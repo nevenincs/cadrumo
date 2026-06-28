@@ -1,0 +1,24 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "01332"
+number = "01332"
+label = "Liquidación IV - Resultado de la autoliquidación - Abono deducciones I+D+i por insuficiencia de cuota - D. Forales/Navarra (Totales) [01332]"
+section = ["liquidacion_iv", "resultado_de_la_autoliquidacion"]
+data_type = "money"
+semantic_role = "is_liquidacion_iv_resultado_misc"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014b-casilla-01332", "modelo-200-page-026-casilla-01332"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01333"
+number = "01333"
+label = "Liquidación IV - Resultado de la autoliquidación - Abono deducciones por producciones cinematográficas extranjeras - D. Forales/Navarra [01333]"
+section = ["liquidacion_iv", "resultado_de_la_autoliquidacion"]
+data_type = "money"
+semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014b-casilla-01333", "modelo-200-page-026-casilla-01333"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

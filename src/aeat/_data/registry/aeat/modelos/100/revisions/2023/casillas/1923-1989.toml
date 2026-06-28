@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "1989"
+number = "1989"
+label = "Pérdida patrimonial diferida (Capítulo VII del Título VII de la Ley del Impuesto sobre Sociedades)."
+section = ["toma_datos_ampliada", "regimen_especial", "feac"]
+semantic_role = "irpf_feac_perdida_patrimonial_diferida"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

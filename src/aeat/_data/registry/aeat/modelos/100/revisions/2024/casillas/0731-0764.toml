@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0764"
+number = "0764"
+label = "Por contribuciones empresariales a sistemas de previsión social (D.A. tercera Real Decreto-ley13/2022): Aplicado en esta declaración"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_deduccion_contribuciones_empresariales_prevision_social_aplicado"
+legal_refs = ["ley-35-2006:art-68"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0479"
+number = "0479"
+label = "Excesos pendientes de reducir procedentes de los ejercicios 2017 a 2020 (Vea el anexo C.4)"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_patrimonio_protegido_discapacidad"]
+semantic_role = "irpf_red_patrimonio_protegido_discapacidad_exceso"
+legal_refs = ["ley-35-2006:art-54"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

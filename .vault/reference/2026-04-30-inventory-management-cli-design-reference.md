@@ -3,10 +3,10 @@ tags:
   - "#reference"
   - "#inventory-management"
 date: 2026-04-30
+modified: '2026-04-30'
 related:
   - "[[2026-04-29-inventory-management-research]]"
   - "[[2026-04-29-inventory-management-adr]]"
-  - "[[2026-04-30-inventory-management-kent-cli-ux-persistence-audit]]"
   - "[[2026-04-30-inventory-management-hardening-plan]]"
   - "[[2026-04-24-aeat-cli-wireframe-adr]]"
   - "[[2026-04-24-aeat-cli-wireframe-reference]]"

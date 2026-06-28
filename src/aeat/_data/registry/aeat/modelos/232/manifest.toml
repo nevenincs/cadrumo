@@ -1,0 +1,24 @@
+[modelo]
+id = "232"
+title = "Operaciones vinculadas y paraísos fiscales (informativa anual)"
+official_name = "Modelo 232. Declaración informativa de operaciones vinculadas y de operaciones y situaciones relacionadas con países o territorios calificados como paraísos fiscales."
+tax_domain = "is"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+calculation_class = "informative"
+output_sensitivity = "identity"
+legal_refs = [
+    "ley-27-2014:art-18",
+    "rd-634-2015:art-13",
+    "orden-hfp-816-2017:art-1",
+    "orden-hfp-816-2017:art-2",
+    "orden-hfp-816-2017:art-3",
+    "ley-27-2014:art-19",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-232-2018",
+    "aeat-dr-232-2016",
+    "aeat-modelo-232-procedure",
+    "boe-modelo-232-2017-form",
+]

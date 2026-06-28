@@ -1,0 +1,50 @@
+[[revisions."2025".parameters]]
+id = "renta-2025-escala-autonomica-madrid-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Comunidad de Madrid", "escala autonómica"]
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "13362.22"
+fixed_addition = "0"
+marginal_rate = "0.085"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "13362.22"
+upper_bound = "19004.63"
+fixed_addition = "1135.79"
+marginal_rate = "0.107"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "19004.63"
+upper_bound = "35425.68"
+fixed_addition = "1739.53"
+marginal_rate = "0.128"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "35425.68"
+upper_bound = "57320.40"
+fixed_addition = "3841.42"
+marginal_rate = "0.174"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "57320.40"
+fixed_addition = "7651.10"
+marginal_rate = "0.205"
+valid_from = 2025-01-01
+valid_to = 2025-12-31

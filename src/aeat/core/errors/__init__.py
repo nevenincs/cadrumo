@@ -6,13 +6,80 @@ predictable error handling throughout the application.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any, TYPE_CHECKING, ClassVar
+from collections.abc import Mapping, Sequence
+from datetime import datetime
+from typing import ClassVar, Protocol, runtime_checkable
 
-from ._registry import ErrorCode
 
-if TYPE_CHECKING:
-    from ..i18n import Translatable
+@runtime_checkable
+class SiteHealthEvidenceLike(Protocol):
+    """Structural view of the evidence block carried by a site-health status.
+
+    Declared in :mod:`aeat.core.errors` so :class:`SiteHealthError` can
+    type its payload without importing the adapter layer that produces
+    it. The concrete record is
+    :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthEvidence`.
+
+    Members are read-only properties so the protocol matches
+    covariantly: a concrete record may carry narrower member types
+    (e.g. ``AnyHttpUrl`` for ``url``) and still satisfy the structural
+    view, which a mutable attribute declaration would reject.
+    """
+
+    @property
+    def url(self) -> object:
+        """URL that was probed during the health check."""
+        ...
+
+    @property
+    def http_status(self) -> object:
+        """HTTP status code returned by the probed URL."""
+        ...
+
+    @property
+    def detected_markers(self) -> Sequence[object]:
+        """Sequence of markers detected in the response that triggered classification."""
+        ...
+
+
+@runtime_checkable
+class SiteHealthStatusLike(Protocol):
+    """Structural view of a detected AEAT site-health classification.
+
+    Declared in :mod:`aeat.core.errors` so :class:`SiteHealthError` can
+    accept the status without a runtime or type-checking import of the
+    adapter layer. The concrete record is
+    :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthStatus`.
+
+    Members are read-only properties so the protocol matches
+    covariantly: the concrete ``SiteHealthStatus`` carries a concrete
+    ``SiteHealthEvidence`` for ``evidence``, which satisfies the
+    ``SiteHealthEvidenceLike`` view only when the member is read-only.
+    """
+
+    @property
+    def state(self) -> object:
+        """Classified site-health state (e.g. mantenimiento, WAF challenge, rate limit)."""
+        ...
+
+    @property
+    def evidence(self) -> SiteHealthEvidenceLike:
+        """Evidence block used to classify the detected state.
+
+        Returns a :class:`SiteHealthEvidenceLike` carrying the URL,
+        HTTP status, and detected markers that drove classification.
+        """
+        ...
+
+    @property
+    def observed_at(self) -> datetime:
+        """Timestamp at which the health check observation was recorded."""
+        ...
+
+    @property
+    def retry_after_seconds(self) -> int | None:
+        """Suggested retry delay in seconds, or ``None`` when not provided."""
+        ...
 
 
 class AeatError(Exception):
@@ -22,7 +89,6 @@ class AeatError(Exception):
 
     def __init_subclass__(cls, **kwargs: object) -> None:
         """Bind a registered :class:`ErrorCode` to each declared subclass."""
-
         super().__init_subclass__(**kwargs)
         from ._registry import bind_error_code
 
@@ -34,7 +100,7 @@ class AeatError(Exception):
         *,
         context: Mapping[str, object] | None = None,
         suggestion: str | None = None,
-        translated_message: Translatable | None = None,
+        translated_message: str | None = None,
     ) -> None:
         """Construct a domain error with optional structured metadata.
 
@@ -43,20 +109,60 @@ class AeatError(Exception):
             context: Optional structured context that can be redacted and
                 emitted in the JSON envelope.
             suggestion: Optional copy-paste recovery command override.
-            translated_message: Optional trilingual message override.
+            translated_message: Optional multilingual message override.
         """
-
         if message is None:
             super().__init__()
         else:
             super().__init__(message)
         self.context: dict[str, object] | None = dict(context) if context is not None else None
         self.suggestion: str | None = suggestion
-        self.translated_message: Translatable | None = translated_message
+        self.translated_message: str | None = translated_message
+
+
+class CoreError(AeatError):
+    """Base error for internal framework and core-primitive failures."""
+
+
+class DecimalFormatError(CoreError):
+    """Raised when :func:`~aeat.core.decimal._format.format_decimal` receives an invalid argument.
+
+    Replaces the bare :class:`TypeError` previously raised when ``value``
+    is ``None`` but ``none_value`` was not provided.
+    """
+
+
+class RedactionError(CoreError):
+    """Raised when a redaction helper receives an argument of the wrong type.
+
+    Replaces bare :class:`TypeError` previously raised by
+    :func:`~aeat.core.redaction.redact` and
+    :func:`~aeat.core.redaction.redact_for_cli_output` when passed a
+    non-``str`` argument.
+    """
+
+
+class CoreValidationError(CoreError, ValueError):
+    """Raised when core primitives or configuration violate invariants.
+
+    Inherits from ValueError to maintain compatibility with Pydantic
+    validators.
+    """
+
+
+class ProfileAnswerTypeError(CoreValidationError):
+    """Raised when a typed profile-answers field coercion receives an unexpected type.
+
+    Lives in :mod:`aeat.core.errors` so :class:`~aeat.core.setup_answers.SetupAnswers`
+    can raise a typed error without importing application-layer wizard modules.
+    Application-layer wizard code raises the narrower
+    :class:`~aeat.application.wizard._errors.WizardAnswerTypeError`, which
+    inherits from this class, so callers catching either type continue to work.
+    """
 
 
 class AeatObservabilityError(AeatError):
-    """Base class for observability-layer errors (#99).
+    """Base class for observability-layer errors.
 
     Lives in :mod:`aeat.core.errors` (rather than the leaf
     :mod:`aeat.core.observability` subpackage) so other subpackages can
@@ -74,8 +180,8 @@ class FixtureProvisioningError(AeatError):
     """
 
 
-class FilingFixtureError(AeatError):
-    """Raised when a synthetic filing-history fixture cannot be loaded.
+class ModeloFixtureError(AeatError):
+    """Raised when a synthetic modelo-history fixture cannot be loaded.
 
     Thrown by :mod:`aeat.application.filing.testing` when the fixtures directory cannot be
     resolved, a fixture file cannot be read, JSON decoding fails, or a
@@ -87,110 +193,95 @@ class FilingFixtureError(AeatError):
 class SiteHealthError(AeatError):
     """Raised when AEAT site-health detection classifies a non-OK state.
 
-    Carries a strict :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthStatus`
-    attribute describing the detected state (mantenimiento, WAF challenge,
-    rate limit, unreachable, unknown error) together with the evidence
-    used to classify it. The workflow engine catches this error in a typed
-    arm that precedes the generic exception handler so a planned
+    Carries a :class:`SiteHealthStatusLike` payload describing the
+    detected state (mantenimiento, WAF challenge, rate limit,
+    unreachable, unknown error) together with the evidence used to
+    classify it. The workflow engine catches this error in a typed arm
+    that precedes the generic exception handler so a planned
     mantenimiento never collapses into ``UNHANDLED_EXCEPTION``.
 
     The error lives in :mod:`aeat.core.errors` (and not in either leaf
     subpackage) to break the circular import between
-    :mod:`aeat.adapters.outbound.aeat.browser` (which raises it) and :mod:`aeat.application.workflow`
-    (which consumes it).
+    :mod:`aeat.adapters.outbound.aeat.browser` (which raises it) and
+    :mod:`aeat.application.workflow` (which consumes it). The payload is
+    typed through the :class:`SiteHealthStatusLike` structural Protocol
+    declared in this module, so no import of the adapter layer occurs at
+    runtime or under type checking — the ``core-not-outer`` boundary is
+    satisfied without an exclusion.
     """
 
-    def __init__(self, *, status: Any) -> None:
+    def __init__(self, *, status: SiteHealthStatusLike) -> None:
         """Construct a SiteHealthError carrying a detected status.
 
         Args:
-            status: The strict
-                :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthStatus`
-                instance describing the detected non-OK state.
+            status: A :class:`SiteHealthStatusLike` instance describing
+                the detected non-OK state. The concrete record is the
+                adapter-layer ``SiteHealthStatus``.
         """
-
-        state = getattr(status, "state")
+        state = status.state
         state_value = getattr(state, "value", state)
-        super().__init__(str(state_value), context={"state": str(state_value)})
-        self.status: Any = status
-
-
-class WorkspaceLockedError(AeatError):
-    """Raised when a concurrent process already owns a workspace lock."""
-
-
-class DeprecatedAliasError(AeatError):
-    """Raised when a deprecated CLI alias needs to emit a stable notice."""
-
-
-class MovedAliasError(AeatError):
-    """Raised when a moved CLI alias needs to emit a stable notice."""
+        evidence = status.evidence
+        context: dict[str, object] = {
+            "state": str(state_value),
+            "url": str(evidence.url),
+            "http_status": evidence.http_status,
+            "detected_markers": tuple(evidence.detected_markers),
+            "observed_at": status.observed_at.isoformat(),
+        }
+        if status.retry_after_seconds is not None:
+            context["retry_after_seconds"] = status.retry_after_seconds
+        super().__init__(str(state_value), context=context)
+        self.status: SiteHealthStatusLike = status
 
 
 class McpLaunchError(AeatError):
     """Raised when a repo-managed MCP process cannot be launched safely."""
 
 
-# -- aeat.domain.formulas error hierarchy (#173) --------------------------------
-# The formula engine lives in :mod:`aeat.domain.formulas`. Per the project-wide
-# mandate (CLAUDE.md §Errors: "All domain errors inherit from
-# aeat.core.errors.AeatError"), the entire formula-engine error hierarchy is
-# declared here rather than inside the subpackage.
+class ActiveProfilePointerError(CoreError):
+    """Raised when the active-profile pointer is present but invalid.
 
+    A missing pointer is a clean cold-start state. A present pointer that
+    cannot be parsed, decoded, read, or validated is storage metadata
+    corruption and must not degrade to a root fallback database route.
+    """
 
-class FormulasError(AeatError):
-    """Base error for the :mod:`aeat.domain.formulas` engine."""
-
-
-class RulesetValidationError(FormulasError):
-    """Raised when a ruleset fails structural validation at load time."""
-
-
-class FormulaCycleError(FormulasError):
-    """Raised when a ruleset DAG contains a cycle between computed casillas."""
-
-    def __init__(self, *, ruleset_id: str, cycle: tuple[str, ...]) -> None:
-        """Construct with the offending ruleset id and the cycle.
+    def __init__(self, *, path: object) -> None:
+        """Construct the active-profile pointer integrity error.
 
         Args:
-            ruleset_id: Stable id of the ruleset whose DAG is cyclic.
-            cycle: Tuple of casilla ids forming the cycle.
+            path: Pointer file path that failed to load.
         """
-
         super().__init__(
-            f"ruleset {ruleset_id!r} has cycle: {' -> '.join(cycle)}",
-            context={"ruleset_id": ruleset_id, "cycle": " -> ".join(cycle)},
+            f"invalid active-profile pointer at {path}; refusing root storage fallback",
+            translated_message="errors.integrity.integrity_active_profile_pointer",
+            context={"path": str(path)},
+            suggestion="aeat config repair profile",
         )
-        self.ruleset_id: str = ruleset_id
-        self.cycle: tuple[str, ...] = cycle
 
 
-class CasillaNotDefinedError(FormulasError):
-    """Raised when a formula references a casilla that the ruleset does not declare."""
+class NoActiveProfileError(AeatError):
+    """Raised when an operation requires an active profile bucket and none is selected.
+
+    Bucket-scoped repositories (transaction catalogue, manual ledger,
+    bucket-local aggregation) and the operator-initiated auth/sede flows refuse
+    to operate without an active profile. The active-bucket precedence chain is
+    a core concern (env var > pointer file), so the refusal that gates it lives
+    in the core error taxonomy and is raised by
+    :func:`aeat.core.require_active_bucket_id`. Callers that surface this to the
+    operator map it to the standard ``cli.common.errors.no_active_profile`` message.
+    """
 
 
-class AmbiguousPeriodError(FormulasError):
-    """Raised when a period matches more than one ruleset span."""
-
-
-class MissingRulesetError(FormulasError):
-    """Raised when no ruleset covers the requested modelo/period pair."""
-
-
-class EvaluationError(FormulasError):
-    """Raised when a formula evaluation produces an arithmetic domain error."""
-
-
-class AuditDiscrepancyError(FormulasError):
-    """Raised by :meth:`AuditReport.assert_clean` when discrepancies are present."""
-
-
-from ._registry import (  # noqa: E402
+from ._not_found import CoreNotFoundError
+from ._registry import (
     ERROR_REGISTRY,
     ErrorCategory,
     ErrorCode,
     ErrorEnvelope,
+    bind_error_code,
     build_error_envelope,
+    declared_error_codes,
     get_error_exit_code,
     get_registered_error_code,
     register,
@@ -200,30 +291,33 @@ from ._registry import (  # noqa: E402
     resolve_output_language,
     scrub_error_context,
 )
+from ._severity import BaseSeverity
 
 __all__ = [
     "ERROR_REGISTRY",
+    "ActiveProfilePointerError",
     "AeatError",
     "AeatObservabilityError",
-    "AmbiguousPeriodError",
-    "AuditDiscrepancyError",
-    "CasillaNotDefinedError",
-    "DeprecatedAliasError",
+    "BaseSeverity",
+    "CoreError",
+    "CoreNotFoundError",
+    "CoreValidationError",
+    "DecimalFormatError",
     "ErrorCategory",
     "ErrorCode",
     "ErrorEnvelope",
-    "EvaluationError",
-    "FilingFixtureError",
     "FixtureProvisioningError",
-    "FormulaCycleError",
-    "FormulasError",
     "McpLaunchError",
-    "MissingRulesetError",
-    "MovedAliasError",
-    "RulesetValidationError",
+    "ModeloFixtureError",
+    "NoActiveProfileError",
+    "ProfileAnswerTypeError",
+    "RedactionError",
     "SiteHealthError",
-    "WorkspaceLockedError",
+    "SiteHealthEvidenceLike",
+    "SiteHealthStatusLike",
+    "bind_error_code",
     "build_error_envelope",
+    "declared_error_codes",
     "get_error_exit_code",
     "get_registered_error_code",
     "register",

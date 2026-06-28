@@ -3,10 +3,10 @@ tags:
   - "#plan"
   - "#unified-review-queue"
 date: 2026-04-18
+modified: '2026-04-18'
 related:
   - "[[2026-04-18-unified-review-queue-adr]]"
   - "[[2026-04-18-unified-review-queue-research]]"
-  - "[[2026-04-17-kent-revise-review-audit]]"
 ---
 
 # unified-review-queue plan

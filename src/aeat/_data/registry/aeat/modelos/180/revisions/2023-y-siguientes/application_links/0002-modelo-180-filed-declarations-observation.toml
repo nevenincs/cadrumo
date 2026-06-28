@@ -1,0 +1,7 @@
+[[revisions.2023-y-siguientes.application_links]]
+id = "modelo-180-filed-declarations-observation"
+surface = "portal"
+consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
+requires_snapshot = true
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-180-procedure"]

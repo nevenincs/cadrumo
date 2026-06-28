@@ -1,15 +1,11 @@
 """Internal SQLAlchemy ORM mapper classes.
 
-These classes back the declarative schema consumed by Alembic autogenerate.
-They are intentionally kept out of the :mod:`aeat.adapters.persistence.storage` public API — the
-public surface exposes pydantic v2 records (see :mod:`aeat.adapters.persistence.storage.records`)
-and repositories bridge between the two.
-
-Note:
-    Translatable columns (e.g. modelo names, portal labels) are plain ``str``
-    today. Once the trilingual primitive from issue #20 lands, these columns
-    will be migrated to the shared ``Translatable`` shape. Each such column
-    carries an inline ``TODO(#20)`` marker.
+Backs the declarative schema consumed by Alembic autogenerate.
+Intentionally kept out of the :mod:`aeat.adapters.persistence.storage`
+public API: the public surface exposes pydantic v2 records (see
+:mod:`aeat.adapters.persistence.storage.sql.records`) and the
+per-domain repositories bridge between the ORM rows and the typed
+records.
 """
 
 from __future__ import annotations
@@ -24,13 +20,24 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    LargeBinary,
     Numeric,
     String,
+    Text,
     UniqueConstraint,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-from ..crypto._encrypted_columns import EncryptedString
+from ..crypto._encrypted_columns import EncryptedString, HashedLookup
+
+_HASH_HEX_LENGTH = 64
+
+
+def _nullable_fixed_length_check(column_name: str, expected_length: int) -> CheckConstraint:
+    return CheckConstraint(
+        f"{column_name} IS NULL OR length({column_name}) = {expected_length}",
+        name=f"ck_secure_objects_{column_name}_len",
+    )
 
 
 class Base(DeclarativeBase):
@@ -42,7 +49,7 @@ class ModeloRow(Base):
 
     Attributes:
         id: Surrogate integer primary key.
-        identifier: Stable natural key (e.g. ``MODELO_130``).
+        identifier: Stable natural key for the modelo record.
         name: Human-readable modelo name.
     """
 
@@ -50,11 +57,10 @@ class ModeloRow(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     identifier: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
-    # TODO(#20): replace with Translatable once the i18n primitive lands.
     name: Mapped[str] = mapped_column(String(255), nullable=False)
 
 
-class PortalRow(Base):
+class PortalOrmRow(Base):
     """Row in the ``portals`` table.
 
     Attributes:
@@ -81,7 +87,6 @@ class PortalRow(Base):
         ForeignKey("modelos.id", ondelete="SET NULL"),
         nullable=True,
     )
-    # TODO(#20): replace with Translatable once the i18n primitive lands.
     label: Mapped[str] = mapped_column(String(255), nullable=False)
 
     modelo: Mapped[ModeloRow | None] = relationship("ModeloRow", lazy="joined")
@@ -124,6 +129,57 @@ class CorpusArtifactRow(Base):
     modelo: Mapped[ModeloRow] = relationship("ModeloRow", lazy="joined")
 
 
+class SecureObjectRow(Base):
+    """Encrypted byte-object row for sensitive application payloads.
+
+    Domain repositories use this table for financial catalogues and
+    workflow state that must not land as standalone JSON files. The
+    ``payload`` column is a SQL BLOB holding the AEAD wire bytes; the
+    repository encrypts and decrypts it explicitly (rather than through a
+    column ``TypeDecorator``) so the row identity (``namespace`` +
+    ``object_key`` digest + ``schema_version``) can be bound into the AEAD
+    associated data, making a ciphertext refuse to decrypt under any other
+    row. The remaining fields are routing, revision-lineage, and integrity
+    metadata.
+    """
+
+    __tablename__ = "secure_objects"
+    __table_args__ = (
+        UniqueConstraint(
+            "namespace",
+            "object_key",
+            name="uq_secure_objects_identity",
+        ),
+        CheckConstraint(
+            "schema_version >= 1",
+            name="ck_secure_objects_schema_version_positive",
+        ),
+        _nullable_fixed_length_check("revision_id", _HASH_HEX_LENGTH),
+        _nullable_fixed_length_check("previous_revision_id", _HASH_HEX_LENGTH),
+        _nullable_fixed_length_check("previous_payload_hash", _HASH_HEX_LENGTH),
+        _nullable_fixed_length_check("payload_hash", _HASH_HEX_LENGTH),
+        _nullable_fixed_length_check("ciphertext_hash", _HASH_HEX_LENGTH),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    namespace: Mapped[str] = mapped_column(String(128), nullable=False)
+    object_key: Mapped[bytes] = mapped_column(HashedLookup(), nullable=False)
+    classification: Mapped[str] = mapped_column(String(32), nullable=False)
+    schema_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    written_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    revision_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    previous_revision_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    revision_ancestor_ids: Mapped[str | None] = mapped_column(Text, nullable=True)
+    previous_payload_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    payload_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    ciphertext_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    revision_written_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    write_provenance: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    source_event_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    conflict_policy: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    payload: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+
+
 _RENTAL_USE_TYPE_VALUES = (
     "VIVIENDA_ARRENDADA",
     "VIVIENDA_HABITUAL",
@@ -151,12 +207,35 @@ def _enum_check(values: tuple[str, ...]) -> str:
     return "(" + ", ".join(repr(v) for v in values) + ")"
 
 
-class RentalFincaRow(Base):
+class FincaRow(Base):
     """Row in the ``rental_fincas`` table.
 
-    Models one Spanish urban property tracked under #454. Address is
-    encrypted at rest because finca addresses identify the contribuyente
-    (Catastro stable reference) and qualify as personal data under GDPR.
+    Models one Spanish urban property. The address column is encrypted
+    at rest via :class:`aeat.adapters.persistence.storage.crypto.EncryptedString`
+    because finca addresses identify the contribuyente through the
+    Catastro stable reference and qualify as personal data under GDPR.
+
+    Attributes:
+        id: Surrogate integer primary key.
+        identifier: Stable natural key for the finca.
+        address: Encrypted street address.
+        valor_catastral_total: Total Catastro value (land + construction).
+        valor_catastral_construccion: Catastro value of the construction
+            component, used as the LIRPF art. 23.1.f amortization basis.
+        valor_catastral_revision_year: Year of the most recent Catastro
+            revision; ``None`` when unavailable.
+        coste_adquisicion: Total acquisition cost.
+        coste_adquisicion_construccion: Acquisition cost attributable to
+            the construction component (alternative amortization basis).
+        acquisition_date: Date the property was acquired.
+        disposal_date: Date the property was sold or otherwise disposed
+            of, when applicable.
+        use_type: Closed enum: ``VIVIENDA_ARRENDADA`` /
+            ``VIVIENDA_HABITUAL`` / ``OTRO_INMUEBLE_NO_AFECTO`` /
+            ``LOCAL_COMERCIAL`` / ``VIVIENDA_DESOCUPADA``.
+        is_stressed_area: Whether the finca sits in a declared
+            stressed-rent area for LIRPF art. 23.2 tier resolution.
+        schema_version: Per-row schema version; defaults to ``"1"``.
     """
 
     __tablename__ = "rental_fincas"
@@ -182,13 +261,44 @@ class RentalFincaRow(Base):
     schema_version: Mapped[str] = mapped_column(String(8), nullable=False, default="1")
 
 
-class RentalContractRow(Base):
+class ArrendamientoRow(Base):
     """Row in the ``rental_contracts`` table.
 
     Per-contract metadata used by the LIRPF art. 23.2 tier resolver.
-    Tenant identifying fields (when added by future schema versions)
-    will use :class:`EncryptedString`. The current schema models
-    only counts and flags so the row itself is not PII-bearing.
+    Tenant identifying fields, when added by future schema versions,
+    will use :class:`aeat.adapters.persistence.storage.crypto.EncryptedString`.
+    The current schema models only counts and flags so the row itself
+    is not PII-bearing.
+
+    Attributes:
+        id: Surrogate integer primary key.
+        finca_id: Foreign key into :class:`FincaRow`.
+        contract_celebration_date: Date the contract was signed.
+        contract_termination_date: Date the contract terminated, when
+            applicable.
+        tenant_count: Total tenants on the contract.
+        qualifying_co_tenant_count: Subset of tenants that qualify for
+            the LIRPF art. 23.2 reduction.
+        tenant_min_age: Minimum tenant age, when known.
+        tenant_max_age: Maximum tenant age, when known.
+        tenant_is_public_admin: True when the tenant is a public
+            administration body.
+        tenant_is_ley_49_2002_entity_with_social_use: Ley 49/2002 social-
+            use qualifier.
+        tenant_is_imv_beneficiary: Ingreso Mínimo Vital beneficiary flag.
+        dwelling_in_public_program: Public housing program qualifier.
+        prior_contract_last_rent: Last rent under the previous contract,
+            when known.
+        prior_contract_indexation: Indexation factor applied to the
+            previous contract.
+        initial_rent: Initial monthly rent under the new contract.
+        is_first_rental: True when the dwelling has never been rented
+            before.
+        rehabilitation_finished_date: Date a qualifying rehabilitation
+            completed, when applicable.
+        lau_17_6_compliant: True when the contract complies with the
+            Ley de Arrendamientos Urbanos art. 17.6.
+        schema_version: Per-row schema version; defaults to ``"1"``.
     """
 
     __tablename__ = "rental_contracts"
@@ -230,15 +340,24 @@ class RentalContractRow(Base):
     lau_17_6_compliant: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     schema_version: Mapped[str] = mapped_column(String(8), nullable=False, default="1")
 
-    finca: Mapped[RentalFincaRow] = relationship("RentalFincaRow", lazy="joined")
+    finca: Mapped[FincaRow] = relationship("FincaRow", lazy="joined")
 
 
-class RentalIncomeRecordRow(Base):
+class FincaRendimientoRecordRow(Base):
     """Row in the ``rental_income_records`` table.
 
-    Per-contract per-period gross-rent ledger. The (contract_id,
-    period_year) tuple is unique so each contract surfaces a single
-    income record per ejercicio.
+    Per-contract per-period gross-rent ledger. The
+    ``(contract_id, period_year)`` tuple is unique so each contract
+    surfaces a single income record per ejercicio.
+
+    Attributes:
+        id: Surrogate integer primary key.
+        contract_id: Foreign key into :class:`ArrendamientoRow`.
+        period_year: Tax year the income belongs to.
+        gross_rent_received: Gross rent received during the period.
+        dias_alquilados: Days the property was actually rented during
+            the period (0..366).
+        schema_version: Per-row schema version; defaults to ``"1"``.
     """
 
     __tablename__ = "rental_income_records"
@@ -264,14 +383,27 @@ class RentalIncomeRecordRow(Base):
     dias_alquilados: Mapped[int] = mapped_column(Integer, nullable=False)
     schema_version: Mapped[str] = mapped_column(String(8), nullable=False, default="1")
 
-    contract: Mapped[RentalContractRow] = relationship("RentalContractRow", lazy="joined")
+    contract: Mapped[ArrendamientoRow] = relationship("ArrendamientoRow", lazy="joined")
 
 
-class RentalExpenseRow(Base):
+class FincaGastoRow(Base):
     """Row in the ``rental_expenses`` table.
 
     Per-finca per-period categorised expense surface for the LIRPF
     art. 23.1 deductible-gasto rollup.
+
+    Attributes:
+        id: Surrogate integer primary key.
+        finca_id: Foreign key into :class:`FincaRow`.
+        period_year: Tax year the expense belongs to.
+        category: One of the closed expense categories
+            (``FINANCIACION_INTERESES``, ``CONSERVACION_REPARACION``,
+            ``IBI_TRIBUTOS_NO_ESTATALES``, ``COMUNIDAD``, ``SEGUROS``,
+            ``SUMINISTROS``, ``ADMINISTRACION_PORTERIA_VIGILANCIA``,
+            ``FORMALIZACION_CONTRATO``, ``DEFENSA_JURIDICA``,
+            ``SALDOS_DUDOSO_COBRO``, ``OTROS``).
+        amount: Expense amount.
+        schema_version: Per-row schema version; defaults to ``"1"``.
     """
 
     __tablename__ = "rental_expenses"
@@ -292,10 +424,10 @@ class RentalExpenseRow(Base):
     amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     schema_version: Mapped[str] = mapped_column(String(8), nullable=False, default="1")
 
-    finca: Mapped[RentalFincaRow] = relationship("RentalFincaRow", lazy="joined")
+    finca: Mapped[FincaRow] = relationship("FincaRow", lazy="joined")
 
 
-class RentalAmortizationLedgerRow(Base):
+class FincaAmortizacionLedgerRow(Base):
     """Row in the ``rental_amortization_ledger`` table.
 
     Per-finca per-period art. 23.1.f amortización 3 % accrual with
@@ -328,7 +460,7 @@ class RentalAmortizationLedgerRow(Base):
     )
     schema_version: Mapped[str] = mapped_column(String(8), nullable=False, default="1")
 
-    finca: Mapped[RentalFincaRow] = relationship("RentalFincaRow", lazy="joined")
+    finca: Mapped[FincaRow] = relationship("FincaRow", lazy="joined")
 
 
 metadata = Base.metadata

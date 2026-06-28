@@ -1,0 +1,48 @@
+rules:
+  - id: no-duplicate-concept-models
+    message: |
+      Pydantic-model name collisions across packages signal duplicate-concept
+      drift. When a new model class shares a name with an existing canonical
+      model in a different package, consolidate onto the canonical shape or
+      rename to disambiguate (e.g., `VerificationFinding` was disambiguated
+      to `ModeloVerificationFinding` and `EvidenceBundleCheckResult`).
+    severity: WARNING
+    languages:
+      - python
+    paths:
+      include:
+        - "/src/aeat/"
+      exclude:
+        - "/src/aeat/**/test_*.py"
+        - "/src/aeat/**/_test_*.py"
+        - "/src/aeat/tests/**/*.py"
+    pattern-either:
+      - patterns:
+          - pattern: |
+              class CCAA(...):
+                  ...
+          - pattern-not-inside: |
+              # canonical-owner-allowed
+              ...
+      - patterns:
+          - pattern: |
+              class RentaCCAA(...):
+                  ...
+      - patterns:
+          - pattern: |
+              class CasillaSchema(...):
+                  ...
+          - pattern-not-inside: |
+              # canonical-owner-allowed
+              ...
+      - patterns:
+          - pattern: |
+              class RegistryCasillaSchema(...):
+                  ...
+          - pattern-not-inside: |
+              # canonical-owner-allowed
+              ...
+      - patterns:
+          - pattern: |
+              class VerificationFinding(...):
+                  ...

@@ -1,28 +1,30 @@
-"""Portal: Modelo 202 — IS pago fraccionado."""
+"""Registry entry for Modelo 202 - corporate-tax instalment payment.
+
+Defines the :class:`PortalMetadata` record identified by the :class:`Portal`
+code ``PORTAL_M202_SOCIEDADES_FRACCIONADO``, exposed as :data:`ENTRY` under
+the :class:`PortalCategory` member ``FILING``, consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
-from ._common import build_entry
+from ._common import build_entry, portal_path
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_M202_SOCIEDADES_FRACCIONADO,
-    url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GE00.shtml",
-    subdomain=Subdomain.SEDE,
+    path=portal_path(Portal.PORTAL_M202_SOCIEDADES_FRACCIONADO),
+    subdomain=PortalHost.SEDE,
     category=PortalCategory.FILING,
     auth_methods=(
         AuthMethod.CERTIFICATE,
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_202,
-    label={
-        "es": "Modelo 202 — IS pago fraccionado",
-        "en": "Modelo 202 — Corporate tax instalment payment",
-        "hu": "202-es űrlap — Társasági adó részletfizetés",
-    },
-    purpose_es="Pago fraccionado a cuenta del Impuesto sobre Sociedades.",
+    label="entries.portal_m202_sociedades_fraccionado.label",
+    purpose="entries.portal_m202_sociedades_fraccionado.purpose",
 )
+"""Portal entry for Modelo 202 (corporate-tax instalment payment)."""

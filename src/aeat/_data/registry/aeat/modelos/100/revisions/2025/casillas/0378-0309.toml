@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0309"
+number = "0309"
+label = "Valor total acumulado de transmisión sobre el que se ha aplicado DT 9.ª en el ejercicio 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022 y 2023"
+section = ["toma_datos_ampliada", "dt9"]
+semantic_role = "irpf_dt9_valor_transmision_acumulado"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:dt-9", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

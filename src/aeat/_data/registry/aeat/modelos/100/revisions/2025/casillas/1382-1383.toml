@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "1383"
+number = "1383"
+label = "Ejercicio 2022: Aplicado en esta  declaración"
+section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
+semantic_role = "irpf_anexo_c_base_liq_neg_aplicado"
+legal_refs = ["ley-35-2006:art-50", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

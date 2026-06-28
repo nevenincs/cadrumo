@@ -1,0 +1,70 @@
+"""Regression: row-producer detection must honour the per-family ROWS default.
+
+A detail-record binding may omit an explicit ``aggregation`` and rely on its
+``source`` family's default operator. For the detail-record families
+(related-party, foreign-asset, atribución, refund) that default is
+``BindingAggregationOp.ROWS``. The row-producer detection in
+``_row_field_lookup`` previously short-circuited on ``aggregation is None``
+and treated such a binding as a non-row producer, silently dropping its
+``row_field`` from the lookup. Routing the test through the centralised
+``binding_aggregation_op`` accessor fixes the mis-detection.
+
+If this test stops detecting a ``aggregation=None`` rows-default binding as a
+row producer, the BIND-01 regression has returned.
+"""
+
+from __future__ import annotations
+
+import pytest
+
+from ....core import BindingSourceKind
+from ....core.resources import resources
+from ....domain.calculations.registry import (
+    BindingAggregationOp,
+    DataBindingDefinition,
+    binding_aggregation_op,
+)
+from .._row_set_assembly import _row_field_lookup
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _rows_default_detail_binding() -> DataBindingDefinition:
+    """A foreign-asset detail binding with no explicit aggregation.
+
+    ``foreign_asset`` is a ROWS-default source family, so the binding must be
+    detected as a row producer even though ``aggregation`` is ``None``.
+    """
+
+    return DataBindingDefinition(
+        id="synthetic-detail-row",
+        source=BindingSourceKind.FOREIGN_ASSET,
+        selector={"fact": "row_field", "grouping": "per_foreign_asset", "row_field": "valuation_amount"},
+        aggregation=None,
+        legal_refs=("ley-7-2012:dt-18",),
+        source_refs=("aeat-modelo-720",),
+    )
+
+
+def test_rows_default_family_resolves_to_rows_op() -> None:
+    """The accessor returns ROWS for a None-aggregation rows-default binding."""
+
+    binding = _rows_default_detail_binding()
+    assert binding.aggregation is None
+    assert binding_aggregation_op(binding) == BindingAggregationOp.ROWS
+
+
+def test_row_field_lookup_detects_none_aggregation_rows_default_binding() -> None:
+    """A rows-default detail binding with aggregation=None is NOT dropped.
+
+    The previous detection (``aggregation is None or op != "rows"``) dropped
+    this binding before the row_field could be read; the accessor-routed
+    detection keeps it.
+    """
+
+    revision = resources().modelos.get("720").revisions["2013-y-siguientes"]
+    revision_with_default = revision.model_copy(update={"bindings": (_rows_default_detail_binding(),)})
+
+    lookup = _row_field_lookup(revision_with_default)
+
+    assert lookup == {"synthetic-detail-row": "valuation_amount"}

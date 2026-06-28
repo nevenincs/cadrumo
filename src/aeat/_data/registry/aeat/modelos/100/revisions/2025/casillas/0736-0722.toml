@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0722"
+number = "0722"
+label = "Importe de la deducción: Aportaciones a actividades prioritarias de mecenazgo con límite del 15% de la base liquidable"
+section = ["resultados", "anexo_a_res", "deduccion_donativos_res"]
+semantic_role = "irpf_anexo_a_deducciones_donativo_importe"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-68.3", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "0426"
+number = "0426"
+label = "Aportaciones del trabajador al plan de pensiones de empleo, mutualidad de previsión social o plan de previsión social empresarial, siempre que se hayan efectuado contribuciones empresariales"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
+semantic_role = "irpf_red_prevision_social_aportaciones_trabajador_con_contribucion_empresarial"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

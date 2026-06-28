@@ -1,0 +1,151 @@
+[[revisions."2020-y-siguientes".live_cross_references]]
+id = "modelo-349-static-documentation"
+evidence_tier = "official_source_guidance"
+surface = "static_official_documentation"
+guard_policy_id = "modelo-349-static-documentation-only"
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = false
+requires_aeat_authorization = false
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure"]
+
+[[revisions."2020-y-siguientes".live_cross_references]]
+id = "modelo-349-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-349-filed-declarations-read-only"
+allowed_hosts = ["www6.agenciatributaria.gob.es", "sede.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure"]
+
+# Spanish-counterparty ROI verification via the AEAT GROI servlet at
+# www2.agenciatributaria.gob.es/wlpl/GROI-JDIT/ConsultaOperadorSedeGroiServlet.
+# The surface category is `authenticated_simulator`: cl@ve-movil required,
+# form-submit POST is the AEAT-prescribed query mechanism. Live execution
+# may only carry operator-authorised non-synthetic counterparty NIFs per
+# the no-synthetic-sede-live-surfaces ADR. The remote-state guard's
+# HTTP-method check stays strict for `kind="http"` operations; only
+# the cross-reference's allowed_methods declaration includes POST so
+# the surface contract is honest. The forbidden_actions include the
+# canonical AEAT_WRITE_FORBIDDEN_ACTIONS set so any write-class
+# action label is rejected before any submit click runs.
+[[revisions."2020-y-siguientes".live_cross_references]]
+id = "modelo-349-groi-spanish-counterparty-check"
+evidence_tier = "executable_parity_evidence"
+surface = "authenticated_simulator"
+guard_policy_id = "modelo-349-groi-spanish-roi-check"
+allowed_hosts = ["www2.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "POST"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+# Per the 2026-05-26 no-synthetic-sede-live-surfaces ADR, no AEAT-hosted
+# live cross-reference may advertise synthetic_data_allowed = true. The
+# GROI authenticated_simulator surface remains the AEAT-prescribed query
+# mechanism for Spanish counterparty ROI verification, but live execution
+# may only carry operator-authorised non-synthetic counterparty NIFs.
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = false
+oracle_id = "aeat-groi-spanish-roi-checker"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-vies-gestiones-procedure"]
+
+# Applicability gate: the GROI Spanish-ROI consult is only relevant
+# to a taxpayer who actually conducts intracommunity operations.
+# Subjects with does_intracomunitario=false do not file Modelo 349
+# at all and therefore have no business invoking the GROI counterparty
+# check. The all-mode aggregation is the default; if a future predicate
+# is added (e.g. iva.roi_enrolled), it AND-composes with this one.
+[[revisions."2020-y-siguientes".live_cross_references.applicability_predicates]]
+field = "does_intracomunitario"
+op = "equals"
+value = true
+explanation = "GROI Spanish-ROI counterparty check applies only when the taxpayer conducts declarable intracommunity operations."
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure"]
+
+# IXVI foreign-EU NIF-IVA verifier. AEAT publishes the IXVI servlet
+# (www1.agenciatributaria.gob.es/wlpl/IXVI-JDIT/ConsultaIntracomunitarios)
+# alongside GROI on the sede gestiones page. IXVI verifies counterparty
+# NIF-IVA identifiers issued by other EU member states (the foreign-EU
+# half of the same Modelo 349 declarant context where GROI handles
+# Spanish counterparties). Empirically gated above cl@ve-movil so
+# declared as authenticated_simulator. Live execution may only carry
+# operator-authorised non-synthetic counterparty NIFs per the
+# no-synthetic-sede-live-surfaces ADR. Live reachability is gated on
+# certificate provisioning — the binding declares the conceptual
+# contract and the live test will exercise it once auth is in place.
+[[revisions."2020-y-siguientes".live_cross_references]]
+id = "modelo-349-ixvi-foreign-counterparty-check"
+evidence_tier = "executable_parity_evidence"
+surface = "authenticated_simulator"
+guard_policy_id = "modelo-349-ixvi-foreign-counterparty-check"
+allowed_hosts = ["sede.agenciatributaria.gob.es", "www1.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "POST"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+# Per the 2026-05-26 no-synthetic-sede-live-surfaces ADR, no AEAT-hosted
+# live cross-reference may advertise synthetic_data_allowed = true. The
+# IXVI authenticated_simulator surface remains the AEAT-prescribed query
+# mechanism for EU NIF-IVA verification, but live execution may only
+# carry operator-authorised non-synthetic counterparty NIFs.
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = false
+oracle_id = "aeat-nif-iva-checker"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-vies-gestiones-procedure"]
+
+# Applicability gate: identical to the GROI binding — the IXVI
+# consult only matters to taxpayers who actually conduct declarable
+# intracommunity operations.
+[[revisions."2020-y-siguientes".live_cross_references.applicability_predicates]]
+field = "does_intracomunitario"
+op = "equals"
+value = true
+explanation = "IXVI foreign-EU NIF-IVA verifier applies only when the taxpayer conducts declarable intracommunity operations."
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure"]
+
+# --- Workbook parity (PDF record-design only; no formula form) ---
+

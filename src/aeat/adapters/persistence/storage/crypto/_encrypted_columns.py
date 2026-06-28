@@ -20,7 +20,7 @@ at the column level without touching the cipher directly:
 All decorators consult :func:`get_master_key_provider` lazily on
 every bind and result conversion. Tests inject an
 :class:`EphemeralMasterKeyProvider` via the
-:func:`override_master_key_provider` test helper so the SQLite
+``override_master_key_provider`` test helper so the SQLite
 round-trip uses a deterministic key without touching the OS keychain
 or the file backend.
 
@@ -35,67 +35,146 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
-import threading
-from typing import Any
+from typing import override
 
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import LargeBinary
+from sqlalchemy.engine import Dialect
 from sqlalchemy.types import TypeDecorator
 
-from .....core.logging import get_logger
+from ..errors import (
+    DecryptionError,
+)
+from ..errors import (
+    storage_validation_error as _storage_validation_error,
+)
+from ..master_key._active_session import get_active_master_key
 from ._crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
-from ..master_key._master_key import MasterKeyProvider, get_master_key_provider
 
-_log = get_logger(__name__)
-_LOW_ENTROPY_LENGTH_THRESHOLD = 12  # sec-M-4: warn below this byte-length
-_low_entropy_warning_emitted = False
+
+class EncryptedPayload(BaseModel):
+    """Validated wrapper for a value decrypted from an :class:`EncryptedJSON` column.
+
+    The single ``data`` field carries the decoded JSON value (dict, list,
+    str, int, float, bool, or None).  Wrapping the raw ``json.loads``
+    result in a typed model ensures the decrypt path is auditable and
+    rejects structurally invalid bytes at the persistence boundary rather
+    than propagating bare ``object`` into domain code.
+    """
+
+    model_config = ConfigDict(strict=False)
+
+    data: object
+
 
 _AAD_STRING = b"aeat.column.encrypted_string.v1"
 _AAD_BYTES = b"aeat.column.encrypted_bytes.v1"
 _AAD_JSON = b"aeat.column.encrypted_json.v1"
 _HKDF_CONTEXT_COLUMN_LOOKUP = b"aeat.column.hashed_lookup.v1"
 
+
+_AAD_SECURE_OBJECT_PAYLOAD = b"aeat.secure-object.payload.v2"
+
+
+def secure_object_payload_aad(namespace: str, object_key_digest: bytes, schema_version: int) -> bytes:
+    """Bind a secure-object row's identity into its payload AEAD associated data.
+
+    The associated data length-prefixes the namespace, the ``object_key`` HMAC
+    digest, and the schema version so the AEAD authentication tag is valid only
+    for the exact row that produced the ciphertext. A ciphertext copied into a
+    different ``(namespace, object_key)`` row fails the tag and refuses to
+    decrypt, closing the at-rest row-substitution gap.
+    """
+    namespace_bytes = namespace.encode("utf-8")
+    return b"".join(
+        (
+            _AAD_SECURE_OBJECT_PAYLOAD,
+            len(namespace_bytes).to_bytes(4, "big"),
+            namespace_bytes,
+            len(object_key_digest).to_bytes(4, "big"),
+            bytes(object_key_digest),
+            schema_version.to_bytes(4, "big"),
+        ),
+    )
+
+
+def secure_object_key_digest(object_key: str | bytes) -> bytes:
+    """Return the stored ``object_key`` digest for a natural or pre-digested key.
+
+    Mirrors the :class:`HashedLookup` column's bind behaviour so the digest used
+    to build the payload AAD at write time matches the digest persisted in the
+    ``object_key`` column (and therefore the value reconstructed on read).
+    """
+    if isinstance(object_key, bytes | bytearray | memoryview):
+        return bytes(object_key)
+    return HashedLookup.compute(object_key)
+
+
+def encrypt_secure_object_payload(plaintext: bytes, *, associated_data: bytes) -> bytes:
+    """Encrypt a secure-object payload under the active DEK, bound to ``associated_data``."""
+    key = _resolve_master_key()
+    return encrypt_record(plaintext, key=key, associated_data=associated_data).to_wire()
+
+
+def decrypt_secure_object_payload(wire: bytes, *, associated_data: bytes) -> bytes:
+    """Decrypt a row-AAD-bound secure-object payload; raises on a tag mismatch."""
+    blob = EncryptedBlob.from_wire(wire)
+    key = _resolve_master_key()
+    return decrypt_record(blob, key=key, associated_data=associated_data)
+
+
+def decrypt_encrypted_bytes_column(wire: bytes) -> bytes:
+    """Decrypt one ``EncryptedBytes`` on-wire payload under the active master key.
+
+    Exposed so iterator consumers (notably
+    :class:`aeat.adapters.persistence.storage.sql.SecureObjectRepository`)
+    can decrypt rows one-by-one inside their own try/except, rather than
+    delegating to SQLAlchemy's column processor whose failure mode aborts
+    the entire result-set materialisation.
+
+    Args:
+        wire: The raw on-wire bytes stored in an ``EncryptedBytes`` column
+            (``nonce || ciphertext_with_tag``).
+
+    Returns:
+        The decrypted plaintext bytes.
+    """
+    blob = EncryptedBlob.from_wire(wire)
+    key = _resolve_master_key()
+    return decrypt_record(blob, key=key, associated_data=_AAD_BYTES)
+
+
+def decrypt_encrypted_string_column(wire: bytes) -> str:
+    """Decrypt one legacy ``EncryptedString`` on-wire payload.
+
+    New lookup columns should use :class:`HashedLookup`; the
+    secure-object repository uses this helper only to migrate rows
+    written by the old randomized ``object_key`` mapper into
+    deterministic lookup digests.
+    """
+    blob = EncryptedBlob.from_wire(wire)
+    key = _resolve_master_key()
+    plaintext = decrypt_record(blob, key=key, associated_data=_AAD_STRING)
+    try:
+        return plaintext.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise DecryptionError("legacy EncryptedString payload is not valid UTF-8") from exc
+
+
 _HASHED_LOOKUP_DIGEST_SIZE = 32
 """HMAC-SHA256 digest size in bytes."""
 
 
-_provider_lock = threading.Lock()
-_provider_override: MasterKeyProvider | None = None
-
-
-def override_master_key_provider(provider: MasterKeyProvider | None) -> None:
-    """Test helper: install (or clear) a process-wide provider override.
-
-    Args:
-        provider: The provider every column decorator should use, or
-            ``None`` to clear the override and revert to the standard
-            :func:`get_master_key_provider` resolution.
-    """
-    global _provider_override
-    with _provider_lock:
-        _provider_override = provider
-
-
 def _resolve_master_key() -> bytes:
-    """Resolve the master key honouring the test override when set."""
-    return _resolve_master_key_provider().get_master_key()
+    """Resolve the column-level encryption key from the active session.
 
-
-def _resolve_master_key_provider() -> MasterKeyProvider:
-    """Resolve the active :class:`MasterKeyProvider`, honouring the override.
-
-    Returns the provider installed via :func:`override_master_key_provider`
-    when set; otherwise falls back to the standard
-    :func:`get_master_key_provider` resolution. Encrypted-envelope
-    consumers (per-domain repositories) call this helper rather than
-    receiving the provider through their constructor so the same
-    test-override discipline that gates column-level decrypt also gates
-    envelope-level decrypt.
+    Delegates to :func:`get_active_master_key`, which reads the DEK
+    of the :class:`BucketSession` bound to the active-session
+    ``ContextVar``. Raises
+    :class:`NoActiveBucketSessionError` when no session block is
+    active on the calling thread or task.
     """
-    with _provider_lock:
-        override = _provider_override
-    if override is not None:
-        return override
-    return get_master_key_provider()
+    return get_active_master_key()
 
 
 class EncryptedString(TypeDecorator[str]):
@@ -109,22 +188,27 @@ class EncryptedString(TypeDecorator[str]):
     impl = LargeBinary
     cache_ok = True
 
-    def process_bind_param(self, value: str | None, dialect: Any) -> bytes | None:
+    @override
+    def process_bind_param(self, value: str | None, dialect: Dialect) -> bytes | None:
         if value is None:
             return None
         if not isinstance(value, str):
-            raise TypeError(f"EncryptedString expects str; got {type(value).__name__}")
+            raise _storage_validation_error(f"EncryptedString expects str; got {type(value).__name__}")
         key = _resolve_master_key()
         blob = encrypt_record(value.encode("utf-8"), key=key, associated_data=_AAD_STRING)
         return blob.to_wire()
 
-    def process_result_value(self, value: bytes | None, dialect: Any) -> str | None:
+    @override
+    def process_result_value(self, value: bytes | None, dialect: Dialect) -> str | None:
         if value is None:
             return None
         key = _resolve_master_key()
         blob = EncryptedBlob.from_wire(bytes(value))
         plaintext = decrypt_record(blob, key=key, associated_data=_AAD_STRING)
-        return plaintext.decode("utf-8")
+        try:
+            return plaintext.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise DecryptionError("EncryptedString payload is not valid UTF-8") from exc
 
 
 class EncryptedBytes(TypeDecorator[bytes]):
@@ -138,16 +222,18 @@ class EncryptedBytes(TypeDecorator[bytes]):
     impl = LargeBinary
     cache_ok = True
 
-    def process_bind_param(self, value: bytes | None, dialect: Any) -> bytes | None:
+    @override
+    def process_bind_param(self, value: bytes | None, dialect: Dialect) -> bytes | None:
         if value is None:
             return None
         if not isinstance(value, bytes | bytearray | memoryview):
-            raise TypeError(f"EncryptedBytes expects bytes-like; got {type(value).__name__}")
+            raise _storage_validation_error(f"EncryptedBytes expects bytes-like; got {type(value).__name__}")
         key = _resolve_master_key()
         blob = encrypt_record(bytes(value), key=key, associated_data=_AAD_BYTES)
         return blob.to_wire()
 
-    def process_result_value(self, value: bytes | None, dialect: Any) -> bytes | None:
+    @override
+    def process_result_value(self, value: bytes | None, dialect: Dialect) -> bytes | None:
         if value is None:
             return None
         key = _resolve_master_key()
@@ -167,7 +253,8 @@ class EncryptedJSON(TypeDecorator[object]):
     impl = LargeBinary
     cache_ok = True
 
-    def process_bind_param(self, value: object | None, dialect: Any) -> bytes | None:
+    @override
+    def process_bind_param(self, value: object | None, dialect: Dialect) -> bytes | None:
         if value is None:
             return None
         try:
@@ -178,18 +265,23 @@ class EncryptedJSON(TypeDecorator[object]):
                 sort_keys=True,
             ).encode("utf-8")
         except (TypeError, ValueError) as exc:
-            raise TypeError(f"EncryptedJSON expects a JSON-serialisable value: {exc}") from exc
+            raise _storage_validation_error(f"EncryptedJSON expects a JSON-serialisable value: {exc}") from exc
         key = _resolve_master_key()
         blob = encrypt_record(serialised, key=key, associated_data=_AAD_JSON)
         return blob.to_wire()
 
-    def process_result_value(self, value: bytes | None, dialect: Any) -> object | None:
+    @override
+    def process_result_value(self, value: bytes | None, dialect: Dialect) -> object | None:
         if value is None:
             return None
         key = _resolve_master_key()
         blob = EncryptedBlob.from_wire(bytes(value))
         plaintext = decrypt_record(blob, key=key, associated_data=_AAD_JSON)
-        return json.loads(plaintext.decode("utf-8"))
+        try:
+            decoded = plaintext.decode("utf-8")
+            return EncryptedPayload(data=json.loads(decoded)).data
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise DecryptionError("EncryptedJSON payload is not valid JSON") from exc
 
 
 class HashedLookup(TypeDecorator[bytes]):
@@ -238,34 +330,23 @@ class HashedLookup(TypeDecorator[bytes]):
     def compute(cls, plaintext: str) -> bytes:
         """Compute the HMAC-SHA256 digest of ``plaintext``.
 
-        Emits a one-shot INFO log (sec-M-4) when ``plaintext`` is
-        shorter than 12 bytes — short plaintexts are vulnerable to
-        frequency-analysis attacks against the deterministic digest
-        column. The warning is suppressed for the rest of the process
-        lifetime so high-volume call sites do not spam the log.
-
         Args:
             plaintext: The natural-key string to digest.
 
         Returns:
             32 raw bytes — the deterministic lookup digest.
+
+        Raises:
+            StorageValidationError: When ``plaintext`` is not a string.
         """
         if not isinstance(plaintext, str):
-            raise TypeError(f"HashedLookup.compute expects str; got {type(plaintext).__name__}")
-        global _low_entropy_warning_emitted
-        if len(plaintext.encode("utf-8")) < _LOW_ENTROPY_LENGTH_THRESHOLD and not _low_entropy_warning_emitted:
-            _log.info(
-                "HashedLookup.compute called on a plaintext shorter than %d bytes; "
-                "short plaintexts are vulnerable to frequency analysis on the "
-                "deterministic digest column. This warning is logged once per process.",
-                _LOW_ENTROPY_LENGTH_THRESHOLD,
-            )
-            _low_entropy_warning_emitted = True
+            raise _storage_validation_error(f"HashedLookup.compute expects str; got {type(plaintext).__name__}")
         key = _resolve_master_key()
         sub_key = cls._derive_lookup_key(key)
         return hmac.new(sub_key, plaintext.encode("utf-8"), hashlib.sha256).digest()
 
-    def process_bind_param(self, value: str | bytes | None, dialect: Any) -> bytes | None:
+    @override
+    def process_bind_param(self, value: str | bytes | None, dialect: Dialect) -> bytes | None:
         if value is None:
             return None
         if isinstance(value, str):
@@ -273,22 +354,23 @@ class HashedLookup(TypeDecorator[bytes]):
         if isinstance(value, bytes | bytearray | memoryview):
             digest = bytes(value)
             if len(digest) != _HASHED_LOOKUP_DIGEST_SIZE:
-                raise ValueError(
+                raise _storage_validation_error(
                     f"HashedLookup pre-computed digest must be {_HASHED_LOOKUP_DIGEST_SIZE} bytes; got {len(digest)}",
                 )
             return digest
-        raise TypeError(
+        raise _storage_validation_error(
             f"HashedLookup expects str or bytes; got {type(value).__name__}",
         )
 
-    def process_result_value(self, value: bytes | None, dialect: Any) -> bytes | None:
+    @override
+    def process_result_value(self, value: bytes | None, dialect: Dialect) -> bytes | None:
         if value is None:
             return None
         # The plaintext is intentionally not recoverable. We hand back
         # the raw digest so callers can compare it against another
         # ``compute()`` result.
         if len(value) != _HASHED_LOOKUP_DIGEST_SIZE:
-            raise ValueError(
+            raise _storage_validation_error(
                 f"HashedLookup expects {_HASHED_LOOKUP_DIGEST_SIZE}-byte digests; got {len(value)}",
             )
         return bytes(value)

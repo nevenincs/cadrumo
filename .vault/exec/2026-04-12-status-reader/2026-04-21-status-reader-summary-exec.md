@@ -3,6 +3,7 @@ tags:
   - "#exec"
   - "#status-reader"
 date: 2026-04-12
+modified: '2026-04-12'
 title: Exec — AEAT status reader (#43)
 related:
   - "[[2026-04-12-status-reader-research]]"

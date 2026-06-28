@@ -1,0 +1,145 @@
+[legal."resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instruction"
+corpus_ref = "corpus/normatives/html/boe-a-2011-208-modelo-145.html#primero"
+document_id = "BOE-A-2011-208"
+article = "primero"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2011-208"
+published_at = 2011-01-05
+effective_from = 2011-01-05
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "codex"
+notes = "Resolucion de 3 de enero de 2011 que aprueba el Modelo 145 como comunicacion de datos del perceptor de rentas del trabajo a su pagador."
+required_text = [
+    "Aprobación del modelo 145",
+    "comunicación de datos del perceptor de rentas del trabajo a su pagador",
+    "un ejemplar para la empresa o entidad pagadora y otro para el perceptor",
+]
+
+[legal."resolucion-dgt-2013-12-17-modelo-145:amendment"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instruction"
+corpus_ref = "corpus/normatives/html/boe-a-2014-59-modelo-145-amendment.html#unico"
+document_id = "BOE-A-2014-59"
+article = "unico"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2014-59"
+published_at = 2014-01-03
+effective_from = 2014-01-03
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "codex"
+notes = "Resolucion de 17 de diciembre de 2013 que modifica el Modelo 145 con efectos para comunicaciones de datos al pagador desde 2014."
+required_text = [
+    "queda modificada como sigue",
+    "El pagador acusará recibo de la presentación",
+    "El pagador deberá conservar a disposición de la Administración tributaria",
+]
+
+[legal."resolucion-dgt-2014-12-18-modelo-145:amendment"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instruction"
+corpus_ref = "corpus/normatives/html/boe-a-2014-13679-modelo-145-amendment.html#unico"
+document_id = "BOE-A-2014-13679"
+article = "unico"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2014-13679"
+published_at = 2014-12-31
+effective_from = 2014-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "codex"
+notes = "Resolucion de 18 de diciembre de 2014 que modifica el Modelo 145 con efectos para comunicaciones de datos al pagador desde 2015."
+required_text = [
+    "queda modificada como sigue",
+    "sustituir el modelo 145",
+    "efectos en relación con las comunicaciones de datos al pagador",
+]
+
+[sources."aeat-modelo-145-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_145/files/modelo-145-procedure.html"
+sha256 = "705c93ecc43d24db1b87185a7519f5a92d3e6d7de6b01986eb88bbcf99acf7f0"
+bytes = 10123
+retrieved_at = 2026-05-14
+applies_from = 2025-02-19
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientos/G603.shtml"
+review_status = "reviewed"
+
+[sources."aeat-modelo-145-obligaciones-retenedor"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_145/files/modelo-145-obligaciones-retenedor.html"
+sha256 = "3bd409c2d24df3e10d1ebf18aee1d450ad4a95cceb56e1d96891ad8d44fc7d0c"
+bytes = 13069
+retrieved_at = 2026-05-14
+applies_from = 2026-03-16
+source_url = "https://sede.agenciatributaria.gob.es/Sede/irpf/retenciones-ingresos-cuenta-pagos-fraccionados/retenciones-ingresos-cuenta/obligaciones-retenedor/modelo-145.html"
+review_status = "reviewed"
+
+[sources."aeat-modelo-145-form"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "form_spec"
+corpus_path = "corpus/aeat_official/forms/modelo_145/files/mod145_es_es.pdf"
+sha256 = "2061c0035b2ce7a4bd25dd7727798ed3754c6902306eac783112aa2824af5667"
+bytes = 123230
+retrieved_at = 2026-05-14
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/G603/mod145_es_es.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-145-v20"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_145/files/dr145v20.pdf"
+sha256 = "fe29e8df4db859b41c66aaaf96c1bd27bc2af9063d98a61e62f21832c091765c"
+bytes = 32295
+retrieved_at = 2026-05-14
+applies_from = 2012-01-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/dr145v20.pdf"
+review_status = "reviewed"
+
+[sources."boe-modelo-145-2011-approval"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/boe-a-2011-208-modelo-145.html"
+sha256 = "d548b41f957f0712a93fd59dce30a5f17f0fd29fff1a75cd5afbe8bcccea0d60"
+bytes = 58329
+retrieved_at = 2026-05-14
+published_at = 2011-01-05
+applies_from = 2011-01-05
+source_url = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2011-208"
+review_status = "reviewed"
+
+[sources."boe-modelo-145-2013-amendment"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/boe-a-2014-59-modelo-145-amendment.html"
+sha256 = "1519acf1d04d9c829698fe585486fee9c624d71cb90d8fc47da6ed883bcb8a09"
+bytes = 40738
+retrieved_at = 2026-05-14
+published_at = 2014-01-03
+applies_from = 2014-01-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2014-59"
+review_status = "reviewed"
+
+[sources."boe-modelo-145-2014-amendment"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/boe-a-2014-13679-modelo-145-amendment.html"
+sha256 = "3f274e0d8357cb0f98dc32ff354c94eb6d1eeee6f52d90563b9892ad1f774320"
+bytes = 32253
+retrieved_at = 2026-05-14
+published_at = 2014-12-31
+applies_from = 2015-01-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2014-13679"
+review_status = "reviewed"

@@ -1,0 +1,13 @@
+[[revisions.2025-y-siguientes.casillas]]
+id = "38"
+number = "38"
+label = "Mod. 40.3 LIS — TOTAL correcciones — Aumentos"
+section = ["liquidacion", "modalidad_40_3_lis", "correcciones_resultado_contable"]
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_total_correcciones_aumentos"
+required = false
+input_kind = "computed"
+formula = "modelo-202-total-correcciones-aumentos"
+export_refs = ["modelo-202-page-01-casilla-38"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]

@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0028"
+number = "0028"
+label = "Intereses de activos financieros con derecho a bonificacion"
+section = ["rendimientos_capital_mobiliario", "base_ahorro"]
+semantic_role = "irpf_rendimiento_capital_mobiliario_ahorro_intereses_bonificados"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]

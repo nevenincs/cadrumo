@@ -1,0 +1,28 @@
+=== ZK layer snapshot: apartados ===
+(unreachable: TimeoutError: Locator.click: Timeout 15000ms exceeded.
+Call log:
+  - waiting for locator("button[title='Apartados declaración']").first
+    - locator resolved to <button id="dIiBts" type="button" class="z-button" title="Apartados declaración">…</button>
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <div id="dIiB1d0" role="dialog" aria-modal="true" aria-labelledby="dIiB1d0-cap" class="vmodal z-window z-window-modal z-window-shadow">…</div> intercepts pointer events
+    - retrying click action
+    - waiting 20ms
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <div id="dIiB1d0" role="dialog" aria-modal="true" aria-labelledby="dIiB1d0-cap" class="vmodal z-window z-window-modal z-window-shadow">…</div> intercepts pointer events
+    - retrying click action
+      - waiting 100ms
+    29 × waiting for element to be visible, enabled and stable
+       - element is visible, enabled and stable
+       - scrolling into view if needed
+       - done scrolling
+       - <div id="dIiB1d0" role="dialog" aria-modal="true" aria-labelledby="dIiB1d0-cap" class="vmodal z-window z-window-modal z-window-shadow">…</div> intercepts pointer events
+     - retrying click action
+       - waiting 500ms
+)

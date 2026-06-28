@@ -1,0 +1,39 @@
+{
+  "articulos": [
+    {
+      "notes": "Base reglamentaria general de los modelos 347 y 349.",
+      "numero": "30",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a30",
+      "summary": {
+        "ca": "Desenvolupa les obligacions de presentació de declaracions informatives per part dels obligats tributaris, fixant el contingut mínim, la forma i els terminis de presentació reglamentaris que serveixen de base als models anuals (347, 349, etc.).",
+        "en": "Details the duty to file information returns, the minimum content, the form, and the filing deadlines that underpin the annual information forms (347, 349, etc).",
+        "es": "Desarrolla las obligaciones de presentación de declaraciones informativas por parte de los obligados tributarios, fijando el contenido mínimo, la forma y los plazos de presentación reglamentarios que sirven de base a los modelos anuales (347, 349, etc).",
+        "hu": "Meghatározza az adatszolgáltatási bevallások benyújtásának kötelezettségét, minimum tartalmát és határidőit, amelyek az éves nyomtatványok (347, 349) alapjául szolgálnak."
+      },
+      "titulo": {
+        "ca": "Obligació de presentar declaracions informatives",
+        "en": "Duty to file information returns",
+        "es": "Obligación de presentar declaraciones informativas",
+        "hu": "Adatszolgáltatási bevallások benyújtásának kötelezettsége"
+      }
+    }
+  ],
+  "boe_id": "BOE-A-2007-15984",
+  "boe_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984",
+  "id": "rd-1065-2007",
+  "kind": "real-decreto",
+  "last_reviewed_at": "2026-04-12",
+  "number": "1065/2007",
+  "published_at": "2007-09-05",
+  "reviewed_by": "wgergely",
+  "tags": [
+    "lgt",
+    "reglamento"
+  ],
+  "title": {
+    "ca": "Reial Decret 1065/2007, de 27 de juliol, pel qual s'aprova el Reglament General de les actuacions i els procediments de gestió i inspecció tributària i de desenvolupament de les normes comunes dels procediments d'aplicació dels tributs",
+    "en": "Royal Decree 1065/2007, of 27 July, approving the General Regulation for tax-management and inspection procedures",
+    "es": "Real Decreto 1065/2007, de 27 de julio, por el que se aprueba el Reglamento General de las actuaciones y los procedimientos de gestión e inspección tributaria y de desarrollo de las normas comunes de los procedimientos de aplicación de los tributos",
+    "hu": "1065/2007. sz. királyi rendelet, az adóigazgatási eljárások általános szabályzatának elfogadásáról"
+  }
+}

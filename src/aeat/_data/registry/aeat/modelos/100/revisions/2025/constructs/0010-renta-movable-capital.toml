@@ -1,0 +1,60 @@
+[[revisions."2025".constructs]]
+id = "renta-movable-capital"
+title = "Modelo 100 movable-capital dependency evidence"
+legal_refs = [
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-26",
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-108",
+    "orden-eha-3377-2011:art-1",
+    "orden-hac-277-2026:art-3",
+    "orden-eha-3435-2007:anexo-ii",
+    "orden-hac-56-2024:art-1",
+]
+source_refs = [
+    "aeat-renta-2025-manual-parte1",
+    "boe-modelo-100-2025-form",
+    "aeat-dr-100-2025-dictionary",
+    "boe-modelo-193-2011-form",
+]
+casilla_ids = [
+    "0027",
+    "0028",
+    "0029",
+    "0030",
+    "0031",
+    "0032",
+    "0033",
+    "0034",
+    "0035",
+    "0036",
+    "0037",
+    "0038",
+    "0039",
+    "0040",
+    "0041",
+    "0046",
+    "0047",
+    "0048",
+    "0050",
+    "0051",
+    "0052",
+    "0053",
+    "0054",
+    "0055",
+    "0056",
+    "0060",
+]
+formulas = [
+    "renta-2025-capital-mobiliario-ahorro-total-ingresos",
+    "renta-2025-capital-mobiliario-ahorro-rendimiento-neto",
+    "renta-2025-capital-mobiliario-ahorro-rendimiento-neto-reducido",
+    "renta-2025-capital-mobiliario-ahorro-suma-rendimientos-reducidos",
+    "renta-2025-capital-mobiliario-general-total-ingresos",
+    "renta-2025-capital-mobiliario-general-rendimiento-neto",
+    "renta-2025-capital-mobiliario-general-rendimiento-neto-reducido",
+    "renta-2025-capital-mobiliario-general-suma-rendimientos-reducidos",
+]
+bindings = ["renta-2025-modelo-123-retenciones-periodicas", "renta-2025-modelo-193-retenciones-anuales"]
+relations = ["renta-2025-rel-123-retenciones-trimestrales", "renta-2025-rel-193-retenciones-anuales"]
+dependency_classifications = ["renta-2025-dep-123", "renta-2025-dep-193"]

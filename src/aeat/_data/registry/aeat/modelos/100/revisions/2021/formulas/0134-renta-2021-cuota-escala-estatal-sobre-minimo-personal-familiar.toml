@@ -1,0 +1,14 @@
+[[revisions."2021".formulas]]
+id = "renta-2021-cuota-escala-estatal-sobre-minimo-personal-familiar"
+target_casilla_id = "0530"
+expression = { op = "lookup_bracket", args = [
+    { casilla_id = "0521" },
+    { parameter = "renta-2021-escala-estatal-base-general" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["escala general", "mínimo personal"]

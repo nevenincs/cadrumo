@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#portal-catalogue'
 date: '2026-04-17'
+modified: '2026-04-17'
 related:
   - '[[2026-04-17-portal-catalogue-research]]'
   - '[[2026-04-13-modelo-inventory-adr]]'

@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "1962"
+number = "1962"
+label = "Por cantidades invertidas a partir de 2023 en instalaciones de autoconsumo o de generación de energía eléctrica o térmica a través de fuentes renovables"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_autoconsumo_desde_2023"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

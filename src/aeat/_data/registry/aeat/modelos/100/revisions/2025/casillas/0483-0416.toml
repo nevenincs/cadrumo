@@ -1,0 +1,9 @@
+[[revisions."2025".casillas]]
+id = "0416"
+number = "0416"
+label = "Si los contribuyentes, socios de entidades no residentes en España, se han visto afectados en 2024 por operaciones de fusión, escisión o canje de valores reguladas en el Capítulo VII del Título VII..."
+section = ["toma_datos_ampliada", "regimen_especial"]
+data_type = "boolean"
+semantic_role = "irpf_re_especial_tfi_fusiones_afectado_flag"
+legal_refs = ["ley-35-2006:art-37", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

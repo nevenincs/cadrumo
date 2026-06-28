@@ -1,0 +1,13 @@
+# Modelo 347 (Operaciones con terceras personas). Enrolled by the
+# year-over-year counterparty identity continuity fidelity test. The
+# €3,000-per-counterparty reporting threshold (Orden EHA/3012/2008 art. 3.1)
+# is exercised across two distinct renta ejercicios: the same counterparty
+# NIF and quarterly importes are persisted for year N (2024) and year N+1
+# (2025), loaded back via the real encrypted-SQLite CalculationObservationRepository,
+# and asserted for strict pydantic equality + data-separation + NIF identity
+# continuity. Evidence class is data_fidelity (no calculation engine).
+[modelo]
+modelo = "347"
+renta_years = [2024, 2025]
+evidence_class = "data_fidelity"
+enrolling_test = "src/aeat/application/calculations/tests/test_modelo_347_informativa_fidelity.py"

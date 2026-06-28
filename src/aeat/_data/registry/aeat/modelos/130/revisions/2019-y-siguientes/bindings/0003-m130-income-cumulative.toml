@@ -1,0 +1,53 @@
+# Casilla 01 — "la totalidad de los ingresos íntegros fiscalmente
+# computables" (AEAT M130 instructions). IVA repercutido is collected on
+# behalf of Hacienda and is NOT fiscally computable income, so a
+# transaction that carries an explicit IVA tagging contributes its
+# IVA-exclusive base imponible (taxable_base); only an untagged
+# transaction (no declared base) falls back to its gross transfer
+# amount, the sole available measure. The per-observation fallback is
+# the `ingresos_integros_sum` fact.
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-130-actividad-economica-ingresos-cumulative"
+source = "ledger_renta_income_aggregation"
+selector = { modelo = "130", target_casilla_id = "01", fact = "ingresos_integros_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-27", "ley-35-2006:art-28"]
+source_refs = ["aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Ingresos íntegros", "Ingresos"]
+
+# Alternative income binding that uses the IVA-exclusive taxable_base
+# (base imponible) from tagged invoices rather than the gross amount.
+# Activated when transactions carry an explicit taxable_base field.
+# Feeds the same casilla 01 as the gross_income_sum path; the operator
+# selects one binding or the other via the fact selector.
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-130-actividad-economica-ingresos-taxable-base-cumulative"
+source = "ledger_renta_income_aggregation"
+selector = { modelo = "130", target_casilla_id = "01", fact = "taxable_base_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-27", "ley-35-2006:art-28"]
+source_refs = ["aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Ingresos íntegros", "Ingresos"]
+
+# RD 439/2007 art. 110.2 — rendimiento neto de actividades económicas en
+# estimación directa. Sums the IVA-exclusive base imponible (taxable_base)
+# across actividad-económica income observations within the cumulative YTD
+# window. Feeds casilla 03 directly from the ledger when transactions carry
+# an explicit taxable_base; observations without taxable_base contribute 0.
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-130-actividad-economica-rendimiento-neto-cumulative"
+source = "ledger_renta_income_aggregation"
+selector = { modelo = "130", target_casilla_id = "01", fact = "taxable_base_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Rendimiento neto", "Casilla 03"]

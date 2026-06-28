@@ -1,0 +1,1334 @@
+[schema]
+id = "aeat.user_profile"
+version = 2
+title = "AEAT user profile schema"
+snapshot_policy = "immutable_secure_snapshot_hash"
+remove_policy = "live_profile_tombstone_retain_snapshots"
+
+[[sections]]
+key = "identity"
+title = "Identity"
+sensitivity = "identity"
+effective_dated = false
+
+[[sections.fields]]
+key = "tax_id"
+type = "string"
+required = true
+sensitivity = "identity"
+description = "NIF/NIE/CIF used as filing identity."
+model_selectors = ["tax.id"]
+export_headers = ["profile_tax_id"]
+
+[[sections.fields]]
+key = "name"
+type = "string"
+required = false
+sensitivity = "identity"
+description = "Declarant given name or display name."
+model_selectors = ["name"]
+export_headers = ["name", "first_name"]
+
+[[sections.fields]]
+key = "surnames"
+type = "string"
+required = false
+sensitivity = "identity"
+description = "Declarant surnames for person filings."
+model_selectors = ["surnames"]
+export_headers = ["surnames"]
+
+[[sections.fields]]
+key = "legal_name"
+type = "string"
+required = false
+sensitivity = "identity"
+description = "Legal or company name for entity-style export headers."
+export_headers = ["legal_name"]
+
+[[sections.fields]]
+key = "email"
+type = "email"
+required = false
+sensitivity = "identity"
+description = "Operator contact email used by configuration surfaces."
+
+[[sections.fields]]
+key = "notes"
+type = "string"
+required = false
+sensitivity = "identity"
+description = "Operator free-form notes attached to the profile."
+
+[[sections]]
+key = "preferences"
+title = "Operator preferences"
+sensitivity = "operational"
+effective_dated = false
+
+[[sections.fields]]
+key = "output_language"
+type = "enum"
+required = false
+sensitivity = "operational"
+description = "Output language used by CLI rendering and notification copy."
+enum_values = ["es", "en", "ca", "hu"]
+
+[[sections]]
+key = "capabilities"
+title = "Service capabilities"
+sensitivity = "operational"
+effective_dated = false
+
+[[sections.fields]]
+key = "cloud_evidence_upload"
+type = "boolean"
+required = false
+sensitivity = "operational"
+description = "Whether this profile permits sending sensitive financial evidence (a text-layer invoice) to a cloud CLI provider for classification. Default off; gestor mode bars it absolutely regardless. Opt-in only narrows, never widens, the global safety floor."
+
+[[sections.fields]]
+key = "llm_vision"
+type = "boolean"
+required = false
+sensitivity = "operational"
+description = "Whether this profile may read scanned or image evidence on-host with the local vision model, so no byte leaves the machine. Default on; opting out disables the on-host vision read."
+
+[[sections.fields]]
+key = "google_export"
+type = "boolean"
+required = false
+sensitivity = "operational"
+description = "Whether this profile may export modelo workbooks to Google Sheets or Drive. Default on; opting out keeps exports offline-only."
+
+[[sections]]
+key = "contact"
+title = "Contact and fiscal address"
+sensitivity = "identity"
+effective_dated = true
+
+[[sections.fields]]
+key = "fiscal_address"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Fiscal address declared for taxpayer/censo purposes."
+
+[[sections.fields]]
+key = "postcode"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Fiscal-address postcode."
+model_selectors = ["address.postcode"]
+
+[[sections.fields]]
+key = "fiscal_address_cadastral_reference"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Catastral reference of the operator's fiscal address. Carried by the 036 censo so AEAT can locate the address in the Catastro."
+model_selectors = ["address.cadastral_reference"]
+legal_refs = ["RDLeg 1/2004 TR Ley Catastro (BOE-A-2004-4163)"]
+
+[[sections.fields]]
+key = "fiscal_address_is_habitual_vivienda"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Whether the fiscal address is also the operator's habitual residence. Gates the home-office afectacion-parcial regime per LIRPF Art. 30.2 rule 5."
+model_selectors = ["address.is_habitual_vivienda"]
+legal_refs = ["LIRPF Art. 68.1.3 (BOE-A-2006-20764)", "LIRPF Art. 30.2 rule 5 (Ley 6/2017 BOE-A-2017-12544)"]
+
+[[sections]]
+key = "tax_residence"
+title = "Tax residence and jurisdiction"
+sensitivity = "identity"
+effective_dated = true
+
+[[sections.fields]]
+key = "ccaa"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Common-regime autonomous community for Modelo 100 jurisdiction (collected later by the wizard)."
+enum_values = [
+  "andalucia",
+  "aragon",
+  "asturias",
+  "baleares",
+  "canarias",
+  "cantabria",
+  "castilla_la_mancha",
+  "castilla_y_leon",
+  "cataluna",
+  "comunidad_valenciana",
+  "extremadura",
+  "galicia",
+  "la_rioja",
+  "madrid",
+  "murcia",
+]
+model_selectors = ["TaxResidenceProfile.ccaa"]
+
+[[sections.fields]]
+key = "jurisdiction_scope"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Common-regime or explicit unsupported foral state. Defaults to common_regime when no wizard answer is recorded."
+enum_values = ["common_regime", "foral_unsupported"]
+
+[[sections.fields]]
+key = "state_attribution_ratio"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Modelo 303 casilla 65 — porcentaje atribuible Administracion del Estado (Art. 29 Concierto Economico, Ley 12/2002). Resolver-side derived from jurisdiction_scope by _inject_derived_state_attribution_facts in src/aeat/application/modelo/_profile_binding.py: common_regime -> 100, foral_unsupported -> 0. Not operator-settable through the wizard; the field declaration exists here so the registry's profile-binding selector for modelo-303-profile-state-attribution-ratio resolves against a schema-declared key."
+
+[[sections]]
+key = "censo"
+title = "Censo and enrollment"
+sensitivity = "identity"
+effective_dated = true
+
+[[sections.fields]]
+key = "status"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Modelo 036 censo state."
+enum_values = ["alta", "modificacion", "baja"]
+
+[[sections.fields]]
+key = "large_company"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Large-company enrollment fact used by filing cadence."
+model_selectors = ["enrollment.large_company"]
+schedule_predicates = ["enrollment.large_company"]
+
+[[sections.fields]]
+key = "public_administration_budget_gt_6000000"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Public-administration budget threshold used by filing cadence."
+model_selectors = ["enrollment.public_administration_budget_gt_6000000"]
+schedule_predicates = ["enrollment.public_administration_budget_gt_6000000"]
+
+[[sections.fields]]
+key = "activity_start_date"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "AEAT censo alta date for the economic activity. Drives obligation start year and pago-fraccionado eligibility."
+model_selectors = ["censo.activity_start_date"]
+legal_refs = ["RGAT Art. 9 (BOE-A-2007-15984)", "RGAT Art. 11 (BOE-A-2007-15984)"]
+
+[[sections.fields]]
+key = "activity_end_date"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "AEAT censo baja date for the economic activity. Caps obligation calendar after baja."
+model_selectors = ["censo.activity_end_date"]
+legal_refs = ["RGAT Art. 9 (BOE-A-2007-15984)", "RGAT Art. 11 (BOE-A-2007-15984)"]
+
+[[sections.fields]]
+key = "establecimiento_type"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Form of business establishment declared on the 036 censo. Gates deductibility treatment of rent / amortizacion / suministros under LIRPF estimacion directa."
+enum_values = ["propio", "arrendado", "cedido_gratuitamente"]
+model_selectors = ["censo.establecimiento_type"]
+legal_refs = ["LIRPF Art. 28 (BOE-A-2006-20764)", "LIRPF Art. 29 (BOE-A-2006-20764)", "LIRPF Art. 30 (BOE-A-2006-20764)"]
+
+[[sections.fields]]
+key = "elected_withholding_pct"
+type = "enum"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Elected IRPF withholding rate on professional invoices, declared on the 036 censo. 15 percent is the standard; 7 percent is the nuevos-profesionales rate (year of alta plus the two following calendar years); 1 percent is the modulos transport carve-out per the annual Orden de Modulos."
+enum_values = ["15", "7", "1"]
+model_selectors = ["censo.elected_withholding_pct"]
+legal_refs = ["LIRPF Art. 101.5 (BOE-A-2006-20764)", "RIRPF Art. 95.1 (BOE-A-2007-6820)", "RIRPF Art. 95.2 (BOE-A-2007-6820)", "Orden HAC/1425/2025 (BOE-A-2025-25272)"]
+
+[[sections]]
+key = "taxpayer_type"
+title = "Taxpayer entity type and income categories"
+sensitivity = "identity"
+effective_dated = true
+
+[[sections.fields]]
+key = "entity_type"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Taxpayer entity type. natural_person is an IRPF contribuyente; legal_entity is an Impuesto sobre Sociedades contribuyente; attribution_entity is an entity without legal personality under the regimen de atribucion de rentas. The entity type selects the tax and therefore the modelos, calendar, and rate schedule."
+enum_values = ["natural_person", "legal_entity", "attribution_entity"]
+model_selectors = ["taxpayer.entity_type"]
+schedule_predicates = ["taxpayer.entity_type"]
+legal_refs = ["LIRPF Ley 35/2006 (BOE-A-2006-20764)", "LIS Ley 27/2014 (BOE-A-2014-12328)", "LIRPF Titulo X Seccion 2 atribucion de rentas (BOE-A-2006-20764)"]
+
+[[sections.fields]]
+key = "legal_entity_form"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Recognised legal form when entity_type is legal_entity. Drives the Impuesto sobre Sociedades rate schedule per LIS Art. 29."
+enum_values = ["sl", "sa", "sal", "sll", "cooperativa", "sociedad_civil_mercantil", "sin_fines_lucrativos", "other"]
+model_selectors = ["taxpayer.legal_entity_form"]
+legal_refs = ["LIS Art. 29 (BOE-A-2014-12328)", "Ley 44/2015 Art. 1 (BOE-A-2015-11071)"]
+
+[[sections.fields]]
+key = "incn_prior_12_months"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Importe neto de la cifra de negocios (INCN) of the prior 12 months. Gates the Modelo 202 pago-fraccionado modality split at the 6.000.000 EUR threshold (LIS Art. 40.3): above the threshold Art. 40.3 is mandatory, below it both Art. 40.2 and Art. 40.3 are reachable. An undeclared value means the engine cannot decide modality and returns INCOMPLETE rather than guessing."
+model_selectors = ["taxpayer.incn_prior_12_months"]
+legal_refs = ["LIS Art. 40.3 (BOE-A-2014-12328)"]
+
+[[sections.fields]]
+key = "new_entity_first_two_profit_periods"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Whether a newly-created legal entity is in one of its first two profit-making tax periods. Opts the entity into the LIS Art. 29 15 percent micro-empresa-style rate override. The override is opt-in: an undeclared value leaves the entity on the otherwise-applicable sub-form rate."
+model_selectors = ["taxpayer.new_entity_first_two_profit_periods"]
+legal_refs = ["LIS Art. 29 (BOE-A-2014-12328)"]
+
+[[sections.fields]]
+key = "tributacion_estado_porcentaje"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Porcentaje de tributación al Estado for Modelo 200 casilla DP200026:00625. Standard (régimen común) entities are 100. Foral entities (Bizkaia, Gipuzkoa, Álava, Navarra) declare a partial percentage. An undeclared value is treated as 100 by the engine binding default so common-regime SLs file without configuring this field."
+model_selectors = ["taxpayer.tributacion_estado_porcentaje"]
+legal_refs = ["LIS Art. 29 (BOE-A-2014-12328)", "Ley Orgánica 8/1980 LOFCA Art. 3 (BOE-A-1980-22492)"]
+
+[[sections.fields]]
+key = "sal_socios_trabajadores_count"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Number of worker-shareholders (socios trabajadores) in a Sociedad Laboral (SAL/SLL). Must constitute a majority of the share capital under Ley 44/2015 Art. 1. Used together with sal_reserva_especial_dotada and sal_capital_social to gate the reserva especial dotacion."
+model_selectors = ["taxpayer.sal_socios_trabajadores_count"]
+legal_refs = ["Ley 44/2015 Art. 1 (BOE-A-2015-11071)", "Ley 44/2015 Art. 2 (BOE-A-2015-11071)"]
+
+[[sections.fields]]
+key = "sal_reserva_especial_dotada"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Accumulated reserva especial balance already dotada in prior periods (Ley 44/2015 Art. 14). Used to test the 50 percent capital social cap: dotacion = 0 once reserva_dotada >= 0.50 * capital_social."
+model_selectors = ["taxpayer.sal_reserva_especial_dotada"]
+legal_refs = ["Ley 44/2015 Art. 14 (BOE-A-2015-11071)"]
+
+[[sections.fields]]
+key = "sal_capital_social"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Capital social of the Sociedad Laboral. Denominator of the 50 percent cap test under Ley 44/2015 Art. 14. Dotacion is capped such that accumulated reserva does not exceed 50 percent of capital social."
+model_selectors = ["taxpayer.sal_capital_social"]
+legal_refs = ["Ley 44/2015 Art. 14 (BOE-A-2015-11071)"]
+
+[[sections.fields]]
+key = "irpf_income_categories"
+type = "string"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Comma-separated set of IRPF income categories a natural person declares: actividad_economica, trabajo, capital_inmobiliario, capital_mobiliario, ganancias_patrimoniales, pension. Only actividad_economica triggers the Modelo 130/131 pago fraccionado. The closed-set validation is enforced by the wizard checkbox widget."
+model_selectors = ["taxpayer.irpf_income_categories"]
+schedule_predicates = ["taxpayer.irpf_income_categories"]
+legal_refs = ["LIRPF Arts. 17-39 (BOE-A-2006-20764)"]
+
+[[sections.fields]]
+key = "fiscal_residency"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Whether the taxpayer has habitual residence in Spain (resident_irpf, subject to IRPF) or not (non_resident_irnr, subject to IRNR under TRLIRNR). Drives which tax and therefore which calendar/modelos apply."
+enum_values = ["resident_irpf", "non_resident_irnr"]
+model_selectors = ["taxpayer.fiscal_residency"]
+schedule_predicates = ["taxpayer.fiscal_residency"]
+legal_refs = ["LIRPF Art. 9 (BOE-A-2006-20764)", "TRLIRNR RDLeg 5/2004 (BOE-A-2004-4527)"]
+
+[[sections.fields]]
+key = "country_of_fiscal_residence"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "ISO 3166-1 alpha-2 country code of the taxpayer's fiscal residence when fiscal_residency is non_resident_irnr. Drives the UE/EEE classification for the IRNR rate split (Art. 25.1.a vs Art. 25.1.f TRLIRNR)."
+model_selectors = ["taxpayer.country_of_fiscal_residence"]
+legal_refs = ["TRLIRNR Art. 25 (BOE-A-2004-4527)"]
+
+[[sections.fields]]
+key = "representante_fiscal_nif"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "NIF of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required by TRLIRNR Art. 10 for non-EU/EEE residents and recommended for EU/EEE residents."
+model_selectors = ["taxpayer.representante_fiscal_nif"]
+legal_refs = ["TRLIRNR Art. 10 (BOE-A-2004-4527)"]
+
+[[sections.fields]]
+key = "representante_fiscal_nombre"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Full name of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required together with representante_fiscal_nif by TRLIRNR Art. 10 for non-EU/EEE residents."
+model_selectors = ["taxpayer.representante_fiscal_nombre"]
+legal_refs = ["TRLIRNR Art. 10 (BOE-A-2004-4527)"]
+
+[[sections]]
+key = "vivienda_office"
+title = "Vivienda habitual office afectacion"
+sensitivity = "financial"
+effective_dated = true
+
+[[sections.fields]]
+key = "total_m2"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Total square meters of the operator's habitual residence. Numerator base for the office-afectacion ratio under LIRPF Art. 30.2 rule 5."
+model_selectors = ["vivienda_office.total_m2"]
+legal_refs = ["LIRPF Art. 30.2 rule 5 (Ley 6/2017 BOE-A-2017-12544)"]
+
+[[sections.fields]]
+key = "office_m2"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Square meters of the habitual residence dedicated to the economic activity. Numerator of the office-afectacion ratio (office_m2 / total_m2) applied directly to ownership costs and multiplied by 0.30 for suministros per LIRPF Art. 30.2 rule 5."
+model_selectors = ["vivienda_office.office_m2"]
+legal_refs = ["LIRPF Art. 30.2 rule 5 (Ley 6/2017 BOE-A-2017-12544)"]
+
+[[sections]]
+key = "activities"
+title = "Business activities"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "description"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Censo activity description."
+
+[[sections.fields]]
+key = "cnae"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "CNAE activity code where applicable."
+export_headers = ["cnae"]
+
+[[sections.fields]]
+key = "iae_epigraph"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "IAE section/group/epigraph where applicable."
+model_selectors = ["activities.iae_epigraph"]
+legal_refs = ["RDLeg 1175/1990 IAE (BOE-A-1990-23930)"]
+
+[[sections]]
+key = "irpf"
+title = "IRPF and withholding"
+sensitivity = "financial"
+effective_dated = true
+
+[[sections.fields]]
+key = "professional_income_withholding_ge_70pct"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether professional income withholding reaches the 70 percent threshold."
+model_selectors = ["professional_income_withholding_ge_70pct"]
+schedule_predicates = ["professional_income_withholding_ge_70pct"]
+
+[[sections.fields]]
+key = "uses_objective_estimation"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the profile uses objective estimation for IRPF. Derived from estimation_regime: objetiva implies true. Retained as a registry-condition predicate until the applicability engine reads estimation_regime directly."
+model_selectors = ["uses_objective_estimation_irpf"]
+schedule_predicates = ["uses_objective_estimation_irpf"]
+
+[[sections.fields]]
+key = "estimation_regime"
+type = "enum"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "IRPF estimation regime for economic-activity income: directa_normal (estimacion directa normal), directa_simplificada (estimacion directa simplificada), objetiva (estimacion objetiva / modulos). The regime selects Modelo 130 vs Modelo 131 and the deductible-expense computation."
+enum_values = ["directa_normal", "directa_simplificada", "objetiva"]
+model_selectors = ["irpf.estimation_regime"]
+schedule_predicates = ["irpf.estimation_regime"]
+legal_refs = ["LIRPF Arts. 16, 28-31 (BOE-A-2006-20764)", "RIRPF RD 439/2007 Arts. 30-31 (BOE-A-2007-6820)"]
+
+[[sections.fields]]
+key = "objective_estimation_prior_year_gross_income_eur"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Prior-year gross income volume for all economic activities except agricultural, livestock, and forestry activities. Used to advise when a declared objective-estimation profile exceeds the settled DT 32 exclusion magnitude."
+model_selectors = ["irpf.objective_estimation_prior_year_gross_income_eur"]
+legal_refs = ["LIRPF DT 32 Ley 35/2006 (BOE-A-2006-20764)"]
+
+[[sections.fields]]
+key = "objective_estimation_prior_year_invoice_gross_income_eur"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Prior-year gross income volume from operations requiring an invoice to a business or professional recipient. Used to advise when a declared objective-estimation profile exceeds the settled DT 32 exclusion magnitude."
+model_selectors = ["irpf.objective_estimation_prior_year_invoice_gross_income_eur"]
+legal_refs = ["LIRPF DT 32 Ley 35/2006 (BOE-A-2006-20764)"]
+
+[[sections.fields]]
+key = "objective_estimation_prior_year_purchases_eur"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Prior-year purchase volume for goods and services, excluding fixed-asset acquisitions. Used to advise when a declared objective-estimation profile exceeds the settled DT 32 exclusion magnitude."
+model_selectors = ["irpf.objective_estimation_prior_year_purchases_eur"]
+legal_refs = ["LIRPF DT 32 Ley 35/2006 (BOE-A-2006-20764)"]
+
+[[sections.fields]]
+key = "special_regime"
+type = "enum"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "IRPF special regime. general is the standard tarifa progressive IRPF (Modelo 100). impatriado is the regimen especial aplicable a los trabajadores desplazados a territorio espanol (Ley Beckham, LIRPF Art. 93): the taxpayer files Modelo 151 at the flat IRNR rate and the obligation engine suppresses Modelo 100 deadlines. The regime window is six fiscal years from the opt-in election (RIRPF Art. 116); record the election date in special_regime_start_date."
+enum_values = ["general", "impatriado"]
+model_selectors = ["irpf.special_regime"]
+schedule_predicates = ["irpf.special_regime"]
+legal_refs = ["LIRPF Art. 93 Ley 35/2006 (BOE-A-2006-20764)", "RIRPF RD 439/2007 Arts. 113-120 (BOE-A-2007-6820)"]
+
+[[sections.fields]]
+key = "special_regime_start_date"
+type = "date"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Opt-in election date for the IRPF special regime (RIRPF Art. 116). Required to compute the six-year impatriado window. Blank when no special regime is in effect."
+model_selectors = ["irpf.special_regime_start_date"]
+legal_refs = ["RIRPF RD 439/2007 Art. 116 (BOE-A-2007-6820)"]
+
+[[sections.fields]]
+key = "pagadores_count"
+type = "integer"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Number of pagadores (income payers) the taxpayer received income from. When >= 2 and irpf_pagadores_secondary_income > 1500, filing Modelo 100 is mandatory under Art. 96.3 LIRPF regardless of the total income threshold."
+model_selectors = ["irpf.pagadores_count"]
+legal_refs = ["LIRPF Art. 96.3 (BOE-A-2006-20764)"]
+
+[[sections.fields]]
+key = "pagadores_secondary_income"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Sum of income received from the 2nd and subsequent pagadores. Art. 96.3 LIRPF: declaración obligatoria when this value exceeds €1,500. Only meaningful when pagadores_count >= 2."
+model_selectors = ["irpf.pagadores_secondary_income"]
+legal_refs = ["LIRPF Art. 96.3 (BOE-A-2006-20764)"]
+
+[[sections]]
+key = "withholding"
+title = "Withholding payer obligations"
+sensitivity = "financial"
+effective_dated = true
+
+[[sections.fields]]
+key = "has_employees"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer pays employees with withholding."
+model_selectors = ["has_employees"]
+schedule_predicates = ["has_employees"]
+
+[[sections.fields]]
+key = "pays_professionals_with_retencion"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer pays professionals with withholding."
+model_selectors = ["pays_professionals_with_retencion"]
+schedule_predicates = ["pays_professionals_with_retencion"]
+
+[[sections.fields]]
+key = "pays_rent_with_retencion"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer pays rent with withholding."
+model_selectors = ["pays_rent_with_retencion"]
+schedule_predicates = ["pays_rent_with_retencion"]
+
+[[sections.fields]]
+key = "pays_capital_income_with_retencion"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer pays capital income with withholding."
+model_selectors = ["pays_capital_income_with_retencion"]
+schedule_predicates = ["pays_capital_income_with_retencion"]
+
+[[sections]]
+key = "iva"
+title = "IVA profile"
+sensitivity = "financial"
+effective_dated = true
+
+[[sections.fields]]
+key = "regime"
+type = "enum"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "IVA regime used by obligation and classification projections. REAGP is the regimen especial de la agricultura, ganaderia y pesca."
+enum_values = ["GENERAL", "SIMPLIFICADO", "RECARGO_EQUIVALENCIA", "REAGP", "EXENTO"]
+model_selectors = ["iva.regime"]
+schedule_predicates = ["iva.regime"]
+legal_refs = ["LIVA Ley 37/1992 Art. 120 (BOE-A-1992-28740)"]
+
+[[sections.fields]]
+key = "does_intracomunitario"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer conducts intracommunity operations."
+model_selectors = ["does_intracomunitario"]
+schedule_predicates = ["does_intracomunitario"]
+
+[[sections.fields]]
+key = "intracommunity_operations_exceed_50000_eur"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Modelo 349 cadence threshold."
+model_selectors = ["iva.intracommunity_operations_exceed_50000_eur"]
+schedule_predicates = ["iva.intracommunity_operations_exceed_50000_eur"]
+
+[[sections.fields]]
+key = "roi_enrolled"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer is registered on AEAT's Registro de Operadores Intracomunitarios (ROI / VIES). Distinct from does_intracomunitario: ROI enrollment is the legal censo state, opted into via Modelo 036/037 checkbox 582. Live cross-references that consult ROI-only AEAT surfaces (GROI, IXVI) gate applicability on this field."
+model_selectors = ["iva.roi_enrolled"]
+schedule_predicates = ["iva.roi_enrolled"]
+
+[[sections.fields]]
+key = "oss_enrolled"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer is enrolled in the OSS / IOSS one-stop-shop regime for declaring intra-EU B2C sales (Modelo 369). Live cross-references that consult OSS-only AEAT surfaces (e.g. modelo-369-exterior-filed-declarations-read) gate applicability on this field."
+model_selectors = ["iva.oss_enrolled"]
+schedule_predicates = ["iva.oss_enrolled"]
+
+[[sections.fields]]
+key = "sii_enrolled"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer is enrolled in the SII (Suministro Inmediato de Informacion), the near-real-time IVA Libros registro submission system. Mandatory for the monthly IVA collective (grandes empresas, REDEME, grupos de IVA); voluntary opt-in via Modelo 036 for everyone else."
+model_selectors = ["iva.sii_enrolled"]
+schedule_predicates = ["iva.sii_enrolled"]
+legal_refs = ["RD 596/2016 (BOE-A-2016-11575)", "Orden HFP/417/2017 (BOE-A-2017-5312)"]
+
+[[sections.fields]]
+key = "redeme_enrolled"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer is registered in REDEME (Registro de Devolucion Mensual del IVA). REDEME registration switches the IVA self-assessment period to monthly and is one of the mandatory-SII triggers."
+model_selectors = ["iva.redeme_enrolled"]
+schedule_predicates = ["iva.redeme_enrolled"]
+export_headers = ["redeme"]
+legal_refs = ["RIVA RD 1624/1992 Art. 30 (BOE-A-1992-28925)"]
+
+[[sections.fields]]
+key = "autoconsumo_promotor_base"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Base imponible del autoconsumo Art. 9.1.c LISIVA para promotores inmobiliarios: coste de construccion o rehabilitacion de inmuebles afectados al patrimonio de arrendamiento. Corresponde a casilla iva.autoconsumo.promotor.base de Modelo 303."
+legal_refs = ["LIVA Ley 37/1992 Art. 9.1.c (BOE-A-1992-28740)", "LIVA Ley 37/1992 Art. 79.4 (BOE-A-1992-28740)"]
+
+[[sections]]
+key = "obligations"
+title = "Filing obligation thresholds"
+sensitivity = "financial"
+effective_dated = true
+
+[[sections.fields]]
+key = "third_party_transactions_above_347_threshold"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Modelo 347 eligibility: declared yearly transactions with a single counterpart exceed the legal threshold."
+model_selectors = ["third_party_transactions_above_347_threshold"]
+schedule_predicates = ["third_party_transactions_above_347_threshold"]
+
+[[sections.fields]]
+key = "bienes_extranjero_above_threshold"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Modelo 720 eligibility: foreign assets/rights declared above the legal threshold."
+schedule_predicates = ["bienes_extranjero_above_threshold"]
+
+[[sections]]
+key = "filing_export"
+title = "Filing and export context"
+sensitivity = "financial"
+effective_dated = false
+
+[[sections.fields]]
+key = "declaration_type"
+type = "string"
+required = false
+sensitivity = "financial"
+description = "Declaration type used by export layouts and Modelo 100."
+model_selectors = ["declaration.type"]
+export_headers = ["declaration_type", "complementaria", "complementaria_page", "page_complementaria"]
+
+[[sections.fields]]
+key = "previous_receipt"
+type = "string"
+required = false
+sensitivity = "financial"
+description = "Previous receipt or justificante reference for complementary filings."
+export_headers = ["previous_receipt", "previous_justificante", "justificante_anterior"]
+
+[[sections.fields]]
+key = "period_start_date"
+type = "date"
+required = false
+sensitivity = "financial"
+description = "Filing period start date where export layouts require a header value."
+export_headers = ["fecha_inicio_periodo", "devengo_start_date"]
+
+[[sections.fields]]
+key = "period_end_date"
+type = "date"
+required = false
+sensitivity = "financial"
+description = "Filing period end date where export layouts require a header value."
+export_headers = ["fecha_fin_periodo"]
+
+[[sections.fields]]
+key = "program_version"
+type = "string"
+required = false
+sensitivity = "audit"
+description = "Program version header supplied by export context."
+export_headers = ["program_version"]
+
+[[sections.fields]]
+key = "presenter_tax_id"
+type = "string"
+required = false
+sensitivity = "audit"
+description = "Developer NIF/CIF header supplied by export context."
+export_headers = ["presenter_nif", "presenter_tax_id"]
+
+[[sections.fields]]
+key = "iban"
+type = "string"
+required = false
+sensitivity = "financial"
+description = "Payment account when required by filing context."
+export_headers = ["iban"]
+
+[[sections.fields]]
+key = "swift_bic"
+type = "string"
+required = false
+sensitivity = "financial"
+description = "SWIFT-BIC of the refund account's bank for a non-SEPA cuenta-devolucion. Emitted on the Modelo 303 DID refund-account page (DR303 position 12). Read transiently at export from encrypted secure storage; never logged."
+export_headers = ["swift_bic"]
+
+[[sections.fields]]
+key = "bank_name"
+type = "string"
+required = false
+sensitivity = "financial"
+description = "Bank name for a non-SEPA refund account (Marca SEPA 3 Resto Paises). Emitted on the Modelo 303 DID refund-account page (DR303 position 57). Read transiently at export from encrypted secure storage; never logged."
+export_headers = ["bank_name"]
+
+[[sections.fields]]
+key = "bank_address"
+type = "string"
+required = false
+sensitivity = "financial"
+description = "Bank address for a non-SEPA refund account (Marca SEPA 3 Resto Paises). Emitted on the Modelo 303 DID refund-account page (DR303 position 127). Read transiently at export from encrypted secure storage; never logged."
+export_headers = ["bank_address"]
+
+[[sections.fields]]
+key = "bank_city"
+type = "string"
+required = false
+sensitivity = "financial"
+description = "Bank city for a non-SEPA refund account (Marca SEPA 3 Resto Paises). Emitted on the Modelo 303 DID refund-account page (DR303 position 162). Read transiently at export from encrypted secure storage; never logged."
+export_headers = ["bank_city"]
+
+[[sections.fields]]
+key = "bank_country_code"
+type = "string"
+required = false
+sensitivity = "financial"
+description = "ISO 3166-1 alpha-2 country code of the bank for a non-SEPA refund account (Marca SEPA 3 Resto Paises). Emitted on the Modelo 303 DID refund-account page (DR303 position 192). Read transiently at export from encrypted secure storage; never logged."
+export_headers = ["bank_country_code"]
+
+[[sections.fields]]
+key = "sepa_marca"
+type = "string"
+required = false
+sensitivity = "financial"
+description = "Marca SEPA derived from the refund account country (1 Cuenta Espana / 2 UE SEPA / 3 Resto Paises). Emitted on the Modelo 303 DID refund-account page (DR303 position 194). Read transiently at export from encrypted secure storage; never logged."
+export_headers = ["sepa_marca"]
+
+[[sections.fields]]
+key = "aeat_seal"
+type = "string"
+required = false
+sensitivity = "audit"
+description = "AEAT seal header when an export layout requires it."
+export_headers = ["aeat_seal"]
+
+[[sections]]
+key = "renta_taxpayer"
+title = "Renta taxpayer"
+sensitivity = "identity"
+effective_dated = true
+
+[[sections.fields]]
+key = "sex"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Taxpayer sex for Modelo 100."
+enum_values = ["1", "2"]
+model_selectors = ["taxpayer.sex"]
+
+[[sections.fields]]
+key = "marital_status"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Taxpayer marital status valid for Modelo 100."
+model_selectors = ["taxpayer.marital_status"]
+
+[[sections.fields]]
+key = "birth_date"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = false
+description = "Taxpayer birth date."
+model_selectors = ["taxpayer.birth_date"]
+
+[[sections.fields]]
+key = "disability_grade"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Taxpayer disability grade code for Modelo 100."
+model_selectors = ["taxpayer.disability_grade"]
+
+[[sections.fields]]
+key = "death_date"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = false
+nullable = true
+description = "Taxpayer death date when Modelo 100 requires it."
+model_selectors = ["taxpayer.death_date"]
+
+[[sections.fields]]
+key = "marriage_date"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = false
+nullable = true
+description = "Date the current marriage began (ISO-8601). Used when marital_status = 2 (casado/a) to derive casillas 0245 (vigente todo el año), 0246 (primer mes), and 0247 (último mes completo) via the profile binding resolver."
+model_selectors = ["renta_taxpayer.marriage_date"]
+legal_refs = ["ley-35-2006:art-82"]
+
+[[sections.fields]]
+key = "marriage_month_start"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = false
+description = "Derived at binding-resolution time from marriage_date and filing year. First month married in the filing year (1-12). Not stored as a profile fact; populated by the binding resolver."
+model_selectors = ["renta_taxpayer.marriage_month_start"]
+legal_refs = ["ley-35-2006:art-82"]
+
+[[sections.fields]]
+key = "marriage_month_end"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = false
+description = "Derived at binding-resolution time from marriage_date. Last full month married in the filing year (always 12 when married). Not stored as a profile fact; populated by the binding resolver."
+model_selectors = ["renta_taxpayer.marriage_month_end"]
+legal_refs = ["ley-35-2006:art-82"]
+
+[[sections.fields]]
+key = "marriage_full_year"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = false
+description = "Derived at binding-resolution time from marriage_date and filing year. 1 when marriage predates the filing year, 0 otherwise. Not stored as a profile fact; populated by the binding resolver."
+model_selectors = ["renta_taxpayer.marriage_full_year"]
+legal_refs = ["ley-35-2006:art-82"]
+
+[[sections]]
+key = "renta_spouse"
+title = "Renta spouse"
+sensitivity = "identity"
+effective_dated = true
+
+[[sections.fields]]
+key = "tax_id"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Spouse NIF/NIE for joint filing."
+model_selectors = ["spouse.tax.id"]
+
+[[sections.fields]]
+key = "name"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Spouse given name."
+model_selectors = ["spouse.name"]
+
+[[sections.fields]]
+key = "surnames"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Spouse surnames."
+model_selectors = ["spouse.surnames"]
+
+[[sections.fields]]
+key = "birth_date"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = false
+description = "Spouse birth date."
+model_selectors = ["spouse.birth_date"]
+
+[[sections.fields]]
+key = "sex"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Spouse sex for Modelo 100."
+enum_values = ["1", "2"]
+model_selectors = ["spouse.sex"]
+
+[[sections.fields]]
+key = "disability_grade"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Spouse disability grade code for Modelo 100."
+model_selectors = ["spouse.disability_grade"]
+
+[[sections.fields]]
+key = "non_resident_irpf"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Whether the spouse is non-resident and not an IRPF taxpayer."
+model_selectors = ["spouse.non_resident_irpf"]
+
+[[sections.fields]]
+key = "eu_eea_resident"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Whether the non-resident spouse is resident in the EU or EEA."
+model_selectors = ["spouse.eu_eea_resident"]
+
+[[sections.fields]]
+key = "eu_eea_country"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+nullable = true
+description = "EU or EEA country of residence for the spouse."
+model_selectors = ["spouse.eu_eea_country"]
+
+[[sections]]
+key = "renta_family"
+title = "Renta family"
+sensitivity = "identity"
+effective_dated = true
+
+[[sections.fields]]
+key = "minor_children_in_unit"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Minor children in the family unit."
+model_selectors = ["family.minor_children_in_unit"]
+
+[[sections.fields]]
+key = "descendants_eu_eea_deduction"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "EU/EEA descendant deduction flag for Modelo 100."
+model_selectors = ["family.descendants_eu_eea_deduction"]
+
+[[sections.fields]]
+key = "situacion_familiar"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+nullable = true
+description = "Art. 82 LIRPF family situation used to validate joint taxation eligibility."
+enum_values = [
+  "casado",
+  "pareja_hecho_registrada",
+  "pareja_hecho_no_registrada",
+  "soltero",
+  "separado_divorciado",
+]
+model_selectors = ["family.situacion_familiar"]
+
+[[sections.fields]]
+key = "descendientes_count"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Count of descendants represented in Renta family facts."
+model_selectors = ["RentaFamilyProfile.descendientes_count"]
+
+[[sections.fields]]
+key = "descendientes_minimos_aggregate_2024"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Renta 2024 aggregate minimum for descendants."
+model_selectors = ["family.descendientes_minimos_aggregate_2024"]
+
+[[sections.fields]]
+key = "descendientes_menores_3_2024"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Count of descendants eligible for the bajo-3-años supplement at year-end 2024 (Art. 58.3 LIRPF)."
+model_selectors = ["family.descendientes_menores_3_2024"]
+
+[[sections.fields]]
+key = "gastos_guarderia_reales_2024"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Sum of Art. 81 bis guardería expenses across children under 3 at year-end 2024."
+model_selectors = ["family.gastos_guarderia_reales_2024"]
+
+[[sections.fields]]
+key = "cotizaciones_ss_madre_2024"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Mother's Social Security cotizaciones paid in 2024 (Art. 81 bis LIRPF cap term)."
+model_selectors = ["family.cotizaciones_ss_madre_2024"]
+
+[[sections.fields]]
+key = "descendants"
+type = "array"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Repeated descendant rows for Renta."
+model_selectors = [
+  "RentaFamilyProfile.descendants",
+  "RentaFamilyProfile.descendants.tax_id",
+  "RentaFamilyProfile.descendants.display_name",
+  "RentaFamilyProfile.descendants.birth_date",
+  "RentaFamilyProfile.descendants.disability_grade",
+  "RentaFamilyProfile.descendants.death_date",
+]
+
+[[sections.fields]]
+key = "ascendants"
+type = "array"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Repeated ascendant rows for Renta."
+model_selectors = [
+  "RentaFamilyProfile.ascendants",
+  "RentaFamilyProfile.ascendants.tax_id",
+  "RentaFamilyProfile.ascendants.display_name",
+  "RentaFamilyProfile.ascendants.birth_date",
+  "RentaFamilyProfile.ascendants.disability_grade",
+  "RentaFamilyProfile.ascendants.cohabiting_descendant_count",
+  "RentaFamilyProfile.ascendants.death_date",
+]
+
+[[sections]]
+key = "properties"
+title = "Properties and rental"
+sensitivity = "financial"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "cadastral_reference"
+type = "string"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Property cadastral reference."
+
+[[sections.fields]]
+key = "use_type"
+type = "enum"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Property use classification."
+enum_values = ["habitual", "rental", "mixed", "imputed_income", "other"]
+
+[[sections]]
+key = "usage_ratios"
+title = "Usage ratios and deductibility"
+sensitivity = "financial"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "category_id"
+type = "string"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Category profile id the ratio applies to."
+
+[[sections.fields]]
+key = "business_ratio"
+type = "decimal"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Business-use ratio in the closed interval 0..1."
+
+[[sections]]
+key = "maritime_worker"
+title = "Maritime worker classification"
+sensitivity = "financial"
+effective_dated = true
+
+[[sections.fields]]
+key = "worker_class"
+type = "enum"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Maritime worker classification. trabajador_del_mar gates three exemption pathways under IRPF: Art. 7.p) foreign-work exemption (Ley 35/2006), REBECA 50% exemption (Ley 19/1994 Arts. 73-75), and DA 41 (inactive pending EU state-aid clearance). Absent this field the engine applies the standard employment income path without maritime adjustment."
+enum_values = ["trabajador_del_mar"]
+schedule_predicates = ["maritime_worker.worker_class"]
+legal_refs = [
+  "Ley 35/2006 Art. 7.p) BOE-A-2006-20764",
+  "Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-15794",
+  "Ley 35/2006 DA 41 BOE-A-2006-20764",
+  "Ley 6/2018 BOE-A-2018-9268",
+  "Ley 47/2015 BOE-A-2015-11346",
+]
+
+[[sections.fields]]
+key = "vessel_flag"
+type = "enum"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Flag state of the vessel. ES (Spanish flag) or foreign. Art. 7.p) eligibility requires work performed outside Spanish territory; foreign-flagged vessels in international waters satisfy this when the employer is a non-resident entity or has a permanent establishment abroad (AEAT accepted practice confirmed by TEAR Galicia December 2024)."
+enum_values = ["ES", "foreign"]
+legal_refs = ["Ley 35/2006 Art. 7.p) BOE-A-2006-20764"]
+
+[[sections.fields]]
+key = "waters_type"
+type = "enum"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Waters classification for the vessel's operating area. international waters qualify as effectively performing work outside Spain under Art. 7.p) LIRPF in AEAT accepted practice."
+enum_values = ["national", "international"]
+legal_refs = ["Ley 35/2006 Art. 7.p) BOE-A-2006-20764"]
+
+[[sections.fields]]
+key = "vessel_registry"
+type = "enum"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Vessel registry classification. REBECA is the Registro Especial de Buques y Empresas Navieras de Canarias (Ley 19/1994). rebeca_eu_eea covers the 2021 extension to vessels of REBECA-registered companies enrolled in another EU/EEA member state registry. scheduled_canary_route covers vessels on Canary Islands to mainland Spain scheduled routes. Absent this field no REBECA exemption is evaluated."
+enum_values = ["REBECA", "rebeca_eu_eea", "scheduled_canary_route", "other"]
+legal_refs = [
+  "Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-15794",
+]
+
+[[sections.fields]]
+key = "retmar_registered"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer is registered in RETMAR (Registro Especial de Trabajadores del Mar). Since January 2023 all RETMAR-registered workers must file an IRPF declaration regardless of income level. This field drives a mandatory-filing profile completeness warning; it does not alter casilla values or formula paths."
+schedule_predicates = ["maritime_worker.retmar_registered"]
+legal_refs = ["Ley 47/2015 BOE-A-2015-11346"]
+
+[[sections.fields]]
+key = "tuna_fleet"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the vessel is a qualifying tuna fleet (flota de pesca de túnidos / atunero). One of the two conjunctive selectors for DA 41 LIRPF: when combined with pending_eu_clearance the engine raises MaritimeExemptionInactiveError to refuse silent application of an exemption that lacks EU state-aid clearance."
+model_selectors = ["maritime_worker.tuna_fleet"]
+schedule_predicates = ["maritime_worker.tuna_fleet"]
+legal_refs = [
+  "Ley 35/2006 DA 41 BOE-A-2006-20764",
+  "Ley 6/2018 BOE-A-2018-9268",
+]
+
+[[sections.fields]]
+key = "pending_eu_clearance"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the DA 41 LIRPF tuna-fleet exemption is pending European Commission state-aid clearance under TFEU rules. Mirrors the inactive_pending_eu_clearance binding status: when True alongside tuna_fleet, the engine refuses to silently produce an exempt-income observation. Flip to False only after EU clearance is granted and the trabajador_del_mar binding status is updated accordingly."
+model_selectors = ["maritime_worker.pending_eu_clearance"]
+schedule_predicates = ["maritime_worker.pending_eu_clearance"]
+legal_refs = [
+  "Ley 35/2006 DA 41 BOE-A-2006-20764",
+  "Ley 6/2018 BOE-A-2018-9268",
+]
+
+[[sections]]
+key = "provenance"
+title = "Provenance and effective dating"
+sensitivity = "audit"
+effective_dated = false
+
+[[sections.fields]]
+key = "source"
+type = "enum"
+required = false
+sensitivity = "audit"
+description = "Source of the profile fact. Defaults to manual_cli when the wizard runner does not record a provenance value."
+enum_values = ["manual_cli", "setup_wizard", "modelo_036_import", "aeat_censo_read", "registry_inference"]
+
+[[sections.fields]]
+key = "valid_from"
+type = "date"
+required = false
+sensitivity = "audit"
+description = "First date the fact applies."
+
+[[sections.fields]]
+key = "valid_to"
+type = "date"
+required = false
+sensitivity = "audit"
+nullable = true
+description = "Last date the fact applies."

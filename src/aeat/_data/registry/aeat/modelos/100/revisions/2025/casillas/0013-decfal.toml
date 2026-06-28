@@ -1,0 +1,11 @@
+[[revisions."2025".casillas]]
+id = "DECFAL"
+number = "*67"
+label = "Primer declarante fecha de fallecimiento"
+section = ["datos_identificativos", "declarante"]
+data_type = "text"
+semantic_role = "irpf_declarante_fecha_fallecimiento"
+input_kind = "bound"
+binding = "renta-2025-profile-taxpayer-death-date"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]

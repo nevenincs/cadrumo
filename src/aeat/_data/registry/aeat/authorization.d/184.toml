@@ -1,0 +1,13 @@
+# Modelo 184 (Entidades en régimen de atribución de rentas). Enrolled by the
+# year-over-year member attribution fidelity test. The member NIF and
+# renta-atribuible-importe (casillas 178-190, completeness-manifest pivot) are
+# persisted for two distinct renta ejercicios (2024, 2025), loaded back via the
+# real encrypted-SQLite CalculationObservationRepository, and asserted for
+# strict pydantic equality + NIF identity continuity + attribution-amount
+# isolation between exercises. Evidence class is data_fidelity (no calculation
+# engine; Orden HAP/2250/2015 / LIRPF arts. 87-89).
+[modelo]
+modelo = "184"
+renta_years = [2024, 2025]
+evidence_class = "data_fidelity"
+enrolling_test = "src/aeat/application/calculations/tests/test_modelo_184_informativa_fidelity.py"

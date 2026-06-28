@@ -1,0 +1,31 @@
+[[revisions."2019-2023".constructs]]
+id = "modelo-123-2019-capital-withholding"
+title = "Modelo 123 historical quarterly capital-income withholding filing"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = [
+    "aeat-dr-123-2019-2023-v13",
+    "aeat-dr-123-2019-2023-v13-form-text",
+    "aeat-modelo-123-procedure",
+    "boe-modelo-123-2007-form",
+]
+casilla_ids = ["01-legacy", "02-legacy", "03-legacy", "04-legacy", "05-legacy", "06-legacy", "07-legacy", "08-legacy"]
+formulas = ["modelo-123-2019-total-liquidacion", "modelo-123-2019-resultado-ingresar"]
+export_layouts = ["modelo-123-2019-fichero-boe"]
+extraction_profiles = ["modelo-123-2019-export-record", "modelo-123-2019-declaracion-pdf"]
+live_cross_references = ["modelo-123-2019-static-official", "modelo-123-2019-filed-declarations-read"]
+workbook_parity_refs = ["modelo-123-dr-xls-2019"]
+verification_expectations = ["modelo-123-2019-calculation-verification"]
+application_links = [
+    "modelo-123-2019-calculation",
+    "modelo-123-2019-filing",
+    "modelo-123-2019-export",
+    "modelo-123-2019-verification",
+    "modelo-123-2019-review",
+    "modelo-123-2019-approval",
+    "modelo-123-2019-reconciliation",
+    "modelo-123-2019-extractor",
+    "modelo-123-2019-portal-cross-reference",
+    "modelo-123-2019-filed-declarations-observation",
+    "modelo-123-2019-workflow",
+]
+

@@ -1,16 +1,22 @@
-"""Portal: Domiciliación bancaria."""
+"""Catalogue entry for the AEAT *Domiciliación bancaria* procedure page.
+
+Exposes :data:`ENTRY`, a :class:`PortalMetadata` record for
+:class:`Portal` ``PORTAL_DOMICILIACION_BANCARIA`` under
+:class:`PortalCategory` ``PAYMENT``. Used to set up, inspect, and
+revoke direct-debit instructions on the AEAT autoliquidación flow.
+"""
 
 from __future__ import annotations
 
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
-from ._common import build_entry
+from ._common import build_entry, portal_path
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_DOMICILIACION_BANCARIA,
-    url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GA16.shtml",
-    subdomain=Subdomain.SEDE,
+    path=portal_path(Portal.PORTAL_DOMICILIACION_BANCARIA),
+    subdomain=PortalHost.SEDE,
     category=PortalCategory.PAYMENT,
     auth_methods=(
         AuthMethod.CERTIFICATE,
@@ -19,10 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label={
-        "es": "Domiciliación bancaria",
-        "en": "Bank-account direct debit",
-        "hu": "Banki csoportos beszedés",
-    },
-    purpose_es="Alta, consulta y revocación de domiciliaciones bancarias de autoliquidaciones.",
+    label="entries.portal_domiciliacion_bancaria.label",
+    purpose="entries.portal_domiciliacion_bancaria.purpose",
 )
+"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the bank direct-debit page."""

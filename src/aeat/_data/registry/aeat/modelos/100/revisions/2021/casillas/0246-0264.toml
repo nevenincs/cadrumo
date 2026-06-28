@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0264"
+number = "0264"
+label = "Retenciones e ingresos a cuenta imputados"
+section = ["toma_datos_ampliada", "regimenes_especiales", "re_agrup_interes_economico"]
+semantic_role = "irpf_re_aie_retenciones_imputadas"
+legal_refs = ["ley-35-2006:art-86"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

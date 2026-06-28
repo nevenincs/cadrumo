@@ -1,17 +1,22 @@
-"""Portal: Modelo 193 — resumen anual retenciones capital mobiliario."""
+"""Registry entry for Modelo 193 - annual summary of movable-capital withholdings.
+
+Defines the :class:`PortalMetadata` record for :class:`Portal`
+``PORTAL_M193_RESUMEN_CAPITAL`` under :class:`PortalCategory`
+``FILING``, exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY`.
+"""
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
-from ._common import build_entry
+from ._common import build_entry, portal_path
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_M193_RESUMEN_CAPITAL,
-    url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI12.shtml",
-    subdomain=Subdomain.SEDE,
+    path=portal_path(Portal.PORTAL_M193_RESUMEN_CAPITAL),
+    subdomain=PortalHost.SEDE,
     category=PortalCategory.FILING,
     auth_methods=(
         AuthMethod.CERTIFICATE,
@@ -20,14 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_193,
-    label={
-        "es": "Modelo 193 — Resumen anual retenciones capital mobiliario",
-        "en": "Modelo 193 — Annual summary of movable-capital withholdings",
-        "hu": "193-as űrlap — Éves tőkejövedelem-forrásadó összefoglaló",
-    },
-    purpose_es=(
-        "Resumen anual de retenciones e ingresos a cuenta sobre determinados rendimientos "
-        "del capital mobiliario (complementa al Modelo 123)."
-    ),
+    label="entries.portal_m193_resumen_capital.label",
+    purpose="entries.portal_m193_resumen_capital.purpose",
 )
+"""Portal entry for Modelo 193 (annual summary of movable-capital withholdings)."""

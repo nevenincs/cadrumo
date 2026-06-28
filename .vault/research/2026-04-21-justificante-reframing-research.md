@@ -3,6 +3,7 @@ tags:
   - "#research"
   - "#justificante-reframing"
 date: "2026-04-21"
+modified: '2026-04-21'
 related:
   - "[[2026-04-21-pdf-taxonomy-adr]]"
   - "[[2026-04-21-real-pdf-import-umbrella-research]]"

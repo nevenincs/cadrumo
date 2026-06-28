@@ -1,0 +1,41 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "modelo-303"
+domain = "modelo"
+lifecycle = "approved"
+legal_refs = ["ley-37-1992:art-164"]
+domain_refs = ["modelo:303"]
+related = ["iva", "casilla", "autoliquidacion", "prorrata", "modelo-390"]
+created_at = 2026-06-10
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "Autoliquidacion periodica del IVA en regimen general."
+definition = "Declaracion-liquidacion periodica del Impuesto sobre el Valor Anadido que presentan los sujetos pasivos en regimen general, trimestral o mensualmente segun el volumen de operaciones."
+
+[language.es.source]
+citation = "Articulos 164 y 167 de la Ley 37/1992 del IVA."
+authority = "boe"
+
+[[language.es.term]]
+label = "modelo 303"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "autoliquidacion de IVA"
+term_status = "admitted"
+
+[language.en]
+short_description = "Periodic VAT self-assessment return."
+
+[language.ca]
+short_description = "Autoliquidacio periodica de l'IVA."
+
+[language.hu]
+short_description = "Idoszakos afa-onbevallas."

@@ -1,0 +1,16 @@
+[modelo]
+id = "123"
+title = "Retenciones sobre capital mobiliario"
+official_name = "Retenciones e ingresos a cuenta del IRPF, Impuesto sobre Sociedades e IRNR establecimientos permanentes. Determinados rendimientos del capital mobiliario o determinadas rentas."
+tax_domain = "cross_tax"
+cadence = "quarterly"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = [
+    "aeat-dr-123-2024-v20",
+    "aeat-dr-123-2024-v20-form-text",
+    "aeat-modelo-123-procedure",
+    "boe-modelo-123-2024-form",
+]
+

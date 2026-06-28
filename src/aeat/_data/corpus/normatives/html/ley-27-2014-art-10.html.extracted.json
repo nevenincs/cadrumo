@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-27-2014-art-10.html",
+  "source_sha256": "67148d23b66dfea43c31fd428a99a6a8c356852ddf5f228624c51bb7cbc8534d",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. La base imponible estará constituida por el importe de la renta obtenida en el período impositivo minorada por la compensación de bases imponibles negativas de períodos impositivos anteriores.\n2. La base imponible se determinará por el método de estimación directa, por el de estimación objetiva cuando esta Ley determine su aplicación y, subsidiariamente, por el de estimación indirecta, de conformidad con lo dispuesto en la Ley 58/2003, de 17 de diciembre, General Tributaria.\n3. En el método de estimación directa, la base imponible se calculará, corrigiendo, mediante la aplicación de los preceptos establecidos en esta Ley, el resultado contable determinado de acuerdo con las normas previstas en el Código de Comercio, en las demás leyes relativas a dicha determinación y en las disposiciones que se dicten en desarrollo de las citadas normas.\n4. En el método de estimación objetiva la base imponible se podrá determinar total o parcialmente mediante la aplicación de los signos, índices o módulos a los sectores de actividad que determine esta Ley.",
+      "title": "Artículo 10. Concepto y determinación de la base imponible.",
+      "section": "Artículo 10. Concepto y determinación de la base imponible.",
+      "anchor": null
+    }
+  ]
+}

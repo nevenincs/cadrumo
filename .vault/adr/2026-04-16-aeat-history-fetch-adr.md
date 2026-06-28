@@ -3,6 +3,7 @@ tags:
   - "#adr"
   - "#aeat-history-fetch"
 date: 2026-04-16
+modified: '2026-04-16'
 title: AEAT filing-history read surface — ADR
 related:
   - "[[2026-04-16-aeat-history-fetch-research]]"

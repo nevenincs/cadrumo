@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/boe-a-2014-13679-modelo-145-amendment.html",
+  "source_sha256": "3f274e0d8357cb0f98dc32ff354c94eb6d1eeee6f52d90563b9892ad1f774320",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "La Resolución de 3 de enero de 2011, del Departamento de Gestión Tributaria de la Agencia Estatal de Administración Tributaria, por la que se aprueba el modelo 145, de comunicación de datos del perceptor de rentas del trabajo a su pagador o de la variación de los datos previamente comunicados, queda modificada como sigue:\nUno. El modelo 145 que figura en el anexo queda sustituido por el modelo 145 que figura en el anexo de la presente resolución.",
+      "title": "Apartado único. Modificación de la Resolución de 3 de enero de 2011, del Departamento de Gestión Tributaria de la Agencia Estatal de Administración Tributaria, por la que se aprueba el modelo 145, de comunicación de datos del perceptor de rentas del trabajo a su pagador o de la variación de los datos previamente comunicados.",
+      "section": "Apartado único. Modificación de la Resolución de 3 de enero de 2011, del Departamento de Gestión Tributaria de la Agencia Estatal de Administración Tributaria, por la que se aprueba el modelo 145, de comunicación de datos del perceptor de rentas del trabajo a su pagador o de la variación de los datos previamente comunicados.",
+      "anchor": null
+    },
+    {
+      "text": "La presente Resolución entrará en vigor el día de su publicación en el «Boletín Oficial del Estado» y surtirá efectos en relación con las comunicaciones de datos al pagador, o de variación de los datos previamente comunicados, efectuadas o que deban efectuarse a partir del 1 de enero de 2015.\nMadrid, 18 de diciembre de 2014.–El Director del Departamento de Gestión Tributaria de la Agencia Estatal de Administración Tributaria, Rufino de la Rosa Cordón.\nANEXO\nAnálisis\nANÁLISIS\nRango: Resolución\nFecha de disposición: 18/12/2014\nFecha de publicación: 31/12/2014\nFecha de entrada en vigor: 31/12/2014\nEfectos desde el 1 de enero de 2015.\nReferencias anteriores\nSUSTITUYE el modelo 145 del anexo de la Resolución de 3 de enero de 2011 (Ref. BOE-A-2011-208).\nDE CONFORMIDAD con el art. 88 del Reglamento aprobado por Real Decreto 439/2007, de 30 de marzo (Ref. BOE-A-2007-6820).\nMaterias\nFormularios administrativos\nGestión fiscal\nImpuesto sobre la Renta de las Personas Físicas\nRetención a cuenta\nSistema tributario\nTrabajo",
+      "title": "Disposición final única. Entrada en vigor.",
+      "section": "Disposición final única. Entrada en vigor.",
+      "anchor": null
+    }
+  ]
+}

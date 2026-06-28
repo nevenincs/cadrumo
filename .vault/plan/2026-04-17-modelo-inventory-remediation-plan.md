@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#modelo-inventory'
 date: '2026-04-17'
+modified: '2026-04-17'
 related:
   - '[[2026-04-17-modelo-inventory-remediation-adr]]'
   - '[[2026-04-17-modelo-inventory-remediation-research]]'

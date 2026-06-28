@@ -1,0 +1,10 @@
+[[revisions."2025".casillas]]
+id = "0461"
+number = "0461"
+label = "Reducción para unidades familiares que opten por la tributación conjunta. Importe"
+section = ["resultados", "red_base_imponible_res"]
+input_kind = "computed"
+formula = "renta-2025-reduccion-art-84-conjunta"
+semantic_role = "irpf_reduccion_tributacion_conjunta_importe"
+legal_refs = ["ley-35-2006:art-50", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

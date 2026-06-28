@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hac-2572-2003.html",
+  "source_sha256": "1b820ea36307beb67372f1eb648d865d3dd912a1c3bf9d926b8455b551f9c722",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Aprobación del modelo de declaración del Impuesto sobre Actividades Económicas.\nSe aprueba el modelo 840, \"Impuesto sobre Actividades Económicas\", que figura en el anexo I de la presente Orden. Este modelo consta de dos ejemplares, uno para la Administración y otro para el interesado.\nAsimismo, como anexo al modelo 840 se aprueba la \"Relación de locales\".\nEl número de referencia que habrá de figurar en el modelo 840 será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 890.",
+      "title": "Primero.",
+      "section": "Primero.",
+      "anchor": null
+    },
+    {
+      "text": "Lugar de presentación de la declaración del Impuesto sobre Actividades Económicas, en impreso.\nLa presentación de la declaración del Impuesto sobre Actividades Económicas, modelo 840, en impreso, deberá realizarse en los lugares que se establecen en el artículo 8 del Real Decreto 243/1995, de 17 de febrero (Boletín Oficial del Estado de 8 de marzo), por el que se dictan normas para la gestión del Impuesto sobre Actividades Económicas y se regula la delegación de competencias en materia de gestión censal de dicho impuesto.",
+      "title": "Segundo.",
+      "section": "Segundo.",
+      "anchor": null
+    },
+    {
+      "text": "Ámbito de aplicación del sistema de presentación telemática del modelo 840 de declaración del Impuesto sobre Actividades Económicas.\nUno. Los obligados tributarios que deban presentar el modelo 840 de declaración del Impuesto sobre Actividades Económicas podrán, a su elección, efectuar la citada presentación en impreso o por vía telemática.\nNo obstante lo anterior, no se podrá efectuar la presentación telemática de las declaraciones correspondientes al modelo 840 que impliquen la aportación de documentos.\nDos. Las personas o entidades autorizadas a presentar por vía telemática declaraciones en representación de terceras personas, de acuerdo con lo dispuesto en el Real Decreto 1377/2002, de 20 de diciembre (Boletín Oficial del Estado del 21), por el que se desarrolla la colaboración social en la gestión de los tributos para la presentación telemática de declaraciones, comunicaciones y otros documentos tributarios, y en el apartado séptimo y en las disposiciones adicionales segunda y tercera de la Orden de 21 de diciembre de 2000 (Boletín Oficial del Estado del 28), por la que se establecen las condiciones generales y el procedimiento para la presentación telemática a través de Internet de las declaraciones correspondientes a los modelos 117, 123, 124, 126, 128, 216, 131, 310, 311, 193, 198, 296 y 345, podrán hacer uso de dicha facultad, respecto de las declaraciones del Impuesto sobre Actividades Económicas.",
+      "title": "Tercero.",
+      "section": "Tercero.",
+      "anchor": null
+    },
+    {
+      "text": "Condiciones generales para la presentación telemática del modelo 840 de declaración del Impuesto sobre Actividades Económicas.\nUno. Requisitos para la presentación telemática del modelo 840 de declaración del Impuesto sobre Actividades Económicas.–La presentación telemática de este modelo estará sujeta a las siguientes condiciones:\n1.º El declarante deberá disponer de Número de Identificación Fiscal (N.I.F.).\n2.º El declarante deberá tener instalado en el navegador de su ordenador el certificado de firma electrónica X.509.V3 expedido por la Fábrica Nacional de Moneda y Timbre-Real Casa de la Moneda de acuerdo con el procedimiento establecido en los anexos III y VI de la Orden de 24 de abril de 2000 (Boletín Oficial del Estado del 29), por la que se establecen las condiciones generales y el procedimiento para la presentación telemática de declaraciones del Impuesto sobre la Renta de las Personas Físicas, o cualquier otro certificado de entre los que se encuentren admitidos por la Agencia Estatal de Administración Tributaria, de acuerdo con lo previsto en la Orden HAC/1181/2003, de 12 de mayo (Boletín Oficial del Estado del 15), por la que se establecen normas específicas sobre el uso de la firma electrónica en las relaciones tributarias por medios electrónicos, informáticos y telemáticos con la Agencia Estatal de Administración Tributaria.\nCuando la presentación por vía telemática vaya a ser realizada por una persona o entidad autorizada a presentar declaraciones en representación de terceras personas será dicha persona o entidad la que deberá tener instalado en su navegador el correspondiente certificado.\n3.º Para efectuar la presentación telemática de la declaración correspondiente al modelo 840, el sujeto pasivo o presentador autorizado deberá generar un fichero cumplimentando los formularios que el propio programa de transmisión le presentará en pantalla o utilizando otros programas que genera el mismo fichero.\n4.º Los declarantes que opten por esta modalidad de presentación deberán tener en cuenta las normas técnicas que se requieren para efectuar la citada presentación y que se encuentran recogidas en el anexo II de la Orden de 24 de abril de 2000 por la que se establecen las condiciones generales y el procedimiento para la presentación telemática de declaraciones del Impuesto sobre la Renta de las Personas Físicas.\nDos. Presentación de declaraciones con deficiencias de tipo formal.–En aquellos casos en que se detecten anomalías de tipo formal en la transmisión telemática de declaraciones, dicha circunstancia se pondrá en conocimiento del declarante por el propio sistema mediante los correspondientes mensajes de error, para que proceda a su subsanación.\nTres. Supuesto de exclusión en la presentación telemática del modelo 840.–No se podrá efectuar la presentación telemática de las declaraciones correspondientes al modelo 840 cuando haya transcurrido más de un año desde la finalización de los plazos señalados en el apartado sexto de esta Orden. Transcurrido dichos plazos, deberá efectuarse la presentación de la declaración mediante el correspondiente modelo de impreso.",
+      "title": "Cuarto.",
+      "section": "Cuarto.",
+      "anchor": null
+    },
+    {
+      "text": "Procedimiento para la presentación telemática del modelo 840 de declaración del Impuesto sobre Actividades Económicas.\nEl procedimiento para la presentación telemática de las declaraciones será el siguiente:\n1.º El declarante se pondrá en comunicación con la Agencia Estatal de Administración Tributaria a través de internet o de cualquier otra vía equivalente que permita la conexión, en la dirección: https://agenciatributaria.es. y seleccionará el modelo de declaración a transmitir.\nA continuación, procederá a transmitir la correspondiente declaración con la firma electrónica, generada al seleccionar el certificado al que se hace referencia en el apartado Cuarto.Uno.2.º de esta Orden y previamente instalado en el navegador a tal efecto.\nSi el presentador es una persona o entidad autorizada para presentar declaraciones en representación de terceras personas, se requerirá una única firma, la correspondiente a su certificado.\n2.º Si la declaración es aceptada, la Agencia Estatal de Administración Tributaria le devolverá en pantalla la declaración validada con un código electrónico de 16 caracteres, además de la fecha y hora de presentación.\nEn el supuesto de que la presentación fuese rechazada, se mostrarán en pantalla la descripción de los errores detectados. En este caso, se deberá proceder a subsanar los mismos con el programa de ayuda con el que se generó el fichero, o repitiendo la presentación si el error fuese originado por otro motivo.\nEl presentador deberá imprimir y conservar la declaración aceptada, debidamente validada con el correspondiente código electrónico.",
+      "title": "Quinto.",
+      "section": "Quinto.",
+      "anchor": null
+    },
+    {
+      "text": "Plazo de presentación de la declaración del Impuesto sobre Actividades Económicas.\nLa presentación de la declaración del Impuesto sobre Actividades Económicas, modelo 840, deberá realizarse, según se trate de declaraciones de alta, variación o baja, en los plazos regulados en los artículos 5, 6 y 7 del Real Decreto 243/1995, de 17 de febrero.",
+      "title": "Sexto.",
+      "section": "Sexto.",
+      "anchor": null
+    },
+    {
+      "text": "Queda derogada la Orden de 26 de diciembre de 2001 (Boletín Oficial del Estado de 5 de enero de 2002), por la que se aprueban los nuevos modelos de declaración del Impuesto sobre Actividades Económicas en euros y se establece el nuevo modelo de soporte utilizable para el intercambio de información entre la Agencia Estatal de Administración Tributaria y las entidades que ejercen por delegación la gestión censal del impuesto.",
+      "title": "Disposición derogatoria.",
+      "section": "Disposición derogatoria.",
+      "anchor": null
+    },
+    {
+      "text": "La presente Orden entrará en vigor el día siguiente al de su publicación en el Boletín Oficial del Estado, a excepción de las disposiciones relativas a la presentación telemática de la declaración, que entrarán en vigor el día 1 de diciembre de 2003.\nLo que comunico a VV. II. para su conocimiento y efectos.\nMadrid, 10 de septiembre de 2003.\nMONTORO ROMERO\nIlmos. Sres. Director General de Tributos y Director General de la Agencia Estatal de Administración Tributaria.\nANEXO I\nEste documento es de carácter informativo y no tiene valor jurídico.\nAyúdenos a mejorar: puede dirigir sus comentarios y sugerencias a nuestro Servicio de atención al ciudadano",
+      "title": "Disposición final.",
+      "section": "Disposición final.",
+      "anchor": null
+    }
+  ]
+}

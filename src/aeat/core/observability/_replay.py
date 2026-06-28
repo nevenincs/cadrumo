@@ -2,7 +2,7 @@
 
 Replay loads a persisted trace, recomputes the current
 ``corpus_sha256``, refuses on drift, and re-enters the same Typer CLI
-path with the captured argv.
+path reconstructed from captured :class:`ArgumentRecord` values.
 
 Replay also refuses recorded arguments containing the removed
 ``--no-dry-run`` flag, so old traces cannot reintroduce an obsolete
@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import os
 import shlex
-from importlib import import_module
+from collections.abc import Callable
 
 from ..config import PROJECT_ROOT, Settings
 from ._errors import AeatCorpusDriftError, AeatObservabilityError
@@ -25,21 +25,22 @@ from ._store import load_trace
 # re-entered CLI call so run_context can label the child trace.
 REPLAY_ACTIVE_ENV_VAR = "AEAT_REPLAY_ACTIVE"
 
-# Legacy flags removed from the workflow CLI surface.
+# Flag tokens the replay scrubber strips from a recorded command so the
+# replayed invocation cannot promote a dry run into a live write.
 _REMOVED_WRITE_FLAG_NAMES: frozenset[str] = frozenset(
     {
         "no-dry-run",
         "no_dry_run",
-    }
+    },
 )
 
 
 def _argument_uses_removed_write_flag(arg: ArgumentRecord) -> bool:
     """Return True if ``arg`` is a removed write-era flag with a truthy value.
 
-    The boolean flags captured by :func:`cli_run_context` arrive as the
-    stringified value ``"True"`` / ``"False"``. A ``False`` capture
-    means the caller did not opt in. Any non-False value pair is
+    The boolean flags captured as :class:`ArgumentRecord` values arrive
+    as the stringified value ``"True"`` / ``"False"``. A ``False``
+    capture means the caller did not opt in. Any non-False value pair is
     rejected before argv reconstruction.
     """
     if arg.source is not ArgumentSource.FLAG:
@@ -74,8 +75,7 @@ def _argv_from_arguments(
       False, so replay simply not re-emitting them matches the
       original user intent. The tradeoff is that toggled-off
       flags like ``--no-sync`` on a ``typer.Option(True, "--sync/--no-sync")``
-      alias pair lose fidelity; this is documented as a known
-      limitation (audit finding NEW-1, 2026-04-21).
+      alias pair lose fidelity; this is a known limitation.
     - Any other value — emit the ``--<name>=<value>`` form; the
       ``=`` binding prevents values that start with ``-`` from being
       mis-parsed as another flag.
@@ -115,11 +115,20 @@ def _argv_from_arguments(
     return parts
 
 
-def replay_run(run_id: str) -> RunTrace:
+def replay_run(
+    run_id: str,
+    *,
+    invoke: Callable[[list[str]], object] | None = None,
+) -> RunTrace:
     """Replay a recorded run after gating on corpus drift.
 
     Args:
         run_id: Identifier of the recorded run to replay.
+        invoke: Optional callable that re-enters the CLI with the reconstructed
+            argv.  When ``None`` the function loads and validates the trace
+            but does not re-execute it, returning the original
+            :class:`RunTrace` directly.
+
     Returns:
         The loaded :class:`RunTrace` of the original run.
 
@@ -147,23 +156,32 @@ def replay_run(run_id: str) -> RunTrace:
             entrypoint=original.entrypoint,
         )
     argv = _argv_from_arguments(original.entrypoint, original.arguments)
-    app = import_module("aeat.entrypoints.cli").app
+    if invoke is None:
+        return original
 
     # Restore the prior value on exit so the process env is unchanged
     # for any caller that imports ``replay_run`` programmatically.
+    #
+    # NOTE: The os.environ READ/WRITE here is a documented exception to
+    # the "every AEAT-prefixed config flows through Settings" mandate.
+    # This is subprocess-IPC, not config: ``invoke(argv)`` re-enters the
+    # CLI which on next ``load_settings()`` reads
+    # ``Settings.aeat_replay_active`` — and the value comes from the
+    # os.environ mutation we perform below. Settings is read-only, so
+    # the write side has no Settings equivalent.
     previous = os.environ.get(REPLAY_ACTIVE_ENV_VAR)
     # Store the *original* run_id, not just "1", so the re-entered
     # run_context can label the new trace's ``replay_of`` field with
     # the source run. This lets ``aeat run show`` distinguish replay
     # traces from fresh runs and chain them back to their original.
-    os.environ[REPLAY_ACTIVE_ENV_VAR] = run_id
+    os.environ[REPLAY_ACTIVE_ENV_VAR] = run_id  # env-write: intentional — scoped context-manager
     try:
-        app(argv, standalone_mode=False)
+        invoke(argv)
     finally:
         if previous is None:
             os.environ.pop(REPLAY_ACTIVE_ENV_VAR, None)
         else:
-            os.environ[REPLAY_ACTIVE_ENV_VAR] = previous
+            os.environ[REPLAY_ACTIVE_ENV_VAR] = previous  # env-write: intentional — restore prior state
     return original
 
 

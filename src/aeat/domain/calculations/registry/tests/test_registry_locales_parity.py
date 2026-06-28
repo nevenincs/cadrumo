@@ -1,0 +1,87 @@
+"""Parity and referential integrity tests for all registered modelo localization files."""
+
+from __future__ import annotations
+
+import pytest
+
+from .....core.resources import bundled_path
+from .._loader import load_registry_tree
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def test_complete_registry_tree_locales_compile_and_validate_cleanly() -> None:
+    """The entire registry tree's localization files must compile and validate without errors.
+
+    Any malformed TOML structures or invalid translation keys referencing unknown
+    casilla_ids/continuidad_ids will fail the loader's referential integrity checks
+    and raise a RegistryValidationError.
+    """
+    root = bundled_path("registry", "aeat")
+
+    # This loads all models and legal parameters, parsing and verifying every locales/*.toml file
+    modelos, _catalogues = load_registry_tree(root)
+    assert len(modelos) > 0, "No modelos loaded from registry"
+
+    # Verify that M130 has our translations loaded
+    m130 = next(m for m in modelos if str(m.id) == "130")
+    revision = m130.revisions["2019-y-siguientes"]
+    casilla_01 = next(c for c in revision.casillas if c.id == "01")
+
+    # Assert labels loaded correctly for all three locales
+    assert casilla_01.get_label("en") == "Income"
+    assert casilla_01.get_label("ca") == "Ingressos"
+    assert casilla_01.get_label("hu") == "Bevételek"
+
+    # Assert help text loaded correctly
+    assert casilla_01.get_help("en") == "Total cumulative business income for the tax year."
+    assert casilla_01.get_help("ca") == "Ingressos acumulats de l'activitat econòmica."
+    assert casilla_01.get_help("hu") == "Az adóévben elért összesített vállalkozási bevétel."
+
+    # Verify Modelo 100 (revision 2024)
+    m100 = next(m for m in modelos if str(m.id) == "100")
+    rev100 = m100.revisions["2024"]
+    casilla_100_01 = next(c for c in rev100.casillas if c.id == "0001")
+    assert casilla_100_01.get_label("en") == "Taxpayer obtaining yield"
+    assert casilla_100_01.get_label("ca") == "Contribuent que obté els rendiments"
+    assert casilla_100_01.get_label("hu") == "Jövedelmet megszerző adózó"
+    assert casilla_100_01.get_help("en") == "Selector for the taxpayer obtaining the business yield."
+
+    # Verify Modelo 200 (revision 2024-y-siguientes)
+    m200 = next(m for m in modelos if str(m.id) == "200")
+    rev200 = m200.revisions["2024-y-siguientes"]
+    casilla_200_01 = next(c for c in rev200.casillas if c.id == "00001")
+    assert casilla_200_01.get_label("en") == "Non-profit entity under special tax regime Title II Law 49/2002"
+    assert casilla_200_01.get_label("ca") == (
+        "Entitat sense ànim de lucre acollida al règim fiscal Títol II Llei 49/2002"
+    )
+    assert casilla_200_01.get_label("hu") == (
+        "Nonprofit szervezet a 49/2002. törvény II. címe szerinti különleges adórendszerben"
+    )
+    assert casilla_200_01.get_help("en") == (
+        "Flag indicating if the entity is non-profit and subject to the Title II regime of Law 49/2002."
+    )
+
+    # Verify Modelo 303 (revision 2023-y-siguientes)
+    m303 = next(m for m in modelos if str(m.id) == "303")
+    rev303 = m303.revisions["2023-y-siguientes"]
+    casilla_303_gen = next(c for c in rev303.casillas if c.id == "iva.repercutido.general")
+    assert casilla_303_gen.get_label("en") == "Output VAT amount at the standard rate (21%)"
+    assert casilla_303_gen.get_label("ca") == "Quota IVA repercutit al tipus general (21%)"
+    assert casilla_303_gen.get_label("hu") == "Felszámított ÁFA összeg általános kulccsal (21%)"
+    assert casilla_303_gen.get_help("en") == "Total output VAT calculated at the standard 21% rate."
+
+
+def test_modelo_130_all_casillas_have_schema_localized_labels_and_help() -> None:
+    """Modelo 130 is the complete small-model exemplar for schema-local translations."""
+    root = bundled_path("registry", "aeat")
+    modelos, _catalogues = load_registry_tree(root)
+
+    m130 = next(m for m in modelos if str(m.id) == "130")
+    revision = m130.revisions["2019-y-siguientes"]
+    assert len(revision.casillas) == 20
+
+    for casilla in revision.casillas:
+        for locale in ("en", "ca", "hu"):
+            assert casilla.get_label(locale) != casilla.label, (casilla.id, locale)
+            assert casilla.get_help(locale), (casilla.id, locale)

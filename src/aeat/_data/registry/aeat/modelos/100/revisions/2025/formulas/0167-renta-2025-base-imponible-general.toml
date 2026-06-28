@@ -1,0 +1,31 @@
+# Base imponible general (casilla 0435) = saldo neto de rendimientos e
+# imputaciones (0432) − saldo neto negativo G/P a integrar, límite 25%
+# (0433) − compensación de bases imponibles generales negativas de
+# ejercicios anteriores aplicada este período (casilla 1389, Ley 35/2006
+# art. 48: "su importe se compensará en los cuatro años siguientes ... con
+# el saldo positivo de las rentas previstas en el párrafo a)"). Clamped
+# non-negative: the art. 48 compensation is against the positive saldo (a)
+# and cannot drive the general base below zero. The applied amount (1389) is
+# operator-elective, bounded by BLOCKING verification predicates (1389 <=
+# 1388 stock; 1389 <= the art. 48 ceiling); a taxpayer with no prior
+# negative general base (1388 = 0) has 1389 = 0 and 0435 is unchanged.
+[[revisions."2025".formulas]]
+id = "renta-2025-base-imponible-general"
+target_casilla_id = "0435"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [
+        { op = "subtract", args = [
+            { casilla_id = "0432" },
+            { casilla_id = "0433" },
+        ] },
+        { casilla_id = "1389" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-48", "ley-35-2006:art-50", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["base imponible general", "Saldo neto"]

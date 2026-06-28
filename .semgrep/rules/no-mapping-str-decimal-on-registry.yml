@@ -1,0 +1,33 @@
+rules:
+  - id: no-mapping-str-decimal-on-registry-models
+    message: |
+      `Mapping[str, Decimal]` / `dict[str, Decimal]` must not appear as a
+      stored field on registry-tier models (`RegistryFilingObservation`,
+      `RegistryCalculationResult`, `CalculationRevision`). Use a
+      `tuple[CasillaObservation, ...]` field instead and expose a
+      `@computed_field casilla_values` property for backward-compatible reads.
+      See defect-class T-01 in the linkage-design-audit reference document.
+    severity: ERROR
+    languages:
+      - python
+    paths:
+      include:
+        - "/src/aeat/domain/calculations/registry/_bindings.py"
+        - "/src/aeat/domain/calculations/registry/_formula_runtime.py"
+        - "/src/aeat/domain/modelos/_calculation_revision.py"
+    pattern-either:
+      - pattern: |
+          class $CLASS(...):
+              ...
+              $FIELD: Mapping[str, Decimal]
+              ...
+      - pattern: |
+          class $CLASS(...):
+              ...
+              $FIELD: dict[str, Decimal]
+              ...
+      - pattern: |
+          class $CLASS(...):
+              ...
+              $FIELD: Dict[str, Decimal]
+              ...

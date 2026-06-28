@@ -1,0 +1,36 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "ledger"
+domain = "concepto"
+lifecycle = "approved"
+related = ["binding", "modelo"]
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "El registro de movimientos de dinero dentro de la aplicacion, del que se nutren los calculos."
+definition = "El registro de movimientos economicos dentro de la aplicacion. La persona importa sus transacciones al ledger y clasifica cada una a efectos fiscales, de modo que las reglas de calculo puedan determinar que entrada alimenta cada casilla de un modelo."
+
+[language.es.source]
+citation = "Documentacion de la aplicacion aeat; concepto interno del producto."
+authority = "other"
+
+[[language.es.term]]
+label = "ledger"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[language.en]
+short_description = "Your record of money movements inside the application, which feeds the calculations."
+
+[language.ca]
+short_description = "El registre de moviments de diners dins de l'aplicacio, que nodreix els calculs."
+
+[language.hu]
+short_description = "A penzmozgasok nyilvantartasa az alkalmazason belul, amely a szamitasokat taplalja."

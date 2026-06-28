@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0613"
+number = "0613"
+label = "Incremento por gastos en guarderias o centros de educación infantil autorizados"
+section = ["resultados", "calculo_impuesto_res", "deduc_mater_res"]
+semantic_role = "irpf_incremento_maternidad_guarderia"
+legal_refs = ["ley-35-2006:art-81"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

@@ -1,0 +1,17 @@
+[revisions."2009-y-siguientes"]
+label = "Modelo 308 ejercicios 2009 y siguientes (Orden EHA/3786/2008, ad-hoc segun tipo de operador)"
+valid_from = 2009-01-01
+period_selector = { year_from = 2009, periods = ["AD-HOC"] }
+legal_refs = [
+    "ley-37-1992:art-21",
+    "rd-1624-1992:art-30-bis",
+    "orden-eha-3786-2008:art-2",
+    "orden-eha-3786-2008:art-11",
+    "ley-37-1992:art-161",
+]
+source_refs = [
+    "aeat-dr-308-2019",
+    "aeat-modelo-308-procedure",
+    "boe-modelo-308-2008-form",
+]
+

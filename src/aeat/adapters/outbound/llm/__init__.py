@@ -1,23 +1,23 @@
-"""LLM client, prompt registry, cache, and translation helpers.
+"""LLM client, prompt registry, and cache.
 
 The public API is exported from this package root so callers never need to
-import internal provider or storage modules directly.
+import internal provider or storage modules directly. Public surface
+includes :class:`LLMClient` for completions, :class:`LLMCache` for the
+on-disk content-addressed cache, :class:`PromptRegistry` for versioned
+prompt templates, and the :class:`LLMError` exception hierarchy.
 
-Example:
-    ```python
-    import asyncio
+Examples:
+    Issue a completion via the high-level client:
 
-    from . import LLMClient, LLMRequest
-
-    async def main() -> None:
-        client = LLMClient()
-        response = await client.complete(
-            LLMRequest(prompt="Summarize Modelo 130 in one sentence.")
-        )
-        print(response.text)
-
-    asyncio.run(main())
-    ```
+    >>> import asyncio
+    >>> from aeat.adapters.outbound.llm import LLMClient, LLMRequest
+    >>> async def main() -> None:
+    ...     client = LLMClient()
+    ...     response = await client.complete(
+    ...         LLMRequest(prompt="Summarize the requested modelo in one sentence.")
+    ...     )
+    ...     # response.text contains the completion; print in real usage
+    >>> # asyncio.run(main())  # requires a live LLM provider; omitted from doctest
 """
 
 from ._cache import LLMCache
@@ -26,6 +26,7 @@ from ._errors import (
     LLMCacheError,
     LLMConfigError,
     LLMError,
+    LLMPdfRasterisationError,
     LLMProviderError,
     LLMRateLimitError,
 )
@@ -36,17 +37,17 @@ from ._models import (
     LLMProvider,
     LLMRequest,
     LLMResponse,
+    MultimodalImageInput,
     PromptDefinition,
     PromptRegistry,
     Translation,
     UsageRecord,
     UsageSummary,
 )
-from ._translator import BulkTranslator, Translator
+from ._providers import rasterise_pdf_pages_to_base64_png
 from ._usage import UsageRecorder
 
 __all__ = [
-    "BulkTranslator",
     "CacheKey",
     "CacheStats",
     "CachedEntry",
@@ -55,16 +56,18 @@ __all__ = [
     "LLMClient",
     "LLMConfigError",
     "LLMError",
+    "LLMPdfRasterisationError",
     "LLMProvider",
     "LLMProviderError",
     "LLMRateLimitError",
     "LLMRequest",
     "LLMResponse",
+    "MultimodalImageInput",
     "PromptDefinition",
     "PromptRegistry",
     "Translation",
-    "Translator",
     "UsageRecord",
     "UsageRecorder",
     "UsageSummary",
+    "rasterise_pdf_pages_to_base64_png",
 ]

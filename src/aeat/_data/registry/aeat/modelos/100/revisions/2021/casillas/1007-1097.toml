@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "1097"
+number = "1097"
+label = "Por obtención de rentas derivadas del arrendamiento de vivienda cuya renta no supere el precio de referencia de alquileres privados"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_arrendamiento_vivienda"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#live-sync-backend'
 date: '2026-04-21'
+modified: '2026-04-21'
 related:
   - '[[2026-04-21-live-sync-backend-plan]]'
   - '[[2026-04-21-live-sync-backend-adr]]'
@@ -10,9 +11,7 @@ related:
 
 # `live-sync-backend` Code Review (Implementation Audit)
 
-<!-- Persistent log of audit findings appended below. -->
 
-<!-- Use: {TOPIC}-### | {LEVEL} | {Summary} \n {DESCRIPTION} format-->
 
 Decision: **PASS** — no CRITICAL or HIGH findings. Static checks: `ruff check` passes; `ruff format --check` passes.
 

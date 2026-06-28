@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0455"
+number = "0455"
+label = "Resto de saldos netos negativos de ganancias y pérdidas patrimoniales de 2019, pendientes de compensación a 1 de enero de 2021, a integrar en la base imponible del ahorro, con el límite del 25 por ..."
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_saldo_neto_gyp_ahorro_pendiente_resto"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

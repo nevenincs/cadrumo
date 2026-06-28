@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-7-2012-da-1.html",
+  "source_sha256": "9daac0a2c4f2bfad780fd2956f5b890891ab2decf769b4bf1ac312eb65354278",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Se introduce una disposición adicional decimoctava en la Ley 58/2003, de 17 de diciembre, General Tributaria, con el siguiente contenido:\n«Disposición adicional decimoctava. Obligación de información sobre bienes y derechos situados en el extranjero.\nLos obligados tributarios deberán suministrar a la Administración Tributaria, conforme a lo dispuesto en los artículos 29 y 93 de esta ley y en los términos que reglamentariamente se establezcan, la siguiente información sobre bienes y derechos situados en el extranjero:\na) Información sobre las cuentas situadas en el extranjero abiertas en entidades que se dediquen al tráfico bancario o crediticio de las que sean titulares o beneficiarios.\nb) Información de cualesquiera títulos, activos, valores o derechos representativos del capital social, fondos propios o patrimonio de todo tipo de entidades, o de la cesión a terceros de capitales propios, de los que sean titulares y que se encuentren depositados o situados en el extranjero.\nc) Información sobre los bienes inmuebles y derechos sobre bienes inmuebles de su titularidad situados en el extranjero.»\nEsta obligación no resultará de aplicación respecto de las cuentas, títulos, activos, valores, derechos o inmuebles cuando el valor de todos ellos, individualmente o en su conjunto, no supere los 50.000 euros.",
+      "title": "Disposición adicional primera. Modificación de la Ley 58/2003, de 17 de diciembre, General Tributaria.",
+      "section": "Disposición adicional primera. Modificación de la Ley 58/2003, de 17 de diciembre, General Tributaria.",
+      "anchor": null
+    }
+  ]
+}

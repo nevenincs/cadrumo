@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-58-2003-art-93.html",
+  "source_sha256": "9bab0567e1fe3cfca9e5f098efaa7fbb62a4e1a214736caf89a4155b8bc10c63",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Las personas físicas o jurídicas, públicas o privadas, así como las entidades mencionadas en el apartado 4 del artículo 35 de esta ley, estarán obligadas a proporcionar a la Administración tributaria toda clase de datos, informes, antecedentes y justificantes con trascendencia tributaria relacionados con el cumplimiento de sus propias obligaciones tributarias o deducidos de sus relaciones económicas, profesionales o financieras con otras personas.\nEn particular:\na) Los retenedores y los obligados a realizar ingresos a cuenta deberán presentar relaciones de los pagos dinerarios o en especie realizados a otras personas o entidades.\nb) Las sociedades, asociaciones, colegios profesionales u otras entidades que, entre sus funciones, realicen la de cobro de honorarios profesionales o de derechos derivados de la propiedad intelectual, industrial, de autor u otros por cuenta de sus socios, asociados o colegiados, deberán comunicar estos datos a la Administración tributaria.\nA la misma obligación quedarán sujetas aquellas personas o entidades, incluidas las bancarias, crediticias o de mediación financiera en general que, legal, estatutaria o habitualmente, realicen la gestión o intervención en el cobro de honorarios profesionales o en el de comisiones, por las actividades de captación, colocación, cesión o mediación en el mercado de capitales.",
+      "title": "Artículo 93. Obligaciones de información.",
+      "section": "Artículo 93. Obligaciones de información.",
+      "anchor": null
+    }
+  ]
+}

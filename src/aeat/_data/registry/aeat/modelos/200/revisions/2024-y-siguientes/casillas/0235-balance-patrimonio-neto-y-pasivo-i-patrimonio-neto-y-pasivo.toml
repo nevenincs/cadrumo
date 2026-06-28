@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "00780"
+number = "00780"
+label = "Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - Fondo de Educación, Formación y Promoción a largo plazo (cooperativas) [00780]"
+section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
+data_type = "money"
+semantic_role = "is_balance_patrimonio_neto_pasivo_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-005-casilla-00780", "modelo-200-page-017-casilla-00780"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00781"
+number = "00781"
+label = "Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - Deudas con características especiales a largo plazo (cooperativas) [00781]"
+section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
+data_type = "money"
+semantic_role = "is_balance_patrimonio_neto_pasivo_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-005-casilla-00781", "modelo-200-page-017-casilla-00781"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00782"
+number = "00782"
+label = "Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - \"Capital\" reembolsable exigible (cooperativas) [00782]"
+section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
+data_type = "money"
+semantic_role = "is_balance_patrimonio_neto_pasivo_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-005-casilla-00782", "modelo-200-page-017-casilla-00782"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00783"
+number = "00783"
+label = "Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - Fondos especiales calificados como pasivo (cooperativas) [00783]"
+section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
+data_type = "money"
+semantic_role = "is_balance_patrimonio_neto_pasivo_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-005-casilla-00783", "modelo-200-page-016-casilla-00783"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00784"
+number = "00784"
+label = "Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - Acreedores por fondos capitalizados a largo plazo (cooperativas) [00784]"
+section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
+data_type = "money"
+semantic_role = "is_balance_patrimonio_neto_pasivo_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-005-casilla-00784", "modelo-200-page-016-casilla-00784"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

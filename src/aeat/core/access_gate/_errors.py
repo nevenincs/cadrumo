@@ -7,8 +7,7 @@ have a single root they can catch at integration boundaries.
 ``adapters/outbound/aeat/export`` layer) because:
 
 1. The gate module (``core/access_gate/``) raises it, and
-   ``core/`` cannot import from ``adapters/`` under the
-   import-linter contract.
+   ``core/`` must remain independent from adapter implementations.
 2. The policy "live AEAT submission is permanently forbidden" is
    a foundational invariant, not an adapter implementation detail.
 """
@@ -16,34 +15,33 @@ have a single root they can catch at integration boundaries.
 from __future__ import annotations
 
 from ..errors import AeatError
-from ..i18n import Translatable
 
 
-class SubmissionError(AeatError):
-    """Base class for every error raised by the submission pipeline.
+class AccessGateSubmissionError(AeatError):
+    """Base class for live-write access-gate submission policy failures.
 
     Attributes:
         translated_message: Optional :class:`aeat.core.i18n.Translatable`
             payload carrying a user-facing version of the message.
     """
 
-    def __init__(self, message: str, *, translated_message: Translatable | None = None) -> None:
+    def __init__(self, message: str, *, translated_message: str | None = None) -> None:
         """Construct a submission error.
 
         Args:
             message: English-authoritative error message (logged).
-            translated_message: Optional trilingual payload surfaced
+            translated_message: Optional multilingual payload surfaced
                 to the CLI and any user-facing consumer.
         """
         super().__init__(message)
-        self.translated_message: Translatable | None = translated_message
+        self.translated_message: str | None = translated_message
 
 
-class SubmissionPreflightError(SubmissionError):
-    """Raised when preflight gating rejects a draft before any browser work."""
+class AccessGateSubmissionPreflightError(AccessGateSubmissionError):
+    """Raised when access-gate preflight rejects a write-shaped operation."""
 
 
-class LiveSubmitForbiddenError(SubmissionPreflightError):
+class LiveSubmitForbiddenError(AccessGateSubmissionPreflightError):
     """Raised when any caller attempts a permanently forbidden live AEAT write."""
 
     def __init__(
@@ -53,47 +51,42 @@ class LiveSubmitForbiddenError(SubmissionPreflightError):
             "export and upload the file yourself in the AEAT portal"
         ),
         *,
-        translated_message: Translatable | None = None,
+        translated_message: str | None = "errors.locked.locked_access_gate_live_submit_forbidden",
     ) -> None:
-        """Construct the permanent live-submit refusal error."""
-        default_translatable: Translatable = {
-            "es": (
-                "El envío en vivo a AEAT está permanentemente prohibido. "
-                "Usa produce -> verify -> export y sube el fichero tú mismo "
-                "en el portal de AEAT."
-            ),
-            "en": (
-                "Live AEAT submission is permanently forbidden. "
-                "Use produce -> verify -> export and upload the file yourself "
-                "in the AEAT portal."
-            ),
-            "hu": (
-                "Az élő AEAT beküldés véglegesen tiltott. "
-                "Használd a produce -> verify -> export folyamatot, és töltsd "
-                "fel a fájlt te magad az AEAT portálon."
-            ),
-        }
-        super().__init__(
-            message,
-            translated_message=translated_message or default_translatable,
-        )
+        """Construct the permanent live-submit refusal error.
+
+        By default the user-facing text uses the same locale key as the
+        central error registry entry bound to this class.
+        """
+        super().__init__(message, translated_message=translated_message)
 
 
 class AeatLiveReadNotEnabledError(AeatError):
-    """Raised when live-read access is required but the gate is shut.
+    """Raised when pytest live-read access is required but the test gate is shut.
 
-    Emitted by :meth:`AeatAccessGate.require_live_read` when
-    ``AEAT_LIVE_TESTS_ENABLED`` is not set to ``"1"``. The existing
-    per-test ``if os.environ[...] != "1": pytest.skip(...)``
-    boilerplate is not replaced — this error gives non-test callers
-    (future live-read CLI commands, sync runners) a typed failure
-    shape.
+    Emitted by :meth:`AeatAccessGate.require_live_read` during pytest
+    execution when ``AEAT_LIVE_TESTS_ENABLED`` is not set to ``"1"``.
+    Operator-facing live reads are controlled by auth/profile/read-only
+    guards rather than this test opt-in variable.
+    """
+
+
+class AuthorizationManifestError(AeatError):
+    """Raised when the multi-year-renta authorization manifest is malformed.
+
+    Emitted by the authorization-manifest loader when
+    ``authorization.toml`` exists but cannot be parsed or declares an
+    entry that violates the manifest invariants (a single-year enrollment
+    claim, a duplicate modelo, an unknown field). An *absent* manifest is
+    not an error: default-deny-by-absence yields an empty manifest that
+    authorizes zero modelos.
     """
 
 
 __all__ = [
+    "AccessGateSubmissionError",
+    "AccessGateSubmissionPreflightError",
     "AeatLiveReadNotEnabledError",
+    "AuthorizationManifestError",
     "LiveSubmitForbiddenError",
-    "SubmissionError",
-    "SubmissionPreflightError",
 ]

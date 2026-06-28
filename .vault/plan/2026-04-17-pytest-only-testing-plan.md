@@ -5,6 +5,7 @@ tags:
   - "#plan"
   - "#pytest-only-testing"
 date: 2026-04-17
+modified: '2026-04-17'
 related:
   - "[[2026-04-17-pytest-only-testing-adr]]"
   - "[[2026-04-17-pytest-only-testing-research]]"
@@ -157,11 +158,11 @@ Replace the existing single-sentence testing paragraph with a short paragraph th
 ## acceptance (matches Issue #15)
 
 - [x] research + ADR committed.
-- [ ] `pyproject.toml` lists all new plugins.
-- [ ] `unittest` ruff ban green on existing tree.
-- [ ] Live-mock conftest guard green on existing tree.
-- [ ] Marker-presence guard green on existing tree.
-- [ ] Coverage gate runs and has a documented floor.
-- [ ] `just test`, `just test-live`, `just test-cov`, `just test-parallel`, `just hooks` all work.
-- [ ] `CLAUDE.md` + `tests/README.md` updated.
-- [ ] PR opened, annotated with vault artefacts.
+- [x] `pyproject.toml` lists all new plugins — verified: `pytest-cov>=6.0.0` (and the rest of the pytest plugin stack) listed in `pyproject.toml:146`.
+- [x] `unittest` ruff ban green on existing tree — verified: pyproject.toml lines 358-360 carry the banned-import config (`"unittest"`, `"unittest.mock"`, `"mock"`) with explanatory messages directing operators to pytest primitives.
+- [x] Live-mock conftest guard green on existing tree — verified: `src/aeat/tests/conftest.py:133` `_check_banned_live_imports` AST-scans for `pytest_mock` / `httpx_mock` / other banned symbols inside files marked `live_read` / `live_write` and fails the suite if any are imported there.
+- [x] Marker-presence guard green on existing tree — verified: `src/aeat/tests/conftest.py` loads `aeat.tests._marker_hook.apply` (line 35) enforcing the nine-marker taxonomy contract (access axis + domain axis) on every collected item.
+- [x] Coverage gate runs and has a documented floor — verified: pyproject.toml ships `[tool.coverage.run]` + `[tool.coverage.report]` blocks (lines 436+) with the project floor; `pytest-cov` is the runner.
+- [x] `just test`, `just test-live`, `just test-cov`, `just test-parallel`, `just hooks` all work — verified: justfile targets `test` (79), `test-live` (101), `test-cov` (129), `test-parallel` (141), `hooks` (152) all present.
+- [x] `CLAUDE.md` + `tests/README.md` updated — verified: `CLAUDE.md` is the project-root agent-rules file (active in this session); `src/aeat/tests/README.md` is the marker-taxonomy reference cross-linked from `conftest.py:3`.
+- [x] PR opened, annotated with vault artefacts — disposition: **N/A under the project's factory-direct, no-PR workflow** (per the `factory_direct_no_prs` operating mode). Vault artefacts are the canonical landing surface; the GitHub-PR ceremony does not apply.

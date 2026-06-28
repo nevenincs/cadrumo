@@ -1,0 +1,30 @@
+[[revisions.2009-y-siguientes.extraction_profiles]]
+id = "modelo-303-declaracion-pdf"
+surface = "declaracion_pdf"
+artefact_kind = "declaracion"
+accepted_artefact_kinds = ["declaration_pdf"]
+parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
+target_casillas = [
+    # Primitive cuota leaves — Route A of the parser-engine-totals-impedance
+    # ADR (2026-06-02). The 2009-y-siguientes revision has no
+    # iva.autoconsumo.promotor.* casillas, so only the five non-autoconsumo
+    # primitives are extracted here.
+    {casilla_id = "iva.repercutido.general", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Primitivo\s+IVA\s+repercutido\s+general\s+21\s+por\s+ciento'},
+    {casilla_id = "iva.repercutido.reducido", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Primitivo\s+IVA\s+repercutido\s+reducido\s+10\s+por\s+ciento'},
+    {casilla_id = "iva.repercutido.super-reducido", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Primitivo\s+IVA\s+repercutido\s+super-reducido\s+4\s+por\s+ciento'},
+    {casilla_id = "iva.autorepercutido.intracomunitaria", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Primitivo\s+IVA\s+autorepercutido\s+intracomunitaria'},
+    {casilla_id = "iva.soportado.interiores", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Primitivo\s+IVA\s+soportado\s+interiores'},
+    # Form-page totals retained for AEAT-form fidelity and downstream
+    # cross-check (engine resultado-regimen-general == c27 - c45).
+    {casilla_id = "27", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Total\s+cuota\s+devengada'},
+    {casilla_id = "29", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Por\s+cuotas\s+soportadas\s+en\s+operaciones\s+interiores\s+corrientes'},
+    {casilla_id = "45", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Total\s+a\s+deducir'},
+    {casilla_id = "iva.resultado-regimen-general", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Resultado\s+r[eé]gimen\s+general\s+\([\[\s]*27[\]\s]*-[\[\s]*45[\]\s]*\)'},
+]
+confidence = "strict"
+corpus_round_trip_verified = true
+verification_source = "synthetic_from_aeat_published_text"
+min_coverage = "1"
+failure_semantics = "fail_hard"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]

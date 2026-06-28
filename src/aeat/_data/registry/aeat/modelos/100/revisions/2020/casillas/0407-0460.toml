@@ -1,0 +1,11 @@
+[[revisions."2020".casillas]]
+id = "0460"
+number = "0460"
+label = "Base imponible del ahorro ( [0424] - [0436] - [0439] - [0440] - [0441] - [0442] - [0443] - [0444] - [0445] - [0447] + [0429] - [0446] - [0449] - [0450] - [0451] - [0452] - [0453] [0454] - [0455] -..."
+section = ["resultados", "base_imponible_res"]
+data_type = "decimal"
+semantic_role = "irpf_base_imponible_ahorro"
+input_kind = "computed"
+formula = "renta-2020-base-imponible-del-ahorro"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

@@ -1,0 +1,22 @@
+[[revisions.2023-y-siguientes.live_cross_references]]
+id = "modelo-180-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-180-filed-declarations-read-only"
+allowed_hosts = ["www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-180-procedure"]

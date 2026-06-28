@@ -12,27 +12,35 @@ from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
-from ...core.i18n import Translatable
-
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period
+from ._errors import SubmissionValidationError
 
 
 class SubmissionStatus(StrEnum):
-    """Lifecycle status of a :class:`SubmittedFiling`.
+    """Lifecycle status of a :class:`ModeloPresentado`.
 
-    Values are retained for historical records imported from AEAT or
-    earlier project phases, even though live AEAT submission is now
-    permanently forbidden.
+    Values are retained for historical records imported from AEAT,
+    even though live AEAT submission is now permanently forbidden.
+    Member names and values mirror the AEAT Sede labels per ADR A7.2.
+
+    Attributes:
+        PENDIENTE_DE_PRESENTAR: Filing recorded but no attempt has run.
+        EN_TRAMITACION: An attempt is currently underway.
+        PRESENTADA: Attempt completed; awaiting AEAT acknowledgement.
+        ACEPTADA: AEAT issued a justificante CSV and PDF.
+        RECHAZADA: AEAT explicitly rejected the filing.
+        FALLIDA: Attempt could not complete (transport / browser).
     """
 
-    PENDING = "PENDING"
-    IN_PROGRESS = "IN_PROGRESS"
-    SUBMITTED = "SUBMITTED"
-    ACKNOWLEDGED = "ACKNOWLEDGED"
-    REJECTED = "REJECTED"
-    FAILED = "FAILED"
+    PENDIENTE_DE_PRESENTAR = "PENDIENTE_DE_PRESENTAR"
+    EN_TRAMITACION = "EN_TRAMITACION"
+    PRESENTADA = "PRESENTADA"
+    ACEPTADA = "ACEPTADA"
+    RECHAZADA = "RECHAZADA"
+    FALLIDA = "FALLIDA"
 
 
 class SubmissionAttempt(BaseModel):
@@ -46,7 +54,7 @@ class SubmissionAttempt(BaseModel):
             failure).
         status: Terminal :class:`SubmissionStatus` for the attempt.
         error_code: Optional machine-readable error code.
-        error_message: Optional trilingual error message.
+        error_message: Optional multilingual error message.
         browser_trace_path: Optional path to a Playwright trace file
             written for this attempt.
     """
@@ -58,18 +66,18 @@ class SubmissionAttempt(BaseModel):
     ended_at: datetime
     status: SubmissionStatus
     error_code: str | None = None
-    error_message: Translatable | None = None
+    error_message: str | None = None
     browser_trace_path: Path | None = None
 
     @model_validator(mode="after")
     def _check_time_ordering(self) -> SubmissionAttempt:
         """Reject attempts whose ``ended_at`` predates ``started_at``."""
-        if self.ended_at < self.started_at:
-            raise ValueError(f"ended_at ({self.ended_at}) is before started_at ({self.started_at})")
+        if self.ended_at and self.ended_at < self.started_at:
+            raise SubmissionValidationError(f"ended_at ({self.ended_at}) is before started_at ({self.started_at})")
         return self
 
 
-class SubmittedFiling(BaseModel):
+class ModeloPresentado(BaseModel):
     """The typed audit record for one historical filing.
 
     Attributes:
@@ -77,8 +85,10 @@ class SubmittedFiling(BaseModel):
             ``f"{draft_id}:{attempt_ordinal}"``. See
             :func:`make_submission_id`.
         draft_id: The upstream draft identifier.
-        modelo: The AEAT modelo identifier (e.g. ``"130"``).
-        period: The period covered (e.g. ``"2026Q1"``).
+        modelo: The AEAT modelo identifier.
+        period: The :class:`~aeat.core.Period` covered, serialised as
+            ``{"filing_year": int, "code": str}`` across the persistence
+            boundary.
         profile_tax_id: The autónomo NIF / NIE verbatim.
         status: The overall :class:`SubmissionStatus` for the filing.
         justificante_csv: The AEAT-issued CSV, when present.
@@ -96,7 +106,7 @@ class SubmittedFiling(BaseModel):
     submission_id: str = Field(min_length=1)
     draft_id: str = Field(min_length=1)
     modelo: str = Field(min_length=1)
-    period: str = Field(min_length=1)
+    period: Period
     profile_tax_id: str = Field(min_length=1)
     status: SubmissionStatus
     justificante_csv: str | None = None
@@ -106,15 +116,19 @@ class SubmittedFiling(BaseModel):
     attempts: tuple[SubmissionAttempt, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
-    def _check_ack_consistency(self) -> SubmittedFiling:
-        """Enforce ``ACKNOWLEDGED`` ↔ justificante-present invariants."""
-        if self.status is SubmissionStatus.ACKNOWLEDGED:
-            if self.justificante_csv is None or self.justificante_pdf_path is None:
-                raise ValueError("status ACKNOWLEDGED requires both justificante_csv and justificante_pdf_path")
-            if self.acknowledged_at is None:
-                raise ValueError("status ACKNOWLEDGED requires acknowledged_at")
-        if self.acknowledged_at is not None and self.acknowledged_at < self.submitted_at:
-            raise ValueError(f"acknowledged_at ({self.acknowledged_at}) is before submitted_at ({self.submitted_at})")
+    def _check_ack_consistency(self) -> ModeloPresentado:
+        """Enforce ``ACEPTADA`` ↔ justificante-present invariants."""
+        if self.status is SubmissionStatus.ACEPTADA:
+            if not self.justificante_csv or not self.justificante_pdf_path:
+                raise SubmissionValidationError(
+                    "status ACEPTADA requires both justificante_csv and justificante_pdf_path",
+                )
+            if not self.acknowledged_at:
+                raise SubmissionValidationError("status ACEPTADA requires acknowledged_at")
+        if self.acknowledged_at and self.acknowledged_at < self.submitted_at:
+            raise SubmissionValidationError(
+                f"acknowledged_at ({self.acknowledged_at}) is before submitted_at ({self.submitted_at})",
+            )
         return self
 
 
@@ -134,12 +148,12 @@ def make_submission_id(draft_id: str, attempt_ordinal: int) -> str:
         A 16-character lowercase hex string.
 
     Raises:
-        ValueError: If ``draft_id`` is empty or ``attempt_ordinal``
-            is not a positive integer.
+        SubmissionValidationError: If ``draft_id`` is empty or
+            ``attempt_ordinal`` is not a positive integer.
     """
     if not draft_id:
-        raise ValueError("draft_id must be non-empty")
+        raise SubmissionValidationError("draft_id must be non-empty")
     if attempt_ordinal < 1:
-        raise ValueError(f"attempt_ordinal must be >= 1, got {attempt_ordinal}")
+        raise SubmissionValidationError(f"attempt_ordinal must be >= 1, got {attempt_ordinal}")
     payload = f"{draft_id}:{attempt_ordinal}".encode()
     return hashlib.sha256(payload).hexdigest()[:16]

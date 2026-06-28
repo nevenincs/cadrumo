@@ -1,0 +1,10 @@
+[[revisions."2024".casillas]]
+id = "0270"
+number = "0270"
+label = "Suma de imputaciones de rentas en el régimen de transparencia fiscal internacional: (suma de las casillas [0269])"
+section = ["resultados", "regimenes_especiales_res", "re_tr_fiscal_inter_res"]
+semantic_role = "irpf_re_tfi_suma_imputaciones"
+input_kind = "computed"
+formula = "renta-2024-transparencia-fiscal-suma"
+legal_refs = ["ley-35-2006:art-91"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

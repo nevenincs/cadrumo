@@ -1,0 +1,22 @@
+rules:
+  - id: no-dict-str-any-in-domain-application
+    message: |
+      `dict[str, Any]` / `Mapping[str, Any]` forbidden in src/aeat/domain/ and
+      src/aeat/application/. Define a typed pydantic model or `TypedDict` for
+      the structured shape, or narrow at the consumption boundary
+      (e.g. `Model.model_validate(parsed)` and use the model thereafter).
+      Untyped string-keyed envelopes erase provenance at cross-boundary
+      transitions and bypass the strict pydantic contracts the registry
+      enforces elsewhere.
+    severity: ERROR
+    languages:
+      - python
+    paths:
+      include:
+        - "/src/aeat/domain/"
+        - "/src/aeat/application/"
+    pattern-either:
+      - pattern: dict[str, Any]
+      - pattern: Dict[str, Any]
+      - pattern: Mapping[str, Any]
+      - pattern: MutableMapping[str, Any]

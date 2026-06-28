@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "0828"
+number = "0828"
+label = "Por las ayudas y subvenciones recibidas por los deportistas de alto nivel de Galicia"
+section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
+semantic_role = "irpf_deduccion_galicia_deportistas_alto_nivel"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

@@ -1,0 +1,10 @@
+[[revisions."2023".casillas]]
+id = "0527"
+number = "0527"
+label = "Importe de las anualidades por alimentos en favor de los hijos satisfechas por decisión judicial ([1741] + [1744] + [1749] + [1754] + [1759])"
+section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
+semantic_role = "irpf_anualidades_alimentos_total"
+input_kind = "computed"
+formula = "renta-2023-anualidades-alimentos-hijos-suma"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

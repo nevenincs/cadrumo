@@ -1,0 +1,17 @@
+[[revisions."2023".formulas]]
+id = "renta-2023-anualidades-alimentos-hijos-suma"
+target_casilla_id = "0527"
+expression = { op = "sum", args = [
+    { casilla_id = "1741" },
+    { casilla_id = "1744" },
+    { casilla_id = "1749" },
+    { casilla_id = "1754" },
+    { casilla_id = "1759" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "reducciones"]

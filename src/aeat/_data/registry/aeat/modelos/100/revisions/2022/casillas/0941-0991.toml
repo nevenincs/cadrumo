@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "0991"
+number = "0991"
+label = "Por arrendamiento de vivienda habitual (importe de la casilla [1130] del anexo B.8)"
+section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
+semantic_role = "irpf_deduccion_murcia_arrendamiento_vivienda"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

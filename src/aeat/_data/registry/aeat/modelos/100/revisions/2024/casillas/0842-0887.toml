@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0887"
+number = "0887"
+label = "Por el arrendamiento de vivienda habitual (se traslada este importe a la casilla [1130] del anexo B.9)"
+section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
+semantic_role = "irpf_deduccion_asturias_arrendamiento_vivienda"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hfp-886-2023.html",
+  "source_sha256": "d831f143a46935e906c960d298d2fcf27049c0976189f67566c5e2fe314376a0",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Orden HFP/886/2023 — Modelo 721 — monedas virtuales situadas en el extranjero.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

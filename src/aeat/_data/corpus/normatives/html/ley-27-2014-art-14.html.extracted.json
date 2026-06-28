@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-27-2014-art-14.html",
+  "source_sha256": "56b8f838fc53e016fadbfeb7ad8727434f097bd65c63c30a7eb6c12c6db76967",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. No serán deducibles los gastos por provisiones y fondos internos para la cobertura de contingencias idénticas o análogas a las que son objeto del Texto Refundido de la Ley de Regulación de los Planes y Fondos de Pensiones, aprobado por el Real Decreto Legislativo 1/2002, de 29 de noviembre.\nEstos gastos serán fiscalmente deducibles en el período impositivo en que se abonen las prestaciones.\n2. No serán deducibles los gastos relativos a retribuciones a largo plazo al personal mediante sistemas de aportación definida o prestación definida. No obstante, serán deducibles las contribuciones de los promotores de planes de pensiones regulados en el Texto Refundido de la Ley de Regulación de los Planes y Fondos de Pensiones, así como las realizadas a planes de previsión social empresarial.\n3. No serán deducibles los siguientes gastos asociados a provisiones:\na) Los derivados de obligaciones implícitas o tácitas.\nb) Los concernientes a los costes de cumplimiento de contratos que excedan a los beneficios económicos que se esperan recibir de los mismos.",
+      "title": "Artículo 14. Provisiones y otros gastos.",
+      "section": "Artículo 14. Provisiones y otros gastos.",
+      "anchor": null
+    }
+  ]
+}

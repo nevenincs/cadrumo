@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-27-2014-art-124.html",
+  "source_sha256": "ca8ced901064fc72c03f2fe0a5a511f20281e281d4ed3bcfa2c617d25ad1c78a",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Los contribuyentes estarán obligados a presentar una declaración por este Impuesto en el lugar y la forma que se determinen por el Ministro de Hacienda y Administraciones Públicas.\nLa declaración se presentará en el plazo de los 25 días naturales siguientes a los 6 meses posteriores a la conclusión del período impositivo.\nSi al inicio del indicado plazo no se hubiera determinado por el Ministro de Hacienda y Administraciones Públicas la forma de presentar la declaración de ese período impositivo, la declaración se presentará dentro de los 25 días naturales siguientes a la fecha de entrada en vigor de la norma que determine dicha forma de presentación. No obstante, en tal supuesto el contribuyente podrá optar por presentar la declaración en el plazo al que se refiere el párrafo anterior cumpliendo los requisitos formales que se hubieran establecido para la declaración del período impositivo precedente.\n2. Los contribuyentes exentos a que se refiere el apartado 1 del artículo 9 de esta Ley no estarán obligados a declarar.\n3. Los contribuyentes a que se refieren los apartados 2, 3 y 4 del artículo 9 de esta Ley estarán obligados a declarar la totalidad de sus rentas, exentas y no exentas.\nNo obstante, los contribuyentes a que se refiere el apartado 3 del artículo 9 de esta Ley no tendrán obligación de presentar declaración cuando cumplan los siguientes requisitos:\na) Que sus ingresos totales no superen 75.000 euros anuales.\nb) Que los ingresos correspondientes a rentas no exentas no superen 2.000 euros anuales.\nc) Que todas las rentas no exentas que obtengan estén sometidas a retención.",
+      "title": "Artículo 124. Declaraciones.",
+      "section": "Artículo 124. Declaraciones.",
+      "anchor": null
+    }
+  ]
+}

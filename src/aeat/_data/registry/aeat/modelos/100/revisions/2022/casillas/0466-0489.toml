@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "0489"
+number = "0489"
+label = "Aportaciones y contribuciones realizadas en 2022 con derecho a reducción"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_deportistas"]
+semantic_role = "irpf_red_deportistas_aportaciones_contribuciones"
+legal_refs = ["ley-35-2006:da-11"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

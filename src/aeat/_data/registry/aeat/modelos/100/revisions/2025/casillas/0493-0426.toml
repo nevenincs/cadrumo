@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0426"
+number = "0426"
+label = "Aportaciones del trabajador al plan de pensiones de empleo, mutualidad de previsión social o plan de previsión social empresarial, siempre que se hayan efectuado contribuciones empresariales"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
+semantic_role = "irpf_red_prevision_social_aportaciones_trabajador_con_contribucion_empresarial"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0739"
+number = "0739"
+label = "Reserva para Inversiones en Canarias 2023: Inversiones previstas en las letras A, B, B.bis y D (1.º) del art. 27.4 y D. A. 15ª (3.º y 6.º)"
+section = ["resultados", "anexo_a_res", "reserva_inversiones_canarias_res"]
+semantic_role = "irpf_anexo_a_ric_inversion_tipo_abd"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

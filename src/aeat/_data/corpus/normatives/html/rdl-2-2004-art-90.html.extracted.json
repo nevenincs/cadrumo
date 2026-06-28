@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/rdl-2-2004-art-90.html",
+  "source_sha256": "4d88585560ecb84281bc4036cbb3038fbcdb98b6fd544353b7eb2a2591d9bb0f",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. El impuesto se gestiona a partir de la matrícula de éste. Dicha matrícula se formará anualmente para cada término y estará constituida por censos comprensivos de las actividades económicas, sujetos pasivos, cuotas mínimas y, en su caso, del recargo provincial.\nLa matrícula estará a disposición del público en los respectivos ayuntamientos.\n2. Los sujetos pasivos estarán obligados a presentar las correspondientes declaraciones censales de alta manifestando todos los elementos necesarios para su inclusión en la matrícula en los términos del artículo 90.1 de esta ley y dentro del plazo que reglamentariamente se establezca. A continuación se practicará por la Administración competente la liquidación correspondiente, la cual se notificará al sujeto pasivo, quien deberá efectuar el ingreso que proceda.\nAsimismo, los sujetos pasivos estarán obligados a comunicar las variaciones de orden físico, económico o jurídico que se produzcan en el ejercicio de las actividades gravadas y que tengan trascendencia a efectos de este impuesto, y las formalizarán en los plazos y términos reglamentariamente determinados.\nEn particular, los sujetos pasivos a los que no resulte de aplicación la exención prevista en el párrafo c) del apartado 1 del artículo 82 de esta ley, deberán comunicar a la Agencia Estatal de Administración Tributaria el importe neto de su cifra de negocios. Asimismo, los sujetos pasivos deberán comunicar las variaciones que se produzcan en el importe neto de su cifra de negocios cuando tal variación suponga la modificación de la aplicación o no de la exención prevista en el párrafo c) del apartado 1 del artículo 82 de esta ley o una modificación en el tramo a considerar a efectos de la aplicación del coeficiente de ponderación previsto en el artículo 86 de esta ley. El Ministro de Hacienda establecerá los supuestos en que deberán presentarse estas comunicaciones, su contenido y su plazo y forma de presentación, así como los supuestos en que habrán de presentarse por vía telemática\n3. La inclusión, exclusión o alteración de los datos contenidos en los censos, resultantes de las actuaciones de inspección tributaria o de la formalización de altas y comunicaciones, se considerarán acto administrativo, y conllevarán la modificación del censo. Cualquier modificación de la matrícula que se refiera a datos obrantes en los censos requerirá, inexcusablemente, la previa alteración de estos últimos en el mismo sentido.\n4. Este impuesto podrá exigirse en régimen de autoliquidación, en los términos que reglamentariamente se establezcan.",
+      "title": "Artículo 90. Gestión tributaria del impuesto.",
+      "section": "Artículo 90. Gestión tributaria del impuesto.",
+      "anchor": null
+    }
+  ]
+}

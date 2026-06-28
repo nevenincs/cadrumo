@@ -1,0 +1,9 @@
+[[revisions."2021".casillas]]
+id = "0628"
+number = "0628"
+label = "Fecha de fin de la discapacidad"
+section = ["resultados", "calculo_impuesto_res", "deduc_ascendiente_disc_res"]
+data_type = "text"
+semantic_role = "irpf_ascendiente_discapacidad_fecha_fin"
+legal_refs = ["ley-35-2006:art-81-bis"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

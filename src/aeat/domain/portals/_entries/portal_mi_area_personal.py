@@ -1,16 +1,23 @@
-"""Portal: Mi área personal."""
+"""Registry entry for the Sede Electronica authenticated personal area.
+
+Defines the :class:`PortalMetadata` record identified by the :class:`Portal`
+code ``PORTAL_MI_AREA_PERSONAL``, exposed as :data:`ENTRY` under the
+:class:`PortalCategory` member ``PERSONAL_AREA``, consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
-from ._common import build_entry
+from ._common import build_entry, portal_path
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_MI_AREA_PERSONAL,
-    url="https://sede.agenciatributaria.gob.es/Sede/area-personal.html",
-    subdomain=Subdomain.SEDE,
+    path=portal_path(Portal.PORTAL_MI_AREA_PERSONAL),
+    subdomain=PortalHost.SEDE,
     category=PortalCategory.AUTH,
     auth_methods=(
         AuthMethod.CLAVE_PIN,
@@ -20,10 +27,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label={
-        "es": "Mi área personal",
-        "en": "My personal area",
-        "hu": "Személyes felületem",
-    },
-    purpose_es="Punto de entrada autenticado al área personal del contribuyente.",
+    label="entries.portal_mi_area_personal.label",
+    purpose="entries.portal_mi_area_personal.purpose",
 )
+"""Portal entry for the taxpayer's personal area (authenticated landing)."""

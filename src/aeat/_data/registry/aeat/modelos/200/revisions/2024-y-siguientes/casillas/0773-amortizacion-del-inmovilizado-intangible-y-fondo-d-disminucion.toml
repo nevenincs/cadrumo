@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02586"
+number = "02586"
+label = "Amortización del inmovilizado intangible y fondo de comercio (art. 12.2 LIS) y amortización de la DT 13ª.1 LIS - Disminución - Correcciones del ejercicio - Permanentes [02586]"
+section = ["amortizacion_del_inmovilizado_intangible_y_fondo_d", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_amortizacion_intangible_fondo_comercio_permanente_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02586"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02587"
+number = "02587"
+label = "Amortización del inmovilizado intangible y fondo de comercio (art. 12.2 LIS) y amortización de la DT 13ª.1 LIS - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) ..."
+section = ["amortizacion_del_inmovilizado_intangible_y_fondo_d", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_amortizacion_intangible_fondo_comercio_temporaria_ejercicio_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02587"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02588"
+number = "02588"
+label = "Amortización del inmovilizado intangible y fondo de comercio (art. 12.2 LIS) y amortización de la DT 13ª.1 LIS - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios ant..."
+section = ["amortizacion_del_inmovilizado_intangible_y_fondo_d", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_amortizacion_intangible_fondo_comercio_permanente_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02588"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02589"
+number = "02589"
+label = "Amortización del inmovilizado intangible y fondo de comercio (art. 12.2 LIS) y amortización de la DT 13ª.1 LIS - Disminución - Saldo pendiente a principio de ejercicio [02589]"
+section = ["amortizacion_del_inmovilizado_intangible_y_fondo_d", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_amortizacion_intangible_fondo_comercio_saldo_inicial"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02589"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02590"
+number = "02590"
+label = "Amortización del inmovilizado intangible y fondo de comercio (art. 12.2 LIS) y amortización de la DT 13ª.1 LIS - Disminución - Saldo pendiente a fin de ejercicio [02590]"
+section = ["amortizacion_del_inmovilizado_intangible_y_fondo_d", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_amortizacion_intangible_fondo_comercio_saldo_final"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02590"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

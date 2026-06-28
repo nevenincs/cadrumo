@@ -1,0 +1,40 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "iva-domestic-reverse-charge"
+domain = "regimen"
+lifecycle = "approved"
+domain_refs = ["iva-category:domestic_reverse_charge"]
+legal_refs = ["ley-37-1992:art-84"]
+created_at = 2026-06-10
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "Inversion del sujeto pasivo (ISP) en operaciones interiores."
+definition = "Mecanismo por el que, en determinadas operaciones interiores, el sujeto pasivo del IVA es el destinatario y no quien realiza la entrega o el servicio, de modo que el destinatario autorrepercute la cuota."
+
+[language.es.source]
+citation = "Articulo 84 de la Ley 37/1992 del IVA."
+authority = "boe"
+
+[[language.es.term]]
+label = "inversion del sujeto pasivo"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "ISP"
+term_status = "admitted"
+
+[language.en]
+short_description = "Domestic reverse charge of VAT (ISP)."
+
+[language.ca]
+short_description = "Inversio del subjecte passiu (ISP) en operacions interiors."
+
+[language.hu]
+short_description = "Forditott adozas belfoldi ugyletekben."

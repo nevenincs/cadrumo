@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "03131"
+number = "03131"
+label = "Sociedades y fondos de capital-riesgo y sociedades de desarrollo industrial regional (capítulo IV del título VII LIS) - Aumento - Correcciones del ejercicio - Permanentes [03131]"
+section = ["sociedades_y_fondos_de_capital_riesgo_y_sociedades", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_regimenes_especiales_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03131"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03132"
+number = "03132"
+label = "Sociedades y fondos de capital-riesgo y sociedades de desarrollo industrial regional (capítulo IV del título VII LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercici..."
+section = ["sociedades_y_fondos_de_capital_riesgo_y_sociedades", "aumento"]
+data_type = "money"
+semantic_role = "is_capital_riesgo_correccion_ejercicio_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03132"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03133"
+number = "03133"
+label = "Sociedades y fondos de capital-riesgo y sociedades de desarrollo industrial regional (capítulo IV del título VII LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios ..."
+section = ["sociedades_y_fondos_de_capital_riesgo_y_sociedades", "aumento"]
+data_type = "money"
+semantic_role = "is_capital_riesgo_correccion_ejercicio_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03133"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03134"
+number = "03134"
+label = "Sociedades y fondos de capital-riesgo y sociedades de desarrollo industrial regional (capítulo IV del título VII LIS) - Aumento - Saldo pendiente a principio de ejercicio [03134]"
+section = ["sociedades_y_fondos_de_capital_riesgo_y_sociedades", "aumento"]
+data_type = "money"
+semantic_role = "is_capital_riesgo_saldo_pendiente_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03134"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03135"
+number = "03135"
+label = "Sociedades y fondos de capital-riesgo y sociedades de desarrollo industrial regional (capítulo IV del título VII LIS) - Aumento - Saldo pendiente a fin de ejercicio [03135]"
+section = ["sociedades_y_fondos_de_capital_riesgo_y_sociedades", "aumento"]
+data_type = "money"
+semantic_role = "is_capital_riesgo_saldo_pendiente_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03135"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

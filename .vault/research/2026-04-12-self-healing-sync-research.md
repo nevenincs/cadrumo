@@ -3,6 +3,7 @@ tags:
   - "#research"
   - "#self-healing-sync"
 date: 2026-04-12
+modified: '2026-04-12'
 title: Self-Healing Live-to-Local Sync Runner
 related:
   - "[[2026-04-12-playwright-anti-bot-adr]]"

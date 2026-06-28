@@ -1,0 +1,23 @@
+[modelo]
+id = "193"
+title = "Resumen anual de retenciones sobre capital mobiliario"
+official_name = "Modelo 193. Declaración informativa. Retenciones e ingresos a cuenta sobre determinados rendimientos del capital mobiliario y determinadas rentas. Resumen anual."
+tax_domain = "cross_tax"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-99",
+    "orden-eha-3377-2011:art-1",
+    "rd-439-2007:art-108",
+    "rd-439-2007:art-90",
+    "ley-35-2006:art-101",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-193-2024",
+    "aeat-modelo-193-procedure",
+    "boe-modelo-193-2011-form",
+]
+

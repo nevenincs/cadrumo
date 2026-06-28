@@ -1,0 +1,20 @@
+# Modelo 202 modalidad 40.2 - 1P base from the Modelo 200 filing whose
+# declaration deadline has elapsed before the April instalment window.
+#
+# The prior-year Modelo 200 deadline has not elapsed by 1P, so the 1P
+# instalment binds two filing years back. The 2P/3P instalments bind one year
+# back in the sibling relation after the July Modelo 200 deadline has elapsed.
+[[revisions.2025-y-siguientes.relations]]
+id = "modelo-202-2025-y-siguientes-rel-cuota-base-1p"
+kind = "cross_model_output"
+dependency_role = "factual_evidence"
+source_modelo = "200"
+source_revision_selector = { filing_year_delta = -2 }
+source_casilla_id = "DP200014B:00592"
+target_binding = "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior"
+period_alignment = { source_period = "0A", target_period = "1P", filing_year_delta = -2 }
+source_periods = ["0A"]
+target_periods = ["1P"]
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30"]
+source_refs = ["aeat-modelo-202-instructions"]

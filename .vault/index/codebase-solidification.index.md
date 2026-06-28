@@ -1,0 +1,876 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#codebase-solidification'
+date: '2026-06-15'
+modified: '2026-06-15'
+related:
+  - '[[2026-05-28-codebase-solidification-W01-P01-S01]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S02]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S03]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S04]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S05]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S06]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S07]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S08]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S09]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S10]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S11]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S12]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S13]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S14]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S15]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S16]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S19]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S20]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S21]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S22]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S23]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S24]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S25]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S26]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S27]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S28]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S29]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S30]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S31]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S32]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S33]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S34]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S35]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S36]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S37]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S38]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S39]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S40]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S41]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S42]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S43]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S44]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S45]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S46]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S47]]'
+  - '[[2026-05-28-codebase-solidification-W01-P01-S48]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S49]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S50]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S51]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S52]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S53]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S54]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S55]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S56]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S57]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S58]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S59]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S60]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S61]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S62]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S63]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S64]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S65]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S66]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S67]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S68]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S69]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S70]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S71]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S72]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S73]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S74]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S75]]'
+  - '[[2026-05-28-codebase-solidification-W01-P02-S76]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S100]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S101]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S102]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S103]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S104]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S105]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S106]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S107]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S108]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S109]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S110]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S111]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S112]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S113]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S114]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S115]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S116]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S117]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S118]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S77]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S78]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S79]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S80]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S81]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S82]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S83]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S84]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S85]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S97]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S98]]'
+  - '[[2026-05-28-codebase-solidification-W01-P03-S99]]'
+  - '[[2026-05-28-codebase-solidification-W01-P04-S119]]'
+  - '[[2026-05-28-codebase-solidification-W01-P04-S120]]'
+  - '[[2026-05-28-codebase-solidification-W01-P04-S121]]'
+  - '[[2026-05-28-codebase-solidification-W01-P04-S122]]'
+  - '[[2026-05-28-codebase-solidification-W01-P04-S123]]'
+  - '[[2026-05-28-codebase-solidification-W01-P04-S124]]'
+  - '[[2026-05-28-codebase-solidification-W01-P04-S125]]'
+  - '[[2026-05-28-codebase-solidification-W01-P04-S126]]'
+  - '[[2026-05-28-codebase-solidification-W01-P04-S127]]'
+  - '[[2026-05-28-codebase-solidification-W01-P04-S128]]'
+  - '[[2026-05-28-codebase-solidification-W01-P04-S129]]'
+  - '[[2026-05-28-codebase-solidification-W01-P04-S130]]'
+  - '[[2026-05-28-codebase-solidification-W01-P04-S131]]'
+  - '[[2026-05-28-codebase-solidification-W01-P04-S132]]'
+  - '[[2026-05-28-codebase-solidification-W01-P04-S133]]'
+  - '[[2026-05-28-codebase-solidification-W01-P04-S134]]'
+  - '[[2026-05-28-codebase-solidification-W01-P04-S135]]'
+  - '[[2026-05-28-codebase-solidification-W01-P04-S136]]'
+  - '[[2026-05-28-codebase-solidification-W01-P05-S137]]'
+  - '[[2026-05-28-codebase-solidification-W01-P05-S138]]'
+  - '[[2026-05-28-codebase-solidification-W01-P05-S139]]'
+  - '[[2026-05-28-codebase-solidification-W01-P05-S140]]'
+  - '[[2026-05-28-codebase-solidification-W01-P05-S141]]'
+  - '[[2026-05-28-codebase-solidification-W01-P05-S142]]'
+  - '[[2026-05-28-codebase-solidification-W01-P05-S143]]'
+  - '[[2026-05-28-codebase-solidification-W01-P05-S144]]'
+  - '[[2026-05-28-codebase-solidification-W01-P05-S145]]'
+  - '[[2026-05-28-codebase-solidification-W01-P05-S146]]'
+  - '[[2026-05-28-codebase-solidification-W01-P05-S147]]'
+  - '[[2026-05-28-codebase-solidification-W01-P05-S148]]'
+  - '[[2026-05-28-codebase-solidification-W01-P05-S149]]'
+  - '[[2026-05-28-codebase-solidification-W01-P05-S150]]'
+  - '[[2026-05-28-codebase-solidification-W01-P05-S151]]'
+  - '[[2026-05-28-codebase-solidification-W01-P05-S152]]'
+  - '[[2026-05-28-codebase-solidification-W01-P05-S153]]'
+  - '[[2026-05-28-codebase-solidification-W01-P05-S154]]'
+  - '[[2026-05-28-codebase-solidification-W01-P06-S155]]'
+  - '[[2026-05-28-codebase-solidification-W01-P06-S156]]'
+  - '[[2026-05-28-codebase-solidification-W01-P06-S157]]'
+  - '[[2026-05-28-codebase-solidification-W01-P06-S158]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S159]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S160]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S161]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S162]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S163]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S164]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S165]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S166]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S167]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S168]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S169]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S170]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S171]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S172]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S173]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S174]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S175]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S176]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S177]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S178]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S179]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S180]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S181]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S182]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S183]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S184]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S185]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S186]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S187]]'
+  - '[[2026-05-28-codebase-solidification-W01-P07-S188]]'
+  - '[[2026-05-28-codebase-solidification-W01-P08-S189]]'
+  - '[[2026-05-28-codebase-solidification-W01-P08-S190]]'
+  - '[[2026-05-28-codebase-solidification-W01-P08-S191]]'
+  - '[[2026-05-28-codebase-solidification-W01-P08-S192]]'
+  - '[[2026-05-28-codebase-solidification-W01-P08-S193]]'
+  - '[[2026-05-28-codebase-solidification-W01-P08-S194]]'
+  - '[[2026-05-28-codebase-solidification-W01-P08-S195]]'
+  - '[[2026-05-28-codebase-solidification-W01-P08-S196]]'
+  - '[[2026-05-28-codebase-solidification-W01-P08-S197]]'
+  - '[[2026-05-28-codebase-solidification-W01-P08-S198]]'
+  - '[[2026-05-28-codebase-solidification-W01-P08-S199]]'
+  - '[[2026-05-28-codebase-solidification-W01-P08-S200]]'
+  - '[[2026-05-28-codebase-solidification-W01-P08-S201]]'
+  - '[[2026-05-28-codebase-solidification-W01-P08-S202]]'
+  - '[[2026-05-28-codebase-solidification-W01-P08-S203]]'
+  - '[[2026-05-28-codebase-solidification-W01-P08-S204]]'
+  - '[[2026-05-28-codebase-solidification-W01-P09-S205]]'
+  - '[[2026-05-28-codebase-solidification-W01-P09-S213]]'
+  - '[[2026-05-28-codebase-solidification-W01-P09-S214]]'
+  - '[[2026-05-28-codebase-solidification-W01-P09-S215]]'
+  - '[[2026-05-28-codebase-solidification-W01-P09-S216]]'
+  - '[[2026-05-28-codebase-solidification-W01-P09-S217]]'
+  - '[[2026-05-28-codebase-solidification-W01-P09-S218]]'
+  - '[[2026-05-28-codebase-solidification-W01-P09-S219]]'
+  - '[[2026-05-28-codebase-solidification-W01-P09-S220]]'
+  - '[[2026-05-28-codebase-solidification-W01-P09-S221]]'
+  - '[[2026-05-28-codebase-solidification-W01-P09-S222]]'
+  - '[[2026-05-28-codebase-solidification-W01-P09-S223]]'
+  - '[[2026-05-28-codebase-solidification-W01-P09-S224]]'
+  - '[[2026-05-28-codebase-solidification-W02-P10-S225]]'
+  - '[[2026-05-28-codebase-solidification-W02-P10-S226]]'
+  - '[[2026-05-28-codebase-solidification-W02-P10-S227]]'
+  - '[[2026-05-28-codebase-solidification-W02-P10-S228]]'
+  - '[[2026-05-28-codebase-solidification-W02-P10-S229]]'
+  - '[[2026-05-28-codebase-solidification-W02-P10-S230]]'
+  - '[[2026-05-28-codebase-solidification-W02-P10-S231]]'
+  - '[[2026-05-28-codebase-solidification-W02-P10-S232]]'
+  - '[[2026-05-28-codebase-solidification-W02-P10-S241]]'
+  - '[[2026-05-28-codebase-solidification-W02-P10-S242]]'
+  - '[[2026-05-28-codebase-solidification-W02-P11-S260]]'
+  - '[[2026-05-28-codebase-solidification-W02-P11-S261]]'
+  - '[[2026-05-28-codebase-solidification-W02-P11-S262]]'
+  - '[[2026-05-28-codebase-solidification-W02-P11-S263]]'
+  - '[[2026-05-28-codebase-solidification-W02-P11-S264]]'
+  - '[[2026-05-28-codebase-solidification-W02-P11-S265]]'
+  - '[[2026-05-28-codebase-solidification-W02-P12-S272]]'
+  - '[[2026-05-28-codebase-solidification-W02-P12-S282]]'
+  - '[[2026-05-28-codebase-solidification-W03-P14-S321]]'
+  - '[[2026-05-28-codebase-solidification-W03-P14-S322]]'
+  - '[[2026-05-28-codebase-solidification-W03-P14-S323]]'
+  - '[[2026-05-28-codebase-solidification-W03-P14-S324]]'
+  - '[[2026-05-28-codebase-solidification-W03-P14-S325]]'
+  - '[[2026-05-28-codebase-solidification-W03-P14-S326]]'
+  - '[[2026-05-28-codebase-solidification-W03-P14-S327]]'
+  - '[[2026-05-28-codebase-solidification-W03-P15-S328]]'
+  - '[[2026-05-28-codebase-solidification-W03-P15-S329]]'
+  - '[[2026-05-28-codebase-solidification-W03-P15-S330]]'
+  - '[[2026-05-28-codebase-solidification-W03-P15-S331]]'
+  - '[[2026-05-28-codebase-solidification-W03-P15-S332]]'
+  - '[[2026-05-28-codebase-solidification-W03-P15-S333]]'
+  - '[[2026-05-28-codebase-solidification-W03-P15-S334]]'
+  - '[[2026-05-28-codebase-solidification-W03-P15-S335]]'
+  - '[[2026-05-28-codebase-solidification-W03-P15-S336]]'
+  - '[[2026-05-28-codebase-solidification-W03-P15-S337]]'
+  - '[[2026-05-28-codebase-solidification-W03-P15-S338]]'
+  - '[[2026-05-28-codebase-solidification-W04-P21-S412]]'
+  - '[[2026-05-28-codebase-solidification-W04-P21-S413]]'
+  - '[[2026-05-28-codebase-solidification-W04-P21-S414]]'
+  - '[[2026-05-28-codebase-solidification-W04-P21-S415]]'
+  - '[[2026-05-28-codebase-solidification-W04-P21-S416]]'
+  - '[[2026-05-28-codebase-solidification-W04-P21-S417]]'
+  - '[[2026-05-28-codebase-solidification-W04-P21-S418]]'
+  - '[[2026-05-28-codebase-solidification-W04-P21-S419]]'
+  - '[[2026-05-28-codebase-solidification-W04-P21-S420]]'
+  - '[[2026-05-28-codebase-solidification-W04-P21-S421]]'
+  - '[[2026-05-28-codebase-solidification-W05-P23-S429]]'
+  - '[[2026-05-28-codebase-solidification-W06-P27-S465]]'
+  - '[[2026-05-28-codebase-solidification-W06-P29-S486]]'
+  - '[[2026-05-28-codebase-solidification-W06-P29-S487]]'
+  - '[[2026-05-28-codebase-solidification-W06-P29-S488]]'
+  - '[[2026-05-28-codebase-solidification-W06-P29-S489]]'
+  - '[[2026-05-28-codebase-solidification-W06-P29-S490]]'
+  - '[[2026-05-28-codebase-solidification-W06-P29-S491]]'
+  - '[[2026-05-28-codebase-solidification-W06-P29-S492]]'
+  - '[[2026-05-28-codebase-solidification-W06-P29-S493]]'
+  - '[[2026-05-28-codebase-solidification-W06-P29-S494]]'
+  - '[[2026-05-28-codebase-solidification-W06-P29-S495]]'
+  - '[[2026-05-28-codebase-solidification-W06-P30-S496]]'
+  - '[[2026-05-28-codebase-solidification-W06-P30-S497]]'
+  - '[[2026-05-28-codebase-solidification-W06-P30-S498]]'
+  - '[[2026-05-28-codebase-solidification-W06-P30-S499]]'
+  - '[[2026-05-28-codebase-solidification-W07-P33-S528]]'
+  - '[[2026-05-28-codebase-solidification-W07-P33-S529]]'
+  - '[[2026-05-28-codebase-solidification-W07-P33-S530]]'
+  - '[[2026-05-28-codebase-solidification-W08-P34-S531]]'
+  - '[[2026-05-28-codebase-solidification-W08-P34-S532]]'
+  - '[[2026-05-28-codebase-solidification-W08-P34-S533]]'
+  - '[[2026-05-28-codebase-solidification-W08-P34-S534]]'
+  - '[[2026-05-28-codebase-solidification-W08-P34-S535]]'
+  - '[[2026-05-28-codebase-solidification-W08-P34-S536]]'
+  - '[[2026-05-28-codebase-solidification-W08-P34-S537]]'
+  - '[[2026-05-28-codebase-solidification-W08-P34-S538]]'
+  - '[[2026-05-28-codebase-solidification-W08-P34-S539]]'
+  - '[[2026-05-28-codebase-solidification-W08-P34-S540]]'
+  - '[[2026-05-28-codebase-solidification-W08-P35-S541]]'
+  - '[[2026-05-28-codebase-solidification-W08-P36-S550]]'
+  - '[[2026-05-28-codebase-solidification-W08-P36-S551]]'
+  - '[[2026-05-28-codebase-solidification-W08-P36-S552]]'
+  - '[[2026-05-28-codebase-solidification-W09-P38-S557]]'
+  - '[[2026-05-28-codebase-solidification-W09-P38-S558]]'
+  - '[[2026-05-28-codebase-solidification-W09-P38-S559]]'
+  - '[[2026-05-28-codebase-solidification-W09-P38-S560]]'
+  - '[[2026-05-28-codebase-solidification-W09-P38-S561]]'
+  - '[[2026-05-28-codebase-solidification-W10-P40-S569]]'
+  - '[[2026-05-28-codebase-solidification-W10-P40-S570]]'
+  - '[[2026-05-28-codebase-solidification-W10-P40-S571]]'
+  - '[[2026-05-28-codebase-solidification-W10-P40-S572]]'
+  - '[[2026-05-28-codebase-solidification-W10-P40-S573]]'
+  - '[[2026-05-28-codebase-solidification-W10-P40-S574]]'
+  - '[[2026-05-28-codebase-solidification-W10-P41-S575]]'
+  - '[[2026-05-28-codebase-solidification-W10-P41-S576]]'
+  - '[[2026-05-28-codebase-solidification-W10-P41-S577]]'
+  - '[[2026-05-28-codebase-solidification-W10-P41-S578]]'
+  - '[[2026-05-28-codebase-solidification-W10-P41-S579]]'
+  - '[[2026-05-28-codebase-solidification-W10-P41-S580]]'
+  - '[[2026-05-28-codebase-solidification-W10-P41-S581]]'
+  - '[[2026-05-28-codebase-solidification-W11-P42-S582]]'
+  - '[[2026-05-28-codebase-solidification-W11-P42-S583]]'
+  - '[[2026-05-28-codebase-solidification-W11-P42-S584]]'
+  - '[[2026-05-28-codebase-solidification-W11-P42-S585]]'
+  - '[[2026-05-28-codebase-solidification-W11-P42-S586]]'
+  - '[[2026-05-28-codebase-solidification-W11-P43-S587]]'
+  - '[[2026-05-28-codebase-solidification-W18-P50-S638]]'
+  - '[[2026-05-28-codebase-solidification-W18-P50-S639]]'
+  - '[[2026-05-28-codebase-solidification-W18-P50-S640]]'
+  - '[[2026-05-28-codebase-solidification-W20-P52-S643]]'
+  - '[[2026-05-28-codebase-solidification-W20-P52-S644]]'
+  - '[[2026-05-28-codebase-solidification-W20-P52-S645]]'
+  - '[[2026-05-28-codebase-solidification-W26-P58-S663]]'
+  - '[[2026-05-28-codebase-solidification-W26-P58-S664]]'
+  - '[[2026-05-28-codebase-solidification-W26-P58-S665]]'
+  - '[[2026-05-28-codebase-solidification-W26-P58-S666]]'
+  - '[[2026-05-28-codebase-solidification-W26-P58-S667]]'
+  - '[[2026-05-28-codebase-solidification-W29-P63-S801]]'
+  - '[[2026-05-28-codebase-solidification-W29-P63-S802]]'
+  - '[[2026-05-28-codebase-solidification-adr]]'
+  - '[[2026-05-28-codebase-solidification-exec]]'
+  - '[[2026-05-28-codebase-solidification-plan]]'
+  - '[[2026-05-30-codebase-solidification-W02-P10-S233]]'
+  - '[[2026-05-30-codebase-solidification-W02-P10-S234]]'
+  - '[[2026-05-30-codebase-solidification-W02-P10-S235]]'
+  - '[[2026-05-30-codebase-solidification-W02-P10-S236]]'
+  - '[[2026-05-30-codebase-solidification-W02-P10-S237]]'
+  - '[[2026-05-30-codebase-solidification-W02-P10-S238]]'
+  - '[[2026-05-30-codebase-solidification-W02-P10-S239]]'
+  - '[[2026-05-30-codebase-solidification-W02-P10-S240]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S243]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S244]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S245]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S246]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S247]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S248]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S249]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S250]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S251]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S252]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S253]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S254]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S255]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S256]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S257]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S258]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S259]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S266]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S267]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S268]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S269]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S270]]'
+  - '[[2026-05-30-codebase-solidification-W02-P11-S271]]'
+  - '[[2026-05-30-codebase-solidification-W02-P13-S292]]'
+  - '[[2026-05-30-codebase-solidification-W02-P13-S296]]'
+  - '[[2026-05-30-codebase-solidification-W02-P13-S297]]'
+  - '[[2026-05-30-codebase-solidification-W02-P13-S298]]'
+  - '[[2026-05-30-codebase-solidification-W02-P13-S299]]'
+  - '[[2026-05-30-codebase-solidification-W02-P13-S300]]'
+  - '[[2026-05-30-codebase-solidification-W02-P13-S301]]'
+  - '[[2026-05-30-codebase-solidification-W02-P13-S302]]'
+  - '[[2026-05-30-codebase-solidification-W02-P13-S303]]'
+  - '[[2026-05-30-codebase-solidification-W02-P13-S304]]'
+  - '[[2026-05-30-codebase-solidification-W02-P13-S307]]'
+  - '[[2026-05-30-codebase-solidification-W02-P13-S308]]'
+  - '[[2026-05-30-codebase-solidification-W02-P13-S309]]'
+  - '[[2026-05-30-codebase-solidification-W02-P13-S310]]'
+  - '[[2026-05-30-codebase-solidification-W02-P13-S311]]'
+  - '[[2026-05-30-codebase-solidification-W02-P13-S312]]'
+  - '[[2026-05-30-codebase-solidification-W03-P18-S358]]'
+  - '[[2026-05-30-codebase-solidification-W04-P19-S369]]'
+  - '[[2026-05-30-codebase-solidification-W04-P22-S422]]'
+  - '[[2026-05-30-codebase-solidification-W04-P22-S423]]'
+  - '[[2026-05-30-codebase-solidification-W04-P22-S424]]'
+  - '[[2026-05-30-codebase-solidification-W04-P22-S425]]'
+  - '[[2026-05-30-codebase-solidification-W04-P22-S426]]'
+  - '[[2026-05-30-codebase-solidification-W04-P22-S427]]'
+  - '[[2026-05-30-codebase-solidification-W04-P22-S428]]'
+  - '[[2026-05-30-codebase-solidification-W05-P25-S455]]'
+  - '[[2026-05-30-codebase-solidification-W05-P25-S456]]'
+  - '[[2026-05-30-codebase-solidification-W05-P25-S457]]'
+  - '[[2026-05-30-codebase-solidification-W05-P25-S458]]'
+  - '[[2026-05-30-codebase-solidification-W05-P25-S459]]'
+  - '[[2026-05-30-codebase-solidification-W05-P25-S460]]'
+  - '[[2026-05-30-codebase-solidification-W05-P25-S461]]'
+  - '[[2026-05-30-codebase-solidification-W05-P25-S462]]'
+  - '[[2026-05-30-codebase-solidification-W05-P26-S463]]'
+  - '[[2026-05-30-codebase-solidification-W05-P26-S464]]'
+  - '[[2026-05-30-codebase-solidification-audit]]'
+  - '[[2026-05-30-codebase-solidification-exec]]'
+  - '[[2026-05-30-codebase-solidification-w03-p16-s339-s348-exec]]'
+  - '[[2026-05-30-codebase-solidification-w03-p17-s349-s357-exec]]'
+  - '[[2026-05-30-codebase-solidification-w04-p20-s397-s411-exec]]'
+  - '[[2026-05-30-codebase-solidification-w05-p24-s444-s454-exec]]'
+  - '[[2026-05-31-codebase-solidification-W06-P28-S476]]'
+  - '[[2026-05-31-codebase-solidification-W07-P31-S500]]'
+  - '[[2026-05-31-codebase-solidification-W09-P39-S562]]'
+  - '[[2026-05-31-codebase-solidification-W22-P54-S651]]'
+  - '[[2026-05-31-codebase-solidification-W22-P54-S652]]'
+  - '[[2026-05-31-codebase-solidification-W22-P54-S653]]'
+  - '[[2026-05-31-codebase-solidification-audit]]'
+  - '[[2026-05-31-codebase-solidification-exec]]'
+  - '[[2026-05-31-codebase-solidification-w07-p32-s517-s527-exec]]'
+  - '[[2026-05-31-codebase-solidification-w09-p37-s553-s556-exec]]'
+  - '[[2026-05-31-codebase-solidification-w12-p44-s594-s599-exec]]'
+  - '[[2026-05-31-codebase-solidification-w13p45-exec]]'
+  - '[[2026-05-31-codebase-solidification-w14-p46-s607-s613-exec]]'
+  - '[[2026-05-31-codebase-solidification-w15p47-exec]]'
+  - '[[2026-05-31-codebase-solidification-w16-p48-s620-s625-exec]]'
+  - '[[2026-05-31-codebase-solidification-w16-p48-s626-s631-exec]]'
+  - '[[2026-05-31-codebase-solidification-w17-p49-s632-s637-exec]]'
+  - '[[2026-05-31-codebase-solidification-w21-p53-s646-s650-exec]]'
+  - '[[2026-06-01-codebase-solidification-W27-P61-S676]]'
+  - '[[2026-06-01-codebase-solidification-W27-P61-S677]]'
+  - '[[2026-06-01-codebase-solidification-W27-P61-S678]]'
+  - '[[2026-06-01-codebase-solidification-W28-P62-S679]]'
+  - '[[2026-06-01-codebase-solidification-W28-P62-S680]]'
+  - '[[2026-06-01-codebase-solidification-w26-p55-s654-s656-exec]]'
+  - '[[2026-06-01-codebase-solidification-w26-p56-s657-s658-exec]]'
+  - '[[2026-06-01-codebase-solidification-w26-p57-s659-s662-exec]]'
+  - '[[2026-06-01-codebase-solidification-w26-p59-s668-s671-exec]]'
+  - '[[2026-06-04-codebase-solidification-research]]'
+---
+
+# `codebase-solidification` feature index
+
+Auto-generated index of all documents tagged with `#codebase-solidification`.
+
+## Documents
+
+### adr
+
+- `2026-05-28-codebase-solidification-adr` - `codebase-solidification` adr: `Recurring hardening epic strategy` | (**status:** `accepted`)
+
+### audit
+
+- `2026-05-30-codebase-solidification-audit` - `codebase-solidification` audit: `Wave 2 swarm re-audit`
+- `2026-05-31-codebase-solidification-audit` - `codebase-solidification` audit: type-ignore paydown classification — 99-site inventory (W26.P56)
+
+### exec
+
+- `2026-05-28-codebase-solidification-W01-P01-S01` - codebase-solidification W01.P01.S01 — TaxationComparisonError base rebind
+- `2026-05-28-codebase-solidification-W01-P01-S02` - codebase-solidification W01.P01.S02 — TaxationComparisonError registry test
+- `2026-05-28-codebase-solidification-W01-P01-S03` - codebase-solidification W01.P01.S03
+- `2026-05-28-codebase-solidification-W01-P01-S04` - codebase-solidification W01.P01.S04
+- `2026-05-28-codebase-solidification-W01-P01-S05` - codebase-solidification W01.P01.S05 — ExportFormatError + ExportFieldError hierarchy
+- `2026-05-28-codebase-solidification-W01-P01-S06` - codebase-solidification W01.P01.S06 — export error envelope and i18n tests
+- `2026-05-28-codebase-solidification-W01-P01-S07` - codebase-solidification W01.P01.S07 — IvaCompensationModeloError
+- `2026-05-28-codebase-solidification-W01-P01-S08` - codebase-solidification W01.P01.S08 — IVA compensation modelo error tests
+- `2026-05-28-codebase-solidification-W01-P01-S09` - codebase-solidification W01.P01.S09 — WorkflowInputMismatchError
+- `2026-05-28-codebase-solidification-W01-P01-S10` - codebase-solidification W01.P01.S10 — WorkflowInputMismatchError tests
+- `2026-05-28-codebase-solidification-W01-P01-S11` - codebase-solidification W01.P01.S11 — replace bare TypeError with BrowserAdapterTypeError in verify
+- `2026-05-28-codebase-solidification-W01-P01-S12` - codebase-solidification W01.P01.S12 — real-behavior tests for verify BrowserAdapterTypeError
+- `2026-05-28-codebase-solidification-W01-P01-S13` - codebase-solidification W01.P01.S13
+- `2026-05-28-codebase-solidification-W01-P01-S14` - codebase-solidification W01.P01.S14
+- `2026-05-28-codebase-solidification-W01-P01-S15` - codebase-solidification W01.P01.S15
+- `2026-05-28-codebase-solidification-W01-P01-S16` - codebase-solidification W01.P01.S16
+- `2026-05-28-codebase-solidification-W01-P01-S19` - codebase-solidification W01.P01.S19 — AuthDiagnosticPhoneStateError introduction
+- `2026-05-28-codebase-solidification-W01-P01-S20` - codebase-solidification W01.P01.S20 — AuthDiagnosticPhoneStateError test coverage
+- `2026-05-28-codebase-solidification-W01-P01-S21` - codebase-solidification W01.P01.S21
+- `2026-05-28-codebase-solidification-W01-P01-S22` - codebase-solidification W01.P01.S22
+- `2026-05-28-codebase-solidification-W01-P01-S23` - codebase-solidification W01.P01.S23 — PensionReduccionError
+- `2026-05-28-codebase-solidification-W01-P01-S24` - codebase-solidification W01.P01.S24 — PensionReduccionError tests
+- `2026-05-28-codebase-solidification-W01-P01-S25` - codebase-solidification W01.P01.S25
+- `2026-05-28-codebase-solidification-W01-P01-S26` - codebase-solidification W01.P01.S26
+- `2026-05-28-codebase-solidification-W01-P01-S27` - codebase-solidification W01.P01.S27
+- `2026-05-28-codebase-solidification-W01-P01-S28` - codebase-solidification W01.P01.S28
+- `2026-05-28-codebase-solidification-W01-P01-S29` - codebase-solidification W01.P01.S29
+- `2026-05-28-codebase-solidification-W01-P01-S30` - codebase-solidification W01.P01.S30
+- `2026-05-28-codebase-solidification-W01-P01-S31` - codebase-solidification W01.P01.S31 — narrow broad except-Exception in ledger bucket-id helpers
+- `2026-05-28-codebase-solidification-W01-P01-S32` - codebase-solidification W01.P01.S32 — real-behavior test for unexpected exception propagation
+- `2026-05-28-codebase-solidification-W01-P01-S33` - codebase-solidification W01.P01.S33 — autocomplete except narrowing
+- `2026-05-28-codebase-solidification-W01-P01-S34` - codebase-solidification W01.P01.S34 — autocomplete AeatError propagation tests
+- `2026-05-28-codebase-solidification-W01-P01-S35` - codebase-solidification W01.P01.S35 — wrap _record_unhandled with build_error_envelope
+- `2026-05-28-codebase-solidification-W01-P01-S36` - codebase-solidification W01.P01.S36 — TestUnhandledEnvelope real-behavior tests
+- `2026-05-28-codebase-solidification-W01-P01-S37` - codebase-solidification W01.P01.S37 — narrow except Exception catches in _config/__init__.py
+- `2026-05-28-codebase-solidification-W01-P01-S38` - codebase-solidification W01.P01.S38 — real-behavior tests for config boundary narrowing
+- `2026-05-28-codebase-solidification-W01-P01-S39` - codebase-solidification W01.P01.S39 — NamespaceRegistryError introduction
+- `2026-05-28-codebase-solidification-W01-P01-S40` - codebase-solidification W01.P01.S40 — NamespaceRegistryError test coverage
+- `2026-05-28-codebase-solidification-W01-P01-S41` - codebase-solidification W01.P01.S41 - introduce IvaWalletReconciliationError
+- `2026-05-28-codebase-solidification-W01-P01-S42` - codebase-solidification W01.P01.S42 - IvaWalletReconciliationError registry and envelope tests
+- `2026-05-28-codebase-solidification-W01-P01-S43` - codebase-solidification W01.P01.S43 - introduce AggregationConfigError
+- `2026-05-28-codebase-solidification-W01-P01-S44` - codebase-solidification W01.P01.S44 - real-behavior tests for AggregationConfigError
+- `2026-05-28-codebase-solidification-W01-P01-S45` - codebase-solidification W01.P01.S45 — DiagnosticModelError invariant replacement
+- `2026-05-28-codebase-solidification-W01-P01-S46` - codebase-solidification W01.P01.S46 — DiagnosticModelError real-behavior tests
+- `2026-05-28-codebase-solidification-W01-P01-S47` - codebase-solidification W01.P01.S47 — ClassificationRuleError introduction
+- `2026-05-28-codebase-solidification-W01-P01-S48` - codebase-solidification W01.P01.S48 — ClassificationRuleError real-behavior tests
+- `2026-05-28-codebase-solidification-W01-P02-S49` - codebase-solidification W01.P02.S49 — _stdio.py logger constraint verification
+- `2026-05-28-codebase-solidification-W01-P02-S50` - codebase-solidification W01.P02.S50 — _stdio logger SecretScrubbingFilter test
+- `2026-05-28-codebase-solidification-W01-P02-S51` - codebase-solidification W01.P02.S51 — hoist _overview.py logger to module level
+- `2026-05-28-codebase-solidification-W01-P02-S52` - codebase-solidification W01.P02.S52 — overview logger SecretScrubbingFilter test
+- `2026-05-28-codebase-solidification-W01-P02-S53` - codebase-solidification W01.P02.S53 — hoist _registry.py logger to module level
+- `2026-05-28-codebase-solidification-W01-P02-S54` - codebase-solidification W01.P02.S54 — error-registry logger scrubbing test
+- `2026-05-28-codebase-solidification-W01-P02-S55` - codebase-solidification W01.P02.S55 — wire _sink.py warning through get_logger
+- `2026-05-28-codebase-solidification-W01-P02-S56` - codebase-solidification W01.P02.S56 — test sink-failure warning passes through SecretScrubbingFilter
+- `2026-05-28-codebase-solidification-W01-P02-S57` - codebase-solidification W01.P02.S57 — centralize pdfminer logging in dictConfig
+- `2026-05-28-codebase-solidification-W01-P02-S58` - codebase-solidification W01.P02.S58 — test: pdfminer level governed by dictConfig
+- `2026-05-28-codebase-solidification-W01-P02-S59` - codebase-solidification W01.P02.S59 — delete duplicated pdfminer silencer from _record_design.py
+- `2026-05-28-codebase-solidification-W01-P02-S60` - codebase-solidification W01.P02.S60 — test: _pdfplumber and _record_design defer to centralized config
+- `2026-05-28-codebase-solidification-W01-P02-S61` - codebase-solidification W01.P02.S61 — set_log_level helper in aeat.core.logging
+- `2026-05-28-codebase-solidification-W01-P02-S62` - codebase-solidification W01.P02.S62 — test: set_log_level updates root and all handlers
+- `2026-05-28-codebase-solidification-W01-P02-S63` - codebase-solidification W01.P02.S63 — attach_run_sink helper + SecretScrubbingFilter on JSONL sink
+- `2026-05-28-codebase-solidification-W01-P02-S64` - codebase-solidification W01.P02.S64 — test: JSONL run sink records scrubbed before persistence
+- `2026-05-28-codebase-solidification-W01-P02-S65` - codebase-solidification W01.P02.S65 — auth waiting banner via structured logger
+- `2026-05-28-codebase-solidification-W01-P02-S66` - codebase-solidification W01.P02.S66 — auth banner log routing tests
+- `2026-05-28-codebase-solidification-W01-P02-S67` - codebase-solidification W01.P02.S67 — wizard emit_progress via structured logger
+- `2026-05-28-codebase-solidification-W01-P02-S68` - codebase-solidification W01.P02.S68 — wizard prompter log routing tests
+- `2026-05-28-codebase-solidification-W01-P02-S69` - `codebase-solidification` `W01.P02.S69`
+- `2026-05-28-codebase-solidification-W01-P02-S70` - `codebase-solidification` `W01.P02.S70`
+- `2026-05-28-codebase-solidification-W01-P02-S71` - `codebase-solidification` `W01.P02.S71`
+- `2026-05-28-codebase-solidification-W01-P02-S72` - `codebase-solidification` `W01.P02.S72`
+- `2026-05-28-codebase-solidification-W01-P02-S73` - codebase-solidification W01.P02.S73 — pikepdf._core moved to dictConfig loggers block
+- `2026-05-28-codebase-solidification-W01-P02-S74` - codebase-solidification W01.P02.S74 — pikepdf._core level test
+- `2026-05-28-codebase-solidification-W01-P02-S75` - codebase-solidification W01.P02.S75 — SecretScrubbingFilter on attach_run_sink path
+- `2026-05-28-codebase-solidification-W01-P02-S76` - codebase-solidification W01.P02.S76 — attach_run_sink scrubbing end-to-end test
+- `2026-05-28-codebase-solidification-W01-P03-S100` - codebase-solidification W01.P03.S100 — SedeNavigationError translated_message tests
+- `2026-05-28-codebase-solidification-W01-P03-S101` - codebase-solidification W01.P03.S101 — empty_identity_nif threading
+- `2026-05-28-codebase-solidification-W01-P03-S102` - codebase-solidification W01.P03.S102 — empty-NIF localized envelope tests
+- `2026-05-28-codebase-solidification-W01-P03-S103` - codebase-solidification W01.P03.S103 — wizard status verb localization
+- `2026-05-28-codebase-solidification-W01-P03-S104` - codebase-solidification W01.P03.S104 — wizard status verb localization tests
+- `2026-05-28-codebase-solidification-W01-P03-S105` - codebase-solidification W01.P03.S105 — profile diagnostics unset placeholder localization
+- `2026-05-28-codebase-solidification-W01-P03-S106` - codebase-solidification W01.P03.S106 — profile diagnostics unset placeholder tests
+- `2026-05-28-codebase-solidification-W01-P03-S107` - codebase-solidification W01.P03.S107 — describe BadParameter localized via tr()
+- `2026-05-28-codebase-solidification-W01-P03-S108` - codebase-solidification W01.P03.S108 — describe BadParameter localization tests
+- `2026-05-28-codebase-solidification-W01-P03-S109` - codebase-solidification W01.P03.S109 — DT12/SAL computation error sites localized
+- `2026-05-28-codebase-solidification-W01-P03-S110` - codebase-solidification W01.P03.S110 — DT12/SAL computation error localization tests
+- `2026-05-28-codebase-solidification-W01-P03-S111` - codebase-solidification W01.P03.S111 — IVA wallet empty-cell SedeParseError translated_message
+- `2026-05-28-codebase-solidification-W01-P03-S112` - codebase-solidification W01.P03.S112 — test IVA wallet empty-cell localized envelopes
+- `2026-05-28-codebase-solidification-W01-P03-S113` - codebase-solidification W01.P03.S113 — DT12 advisory next_action through tr()
+- `2026-05-28-codebase-solidification-W01-P03-S114` - codebase-solidification W01.P03.S114 — test DT12 advisory next_action localization
+- `2026-05-28-codebase-solidification-W01-P03-S115` - codebase-solidification W01.P03.S115 — wrap locales-CLI typer.echo in tr()
+- `2026-05-28-codebase-solidification-W01-P03-S116` - codebase-solidification W01.P03.S116 — test locales-CLI tr() emission
+- `2026-05-28-codebase-solidification-W01-P03-S117` - codebase-solidification W01.P03.S117 — introduce DEFAULT_OUTPUT_LANGUAGE constant
+- `2026-05-28-codebase-solidification-W01-P03-S118` - codebase-solidification W01.P03.S118 — test DEFAULT_OUTPUT_LANGUAGE routing
+- `2026-05-28-codebase-solidification-W01-P03-S77` - codebase-solidification W01.P03.S77 — draft_id_not_found locale enrollment
+- `2026-05-28-codebase-solidification-W01-P03-S78` - codebase-solidification W01.P03.S78 — draft_id_not_found test
+- `2026-05-28-codebase-solidification-W01-P03-S79` - codebase-solidification W01.P03.S79 — no_active_profile locale enrollment
+- `2026-05-28-codebase-solidification-W01-P03-S80` - codebase-solidification W01.P03.S80 — no_active_profile output test
+- `2026-05-28-codebase-solidification-W01-P03-S81` - codebase-solidification W01.P03.S81 — ledger id-prefix catch-all through tr()
+- `2026-05-28-codebase-solidification-W01-P03-S82` - codebase-solidification W01.P03.S82 — ledger id-prefix fallthrough locale test
+- `2026-05-28-codebase-solidification-W01-P03-S83` - codebase-solidification W01.P03.S83 — describe label tr() wrapping
+- `2026-05-28-codebase-solidification-W01-P03-S84` - codebase-solidification W01.P03.S84 — describe label localisation tests
+- `2026-05-28-codebase-solidification-W01-P03-S85` - codebase-solidification W01.P03.S85-S96 — verification-finding cluster localisation
+- `2026-05-28-codebase-solidification-W01-P03-S97` - codebase-solidification W01.P03.S97 — route missing_required_casilla message through tr()
+- `2026-05-28-codebase-solidification-W01-P03-S98` - codebase-solidification W01.P03.S98 — test missing_required_casilla localization
+- `2026-05-28-codebase-solidification-W01-P03-S99` - codebase-solidification W01.P03.S99 — SedeNavigationError no_auth_session threading
+- `2026-05-28-codebase-solidification-W01-P04-S119` - codebase-solidification W01.P04.S119 — ReplayPayload typed envelope
+- `2026-05-28-codebase-solidification-W01-P04-S120` - codebase-solidification W01.P04.S120 — ReplayPayload roundtrip tests
+- `2026-05-28-codebase-solidification-W01-P04-S121` - codebase-solidification W01.P04.S121 — NIF-IVA oracle caller migration
+- `2026-05-28-codebase-solidification-W01-P04-S122` - codebase-solidification W01.P04.S122 — NIF-IVA ReplayPayload roundtrip tests
+- `2026-05-28-codebase-solidification-W01-P04-S123` - codebase-solidification W01.P04.S123 — GROI oracle caller migration
+- `2026-05-28-codebase-solidification-W01-P04-S124` - codebase-solidification W01.P04.S124 — GROI ReplayPayload roundtrip tests
+- `2026-05-28-codebase-solidification-W01-P04-S125` - codebase-solidification W01.P04.S125 — Renta WEB Open oracle caller migration
+- `2026-05-28-codebase-solidification-W01-P04-S126` - codebase-solidification W01.P04.S126 — Renta WEB Open ReplayPayload roundtrip tests
+- `2026-05-28-codebase-solidification-W01-P04-S127` - codebase-solidification W01.P04.S127 — verify `_entry_from_payload` typed contract
+- `2026-05-28-codebase-solidification-W01-P04-S128` - codebase-solidification W01.P04.S128 — LLM cache malformed payload rejection tests
+- `2026-05-28-codebase-solidification-W01-P04-S129` - codebase-solidification W01.P04.S129 — confirm Google Sheets/Drive boundary rationale
+- `2026-05-28-codebase-solidification-W01-P04-S130` - codebase-solidification W01.P04.S130 — Google Sheets boundary rationale assertion test
+- `2026-05-28-codebase-solidification-W01-P04-S131` - codebase-solidification W01.P04.S131 — confirm Playwright _build_context_kwargs boundary rationale
+- `2026-05-28-codebase-solidification-W01-P04-S132` - codebase-solidification W01.P04.S132 — Playwright kwargs boundary annotation test
+- `2026-05-28-codebase-solidification-W01-P04-S133` - codebase-solidification W01.P04.S133 — DiagnosticPayload pydantic envelope
+- `2026-05-28-codebase-solidification-W01-P04-S134` - codebase-solidification W01.P04.S134 — DiagnosticPayload roundtrip tests
+- `2026-05-28-codebase-solidification-W01-P04-S135` - codebase-solidification W01.P04.S135 — adapter dict[str, Any] boundary rationale audit
+- `2026-05-28-codebase-solidification-W01-P04-S136` - codebase-solidification W01.P04.S136 — boundary rationale assertion test
+- `2026-05-28-codebase-solidification-W01-P05-S137` - codebase-solidification W01.P05.S137 step record
+- `2026-05-28-codebase-solidification-W01-P05-S138` - codebase-solidification W01.P05.S138 step record
+- `2026-05-28-codebase-solidification-W01-P05-S139` - codebase-solidification W01.P05.S139
+- `2026-05-28-codebase-solidification-W01-P05-S140` - codebase-solidification W01.P05.S140
+- `2026-05-28-codebase-solidification-W01-P05-S141` - codebase-solidification W01.P05.S141 — canonical `_now` in `aeat.core.time._clock`
+- `2026-05-28-codebase-solidification-W01-P05-S142` - codebase-solidification W01.P05.S142 — real-behavior test for `_now`
+- `2026-05-28-codebase-solidification-W01-P05-S143` - codebase-solidification W01.P05.S143 — shared storage_path helper
+- `2026-05-28-codebase-solidification-W01-P05-S144` - codebase-solidification W01.P05.S144 — storage_path real-behaviour tests
+- `2026-05-28-codebase-solidification-W01-P05-S145` - codebase-solidification W01.P05.S145 — canonical `_round_to_cents` in `aeat.domain.fincas._rounding`
+- `2026-05-28-codebase-solidification-W01-P05-S146` - codebase-solidification W01.P05.S146 — real-behavior test for fincas rounding
+- `2026-05-28-codebase-solidification-W01-P05-S147` - codebase-solidification W01.P05.S147 — reconcile `_parse_bool` signatures
+- `2026-05-28-codebase-solidification-W01-P05-S148` - codebase-solidification W01.P05.S148 — real-behavior tests for `_parse_bool`
+- `2026-05-28-codebase-solidification-W01-P05-S149` - `codebase-solidification` `W01.P05.S149`
+- `2026-05-28-codebase-solidification-W01-P05-S150` - `codebase-solidification` `W01.P05.S150`
+- `2026-05-28-codebase-solidification-W01-P05-S151` - codebase-solidification W01.P05.S151 — consolidate `_format_decimal` into `aeat.core.decimal._format`
+- `2026-05-28-codebase-solidification-W01-P05-S152` - codebase-solidification W01.P05.S152 — real-behavior tests for `format_decimal`
+- `2026-05-28-codebase-solidification-W01-P05-S153` - codebase-solidification W01.P05.S153 — canonicalize `_coerce_decimal`
+- `2026-05-28-codebase-solidification-W01-P05-S154` - codebase-solidification W01.P05.S154 — real-behavior tests for `coerce_decimal`
+- `2026-05-28-codebase-solidification-W01-P06-S155` - `codebase-solidification` `W01.P06.S155`
+- `2026-05-28-codebase-solidification-W01-P06-S156` - `codebase-solidification` `W01.P06.S156`
+- `2026-05-28-codebase-solidification-W01-P06-S157` - `codebase-solidification` `W01.P06.S157`
+- `2026-05-28-codebase-solidification-W01-P06-S158` - `codebase-solidification` `W01.P06.S158`
+- `2026-05-28-codebase-solidification-W01-P07-S159` - codebase-solidification W01.P07.S159 — promote InputKind to StrEnum
+- `2026-05-28-codebase-solidification-W01-P07-S160` - codebase-solidification W01.P07.S160 — InputKind real-behaviour tests
+- `2026-05-28-codebase-solidification-W01-P07-S161` - codebase-solidification W01.P07.S161 — migrate bare-string input_kind comparisons to InputKind enum
+- `2026-05-28-codebase-solidification-W01-P07-S162` - codebase-solidification W01.P07.S162 — real-behaviour tests for InputKind enum surface
+- `2026-05-28-codebase-solidification-W01-P07-S163` - codebase-solidification W01.P07.S163 — AggregationSourceKind bare-string migration
+- `2026-05-28-codebase-solidification-W01-P07-S164` - codebase-solidification W01.P07.S164 — StrEnum surface coverage tests
+- `2026-05-28-codebase-solidification-W01-P07-S165` - codebase-solidification W01.P07.S165 — review-status bare-string migration
+- `2026-05-28-codebase-solidification-W01-P07-S166` - codebase-solidification W01.P07.S166 — review-status enum membership tests
+- `2026-05-28-codebase-solidification-W01-P07-S167` - codebase-solidification W01.P07.S167 — IVARegime enum surface
+- `2026-05-28-codebase-solidification-W01-P07-S168` - codebase-solidification W01.P07.S168 — IVA-regime enum surface tests
+- `2026-05-28-codebase-solidification-W01-P07-S169` - codebase-solidification W01.P07.S169 — CasillaFieldKind StrEnum promotion
+- `2026-05-28-codebase-solidification-W01-P07-S170` - codebase-solidification W01.P07.S170 — CasillaFieldKind tests
+- `2026-05-28-codebase-solidification-W01-P07-S171` - codebase-solidification W01.P07.S171 — extract CLASSIFIED_BY_MANUAL constant
+- `2026-05-28-codebase-solidification-W01-P07-S172` - codebase-solidification W01.P07.S172 — real-behavior tests for CLASSIFIED_BY_MANUAL
+- `2026-05-28-codebase-solidification-W01-P07-S173` - codebase-solidification W01.P07.S173 — OracleEnvironment StrEnum promotion
+- `2026-05-28-codebase-solidification-W01-P07-S174` - codebase-solidification W01.P07.S174 — OracleEnvironment round-trip tests
+- `2026-05-28-codebase-solidification-W01-P07-S175` - codebase-solidification W01.P07.S175 — centralise `DEFAULT_CURRENCY` constant
+- `2026-05-28-codebase-solidification-W01-P07-S176` - codebase-solidification W01.P07.S176 — real-behaviour tests for `DEFAULT_CURRENCY`
+- `2026-05-28-codebase-solidification-W01-P07-S177` - codebase-solidification W01.P07.S177 — centralise `BINARY_MIME_TYPE` constant
+- `2026-05-28-codebase-solidification-W01-P07-S178` - codebase-solidification W01.P07.S178 — real-behaviour tests for `BINARY_MIME_TYPE`
+- `2026-05-28-codebase-solidification-W01-P07-S179` - codebase-solidification W01.P07.S179 — CSV encoding fallback chain constant
+- `2026-05-28-codebase-solidification-W01-P07-S180` - codebase-solidification W01.P07.S180 — CSV encoding fallback chain test
+- `2026-05-28-codebase-solidification-W01-P07-S181` - codebase-solidification W01.P07.S181 — shared file-extension constants
+- `2026-05-28-codebase-solidification-W01-P07-S182` - codebase-solidification W01.P07.S182 — real-behavior detection tests
+- `2026-05-28-codebase-solidification-W01-P07-S183` - codebase-solidification W01.P07.S183 — centralize encoding alias map
+- `2026-05-28-codebase-solidification-W01-P07-S184` - codebase-solidification W01.P07.S184 — real-behavior encoding alias map tests
+- `2026-05-28-codebase-solidification-W01-P07-S185` - codebase-solidification W01.P07.S185
+- `2026-05-28-codebase-solidification-W01-P07-S186` - codebase-solidification W01.P07.S186
+- `2026-05-28-codebase-solidification-W01-P07-S187` - codebase-solidification W01.P07.S187
+- `2026-05-28-codebase-solidification-W01-P07-S188` - codebase-solidification W01.P07.S188
+- `2026-05-28-codebase-solidification-W01-P08-S189` - codebase-solidification W01.P08.S189 — annotate cast(T, envelope.payload)
+- `2026-05-28-codebase-solidification-W01-P08-S190` - codebase-solidification W01.P08.S190 — test payload type preservation across generic boundary
+- `2026-05-28-codebase-solidification-W01-P08-S191` - codebase-solidification W01.P08.S191 — typed Envelope.for_payload_type factory
+- `2026-05-28-codebase-solidification-W01-P08-S192` - codebase-solidification W01.P08.S192 — test typed factory envelope subtype
+- `2026-05-28-codebase-solidification-W01-P08-S193` - codebase-solidification W01.P08.S193 — TypeGuard replaces bare cast in _errors.py
+- `2026-05-28-codebase-solidification-W01-P08-S194` - codebase-solidification W01.P08.S194 — test TypeGuard narrowing in test_errors.py
+- `2026-05-28-codebase-solidification-W01-P08-S195` - codebase-solidification W01.P08.S195 — rationale comments for remaining casts in _secure_repository.py
+- `2026-05-28-codebase-solidification-W01-P08-S196` - codebase-solidification W01.P08.S196 — CI assertion that rationale markers survive refactoring
+- `2026-05-28-codebase-solidification-W01-P08-S197` - codebase-solidification W01.P08.S197
+- `2026-05-28-codebase-solidification-W01-P08-S198` - codebase-solidification W01.P08.S198
+- `2026-05-28-codebase-solidification-W01-P08-S199` - codebase-solidification W01.P08.S199
+- `2026-05-28-codebase-solidification-W01-P08-S200` - codebase-solidification W01.P08.S200
+- `2026-05-28-codebase-solidification-W01-P08-S201` - codebase-solidification W01.P08.S201
+- `2026-05-28-codebase-solidification-W01-P08-S202` - codebase-solidification W01.P08.S202
+- `2026-05-28-codebase-solidification-W01-P08-S203` - codebase-solidification W01.P08.S203
+- `2026-05-28-codebase-solidification-W01-P08-S204` - codebase-solidification W01.P08.S204
+- `2026-05-28-codebase-solidification-W01-P09-S205` - codebase-solidification W01.P09 S205-S212 — test-suite semantic intent audit
+- `2026-05-28-codebase-solidification-W01-P09-S213` - codebase-solidification W01.P09.S213 — calculation-test tautology enumeration
+- `2026-05-28-codebase-solidification-W01-P09-S214` - codebase-solidification W01.P09.S214 — calculation grounding assertion test
+- `2026-05-28-codebase-solidification-W01-P09-S215` - codebase-solidification W01.P09.S215 — module-level test coverage inventory enumeration
+- `2026-05-28-codebase-solidification-W01-P09-S216` - codebase-solidification W01.P09.S216 — module coverage inventory assertion test
+- `2026-05-28-codebase-solidification-W01-P09-S217` - codebase-solidification W01.P09.S217 — persistence boundary roundtrip coverage enumeration
+- `2026-05-28-codebase-solidification-W01-P09-S218` - codebase-solidification W01.P09.S218 — persistence boundary roundtrip assertion test
+- `2026-05-28-codebase-solidification-W01-P09-S219` - codebase-solidification W01.P09.S219 — semantic-intent drift sampler enumeration
+- `2026-05-28-codebase-solidification-W01-P09-S220` - codebase-solidification W01.P09.S220 — semantic-intent drift sampler assertion test
+- `2026-05-28-codebase-solidification-W01-P09-S221` - codebase-solidification W01.P09.S221 — bare-except enumeration in test surface
+- `2026-05-28-codebase-solidification-W01-P09-S222` - codebase-solidification W01.P09.S222 — bare-except AST gate test
+- `2026-05-28-codebase-solidification-W01-P09-S223` - codebase-solidification W01.P09.S223 — roundtrip-fixture builder enumeration
+- `2026-05-28-codebase-solidification-W01-P09-S224` - codebase-solidification W01.P09.S224 — roundtrip fixture saturation structural gate
+- `2026-05-28-codebase-solidification-exec` - `codebase-solidification` historical placeholder exec
+- `2026-05-28-codebase-solidification-W02-P10-S225` - codebase-solidification W02.P10.S225
+- `2026-05-28-codebase-solidification-W02-P10-S226` - codebase-solidification W02.P10.S226
+- `2026-05-28-codebase-solidification-W02-P10-S227` - codebase-solidification W02.P10.S227
+- `2026-05-28-codebase-solidification-W02-P10-S228` - codebase-solidification W02.P10.S228
+- `2026-05-28-codebase-solidification-W02-P10-S229` - codebase-solidification W02.P10.S229
+- `2026-05-28-codebase-solidification-W02-P10-S230` - codebase-solidification W02.P10.S230
+- `2026-05-28-codebase-solidification-W02-P10-S231` - codebase-solidification W02.P10.S231
+- `2026-05-28-codebase-solidification-W02-P10-S232` - codebase-solidification W02.P10.S232
+- `2026-05-28-codebase-solidification-W02-P10-S241` - `codebase-solidification` `W02.P10.S241`
+- `2026-05-28-codebase-solidification-W02-P10-S242` - `codebase-solidification` `W02.P10.S242`
+- `2026-05-28-codebase-solidification-W02-P11-S260` - codebase-solidification W02.P11.S260
+- `2026-05-28-codebase-solidification-W02-P11-S261` - codebase-solidification W02.P11.S261
+- `2026-05-28-codebase-solidification-W02-P11-S262` - codebase-solidification W02.P11.S262
+- `2026-05-28-codebase-solidification-W02-P11-S263` - codebase-solidification W02.P11.S263
+- `2026-05-28-codebase-solidification-W02-P11-S264` - codebase-solidification W02.P11.S264
+- `2026-05-28-codebase-solidification-W02-P11-S265` - codebase-solidification W02.P11.S265
+- `2026-05-28-codebase-solidification-W02-P12-S272` - codebase-solidification W02.P12.S272-S281 — A3 auth-locale survivor cluster
+- `2026-05-28-codebase-solidification-W02-P12-S282` - codebase-solidification W02.P12.S282-S291 — A3 sede navigation + portal locale cluster
+- `2026-05-28-codebase-solidification-W03-P14-S321` - codebase-solidification W03.P14.S321 — SetupAnswers canonical home in aeat.core
+- `2026-05-28-codebase-solidification-W03-P14-S322` - codebase-solidification W03.P14.S322 — project_answers registration slot in aeat.core
+- `2026-05-28-codebase-solidification-W03-P14-S323` - codebase-solidification W03.P14.S323 — _profiles.py imports from aeat.core (no upward domain→app imports)
+- `2026-05-28-codebase-solidification-W03-P14-S324` - codebase-solidification W03.P14.S324 — real-behavior tests for canonical home and import purity
+- `2026-05-28-codebase-solidification-W03-P14-S325` - codebase-solidification W03.P14.S325 — relocate AggregationSourceKind to aeat.core.aggregation
+- `2026-05-28-codebase-solidification-W03-P14-S326` - codebase-solidification W03.P14.S326 — migrate 5 importers to aeat.core.aggregation
+- `2026-05-28-codebase-solidification-W03-P14-S327` - codebase-solidification W03.P14.S327 — real-behavior tests for AggregationSourceKind relocation
+- `2026-05-28-codebase-solidification-W03-P15-S328` - codebase-solidification W03.P15.S328 — _local.py clock enrollment
+- `2026-05-28-codebase-solidification-W03-P15-S329` - codebase-solidification W03.P15.S329 — _declarations.py clock enrollment
+- `2026-05-28-codebase-solidification-W03-P15-S330` - codebase-solidification W03.P15.S330 — _authenticator.py clock enrollment
+- `2026-05-28-codebase-solidification-W03-P15-S331` - codebase-solidification W03.P15.S331 — _clave_movil.py clock enrollment
+- `2026-05-28-codebase-solidification-W03-P15-S332` - codebase-solidification W03.P15.S332 — _site_health_parsers.py clock enrollment
+- `2026-05-28-codebase-solidification-W03-P15-S333` - codebase-solidification W03.P15.S333 — _rotation.py clock enrollment
+- `2026-05-28-codebase-solidification-W03-P15-S334` - codebase-solidification W03.P15.S334 — _service.py clock enrollment
+- `2026-05-28-codebase-solidification-W03-P15-S335` - codebase-solidification W03.P15.S335 — _complementaria_repository.py clock enrollment
+- `2026-05-28-codebase-solidification-W03-P15-S336` - codebase-solidification W03.P15.S336 — _validator.py clock enrollment
+- `2026-05-28-codebase-solidification-W03-P15-S337` - codebase-solidification W03.P15.S337 — _context.py clock enrollment
+- `2026-05-28-codebase-solidification-W03-P15-S338` - codebase-solidification W03.P15.S338 — test_clock_enrollment_inventory.py clock enrollment
+- `2026-05-28-codebase-solidification-W04-P21-S412` - codebase-solidification W04.P21.S412
+- `2026-05-28-codebase-solidification-W04-P21-S413` - codebase-solidification W04.P21.S413
+- `2026-05-28-codebase-solidification-W04-P21-S414` - codebase-solidification W04.P21.S414
+- `2026-05-28-codebase-solidification-W04-P21-S415` - codebase-solidification W04.P21.S415
+- `2026-05-28-codebase-solidification-W04-P21-S416` - codebase-solidification W04.P21.S416
+- `2026-05-28-codebase-solidification-W04-P21-S417` - codebase-solidification W04.P21.S417
+- `2026-05-28-codebase-solidification-W04-P21-S418` - codebase-solidification W04.P21.S418
+- `2026-05-28-codebase-solidification-W04-P21-S419` - codebase-solidification W04.P21.S419
+- `2026-05-28-codebase-solidification-W04-P21-S420` - codebase-solidification W04.P21.S420
+- `2026-05-28-codebase-solidification-W04-P21-S421` - codebase-solidification W04.P21.S421
+- `2026-05-28-codebase-solidification-W05-P23-S429` - codebase-solidification W05.P23.S429-S443 — locale regression fix + translated_message sweep
+- `2026-05-30-codebase-solidification-W02-P10-S233` - codebase-solidification W02.P10.S233
+- `2026-05-30-codebase-solidification-W02-P10-S234` - codebase-solidification W02.P10.S234
+- `2026-05-30-codebase-solidification-W02-P10-S235` - codebase-solidification W02.P10.S235
+- `2026-05-30-codebase-solidification-W02-P10-S236` - codebase-solidification W02.P10.S236
+- `2026-05-30-codebase-solidification-W02-P10-S237` - codebase-solidification W02.P10.S237
+- `2026-05-30-codebase-solidification-W02-P10-S238` - codebase-solidification W02.P10.S238
+- `2026-05-30-codebase-solidification-W02-P10-S239` - codebase-solidification W02.P10.S239
+- `2026-05-30-codebase-solidification-W02-P10-S240` - codebase-solidification W02.P10.S240
+- `2026-05-30-codebase-solidification-W02-P11-S243` - codebase-solidification W02.P11.S243
+- `2026-05-30-codebase-solidification-W02-P11-S244` - codebase-solidification W02.P11.S244
+- `2026-05-30-codebase-solidification-W02-P11-S245` - codebase-solidification W02.P11.S245
+- `2026-05-30-codebase-solidification-W02-P11-S246` - codebase-solidification W02.P11.S246
+- `2026-05-30-codebase-solidification-W02-P11-S247` - codebase-solidification W02.P11.S247
+- `2026-05-30-codebase-solidification-W02-P11-S248` - codebase-solidification W02.P11.S248
+- `2026-05-30-codebase-solidification-W02-P11-S249` - codebase-solidification W02.P11.S249
+- `2026-05-30-codebase-solidification-W02-P11-S250` - codebase-solidification W02.P11.S250
+- `2026-05-30-codebase-solidification-W02-P11-S251` - codebase-solidification W02.P11.S251
+- `2026-05-30-codebase-solidification-W02-P11-S252` - codebase-solidification W02.P11.S252
+- `2026-05-30-codebase-solidification-W02-P11-S253` - codebase-solidification W02.P11.S253
+- `2026-05-30-codebase-solidification-W02-P11-S254` - codebase-solidification W02.P11.S254
+- `2026-05-30-codebase-solidification-W02-P11-S255` - codebase-solidification W02.P11.S255
+- `2026-05-30-codebase-solidification-W02-P11-S256` - codebase-solidification W02.P11.S256
+- `2026-05-30-codebase-solidification-W02-P11-S257` - codebase-solidification W02.P11.S257
+- `2026-05-30-codebase-solidification-W02-P11-S258` - codebase-solidification W02.P11.S258
+- `2026-05-30-codebase-solidification-W02-P11-S259` - codebase-solidification W02.P11.S259
+- `2026-05-30-codebase-solidification-W02-P11-S266` - codebase-solidification W02.P11.S266 — RepositorySetupError introduction
+- `2026-05-30-codebase-solidification-W02-P11-S267` - codebase-solidification W02.P11.S267 — ProfileLabelAmbiguousError introduction
+- `2026-05-30-codebase-solidification-W02-P11-S268` - codebase-solidification W02.P11.S268 — RepairIntegrityError and RepairDecisionNotFoundError
+- `2026-05-30-codebase-solidification-W02-P11-S269` - codebase-solidification W02.P11.S269 — SnapshotNotFoundError AeatError enrollment
+- `2026-05-30-codebase-solidification-W02-P11-S270` - codebase-solidification W02.P11.S270 — Narrow bare except Exception swallows
+- `2026-05-30-codebase-solidification-W02-P11-S271` - codebase-solidification W02.P11.S271 — Survivor envelope enrollment test
+- `2026-05-30-codebase-solidification-W02-P13-S292` - `codebase-solidification` `W02.P13.S292`
+- `2026-05-30-codebase-solidification-W02-P13-S296` - codebase-solidification W02.P13.S296
+- `2026-05-30-codebase-solidification-W02-P13-S297` - codebase-solidification W02.P13.S297
+- `2026-05-30-codebase-solidification-W02-P13-S298` - codebase-solidification W02.P13.S298
+- `2026-05-30-codebase-solidification-W02-P13-S299` - codebase-solidification W02.P13.S299
+- `2026-05-30-codebase-solidification-W02-P13-S300` - codebase-solidification W02.P13.S300
+- `2026-05-30-codebase-solidification-W02-P13-S301` - codebase-solidification W02.P13.S301
+- `2026-05-30-codebase-solidification-W02-P13-S302` - codebase-solidification W02.P13.S302
+- `2026-05-30-codebase-solidification-W02-P13-S303` - codebase-solidification W02.P13.S303
+- `2026-05-30-codebase-solidification-W02-P13-S304` - codebase-solidification W02.P13.S304
+- `2026-05-30-codebase-solidification-W02-P13-S307` - `codebase-solidification` `W02.P13.S307`
+- `2026-05-30-codebase-solidification-W02-P13-S308` - `codebase-solidification` `W02.P13.S308`
+- `2026-05-30-codebase-solidification-W02-P13-S309` - `codebase-solidification` `W02.P13.S309`
+- `2026-05-30-codebase-solidification-W02-P13-S310` - `codebase-solidification` `W02.P13.S310`
+- `2026-05-30-codebase-solidification-W02-P13-S311` - `codebase-solidification` `W02.P13.S311`
+- `2026-05-30-codebase-solidification-W02-P13-S312` - `codebase-solidification` `W02.P13.S312`
+- `2026-05-30-codebase-solidification-W03-P18-S358` - codebase-solidification W03.P18 — decimal canonical enrollment (S358–S368)
+- `2026-05-30-codebase-solidification-W04-P19-S369` - codebase-solidification W04.P19 S369-S396 execution record
+- `2026-05-30-codebase-solidification-W04-P22-S422` - W04.P22.S422 — get_logger swap at core/profile_catalogue.py
+- `2026-05-30-codebase-solidification-W04-P22-S423` - W04.P22.S423 — SetupAnswers duplicate-class collapse
+- `2026-05-30-codebase-solidification-W04-P22-S424` - W04.P22.S424 — CounterpartSourceKind single canonical home
+- `2026-05-30-codebase-solidification-W04-P22-S425` - W04.P22.S425 — Canonical _parse_date helper + 3 wrapper migrations
+- `2026-05-30-codebase-solidification-W04-P22-S426` - W04.P22.S426 — ApoderadoService disposition audit
+- `2026-05-30-codebase-solidification-W04-P22-S427` - W04.P22.S427 — FinancialProvider corpus attribute enforcement
+- `2026-05-30-codebase-solidification-W04-P22-S428` - W04.P22.S428 — Aggregate real-behavior test
+- `2026-05-30-codebase-solidification-W05-P25-S455` - codebase-solidification W05.P25.S455
+- `2026-05-30-codebase-solidification-W05-P25-S456` - codebase-solidification W05.P25.S456
+- `2026-05-30-codebase-solidification-W05-P25-S457` - codebase-solidification W05.P25.S457
+- `2026-05-30-codebase-solidification-W05-P25-S458` - codebase-solidification W05.P25.S458
+- `2026-05-30-codebase-solidification-W05-P25-S459` - codebase-solidification W05.P25.S459
+- `2026-05-30-codebase-solidification-W05-P25-S460` - codebase-solidification W05.P25.S460
+- `2026-05-30-codebase-solidification-W05-P25-S461` - codebase-solidification W05.P25.S461
+- `2026-05-30-codebase-solidification-W05-P25-S462` - codebase-solidification W05.P25.S462
+- `2026-05-30-codebase-solidification-W05-P26-S463` - `codebase-solidification` `W05.P26.S463`
+- `2026-05-30-codebase-solidification-W05-P26-S464` - `codebase-solidification` `W05.P26.S464`
+- `2026-05-30-codebase-solidification-exec` - `codebase-solidification` `W03.P14.S315-S320`
+- `2026-05-30-codebase-solidification-w03-p16-s339-s348-exec` - codebase-solidification W03.P16 — UTC validator enrollment sweep S339-S348
+- `2026-05-30-codebase-solidification-w03-p17-s349-s357-exec` - codebase-solidification W03.P17 — canonical parsing enrollment S349-S357
+- `2026-05-30-codebase-solidification-w04-p20-s397-s411-exec` - codebase-solidification W04.P20 — S397–S411 Step Record
+- `2026-05-30-codebase-solidification-w05-p24-s444-s454-exec` - codebase-solidification W05.P24.S444-S454 — A1 exception sweep
+- `2026-05-28-codebase-solidification-W06-P27-S465` - codebase-solidification W06.P27.S465-S475
+- `2026-05-28-codebase-solidification-W06-P29-S486` - codebase-solidification W06.P29.S486
+- `2026-05-28-codebase-solidification-W06-P29-S487` - codebase-solidification W06.P29.S487
+- `2026-05-28-codebase-solidification-W06-P29-S488` - codebase-solidification W06.P29.S488
+- `2026-05-28-codebase-solidification-W06-P29-S489` - codebase-solidification W06.P29.S489
+- `2026-05-28-codebase-solidification-W06-P29-S490` - codebase-solidification W06.P29.S490
+- `2026-05-28-codebase-solidification-W06-P29-S491` - codebase-solidification W06.P29.S491
+- `2026-05-28-codebase-solidification-W06-P29-S492` - codebase-solidification W06.P29.S492
+- `2026-05-28-codebase-solidification-W06-P29-S493` - codebase-solidification W06.P29.S493
+- `2026-05-28-codebase-solidification-W06-P29-S494` - codebase-solidification W06.P29.S494
+- `2026-05-28-codebase-solidification-W06-P29-S495` - codebase-solidification W06.P29.S495
+- `2026-05-28-codebase-solidification-W06-P30-S496` - codebase-solidification W06.P30.S496
+- `2026-05-28-codebase-solidification-W06-P30-S497` - codebase-solidification W06.P30.S497
+- `2026-05-28-codebase-solidification-W06-P30-S498` - codebase-solidification W06.P30.S498
+- `2026-05-28-codebase-solidification-W06-P30-S499` - codebase-solidification W06.P30.S499
+- `2026-05-28-codebase-solidification-W07-P33-S528` - `codebase-solidification` `W07.P33.S528`
+- `2026-05-28-codebase-solidification-W07-P33-S529` - `codebase-solidification` `W07.P33.S529`
+- `2026-05-28-codebase-solidification-W07-P33-S530` - `codebase-solidification` `W07.P33.S530`
+- `2026-05-28-codebase-solidification-W08-P34-S531` - `codebase-solidification` `W08.P34.S531`
+- `2026-05-28-codebase-solidification-W08-P34-S532` - `codebase-solidification` `W08.P34.S532`
+- `2026-05-28-codebase-solidification-W08-P34-S533` - `codebase-solidification` `W08.P34.S533`
+- `2026-05-28-codebase-solidification-W08-P34-S534` - `codebase-solidification` `W08.P34.S534`
+- `2026-05-28-codebase-solidification-W08-P34-S535` - `codebase-solidification` `W08.P34.S535`
+- `2026-05-28-codebase-solidification-W08-P34-S536` - `codebase-solidification` `W08.P34.S536`
+- `2026-05-28-codebase-solidification-W08-P34-S537` - `codebase-solidification` `W08.P34.S537`
+- `2026-05-28-codebase-solidification-W08-P34-S538` - `codebase-solidification` `W08.P34.S538`
+- `2026-05-28-codebase-solidification-W08-P34-S539` - `codebase-solidification` `W08.P34.S539`
+- `2026-05-28-codebase-solidification-W08-P34-S540` - `codebase-solidification` `W08.P34.S540`
+- `2026-05-28-codebase-solidification-W08-P35-S541` - codebase-solidification W08.P35.S541–S549 batch exec
+- `2026-05-28-codebase-solidification-W08-P36-S550` - `codebase-solidification` `W08.P36.S550`
+- `2026-05-28-codebase-solidification-W08-P36-S551` - `codebase-solidification` `W08.P36.S551`
+- `2026-05-28-codebase-solidification-W08-P36-S552` - `codebase-solidification` `W08.P36.S552`
+- `2026-05-28-codebase-solidification-W09-P38-S557` - `codebase-solidification` `W09.P38.S557`
+- `2026-05-28-codebase-solidification-W09-P38-S558` - `codebase-solidification` `W09.P38.S558`
+- `2026-05-28-codebase-solidification-W09-P38-S559` - `codebase-solidification` `W09.P38.S559`
+- `2026-05-28-codebase-solidification-W09-P38-S560` - `codebase-solidification` `W09.P38.S560`
+- `2026-05-28-codebase-solidification-W09-P38-S561` - `codebase-solidification` `W09.P38.S561`
+- `2026-05-28-codebase-solidification-W10-P40-S569` - codebase-solidification W10.P40.S569 — _VARCHAR_64 constant extraction
+- `2026-05-28-codebase-solidification-W10-P40-S570` - codebase-solidification W10.P40.S570 — WorkbookKind Literal to StrEnum
+- `2026-05-28-codebase-solidification-W10-P40-S571` - codebase-solidification W10.P40.S571 — _ENGINE_LIBREOFFICE constant
+- `2026-05-28-codebase-solidification-W10-P40-S572` - codebase-solidification W10.P40.S572 — file_permissions.py os.environ allowlist doc
+- `2026-05-28-codebase-solidification-W10-P40-S573` - codebase-solidification W10.P40.S573 — _render.py os.environ cache-key allowlist doc
+- `2026-05-28-codebase-solidification-W10-P40-S574` - codebase-solidification W10.P40.S574 — W10.P40 constants inventory test
+- `2026-05-28-codebase-solidification-W10-P41-S575` - `codebase-solidification` `W10.P41.S575`
+- `2026-05-28-codebase-solidification-W10-P41-S576` - `codebase-solidification` `W10.P41.S576`
+- `2026-05-28-codebase-solidification-W10-P41-S577` - `codebase-solidification` `W10.P41.S577`
+- `2026-05-28-codebase-solidification-W10-P41-S578` - `codebase-solidification` `W10.P41.S578`
+- `2026-05-28-codebase-solidification-W10-P41-S579` - `codebase-solidification` `W10.P41.S579`
+- `2026-05-28-codebase-solidification-W10-P41-S580` - `codebase-solidification` `W10.P41.S580`
+- `2026-05-28-codebase-solidification-W10-P41-S581` - `codebase-solidification` `W10.P41.S581`
+- `2026-05-28-codebase-solidification-W11-P42-S582` - `codebase-solidification` `W11.P42.S582`
+- `2026-05-28-codebase-solidification-W11-P42-S583` - `codebase-solidification` `W11.P42.S583`
+- `2026-05-28-codebase-solidification-W11-P42-S584` - `codebase-solidification` `W11.P42.S584`
+- `2026-05-28-codebase-solidification-W11-P42-S585` - `codebase-solidification` `W11.P42.S585`
+- `2026-05-28-codebase-solidification-W11-P42-S586` - `codebase-solidification` `W11.P42.S586`
+- `2026-05-28-codebase-solidification-W11-P43-S587` - codebase-solidification W11.P43 S587-S593 — axis finishers
+- `2026-05-28-codebase-solidification-W18-P50-S638` - codebase-solidification W18.P50.S638
+- `2026-05-28-codebase-solidification-W18-P50-S639` - codebase-solidification W18.P50.S639
+- `2026-05-28-codebase-solidification-W18-P50-S640` - codebase-solidification W18.P50.S640
+- `2026-05-28-codebase-solidification-W20-P52-S643` - `codebase-solidification` `W20.P52.S643`
+- `2026-05-28-codebase-solidification-W20-P52-S644` - `codebase-solidification` `W20.P52.S644`
+- `2026-05-28-codebase-solidification-W20-P52-S645` - `codebase-solidification` `W20.P52.S645`
+- `2026-05-31-codebase-solidification-W06-P28-S476` - codebase-solidification W06.P28 — S476-S485 batch exec record
+- `2026-05-31-codebase-solidification-W07-P31-S500` - codebase-solidification W07.P31.S500 — CertificateLoadError tr-positional regression fix
+- `2026-05-31-codebase-solidification-W09-P39-S562` - codebase-solidification W09.P39.S562-S568 — locale + pydantic boundary hardening
+- `2026-05-31-codebase-solidification-W22-P54-S651` - `codebase-solidification` `W22.P54.S651`
+- `2026-05-31-codebase-solidification-W22-P54-S652` - `codebase-solidification` `W22.P54.S652`
+- `2026-05-31-codebase-solidification-W22-P54-S653` - `codebase-solidification` `W22.P54.S653`
+- `2026-05-31-codebase-solidification-exec` - `codebase-solidification` historical placeholder exec
+- `2026-05-31-codebase-solidification-w07-p32-s517-s527-exec` - codebase-solidification W07.P32.S517-S527 — A1 exception sweep + MRO finishers
+- `2026-05-31-codebase-solidification-w09-p37-s553-s556-exec` - codebase-solidification W09.P37 — S553-S556 Step Record
+- `2026-05-31-codebase-solidification-w12-p44-s594-s599-exec` - codebase-solidification W12.P44 S594-S599 Step Record
+- `2026-05-31-codebase-solidification-w13p45-exec` - `codebase-solidification` `W13.P45.S600-S606`
+- `2026-05-31-codebase-solidification-w14-p46-s607-s613-exec` - codebase-solidification W14.P46 S607-S613 Step Record
+- `2026-05-31-codebase-solidification-w15p47-exec` - codebase-solidification W15.P47.S614-S619
+- `2026-05-31-codebase-solidification-w16-p48-s620-s625-exec` - codebase-solidification W16.P48 S620-S625 — boundary type-narrowing + canonical extraction
+- `2026-05-31-codebase-solidification-w16-p48-s626-s631-exec` - codebase-solidification W16.P48 S626-S631
+- `2026-05-31-codebase-solidification-w17-p49-s632-s637-exec` - codebase-solidification W17.P49.S632-S637
+- `2026-05-31-codebase-solidification-w21-p53-s646-s650-exec` - codebase-solidification W21.P53.S646-S650
+- `2026-05-28-codebase-solidification-W26-P58-S663` - codebase-solidification W26.P58.S663 — Playwright adapter no-untyped-def cluster
+- `2026-05-28-codebase-solidification-W26-P58-S664` - codebase-solidification W26.P58.S664 — Session-store Protocol cluster
+- `2026-05-28-codebase-solidification-W26-P58-S665` - codebase-solidification W26.P58.S665 — Invoice-import dict-splat cluster
+- `2026-05-28-codebase-solidification-W26-P58-S666` - codebase-solidification W26.P58.S666 — Ledger no-untyped-def cluster
+- `2026-05-28-codebase-solidification-W26-P58-S667` - codebase-solidification W26.P58.S667 — P58 closure test
+- `2026-06-01-codebase-solidification-W27-P61-S676` - `codebase-solidification` `W27.P61.S676`
+- `2026-06-01-codebase-solidification-W27-P61-S677` - `codebase-solidification` `W27.P61.S677`
+- `2026-06-01-codebase-solidification-W27-P61-S678` - `codebase-solidification` `W27.P61.S678`
+- `2026-06-01-codebase-solidification-W28-P62-S679` - `codebase-solidification` `W28.P62.S679`
+- `2026-06-01-codebase-solidification-W28-P62-S680` - `codebase-solidification` `W28.P62.S680`
+- `2026-06-01-codebase-solidification-w26-p55-s654-s656-exec` - codebase-solidification W26.P55 — S654, S655, S656
+- `2026-06-01-codebase-solidification-w26-p56-s657-s658-exec` - codebase-solidification W26.P56 — S657 + S658: type-ignore paydown classification + first batch
+- `2026-06-01-codebase-solidification-w26-p57-s659-s662-exec` - codebase-solidification W26.P57 — S659/S660/S661/S662
+- `2026-06-01-codebase-solidification-w26-p59-s668-s671-exec` - codebase-solidification W26.P59 — S668–S671 execution record
+- `2026-05-28-codebase-solidification-W29-P63-S801` - Introduce StandardPeriodCode StrEnum covering the standard period codes (1T through 4T, 1P through 4P, 0A, 01 through 12) at canonical home `src/aeat/core/_period.py`. Refactor PeriodCode in `src/aeat/domain/calculations/registry/_schema.py` to validate via StandardPeriodCode plus extended/ad-hoc/event regex patterns. Sweep all consumer sites in one atomic commit per atomic-relocation-coordination ADR. Tag commit subject relocation:StandardPeriodCode
+- `2026-05-28-codebase-solidification-W29-P63-S802` - Introduce OutputLanguage StrEnum with members ES, EN, CA, HU at canonical home `src/aeat/core/external_constants.py`. Rebase SUPPORTED_OUTPUT_LANGUAGES to frozenset of OutputLanguage
+
+### plan
+
+- `2026-05-28-codebase-solidification-plan` - `codebase-solidification` `Codebase solidification recurring hardening epic` plan
+
+### research
+
+- `2026-06-04-codebase-solidification-research` - `codebase-solidification` research: `warning closeout research grounding`  ## Question  Which vault lifecycle warning needs an explicit research grounding edge so future semantic search and developer briefings do not treat execution evidence as orphaned context?  ## Findings  This note is a vault-curation closeout record. It does not introduce new runtime behavior, change an accepted architecture, or supersede an existing feature-specific research note.  The warning pass found that this feature needed an explicit research node or a plan-to-research edge. The related frontmatter carries the navigable authority chain; body wiki-links are intentionally avoided to keep body-link hygiene clean.  Semantic vault search was used before creating this bridge. Where older plan, audit, or execution records already existed, this note makes that evidence discoverable without rewriting the historical documents.  ## Recommendation  Keep this research bridge until a deeper feature-specific research record supersedes it. Any future supersession should update the related frontmatter on the linked ADR, plan, and this research record.

@@ -1,0 +1,9 @@
+[[revisions."2023".casillas]]
+id = "0167"
+number = "0167"
+label = "Grupo o epígrafe I.A.E. (de la actividad principal en caso de realizar varias actividades del mismo tipo)"
+section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
+data_type = "text"
+semantic_role = "irpf_ed_actividad_iae_code"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

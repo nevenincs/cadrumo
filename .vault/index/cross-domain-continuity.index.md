@@ -1,0 +1,348 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#cross-domain-continuity'
+date: '2026-06-15'
+modified: '2026-06-15'
+related:
+  - '[[2026-05-26-cross-domain-continuity-P01-S05]]'
+  - '[[2026-05-26-cross-domain-continuity-P01-S06]]'
+  - '[[2026-05-26-cross-domain-continuity-P01-S07]]'
+  - '[[2026-05-26-cross-domain-continuity-P11-S227]]'
+  - '[[2026-05-26-cross-domain-continuity-P11-S230]]'
+  - '[[2026-05-26-cross-domain-continuity-P14-S218]]'
+  - '[[2026-05-26-cross-domain-continuity-P14-S55]]'
+  - '[[2026-05-26-cross-domain-continuity-P15-S59]]'
+  - '[[2026-05-26-cross-domain-continuity-P15-S60]]'
+  - '[[2026-05-26-cross-domain-continuity-P15-S61]]'
+  - '[[2026-05-26-cross-domain-continuity-P16-S65]]'
+  - '[[2026-05-26-cross-domain-continuity-P17-S66]]'
+  - '[[2026-05-26-cross-domain-continuity-P17-S67]]'
+  - '[[2026-05-26-cross-domain-continuity-P19-S210]]'
+  - '[[2026-05-26-cross-domain-continuity-P19-S211]]'
+  - '[[2026-05-26-cross-domain-continuity-P19-S75]]'
+  - '[[2026-05-26-cross-domain-continuity-P19-S76]]'
+  - '[[2026-05-26-cross-domain-continuity-P20-S77]]'
+  - '[[2026-05-26-cross-domain-continuity-P22-S81]]'
+  - '[[2026-05-26-cross-domain-continuity-P22-S82]]'
+  - '[[2026-05-26-cross-domain-continuity-P22-S83]]'
+  - '[[2026-05-26-cross-domain-continuity-P22-S84]]'
+  - '[[2026-05-26-cross-domain-continuity-P22-S85]]'
+  - '[[2026-05-26-cross-domain-continuity-P25-S96]]'
+  - '[[2026-05-26-cross-domain-continuity-P26-S100]]'
+  - '[[2026-05-26-cross-domain-continuity-P26-S99]]'
+  - '[[2026-05-26-cross-domain-continuity-P35-S123]]'
+  - '[[2026-05-26-cross-domain-continuity-P35-S140]]'
+  - '[[2026-05-26-cross-domain-continuity-W07-P31-S113]]'
+  - '[[2026-05-26-cross-domain-continuity-W07-P31-S114]]'
+  - '[[2026-05-26-cross-domain-continuity-W07-P31-S115]]'
+  - '[[2026-05-26-cross-domain-continuity-W07-P32-S116]]'
+  - '[[2026-05-26-cross-domain-continuity-W07-P32-S117]]'
+  - '[[2026-05-26-cross-domain-continuity-W07-P33-S118]]'
+  - '[[2026-05-26-cross-domain-continuity-W07-P33-S119]]'
+  - '[[2026-05-26-cross-domain-continuity-W08-P36-S141]]'
+  - '[[2026-05-26-cross-domain-continuity-W08-P36-S142]]'
+  - '[[2026-05-26-cross-domain-continuity-W08-P36-S143]]'
+  - '[[2026-05-26-cross-domain-continuity-W08-P36-S144]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S160]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S164]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S198]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S199]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S202]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S205]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S208]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S250]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S252]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S253]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S254]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S256]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S267]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S270]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S289]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S290]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S291]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S304]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P42-S165]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S168]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S282]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P47-S170]]'
+  - '[[2026-05-26-cross-domain-continuity-W12-P61-S277]]'
+  - '[[2026-05-26-cross-domain-continuity-adr]]'
+  - '[[2026-05-26-cross-domain-continuity-audit]]'
+  - '[[2026-05-26-cross-domain-continuity-plan]]'
+  - '[[2026-05-26-cross-domain-continuity-w07-p31-s246-s249-exec]]'
+  - '[[2026-05-26-cross-domain-continuity-w12-p62-s149-s156-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-P41-S367]]'
+  - '[[2026-05-27-cross-domain-continuity-P50-S176]]'
+  - '[[2026-05-27-cross-domain-continuity-P50-S177]]'
+  - '[[2026-05-27-cross-domain-continuity-P50-S178]]'
+  - '[[2026-05-27-cross-domain-continuity-P50-S179]]'
+  - '[[2026-05-27-cross-domain-continuity-W02-P11-S306]]'
+  - '[[2026-05-27-cross-domain-continuity-W04-P19-S296]]'
+  - '[[2026-05-27-cross-domain-continuity-W04-P19-S305]]'
+  - '[[2026-05-27-cross-domain-continuity-W04-P19-S340]]'
+  - '[[2026-05-27-cross-domain-continuity-W04-P19-S376]]'
+  - '[[2026-05-27-cross-domain-continuity-W04-P19-S377]]'
+  - '[[2026-05-27-cross-domain-continuity-W04-P19-S378]]'
+  - '[[2026-05-27-cross-domain-continuity-W05-P23-S86]]'
+  - '[[2026-05-27-cross-domain-continuity-W07-P31-S353]]'
+  - '[[2026-05-27-cross-domain-continuity-W07-P31-S361]]'
+  - '[[2026-05-27-cross-domain-continuity-W09-P41-S159]]'
+  - '[[2026-05-27-cross-domain-continuity-W09-P41-S161]]'
+  - '[[2026-05-27-cross-domain-continuity-W09-P41-S162]]'
+  - '[[2026-05-27-cross-domain-continuity-W09-P41-S163]]'
+  - '[[2026-05-27-cross-domain-continuity-W09-P41-S174]]'
+  - '[[2026-05-27-cross-domain-continuity-W09-P41-S175]]'
+  - '[[2026-05-27-cross-domain-continuity-W09-P41-S299]]'
+  - '[[2026-05-27-cross-domain-continuity-W09-P41-S318]]'
+  - '[[2026-05-27-cross-domain-continuity-W09-P41-S342]]'
+  - '[[2026-05-27-cross-domain-continuity-W09-P41-S352]]'
+  - '[[2026-05-27-cross-domain-continuity-W09-P41-S353]]'
+  - '[[2026-05-27-cross-domain-continuity-W09-P41-S371]]'
+  - '[[2026-05-27-cross-domain-continuity-W09-P41-S372]]'
+  - '[[2026-05-27-cross-domain-continuity-W09-P41-S373]]'
+  - '[[2026-05-27-cross-domain-continuity-W09-P41-S374]]'
+  - '[[2026-05-27-cross-domain-continuity-W09-P41-S399]]'
+  - '[[2026-05-27-cross-domain-continuity-W12-P61-S278]]'
+  - '[[2026-05-27-cross-domain-continuity-W12-P61-S279]]'
+  - '[[2026-05-27-cross-domain-continuity-W12-P61-S280]]'
+  - '[[2026-05-27-cross-domain-continuity-W12-P61-S350]]'
+  - '[[2026-05-27-cross-domain-continuity-W12-P63-S375]]'
+  - '[[2026-05-27-cross-domain-continuity-W12-P65-S381]]'
+  - '[[2026-05-27-cross-domain-continuity-W12-P65-S382]]'
+  - '[[2026-05-27-cross-domain-continuity-W12-P65-S383]]'
+  - '[[2026-05-27-cross-domain-continuity-W12-P65-S384]]'
+  - '[[2026-05-27-cross-domain-continuity-W12-P65-S385]]'
+  - '[[2026-05-27-cross-domain-continuity-W12-P65-S386]]'
+  - '[[2026-05-27-cross-domain-continuity-adr]]'
+  - '[[2026-05-27-cross-domain-continuity-audit]]'
+  - '[[2026-05-27-cross-domain-continuity-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-fu-173-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-fu-176-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-fu-177-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-fu-182-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-fu-s352-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-fu-s361-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w05-p23-s87-s90-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w06-p28-s104-s107-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w06-p29-s108-s109-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w07-p31-fu-s353-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w07-p31-s353-review-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s176-review-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s177-review-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s183-review-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s194-review-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s195-review-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s197-review-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s206-review-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s207-review-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s209-review-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s210-review-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s212-review-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s215-review-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s217-review-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s222-review-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s224-review-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s254-p45-s282-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s273-s244-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s299-review-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s322-s334-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s352-review-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s361-review-exec]]'
+  - '[[2026-05-27-cross-domain-continuity-w09-p41-s367-pathb-exec]]'
+  - '[[2026-05-27-m200-cuota-formula-estado-binding-fix-exec]]'
+  - '[[2026-05-27-profile-portability-adr]]'
+  - '[[2026-05-27-s113-modelo-100-cuota-trace-exec]]'
+  - '[[2026-05-28-cross-domain-continuity-W04-P19-S398]]'
+  - '[[2026-05-28-cross-domain-continuity-audit]]'
+  - '[[2026-05-28-cross-domain-continuity-w04-p19-s387-patch-exec]]'
+  - '[[2026-05-28-cross-domain-continuity-w04-p19-s387-skeleton-exec]]'
+  - '[[2026-05-28-cross-domain-continuity-w04-p19-s398-repurpose-exec]]'
+  - '[[2026-05-28-cross-domain-continuity-w12-p65-s385-closing-review-exec]]'
+  - '[[2026-05-28-cross-domain-continuity-w12-p65-s386b-hygiene-exec]]'
+  - '[[2026-05-29-cross-domain-continuity-audit]]'
+  - '[[2026-05-31-cross-domain-continuity-exec]]'
+  - '[[2026-06-03-cross-domain-continuity-audit]]'
+  - '[[2026-06-04-cross-domain-continuity-research]]'
+---
+
+# `cross-domain-continuity` feature index
+
+Auto-generated index of all documents tagged with `#cross-domain-continuity`.
+
+## Documents
+
+### adr
+
+- `2026-05-26-cross-domain-continuity-adr` - `cross-domain-continuity` adr: `verification-predicate-strategy` | (**status:** `accepted`)
+- `2026-05-27-cross-domain-continuity-adr` - `cross-domain-continuity` adr: `ledger-classification-rule-engine` | (**status:** `accepted`)
+- `2026-05-27-profile-portability-adr` - `cross-domain-continuity` adr: `profile-portability` | (**status:** `accepted`)
+
+### audit
+
+- `2026-05-26-cross-domain-continuity-audit` - `cross-domain-continuity` audit: `round-6 cross-domain continuity audit + systemic drift catalog`
+- `2026-05-27-cross-domain-continuity-audit` - `cross-domain-continuity` audit: `wave-1-commit-review`
+- `2026-05-28-cross-domain-continuity-audit` - `cross-domain-continuity` audit: `wave-3-commit-review`
+- `2026-05-29-cross-domain-continuity-audit` - `cross-domain-continuity` audit: `persona-fleet round 7`
+- `2026-06-03-cross-domain-continuity-audit` - `cross-domain-continuity` audit: `Peer-WIP collision protocol audit (lint-zero session)`
+
+### exec
+
+- `2026-05-26-cross-domain-continuity-P01-S05` - cross-domain-continuity P01.S05 — StoredProfileDriftError + repository wrap
+- `2026-05-26-cross-domain-continuity-P01-S06` - cross-domain-continuity P01.S06 — command_error_boundary discrimination
+- `2026-05-26-cross-domain-continuity-P01-S07` - cross-domain-continuity P01.S07 — real-CLI boundary tests
+- `2026-05-26-cross-domain-continuity-P11-S227` - cross-domain-continuity W02.P11.S227
+- `2026-05-26-cross-domain-continuity-P11-S230` - cross-domain-continuity W02.P11.S230
+- `2026-05-26-cross-domain-continuity-P14-S218` - cross-domain-continuity P14.S218 — Fix M200 verify ModeloBuilderError for legal_entity_form enum binding
+- `2026-05-26-cross-domain-continuity-P14-S55` - cross-domain-continuity P14.S55 — Decision record: backfill 2024 pyme bracket
+- `2026-05-26-cross-domain-continuity-P15-S59` - cross-domain-continuity P15.S59
+- `2026-05-26-cross-domain-continuity-P15-S60` - cross-domain-continuity P15.S60
+- `2026-05-26-cross-domain-continuity-P15-S61` - cross-domain-continuity P15.S61
+- `2026-05-26-cross-domain-continuity-P16-S65` - cross-domain-continuity P16.S65
+- `2026-05-26-cross-domain-continuity-P17-S66` - cross-domain-continuity P17.S66 — CLI-level cross-modelo calculation tests
+- `2026-05-26-cross-domain-continuity-P17-S67` - cross-domain-continuity P17.S67 — External oracle values backfill
+- `2026-05-26-cross-domain-continuity-P19-S210` - cross-domain-continuity P19.S210 — provenance re-validation drift detection
+- `2026-05-26-cross-domain-continuity-P19-S211` - cross-domain-continuity P19.S211 — tamper-detection regression test
+- `2026-05-26-cross-domain-continuity-P19-S75` - cross-domain-continuity P19.S75 — predicate evaluator + required-casilla gate
+- `2026-05-26-cross-domain-continuity-P19-S76` - cross-domain-continuity P19.S76 — M130 verificado-completo regression tests
+- `2026-05-26-cross-domain-continuity-P20-S77` - cross-domain-continuity P20.S77 — verification boundary docstring
+- `2026-05-26-cross-domain-continuity-P22-S81` - cross-domain-continuity P22.S81
+- `2026-05-26-cross-domain-continuity-P22-S82` - cross-domain-continuity P22.S82
+- `2026-05-26-cross-domain-continuity-P22-S83` - cross-domain-continuity P22.S83
+- `2026-05-26-cross-domain-continuity-P22-S84` - cross-domain-continuity P22.S84
+- `2026-05-26-cross-domain-continuity-P22-S85` - cross-domain-continuity P22.S85
+- `2026-05-26-cross-domain-continuity-P25-S96` - cross-domain-continuity P25.S96-S98
+- `2026-05-26-cross-domain-continuity-P26-S100` - cross-domain-continuity W05.P26.S100 — 7 regression tests for iva-wallet balance
+- `2026-05-26-cross-domain-continuity-P26-S99` - cross-domain-continuity W05.P26.S99 — IvaWalletBalanceReport + iva-wallet balance verb
+- `2026-05-26-cross-domain-continuity-P35-S123` - cross-domain-continuity W08.P35.S123-S139 — de-hardcode 17 f-string error raises in `_actions.py`
+- `2026-05-26-cross-domain-continuity-P35-S140` - cross-domain-continuity W08.P35.S140 — Haiku discovery sweep: remaining f-string error raises in application layer
+- `2026-05-26-cross-domain-continuity-W07-P31-S113` - cross-domain-continuity W07.P31.S113 — Modelo 100 cuota trace: mínimo personal silent-zero
+- `2026-05-26-cross-domain-continuity-W07-P31-S114` - cross-domain-continuity W07.P31.S114 — M100 2024 mínimo del contribuyente: fix
+- `2026-05-26-cross-domain-continuity-W07-P31-S115` - cross-domain-continuity W07.P31.S115 — Cluster T regression test
+- `2026-05-26-cross-domain-continuity-W07-P32-S116` - cross-domain-continuity W07.P32.S116 — `aeat app modelo project` implementation
+- `2026-05-26-cross-domain-continuity-W07-P32-S117` - cross-domain-continuity W07.P32.S117 — projection regression test
+- `2026-05-26-cross-domain-continuity-W07-P33-S118` - cross-domain-continuity W07.P33.S118 — `aeat app modelo compare` implementation
+- `2026-05-26-cross-domain-continuity-W07-P33-S119` - cross-domain-continuity W07.P33.S119 — compare verb regression test
+- `2026-05-26-cross-domain-continuity-W08-P36-S141` - cross-domain-continuity W08.P36.S141
+- `2026-05-26-cross-domain-continuity-W08-P36-S142` - cross-domain-continuity W08.P36.S142
+- `2026-05-26-cross-domain-continuity-W08-P36-S143` - cross-domain-continuity W08.P36.S143
+- `2026-05-26-cross-domain-continuity-W08-P36-S144` - cross-domain-continuity W08.P36.S144
+- `2026-05-26-cross-domain-continuity-W09-P41-S208` - cross-domain-continuity W09.P41.S208 — audit secure_sql.py + add isolated_sessionless_storage_root
+- `2026-05-26-cross-domain-continuity-W09-P41-S250` - cross-domain-continuity W09.P41.S250
+- `2026-05-26-cross-domain-continuity-W09-P41-S252` - cross-domain-continuity W09.P41.S252 — Category A batch 1 migration (4/5 files clean)
+- `2026-05-26-cross-domain-continuity-W09-P41-S253` - cross-domain-continuity W09.P41.S253 — Category B batch 2 storage migration
+- `2026-05-26-cross-domain-continuity-W09-P41-S254` - cross-domain-continuity W09.P41.S254 — Batch 3 mixed-fixture triage (3 files)
+- `2026-05-26-cross-domain-continuity-W09-P45-S282` - cross-domain-continuity W09.P45.S282 — auth env-var leak via tr()
+- `2026-05-26-cross-domain-continuity-W12-P61-S277` - cross-domain-continuity W12.P61.S277 — typed-boundary warmup (_parse_typed_cli_observations)
+- `2026-05-26-cross-domain-continuity-w07-p31-s246-s249-exec` - cross-domain-continuity W07.P31.S246-S249 — Mínimo supplement parameters + regression tests
+- `2026-05-26-cross-domain-continuity-w12-p62-s149-s156-exec` - cross-domain-continuity W12.P62.S149-S156 — registry validate-helper dedup (G5 gate)
+- `2026-05-27-cross-domain-continuity-P41-S367` - cross-domain-continuity P41.S367 — M721 registry stub + refusal payload
+- `2026-05-27-cross-domain-continuity-P50-S176` - S176 — Modelo 100 deadline windows exercise 2020 (campaign 2021)
+- `2026-05-27-cross-domain-continuity-P50-S177` - S177 — Modelo 100 deadline windows exercise 2021 (campaign 2022)
+- `2026-05-27-cross-domain-continuity-P50-S178` - S178 — Modelo 100 deadline windows exercise 2022 (campaign 2023)
+- `2026-05-27-cross-domain-continuity-P50-S179` - S179 — Modelo 100 deadline windows exercise 2024 (campaign 2025)
+- `2026-05-27-cross-domain-continuity-W02-P11-S306` - cross-domain-continuity W02.P11.S306 — --all-profiles flag on aeat app overview calendar
+- `2026-05-27-cross-domain-continuity-W04-P19-S296` - cross-domain-continuity W04.P19.S296 — R8-M200-1 DP200014:00562 TOML reclassification
+- `2026-05-27-cross-domain-continuity-W04-P19-S305` - cross-domain-continuity W04.P19.S305 — _refuse_duplicate_tax_id warn-and-continue
+- `2026-05-27-cross-domain-continuity-W04-P19-S340` - cross-domain-continuity W04.P19.S340 — workflow abort surface: DRAFT_HAS_ERRORS next_action pointer
+- `2026-05-27-cross-domain-continuity-W04-P19-S376` - `cross-domain-continuity` `W04.P19.S376`
+- `2026-05-27-cross-domain-continuity-W04-P19-S377` - `cross-domain-continuity` `W04.P19.S377`
+- `2026-05-27-cross-domain-continuity-W04-P19-S378` - `cross-domain-continuity` `W04.P19.S378`
+- `2026-05-27-cross-domain-continuity-W05-P23-S86` - cross-domain-continuity W05.P23.S86 — FX conversion strategy decision
+- `2026-05-27-cross-domain-continuity-W07-P31-S353` - S353: M100 casilla 0505 formula derivation
+- `2026-05-27-cross-domain-continuity-W07-P31-S361` - cross-domain-continuity W07.P31.S361 — M100 2024 final-settlement chain
+- `2026-05-27-cross-domain-continuity-W09-P41-S159` - `cross-domain-continuity` Code Review
+- `2026-05-27-cross-domain-continuity-W09-P41-S161` - cross-domain-continuity Code Review — #161 M151 Beckham régimen Path-B refusal stub
+- `2026-05-27-cross-domain-continuity-W09-P41-S162` - `cross-domain-continuity` W09.P41 — #162 Code Review
+- `2026-05-27-cross-domain-continuity-W09-P41-S163` - `cross-domain-continuity` W09.P41 -- #163 Code Review
+- `2026-05-27-cross-domain-continuity-W09-P41-S174` - cross-domain-continuity Code Review — #174 `_guard_casilla_data_type`
+- `2026-05-27-cross-domain-continuity-W09-P41-S175` - cross-domain-continuity Code Review
+- `2026-05-27-cross-domain-continuity-W09-P41-S299` - cross-domain-continuity W09.P41.S299 — M303 SIMPLIFICADO ledger-preflight bypass
+- `2026-05-27-cross-domain-continuity-W09-P41-S318` - cross-domain-continuity W09.P41.S318 — verification provenance (legal_refs/source_refs)
+- `2026-05-27-cross-domain-continuity-W09-P41-S342` - cross-domain-continuity W09.P41.S342 — M130 income aggregation actividad-económica fix
+- `2026-05-27-cross-domain-continuity-W09-P41-S352` - S352: M303 iva-wallet seed verb
+- `2026-05-27-cross-domain-continuity-W09-P41-S353` - cross-domain-continuity W09.P41.S353 — M100 casilla 0505 formula derivation
+- `2026-05-27-cross-domain-continuity-W09-P41-S371` - `cross-domain-continuity` `W09.P41.S371`
+- `2026-05-27-cross-domain-continuity-W09-P41-S372` - `cross-domain-continuity` `W09.P41.S372`
+- `2026-05-27-cross-domain-continuity-W09-P41-S373` - `cross-domain-continuity` `W09.P41.S373`
+- `2026-05-27-cross-domain-continuity-W09-P41-S374` - `cross-domain-continuity` `W09.P41.S374`
+- `2026-05-27-cross-domain-continuity-W09-P41-S399` - `cross-domain-continuity` `W09.P41.S399`
+- `2026-05-27-cross-domain-continuity-W12-P61-S278` - cross-domain-continuity W12.P61.S278 — typed payload models (application + CLI layer)
+- `2026-05-27-cross-domain-continuity-W12-P61-S279` - cross-domain-continuity W12.P61 — S279
+- `2026-05-27-cross-domain-continuity-W12-P61-S280` - cross-domain-continuity W12.P61 — S280
+- `2026-05-27-cross-domain-continuity-W12-P61-S350` - cross-domain-continuity W12.P61.S350
+- `2026-05-27-cross-domain-continuity-W12-P63-S375` - W12.P63.S375 — M037 historical AEAT-Sede corpus search
+- `2026-05-27-cross-domain-continuity-W12-P65-S381` - `cross-domain-continuity` `W12.P65.S381`
+- `2026-05-27-cross-domain-continuity-W12-P65-S382` - `cross-domain-continuity` `W12.P65.S382`
+- `2026-05-27-cross-domain-continuity-W12-P65-S383` - `cross-domain-continuity` `W12.P65.S383`
+- `2026-05-27-cross-domain-continuity-W12-P65-S384` - `cross-domain-continuity` `W12.P65.S384`
+- `2026-05-27-cross-domain-continuity-W12-P65-S385` - `cross-domain-continuity` `W12.P65.S385`
+- `2026-05-27-cross-domain-continuity-W12-P65-S386` - `cross-domain-continuity` `W12.P65.S386`
+- `2026-05-27-cross-domain-continuity-exec` - `cross-domain-continuity` historical placeholder exec
+- `2026-05-27-cross-domain-continuity-fu-173-exec` - FU-173 — layout_authority coverage fix for M151 / M714 / M721
+- `2026-05-27-cross-domain-continuity-fu-176-exec` - S176: Art. 82 LIRPF situacion_familiar axis
+- `2026-05-27-cross-domain-continuity-fu-177-exec` - S177: Art. 59 LIRPF custodia compartida prorrata 50 %
+- `2026-05-27-cross-domain-continuity-fu-182-exec` - cross-domain-continuity FU-182 Step Record
+- `2026-05-27-cross-domain-continuity-fu-s352-exec` - FU-S352: route engine-layer seed_hint through tr()
+- `2026-05-27-cross-domain-continuity-fu-s361-exec` - FU-S361: add aeat-renta-2024-manual-parte1 to 0172 formula source_refs
+- `2026-05-27-cross-domain-continuity-w05-p23-s87-s90-exec` - cross-domain-continuity W05.P23.S87-S90 — FX conversion schema + implementation + tests
+- `2026-05-27-cross-domain-continuity-w06-p28-s104-s107-exec` - cross-domain-continuity W06.P28.S104-S107 — bundled-export schema v2 + serializer + deserializer + roundtrip test
+- `2026-05-27-cross-domain-continuity-w06-p29-s108-s109-exec` - cross-domain-continuity W06.P29.S108-S109 — import idempotency + regression test
+- `2026-05-27-cross-domain-continuity-w07-p31-fu-s353-exec` - `cross-domain-continuity` `W07.P31.FU-S353`
+- `2026-05-27-cross-domain-continuity-w07-p31-s353-review-exec` - cross-domain-continuity Code Review
+- `2026-05-27-cross-domain-continuity-w09-p41-s176-review-exec` - cross-domain-continuity Code Review
+- `2026-05-27-cross-domain-continuity-w09-p41-s177-review-exec` - `cross-domain-continuity` Code Review
+- `2026-05-27-cross-domain-continuity-w09-p41-s183-review-exec` - cross-domain-continuity S183 Code Review
+- `2026-05-27-cross-domain-continuity-w09-p41-s194-review-exec` - cross-domain-continuity W09.P41.S194 Code Review
+- `2026-05-27-cross-domain-continuity-w09-p41-s195-review-exec` - cross-domain-continuity Code Review
+- `2026-05-27-cross-domain-continuity-w09-p41-s197-review-exec` - cross-domain-continuity Code Review
+- `2026-05-27-cross-domain-continuity-w09-p41-s206-review-exec` - cross-domain-continuity Code Review -- commit bd6a05f51 (#206 DT 12a LIRPF)
+- `2026-05-27-cross-domain-continuity-w09-p41-s207-review-exec` - cross-domain-continuity S207 Code Review
+- `2026-05-27-cross-domain-continuity-w09-p41-s209-review-exec` - cross-domain-continuity Code Review
+- `2026-05-27-cross-domain-continuity-w09-p41-s210-review-exec` - cross-domain-continuity Code Review
+- `2026-05-27-cross-domain-continuity-w09-p41-s212-review-exec` - cross-domain-continuity Code Review
+- `2026-05-27-cross-domain-continuity-w09-p41-s215-review-exec` - cross-domain-continuity Code Review
+- `2026-05-27-cross-domain-continuity-w09-p41-s217-review-exec` - cross-domain-continuity W09-P41 S217 Code Review
+- `2026-05-27-cross-domain-continuity-w09-p41-s222-review-exec` - cross-domain-continuity W09.P41.S222 Code Review
+- `2026-05-27-cross-domain-continuity-w09-p41-s224-review-exec` - cross-domain-continuity Code Review
+- `2026-05-27-cross-domain-continuity-w09-p41-s254-p45-s282-exec` - cross-domain-continuity W09.P41.S254 + W09.P45.S282
+- `2026-05-27-cross-domain-continuity-w09-p41-s273-s244-exec` - cross-domain-continuity W09.P41.S273 + S244 — 7-file Category B storage migration
+- `2026-05-27-cross-domain-continuity-w09-p41-s299-review-exec` - cross-domain-continuity Code Review — S299 M303 SIMPLIFICADO ledger-preflight bypass
+- `2026-05-27-cross-domain-continuity-w09-p41-s322-s334-exec` - cross-domain-continuity W09.P41.S322+S326+S327+S334 — W09 hygiene batch
+- `2026-05-27-cross-domain-continuity-w09-p41-s352-review-exec` - cross-domain-continuity S352 Code Review
+- `2026-05-27-cross-domain-continuity-w09-p41-s361-review-exec` - cross-domain-continuity Code Review
+- `2026-05-27-cross-domain-continuity-w09-p41-s367-pathb-exec` - cross-domain-continuity W09.P41.S367 — M721 Path-B work create refusal guard
+- `2026-05-27-m200-cuota-formula-estado-binding-fix-exec` - `task-183` M200 cuota engine — formula rewrite + profile field + test migration
+- `2026-05-27-s113-modelo-100-cuota-trace-exec` - cross-domain-continuity P31.S113 — Modelo 100 cuota trace: mínimo personal silent-zero
+- `2026-05-28-cross-domain-continuity-W04-P19-S398` - `cross-domain-continuity` `W04.P19.S398`
+- `2026-05-28-cross-domain-continuity-w04-p19-s387-patch-exec` - `cross-domain-continuity` `W04.P19.S387.patch` (M210 registry-load fixes)
+- `2026-05-28-cross-domain-continuity-w04-p19-s387-skeleton-exec` - `cross-domain-continuity` `W04.P19.S387` (M210 casilla skeleton — initial commit)
+- `2026-05-28-cross-domain-continuity-w04-p19-s398-repurpose-exec` - `cross-domain-continuity` `W04.P19.S398` (slot repurpose + research-memo hygiene)
+- `2026-05-28-cross-domain-continuity-w12-p65-s385-closing-review-exec` - `cross-domain-continuity` `W12.P65.S385` (closing review)
+- `2026-05-28-cross-domain-continuity-w12-p65-s386b-hygiene-exec` - `cross-domain-continuity` `W12.P65.S386b` (ADR frontmatter hygiene)
+- `2026-05-31-cross-domain-continuity-exec` - `cross-domain-continuity` — cross-domain handoff provenance audit closures (F1-F5)
+- `2026-05-26-cross-domain-continuity-W09-P41-S160` - delete address_postcode field from SetupAnswers or wire to real consumer recommend delete
+- `2026-05-26-cross-domain-continuity-W09-P41-S164` - delete dead alias _profile_binding_selectors
+- `2026-05-26-cross-domain-continuity-W09-P41-S198` - delete duplicate AuthProviderReservedError registration
+- `2026-05-26-cross-domain-continuity-W09-P41-S199` - delete duplicate AuthConfigureDanglingActiveProfileError registration
+- `2026-05-26-cross-domain-continuity-W09-P41-S202` - audit stored-data drift taxonomy semantic gap
+- `2026-05-26-cross-domain-continuity-W09-P41-S205` - consolidate UserProfileLifecycleRepository.__init__ and UserProfileSnapshotRepository.__init__ identical signatures into shared base class or factory
+- `2026-05-26-cross-domain-continuity-W09-P41-S256` - FU-W07-D surface legal_refs and source_refs on projected M100 casilla values in modelo project verb output payload
+- `2026-05-26-cross-domain-continuity-W09-P41-S267` - FU-S208-A verify all isolated_profile_storage_root callers pass with file-backend change and document aeat_dev_test_database_password CI dependency in secure_sql.py docstring
+- `2026-05-26-cross-domain-continuity-W09-P41-S270` - FU-W09-A S267 verify CI sets AEAT_DEV_TEST_DATABASE_PASSWORD environment variable
+- `2026-05-26-cross-domain-continuity-W09-P41-S289` - evaluate access_gate __init__.py env-var read pre-Settings bootstrap
+- `2026-05-26-cross-domain-continuity-W09-P41-S290` - evaluate core i18n _render.py env-var signature for cache-key invalidation
+- `2026-05-26-cross-domain-continuity-W09-P41-S291` - evaluate core observability _replay.py env-var write for replay scope
+- `2026-05-26-cross-domain-continuity-W09-P41-S304` - latent circular import between calculations.registry _applicability and deadlines _engine
+- `2026-05-26-cross-domain-continuity-W09-P42-S165` - merge active_bucket_id_or_raise and require_active_bucket_id into one canonical function update all call sites
+- `2026-05-26-cross-domain-continuity-W09-P45-S168` - extract _covered_by_namespace to one location and import from the other
+- `2026-05-26-cross-domain-continuity-W09-P47-S170` - for every CLI command registering --verbose assert it consumes the flag fix or remove unused declarations
+
+### plan
+
+- `2026-05-26-cross-domain-continuity-plan` - `cross-domain-continuity` `cross-domain continuity remediation epic - open-ended persona-driven correctness campaign` plan
+
+### research
+
+- `2026-06-04-cross-domain-continuity-research` - `cross-domain-continuity` research: `warning closeout research grounding`  ## Question  Which vault lifecycle warning needs an explicit research grounding edge so future semantic search and developer briefings do not treat execution evidence as orphaned context?  ## Findings  This note is a vault-curation closeout record. It does not introduce new runtime behavior, change an accepted architecture, or supersede an existing feature-specific research note.  The warning pass found that this feature needed an explicit research node or a plan-to-research edge. The related frontmatter carries the navigable authority chain; body wiki-links are intentionally avoided to keep body-link hygiene clean.  Semantic vault search was used before creating this bridge. Where older plan, audit, or execution records already existed, this note makes that evidence discoverable without rewriting the historical documents.  ## Recommendation  Keep this research bridge until a deeper feature-specific research record supersedes it. Any future supersession should update the related frontmatter on the linked ADR, plan, and this research record.

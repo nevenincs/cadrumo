@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0015"
+number = "0015"
+label = "Cuotas satisfechas a colegios profesionales"
+section = ["rendimientos_trabajo"]
+semantic_role = "irpf_rendimiento_trabajo_gasto_colegio_profesional"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]

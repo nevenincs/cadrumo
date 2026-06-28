@@ -1,0 +1,16 @@
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-115-perceptores-anual"
+# RET-1: the "número total de perceptores" (número de registros de tipo 2) is a
+# DISTINCT perceptor-NIF count, not the sum of the quarterly Modelo 115 aggregate
+# counts (which double-counts a perceptor paid in more than one quarter). Sourced
+# from the dedicated per-perceptor retención store via the distinct-count primitive
+# (aggregate_retenciones_180.total_perceptors), replacing the op=sum relation.
+source = "retenciones_aggregation"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form", "aeat-modelo-180-ayuda-presentacion"]
+selector = { target_casilla_id = "decl.total-perceptores", fact = "perceptor_count_distinct" }
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-180-2014-form"
+required_text = ["NÚMERO TOTAL DE PERCEPTORES", "Número de registros de tipo 2"]
+

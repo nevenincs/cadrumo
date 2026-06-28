@@ -1,0 +1,84 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "00632"
+number = "00632"
+label = "Estado de cambios patrimonio neto (II) - SALDO, FINAL DEL EJERCICIO - Capital - Escriturado [00632]"
+section = ["estado_de_cambios_patrimonio_neto_ii", "saldo_final_del_ejercicio"]
+data_type = "money"
+semantic_role = "is_ecpn_saldo_final_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-010-casilla-00632", "modelo-200-page-043-casilla-00632"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00633"
+number = "00633"
+label = "Estado de cambios patrimonio neto (II) - SALDO, FINAL DEL EJERCICIO - Capital - No exigido [00633]"
+section = ["estado_de_cambios_patrimonio_neto_ii", "saldo_final_del_ejercicio"]
+data_type = "money"
+semantic_role = "is_ecpn_saldo_final_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-010-casilla-00633", "modelo-200-page-014b-casilla-00633", "modelo-200-page-043-casilla-00633"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00634"
+number = "00634"
+label = "Estado de cambios patrimonio neto (II) - SALDO, FINAL DEL EJERCICIO - Prima de emisión [00634]"
+section = ["estado_de_cambios_patrimonio_neto_ii", "saldo_final_del_ejercicio"]
+data_type = "money"
+semantic_role = "is_ecpn_saldo_final_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-010-casilla-00634", "modelo-200-page-018b-casilla-00634", "modelo-200-page-042-casilla-00634"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00635"
+number = "00635"
+label = "Estado de cambios patrimonio neto (II) - SALDO, FINAL DEL EJERCICIO - Reservas [00635]"
+section = ["estado_de_cambios_patrimonio_neto_ii", "saldo_final_del_ejercicio"]
+data_type = "money"
+semantic_role = "is_ecpn_saldo_final_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-010-casilla-00635", "modelo-200-page-018b-casilla-00635", "modelo-200-page-042-casilla-00635"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00636"
+number = "00636"
+label = "Estado de cambios patrimonio neto (II) - SALDO, FINAL DEL EJERCICIO - Acciones y participaciones en patrimonio propias [00636]"
+section = ["estado_de_cambios_patrimonio_neto_ii", "saldo_final_del_ejercicio"]
+data_type = "money"
+semantic_role = "is_ecpn_saldo_final_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-010-casilla-00636", "modelo-200-page-018b-casilla-00636", "modelo-200-page-042-casilla-00636"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00637"
+number = "00637"
+label = "Estado de cambios patrimonio neto (II) - SALDO, FINAL DEL EJERCICIO - Resultados ejercicios anteriores [00637]"
+section = ["estado_de_cambios_patrimonio_neto_ii", "saldo_final_del_ejercicio"]
+data_type = "money"
+semantic_role = "is_ecpn_saldo_final_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-010-casilla-00637", "modelo-200-page-015b-casilla-00637", "modelo-200-page-042-casilla-00637"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00638"
+number = "00638"
+label = "Estado de cambios patrimonio neto (II) - SALDO, FINAL DEL EJERCICIO - Otras aportaciones de socios [00638]"
+section = ["estado_de_cambios_patrimonio_neto_ii", "saldo_final_del_ejercicio"]
+data_type = "money"
+semantic_role = "is_ecpn_saldo_final_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-010-casilla-00638", "modelo-200-page-015b-casilla-00638", "modelo-200-page-042-casilla-00638"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

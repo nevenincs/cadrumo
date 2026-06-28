@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0677"
+number = "0677"
+label = "Devolución acordada por la Agencia Tributaria como consecuencia de la tramitación de autoliquidaciones anteriores o liquidaciones administrativas correspondientes al ejercicio 2024"
+section = ["resultados", "regularizacion_res"]
+semantic_role = "irpf_regularizacion_autoliquidaciones_anteriores_devolver"
+legal_refs = ["ley-35-2006:art-97"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

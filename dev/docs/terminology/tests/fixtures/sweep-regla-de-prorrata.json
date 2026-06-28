@@ -1,0 +1,127 @@
+{
+  "query": "regla de prorrata",
+  "concept_id": "prorrata",
+  "language": "es",
+  "hits": [
+    {
+      "path": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-102.html.extracted.md",
+      "line_start": 3,
+      "line_end": 3,
+      "score": 0.994483
+    },
+    {
+      "path": "src/aeat/_data/corpus/normatives/html/ley-37-1992.html.extracted.md",
+      "line_start": 2393,
+      "line_end": 2393,
+      "score": 0.994483
+    },
+    {
+      "path": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-102.html.extracted.json",
+      "line_start": 11,
+      "line_end": 12,
+      "score": 0.994188
+    },
+    {
+      "path": "src/aeat/_data/corpus/normatives/html/ley-37-1992.html.extracted.json",
+      "line_start": 653,
+      "line_end": 654,
+      "score": 0.994188
+    },
+    {
+      "path": "src/aeat/_data/corpus/normatives/html/ley-37-1992.html.extracted.md",
+      "line_start": 2400,
+      "line_end": 2403,
+      "score": 0.991871
+    },
+    {
+      "path": "src/aeat/_data/corpus/normatives/html/ley-37-1992.html.extracted.json",
+      "line_start": 659,
+      "line_end": 660,
+      "score": 0.991254
+    },
+    {
+      "path": "src/aeat/_data/registry/aeat/legal/iva.toml",
+      "line_start": 905,
+      "line_end": 908,
+      "score": 0.990215
+    },
+    {
+      "path": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-102.html.extracted.md",
+      "line_start": 1,
+      "line_end": 1,
+      "score": 0.975931
+    },
+    {
+      "path": "src/aeat/_data/corpus/normatives/html/ley-37-1992.html.extracted.md",
+      "line_start": 2390,
+      "line_end": 2391,
+      "score": 0.975931
+    },
+    {
+      "path": "src/aeat/_data/corpus/normatives/html/ley-37-1992.html.extracted.json",
+      "line_start": 665,
+      "line_end": 666,
+      "score": 0.933799
+    },
+    {
+      "path": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-104.html.extracted.json",
+      "line_start": 11,
+      "line_end": 12,
+      "score": 0.933799
+    },
+    {
+      "path": "src/aeat/_data/corpus/normatives/html/ley-37-1992.html.extracted.json",
+      "line_start": 654,
+      "line_end": 659,
+      "score": 0.897989
+    },
+    {
+      "path": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-104.html.extracted.md",
+      "line_start": 3,
+      "line_end": 4,
+      "score": 0.896995
+    },
+    {
+      "path": "src/aeat/_data/corpus/normatives/html/ley-37-1992.html.extracted.md",
+      "line_start": 2409,
+      "line_end": 2410,
+      "score": 0.896995
+    },
+    {
+      "path": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-102.html.extracted.json",
+      "line_start": 12,
+      "line_end": 18,
+      "score": 0.887089
+    },
+    {
+      "path": "src/aeat/_data/corpus/normatives/html/ley-37-1992.html.extracted.json",
+      "line_start": 660,
+      "line_end": 660,
+      "score": 0.872954
+    },
+    {
+      "path": "dev/docs/preprocess/_golden_queries.py",
+      "line_start": 85,
+      "line_end": 119,
+      "score": 0.843825
+    },
+    {
+      "path": "src/aeat/_data/terminology/concepts/prorrata-especial.toml",
+      "line_start": 15,
+      "line_end": 19,
+      "score": 0.814299
+    },
+    {
+      "path": "src/aeat/_data/corpus/normatives/html/ley-37-1992.html.extracted.json",
+      "line_start": 516,
+      "line_end": 516,
+      "score": 0.798353
+    },
+    {
+      "path": "src/aeat/_data/corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf.extracted.md",
+      "line_start": 15705,
+      "line_end": 15711,
+      "score": 0.779884
+    }
+  ]
+}

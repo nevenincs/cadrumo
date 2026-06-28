@@ -1,0 +1,86 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "00415"
+number = "00415"
+label = "Estado de cambios patrimonio neto (III) - Ajustes por errores de ejercicios anteriores - Resultado del ejercicio [00415]"
+section = ["estado_de_cambios_patrimonio_neto_iii", "ajustes_por_errores_de_ejercicios_anteriores"]
+data_type = "money"
+semantic_role = "is_ecpn_ajuste_errores_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-011-casilla-00415", "modelo-200-page-012-casilla-00415", "modelo-200-page-032-casilla-00415", "modelo-200-page-042-casilla-00415"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00416"
+number = "00416"
+label = "Estado de cambios patrimonio neto (III) - Ajustes por errores de ejercicios anteriores - Dividendo a cuenta [00416]"
+section = ["estado_de_cambios_patrimonio_neto_iii", "ajustes_por_errores_de_ejercicios_anteriores"]
+data_type = "money"
+semantic_role = "is_ecpn_ajuste_errores_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-011-casilla-00416", "modelo-200-page-012-casilla-00416", "modelo-200-page-032-casilla-00416", "modelo-200-page-042-casilla-00416"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200011:00417"
+number = "00417"
+segmento = "DP200011"
+label = "Estado de cambios patrimonio neto (III) - Ajustes por errores de ejercicios anteriores - Otros instrumentos patrimonio neto [00417]"
+section = ["estado_de_cambios_patrimonio_neto_iii", "ajustes_por_errores_de_ejercicios_anteriores"]
+data_type = "money"
+semantic_role = "is_ecpn_ajuste_errores_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-011-casilla-00417", "modelo-200-page-032-casilla-00417", "modelo-200-page-042-casilla-00417"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200011:00418"
+number = "00418"
+segmento = "DP200011"
+label = "Estado de cambios patrimonio neto (III) - Ajustes por errores de ejercicios anteriores - Ajustes por cambios de valor [00418]"
+section = ["estado_de_cambios_patrimonio_neto_iii", "ajustes_por_errores_de_ejercicios_anteriores"]
+data_type = "money"
+semantic_role = "is_ecpn_ajuste_errores_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-011-casilla-00418", "modelo-200-page-042-casilla-00418"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00419"
+number = "00419"
+label = "Estado de cambios patrimonio neto (III) - Ajustes por errores de ejercicios anteriores - Ajustes en patrimonio neto [00419]"
+section = ["estado_de_cambios_patrimonio_neto_iii", "ajustes_por_errores_de_ejercicios_anteriores"]
+data_type = "money"
+semantic_role = "is_ecpn_ajuste_errores_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-011-casilla-00419", "modelo-200-page-017-casilla-00419", "modelo-200-page-033-casilla-00419", "modelo-200-page-042-casilla-00419"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00420"
+number = "00420"
+label = "Estado de cambios patrimonio neto (III) - Ajustes por errores de ejercicios anteriores - Subvenciones, donaciones y legados recibidos [00420]"
+section = ["estado_de_cambios_patrimonio_neto_iii", "ajustes_por_errores_de_ejercicios_anteriores"]
+data_type = "money"
+semantic_role = "is_ecpn_ajuste_errores_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-011-casilla-00420", "modelo-200-page-026-casilla-00420", "modelo-200-page-033-casilla-00420", "modelo-200-page-043-casilla-00420"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00421"
+number = "00421"
+label = "Estado de cambios patrimonio neto (III) - Ajustes por errores de ejercicios anteriores - Total [00421]"
+section = ["estado_de_cambios_patrimonio_neto_iii", "ajustes_por_errores_de_ejercicios_anteriores"]
+data_type = "money"
+semantic_role = "is_ecpn_ajuste_errores_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-011-casilla-00421", "modelo-200-page-026-casilla-00421", "modelo-200-page-043-casilla-00421"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

@@ -1,0 +1,11 @@
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-spouse-disability-grade"
+source = "profile"
+selector = { profile_key = "renta_spouse.disability_grade", xsd_path = "/DatosIdentificativos/Conyuge/DPGMIN_C", dictionary_field = "DPGMIN_C" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["declaraciones conjuntas", "personas con discapacidad"]

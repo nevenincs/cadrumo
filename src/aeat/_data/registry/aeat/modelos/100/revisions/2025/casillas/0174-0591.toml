@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0591"
+number = "0591"
+label = "Retenciones no practicadas deducibles de la cuota"
+section = ["resultado_declaracion"]
+semantic_role = "irpf_retenciones_consideradas_practicadas"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]

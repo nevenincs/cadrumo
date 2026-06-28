@@ -6,13 +6,21 @@ tags:
   - "#plan"
   - "#docs-rewrite"
 date: 2026-04-12
+modified: '2026-04-12'
 related:
   - "[[2026-04-12-docs-rewrite-research]]"
   - "[[2026-04-12-docs-rewrite-adr]]"
+  - '[[2026-05-30-docs-architecture-adr]]'
+  - '[[2026-05-30-docs-architecture-plan]]'
 issue: wgergely/aeat#67
 ---
 
 # plan: docs-rewrite
+
+> Superseded by the `2026-05-30-docs-architecture-adr` and
+> `2026-05-30-docs-architecture-plan`. This plan is historical
+> evidence for the 2026-04-12 markdown-only rewrite only. Do not use
+> its steps as current documentation implementation guidance.
 
 ## scope
 

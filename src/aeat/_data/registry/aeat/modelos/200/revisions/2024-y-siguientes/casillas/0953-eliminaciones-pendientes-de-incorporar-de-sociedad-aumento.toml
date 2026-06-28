@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "03381"
+number = "03381"
+label = "Eliminaciones pendientes de incorporar de sociedades que dejen de pertenecer a un grupo - Aumento - Correcciones del ejercicio - Permanentes [03381]"
+section = ["eliminaciones_pendientes_de_incorporar_de_sociedad", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_eliminaciones_pendientes_grupo_permanente_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026g-casilla-03381"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03382"
+number = "03382"
+label = "Eliminaciones pendientes de incorporar de sociedades que dejen de pertenecer a un grupo - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [03382]"
+section = ["eliminaciones_pendientes_de_incorporar_de_sociedad", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_eliminaciones_pendientes_grupo_temporaria_ejercicio_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026g-casilla-03382"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03383"
+number = "03383"
+label = "Eliminaciones pendientes de incorporar de sociedades que dejen de pertenecer a un grupo - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [03383]"
+section = ["eliminaciones_pendientes_de_incorporar_de_sociedad", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_eliminaciones_pendientes_grupo_temporaria_anteriores_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026g-casilla-03383"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03384"
+number = "03384"
+label = "Eliminaciones pendientes de incorporar de sociedades que dejen de pertenecer a un grupo - Aumento - Saldo pendiente a principio de ejercicio [03384]"
+section = ["eliminaciones_pendientes_de_incorporar_de_sociedad", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_eliminaciones_pendientes_grupo_saldo_inicial"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026g-casilla-03384"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03385"
+number = "03385"
+label = "Eliminaciones pendientes de incorporar de sociedades que dejen de pertenecer a un grupo - Aumento - Saldo pendiente a fin de ejercicio [03385]"
+section = ["eliminaciones_pendientes_de_incorporar_de_sociedad", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_eliminaciones_pendientes_grupo_saldo_final"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026g-casilla-03385"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

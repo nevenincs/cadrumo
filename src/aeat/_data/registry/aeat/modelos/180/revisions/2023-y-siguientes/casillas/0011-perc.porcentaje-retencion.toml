@@ -1,0 +1,12 @@
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.porcentaje-retencion"
+number = "93-96"
+label = "Porcentaje de retencion aplicado"
+section = ["perceptor", "renta"]
+data_type = "text"
+semantic_role = "porcentaje_retencion"
+required = true
+input_kind = "manual"
+export_refs = ["modelo-180-perc-porcentaje-retencion"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]

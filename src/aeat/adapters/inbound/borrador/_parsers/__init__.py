@@ -1,4 +1,9 @@
-"""PDF backend implementations for the borrador parser."""
+"""PDF backend implementations for the borrador parser.
+
+Re-exports ``extract_pages_text`` from the active backend
+implementation. Today the only backend is the pdfplumber-based
+``_pdfplumber_backend``.
+"""
 
 from __future__ import annotations
 

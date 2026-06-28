@@ -1,0 +1,29 @@
+# Ley 35/2006 art. 48 — base imponible general negativa carry-forward.
+# The negative saldo of the base imponible general (art. 48.b) left
+# unapplied is compensated in the four following ejercicios, with the
+# 25% cross-class limit (art. 48 grounds the casilla 1391 -> 1388 Modelo
+# 100 carry per the BOE corpus body). NOTE: art. 49 governs the base
+# imponible del AHORRO (savings base), a distinct mechanism; the
+# general-base carry is art. 48. The
+# prior year's end-of-year generated saldo (casilla 1391, semantic_role
+# irpf_anexo_c_base_liq_neg_generado) becomes, in the following year's
+# declaration, the opening pending balance for the immediately-prior
+# origin ejercicio (casilla 1388, "Ejercicio 2023: Pendiente de
+# aplicacion al principio del periodo" in the 2024 revision). This
+# previous_filing copy auto-resolves casilla 1388 from the prior filing
+# so the operator does not re-key the carried saldo. Origin-year-matched:
+# the 2024-revision's 1388 (ejercicio 2023) sources the 2023 filing's
+# 1391, exactly as the 2025-revision's 1388 (ejercicio 2024) sources the
+# 2024 filing's 1391. The four-year expiry window and the integracion
+# subtract that consumes the opening pending are deferred follow-ons.
+[[revisions."2024".bindings]]
+id = "renta-2024-base-liquidable-negativa-general-anterior"
+source = "previous_filing"
+selector = { source_modelo = "100", source_casilla_id = "1391", filing_year_delta = -1, period = "0A" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-48", "ley-35-2006:art-50"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-modelo-100-procedure", "boe-modelo-100-2024-form"]
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "boe-modelo-100-2024-form"
+required_text = ["Modelo 100", "ejercicio 2024"]

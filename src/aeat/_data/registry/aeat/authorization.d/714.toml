@@ -1,0 +1,15 @@
+# Modelo 714 (Impuesto sobre el Patrimonio). Phase-A enrollment by the
+# prior-year wealth-base data-fidelity test: two distinct renta ejercicios
+# (2023, 2024) of patrimonio-neto / base-liquidable / cuota observations are
+# persisted through the real encrypted-SQLite CalculationObservationRepository
+# and reloaded with strict pydantic equality, with per-ejercicio isolation and
+# the €2.000.000 filing-obligation threshold (Orden HAC/1023/2021) asserted.
+# Casillas are input_kind=manual (no calc engine at Phase-A); the registry is
+# grounded in the DR714 diseño de registro + Ley 19/1991 arts 28/30/31/4.Nueve.
+# evidence_class data_fidelity; the Phase-B tarifa(art.30)/límite(art.31) calc
+# engine is the follow-on.
+[modelo]
+modelo = "714"
+renta_years = [2023, 2024]
+evidence_class = "data_fidelity"
+enrolling_test = "src/aeat/application/calculations/tests/test_modelo_714_patrimonio_baseline_fidelity.py"

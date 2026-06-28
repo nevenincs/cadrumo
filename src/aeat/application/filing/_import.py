@@ -1,10 +1,10 @@
-"""Reconstruct a :class:`FilingDraft` from an AEAT justificante PDF (#271).
+"""Reconstruct a :class:`ModeloDraft` from an AEAT justificante PDF.
 
-Kent keeps the justificante PDF of a past filing on disk. This module
-parses the PDF via :mod:`aeat.domain.justificante`, materialises an empty draft
-scaffold (every casilla ``EMPTY``) via the registered builder for the
-modelo, and co-produces a ``SubmittedFiling`` record so the import is
-usable as the baseline for amendment flows (#93, #234, #235).
+The operator keeps the justificante PDF of a past filing on disk. This
+module parses the PDF via :mod:`aeat.adapters.inbound.justificante`,
+materialises an empty draft scaffold (every casilla ``EMPTY``) via the
+registered builder for the modelo, and co-produces a ``ModeloPresentado``
+record so the import is usable as the baseline for amendment flows.
 
 No AEAT certificate authentication or network call is involved — the
 command is a pure offline transform from (PDF bytes) → (draft, submission,
@@ -14,47 +14,44 @@ warnings).
 from __future__ import annotations
 
 import hashlib
-import re
 from dataclasses import dataclass
 from datetime import UTC
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 from zoneinfo import ZoneInfo
 
-from ...core.i18n import Translatable
+from ...adapters.inbound.justificante import parse_justificante
+from ...core import Period, PeriodError
 from ...core.logging import get_logger
-from ...domain.filing import CasillaSchemaProvider, FilingBuilderError, FilingDraft, FilingImportError
-from ...domain.justificante import Justificante, parse_justificante
-from .runtime import FilingOperatorProfile
+from ...domain.filing import CasillaSchemaProvider, ModeloBuilderError, ModeloDraft, ModeloImportError
+from ...domain.justificante import Justificante
+from .runtime import ModeloOperatorProfile
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.export._models import SubmittedFiling
+    from ...domain.submission import ModeloPresentado
 
 _logger = get_logger(__name__)
 
 _MADRID_TZ = ZoneInfo("Europe/Madrid")
 
-_QUARTER_RE = re.compile(r"^([1-4])T$")
-_MONTH_RE = re.compile(r"^(0[1-9]|1[0-2])$")
-_ANNUAL_RE = re.compile(r"^0A$")
-_CANONICAL_QUARTER_RE = re.compile(r"^\d{4}Q[1-4]$")
-_CANONICAL_MONTH_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
-_CANONICAL_ANNUAL_RE = re.compile(r"^\d{4}A$")
+_EMPTY_CASILLA_WARNING: str = "filing.import.empty_casilla_warning"
 
-_EMPTY_CASILLA_WARNING: Translatable = {
-    "es": (
-        "Los valores de casilla detallados no se extraen del justificante: "
-        "rellénalos con `aeat filing build` o editando el borrador."
-    ),
-    "en": (
-        "Line-level casilla values are not carried in the justificante PDF; "
-        "fill them in via `aeat filing build` or by editing the draft JSON."
-    ),
-    "hu": (
-        "A justificante PDF nem hordozza a soronkénti casilla értékeket; "
-        "töltsd ki őket `aeat filing build` paranccsal vagy a piszkozatban."
-    ),
-}
+
+class _RegistryPeriodSubview(Protocol):
+    period_selector_periods: tuple[str, ...]
+
+
+class RegistryImportSchemaProvider(CasillaSchemaProvider, Protocol):
+    """Combined casilla schema and period-subview provider used by the import path.
+
+    Implementations must satisfy both the :class:`aeat.domain.filing.CasillaSchemaProvider`
+    contract (for draft construction) and expose ``get_subview`` so
+    :func:`import_filing_from_justificante` can look up the supported
+    period tokens for a given modelo during period canonicalisation.
+    The production implementation is ``build_runtime_schema_provider()``.
+    """
+
+    def get_subview(self, modelo: str) -> _RegistryPeriodSubview: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,28 +60,28 @@ class JustificanteImportResult:
 
     The container is deliberately a frozen dataclass rather than a
     pydantic model because it wraps two already-validated pydantic
-    records and defers the ``SubmittedFiling`` type to runtime (the
+    records and defers the ``ModeloPresentado`` type to runtime (the
     ``aeat.adapters.outbound.aeat.export`` package itself imports :mod:`aeat.application.filing`, so
-    pulling ``SubmittedFiling`` in at module scope would cycle).
+    pulling ``ModeloPresentado`` in at module scope would cycle).
 
     Attributes:
         draft: The freshly built scaffold with every casilla empty.
-        submission: The companion :class:`aeat.adapters.outbound.aeat.export._models.SubmittedFiling`
+        submission: The companion :class:`aeat.domain.submission.ModeloPresentado`
             that lets the amendment engine treat the imported draft as a
             baseline.
-        warnings: Trilingual advisory messages. The CLI renders these so
-            Kent knows which fields still need his input.
+        warnings: Multilingual advisory messages. The CLI renders these so
+            the operator knows which fields still need input.
     """
 
-    draft: FilingDraft
-    submission: SubmittedFiling
-    warnings: tuple[Translatable, ...]
+    draft: ModeloDraft
+    submission: ModeloPresentado
+    warnings: tuple[str, ...]
 
 
 def import_filing_from_justificante(
     pdf_path: Path,
     *,
-    schema_provider: CasillaSchemaProvider,
+    schema_provider: RegistryImportSchemaProvider,
 ) -> JustificanteImportResult:
     """Reconstruct a draft + submission record from a justificante PDF.
 
@@ -99,9 +96,7 @@ def import_filing_from_justificante(
         ``submission``, and any advisory warnings.
 
     Raises:
-        JustificanteParseError: If the PDF cannot be parsed.
-        JustificanteCsvNotFoundError: If the PDF has no CSV.
-        FilingImportError: If the modelo has no registered builder or
+        ModeloImportError: If the modelo has no registered builder or
             the printed period cannot be canonicalised.
     """
     justificante = parse_justificante(pdf_path)
@@ -109,11 +104,11 @@ def import_filing_from_justificante(
         modelo=justificante.modelo,
         ejercicio=justificante.ejercicio,
         raw_period=justificante.period,
+        schema_provider=schema_provider,
     )
-    profile = FilingOperatorProfile(
+    profile = ModeloOperatorProfile(
         tax_id=justificante.tax_id,
         display_name=f"Imported filing {justificante.csv}",
-        applicable_modelos=(justificante.modelo,),
     )
 
     # Deferred import: `aeat.application.filing` imports this module, so top-level
@@ -128,11 +123,11 @@ def import_filing_from_justificante(
             inputs={},
             schema_provider=schema_provider,
         )
-    except FilingBuilderError as exc:
-        raise FilingImportError(f"cannot import modelo {justificante.modelo!r}: {exc}") from exc
+    except ModeloBuilderError as exc:
+        raise ModeloImportError(f"cannot import modelo {justificante.modelo!r}: {exc}") from exc
 
     submission = _build_submission_record(justificante=justificante, draft=draft)
-    warnings: tuple[Translatable, ...] = (_EMPTY_CASILLA_WARNING,)
+    warnings: tuple[str, ...] = (_EMPTY_CASILLA_WARNING,)
     _logger.debug(
         "imported justificante csv=%s modelo=%s period=%s → draft_id=%s submission_id=%s",
         justificante.csv,
@@ -148,70 +143,83 @@ def _normalise_period(
     *,
     modelo: str,
     ejercicio: str | None,
-    raw_period: str,
-) -> str:
-    """Canonicalise a printed AEAT period to the project's internal form.
+    raw_period: Period,
+    schema_provider: RegistryImportSchemaProvider,
+) -> Period:
+    """Validate a parsed justificante period against the active registry.
 
-    Quarterly modelos (130, 303-quarterly, 390): ``"1T"..."4T"`` →
-    ``"YYYYQ1"..."YYYYQ4"``. Monthly 303: ``"01"..."12"`` →
-    ``"YYYY-MM"``. Annual 100/390: ``"0A"`` → ``"YYYYA"``. Already
-    canonical inputs pass through unchanged.
+    The inbound justificante parser resolves printed AEAT tokens and
+    year-only annual receipts to :class:`aeat.core.Period` before this
+    import service builds filing records. This helper only confirms that
+    the typed period matches the printed ``ejercicio`` and is declared by
+    the active registry revision.
 
     Args:
         modelo: The modelo string, used only for error messages.
-        ejercicio: Four-digit tax year; required for any non-canonical
-            input.
-        raw_period: The period as printed on the justificante
-            (``"1T"``, ``"12"``, ``"0A"``, ``"2026Q1"``, ...).
+        ejercicio: Four-digit tax year printed on the justificante, when
+            present.
+        raw_period: Typed filing period parsed from the justificante.
+        schema_provider: Registry-backed schema provider used to look
+            up the supported period tokens for the given modelo.
 
     Returns:
-        The canonical period string.
+        The typed filing period.
 
     Raises:
-        FilingImportError: If the pair cannot be canonicalised.
+        ModeloImportError: If the pair cannot be canonicalised.
     """
-    if _CANONICAL_QUARTER_RE.match(raw_period):
-        return raw_period
-    if _CANONICAL_MONTH_RE.match(raw_period):
-        return raw_period
-    if _CANONICAL_ANNUAL_RE.match(raw_period):
-        return raw_period
+    try:
+        subview = schema_provider.get_subview(modelo)
+    except ModeloBuilderError as exc:
+        raise ModeloImportError(f"modelo {modelo!r} is not present in the calculation registry") from exc
+    supported_periods = set(subview.period_selector_periods)
 
-    if ejercicio is None:
-        raise FilingImportError(
-            f"modelo {modelo}: justificante period {raw_period!r} requires an ejercicio to canonicalise"
+    if ejercicio is not None and (len(ejercicio) != 4 or not ejercicio.isdigit()):
+        raise ModeloImportError(f"modelo {modelo}: unexpected ejercicio {ejercicio!r}; want four-digit year")
+    if ejercicio is not None and raw_period.filing_year != int(ejercicio):
+        raise ModeloImportError(
+            f"modelo {modelo}: cannot canonicalise period {raw_period!s} for ejercicio {ejercicio!r}",
         )
-    if not re.fullmatch(r"\d{4}", ejercicio):
-        raise FilingImportError(f"modelo {modelo}: unexpected ejercicio {ejercicio!r}; want four-digit year")
 
-    quarter_match = _QUARTER_RE.match(raw_period)
-    if quarter_match is not None:
-        return f"{ejercicio}Q{quarter_match.group(1)}"
-    month_match = _MONTH_RE.match(raw_period)
-    if month_match is not None:
-        return f"{ejercicio}-{month_match.group(1)}"
-    if _ANNUAL_RE.match(raw_period):
-        return f"{ejercicio}A"
+    return _require_supported_period_token(
+        modelo=modelo,
+        filing_year=raw_period.filing_year,
+        period_code=raw_period.registry_token,
+        supported_periods=supported_periods,
+    )
 
-    raise FilingImportError(f"modelo {modelo}: cannot canonicalise period {raw_period!r} for ejercicio {ejercicio!r}")
+
+def _require_supported_period_token(
+    *,
+    modelo: str,
+    filing_year: int,
+    period_code: str,
+    supported_periods: set[str],
+) -> Period:
+    if period_code not in supported_periods:
+        raise ModeloImportError(
+            f"modelo {modelo}: period token {period_code!r} is not declared by the active registry revision",
+        )
+    try:
+        return Period.from_year_and_code(filing_year, period_code)
+    except PeriodError as exc:
+        raise ModeloImportError(
+            f"modelo {modelo}: period token {period_code!r} cannot be represented as a core Period",
+        ) from exc
 
 
 def _build_submission_record(
     *,
     justificante: Justificante,
-    draft: FilingDraft,
-) -> SubmittedFiling:
-    """Build the companion :class:`SubmittedFiling` for an import.
+    draft: ModeloDraft,
+) -> ModeloPresentado:
+    """Build the companion :class:`ModeloPresentado` for an import.
 
     The ``submission_id`` hashes the CSV and the draft id together so it
     stays stable across re-imports of the same PDF and remains distinct
-    from legacy local attempt ids.
+    from locally-created attempt ids.
     """
-    # Deferred import: :mod:`aeat.adapters.outbound.aeat.export._models` imports
-    # ``FilingAmendment`` from :mod:`aeat.application.filing`, so pulling it in at
-    # module scope would cycle through this module while
-    # :mod:`aeat.application.filing` is still loading.
-    from ...adapters.outbound.aeat.export._models import SubmissionAttempt, SubmissionStatus, SubmittedFiling
+    from ...domain.submission import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 
     submitted_at = justificante.presented_at.replace(tzinfo=_MADRID_TZ).astimezone(UTC)
     submission_id = hashlib.sha256(f"{justificante.csv}:{draft.draft_id}".encode()).hexdigest()[:16]
@@ -219,15 +227,15 @@ def _build_submission_record(
         attempt_id=f"{submission_id}.1",
         started_at=submitted_at,
         ended_at=submitted_at,
-        status=SubmissionStatus.SUBMITTED,
+        status=SubmissionStatus.PRESENTADA,
     )
-    return SubmittedFiling(
+    return ModeloPresentado(
         submission_id=submission_id,
         draft_id=draft.draft_id,
         modelo=draft.modelo,
         period=draft.period,
         profile_tax_id=draft.profile_tax_id,
-        status=SubmissionStatus.SUBMITTED,
+        status=SubmissionStatus.PRESENTADA,
         justificante_csv=justificante.csv,
         justificante_pdf_path=justificante.source_pdf_path,
         submitted_at=submitted_at,

@@ -1,0 +1,15 @@
+# Modelo 100 (2024) first-slice deductible-expense aggregation into casilla
+# 0186. The ledger_renta_expense_aggregation source routes each deductible ledger
+# fact to its first-slice casilla via FIRST_SLICE_EXPENSE_CASILLAS over the full
+# ejercicio (period 0A). Parity with renta-2025-ledger-expense-0186-deductible.
+[[revisions."2024".bindings]]
+id = "renta-2024-ledger-expense-0186-deductible"
+source = "ledger_renta_expense_aggregation"
+selector = { modelo = "100", period = "0A", target_casilla_id = "0186", fact = "deductible_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]

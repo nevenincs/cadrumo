@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02931"
+number = "02931"
+label = "Operaciones vinculadas: aplicación del valor de mercado (art. 18 LIS ) - Aumento - Correcciones del ejercicio - Permanentes [02931]"
+section = ["operaciones_vinculadas_aplicacion_del_valor_de_mer", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_vinculadas_valor_mercado_permanente_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-02931"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02932"
+number = "02932"
+label = "Operaciones vinculadas: aplicación del valor de mercado (art. 18 LIS ) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02932]"
+section = ["operaciones_vinculadas_aplicacion_del_valor_de_mer", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_vinculadas_valor_mercado_temporaria_ejercicio_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-02932"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02933"
+number = "02933"
+label = "Operaciones vinculadas: aplicación del valor de mercado (art. 18 LIS ) - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02933]"
+section = ["operaciones_vinculadas_aplicacion_del_valor_de_mer", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_vinculadas_valor_mercado_temporaria_anteriores_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-02933"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02934"
+number = "02934"
+label = "Operaciones vinculadas: aplicación del valor de mercado (art. 18 LIS ) - Aumento - Saldo pendiente a principio de ejercicio [02934]"
+section = ["operaciones_vinculadas_aplicacion_del_valor_de_mer", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_vinculadas_valor_mercado_saldo_inicial"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-02934"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02935"
+number = "02935"
+label = "Operaciones vinculadas: aplicación del valor de mercado (art. 18 LIS ) - Aumento - Saldo pendiente a fin de ejercicio [02935]"
+section = ["operaciones_vinculadas_aplicacion_del_valor_de_mer", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_vinculadas_valor_mercado_saldo_final"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-02935"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

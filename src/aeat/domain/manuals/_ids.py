@@ -1,68 +1,26 @@
-"""Deterministic rule-id generation for ``aeat.domain.manuals``.
+"""Hand-curated handbook and volume identifiers for :mod:`aeat.domain.manuals`.
 
-Rule identifiers are locked at the v1 schema layer even though v1
-does not yet produce real rule records, so follow-up extraction runs
-cannot collide with each other. The generator is pure and fully
-deterministic given its inputs.
+Identifiers are closed enums so extraction pipelines cannot create
+rogue volumes.
 """
 
 from __future__ import annotations
 
-import re
-
-from ._schema import ManualId, ManualPart
-
-_ID_CHAR_RE = re.compile(r"[^a-z0-9-]+")
+from enum import StrEnum
 
 
-def _slug(value: str) -> str:
-    """Lower-case and strip to kebab-case characters only."""
-    return _ID_CHAR_RE.sub("-", value.lower()).strip("-")
+class ManualId(StrEnum):
+    """Authoritative handbook identifiers."""
+
+    RENTA = "renta"
+    IVA = "iva"
+    SOCIEDADES = "sociedades"
 
 
-def generate_rule_id(
-    *,
-    manual_id: ManualId,
-    year: int,
-    part: ManualPart,
-    chapter_id: str,
-    section_id: str,
-    ordinal: int,
-) -> str:
-    """Return the deterministic identifier for a rule.
+class ManualPart(StrEnum):
+    """Volume identifiers for multi-part handbooks."""
 
-    The shape is
-    ``{manual_id}-{year}-[{part}-]{chapter_id}-{section_id}-rule{ordinal:04d}``,
-    where the ``part`` segment is collapsed for ``ManualPart.SINGLE`` so
-    IVA rule IDs stay compact.
-
-    Args:
-        manual_id: Handbook identifier.
-        year: Tax year the manual applies to.
-        part: Volume split within the year.
-        chapter_id: Stable kebab-case chapter identifier.
-        section_id: Stable kebab-case section identifier.
-        ordinal: 1-indexed position of the rule within its section.
-
-    Returns:
-        A deterministic lower-case kebab-case rule identifier.
-
-    Raises:
-        ValueError: If ``ordinal`` is not a positive integer or any of
-            the identifier components is empty after slugging.
-    """
-    if ordinal < 1:
-        raise ValueError(f"ordinal must be >= 1, got {ordinal}")
-
-    chapter_slug = _slug(chapter_id)
-    section_slug = _slug(section_id)
-    if not chapter_slug:
-        raise ValueError("chapter_id is empty after slugging")
-    if not section_slug:
-        raise ValueError("section_id is empty after slugging")
-
-    segments: list[str] = [manual_id.value, str(year)]
-    if part is not ManualPart.SINGLE:
-        segments.append(part.value)
-    segments.extend([chapter_slug, section_slug, f"rule{ordinal:04d}"])
-    return "-".join(segments)
+    SINGLE = "single"
+    PARTE_1 = "part1"
+    PARTE_2_DEDUCCIONES_AUTONOMICAS = "part2-deducciones-autonomicas"
+    PARTE_3 = "part3"

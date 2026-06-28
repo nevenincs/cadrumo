@@ -1,0 +1,9 @@
+[[revisions."2023".casillas]]
+id = "0484"
+number = "0484"
+label = "Marque una \"X\" si en la casilla [0483] ha consignado un NIF de otro País"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_pensiones_compensatorias_alimentos"]
+data_type = "boolean"
+semantic_role = "irpf_red_pensiones_compensatorias_receptor_nif_extranjero_flag"
+legal_refs = ["ley-35-2006:art-55"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

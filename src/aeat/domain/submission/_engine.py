@@ -1,4 +1,13 @@
-"""Read-only submission record and preflight engine."""
+"""Read-only submission record loader and preflight engine.
+
+Exposes :class:`SubmissionEngine`, the only sanctioned surface for
+running preflight gates and reading historical
+:class:`aeat.domain.submission.ModeloPresentado` records persisted under
+the secure SQL object backend.
+
+AEAT remote writes and write-shaped portal walks are permanently
+forbidden; the engine intentionally exposes no transport method.
+"""
 
 from __future__ import annotations
 
@@ -6,11 +15,11 @@ from datetime import date
 
 from ...core.config import Settings
 from ...core.logging import get_logger
-from ...core.paths import resolve_record_json_path
-from ._errors import LiveSubmitForbiddenError, SubmissionError
-from ._models import SubmissionStatus, SubmittedFiling
+from ._errors import SubmissionError
+from ._models import ModeloPresentado, SubmissionStatus
 from ._preflight import Preflight
-from ._protocols import AuthProviderProbe, DeadlineWindowChecker, FilingDraftLike
+from ._protocols import AuthProviderProbe, DeadlineWindowChecker, ModeloDraftLike
+from ._repository import SubmissionRepository
 
 _logger = get_logger(__name__)
 
@@ -20,6 +29,11 @@ class SubmissionEngine:
 
     AEAT remote writes and write-shaped portal walks are permanently
     forbidden. This class intentionally exposes no transport method.
+
+    Attributes:
+        auth_provider: Narrow auth-provider probe used by preflight.
+        deadline_checker: Narrow window checker used by preflight.
+        settings: Resolved :class:`aeat.core.config.Settings`.
     """
 
     def __init__(
@@ -28,15 +42,15 @@ class SubmissionEngine:
         auth_provider: AuthProviderProbe,
         deadline_checker: DeadlineWindowChecker,
         settings: Settings,
-        **legacy_live_kwargs: object,
     ) -> None:
-        """Construct a read-only :class:`SubmissionEngine`."""
-        if legacy_live_kwargs:
-            raise LiveSubmitForbiddenError(
-                "SubmissionEngine no longer accepts transport compatibility "
-                "keywords; AEAT remote submission and portal walks are "
-                "permanently forbidden"
-            )
+        """Construct a read-only :class:`SubmissionEngine`.
+
+        Args:
+            auth_provider: Narrow probe over the active auth provider.
+            deadline_checker: Narrow window checker over
+                :mod:`aeat.domain.deadlines`.
+            settings: Resolved :class:`aeat.core.config.Settings`.
+        """
         self.auth_provider = auth_provider
         self.deadline_checker = deadline_checker
         self.settings = settings
@@ -45,45 +59,90 @@ class SubmissionEngine:
             auth_provider=auth_provider,
         )
 
-    def preflight(self, draft: FilingDraftLike, *, today: date) -> None:
-        """Run preflight gates without browser work or AEAT writes."""
-        self._preflight.check(draft, today=today)
+    def preflight(
+        self,
+        draft: ModeloDraftLike,
+        *,
+        today: date,
+        skip_deadline_window: bool = False,
+    ) -> None:
+        """Run preflight gates without browser work or AEAT writes.
 
-    def load_submission(self, submission_id: str) -> SubmittedFiling:
-        """Load a historical :class:`SubmittedFiling` by id."""
+        Args:
+            draft: Draft conforming to :class:`ModeloDraftLike`.
+            today: Calendar date used to evaluate the AEAT filing window.
+            skip_deadline_window: When ``True``, the AEAT filing-window
+                gate is skipped so a calculation can be verified
+                independently of the filing calendar. Filing always
+                runs the window gate.
+        """
+        self._preflight.check(draft, today=today, skip_deadline_window=skip_deadline_window)
+
+    def load_submission(self, submission_id: str) -> ModeloPresentado:
+        """Load a historical :class:`ModeloPresentado` by id.
+
+        Args:
+            submission_id: Stable submission identifier.
+
+        Returns:
+            The persisted :class:`ModeloPresentado` record.
+
+        Raises:
+            SubmissionError: If ``submission_id`` is malformed or no
+                secure object exists for the supplied id.
+        """
+        from ...adapters.persistence.storage.errors import StorageError
+
+        repository = SubmissionRepository()
         try:
-            target = resolve_record_json_path(
-                self.settings.aeat_submissions_dir,
-                submission_id,
-                context="submission id",
-            )
+            filing = repository.load(submission_id)
         except ValueError as exc:
             raise SubmissionError(str(exc)) from exc
-        if not target.exists():
+        except StorageError as exc:
+            _logger.error(
+                "submission record validation failed: id=%s marker=%s",
+                submission_id,
+                repository.store_dir,
+                exc_info=True,
+            )
+            raise SubmissionError(f"submission record {submission_id!r} failed validation") from exc
+        if filing is None:
+            _logger.debug("submission not found for id %s", submission_id)
             raise SubmissionError(f"no persisted submission with id {submission_id!r}")
-        return SubmittedFiling.model_validate_json(target.read_text(encoding="utf-8"))
+        _logger.debug("loaded submission id=%s modelo=%s status=%s", submission_id, filing.modelo, filing.status)
+        return filing
 
     def list_submissions(
         self,
         *,
         modelo: str | None = None,
         status: SubmissionStatus | None = None,
-    ) -> tuple[SubmittedFiling, ...]:
-        """Return historical persisted records, optionally filtered."""
-        target_dir = self.settings.aeat_submissions_dir
-        if not target_dir.exists():
-            return ()
-        results: list[SubmittedFiling] = []
-        for path in sorted(target_dir.glob("*.json")):
-            try:
-                filing = SubmittedFiling.model_validate_json(path.read_text(encoding="utf-8"))
-            except Exception as exc:  # pragma: no cover - defensive
-                _logger.warning("engine: skipping unreadable record %s: %s", path, exc)
-                continue
+    ) -> tuple[ModeloPresentado, ...]:
+        """Return historical persisted records, optionally filtered.
+
+        Args:
+            modelo: Optional AEAT modelo identifier to filter by
+                (``filing.modelo == modelo``).
+            status: Optional :class:`SubmissionStatus` to filter by.
+
+        Returns:
+            A chronologically reverse-sorted tuple of
+            :class:`ModeloPresentado` records. Returns an empty tuple
+            when no submission objects exist.
+        """
+        repository = SubmissionRepository()
+        results: list[ModeloPresentado] = []
+        for filing in repository.iter_submissions():
             if modelo is not None and filing.modelo != modelo:
                 continue
             if status is not None and filing.status != status:
                 continue
             results.append(filing)
         results.sort(key=lambda f: f.submitted_at, reverse=True)
+        _logger.debug(
+            "list_submissions: returned %d records (modelo=%s status=%s)",
+            len(results),
+            modelo,
+            status,
+        )
         return tuple(results)

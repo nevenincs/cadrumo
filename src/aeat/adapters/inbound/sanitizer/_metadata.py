@@ -45,7 +45,7 @@ def scrub_docinfo(pdf: Pdf) -> ScrubbedSurface:
         return ScrubbedSurface(surface="docinfo_other", count=0)
     count = len(list(info.keys()))
     # `del pdf.docinfo` is the documented pattern but pikepdf's
-    # type stub omits the deleter; reach into the trailer
+    # typing metadata omits the deleter; reach into the trailer
     # directly so the static checker stays happy.
     del pdf.trailer["/Info"]
     return ScrubbedSurface(surface="docinfo_other", count=count)
@@ -67,11 +67,11 @@ def scrub_xmp(
             downstream consumer still asserts the packet exists).
 
     Returns:
-        A 2-tuple of (counter, warnings). The counter records how
-        many top-level XMP entries were affected; the warning
-        tuple includes a ``pdfa_claim_invalidated`` entry when the
-        original packet declared PDF/A conformance, since the
-        sanitiser's content-stream rewrite invalidates that claim.
+        A 2-tuple of (counter, warnings). The counter is a :class:`ScrubbedSurface`
+        recording how many top-level XMP entries were affected; the warning
+        tuple contains :class:`SanitizationWarning` entries, including
+        ``pdfa_claim_invalidated`` when the original packet declared PDF/A
+        conformance.
     """
     root = pdf.Root
     if "/Metadata" not in root:
@@ -85,7 +85,7 @@ def scrub_xmp(
                 code="pdfa_claim_invalidated",
                 detail="Source PDF declared PDF/A conformance; the sanitiser's content "
                 "rewrite invalidates the alignment so the claim is dropped.",
-            )
+            ),
         )
 
     if strategy == "delete":

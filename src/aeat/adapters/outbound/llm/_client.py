@@ -2,26 +2,28 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
-from datetime import UTC, datetime
 
 from pydantic import SecretStr
 
 from ....core.config import Settings
+from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
+from ....core.time import now
 from ._cache import LLMCache
 from ._errors import LLMConfigError
 from ._models import LLMProvider, LLMRequest, LLMResponse, PromptRegistry
 from ._pricing import estimate_cost_usd
 from ._providers import (
-    AnthropicAdapter,
     GeminiAdapter,
     LocalAdapter,
     OpenAIAdapter,
     ProviderRequest,
     _ProviderAdapter,
 )
+
+# AnthropicAdapter is NOT imported here: it pulls the optional `anthropic` SDK at
+# module load. It is imported lazily in _build_adapter behind the extra guard.
 from ._usage import UsageRecorder
 
 _LOGGER = get_logger(__name__)
@@ -38,7 +40,7 @@ class LLMClient:
         prompt_registry: Optional prompt registry override.
         caller: Stable caller identifier recorded in usage logs.
         prompt_id: Stable prompt identifier recorded in usage logs.
-        _adapter: Optional adapter override for tests and controlled flows.
+        adapter_override: Optional adapter override for tests and controlled flows.
     """
 
     def __init__(
@@ -50,7 +52,7 @@ class LLMClient:
         prompt_registry: PromptRegistry | None = None,
         caller: str = "aeat.adapters.outbound.llm.client",
         prompt_id: str = "adhoc",
-        _adapter: _ProviderAdapter | None = None,
+        adapter_override: _ProviderAdapter | None = None,
     ) -> None:
         self.settings = settings or Settings()
         self.cache = cache or LLMCache(root_dir=self.settings.aeat_llm_cache_dir)
@@ -58,7 +60,7 @@ class LLMClient:
         self.prompt_registry = prompt_registry or PromptRegistry.seeded()
         self.caller = caller
         self.prompt_id = prompt_id
-        self._adapter_override = _adapter
+        self._adapter_override = adapter_override
 
     async def complete(self, request: LLMRequest) -> LLMResponse:
         """Complete a prompt request.
@@ -67,9 +69,11 @@ class LLMClient:
             request: Structured completion request.
 
         Returns:
-            The provider response enriched with cache and cost metadata.
-        """
+            A :class:`LLMResponse` enriched with cache and cost metadata.
 
+        Raises:
+            Exception: Re-raised after logging when the LLM provider adapter fails.
+        """
         provider = request.provider_override or self._default_provider()
         model = request.model_override or self._default_model(provider)
         request_id = self._request_id(request)
@@ -85,11 +89,24 @@ class LLMClient:
             model=model,
             prompt=request.prompt,
             system=request.system,
-            max_tokens=request.max_tokens or 1024,
-            temperature=request.temperature if request.temperature is not None else 0.0,
+            max_tokens=request.max_tokens or self.settings.aeat_llm_default_max_tokens,
+            temperature=(
+                request.temperature if request.temperature is not None else self.settings.aeat_llm_default_temperature
+            ),
             timeout_s=self.settings.aeat_llm_default_timeout_s,
+            images=tuple(image.base64_data for image in request.images),
         )
-        completion = await adapter.complete(provider_request)
+        try:
+            completion = await adapter.complete(provider_request)
+        except Exception:  # LLM provider adapters surface heterogeneous exceptions; log+re-raise at this boundary
+            _LOGGER.error(
+                "llm request failed provider=%s model=%s request_id=%s",
+                provider.value,
+                model,
+                request_id,
+                exc_info=True,
+            )
+            raise
         response = LLMResponse(
             text=completion.text,
             provider=provider,
@@ -103,12 +120,18 @@ class LLMClient:
                 output_tokens=completion.output_tokens,
             ),
             cache_hit=False,
-            created_at=datetime.now(UTC),
+            created_at=now(),
             request_id=request_id,
         )
         self.cache.write(request, response)
         self.usage_recorder.record(self.usage_recorder.build_record(response, self.prompt_id, self.caller))
-        _LOGGER.info("completed llm request", extra={"provider": provider.value, "model": completion.model})
+        _LOGGER.info(
+            "llm request completed provider=%s model=%s input_tokens=%d output_tokens=%d",
+            provider.value,
+            completion.model,
+            completion.input_tokens,
+            completion.output_tokens,
+        )
         return response
 
     def _default_provider(self) -> LLMProvider:
@@ -133,6 +156,17 @@ class LLMClient:
     def _build_adapter(self, provider: LLMProvider) -> _ProviderAdapter:
         timeout_s = self.settings.aeat_llm_default_timeout_s
         if provider is LLMProvider.ANTHROPIC:
+            # The Anthropic-API provider needs the optional `anthropic` extra. Guard
+            # before the lazy import so a missing extra is an instructive
+            # LLMConfigError, not a deep ModuleNotFoundError.
+            from ....core import ANTHROPIC_EXTRA, MissingOptionalExtraError, require_optional_extra
+
+            try:
+                require_optional_extra(ANTHROPIC_EXTRA)
+            except MissingOptionalExtraError as exc:
+                raise LLMConfigError(message=str(exc), suggestion=exc.install_hint) from exc
+            from ._providers.anthropic import AnthropicAdapter
+
             return AnthropicAdapter(
                 api_key=self._unwrap_secret(self.settings.aeat_llm_anthropic_api_key),
                 timeout_s=timeout_s,
@@ -159,7 +193,6 @@ class LLMClient:
         Returns:
             The underlying secret string, or an empty string when unset.
         """
-
         return "" if value is None else value.get_secret_value()
 
     @staticmethod
@@ -172,7 +205,6 @@ class LLMClient:
         Returns:
             Stable SHA-256 request identifier.
         """
-
         payload = request.model_dump(mode="json", exclude_none=True)
         material = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
-        return hashlib.sha256(material.encode("utf-8")).hexdigest()
+        return sha256_hex(material.encode("utf-8"))

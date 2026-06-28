@@ -1,0 +1,44 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "232",
+  "retrieved_at": "2026-05-03",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99_.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
+  ],
+  "artefact_count": 2,
+  "artefacts": [
+    {
+      "modelo": "232",
+      "title": "232 - Orden HFP/816/2017 (Ejercicio 2016 y siguientes, actualizado 15/01/2020) (145 KB - xlsx )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_17/dr232e17v14.xlsx",
+      "stored_path": "files/01-232-orden-hfp-816-2017-ejercicio-2016-y-siguientes-actualizado-15-01-2020-145-kb-xlsx.xlsx",
+      "original_filename": "dr232e17v14.xlsx",
+      "content_type": "",
+      "bytes": 149501,
+      "sha256": "a61485dfc480393ec1dfc926142fd0b6a9386e28e60746da3dfbf2fdaf3bffff",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "232",
+      "title": "232 - Orden HFP/816/2017 (Ejercicios 2016-2017) (146 KB - xlsx )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/dr232e17v13.xlsx",
+      "stored_path": "files/02-232-orden-hfp-816-2017-ejercicios-2016-2017-146-kb-xlsx.xlsx",
+      "original_filename": "dr232e17v13.xlsx",
+      "content_type": "",
+      "bytes": 150262,
+      "sha256": "fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad",
+      "retrieved_at": "2026-05-03"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+# decl.event-kind label_pattern grounded against AEAT-published Anexo 3
+# "Instrucciones Modelo 036", PAGINA 1, section heading (h3):
+#   "Causas de presentación de la declaración"
+# Source: sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/
+#   manuales-practicos/guia-practica-cumplimentacion-modelo-censal-036/
+#   anexos/anexo-03-instrucciones-modelo-036/cumplimentacion-modelo/pagina-1.html
+# Fetched 2026-05-27 and saved to corpus:
+#   src/aeat/_data/corpus/aeat_official/instructions/modelo_036/files/
+#     instrucciones-cumplimentacion-pagina-1.html
+# The AEAT table column header is "CAUSA DE PRESENTACIÓN" and the values
+# (ALTA/MODIFICACIÓN/BAJA) appear in the TIPO column.
+# The previous pattern 'Tipo\s+de\s+declaraci[oó]n\s+censal' does NOT appear
+# anywhere in AEAT-published M036 instructions; it was a registry self-reference.
+#
+# decl.vigencia-2025 is input_kind="informational" and records the normative
+# validity date from the diseño de registro header, not a printed-form field.
+# "Vigencia normativa desde" does not appear on any AEAT-published M036 page.
+# It is removed from target_casillas; the informational casilla remains in the
+# registry as a validity marker but is not extractable from printed-form PDFs.
+[[revisions."2025-02-03-y-siguientes".extraction_profiles]]
+id = "modelo-036-declaracion-pdf"
+surface = "declaracion_pdf"
+artefact_kind = "declaration_pdf"
+accepted_artefact_kinds = ["declaration_pdf"]
+parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
+target_casillas = [
+    {casilla_id = "decl.event-kind", match_strategy = "named_label", value_kind = "enum", label_pattern = 'Causas\s+de\s+presentaci[oó]n\s+de\s+la\s+declaraci[oó]n'},
+]
+# Pattern grounded against AEAT-published Anexo 3 instructions (PAGINA 1 heading).
+# Synthetic round-trip fixture at src/aeat/tests/fixtures/justificantes/036/2025-alta.pdf
+# reproduces the AEAT-published section heading so the named_label parser can
+# locate and extract the event-kind value (Alta/Modificacion/Baja).
+# decl.vigencia-2025 is absent from target_casillas: it is an informational
+# registry validity marker with no corresponding printed-form field.
+confidence = "strict"
+corpus_round_trip_verified = true
+verification_source = "synthetic_from_aeat_published_text"
+min_coverage = "1.0"
+failure_semantics = "fail_hard"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-dr-036-2025", "aeat-modelo-036-procedure"]
+

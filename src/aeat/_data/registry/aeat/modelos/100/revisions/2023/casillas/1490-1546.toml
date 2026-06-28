@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "1546"
+number = "1546"
+label = "7. Por ser empresa cuyo rdto. neto minorado no supera 9.447,91 euros"
+section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
+semantic_role = "irpf_eo_agr_indice_pequena_empresa"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

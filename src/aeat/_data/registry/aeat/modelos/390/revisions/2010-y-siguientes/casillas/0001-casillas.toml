@@ -1,0 +1,200 @@
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.repercutido.general"
+number = "iva.anual.repercutido.general"
+label = "Cuota IVA repercutido al tipo general (21%) - anual"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_cuota_repercutida_general"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-general-cuota"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.repercutido.reducido"
+number = "iva.anual.repercutido.reducido"
+label = "Cuota IVA repercutido al tipo reducido (10%) - anual"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_cuota_repercutida_reducido"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-reducido-cuota"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.repercutido.super-reducido"
+number = "iva.anual.repercutido.super-reducido"
+label = "Cuota IVA repercutido al tipo super-reducido (4%) - anual"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_cuota_repercutida_super_reducido"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-super-reducido-cuota"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.soportado.interiores"
+number = "iva.anual.soportado.interiores"
+label = "Cuota IVA soportado en operaciones interiores corrientes - anual"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_cuota_soportada_interiores"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-soportado-interiores-cuota"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# Annual IVA soportado deducible en importaciones de bienes corrientes. Mirrors
+# the M303 import-deducible cuota (LIVA art. 17 hecho imponible + art. 92
+# deducción) so the annual deducible total includes imports; without it the M390
+# resultado over-states the importer's amount to pay. Internal (no fichero
+# export), bound to the same ledger import aggregation M303 uses.
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.soportado.importaciones"
+number = "iva.anual.soportado.importaciones"
+label = "Cuota IVA soportado deducible en importaciones de bienes corrientes - anual"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_cuota_soportada_importaciones"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-soportado-importaciones-cuota"
+legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.autorepercutido.intracomunitaria"
+number = "iva.anual.autorepercutido.intracomunitaria"
+label = "Cuota IVA autorepercutida en adquisiciones intracomunitarias - anual"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_cuota_autorepercutida_intracomunitaria"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-autorepercutido-intracomunitaria-cuota"
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# Reconciliation casillas — pulled from the four 303 quarters via previous_filing.
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.reconciliacion.devengada-303"
+number = "iva.anual.reconciliacion.devengada-303"
+label = "Cuota devengada anual reconciliada desde los cuatro Modelos 303 trimestrales"
+section = ["iva", "anual", "reconciliacion"]
+data_type = "money"
+semantic_role = "iva_anual_reconciliacion_devengada_303"
+required = false
+input_kind = "bound"
+binding = "modelo-390-prev-303-cuota-devengada-total"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.reconciliacion.deducible-303"
+number = "iva.anual.reconciliacion.deducible-303"
+label = "Cuota deducible anual reconciliada desde los cuatro Modelos 303 trimestrales"
+section = ["iva", "anual", "reconciliacion"]
+data_type = "money"
+semantic_role = "iva_anual_reconciliacion_deducible_303"
+required = false
+input_kind = "bound"
+binding = "modelo-390-prev-303-cuota-deducible-total"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.reconciliacion.resultado-303"
+number = "iva.anual.reconciliacion.resultado-303"
+label = "Resultado anual reconciliado desde los cuatro Modelos 303 trimestrales"
+section = ["iva", "anual", "reconciliacion"]
+data_type = "money"
+semantic_role = "iva_anual_reconciliacion_resultado_303"
+required = false
+input_kind = "bound"
+binding = "modelo-390-prev-303-resultado-regimen-general"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.compensacion-ultimo-periodo-97"
+number = "97"
+label = "Resultado declaracion-liquidacion ultimo periodo - A compensar"
+section = ["iva", "anual", "resultado_liquidaciones"]
+data_type = "money"
+semantic_role = "iva_anual_compensacion_ultimo_periodo"
+required = false
+input_kind = "bound"
+binding = "modelo-390-prev-303-compensacion-ultimo-periodo"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"], source_refs = ["aeat-dr-390-2025"] }
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.compensacion-generada-ejercicio-no-97"
+number = "662"
+label = "Cuotas pendientes de compensacion generadas en el ejercicio y distintas de las incluidas en la casilla 97"
+section = ["iva", "anual", "resultado_liquidaciones"]
+data_type = "money"
+semantic_role = "iva_anual_compensacion_generada_ejercicio"
+required = false
+input_kind = "bound"
+binding = "modelo-390-prev-303-compensacion-generada-ejercicio-no-97"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"], source_refs = ["aeat-dr-390-2025"] }
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+
+# -----------------------------------------------------------------------------
+# Computed annual totals — same shape as Modelo 303 result-casillas, applied
+# over the full ejercicio rather than per quarter.
+# -----------------------------------------------------------------------------
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.cuota-devengada-total"
+number = "iva.anual.cuota-devengada-total"
+label = "Total cuota IVA devengada anual (repercutido + autorepercutido)"
+section = ["iva", "anual", "totales"]
+data_type = "money"
+semantic_role = "iva_anual_cuota_devengada_total"
+required = false
+input_kind = "computed"
+formula = "modelo-390-iva-anual-cuota-devengada-total"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.cuota-deducible-total"
+number = "iva.anual.cuota-deducible-total"
+label = "Total cuota IVA deducible anual (soportado + autorepercutido)"
+section = ["iva", "anual", "totales"]
+data_type = "money"
+semantic_role = "iva_anual_cuota_deducible_total"
+required = false
+input_kind = "computed"
+formula = "modelo-390-iva-anual-cuota-deducible-total"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.resultado-regimen-general"
+number = "iva.anual.resultado-regimen-general"
+label = "Resultado anual del regimen general (cuota devengada - cuota deducible)"
+section = ["iva", "anual", "totales"]
+data_type = "money"
+semantic_role = "iva_anual_resultado_regimen_general"
+required = false
+input_kind = "computed"
+formula = "modelo-390-iva-anual-resultado-regimen-general"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# -----------------------------------------------------------------------------
+# Formulas backing the three computed annual result-casillas.
+# -----------------------------------------------------------------------------
+

@@ -1,0 +1,15 @@
+[[revisions.2025-y-siguientes.parameters]]
+id = "is.modalidad_cuota.percentage"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]
+
+[[revisions.2025-y-siguientes.parameters.source_citations]]
+source_ref = "aeat-modelo-202-instructions"
+required_text = ["modalidad articulo 40.2 lis", "porcentaje del 18%", "base del pago fraccionado"]
+
+[[revisions.2025-y-siguientes.parameters.values]]
+value = "18"
+date_axis = "filing_period"
+valid_from = 2025-01-01

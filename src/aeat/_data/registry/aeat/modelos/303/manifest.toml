@@ -1,0 +1,10 @@
+[modelo]
+id = "303"
+title = "IVA. Autoliquidación (trimestral)"
+official_name = "Modelo 303. Impuesto sobre el Valor Añadido. Autoliquidación."
+tax_domain = "iva"
+cadence = "quarterly"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]

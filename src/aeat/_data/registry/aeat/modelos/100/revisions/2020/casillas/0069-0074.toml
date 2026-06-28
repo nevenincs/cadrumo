@@ -1,0 +1,9 @@
+[[revisions."2020".casillas]]
+id = "0074"
+number = "0074"
+label = "Arrendamiento como inmueble accesorio"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+data_type = "boolean"
+semantic_role = "irpf_inmueble_arrendamiento_accesorio_flag"
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

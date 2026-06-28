@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0438"
+number = "0438"
+label = "Aportaciones efectuadas por la empresa que deriven de una decisión del trabajador"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
+semantic_role = "irpf_red_prevision_social_aportaciones_empresa_decision_trabajador"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

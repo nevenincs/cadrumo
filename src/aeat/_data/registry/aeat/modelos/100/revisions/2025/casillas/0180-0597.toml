@@ -1,0 +1,10 @@
+[[revisions."2025".casillas]]
+id = "0597"
+number = "0597"
+label = "Por rendimientos del capital mobiliario"
+section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
+semantic_role = "irpf_retencion_capital_mobiliario"
+input_kind = "bound"
+binding = "renta-2025-modelo-123-retenciones-periodicas"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-101", "rd-439-2007:art-90", "ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]

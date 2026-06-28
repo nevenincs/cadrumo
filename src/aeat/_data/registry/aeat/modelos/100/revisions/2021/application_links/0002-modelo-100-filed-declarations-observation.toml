@@ -1,0 +1,13 @@
+[[revisions."2021".application_links]]
+id = "modelo-100-filed-declarations-observation"
+surface = "portal"
+consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
+requires_snapshot = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = ["aeat-modelo-100-procedure"]

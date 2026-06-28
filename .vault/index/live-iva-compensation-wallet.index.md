@@ -1,0 +1,374 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#live-iva-compensation-wallet'
+date: '2026-06-15'
+modified: '2026-06-15'
+related:
+  - '[[2026-05-19-live-iva-compensation-wallet-adr]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-code-review-audit]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-implementation-summary-exec]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-research]]'
+  - '[[2026-05-20-live-iva-compensation-wallet-auth-live-hardening-exec]]'
+  - '[[2026-05-20-live-iva-compensation-wallet-review-audit]]'
+  - '[[2026-05-20-live-iva-compensation-wallet-w01-p02-s03-exec]]'
+  - '[[2026-05-20-live-iva-compensation-wallet-w01-p03-s04-exec]]'
+  - '[[2026-05-20-live-iva-compensation-wallet-w01-p04-s01-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-code-review-audit]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-persona-briefs-audit]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-persona-testimonials-audit]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w02-p02-s01-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w02-p02-s02-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w02-p02-s03-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w02-p02-s04-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w03-p01-s01-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w03-p01-s02-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w03-p01-s03-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w03-p01-summary-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w03-p02-s01-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w03-p02-s02-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w03-p02-s03-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w03-p02-summary-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w03-p03-s01-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w03-p03-s02-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w03-p03-s03-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w03-p03-summary-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w03-p04-s01-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w03-p04-s02-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w03-p04-s03-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w03-p04-summary-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w04-f01-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w04-f02-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w04-f03-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w04-f04-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w04-f05-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w04-f06-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w04-f07-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w04-f08-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w04-f09-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w04-f10-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w04-f12-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w04-f13-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w04-f14-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w04-f20-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w04-p01-summary-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w04-p02-s01-s02-exec]]'
+  - '[[2026-05-21-live-iva-compensation-wallet-w04-p02-s03-exec]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-profile-bucket-repository-binding-reconciliation-adr]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-profile-bucket-repository-binding-reconciliation-research]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-w04-f21-exec]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-w04-f22-exec]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-w04-f23-exec]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-w04-f24-exec]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-w04-f25-exec]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-w04-f26-exec]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-w04-f27-exec]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-w04-f28-exec]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-w05-p01-s02-exec]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-w05-p01-s02-s03-review-audit]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-w05-p01-s03-exec]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-w05-p01-s04-exec]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-w05-p01-s05-exec]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-w05-p01-summary-exec]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-w05-p02-s01-exec]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-w05-p02-s02-exec]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-w05-p02-s03-exec]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-w05-p02-s04-exec]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-w05-p02-summary-exec]]'
+  - '[[2026-05-26-live-iva-auth-read-acquisition-adr]]'
+  - '[[2026-05-26-live-iva-compensation-wallet-convention-regrounding-audit]]'
+  - '[[2026-05-26-live-iva-compensation-wallet-w09-p01-s01-exec]]'
+  - '[[2026-05-26-live-iva-compensation-wallet-w09-p01-s02-exec]]'
+  - '[[2026-05-26-live-iva-compensation-wallet-w09-p01-s03-exec]]'
+  - '[[2026-05-26-live-iva-compensation-wallet-w09-p01-s04-exec]]'
+  - '[[2026-05-26-live-iva-compensation-wallet-w10-p01-s01-exec]]'
+  - '[[2026-05-26-live-iva-compensation-wallet-w10-p01-s02-exec]]'
+  - '[[2026-05-26-live-iva-compensation-wallet-w10-p01-s03-exec]]'
+  - '[[2026-05-26-live-iva-compensation-wallet-w10-p01-s04-exec]]'
+  - '[[2026-05-26-live-iva-remote-evidence-reconciliation-adr]]'
+  - '[[2026-05-26-live-iva-storage-regression-fixes-review-audit]]'
+  - '[[2026-05-26-securestorage-repair-policy-adr-adjudication-research]]'
+  - '[[2026-05-26-securestorage-repair-policy-adr-coverage-audit]]'
+  - '[[2026-05-27-live-iva-compensation-wallet-acquisition-manifest-review-audit]]'
+  - '[[2026-05-27-live-iva-compensation-wallet-auth-diagnostics-review-audit]]'
+  - '[[2026-05-27-live-iva-compensation-wallet-filed-history-divergence-review-audit]]'
+  - '[[2026-05-27-live-iva-compensation-wallet-reload-review-audit]]'
+  - '[[2026-05-27-live-iva-compensation-wallet-s48-review-audit]]'
+  - '[[2026-05-27-live-iva-compensation-wallet-s49-review-audit]]'
+  - '[[2026-05-27-live-iva-compensation-wallet-w05-p13-s45-live-auth-preflight-exec]]'
+  - '[[2026-05-27-live-iva-compensation-wallet-w05-p13-s46-auth-route-diagnostics-exec]]'
+  - '[[2026-05-27-live-iva-compensation-wallet-w05-p13-s48-real-auth-diagnostics-test-exec]]'
+  - '[[2026-05-27-live-iva-compensation-wallet-w05-p14-s49-auth-acquisition-outcomes-exec]]'
+  - '[[2026-05-27-live-iva-compensation-wallet-w07-p17-s60-acquisition-manifest-exec]]'
+  - '[[2026-05-27-live-iva-compensation-wallet-w07-p17-s61-acquisition-manifest-reload-exec]]'
+  - '[[2026-05-27-live-iva-compensation-wallet-w07-p17-s63-privacy-reload-exec]]'
+  - '[[2026-05-27-live-iva-compensation-wallet-w09-p02-s06-reconciliation-binding-reload-exec]]'
+  - '[[2026-05-28-live-iva-auth-testimonial-correction-audit]]'
+  - '[[2026-05-28-live-iva-compensation-wallet-W09-P22-S80]]'
+  - '[[2026-05-28-live-iva-compensation-wallet-s50-review-audit]]'
+  - '[[2026-05-28-live-iva-compensation-wallet-s51-review-audit]]'
+  - '[[2026-05-28-live-iva-compensation-wallet-s52-review-audit]]'
+  - '[[2026-05-28-live-iva-compensation-wallet-s80-review-audit]]'
+  - '[[2026-05-28-live-iva-compensation-wallet-w05-p14-s50-cli-auth-outcomes-exec]]'
+  - '[[2026-05-28-live-iva-compensation-wallet-w05-p14-s51-auth-diagnostic-linkage-exec]]'
+  - '[[2026-05-28-live-iva-compensation-wallet-w05-p14-s52-taxonomy-regression-exec]]'
+  - '[[2026-05-28-live-iva-read-only-auth-success-surface-failures-audit]]'
+  - '[[2026-05-31-live-iva-compensation-wallet-551-s1-exec]]'
+  - '[[2026-05-31-live-iva-compensation-wallet-551-s2-exec]]'
+  - '[[2026-05-31-live-iva-compensation-wallet-551-s3-exec]]'
+  - '[[2026-06-02-live-iva-compensation-consultation-research]]'
+  - '[[2026-06-02-live-iva-compensation-wallet-W06-P15-S56]]'
+  - '[[2026-06-02-live-iva-compensation-wallet-code-review-audit]]'
+  - '[[2026-06-02-live-iva-compensation-wallet-w06-p15-s56-auth-retry-2-exec]]'
+  - '[[2026-06-02-live-iva-compensation-wallet-w06-p15-s56-auth-retry-exec]]'
+  - '[[2026-06-02-live-iva-compensation-wallet-w06-p15-s56-discovered-entrypoint-exec]]'
+  - '[[2026-06-02-live-iva-compensation-wallet-w06-p15-s56-session-reuse-live-read-exec]]'
+  - '[[2026-06-02-live-iva-compensation-wallet-w06-p15-s56-storage-auth-timeout-exec]]'
+  - '[[2026-06-02-live-iva-persistent-failure-team-brief-audit]]'
+  - '[[2026-06-02-live-iva-surface-diagnostics-review-audit]]'
+  - '[[2026-06-03-live-iva-compensation-wallet-W09-P22-S81]]'
+  - '[[2026-06-03-live-iva-compensation-wallet-W09-P22-S84]]'
+  - '[[2026-06-03-live-iva-compensation-wallet-W09-P22-S85]]'
+  - '[[2026-06-03-live-iva-compensation-wallet-W09-P22-S86]]'
+  - '[[2026-06-03-live-iva-compensation-wallet-code-review-audit]]'
+  - '[[2026-06-03-live-iva-compensation-wallet-w06-p15-s56-wallet-live-success-exec]]'
+  - '[[2026-06-03-live-iva-compensation-wallet-w09-p22-s77-downstream-gates-exec]]'
+  - '[[2026-06-03-live-iva-compensation-wallet-w09-p22-s79-review-fixes-exec]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W06-P15-S53]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W06-P15-S54]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W06-P15-S55]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W06-P16-S57]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W06-P16-S58]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W06-P16-S59]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W07-P17-S60]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W07-P17-S63]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W07-P18-S64]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W07-P18-S65]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W07-P18-S66]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W08-P19-S67]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W08-P19-S68]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W08-P20-S70]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W08-P20-S71]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W08-P20-S72]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W09-P21-S73]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W09-P21-S74]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W09-P21-S75]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W09-P21-S76]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W09-P22-S77]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W09-P22-S78]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W09-P22-S79]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W09-P22-S82]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W09-P22-S83]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W09-P22-S87]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W09-P23-S88]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W09-P23-S89]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W09-P23-S90]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W10-P24-S91]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W10-P24-S92]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W10-P24-S99]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W11-P25-S94]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W11-P25-S95]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W11-P25-S96]]'
+  - '[[2026-06-04-live-iva-compensation-wallet-W11-P25-S97]]'
+  - '[[2026-06-05-live-iva-compensation-wallet-W10-P24-S100]]'
+  - '[[2026-06-05-live-iva-compensation-wallet-W10-P24-S101]]'
+  - '[[2026-06-05-live-iva-compensation-wallet-W10-P24-S102]]'
+  - '[[2026-06-05-live-iva-compensation-wallet-W10-P24-S93]]'
+  - '[[2026-06-05-live-iva-compensation-wallet-W10-P24-S98]]'
+  - '[[2026-06-05-live-iva-compensation-wallet-W10-P24-summary]]'
+---
+
+# `live-iva-compensation-wallet` feature index
+
+Auto-generated index of all documents tagged with `#live-iva-compensation-wallet`.
+
+## Documents
+
+### adr
+
+- `2026-05-19-live-iva-compensation-wallet-adr` - `live-iva-compensation-wallet` adr: `AEAT wallet as primary IVA compensation authority` | (**status:** `accepted`)
+- `2026-05-22-live-iva-compensation-wallet-profile-bucket-repository-binding-reconciliation-adr` - `live-iva-compensation-wallet` adr: `profile, bucket, repository, and calculation-binding hierarchy` | (**status:** `accepted`)
+- `2026-05-26-live-iva-auth-read-acquisition-adr` - `live-iva-compensation-wallet` adr: `read-only live auth diagnostics and acquisition boundary` | (**status:** `accepted`)
+- `2026-05-26-live-iva-remote-evidence-reconciliation-adr` - `live-iva-compensation-wallet` adr: `remote IVA evidence persistence and reconciliation authority` | (**status:** `accepted`)
+
+### audit
+
+- `2026-05-19-live-iva-compensation-wallet-code-review-audit` - `live-iva-compensation-wallet` code review
+- `2026-05-20-live-iva-compensation-wallet-review-audit` - `live-iva-compensation-wallet` Code Review
+- `2026-05-21-live-iva-compensation-wallet-code-review-audit` - `live-iva-compensation-wallet` Code Review
+- `2026-05-21-live-iva-compensation-wallet-persona-briefs-audit` - Live IVA compensation wallet W04 persona briefs
+- `2026-05-21-live-iva-compensation-wallet-persona-testimonials-audit` - Live IVA compensation wallet W04 persona testimonials
+- `2026-05-22-live-iva-compensation-wallet-w05-p01-s02-s03-review-audit` - `live-iva-compensation-wallet` Code Review
+- `2026-05-26-live-iva-compensation-wallet-convention-regrounding-audit` - `live-iva-compensation-wallet` Code Review
+- `2026-05-26-live-iva-storage-regression-fixes-review-audit` - `live-iva-compensation-wallet` Code Review
+- `2026-05-26-securestorage-repair-policy-adr-coverage-audit` - `live-iva-compensation-wallet` SecureStorage Repair Policy ADR Coverage Audit
+- `2026-05-27-live-iva-compensation-wallet-acquisition-manifest-review-audit` - `live-iva-compensation-wallet` Code Review
+- `2026-05-27-live-iva-compensation-wallet-auth-diagnostics-review-audit` - `live-iva-compensation-wallet` Code Review
+- `2026-05-27-live-iva-compensation-wallet-filed-history-divergence-review-audit` - `live-iva-compensation-wallet` Code Review
+- `2026-05-27-live-iva-compensation-wallet-reload-review-audit` - `live-iva-compensation-wallet` Code Review
+- `2026-05-27-live-iva-compensation-wallet-s48-review-audit` - `live-iva-compensation-wallet` S48 Code Review
+- `2026-05-27-live-iva-compensation-wallet-s49-review-audit` - `live-iva-compensation-wallet` S49 Code Review
+- `2026-05-28-live-iva-auth-testimonial-correction-audit` - `live-iva-compensation-wallet` Auth Evidence Correction
+- `2026-05-28-live-iva-compensation-wallet-s50-review-audit` - `live-iva-compensation-wallet` Code Review
+- `2026-05-28-live-iva-compensation-wallet-s51-review-audit` - `live-iva-compensation-wallet` Code Review
+- `2026-05-28-live-iva-compensation-wallet-s52-review-audit` - `live-iva-compensation-wallet` Code Review
+- `2026-05-28-live-iva-compensation-wallet-s80-review-audit` - `live-iva-compensation-wallet` Code Review
+- `2026-05-28-live-iva-read-only-auth-success-surface-failures-audit` - `live-iva-compensation-wallet` Live Read Attempt
+- `2026-06-02-live-iva-compensation-wallet-code-review-audit` - `live-iva-compensation-wallet` Code Review
+- `2026-06-02-live-iva-persistent-failure-team-brief-audit` - Live IVA Persistent Failure Team Brief
+- `2026-06-02-live-iva-surface-diagnostics-review-audit` - `live-iva-compensation-wallet` Code Review
+- `2026-06-03-live-iva-compensation-wallet-code-review-audit` - `live-iva-compensation-wallet` Code Review
+
+### exec
+
+- `2026-05-19-live-iva-compensation-wallet-implementation-summary-exec` - `live-iva-compensation-wallet` `implementation` summary
+- `2026-05-20-live-iva-compensation-wallet-auth-live-hardening-exec` - `live-iva-compensation-wallet` Auth Live Hardening
+- `2026-05-20-live-iva-compensation-wallet-w01-p02-s03-exec` - `live-iva-compensation-wallet` `W01.P02.S03`
+- `2026-05-20-live-iva-compensation-wallet-w01-p03-s04-exec` - `live-iva-compensation-wallet` `W01.P03.S04`
+- `2026-05-20-live-iva-compensation-wallet-w01-p04-s01-exec` - `live-iva-compensation-wallet` `W01.P04.S01`
+- `2026-05-21-live-iva-compensation-wallet-w02-p02-s01-exec` - `live-iva-compensation-wallet` `W02.P02.S01`
+- `2026-05-21-live-iva-compensation-wallet-w02-p02-s02-exec` - `live-iva-compensation-wallet` `W02.P02.S02`
+- `2026-05-21-live-iva-compensation-wallet-w02-p02-s03-exec` - `live-iva-compensation-wallet` `W02.P02.S03`
+- `2026-05-21-live-iva-compensation-wallet-w02-p02-s04-exec` - `live-iva-compensation-wallet` `W02.P02.S04`
+- `2026-05-21-live-iva-compensation-wallet-w03-p01-s01-exec` - `live-iva-compensation-wallet` `W03.P01.S01`
+- `2026-05-21-live-iva-compensation-wallet-w03-p01-s02-exec` - `live-iva-compensation-wallet` `W03.P01.S02`
+- `2026-05-21-live-iva-compensation-wallet-w03-p01-s03-exec` - `live-iva-compensation-wallet` `W03.P01.S03`
+- `2026-05-21-live-iva-compensation-wallet-w03-p01-summary-exec` - `live-iva-compensation-wallet` `W03.P01` summary
+- `2026-05-21-live-iva-compensation-wallet-w03-p02-s01-exec` - `live-iva-compensation-wallet` `W03.P02.S01`
+- `2026-05-21-live-iva-compensation-wallet-w03-p02-s02-exec` - `live-iva-compensation-wallet` `W03.P02.S02`
+- `2026-05-21-live-iva-compensation-wallet-w03-p02-s03-exec` - `live-iva-compensation-wallet` `W03.P02.S03`
+- `2026-05-21-live-iva-compensation-wallet-w03-p02-summary-exec` - `live-iva-compensation-wallet` `W03.P02` summary
+- `2026-05-21-live-iva-compensation-wallet-w03-p03-s01-exec` - `live-iva-compensation-wallet` `W03.P03.S01`
+- `2026-05-21-live-iva-compensation-wallet-w03-p03-s02-exec` - `live-iva-compensation-wallet` `W03.P03.S02`
+- `2026-05-21-live-iva-compensation-wallet-w03-p03-s03-exec` - `live-iva-compensation-wallet` `W03.P03.S03`
+- `2026-05-21-live-iva-compensation-wallet-w03-p03-summary-exec` - `live-iva-compensation-wallet` `W03.P03` summary
+- `2026-05-21-live-iva-compensation-wallet-w03-p04-s01-exec` - W03.P04.S01 persisted IVA wallet decision gate
+- `2026-05-21-live-iva-compensation-wallet-w03-p04-s02-exec` - W03.P04.S02 IVA wallet authority-source separation
+- `2026-05-21-live-iva-compensation-wallet-w03-p04-s03-exec` - W03.P04.S03 blocked wallet reconciliation workflow/export surfacing
+- `2026-05-21-live-iva-compensation-wallet-w03-p04-summary-exec` - W03.P04 AEAT remote-state reconciliation ladder summary
+- `2026-05-21-live-iva-compensation-wallet-w04-f01-exec` - W04.F01 Modelo readiness and ledger preflight convergence
+- `2026-05-21-live-iva-compensation-wallet-w04-f02-exec` - W04.F02 ledger status IVA tax diagnostics
+- `2026-05-21-live-iva-compensation-wallet-w04-f03-exec` - W04.F03 live wallet CLI no-submit safety surfacing
+- `2026-05-21-live-iva-compensation-wallet-w04-f04-exec` - W04.F04 IVA wallet history lots and authority decisions
+- `2026-05-21-live-iva-compensation-wallet-w04-f05-exec` - W04.F05 injected wallet-decision repository guards
+- `2026-05-21-live-iva-compensation-wallet-w04-f06-exec` - `live-iva-compensation-wallet` `W04.F06`
+- `2026-05-21-live-iva-compensation-wallet-w04-f07-exec` - `live-iva-compensation-wallet` `W04.F07`
+- `2026-05-21-live-iva-compensation-wallet-w04-f08-exec` - `live-iva-compensation-wallet` `W04.F08`
+- `2026-05-21-live-iva-compensation-wallet-w04-f09-exec` - `live-iva-compensation-wallet` `W04.F09`
+- `2026-05-21-live-iva-compensation-wallet-w04-f10-exec` - `live-iva-compensation-wallet` `W04.F10`
+- `2026-05-21-live-iva-compensation-wallet-w04-f12-exec` - `live-iva-compensation-wallet` `W04.F12`
+- `2026-05-21-live-iva-compensation-wallet-w04-f13-exec` - `live-iva-compensation-wallet` `W04.F13`
+- `2026-05-21-live-iva-compensation-wallet-w04-f14-exec` - `live-iva-compensation-wallet` `W04.F14`
+- `2026-05-21-live-iva-compensation-wallet-w04-f20-exec` - `live-iva-compensation-wallet` `W04.F20`
+- `2026-05-21-live-iva-compensation-wallet-w04-p01-summary-exec` - W04.P01 persona briefs summary
+- `2026-05-21-live-iva-compensation-wallet-w04-p02-s01-s02-exec` - W04.P02.S01-S02 persona testimonial capture and task conversion
+- `2026-05-21-live-iva-compensation-wallet-w04-p02-s03-exec` - W04.P02.S03 code review summary
+- `2026-05-22-live-iva-compensation-wallet-w04-f21-exec` - `live-iva-compensation-wallet` `W04.F21`
+- `2026-05-22-live-iva-compensation-wallet-w04-f22-exec` - `live-iva-compensation-wallet` `W04.F22`
+- `2026-05-22-live-iva-compensation-wallet-w04-f23-exec` - `live-iva-compensation-wallet` `W04.F23`
+- `2026-05-22-live-iva-compensation-wallet-w04-f24-exec` - `live-iva-compensation-wallet` `W04.F24`
+- `2026-05-22-live-iva-compensation-wallet-w04-f25-exec` - `live-iva-compensation-wallet` `W04.F25`
+- `2026-05-22-live-iva-compensation-wallet-w04-f26-exec` - `live-iva-compensation-wallet` `W04.F26`
+- `2026-05-22-live-iva-compensation-wallet-w04-f27-exec` - `live-iva-compensation-wallet` `W04.F27`
+- `2026-05-22-live-iva-compensation-wallet-w04-f28-exec` - `live-iva-compensation-wallet` `W04.F28`
+- `2026-05-22-live-iva-compensation-wallet-w05-p01-s02-exec` - `live-iva-compensation-wallet` `W05.P01.S02`
+- `2026-05-22-live-iva-compensation-wallet-w05-p01-s03-exec` - `live-iva-compensation-wallet` `W05.P01.S03`
+- `2026-05-22-live-iva-compensation-wallet-w05-p01-s04-exec` - `live-iva-compensation-wallet` `W05.P01.S04`
+- `2026-05-22-live-iva-compensation-wallet-w05-p01-s05-exec` - `live-iva-compensation-wallet` `W05.P01.S05`
+- `2026-05-22-live-iva-compensation-wallet-w05-p01-summary-exec` - `live-iva-compensation-wallet` `W05.P01` summary
+- `2026-05-22-live-iva-compensation-wallet-w05-p02-s01-exec` - `live-iva-compensation-wallet` `W05.P02.S01`
+- `2026-05-22-live-iva-compensation-wallet-w05-p02-s02-exec` - `live-iva-compensation-wallet` `W05.P02.S02`
+- `2026-05-22-live-iva-compensation-wallet-w05-p02-s03-exec` - `live-iva-compensation-wallet` `W05.P02.S03`
+- `2026-05-22-live-iva-compensation-wallet-w05-p02-s04-exec` - `live-iva-compensation-wallet` `W05.P02.S04`
+- `2026-05-22-live-iva-compensation-wallet-w05-p02-summary-exec` - `live-iva-compensation-wallet` `W05.P02` summary
+- `2026-05-26-live-iva-compensation-wallet-w09-p01-s01-exec` - `live-iva-compensation-wallet` `W09.P01.S01`
+- `2026-05-26-live-iva-compensation-wallet-w09-p01-s02-exec` - `live-iva-compensation-wallet` `W09.P01.S02`
+- `2026-05-26-live-iva-compensation-wallet-w09-p01-s03-exec` - `live-iva-compensation-wallet` `W09.P01.S03`
+- `2026-05-26-live-iva-compensation-wallet-w09-p01-s04-exec` - `live-iva-compensation-wallet` `W09.P01.S04`
+- `2026-05-26-live-iva-compensation-wallet-w10-p01-s01-exec` - `live-iva-compensation-wallet` `W10.P01.S01`
+- `2026-05-26-live-iva-compensation-wallet-w10-p01-s02-exec` - `live-iva-compensation-wallet` `W10.P01.S02`
+- `2026-05-26-live-iva-compensation-wallet-w10-p01-s03-exec` - `live-iva-compensation-wallet` `W10.P01.S03`
+- `2026-05-26-live-iva-compensation-wallet-w10-p01-s04-exec` - `live-iva-compensation-wallet` `W10.P01.S04`
+- `2026-05-27-live-iva-compensation-wallet-w05-p13-s45-live-auth-preflight-exec` - `live-iva-compensation-wallet` `W05.P13.S45`
+- `2026-05-27-live-iva-compensation-wallet-w05-p13-s46-auth-route-diagnostics-exec` - `live-iva-compensation-wallet` `W05.P13.S46`
+- `2026-05-27-live-iva-compensation-wallet-w05-p13-s48-real-auth-diagnostics-test-exec` - `live-iva-compensation-wallet` `W05.P13.S48`
+- `2026-05-27-live-iva-compensation-wallet-w05-p14-s49-auth-acquisition-outcomes-exec` - `live-iva-compensation-wallet` `W05.P14.S49`
+- `2026-05-27-live-iva-compensation-wallet-w07-p17-s60-acquisition-manifest-exec` - `live-iva-compensation-wallet` `W07.P17.S60`
+- `2026-05-27-live-iva-compensation-wallet-w07-p17-s61-acquisition-manifest-reload-exec` - `live-iva-compensation-wallet` `W07.P17.S61`
+- `2026-05-27-live-iva-compensation-wallet-w07-p17-s63-privacy-reload-exec` - `live-iva-compensation-wallet` `W07.P17.S63`
+- `2026-05-27-live-iva-compensation-wallet-w09-p02-s06-reconciliation-binding-reload-exec` - W09.P02.S06 Reconciliation Binding Reload
+- `2026-05-28-live-iva-compensation-wallet-W09-P22-S80` - `live-iva-compensation-wallet` `W09.P22.S80`
+- `2026-05-28-live-iva-compensation-wallet-w05-p14-s50-cli-auth-outcomes-exec` - `live-iva-compensation-wallet` `W05.P14.S50`
+- `2026-05-28-live-iva-compensation-wallet-w05-p14-s51-auth-diagnostic-linkage-exec` - `live-iva-compensation-wallet` `W05.P14.S51`
+- `2026-05-28-live-iva-compensation-wallet-w05-p14-s52-taxonomy-regression-exec` - `live-iva-compensation-wallet` `W05.P14.S52`
+- `2026-05-31-live-iva-compensation-wallet-551-s1-exec` - live-iva-compensation-wallet #551 S1 — ADR first-period bootstrap amendment
+- `2026-05-31-live-iva-compensation-wallet-551-s2-exec` - live-iva-compensation-wallet #551 S2 — first_period_zero divergence variant
+- `2026-05-31-live-iva-compensation-wallet-551-s3-exec` - live-iva-compensation-wallet #551 S3 — CLI seed help text with legal grounding
+- `2026-06-02-live-iva-compensation-wallet-W06-P15-S56` - `live-iva-compensation-wallet` `W06.P15.S56`
+- `2026-06-02-live-iva-compensation-wallet-w06-p15-s56-auth-retry-2-exec` - `live-iva-compensation-wallet` `W06.P15.S56` auth retry 2
+- `2026-06-02-live-iva-compensation-wallet-w06-p15-s56-auth-retry-exec` - `live-iva-compensation-wallet` `W06.P15.S56` auth retry
+- `2026-06-02-live-iva-compensation-wallet-w06-p15-s56-discovered-entrypoint-exec` - `live-iva-compensation-wallet` `W06.P15.S56` discovered entrypoint repair
+- `2026-06-02-live-iva-compensation-wallet-w06-p15-s56-session-reuse-live-read-exec` - `live-iva-compensation-wallet` `W06.P15.S56` session reuse live read
+- `2026-06-02-live-iva-compensation-wallet-w06-p15-s56-storage-auth-timeout-exec` - `live-iva-compensation-wallet` `W06.P15.S56`
+- `2026-06-03-live-iva-compensation-wallet-W09-P22-S81` - Wallet-Only Export Provenance Coverage
+- `2026-06-03-live-iva-compensation-wallet-W09-P22-S84` - Divergence Ladder Engine Coverage
+- `2026-06-03-live-iva-compensation-wallet-W09-P22-S85` - Modelo 303 Wallet-Only Export Coverage
+- `2026-06-03-live-iva-compensation-wallet-W09-P22-S86` - Live Own-Name Representation Dispatcher Fix
+- `2026-06-03-live-iva-compensation-wallet-w06-p15-s56-wallet-live-success-exec` - `live-iva-compensation-wallet` `W06.P15.S56` wallet live success
+- `2026-06-03-live-iva-compensation-wallet-w09-p22-s77-downstream-gates-exec` - `live-iva-compensation-wallet` `W09.P22.S77` downstream gates
+- `2026-06-03-live-iva-compensation-wallet-w09-p22-s79-review-fixes-exec` - Live IVA Wallet Review Fixes
+- `2026-06-04-live-iva-compensation-wallet-W06-P15-S53` - live-iva-compensation-wallet W06.P15.S53
+- `2026-06-04-live-iva-compensation-wallet-W06-P15-S54` - live-iva-compensation-wallet W06.P15.S54
+- `2026-06-04-live-iva-compensation-wallet-W06-P15-S55` - live-iva-compensation-wallet W06.P15.S55
+- `2026-06-04-live-iva-compensation-wallet-W06-P16-S57` - `live-iva-compensation-wallet` `W06.P16.S57`
+- `2026-06-04-live-iva-compensation-wallet-W06-P16-S58` - `live-iva-compensation-wallet` `W06.P16.S58`
+- `2026-06-04-live-iva-compensation-wallet-W06-P16-S59` - `live-iva-compensation-wallet` `W06.P16.S59`
+- `2026-06-04-live-iva-compensation-wallet-W07-P17-S60` - live-iva-compensation-wallet W07.P17.S60
+- `2026-06-04-live-iva-compensation-wallet-W07-P17-S63` - live-iva-compensation-wallet W07.P17.S63
+- `2026-06-04-live-iva-compensation-wallet-W07-P18-S64` - live-iva-compensation-wallet W07.P18.S64
+- `2026-06-04-live-iva-compensation-wallet-W07-P18-S65` - live-iva-compensation-wallet W07.P18.S65
+- `2026-06-04-live-iva-compensation-wallet-W07-P18-S66` - live-iva-compensation-wallet W07.P18.S66
+- `2026-06-04-live-iva-compensation-wallet-W08-P19-S67` - live-iva-compensation-wallet W08.P19.S67
+- `2026-06-04-live-iva-compensation-wallet-W08-P19-S68` - W08.P19.S68 repository-backed filing-history regression
+- `2026-06-04-live-iva-compensation-wallet-W08-P20-S70` - W08.P20.S70 reconciliation and export-routing review
+- `2026-06-04-live-iva-compensation-wallet-W08-P20-S71` - W08.P20.S71 persisted-decision readiness review
+- `2026-06-04-live-iva-compensation-wallet-W08-P20-S72` - W08.P20.S72 three-year production-service regression
+- `2026-06-04-live-iva-compensation-wallet-W09-P21-S73` - W09.P21.S73 constants inventory
+- `2026-06-04-live-iva-compensation-wallet-W09-P21-S74` - W09.P21.S74 constants centralization
+- `2026-06-04-live-iva-compensation-wallet-W09-P21-S75` - W09.P21.S75 portal constants guard
+- `2026-06-04-live-iva-compensation-wallet-W09-P21-S76` - W09.P21.S76 database-backed test password guard
+- `2026-06-04-live-iva-compensation-wallet-W09-P22-S77` - `live-iva-compensation-wallet` `W09.P22.S77`
+- `2026-06-04-live-iva-compensation-wallet-W09-P22-S78` - `live-iva-compensation-wallet` `W09.P22.S78`
+- `2026-06-04-live-iva-compensation-wallet-W09-P22-S79` - `live-iva-compensation-wallet` `W09.P22.S79`
+- `2026-06-04-live-iva-compensation-wallet-W09-P22-S82` - Live Read-Only IVA Remote-State Verification
+- `2026-06-04-live-iva-compensation-wallet-W09-P22-S83` - Wallet-Only Local File Lifecycle
+- `2026-06-04-live-iva-compensation-wallet-W09-P22-S87` - Backend Remote-State Reload Bootstrap
+- `2026-06-04-live-iva-compensation-wallet-W09-P23-S88` - W09.P23.S88 Test Literal Centralization
+- `2026-06-04-live-iva-compensation-wallet-W09-P23-S89` - W09.P23.S89 locale audit repair
+- `2026-06-04-live-iva-compensation-wallet-W09-P23-S90` - W09.P23.S90 Modelo 100 payments-retentions registry expectation repair
+- `2026-06-04-live-iva-compensation-wallet-W10-P24-S91` - W10.P24.S91 Clave cleanup timeout hardening
+- `2026-06-04-live-iva-compensation-wallet-W10-P24-S92` - W10.P24.S92 live IVA CLI watchdog containment completed
+- `2026-06-04-live-iva-compensation-wallet-W10-P24-S99` - W10.P24.S99 persisted Clave reuse contract
+- `2026-06-04-live-iva-compensation-wallet-W11-P25-S94` - W11.P25.S94 live marker and access-gate inventory
+- `2026-06-04-live-iva-compensation-wallet-W11-P25-S95` - W11.P25.S95 Live-Test Gate Separation
+- `2026-06-04-live-iva-compensation-wallet-W11-P25-S96` - W11.P25.S96 Live Marker Taxonomy Closeout
+- `2026-06-04-live-iva-compensation-wallet-W11-P25-S97` - W11.P25.S97 Static Live-Test Opt-In Guard
+- `2026-06-05-live-iva-compensation-wallet-W10-P24-S100` - W10.P24.S100 full-range IVA remote-state acquisition
+- `2026-06-05-live-iva-compensation-wallet-W10-P24-S101` - W10.P24.S101 fresh Clave auth reliability
+- `2026-06-05-live-iva-compensation-wallet-W10-P24-S102` - W10.P24.S102 auth diagnostic show contract repair
+- `2026-06-05-live-iva-compensation-wallet-W10-P24-S93` - W10.P24.S93 live IVA evidence retry
+- `2026-06-05-live-iva-compensation-wallet-W10-P24-S98` - W10.P24.S98 vaultspec-rag service diagnostics
+- `2026-06-05-live-iva-compensation-wallet-W10-P24-summary` - `live-iva-compensation-wallet` `W10.P24` summary
+
+### plan
+
+- `2026-05-19-live-iva-compensation-wallet-plan` - `live-iva-compensation-wallet` `implementation` plan
+
+### research
+
+- `2026-05-19-live-iva-compensation-wallet-research` - `live-iva-compensation-wallet` research: `AEAT-held IVA compensation wallet read`
+- `2026-05-22-live-iva-compensation-wallet-profile-bucket-repository-binding-reconciliation-research` - `live-iva-compensation-wallet` research: `profile, bucket, repository, and binding terminology reconciliation`
+- `2026-05-26-securestorage-repair-policy-adr-adjudication-research` - `live-iva-compensation-wallet` research: `SecureStorage repair policy ADR adjudication`
+- `2026-06-02-live-iva-compensation-consultation-research` - `live-iva-compensation-wallet` research: `AEAT IVA compensation consultation`

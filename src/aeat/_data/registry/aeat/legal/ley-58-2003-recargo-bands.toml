@@ -1,0 +1,114 @@
+# Recargo schedule per Ley 58/2003 art-27.2 (Ley General Tributaria) for
+# self-assessments filed after the deadline without prior AEAT notice.
+#
+# Post-Ley 11/2021 regime (Art. 27.2): the recargo is 1% plus a further 1%
+# for each COMPLETED month of delay, with NO intereses de demora for the first
+# 12 months; once 12 completed months have elapsed the recargo is 15% plus
+# intereses de demora. A fractional (incomplete) month does NOT count — the law
+# says "por cada mes completo de retraso" — so the schedule is keyed on
+# COMPLETED months, not on a day-bracket approximation.
+#
+# Reference: ley-58-2003:art-27.2
+
+[[band]]
+id = "completed_months_0"
+min_completed_months = 0
+max_completed_months = 0
+surcharge_pct = "1.00"
+interest_applies = false
+legal_ref = "ley-58-2003:art-27.2"
+
+[[band]]
+id = "completed_months_1"
+min_completed_months = 1
+max_completed_months = 1
+surcharge_pct = "2.00"
+interest_applies = false
+legal_ref = "ley-58-2003:art-27.2"
+
+[[band]]
+id = "completed_months_2"
+min_completed_months = 2
+max_completed_months = 2
+surcharge_pct = "3.00"
+interest_applies = false
+legal_ref = "ley-58-2003:art-27.2"
+
+[[band]]
+id = "completed_months_3"
+min_completed_months = 3
+max_completed_months = 3
+surcharge_pct = "4.00"
+interest_applies = false
+legal_ref = "ley-58-2003:art-27.2"
+
+[[band]]
+id = "completed_months_4"
+min_completed_months = 4
+max_completed_months = 4
+surcharge_pct = "5.00"
+interest_applies = false
+legal_ref = "ley-58-2003:art-27.2"
+
+[[band]]
+id = "completed_months_5"
+min_completed_months = 5
+max_completed_months = 5
+surcharge_pct = "6.00"
+interest_applies = false
+legal_ref = "ley-58-2003:art-27.2"
+
+[[band]]
+id = "completed_months_6"
+min_completed_months = 6
+max_completed_months = 6
+surcharge_pct = "7.00"
+interest_applies = false
+legal_ref = "ley-58-2003:art-27.2"
+
+[[band]]
+id = "completed_months_7"
+min_completed_months = 7
+max_completed_months = 7
+surcharge_pct = "8.00"
+interest_applies = false
+legal_ref = "ley-58-2003:art-27.2"
+
+[[band]]
+id = "completed_months_8"
+min_completed_months = 8
+max_completed_months = 8
+surcharge_pct = "9.00"
+interest_applies = false
+legal_ref = "ley-58-2003:art-27.2"
+
+[[band]]
+id = "completed_months_9"
+min_completed_months = 9
+max_completed_months = 9
+surcharge_pct = "10.00"
+interest_applies = false
+legal_ref = "ley-58-2003:art-27.2"
+
+[[band]]
+id = "completed_months_10"
+min_completed_months = 10
+max_completed_months = 10
+surcharge_pct = "11.00"
+interest_applies = false
+legal_ref = "ley-58-2003:art-27.2"
+
+[[band]]
+id = "completed_months_11"
+min_completed_months = 11
+max_completed_months = 11
+surcharge_pct = "12.00"
+interest_applies = false
+legal_ref = "ley-58-2003:art-27.2"
+
+[[band]]
+id = "after_12_months"
+min_completed_months = 12
+surcharge_pct = "15.00"
+interest_applies = true
+legal_ref = "ley-58-2003:art-27.2"

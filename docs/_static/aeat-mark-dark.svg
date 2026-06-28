@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="72" viewBox="0 0 240 72" role="img" aria-labelledby="title desc">
+  <title id="title">aeat-cli documentation</title>
+  <desc id="desc">A ledger mark for the aeat-cli documentation site.</desc>
+  <g transform="translate(22 14)">
+    <rect x="0" y="0" width="44" height="44" rx="7" fill="#ffffff"/>
+    <path d="M13 13h18M13 22h18M13 31h11" stroke="#000000" stroke-width="3.4" stroke-linecap="round"/>
+    <path d="M31 29l4 4 8-10" fill="none" stroke="#3291ff" stroke-width="3.7" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="80" y="43" fill="#ffffff" font-family="Geist, Segoe UI, system-ui, sans-serif" font-size="29" font-weight="650" letter-spacing="0">aeat-cli</text>
+</svg>

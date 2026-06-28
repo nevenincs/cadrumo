@@ -1,0 +1,10 @@
+[modelo]
+id = "202"
+title = "IS pago fraccionado"
+official_name = "Impuesto sobre Sociedades. Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español). Pago fraccionado."
+tax_domain = "is"
+cadence = "quarterly"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]

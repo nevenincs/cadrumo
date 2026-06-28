@@ -1,0 +1,67 @@
+[[revisions."2025".constructs]]
+id = "renta-real-estate-capital"
+title = "Modelo 100 real-estate capital dependency evidence"
+legal_refs = [
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-24",
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-13",
+    "rd-439-2007:art-100",
+    "rd-439-2007:art-108",
+    "orden-hac-277-2026:art-3",
+    "orden-hap-1732-2014:art-2",
+    "orden-hfp-1284-2023:art-7",
+    "ley-35-2006:art-85",
+    "ley-35-2006:art-101",
+]
+source_refs = [
+    "aeat-renta-2025-manual-parte1",
+    "boe-modelo-100-2025-form",
+    "aeat-dr-100-2025-dictionary",
+]
+casilla_ids = [
+    "0089",
+    "0102",
+    "0104",
+    "0107",
+    "0109",
+    "0110",
+    "0111",
+    "0112",
+    "0113",
+    "0114",
+    "0115",
+    "0116",
+    "0117",
+    "0131",
+    "0132",
+    "0146",
+    "0147",
+    "0148",
+    "0149",
+    "0150",
+    "0151",
+    "0152",
+    "0153",
+    "0154",
+    "0155",
+    "0156",
+    "0598",
+]
+formulas = [
+    "renta-2025-capital-inmobiliario-rendimiento-neto",
+    "renta-2025-capital-inmobiliario-rendimiento-neto-reducido",
+    "renta-2025-inmobiliario-suma-rentas-imputadas",
+    "renta-2025-capital-inmobiliario-suma-rendimientos-reducidos",
+    "renta-2025-retenciones-arrendamientos-urbanos",
+]
+bindings = [
+    "renta-2025-modelo-115-retenciones-periodicas",
+    "renta-2025-modelo-180-retenciones-anuales",
+]
+relations = [
+    "renta-2025-rel-115-retenciones-trimestrales",
+    "renta-2025-rel-180-retenciones-anuales",
+]
+dependency_classifications = ["renta-2025-dep-115", "renta-2025-dep-180"]

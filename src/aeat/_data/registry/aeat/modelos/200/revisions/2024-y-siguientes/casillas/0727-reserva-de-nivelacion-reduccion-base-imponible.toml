@@ -1,0 +1,24 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02410"
+number = "02410"
+label = "Reserva de nivelación - Reducción base imponible - Ejercicio generación 2020 - Importe minoración B.I. periodo/pendiente adicionar inicio periodo [02410]"
+section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
+data_type = "money"
+semantic_role = "is_reserva_nivelacion_adicion_pendiente"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020b-casilla-02410"]
+legal_refs = ["ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02411"
+number = "02411"
+label = "Reserva de nivelación - Reducción base imponible - Ejercicio generación 2020 - Importe adicionado base imponible en periodo [02411]"
+section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
+data_type = "money"
+semantic_role = "is_reserva_nivelacion_adicion_realizada"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020b-casilla-02411"]
+legal_refs = ["ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

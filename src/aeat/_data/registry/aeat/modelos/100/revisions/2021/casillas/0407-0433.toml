@@ -1,0 +1,10 @@
+[[revisions."2021".casillas]]
+id = "0433"
+number = "0433"
+label = "Saldo neto negativo de las ganancias y pérdidas patrimoniales de 2021 a integrar en la base imponible general, con el límite del 25 por 100 del importe de la casilla [0432] (*) (traslade el importe..."
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_saldo_neto_gyp_general_limite_25pct"
+input_kind = "computed"
+formula = "renta-2021-saldo-gp-base-general-cap-25"
+legal_refs = ["ley-35-2006:art-48"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

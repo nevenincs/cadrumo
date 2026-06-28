@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0564"
+number = "0564"
+label = "Suma de deducciones autonómicas (traslade el importe de esta misma casilla del anexo B.1, B.2, B.3, B.4, B.5, B.6, B.7, ó B8, según corresponda): Parte autonómica"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_deducciones_autonomicas_suma"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

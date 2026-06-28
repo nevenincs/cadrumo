@@ -1,0 +1,11 @@
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-spouse-eu-eea-country"
+source = "profile"
+selector = { profile_key = "renta_spouse.eu_eea_country", xsd_path = "/DatosIdentificativos/Conyuge/ZRUE2", dictionary_field = "ZRUE2", required_when_profile_key = "renta_spouse.eu_eea_resident", required_when_value = "true" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["Estados miembros de la Unión Europea", "Espacio Económico Europeo"]

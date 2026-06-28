@@ -1,0 +1,80 @@
+# M210 IRNR Phase 1 baseline tipo-de-gravamen table (W09.P41.S388).
+#
+# Keyed-bracket-table parameter mapping each declarable tipo_renta to
+# its TRLIRNR baseline rate. The lookup is exact-match on tipo_renta;
+# there is no notion of numeric-interval overlap because the domain is
+# an enum of regulatory categories, not an income amount.
+#
+# Phase 1 rows (per m210-irnr-full-engine ADR §D2.3):
+# - general                 → 24% (TRLIRNR Art 25.1.a baseline)
+# - ue_residente            → 19% (TRLIRNR Art 25.1.a UE/EEE)
+# - ganancia_patrimonial    → 19% (TRLIRNR Art 25.1.f, savings-base rate)
+# - inmobiliaria            → 24% (TRLIRNR Art 25.1.a; deduction routing
+#                                  via Art 24.5 deferred to Phase 2)
+# - interest                → 19% (TRLIRNR Art 25.1.f.2º: "intereses y otros
+#                                  rendimientos obtenidos por la cesión a
+#                                  terceros de capitales propios" tributan al
+#                                  19% para TODO no residente sin EP, SIN
+#                                  condición de residencia UE/EEE — la letra f)
+#                                  fija el 19% por tipo de renta, igual que
+#                                  ganancia_patrimonial (25.1.f.3º). El previo
+#                                  24% "fallback no-UE" era incorrecto: confundía
+#                                  la reducción UE/EEE del tipo general (25.1.a)
+#                                  con el 25.1.f incondicional. Verified vs BOE
+#                                  RDLeg 5/2004 art.25.1.f + AEAT manual no
+#                                  residentes (2026-06-14 grounding pass).)
+#
+# Pension is intentionally absent from this flat-rate table because
+# TRLIRNR Art 25.1.b is a progressive bracket tariff. The live branch
+# is represented by parameter `m210-pension-tarifa-2025`, and
+# `m210_resolve_rate` derives an effective rate from that table when
+# tipo_renta is `pension`. Other future tipos with no row still surface
+# as deferred/missing coverage through the lookup helper.
+#
+# S389 will compose this baseline with an override table
+# (m210-convenio-rates) that REPLACES the baseline when the profile
+# declares a treaty country.
+
+[[revisions."2025".parameters]]
+id = "m210-tipo-gravamen-2025"
+data_type = "keyed_bracket_table"
+unit = "percent"
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["tipo de gravamen", "no residentes"]
+
+[[revisions."2025".parameters.keyed_brackets]]
+key = "general"
+value = "0.24"
+valid_from = 2025-01-01
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
+
+[[revisions."2025".parameters.keyed_brackets]]
+key = "ue_residente"
+value = "0.19"
+valid_from = 2025-01-01
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
+
+[[revisions."2025".parameters.keyed_brackets]]
+key = "ganancia_patrimonial"
+value = "0.19"
+valid_from = 2025-01-01
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
+
+[[revisions."2025".parameters.keyed_brackets]]
+key = "inmobiliaria"
+value = "0.24"
+valid_from = 2025-01-01
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
+
+[[revisions."2025".parameters.keyed_brackets]]
+key = "interest"
+value = "0.19"
+valid_from = 2025-01-01
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).

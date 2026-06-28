@@ -1,0 +1,50 @@
+[[revisions."2023".parameters]]
+id = "renta-2023-escala-autonomica-base-ahorro"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-76"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "tipos de gravamen"]
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "6000"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "6000"
+upper_bound = "50000"
+fixed_addition = "570"
+marginal_rate = "0.105"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "50000"
+upper_bound = "200000"
+fixed_addition = "5190"
+marginal_rate = "0.115"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "200000"
+upper_bound = "300000"
+fixed_addition = "22440"
+marginal_rate = "0.135"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "300000"
+fixed_addition = "35940"
+marginal_rate = "0.14"
+valid_from = 2023-01-01
+valid_to = 2023-12-31

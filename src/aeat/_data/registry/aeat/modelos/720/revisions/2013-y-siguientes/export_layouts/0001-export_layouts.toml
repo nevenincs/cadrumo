@@ -1,0 +1,23 @@
+[[revisions."2013-y-siguientes".export_layouts]]
+id = "modelo-720-fichero-aeat"
+format = "fixed_width"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[[revisions."2013-y-siguientes".export_layouts.records]]
+id = "modelo-720-type-1"
+record_type = "type_1"
+order = 0
+encoding = "iso-8859-1"
+line_ending = "crlf"
+binding_record = "type_1"
+
+[[revisions."2013-y-siguientes".export_layouts.records]]
+id = "modelo-720-type-2"
+record_type = "type_2"
+order = 1
+encoding = "iso-8859-1"
+line_ending = "crlf"
+repeat = "binding_rows"
+binding_record = "type_2"
+

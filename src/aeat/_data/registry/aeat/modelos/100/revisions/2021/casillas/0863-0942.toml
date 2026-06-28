@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0942"
+number = "0942"
+label = "Por arrendamiento de vivienda habitual vinculado a determinadas operaciones de dación en pago (traslade el importe de la casilla [1170] del anexo B.9)"
+section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
+semantic_role = "irpf_deduccion_canarias_arrendamiento_vinculado"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

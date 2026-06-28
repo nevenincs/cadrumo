@@ -1,0 +1,84 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "00705"
+number = "00705"
+label = "Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Ingresos carácter financiero sociedades holding [00705]"
+section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
+data_type = "money"
+semantic_role = "is_pyg_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-007-casilla-00705", "modelo-200-page-015-casilla-00705"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00706"
+number = "00706"
+label = "Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Ingresos carácter financiero sociedades holding - De participaciones en instrumentos patrimonio [00706]"
+section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
+data_type = "money"
+semantic_role = "is_pyg_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-007-casilla-00706", "modelo-200-page-015-casilla-00706"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00707"
+number = "00707"
+label = "Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Ingresos carácter financiero sociedades holding - De valores negociables y otros instrumentos financieros [00707]"
+section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
+data_type = "money"
+semantic_role = "is_pyg_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-007-casilla-00707", "modelo-200-page-015b-casilla-00707"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00708"
+number = "00708"
+label = "Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Ingresos carácter financiero sociedades holding - Resto [00708]"
+section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
+data_type = "money"
+semantic_role = "is_pyg_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-007-casilla-00708", "modelo-200-page-016-casilla-00708"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00709"
+number = "00709"
+label = "Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Gastos por emisión de gases de efecto invernadero [00709]"
+section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
+data_type = "money"
+semantic_role = "is_pyg_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-007-casilla-00709", "modelo-200-page-016-casilla-00709"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00710"
+number = "00710"
+label = "Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Deterioro y resultados por enajenaciones del inmovilizado de las sociedades holding [00710]"
+section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
+data_type = "money"
+semantic_role = "is_pyg_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-007-casilla-00710", "modelo-200-page-016-casilla-00710"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00711"
+number = "00711"
+label = "Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Ingresos de carácter financiero de las entidades concesionarias de infraestructuras públicas [00711]"
+section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
+data_type = "money"
+semantic_role = "is_pyg_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-007-casilla-00711", "modelo-200-page-016b-casilla-00711"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

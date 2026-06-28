@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hac-2572-2003-art-6.html",
+  "source_sha256": "11567ca7da29819697f3a609bd5a8441234b629ed1bd61712c382a89471926c8",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Plazo de presentación de la declaración del Impuesto sobre Actividades Económicas.\nLa presentación de la declaración del Impuesto sobre Actividades Económicas, modelo 840, deberá realizarse, según se trate de declaraciones de alta, variación o baja, en los plazos regulados en los artículos 5, 6 y 7 del Real Decreto 243/1995, de 17 de febrero.",
+      "title": "Sexto.",
+      "section": "Sexto.",
+      "anchor": null
+    }
+  ]
+}

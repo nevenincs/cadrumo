@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "01841"
+number = "01841"
+label = "Entidad en régimen de atribución de rentas: asimetrías híbridas (art. 15 bis.12 LIS) - Aumento - Saldo pendiente a principio de ejercicio [01841]"
+section = ["entidad_en_regimen_de_atribucion_de_rentas_asimetr", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_asimetrias_hibridas_atribucion_rentas_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-01841"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01842"
+number = "01842"
+label = "Entidad en régimen de atribución de rentas: asimetrías híbridas (art. 15 bis.12 LIS) - Aumento - Correcciones del ejercicio - Permanentes [01842]"
+section = ["entidad_en_regimen_de_atribucion_de_rentas_asimetr", "aumento"]
+data_type = "money"
+semantic_role = "is_atribucion_rentas_hibridos_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-01842"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01843"
+number = "01843"
+label = "Entidad en régimen de atribución de rentas: asimetrías híbridas (art. 15 bis.12 LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [01843]"
+section = ["entidad_en_regimen_de_atribucion_de_rentas_asimetr", "aumento"]
+data_type = "money"
+semantic_role = "is_atribucion_rentas_hibridos_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-01843"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01844"
+number = "01844"
+label = "Entidad en régimen de atribución de rentas: asimetrías híbridas (art. 15 bis.12 LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [01844]"
+section = ["entidad_en_regimen_de_atribucion_de_rentas_asimetr", "aumento"]
+data_type = "money"
+semantic_role = "is_atribucion_rentas_hibridos_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-01844"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01845"
+number = "01845"
+label = "Entidad en régimen de atribución de rentas: asimetrías híbridas (art. 15 bis.12 LIS) - Aumento - Saldo pendiente a fin de ejercicio [01845]"
+section = ["entidad_en_regimen_de_atribucion_de_rentas_asimetr", "aumento"]
+data_type = "money"
+semantic_role = "is_atribucion_rentas_hibridos_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-01845"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

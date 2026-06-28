@@ -1,0 +1,12 @@
+[revisions."2019-y-siguientes"]
+label = "Modelo 115 vigente (Orden de 20 de noviembre de 2000, BOE-A-2000-21430), ejercicios 2019 y siguientes"
+valid_from = 2019-01-01
+period_selector = { year_from = 2019, periods = ["1T", "2T", "3T", "4T"] }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = [
+    "aeat-dr-115-2019-v13",
+    "aeat-modelo-115-obligaciones-retenedor",
+    "aeat-modelo-115-guia-censal",
+    "aeat-modelo-115-180-folleto-actividades",
+]
+

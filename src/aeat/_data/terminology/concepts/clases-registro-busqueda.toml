@@ -1,0 +1,43 @@
+# Terminology Handbook concept fragment.
+
+[concept]
+concept_id = "clases-registro-busqueda"
+domain = "concepto"
+lifecycle = "deprecated"
+broader = ["manual-terminologia"]
+related = ["proyeccion-busqueda"]
+created_at = 2026-06-12
+updated_at = 2026-06-12
+
+[language.es]
+short_description = "Las categorias de resultado que la busqueda offline combina y rankea juntas."
+definition = "Conjunto tipado de registros que la busqueda de documentacion combina: tarjetas de concepto del Handbook, proyecciones de casilla desde el registro, superficies CLI y paginas documentales. En ADR D4 y D5, estas clases permiten que una consulta devuelva significado, casillas, grounding legal y navegacion en un unico ranking."
+scope_note = "La clase de registro no es una clase Python concreta solamente; es la categoria semantica que viaja en los metadatos de busqueda."
+
+[language.es.source]
+citation = "2026-06-10-docs-terminology-search-adr, decisiones D4 y D5."
+authority = "vaultspec"
+
+[[language.es.term]]
+label = "clases de registro de busqueda"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[[language.es.term]]
+label = "record kinds"
+term_status = "admitted"
+part_of_speech = "noun"
+
+[language.en]
+short_description = "The result categories that offline search combines and ranks together."
+
+[[language.en.term]]
+label = "search record kinds"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[language.ca]
+short_description = "Les categories de resultat que la cerca offline combina i ordena conjuntament."
+
+[language.hu]
+short_description = "Az eredmenykategoriak, amelyeket az offline kereses egyutt rangsorol."

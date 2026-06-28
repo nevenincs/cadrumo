@@ -1,0 +1,1448 @@
+/* aeat docs design system — a 2026 theme layer over the Furo skeleton.
+ *
+ * Sections:
+ *   1. Fonts                 6. Sidebar + page toc
+ *   2. Design tokens         7. Content typography
+ *   3. Base + motion         8. Code surfaces
+ *   4. Site header           9. Components (admonitions, cards, tabs, tables)
+ *   5. Broadcast strip      10. Footer, palette, responsive
+ */
+
+/* ── 1. Fonts ─────────────────────────────────────────────────────────── */
+
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("geist-sans-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("geist-sans-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("geist-sans-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("geist-sans-latin-700-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("geist-mono-latin-normal.woff2") format("woff2-variations");
+}
+
+/* ── 2. Design tokens ─────────────────────────────────────────────────── */
+
+:root {
+  --aeat-header-h: 3.5rem;
+  --aeat-broadcast-h: 2.375rem;
+  --aeat-radius-s: 6px;
+  --aeat-radius-m: 10px;
+  --aeat-radius-l: 14px;
+  --aeat-page-max: 100rem;
+  --aeat-accent-warning: light-dark(#b45309, #fbbf24);
+  --aeat-accent-success: light-dark(#047857, #34d399);
+  --aeat-accent-danger: light-dark(#dc2626, #f87171);
+  --aeat-shadow-pop:
+    0 0 0 1px light-dark(rgb(0 0 0 / 5%), rgb(255 255 255 / 6%)),
+    0 16px 48px -12px rgb(0 0 0 / 30%);
+
+  /* sphinx-design token bridge */
+  --sd-color-primary: var(--color-brand-content, #0068d6);
+  --sd-color-primary-highlight: var(--color-link--hover, #0054ad);
+  --sd-color-primary-text: #ffffff;
+  --sd-color-secondary: var(--color-foreground-secondary, #52525b);
+  --sd-color-secondary-highlight: var(--color-foreground-primary, #18181b);
+  --sd-color-secondary-text: #ffffff;
+  --sd-color-shadow: transparent;
+  --sd-color-card-border: var(--color-card-border);
+  --sd-color-card-border-hover: var(--color-foreground-border);
+  --sd-color-card-background: var(--color-card-background);
+  --sd-color-card-text: inherit;
+  --sd-color-card-header: transparent;
+  --sd-color-card-footer: transparent;
+  --sd-color-tabs-label-active: var(--color-brand-content);
+  --sd-color-tabs-label-hover: var(--color-brand-content);
+  --sd-color-tabs-label-inactive: var(--color-foreground-secondary);
+  --sd-color-tabs-underline-active: var(--color-brand-content);
+  --sd-color-tabs-underline-hover: var(--color-link-underline--hover);
+  --sd-color-tabs-underline-inactive: transparent;
+  --sd-color-tabs-overline: var(--color-background-border);
+  --sd-color-tabs-underline: var(--color-background-border);
+}
+
+body[data-theme="light"] {
+  color-scheme: light;
+}
+
+body[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+body[data-theme="auto"] {
+  color-scheme: light dark;
+}
+
+/* ── 3. Base + motion ─────────────────────────────────────────────────── */
+
+@view-transition {
+  navigation: auto;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--aeat-header-h) + 1.25rem);
+  text-rendering: optimizeLegibility;
+}
+
+/* Furo pins body to the viewport height, which truncates the sticky
+ * containing block for the site header after one screen of scroll. */
+body {
+  height: auto;
+  min-height: 100%;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-brand-content) 22%, transparent);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+.sd-card:focus-within {
+  outline: 2px solid var(--color-brand-content);
+  outline-offset: 2px;
+}
+
+kbd:not(.compound) {
+  background: var(--color-background-secondary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--aeat-radius-s);
+  box-shadow: none;
+  color: var(--color-foreground-secondary);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.72em;
+  padding: 0.12em 0.42em;
+}
+
+/* Furo's stock mobile chrome is replaced by the aeat header. */
+.mobile-header {
+  display: none !important;
+}
+
+.back-to-top {
+  border: 1px solid var(--color-background-border);
+  border-radius: 999px;
+  box-shadow: 0 6px 20px -8px rgb(0 0 0 / 25%);
+  top: calc(var(--aeat-header-h) + 0.75rem);
+}
+
+/* ── 4. Site header ───────────────────────────────────────────────────── */
+
+.announcement {
+  background: transparent;
+  border-bottom: none;
+  color: var(--color-foreground-primary);
+  display: block;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+  padding: 0;
+  position: sticky;
+  top: calc(-1 * var(--aeat-broadcast-h));
+  z-index: 70;
+}
+
+html.aeat-broadcast-dismissed .announcement {
+  top: 0;
+}
+
+.announcement + .page {
+  min-height: 100%;
+}
+
+.announcement-content {
+  color: inherit;
+  display: block;
+  max-width: none;
+  min-width: 0;
+  overflow: visible;
+  padding: 0;
+  text-align: inherit;
+  white-space: normal;
+  width: 100%;
+}
+
+.aeat-header {
+  -webkit-backdrop-filter: blur(12px) saturate(1.6);
+  backdrop-filter: blur(12px) saturate(1.6);
+  background: color-mix(in srgb, var(--color-background-primary) 78%, transparent);
+  border-bottom: 1px solid var(--color-background-border);
+  height: var(--aeat-header-h);
+}
+
+.aeat-header-inner {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  gap: 1rem;
+  height: 100%;
+  margin: 0 auto;
+  max-width: var(--aeat-page-max);
+  padding: 0 1.25rem;
+}
+
+.aeat-header-burger,
+.aeat-header-toc {
+  align-items: center;
+  border-radius: var(--aeat-radius-s);
+  color: var(--color-foreground-secondary);
+  cursor: pointer;
+  display: none;
+  height: 2.1rem;
+  justify-content: center;
+  width: 2.1rem;
+}
+
+.aeat-header-burger:hover,
+.aeat-header-toc:hover {
+  background: var(--color-background-hover);
+  color: var(--color-foreground-primary);
+}
+
+.aeat-header-burger svg,
+.aeat-header-toc svg {
+  height: 1.2rem;
+  width: 1.2rem;
+}
+
+.aeat-header-brand:any-link,
+.aeat-header-brand:visited {
+  align-items: center;
+  color: var(--color-foreground-primary);
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.55rem;
+  text-decoration: none;
+}
+
+.aeat-header-mark {
+  border-radius: 7px;
+  display: block;
+  height: 1.5rem;
+  width: 1.5rem;
+}
+
+body[data-theme="dark"] .aeat-header-mark {
+  box-shadow: 0 0 0 1px var(--color-background-border);
+}
+
+.aeat-header-wordmark {
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.aeat-header-wordmark-suffix {
+  color: var(--color-foreground-muted);
+  font-weight: 450;
+}
+
+.aeat-header-nav {
+  align-items: center;
+  display: flex;
+  gap: 0.15rem;
+  margin-left: 0.75rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.aeat-header-nav-link:any-link {
+  border-radius: var(--aeat-radius-s);
+  color: var(--color-foreground-secondary);
+  font-size: 0.84rem;
+  font-weight: 500;
+  padding: 0.38rem 0.65rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.aeat-header-nav-link:hover {
+  background: var(--color-background-hover);
+  color: var(--color-foreground-primary);
+}
+
+.aeat-header-nav-link.is-active:any-link {
+  color: var(--color-brand-content);
+}
+
+.aeat-header-actions {
+  align-items: center;
+  display: flex;
+  gap: 0.3rem;
+  margin-left: auto;
+}
+
+.aeat-header-search,
+.aeat-header-icon:any-link {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--aeat-radius-s);
+  color: var(--color-foreground-secondary);
+  cursor: pointer;
+  display: flex;
+  height: 2.1rem;
+  justify-content: center;
+  padding: 0;
+  width: 2.1rem;
+}
+
+.aeat-header-search:hover,
+.aeat-header-icon:hover {
+  background: var(--color-background-hover);
+  color: var(--color-foreground-primary);
+}
+
+.aeat-header-search svg,
+.aeat-header-icon svg {
+  height: 1.05rem;
+  width: 1.05rem;
+}
+
+.aeat-header-toggle .theme-toggle {
+  align-items: center;
+  border-radius: var(--aeat-radius-s);
+  color: var(--color-foreground-secondary);
+  display: flex;
+  height: 2.1rem;
+  justify-content: center;
+  padding: 0;
+  width: 2.1rem;
+}
+
+.aeat-header-toggle .theme-toggle:hover {
+  background: var(--color-background-hover);
+  color: var(--color-foreground-primary);
+}
+
+.aeat-header-toggle .theme-toggle svg {
+  height: 1.1rem;
+  width: 1.1rem;
+}
+
+/* The header owns the theme toggle; drop the duplicate above the article. */
+.theme-toggle-container.theme-toggle-content {
+  display: none;
+}
+
+/* ── 5. Broadcast strip ───────────────────────────────────────────────── */
+
+.aeat-broadcast {
+  align-items: center;
+  background: var(--color-background-secondary);
+  border-bottom: 1px solid var(--color-background-border);
+  box-sizing: border-box;
+  display: flex;
+  font-size: 0.78rem;
+  height: var(--aeat-broadcast-h);
+  justify-content: center;
+  margin: 0;
+  max-width: none;
+  padding: 0 2.6rem 0 1rem;
+  position: relative;
+}
+
+html.aeat-broadcast-dismissed .aeat-broadcast {
+  display: none;
+}
+
+.aeat-broadcast-item {
+  align-items: center;
+  display: flex;
+  gap: 0.65rem;
+  line-height: 1.3;
+  min-height: 0;
+  min-width: 0;
+  text-align: left;
+}
+
+.aeat-broadcast-label {
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--aeat-accent-warning) 38%, transparent);
+  border-radius: 999px;
+  color: var(--aeat-accent-warning);
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 0.64rem;
+  font-weight: 600;
+  gap: 0.32rem;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  padding: 0.26rem 0.55rem;
+  text-transform: uppercase;
+}
+
+.aeat-broadcast-label::before {
+  background: var(--aeat-accent-warning);
+  border-radius: 999px;
+  content: "";
+  height: 0.36rem;
+  width: 0.36rem;
+}
+
+.aeat-broadcast-message {
+  color: var(--color-foreground-secondary);
+  font-weight: 480;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aeat-broadcast-links {
+  align-items: center;
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 0.85rem;
+}
+
+.aeat-broadcast-link:any-link {
+  color: var(--color-link);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.aeat-broadcast-link:hover,
+.aeat-broadcast-link:visited:hover {
+  color: var(--color-link--hover);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.aeat-broadcast-dismiss {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--aeat-radius-s);
+  color: var(--color-foreground-muted);
+  cursor: pointer;
+  display: flex;
+  height: 1.6rem;
+  justify-content: center;
+  padding: 0;
+  position: absolute;
+  right: 0.7rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.6rem;
+}
+
+.aeat-broadcast-dismiss:hover {
+  background: var(--color-background-hover);
+  color: var(--color-foreground-primary);
+}
+
+.aeat-broadcast-dismiss svg {
+  height: 0.85rem;
+  width: 0.85rem;
+}
+
+/* ── 6. Layout, sidebar, page toc ─────────────────────────────────────── */
+
+@media (min-width: 67em) {
+  .page {
+    margin: 0 auto;
+    max-width: var(--aeat-page-max);
+  }
+
+  .sidebar-drawer {
+    background: transparent;
+    border-right: none;
+    justify-content: flex-start;
+    min-width: 0;
+    width: clamp(15rem, 18vw, 17.5rem);
+  }
+
+  .main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .content {
+    box-sizing: border-box;
+    margin: 0 auto;
+    max-width: 53rem;
+    padding: 0 clamp(1.5rem, 3.5vw, 3.25rem);
+    width: 100%;
+  }
+
+  .toc-drawer {
+    width: clamp(13rem, 16vw, 16rem);
+  }
+}
+
+.sidebar-sticky {
+  height: calc(100vh - var(--aeat-header-h));
+  top: var(--aeat-header-h);
+}
+
+.sidebar-container {
+  width: 100%;
+}
+
+.sidebar-scroll {
+  scrollbar-color: var(--color-background-border) transparent;
+  scrollbar-width: thin;
+}
+
+.aeat-sidebar-search {
+  padding: 1.15rem 0.95rem 0.4rem;
+}
+
+.aeat-search-trigger {
+  align-items: center;
+  background: var(--color-background-secondary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--aeat-radius-m);
+  color: var(--color-foreground-muted);
+  cursor: pointer;
+  display: flex;
+  font-family: inherit;
+  font-size: 0.82rem;
+  gap: 0.5rem;
+  padding: 0.48rem 0.65rem;
+  transition: border-color 140ms ease, color 140ms ease;
+  width: 100%;
+}
+
+.aeat-search-trigger:hover {
+  border-color: var(--color-foreground-border);
+  color: var(--color-foreground-secondary);
+}
+
+.aeat-search-trigger svg {
+  flex: 0 0 auto;
+  height: 0.85rem;
+  width: 0.85rem;
+}
+
+.aeat-search-trigger-label {
+  flex: 1;
+  text-align: left;
+}
+
+.aeat-search-trigger-kbd {
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--aeat-radius-s);
+  color: var(--color-foreground-muted);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.62rem;
+  line-height: 1;
+  padding: 0.22rem 0.4rem;
+  white-space: nowrap;
+}
+
+.sidebar-tree {
+  font-size: 0.84rem;
+}
+
+.sidebar-tree p.caption {
+  color: var(--color-foreground-muted);
+  font-size: 0.67rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  margin: 1.5rem 0 0.4rem;
+  padding-left: 0.95rem;
+  text-transform: uppercase;
+}
+
+.sidebar-tree .reference {
+  border-radius: var(--aeat-radius-s);
+  line-height: 1.45;
+  margin: 0.14rem 0.45rem;
+  padding: 0.34rem 0.55rem;
+}
+
+.sidebar-tree .reference:hover {
+  background: var(--color-sidebar-item-background--hover);
+  color: var(--color-foreground-primary);
+}
+
+.sidebar-tree .current-page > .reference {
+  background: var(--color-sidebar-item-background--current);
+  color: var(--color-brand-content);
+  font-weight: 550;
+}
+
+.sidebar-tree label {
+  border-radius: var(--aeat-radius-s);
+  color: var(--color-foreground-muted);
+}
+
+.sidebar-tree .current > .reference {
+  color: var(--color-foreground-primary);
+}
+
+.muted-link:visited,
+.sidebar-container a:visited,
+.toc-drawer a:visited,
+.table-of-contents a:visited {
+  color: var(--color-sidebar-link-text);
+}
+
+.toc-sticky {
+  height: calc(100vh - var(--aeat-header-h));
+  padding-top: 1.15rem;
+  top: var(--aeat-header-h);
+}
+
+.toc-scroll {
+  scrollbar-color: var(--color-background-border) transparent;
+  scrollbar-width: thin;
+}
+
+.toc-title {
+  color: var(--color-foreground-muted);
+  font-size: 0.67rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.toc-tree {
+  border-left: 1px solid var(--color-background-border);
+  font-size: 0.8rem;
+  padding-left: 0;
+}
+
+.toc-tree li.scroll-current > .reference {
+  color: var(--color-toc-item-text--active);
+  font-weight: 550;
+  position: relative;
+}
+
+.toc-tree li.scroll-current > .reference::before {
+  background: var(--color-toc-item-text--active);
+  border-radius: 999px;
+  bottom: 0.2em;
+  content: "";
+  left: -1.05rem;
+  position: absolute;
+  top: 0.2em;
+  width: 2px;
+}
+
+/* ── 7. Content typography ────────────────────────────────────────────── */
+
+.content {
+  font-feature-settings:
+    "kern" 1,
+    "liga" 1;
+  line-height: 1.7;
+}
+
+.aeat-breadcrumbs {
+  align-items: center;
+  color: var(--color-foreground-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  gap: 0.45rem;
+  margin: 0 0 1.1rem;
+}
+
+.aeat-breadcrumbs a:any-link {
+  color: var(--color-foreground-muted);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.aeat-breadcrumbs a:hover {
+  color: var(--color-foreground-primary);
+}
+
+.aeat-breadcrumbs-sep {
+  color: var(--color-background-border);
+  user-select: none;
+}
+
+.aeat-breadcrumbs-current {
+  color: var(--color-foreground-secondary);
+  font-weight: 500;
+}
+
+.content h1 {
+  font-size: clamp(1.9rem, 1.45rem + 1.4vw, 2.5rem);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  margin-bottom: 1.1rem;
+}
+
+.content h2 {
+  font-size: 1.45rem;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  line-height: 1.3;
+  margin-top: 2.7rem;
+}
+
+.content h3 {
+  font-size: 1.13rem;
+  font-weight: 600;
+  letter-spacing: -0.008em;
+  margin-top: 2rem;
+}
+
+.content h4,
+.content h5 {
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.content p,
+.content li {
+  max-width: 72ch;
+}
+
+.content a {
+  font-weight: 500;
+  text-decoration-thickness: 0.07em;
+  text-underline-offset: 0.2em;
+}
+
+.content a:hover,
+.content a:visited:hover {
+  color: var(--color-link--hover);
+  text-decoration-color: var(--color-link-underline--hover);
+}
+
+/* ── 8. Code surfaces ─────────────────────────────────────────────────── */
+
+.content code,
+.content kbd,
+.content samp,
+.content pre,
+.content .docutils.literal,
+.content .pre {
+  font-family: var(--font-stack--monospace);
+  font-feature-settings:
+    "liga" 0,
+    "clig" 0,
+    "calt" 0,
+    "dlig" 0,
+    "kern" 0;
+  font-kerning: none;
+  font-variant-ligatures: no-common-ligatures no-discretionary-ligatures no-contextual;
+  letter-spacing: 0;
+  text-rendering: geometricPrecision;
+}
+
+/* Inline code rides the text line: tint only, no chip border. */
+.content code.docutils.literal,
+.content .docutils.literal {
+  background: var(--color-inline-code-background);
+  border: none;
+  border-radius: 5px;
+  box-decoration-break: clone;
+  color: var(--color-foreground-primary);
+  display: inline;
+  font-size: 0.86em;
+  font-weight: 500;
+  padding: 0.14em 0.34em;
+  -webkit-box-decoration-break: clone;
+}
+
+.content .docutils.literal .pre,
+body .docutils.literal span.pre {
+  box-decoration-break: clone;
+  display: inline;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  unicode-bidi: isolate;
+  white-space: normal;
+  -webkit-box-decoration-break: clone;
+}
+
+.content a .docutils.literal {
+  color: inherit;
+}
+
+/* Definition lists (CLI flags / option references) keep crisp chips. */
+.content dl.simple {
+  margin: 1.1rem 0 1.45rem;
+}
+
+.content dl.simple > dt {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  line-height: 1.45;
+  margin-top: 0.95rem;
+  max-width: 72ch;
+}
+
+.content dl.simple > dt:first-child {
+  margin-top: 0;
+}
+
+.content dl.simple > dt code.docutils.literal,
+.content dl.simple > dt .docutils.literal {
+  background: var(--color-background-secondary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--aeat-radius-s);
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: normal;
+  padding: 0.12rem 0.46rem;
+  white-space: nowrap;
+}
+
+.content dl.simple > dt .docutils.literal .pre,
+.content dl.simple > dt .docutils.literal span.pre {
+  display: inline-block;
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+.content dl.simple > dd {
+  border-left: 2px solid var(--color-background-border);
+  color: var(--color-foreground-secondary);
+  line-height: 1.6;
+  margin: 0.4rem 0 0.95rem;
+  max-width: 72ch;
+  padding-left: 0.9rem;
+}
+
+.content .highlight {
+  background: var(--color-inline-code-background);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--aeat-radius-m);
+  margin: 1.1rem 0 1.4rem;
+  overflow: hidden;
+}
+
+.content .highlight pre {
+  background: transparent;
+  color: var(--color-code-foreground);
+  font-size: 0.85rem;
+  line-height: 1.7;
+  margin: 0;
+  overflow-x: auto;
+  padding: 1rem 1.15rem;
+  scrollbar-color: var(--color-background-border) transparent;
+  scrollbar-width: thin;
+  tab-size: 2;
+  white-space: pre;
+}
+
+.content .highlight .gp {
+  color: var(--color-brand-content);
+  font-weight: 600;
+  user-select: none;
+}
+
+/* Client-side command decoration (aeat-docs.js): the command head and its
+ * flags, which Pygments leaves as plain text in shell transcripts. */
+.content .highlight .aeat-tok-cmd {
+  color: var(--color-brand-content);
+  font-weight: 550;
+}
+
+.content .highlight .aeat-tok-flag {
+  color: light-dark(#7c3aed, #c4b5fd);
+}
+
+.content .highlight .go {
+  color: var(--color-foreground-secondary);
+}
+
+.content .highlight .w {
+  display: inline;
+  padding-inline-end: 0;
+  white-space: pre;
+}
+
+.highlight button.copybtn {
+  background: color-mix(in srgb, var(--color-background-primary) 80%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--aeat-radius-s);
+  color: var(--color-foreground-secondary);
+  transition: opacity 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.highlight button.copybtn:hover {
+  border-color: var(--color-foreground-border);
+  color: var(--color-foreground-primary);
+}
+
+.highlight button.copybtn.success {
+  color: var(--aeat-accent-success);
+}
+
+/* Mermaid diagrams */
+.content pre.mermaid,
+.content .mermaid {
+  background: transparent;
+  border: none;
+  display: flex;
+  justify-content: center;
+  margin: 1.4rem 0 1.6rem;
+}
+
+/* ── 9. Components ────────────────────────────────────────────────────── */
+
+.content .admonition,
+.content .topic {
+  --aeat-adm-accent: var(--color-foreground-secondary);
+  background: color-mix(in srgb, var(--aeat-adm-accent) 6%, var(--color-background-primary));
+  border: 1px solid color-mix(in srgb, var(--aeat-adm-accent) 28%, transparent);
+  border-radius: var(--aeat-radius-m);
+  box-shadow: none;
+  font-size: 0.92rem;
+  padding: 0.45rem 1.1rem 0.7rem;
+}
+
+.content .admonition.note,
+.content .admonition.important,
+.content .admonition.seealso {
+  --aeat-adm-accent: var(--color-brand-content);
+}
+
+.content .admonition.warning,
+.content .admonition.caution,
+.content .admonition.attention {
+  --aeat-adm-accent: var(--aeat-accent-warning);
+}
+
+.content .admonition.tip,
+.content .admonition.hint {
+  --aeat-adm-accent: var(--aeat-accent-success);
+}
+
+.content .admonition.danger,
+.content .admonition.error {
+  --aeat-adm-accent: var(--aeat-accent-danger);
+}
+
+.content .admonition .admonition-title,
+.content .topic .topic-title {
+  background: transparent !important;
+  color: var(--aeat-adm-accent) !important;
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin: 0 -1.1rem 0.35rem;
+  padding-bottom: 0;
+  padding-top: 0.65rem;
+}
+
+.content .admonition .admonition-title::before {
+  background-color: var(--aeat-adm-accent) !important;
+}
+
+.content .admonition > :last-child {
+  margin-bottom: 0.35rem;
+}
+
+.sd-card {
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.sd-card a:any-link,
+a.sd-card:any-link,
+.content .sd-card a:visited {
+  color: inherit;
+  text-decoration: none;
+}
+
+.sd-card-title {
+  color: var(--color-foreground-primary);
+}
+
+.aeat-route-grid {
+  margin-top: 1rem;
+}
+
+.sd-card.aeat-route-card,
+.sd-card.aeat-status-card {
+  background: var(--color-card-background);
+  border: 1px solid var(--color-card-border);
+}
+
+.sd-card.aeat-route-card {
+  min-height: 0;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    translate 160ms ease;
+}
+
+.sd-card.aeat-route-card:hover {
+  background: var(--color-background-secondary);
+  border-color: color-mix(in srgb, var(--color-brand-content) 45%, var(--color-card-border));
+  box-shadow: 0 10px 32px -16px rgb(0 0 0 / 28%);
+  translate: 0 -2px;
+}
+
+.sd-card.aeat-route-card .sd-card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.sd-card.aeat-route-card .sd-card-text {
+  color: var(--color-foreground-secondary);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.sd-card.aeat-route-card .sd-card-footer {
+  background: transparent;
+  border-top: 0;
+  padding-top: 0;
+}
+
+.sd-badge {
+  background: transparent !important;
+  border-color: var(--color-background-border) !important;
+  border-radius: 999px;
+  color: var(--color-foreground-secondary) !important;
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.sd-tab-set {
+  border-radius: 0;
+}
+
+.sd-tab-content {
+  background: transparent;
+  border-color: var(--color-background-border);
+  border-radius: 0 0 var(--aeat-radius-m) var(--aeat-radius-m);
+}
+
+.sd-tab-label {
+  font-size: 0.86rem;
+  font-weight: 550;
+  letter-spacing: 0;
+}
+
+.content table.docutils {
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--aeat-radius-m);
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.875rem;
+  overflow: hidden;
+}
+
+.content table.docutils th {
+  background: var(--color-background-secondary);
+  border-bottom: 1px solid var(--color-background-border);
+  color: var(--color-foreground-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.55rem 0.9rem;
+  text-align: left;
+}
+
+.content table.docutils td {
+  border-bottom: 1px solid var(--color-background-border);
+  border-left: none;
+  border-right: none;
+  padding: 0.55rem 0.9rem;
+}
+
+.content table.docutils tr:last-child td {
+  border-bottom: none;
+}
+
+.content table.docutils tbody tr:hover td {
+  background: var(--color-background-hover);
+}
+
+/* Prev / next page navigation as cards. */
+.related-pages {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  margin-top: 2.5rem;
+}
+
+.related-pages a.next-page,
+.related-pages a.prev-page {
+  border: 1px solid var(--color-background-border);
+  border-radius: 12px;
+  margin: 0;
+  max-width: none;
+  padding: 0.85rem 1.05rem;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.related-pages a.prev-page {
+  grid-row: 1;
+}
+
+.related-pages a.next-page {
+  grid-column: -2;
+  grid-row: 1;
+}
+
+.related-pages a.next-page:hover,
+.related-pages a.prev-page:hover {
+  background: var(--color-background-secondary);
+  border-color: color-mix(in srgb, var(--color-brand-content) 45%, var(--color-background-border));
+}
+
+.related-pages .page-info .context {
+  color: var(--color-foreground-muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.related-pages .page-info .title {
+  color: var(--color-foreground-primary);
+  font-size: 0.92rem;
+  font-weight: 550;
+}
+
+/* ── 10. Footer, palette, responsive ──────────────────────────────────── */
+
+.bottom-of-page {
+  border-top: 1px solid var(--color-background-border);
+  color: var(--color-foreground-muted);
+  font-size: 0.78rem;
+}
+
+.aeat-site-footer {
+  border-top: 1px solid var(--color-background-border);
+  margin: 2.8rem 0 0;
+  padding: 1.9rem 0 0.6rem;
+}
+
+.aeat-site-footer-intro {
+  margin-bottom: 1.5rem;
+}
+
+.aeat-site-footer-kicker,
+.aeat-site-footer-title {
+  color: var(--color-foreground-muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.45rem;
+  text-transform: uppercase;
+}
+
+.aeat-site-footer-note {
+  color: var(--color-foreground-secondary);
+  font-size: 0.86rem;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 70ch;
+}
+
+.aeat-site-footer-grid {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+
+.aeat-site-footer-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.aeat-site-footer-group li + li {
+  margin-top: 0.45rem;
+}
+
+.aeat-site-footer-group a:any-link {
+  color: var(--color-foreground-secondary);
+  font-size: 0.84rem;
+  font-weight: 450;
+  text-decoration: none;
+}
+
+.aeat-site-footer-group a:hover,
+.aeat-site-footer-group a:visited:hover {
+  color: var(--color-foreground-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* Command palette */
+
+.aeat-palette {
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--aeat-radius-l);
+  box-shadow: var(--aeat-shadow-pop);
+  color: var(--color-foreground-primary);
+  margin: min(14vh, 9rem) auto auto;
+  max-width: calc(100vw - 2rem);
+  padding: 0;
+  width: 37.5rem;
+}
+
+.aeat-palette::backdrop {
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  background: rgb(0 0 0 / 32%);
+}
+
+.aeat-palette-head {
+  align-items: center;
+  border-bottom: 1px solid var(--color-background-border);
+  display: flex;
+  gap: 0.65rem;
+  padding: 0.85rem 1.05rem;
+}
+
+.aeat-palette-head svg {
+  color: var(--color-foreground-muted);
+  flex: 0 0 auto;
+  height: 1rem;
+  width: 1rem;
+}
+
+.aeat-palette-input {
+  background: transparent;
+  border: none;
+  color: var(--color-foreground-primary);
+  flex: 1;
+  font-family: inherit;
+  font-size: 0.98rem;
+  outline: none;
+  padding: 0;
+}
+
+.aeat-palette-input::placeholder {
+  color: var(--color-foreground-muted);
+}
+
+.aeat-palette-esc {
+  flex: 0 0 auto;
+}
+
+.aeat-palette-list {
+  list-style: none;
+  margin: 0;
+  max-height: min(50vh, 22rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.45rem;
+  scrollbar-color: var(--color-background-border) transparent;
+  scrollbar-width: thin;
+}
+
+.aeat-palette-item a:any-link {
+  border-radius: var(--aeat-radius-s);
+  color: var(--color-foreground-secondary);
+  display: block;
+  padding: 0.5rem 0.7rem;
+  text-decoration: none;
+}
+
+.aeat-palette-item-title {
+  color: var(--color-foreground-primary);
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.aeat-palette-item-crumb {
+  color: var(--color-foreground-muted);
+  display: block;
+  font-size: 0.72rem;
+  margin-top: 0.06rem;
+}
+
+.aeat-palette-item.is-selected a {
+  background: var(--color-background-hover);
+}
+
+.aeat-palette-item.is-selected .aeat-palette-item-title {
+  color: var(--color-brand-content);
+}
+
+/* Pagefind term-card tiers: a kind badge on the crumb and a one-line excerpt
+ * of the matched description. The badge colour distinguishes the surface
+ * (term / casilla / command) at a glance. */
+.aeat-palette-item-excerpt {
+  color: var(--color-foreground-muted);
+  display: block;
+  font-size: 0.72rem;
+  margin-top: 0.12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aeat-palette-item--concept .aeat-palette-item-crumb::before,
+.aeat-palette-item--casilla .aeat-palette-item-crumb::before,
+.aeat-palette-item--cli .aeat-palette-item-crumb::before {
+  border-radius: var(--aeat-radius-s);
+  content: "";
+  display: inline-block;
+  height: 0.5rem;
+  margin-right: 0.4rem;
+  width: 0.5rem;
+}
+
+.aeat-palette-item--concept .aeat-palette-item-crumb::before {
+  background: var(--color-brand-content);
+}
+
+.aeat-palette-item--casilla .aeat-palette-item-crumb::before {
+  background: var(--color-foreground-secondary);
+}
+
+.aeat-palette-item--cli .aeat-palette-item-crumb::before {
+  background: var(--color-foreground-muted);
+}
+
+.aeat-palette-empty {
+  color: var(--color-foreground-muted);
+  font-size: 0.85rem;
+  padding: 1.1rem 0.95rem;
+}
+
+.aeat-palette-foot {
+  border-top: 1px solid var(--color-background-border);
+  color: var(--color-foreground-muted);
+  display: flex;
+  font-size: 0.68rem;
+  gap: 1rem;
+  padding: 0.5rem 1.05rem;
+}
+
+/* Responsive */
+
+@media (max-width: 67em) {
+  /* Slide-in drawers float above the sticky header on a solid surface. */
+  .sidebar-drawer {
+    background: var(--color-background-primary);
+    border-right: 1px solid var(--color-background-border);
+    z-index: 90;
+  }
+
+  .toc-drawer {
+    background: var(--color-background-primary);
+    border-left: 1px solid var(--color-background-border);
+    z-index: 90;
+  }
+
+  .sidebar-overlay,
+  .toc-overlay {
+    z-index: 80;
+  }
+
+  .sidebar-sticky,
+  .toc-sticky {
+    height: 100vh;
+    top: 0;
+  }
+
+  .aeat-header-burger,
+  .aeat-header-toc {
+    display: flex;
+  }
+
+  .aeat-header-toc.no-toc {
+    display: none;
+  }
+
+  .aeat-header-nav {
+    display: none;
+  }
+
+  .aeat-header-inner {
+    gap: 0.6rem;
+    padding: 0 0.85rem;
+  }
+
+  .aeat-broadcast {
+    padding-left: 0.85rem;
+  }
+
+  .aeat-broadcast-links {
+    display: none;
+  }
+
+  .content .highlight pre {
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    word-break: normal;
+  }
+}
+
+@media (max-width: 40em) {
+  .aeat-broadcast-message {
+    font-size: 0.74rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  .sd-card.aeat-route-card,
+  .related-pages a.next-page,
+  .related-pages a.prev-page,
+  .aeat-search-trigger,
+  .highlight button.copybtn {
+    transition: none;
+  }
+
+  .sd-card.aeat-route-card:hover {
+    translate: none;
+  }
+}
+
+@media print {
+  .announcement,
+  .aeat-header,
+  .aeat-broadcast {
+    display: none;
+  }
+}

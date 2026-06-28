@@ -1,0 +1,9 @@
+[[revisions."2024".casillas]]
+id = "1033"
+number = "1033"
+label = "Código de la instalación facilitado por la Oficina Virtual de Industria:"
+section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
+data_type = "text"
+semantic_role = "irpf_deduccion_galicia_codigo_instalacion"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

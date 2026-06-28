@@ -3,6 +3,7 @@ tags:
   - "#plan"
   - "#pytest-markers"
 date: 2026-04-17
+modified: '2026-04-17'
 related:
   - "[[2026-04-17-pytest-markers-adr]]"
   - "[[2026-04-17-pytest-markers-research]]"
@@ -12,14 +13,7 @@ related:
   - "[[2026-04-12-base-module-structure-adr]]"
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - `[[wiki-links]]` are ONLY for .vault/ documents in the related: field above.
-     - NEVER use `[[wiki-links]]` or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `pytest-markers` `phase-1` plan
 
@@ -55,8 +49,6 @@ Deterministic conclusion: the canonical hook host is a new repo-root `conftest.p
 
 ## Tasks
 
-<!-- IMPORTANT: This document must be updated between execution runs to
-     track progress. -->
 
 - `Phase 1: marker registration`
   1. `Step 1.1: rewrite pyproject.toml marker table and addopts`

@@ -1,0 +1,10 @@
+[[revisions."2023".casillas]]
+id = "0563"
+number = "0563"
+label = "Por alquiler de la vivienda habitual. Régimen transitorio (traslade el importe de esta misma casilla del anexo A.1): Parte autonómica"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_deduccion_alquiler_vivienda_habitual_autonomica"
+input_kind = "computed"
+formula = "renta-2023-deduccion-alquiler-vivienda-autonomica-50-porciento"
+legal_refs = ["ley-35-2006:dt-15"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

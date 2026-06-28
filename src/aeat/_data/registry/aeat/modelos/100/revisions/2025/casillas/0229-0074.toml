@@ -1,0 +1,9 @@
+[[revisions."2025".casillas]]
+id = "0074"
+number = "0074"
+label = "Arrendamiento como inmueble accesorio"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+data_type = "boolean"
+semantic_role = "irpf_inmueble_arrendamiento_accesorio_flag"
+legal_refs = ["ley-35-2006:art-22", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

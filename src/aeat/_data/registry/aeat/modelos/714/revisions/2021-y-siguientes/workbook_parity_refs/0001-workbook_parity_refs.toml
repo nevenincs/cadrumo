@@ -1,0 +1,16 @@
+[[revisions."2021-y-siguientes".workbook_parity_refs]]
+id = "modelo-714-dr"
+workbook_source = "boe-modelo-714-layout"
+fixture_id = "modelo-714-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30"]
+source_refs = ["boe-modelo-714-layout"]
+
+# Record-design-layout parity only (Phase A, no calc): the 714 casilla schema is
+# authored from the AEAT diseño de registro DR714_2025.xls
+# (corpus/aeat_official/disenos_registro/modelo_714/, Orden HAC/1023/2021). No
+# formula runner is required at Phase A — runner_required = false — because the
+# casillas are input_kind = manual and no cuota is computed yet. The Phase-B calc
+# engine (tarifa art. 30 lookup_bracket + límite art. 31) will add formula parity.

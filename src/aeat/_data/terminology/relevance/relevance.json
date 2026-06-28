@@ -1,0 +1,2892 @@
+{
+  "mappings": [
+    {
+      "query": "AEAT",
+      "concept_id": "aeat",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:aeat",
+          "target": "_generated/glossary.html#term-aeat",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.96885
+        },
+        {
+          "record_id": "concept:casilla",
+          "target": "_generated/glossary.html#term-casilla",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.947998
+        },
+        {
+          "record_id": "page:USERDOCS-KICKOFF-BRIEF",
+          "target": "USERDOCS-KICKOFF-BRIEF.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.497864
+        },
+        {
+          "record_id": "page:architecture",
+          "target": "architecture.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.497757
+        },
+        {
+          "record_id": "page:authoring-guide",
+          "target": "authoring-guide.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.497501
+        },
+        {
+          "record_id": "page:updates",
+          "target": "updates.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.496971
+        },
+        {
+          "record_id": "page:disclaimer",
+          "target": "disclaimer.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.493324
+        },
+        {
+          "record_id": "page:explanation/reviewing-and-exporting",
+          "target": "explanation/reviewing-and-exporting.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.490851
+        },
+        {
+          "record_id": "page:how-to/quickstart",
+          "target": "how-to/quickstart.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.486472
+        },
+        {
+          "record_id": "legal:orden-eha-3127-2009:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18567#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.480919
+        },
+        {
+          "record_id": "code:aeat",
+          "target": "api/aeat.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.473868
+        }
+      ],
+      "dropped_count": 9,
+      "collapsed_count": 0,
+      "dominant_cluster": "docs:docs/USERDOCS-KICKOFF-BRIEF.md"
+    },
+    {
+      "query": "Agencia Tributaria",
+      "concept_id": "aeat",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:aeat",
+          "target": "_generated/glossary.html#term-aeat",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.994907
+        },
+        {
+          "record_id": "legal:orden-hac-277-2026:art-3",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-7041",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.495066
+        },
+        {
+          "record_id": "legal:orden-eha-3127-2009:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18567#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.493206
+        },
+        {
+          "record_id": "legal:orden-eha-3377-2011:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.493206
+        },
+        {
+          "record_id": "legal:orden-eha-3435-2007:anexo-ii",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485#ai-2",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.493206
+        },
+        {
+          "record_id": "legal:orden-hac-265-2024:art-8",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-5721",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.493206
+        }
+      ],
+      "dropped_count": 12,
+      "collapsed_count": 2,
+      "dominant_cluster": "legal:src/aeat"
+    },
+    {
+      "query": "autoliquidacion",
+      "concept_id": "autoliquidacion",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:autoliquidacion",
+          "target": "_generated/glossary.html#term-autoliquidacion",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.953718
+        },
+        {
+          "record_id": "concept:modelo-303",
+          "target": "_generated/glossary.html#term-modelo-303",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.942841
+        },
+        {
+          "record_id": "legal:ley-58-2003:art-120",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a120",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.498704
+        },
+        {
+          "record_id": "legal:ley-58-2003:art-93",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a93",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.497489
+        },
+        {
+          "record_id": "legal:ley-35-2006:dt-32",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dttrigesimasegunda",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.483789
+        }
+      ],
+      "dropped_count": 12,
+      "collapsed_count": 3,
+      "dominant_cluster": "legal:src/aeat"
+    },
+    {
+      "query": "self-assessment",
+      "concept_id": "autoliquidacion",
+      "language": "en",
+      "targets": [
+        {
+          "record_id": "concept:autoliquidacion",
+          "target": "_generated/glossary.html#term-autoliquidacion",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.961095
+        },
+        {
+          "record_id": "page:how-to/modelo-303",
+          "target": "how-to/modelo-303.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.470957
+        },
+        {
+          "record_id": "legal:ley-58-2003:art-93",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a93",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.431431
+        }
+      ],
+      "dropped_count": 16,
+      "collapsed_count": 1,
+      "dominant_cluster": "concept:domain:concepto"
+    },
+    {
+      "query": "borrador",
+      "concept_id": "borrador",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:borrador",
+          "target": "_generated/glossary.html#term-borrador",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "page:how-to/check-aeat-notifications",
+          "target": "how-to/check-aeat-notifications.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.496919
+        },
+        {
+          "record_id": "code:aeat.domain.modelos._work_unit",
+          "target": "api/aeat.domain.modelos._work_unit.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.477082
+        },
+        {
+          "record_id": "legal:orden-hac-248-2021:art-8",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-4238",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.466298
+        },
+        {
+          "record_id": "legal:ley-35-2006:dt-32",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dttrigesimasegunda",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.445707
+        },
+        {
+          "record_id": "code:aeat.adapters.inbound.borrador",
+          "target": "api/aeat.adapters.inbound.borrador.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.444674
+        },
+        {
+          "record_id": "code:aeat.application.live._borrador_100",
+          "target": "api/aeat.application.live._borrador_100.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.441372
+        },
+        {
+          "record_id": "code:aeat.entrypoints.cli._app_live_borrador_cli",
+          "target": "api/aeat.entrypoints.cli._app_live_borrador_cli.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.419108
+        },
+        {
+          "record_id": "code:aeat.adapters.inbound.borrador._parser",
+          "target": "api/aeat.adapters.inbound.borrador._parser.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.416196
+        }
+      ],
+      "dropped_count": 9,
+      "collapsed_count": 2,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "draft",
+      "concept_id": "borrador",
+      "language": "en",
+      "targets": [
+        {
+          "record_id": "concept:borrador",
+          "target": "_generated/glossary.html#term-borrador",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.784526
+        },
+        {
+          "record_id": "code:aeat.application.review._adapters",
+          "target": "api/aeat.application.review._adapters.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.415621
+        },
+        {
+          "record_id": "code:aeat.application.filing._export",
+          "target": "api/aeat.application.filing._export.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.407044
+        },
+        {
+          "record_id": "code:aeat.application.filing",
+          "target": "api/aeat.application.filing.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.397986
+        },
+        {
+          "record_id": "code:aeat.application.filing._review",
+          "target": "api/aeat.application.filing._review.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.397363
+        }
+      ],
+      "dropped_count": 13,
+      "collapsed_count": 1,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "presentado",
+      "concept_id": "borrador-vs-presentado",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:borrador-vs-presentado",
+          "target": "_generated/glossary.html#term-borrador-vs-presentado",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.884013
+        },
+        {
+          "record_id": "legal:ley-58-2003:art-27.2",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a27",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.481293
+        },
+        {
+          "record_id": "code:aeat.domain.modelos._calculation_revision",
+          "target": "api/aeat.domain.modelos._calculation_revision.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.412635
+        },
+        {
+          "record_id": "code:aeat.domain.submission._protocols",
+          "target": "api/aeat.domain.submission._protocols.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.377145
+        }
+      ],
+      "dropped_count": 15,
+      "collapsed_count": 1,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "box",
+      "concept_id": "casilla",
+      "language": "en",
+      "targets": [
+        {
+          "record_id": "concept:casilla",
+          "target": "_generated/glossary.html#term-casilla",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        }
+      ],
+      "dropped_count": 20,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "casella",
+      "concept_id": "casilla",
+      "language": "ca",
+      "targets": [
+        {
+          "record_id": "concept:casilla",
+          "target": "_generated/glossary.html#term-casilla",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "casilla-record:887c517cb4bbff8eec748645",
+          "target": "search.html?q=100+PH18",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.638046
+        },
+        {
+          "record_id": "code:aeat.domain.calculations.registry._queries",
+          "target": "api/aeat.domain.calculations.registry._queries.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.49075
+        }
+      ],
+      "dropped_count": 14,
+      "collapsed_count": 4,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "casilla",
+      "concept_id": "casilla",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:casilla",
+          "target": "_generated/glossary.html#term-casilla",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "casilla-record:887c517cb4bbff8eec748645",
+          "target": "search.html?q=100+PH18",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.688977
+        },
+        {
+          "record_id": "code:aeat.domain.calculations.registry._queries",
+          "target": "api/aeat.domain.calculations.registry._queries.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.496924
+        },
+        {
+          "record_id": "legal:orden-hac-819-2024:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2024-6840#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.485919
+        },
+        {
+          "record_id": "page:how-to/review-calculation-values",
+          "target": "how-to/review-calculation-values.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.481464
+        },
+        {
+          "record_id": "page:how-to/troubleshooting",
+          "target": "how-to/troubleshooting.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.47949
+        }
+      ],
+      "dropped_count": 10,
+      "collapsed_count": 5,
+      "dominant_cluster": "docs:docs/how-to"
+    },
+    {
+      "query": "recuadro",
+      "concept_id": "casilla",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:casilla",
+          "target": "_generated/glossary.html#term-casilla",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.945036
+        }
+      ],
+      "dropped_count": 18,
+      "collapsed_count": 1,
+      "dominant_cluster": "concept:domain:casilla-namespace"
+    },
+    {
+      "query": "rovat",
+      "concept_id": "casilla",
+      "language": "hu",
+      "targets": [
+        {
+          "record_id": "concept:casilla",
+          "target": "_generated/glossary.html#term-casilla",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.809288
+        }
+      ],
+      "dropped_count": 19,
+      "collapsed_count": 0,
+      "dominant_cluster": "concept:domain:casilla-namespace"
+    },
+    {
+      "query": "censo",
+      "concept_id": "censo",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:censo",
+          "target": "_generated/glossary.html#term-censo",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "concept:modelo",
+          "target": "_generated/glossary.html#term-modelo",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.767725
+        },
+        {
+          "record_id": "page:how-to/censo-update",
+          "target": "how-to/censo-update.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.471247
+        },
+        {
+          "record_id": "code:aeat.application.ledger._ratios",
+          "target": "api/aeat.application.ledger._ratios.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.463844
+        },
+        {
+          "record_id": "code:aeat.application.live._censo",
+          "target": "api/aeat.application.live._censo.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.452807
+        },
+        {
+          "record_id": "code:aeat.entrypoints.cli._config._profile_censo",
+          "target": "api/aeat.entrypoints.cli._config._profile_censo.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.432748
+        },
+        {
+          "record_id": "code:aeat.application.user_profile._censo_sync",
+          "target": "api/aeat.application.user_profile._censo_sync.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.413535
+        },
+        {
+          "record_id": "code:aeat.adapters.outbound.aeat.sede._censo_live",
+          "target": "api/aeat.adapters.outbound.aeat.sede._censo_live.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.402485
+        },
+        {
+          "record_id": "page:how-to/choose-modelo",
+          "target": "how-to/choose-modelo.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.381703
+        }
+      ],
+      "dropped_count": 4,
+      "collapsed_count": 8,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "census",
+      "concept_id": "censo",
+      "language": "en",
+      "targets": [
+        {
+          "record_id": "concept:censo",
+          "target": "_generated/glossary.html#term-censo",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "concept:modelo",
+          "target": "_generated/glossary.html#term-modelo",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.861911
+        },
+        {
+          "record_id": "page:how-to/censo-update",
+          "target": "how-to/censo-update.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.430907
+        }
+      ],
+      "dropped_count": 17,
+      "collapsed_count": 1,
+      "dominant_cluster": "concept:domain:concepto"
+    },
+    {
+      "query": "datos censales",
+      "concept_id": "censo",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo",
+          "target": "_generated/glossary.html#term-modelo",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.993314
+        },
+        {
+          "record_id": "concept:censo",
+          "target": "_generated/glossary.html#term-censo",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.969306
+        },
+        {
+          "record_id": "legal:orden-hac-56-2024:art-1",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-1772",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.482119
+        },
+        {
+          "record_id": "code:aeat.adapters.outbound.aeat.sede._censo_live",
+          "target": "api/aeat.adapters.outbound.aeat.sede._censo_live.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.453458
+        }
+      ],
+      "dropped_count": 15,
+      "collapsed_count": 1,
+      "dominant_cluster": "concept:domain:concepto"
+    },
+    {
+      "query": "declaracion",
+      "concept_id": "declaracion",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:declaracion",
+          "target": "_generated/glossary.html#term-declaracion",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.95216
+        },
+        {
+          "record_id": "code:aeat.adapters.inbound.declaracion",
+          "target": "api/aeat.adapters.inbound.declaracion.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.431792
+        },
+        {
+          "record_id": "code:aeat.adapters.outbound.aeat.sede._declarations",
+          "target": "api/aeat.adapters.outbound.aeat.sede._declarations.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.412336
+        },
+        {
+          "record_id": "code:aeat.adapters.outbound.aeat.sede._declarations_schema",
+          "target": "api/aeat.adapters.outbound.aeat.sede._declarations_schema.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.405058
+        },
+        {
+          "record_id": "legal:orden-hac-248-2021:art-8",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-4238",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.376591
+        },
+        {
+          "record_id": "legal:orden-hac-265-2024:art-8",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-5721",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.376591
+        },
+        {
+          "record_id": "legal:orden-hfp-207-2022:art-8",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-4296",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.376591
+        }
+      ],
+      "dropped_count": 11,
+      "collapsed_count": 2,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "declaracion tributaria",
+      "concept_id": "declaracion",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:autoliquidacion",
+          "target": "_generated/glossary.html#term-autoliquidacion",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.98159
+        },
+        {
+          "record_id": "concept:declaracion",
+          "target": "_generated/glossary.html#term-declaracion",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.974683
+        },
+        {
+          "record_id": "casilla-record:ad52a94d31bd87c799f0500e",
+          "target": "search.html?q=347+contraparte.clave-operacion",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.598949
+        },
+        {
+          "record_id": "legal:ley-58-2003:art-119",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a119",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.499034
+        },
+        {
+          "record_id": "legal:ley-58-2003:art-93",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a93",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.49758
+        },
+        {
+          "record_id": "legal:orden-hac-265-2024:art-8",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-5721",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.489259
+        },
+        {
+          "record_id": "legal:orden-hac-248-2021:art-8",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-4238",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.445834
+        }
+      ],
+      "dropped_count": 10,
+      "collapsed_count": 3,
+      "dominant_cluster": "legal:src/aeat"
+    },
+    {
+      "query": "declaration",
+      "concept_id": "declaracion",
+      "language": "en",
+      "targets": [
+        {
+          "record_id": "concept:declaracion",
+          "target": "_generated/glossary.html#term-declaracion",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.801959
+        },
+        {
+          "record_id": "code:aeat.adapters.outbound.aeat.sede._declarations",
+          "target": "api/aeat.adapters.outbound.aeat.sede._declarations.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.413577
+        },
+        {
+          "record_id": "code:aeat.adapters.outbound.aeat.sede._declarations_schema",
+          "target": "api/aeat.adapters.outbound.aeat.sede._declarations_schema.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.394439
+        },
+        {
+          "record_id": "code:aeat.entrypoints.cli._app_live_expedientes_cli",
+          "target": "api/aeat.entrypoints.cli._app_live_expedientes_cli.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.380582
+        },
+        {
+          "record_id": "code:aeat.application.live._filed_data_capture",
+          "target": "api/aeat.application.live._filed_data_capture.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.375077
+        }
+      ],
+      "dropped_count": 14,
+      "collapsed_count": 1,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "tax return",
+      "concept_id": "declaracion",
+      "language": "en",
+      "targets": [
+        {
+          "record_id": "concept:declaracion",
+          "target": "_generated/glossary.html#term-declaracion",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "page:explanation/building-on-earlier-filings",
+          "target": "explanation/building-on-earlier-filings.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.440195
+        }
+      ],
+      "dropped_count": 18,
+      "collapsed_count": 1,
+      "dominant_cluster": "docs:docs/explanation"
+    },
+    {
+      "query": "case file",
+      "concept_id": "expediente",
+      "language": "en",
+      "targets": [
+        {
+          "record_id": "concept:expediente",
+          "target": "_generated/glossary.html#term-expediente",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.954144
+        }
+      ],
+      "dropped_count": 19,
+      "collapsed_count": 0,
+      "dominant_cluster": "concept:domain:concepto"
+    },
+    {
+      "query": "expediente",
+      "concept_id": "expediente",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:expediente",
+          "target": "_generated/glossary.html#term-expediente",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.787527
+        },
+        {
+          "record_id": "page:how-to/check-aeat-notifications",
+          "target": "how-to/check-aeat-notifications.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.469386
+        },
+        {
+          "record_id": "code:aeat.application.workflow._protocols",
+          "target": "api/aeat.application.workflow._protocols.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.437258
+        },
+        {
+          "record_id": "code:aeat.adapters.outbound.aeat.sede._parse",
+          "target": "api/aeat.adapters.outbound.aeat.sede._parse.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.433899
+        },
+        {
+          "record_id": "code:aeat.adapters.outbound.aeat.sede._schema",
+          "target": "api/aeat.adapters.outbound.aeat.sede._schema.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.385601
+        },
+        {
+          "record_id": "code:aeat.application.live._justificante",
+          "target": "api/aeat.application.live._justificante.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.378412
+        }
+      ],
+      "dropped_count": 14,
+      "collapsed_count": 0,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "fichero-BOE",
+      "concept_id": "fichero-boe",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:fichero-boe",
+          "target": "_generated/glossary.html#term-fichero-boe",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.975257
+        },
+        {
+          "record_id": "code:aeat.adapters.outbound.aeat.export._formats._record_spec",
+          "target": "api/aeat.adapters.outbound.aeat.export._formats._record_spec.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.471494
+        }
+      ],
+      "dropped_count": 16,
+      "collapsed_count": 2,
+      "dominant_cluster": "concept:domain:concepto"
+    },
+    {
+      "query": "Impuesto sobre la Renta de las Personas Fisicas",
+      "concept_id": "irpf",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:irpf",
+          "target": "_generated/glossary.html#term-irpf",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.997853
+        },
+        {
+          "record_id": "legal:ley-35-2006:dt-32",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dttrigesimasegunda",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.499954
+        }
+      ],
+      "dropped_count": 16,
+      "collapsed_count": 2,
+      "dominant_cluster": "legal:src/aeat"
+    },
+    {
+      "query": "IRPF",
+      "concept_id": "irpf",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:irpf",
+          "target": "_generated/glossary.html#term-irpf",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.932753
+        }
+      ],
+      "dropped_count": 19,
+      "collapsed_count": 0,
+      "dominant_cluster": "concept:domain:concepto"
+    },
+    {
+      "query": "personal income tax",
+      "concept_id": "irpf",
+      "language": "en",
+      "targets": [
+        {
+          "record_id": "concept:irpf",
+          "target": "_generated/glossary.html#term-irpf",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.939071
+        },
+        {
+          "record_id": "concept:modelo-100",
+          "target": "_generated/glossary.html#term-modelo-100",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.89516
+        }
+      ],
+      "dropped_count": 17,
+      "collapsed_count": 1,
+      "dominant_cluster": "concept:domain:concepto"
+    },
+    {
+      "query": "Impuesto sobre el Valor Anadido",
+      "concept_id": "iva",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:iva",
+          "target": "_generated/glossary.html#term-iva",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.994851
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-9",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.499853
+        },
+        {
+          "record_id": "legal:orden-eha-3786-2008:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2008-20953#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.470518
+        }
+      ],
+      "dropped_count": 15,
+      "collapsed_count": 2,
+      "dominant_cluster": "legal:src/aeat"
+    },
+    {
+      "query": "impuesto sobre el valor anyadido",
+      "concept_id": "iva",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:iva",
+          "target": "_generated/glossary.html#term-iva",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.99381
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-9",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.499839
+        },
+        {
+          "record_id": "legal:orden-hap-1732-2014:art-2",
+          "target": "https://www.boe.es/eli/es/o/2014/09/24/hap1732",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.499832
+        },
+        {
+          "record_id": "legal:orden-eha-3434-2007:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20484#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.487048
+        }
+      ],
+      "dropped_count": 14,
+      "collapsed_count": 2,
+      "dominant_cluster": "legal:src/aeat"
+    },
+    {
+      "query": "IVA",
+      "concept_id": "iva",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:iva",
+          "target": "_generated/glossary.html#term-iva",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "page:how-to/profile-setup",
+          "target": "how-to/profile-setup.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.471956
+        },
+        {
+          "record_id": "code:aeat.domain.iva",
+          "target": "api/aeat.domain.iva.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.384898
+        },
+        {
+          "record_id": "code:aeat.domain.iva._schema",
+          "target": "api/aeat.domain.iva._schema.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.380032
+        }
+      ],
+      "dropped_count": 16,
+      "collapsed_count": 1,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "value-added tax",
+      "concept_id": "iva",
+      "language": "en",
+      "targets": [
+        {
+          "record_id": "concept:iva",
+          "target": "_generated/glossary.html#term-iva",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.971843
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-9",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.498303
+        },
+        {
+          "record_id": "page:how-to/profile-setup",
+          "target": "how-to/profile-setup.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.468329
+        }
+      ],
+      "dropped_count": 16,
+      "collapsed_count": 1,
+      "dominant_cluster": "legal:src/aeat"
+    },
+    {
+      "query": "inversion del sujeto pasivo",
+      "concept_id": "iva-domestic-reverse-charge",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:iva-domestic-reverse-charge",
+          "target": "_generated/glossary.html#term-iva-domestic-reverse-charge",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.998185
+        },
+        {
+          "record_id": "casilla-record:ad52a94d31bd87c799f0500e",
+          "target": "search.html?q=347+contraparte.clave-operacion",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.681894
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-9",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.498129
+        },
+        {
+          "record_id": "code:aeat.domain.iva._flow",
+          "target": "api/aeat.domain.iva._flow.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.493952
+        },
+        {
+          "record_id": "code:aeat.domain.iva._invoice_classification",
+          "target": "api/aeat.domain.iva._invoice_classification.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.490805
+        }
+      ],
+      "dropped_count": 11,
+      "collapsed_count": 4,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "ISP",
+      "concept_id": "iva-domestic-reverse-charge",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:iva-domestic-reverse-charge",
+          "target": "_generated/glossary.html#term-iva-domestic-reverse-charge",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.952448
+        }
+      ],
+      "dropped_count": 18,
+      "collapsed_count": 1,
+      "dominant_cluster": "concept:domain:regimen"
+    },
+    {
+      "query": "RE",
+      "concept_id": "iva-recargo-equivalencia",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:iva-recargo-equivalencia",
+          "target": "_generated/glossary.html#term-iva-recargo-equivalencia",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "code:aeat.adapters.inbound.justificante._extract",
+          "target": "api/aeat.adapters.inbound.justificante._extract.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.420782
+        },
+        {
+          "record_id": "code:aeat.domain.calculations.registry._text",
+          "target": "api/aeat.domain.calculations.registry._text.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.385413
+        }
+      ],
+      "dropped_count": 18,
+      "collapsed_count": 0,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "regimen del recargo de equivalencia",
+      "concept_id": "iva-recargo-equivalencia",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:iva-recargo-equivalencia",
+          "target": "_generated/glossary.html#term-iva-recargo-equivalencia",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.983029
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-9",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.499071
+        },
+        {
+          "record_id": "code:aeat.domain.deadlines._models",
+          "target": "api/aeat.domain.deadlines._models.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.493696
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-161",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a161",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.490763
+        }
+      ],
+      "dropped_count": 15,
+      "collapsed_count": 1,
+      "dominant_cluster": "legal:src/aeat"
+    },
+    {
+      "query": "modulos",
+      "concept_id": "iva-regimen-simplificado",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:iva-regimen-simplificado",
+          "target": "_generated/glossary.html#term-iva-regimen-simplificado",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.969356
+        },
+        {
+          "record_id": "casilla-record:a4ae8b87e8e2ed0721c248d0",
+          "target": "search.html?q=131+01",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.61204
+        },
+        {
+          "record_id": "casilla-record:7b05f42effac46cf0c0e5f86",
+          "target": "search.html?q=303+01",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.57899
+        }
+      ],
+      "dropped_count": 13,
+      "collapsed_count": 4,
+      "dominant_cluster": "concept:domain:regimen"
+    },
+    {
+      "query": "regimen simplificado",
+      "concept_id": "iva-regimen-simplificado",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:iva-regimen-simplificado",
+          "target": "_generated/glossary.html#term-iva-regimen-simplificado",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.992097
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-122",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a122",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.496365
+        },
+        {
+          "record_id": "code:aeat.domain.deadlines._models",
+          "target": "api/aeat.domain.deadlines._models.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.494136
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-9",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.492464
+        },
+        {
+          "record_id": "legal:orden-eha-789-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.492249
+        },
+        {
+          "record_id": "page:how-to/profile-setup",
+          "target": "how-to/profile-setup.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.484016
+        }
+      ],
+      "dropped_count": 10,
+      "collapsed_count": 4,
+      "dominant_cluster": "legal:src/aeat"
+    },
+    {
+      "query": "filing receipt",
+      "concept_id": "justificante",
+      "language": "en",
+      "targets": [
+        {
+          "record_id": "concept:justificante",
+          "target": "_generated/glossary.html#term-justificante",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.965726
+        },
+        {
+          "record_id": "page:how-to/justificante-receipts",
+          "target": "how-to/justificante-receipts.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.489861
+        },
+        {
+          "record_id": "page:how-to/file-at-aeat",
+          "target": "how-to/file-at-aeat.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.464054
+        },
+        {
+          "record_id": "page:how-to/reconcile",
+          "target": "how-to/reconcile.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.445619
+        },
+        {
+          "record_id": "code:aeat.domain.modelos._filing_record",
+          "target": "api/aeat.domain.modelos._filing_record.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.43376
+        },
+        {
+          "record_id": "page:explanation/recording-a-filing-and-the-boundary",
+          "target": "explanation/recording-a-filing-and-the-boundary.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.421736
+        },
+        {
+          "record_id": "code:aeat.application.modelo._export",
+          "target": "api/aeat.application.modelo._export.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.4172
+        },
+        {
+          "record_id": "code:aeat.domain.justificante._schema",
+          "target": "api/aeat.domain.justificante._schema.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.404419
+        }
+      ],
+      "dropped_count": 7,
+      "collapsed_count": 5,
+      "dominant_cluster": "docs:docs/how-to"
+    },
+    {
+      "query": "justificante",
+      "concept_id": "justificante",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:justificante",
+          "target": "_generated/glossary.html#term-justificante",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.927063
+        },
+        {
+          "record_id": "page:how-to/reconcile",
+          "target": "how-to/reconcile.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.49466
+        },
+        {
+          "record_id": "code:aeat.domain.justificante._schema",
+          "target": "api/aeat.domain.justificante._schema.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.488703
+        },
+        {
+          "record_id": "page:how-to/justificante-receipts",
+          "target": "how-to/justificante-receipts.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.486539
+        },
+        {
+          "record_id": "code:aeat.domain.justificante._repository",
+          "target": "api/aeat.domain.justificante._repository.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.469875
+        },
+        {
+          "record_id": "page:explanation/recording-a-filing-and-the-boundary",
+          "target": "explanation/recording-a-filing-and-the-boundary.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.466825
+        },
+        {
+          "record_id": "code:aeat.adapters.inbound.justificante._extract",
+          "target": "api/aeat.adapters.inbound.justificante._extract.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.466591
+        },
+        {
+          "record_id": "code:aeat.application.live._justificante",
+          "target": "api/aeat.application.live._justificante.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.464966
+        },
+        {
+          "record_id": "code:aeat.application.modelo._reconcile",
+          "target": "api/aeat.application.modelo._reconcile.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.452226
+        },
+        {
+          "record_id": "code:aeat.adapters.inbound.justificante._parser",
+          "target": "api/aeat.adapters.inbound.justificante._parser.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.437749
+        }
+      ],
+      "dropped_count": 7,
+      "collapsed_count": 3,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "justificante de presentacion",
+      "concept_id": "justificante",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:justificante",
+          "target": "_generated/glossary.html#term-justificante",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.972537
+        },
+        {
+          "record_id": "casilla-record:0ef210154ad84cd9ed8ac1a3",
+          "target": "search.html?q=360+decl.ejercicio",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.664129
+        },
+        {
+          "record_id": "code:aeat.domain.justificante._schema",
+          "target": "api/aeat.domain.justificante._schema.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.492449
+        },
+        {
+          "record_id": "code:aeat.application.live._justificante",
+          "target": "api/aeat.application.live._justificante.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.449839
+        }
+      ],
+      "dropped_count": 15,
+      "collapsed_count": 0,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "ledger",
+      "concept_id": "ledger",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:ledger",
+          "target": "_generated/glossary.html#term-ledger",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.882471
+        },
+        {
+          "record_id": "code:aeat.entrypoints.cli._ledger_read_cli",
+          "target": "api/aeat.entrypoints.cli._ledger_read_cli.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.394322
+        }
+      ],
+      "dropped_count": 16,
+      "collapsed_count": 1,
+      "dominant_cluster": "concept:domain:concepto"
+    },
+    {
+      "query": "modelo",
+      "concept_id": "modelo",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo",
+          "target": "_generated/glossary.html#term-modelo",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.877211
+        },
+        {
+          "record_id": "page:how-to/choose-modelo",
+          "target": "how-to/choose-modelo.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.495015
+        },
+        {
+          "record_id": "code:aeat.domain.calculations.registry._authority",
+          "target": "api/aeat.domain.calculations.registry._authority.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.492681
+        },
+        {
+          "record_id": "page:explanation/editing-and-verifying",
+          "target": "explanation/editing-and-verifying.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.483234
+        },
+        {
+          "record_id": "code:aeat.domain.calculations.registry._queries",
+          "target": "api/aeat.domain.calculations.registry._queries.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.481911
+        },
+        {
+          "record_id": "page:how-to/filing-calendar",
+          "target": "how-to/filing-calendar.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.480175
+        },
+        {
+          "record_id": "code:aeat.core._modelo",
+          "target": "api/aeat.core._modelo.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.468179
+        },
+        {
+          "record_id": "page:how-to/quickstart",
+          "target": "how-to/quickstart.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.45273
+        },
+        {
+          "record_id": "code:aeat.domain.modelos._filing_repository",
+          "target": "api/aeat.domain.modelos._filing_repository.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.452456
+        },
+        {
+          "record_id": "page:how-to/censo-update",
+          "target": "how-to/censo-update.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.447797
+        },
+        {
+          "record_id": "page:how-to/modelo-303",
+          "target": "how-to/modelo-303.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.440629
+        },
+        {
+          "record_id": "code:aeat.domain.modelos",
+          "target": "api/aeat.domain.modelos.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.436625
+        },
+        {
+          "record_id": "code:aeat.domain.calculations.registry._schema",
+          "target": "api/aeat.domain.calculations.registry._schema.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.425295
+        },
+        {
+          "record_id": "page:USERDOCS-KICKOFF-BRIEF",
+          "target": "USERDOCS-KICKOFF-BRIEF.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.418723
+        }
+      ],
+      "dropped_count": 5,
+      "collapsed_count": 1,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "tax form",
+      "concept_id": "modelo",
+      "language": "en",
+      "targets": [
+        {
+          "record_id": "concept:modelo",
+          "target": "_generated/glossary.html#term-modelo",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.775176
+        },
+        {
+          "record_id": "page:how-to/choose-modelo",
+          "target": "how-to/choose-modelo.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.391732
+        },
+        {
+          "record_id": "page:explanation/from-records-to-figures",
+          "target": "explanation/from-records-to-figures.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.389355
+        },
+        {
+          "record_id": "page:explanation/building-on-earlier-filings",
+          "target": "explanation/building-on-earlier-filings.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.388968
+        }
+      ],
+      "dropped_count": 16,
+      "collapsed_count": 0,
+      "dominant_cluster": "docs:docs/explanation"
+    },
+    {
+      "query": "declaracion de la renta",
+      "concept_id": "modelo-100",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-100",
+          "target": "_generated/glossary.html#term-modelo-100",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.976478
+        },
+        {
+          "record_id": "concept:renta",
+          "target": "_generated/glossary.html#term-renta",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.940856
+        }
+      ],
+      "dropped_count": 17,
+      "collapsed_count": 1,
+      "dominant_cluster": "concept:domain:modelo"
+    },
+    {
+      "query": "modelo 100",
+      "concept_id": "modelo-100",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-100",
+          "target": "_generated/glossary.html#term-modelo-100",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "casilla-record:887c517cb4bbff8eec748645",
+          "target": "search.html?q=100+PH18",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.687014
+        },
+        {
+          "record_id": "legal:ley-35-2006:art-85",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a85",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.499841
+        }
+      ],
+      "dropped_count": 4,
+      "collapsed_count": 14,
+      "dominant_cluster": "legal:src/aeat"
+    },
+    {
+      "query": "modelo 130",
+      "concept_id": "modelo-130",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-130",
+          "target": "_generated/glossary.html#term-modelo-130",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.977145
+        },
+        {
+          "record_id": "casilla-record:72682934c9ce0782ee8ba38d",
+          "target": "search.html?q=130+01",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.693835
+        }
+      ],
+      "dropped_count": 14,
+      "collapsed_count": 4,
+      "dominant_cluster": "casilla:modelo:130"
+    },
+    {
+      "query": "pago fraccionado",
+      "concept_id": "modelo-130",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-130",
+          "target": "_generated/glossary.html#term-modelo-130",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "legal:orden-hac-1155-2020:art-4",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2020-15599",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.498068
+        },
+        {
+          "record_id": "legal:orden-hac-1347-2024:art-4",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.498068
+        },
+        {
+          "record_id": "legal:orden-hac-1425-2025:art-4",
+          "target": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25272",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.498068
+        },
+        {
+          "record_id": "legal:orden-hfp-1172-2022:art-4",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20025",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.498068
+        },
+        {
+          "record_id": "legal:orden-hfp-1335-2021:art-4",
+          "target": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2021-19904",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.498068
+        },
+        {
+          "record_id": "legal:orden-hfp-1359-2023:art-4",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.498068
+        },
+        {
+          "record_id": "legal:ley-27-2014:art-40",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a40",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.490075
+        }
+      ],
+      "dropped_count": 13,
+      "collapsed_count": 0,
+      "dominant_cluster": "legal:src/aeat"
+    },
+    {
+      "query": "autoliquidacion de IVA",
+      "concept_id": "modelo-303",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-303",
+          "target": "_generated/glossary.html#term-modelo-303",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.992267
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-9",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.497579
+        },
+        {
+          "record_id": "page:how-to/modelo-303",
+          "target": "how-to/modelo-303.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.49347
+        },
+        {
+          "record_id": "legal:orden-hac-819-2024:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2024-6840#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.486172
+        },
+        {
+          "record_id": "legal:orden-eha-789-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.486149
+        },
+        {
+          "record_id": "code:aeat.domain.portals._entries.portal_m303_iva_autoliquidacion",
+          "target": "api/aeat.domain.portals._entries.portal_m303_iva_autoliquidacion.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.478203
+        }
+      ],
+      "dropped_count": 11,
+      "collapsed_count": 3,
+      "dominant_cluster": "legal:src/aeat"
+    },
+    {
+      "query": "modelo 303",
+      "concept_id": "modelo-303",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-303",
+          "target": "_generated/glossary.html#term-modelo-303",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "casilla-record:7b05f42effac46cf0c0e5f86",
+          "target": "search.html?q=303+01",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.686158
+        },
+        {
+          "record_id": "page:how-to/modelo-303",
+          "target": "how-to/modelo-303.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.499537
+        },
+        {
+          "record_id": "page:how-to/choose-modelo",
+          "target": "how-to/choose-modelo.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.491268
+        }
+      ],
+      "dropped_count": 0,
+      "collapsed_count": 17,
+      "dominant_cluster": "docs:docs/how-to"
+    },
+    {
+      "query": "modelo 390",
+      "concept_id": "modelo-390",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-390",
+          "target": "_generated/glossary.html#term-modelo-390",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "casilla-record:fe0169c831b8e37bf0c1641c",
+          "target": "search.html?q=390+iva.anual.compensacion-generada-ejercicio-no-97",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.692256
+        },
+        {
+          "record_id": "page:how-to/modelo-390",
+          "target": "how-to/modelo-390.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.499221
+        }
+      ],
+      "dropped_count": 4,
+      "collapsed_count": 14,
+      "dominant_cluster": "docs:docs/how-to"
+    },
+    {
+      "query": "resumen anual de IVA",
+      "concept_id": "modelo-390",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-390",
+          "target": "_generated/glossary.html#term-modelo-390",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.997081
+        },
+        {
+          "record_id": "legal:orden-eha-789-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.488151
+        },
+        {
+          "record_id": "code:aeat.domain.calculations.registry._applicability",
+          "target": "api/aeat.domain.calculations.registry._applicability.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.485668
+        }
+      ],
+      "dropped_count": 17,
+      "collapsed_count": 0,
+      "dominant_cluster": "concept:domain:modelo"
+    },
+    {
+      "query": "CIF",
+      "concept_id": "nif",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:nif",
+          "target": "_generated/glossary.html#term-nif",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.978377
+        },
+        {
+          "record_id": "code:aeat.core.identity._documents",
+          "target": "api/aeat.core.identity._documents.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.479832
+        },
+        {
+          "record_id": "code:aeat.core.identity._tax_id",
+          "target": "api/aeat.core.identity._tax_id.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.465244
+        },
+        {
+          "record_id": "page:how-to/profile-setup",
+          "target": "how-to/profile-setup.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.417412
+        },
+        {
+          "record_id": "code:aeat.adapters.outbound.aeat.auth.certificate",
+          "target": "api/aeat.adapters.outbound.aeat.auth.certificate.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.401429
+        }
+      ],
+      "dropped_count": 9,
+      "collapsed_count": 6,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "NIE",
+      "concept_id": "nif",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:nif",
+          "target": "_generated/glossary.html#term-nif",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.85941
+        },
+        {
+          "record_id": "code:aeat.core.identity._documents",
+          "target": "api/aeat.core.identity._documents.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.463099
+        },
+        {
+          "record_id": "page:how-to/profile-setup",
+          "target": "how-to/profile-setup.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.40038
+        }
+      ],
+      "dropped_count": 15,
+      "collapsed_count": 2,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "NIF",
+      "concept_id": "nif",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:nif",
+          "target": "_generated/glossary.html#term-nif",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.974399
+        },
+        {
+          "record_id": "casilla-record:887c517cb4bbff8eec748645",
+          "target": "search.html?q=100+PH18",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.65845
+        },
+        {
+          "record_id": "legal:orden-eha-3127-2009:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18567#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.483628
+        },
+        {
+          "record_id": "legal:orden-hac-265-2024:art-8",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-5721",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.478179
+        },
+        {
+          "record_id": "legal:orden-hac-277-2026:art-3",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-7041",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.478179
+        },
+        {
+          "record_id": "legal:orden-hac-248-2021:art-8",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-4238",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.47386
+        },
+        {
+          "record_id": "legal:orden-hfp-207-2022:art-8",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-4296",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.47386
+        },
+        {
+          "record_id": "legal:orden-hfp-310-2023:art-8",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-8118",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.47386
+        }
+      ],
+      "dropped_count": 4,
+      "collapsed_count": 8,
+      "dominant_cluster": "legal:src/aeat"
+    },
+    {
+      "query": "Numero de Identificacion Fiscal",
+      "concept_id": "nif",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:nif",
+          "target": "_generated/glossary.html#term-nif",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.998946
+        },
+        {
+          "record_id": "casilla-record:ad52a94d31bd87c799f0500e",
+          "target": "search.html?q=347+contraparte.clave-operacion",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.681199
+        },
+        {
+          "record_id": "casilla-record:8b981f9d5851140dc06a6f77",
+          "target": "search.html?q=720+decl.ejercicio",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.668091
+        },
+        {
+          "record_id": "casilla-record:292c599d5a02e02025aa5254",
+          "target": "search.html?q=184+tipo2.renta-atribuible-importe",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.658908
+        },
+        {
+          "record_id": "casilla-record:5ba734e53bd5da4719183586",
+          "target": "search.html?q=190+decl.total-percepciones",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.657595
+        },
+        {
+          "record_id": "legal:orden-eha-3377-2011:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.499893
+        },
+        {
+          "record_id": "legal:orden-eha-3127-2009:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18567#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.488099
+        }
+      ],
+      "dropped_count": 10,
+      "collapsed_count": 3,
+      "dominant_cluster": "legal:src/aeat"
+    },
+    {
+      "query": "aranyositas",
+      "concept_id": "prorrata",
+      "language": "hu",
+      "targets": [
+        {
+          "record_id": "concept:prorrata",
+          "target": "_generated/glossary.html#term-prorrata",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        }
+      ],
+      "dropped_count": 20,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "deductible proportion",
+      "concept_id": "prorrata",
+      "language": "en",
+      "targets": [
+        {
+          "record_id": "concept:prorrata",
+          "target": "_generated/glossary.html#term-prorrata",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.995397
+        },
+        {
+          "record_id": "code:aeat.domain.categories._proportionality",
+          "target": "api/aeat.domain.categories._proportionality.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.473709
+        },
+        {
+          "record_id": "code:aeat.domain.iva._prorrata",
+          "target": "api/aeat.domain.iva._prorrata.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.44007
+        },
+        {
+          "record_id": "code:aeat.domain.renta._ledger_expenses",
+          "target": "api/aeat.domain.renta._ledger_expenses.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.403811
+        }
+      ],
+      "dropped_count": 11,
+      "collapsed_count": 5,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "pro rata",
+      "concept_id": "prorrata",
+      "language": "en",
+      "targets": [
+        {
+          "record_id": "concept:prorrata-especial",
+          "target": "_generated/glossary.html#term-prorrata-especial",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.91587
+        },
+        {
+          "record_id": "concept:prorrata",
+          "target": "_generated/glossary.html#term-prorrata",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.859667
+        },
+        {
+          "record_id": "code:aeat.domain.iva._prorrata",
+          "target": "api/aeat.domain.iva._prorrata.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.417498
+        },
+        {
+          "record_id": "legal:orden-eha-789-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.388086
+        },
+        {
+          "record_id": "code:aeat.application.aggregation._prorrata",
+          "target": "api/aeat.application.aggregation._prorrata.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.378365
+        }
+      ],
+      "dropped_count": 13,
+      "collapsed_count": 2,
+      "dominant_cluster": "concept:domain:concepto"
+    },
+    {
+      "query": "prorateo",
+      "concept_id": "prorrata",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:prorrata",
+          "target": "_generated/glossary.html#term-prorrata",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        }
+      ],
+      "dropped_count": 20,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "prorrata",
+      "concept_id": "prorrata",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:prorrata",
+          "target": "_generated/glossary.html#term-prorrata",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "concept:prorrata-especial",
+          "target": "_generated/glossary.html#term-prorrata-especial",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.968093
+        },
+        {
+          "record_id": "code:aeat.domain.iva._prorrata",
+          "target": "api/aeat.domain.iva._prorrata.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.463878
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-104",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a104",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.460583
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-9",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.460583
+        },
+        {
+          "record_id": "code:aeat.application.aggregation._prorrata",
+          "target": "api/aeat.application.aggregation._prorrata.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.440079
+        }
+      ],
+      "dropped_count": 9,
+      "collapsed_count": 6,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "prorrateo",
+      "concept_id": "prorrata",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:prorrata",
+          "target": "_generated/glossary.html#term-prorrata",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        }
+      ],
+      "dropped_count": 20,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "regla de prorrata",
+      "concept_id": "prorrata",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:prorrata",
+          "target": "_generated/glossary.html#term-prorrata",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "concept:prorrata-especial",
+          "target": "_generated/glossary.html#term-prorrata-especial",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.99196
+        },
+        {
+          "record_id": "legal:orden-eha-789-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.499217
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-9",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.499149
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-102",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a102",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.499089
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-104",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a104",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.488052
+        }
+      ],
+      "dropped_count": 10,
+      "collapsed_count": 5,
+      "dominant_cluster": "legal:src/aeat"
+    },
+    {
+      "query": "kulonleges aranyositas",
+      "concept_id": "prorrata-especial",
+      "language": "hu",
+      "targets": [
+        {
+          "record_id": "concept:prorrata-especial",
+          "target": "_generated/glossary.html#term-prorrata-especial",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.879412
+        }
+      ],
+      "dropped_count": 19,
+      "collapsed_count": 0,
+      "dominant_cluster": "concept:domain:concepto"
+    },
+    {
+      "query": "prorrata especial",
+      "concept_id": "prorrata-especial",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:prorrata-especial",
+          "target": "_generated/glossary.html#term-prorrata-especial",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.949319
+        },
+        {
+          "record_id": "concept:prorrata",
+          "target": "_generated/glossary.html#term-prorrata",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.921156
+        },
+        {
+          "record_id": "casilla-record:75667132dbf04550bd5e5aa4",
+          "target": "search.html?q=322+decl.ejercicio",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.653734
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-9",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.498076
+        },
+        {
+          "record_id": "code:aeat.domain.iva._prorrata",
+          "target": "api/aeat.domain.iva._prorrata.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.493136
+        },
+        {
+          "record_id": "code:aeat.core.external_constants",
+          "target": "api/aeat.core.external_constants.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.486789
+        }
+      ],
+      "dropped_count": 6,
+      "collapsed_count": 8,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "special pro rata",
+      "concept_id": "prorrata-especial",
+      "language": "en",
+      "targets": [
+        {
+          "record_id": "concept:prorrata-especial",
+          "target": "_generated/glossary.html#term-prorrata-especial",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.983084
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-9",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.446114
+        },
+        {
+          "record_id": "code:aeat.domain.iva._prorrata",
+          "target": "api/aeat.domain.iva._prorrata.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.398344
+        }
+      ],
+      "dropped_count": 16,
+      "collapsed_count": 1,
+      "dominant_cluster": "concept:domain:concepto"
+    },
+    {
+      "query": "equivalence surcharge",
+      "concept_id": "recargo-equivalencia",
+      "language": "en",
+      "targets": [
+        {
+          "record_id": "concept:recargo-equivalencia",
+          "target": "_generated/glossary.html#term-recargo-equivalencia",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.9675
+        },
+        {
+          "record_id": "concept:iva-recargo-equivalencia",
+          "target": "_generated/glossary.html#term-iva-recargo-equivalencia",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.919694
+        },
+        {
+          "record_id": "page:how-to/profile-setup",
+          "target": "how-to/profile-setup.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.471424
+        },
+        {
+          "record_id": "code:aeat.domain.iva._saturation",
+          "target": "api/aeat.domain.iva._saturation.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.422579
+        },
+        {
+          "record_id": "code:aeat.application.aggregation._iva_ledger",
+          "target": "api/aeat.application.aggregation._iva_ledger.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.402648
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-9",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.39162
+        }
+      ],
+      "dropped_count": 14,
+      "collapsed_count": 0,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "recargo de equivalencia",
+      "concept_id": "recargo-equivalencia",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:recargo-equivalencia",
+          "target": "_generated/glossary.html#term-recargo-equivalencia",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.978228
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-9",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.49852
+        },
+        {
+          "record_id": "code:aeat.domain.iva._recargo_equivalencia",
+          "target": "api/aeat.domain.iva._recargo_equivalencia.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.493204
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-161",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a161",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.4878
+        },
+        {
+          "record_id": "code:aeat.domain.iva._saturation",
+          "target": "api/aeat.domain.iva._saturation.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.48747
+        }
+      ],
+      "dropped_count": 11,
+      "collapsed_count": 4,
+      "dominant_cluster": "legal:src/aeat"
+    },
+    {
+      "query": "renta",
+      "concept_id": "renta",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:renta",
+          "target": "_generated/glossary.html#term-renta",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.934951
+        },
+        {
+          "record_id": "page:explanation/building-on-earlier-filings",
+          "target": "explanation/building-on-earlier-filings.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.487531
+        }
+      ],
+      "dropped_count": 18,
+      "collapsed_count": 0,
+      "dominant_cluster": "docs:docs/explanation"
+    },
+    {
+      "query": "revision",
+      "concept_id": "revision",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:revision",
+          "target": "_generated/glossary.html#term-revision",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.925941
+        },
+        {
+          "record_id": "page:how-to/filing-spine",
+          "target": "how-to/filing-spine.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.44422
+        },
+        {
+          "record_id": "code:aeat.application.registry",
+          "target": "api/aeat.application.registry.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.42401
+        },
+        {
+          "record_id": "code:aeat.application.modelo._revision_persistence",
+          "target": "api/aeat.application.modelo._revision_persistence.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.420441
+        },
+        {
+          "record_id": "page:how-to/modelo-303",
+          "target": "how-to/modelo-303.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.418493
+        },
+        {
+          "record_id": "code:aeat.application.modelo._selectors",
+          "target": "api/aeat.application.modelo._selectors.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.387646
+        },
+        {
+          "record_id": "code:aeat.entrypoints.cli._modelo_work_revision_cli",
+          "target": "api/aeat.entrypoints.cli._modelo_work_revision_cli.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.380723
+        }
+      ],
+      "dropped_count": 11,
+      "collapsed_count": 2,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "electronic office",
+      "concept_id": "sede-electronica",
+      "language": "en",
+      "targets": [
+        {
+          "record_id": "concept:sede-electronica",
+          "target": "_generated/glossary.html#term-sede-electronica",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.95655
+        },
+        {
+          "record_id": "legal:orden-hfp-310-2023:art-8",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-8118",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.435909
+        }
+      ],
+      "dropped_count": 18,
+      "collapsed_count": 0,
+      "dominant_cluster": "concept:domain:concepto"
+    },
+    {
+      "query": "sede",
+      "concept_id": "sede-electronica",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:sede-electronica",
+          "target": "_generated/glossary.html#term-sede-electronica",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "code:aeat.adapters.outbound.aeat.sede._walker",
+          "target": "api/aeat.adapters.outbound.aeat.sede._walker.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.387267
+        },
+        {
+          "record_id": "code:aeat.adapters.outbound.aeat.sede._parse",
+          "target": "api/aeat.adapters.outbound.aeat.sede._parse.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.385613
+        },
+        {
+          "record_id": "code:aeat.adapters.outbound.aeat.sede._schema",
+          "target": "api/aeat.adapters.outbound.aeat.sede._schema.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.381303
+        },
+        {
+          "record_id": "page:how-to/modelo-036",
+          "target": "how-to/modelo-036.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.375979
+        }
+      ],
+      "dropped_count": 16,
+      "collapsed_count": 0,
+      "dominant_cluster": "codebase:src/aeat"
+    },
+    {
+      "query": "sede electronica",
+      "concept_id": "sede-electronica",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:sede-electronica",
+          "target": "_generated/glossary.html#term-sede-electronica",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.989675
+        }
+      ],
+      "dropped_count": 18,
+      "collapsed_count": 1,
+      "dominant_cluster": "concept:domain:concepto"
+    },
+    {
+      "query": "VAT Information Exchange System",
+      "concept_id": "vies",
+      "language": "en",
+      "targets": [
+        {
+          "record_id": "concept:vies",
+          "target": "_generated/glossary.html#term-vies",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.999111
+        },
+        {
+          "record_id": "code:aeat.domain.calculations.registry._groi_oracle",
+          "target": "api/aeat.domain.calculations.registry._groi_oracle.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.495373
+        }
+      ],
+      "dropped_count": 15,
+      "collapsed_count": 3,
+      "dominant_cluster": "concept:domain:concepto"
+    },
+    {
+      "query": "VIES",
+      "concept_id": "vies",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:vies",
+          "target": "_generated/glossary.html#term-vies",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.976362
+        },
+        {
+          "record_id": "code:aeat.domain.calculations.registry._groi_oracle",
+          "target": "api/aeat.domain.calculations.registry._groi_oracle.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.494207
+        },
+        {
+          "record_id": "page:how-to/profile-setup",
+          "target": "how-to/profile-setup.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.451602
+        },
+        {
+          "record_id": "code:aeat.application.live._verify",
+          "target": "api/aeat.application.live._verify.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.422761
+        },
+        {
+          "record_id": "code:aeat.domain.modelos._row_models",
+          "target": "api/aeat.domain.modelos._row_models.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.399199
+        },
+        {
+          "record_id": "code:aeat.adapters.outbound.aeat.sede._nif_iva_check",
+          "target": "api/aeat.adapters.outbound.aeat.sede._nif_iva_check.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.382733
+        },
+        {
+          "record_id": "code:aeat.domain.deadlines._models",
+          "target": "api/aeat.domain.deadlines._models.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.378326
+        }
+      ],
+      "dropped_count": 13,
+      "collapsed_count": 0,
+      "dominant_cluster": "codebase:src/aeat"
+    }
+  ],
+  "query_count": 72,
+  "concept_count": 29,
+  "failed_query_count": 0,
+  "reindex_note": "derived from the failed=0 approved-era sweep by excluding deprecated concepts (glossary-enrolment policy); no re-retrieval",
+  "score_floor": 0.5
+}

@@ -2,17 +2,18 @@
 
 The substrate's at-rest encryption derives a per-consumer key from the
 project master key via HKDF-SHA256 over a stable, per-consumer
-``hkdf_context``. Rotating the master key therefore requires walking
-every consumer's persisted ciphertext, decrypting under the old key,
-and re-writing under the new key. This module is the single sanctioned
-path for that operation.
+``hkdf_context``. Callers supply the old and new keys as
+:class:`MasterKeyProvider` instances. Rotating the master key requires
+walking every consumer's persisted ciphertext, decrypting under the old
+key, and re-writing under the new key. This module is the single
+sanctioned path for that operation.
 
-Rotation operates at the bytes level — it never parses the inner
+Rotation operates at the bytes level - it never parses the inner
 :class:`Envelope` payload. That keeps the rotation contract
 content-preserving across every consumer's payload type without
 requiring rotation code to know the typed payload schemas.
 
-The rotation is **per-file atomic** — each cipher envelope is
+The rotation is **per-file atomic** - each cipher envelope is
 re-written via tempfile + ``os.replace`` so a crash mid-rotation
 leaves either the old or the new ciphertext on disk, never a torn
 state. The whole rotation is **not** transactional across files:
@@ -25,28 +26,64 @@ On failure, the helper falls back to the old key.
 
 from __future__ import annotations
 
+import binascii
+import hashlib
 import os
 import tempfile
 from collections.abc import Iterator
-from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Protocol
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field, ValidationError
 
+from ....core import STRICT_FROZEN_CONFIG
+from ....core.external_constants import UTF_8_ENCODING
+from ....core.locks import exclusive_file_lock, fsync_parent_dir
 from ....core.logging import get_logger
+from ....core.time import now
 from .blob_store._blob_store import EncryptedBlobStore
 from .crypto._crypto import decrypt_record, encrypt_record
 from .envelope._envelope import (
     CipherEnvelope,
     EncryptionMetadata,
-    _build_aad,  # type: ignore[attr-defined]
-    _derive_envelope_key,  # type: ignore[attr-defined]
+    _build_aad,
+    _derive_envelope_key,
 )
-from ....core.locks import exclusive_file_lock, fsync_parent_dir
+from .errors import DecryptionError, EncryptionError
 from .master_key._master_key import MasterKeyProvider
 
 _log = get_logger(__name__)
+
+
+def _path_log_marker(path: Path) -> str:
+    """Return a stable diagnostic marker without exposing the filesystem path."""
+    try:
+        raw_path = path.resolve(strict=False).as_posix()
+    except OSError:
+        raw_path = path.as_posix()
+    digest = hashlib.sha256(raw_path.encode(UTF_8_ENCODING)).hexdigest()[:16]
+    return f"<path:{digest}>"
+
+
+class _RotationPlanSettings(Protocol):
+    """Minimal settings surface required by :func:`default_rotation_plan`."""
+
+    aeat_financial_txs_dir: Path
+    aeat_invoices_dir: Path
+    aeat_attachments_dir: Path
+    aeat_usage_ratios_path: Path
+    aeat_drafts_dir: Path
+    aeat_submissions_dir: Path
+    aeat_justificantes_dir: Path
+    aeat_filing_history_dir: Path
+    aeat_workflow_runs_dir: Path
+
+
+class _BlobStoreSettings(Protocol):
+    """Minimal settings surface required by :func:`default_blob_store_roots`."""
+
+    aeat_blob_store_dir: Path
+    aeat_attachments_dir: Path
 
 
 class RotationPlanEntry(BaseModel):
@@ -65,13 +102,12 @@ class RotationPlanEntry(BaseModel):
             Use this for single-file consumers whose on-disk filename
             does not end in ``.envelope.json`` (e.g.
             ``usage-ratios.json`` written by the usage-ratios
-            service, or an operator-configured
-            ``aeat_default_profile_path``). When set, the rotation
+            service). When set, the rotation
             visits exactly ``store_dir / target_filename`` and ignores
             every other file in the directory.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     store_dir: Path
     hkdf_context: bytes
@@ -119,7 +155,7 @@ class RotationSummary(BaseModel):
             decrypted under either key, or re-encrypted.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     rotated: int = Field(ge=0)
     skipped: int = Field(ge=0)
@@ -136,8 +172,7 @@ def _iter_envelope_files(
         if entry.target_filename is not None:
             # Single-file mode: visit exactly this filename inside the
             # directory. Used by consumers whose on-disk filename does
-            # not end in ``.envelope.json`` (usage_ratios, setup
-            # profile).
+            # not end in ``.envelope.json`` (usage_ratios).
             target = entry.store_dir / entry.target_filename
             if target.is_file():
                 yield target, entry
@@ -168,11 +203,12 @@ def _try_decrypt_bytes(
         aad = _build_aad(cipher_envelope.classification, hkdf_context)
         if cipher_envelope.encryption.associated_data() != aad:
             return None
-    except Exception:
+    except (ValueError, binascii.Error):
         # Malformed nonce/ciphertext base64 or invalid AAD encoding
         # surfaces as a probe miss rather than a hard error so the
         # rotation can continue past the corrupt file and report it
         # in the errors counter via the outer caller.
+        _log.debug("rotation probe: AAD/blob parse failed; treating as miss", exc_info=True)
         return None
     derived_key = _derive_envelope_key(
         master_key=master_key_provider.get_master_key(),
@@ -180,32 +216,36 @@ def _try_decrypt_bytes(
     )
     try:
         return decrypt_record(blob, key=derived_key, associated_data=aad)
-    except Exception:
+    except (DecryptionError, EncryptionError):
+        _log.debug("rotation probe: decrypt failed; treating as miss", exc_info=True)
         return None
 
 
 def _atomic_write(target: Path, *, payload: str) -> None:
     """Atomically replace ``target`` with ``payload`` via tempfile + os.replace."""
     target.parent.mkdir(parents=True, exist_ok=True)
-    # Capture tmp_path BEFORE the ``with`` so cleanup works when context
-    # entry raises (rare but possible on some filesystems / antivirus
-    # shims). NamedTemporaryFile raising means no file was created.
-    handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
-        mode="w",
-        encoding="utf-8",
-        dir=target.parent,
-        prefix=f"{target.stem}.",
-        suffix=".tmp",
-        delete=False,
-    )
-    tmp_path = Path(handle.name)
+    tmp_path: Path | None = None
     try:
-        with handle:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding=UTF_8_ENCODING,
+            dir=target.parent,
+            prefix=f"{target.stem}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            tmp_path = Path(handle.name)
             handle.write(payload)
         os.replace(tmp_path, target)
         fsync_parent_dir(target)
-    except OSError:
-        tmp_path.unlink(missing_ok=True)
+    except OSError as exc:
+        _log.error(
+            "rotation: atomic write failed path_marker=%s error_type=%s",
+            _path_log_marker(target),
+            type(exc).__name__,
+        )
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
         raise
 
 
@@ -234,11 +274,11 @@ def rotate_master_key(
     Args:
         plan: Tuple of :class:`RotationPlanEntry` records — one per
             consumer (transactions, drafts, submissions, etc.).
-        old_master_key_provider: Provider returning the master key
-            currently in use.
-        new_master_key_provider: Provider returning the new master
-            key. Rotating to an identical key is permitted (no-op
-            rotation) but the caller is responsible for the
+        old_master_key_provider: :class:`MasterKeyProvider` returning
+            the master key currently in use.
+        new_master_key_provider: :class:`MasterKeyProvider` returning
+            the new master key. Rotating to an identical key is permitted
+            (no-op rotation) but the caller is responsible for the
             different-keys discipline.
 
     Returns:
@@ -259,10 +299,14 @@ def rotate_master_key(
         with exclusive_file_lock(lock_target):
             try:
                 cipher_envelope = CipherEnvelope.model_validate_json(
-                    path.read_text(encoding="utf-8"),
+                    path.read_text(encoding=UTF_8_ENCODING),
                 )
-            except Exception as exc:
-                _log.warning("rotate_master_key: %s is not a CipherEnvelope: %s", path, exc)
+            except (OSError, ValueError, ValidationError) as exc:
+                _log.warning(
+                    "rotate_master_key: path_marker=%s is not a CipherEnvelope error_type=%s",
+                    _path_log_marker(path),
+                    type(exc).__name__,
+                )
                 errors += 1
                 continue
 
@@ -273,6 +317,10 @@ def rotate_master_key(
                 hkdf_context=entry.hkdf_context,
             )
             if already_rotated is not None:
+                _log.debug(
+                    "rotate_master_key: path_marker=%s already rotated, skipping",
+                    _path_log_marker(path),
+                )
                 skipped += 1
                 continue
 
@@ -284,8 +332,8 @@ def rotate_master_key(
             )
             if plaintext is None:
                 _log.warning(
-                    "rotate_master_key: cannot decrypt %s under either old or new key",
-                    path,
+                    "rotate_master_key: cannot decrypt path_marker=%s under either old or new key",
+                    _path_log_marker(path),
                 )
                 errors += 1
                 continue
@@ -300,21 +348,29 @@ def rotate_master_key(
             )
             try:
                 new_blob = encrypt_record(plaintext, key=new_derived_key, associated_data=aad)
-            except Exception as exc:
-                _log.warning("rotate_master_key: failed to encrypt %s: %s", path, exc)
+            except EncryptionError as exc:
+                _log.warning(
+                    "rotate_master_key: failed to encrypt path_marker=%s error_type=%s",
+                    _path_log_marker(path),
+                    type(exc).__name__,
+                )
                 errors += 1
                 continue
 
             new_cipher_envelope = CipherEnvelope(
                 cipher_schema_version=cipher_envelope.cipher_schema_version,
-                written_at=datetime.now(UTC),
+                written_at=now(),
                 classification=cipher_envelope.classification,
                 encryption=EncryptionMetadata.from_blob(new_blob, associated_data=aad),
             )
             try:
                 _atomic_write(path, payload=new_cipher_envelope.model_dump_json())
             except OSError as exc:
-                _log.warning("rotate_master_key: failed to atomic-write %s: %s", path, exc)
+                _log.warning(
+                    "rotate_master_key: failed to atomic-write path_marker=%s error_type=%s",
+                    _path_log_marker(path),
+                    type(exc).__name__,
+                )
                 errors += 1
                 continue
             rotated += 1
@@ -323,17 +379,26 @@ def rotate_master_key(
         rotated,
         skipped,
         errors,
-        datetime.now(UTC).isoformat(),
+        now().isoformat(),
     )
     return RotationSummary(rotated=rotated, skipped=skipped, errors=errors)
 
 
-def default_rotation_plan(settings: Any) -> tuple[RotationPlanEntry, ...]:
-    """Return the canonical rotation plan against ``settings``.
+def default_rotation_plan(settings: _RotationPlanSettings) -> tuple[RotationPlanEntry, ...]:
+    """Return the canonical rotation plan as a tuple of :class:`RotationPlanEntry` records.
 
-    Enumerates every repository's directory + HKDF
-    context. Operators with custom directories / additional consumers
-    pass an extended plan to :func:`rotate_master_key` directly.
+    Enumerates every master-key-encrypted file-envelope consumer's directory +
+    HKDF context. Operators with custom directories / additional consumers pass
+    an extended plan to :func:`rotate_master_key` directly.
+
+    Scope boundary: this plan covers only the ``*.envelope.json`` file consumers
+    whose ciphertext is derived directly from the project master key (via the
+    per-consumer HKDF context above). The SQL ``secure_objects`` store is NOT in
+    this plan and intentionally so: its payloads are encrypted under the
+    per-bucket DEK (the column layer resolves the active :class:`BucketSession`
+    DEK, not the master key). A master-key / passphrase custody change rewraps
+    that DEK without changing its value, so the ``secure_objects`` ciphertext
+    stays valid and never requires re-encryption on master-key rotation.
     """
     return (
         RotationPlanEntry(
@@ -367,7 +432,7 @@ def default_rotation_plan(settings: Any) -> tuple[RotationPlanEntry, ...]:
             hkdf_context=b"aeat.adapters.outbound.aeat.export.filing.v1",
         ),
         # Amendments share one HKDF context across two store dirs.
-        # ``FilingAmendmentRepository`` is one consumer identity but it
+        # ``ModeloAmendmentRepository`` is one consumer identity but it
         # binds to two sibling subdirectories under ``aeat_submissions_dir``
         # (``amendment-results/`` and ``amendments/``). Both directories
         # therefore appear here as separate plan entries with the same
@@ -393,31 +458,6 @@ def default_rotation_plan(settings: Any) -> tuple[RotationPlanEntry, ...]:
             store_dir=Path(settings.aeat_workflow_runs_dir),
             hkdf_context=b"aeat.application.workflow.run.v1",
         ),
-        RotationPlanEntry(
-            store_dir=Path(settings.aeat_sync_divergence_file_dir),
-            hkdf_context=b"aeat.application.sync.divergence.v1",
-        ),
-        RotationPlanEntry(
-            # The setup wizard's ``AutonomoProfile`` is written as a
-            # single-file envelope at the operator-configured
-            # ``aeat_default_profile_path`` (or no file at all when
-            # the setting is None). The actual filename is operator-
-            # chosen and may not end in ``.envelope.json`` — target
-            # the exact filename rather than relying on the directory
-            # walk's default suffix match (which would miss e.g.
-            # ``profile.json``).
-            store_dir=(
-                Path(settings.aeat_default_profile_path).parent
-                if settings.aeat_default_profile_path is not None
-                else Path(settings.aeat_secret_store_dir) / "setup"
-            ),
-            hkdf_context=b"aeat.application.setup.profile.v1",
-            target_filename=(
-                Path(settings.aeat_default_profile_path).name
-                if settings.aeat_default_profile_path is not None
-                else None
-            ),
-        ),
     )
 
 
@@ -438,10 +478,10 @@ def rotate_blob_stores(
     Args:
         blob_store_roots: Tuple of root directories (each containing
             a ``blobs/`` subtree) to walk.
-        old_master_key_provider: Provider returning the master key
-            currently in use.
-        new_master_key_provider: Provider returning the new master
-            key.
+        old_master_key_provider: :class:`MasterKeyProvider` returning
+            the master key currently in use.
+        new_master_key_provider: :class:`MasterKeyProvider` returning
+            the new master key.
 
     Returns:
         A frozen :class:`RotationSummary` covering every visited blob.
@@ -466,10 +506,11 @@ def rotate_blob_stores(
     return RotationSummary(rotated=rotated, skipped=skipped, errors=errors)
 
 
-def default_blob_store_roots(settings: Any) -> tuple[Path, ...]:
+def default_blob_store_roots(settings: _BlobStoreSettings) -> tuple[Path, ...]:
     """Return the canonical blob-store roots covered by master-key rotation.
 
     The substrate persists wrapped DEKs in:
+
     - The secret-store's blob store (``aeat_blob_store_dir``), wired up
       by :func:`get_secret_store` for opaque-bearer credentials, OAuth
       refresh tokens, and identity records.

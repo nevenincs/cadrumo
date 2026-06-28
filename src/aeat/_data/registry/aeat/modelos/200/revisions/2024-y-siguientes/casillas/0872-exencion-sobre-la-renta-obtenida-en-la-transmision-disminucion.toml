@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02986"
+number = "02986"
+label = "Exención sobre la renta obtenida en la transmisión de valores entidades residentes (art. 21.3, 21.10 y DT 40ª LIS) - Disminución - Correcciones del ejercicio - Permanentes [02986]"
+section = ["exencion_sobre_la_renta_obtenida_en_la_transmision", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-02986"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02987"
+number = "02987"
+label = "Exención sobre la renta obtenida en la transmisión de valores entidades residentes (art. 21.3, 21.10 y DT 40ª LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercic..."
+section = ["exencion_sobre_la_renta_obtenida_en_la_transmision", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-02987"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02988"
+number = "02988"
+label = "Exención sobre la renta obtenida en la transmisión de valores entidades residentes (art. 21.3, 21.10 y DT 40ª LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios..."
+section = ["exencion_sobre_la_renta_obtenida_en_la_transmision", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-02988"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02989"
+number = "02989"
+label = "Exención sobre la renta obtenida en la transmisión de valores entidades residentes (art. 21.3, 21.10 y DT 40ª LIS) - Disminución - Saldo pendiente a principio de ejercicio [02989]"
+section = ["exencion_sobre_la_renta_obtenida_en_la_transmision", "disminucion"]
+data_type = "money"
+semantic_role = "is_exencion_rentas_ajuste_saldo_inicio"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-02989"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02990"
+number = "02990"
+label = "Exención sobre la renta obtenida en la transmisión de valores entidades residentes (art. 21.3, 21.10 y DT 40ª LIS) - Disminución - Saldo pendiente a fin de ejercicio [02990]"
+section = ["exencion_sobre_la_renta_obtenida_en_la_transmision", "disminucion"]
+data_type = "money"
+semantic_role = "is_exencion_transmision_saldo_fin"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-02990"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

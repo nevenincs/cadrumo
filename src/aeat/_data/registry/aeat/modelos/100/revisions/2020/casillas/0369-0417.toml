@@ -1,0 +1,9 @@
+[[revisions."2020".casillas]]
+id = "0417"
+number = "0417"
+label = "Si las entidades no residentes no han aplicado un régimen fiscal similar a éste, marque la casilla"
+section = ["toma_datos_ampliada", "regimen_especial"]
+data_type = "boolean"
+semantic_role = "irpf_re_especial_tfi_no_regimen_similar_flag"
+legal_refs = ["ley-35-2006:art-37"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "1512"
+number = "1512"
+label = "Arroz, uva para vino de mesa con denominación de origen, oleaginosas, flores, plantas ornamentales y uva de mesa: Ingresos íntegros"
+section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
+semantic_role = "irpf_eo_agr_ingresos_integros_arroz_oleaginosas_flores"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

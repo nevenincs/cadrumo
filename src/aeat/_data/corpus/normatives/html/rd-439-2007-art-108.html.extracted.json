@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-439-2007-art-108.html",
+  "source_sha256": "012e6624c2f89f4c7a82df00b6638e5117af0fedd63ca9516bb2dcdcd4076ee8",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. El sujeto obligado a retener y practicar ingresos a cuenta deberá presentar, en los primeros veinte días naturales de los meses de abril, julio, octubre y enero, declaración de las cantidades retenidas y de los ingresos a cuenta que correspondan por el trimestre natural inmediato anterior, e ingresar su importe en el Tesoro Público.\nNo obstante, la declaración e ingreso a que se refiere el párrafo anterior se efectuará en los veinte primeros días naturales de cada mes, en relación con las cantidades retenidas y los ingresos a cuenta que correspondan por el mes inmediato anterior, cuando se trate de retenedores u obligados en los que concurran las circunstancias a que se refieren los números 1.º y 2.º del apartado 3 del artículo 71 del Reglamento del Impuesto sobre el Valor Añadido, aprobado por el Real Decreto 1624/1992, de 29 de diciembre.\nEl retenedor u obligado a ingresar a cuenta presentará declaración negativa cuando, a pesar de haber satisfecho rentas sometidas a retención o ingreso a cuenta, no hubiera procedido, por razón de su cuantía, la práctica de retención o ingreso a cuenta alguno. No procederá presentación de declaración negativa cuando no se hubieran satisfecho, en el período de declaración, rentas sometidas a retención e ingreso a cuenta.\n2. El retenedor u obligado a ingresar a cuenta deberá presentar en los primeros veinte días naturales del mes de enero una declaración anual de las retenciones e ingresos a cuenta efectuados.",
+      "title": "Artículo 108. Obligaciones formales del retenedor y del obligado a ingresar a cuenta.",
+      "section": "Artículo 108. Obligaciones formales del retenedor y del obligado a ingresar a cuenta.",
+      "anchor": null
+    }
+  ]
+}

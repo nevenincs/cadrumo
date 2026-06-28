@@ -3,10 +3,10 @@ tags:
   - '#research'
   - '#google-auth-ux'
 date: '2026-04-21'
+modified: '2026-04-21'
 related:
   - '[[2026-04-16-google-workspace-mcp-auth-research]]'
   - '[[2026-04-16-google-workspace-mcp-auth-adr]]'
-  - '[[2026-04-17-kent-ux-journey-audit]]'
 ---
 
 # `google-auth-ux` research: `kent-first-google-authentication-ux-for-cli-mcp-bootstrap`

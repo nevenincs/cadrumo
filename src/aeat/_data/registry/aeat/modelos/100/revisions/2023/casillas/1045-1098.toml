@@ -1,0 +1,9 @@
+[[revisions."2023".casillas]]
+id = "1098"
+number = "1098"
+label = "Marque una \"X\" si en la casilla [1096] ha consignado un NIF de otro país"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+data_type = "boolean"
+semantic_role = "irpf_deduccion_c_valenciana_arrendador_nif_extranjero_flag"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

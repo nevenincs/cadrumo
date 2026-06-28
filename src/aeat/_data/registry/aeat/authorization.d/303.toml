@@ -1,0 +1,11 @@
+# Modelo 303 (IVA autoliquidación). Enrolled by the cross-renta
+# compensación-pendiente carry: a credit-making 4T of year N produces a
+# saldo a compensar (LIVA arts. 99, 115-116) that wraps into 1T of year
+# N+1's casilla 110 via the self-relation
+# modelo-303-rel-self-compensacion-anteriores. Both years are driven
+# through the real registry calculation engine.
+[modelo]
+modelo = "303"
+renta_years = [2025, 2026]
+evidence_class = "calculation"
+enrolling_test = "src/aeat/application/calculations/tests/test_modelo_303_compensacion_carry_forward_continuity.py"

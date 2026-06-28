@@ -1,93 +1,63 @@
-"""Public test-double helpers for :mod:`aeat.application.filing`.
+"""Public fixture helpers for :mod:`aeat.application.filing`.
 
-This module exposes the synthetic Modelo 130 casilla schema and a
-small profile / deadline-checker pair so that downstream tests can
-exercise :func:`aeat.application.filing.build_draft` end-to-end without
-reaching into private builder internals. These helpers are
-intentionally test-grade — they will be replaced once the real
-casilla DB (#23), modelo catalogue (#6), and deadline engine
-(#38) land on ``main``.
+This module exposes profile/deadline helpers and draft construction helpers so
+tests can exercise application filing workflows without reaching into private
+builder internals. It deliberately does not expose modelo-specific casilla
+schemas or formulas.
 """
 
 from __future__ import annotations
 
 from datetime import date
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
-from ...domain.filing._builders._modelo_130_schema import (
-    MODELO_130_SCHEMA,
-    StaticCasillaCollection,
-    StaticCasillaSchema,
-    StaticCasillaSchemaProvider,
-)
-from ...domain.filing._builders._modelo_303_schema import MODELO_303_SCHEMA
-from ...domain.filing._builders._modelo_390_schema import MODELO_390_SCHEMA
+from ...core import STRICT_FROZEN_CONFIG, Period
+from ...core.errors import FixtureProvisioningError
+from ._testing_registry import build_registry_filing_draft, build_registry_filing_draft_from_decimals
 
 
-def default_schema_provider() -> StaticCasillaSchemaProvider:
-    """Return a provider seeded with the synthetic 130/303/390 schemas.
+class ModeloTestProfile(BaseModel):
+    """A frozen :class:`aeat.application.filing.ModeloProfile`-conforming record."""
 
-    Returns:
-        A frozen :class:`StaticCasillaSchemaProvider` wiring the
-        three hand-curated collections used by the test suite and
-        the ``aeat.application.filing`` public docstring examples.
-    """
-    return StaticCasillaSchemaProvider(
-        collections={
-            "130": MODELO_130_SCHEMA,
-            "303": MODELO_303_SCHEMA,
-            "390": MODELO_390_SCHEMA,
-        }
-    )
-
-
-class SyntheticProfile(BaseModel):
-    """A frozen :class:`aeat.application.filing.FilingProfile`-conforming record."""
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     tax_id: str
     display_name: str
-    applicable_modelos: tuple[str, ...]
 
 
-class SyntheticDeadlineStatus(BaseModel):
+class ModeloTestDeadlineStatus(BaseModel):
     """A frozen :class:`aeat.application.filing.DeadlineStatus`-conforming record."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     due_date: date
     is_overdue: bool
 
 
-class SyntheticDeadlineChecker(BaseModel):
+class ModeloTestDeadlineChecker(BaseModel):
     """A frozen :class:`aeat.application.filing.DeadlineChecker`-conforming record.
 
-    The checker returns the same :class:`SyntheticDeadlineStatus`
+    The checker returns the same :class:`ModeloTestDeadlineStatus`
     for every ``(modelo, period)`` query, which keeps tests
     deterministic.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
-    status: SyntheticDeadlineStatus
+    status: ModeloTestDeadlineStatus
 
-    def check(self, modelo: str, period: str) -> SyntheticDeadlineStatus:
-        """Return the configured :class:`SyntheticDeadlineStatus`."""
+    def check(self, modelo: str, period: Period) -> ModeloTestDeadlineStatus:
+        """Return the configured :class:`ModeloTestDeadlineStatus`."""
         del modelo, period
         return self.status
 
 
 __all__ = [
-    "MODELO_130_SCHEMA",
-    "MODELO_303_SCHEMA",
-    "MODELO_390_SCHEMA",
-    "StaticCasillaCollection",
-    "StaticCasillaSchema",
-    "StaticCasillaSchemaProvider",
-    "SyntheticDeadlineChecker",
-    "SyntheticDeadlineStatus",
-    "SyntheticProfile",
-    "default_schema_provider",
+    "FixtureProvisioningError",
+    "ModeloTestDeadlineChecker",
+    "ModeloTestDeadlineStatus",
+    "ModeloTestProfile",
+    "build_registry_filing_draft",
+    "build_registry_filing_draft_from_decimals",
 ]

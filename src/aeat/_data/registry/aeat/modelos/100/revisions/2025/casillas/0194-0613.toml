@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0613"
+number = "0613"
+label = "Incremento por gastos en guarderias"
+section = ["resultado_declaracion"]
+semantic_role = "irpf_incremento_maternidad_guarderia"
+legal_refs = ["ley-35-2006:art-81", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]

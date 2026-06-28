@@ -1,0 +1,24 @@
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+label = "Ejercicio al que se refiere la declaracion-resumen"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "decl.tipo-declaracion"
+number = "tipo-declaracion"
+label = "Tipo de declaracion (originaria / sustitutiva / complementaria)"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "tipo_declaracion"
+required = true
+input_kind = "informational"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["boe-modelo-390-2009-form"]
+

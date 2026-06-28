@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0573"
+number = "0573"
+label = "Intereses de demora correspondientes a las deducciones anteriores: Parte estatal"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_intereses_demora_perdida_deduccion_estatal"
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

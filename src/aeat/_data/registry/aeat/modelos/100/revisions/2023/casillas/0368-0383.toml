@@ -1,0 +1,9 @@
+[[revisions."2023".casillas]]
+id = "0383"
+number = "0383"
+label = "Si los rendimientos íntegros del trabajo de este empleador en el ejercicio son iguales o inferiores a 60.000 ?, marque con una \"X\""
+section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
+data_type = "boolean"
+semantic_role = "irpf_red_prevision_social_rendimientos_trabajo_rango_flag"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

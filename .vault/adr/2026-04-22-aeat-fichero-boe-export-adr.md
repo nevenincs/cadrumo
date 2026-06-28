@@ -3,6 +3,7 @@ tags:
   - "#adr"
   - "#real-pdf-import"
 date: 2026-04-22
+modified: '2026-04-22'
 related:
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-22-ruleset-architecture-adr]]"
@@ -198,3 +199,41 @@ yet; it's pure library code with no side-effects.
   decision that import is always Kent-uploads-file
 - `src/aeat/adapters/outbound/aeat/export/_engine.py` — preflight path (pre-export)
 - `src/aeat/adapters/outbound/aeat/export/_models.py` — `FilingDraft` shape
+
+## Amendment (2026-05-21): export layouts authored as registry TOML, not Python modules
+
+This ADR's original section 1 described per-modelo Python submodules
+under `src/aeat/adapters/outbound/aeat/export/_formats/` as the
+authoring surface for `_RECORD_SPECS` tuples derived from the official
+AEAT Diseño de Registros. That authoring direction is superseded.
+
+The `calculation-truth-registry` ADR accepted 2026-05-03 established
+that export layouts are reviewed registry data, not Python modules.
+Under that direction the DR-spec generator (`_generate.py`), its
+companion ingestion module (`_ingest.py`), and the DR-spec JSON
+fixtures were deleted (commit `97dac2be7`; sanctioned by the
+2026-05-21 amendment to the `calculation-truth-registry` ADR).
+
+The decision in this ADR — that Modelo 130 and Modelo 303 fichero-BOE
+export support is required — is unchanged. Only the artefact form
+changes:
+
+- Export layouts for M130 and M303 are authored as `export_layouts`
+  blocks inside the per-modelo registry TOML files
+  (`src/aeat/_data/registry/aeat/modelos/130.toml` and
+  `src/aeat/_data/registry/aeat/modelos/303.toml`), following the
+  pattern already shipped for modelos 180, 202, and 232.
+- The generic fixed-width serialiser and deserialiser in
+  `src/aeat/adapters/outbound/aeat/export/_formats/` are retained as
+  the runtime that consumes registry-authored export layouts at
+  execution time; they are not the authoring surface.
+- Per-modelo Python format modules (`modelo_130_2024.py` etc.) are
+  not created. The Python side owns runtime behaviour; the TOML side
+  owns the layout data that must be grounded in the official Diseño.
+- Golden round-trip tests derive their expected bytes from the AEAT
+  Diseño de Registros corpus, consistent with the no-tautological-
+  tests rule and the registry-truth ADR's evidence-grounding mandate.
+
+This amendment is recorded here so that future readers understand why
+the Python-module path described in section 1 is absent from the
+implementation.

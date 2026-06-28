@@ -1,0 +1,36 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "03243"
+number = "03243"
+label = "Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa - Rectificativa: Devolución acordada/compensada - Total [03243]"
+section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
+data_type = "money"
+semantic_role = "is_conversion_aid_rectificativa"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-015-casilla-03243"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03244"
+number = "03244"
+label = "Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa - Rectificativa: Devolución acordada/compensada - Estado [03244]"
+section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
+data_type = "money"
+semantic_role = "is_conversion_aid_rectificativa"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-015-casilla-03244"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03245"
+number = "03245"
+label = "Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa - Rectificativa: Devolución acordada/compensada - D. Forales/Nav..."
+section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
+data_type = "money"
+semantic_role = "is_conversion_aid_rectificativa"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-015-casilla-03245", "modelo-200-page-026-casilla-03245"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

@@ -1,0 +1,9 @@
+[[revisions."2024".casillas]]
+id = "0685"
+number = "0685"
+label = "Resultado"
+section = ["resultados", "regularizacion_res"]
+data_type = "decimal"
+semantic_role = "irpf_regularizacion_rectificacion_resultado"
+legal_refs = ["ley-35-2006:art-97"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

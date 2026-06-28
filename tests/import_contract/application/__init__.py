@@ -1,1 +1,0 @@
-"""Application import-contract tests."""

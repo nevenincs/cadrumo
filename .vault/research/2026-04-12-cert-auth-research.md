@@ -3,6 +3,7 @@ tags:
   - "#research"
   - "#cert-auth"
 date: 2026-04-12
+modified: '2026-04-12'
 title: "AEAT PKCS#12 Certificate Authentication Research"
 related:
   - "[[2026-04-12-playwright-anti-bot-research]]"

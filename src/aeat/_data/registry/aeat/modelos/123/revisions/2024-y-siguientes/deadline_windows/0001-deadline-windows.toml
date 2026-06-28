@@ -1,0 +1,80 @@
+[[revisions."2024-y-siguientes".deadline_windows]]
+id = "modelo-123-2026-1t"
+filing_year = 2026
+period = "2026Q1"
+period_kind = "quarterly"
+opens_on = 2026-04-01
+closes_on = 2026-04-20
+payment_cutoff_on = 2026-04-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-123-procedure"]
+
+[[revisions."2024-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_capital_income_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rendimientos de capital mobiliario o determinadas rentas sujetas a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-123-procedure"]
+
+[[revisions."2024-y-siguientes".deadline_windows]]
+id = "modelo-123-2026-2t"
+filing_year = 2026
+period = "2026Q2"
+period_kind = "quarterly"
+opens_on = 2026-07-01
+closes_on = 2026-07-20
+payment_cutoff_on = 2026-07-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-123-procedure"]
+
+[[revisions."2024-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_capital_income_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rendimientos de capital mobiliario o determinadas rentas sujetas a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-123-procedure"]
+
+[[revisions."2024-y-siguientes".deadline_windows]]
+id = "modelo-123-2026-3t"
+filing_year = 2026
+period = "2026Q3"
+period_kind = "quarterly"
+opens_on = 2026-10-01
+closes_on = 2026-10-20
+payment_cutoff_on = 2026-10-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-123-procedure"]
+
+[[revisions."2024-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_capital_income_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rendimientos de capital mobiliario o determinadas rentas sujetas a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-123-procedure"]
+
+[[revisions."2024-y-siguientes".deadline_windows]]
+id = "modelo-123-2026-4t"
+filing_year = 2026
+period = "2026Q4"
+period_kind = "quarterly"
+opens_on = 2027-01-01
+closes_on = 2027-01-20
+payment_cutoff_on = 2027-01-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-123-procedure"]
+
+[[revisions."2024-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_capital_income_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rendimientos de capital mobiliario o determinadas rentas sujetas a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-123-procedure"]
+

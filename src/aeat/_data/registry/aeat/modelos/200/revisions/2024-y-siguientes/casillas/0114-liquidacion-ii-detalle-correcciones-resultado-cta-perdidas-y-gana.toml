@@ -1,0 +1,96 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "00372"
+number = "00372"
+label = "Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Reducción de ingresos procedentes de determinados activos intangibles (art. 23 LIS) - Disminuciones [00372]"
+section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+data_type = "money"
+semantic_role = "is_correcciones_disminuciones_liquidacion_detalle"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-013-casilla-00372", "modelo-200-page-040-casilla-00372"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00373"
+number = "00373"
+label = "Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Obra benéfico-social de las cajas de ahorro y fundaciones bancarias (art. 24 LIS) - Aumentos [00373]"
+section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+data_type = "money"
+semantic_role = "is_correcciones_aumentos"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-013-casilla-00373", "modelo-200-page-040-casilla-00373"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00374"
+number = "00374"
+label = "Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Obra benéfico-social de las cajas de ahorro y fundaciones bancarias (art. 24 LIS) - Disminuciones [00374]"
+section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+data_type = "money"
+semantic_role = "is_correcciones_disminuciones_liquidacion_detalle"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-013-casilla-00374", "modelo-200-page-040-casilla-00374"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00375"
+number = "00375"
+label = "Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Agrupación de interés económico (Cap. II Tit. VII LIS) - Aumentos [00375]"
+section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+data_type = "money"
+semantic_role = "is_correcciones_aumentos"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-013-casilla-00375", "modelo-200-page-040-casilla-00375"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00376"
+number = "00376"
+label = "Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Agrupación de interés económico (Cap. II Tit. VII LIS) - Disminuciones [00376]"
+section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+data_type = "money"
+semantic_role = "is_correcciones_disminuciones_liquidacion_detalle"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-013-casilla-00376", "modelo-200-page-033-casilla-00376", "modelo-200-page-040-casilla-00376"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00377"
+number = "00377"
+label = "Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Soc. y fondos de capital-riesgo y soc. desarrollo industrial regional (cap.IV, titulo VII LIS) - Aumentos [00377]"
+section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+data_type = "money"
+semantic_role = "is_correcciones_aumentos"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-013-casilla-00377", "modelo-200-page-032-casilla-00377", "modelo-200-page-040-casilla-00377"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00378"
+number = "00378"
+label = "Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Soc. y fondos de capital-riesgo y soc. desarrollo industrial regional (cap.IV, titulo VII LIS) - Disminuciones [00378]"
+section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+data_type = "money"
+semantic_role = "is_correcciones_disminuciones_liquidacion_detalle"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-013-casilla-00378", "modelo-200-page-032-casilla-00378", "modelo-200-page-040-casilla-00378"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00379"
+number = "00379"
+label = "Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Valoración bienes y derechos. Régimen especial operaciones reestructuración (cap.VII, titulo VII LIS) - Aumentos [00379]"
+section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+data_type = "money"
+semantic_role = "is_correcciones_aumentos"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-013-casilla-00379", "modelo-200-page-032-casilla-00379", "modelo-200-page-040-casilla-00379"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

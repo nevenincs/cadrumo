@@ -1,0 +1,36 @@
+# Modelo 151 (régimen impatriados) — cuota chain formulas.
+
+# Cuota íntegra general: aplica la escala plana del art. 93.2.e.1º (24% hasta
+# 600.000 €, 47% sobre el exceso) a la base liquidable general, vía lookup_bracket
+# sobre la tabla modelo-151.escala-cuota-integra-general.
+[[revisions."2015-y-siguientes".formulas]]
+id = "modelo-151-cuota-integra-general"
+target_casilla_id = "impatriado.cuota-integra-general"
+expression = { op = "lookup_bracket", args = [
+    { casilla_id = "impatriado.base-liquidable-general" },
+    { parameter = "modelo-151.escala-cuota-integra-general" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-93"]
+source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-form"]
+
+[[revisions."2015-y-siguientes".formulas.source_citations]]
+source_ref = "boe-modelo-151-form"
+required_text = ["modelo 151"]
+
+# Cuota diferencial: cuota íntegra general menos retenciones e ingresos a cuenta
+# (los pagos a cuenta de la letra f), que son distintos de la cuota).
+[[revisions."2015-y-siguientes".formulas]]
+id = "modelo-151-cuota-diferencial"
+target_casilla_id = "impatriado.cuota-diferencial"
+expression = { op = "subtract", args = [
+    { casilla_id = "impatriado.cuota-integra-general" },
+    { casilla_id = "impatriado.retenciones" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-93"]
+source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-form"]
+
+[[revisions."2015-y-siguientes".formulas.source_citations]]
+source_ref = "boe-modelo-151-form"
+required_text = ["modelo 151"]

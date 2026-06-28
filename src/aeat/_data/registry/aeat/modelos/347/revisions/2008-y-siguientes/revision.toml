@@ -1,0 +1,19 @@
+[revisions."2008-y-siguientes"]
+label = "Modelo 347 ejercicios 2008 y siguientes (Orden EHA/3012/2008, modificada por EHA/3378/2011 y HAC/1431/2025)"
+valid_from = 2008-10-23
+period_selector = { year_from = 2008, periods = ["0A"] }
+legal_refs = [
+    "orden-eha-3012-2008:art-1",
+    "orden-eha-3012-2008:art-10",
+    "orden-hac-1431-2025:art-1",
+    "rd-1065-2007:art-31",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-347-2025",
+    "aeat-dr-347-2011",
+    "aeat-modelo-347-procedure",
+    "boe-modelo-347-2008-form",
+    "boe-modelo-347-2011-amendment",
+]
+

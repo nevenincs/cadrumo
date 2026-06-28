@@ -1,0 +1,41 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "modelo-130"
+domain = "modelo"
+lifecycle = "approved"
+domain_refs = ["modelo:130"]
+legal_refs = ["ley-35-2006:art-99"]
+related = ["irpf", "renta", "casilla", "autoliquidacion"]
+created_at = 2026-06-10
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "Pago fraccionado del IRPF en estimacion directa."
+definition = "Autoliquidacion del pago fraccionado trimestral a cuenta del IRPF que presentan los autonomos que determinan su rendimiento por estimacion directa."
+
+[language.es.source]
+citation = "Ley 35/2006 del IRPF y articulo 110 del Reglamento del IRPF."
+authority = "boe"
+
+[[language.es.term]]
+label = "modelo 130"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "pago fraccionado"
+term_status = "admitted"
+
+[language.en]
+short_description = "Quarterly IRPF instalment under direct estimation."
+
+[language.ca]
+short_description = "Pagament fraccionat de l'IRPF en estimacio directa."
+
+[language.hu]
+short_description = "Negyedeves szja-eloleg kozvetlen becsles alatt."

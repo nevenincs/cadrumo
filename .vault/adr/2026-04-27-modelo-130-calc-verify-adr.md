@@ -3,14 +3,26 @@ tags:
   - '#adr'
   - '#modelo-130-calc-verify'
 date: '2026-04-27'
+modified: '2026-04-27'
 related:
   - "[[2026-04-27-modelo-130-calc-verify-research]]"
   - "[[2026-04-25-mandatory-citations-adr]]"
   - "[[2026-04-25-mutation-harness-extension-adr]]"
-  - "[[2026-04-25-kent-workflows-expansion-adr]]"
 ---
 
-# `modelo-130-calc-verify` ADR — child of EPIC `#316`
+# `modelo-130-calc-verify` ADR — child of EPIC `#316` | (**status:** `accepted`)
+
+## Status note (2026-05-21)
+
+Accepted — status field resolved during the branch-reconciliation
+campaign. The Modelo 130 calc-verify decision is implemented and
+verified: casilla `03 = 01 − 02` (rendimiento neto) is a registry
+formula (`modelo-130-rendimiento-neto`) and is gated by the
+`modelo-130-calculation-verification` `verification_expectations`
+stanza. The ADR's references to a post-PR-440 declaración extractor
+registry predate the registry-driven declaración re-architecture; that
+infrastructure detail is superseded but does not affect the accepted
+calc-verify decision.
 
 ## Context
 

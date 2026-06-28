@@ -1,14 +1,20 @@
 """Logging configuration entry point.
 
-Provides a consistent logger factory to avoid scattered bare logging instances.
-The root logger carries the run-trace context filter from
-:mod:`aeat.core.observability._sink` so every record automatically picks up
-the active ``run_id`` / ``step_id`` while a run context is bound.
+Provides :func:`get_logger` as the consistent logger factory to avoid scattered
+bare logging instances, with :func:`configure_logging` installing the project
+defaults. The installed log-record factory reads
+:func:`aeat.core.observability.current_run_context` state indirectly through
+contextvars, so every record automatically picks up the active ``run_id`` /
+``step_id`` while a run context is bound.
 
-This module is also the single source of truth for log-record secret
-scrubbing. Every handler attached through :func:`configure_logging`
-receives a :class:`SecretScrubbingFilter` so sensitive fields are
-redacted before formatting.
+This module attaches the log-record secret scrubber. Every handler
+attached through :func:`configure_logging` receives a
+:class:`SecretScrubbingFilter` so sensitive fields are redacted before
+formatting. Shape-based NIF, URL, and bearer-token matching is delegated
+to :func:`~aeat.core.redaction.redact_for_log`; this module keeps only
+logging-specific key-paired placeholders such as cookies, passphrases, and
+certificate serial suffixes. Per-run JSONL handlers are attached with
+:func:`attach_run_sink` so the same filter protects observability output.
 """
 
 from __future__ import annotations
@@ -17,7 +23,13 @@ import logging
 import logging.config
 import re
 from collections.abc import Mapping
-from typing import Any, cast
+from contextvars import ContextVar
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, overload, override
+
+if TYPE_CHECKING:
+    from .observability._context import RunContextInfo
+from .redaction import redact_for_log
 
 _CONFIGURED = False
 _FACTORY_INSTALLED = False
@@ -51,26 +63,25 @@ SCRUB_FIELD_PATTERNS: tuple[str, ...] = (
     "token",
 )
 _SENSITIVE_KEY_SET = frozenset(pattern.lower() for pattern in SCRUB_FIELD_PATTERNS)
-_SENSITIVE_ASSIGNMENT_KEYS: tuple[str, ...] = cast(
-    tuple[str, ...],
-    tuple(sorted(SCRUB_FIELD_PATTERNS, key=len, reverse=True)),
-)
+_SENSITIVE_ASSIGNMENT_KEYS: tuple[str, ...] = (*sorted(SCRUB_FIELD_PATTERNS, key=lambda p: len(p), reverse=True),)
 
 _SENSITIVE_ASSIGNMENT_RE = re.compile(
     r"(?<![A-Za-z0-9])(?P<key>"
     + "|".join(re.escape(pattern) for pattern in _SENSITIVE_ASSIGNMENT_KEYS)
-    + r")(?![A-Za-z0-9])\s*[:=]\s*(?P<value>[^,\s;]+)",
+    + r")(?![A-Za-z0-9])(?P<separator>\s*[:=]\s*)"
+    + r"(?P<value>\"[^\"]*\"|'[^']*'|[^,;\r\n]+?)"
+    + r"(?=$|[,;\r\n]|\s+[A-Za-z0-9_.-]+\s*[:=])",
     flags=re.IGNORECASE,
 )
 _BEARER_TOKEN_RE = re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/=-]+\b")
 _LLM_KEY_RE = re.compile(r"\b(?:sk-ant-|sk-proj-|sk-live-|sk-test-|sk-)[A-Za-z0-9_-]+\b")
 _PERCENT_PLACEHOLDER_VALUE_RE = re.compile(r"^%[-#+ 0-9.]*[a-zA-Z]$")
 _PERCENT_PLACEHOLDER_RE = re.compile(r"(?:(?P<key>[A-Za-z0-9_.-]+)\s*[:=]\s*)?(?P<placeholder>%[-#+ 0-9.]*[a-zA-Z])")
+_DEFAULT_LOG_FILE_NAME = "aeat.log"
 
 
-def _normalise_key(key: str) -> str:
+def _normalise_log_key(key: str) -> str:
     """Return a canonical, separator-stable representation of ``key``."""
-
     camel_split = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", key)
     collapsed = re.sub(r"[^A-Za-z0-9]+", "_", camel_split)
     return collapsed.strip("_").lower()
@@ -78,13 +89,11 @@ def _normalise_key(key: str) -> str:
 
 def _looks_sensitive_key(key: str | None) -> bool:
     """Return whether ``key`` should have its value redacted."""
-
-    return key is not None and _normalise_key(key) in _SENSITIVE_KEY_SET
+    return key is not None and _normalise_log_key(key) in _SENSITIVE_KEY_SET
 
 
 def _redacted_value(key: str | None, value: str) -> str:
     """Return the stable redaction marker for a sensitive value."""
-
     if key is not None and "serial" in key.lower():
         suffix = value[-4:] if len(value) >= 4 else "????"
         return f"<cert:....{suffix}>"
@@ -93,28 +102,57 @@ def _redacted_value(key: str | None, value: str) -> str:
 
 def _scrub_text(value: str, *, key: str | None = None) -> str:
     """Redact sensitive fragments from a free-form string."""
-
     if not value:
         return value
     if _looks_sensitive_key(key):
         return _redacted_value(key, value)
 
+    scrubbed = redact_for_log(value)
     scrubbed = _SENSITIVE_ASSIGNMENT_RE.sub(
         lambda match: (
             match.group(0)
-            if _PERCENT_PLACEHOLDER_VALUE_RE.fullmatch(match.group("value"))
-            else f"{match.group('key')}={_redacted_value(match.group('key'), match.group('value'))}"
+            if _PERCENT_PLACEHOLDER_RE.search(match.group("value"))
+            else (
+                f"{match.group('key')}{match.group('separator')}"
+                f"{_redacted_value(match.group('key'), match.group('value'))}"
+            )
         ),
-        value,
+        scrubbed,
     )
     scrubbed = _BEARER_TOKEN_RE.sub("Bearer <redacted>", scrubbed)
     scrubbed = _LLM_KEY_RE.sub("<redacted>", scrubbed)
     return scrubbed
 
 
-def _scrub_value(value: Any, *, key: str | None = None) -> Any:
-    """Recursively scrub sensitive values in common logging payload shapes."""
+@overload
+def _scrub_value(value: str, *, key: str | None = ...) -> str: ...
 
+
+@overload
+def _scrub_value(value: Mapping[str, object], *, key: str | None = ...) -> dict[str, object]: ...
+
+
+@overload
+def _scrub_value(value: tuple[object, ...], *, key: str | None = ...) -> tuple[object, ...]: ...
+
+
+@overload
+def _scrub_value(value: list[object], *, key: str | None = ...) -> list[object]: ...
+
+
+@overload
+def _scrub_value(value: set[object], *, key: str | None = ...) -> set[object]: ...
+
+
+@overload
+def _scrub_value(value: object, *, key: str | None = ...) -> object: ...
+
+
+# ANY-RETURN-RATIONALE-SCRUB-OVERLOAD-IMPL:
+# The implementation overload returns Any to subsume all concrete overload
+# return types per mypy overload rules.
+def _scrub_value(value: object, *, key: str | None = None) -> Any:  # ANY-RETURN-RATIONALE-SCRUB-OVERLOAD-IMPL
+    """Recursively scrub sensitive values in common logging payload shapes."""
     if isinstance(value, str):
         return _scrub_text(value, key=key)
     if isinstance(value, Mapping):
@@ -130,9 +168,11 @@ def _scrub_value(value: Any, *, key: str | None = None) -> Any:
     return value
 
 
+# ANY-RETURN-RATIONALE-LOGGING-POSITIONAL-ARGS: args/return mirror the stdlib
+# logging.LogRecord positional-args tuple, whose element types are arbitrary
+# %-formatting operands.
 def _scrub_positional_args(message: str, args: tuple[Any, ...]) -> tuple[Any, ...]:
     """Scrub tuple-style logging args using keys inferred from ``message``."""
-
     placeholders = list(_PERCENT_PLACEHOLDER_RE.finditer(message))
     return tuple(
         _scrub_value(arg, key=placeholders[index].group("key") if index < len(placeholders) else None)
@@ -143,7 +183,17 @@ def _scrub_positional_args(message: str, args: tuple[Any, ...]) -> tuple[Any, ..
 class SecretScrubbingFilter(logging.Filter):
     """Redact sensitive fields from log records before formatting."""
 
+    @override
     def filter(self, record: logging.LogRecord) -> bool:
+        """Scrub sensitive values from ``record`` in-place and return ``True`` to allow it.
+
+        Args:
+            record: The log record whose ``msg``, ``args``, ``exc_info``,
+                ``exc_text``, and extra fields are scrubbed before formatting.
+
+        Returns:
+            Always ``True`` — every record is allowed through after scrubbing.
+        """
         if isinstance(record.msg, str):
             record.msg = _scrub_text(record.msg)
         else:
@@ -151,12 +201,21 @@ class SecretScrubbingFilter(logging.Filter):
 
         if isinstance(record.args, tuple | list) and isinstance(record.msg, str):
             scrubbed_args = _scrub_positional_args(record.msg, tuple(record.args))
-            record.args = cast(
-                Any,
-                list(scrubbed_args) if isinstance(record.args, list) else scrubbed_args,
-            )
-        elif record.args:
-            record.args = _scrub_value(record.args)
+            # ``logging.LogRecord.args`` is annotated ``tuple[object, ...]
+            # | Mapping[str, object] | None``; ``list`` is not in the
+            # union even though logging accepts it at runtime.
+            # Normalising to a tuple sidesteps the union mismatch
+            # without changing the runtime contract.
+            record.args = tuple(scrubbed_args)
+        elif isinstance(record.args, Mapping):
+            scrubbed_mapping = {str(k): _scrub_value(v, key=str(k)) for k, v in record.args.items()}
+            record.args = scrubbed_mapping
+        elif isinstance(record.args, tuple | list):
+            # Residual tuple/list args reached only when ``record.msg`` is not a
+            # str (the positional branch above requires a str format). Preserve
+            # the original ``_scrub_value`` element-wise scrubbing so no args
+            # path skips redaction.
+            record.args = tuple(_scrub_value(item) for item in record.args)
 
         if record.exc_info is not None:
             record.exc_text = _scrub_text(_EXCEPTION_FORMATTER.formatException(record.exc_info))
@@ -187,23 +246,20 @@ def _install_run_context_record_factory() -> None:
     # it into the closure eliminates the repeated try/except on every
     # single log record — the factory runs in the hottest path of the
     # logging subsystem.
-    cached_vars: tuple[Any, Any] | None = None
+    cached_vars: tuple[ContextVar[RunContextInfo | None], ContextVar[str | None]] | None = None
 
+    # KWARGS-ANY-RATIONALE-LOG-RECORD-FACTORY: signature mirrors the stdlib
+    # logging.setLogRecordFactory contract whose *args/**kwargs are the raw
+    # LogRecord constructor arguments.
     def _factory(*args: Any, **kwargs: Any) -> logging.LogRecord:
         nonlocal cached_vars
         record = previous_factory(*args, **kwargs)
         if cached_vars is None:
-            try:
-                from .observability._context import (
-                    RUN_CONTEXT_VAR,
-                    STEP_CONTEXT_VAR,
-                )
-            except ImportError:
-                # Partial import during module bootstrap — degrade
-                # gracefully and retry next time.
-                record.run_id = ""
-                record.step_id = ""
-                return record
+            from .observability._context import (
+                RUN_CONTEXT_VAR,
+                STEP_CONTEXT_VAR,
+            )
+
             cached_vars = (RUN_CONTEXT_VAR, STEP_CONTEXT_VAR)
         run_var, step_var = cached_vars
         ctx = run_var.get(None)
@@ -220,15 +276,34 @@ class _DropRunEventFilter(logging.Filter):
 
     Records carrying a ``run_event`` extra are the per-run JSONL sink's
     diet — they're already persisted to ``events.jsonl`` via
-    :class:`aeat.core.observability.JsonlRunSink`. Echoing them on stderr as
-    well would spam the console with one ``run.event NAVIGATION`` line
-    per step; suppressing them here removes the noise while leaving
-    the record intact for any other handler (including the JSONL
-    sink). See audit finding S2 (vaultspec-code-reviewer, 2026-04-21).
+    :class:`~aeat.core.observability._sink.JsonlRunSink`. Echoing them
+    on stderr as well would spam the console with one
+    ``run.event NAVIGATION`` line per step; suppressing them here
+    removes the noise while leaving the record intact for any other
+    handler (including the JSONL sink).
     """
 
+    @override
     def filter(self, record: logging.LogRecord) -> bool:
         return getattr(record, "run_event", None) is None
+
+
+def default_log_file_path() -> Path:
+    """Return the file path for non-interactive project logs.
+
+    The diagnostic log is rooted under ``aeat_log_dir``, which the
+    :class:`~aeat.core.config.Settings` validator derives from
+    ``<aeat_local_storage_root>/logs`` when no explicit ``AEAT_LOG_DIR``
+    override is supplied — so the log stays isolated per workspace
+    rather than mixing every session's records into a single
+    system-wide file.
+    """
+    from .config import load_settings
+
+    log_dir = load_settings().aeat_log_dir
+    if log_dir is None:  # pragma: no cover - validator always populates the field
+        log_dir = load_settings().aeat_local_storage_root / "logs"
+    return log_dir.expanduser() / _DEFAULT_LOG_FILE_NAME
 
 
 def configure_logging() -> None:
@@ -237,6 +312,12 @@ def configure_logging() -> None:
     if _CONFIGURED:
         return
 
+    from .config import load_settings
+
+    log_file = default_log_file_path()
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+
+    settings = load_settings()
     logging.config.dictConfig(
         {
             "version": 1,
@@ -248,19 +329,41 @@ def configure_logging() -> None:
                 "drop_run_event": {"()": f"{__name__}._DropRunEventFilter"},
             },
             "handlers": {
-                "default": {
-                    "level": "INFO",
+                "stderr": {
+                    "level": settings.aeat_log_stderr_level,
                     "formatter": "standard",
                     "class": "logging.StreamHandler",
                     "stream": "ext://sys.stderr",
                     "filters": ["drop_run_event"],
                 },
+                "file": {
+                    "level": settings.aeat_log_file_level,
+                    "formatter": "standard",
+                    "class": "logging.FileHandler",
+                    "filename": str(log_file),
+                    "encoding": "utf-8",
+                    "filters": ["drop_run_event"],
+                },
             },
             "root": {
-                "handlers": ["default"],
-                "level": "INFO",
+                "handlers": ["stderr", "file"],
+                "level": settings.aeat_log_root_level,
             },
-        }
+            "loggers": {
+                "alembic.runtime.plugins": {
+                    "level": "WARNING",
+                    "propagate": True,
+                },
+                "pdfminer": {
+                    "level": "WARNING",
+                    "propagate": True,
+                },
+                "pikepdf._core": {
+                    "level": "WARNING",
+                    "propagate": True,
+                },
+            },
+        },
     )
 
     # Local import: the observability layer imports ``aeat.core.logging`` for
@@ -277,6 +380,76 @@ def configure_logging() -> None:
             handler.addFilter(SecretScrubbingFilter())
 
     _CONFIGURED = True
+
+
+def set_log_level(level: int, *, file_level: int = logging.DEBUG) -> None:
+    """Apply ``level`` to the root logger and every attached handler.
+
+    The root logger itself is always set to ``logging.DEBUG`` so no
+    record is discarded before reaching a handler; each handler then
+    applies its own level gate.  ``FileHandler`` instances receive
+    ``file_level`` (default ``DEBUG``) to keep the diagnostic log
+    comprehensive.  All other handlers (typically the stderr stream
+    handler) receive ``level``.
+
+    :func:`configure_logging` is called first so the dictConfig contract
+    is in place before any level mutation.
+
+    Args:
+        level: The effective level for non-file handlers (e.g.
+            ``logging.INFO`` for verbose mode).
+        file_level: The level applied to :class:`logging.FileHandler`
+            instances (default ``logging.DEBUG``).
+    """
+    configure_logging()
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+    for handler in root_logger.handlers:
+        if isinstance(handler, logging.FileHandler):
+            handler.setLevel(file_level)
+        else:
+            handler.setLevel(level)
+
+
+def attach_run_sink(sink: logging.Handler) -> None:
+    """Install ``SecretScrubbingFilter`` on ``sink`` then attach it to root.
+
+    Ensures every record flowing through the JSONL run sink is scrubbed
+    before it reaches the serialiser, even when the root-logger filter
+    has already scrubbed the shared record in-place.  The filter is
+    idempotent: a second call with the same sink is a no-op because the
+    guard checks ``root_logger.handlers`` for an existing instance.
+
+    Args:
+        sink: The :class:`logging.Handler` (typically
+            :class:`aeat.core.observability._sink.JsonlRunSink`) to
+            attach to the root logger.
+    """
+    if not any(isinstance(f, SecretScrubbingFilter) for f in sink.filters):
+        sink.addFilter(SecretScrubbingFilter())
+    logging.getLogger().addHandler(sink)
+
+
+def detach_run_sink(sink: logging.Handler) -> None:
+    """Remove ``sink`` from the root logger and perform symmetric teardown.
+
+    Reverses every side-effect of :func:`attach_run_sink`: the handler is
+    removed from the root logger, the :class:`SecretScrubbingFilter`
+    instances that :func:`attach_run_sink` installed on the sink are
+    removed, and the sink is flushed so in-flight records reach their
+    destination before the handle is released.
+
+    The caller is responsible for closing the sink after detach; this
+    function deliberately does not call :meth:`~logging.Handler.close` so
+    a caller can flush output and inspect state before teardown.
+
+    Args:
+        sink: The :class:`logging.Handler` previously attached by
+            :func:`attach_run_sink`.
+    """
+    logging.getLogger().removeHandler(sink)
+    sink.filters = [f for f in sink.filters if not isinstance(f, SecretScrubbingFilter)]
+    sink.flush()
 
 
 def get_logger(name: str) -> logging.Logger:

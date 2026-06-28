@@ -6,6 +6,7 @@ tags:
   - "#exec"
   - "#modelo-inventory"
 date: 2026-04-13
+modified: '2026-04-13'
 related:
   - "[[2026-04-13-modelo-inventory-plan]]"
   - "[[2026-04-13-modelo-inventory-adr]]"

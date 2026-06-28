@@ -1,0 +1,9 @@
+[[revisions."2021".casillas]]
+id = "0670"
+number = "0670"
+label = "Resultado de la declaración ( [0610] - [0611] + [0612] - [[0613] - [0623] + [0624] - [0636] + [0637] - [0248] + [0249] - [0660] + [0661] - [0662] + [0663] + [0664] + [0666] )"
+section = ["resultados", "calculo_impuesto_res"]
+data_type = "decimal"
+semantic_role = "irpf_resultado_declaracion"
+legal_refs = ["ley-35-2006:art-103"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

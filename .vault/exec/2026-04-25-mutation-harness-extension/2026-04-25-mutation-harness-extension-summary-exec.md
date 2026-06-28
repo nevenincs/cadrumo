@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#mutation-harness-extension'
 date: '2026-04-25'
+modified: '2026-04-25'
 related:
   - "[[2026-04-25-mutation-harness-extension-plan]]"
   - "[[2026-04-25-mutation-harness-extension-adr]]"

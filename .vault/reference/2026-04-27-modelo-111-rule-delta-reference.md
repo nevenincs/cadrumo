@@ -3,6 +3,7 @@ tags:
   - '#reference'
   - '#modelo-111-calc-verify'
 date: '2026-04-27'
+modified: '2026-04-27'
 related:
   - "[[2026-04-27-modelo-111-calc-verify-research]]"
   - "[[2026-04-27-modelo-111-calc-verify-adr]]"
@@ -251,3 +252,4 @@ available but are not gating.
 | Date          | Author                         | Change                                                                                                                                                                                                                                                                                                                                                       |
 | :------------ | :----------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | 2026-04-27    | Issue `#318` implementation    | Initial manifest. 2024 / 2025 / 2026 ruleset state recorded as identical. Sibling 2024 + 2026 extractor classes registered in `src/aeat/adapters/inbound/declaracion/_extractors/__init__.py` alongside the existing 2025 class — closes the post-PR-440 registry gap surfaced on M130 / `#321`. Per-year mutation harness fingerprint (`sub_op = 1`, `percent_rate_param = 2`) extended to `modelo_111.2026`. |
+| 2026-05-21    | `declaracion-extraction-architecture` ADR | The per-modelo extractor classes (`Modelo111V2024Extractor`, `Modelo111V2026Extractor`, `_extractors/__init__.py` registry) described in the 2026-04-27 audit-trail entry were deleted. Declaración extraction is now driven by registry `declaracion_pdf` extraction profiles. See ADR `2026-05-21-declaracion-extraction-architecture-adr`. |

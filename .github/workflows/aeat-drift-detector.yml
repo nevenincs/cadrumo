@@ -1,0 +1,107 @@
+# AEAT live-parity drift detector
+#
+# Runs the GROI Spanish-ROI live-read tests against AEAT under a
+# stored cl@ve-movil session every Sunday morning. Failure means
+# AEAT changed the form shape, response shape, or selectors used by
+# the GROI driver — the project oracle's selectors must be updated.
+#
+# Required secrets (GitHub repo settings -> Secrets and variables ->
+# Actions):
+#   AEAT_CLAVE_MOVIL_DNI_NIE          User identity for cl@ve-movil
+#   AEAT_CLAVE_MOVIL_DNI_FECHA        Identity verification date
+#   AEAT_CLAVE_MOVIL_NIE_SOPORTE      Identity card support number
+#   AEAT_CLAVE_MOVIL_FULL_LIVE_AUTH   Set to "1" to enable headless
+#                                     authentication
+#   AEAT_CLAVE_PREFER_NON_QR          Set to "true" to skip QR flow
+#
+# Use a dedicated cl@ve-movil identity for this workflow — never the
+# project owner's personal credentials. Identity rotation should be
+# handled out-of-band.
+#
+# When this workflow fails, an issue is automatically opened with
+# the `aeat-drift` label so the maintainer is notified within hours.
+
+name: AEAT drift detector
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Every Sunday at 07:00 UTC (off-minute weekend slot).
+    - cron: '0 7 * * 0'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  drift-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # just
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          python-version: '3.13'
+          enable-cache: true
+
+      - name: Bootstrap
+        run: |
+          uv sync --frozen
+          uv run vaultspec-core install --force
+
+      - name: Install Playwright browsers
+        run: uv run playwright install --with-deps chromium
+
+      - name: Run GROI live drift tests
+        env:
+          AEAT_LIVE_TESTS_ENABLED: '1'
+          AEAT_AUTH_PROVIDER: clave-movil
+          AEAT_CLAVE_MOVIL_FULL_LIVE_AUTH: ${{ secrets.AEAT_CLAVE_MOVIL_FULL_LIVE_AUTH }}
+          AEAT_CLAVE_PREFER_NON_QR: ${{ secrets.AEAT_CLAVE_PREFER_NON_QR }}
+          AEAT_CLAVE_MOVIL_DNI_NIE: ${{ secrets.AEAT_CLAVE_MOVIL_DNI_NIE }}
+          AEAT_CLAVE_MOVIL_DNI_FECHA: ${{ secrets.AEAT_CLAVE_MOVIL_DNI_FECHA }}
+          AEAT_CLAVE_MOVIL_NIE_SOPORTE: ${{ secrets.AEAT_CLAVE_MOVIL_NIE_SOPORTE }}
+        run: |
+          uv run --no-sync pytest \
+            src/aeat/adapters/outbound/aeat/sede/test_groi_oracle_live.py \
+            src/aeat/adapters/outbound/aeat/sede/test_groi_dependency_chain_live.py \
+            -v --junitxml=drift-junit.xml
+
+      - name: Upload drift results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: drift-results
+          path: drift-junit.xml
+
+      - name: Open drift issue on failure
+        if: failure()
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const title = 'AEAT drift detector: GROI live tests failed';
+            const body = [
+              'The weekly AEAT drift detector found the GROI live tests',
+              'failing. AEAT likely changed the form shape, response',
+              'shape, or selectors used by the GROI oracle.',
+              '',
+              `Workflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              '',
+              'Remediation: re-capture the AEAT form HTML, update the',
+              'driver selectors in `src/aeat/adapters/outbound/aeat/sede/_groi_check.py`,',
+              'and re-run the tests locally with `AEAT_LIVE_TESTS_ENABLED=1`.',
+            ].join('\n');
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ['aeat-drift'],
+            });

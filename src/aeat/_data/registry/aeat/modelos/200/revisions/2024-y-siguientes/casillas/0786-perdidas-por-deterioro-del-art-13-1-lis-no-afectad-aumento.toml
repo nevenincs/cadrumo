@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02651"
+number = "02651"
+label = "Pérdidas por deterioro del art. 13.1 LIS no afectada por el art. 11.12 ni por DT 33ª.1 LIS - Aumento - Correcciones del ejercicio - Permanentes [02651]"
+section = ["perdidas_por_deterioro_del_art_13_1_lis_no_afectad", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_art13_1_no_afectado_permanente_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02651"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02652"
+number = "02652"
+label = "Pérdidas por deterioro del art. 13.1 LIS no afectada por el art. 11.12 ni por DT 33ª.1 LIS - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02652]"
+section = ["perdidas_por_deterioro_del_art_13_1_lis_no_afectad", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_art13_1_no_afectado_temporaria_ejercicio_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02652"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02653"
+number = "02653"
+label = "Pérdidas por deterioro del art. 13.1 LIS no afectada por el art. 11.12 ni por DT 33ª.1 LIS - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02653]"
+section = ["perdidas_por_deterioro_del_art_13_1_lis_no_afectad", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_art13_1_no_afectado_temporaria_anteriores_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02653"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02654"
+number = "02654"
+label = "Pérdidas por deterioro del art. 13.1 LIS no afectada por el art. 11.12 ni por DT 33ª.1 LIS - Aumento - Saldo pendiente a principio de ejercicio [02654]"
+section = ["perdidas_por_deterioro_del_art_13_1_lis_no_afectad", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_art13_1_no_afectado_saldo_inicial"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02654"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02655"
+number = "02655"
+label = "Pérdidas por deterioro del art. 13.1 LIS no afectada por el art. 11.12 ni por DT 33ª.1 LIS - Aumento - Saldo pendiente a fin de ejercicio [02655]"
+section = ["perdidas_por_deterioro_del_art_13_1_lis_no_afectad", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_art13_1_no_afectado_saldo_final_neto"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02655"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

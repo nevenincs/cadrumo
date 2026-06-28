@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "1912"
+number = "1912"
+label = "Incremento de la deducción (cantidades no aplicadas en el ejercicio 2020)"
+section = ["resultados", "calculo_impuesto_res", "ampliacion_deduc_mater_res"]
+semantic_role = "irpf_incremento_maternidad_no_aplicado_2020"
+legal_refs = ["ley-35-2006:art-81"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

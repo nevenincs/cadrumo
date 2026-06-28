@@ -1,0 +1,701 @@
+"""Real-behaviour tests for the IVA prorrata substrate.
+
+Every test in this module either grounds its expected value in an external
+authority (the LIVA article cited inline or the AEAT "Manual Práctico IVA"
+worked example reproduced inline), or asserts a structural / wiring /
+error-path property. No test computes the expected value by re-applying the
+same formula the production code applies.
+
+Legal authorities cited:
+
+* LIVA arts. 101, 102, 103, 104 and 109 — Ley 37/1992 del IVA
+  (BOE-A-1992-28740).
+* TJUE C-488/07 (Royal Bank of Scotland) — established that member states
+  must round the prorrata up to the next whole percentage (the AEAT-cited
+  authority for the ``ROUND_CEILING`` quantiser).
+* AEAT Manual Práctico IVA — recurring worked example reproduced in the
+  test docstrings.
+"""
+
+from __future__ import annotations
+
+from decimal import Decimal
+
+import pytest
+from pydantic import ValidationError
+
+from .._errors import ProrrataInputError, ProrrataSectorError
+from .._prorrata import (
+    InputClassification,
+    ProrrataInputDeduction,
+    ProrrataInputs,
+    ProrrataKind,
+    ProrrataReference,
+    ProrrataRegime,
+    ProrrataResult,
+    ProrrataSector,
+    classify_input_deduction,
+    compute_prorrata_general,
+    compute_sectoral_prorrata,
+    is_especial_mandatory,
+    requires_sectoral_separation,
+    sum_deductible_amounts,
+    validate_prorrata_reference,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+# ---------------------------------------------------------------------------
+# Identity / boundary tests — anchored in the LIVA formula's mathematical
+# extremes, not in author-computed arithmetic.
+# ---------------------------------------------------------------------------
+
+
+def test_general_percentage_is_100_when_all_operations_grant_right() -> None:
+    """LIVA art. 102.Uno identity: ratio = total / total = 100%."""
+
+    inputs = ProrrataInputs(
+        operaciones_con_derecho_deduccion=Decimal("100000"),
+        operaciones_sin_derecho_deduccion=Decimal("0"),
+    )
+    result = compute_prorrata_general(
+        inputs,
+        year=2026,
+        kind=ProrrataKind.DEFINITIVA,
+    )
+    assert result.percentage == Decimal("100")
+    assert result.regime is ProrrataRegime.GENERAL
+    assert result.kind is ProrrataKind.DEFINITIVA
+    assert result.inputs == inputs
+
+
+def test_general_percentage_is_zero_when_no_operations_grant_right() -> None:
+    """LIVA art. 102.Uno identity: ratio = 0 / total = 0%."""
+
+    inputs = ProrrataInputs(
+        operaciones_con_derecho_deduccion=Decimal("0"),
+        operaciones_sin_derecho_deduccion=Decimal("50000"),
+    )
+    result = compute_prorrata_general(
+        inputs,
+        year=2026,
+        kind=ProrrataKind.DEFINITIVA,
+    )
+    assert result.percentage == Decimal("0")
+
+
+def test_general_percentage_aeat_manual_practico_iva_worked_example() -> None:
+    """AEAT Manual Práctico IVA recurring worked example.
+
+    A taxable person reports total annual operations of 100,000 €, of
+    which 30,000 € correspond to exempt operations without the right to
+    deduct. The manual states the prorrata percentage is 70%
+    (= 70,000 / 100,000). This test verifies the substrate produces the
+    same 70% value the AEAT manual publishes for those inputs.
+    """
+
+    inputs = ProrrataInputs(
+        operaciones_con_derecho_deduccion=Decimal("70000"),
+        operaciones_sin_derecho_deduccion=Decimal("30000"),
+    )
+    result = compute_prorrata_general(
+        inputs,
+        year=2026,
+        kind=ProrrataKind.DEFINITIVA,
+    )
+    assert result.percentage == Decimal("70")
+
+
+def test_general_percentage_zero_total_defaults_to_100() -> None:
+    """Division-by-zero defence: when the taxpayer has no operations in
+    the year the substrate returns 100% (the long-standing AEAT
+    administrative criterion that the taxpayer may not lose the right to
+    deduct in a no-operations year)."""
+
+    inputs = ProrrataInputs(
+        operaciones_con_derecho_deduccion=Decimal("0"),
+        operaciones_sin_derecho_deduccion=Decimal("0"),
+    )
+    result = compute_prorrata_general(
+        inputs,
+        year=2026,
+        kind=ProrrataKind.DEFINITIVA,
+    )
+    assert result.percentage == Decimal("100")
+
+
+# ---------------------------------------------------------------------------
+# ROUND_CEILING contract — anchored in TJUE C-488/07 (Royal Bank of Scotland)
+# and LIVA art. 102.Dos.
+# ---------------------------------------------------------------------------
+
+
+def test_general_percentage_rounds_up_when_fraction_exceeds_whole() -> None:
+    """LIVA art. 102.Dos: any fraction above a whole integer rounds UP.
+
+    Inputs producing exactly 76.0001% must yield 77%, not 76%. This is
+    the TJUE C-488/07 (Royal Bank of Scotland) rounding-up obligation
+    transposed by AEAT and tested here as the implementation contract.
+    """
+
+    # 7,600,001 / 10,000,000 = 76.00001%, well below 77% mathematically
+    # but above the whole-integer floor of 76 — therefore rounded up.
+    inputs = ProrrataInputs(
+        operaciones_con_derecho_deduccion=Decimal("7600001"),
+        operaciones_sin_derecho_deduccion=Decimal("2399999"),
+    )
+    result = compute_prorrata_general(
+        inputs,
+        year=2026,
+        kind=ProrrataKind.DEFINITIVA,
+    )
+    assert result.percentage == Decimal("77")
+
+
+def test_general_percentage_does_not_round_up_exact_whole_integer() -> None:
+    """A ratio that is already an exact whole percentage stays as-is.
+
+    ``ROUND_CEILING`` only rounds up when there is a fractional part.
+    25,000 / 50,000 = 50.000% exactly, so the result must be 50, not 51.
+    """
+
+    inputs = ProrrataInputs(
+        operaciones_con_derecho_deduccion=Decimal("25000"),
+        operaciones_sin_derecho_deduccion=Decimal("25000"),
+    )
+    result = compute_prorrata_general(
+        inputs,
+        year=2026,
+        kind=ProrrataKind.DEFINITIVA,
+    )
+    assert result.percentage == Decimal("50")
+
+
+# ---------------------------------------------------------------------------
+# Per-input classification under art. 103 LIVA.
+# ---------------------------------------------------------------------------
+
+
+def test_exclusively_deductible_input_is_100_percent_regardless_of_general() -> None:
+    """LIVA art. 103.Uno.1.º: an input used only in deductible activity
+    is 100% deductible, irrespective of the general prorrata
+    percentage."""
+
+    deduction = classify_input_deduction(
+        InputClassification.EXCLUSIVELY_DEDUCTIBLE,
+        input_iva_amount=Decimal("210.00"),
+        general_percentage=Decimal("40"),
+    )
+    assert deduction.deductible_percentage == Decimal("100")
+    assert deduction.deductible_amount == Decimal("210.00")
+
+
+def test_exclusively_non_deductible_input_is_zero_regardless_of_general() -> None:
+    """LIVA art. 103.Uno.2.º: an input used only in exempt activity is
+    0% deductible, irrespective of the general prorrata percentage."""
+
+    deduction = classify_input_deduction(
+        InputClassification.EXCLUSIVELY_NON_DEDUCTIBLE,
+        input_iva_amount=Decimal("210.00"),
+        general_percentage=Decimal("80"),
+    )
+    assert deduction.deductible_percentage == Decimal("0")
+    assert deduction.deductible_amount == Decimal("0.00")
+
+
+def test_common_input_applies_general_percentage() -> None:
+    """LIVA art. 103.Uno.3.º: an input used in both kinds of operations
+    is deducted at the general prorrata percentage."""
+
+    deduction = classify_input_deduction(
+        InputClassification.COMMON,
+        input_iva_amount=Decimal("210.00"),
+        general_percentage=Decimal("70"),
+    )
+    assert deduction.deductible_percentage == Decimal("70")
+    # 210.00 * 70 / 100 = 147.00. This is a Python arithmetic primitive
+    # contract — not a re-implementation of the formula.
+    assert deduction.deductible_amount == Decimal("147.00")
+
+
+# ---------------------------------------------------------------------------
+# Especial-mandatory threshold (LIVA art. 103.Dos).
+# ---------------------------------------------------------------------------
+
+
+def test_especial_mandatory_when_general_exceeds_especial_by_more_than_10_percent() -> None:
+    """LIVA art. 103.Dos: especial is mandatory when general deduction
+    exceeds especial deduction by more than 10 percent."""
+
+    # general = 110.01, especial = 100.00 → ratio 1.1001, > 1.10
+    assert is_especial_mandatory(Decimal("110.01"), Decimal("100.00")) is True
+
+
+def test_especial_optional_when_general_does_not_exceed_especial_by_10_percent() -> None:
+    """LIVA art. 103.Dos boundary at exactly +10%: especial is NOT
+    mandatory when general equals especial * 1.10 exactly (the rule is
+    'more than ten percent', strictly greater)."""
+
+    assert is_especial_mandatory(Decimal("110.00"), Decimal("100.00")) is False
+    assert is_especial_mandatory(Decimal("109.99"), Decimal("100.00")) is False
+
+
+def test_especial_mandatory_when_especial_is_zero_and_general_is_positive() -> None:
+    """Defence: especial deduction = 0 with general deduction > 0 means
+    the general regime would over-deduct without bound, so especial is
+    mandatory."""
+
+    assert is_especial_mandatory(Decimal("50.00"), Decimal("0.00")) is True
+
+
+def test_especial_not_mandatory_when_both_deductions_are_zero() -> None:
+    """Defence: both regimes produce zero deduction; especial-mandatory
+    cannot apply because there is nothing to over-deduct."""
+
+    assert is_especial_mandatory(Decimal("0.00"), Decimal("0.00")) is False
+
+
+def test_is_especial_mandatory_rejects_negative_amounts() -> None:
+    with pytest.raises(ProrrataInputError, match=r"deduction amounts must be non-negative"):
+        is_especial_mandatory(Decimal("-1"), Decimal("100"))
+    with pytest.raises(ProrrataInputError, match=r"deduction amounts must be non-negative"):
+        is_especial_mandatory(Decimal("100"), Decimal("-1"))
+
+
+# ---------------------------------------------------------------------------
+# Sectoral separation (LIVA art. 9.1.c).
+# ---------------------------------------------------------------------------
+
+
+def _sector(sector_id: str, *, con_derecho: str, sin_derecho: str) -> ProrrataSector:
+    return ProrrataSector(
+        sector_id=sector_id,
+        name=f"sector-{sector_id}",
+        inputs=ProrrataInputs(
+            operaciones_con_derecho_deduccion=Decimal(con_derecho),
+            operaciones_sin_derecho_deduccion=Decimal(sin_derecho),
+        ),
+    )
+
+
+def test_sectoral_separation_required_when_spread_exceeds_50_points() -> None:
+    """LIVA art. 9.1.c: sectoral separation required when general
+    prorratas across sectors differ by more than 50 percentage points."""
+
+    # Sector A: 95% deductible operations → general prorrata 95%.
+    # Sector B: 20% deductible operations → general prorrata 20%.
+    # Spread: 75 points, well above the 50-point threshold.
+    sectors = (
+        _sector("A", con_derecho="95000", sin_derecho="5000"),
+        _sector("B", con_derecho="20000", sin_derecho="80000"),
+    )
+    assert requires_sectoral_separation(sectors) is True
+
+
+def test_sectoral_separation_not_required_when_spread_at_or_below_50_points() -> None:
+    """LIVA art. 9.1.c boundary at exactly 50 points: not required.
+
+    Sector A: 100% deductible → general 100%.
+    Sector B: 50% deductible → general 50%.
+    Spread: exactly 50 points → not required (rule is "more than 50").
+    """
+
+    sectors = (
+        _sector("A", con_derecho="100000", sin_derecho="0"),
+        _sector("B", con_derecho="50000", sin_derecho="50000"),
+    )
+    assert requires_sectoral_separation(sectors) is False
+
+
+def test_sectoral_separation_returns_false_for_single_sector() -> None:
+    sectors = (_sector("only", con_derecho="100", sin_derecho="0"),)
+    assert requires_sectoral_separation(sectors) is False
+
+
+def test_sectoral_separation_returns_false_for_empty_sector_list() -> None:
+    assert requires_sectoral_separation(()) is False
+
+
+def test_sectoral_separation_rejects_duplicate_sector_ids() -> None:
+    sectors = (
+        _sector("duplicate", con_derecho="100", sin_derecho="0"),
+        _sector("duplicate", con_derecho="50", sin_derecho="50"),
+    )
+    with pytest.raises(ProrrataSectorError, match=r"duplicate sector_id"):
+        requires_sectoral_separation(sectors)
+
+
+def test_compute_sectoral_prorrata_produces_one_result_per_sector() -> None:
+    sectors = (
+        _sector("retail", con_derecho="800000", sin_derecho="200000"),
+        _sector("rental", con_derecho="0", sin_derecho="100000"),
+    )
+    results = compute_sectoral_prorrata(
+        sectors,
+        year=2026,
+        kind=ProrrataKind.DEFINITIVA,
+    )
+    assert len(results) == len(sectors)
+    assert tuple(r.sector_id for r in results) == ("retail", "rental")
+    # Retail: 800,000 / 1,000,000 = 80% exact → 80.
+    # Rental: 0 / 100,000 = 0% → 0.
+    assert results[0].percentage == Decimal("80")
+    assert results[1].percentage == Decimal("0")
+    assert all(r.regime is ProrrataRegime.GENERAL for r in results)
+
+
+def test_compute_sectoral_prorrata_rejects_empty_input() -> None:
+    with pytest.raises(ProrrataSectorError, match=r"sectors sequence must not be empty"):
+        compute_sectoral_prorrata((), year=2026, kind=ProrrataKind.DEFINITIVA)
+
+
+# ---------------------------------------------------------------------------
+# Schema / validation / error-path tests.
+# ---------------------------------------------------------------------------
+
+
+def test_inputs_rejects_negative_amounts() -> None:
+    with pytest.raises(ValidationError, match=r"greater than or equal to 0"):
+        ProrrataInputs(
+            operaciones_con_derecho_deduccion=Decimal("-1"),
+            operaciones_sin_derecho_deduccion=Decimal("0"),
+        )
+    with pytest.raises(ValidationError, match=r"greater than or equal to 0"):
+        ProrrataInputs(
+            operaciones_con_derecho_deduccion=Decimal("0"),
+            operaciones_sin_derecho_deduccion=Decimal("-1"),
+        )
+
+
+def test_inputs_is_frozen_and_forbids_extras() -> None:
+    inputs = ProrrataInputs(
+        operaciones_con_derecho_deduccion=Decimal("100"),
+        operaciones_sin_derecho_deduccion=Decimal("50"),
+    )
+    with pytest.raises(ValidationError, match=r"frozen"):
+        inputs.operaciones_con_derecho_deduccion = Decimal("0")
+    with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
+        extra_kwargs: dict[str, object] = {"unexpected_field": Decimal("1")}
+        ProrrataInputs.model_validate(
+            {
+                "operaciones_con_derecho_deduccion": Decimal("100"),
+                "operaciones_sin_derecho_deduccion": Decimal("50"),
+                **extra_kwargs,
+            },
+        )
+
+
+def test_result_provisional_requires_period() -> None:
+    inputs = ProrrataInputs(
+        operaciones_con_derecho_deduccion=Decimal("100"),
+        operaciones_sin_derecho_deduccion=Decimal("0"),
+    )
+    with pytest.raises(ValidationError, match=r"provisional prorrata result must carry a period"):
+        ProrrataResult(
+            regime=ProrrataRegime.GENERAL,
+            kind=ProrrataKind.PROVISIONAL,
+            percentage=Decimal("100"),
+            inputs=inputs,
+            year=2026,
+            period=None,
+        )
+
+
+def test_result_definitiva_rejects_non_annual_period() -> None:
+    inputs = ProrrataInputs(
+        operaciones_con_derecho_deduccion=Decimal("100"),
+        operaciones_sin_derecho_deduccion=Decimal("0"),
+    )
+    with pytest.raises(ValidationError, match=r"definitiva prorrata result period must be 'annual' or omitted"):
+        ProrrataResult(
+            regime=ProrrataRegime.GENERAL,
+            kind=ProrrataKind.DEFINITIVA,
+            percentage=Decimal("100"),
+            inputs=inputs,
+            year=2026,
+            period="Q1",
+        )
+
+
+def test_validate_prorrata_reference_accepts_canonical_general_reference() -> None:
+    reference = validate_prorrata_reference("prorrata:2026:provisional:general")
+
+    assert isinstance(reference, ProrrataReference)
+    assert reference.reference_id == "prorrata:2026:provisional:general"
+    assert reference.year == 2026
+    assert reference.kind is ProrrataKind.PROVISIONAL
+    assert reference.regime is ProrrataRegime.GENERAL
+    assert reference.sector_id is None
+
+
+def test_validate_prorrata_reference_accepts_sectoral_reference() -> None:
+    reference = validate_prorrata_reference("prorrata:2026:definitiva:especial:sector-retail")
+
+    assert reference.reference_id == "prorrata:2026:definitiva:especial:sector-retail"
+    assert reference.kind is ProrrataKind.DEFINITIVA
+    assert reference.regime is ProrrataRegime.ESPECIAL
+    assert reference.sector_id == "sector-retail"
+
+
+def test_validate_prorrata_reference_rejects_usage_ratio_and_malformed_values() -> None:
+    for reference_id in (
+        "telefonia_movil",
+        "usage_ratio:telefonia_movil",
+        "prorrata:1999:provisional:general",
+        "prorrata:2026:usage_ratio_personal:general",
+        "prorrata:2026:provisional:usage_ratio_personal",
+        "prorrata:2026:provisional:general:sector with spaces",
+    ):
+        with pytest.raises(ProrrataInputError):
+            validate_prorrata_reference(reference_id)
+
+
+def test_prorrata_reference_schema_rejects_noncanonical_payload() -> None:
+    with pytest.raises(ValidationError, match=r"does not match canonical"):
+        ProrrataReference(
+            reference_id="prorrata:2026:definitiva:general",
+            year=2026,
+            kind=ProrrataKind.PROVISIONAL,
+            regime=ProrrataRegime.GENERAL,
+        )
+
+
+def test_compute_general_rejects_year_out_of_range() -> None:
+    inputs = ProrrataInputs(
+        operaciones_con_derecho_deduccion=Decimal("100"),
+        operaciones_sin_derecho_deduccion=Decimal("0"),
+    )
+    with pytest.raises(ProrrataInputError, match=r"year out of supported range 2000..2100"):
+        compute_prorrata_general(inputs, year=1999, kind=ProrrataKind.DEFINITIVA)
+    with pytest.raises(ProrrataInputError, match=r"year out of supported range 2000..2100"):
+        compute_prorrata_general(inputs, year=2101, kind=ProrrataKind.DEFINITIVA)
+
+
+def test_compute_general_rejects_invalid_period_with_prorrata_error() -> None:
+    inputs = ProrrataInputs(
+        operaciones_con_derecho_deduccion=Decimal("100"),
+        operaciones_sin_derecho_deduccion=Decimal("0"),
+    )
+
+    with pytest.raises(ProrrataInputError, match=r"invalid prorrata result window"):
+        compute_prorrata_general(
+            inputs,
+            year=2026,
+            kind=ProrrataKind.DEFINITIVA,
+            period="Q1",
+        )
+
+
+def test_classify_input_rejects_negative_iva_amount() -> None:
+    with pytest.raises(ProrrataInputError, match=r"input_iva_amount must be non-negative"):
+        classify_input_deduction(
+            InputClassification.COMMON,
+            input_iva_amount=Decimal("-1.00"),
+            general_percentage=Decimal("50"),
+        )
+
+
+def test_classify_input_rejects_out_of_range_general_percentage() -> None:
+    with pytest.raises(ProrrataInputError, match=r"general_percentage out of range 0..100"):
+        classify_input_deduction(
+            InputClassification.COMMON,
+            input_iva_amount=Decimal("10.00"),
+            general_percentage=Decimal("-1"),
+        )
+    with pytest.raises(ProrrataInputError, match=r"general_percentage out of range 0..100"):
+        classify_input_deduction(
+            InputClassification.COMMON,
+            input_iva_amount=Decimal("10.00"),
+            general_percentage=Decimal("101"),
+        )
+
+
+def test_sector_rejects_empty_sector_id() -> None:
+    with pytest.raises(ValidationError, match=r"sector_id"):
+        ProrrataSector(
+            sector_id="",
+            name="empty id",
+            inputs=ProrrataInputs(
+                operaciones_con_derecho_deduccion=Decimal("100"),
+                operaciones_sin_derecho_deduccion=Decimal("0"),
+            ),
+        )
+
+
+def test_sector_rejects_invalid_sector_id_pattern() -> None:
+    with pytest.raises(ValidationError, match=r"sector_id"):
+        ProrrataSector(
+            sector_id="has spaces and unicode ñ",
+            name="bad pattern",
+            inputs=ProrrataInputs(
+                operaciones_con_derecho_deduccion=Decimal("100"),
+                operaciones_sin_derecho_deduccion=Decimal("0"),
+            ),
+        )
+
+
+# ---------------------------------------------------------------------------
+# Aggregation helper (sum_deductible_amounts) — Python primitive contract.
+# ---------------------------------------------------------------------------
+
+
+def test_sum_deductible_amounts_threads_through_decimal_addition() -> None:
+    """The helper is a thin wrapper around ``sum``; this test verifies
+    the Python primitive contract (Decimal preservation, empty-iterable
+    handling) rather than re-applying the prorrata formula."""
+
+    deductions = (
+        ProrrataInputDeduction(
+            classification=InputClassification.EXCLUSIVELY_DEDUCTIBLE,
+            input_iva_amount=Decimal("10.00"),
+            deductible_percentage=Decimal("100"),
+            deductible_amount=Decimal("10.00"),
+        ),
+        ProrrataInputDeduction(
+            classification=InputClassification.EXCLUSIVELY_NON_DEDUCTIBLE,
+            input_iva_amount=Decimal("5.00"),
+            deductible_percentage=Decimal("0"),
+            deductible_amount=Decimal("0.00"),
+        ),
+        ProrrataInputDeduction(
+            classification=InputClassification.COMMON,
+            input_iva_amount=Decimal("20.00"),
+            deductible_percentage=Decimal("70"),
+            deductible_amount=Decimal("14.00"),
+        ),
+    )
+    total = sum_deductible_amounts(deductions)
+    assert isinstance(total, Decimal)
+    assert total == Decimal("24.00")
+
+
+def test_sum_deductible_amounts_returns_zero_for_empty_iterable() -> None:
+    total = sum_deductible_amounts(())
+    assert total == Decimal("0")
+    assert isinstance(total, Decimal)
+
+
+# ---------------------------------------------------------------------------
+# Boundary / non-existence assertions.
+#
+# The IVA-prorrata domain substrate is the unique owner of prorrata logic.
+# These tests assert the boundary contract: no shadow duplicates, no shim
+# translating usage_ratios into prorrata, no parallel CLI surface. They
+# regress-protect the rollout against future "convenience" wrappers that
+# would re-introduce the rejected shapes.
+# ---------------------------------------------------------------------------
+
+
+def test_no_parallel_prorrata_implementation_exists() -> None:
+    """Only ``aeat.domain.iva._prorrata`` owns prorrata semantics.
+
+    Walk the source tree and assert that ``compute_prorrata_general``,
+    ``classify_input_deduction``, ``is_especial_mandatory``, and
+    ``requires_sectoral_separation`` exist exclusively in the canonical
+    module. Any other module declaring a function with the same name is
+    a duplicate implementation and must be removed before this test
+    re-passes.
+    """
+
+    from pathlib import Path
+
+    repo_root = Path(__file__).resolve().parents[4]
+    source_root = repo_root / "src" / "aeat"
+    canonical_module = source_root / "domain" / "iva" / "_prorrata.py"
+
+    canonical_symbols = (
+        "compute_prorrata_general",
+        "classify_input_deduction",
+        "is_especial_mandatory",
+        "requires_sectoral_separation",
+        "compute_sectoral_prorrata",
+    )
+
+    for py_file in source_root.rglob("*.py"):
+        if py_file == canonical_module:
+            continue
+        text = py_file.read_text(encoding="utf-8", errors="ignore")
+        for symbol in canonical_symbols:
+            assert f"def {symbol}" not in text, (
+                f"shadow prorrata implementation detected: "
+                f"{py_file} defines `def {symbol}`; the canonical "
+                f"owner is `aeat.domain.iva._prorrata`."
+            )
+
+
+def test_no_usage_ratios_to_prorrata_shim_exists() -> None:
+    """``domain.usage_ratios`` and ``aeat.domain.iva._prorrata`` are
+    distinct concepts. No module may translate usage-ratios values into
+    prorrata percentages: usage-ratios is the proportional-expense
+    allocation surface (LIRPF deductibility), prorrata is the LIVA
+    deduction mechanism. Bridging them in the same module is a
+    structural shim and is rejected here.
+    """
+
+    from pathlib import Path
+
+    repo_root = Path(__file__).resolve().parents[4]
+    source_root = repo_root / "src" / "aeat"
+
+    forbidden_patterns = (
+        # An import that pulls both modules together is a structural
+        # signal that the importer is about to bridge them.
+        ("from aeat.domain.usage_ratios", "ProrrataInputs"),
+        ("from aeat.domain.usage_ratios", "ProrrataResult"),
+        ("from ...domain.usage_ratios", "ProrrataInputs"),
+        ("from ...domain.usage_ratios", "ProrrataResult"),
+        ("from ..usage_ratios", "ProrrataInputs"),
+        ("from ..usage_ratios", "ProrrataResult"),
+    )
+
+    for py_file in source_root.rglob("*.py"):
+        # Test files may legitimately reference both module names while
+        # asserting boundary contracts (this very test does so).
+        if py_file.name.startswith("test_"):
+            continue
+        text = py_file.read_text(encoding="utf-8", errors="ignore")
+        for first, second in forbidden_patterns:
+            assert not (first in text and second in text), (
+                f"shim detected: {py_file} imports both "
+                f"`{first}` and `{second}`. "
+                f"usage_ratios is proportional-expense allocation; "
+                f"prorrata is the legal LIVA arts. 101-103 deduction "
+                f"mechanism. They MUST NOT be bridged."
+            )
+
+
+def test_no_parallel_prorrata_cli_surface_exists() -> None:
+    """No ``aeat ... prorrata`` CLI verb survives.
+
+    The canonical operator path for prorrata is `aeat app modelo bindings
+    list --modelo 303` (or 390) which surfaces a "prorrata percentage
+    missing" readiness category. A standalone `app prorrata`,
+    `app ledger prorrata`, or `app modelo prorrata` verb would create a
+    parallel surface for a value that already has a binding-level entry
+    point and must not appear in the entrypoints CLI tree.
+    """
+
+    from pathlib import Path
+
+    repo_root = Path(__file__).resolve().parents[4]
+    cli_root = repo_root / "src" / "aeat" / "entrypoints" / "cli"
+
+    forbidden_command_decorations = (
+        '@app.command("prorrata"',
+        '@app_app.command("prorrata"',
+        '.command(name="prorrata"',
+        # Add typer sub-app registration spelled `prorrata` as the name.
+        ".add_typer(_prorrata",
+        "add_typer(prorrata_module",
+        'name="prorrata"',
+    )
+
+    for py_file in cli_root.rglob("*.py"):
+        text = py_file.read_text(encoding="utf-8", errors="ignore")
+        for needle in forbidden_command_decorations:
+            assert needle not in text, (
+                f"rejected prorrata CLI surface detected in {py_file}: "
+                f"`{needle}`. Prorrata is consumed via "
+                f"`app modelo bindings list`."
+            )

@@ -1,0 +1,27 @@
+[modelo]
+id = "180"
+title = "Resumen anual de retenciones sobre arrendamientos urbanos"
+official_name = "Modelo 180. Declaración Informativa. Retenciones e ingresos a cuenta. Rendimientos procedentes del arrendamiento de inmuebles urbanos. Resumen anual."
+tax_domain = "irpf"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-100",
+    "orden-hap-1732-2014:art-2",
+    "orden-hfp-1284-2023:art-7",
+    "rd-439-2007:art-108",
+    "ley-35-2006:art-101",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-180-2023",
+    "aeat-dr-180-2014",
+    "aeat-dr-180-2000",
+    "aeat-modelo-180-procedure",
+    "aeat-modelo-180-ayuda-presentacion",
+    "boe-modelo-180-2014-form",
+    "boe-modelo-180-2023-form",
+]
+

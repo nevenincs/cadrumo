@@ -1,0 +1,11 @@
+[[revisions.2025-y-siguientes.formulas]]
+id = "modelo-202-base-imponible-corregida"
+target_casilla_id = "16"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ op = "add", args = [{ op = "subtract", args = [{ op = "subtract", args = [{ casilla_id = "13" }, { casilla_id = "44" }] }, { casilla_id = "14" }] }, { casilla_id = "45" }] }, { casilla_id = "46" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]
+
+[[revisions.2025-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-202-instructions"
+required_text = ["clave [16]", "sin poder ser negativa"]

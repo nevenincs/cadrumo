@@ -1,0 +1,20 @@
+[modelo]
+id = "840"
+title = "Impuesto sobre Actividades Económicas (declaración censal)"
+official_name = "Modelo 840. Declaración del Impuesto sobre Actividades Económicas (alta, variación, baja)."
+tax_domain = "iae"
+cadence = "ad_hoc"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "identity"
+legal_refs = [
+    "rdl-2-2004:art-78",
+    "rdl-2-2004:art-82",
+    "rdl-2-2004:art-90",
+    "orden-hac-2572-2003:apartado-1",
+    "orden-hac-2572-2003:apartado-6",
+]
+source_refs = [
+    "aeat-dr-840",
+    "boe-modelo-840-2003-form",
+]
+

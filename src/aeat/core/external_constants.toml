@@ -1,0 +1,233 @@
+## External constants registry.
+##
+## Single source of truth for third-party hostnames, AEAT service paths,
+## OAuth scopes, and remote API endpoints that the codebase consumes. Values
+## here are externally-defined identifiers that may change with AEAT portal
+## redesigns, OAuth-scope reorganisations, or LLM-vendor URL renames.
+##
+## Loaded by `aeat.core.external_constants.load_external_constants`. Bound
+## to `Settings.external` via `Settings.external_constants()`.
+
+[aeat.domains]
+host_suffix = "agenciatributaria.gob.es"
+sede = "https://sede.agenciatributaria.gob.es"
+www1 = "https://www1.agenciatributaria.gob.es"
+www2 = "https://www2.agenciatributaria.gob.es"
+www3 = "https://www3.agenciatributaria.gob.es"
+www6 = "https://www6.agenciatributaria.gob.es"
+www12 = "https://www12.agenciatributaria.gob.es"
+aeat_gob = "https://agenciatributaria.gob.es"
+legacy_www = "https://www.agenciatributaria.es"
+clave = "https://clave.gob.es"
+boe = "https://www.boe.es"
+
+[aeat.sede_paths]
+auth_gate_4033 = "/Sede/errores/erro4033.html"
+expedientes_resumen = "/wlpl/TEWV-CORE/ResumenVlt"
+declarations_listing = "/wlpl/SCEJ-MANT/CONSUL/index.zul"
+cotejo_query = "/wlpl/KATA-APLI/cotejo/CotejoIdSv"
+cotejo_document = "/wlpl/KATA-APLI/cotejo/CotejoDocIdSv"
+notifications_summary = "/wlpl/GNNO-JDIT/ResumenInteresados"
+notifications_query = "/wlpl/GNNO-JDIT/SvInteresadosQuery?VEZ=BUSCAR1"
+certificate_selector = "/wlpl/BUCV-JDIT/SelectorCertificado"
+censo_g313_launcher = "/Sede/procedimientoini/G313.shtml"
+r210_simulator_open_ajax = "/wlpl/PRET-R210/SimuladorOpenAjax"
+borrador_100_detail_template = "/wlpl/PROC-RENTA/borrador/{year}?expediente={expediente_id}"
+declaracion_consult = "/wlpl/CCD-WLPL/ConsultarDecl"
+clave_movil_login = "/wlpl/CLMV-CLAV/Movil?op=Login"
+expediente_detail_template = "/wlpl/TC-UTIL/Expediente/Detalle?EXP={expediente_id}"
+irpf_expediente_detail_year_prefix = "/wlpl/DASR-CORE/AccesoDR"
+irpf_expediente_detail_year_suffix = "RVlt"
+notificaciones = "/wlpl/TC-UTIL/NOT-L/Notificacion"
+iva_compensation_wallet = "/wlpl/DAI3-RUTI/CarteraCuotas"
+
+[aeat.clave_movil]
+selector_access_url_template = "https://sede.agenciatributaria.gob.es/static_files/common/html/selector_acceso/SelectorAccesos.html?rep=S&ref={target}&aut=CP"
+selector_access_path_marker = "SelectorAccesos"
+dialogo_representacion_path_marker = "DialogoRepresentacion"
+dialogo_representacion_path = "/wlpl/OVCT-CXEW/DialogoRepresentacion"
+obtener_clave_movil_path_marker = "ObtenerClaveMovil"
+obtener_clave_movil_qr_path_marker = "ObtenerClaveMovilQR"
+cancelar_clave_movil_path_marker = "CancelarClaveMovil"
+obtener_clave_movil_qr_path = "/wlpl/MOVI-P24H/ObtenerClaveMovilQR"
+obtener_clave_movil_non_qr_path = "/wlpl/MOVI-P24H/ObtenerClaveMovil?qAA=2"
+autentica_dni_nie_contraste_path = "/wlpl/MOVI-P24H/AutenticaDniNieContrasteh"
+cancelar_clave_movil_path = "/wlpl/MOVI-P24H/CancelarClaveMovil"
+obtener_clave_movil_browser_global = "ObtenerClaveMovil"
+authorize_button_selector = "button[name=\"autoriza-P\"]"
+non_qr_link_selector = "a[href*=\"ObtenerClaveMovil?qAA=2\"]"
+nif_input_selector = "#NIF"
+dni_fecha_input_selector = "#FECHA"
+dni_fecha_visible_selector = "#FECHA:visible"
+nie_soporte_input_selector = "#SOPORTE"
+nie_soporte_visible_selector = "#SOPORTE:visible"
+continue_button_selector = "#botonContinuar"
+continue_button_visible_selector = "#botonContinuar:visible"
+verification_code_selector = "#spanCodigoVerificacion"
+wait_text_markers = [
+  "codigo de verificacion",
+  "código de verificación",
+  "spanCodigoVerificacion",
+  "clave movil",
+  "cl@ve móvil",
+  "cl@ve movil",
+]
+pending_petition_text_markers = [
+  "no ha sido posible generar una nueva petición",
+  "no ha sido posible generar una nueva petici",
+  "petición pendiente",
+  "peticion pendiente",
+  "rechace la petición pendiente",
+  "rechace la peticion pendiente",
+]
+
+[aeat.pre303]
+presentation_service_path = "/wlpl/BUGC-JDIT/VentanaCensalIva?forigen=pre303"
+access_help_path = "/Sede/iva/pre-303/acceder-pre303.html"
+faq_general_path = "/Sede/iva/pre-303/preguntas-frecuentes/cuestiones-generales-sobre-servicio-pre303_.html"
+faq_specific_path = "/Sede/iva/pre-303/preguntas-frecuentes/cuestiones-especificas-sobre-servicio-pre303_.html"
+functionalities_path = "/Sede/iva/pre-303/que-servicios-funcionalidades-tiene-nuevo-pre303.html"
+procedures_path = "/Sede/iva/pre-303/gestiones.html"
+iva_wallet_header_tokens = [
+  "ejercicio",
+  "periodo",
+  "disponible",
+]
+iva_wallet_total_label_tokens = [
+  "compensar",
+  "pendientes",
+]
+iva_wallet_empty_page_tokens = [
+  "cartera",
+  "cuotas",
+]
+official_access_auth_methods = [
+  "Certificado o DNI electrónico",
+  "clave PIN",
+]
+representation_own_name_selector = "#propio"
+representation_own_name_label_selector = "label[for=\"propio\"]"
+representation_representative_selector = "input[name=\"representacion\"][id=\"representante\"]"
+representation_submit_selector = "form#repForm button[type=\"submit\"]"
+representation_own_name_action_label = "representation-gate-own-name-continue"
+wallet_discovered_entrypoint_action_label = "wallet-discovered-entrypoint-open"
+wallet_execute_read_action_label = "wallet-execute-read-query"
+alert_modal_selector = "#alertsModal"
+alert_continue_button_text = "continuar"
+wallet_form_selector = "form#Form"
+wallet_execute_submit_selector = "input#ejecutar[name=\"ejecutar\"][type=\"submit\"]"
+tipo_actuacion_own_name_link_selector = "a[href*=\"np=true\"]"
+wallet_ejercicio_input_selector = "input#ejercicio[name=\"ejercicio\"]"
+wallet_periodo_input_selector = "input#periodo[name=\"periodo\"]"
+
+[aeat.help_pages]
+csv_verification = "/Sede/ayuda/consultas-practicas-manuales/verificacion-integridad-documentos.html"
+renta_web_open_landing = "/Sede/ayuda/consultas-informaticas/renta-ayuda-tecnica/renta-web-open.html"
+nif_iva_landing = "/Sede/iva/iva-operaciones-comercio-exterior/identificacion-realizar-operaciones-otros-empresarios-ue/vies.html"
+manual_practicos_root = "/static_files/Sede/Biblioteca/Manual/Practicos"
+
+[aeat.oracles]
+nif_iva_verification = "https://www1.agenciatributaria.gob.es/wlpl/IXVI-JDIT/ConsultaIntracomunitarios"
+groi_check = "https://www2.agenciatributaria.gob.es/wlpl/GROI-JDIT/ConsultaOperadorSedeGroiServlet"
+renta_web_open_app_template = "https://www2.agenciatributaria.gob.es/wlpl/PARE-RW25/OPEN/index.zul?EJER={year}&TACCESO=COLAB"
+groi_auth_unlock_descriptor = "www2 GROI ConsultaOperadorSedeGroiServlet"
+nif_iva_auth_locked_descriptor = "www1 IXVI ConsultaIntracomunitarios"
+
+[aeat.live_safety]
+auth_browser_action_patterns = [
+  "clave-movil-authorize",
+  "clave-movil-open-non-qr",
+  "clave-movil-fill-nif",
+  "clave-movil-fill-dni-fecha",
+  "clave-movil-fill-nie-soporte",
+  "clave-movil-continue",
+  "clave-movil-cancel-pending-request",
+  "representation-gate-own-name-continue",
+]
+  wallet_browser_action_patterns = [
+    "clave-movil-authorize",
+    "representation-gate-own-name-continue",
+    "wallet-discovered-entrypoint-open",
+    "wallet-execute-read-query",
+  ]
+declarations_browser_action_patterns = [
+  "alert-modal-continuar",
+  "select-modelo",
+  "select-ejercicio",
+  "select-option-*",
+  "buscar-declaraciones-presentadas",
+  "open-cotejo-pdf",
+  "download-filed-data-file",
+]
+csv_verify_browser_action_patterns = [
+  "csv-verifier-query",
+]
+consult_oracle_browser_action_patterns = [
+  "open-groi-form",
+  "open-nif-iva-form",
+  "check-nif-*",
+  "discard-session",
+]
+renta_web_open_browser_action_patterns = [
+  "requires-renta-web-open-driver",
+  "start-open-simulator",
+  "fill-synthetic-profile",
+  "accept-identification",
+  "navigate-to-display-number:*",
+  "navigate-to-resumen",
+  "apply-display-override:*",
+  "scrape-summary-field:*",
+  "close-browser-context",
+]
+
+[aeat.portal_paths]
+filing_censo_path_regex = "^/Sede/procedimientoini/G[A-Z0-9]{3}\\.shtml$"
+filing_censo_path_description = "/Sede/procedimientoini/G<code>.shtml"
+
+[aeat.portal_paths.paths]
+portal_calendario_contribuyente = "/Sede/ayuda/manuales-videos-folletos/calendario-contribuyente.html"
+portal_cert_selection = "/wlpl/BUCV-JDIT/SelectorCertificado"
+portal_cert_validation_rest = "/Sede/certificados.html"
+portal_clave_gestiones = "/Sede/clave-pin/gestiones.html"
+portal_clave_idp_root = "/"
+portal_clave_sede_entry = "/Sede/clave.html"
+portal_consulta_pagos = "/Sede/procedimientoini/ES09.shtml"
+portal_dnie_sede_entry = "/Sede/dnie-electronico.html"
+portal_domiciliacion_bancaria = "/Sede/procedimientoini/GA16.shtml"
+portal_m036_censal = "/Sede/procedimientoini/G322.shtml"
+portal_m037_censal_simplificada = "/Sede/procedimientoini/G324.shtml"
+portal_m100_renta = "/Sede/procedimientoini/G229.shtml"
+portal_m111_retenciones_trabajo = "/Sede/procedimientoini/GH01.shtml"
+portal_m115_retenciones_arrendamientos = "/Sede/procedimientoini/GH02.shtml"
+portal_m123_retenciones_capital = "/Sede/procedimientoini/GH04.shtml"
+portal_m130_pago_fraccionado_ed = "/Sede/procedimientoini/G601.shtml"
+portal_m131_pago_fraccionado_eo = "/Sede/procedimientoini/G602.shtml"
+portal_m180_resumen_arrendamientos = "/Sede/procedimientoini/GI00.shtml"
+portal_m190_resumen_trabajo = "/Sede/procedimientoini/GI10.shtml"
+portal_m193_resumen_capital = "/Sede/procedimientoini/GI12.shtml"
+portal_m200_sociedades_anual = "/Sede/procedimientoini/GE04.shtml"
+portal_m202_sociedades_fraccionado = "/Sede/procedimientoini/GE00.shtml"
+portal_m232_vinculadas = "/Sede/procedimientoini/GI43.shtml"
+portal_m303_iva_autoliquidacion = "/Sede/procedimientoini/G414.shtml"
+portal_m347_operaciones_terceros = "/Sede/procedimientoini/GI27.shtml"
+portal_m349_intracomunitarias = "/Sede/procedimientoini/GI28.shtml"
+portal_m369_oss_ioss = "/Sede/procedimientoini/G420.shtml"
+portal_m390_resumen_iva = "/Sede/procedimientoini/G412.shtml"
+portal_m720_bienes_extranjero = "/Sede/procedimientoini/GI34.shtml"
+portal_m840_iae = "/Sede/procedimientoini/G323.shtml"
+portal_mi_area_personal = "/Sede/area-personal.html"
+portal_mis_documentos_pendientes_firma = "/Sede/gestiones/presentacion-portafirmas.html"
+portal_mis_expedientes = "/Sede/procedimientoini/ZZ09.shtml"
+portal_mis_notificaciones = "/Sede/notificaciones-comunicaciones/buzon-electronico.html"
+portal_pago_autoliquidacion_cuenta = "/Sede/procedimientoini/ES14.shtml"
+portal_pago_autoliquidacion_tarjeta_bizum = "/Sede/procedimientoini/ES18.shtml"
+portal_pago_liquidaciones_deudas = "/Sede/procedimientoini/ES15.shtml"
+portal_presentar_consultar_index = "/Sede/presentar-consultar-declaraciones-modelo.html"
+portal_renta_web_borrador = "/wlpl/OVCT-CXEW/SesionHTML"
+portal_sede_root = "/"
+
+[online_services.google.oauth_scopes]
+openid = "openid"
+email = "https://www.googleapis.com/auth/userinfo.email"
+drive_file = "https://www.googleapis.com/auth/drive.file"
+spreadsheets = "https://www.googleapis.com/auth/spreadsheets"

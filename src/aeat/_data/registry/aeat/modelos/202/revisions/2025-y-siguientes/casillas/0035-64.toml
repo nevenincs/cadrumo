@@ -1,0 +1,14 @@
+[[revisions.2025-y-siguientes.casillas]]
+id = "64"
+number = "64"
+label = "Mod. 40.3 LIS B2 — Base a tipo 4"
+section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_b2_base_tipo_4"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only Mod. 40.3 LIS B2 fourth rate band; older revisions only expose tipo 1 and tipo 2."
+required = false
+input_kind = "manual"
+export_refs = ["modelo-202-page-02-casilla-64"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]

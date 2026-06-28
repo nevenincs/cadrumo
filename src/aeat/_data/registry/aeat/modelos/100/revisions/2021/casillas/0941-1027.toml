@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "1027"
+number = "1027"
+label = "Por acogimiento de menores"
+section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
+semantic_role = "irpf_deduccion_galicia_acogimiento_menores"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

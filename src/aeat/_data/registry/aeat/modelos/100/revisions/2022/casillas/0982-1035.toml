@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "1035"
+number = "1035"
+label = "Por inversión en empresas que desarrollen actividades agrarias (traslade el importe de la casilla [1154] del anexo B.8)"
+section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
+semantic_role = "irpf_deduccion_galicia_actividades_agrarias"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

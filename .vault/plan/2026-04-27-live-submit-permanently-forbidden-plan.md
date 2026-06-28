@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#live-submit-permanently-forbidden'
 date: '2026-04-27'
+modified: '2026-04-27'
 related:
   - '[[2026-04-27-live-submit-permanently-forbidden-research]]'
   - '[[2026-04-27-live-submit-permanently-forbidden-adr]]'

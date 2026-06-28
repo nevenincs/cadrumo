@@ -1,0 +1,3652 @@
+``aeat app`` — command reference
+================================
+
+This page documents every leaf command under ``aeat app``. Help strings are rendered in English; the CLI respects the active output-language setting at runtime.
+
+``aeat app ledger add``
+~~~~~~~~~~~~~~~~~~~~~~~
+Add one manual ledger transaction in the active profile bucket
+
+**Command path:** ``aeat app ledger add``
+
+**Registry key:** ``ledger.add``
+
+**Parameters**
+
+``--date``
+   *Option, required.* Booked date (YYYY-MM-DD)
+
+``--amount``
+   *Option, required.* Signed transaction amount in the bucket currency
+
+``--direction``
+   *Option, required.* Transaction direction (INCOMING / OUTGOING / INTERNAL_TRANSFER)
+
+``--description``
+   *Option, required.* Non-blank narrative
+
+``--value-date``
+   *Option, optional.* Value date (YYYY-MM-DD)
+
+``--currency``
+   *Option, optional.* Three-letter ISO 4217 currency code
+
+``--counterparty``
+   *Option, optional.* Counterparty descriptor
+
+``--classification``
+   *Option, optional.* Business classification (BUSINESS / PERSONAL / MIXED / ...)
+
+``--business-pct``
+   *Option, optional.* Business-use share from 0 to 1 (only when classification is MIXED)
+
+``--category-id``
+   *Option, optional.* Deductible-expense category id (expense transactions only; income needs no category)
+
+``--taxable-base``
+   *Option, optional.* IVA-exclusive base amount
+
+``--iva-rate``
+   *Option, optional.* Optional IVA rate as a decimal fraction
+
+``--iva-amount``
+   *Option, optional.* Optional IVA amount on the row
+
+``--irpf-category``
+   *Option, optional.* IRPF-specific category key
+
+``--usage-ratio-id``
+   *Option, optional.* Usage-ratio id for proportional business use
+
+``--prorrata-reference``
+   *Option, optional.* IVA prorrata substrate reference
+
+``--purchase-invoice-evidence-id``
+   *Option, optional.* Canonical purchase-invoice evidence id
+
+``--attachment-id``
+   *Option, optional.* Supplementary attachment id (repeatable)
+
+``--notes``
+   *Option, optional.* Operator notes stored with the transaction
+
+``--actor``
+   *Option, optional.* Operator name recorded on the bucket event
+
+``--idempotency-key``
+   *Option, optional.* Caller-supplied idempotency key recorded with the row
+
+``--source-jurisdiction``
+   *Option, optional.* Two-letter ISO 3166-1 alpha-2 country code identifying the regulatory source jurisdiction of the income or expense (e.g. ES for Spanish-source, FR for French-source). Required for IRNR scope and the Art. 93 LIRPF Beckham filter.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerAddResult``.
+
+``aeat app ledger allocate``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Record business/private proportionality for a ledger transaction
+
+**Command path:** ``aeat app ledger allocate``
+
+**Registry key:** ``ledger.allocate``
+
+**Parameters**
+
+``--id``
+   *Option, required.* Ledger transaction id to allocate
+
+``--business-pct``
+   *Option, required.* Business-use share from 0 to 1
+
+``--category-id``
+   *Option, optional.* Deductible-expense category id (expense transactions only; income needs no category)
+
+``--usage-ratio-id``
+   *Option, optional.* Usage-ratio id for proportional business use
+
+``--prorrata-reference``
+   *Option, optional.* IVA prorrata reference for IVA workflows
+
+``--actor``
+   *Option, optional.* Operator name recorded on the bucket event
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerAllocateResult``.
+
+``aeat app ledger archive``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Archive one ledger transaction in the active profile bucket
+
+**Command path:** ``aeat app ledger archive``
+
+**Registry key:** ``ledger.archive``
+
+**Parameters**
+
+``--id``
+   *Option, required.* Ledger transaction id to archive
+
+``--reason``
+   *Option, optional.* Reason recorded in lifecycle history
+
+``--yes``
+   *Option, optional.* Confirm archiving the ledger transaction
+
+``--actor``
+   *Option, optional.* Operator name recorded on the bucket event
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerArchiveResult``.
+
+``aeat app ledger attach``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Attach secure evidence objects to one ledger transaction
+
+**Command path:** ``aeat app ledger attach``
+
+**Registry key:** ``ledger.attach``
+
+**Parameters**
+
+``--id``
+   *Option, required.* Ledger transaction id to attach evidence to
+
+``--purchase-invoice-evidence-id``
+   *Option, optional.* Purchase invoice evidence id supporting the transaction
+
+``--attachment-id``
+   *Option, optional.* Secure attachment id to link to the transaction; repeat for multiple attachments
+
+``--actor``
+   *Option, optional.* Operator name recorded on the bucket event
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerAttachResult``.
+
+``aeat app ledger categories``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List the spending-category ids accepted by --category-id, grouped by family
+
+**Command path:** ``aeat app ledger categories``
+
+**Registry key:** ``ledger.categories``
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerCategoriesResult``.
+
+``aeat app ledger check``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Probe ledger transactions in the addressed bucket (defaults to the active profile bucket) and report anomaly rows aggregated across every period a transaction touches. Local-only; never contacts AEAT.
+
+**Command path:** ``aeat app ledger check``
+
+**Registry key:** ``ledger.check``
+
+**Parameters**
+
+``--bucket-id``
+   *Option, optional.* Bucket id to probe (defaults to the active profile bucket).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerCheckResult``.
+
+``aeat app ledger classify``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Classify one ledger transaction in the active profile bucket
+
+**Command path:** ``aeat app ledger classify``
+
+**Registry key:** ``ledger.classify``
+
+**Parameters**
+
+``--id``
+   *Option, optional.* Ledger transaction id to classify
+
+``--classification``
+   *Option, optional.* Business classification state for the transaction
+
+``--from-csv``
+   *Option, optional.* Path to a CSV file with columns transaction_id, classification[, category_id].
+
+``--business-pct``
+   *Option, optional.* Business-use share from 0 to 1; required with --classification MIXED and rejected for any other classification
+
+``--category-id``
+   *Option, optional.* Deductible-expense category id (expense transactions only; income needs no category)
+
+``--taxable-base``
+   *Option, optional.* Taxable base amount
+
+``--iva-rate``
+   *Option, optional.* IVA rate as a decimal, for example 0.21
+
+``--iva-amount``
+   *Option, optional.* IVA amount
+
+``--irpf-category``
+   *Option, optional.* IRPF category for modelo calculations
+
+``--iva-category``
+   *Option, optional.* Explicit IVA category override for this transaction (e.g. intra_community_supply, export_third_country_zero_rated, domestic_not_subject)
+
+``--counterparty-eu-member-state``
+   *Option, optional.* EU member state of the counterparty (ISO 3166-1 alpha-2 lowercase, e.g. de); required with --iva-category intra_community_supply, prohibited with export_third_country_zero_rated
+
+``--actor``
+   *Option, optional.* Operator name recorded on the bucket event
+
+``--reaffirm``
+   *Option, optional.* Reaffirm the classification of an already-classified transaction.
+
+``--llm``
+   *Option, optional.* Ask a local LLM provider (claude/gemini/codex) to classify the transaction; preview by default, persist with --apply.
+
+``--apply``
+   *Option, optional.* Persist the LLM suggestion with llm: provenance instead of only previewing it.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerClassifyResult``.
+
+``aeat app ledger collectible-invoice add``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Register a new collectible invoice
+
+**Command path:** ``aeat app ledger collectible-invoice add``
+
+**Registry key:** ``ledger.collectible_invoice.add``
+
+**Parameters**
+
+``--counterparty-nif``
+   *Option, required.* No description.
+
+``--invoice-number``
+   *Option, required.* No description.
+
+``--invoice-date``
+   *Option, required.* Invoice issue date (YYYY-MM-DD)
+
+``--counterparty-name``
+   *Option, optional.* No description.
+
+``--currency``
+   *Option, optional.* No description.
+
+``--taxable-base``
+   *Option, optional.* No description.
+
+``--iva-rate``
+   *Option, optional.* No description.
+
+``--iva-amount``
+   *Option, optional.* No description.
+
+``--total-amount``
+   *Option, optional.* No description.
+
+``--notes``
+   *Option, optional.* No description.
+
+``--country-code``
+   *Option, optional.* Counterparty ISO 3166-1 alpha-2 country code (intracom EU operations)
+
+``--eu-iva-id``
+   *Option, optional.* Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations
+
+``--operation-type``
+   *Option, optional.* M349 operation type: E supply of goods, S services, T triangular, R rectification, A acquisition of goods, I acquisition of services, M miscellaneous
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.CollectibleInvoiceAddResult``.
+
+``aeat app ledger collectible-invoice list``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List registered collectible invoices
+
+**Command path:** ``aeat app ledger collectible-invoice list``
+
+**Registry key:** ``ledger.collectible_invoice.list``
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.CollectibleInvoiceListResult``.
+
+``aeat app ledger collectible-invoice remove``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Delete a registered collectible invoice
+
+**Command path:** ``aeat app ledger collectible-invoice remove``
+
+**Registry key:** ``ledger.collectible_invoice.remove``
+
+**Parameters**
+
+``invoice_id``
+   *Argument, required.* Invoice id (or unambiguous prefix)
+
+``--yes``
+   *Option, optional.* Confirm deleting the collectible invoice
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.CollectibleInvoiceRemoveResult``.
+
+``aeat app ledger collectible-invoice update``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Update collectible invoice details
+
+**Command path:** ``aeat app ledger collectible-invoice update``
+
+**Registry key:** ``ledger.collectible_invoice.update``
+
+**Parameters**
+
+``invoice_id``
+   *Argument, required.* Invoice id (or unambiguous prefix)
+
+``--counterparty-nif``
+   *Option, optional.* No description.
+
+``--counterparty-name``
+   *Option, optional.* No description.
+
+``--invoice-number``
+   *Option, optional.* No description.
+
+``--invoice-date``
+   *Option, optional.* No description.
+
+``--currency``
+   *Option, optional.* No description.
+
+``--taxable-base``
+   *Option, optional.* No description.
+
+``--iva-rate``
+   *Option, optional.* No description.
+
+``--iva-amount``
+   *Option, optional.* No description.
+
+``--total-amount``
+   *Option, optional.* No description.
+
+``--notes``
+   *Option, optional.* No description.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.CollectibleInvoiceUpdateResult``.
+
+``aeat app ledger collectible-invoice view``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Show collectible invoice details
+
+**Command path:** ``aeat app ledger collectible-invoice view``
+
+**Registry key:** ``ledger.collectible_invoice.view``
+
+**Parameters**
+
+``invoice_id``
+   *Argument, required.* Invoice id (or unambiguous prefix)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.CollectibleInvoiceViewResult``.
+
+``aeat app ledger doclink``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Record a Gmail/Drive/URL document link on a ledger row (never fetched).
+
+**Command path:** ``aeat app ledger doclink``
+
+**Registry key:** ``ledger.doclink``
+
+**Parameters**
+
+``--id``
+   *Option, required.* Ledger transaction id.
+
+``--source``
+   *Option, required.* Link source: gmail, google_drive, or url.
+
+``--reference``
+   *Option, required.* The document link reference.
+
+``--note``
+   *Option, optional.* Optional note.
+
+``--actor``
+   *Option, optional.* Operator label.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerAttachResult``.
+
+``aeat app ledger evidence add``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Register purchase invoice evidence from a PDF or image
+
+**Command path:** ``aeat app ledger evidence add``
+
+**Registry key:** ``ledger.evidence.add``
+
+**Parameters**
+
+``source_path``
+   *Argument, required.* Path to the invoice PDF or image
+
+``--supplier``
+   *Option, optional.* Supplier name
+
+``--invoice-number``
+   *Option, optional.* Supplier invoice number
+
+``--invoice-date``
+   *Option, optional.* Invoice issue date (YYYY-MM-DD)
+
+``--taxable-base``
+   *Option, optional.* Invoice taxable base
+
+``--iva-rate``
+   *Option, optional.* Applied IVA rate as a decimal
+
+``--iva-amount``
+   *Option, optional.* Invoice IVA amount
+
+``--notes``
+   *Option, optional.* Internal notes about the evidence
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.EvidenceAddResult``.
+
+``aeat app ledger evidence list``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List registered purchase invoice evidence
+
+**Command path:** ``aeat app ledger evidence list``
+
+**Registry key:** ``ledger.evidence.list``
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.EvidenceListResult``.
+
+``aeat app ledger evidence remove``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Delete purchase invoice evidence
+
+**Command path:** ``aeat app ledger evidence remove``
+
+**Registry key:** ``ledger.evidence.remove``
+
+**Parameters**
+
+``evidence_id``
+   *Argument, required.* Evidence id (or unambiguous prefix)
+
+``--yes``
+   *Option, optional.* Confirm deleting the evidence
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.EvidenceRemoveResult``.
+
+``aeat app ledger evidence update``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Update purchase invoice evidence details
+
+**Command path:** ``aeat app ledger evidence update``
+
+**Registry key:** ``ledger.evidence.update``
+
+**Parameters**
+
+``evidence_id``
+   *Argument, required.* Evidence id (or unambiguous prefix)
+
+``--supplier``
+   *Option, optional.* No description.
+
+``--invoice-number``
+   *Option, optional.* No description.
+
+``--invoice-date``
+   *Option, optional.* No description.
+
+``--taxable-base``
+   *Option, optional.* No description.
+
+``--iva-rate``
+   *Option, optional.* No description.
+
+``--iva-amount``
+   *Option, optional.* No description.
+
+``--notes``
+   *Option, optional.* No description.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.EvidenceUpdateResult``.
+
+``aeat app ledger evidence view``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Show purchase invoice evidence
+
+**Command path:** ``aeat app ledger evidence view``
+
+**Registry key:** ``ledger.evidence.view``
+
+**Parameters**
+
+``evidence_id``
+   *Argument, required.* Evidence id (or unambiguous prefix)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.EvidenceViewResult``.
+
+``aeat app ledger export``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Export canonical ledger rows from the active profile bucket
+
+**Command path:** ``aeat app ledger export``
+
+**Registry key:** ``ledger.export``
+
+**Parameters**
+
+``--output``
+   *Option, required.* Path to write the exported ledger file
+
+``--export-format``
+   *Option, optional.* Export serialization format
+
+``--include-inactive``
+   *Option, optional.* Include archived and stashed ledger transactions
+
+``--period``
+   *Option, optional.* Restrict the export to one filing period (e.g. 2025Q1, 2025).
+
+``--actor``
+   *Option, optional.* Operator name recorded on the bucket event
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerExportPayload``.
+
+``aeat app ledger history``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Emit the chronological bucket-event chain for one ledger transaction id
+
+**Command path:** ``aeat app ledger history``
+
+**Registry key:** ``ledger.history``
+
+**Parameters**
+
+``transaction_id``
+   *Argument, required.* Ledger transaction id (or unambiguous hex prefix) to inspect
+
+``--include-split-siblings``
+   *Option, optional.* Expand the chain to include events for every split sibling that shares a split_group_id with this transaction
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerHistoryResult``.
+
+``aeat app ledger import``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Import bank statements or records into the accounting ledger
+
+**Command path:** ``aeat app ledger import``
+
+**Registry key:** ``ledger.import``
+
+**Parameters**
+
+``path``
+   *Argument, required.* Path to the bank statement file or directory
+
+``--provider``
+   *Option, required.* Statement format provider. Recognised values: auto, csv, ofx, qfx, xlsx, excel, n26, pdf, pdf-n26
+
+``--dry-run``
+   *Option, optional.* Run the import in dry-run mode (without saving)
+
+``--verify``
+   *Option, optional.* Verify entries after import
+
+``--source``
+   *Option, optional.* Original file used to verify imported rows
+
+``--verbose``
+   *Option, optional.* Show detailed information during import
+
+``--period``
+   *Option, optional.* Fiscal period for the import
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerImportPayload``.
+
+``aeat app ledger inventory create``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Create an inventory ledger for one activity and tax year
+
+**Command path:** ``aeat app ledger inventory create``
+
+**Registry key:** ``ledger.inventory.create``
+
+**Parameters**
+
+``actividad_id``
+   *Argument, required.* Economic activity identifier
+
+``--year``
+   *Option, required.* Tax year
+
+``--valuation-method``
+   *Option, required.* Valuation method (fifo or pmp)
+
+``--opening-stock``
+   *Option, optional.* Opening stock value
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.InventoryCreateResult``.
+
+``aeat app ledger inventory list``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List inventory ledgers in the active bucket
+
+**Command path:** ``aeat app ledger inventory list``
+
+**Registry key:** ``ledger.inventory.list``
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.InventoryListResult``.
+
+``aeat app ledger inventory movement add``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Add a purchase, sale, or adjustment movement to the ledger
+
+**Command path:** ``aeat app ledger inventory movement add``
+
+**Registry key:** ``ledger.inventory.movement.add``
+
+**Parameters**
+
+``--actividad-id``
+   *Option, required.* Economic activity identifier
+
+``--year``
+   *Option, required.* Tax year
+
+``--movement-id``
+   *Option, required.* Movement id within the ledger
+
+``--date``
+   *Option, required.* Movement date (YYYY-MM-DD)
+
+``--kind``
+   *Option, required.* Movement kind (purchase, sale, adjustment)
+
+``--quantity``
+   *Option, required.* Movement quantity, positive or negative
+
+``--unit-cost``
+   *Option, optional.* Unit cost for purchase movements
+
+``--taxable-base``
+   *Option, optional.* Taxable base linked to the movement
+
+``--iva-rate``
+   *Option, optional.* IVA rate as a percentage
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.InventoryMovementAddResult``.
+
+``aeat app ledger inventory valuation preview``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Preview closing stock and cost of sales
+
+**Command path:** ``aeat app ledger inventory valuation preview``
+
+**Registry key:** ``ledger.inventory.valuation.preview``
+
+**Parameters**
+
+``--actividad-id``
+   *Option, required.* Economic activity identifier
+
+``--year``
+   *Option, required.* Tax year
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.InventoryValuationPreviewPayload``.
+
+``aeat app ledger link``
+~~~~~~~~~~~~~~~~~~~~~~~~
+Bind a ledger transaction to an invoice and/or a purchase-invoice evidence record in a single canonical call. Refuses cross-bucket links. Local-only; never contacts AEAT.
+
+**Command path:** ``aeat app ledger link``
+
+**Registry key:** ``ledger.link``
+
+**Parameters**
+
+``--id``
+   *Option, required.* Ledger transaction id (SHA-256 or unambiguous prefix).
+
+``--invoice-id``
+   *Option, optional.* Invoice id to bind bidirectionally to the transaction.
+
+``--evidence-id``
+   *Option, optional.* Purchase-invoice evidence record id to attach to the transaction.
+
+``--by``
+   *Option, optional.* Operator label recorded on bucket events.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerLinkResult``.
+
+``aeat app ledger list``
+~~~~~~~~~~~~~~~~~~~~~~~~
+List ledger transactions in the active profile bucket
+
+**Command path:** ``aeat app ledger list``
+
+**Registry key:** ``ledger.list``
+
+**Parameters**
+
+``--filter``
+   *Option, optional.* Filter rows by status, period (incl. bare YYYY for a year), classification, issue, import, direction (ingreso/gasto), or text. To filter by organisational group label use the separate --group option.
+
+``--limit``
+   *Option, optional.* Maximum rows to show (default: all rows).
+
+``--offset``
+   *Option, optional.* Skip this many rows before listing (default: 0).
+
+``--group``
+   *Option, optional.* Show only rows in this group label.
+
+``--by-group``
+   *Option, optional.* Section the listing by group label.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerListResult``.
+
+``aeat app ledger merge``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Re-merge a complete cohort of split children into a fresh transaction
+
+**Command path:** ``aeat app ledger merge``
+
+**Registry key:** ``ledger.merge``
+
+**Parameters**
+
+``--child-id``
+   *Option, optional.* One child id (or unambiguous prefix) to merge. Repeat for every sibling in the cohort; partial merges are refused.
+
+``--reason``
+   *Option, optional.* Reason recorded in the bucket-event payload and lifecycle history
+
+``--yes``
+   *Option, optional.* Confirm the merge (archives every child and the parent, persists a fresh content-addressed merged transaction)
+
+``--actor``
+   *Option, optional.* Operator name recorded on the LEDGER_TRANSACTION_MERGED event
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerMergeResult``.
+
+``aeat app ledger payable-invoice add``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Register a new payable invoice
+
+**Command path:** ``aeat app ledger payable-invoice add``
+
+**Registry key:** ``ledger.payable_invoice.add``
+
+**Parameters**
+
+``--counterparty-nif``
+   *Option, required.* No description.
+
+``--invoice-number``
+   *Option, required.* No description.
+
+``--invoice-date``
+   *Option, required.* Invoice issue date (YYYY-MM-DD)
+
+``--counterparty-name``
+   *Option, optional.* No description.
+
+``--currency``
+   *Option, optional.* No description.
+
+``--taxable-base``
+   *Option, optional.* No description.
+
+``--iva-rate``
+   *Option, optional.* No description.
+
+``--iva-amount``
+   *Option, optional.* No description.
+
+``--total-amount``
+   *Option, optional.* No description.
+
+``--notes``
+   *Option, optional.* No description.
+
+``--country-code``
+   *Option, optional.* Counterparty ISO 3166-1 alpha-2 country code (intracom EU operations)
+
+``--eu-iva-id``
+   *Option, optional.* Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations
+
+``--operation-type``
+   *Option, optional.* M349 operation type: E supply of goods, S services, T triangular, R rectification, A acquisition of goods, I acquisition of services, M miscellaneous
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.PayableInvoiceAddResult``.
+
+``aeat app ledger payable-invoice list``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List registered payable invoices
+
+**Command path:** ``aeat app ledger payable-invoice list``
+
+**Registry key:** ``ledger.payable_invoice.list``
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.PayableInvoiceListResult``.
+
+``aeat app ledger payable-invoice remove``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Delete a registered payable invoice
+
+**Command path:** ``aeat app ledger payable-invoice remove``
+
+**Registry key:** ``ledger.payable_invoice.remove``
+
+**Parameters**
+
+``invoice_id``
+   *Argument, required.* Invoice id (or unambiguous prefix)
+
+``--yes``
+   *Option, optional.* Confirm deleting the payable invoice
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.PayableInvoiceRemoveResult``.
+
+``aeat app ledger payable-invoice update``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Update payable invoice details
+
+**Command path:** ``aeat app ledger payable-invoice update``
+
+**Registry key:** ``ledger.payable_invoice.update``
+
+**Parameters**
+
+``invoice_id``
+   *Argument, required.* Invoice id (or unambiguous prefix)
+
+``--counterparty-nif``
+   *Option, optional.* No description.
+
+``--counterparty-name``
+   *Option, optional.* No description.
+
+``--invoice-number``
+   *Option, optional.* No description.
+
+``--invoice-date``
+   *Option, optional.* No description.
+
+``--currency``
+   *Option, optional.* No description.
+
+``--taxable-base``
+   *Option, optional.* No description.
+
+``--iva-rate``
+   *Option, optional.* No description.
+
+``--iva-amount``
+   *Option, optional.* No description.
+
+``--total-amount``
+   *Option, optional.* No description.
+
+``--notes``
+   *Option, optional.* No description.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.PayableInvoiceUpdateResult``.
+
+``aeat app ledger payable-invoice view``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Show payable invoice details
+
+**Command path:** ``aeat app ledger payable-invoice view``
+
+**Registry key:** ``ledger.payable_invoice.view``
+
+**Parameters**
+
+``invoice_id``
+   *Argument, required.* Invoice id (or unambiguous prefix)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.PayableInvoiceViewResult``.
+
+``aeat app ledger preflight``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Report missing ledger facts (category, taxable base, IVA amount/rate, currency, proportionality reference) for the active bucket's transactions in a given period. Local-only; never contacts AEAT.
+
+**Command path:** ``aeat app ledger preflight``
+
+**Registry key:** ``ledger.preflight``
+
+**Parameters**
+
+``--period``
+   *Option, required.* Canonical period (e.g. 2026Q1, 2026-03, 2026).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerPreflightResult``.
+
+``aeat app ledger providers``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List which subprocess LLM providers have a usable CLI on PATH.
+
+**Command path:** ``aeat app ledger providers``
+
+**Registry key:** ``ledger.providers``
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerProvidersResult``.
+
+``aeat app ledger ratios eligible``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List categories that accept a specific ratio
+
+**Command path:** ``aeat app ledger ratios eligible``
+
+**Registry key:** ``ledger.ratios.eligible``
+
+**Parameters**
+
+``--output-language``, ``--language``
+   *Option, optional.* Output language for the response text (es, en, ca, hu).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.RatiosEligibleResult``.
+
+``aeat app ledger ratios list``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List category ratios in the active bucket
+
+**Command path:** ``aeat app ledger ratios list``
+
+**Registry key:** ``ledger.ratios.list``
+
+**Parameters**
+
+``--output-language``, ``--language``
+   *Option, optional.* Output language for the response text (es, en, ca, hu).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.RatiosListResult``.
+
+``aeat app ledger ratios set``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Set or replace the ratio for a category
+
+**Command path:** ``aeat app ledger ratios set``
+
+**Registry key:** ``ledger.ratios.set``
+
+**Parameters**
+
+``category``
+   *Argument, required.* Spending category id (e.g. USAGE_RATIO_VEHICLE)
+
+``ratio``
+   *Argument, required.* Applicable ratio between 0 and 1
+
+``--output-language``, ``--language``
+   *Option, optional.* Output language for the response text (es, en, ca, hu).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.RatiosSetResult``.
+
+``aeat app ledger ratios unset``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Remove the specific ratio for a category
+
+**Command path:** ``aeat app ledger ratios unset``
+
+**Registry key:** ``ledger.ratios.unset``
+
+**Parameters**
+
+``category``
+   *Argument, required.* Category id whose ratio you want to clear
+
+``--output-language``, ``--language``
+   *Option, optional.* Output language for the response text (es, en, ca, hu).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.RatiosUnsetResult``.
+
+``aeat app ledger ratios validate``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Validate ratios against eligible categories and bounds
+
+**Command path:** ``aeat app ledger ratios validate``
+
+**Registry key:** ``ledger.ratios.validate``
+
+**Parameters**
+
+``--output-language``, ``--language``
+   *Option, optional.* Output language for the response text (es, en, ca, hu).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.RatiosValidateResult``.
+
+``aeat app ledger remove``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Remove one ledger transaction from the active profile bucket
+
+**Command path:** ``aeat app ledger remove``
+
+**Registry key:** ``ledger.remove``
+
+**Parameters**
+
+``--id``
+   *Option, required.* Ledger transaction id to remove
+
+``--reason``
+   *Option, optional.* Reason recorded in removal history
+
+``--dry-run``
+   *Option, optional.* Report removal effects without deleting the ledger transaction
+
+``--yes``
+   *Option, optional.* Confirm deletion of the ledger transaction
+
+``--actor``
+   *Option, optional.* Operator name recorded on the bucket event
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerRemoveResult``.
+
+``aeat app ledger reset``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Reset the active profile bucket ledger catalogue
+
+**Command path:** ``aeat app ledger reset``
+
+**Registry key:** ``ledger.reset``
+
+**Parameters**
+
+``--reason``
+   *Option, optional.* Reason recorded in reset history
+
+``--dry-run``
+   *Option, optional.* Report reset effects without clearing the ledger catalogue
+
+``--yes``
+   *Option, optional.* Confirm clearing the active ledger catalogue
+
+``--actor``
+   *Option, optional.* Operator name recorded on the bucket event
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerResetResult``.
+
+``aeat app ledger review``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Interactive review and validation of ledger entries
+
+**Command path:** ``aeat app ledger review``
+
+**Registry key:** ``ledger.review``
+
+**Parameters**
+
+``--filter``
+   *Option, optional.* Filter rows by status, period, issue, or import
+
+``--id``
+   *Option, optional.* Identifier of the specific entry to review
+
+``--verbose``
+   *Option, optional.* Show detailed information during review
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerReviewResult``.
+
+``aeat app ledger rule add``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Add a classification rule that auto-classifies matching transactions.
+
+**Command path:** ``aeat app ledger rule add``
+
+**Registry key:** ``ledger.rule.add``
+
+**Parameters**
+
+``--description-pattern``
+   *Option, required.* Regex pattern matched (case-insensitive) against transaction description.
+
+``--classification``
+   *Option, required.* Target classification for matching transactions.
+
+``--category-id``
+   *Option, optional.* Optional spending category to apply.
+
+``--priority``
+   *Option, optional.* Numeric priority; lower value is evaluated first (default 100).
+
+``--actor``
+   *Option, optional.* Operator identifier recorded in the rule provenance.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.RuleAddResult``.
+
+``aeat app ledger rule apply``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Apply stored classification rules to unclassified ACTIVE transactions.
+
+**Command path:** ``aeat app ledger rule apply``
+
+**Registry key:** ``ledger.rule.apply``
+
+**Parameters**
+
+``--reaffirm``
+   *Option, optional.* Also re-classify transactions that were manually classified.
+
+``--dry-run``
+   *Option, optional.* Show what would be classified without persisting changes.
+
+``--actor``
+   *Option, optional.* Operator identifier recorded in the rule provenance.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.RuleApplyResult``.
+
+``aeat app ledger rule list``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List stored classification rules ordered by priority.
+
+**Command path:** ``aeat app ledger rule list``
+
+**Registry key:** ``ledger.rule.list``
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.RuleListResult``.
+
+``aeat app ledger split``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Redistribute one parent transaction into N child transactions whose amounts sum to the parent amount exactly
+
+**Command path:** ``aeat app ledger split``
+
+**Registry key:** ``ledger.split``
+
+**Parameters**
+
+``--id``
+   *Option, required.* Parent transaction id (or unambiguous hex prefix) to split
+
+``--child-amount``
+   *Option, optional.* One child amount (signed Decimal in the parent's currency). Repeat once per child; the count must match --child-description.
+
+``--child-description``
+   *Option, optional.* One child narrative. Repeat once per child; the count must match --child-amount.
+
+``--reason``
+   *Option, optional.* Reason recorded in the bucket-event payload and lifecycle history
+
+``--yes``
+   *Option, optional.* Confirm the split (transitions the parent to SPLIT and persists N child transactions)
+
+``--actor``
+   *Option, optional.* Operator name recorded on the LEDGER_TRANSACTION_SPLIT event
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerSplitResult``.
+
+``aeat app ledger stash``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Stash one ledger transaction in the active profile bucket
+
+**Command path:** ``aeat app ledger stash``
+
+**Registry key:** ``ledger.stash``
+
+**Parameters**
+
+``--id``
+   *Option, required.* Ledger transaction id to stash
+
+``--reason``
+   *Option, optional.* Reason recorded in lifecycle history
+
+``--yes``
+   *Option, optional.* Confirm stashing the ledger transaction
+
+``--actor``
+   *Option, optional.* Operator name recorded on the bucket event
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerStashResult``.
+
+``aeat app ledger status``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Summarize ledger state and calculation readiness for the active profile bucket
+
+**Command path:** ``aeat app ledger status``
+
+**Registry key:** ``ledger.status``
+
+**Parameters**
+
+``--period``
+   *Option, optional.* Fiscal period to preflight (YYYY-MM or modelo period)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerStatusResult``.
+
+``aeat app ledger track``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Show the event lineage for one ledger transaction
+
+**Command path:** ``aeat app ledger track``
+
+**Registry key:** ``ledger.track``
+
+**Parameters**
+
+``transaction_id``
+   *Argument, required.* Ledger transaction id to inspect
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerTrackResult``.
+
+``aeat app ledger update``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Update one ledger transaction with full-replace field semantics
+
+**Command path:** ``aeat app ledger update``
+
+**Registry key:** ``ledger.update``
+
+**Parameters**
+
+``--id``
+   *Option, required.* Ledger transaction id (or unambiguous hex prefix) to update
+
+``--date``
+   *Option, optional.* New booked date (YYYY-MM-DD)
+
+``--value-date``
+   *Option, optional.* New value date (YYYY-MM-DD)
+
+``--amount``
+   *Option, optional.* New signed amount (full replace)
+
+``--direction``
+   *Option, optional.* New transaction direction
+
+``--currency``
+   *Option, optional.* New three-letter ISO 4217 currency code
+
+``--counterparty``
+   *Option, optional.* New counterparty descriptor
+
+``--description``
+   *Option, optional.* New narrative
+
+``--taxable-base``
+   *Option, optional.* New IVA-exclusive base amount
+
+``--iva-rate``
+   *Option, optional.* New IVA rate as a decimal fraction
+
+``--iva-amount``
+   *Option, optional.* New IVA amount
+
+``--irpf-category``
+   *Option, optional.* New IRPF-specific category key
+
+``--notes``
+   *Option, optional.* New operator notes
+
+``--group``
+   *Option, optional.* Assign an organisational group label (pass an empty string to clear).
+
+``--actor``
+   *Option, optional.* Operator name recorded on the bucket event
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerUpdateResult``.
+
+``aeat app ledger view``
+~~~~~~~~~~~~~~~~~~~~~~~~
+View one ledger transaction in the active profile bucket
+
+**Command path:** ``aeat app ledger view``
+
+**Registry key:** ``ledger.view``
+
+**Parameters**
+
+``transaction_id``
+   *Argument, required.* Ledger transaction id (or unambiguous hex prefix)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._ledger_payloads.LedgerViewResult``.
+
+``aeat app live borrador 100 latest``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Show the most recent active snapshot for a filing year
+
+**Command path:** ``aeat app live borrador 100 latest``
+
+**Registry key:** ``app.live.borrador.100.latest``
+
+**Parameters**
+
+``--filing-year``
+   *Option, required.* Filing year (e.g. 2024)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.Borrador100LatestResult``.
+
+``aeat app live borrador 100 list``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List persisted Modelo 100 borrador snapshots
+
+**Command path:** ``aeat app live borrador 100 list``
+
+**Registry key:** ``app.live.borrador.100.list``
+
+**Parameters**
+
+``--state``
+   *Option, optional.* Snapshot state filter: active, superseded, discarded, or all
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.Borrador100ListResult``.
+
+``aeat app live borrador 100 view``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Show one Modelo 100 borrador snapshot
+
+**Command path:** ``aeat app live borrador 100 view``
+
+**Registry key:** ``app.live.borrador.100.view``
+
+**Parameters**
+
+``snapshot_id``
+   *Argument, required.* Snapshot id (or unambiguous prefix)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.Borrador100ViewResult``.
+
+``aeat app live expedientes capture``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Capture AEAT declaration register data and save a snapshot
+
+**Command path:** ``aeat app live expedientes capture``
+
+**Registry key:** ``app.live.expedientes.capture``
+
+**Parameters**
+
+``--modelo``
+   *Option, required.* Modelo code
+
+``--year``
+   *Option, required.* Filing year
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.ExpedientesCaptureResult``.
+
+``aeat app live expedientes latest``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Show the most recent expediente snapshot
+
+**Command path:** ``aeat app live expedientes latest``
+
+**Registry key:** ``app.live.expedientes.latest``
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.ExpedientesLatestResult``.
+
+``aeat app live expedientes list``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List saved expediente snapshots
+
+**Command path:** ``aeat app live expedientes list``
+
+**Registry key:** ``app.live.expedientes.list``
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.ExpedientesListResult``.
+
+``aeat app live expedientes view``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Show an expediente snapshot
+
+**Command path:** ``aeat app live expedientes view``
+
+**Registry key:** ``app.live.expedientes.view``
+
+**Parameters**
+
+``snapshot_id``
+   *Argument, required.* Snapshot id (or unambiguous prefix)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.ExpedientesViewResult``.
+
+``aeat app live filed capture``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Capture filed declaration data from AEAT
+
+**Command path:** ``aeat app live filed capture``
+
+**Registry key:** ``app.live.filed.capture``
+
+**Parameters**
+
+``--modelo``
+   *Option, required.* Modelo code
+
+``--year``
+   *Option, required.* Filing year
+
+``--output-root``
+   *Option, optional.* Directory for captured filed-declaration observations
+
+``--period``
+   *Option, optional.* Filing period
+
+``--expediente``
+   *Option, optional.* AEAT expediente identifier
+
+``--limit``
+   *Option, optional.* Maximum rows to capture
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.FiledCaptureResult``.
+
+``aeat app live filed capture-all``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Capture all filed declaration data from AEAT. Read-only; does not submit filings.
+
+**Command path:** ``aeat app live filed capture-all``
+
+**Registry key:** ``app.live.filed.capture_all``
+
+**Parameters**
+
+``--from-year``
+   *Option, required.* First filing year
+
+``--to-year``
+   *Option, required.* Last filing year
+
+``--output-root``
+   *Option, optional.* Directory for captured filed-declaration observations
+
+``--modelo``
+   *Option, optional.* Limit capture-all to this modelo.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.FiledCaptureAllResult``.
+
+``aeat app live filed capture-sources``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Capture filed observations required by a target filing
+
+**Command path:** ``aeat app live filed capture-sources``
+
+**Registry key:** ``app.live.filed.capture_sources``
+
+**Parameters**
+
+``--modelo``
+   *Option, required.* Modelo code
+
+``--year``
+   *Option, required.* Filing year
+
+``--period``
+   *Option, required.* Filing period
+
+``--output-root``
+   *Option, optional.* Directory for captured filed-declaration observations
+
+``--registry-root``
+   *Option, optional.* Registry root
+
+``--source-root``
+   *Option, optional.* Project source root
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.FiledCaptureSourcesResult``.
+
+``aeat app live filed list``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List filed declaration rows without downloading artefacts
+
+**Command path:** ``aeat app live filed list``
+
+**Registry key:** ``app.live.filed.list``
+
+**Parameters**
+
+``--modelo``
+   *Option, optional.* Modelo code
+
+``--from-year``
+   *Option, optional.* First filing year
+
+``--to-year``
+   *Option, optional.* Last filing year
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.FiledListResult``.
+
+``aeat app live iva-wallet capture-history``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Live-capture filed Modelo 303 history and persist secure IVA compensation state. No AEAT filing or wallet form choices are submitted.
+
+**Command path:** ``aeat app live iva-wallet capture-history``
+
+**Registry key:** ``app.live.iva_wallet.capture_history``
+
+**Parameters**
+
+``--from-year``
+   *Option, required.* First filing year
+
+``--to-year``
+   *Option, required.* Last filing year
+
+``--output-root``
+   *Option, optional.* Directory for captured filed-declaration observations
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.IvaWalletCaptureHistoryResult``.
+
+``aeat app live iva-wallet capture-remote-state``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Live-capture filed Modelo 303 history and attempt the AEAT IVA wallet/cartera read as one typed read-only acquisition.
+
+**Command path:** ``aeat app live iva-wallet capture-remote-state``
+
+**Registry key:** ``app.live.iva_wallet.capture_remote_state``
+
+**Parameters**
+
+``--from-year``
+   *Option, required.* First filing year
+
+``--to-year``
+   *Option, required.* Last filing year
+
+``--target-year``
+   *Option, required.* Filing year
+
+``--target-period``
+   *Option, required.* Filing period
+
+``--taxpayer-nif``
+   *Option, optional.* Taxpayer NIF; defaults to the authenticated identity.
+
+``--output-root``
+   *Option, optional.* Directory for captured filed-declaration observations
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.IvaWalletCaptureRemoteStateResult``.
+
+``aeat app live iva-wallet history``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List secure local IVA compensation history, carry-forward lots, and persisted wallet authority decisions derived from Modelo 303 captures.
+
+**Command path:** ``aeat app live iva-wallet history``
+
+**Registry key:** ``app.live.iva_wallet.history``
+
+**Parameters**
+
+``--as-of-year``
+   *Option, optional.* Year used to age IVA compensation carry-forward lots.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.IvaWalletHistoryResult``.
+
+``aeat app live iva-wallet pull``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Live-fetch and persist AEAT's IVA compensation wallet. The only AEAT form action allowed is the guarded wallet read query; representation gates only continue in own-name mode.
+
+**Command path:** ``aeat app live iva-wallet pull``
+
+**Registry key:** ``app.live.iva_wallet.pull``
+
+**Parameters**
+
+``--year``
+   *Option, required.* Filing year
+
+``--period``
+   *Option, required.* Filing period
+
+``--taxpayer-nif``
+   *Option, optional.* Taxpayer NIF; defaults to the authenticated identity.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.IvaWalletPullResult``.
+
+``aeat app live notifications capture``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Capture DEHú notifications and save a snapshot
+
+**Command path:** ``aeat app live notifications capture``
+
+**Registry key:** ``app.live.notifications.capture``
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.NotificationsCaptureResult``.
+
+``aeat app live notifications list``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List saved DEHú notification snapshots
+
+**Command path:** ``aeat app live notifications list``
+
+**Registry key:** ``app.live.notifications.list``
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.NotificationsListResult``.
+
+``aeat app live notifications view``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Show a DEHú notification snapshot
+
+**Command path:** ``aeat app live notifications view``
+
+**Registry key:** ``app.live.notifications.view``
+
+**Parameters**
+
+``snapshot_id``
+   *Argument, required.* Snapshot id (or unambiguous prefix)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.NotificationsViewResult``.
+
+``aeat app live portals list``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List portal catalogue entries
+
+**Command path:** ``aeat app live portals list``
+
+**Registry key:** ``app.live.portals.list``
+
+**Parameters**
+
+``--category``
+   *Option, optional.* Filter by portal category
+
+``--modelo``
+   *Option, optional.* Filter by portals linked to a modelo
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.PortalsListResult``.
+
+``aeat app live portals view``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Show a portal catalogue entry
+
+**Command path:** ``aeat app live portals view``
+
+**Registry key:** ``app.live.portals.view``
+
+**Parameters**
+
+``portal_id``
+   *Argument, required.* Portal identifier
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.PortalsViewResult``.
+
+``aeat app live verify latest``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Show the most recent observation for surface and NIF
+
+**Command path:** ``aeat app live verify latest``
+
+**Registry key:** ``app.live.verify.latest``
+
+**Parameters**
+
+``--surface``
+   *Option, required.* Verification surface: nif_iva or tgvi
+
+``--nif``
+   *Option, required.* NIF to look up
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.VerifyLatestResult``.
+
+``aeat app live verify list``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List saved verification observations
+
+**Command path:** ``aeat app live verify list``
+
+**Registry key:** ``app.live.verify.list``
+
+**Parameters**
+
+``--surface``
+   *Option, optional.* Filter by surface: nif_iva or tgvi
+
+``--nif``
+   *Option, optional.* Filter by one NIF
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.VerifyListResult``.
+
+``aeat app live verify nif-iva``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Verify an intra-community NIF-IVA in AEAT IXVI and save the observation
+
+**Command path:** ``aeat app live verify nif-iva``
+
+**Registry key:** ``app.live.verify.nif_iva``
+
+**Parameters**
+
+``nif``
+   *Argument, required.* NIF-IVA value (e.g. ESB12345678)
+
+``--expected``
+   *Option, optional.* Optional expected result (valid, invalid, or unknown)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.VerifyNifIvaResult``.
+
+``aeat app live verify tgvi``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Verify a NIF's ROI/VIES registration in GROI and save the observation
+
+**Command path:** ``aeat app live verify tgvi``
+
+**Registry key:** ``app.live.verify.tgvi``
+
+**Parameters**
+
+``nif``
+   *Argument, required.* Spanish NIF/NIE to check
+
+``--expected``
+   *Option, optional.* Optional expected result (valid, invalid, or unknown)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.VerifyTgviResult``.
+
+``aeat app live verify view``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Show a saved verification observation
+
+**Command path:** ``aeat app live verify view``
+
+**Registry key:** ``app.live.verify.view``
+
+**Parameters**
+
+``observation_id``
+   *Argument, required.* Observation id (or unambiguous prefix)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._app_live_payloads.VerifyViewResult``.
+
+``aeat app modelo aggregate``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Run the backend per-modelo aggregation service from explicit canonical observations. Accepted source_kind values are ledger_transaction, purchase_invoice_evidence, payable_invoice, and collectible_invoice.
+
+**Command path:** ``aeat app modelo aggregate``
+
+**Registry key:** ``modelo.aggregate``
+
+**Parameters**
+
+``--modelo``
+   *Option, required.* Supported modelo code for the backend aggregation service (111, 115, 123, 180, 190, 193, 347, 349, or 720).
+
+``--period``
+   *Option, required.* Aggregation period passed to the backend service.
+
+``--retencion-observation``
+   *Option, optional.* JSON RetencionObservation object. The source_kind value must be ledger_transaction, purchase_invoice_evidence, payable_invoice, or collectible_invoice. Repeat for multiple observations.
+
+``--counterpart-observation``
+   *Option, optional.* JSON CounterpartObservation object. The source_kind value must be ledger_transaction, purchase_invoice_evidence, payable_invoice, or collectible_invoice. Repeat for multiple observations.
+
+``--foreign-asset-observation``
+   *Option, optional.* JSON ForeignAssetObservation object. The source_kind value must be ledger_transaction, purchase_invoice_evidence, payable_invoice, or collectible_invoice. Repeat for multiple observations.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.ModeloAggregateResult``.
+
+``aeat app modelo audit check``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Re-verify an evidence bundle by recomputing record digests.
+
+**Command path:** ``aeat app modelo audit check``
+
+**Registry key:** ``modelo.audit.check``
+
+**Parameters**
+
+``bundle_id``
+   *Argument, required.* Evidence bundle id (full SHA-256 or unambiguous prefix).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.ModeloAuditCheckResult``.
+
+``aeat app modelo audit export``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Write a deterministic ZIP archive of the evidence bundle (manifest.json emitted last).
+
+**Command path:** ``aeat app modelo audit export``
+
+**Registry key:** ``modelo.audit.export``
+
+**Parameters**
+
+``bundle_id``
+   *Argument, required.* Evidence bundle id (full SHA-256 or unambiguous prefix).
+
+``--output``
+   *Option, required.* Output path for the bundle ZIP archive.
+
+``--force-incomplete``
+   *Option, optional.* Allow export when verification reports the bundle as incomplete.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.ModeloAuditExportResult``.
+
+``aeat app modelo audit replay``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Re-run the evidence-case verification for forensic audit handoff; never contacts AEAT and never performs submission.
+
+**Command path:** ``aeat app modelo audit replay``
+
+**Registry key:** ``modelo.audit.replay``
+
+**Parameters**
+
+``bundle_id``
+   *Argument, required.* Evidence bundle id (full SHA-256 or unambiguous prefix).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.ModeloAuditReplayResult``.
+
+``aeat app modelo audit show``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Render an evidence bundle's manifest and referenced records
+
+**Command path:** ``aeat app modelo audit show``
+
+**Registry key:** ``modelo.audit.show``
+
+**Parameters**
+
+``bundle_id``
+   *Argument, required.* Evidence bundle id (full SHA-256 or unambiguous prefix).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.ModeloAuditShowResult``.
+
+``aeat app modelo bindings list``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List the required and available bindings for a modelo / year / period
+
+**Command path:** ``aeat app modelo bindings list``
+
+**Registry key:** ``modelo.bindings.list``
+
+**Parameters**
+
+``--modelo``
+   *Option, optional.* Tax form code (e.g. 303, 130, 100)
+
+``--year``
+   *Option, optional.* Tax year of the modelo (e.g. 2026)
+
+``--period``
+   *Option, optional.* Period token: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.
+
+``--missing``
+   *Option, optional.* Filter to the bindings still owed: drops constant-valued bindings and any the active profile already resolves. With no active profile every non-constant binding is shown (the conservative answer).
+
+``--as-of``
+   *Option, optional.* Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.ModeloBindingsListResult``.
+
+``aeat app modelo bindings preview``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Preview bindings with temporary overrides without mutating state
+
+**Command path:** ``aeat app modelo bindings preview``
+
+**Registry key:** ``modelo.bindings.preview``
+
+**Parameters**
+
+``--modelo``
+   *Option, optional.* Tax form code (e.g. 303, 130, 100)
+
+``--year``
+   *Option, optional.* Tax year of the modelo (e.g. 2026)
+
+``--period``
+   *Option, optional.* Period token: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.
+
+``--binding``
+   *Option, optional.* Temporary binding override with KEY=VALUE syntax (repeatable)
+
+``--as-of``
+   *Option, optional.* Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.ModeloBindingsPreviewResult``.
+
+``aeat app modelo casillas``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+No description available.
+
+**Command path:** ``aeat app modelo casillas``
+
+**Registry key:** ``modelo.casillas``
+
+**Parameters**
+
+``modelo``
+   *Argument, required.* Tax form code (e.g. 303, 130, 100)
+
+``--period``
+   *Option, optional.* Period token; for Modelo 036 use alta, modificacion, or baja; periodic examples include 2026Q1 and 2026-01
+
+``--as-of``
+   *Option, optional.* Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
+
+``--input-kind``
+   *Option, optional.* Filter casillas by input kind (manual, bound, computed, informational)
+
+``--required``
+   *Option, optional.* Show only casillas the modelo marks as required
+
+``--form-number``
+   *Option, optional.* Filter casillas by BOE-printed form number (e.g. 46)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.ModeloCasillasResult``.
+
+``aeat app modelo compare``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Compare two filing-year calculation revisions for the same modelo. Emits per-casilla delta rows (year_b - year_a) grouped by section.
+
+**Command path:** ``aeat app modelo compare``
+
+**Registry key:** ``modelo.compare``
+
+**Parameters**
+
+``--year``
+   *Option, optional.* Filing year to include in the comparison. Specify exactly twice (--year 2024 --year 2025).
+
+``--modelo``
+   *Option, optional.* Modelo number to compare (e.g. 100, 130).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.ModeloCompareResult``.
+
+``aeat app modelo describe``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+No description available.
+
+**Command path:** ``aeat app modelo describe``
+
+**Registry key:** ``modelo.describe``
+
+**Parameters**
+
+``modelo``
+   *Argument, required.* Tax form code (e.g. 303, 130, 100)
+
+``--period``
+   *Option, optional.* Period token used to resolve the modelo revision: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.
+
+``--as-of``
+   *Option, optional.* Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.ModeloDescribeResult``.
+
+``aeat app modelo export``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Export a verified-complete or filed modelo revision to a local AEAT-compatible fichero-BOE file. Local-only; never contacts AEAT.
+
+**Command path:** ``aeat app modelo export``
+
+**Registry key:** ``modelo.export``
+
+**Parameters**
+
+``work_unit_id``
+   *Argument, optional.* Work unit id (SHA-256 or unambiguous prefix).
+
+``--modelo``
+   *Option, optional.* Tax form code (e.g. 303, 130, 100)
+
+``--year``
+   *Option, optional.* Tax year of the work unit (e.g. 2026)
+
+``--period``
+   *Option, optional.* Work-unit period token: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.
+
+``--registry-revision``
+   *Option, optional.* Stable id of the targeted registry modelo revision; run `aeat app modelo describe MODELO` to see the available revision ids.
+
+``--bucket-id``
+   *Option, optional.* Bucket identifier the work unit belongs to
+
+``--select``
+   *Option, optional.* Revision selector.
+
+``--output``
+   *Option, optional.* Path to write the fichero-BOE artefact to.
+
+``--revision``
+   *Option, optional.* Calculation revision id to export; defaults to the work unit's most recent verified-complete or filed revision.
+
+``--by``
+   *Option, optional.* Operator label recorded into the MODELO_EXPORTED event.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.ModeloExportPayload``.
+
+``aeat app modelo filing-record import``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Persist an externally-filed return as a baseline filing record carrying imported AEAT-attested evidence
+
+**Command path:** ``aeat app modelo filing-record import``
+
+**Registry key:** ``modelo.filing_record.import``
+
+**Parameters**
+
+``work_unit_id``
+   *Argument, required.* Stable 64-character SHA-256 identifier of the work unit
+
+``--evidence-kind``
+   *Option, required.* Kind of imported evidence (aeat_justificante_pdf, aeat_csv_register, aeat_live_capture)
+
+``--evidence-id``
+   *Option, required.* Stable reference id of the imported evidence (justificante number, CSV register id, live capture id)
+
+``--by``
+   *Option, optional.* Actor responsible for the action (free-text label up to 64 chars)
+
+``--set``
+   *Option, optional.* Imported casilla value with CASILLA=DECIMAL syntax (repeatable; at least one required)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.FilingRecordImportResult``.
+
+``aeat app modelo filing-record list``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List registered filing records
+
+**Command path:** ``aeat app modelo filing-record list``
+
+**Registry key:** ``modelo.filing_record.list``
+
+**Parameters**
+
+``--bucket-id``
+   *Option, optional.* Filter by bucket
+
+``--include-superseded``
+   *Option, optional.* Include superseded filing records (excluded by default)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.ModeloRecordListResult``.
+
+``aeat app modelo filing-record view``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Show one filing record by id
+
+**Command path:** ``aeat app modelo filing-record view``
+
+**Registry key:** ``modelo.filing_record.view``
+
+**Parameters**
+
+``filing_record_id``
+   *Argument, required.* Stable filing-record identifier
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.ModeloRecordShowResult``.
+
+``aeat app modelo formulas``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+No description available.
+
+**Command path:** ``aeat app modelo formulas``
+
+**Registry key:** ``modelo.formulas``
+
+**Parameters**
+
+``modelo``
+   *Argument, required.* Tax form code (e.g. 303, 130, 100)
+
+``--period``
+   *Option, optional.* Period token; for Modelo 036 use alta, modificacion, or baja; periodic examples include 2026Q1 and 2026-01
+
+``--as-of``
+   *Option, optional.* Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
+
+``--explain``
+   *Option, optional.* Include the legal_refs and source_refs that ground each formula in the text output. The JSON payload always carries them.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.FormulasResult``.
+
+``aeat app modelo history``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Show the chronological lifecycle audit for one modelo
+
+**Command path:** ``aeat app modelo history``
+
+**Registry key:** ``modelo.history``
+
+**Parameters**
+
+``--modelo``
+   *Option, required.* Modelo code (e.g. 100, 303)
+
+``--year``
+   *Option, optional.* Optional filing year filter
+
+``--period``
+   *Option, optional.* Optional period filter (e.g. Q1, annual)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.ModeloHistoryResult``.
+
+``aeat app modelo iva-wallet balance``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Show aggregated IVA compensation carry-forward balance computed from local Modelo 303 history. Reports total_balance, lot_count, and next_expiry_year.
+
+**Command path:** ``aeat app modelo iva-wallet balance``
+
+**Registry key:** ``modelo.iva_wallet.balance``
+
+**Parameters**
+
+``--as-of-year``
+   *Option, required.* Reference year for carry-forward age and expiry calculations.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.IvaWalletBalanceResult``.
+
+``aeat app modelo iva-wallet seed``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Declare a Modelo 303 carry-forward balance for a period that pre-dates local history. Refuses if a record already exists for the period.
+
+Two cases:
+
+ --amount 0   True first-period: this is the taxpayer's first ever Modelo 303 filing under this NIF. Casilla 110 is zero because no prior compensation balance exists (LIVA art. 99.5, Ley 37/1992). The reconciliation layer treats this as first_period_zero — non-blocking and legally certain.
+
+  --amount X   Carry-in: the taxpayer has filed prior M303s under a different tool or directly with AEAT. X is the compensacion pendiente de periodos posteriores from the last filed M303.
+
+**Command path:** ``aeat app modelo iva-wallet seed``
+
+**Registry key:** ``modelo.iva_wallet.seed``
+
+**Parameters**
+
+``--filing-year``
+   *Option, required.* Filing year of the Modelo 303 period to seed.
+
+``--period``
+   *Option, required.* Period of the seed amount (e.g. 2024N4).
+
+``--amount``
+   *Option, required.* Carry-forward balance amount in EUR (decimal, e.g. 1200.50). This is the compensación pendiente de periodos anteriores for the NEXT period after the seeded one.
+
+``--confirm``
+   *Option, optional.* Required confirmation flag. Acknowledge that seeding declares a carry-forward balance and filing accuracy depends on the value supplied.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.IvaWalletSeedResult``.
+
+``aeat app modelo list``
+~~~~~~~~~~~~~~~~~~~~~~~~
+No description available.
+
+**Command path:** ``aeat app modelo list``
+
+**Registry key:** ``modelo.list``
+
+**Parameters**
+
+``--year``
+   *Option, optional.* Filter the modelo catalogue to a single fiscal year
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.ModeloListResult``.
+
+``aeat app modelo m036 alta``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Record an M036 alta declaration (initial census registration) filed at sede.
+
+**Command path:** ``aeat app modelo m036 alta``
+
+**Registry key:** ``modelo.m036.alta``
+
+**Parameters**
+
+``--declared-on``
+   *Option, required.* ISO date (YYYY-MM-DD) the operator filed the M036 at sede.
+
+``--sede-justificante``
+   *Option, optional.* Optional AEAT acuse de recibo identifier emitted by sede for the filing.
+
+``--note``
+   *Option, optional.* Optional operator note (up to 512 chars).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.M036DeclarationRecordResult``.
+
+``aeat app modelo m036 baja``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Record an M036 baja declaration (census deregistration) filed at sede.
+
+**Command path:** ``aeat app modelo m036 baja``
+
+**Registry key:** ``modelo.m036.baja``
+
+**Parameters**
+
+``--declared-on``
+   *Option, required.* ISO date (YYYY-MM-DD) the operator filed the M036 at sede.
+
+``--sede-justificante``
+   *Option, optional.* Optional AEAT acuse de recibo identifier emitted by sede for the filing.
+
+``--note``
+   *Option, optional.* Optional operator note (up to 512 chars).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.M036DeclarationRecordResult``.
+
+``aeat app modelo m036 modificacion``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Record an M036 modificacion declaration (census update) filed at sede.
+
+**Command path:** ``aeat app modelo m036 modificacion``
+
+**Registry key:** ``modelo.m036.modificacion``
+
+**Parameters**
+
+``--declared-on``
+   *Option, required.* ISO date (YYYY-MM-DD) the operator filed the M036 at sede.
+
+``--sede-justificante``
+   *Option, optional.* Optional AEAT acuse de recibo identifier emitted by sede for the filing.
+
+``--note``
+   *Option, optional.* Optional operator note (up to 512 chars).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.M036DeclarationRecordResult``.
+
+``aeat app modelo project``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Run modelo aggregate projections (e.g. year-end Modelo 130 aggregation).
+
+**Command path:** ``aeat app modelo project``
+
+**Registry key:** ``modelo.project``
+
+**Parameters**
+
+``--year``
+   *Option, required.* Filing year (e.g. 2024).
+
+``--ccaa``
+   *Option, required.* Autonomous community tax residence key for the M100 autonomic scale (e.g. cataluna, comunidad-valenciana). Must match the registry enum.
+
+``--casilla``
+   *Option, optional.* Additional M100 casilla override as CASILLA=DECIMAL (e.g. 0513=1150 for age supplement). Repeat for multiple overrides.
+
+``--binding``
+   *Option, optional.* Additional M100 binding override as KEY=VALUE. Repeat for multiple. Retenciones bindings default to zero when not supplied.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.ModeloProjectResult``.
+
+``aeat app modelo readiness``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Report whether the active profile is ready to file one modelo / year / period.
+
+**Command path:** ``aeat app modelo readiness``
+
+**Registry key:** ``modelo.readiness``
+
+**Parameters**
+
+``--modelo``
+   *Option, required.* Modelo code (e.g. 303).
+
+``--revision-id``
+   *Option, required.* Registry revision id.
+
+``--year``
+   *Option, required.* Filing year.
+
+``--period``
+   *Option, optional.* Period token (e.g. Q1, annual).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.ModeloReadinessResult``.
+
+``aeat app modelo reconcile``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Reconcile a modelo work unit against external evidence (justificante PDF). Local-only; never contacts AEAT.
+
+**Command path:** ``aeat app modelo reconcile``
+
+**Registry key:** ``modelo.reconcile``
+
+**Parameters**
+
+``work_unit_id``
+   *Argument, optional.* Work unit id (SHA-256 or unambiguous prefix).
+
+``--modelo``
+   *Option, optional.* Tax form code (e.g. 303, 130, 100)
+
+``--year``
+   *Option, optional.* Tax year of the work unit (e.g. 2026)
+
+``--period``
+   *Option, optional.* Work-unit period token: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.
+
+``--revision``
+   *Option, optional.* Stable id of the targeted registry modelo revision; run `aeat app modelo describe MODELO` to see the available revision ids.
+
+``--bucket-id``
+   *Option, optional.* Bucket identifier the work unit belongs to
+
+``--from-justificante``
+   *Option, optional.* Path to the AEAT justificante PDF to reconcile against.
+
+``--from-declaration``
+   *Option, optional.* Path to the filed declaration PDF to reconcile against (reserved; parser pending).
+
+``--by``
+   *Option, optional.* Actor responsible for the action (free-text label up to 64 chars)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.ModeloReconcileResult``.
+
+``aeat app modelo reconcile-from-justificante``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Reconcile a modelo work unit against a justificante PDF. Sugar for operators who think "reconcile from this justificante" rather than "reconcile, source = justificante". Shares the modelo_reconcile application service entry point with the flag-based form. Local-only; never contacts AEAT.
+
+**Command path:** ``aeat app modelo reconcile-from-justificante``
+
+**Registry key:** ``modelo.reconcile_from_justificante``
+
+**Parameters**
+
+``justificante_path``
+   *Argument, required.* Path to the AEAT justificante PDF to reconcile against.
+
+``work_unit_id``
+   *Argument, optional.* Work unit id (SHA-256 or unambiguous prefix).
+
+``--modelo``
+   *Option, optional.* Tax form code (e.g. 303, 130, 100)
+
+``--year``
+   *Option, optional.* Tax year of the work unit (e.g. 2026)
+
+``--period``
+   *Option, optional.* Work-unit period token: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.
+
+``--revision``
+   *Option, optional.* Stable id of the targeted registry modelo revision; run `aeat app modelo describe MODELO` to see the available revision ids.
+
+``--bucket-id``
+   *Option, optional.* Bucket identifier the work unit belongs to
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.ModeloReconcileResult``.
+
+``aeat app modelo verification-report list``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List verification reports, optionally filtered to one calculation revision
+
+**Command path:** ``aeat app modelo verification-report list``
+
+**Registry key:** ``modelo.verification_report.list``
+
+**Parameters**
+
+``--calculation-revision-id``
+   *Option, optional.* Stable 64-character SHA-256 id of a calculation revision
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.VerificationReportListResult``.
+
+``aeat app modelo verification-report view``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Show one verification report by id
+
+**Command path:** ``aeat app modelo verification-report view``
+
+**Registry key:** ``modelo.verification_report.view``
+
+**Parameters**
+
+``verification_report_id``
+   *Argument, required.* Stable 64-character SHA-256 identifier of a verification report
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.VerificationReportShowResult``.
+
+``aeat app modelo work amend``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Build a corrective amendment over an externally-filed return. Requires a filing record with imported AEAT-attested evidence
+
+**Command path:** ``aeat app modelo work amend``
+
+**Registry key:** ``modelo.work.amend``
+
+**Parameters**
+
+``--from-filing-record``
+   *Option, optional.* Stable id of the baseline filing record to amend. Must carry imported external evidence (justificante / CSV register / live capture)
+
+``--kind``
+   *Option, optional.* Legal kind of the amendment (complementaria or sustitutiva)
+
+``--reason``
+   *Option, optional.* Free-text reason for the amendment (operator audit trail)
+
+``--by``
+   *Option, optional.* Actor responsible for the action (free-text label up to 64 chars)
+
+``--set``
+   *Option, optional.* Corrected casilla value with CASILLA=DECIMAL syntax (repeatable; at least one required)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.WorkAmendResult``.
+
+``aeat app modelo work calculate``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Persist a new draft calculation revision for the work unit
+
+**Command path:** ``aeat app modelo work calculate``
+
+**Registry key:** ``modelo.work.calculate``
+
+**Parameters**
+
+``work_unit_id``
+   *Argument, optional.* Stable 64-character SHA-256 identifier of the work unit
+
+``--modelo``
+   *Option, optional.* Tax form code (e.g. 303, 130, 100)
+
+``--year``
+   *Option, optional.* Tax year of the work unit (e.g. 2026)
+
+``--period``
+   *Option, optional.* Work-unit period token: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.
+
+``--revision``
+   *Option, optional.* Stable id of the targeted registry modelo revision; run `aeat app modelo describe MODELO` to see the available revision ids.
+
+``--bucket-id``
+   *Option, optional.* Bucket identifier the work unit belongs to
+
+``--casilla``
+   *Option, optional.* Casilla value with CASILLA=DECIMAL syntax (repeatable). CASILLA accepts the casilla id, the registry number, or the BOE printed casilla number shown by `aeat app modelo casillas`.
+
+``--binding``
+   *Option, optional.* Binding value with KEY=VALUE syntax (repeatable); run `aeat app modelo bindings list --missing` to see the bindings the calculation needs.
+
+``--borrador``
+   *Option, optional.* Modelo 100 borrador snapshot id (full or unambiguous prefix). Snapshot binding values are used only for registry bindings marked aeat_prefilled; caller --binding overrides always take precedence.
+
+``--by``
+   *Option, optional.* Actor responsible for the action (free-text label up to 64 chars)
+
+``--relation``
+   *Option, optional.* Prior-period relation value as KEY=VALUE. The KEY is a registry relation id; the VALUE is a decimal. Repeat to supply multiple relations.
+
+``--row``
+   *Option, optional.* Typed detail row for multi-record informational modelos. Format: TYPE FIELD=value [FIELD=value ...]. TYPE is 'miembro' (M184 attribution member), 'vinculada' (M232 related-party operation), 'operador' (M349 intracom operator), or 'contraparte' (M347 declared counterparty). Repeat to add multiple rows. M184 example: --row 'miembro nif=12345678A porcentaje=40 importe=10000'. M349 example: --row 'operador codigo_pais=DE nif_comunitario=DE123456789 clave_operacion=E importe=50000'.
+
+``--prestacion-inss-exenta``
+   *Option, optional.* Gross amount of INSS maternity/paternity benefit exempt from IRPF (Art. 7.h LIRPF). Recorded in the revision-specific exempt casilla and subtracted from total computable income. Enter the gross amount received from Social Security for maternity or paternity leave. Do NOT include this in --casilla 0003 (Retribuciones dinerarias).
+
+``--meses-trabajo-con-hijo-menor-3``
+   *Option, optional.* Months worked while the child under 3 was in the family unit (Art. 81 LIRPF maternity deduction). Format: HIJO_ID=MESES. Repeatable per child. HIJO_ID is a free label (e.g. 0, 1, 'laia'). Computes sum(min(MESES × 100, 1200)) and injects into casilla 0611. Example: --meses-trabajo-con-hijo-menor-3 0=12 --meses-trabajo-con-hijo-menor-3 1=6 → 0611 = 1800.
+
+``--rescate-plan-pensiones-capital``
+   *Option, optional.* Gross lump-sum pension-plan redemption amount (LIRPF transitional provision 12). Use it with --rescate-plan-pensiones-aportaciones-pre-2007 and --rescate-plan-pensiones-aportaciones-totales so the assistant calculates the 40% reduction and injects it into casilla 0011.
+
+``--rescate-plan-pensiones-aportaciones-pre-2007``
+   *Option, optional.* Contributions made to the pension plan up to 31 Dec 2006 (LIRPF transitional provision 12 proration base). Required with --rescate-plan-pensiones-capital and --rescate-plan-pensiones-aportaciones-totales.
+
+``--rescate-plan-pensiones-aportaciones-totales``
+   *Option, optional.* Total pension-plan contributions (denominator for the LIRPF transitional provision 12 proration). Required with --rescate-plan-pensiones-capital and --rescate-plan-pensiones-aportaciones-pre-2007.
+
+``--sal-beneficio-neto``
+   *Option, optional.* Net profit for the fiscal year of the worker-owned company (SAL/SLL, Law 44/2015 Art. 14). The assistant applies 10% to calculate the mandatory special reserve allocation, capped by the 50% share-capital threshold. Use it with --sal-reserva-dotada and --sal-capital-social.
+
+``--sal-reserva-dotada``
+   *Option, optional.* Special reserve accumulated in previous fiscal years (Law 44/2015 Art. 14). Used to check whether the reserve has already reached 50% of share capital. Required with --sal-beneficio-neto and --sal-capital-social.
+
+``--sal-capital-social``
+   *Option, optional.* Share capital of the worker-owned company (Law 44/2015 Art. 14). Denominator for the 50% test: the allocation is zero once accumulated reserve reaches 50% of share capital. Required with --sal-beneficio-neto and --sal-reserva-dotada.
+
+``--autoconsumo-promotor-base``
+   *Option, optional.* Tax base for the real-estate developer self-supply (Art. 9.1.c + Art. 79.4 LISIVA): construction or renovation cost of properties converted to the rental estate. The assistant automatically applies 21% (Art. 90 LISIVA) to compute the IVA charge. Applicable to Modelo 303 only.
+
+``--output-language``, ``--language``
+   *Option, optional.* Output language for the response text (es, en, ca, hu).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.WorkCalculateResult``.
+
+``aeat app modelo work compare-taxation``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Compare IRPF cuota under joint (conjunta, Art. 82-84 LIRPF) vs. individual filing for an existing Modelo 100 work unit. Runs the registry engine twice — once with declaration_type=2 (conjunta) and once with declaration_type=1 (individual) — over identical profile bindings, and outputs the cuota differential and a recommendation. Ephemeral: no revision is persisted.
+
+**Command path:** ``aeat app modelo work compare-taxation``
+
+**Registry key:** ``modelo.work.compare_taxation``
+
+**Parameters**
+
+``work_unit_id``
+   *Argument, optional.* Stable 64-character SHA-256 identifier of the work unit
+
+``--modelo``
+   *Option, optional.* Tax form code (e.g. 303, 130, 100)
+
+``--year``
+   *Option, optional.* Tax year of the work unit (e.g. 2026)
+
+``--period``
+   *Option, optional.* Work-unit period token: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.
+
+``--revision``
+   *Option, optional.* Stable id of the targeted registry modelo revision; run `aeat app modelo describe MODELO` to see the available revision ids.
+
+``--bucket-id``
+   *Option, optional.* Bucket identifier the work unit belongs to
+
+``--output-language``
+   *Option, optional.* Output language for rendered messages.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.WorkCompareTaxationResult``.
+
+``aeat app modelo work create``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Create or reuse a work unit for (modelo, year, period, revision)
+
+**Command path:** ``aeat app modelo work create``
+
+**Registry key:** ``modelo.work.create``
+
+**Parameters**
+
+``--modelo``
+   *Option, required.* Tax form code (e.g. 303, 130, 100)
+
+``--year``
+   *Option, required.* Tax year of the work unit (e.g. 2026)
+
+``--period``
+   *Option, required.* Work-unit period token: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.
+
+``--revision``
+   *Option, optional.* Stable id of the targeted registry modelo revision; run `aeat app modelo describe MODELO` to see the available revision ids.
+
+``--bucket-id``
+   *Option, optional.* Bucket identifier the work unit belongs to
+
+``--name``
+   *Option, optional.* Optional display name for the work unit
+
+``--by``
+   *Option, optional.* Actor responsible for the action (free-text label up to 64 chars)
+
+``--allow-not-applicable``
+   *Option, optional.* Create the work unit even when the modelo does not apply to the active profile's taxpayer type.
+
+``--causante-ccaa``
+   *Option, optional.* CCAA of habitual residence of the deceased (ISD Modelo 650/660) or CCAA where the transferred asset is located (ITPyAJD Modelo 600/620). Determines the competent Hacienda (Ley 22/2009 Art. 32). País Vasco and Navarra are foral regimes; consult the corresponding regional Hacienda.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.WorkCreateResult``.
+
+``aeat app modelo work discard``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Mark a work unit as discarded (auditable state transition)
+
+**Command path:** ``aeat app modelo work discard``
+
+**Registry key:** ``modelo.work.discard``
+
+**Parameters**
+
+``work_unit_id``
+   *Argument, optional.* Stable 64-character SHA-256 identifier of the work unit
+
+``--modelo``
+   *Option, optional.* Tax form code (e.g. 303, 130, 100)
+
+``--year``
+   *Option, optional.* Tax year of the work unit (e.g. 2026)
+
+``--period``
+   *Option, optional.* Work-unit period token: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.
+
+``--revision``
+   *Option, optional.* Stable id of the targeted registry modelo revision; run `aeat app modelo describe MODELO` to see the available revision ids.
+
+``--bucket-id``
+   *Option, optional.* Bucket identifier the work unit belongs to
+
+``--by``
+   *Option, optional.* Actor responsible for the action (free-text label up to 64 chars)
+
+``--reason``
+   *Option, optional.* Optional free-text reason for the discard (up to 500 chars)
+
+``--yes``
+   *Option, optional.* Explicitly confirm the discard operation
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.WorkDiscardResult``.
+
+``aeat app modelo work file``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Mark a verified revision as internally filed. Does NOT submit to AEAT
+
+**Command path:** ``aeat app modelo work file``
+
+**Registry key:** ``modelo.work.file``
+
+**Parameters**
+
+``calculation_revision_id``
+   *Argument, optional.* Stable 64-character SHA-256 id of a calculation revision
+
+``--modelo``
+   *Option, optional.* Tax form code (e.g. 303, 130, 100)
+
+``--year``
+   *Option, optional.* Tax year of the work unit (e.g. 2026)
+
+``--period``
+   *Option, optional.* Work-unit period token: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.
+
+``--revision``
+   *Option, optional.* Stable id of the targeted registry modelo revision; run `aeat app modelo describe MODELO` to see the available revision ids.
+
+``--work-unit-id``
+   *Option, optional.* Stable 64-character SHA-256 identifier of the work unit
+
+``--select``
+   *Option, optional.* Revision selector.
+
+``--bucket-id``
+   *Option, optional.* Bucket identifier the work unit belongs to
+
+``--by``
+   *Option, optional.* Actor responsible for the action (free-text label up to 64 chars)
+
+``--notes``
+   *Option, optional.* Optional notes attached to the filing record
+
+``--output-language``, ``--language``
+   *Option, optional.* Output language for the response text (es, en, ca, hu).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.WorkFileResult``.
+
+``aeat app modelo work history``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Show every lifecycle event for one work unit
+
+**Command path:** ``aeat app modelo work history``
+
+**Registry key:** ``modelo.work.history``
+
+**Parameters**
+
+``work_unit_id``
+   *Argument, optional.* Work unit id whose lifecycle you want to view
+
+``--modelo``
+   *Option, optional.* Tax form code (e.g. 303, 130, 100)
+
+``--year``
+   *Option, optional.* Tax year of the work unit (e.g. 2026)
+
+``--period``
+   *Option, optional.* Work-unit period token: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.
+
+``--revision``
+   *Option, optional.* Stable id of the targeted registry modelo revision; run `aeat app modelo describe MODELO` to see the available revision ids.
+
+``--bucket-id``
+   *Option, optional.* Bucket identifier the work unit belongs to
+
+``--output-language``, ``--language``
+   *Option, optional.* Output language for the response text (es, en, ca, hu).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.WorkHistoryResult``.
+
+``aeat app modelo work list``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List registered work units, optionally filtered by bucket
+
+**Command path:** ``aeat app modelo work list``
+
+**Registry key:** ``modelo.work.list``
+
+**Parameters**
+
+``--bucket-id``
+   *Option, optional.* Bucket identifier the work unit belongs to
+
+``--include-discarded``
+   *Option, optional.* Include discarded work units in the listing (excluded by default)
+
+``--output-language``, ``--language``
+   *Option, optional.* Output language for the response text (es, en, ca, hu).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.WorkListResult``.
+
+``aeat app modelo work preview-maritime-exemption``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Preview the Art. 7.p) / REBECA maritime worker IRPF exemption resolved from the active profile's maritime_worker facts. Emits typed CasillaObservation rows with legal_refs; surfaces the RETMAR mandatory-filing warning when retmar_registered=True; refuses with the DA 41 inactive code when the tuna-fleet selector resolves.
+
+**Command path:** ``aeat app modelo work preview-maritime-exemption``
+
+**Registry key:** ``modelo.work.preview_maritime_exemption``
+
+**Parameters**
+
+``--annual-salary``
+   *Option, optional.* Gross annual salary in EUR (Decimal). Required when the active profile triggers Art. 7.p) eligibility (vessel_flag=foreign or waters_type=international).
+
+``--qualifying-days``
+   *Option, optional.* Calendar days worked outside Spanish territory in the tax year. Required alongside --annual-salary when Art. 7.p) applies.
+
+``--gross-navigation-income``
+   *Option, optional.* Total gross employment income from navigation in EUR (Decimal). Required when the active profile triggers REBECA eligibility (vessel_registry in REBECA / rebeca_eu_eea / scheduled_canary_route).
+
+``--output-language``, ``--language``
+   *Option, optional.* Output language for the response text (es, en, ca, hu).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.WorkPreviewMaritimeExemptionResult``.
+
+``aeat app modelo work rename``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Update the display name of a work unit
+
+**Command path:** ``aeat app modelo work rename``
+
+**Registry key:** ``modelo.work.rename``
+
+**Parameters**
+
+``work_unit_id``
+   *Argument, optional.* Stable 64-character SHA-256 identifier of the work unit
+
+``--modelo``
+   *Option, optional.* Tax form code (e.g. 303, 130, 100)
+
+``--year``
+   *Option, optional.* Tax year of the work unit (e.g. 2026)
+
+``--period``
+   *Option, optional.* Work-unit period token: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.
+
+``--revision``
+   *Option, optional.* Stable id of the targeted registry modelo revision; run `aeat app modelo describe MODELO` to see the available revision ids.
+
+``--bucket-id``
+   *Option, optional.* Bucket identifier the work unit belongs to
+
+``--name``
+   *Option, optional.* Optional display name for the work unit
+
+``--by``
+   *Option, optional.* Actor responsible for the action (free-text label up to 64 chars)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.WorkRenameResult``.
+
+``aeat app modelo work resume``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Validate whether you can retry an interrupted workflow run without contacting AEAT. Accepts a workflow run id or a work-unit id.
+
+**Command path:** ``aeat app modelo work resume``
+
+**Registry key:** ``modelo.work.resume``
+
+**Parameters**
+
+``target``
+   *Argument, required.* 16-character workflow run id, or the 64-character work-unit id (its latest run is resolved automatically). Run `aeat app modelo work runs` to list run ids.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.WorkResumeResult``.
+
+``aeat app modelo work revision``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Show one stored calculation revision's persisted casilla values (without recomputing)
+
+**Command path:** ``aeat app modelo work revision``
+
+**Registry key:** ``modelo.work.revision``
+
+**Parameters**
+
+``calculation_revision_id``
+   *Argument, optional.* Stable 64-character SHA-256 id of a calculation revision
+
+``--modelo``
+   *Option, optional.* Tax form code (e.g. 303, 130, 100)
+
+``--year``
+   *Option, optional.* Tax year of the work unit (e.g. 2026)
+
+``--period``
+   *Option, optional.* Work-unit period token: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.
+
+``--registry-revision``
+   *Option, optional.* Stable id of the targeted registry modelo revision; run `aeat app modelo describe MODELO` to see the available revision ids.
+
+``--work-unit-id``
+   *Option, optional.* Stable 64-character SHA-256 identifier of the work unit
+
+``--select``
+   *Option, optional.* Revision selector.
+
+``--bucket-id``
+   *Option, optional.* Bucket identifier the work unit belongs to
+
+``--output-language``, ``--language``
+   *Option, optional.* Output language for the response text (es, en, ca, hu).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.WorkRevisionResult``.
+
+``aeat app modelo work revisions``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List calculation revisions, optionally filtered to one work unit
+
+**Command path:** ``aeat app modelo work revisions``
+
+**Registry key:** ``modelo.work.revisions``
+
+**Parameters**
+
+``work_unit_id``
+   *Argument, optional.* Stable 64-character SHA-256 identifier of the work unit
+
+``--modelo``
+   *Option, optional.* Tax form code (e.g. 303, 130, 100)
+
+``--year``
+   *Option, optional.* Tax year of the work unit (e.g. 2026)
+
+``--period``
+   *Option, optional.* Work-unit period token: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.
+
+``--revision``
+   *Option, optional.* Stable id of the targeted registry modelo revision; run `aeat app modelo describe MODELO` to see the available revision ids.
+
+``--bucket-id``
+   *Option, optional.* Bucket identifier the work unit belongs to
+
+``--output-language``, ``--language``
+   *Option, optional.* Output language for the response text (es, en, ca, hu).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.WorkRevisionsResult``.
+
+``aeat app modelo work runs``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List persisted workflow runs with their run ids, newest first. Use a run id with `aeat app modelo work resume`. Local-only; never contacts AEAT.
+
+**Command path:** ``aeat app modelo work runs``
+
+**Registry key:** ``modelo.work.runs``
+
+**Parameters**
+
+``--output-language``, ``--language``
+   *Option, optional.* Output language for the response text (es, en, ca, hu).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.WorkRunsResult``.
+
+``aeat app modelo work status``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Show the metadata of one work unit
+
+**Command path:** ``aeat app modelo work status``
+
+**Registry key:** ``modelo.work.status``
+
+**Parameters**
+
+``work_unit_id``
+   *Argument, optional.* Stable 64-character SHA-256 identifier of the work unit
+
+``--modelo``
+   *Option, optional.* Tax form code (e.g. 303, 130, 100)
+
+``--year``
+   *Option, optional.* Tax year of the work unit (e.g. 2026)
+
+``--period``
+   *Option, optional.* Work-unit period token: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.
+
+``--revision``
+   *Option, optional.* Stable id of the targeted registry modelo revision; run `aeat app modelo describe MODELO` to see the available revision ids.
+
+``--bucket-id``
+   *Option, optional.* Bucket identifier the work unit belongs to
+
+``--output-language``, ``--language``
+   *Option, optional.* Output language for the response text (es, en, ca, hu).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.WorkStatusResult``.
+
+``aeat app modelo work verify``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Verify a draft calculation revision against the verified-complete contract
+
+**Command path:** ``aeat app modelo work verify``
+
+**Registry key:** ``modelo.work.verify``
+
+**Parameters**
+
+``calculation_revision_id``
+   *Argument, optional.* Stable 64-character SHA-256 id of a calculation revision
+
+``--modelo``
+   *Option, optional.* Tax form code (e.g. 303, 130, 100)
+
+``--year``
+   *Option, optional.* Tax year of the work unit (e.g. 2026)
+
+``--period``
+   *Option, optional.* Work-unit period token: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.
+
+``--revision``
+   *Option, optional.* Stable id of the targeted registry modelo revision; run `aeat app modelo describe MODELO` to see the available revision ids.
+
+``--work-unit-id``
+   *Option, optional.* Stable 64-character SHA-256 identifier of the work unit
+
+``--select``
+   *Option, optional.* Revision selector.
+
+``--bucket-id``
+   *Option, optional.* Bucket identifier the work unit belongs to
+
+``--by``
+   *Option, optional.* Actor responsible for the action (free-text label up to 64 chars)
+
+``--output-language``, ``--language``
+   *Option, optional.* Output language for the response text (es, en, ca, hu).
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._modelo_payloads.WorkVerifyResult``.
+
+``aeat app overview agenda``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Rank upcoming and past-due obligations around an as-of date. Surfaces a single `next_due` plus due-today / due-soon / overdue cohorts. Local-only; never contacts AEAT.
+
+**Command path:** ``aeat app overview agenda``
+
+**Registry key:** ``overview.agenda``
+
+**Parameters**
+
+``--date``
+   *Option, optional.* As-of date for the agenda (ISO YYYY-MM-DD); defaults to today.
+
+``--horizon``
+   *Option, optional.* Forward window (days) the `due_soon` cohort honours.
+
+``--allow-incomplete``
+   *Option, optional.* Render the agenda even when profile data is incomplete.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._overview_payloads.OverviewAgendaResult``.
+
+``aeat app overview backlog``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List past-due obligations the operator has not yet filed. Sorted oldest first so the most-overdue items triage first. Local-only; never contacts AEAT.
+
+**Command path:** ``aeat app overview backlog``
+
+**Registry key:** ``overview.backlog``
+
+**Parameters**
+
+``--from``
+   *Option, optional.* Inclusive start date (ISO YYYY-MM-DD); defaults to 365 days before today.
+
+``--to``
+   *Option, optional.* Inclusive end date (ISO YYYY-MM-DD); defaults to today.
+
+``--allow-incomplete``
+   *Option, optional.* Render the backlog even when profile data is incomplete.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._overview_payloads.OverviewBacklogResult``.
+
+``aeat app overview calendar``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Render the deadline calendar for the active profile across the supplied date window. Applies festivos and business-day shifts. Local-only; never contacts AEAT.
+
+**Command path:** ``aeat app overview calendar``
+
+**Registry key:** ``overview.calendar``
+
+**Parameters**
+
+``--from``
+   *Option, required.* Inclusive start date for the calendar window (ISO YYYY-MM-DD).
+
+``--to``
+   *Option, required.* Inclusive end date for the calendar window (ISO YYYY-MM-DD).
+
+``--allow-incomplete``
+   *Option, optional.* Render the calendar even when profile data is incomplete.
+
+``--show-suppressed``
+   *Option, optional.* Include filtered (non-applicable) obligations in the output with their applicability verdict and reason.
+
+``--all-profiles``
+   *Option, optional.* Render the calendar for every registered profile instead of the active one. Each block is prefixed with a profile header line.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._overview_payloads.OverviewCalendarResult``.
+
+``aeat app overview explain``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Decompose a modelo's applicability against the active profile. Surfaces the binary applicable flag, the registry-backed rationale text, and the profile facts the decision depends on. Local-only; never contacts AEAT.
+
+**Command path:** ``aeat app overview explain``
+
+**Registry key:** ``overview.explain``
+
+**Parameters**
+
+``modelo``
+   *Argument, required.* AEAT modelo identifier (e.g. 303, 130, 100).
+
+``--year``
+   *Option, optional.* Fiscal year for the applicability evaluation; defaults to the current year.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._overview_payloads.OverviewExplainResult``.
+
+``aeat app overview status``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Show profile, ledger, and modelo readiness
+
+**Command path:** ``aeat app overview status``
+
+**Registry key:** ``overview.status``
+
+**Parameters**
+
+``--period``
+   *Option, optional.* Tax period to review (for example, 2026-Q1)
+
+``--verbose``
+   *Option, optional.* Show details and next action when available
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._overview_payloads.OverviewStatusResult``.
+
+``aeat app registry audit-oracles``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Surface live-parity oracle binding mismatches at startup
+
+**Command path:** ``aeat app registry audit-oracles``
+
+**Registry key:** ``registry.audit_oracles``
+
+**Parameters**
+
+``--registry-root``
+   *Option, optional.* Path to the registry root directory
+
+``--environment``
+   *Option, optional.* Live parity catalogue environment to audit against (production, test_environment, or both)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._registry_payloads.RegistryAuditOraclesResult``.
+
+``aeat app registry citations list``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List the normatives codified in the legal corpus
+
+**Command path:** ``aeat app registry citations list``
+
+**Registry key:** ``registry.citations.list``
+
+**Parameters**
+
+``--tag``
+   *Option, optional.* Filter by tax-domain tag (e.g. 'irpf', 'iva')
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._registry_corpus_payloads.CitationListResult``.
+
+``aeat app registry citations verify``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Verify the legal-norm corpus integrity
+
+**Command path:** ``aeat app registry citations verify``
+
+**Registry key:** ``registry.citations.verify``
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._registry_corpus_payloads.CitationVerifyResult``.
+
+``aeat app registry citations view``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Show one normative and, optionally, one of its articles
+
+**Command path:** ``aeat app registry citations view``
+
+**Registry key:** ``registry.citations.view``
+
+**Parameters**
+
+``normative_id``
+   *Argument, required.* Stable normative id (e.g. ley-37-1992)
+
+``--articulo``
+   *Option, optional.* Specific article to show (e.g. 91.Uno.2.1º)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._registry_corpus_payloads.CitationShowResult``.
+
+``aeat app registry inspect``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Inspect registry status and references
+
+**Command path:** ``aeat app registry inspect``
+
+**Registry key:** ``registry.inspect``
+
+**Parameters**
+
+``--registry-root``
+   *Option, optional.* Path to the registry root directory
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._registry_payloads.RegistryInspectResult``.
+
+``aeat app registry manuals list``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List manual parts available locally
+
+**Command path:** ``aeat app registry manuals list``
+
+**Registry key:** ``registry.manuals.list``
+
+**Parameters**
+
+``--manual``
+   *Option, optional.* Manual identifier (renta, iva, sociedades)
+
+``--year``
+   *Option, optional.* Tax year of the manual (e.g. 2024)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._registry_corpus_payloads.ManualListResult``.
+
+``aeat app registry manuals rules``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List the rules codified in a manual
+
+**Command path:** ``aeat app registry manuals rules``
+
+**Registry key:** ``registry.manuals.rules``
+
+**Parameters**
+
+``--manual``
+   *Option, required.* Manual identifier (renta, iva, sociedades)
+
+``--year``
+   *Option, required.* Tax year of the manual (e.g. 2024)
+
+``--part``
+   *Option, optional.* Manual volume (single, part1, part2-deducciones-autonomicas, part3)
+
+``--kind``
+   *Option, optional.* Filter by manual rule kind
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._registry_corpus_payloads.ManualRulesListResult``.
+
+``aeat app registry manuals verify``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Verify the manual integrity against its contract
+
+**Command path:** ``aeat app registry manuals verify``
+
+**Registry key:** ``registry.manuals.verify``
+
+**Parameters**
+
+``--manual``
+   *Option, required.* Manual identifier (renta, iva, sociedades)
+
+``--year``
+   *Option, required.* Tax year of the manual (e.g. 2024)
+
+``--part``
+   *Option, optional.* Manual volume (single, part1, part2-deducciones-autonomicas, part3)
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._registry_corpus_payloads.ManualVerifyResult``.
+
+``aeat app registry manuals view``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Show a manual structure and, optionally, one section
+
+**Command path:** ``aeat app registry manuals view``
+
+**Registry key:** ``registry.manuals.view``
+
+**Parameters**
+
+``--manual``
+   *Option, required.* Manual identifier (renta, iva, sociedades)
+
+``--year``
+   *Option, required.* Tax year of the manual (e.g. 2024)
+
+``--part``
+   *Option, optional.* Manual volume (single, part1, part2-deducciones-autonomicas, part3)
+
+``--section``
+   *Option, optional.* Optional section identifier to show
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._registry_corpus_payloads.ManualShowResult``.
+
+``aeat app registry parity replay``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Replay an archived parity tape against the current registry runtime
+
+**Command path:** ``aeat app registry parity replay``
+
+**Registry key:** ``registry.parity.replay``
+
+**Parameters**
+
+``--tape``
+   *Option, required.* Path to a stored parity tape JSON file
+
+``--registry-root``
+   *Option, optional.* Path to the registry root directory
+
+``--source-root``
+   *Option, optional.* Path to the source directory to verify
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._registry_payloads.RegistryParityReplayResult``.
+
+``aeat app registry parity run``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Run a stored parity scenario and archive the resulting parity tape
+
+**Command path:** ``aeat app registry parity run``
+
+**Registry key:** ``registry.parity.run``
+
+**Parameters**
+
+``--scenario``
+   *Option, required.* Path to a parity scenario JSON file
+
+``--registry-root``
+   *Option, optional.* Path to the registry root directory
+
+``--source-root``
+   *Option, optional.* Path to the source directory to verify
+
+``--store-root``
+   *Option, optional.* Root directory used to store generated parity tapes
+
+``--output``
+   *Option, optional.* Destination JSON file for the generated parity tape
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._registry_payloads.RegistryParityRunResult``.
+
+``aeat app registry verify``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Verify the integrity of the local registry
+
+**Command path:** ``aeat app registry verify``
+
+**Registry key:** ``registry.verify``
+
+**Parameters**
+
+``--registry-root``
+   *Option, optional.* Path to the registry root directory
+
+``--source-root``
+   *Option, optional.* Path to the source directory to verify
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._registry_payloads.RegistryVerifyResult``.
+
+``aeat app registry verify-filed-state``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Compare local registry calculation output against captured filed AEAT state
+
+**Command path:** ``aeat app registry verify-filed-state``
+
+**Registry key:** ``registry.verify_filed_state``
+
+**Parameters**
+
+``--observation``
+   *Option, required.* Encrypted filed-declaration observation manifest to verify
+
+``--source-observation``
+   *Option, optional.* Encrypted source observation manifest required by previous-filing bindings or relations
+
+``--registry-root``
+   *Option, optional.* Path to the registry root directory
+
+``--source-root``
+   *Option, optional.* Path to the source directory to verify
+
+``--casilla``
+   *Option, optional.* Casilla id to compare; repeat to override the default computed casillas
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._registry_payloads.RegistryVerifyFiledStateResult``.
+
+``aeat app registry workbooks verify``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Verify the integrity of the generated workbooks
+
+**Command path:** ``aeat app registry workbooks verify``
+
+**Registry key:** ``registry.workbooks.verify``
+
+**Parameters**
+
+``--root``
+   *Option, optional.* Root directory containing the workbooks definitions
+
+``--limit``
+   *Option, optional.* Limit of workbooks to compile
+
+``--per-file-timeout``
+   *Option, optional.* Maximum timeout (in seconds) for the compilation
+
+``--output``
+   *Option, optional.* Output directory for the compiled workbooks
+
+``--resume-from``
+   *Option, optional.* Resume workbooks compilation from the last point
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._registry_payloads.RegistryWorkbooksVerifyResult``.
+
+``aeat app review queue``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+List items waiting for operator review
+
+**Command path:** ``aeat app review queue``
+
+**Registry key:** ``review.queue``
+
+**Parameters**
+
+``--kind``
+   *Option, optional.* Restrict the queue to one item kind
+
+``--source-kind``
+   *Option, optional.* Restrict the queue to one source kind
+
+``--state``
+   *Option, optional.* Restrict the queue to one review state
+
+``--modelo``
+   *Option, optional.* Restrict the queue to one modelo
+
+``--explain``
+   *Option, optional.* Include the legal_refs that ground each finding in the text output. The JSON payload always carries them.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._review_payloads.ReviewQueueResult``.
+
+``aeat app review view``
+~~~~~~~~~~~~~~~~~~~~~~~~
+Show review details for a single item
+
+**Command path:** ``aeat app review view``
+
+**Registry key:** ``review.view``
+
+**Parameters**
+
+``item_id``
+   *Argument, required.* Item id from the review queue
+
+``--explain``
+   *Option, optional.* Include the legal_refs that ground this finding in the text output. The JSON payload always carries them.
+
+**Output schema**
+
+This command emits a ``SchemaEnvelope`` whose ``result`` field is validated against ``aeat.entrypoints.cli._review_payloads.ReviewViewResult``.
+

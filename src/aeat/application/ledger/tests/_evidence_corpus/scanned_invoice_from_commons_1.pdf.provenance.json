@@ -1,0 +1,10 @@
+{
+  "provenance": "real_corpus",
+  "kind": "pdf_invoice_scanned_no_text_layer",
+  "source": "derived",
+  "derived_from": "commons_invoice_1.jpg",
+  "licence": "Public domain",
+  "notes": "real PD invoice image embedded as an image-only PDF (no text layer)",
+  "sha256": "a866440c8a44524a5a20161ff09edc29c5737cb8a0b1f15cc3c8ae667fa454eb",
+  "bytes": 297996
+}

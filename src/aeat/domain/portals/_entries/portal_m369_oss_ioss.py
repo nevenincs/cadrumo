@@ -1,28 +1,29 @@
-"""Portal: Modelo 369 — ventanilla única OSS / IOSS."""
+"""Registry entry for Modelo 369 - OSS / IOSS one-stop-shop return.
+
+Defines the :class:`PortalMetadata` record for :class:`Portal`
+``PORTAL_M369_OSS_IOSS`` under :class:`PortalCategory` ``FILING``,
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY`.
+"""
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
-from ._common import build_entry
+from ._common import build_entry, portal_path
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_M369_OSS_IOSS,
-    url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G420.shtml",
-    subdomain=Subdomain.SEDE,
+    path=portal_path(Portal.PORTAL_M369_OSS_IOSS),
+    subdomain=PortalHost.SEDE,
     category=PortalCategory.FILING,
     auth_methods=(
         AuthMethod.CERTIFICATE,
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_369,
-    label={
-        "es": "Modelo 369 — Ventanilla única OSS/IOSS",
-        "en": "Modelo 369 — OSS / IOSS one-stop shop",
-        "hu": "369-es űrlap — OSS / IOSS egyablakos ügyintézés",
-    },
-    purpose_es="Autoliquidación del IVA de servicios y ventas a distancia intracomunitarias bajo el régimen OSS/IOSS.",
+    label="entries.portal_m369_oss_ioss.label",
+    purpose="entries.portal_m369_oss_ioss.purpose",
 )
+"""Portal entry for Modelo 369 (OSS / IOSS one-stop-shop IVA return)."""

@@ -1,0 +1,36 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02578"
+number = "02578"
+label = "Deducción del 30% importe gastos de amortiz. contable (excluidas emp. reducida dimensión) (art. 7 Ley 16/2012) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios ant..."
+section = ["deduccion_del_30_importe_gastos_de_amortiz_contabl", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02578"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02579"
+number = "02579"
+label = "Deducción del 30% importe gastos de amortiz. contable (excluidas emp. reducida dimensión) (art. 7 Ley 16/2012) - Disminución - Saldo pendiente a principio de ejercicio [02579]"
+section = ["deduccion_del_30_importe_gastos_de_amortiz_contabl", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_amortizacion_libre_30pct_saldo_pendiente"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02579"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02580"
+number = "02580"
+label = "Deducción del 30% importe gastos de amortiz. contable (excluidas emp. reducida dimensión) (art. 7 Ley 16/2012) - Disminución - Saldo pendiente a fin de ejercicio [02580]"
+section = ["deduccion_del_30_importe_gastos_de_amortiz_contabl", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_amortizacion_libre_30pct_saldo_pendiente"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02580"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0608"
+number = "0608"
+label = "Por la instalación de puntos de recarga: Parte estatal"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_deduccion_puntos_recarga"
+legal_refs = ["ley-35-2006:da-58"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

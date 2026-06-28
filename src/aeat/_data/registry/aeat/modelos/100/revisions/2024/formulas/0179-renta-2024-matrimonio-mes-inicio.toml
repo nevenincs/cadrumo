@@ -1,0 +1,14 @@
+[[revisions."2024".formulas]]
+id = "renta-2024-matrimonio-mes-inicio"
+target_casilla_id = "0246"
+# Casilla 0246: Primer mes en que estuvo vigente el matrimonio en 2024.
+# Resolves to the month integer (1-12) when marriage_date is in 2024,
+# or 1 when the marriage predates 2024.  The binding is absent when no
+# marriage_date is recorded and the engine emits 0 via the default-missing path.
+expression = { binding = "renta-2024-profile-marriage-month-start" }
+legal_refs = ["ley-35-2006:art-82"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form", "aeat-renta-2024-manual-parte1"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "boe-modelo-100-2024-form"
+required_text = ["Modelo 100", "ejercicio 2024"]

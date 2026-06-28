@@ -1,0 +1,11 @@
+[[revisions.2025-y-siguientes.formulas]]
+id = "modelo-202-resultado-previo-b2"
+target_casilla_id = "26"
+expression = { op = "subtract", args = [{ op = "add", args = [{ op = "subtract", args = [{ op = "add", args = [{ op = "add", args = [{ op = "add", args = [{ op = "add", args = [{ casilla_id = "22" }, { casilla_id = "25" }] }, { casilla_id = "63" }] }, { casilla_id = "66" }] }, { casilla_id = "50" }] }, { casilla_id = "42" }] }, { casilla_id = "51" }] }, { casilla_id = "52" }] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]
+
+[[revisions.2025-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-202-instructions"
+required_text = ["la clave [26]", "clave [22] + clave [25] + clave [63] + clave [66] + clave [50]"]

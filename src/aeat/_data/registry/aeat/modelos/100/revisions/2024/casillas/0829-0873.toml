@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0873"
+number = "0873"
+label = "Por inversión en la adquisición de acciones o participaciones sociales de nuevas entidades o de reciente creación (se traslada este importe a la casilla [1136] del anexo B.9)"
+section = ["resultados", "deduccion_autonomica_res", "aragon_res"]
+semantic_role = "irpf_deduccion_aragon_acciones_participaciones"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

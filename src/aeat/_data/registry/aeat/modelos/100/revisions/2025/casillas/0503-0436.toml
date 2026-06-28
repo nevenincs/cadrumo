@@ -1,0 +1,10 @@
+[[revisions."2025".casillas]]
+id = "0436"
+number = "0436"
+label = "Saldos netos negativos de rendimientos de capital mobiliario imputables a 2025, a integrar en la base del ahorro, con el límite del 25 por 100 de [0424](*) (traslade el importe de la casilla [0430]..."
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_saldo_neto_rdto_capital_mobiliario_ahorro_pendiente_reduccion"
+input_kind = "computed"
+formula = "renta-2025-saldo-capital-mobiliario-cap-25-base-ahorro"
+legal_refs = ["ley-35-2006:art-49", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

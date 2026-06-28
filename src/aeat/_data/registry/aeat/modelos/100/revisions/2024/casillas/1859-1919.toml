@@ -1,0 +1,10 @@
+[[revisions."2024".casillas]]
+id = "1919"
+number = "1919"
+label = "Valor de adquisición del vehículo ([1920] + [1921])"
+section = ["toma_datos_ampliada", "anexo_a", "vehiculos_elec_y_puntos_carga"]
+semantic_role = "irpf_deduccion_vehiculo_valor_adquisicion"
+input_kind = "computed"
+formula = "renta-2024-vehiculo-valor-adquisicion-suma"
+legal_refs = ["ley-35-2006:da-58"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

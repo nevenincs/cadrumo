@@ -1,0 +1,24 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "00041"
+number = "00041"
+label = "Personal asalariado (cifra media del ejercicio) Personal fijo [00041]"
+section = ["personal_asalariado_cifra_media_del_ejercicio_pers"]
+data_type = "decimal"
+semantic_role = "is_personal_asalariado_cifra_media"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-001b-casilla-00041", "modelo-200-page-016-casilla-00041"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00042"
+number = "00042"
+label = "Personal asalariado (cifra media del ejercicio) Personal no fijo [00042]"
+section = ["personal_asalariado_cifra_media_del_ejercicio_pers"]
+data_type = "decimal"
+semantic_role = "is_personal_asalariado_cifra_media"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-001b-casilla-00042"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

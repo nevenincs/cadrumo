@@ -1,0 +1,48 @@
+[[revisions."2010-y-siguientes".formulas]]
+id = "modelo-390-iva-anual-cuota-devengada-total"
+target_casilla_id = "iva.anual.cuota-devengada-total"
+expression = { op = "add", args = [
+    { casilla_id = "iva.anual.repercutido.general" },
+    { casilla_id = "iva.anual.repercutido.reducido" },
+    { casilla_id = "iva.anual.repercutido.super-reducido" },
+    { casilla_id = "iva.anual.autorepercutido.intracomunitaria" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".formulas.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+[[revisions."2010-y-siguientes".formulas]]
+id = "modelo-390-iva-anual-cuota-deducible-total"
+target_casilla_id = "iva.anual.cuota-deducible-total"
+expression = { op = "add", args = [
+    { casilla_id = "iva.anual.soportado.interiores" },
+    { casilla_id = "iva.anual.soportado.importaciones" },
+    { casilla_id = "iva.anual.autorepercutido.intracomunitaria" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".formulas.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+[[revisions."2010-y-siguientes".formulas]]
+id = "modelo-390-iva-anual-resultado-regimen-general"
+target_casilla_id = "iva.anual.resultado-regimen-general"
+expression = { op = "subtract", args = [
+    { casilla_id = "iva.anual.cuota-devengada-total" },
+    { casilla_id = "iva.anual.cuota-deducible-total" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".formulas.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+

@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "0108"
+number = "0108"
+label = "Importe de 2023 pendiente de deducir en los 4 años siguientes (Cumplimente el anexo C.1)"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+semantic_role = "irpf_inmueble_gastos_financiacion_pendientes_futuros"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

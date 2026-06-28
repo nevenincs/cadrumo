@@ -1,0 +1,64 @@
+[modelo]
+id = "100"
+title = "IRPF declaración anual"
+official_name = "Modelo 100. Declaración del Impuesto sobre la Renta de las Personas Físicas."
+tax_domain = "irpf"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+capabilities = ["borrador", "renta_ledger_default"]
+legal_refs = [
+    "ley-35-2006:art-17",
+    "ley-35-2006:art-18",
+    "ley-35-2006:art-19",
+    "ley-35-2006:art-20",
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-24",
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-26",
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+    "rd-439-2007:art-30",
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-109",
+    "orden-hac-277-2026:art-3",
+]
+source_refs = [
+    "aeat-dr-100-2020-dictionary",
+    "aeat-dr-100-2020-input-dictionary",
+    "aeat-dr-100-2020-xsd",
+    "aeat-renta-2020-manual-parte1",
+    "boe-modelo-100-2020-form",
+    "aeat-dr-100-2021-dictionary",
+    "aeat-dr-100-2021-input-dictionary",
+    "aeat-dr-100-2021-xsd",
+    "aeat-renta-2021-manual-parte1",
+    "boe-modelo-100-2021-form",
+    "aeat-dr-100-2022-dictionary",
+    "aeat-dr-100-2022-input-dictionary",
+    "aeat-dr-100-2022-xsd",
+    "aeat-renta-2022-manual-parte1",
+    "boe-modelo-100-2022-form",
+    "aeat-dr-100-2023-dictionary",
+    "aeat-dr-100-2023-input-dictionary",
+    "aeat-dr-100-2023-xsd",
+    "aeat-renta-2023-manual-parte1",
+    "boe-modelo-100-2023-form",
+    "aeat-dr-100-2024-dictionary",
+    "aeat-dr-100-2024-input-dictionary",
+    "aeat-dr-100-2024-xsd",
+    "aeat-renta-2024-manual-parte1",
+    "boe-modelo-100-2024-form",
+    "aeat-dr-100-2025-dictionary",
+    "aeat-dr-100-2025-input-dictionary",
+    "aeat-dr-100-2025-xsd",
+    "aeat-renta-2025-manual-parte1",
+    "aeat-renta-2025-manual-deducciones-autonomicas",
+    "boe-modelo-100-2025-form",
+    "aeat-modelo-100-procedure",
+    "aeat-renta-web-open",
+]

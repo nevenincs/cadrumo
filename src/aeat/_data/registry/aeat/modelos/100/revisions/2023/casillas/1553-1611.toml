@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "1611"
+number = "1611"
+label = "Importe de deducciones por inversión en vivienda habitual que tenga la consideración de protegida (con derecho a aplicación en ejercicios siguientes): Importe generado en 2022 pendiente de aplicación"
+section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
+semantic_role = "irpf_deduccion_asturias_vivienda_protegida_pendiente_ejercicio_anterior"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

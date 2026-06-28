@@ -1,0 +1,10 @@
+[[revisions."2020".casillas]]
+id = "0467"
+number = "0467"
+label = "Importes con derecho a reducción ( [0463] + [0464] + [0465] + [0466] ) (Límite máximo artículo 52 de la Ley del Impuesto)"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
+semantic_role = "irpf_red_prevision_social_importes_derecho_reduccion"
+input_kind = "computed"
+formula = "renta-2020-importe-derecho-reduccion-pension-suma"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

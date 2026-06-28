@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "1007"
+number = "1007"
+label = "Por donaciones a determinadas entidades en beneficio del medio ambiente, la conservación del patrimonio natural y de custodia del territorio"
+section = ["resultados", "deduccion_autonomica_res", "catalunya_res"]
+semantic_role = "irpf_deduccion_catalunya_donaciones_medio_ambiente"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

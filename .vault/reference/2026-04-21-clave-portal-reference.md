@@ -3,6 +3,7 @@ tags:
   - "#reference"
   - "#auth-cli"
 date: "2026-04-21"
+modified: '2026-04-21'
 related:
   - "[[2026-04-21-auth-cli-adr]]"
   - "[[2026-04-18-aeat-auth-providers-research]]"

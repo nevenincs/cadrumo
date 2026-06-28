@@ -1,0 +1,46 @@
+[[revisions."2019-2023".extraction_profiles]]
+id = "modelo-123-2019-export-record"
+surface = "export_record"
+artefact_kind = "submitted_file"
+accepted_artefact_kinds = ["submitted_file"]
+parser = "aeat.domain.calculations.registry.parse_export_payload"
+target_casillas = [
+    {casilla_id = "01-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "02-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "03-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "04-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "05-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "06-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "07-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "08-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+]
+confidence = "strict"
+min_coverage = "1"
+failure_semantics = "fail_hard"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".extraction_profiles]]
+id = "modelo-123-2019-declaracion-pdf"
+surface = "declaracion_pdf"
+artefact_kind = "declaracion"
+accepted_artefact_kinds = ["declaration_pdf"]
+parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
+target_casillas = [
+    {casilla_id = "01-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "02-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "03-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "04-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "05-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "06-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "07-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "08-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+]
+confidence = "strict"
+corpus_round_trip_verified = true
+verification_source = "synthetic_from_aeat_published_text"
+min_coverage = "1"
+failure_semantics = "fail_hard"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+

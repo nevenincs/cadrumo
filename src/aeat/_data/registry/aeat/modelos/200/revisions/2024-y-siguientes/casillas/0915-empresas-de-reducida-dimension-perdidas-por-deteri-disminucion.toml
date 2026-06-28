@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "03206"
+number = "03206"
+label = "Empresas de reducida dimensión: pérdidas por deterioro créditos insolvencias (art. 104 LIS) - Disminución - Correcciones del ejercicio - Permanentes [03206]"
+section = ["empresas_de_reducida_dimension_perdidas_por_deteri", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03206"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03207"
+number = "03207"
+label = "Empresas de reducida dimensión: pérdidas por deterioro créditos insolvencias (art. 104 LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [03207]"
+section = ["empresas_de_reducida_dimension_perdidas_por_deteri", "disminucion"]
+data_type = "money"
+semantic_role = "is_erd_deterioro_creditos_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03207"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03208"
+number = "03208"
+label = "Empresas de reducida dimensión: pérdidas por deterioro créditos insolvencias (art. 104 LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [03208]"
+section = ["empresas_de_reducida_dimension_perdidas_por_deteri", "disminucion"]
+data_type = "money"
+semantic_role = "is_erd_deterioro_creditos_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03208"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03209"
+number = "03209"
+label = "Empresas de reducida dimensión: pérdidas por deterioro créditos insolvencias (art. 104 LIS) - Disminución - Saldo pendiente a principio de ejercicio [03209]"
+section = ["empresas_de_reducida_dimension_perdidas_por_deteri", "disminucion"]
+data_type = "money"
+semantic_role = "is_erd_deterioro_creditos_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03209"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03210"
+number = "03210"
+label = "Empresas de reducida dimensión: pérdidas por deterioro créditos insolvencias (art. 104 LIS) - Disminución - Saldo pendiente a fin de ejercicio [03210]"
+section = ["empresas_de_reducida_dimension_perdidas_por_deteri", "disminucion"]
+data_type = "money"
+semantic_role = "is_erd_deterioro_creditos_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03210"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

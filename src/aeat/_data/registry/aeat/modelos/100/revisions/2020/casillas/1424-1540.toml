@@ -1,0 +1,8 @@
+[[revisions."2020".casillas]]
+id = "1540"
+number = "1540"
+label = "1. Por utilización de medios de producción ajenos en actividades agrícolas"
+section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
+semantic_role = "irpf_eo_agr_indice_medios_ajenos"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "1218"
+number = "1218"
+label = "Ejercicio 2019: Pendiente de aplicación al principio del periodo"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+semantic_role = "irpf_inmueble_gastos_pendientes_inicio_periodo"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

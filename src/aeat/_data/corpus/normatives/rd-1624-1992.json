@@ -1,0 +1,39 @@
+{
+  "articulos": [
+    {
+      "notes": "Base reglamentaria del Modelo 303 y del Modelo 390.",
+      "numero": "71",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28925#a71",
+      "summary": {
+        "ca": "Regula la declaració-liquidació periòdica de l'IVA, fixa els terminis de presentació (trimestrals o mensuals segons el règim) i remet als models oficials aprovats per Ordre Ministerial.",
+        "en": "Governs the periodic IVA self-assessment, fixes the filing deadlines (quarterly or monthly depending on the regime), and defers the form layout to ministerial orders.",
+        "es": "Regula la declaración-liquidación periódica del IVA, fija los plazos de presentación (trimestrales o mensuales según el régimen) y remite a los modelos oficiales aprobados por Orden Ministerial.",
+        "hu": "Szabályozza az időszakos IVA-önbevallást, meghatározza a benyújtási határidőket és miniszteri rendeletre utalja a nyomtatvány kialakítását."
+      },
+      "titulo": {
+        "ca": "Liquidació del Impuesto. Normas generales",
+        "en": "Settlement of the tax — general rules (Modelo 303 / 390)",
+        "es": "Liquidación del Impuesto. Normas generales",
+        "hu": "Az adó elszámolása — általános szabályok (303 / 390)"
+      }
+    }
+  ],
+  "boe_id": "BOE-A-1992-28925",
+  "boe_url": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28925",
+  "id": "rd-1624-1992",
+  "kind": "real-decreto",
+  "last_reviewed_at": "2026-04-12",
+  "number": "1624/1992",
+  "published_at": "1992-12-31",
+  "reviewed_by": "wgergely",
+  "tags": [
+    "iva",
+    "reglamento"
+  ],
+  "title": {
+    "ca": "Reial Decret 1624/1992, de 29 de desembre, pel qual s'aprova el Reglament de l'Impost sobre el Valor Afegit",
+    "en": "Royal Decree 1624/1992, of 29 December, approving the Value Added Tax Regulation",
+    "es": "Real Decreto 1624/1992, de 29 de diciembre, por el que se aprueba el Reglamento del Impuesto sobre el Valor Añadido",
+    "hu": "1624/1992. sz. királyi rendelet, a hozzáadottérték-adó végrehajtási szabályzatának elfogadásáról"
+  }
+}

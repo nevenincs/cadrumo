@@ -1,0 +1,41 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "modelo-390"
+domain = "modelo"
+lifecycle = "approved"
+legal_refs = ["ley-37-1992:art-164"]
+domain_refs = ["modelo:390"]
+related = ["iva", "modelo-303", "casilla", "autoliquidacion"]
+created_at = 2026-06-10
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "Resumen anual del IVA."
+definition = "Declaracion informativa resumen anual del Impuesto sobre el Valor Anadido que recapitula las operaciones declaradas en los modelos 303 del ejercicio."
+
+[language.es.source]
+citation = "Articulo 164 de la Ley 37/1992 del IVA y su normativa de desarrollo."
+authority = "boe"
+
+[[language.es.term]]
+label = "modelo 390"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "resumen anual de IVA"
+term_status = "admitted"
+
+[language.en]
+short_description = "Annual VAT summary return."
+
+[language.ca]
+short_description = "Resum anual de l'IVA."
+
+[language.hu]
+short_description = "Eves afa-osszesito."

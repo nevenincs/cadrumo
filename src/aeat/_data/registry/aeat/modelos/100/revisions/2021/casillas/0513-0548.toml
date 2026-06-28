@@ -1,0 +1,10 @@
+[[revisions."2021".casillas]]
+id = "0548"
+number = "0548"
+label = "Deducción por inversión en vivienda habitual: (traslade los importes de estas mismas casillas del anexo A.1): Parte autonómica"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_deduccion_vivienda_habitual_autonomica"
+input_kind = "computed"
+formula = "renta-2021-deducciones-actividades-economicas-autonomica-suma"
+legal_refs = ["ley-35-2006:dt-18"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

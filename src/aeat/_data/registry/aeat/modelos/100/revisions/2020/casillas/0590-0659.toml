@@ -1,0 +1,9 @@
+[[revisions."2020".casillas]]
+id = "0659"
+number = "0659"
+label = "Si los hijos que formen parte de la familia numerosa exceden del número mínimo de hijos exigidos para ser familia numerosa de categoría general o especial, marque esta casilla"
+section = ["resultados", "calculo_impuesto_res", "deduc_familia_numerosa_res"]
+data_type = "boolean"
+semantic_role = "irpf_familia_numerosa_hijos_exceden_minimo_flag"
+legal_refs = ["ley-35-2006:art-81-bis"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

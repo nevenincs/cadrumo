@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "03291"
+number = "03291"
+label = "Reserva para inversiones en Canarias (Ley 19/1994) - Aumento - Correcciones del ejercicio - Permanentes [03291]"
+section = ["reserva_para_inversiones_en_canarias_ley_19_1994", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_ric_permanente"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03291"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03292"
+number = "03292"
+label = "Reserva para inversiones en Canarias (Ley 19/1994) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [03292]"
+section = ["reserva_para_inversiones_en_canarias_ley_19_1994", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_reserva_inversiones_canarias_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03292"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03293"
+number = "03293"
+label = "Reserva para inversiones en Canarias (Ley 19/1994) - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [03293]"
+section = ["reserva_para_inversiones_en_canarias_ley_19_1994", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_reserva_inversiones_canarias_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03293"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03294"
+number = "03294"
+label = "Reserva para inversiones en Canarias (Ley 19/1994) - Aumento - Saldo pendiente a principio de ejercicio [03294]"
+section = ["reserva_para_inversiones_en_canarias_ley_19_1994", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_reserva_inversiones_canarias_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03294"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03295"
+number = "03295"
+label = "Reserva para inversiones en Canarias (Ley 19/1994) - Aumento - Saldo pendiente a fin de ejercicio [03295]"
+section = ["reserva_para_inversiones_en_canarias_ley_19_1994", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_reserva_inversiones_canarias_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03295"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

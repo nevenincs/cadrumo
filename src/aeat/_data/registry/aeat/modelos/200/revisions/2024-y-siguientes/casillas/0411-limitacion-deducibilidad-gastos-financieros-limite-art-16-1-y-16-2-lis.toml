@@ -1,0 +1,192 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "01245"
+number = "01245"
+label = "Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - e) Gastos financieros del período impositivo no afectados por art. 16.5 y/o 83 LIS (sin signo) [01245]"
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+data_type = "money"
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020-casilla-01245"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01246"
+number = "01246"
+label = "Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - f) Gastos financieros del período impositivo (= [c1+e]) [01246]"
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+data_type = "money"
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020-casilla-01246"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01247"
+number = "01247"
+label = "Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - g) Ingresos financieros del período impositivo derivados de la cesión a terceros de capitales propios [01247]"
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+data_type = "money"
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020-casilla-01247"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01248"
+number = "01248"
+label = "Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - h) Gastos financieros netos del período impositivo (= [f-g]) [01248]"
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+data_type = "money"
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020-casilla-01248"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01249"
+number = "01249"
+label = "Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - i) Límite a la deducción de gastos financieros netos (= 30%* [i1-i2-i3-i4+i5-i6]) [01249]"
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+data_type = "money"
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020-casilla-01249"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01250"
+number = "01250"
+label = "Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - i1) Resultado de explotación (signo igual a Cta.de Pérd. y Gan) [01250]"
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+data_type = "money"
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020-casilla-01250"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01251"
+number = "01251"
+label = "Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - i2) Amortización del inmovilizado (signo igual a Cta.de Pérd. y Gan) [01251]"
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+data_type = "money"
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020-casilla-01251"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01252"
+number = "01252"
+label = "Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - i3) Imputación de subvenciones de inmovilizado no financiero y otras (signo igual a Cta.de Pérd. y Gan) [01252]"
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+data_type = "money"
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020-casilla-01252"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01253"
+number = "01253"
+label = "Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - i4) Deterioro y resultado por enajenaciones del inmovilizado (signo igual a Cta.de Pérd. y Gan) [01253]"
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+data_type = "money"
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020-casilla-01253"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01254"
+number = "01254"
+label = "Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - i5) Ingresos financieros de participaciones en instrumentos de patrimonio (signo igual a Cta.de Pérd. y Gan) [01254]"
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+data_type = "money"
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020-casilla-01254"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01255"
+number = "01255"
+label = "Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - j) Adición por límite beneficio operativo no aplicado en los cinco ejercicios anteriores [01255]"
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+data_type = "money"
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020-casilla-01255"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01256"
+number = "01256"
+label = "Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - l1) Gastos financieros netos del período impositivo deducibles ([h=l1+l2], ≥ 0) [01256]"
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+data_type = "money"
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020-casilla-01256"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01257"
+number = "01257"
+label = "Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - l2) Gastos financieros netos del período impositivo no deducibles (=[h - l1], ≥ 0) [01257]"
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+data_type = "money"
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020-casilla-01257"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01258"
+number = "01258"
+label = "Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - m) Gastos financieros pendientes de deducir en períodos impositivos anteriores afectados por art 16.5 y/o 83 LIS deducibl..."
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+data_type = "money"
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020-casilla-01258"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01259"
+number = "01259"
+label = "Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - n) Gastos financieros pendientes de deducir de períodos impositivos anteriores no afectados por art 16.5 y/o 83 LIS aplic..."
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+data_type = "money"
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020-casilla-01259"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01260"
+number = "01260"
+label = "Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - Total gastos financieros del período impositivo no deducibles (= [c2+l2]) [01260]"
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+data_type = "money"
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020-casilla-01260"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

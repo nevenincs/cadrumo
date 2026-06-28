@@ -1,0 +1,10 @@
+[[revisions."2021".casillas]]
+id = "0585"
+number = "0585"
+label = "Cuota líquida estatal incrementada: Parte estatal"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_cuota_liquida_estatal_incrementada"
+input_kind = "computed"
+formula = "renta-2021-cuota-liquida-estatal-incrementada"
+legal_refs = ["ley-35-2006:art-67"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

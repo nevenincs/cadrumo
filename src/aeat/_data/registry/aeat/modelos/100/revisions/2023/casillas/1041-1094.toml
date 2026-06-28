@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "1094"
+number = "1094"
+label = "Por cantidades destinadas a la adquisición o rehabilitación de vivienda habitual, procedentes de ayudas públicas"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_vivienda_adquisicion_rehabilitacion"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

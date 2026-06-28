@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "0588"
+number = "0588"
+label = "Por doble imposición internacional, por razón de las rentas obtenidas y gravadas en el extranjero"
+section = ["resultados", "calculo_impuesto_res", "cuota_autoliquidacion_res"]
+semantic_role = "irpf_deduccion_doble_imposicion_internacional"
+legal_refs = ["ley-35-2006:art-80"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

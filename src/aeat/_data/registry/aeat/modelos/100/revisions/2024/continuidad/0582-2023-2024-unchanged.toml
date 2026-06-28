@@ -1,0 +1,8 @@
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m100-0582-2023-2024-unchanged"
+continuidad_id = "irpf.intereses-demora-regularizacion.estatal"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

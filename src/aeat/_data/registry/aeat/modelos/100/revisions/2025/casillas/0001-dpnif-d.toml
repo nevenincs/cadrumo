@@ -1,0 +1,12 @@
+[[revisions."2025".casillas]]
+id = "DPNIF_D"
+number = "*01"
+label = "Primer declarante NIF"
+section = ["datos_identificativos", "declarante"]
+data_type = "nif"
+semantic_role = "irpf_declarante_nif"
+required = true
+input_kind = "bound"
+binding = "renta-2025-profile-tax-id"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]

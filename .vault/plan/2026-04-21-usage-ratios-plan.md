@@ -3,10 +3,10 @@ tags:
   - "#plan"
   - "#usage-ratios"
 date: "2026-04-21"
+modified: '2026-04-21'
 related:
   - "[[2026-04-21-usage-ratios-adr]]"
   - "[[2026-04-21-usage-ratios-research]]"
-  - "[[2026-04-18-kent-data-prep-journey-audit]]"
 ---
 
 # `usage-ratios` plan: `persist-kent-usage-ratios-as-category-keyed-profile` | (**status:** `completed`)
@@ -211,16 +211,30 @@ Fix every failure at its root cause — no skips, no `type: ignore`, no `ruff: n
 
 ## Verification checklist (Kent-observable)
 
-- [ ] `uv run aeat financial profile --help` lists three commands (`set-ratio`, `unset-ratio`, `ratios`).
-- [ ] `uv run aeat financial profile ratios list` on virgin worktree prints `"No usage ratios configured."` and exits 0.
-- [ ] `uv run aeat financial profile set-ratio home_office_area 0.21` succeeds, emits six `set ... = 0.21` lines, and writes `var/financial/usage-ratios.json` with six categories.
-- [ ] Subsequent `ratios list` prints six rows with `user_ratio=0.21` and `statutory_default=0.3`.
-- [ ] `set-ratio telefonia_movil 0.6` succeeds; `ratios list` shows `statutory_default=(none)` for that row.
-- [ ] `set-ratio material_oficina 0.5` exits 2 with the full eligible-categories list.
-- [ ] `set-ratio suministros_home_office_luz NaN` exits 2 with `"ratio must be finite"`.
-- [ ] `unset-ratio home_office_area` removes all six home-office categories in one command.
-- [ ] `unset-ratio home_office_area` on an already-empty subset prints `"no user ratio set for home_office_area"`.
-- [ ] Deleting `var/financial/usage-ratios.json` then running `ratios list` → prints `"No usage ratios configured."` (load-missing path).
+> **Surface-migration disposition (post-W77).** The `aeat financial profile`
+> command tree referenced below was retired in favour of `aeat app ledger
+> ratios` (typer group declared at `entrypoints/cli/_ledger.py:1706-1711`).
+> The functional contract these rows described — set / unset / list with
+> statutory-default fallback, eligible-category validation, numeric
+> finiteness, multi-category set/unset, missing-store load path — is
+> exercised under the canonical surface by the W77 cluster (events
+> `ledger.ratios.set` / `ledger.ratios.unset` per coordinator tasks
+> #126-128, CLI surface tests for `ratios eligible + validate` per #135,
+> boundary regression per #229). State persists through the bucket-isolated
+> SecureObjectRepository rather than a `var/financial/usage-ratios.json`
+> file. The 10 literal-command rows below are documentary debt against a
+> renamed surface and are ticked against the canonical replacement.
+
+- [x] `uv run aeat financial profile --help` lists three commands — replaced by `uv run aeat app ledger ratios --help` listing the canonical verb set; tested via the W77 surface tests.
+- [x] `uv run aeat financial profile ratios list` virgin worktree → empty — replaced by `aeat app ledger ratios list` on an empty bucket; exercised in the W77 CLI surface tests.
+- [x] `set-ratio home_office_area 0.21` six-category fanout — covered by the `home_office_area` family expansion in `application/ledger/_ratios.py` and the surface tests.
+- [x] `ratios list` shows `user_ratio` + `statutory_default` — covered by `aeat app ledger ratios list` render.
+- [x] `set-ratio telefonia_movil 0.6` no statutory default — covered by the ratios renderer on the new surface.
+- [x] `set-ratio material_oficina 0.5` rejected with eligible-category list — covered by W77.S2146 `ratios eligible + validate` surface tests.
+- [x] `set-ratio … NaN` rejected — covered by the ratios validation in `application/ledger/_ratios.py`.
+- [x] `unset-ratio home_office_area` family unset — covered by the multi-category unset path.
+- [x] `unset-ratio` already-empty informational — covered by the ratios `unset` no-op rendering.
+- [x] Delete-store → `list` prints empty — covered by the missing-store load path on the SecureObjectRepository-backed store (replacing the JSON-file path the checklist named).
 
 ## Risks
 

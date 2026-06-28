@@ -3,6 +3,7 @@ tags:
   - "#research"
   - "#attachment-service"
 date: "2026-04-17"
+modified: '2026-04-17'
 related:
   - "[[2026-04-14-transaction-catalogue-research]]"
   - "[[2026-04-14-transaction-catalogue-adr]]"

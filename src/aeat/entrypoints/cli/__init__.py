@@ -1,254 +1,696 @@
-"""``aeat`` command-line surface.
+"""User-facing ``aeat`` CLI.
 
-Sub-modules expose Typer sub-apps that are wired into the root
-``app`` exposed at the package root. The CLI is Kent's command-line
-route through the produce -> verify -> export workflow: setup, doctor,
-deadlines, filing drafts, guarded AEAT reads, and audit helpers.
+The command tree exposes two top-level namespaces:
 
-The package exposes ``app`` directly so the project entry point in
-``pyproject.toml`` reads ``aeat = "aeat.entrypoints.cli:app"``, matching the
-single-file convention introduced by the base module structure.
+- ``aeat config`` — local configuration, on-ramp wizard, diagnostics.
+- ``aeat app`` — operational tax work: overview, ledger, modelo,
+  registry, and review.
+
+Every command in this package is a thin transport over the backend API.
+The handler bodies parse argv, call into
+``aeat.application`` / ``aeat.domain``, and render the typed result.
+No business logic lives in the CLI layer: validation, mutation,
+schema-decision, and persistence all live behind the imported
+application functions and pydantic records.
 """
 
 from __future__ import annotations
 
-import logging
+from collections.abc import Callable
+from typing import TYPE_CHECKING, cast
 
 import typer
 
-from . import attachments as attachments_module
-from . import audit as audit_module
-from . import auth as auth_module
-from . import bootstrap as bootstrap_module
-from . import browser as browser_module
-from . import casillas as casillas_module
-from . import categories as categories_module
-from . import cloud as cloud_module
-from . import data as data_module
-from . import deadlines as deadlines_module
-from . import docs as docs_module
-from . import doctor as doctor_module
-from . import drive as drive_module
-from . import filing as filing_module
-from . import financial as financial_module
-from . import formulas as formulas_module
-from . import justificante as justificante_module
-from . import llm as llm_module
-from . import manual as manual_module
-from . import modelos as modelos_module
-from . import normatives as normatives_module
-from . import oauth as oauth_module
-from . import portals as portals_module
-from . import profile as profile_module
-from . import rental as rental_module
-from . import review as review_module
-from . import run as run_module
-from . import sanitize as sanitize_module
-from . import schema as schema_module
-from . import secrets as secrets_module
-from . import security as security_module
-from . import sede as sede_module
-from . import setup as setup_wizard_module
-from . import sheets as sheets_module
-from . import submission as submission_module
-from . import sync as sync_module
-from . import vat as vat_module
-from . import workflow as workflow_module
-from ._errors import decorate_typer_app
-from ._exit_codes import ExitCode, exit_with
-from ._log_levels import LogLevel, LogLevelResolutionError, apply_to_root_logger, resolve_log_level
-from ._schemas import (
-    SCHEMA_REGISTRY,
-    OutputSchema,
-    OutputSchemaError,
-    SchemaEnvelope,
-    emit_json_document,
-    register_schema,
+if TYPE_CHECKING:
+    import click
+from typer._types import TyperChoice as _TyperChoice
+
+from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
+
+# Force UTF-8 on stdout / stderr before any echo, log, or Rich console
+# instantiation. Default Windows terminals expose cp1252; emoji,
+# CJK, the U+2192 arrow used by the review queue, and the § sign
+# in some IVA citations all crash typer.echo on cp1252. See
+# :mod:`._stdio` for the rationale.
+_configure_stdio_for_utf8()
+
+from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
+from ...core.i18n import tr
+from ...core.redaction import redact_for_cli_output as _redact_for_cli_output
+from ._command_suggestions import (
+    AeatTyperGroup as _AeatTyperGroup,
 )
-from ._tty import (
-    NonTtyRefusedError,
-    is_stderr_tty,
-    is_stdin_tty,
-    is_stdout_tty,
-    refuse_if_stdin_non_tty,
-    should_show_rich_progress,
-    should_use_color,
+from ._command_suggestions import (
+    LazySubcommand as _LazySubcommand,
 )
+from ._command_suggestions import (
+    register_lazy_subcommand as _register_lazy_subcommand,
+)
+from ._common import _FORMAT_TEXT, _emit_envelope
+from ._errors import decorate_typer_app as _decorate_typer_app
+from ._errors import write_stderr as _write_stderr
+from ._language_argv import apply_language_argv_to_environment as _apply_language_argv_to_environment
+from ._log_levels import apply_to_root_logger as _apply_to_root_logger
+from ._log_levels import resolve_log_level as _resolve_log_level
+from ._root_payloads import AppRootResult, RootStatusResult
+
+# The command tree is assembled lazily: each leaf command module pulls
+# the application layer and, transitively, the ~0.6 s registry parse.
+# Importing every module just to build the ``aeat`` app object made
+# ``aeat --version`` and ``aeat --help`` pay that cost even though they
+# never dispatch into a subcommand. Modules are imported by their
+# :class:`_LazySubcommand` loader only when an operator actually invokes
+# something in the owning subtree (see :mod:`._command_suggestions`).
+# ``--version`` / ``--help`` / the bare landing surface short-circuit
+# in the callbacks below before any subcommand is resolved.
+
+# ---------------------------------------------------------------------
+# Root app + callback
+# ---------------------------------------------------------------------
+
 
 app = typer.Typer(
     name="aeat",
-    help="File your Spanish tax returns: produce, verify, and export AEAT-ready drafts and records.",
-    no_args_is_help=True,
-    add_completion=False,
+    help=tr("cli.root.app_help"),
+    no_args_is_help=False,
+    invoke_without_command=True,
+    add_help_option=False,
+    add_completion=True,
+    cls=_AeatTyperGroup,
 )
 
 
 @app.callback()
-def main(
+def _root(
     ctx: typer.Context,
-    json_output: bool = typer.Option(
-        False,
-        "--json",
-        help="Enable machine-readable JSON mode for commands that support the shared contract.",
+    language: str | None = typer.Option(
+        None,
+        "--language",
+        "--lang",
+        click_type=_TyperChoice(_SUPPORTED_OUTPUT_LANGUAGES),
+        help=tr("cli.root.language_help"),
+        is_eager=True,
     ),
-    quiet: bool = typer.Option(False, "--quiet", help="Only emit errors on stderr."),
-    verbose: bool = typer.Option(False, "--verbose", help="Emit info-level operation summaries."),
-    debug: bool = typer.Option(False, "--debug", help="Emit debug-level diagnostics on stderr."),
-    no_color: bool = typer.Option(False, "--no-color", help="Disable ANSI colour output."),
-    no_progress: bool = typer.Option(False, "--no-progress", help="Disable progress reporting on stderr."),
+    profile: str | None = typer.Option(
+        None,
+        "--profile",
+        help=tr("cli.root.profile_help"),
+    ),
+    version: bool = typer.Option(
+        False,
+        "--version",
+        "-V",
+        help=tr("cli.root.version_help"),
+        is_eager=True,
+    ),
+    detail: bool = typer.Option(
+        False,
+        "--detail",
+        help=tr("cli.root.detail_help"),
+        is_eager=True,
+    ),
+    help_: bool = typer.Option(
+        False,
+        "--help",
+        "-h",
+        help=tr("cli.root.help_help"),
+        is_eager=True,
+    ),
+    format_: str = typer.Option(
+        _FORMAT_TEXT,
+        "--format",
+        help=tr("cli.root.format_help"),
+    ),
+    quiet: bool = typer.Option(False, "--quiet", help=tr("cli.root.quiet_help")),
+    verbose: bool = typer.Option(False, "--verbose", help=tr("cli.root.verbose_help")),
+    debug: bool = typer.Option(False, "--debug", help=tr("cli.root.debug_help")),
 ) -> None:
-    """Apply root-level CLI transport defaults for the current invocation."""
+    """Capture root-level CLI flags into the Typer context."""
+    if language is not None:
+        from ...core.config import override_settings
 
+        ctx.with_resource(override_settings(aeat_output_language=language))
+    _apply_to_root_logger(_resolve_log_level(quiet=quiet, verbose=verbose, debug=debug))
     state = ctx.ensure_object(dict)
-    state["json"] = json_output
-    state["quiet"] = quiet
-    state["verbose"] = verbose
-    state["debug"] = debug
-    state["no_color"] = no_color
-    state["no_progress"] = no_progress
-    root_logger = logging.getLogger()
-    previous_root_level = root_logger.level
-    previous_handler_levels = [handler.level for handler in root_logger.handlers]
+    state["format"] = format_.strip().lower() or _FORMAT_TEXT
+    if version:
+        # Fast-path: bare `aeat --version` skips the registry load
+        # (disaster ADR Ruling 4 — registry validation must not run
+        # on the version surface). The `--detail` variant re-invokes
+        # with the registry summary populated. The diagnostics import
+        # is deferred here so it never loads on a non-version surface.
+        from ...application.diagnostics import build_cli_version_report, render_cli_version_text
 
-    def _restore_root_logger_levels() -> None:
-        root_logger.setLevel(previous_root_level)
-        for handler, previous_level in zip(root_logger.handlers, previous_handler_levels, strict=False):
-            handler.setLevel(previous_level)
+        report = build_cli_version_report(with_registry=detail)
+        if detail:
+            typer.echo(render_cli_version_text(report))
+        else:
+            # The short `aeat --version` line is machine-format semver
+            # (e.g. "aeat 1.2.3") consumed by CI tooling and package
+            # managers. AEAT policy treats semver output as machine-format,
+            # not operator text, so tr() wrapping is intentionally omitted.
+            typer.echo(f"{report.package_name} {report.package_version}")
+        raise typer.Exit()
+    if help_:
+        # The operator-surface import is deferred so the help-document
+        # builder loads only on a help surface, not on every dispatch.
+        from ...application.operator_surface import build_help_document, render_help_text
 
-    ctx.call_on_close(_restore_root_logger_levels)
-    apply_to_root_logger(resolve_log_level(quiet=quiet, verbose=verbose, debug=debug))
+        document = build_help_document("root")
+        typed_help = RootStatusResult.model_validate(document.model_dump(mode="json"))
+        _emit_envelope(ctx, command="root.status", result=typed_help, lines=render_help_text(document).splitlines())
+        raise typer.Exit()
+    # Defer profile override and bucket-session activation to after the
+    # version/help fast-paths (already exited above). Bare invocation
+    # (ctx.invoked_subcommand is None) defers the full application-layer
+    # imports (user_profile, wizard, workflow) into its own branch so
+    # state-free dispatch avoids the registry load.
+    if profile is not None:
+        _activate_profile_override(ctx, profile)
+    else:
+        # No explicit --profile: the active profile comes from the
+        # AEAT_ACTIVE_PROFILE env override / pointer. Normalize a display-name
+        # value to its UUID so the core storage-route resolver (UUID-only)
+        # resolves it — an operator only knows the label, never the UUID.
+        # Bootstrap-exempt recovery verbs must not read bucket manifests here:
+        # they are the surfaces operators use when those manifests are torn.
+        from ._bootstrap_exempt import is_bootstrap_exempt
 
+        verb_path = _full_invocation_verb_path() or _verb_path_from_context(ctx)
+        if not is_bootstrap_exempt(verb_path):
+            _normalize_active_profile_label_to_uuid(ctx)
+    if ctx.invoked_subcommand is None:
+        # The landing surface needs the application operator_surface
+        # layer; deferring the import keeps it off the ``--version`` /
+        # ``--help`` fast-paths above. Bare invocation without an active
+        # profile does NOT import workflow or overview (which pull the
+        # registry) — it only renders the profile-creation prompt.
+        # Use the lightweight core resolver to avoid importing workflow.
+        from ...adapters.persistence.storage import has_active_bucket_session
+        from ...application.operator_surface import build_root_landing_report
+        from ...core import resolve_active_bucket_id
+        from ._root_landing import render_cli_root_landing_lines
 
-@app.command(name="hello", help="Smoke test command - prints a greeting and exits 0.")
-def hello() -> None:
-    """Sanity check command preserved for the base smoke tests."""
-    typer.echo("Hello from AEAT CLI")
+        active = resolve_active_bucket_id()
+        landing = build_root_landing_report(active)
+        if active is None or not has_active_bucket_session():
+            # Bare invocation with no active profile OR no open
+            # session: render the landing card and exit. Per
+            # `2026-06-03-bare-invocation-bucket-session-gate-adr`
+            # bare invocation is a metadata-emitting introspection
+            # surface analogous to --help/--version and MUST NOT
+            # require an active bucket session. Reading
+            # workflow_state would force session-open against the
+            # encrypted bucket, breaking the cold-start /
+            # session-closed-but-profile-exists path.
+            typed_landing = RootStatusResult.model_validate(landing.model_dump(mode="json"))
+            _emit_envelope(
+                ctx,
+                command="root.status",
+                result=typed_landing,
+                lines=render_cli_root_landing_lines(landing),
+            )
+            raise typer.Exit()
+        # An active profile resolves AND a session is already open:
+        # render the full overview. These imports pull the registry,
+        # but are deferred until a verb that actually needs them is
+        # invoked.
+        from ...application.overview import build_overview_status_report
+        from ...application.workflow import workflow_state_repository
 
-
-app.command(
-    name="doctor",
-    help="Report whether this workstation is ready for Kent's filing workflow.",
-)(doctor_module.doctor)
-app.command(name="bootstrap", help="Provision scratch resources and persist their IDs to env/.env.")(
-    bootstrap_module.bootstrap
-)
-app.add_typer(
-    auth_module.app,
-    name="auth",
-    help="Kent-first auth setup and AEAT authentication provider management.",
-)
-app.add_typer(
-    attachments_module.app,
-    name="attachments",
-    help="Content-addressed attachment service (#76).",
-)
-app.add_typer(browser_module.app, name="browser", help="Playwright browser session health probes (#95).")
-app.add_typer(casillas_module.app, name="casillas", help="Curated AEAT casilla catalogue helpers.")
-app.add_typer(categories_module.app, name="categories", help="AEAT spending-category taxonomy helpers (#77).")
-app.add_typer(drive_module.app, name="drive", help="Google Drive helpers.")
-app.add_typer(sheets_module.app, name="sheets", help="Google Sheets helpers.")
-app.add_typer(docs_module.app, name="docs", help="Google Docs helpers.")
-app.add_typer(cloud_module.app, name="cloud", help="GCP product helpers (Functions / Run / Storage).")
-app.add_typer(data_module.app, name="data", help="Local encrypted data ledgers.")
-app.add_typer(llm_module.app, name="llm", help="LLM prompt, translation, cache, and usage helpers.")
-app.add_typer(oauth_module.app, name="oauth-client", help="OAuth 2.0 Desktop client provisioning.")
-app.add_typer(manual_module.app, name="manual", help="AEAT Manual práctico corpus helpers (#25).")
-app.add_typer(modelos_module.app, name="modelos", help="AEAT modelo inventory + applicability helpers.")
-app.add_typer(normatives_module.app, name="normatives", help="Spanish tax normatives corpus helpers (#45).")
-app.add_typer(portals_module.app, name="portals", help="AEAT portal catalogue + modelo cross-reference (#7).")
-app.add_typer(schema_module.app, name="schema", help="Programmatic AEAT modelo schema extraction (#9).")
-app.add_typer(vat_module.app, name="vat", help="Spanish VAT (IVA) taxonomy + rules (#85).")
-app.add_typer(sync_module.app, name="sync", help="Self-healing live-to-local sync runner (#11).")
-app.add_typer(deadlines_module.app, name="deadlines", help="Filing-deadline computation engine (#38).")
-app.add_typer(filing_module.app, name="filing", help="Filing draft engine commands (#39).")
-app.add_typer(formulas_module.app, name="formulas", help="Per-modelo calculation formula engine (#173).")
-app.add_typer(
-    financial_module.app,
-    name="financial",
-    help="Financial ingest, transaction catalogue, and invoice tooling (#73, #74, #75).",
-)
-app.add_typer(
-    financial_module.invoices_app,
-    name="invoices",
-    help="Invoice catalogue helpers (#75) — alias for `aeat financial invoices`.",
-)
-app.add_typer(profile_module.app, name="profile", help=profile_module.PROFILE_HELP)
-app.add_typer(sede_module.app, name="sede", help="Post-auth AEAT sede discovery (read-only, #239).")
-app.add_typer(
-    secrets_module.app,
-    name="secrets",
-    help="Operator-facing secret-store management (#216).",
-)
-app.add_typer(
-    security_module.app,
-    name="security",
-    help="Operator key-management commands (rotate the master key, etc.).",
-)
-app.add_typer(
-    sanitize_module.app,
-    name="sanitize",
-    help="PDF PII sanitiser for fixture commits (read-only on AEAT, #239).",
-)
-app.add_typer(
-    submission_module.app,
-    name="submission",
-    help="Preflight, export, verify, and inspect local AEAT filing records; the tool never writes to AEAT.",
-)
-app.add_typer(
-    rental_module.app,
-    name="rental",
-    help="Per-finca rental register, Ley 12/2023 tier auto-resolver, art. 23.1.f amortización ledger (#454).",
-)
-app.add_typer(
-    review_module.app,
-    name="review",
-    help="Review surfaces: queue (#232), history (#237), draft approve/unapprove/show/stale (#230).",
-)
-app.add_typer(
-    workflow_module.app,
-    name="workflow",
-    help="Drive Kent's produce -> verify -> export filing workflow.",
-)
-app.add_typer(
-    run_module.app,
-    name="run",
-    help="Run-trace inspection and deterministic read-only replay (#99).",
-)
-app.add_typer(
-    justificante_module.app,
-    name="justificante",
-    help="AEAT justificante (PDF receipt) parser and live CSV verifier (#44).",
-)
-app.add_typer(setup_wizard_module.app, name="setup", help=setup_wizard_module.SETUP_HELP)
-app.add_typer(
-    audit_module.audit_app,
-    name="audit",
-    help="Audit helpers (dev-only, #339).",
-    hidden=True,
-)
-
-decorate_typer_app(app)
+        workflow_state = workflow_state_repository().load()
+        overview_report = build_overview_status_report(state=workflow_state)
+        typed_overview = RootStatusResult.model_validate(overview_report.model_dump(mode="json"))
+        _emit_envelope(ctx, command="root.status", result=typed_overview, lines=render_cli_root_landing_lines(landing))
+        raise typer.Exit()
+    # A subcommand is being invoked. Activate the bucket session here
+    # so verbs that need it have access to the active profile's
+    # encrypted records. This is deferred after the bare-invocation
+    # path to keep it out of the state-free surfaces (--version,
+    # --help, bare invocation). Help and usage-error renderings are
+    # introspection surfaces too: they must never require the master
+    # key, or a newcomer without AEAT_SECRET_PASSPHRASE cannot browse
+    # the command tree and an unknown-command typo is masked by a
+    # master-key refusal instead of the usage error.
+    if _is_introspection_only_invocation(ctx):
+        return
+    _activate_active_bucket_session(ctx)
 
 
-__all__ = [
-    "SCHEMA_REGISTRY",
-    "ExitCode",
-    "LogLevel",
-    "LogLevelResolutionError",
-    "NonTtyRefusedError",
-    "OutputSchema",
-    "OutputSchemaError",
-    "SchemaEnvelope",
-    "app",
-    "apply_to_root_logger",
-    "emit_json_document",
-    "exit_with",
-    "is_stderr_tty",
-    "is_stdin_tty",
-    "is_stdout_tty",
-    "refuse_if_stdin_non_tty",
-    "register_schema",
-    "resolve_log_level",
-    "should_show_rich_progress",
-    "should_use_color",
-]
+def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
+    """Resolve ``--profile`` to a bucket id and set the active-profile override.
+
+    Resolves through the single application-layer name-or-UUID resolver so a
+    ``--profile`` value may be either the operator display label or the UUID
+    bucket id, then pins the override to the resolved UUID.
+    """
+    from ...application.workflow import ProfileLabelAmbiguousError, resolve_profile_bucket
+    from ...core.config import override_settings
+    from ._errors import CliRefusedBoundaryError
+
+    requested = profile.strip()
+    if not requested:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": profile},
+        )
+    # The label fallback raises ProfileLabelAmbiguousError (a WorkflowError, NOT
+    # a ValueError) when two live profiles share the name; refuse clearly rather
+    # than arbitrarily picking a bucket.
+    try:
+        pointer = resolve_profile_bucket(requested)
+    except ProfileLabelAmbiguousError as exc:
+        # The label is AMBIGUOUS, not unknown: more than one live profile
+        # carries it. Render the dedicated ambiguity refusal (which carries no
+        # placeholder) rather than the generic unknown-profile message, matching
+        # the _config-site precedent in commit c3509a5ee.
+        raise CliRefusedBoundaryError(
+            translated_message="errors.refused.refused_profile_label_ambiguous",
+        ) from exc
+    if pointer is None:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": requested},
+        )
+    ctx.with_resource(override_settings(aeat_active_profile=pointer.bucket_id))
+
+
+def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
+    """Normalize a display-name ``AEAT_ACTIVE_PROFILE`` to its UUID bucket id.
+
+    An operator addresses a profile by the label they chose at ``profile
+    create``; the immutable UUID bucket id is never surfaced to them. When no
+    ``--profile`` flag is given, the active profile is resolved from the
+    ``AEAT_ACTIVE_PROFILE`` env override (the highest-precedence rung): if that
+    value is a display LABEL rather than a UUID bucket directory, the core
+    storage-route resolver — which keys directly on ``buckets/<value>`` — would
+    hard-miss with a "no registered bucket manifest" refusal on every
+    profile-bound command. Resolve the label to its UUID through the single
+    application-layer resolver and pin the override to the UUID, so the core
+    route resolver (which stays UUID-only) receives the identifier it expects.
+
+    No-ops when no active profile resolves, when the value already resolves as a
+    UUID bucket directly (the fast path — zero change for UUID-valued input), or
+    when the label does not match any live profile (the per-command active-profile
+    guard surfaces that). An ambiguous label (more than one live match) raises a
+    clear refusal rather than an arbitrary pick.
+    """
+    from ...application.workflow import (
+        ProfileLabelAmbiguousError,
+        read_profile_bucket_by_id,
+        resolve_profile_bucket,
+    )
+    from ...core import resolve_active_bucket_id
+    from ...core.config import override_settings
+    from ...core.errors import AeatError
+    from ._errors import CliRefusedBoundaryError
+
+    active = resolve_active_bucket_id()
+    if active is None:
+        return
+    try:
+        active_bucket = read_profile_bucket_by_id(active)
+    except AeatError:
+        return
+    if active_bucket is not None:
+        # Already a UUID bucket directory — the canonical fast path. Leave the
+        # active-profile value byte-identical so the UUID path is unchanged.
+        return
+    try:
+        pointer = resolve_profile_bucket(active)
+    except ProfileLabelAmbiguousError as exc:
+        # Two live profiles share the label (ProfileLabelAmbiguousError is a
+        # WorkflowError, NOT a ValueError); refuse clearly rather than picking
+        # an arbitrary bucket — a wrong silent pick on a tax profile is a
+        # data-integrity hazard. The label is AMBIGUOUS, not unknown: render the
+        # dedicated ambiguity refusal (no placeholder) rather than the generic
+        # unknown-profile message, matching the _config-site precedent in
+        # commit c3509a5ee.
+        raise CliRefusedBoundaryError(
+            translated_message="errors.refused.refused_profile_label_ambiguous",
+        ) from exc
+    except AeatError:
+        return
+    if pointer is None:
+        # Not a live label either; leave resolution to the per-command active
+        # profile guard, which emits the canonical no-active-profile refusal.
+        return
+    ctx.with_resource(override_settings(aeat_active_profile=pointer.bucket_id))
+
+
+def _activate_active_bucket_session(ctx: typer.Context) -> None:
+    """Active-gate the CLI session against the bootstrap-exempt registry.
+
+    Three outcomes:
+
+    - Bootstrap-exempt verbs (``profile create``, ``profile import``,
+      ``config repair`` family) run without a session — return early.
+    - No active profile resolves — return without opening a session.
+      Each non-exempt verb carries its own
+      ``resolve_active_bucket_id() is None`` guard that refuses with a
+      translated message; opening a session here against an absent
+      per-bucket database would pre-empt that cleaner per-verb refusal
+      and break the bare-invocation landing card.
+    - An active profile resolves — open its bucket session (unless one
+      is already active) so the verb body can decrypt stored records.
+
+    The per-verb guards remain the primary refusal surface. This root
+    callback adds only one fail-closed guard before the verb body: a
+    real operator invocation of a guarded profile-bound mutation verb
+    may not proceed when settings route the primary SQL store to the
+    root fallback database.
+    ``_full_invocation_verb_path`` returns ``None`` for in-process test
+    runner invocations (``sys.argv[0]`` is not the ``aeat`` console
+    script). In that case we fall back to
+    :func:`_verb_path_from_context`, which reconstructs the verb chain
+    from the typer/click context so the bootstrap-exemption gate sees
+    the same verb path it would on a real ``aeat`` invocation — without
+    this fallback an in-process invocation would be misclassified as
+    bare and the session would never open.
+    """
+    from ...adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
+    from ...application.storage_write_policy import inspect_storage_write_policy
+    from ...core import resolve_active_bucket_id
+    from ._bootstrap_exempt import is_bootstrap_exempt
+    from ._errors import CliRefusedBoundaryError
+
+    verb_path = _full_invocation_verb_path() or _verb_path_from_context(ctx)
+    exempt = is_bootstrap_exempt(verb_path)
+    write_policy = inspect_storage_write_policy(verb_path, bootstrap_exempt=exempt)
+    if not write_policy.allowed:
+        raise CliRefusedBoundaryError(write_policy.render_refusal_message())
+    if resolve_active_bucket_id() is None:
+        # No active profile: each non-exempt verb refuses for itself
+        # with a translated message (see the per-verb
+        # ``resolve_active_bucket_id() is None`` guards). Returning here
+        # avoids opening a session against an absent per-bucket
+        # database and keeps the bare-invocation landing card path
+        # (handled by the caller) intact. Bootstrap-exempt verbs also
+        # return — they run cleanly with no profile by design.
+        return
+    _register_wizard_catalogue_for_profile_keys()
+    if has_active_bucket_session():
+        return
+    if exempt:
+        return
+    ctx.with_resource(get_master_key_provider())
+    # The active profile's encrypted record is only decryptable once the
+    # bucket session above is open. ``output_language()`` is cached, and
+    # its cache key (env vars + `.env` mtime) does not vary when a
+    # session opens — so any `tr()` fired during module import or the
+    # root callback cached the settings-default language before the
+    # profile preference was readable. Drop the cache here so the verb
+    # body re-resolves through the now-readable profile preference.
+    from ...core.i18n._render import clear_output_language_cache
+
+    clear_output_language_cache()
+
+
+def _register_wizard_catalogue_for_profile_keys() -> None:
+    """Import wizard registration side effects before profile-key reads."""
+    from ...application.wizard import _catalogue as _wizard_catalogue
+    from ...application.wizard import _persistence as _wizard_persistence
+
+    _ = (_wizard_catalogue, _wizard_persistence)
+
+
+def _is_introspection_only_invocation(ctx: typer.Context) -> bool:
+    """Return whether the invocation can only render help or a usage error.
+
+    Two introspection shapes never execute a verb body and therefore must
+    not open the encrypted bucket session (which demands the master key and,
+    without ``AEAT_SECRET_PASSPHRASE`` on a non-interactive stdin, refuses):
+
+    - A help request: a ``--help`` / ``-h`` token anywhere in the unparsed
+      remainder. Click's eager help callback (or the curated subgroup help
+      in the group callbacks) aborts before any verb body runs.
+    - An unresolvable command chain: the leading non-option tokens do not
+      name a registered command, so click can only emit the usage error.
+      Opening the session first would mask that exit-2 usage error with a
+      master-key refusal, hiding the typo from the operator.
+
+    A literal ``--help`` passed as an option VALUE (``--note --help``) is
+    indistinguishable from a help request at this stage; the skip is
+    fail-closed — the verb body then refuses on the missing session rather
+    than executing, and the canonical spelling ``--note=--help`` is
+    unaffected.
+
+    Click empties ``ctx.args`` / the protected list before the group
+    callback runs, so the token stream is read from the ``ctx.meta``
+    capture staged by :class:`AeatTyperGroup.invoke` (which works for both
+    real-process and in-process invocations).
+    """
+    from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
+
+    remainder = list(ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
+    if any(token in ("--help", "-h") for token in remainder):
+        return True
+    # Walk the LEADING non-option tokens through the real command tree;
+    # the chain stops at the first option token (everything after it can
+    # be an option value, not a subcommand name). ``list_commands`` is
+    # the structural group marker (the vendored TyperGroup is not a
+    # guaranteed upstream ``click.Group`` subclass).
+    tokens: list[str] = []
+    for token in remainder:
+        if token.startswith("-"):
+            break
+        tokens.append(token)
+    if not tokens:
+        return False
+    command: object = ctx.command
+    for token in tokens:
+        if not hasattr(command, "list_commands"):
+            return False
+        # CAST-RATIONALE-CLICK-GROUP: ``list_commands`` is the structural group
+        # marker used above before calling the click group API.
+        group = cast("click.Group", command)
+        # CAST-RATIONALE-CLICK-CONTEXT: ``typer.Context`` is the vendored-fork
+        # context; ty treats it as distinct from upstream ``click.core.Context``
+        # that ``get_command`` annotates, though it is structurally identical.
+        subcommand = group.get_command(cast("click.Context", ctx), token)
+        if subcommand is None:
+            return True
+        command = subcommand
+    return False
+
+
+def _verb_path_from_context(ctx: typer.Context) -> str | None:
+    """Recover the verb path from the typer/click context.
+
+    Fallback for in-process invocations (e.g. ``CliRunner`` in tests)
+    where ``sys.argv[0]`` is not the ``aeat`` entry-point and the
+    argv-based :func:`_full_invocation_verb_path` returns ``None``.
+    The bootstrap-exemption gate treats a ``None`` verb path as
+    "bare invocation" (per the bare-invocation ADR), but the caller
+    only reaches this helper when ``ctx.invoked_subcommand`` is set —
+    i.e. a real subcommand IS being dispatched and the session must
+    open. Reconstructs the verb chain from the root invoked
+    subcommand plus the unparsed remainder so prefix matching against
+    :data:`BOOTSTRAP_EXEMPT_VERB_PATHS` continues to work.
+    """
+    invoked = ctx.invoked_subcommand
+    if invoked is None:
+        return None
+    tokens: list[str] = [invoked]
+    # Click 9 exposes the unparsed remainder on ``ctx.args``. Click 8 still
+    # stages the same data on the internal protected list during root-callback
+    # execution; reading the deprecated public ``protected_args`` property emits
+    # a warning, so use the internal storage only as a compatibility fallback.
+    remainder = list(ctx.args)
+    if not remainder:
+        remainder = list(getattr(ctx, "_protected_args", ()))
+    for token in remainder:
+        if token.startswith("-"):
+            # Stop at the first option flag; the verb chain is the
+            # leading subcommand chain only.
+            break
+        tokens.append(token)
+    return " ".join(tokens)
+
+
+def _full_invocation_verb_path() -> str | None:
+    """Return the operator-typed verb path stripped of top-level flags.
+
+    Reads ``sys.argv`` and removes top-level option flags
+    (``--version``, ``--help``, ``--language``, ``--format``, etc.)
+    so the returned string is the canonical subcommand chain the
+    operator typed: ``"config profile create"`` for
+    ``aeat --quiet config profile create alice``. Returns ``None``
+    for the bare invocation and for non-entrypoint processes such as
+    in-process test runners.
+
+    Matched against :data:`BOOTSTRAP_EXEMPT_VERB_PATHS` via prefix
+    so ``"config profile create alice"`` matches the exempt entry
+    ``"config profile create"``.
+    """
+    import sys
+    from pathlib import Path
+
+    executable = Path(sys.argv[0]).name.lower()
+    if executable not in {"aeat", "aeat.exe", "__main__.py"}:
+        return None
+
+    tokens = sys.argv[1:]
+    verb_tokens: list[str] = []
+    skip_next = False
+    for token in tokens:
+        if skip_next:
+            skip_next = False
+            continue
+        if token.startswith("-"):
+            if token in ("--language", "--lang", "--format", "--profile") and "=" not in token:
+                skip_next = True
+            continue
+        verb_tokens.append(token)
+    if not verb_tokens:
+        return None
+    return " ".join(verb_tokens)
+
+
+def _import_failure_surface(name: str, error: ModuleNotFoundError) -> typer.Typer:
+    failed_app = typer.Typer(
+        name=name,
+        help=tr("cli.root.unavailable_app_help"),
+        no_args_is_help=False,
+        invoke_without_command=True,
+    )
+
+    @failed_app.callback()
+    def _failed() -> None:
+        _emit_startup_import_error(error)
+
+    return failed_app
+
+
+def _emit_startup_import_error(error: ModuleNotFoundError) -> None:
+    _write_stderr(_startup_import_error_text(error))
+    raise typer.Exit(code=1)
+
+
+def _startup_import_error_text(error: ModuleNotFoundError) -> str:
+    dependency = _redact_for_cli_output(_missing_dependency_name(error))
+    return tr("cli.root.startup_import_error", dependency=dependency) + "\n"
+
+
+def _missing_dependency_name(error: ModuleNotFoundError) -> str:
+    if error.name:
+        return error.name
+    text = str(error).strip()
+    if text:
+        return text
+    return type(error).__name__
+
+
+# ---------------------------------------------------------------------
+# `aeat app` — workflow aggregator
+# ---------------------------------------------------------------------
+
+
+app_app = typer.Typer(
+    name="app",
+    help=tr("cli.root.app_app_help"),
+    no_args_is_help=False,
+    invoke_without_command=True,
+    add_help_option=False,
+    cls=_AeatTyperGroup,
+)
+
+
+@app_app.callback()
+def _app_root(
+    ctx: typer.Context,
+    help_: bool = typer.Option(False, "--help", "-h", help=tr("cli.root.app_help_help"), is_eager=True),
+) -> None:
+    """Render app-level workflow help when requested."""
+    if help_ or ctx.invoked_subcommand is None:
+        from ...application.operator_surface import build_help_document, render_help_text
+
+        document = build_help_document("app")
+        typed_app = AppRootResult.model_validate(document.model_dump(mode="json"))
+        _emit_envelope(ctx, command="root.app", result=typed_app, lines=render_help_text(document).splitlines())
+        raise typer.Exit()
+
+
+_LAZY_COMMAND_MODULES: frozenset[str] = frozenset(
+    {
+        "._app_live",
+        "._config",
+        "._ledger",
+        "._modelo",
+        "._overview",
+        "._review",
+        ".registry",
+    },
+)
+
+
+def _lazy_loader(module_name: str, group_label: str) -> Callable[[], typer.Typer]:
+    """Build a deferred factory importing ``module_name``'s ``app`` Typer.
+
+    A :exc:`ModuleNotFoundError` from a missing optional dependency is
+    converted into a failure-surface Typer that refuses cleanly and
+    points the operator at ``aeat config repair`` — the same behaviour
+    the eager startup path produced, now deferred to the first time the
+    subtree is actually invoked.
+    """
+
+    def _factory() -> typer.Typer:
+        from importlib import import_module
+
+        if module_name not in _LAZY_COMMAND_MODULES:
+            raise RuntimeError(f"unregistered lazy CLI module: {module_name}")
+        try:
+            # Module names are constrained to `_LAZY_COMMAND_MODULES`.
+            module = import_module(module_name, __name__)  # nosemgrep
+        except ModuleNotFoundError as error:
+            return _import_failure_surface(group_label, error)
+        return module.app
+
+    return _factory
+
+
+def _lazy(group_name: str, name: str, module_name: str) -> None:
+    """Register ``module_name`` as a lazily-loaded subcommand of ``group_name``."""
+    _register_lazy_subcommand(
+        group_name,
+        _LazySubcommand(name, _lazy_loader(module_name, name), decorate=_decorate_typer_app),
+    )
+
+
+# ---------------------------------------------------------------------
+# Wiring — every heavy subcommand module is registered lazily so the
+# `aeat` app object can be constructed without importing the command
+# tree (and therefore without the registry parse).
+# ---------------------------------------------------------------------
+
+
+_lazy("app", "overview", "._overview")
+_lazy("app", "ledger", "._ledger")
+_lazy("app", "live", "._app_live")
+_lazy("app", "modelo", "._modelo")
+_lazy("app", "registry", ".registry")
+_lazy("app", "review", "._review")
+
+_lazy("aeat", "config", "._config")
+app.add_typer(app_app, name="app")
+_decorate_typer_app(app)
+
+
+def main() -> None:
+    """Console-script entry point.
+
+    Pins ``prog_name`` so Typer's usage lines say ``aeat`` even when the
+    launcher is ``aeat.EXE`` on Windows.
+
+    An explicit ``--language`` / ``--lang`` flag is promoted to
+    ``AEAT_OUTPUT_LANGUAGE`` here, before the lazily imported subcommand modules
+    render their ``tr(...)``-bound help, so the flag genuinely localises help
+    text per operator-surface ADR decision D6 (see :mod:`._language_argv`).
+    """
+    import sys
+
+    _apply_language_argv_to_environment(sys.argv[1:])
+    app(prog_name="aeat")
+
+
+__all__ = ["AppRootResult", "RootStatusResult", "app", "main"]

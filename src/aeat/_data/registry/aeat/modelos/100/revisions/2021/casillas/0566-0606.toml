@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0606"
+number = "0606"
+label = "Retenciones art. 11 de la Directiva 2003/48/CE, del Consejo devengadas con anterioridad al 1 de enero de 2019 (Austria, Luxemburgo, Suiza, Liechtenstein, San Marino, Mónaco y Andorra)"
+section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
+semantic_role = "irpf_retencion_directiva_ahorro_2003_48"
+legal_refs = ["ley-35-2006:art-99"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

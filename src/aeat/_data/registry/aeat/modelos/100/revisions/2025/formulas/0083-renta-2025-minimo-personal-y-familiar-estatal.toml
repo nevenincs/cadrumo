@@ -1,0 +1,16 @@
+[[revisions."2025".formulas]]
+id = "renta-2025-minimo-personal-y-familiar-estatal"
+target_casilla_id = "0519"
+expression = { op = "sum", args = [
+    { casilla_id = "0511" },
+    { casilla_id = "0513" },
+    { casilla_id = "0515" },
+    { casilla_id = "0517" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Mínimo del contribuyente", "Mínimo personal y familiar"]

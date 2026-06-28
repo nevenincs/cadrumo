@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0103"
+number = "0103"
+label = "Importe pendiente de deducir de los ejercicios 2017, 2018, 2019 y 2020 (Cumplimente el anexo C.1)"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+semantic_role = "irpf_inmueble_gastos_financiacion_pendientes_previos"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

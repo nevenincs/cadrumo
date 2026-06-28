@@ -1,0 +1,11 @@
+[[revisions."2025".casillas]]
+id = "0054"
+number = "0054"
+label = "Rendimiento neto del capital mobiliario en base general"
+section = ["rendimientos_capital_mobiliario", "base_general"]
+data_type = "decimal"
+semantic_role = "irpf_rendimiento_capital_mobiliario_general_rendimiento_neto"
+input_kind = "computed"
+formula = "renta-2025-capital-mobiliario-general-rendimiento-neto"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]

@@ -1,0 +1,939 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#schema-hardening'
+date: '2026-06-15'
+modified: '2026-06-15'
+related:
+  - '[[2026-05-18-schema-hardening-adr]]'
+  - '[[2026-05-18-schema-hardening-nif-coverage-m100-audit]]'
+  - '[[2026-05-18-schema-hardening-period-coverage-audit]]'
+  - '[[2026-05-18-schema-hardening-plan]]'
+  - '[[2026-05-18-schema-hardening-research]]'
+  - '[[2026-05-19-schema-hardening-constraint-backfill-audit]]'
+  - '[[2026-05-19-schema-hardening-cross-revision-drift-inventory-audit]]'
+  - '[[2026-05-19-schema-hardening-enrollment-campaign-queue-audit]]'
+  - '[[2026-05-19-schema-hardening-iban-deprecation-audit]]'
+  - '[[2026-05-19-schema-hardening-m100-actividad-agraria-audit]]'
+  - '[[2026-05-19-schema-hardening-m100-actividad-est-directa-audit]]'
+  - '[[2026-05-19-schema-hardening-m100-anexo-a-res-audit]]'
+  - '[[2026-05-19-schema-hardening-m100-anexo-b-audit]]'
+  - '[[2026-05-19-schema-hardening-m100-anexo-c-audit]]'
+  - '[[2026-05-19-schema-hardening-m100-calculo-impuesto-audit]]'
+  - '[[2026-05-19-schema-hardening-m100-ccaa-deducciones-audit]]'
+  - '[[2026-05-19-schema-hardening-m100-deducciones-inversion-empresarial-audit]]'
+  - '[[2026-05-19-schema-hardening-m100-ganancias-audit]]'
+  - '[[2026-05-19-schema-hardening-m100-identity-residual-audit]]'
+  - '[[2026-05-19-schema-hardening-m100-inmuebles-audit]]'
+  - '[[2026-05-19-schema-hardening-m100-nif-role-assignment-audit]]'
+  - '[[2026-05-19-schema-hardening-m100-reducciones-prevision-social-audit]]'
+  - '[[2026-05-19-schema-hardening-m100-regimenes-especiales-audit]]'
+  - '[[2026-05-19-schema-hardening-m100-regimenes-especiales-residual-audit]]'
+  - '[[2026-05-19-schema-hardening-m100-rendimientos-audit]]'
+  - '[[2026-05-19-schema-hardening-m100-rendimientos-economicos-resto-audit]]'
+  - '[[2026-05-19-schema-hardening-m100-reserva-inversiones-audit]]'
+  - '[[2026-05-19-schema-hardening-m100-residual-clusters-audit]]'
+  - '[[2026-05-19-schema-hardening-m100-resultados-small-audit]]'
+  - '[[2026-05-19-schema-hardening-m100-section-inventory-audit]]'
+  - '[[2026-05-19-schema-hardening-m200-role-assignment-audit]]'
+  - '[[2026-05-19-schema-hardening-plan]]'
+  - '[[2026-05-19-schema-hardening-role-rollout-strategy-audit]]'
+  - '[[2026-05-19-schema-hardening-role-taxonomy-reference]]'
+  - '[[2026-05-20-schema-hardening-audit]]'
+  - '[[2026-05-20-schema-hardening-m100-aeip-family-audit]]'
+  - '[[2026-05-20-schema-hardening-m200-base-imponible-ajustes-audit]]'
+  - '[[2026-05-20-schema-hardening-m200-conversion-activos-diferidos-audit]]'
+  - '[[2026-05-20-schema-hardening-m200-correcciones-reconciled-audit]]'
+  - '[[2026-05-20-schema-hardening-m200-correcciones-resultado-contable-a-audit]]'
+  - '[[2026-05-20-schema-hardening-m200-correcciones-resultado-contable-b-audit]]'
+  - '[[2026-05-20-schema-hardening-m200-deducciones-a-audit]]'
+  - '[[2026-05-20-schema-hardening-m200-deducciones-b-audit]]'
+  - '[[2026-05-20-schema-hardening-m200-estados-contables-a-audit]]'
+  - '[[2026-05-20-schema-hardening-m200-estados-contables-b-audit]]'
+  - '[[2026-05-20-schema-hardening-m200-liquidacion-audit]]'
+  - '[[2026-05-20-schema-hardening-m200-regimenes-especiales-audit]]'
+  - '[[2026-05-20-schema-hardening-plan]]'
+  - '[[2026-05-20-schema-hardening-r10-calc-test-investigation-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-m100-batch-1-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-m100-batch-10-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-m100-batch-11-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-m100-batch-12-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-m100-batch-2-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-m100-batch-3-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-m100-batch-4-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-m100-batch-5-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-m100-batch-6-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-m100-batch-7-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-m100-batch-8-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-m100-batch-9-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-m100-consolidated-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-m200-batch-1-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-m200-batch-2-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-m200-batch-3-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-m200-batch-4-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-m200-batch-5-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-m200-batch-6-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-m200-consolidated-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-small-batch-1-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-small-batch-2-audit]]'
+  - '[[2026-05-20-schema-hardening-r7-small-batch-3-audit]]'
+  - '[[2026-05-20-schema-hardening-verification-ledger-audit]]'
+  - '[[2026-05-21-schema-hardening-P01-S01]]'
+  - '[[2026-05-21-schema-hardening-P01-S02]]'
+  - '[[2026-05-21-schema-hardening-P01-S03]]'
+  - '[[2026-05-21-schema-hardening-P01-S04]]'
+  - '[[2026-05-21-schema-hardening-P01-summary]]'
+  - '[[2026-05-21-schema-hardening-P02-S07]]'
+  - '[[2026-05-21-schema-hardening-P02-S08]]'
+  - '[[2026-05-21-schema-hardening-P02-S09]]'
+  - '[[2026-05-21-schema-hardening-P02-summary]]'
+  - '[[2026-05-21-schema-hardening-P03-S05]]'
+  - '[[2026-05-21-schema-hardening-P03-S06]]'
+  - '[[2026-05-21-schema-hardening-P03-summary]]'
+  - '[[2026-05-21-schema-hardening-P04-S10]]'
+  - '[[2026-05-21-schema-hardening-P04-S11]]'
+  - '[[2026-05-21-schema-hardening-P04-summary]]'
+  - '[[2026-05-21-schema-hardening-P05-S12]]'
+  - '[[2026-05-21-schema-hardening-P05-summary]]'
+  - '[[2026-05-21-schema-hardening-P06-S13]]'
+  - '[[2026-05-21-schema-hardening-P06-summary]]'
+  - '[[2026-05-21-schema-hardening-P07-S14]]'
+  - '[[2026-05-21-schema-hardening-P07-summary]]'
+  - '[[2026-05-21-schema-hardening-P08-S15]]'
+  - '[[2026-05-21-schema-hardening-P08-summary]]'
+  - '[[2026-05-21-schema-hardening-P09-S16]]'
+  - '[[2026-05-21-schema-hardening-P09-summary]]'
+  - '[[2026-05-21-schema-hardening-W02-P10-S17]]'
+  - '[[2026-05-21-schema-hardening-W02-P10-S18]]'
+  - '[[2026-05-21-schema-hardening-W02-P10-S19]]'
+  - '[[2026-05-21-schema-hardening-W03-P11-S20]]'
+  - '[[2026-05-21-schema-hardening-W03-P11-S21]]'
+  - '[[2026-05-21-schema-hardening-W03-P11-S22]]'
+  - '[[2026-05-21-schema-hardening-W04-P12-S23]]'
+  - '[[2026-05-21-schema-hardening-W04-P12-S24]]'
+  - '[[2026-05-21-schema-hardening-W04-P13-S25]]'
+  - '[[2026-05-21-schema-hardening-W04-P13-S26]]'
+  - '[[2026-05-21-schema-hardening-W04-P14-S27]]'
+  - '[[2026-05-21-schema-hardening-W04-P14-S28]]'
+  - '[[2026-05-21-schema-hardening-W04-P15-S29]]'
+  - '[[2026-05-21-schema-hardening-W04-P15-S30]]'
+  - '[[2026-05-21-schema-hardening-W04-P15-summary]]'
+  - '[[2026-05-21-schema-hardening-W05-P16-S31]]'
+  - '[[2026-05-21-schema-hardening-W05-P16-S32]]'
+  - '[[2026-05-21-schema-hardening-W05-P16-S33]]'
+  - '[[2026-05-21-schema-hardening-W05-P16-summary]]'
+  - '[[2026-05-21-schema-hardening-W06-P17-S34]]'
+  - '[[2026-05-21-schema-hardening-W06-P17-S35]]'
+  - '[[2026-05-21-schema-hardening-W06-P17-summary]]'
+  - '[[2026-05-21-schema-hardening-W06-P18-S36]]'
+  - '[[2026-05-21-schema-hardening-W06-P18-S37]]'
+  - '[[2026-05-21-schema-hardening-W06-P18-summary]]'
+  - '[[2026-05-21-schema-hardening-W06-P19-S38]]'
+  - '[[2026-05-21-schema-hardening-W06-P19-S39]]'
+  - '[[2026-05-21-schema-hardening-W06-P19-summary]]'
+  - '[[2026-05-21-schema-hardening-W07-P20-S40]]'
+  - '[[2026-05-21-schema-hardening-W07-P20-S41]]'
+  - '[[2026-05-21-schema-hardening-W07-P20-summary]]'
+  - '[[2026-05-21-schema-hardening-W07-P21-S42]]'
+  - '[[2026-05-21-schema-hardening-W07-P21-S43]]'
+  - '[[2026-05-21-schema-hardening-W07-P21-summary]]'
+  - '[[2026-05-21-schema-hardening-W07-P22-S44]]'
+  - '[[2026-05-21-schema-hardening-W07-P22-S45]]'
+  - '[[2026-05-21-schema-hardening-W07-P22-summary]]'
+  - '[[2026-05-21-schema-hardening-W08-P23-S46]]'
+  - '[[2026-05-21-schema-hardening-W08-P23-S47]]'
+  - '[[2026-05-21-schema-hardening-W08-P23-summary]]'
+  - '[[2026-05-21-schema-hardening-W08-P24-S48]]'
+  - '[[2026-05-21-schema-hardening-W08-P24-S49]]'
+  - '[[2026-05-21-schema-hardening-W08-P24-summary]]'
+  - '[[2026-05-21-schema-hardening-W08-P25-S50]]'
+  - '[[2026-05-21-schema-hardening-W08-P25-S51]]'
+  - '[[2026-05-21-schema-hardening-W08-P25-summary]]'
+  - '[[2026-05-21-schema-hardening-W09-P26-S52]]'
+  - '[[2026-05-21-schema-hardening-W09-P26-S53]]'
+  - '[[2026-05-21-schema-hardening-W09-P26-summary]]'
+  - '[[2026-05-21-schema-hardening-W09-P27-S54]]'
+  - '[[2026-05-21-schema-hardening-W09-P27-summary]]'
+  - '[[2026-05-21-schema-hardening-W10-P28-S55]]'
+  - '[[2026-05-21-schema-hardening-W10-P28-S56]]'
+  - '[[2026-05-21-schema-hardening-W10-P28-summary]]'
+  - '[[2026-05-21-schema-hardening-W10-P29-S57]]'
+  - '[[2026-05-21-schema-hardening-W10-P29-summary]]'
+  - '[[2026-05-21-schema-hardening-W11-P30-S58]]'
+  - '[[2026-05-21-schema-hardening-W11-P30-S59]]'
+  - '[[2026-05-21-schema-hardening-W11-P30-summary]]'
+  - '[[2026-05-21-schema-hardening-W11-P31-S60]]'
+  - '[[2026-05-21-schema-hardening-W11-P31-summary]]'
+  - '[[2026-05-21-schema-hardening-W12-P32-S61]]'
+  - '[[2026-05-21-schema-hardening-W12-P32-S62]]'
+  - '[[2026-05-21-schema-hardening-W12-P32-S64]]'
+  - '[[2026-05-21-schema-hardening-W12-P32-summary]]'
+  - '[[2026-05-21-schema-hardening-W12-P33-S65]]'
+  - '[[2026-05-21-schema-hardening-W12-P33-summary]]'
+  - '[[2026-05-21-schema-hardening-W13-P34-S66]]'
+  - '[[2026-05-21-schema-hardening-W13-P34-S67]]'
+  - '[[2026-05-21-schema-hardening-W13-P34-S68]]'
+  - '[[2026-05-21-schema-hardening-W13-P34-summary]]'
+  - '[[2026-05-21-schema-hardening-W13-P35-S69]]'
+  - '[[2026-05-21-schema-hardening-W13-P35-summary]]'
+  - '[[2026-05-21-schema-hardening-W14-P36-S70]]'
+  - '[[2026-05-21-schema-hardening-W14-P36-S71]]'
+  - '[[2026-05-21-schema-hardening-W14-P36-summary]]'
+  - '[[2026-05-21-schema-hardening-W14-P37-S72]]'
+  - '[[2026-05-21-schema-hardening-W14-P37-S73]]'
+  - '[[2026-05-21-schema-hardening-W14-P37-summary]]'
+  - '[[2026-05-21-schema-hardening-plan]]'
+  - '[[2026-05-21-schema-hardening-reference]]'
+  - '[[2026-05-21-schema-hardening-review-audit]]'
+  - '[[2026-05-21-schema-hardening-semantic-role-sidecar-audit]]'
+  - '[[2026-05-22-schema-hardening-P01-S01]]'
+  - '[[2026-05-22-schema-hardening-P01-S02]]'
+  - '[[2026-05-22-schema-hardening-P01-S03]]'
+  - '[[2026-05-22-schema-hardening-P01-summary]]'
+  - '[[2026-05-22-schema-hardening-P02-S04]]'
+  - '[[2026-05-22-schema-hardening-P02-S05]]'
+  - '[[2026-05-22-schema-hardening-P02-S06]]'
+  - '[[2026-05-22-schema-hardening-P02-S07]]'
+  - '[[2026-05-22-schema-hardening-P02-summary]]'
+  - '[[2026-05-22-schema-hardening-P03-S08]]'
+  - '[[2026-05-22-schema-hardening-P03-S09]]'
+  - '[[2026-05-22-schema-hardening-P03-S10]]'
+  - '[[2026-05-22-schema-hardening-P03-summary]]'
+  - '[[2026-05-22-schema-hardening-P04-S11]]'
+  - '[[2026-05-22-schema-hardening-P04-S12]]'
+  - '[[2026-05-22-schema-hardening-P04-summary]]'
+  - '[[2026-05-22-schema-hardening-P06-S16]]'
+  - '[[2026-05-22-schema-hardening-P06-S17]]'
+  - '[[2026-05-22-schema-hardening-P06-S18]]'
+  - '[[2026-05-22-schema-hardening-P06-S19]]'
+  - '[[2026-05-22-schema-hardening-P06-summary]]'
+  - '[[2026-05-22-schema-hardening-adr]]'
+  - '[[2026-05-22-schema-hardening-audit]]'
+  - '[[2026-05-22-schema-hardening-code-review-audit]]'
+  - '[[2026-05-22-schema-hardening-plan]]'
+  - '[[2026-05-22-schema-hardening-research]]'
+  - '[[2026-05-26-schema-hardening-W07-P22-S146]]'
+  - '[[2026-05-26-schema-hardening-W09-P20-S143]]'
+  - '[[2026-05-26-schema-hardening-W09-P21-S142]]'
+  - '[[2026-05-26-schema-hardening-code-review-audit]]'
+  - '[[2026-05-26-schema-hardening-m130-standardization-P01-S01]]'
+  - '[[2026-05-26-schema-hardening-m130-standardization-P01-S02]]'
+  - '[[2026-05-26-schema-hardening-m130-standardization-P01-S03]]'
+  - '[[2026-05-26-schema-hardening-m130-standardization-P01-S04]]'
+  - '[[2026-05-26-schema-hardening-m130-standardization-P01-summary]]'
+  - '[[2026-05-26-schema-hardening-m130-standardization-inventory-audit]]'
+  - '[[2026-05-26-schema-hardening-m130-standardization-plan]]'
+  - '[[2026-05-26-schema-hardening-m130-standardization-review-audit]]'
+  - '[[2026-05-26-schema-hardening-m131-fragmentation-P01-S01]]'
+  - '[[2026-05-26-schema-hardening-m131-fragmentation-P01-S02]]'
+  - '[[2026-05-26-schema-hardening-m131-fragmentation-P01-S03]]'
+  - '[[2026-05-26-schema-hardening-m131-fragmentation-P01-S04]]'
+  - '[[2026-05-26-schema-hardening-m131-fragmentation-P01-summary]]'
+  - '[[2026-05-26-schema-hardening-m131-fragmentation-inventory-audit]]'
+  - '[[2026-05-26-schema-hardening-m131-fragmentation-plan]]'
+  - '[[2026-05-26-schema-hardening-m131-fragmentation-review-audit]]'
+  - '[[2026-05-26-schema-hardening-open-edge-closeout-audit]]'
+  - '[[2026-05-27-schema-hardening-W07-P23-S147]]'
+  - '[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]'
+  - '[[2026-05-27-schema-hardening-casilla-continuity-contract-plan]]'
+  - '[[2026-05-27-schema-hardening-casilla-continuity-contract-research]]'
+  - '[[2026-05-27-schema-hardening-label-artifact-inventory-exec]]'
+  - '[[2026-05-27-schema-hardening-m036-standardization-P01-S01]]'
+  - '[[2026-05-27-schema-hardening-m036-standardization-P01-S02]]'
+  - '[[2026-05-27-schema-hardening-m036-standardization-P01-S03]]'
+  - '[[2026-05-27-schema-hardening-m036-standardization-P01-S04]]'
+  - '[[2026-05-27-schema-hardening-m036-standardization-inventory-audit]]'
+  - '[[2026-05-27-schema-hardening-m036-standardization-plan]]'
+  - '[[2026-05-27-schema-hardening-m100-marriage-citation-repair-exec]]'
+  - '[[2026-05-27-schema-hardening-m100-revision-drift-research]]'
+  - '[[2026-05-27-schema-hardening-m100-validation-repair-exec]]'
+  - '[[2026-05-27-schema-hardening-m115-standardization-P01-S01]]'
+  - '[[2026-05-27-schema-hardening-m115-standardization-P01-S02]]'
+  - '[[2026-05-27-schema-hardening-m115-standardization-P01-S03]]'
+  - '[[2026-05-27-schema-hardening-m115-standardization-P01-S04]]'
+  - '[[2026-05-27-schema-hardening-m115-standardization-P01-summary]]'
+  - '[[2026-05-27-schema-hardening-m115-standardization-inventory-audit]]'
+  - '[[2026-05-27-schema-hardening-m115-standardization-plan]]'
+  - '[[2026-05-27-schema-hardening-m115-standardization-review-audit]]'
+  - '[[2026-05-27-schema-hardening-m180-legal-ref-drift-repair-exec]]'
+  - '[[2026-05-27-schema-hardening-m184-standardization-P01-S01]]'
+  - '[[2026-05-27-schema-hardening-m184-standardization-P01-S02]]'
+  - '[[2026-05-27-schema-hardening-m184-standardization-P01-S03]]'
+  - '[[2026-05-27-schema-hardening-m184-standardization-P01-S04]]'
+  - '[[2026-05-27-schema-hardening-m184-standardization-P01-summary]]'
+  - '[[2026-05-27-schema-hardening-m184-standardization-inventory-audit]]'
+  - '[[2026-05-27-schema-hardening-m184-standardization-plan]]'
+  - '[[2026-05-27-schema-hardening-m184-standardization-review-audit]]'
+  - '[[2026-05-27-schema-hardening-m190-standardization-P01-S01]]'
+  - '[[2026-05-27-schema-hardening-m190-standardization-P01-S02]]'
+  - '[[2026-05-27-schema-hardening-m190-standardization-P01-S03]]'
+  - '[[2026-05-27-schema-hardening-m190-standardization-P01-S04]]'
+  - '[[2026-05-27-schema-hardening-m190-standardization-P01-summary]]'
+  - '[[2026-05-27-schema-hardening-m190-standardization-inventory-audit]]'
+  - '[[2026-05-27-schema-hardening-m190-standardization-plan]]'
+  - '[[2026-05-27-schema-hardening-m190-standardization-review-audit]]'
+  - '[[2026-05-27-schema-hardening-m193-standardization-P01-S01]]'
+  - '[[2026-05-27-schema-hardening-m193-standardization-P01-S02]]'
+  - '[[2026-05-27-schema-hardening-m193-standardization-P01-S03]]'
+  - '[[2026-05-27-schema-hardening-m193-standardization-P01-S04]]'
+  - '[[2026-05-27-schema-hardening-m193-standardization-inventory-audit]]'
+  - '[[2026-05-27-schema-hardening-m193-standardization-plan]]'
+  - '[[2026-05-27-schema-hardening-m200-estado-share-binding-repair-exec]]'
+  - '[[2026-05-27-schema-hardening-m202-label-drift-repair-exec]]'
+  - '[[2026-05-27-schema-hardening-m308-standardization-P01-S01]]'
+  - '[[2026-05-27-schema-hardening-m308-standardization-P01-S02]]'
+  - '[[2026-05-27-schema-hardening-m308-standardization-P01-S03]]'
+  - '[[2026-05-27-schema-hardening-m308-standardization-P01-S04]]'
+  - '[[2026-05-27-schema-hardening-m308-standardization-inventory-audit]]'
+  - '[[2026-05-27-schema-hardening-m308-standardization-plan]]'
+  - '[[2026-05-27-schema-hardening-m309-standardization-P01-S01]]'
+  - '[[2026-05-27-schema-hardening-m309-standardization-P01-S02]]'
+  - '[[2026-05-27-schema-hardening-m309-standardization-P01-S03]]'
+  - '[[2026-05-27-schema-hardening-m309-standardization-P01-S04]]'
+  - '[[2026-05-27-schema-hardening-m309-standardization-inventory-audit]]'
+  - '[[2026-05-27-schema-hardening-m309-standardization-plan]]'
+  - '[[2026-05-27-schema-hardening-m322-standardization-P01-S01]]'
+  - '[[2026-05-27-schema-hardening-m322-standardization-P01-S02]]'
+  - '[[2026-05-27-schema-hardening-m322-standardization-P01-S03]]'
+  - '[[2026-05-27-schema-hardening-m322-standardization-P01-S04]]'
+  - '[[2026-05-27-schema-hardening-m322-standardization-P01-summary]]'
+  - '[[2026-05-27-schema-hardening-m322-standardization-inventory-audit]]'
+  - '[[2026-05-27-schema-hardening-m322-standardization-plan]]'
+  - '[[2026-05-27-schema-hardening-m322-standardization-review-audit]]'
+  - '[[2026-05-27-schema-hardening-m347-standardization-P01-S01]]'
+  - '[[2026-05-27-schema-hardening-m347-standardization-P01-S02]]'
+  - '[[2026-05-27-schema-hardening-m347-standardization-P01-S03]]'
+  - '[[2026-05-27-schema-hardening-m347-standardization-P01-S04]]'
+  - '[[2026-05-27-schema-hardening-m347-standardization-inventory-audit]]'
+  - '[[2026-05-27-schema-hardening-m347-standardization-plan]]'
+  - '[[2026-05-27-schema-hardening-m353-standardization-P01-S01]]'
+  - '[[2026-05-27-schema-hardening-m353-standardization-P01-S02]]'
+  - '[[2026-05-27-schema-hardening-m353-standardization-P01-S03]]'
+  - '[[2026-05-27-schema-hardening-m353-standardization-P01-S04]]'
+  - '[[2026-05-27-schema-hardening-m353-standardization-P01-summary]]'
+  - '[[2026-05-27-schema-hardening-m353-standardization-inventory-audit]]'
+  - '[[2026-05-27-schema-hardening-m353-standardization-plan]]'
+  - '[[2026-05-27-schema-hardening-m353-standardization-review-audit]]'
+  - '[[2026-05-27-schema-hardening-m360-standardization-P01-S01]]'
+  - '[[2026-05-27-schema-hardening-m360-standardization-P01-S02]]'
+  - '[[2026-05-27-schema-hardening-m360-standardization-P01-S03]]'
+  - '[[2026-05-27-schema-hardening-m360-standardization-P01-S04]]'
+  - '[[2026-05-27-schema-hardening-m360-standardization-inventory-audit]]'
+  - '[[2026-05-27-schema-hardening-m360-standardization-plan]]'
+  - '[[2026-05-27-schema-hardening-m390-standardization-P01-S01]]'
+  - '[[2026-05-27-schema-hardening-m390-standardization-P01-S02]]'
+  - '[[2026-05-27-schema-hardening-m390-standardization-P01-S03]]'
+  - '[[2026-05-27-schema-hardening-m390-standardization-P01-S04]]'
+  - '[[2026-05-27-schema-hardening-m390-standardization-P01-summary]]'
+  - '[[2026-05-27-schema-hardening-m390-standardization-inventory-audit]]'
+  - '[[2026-05-27-schema-hardening-m390-standardization-plan]]'
+  - '[[2026-05-27-schema-hardening-m390-standardization-review-audit]]'
+  - '[[2026-05-27-schema-hardening-m720-standardization-P01-S01]]'
+  - '[[2026-05-27-schema-hardening-m720-standardization-P01-S02]]'
+  - '[[2026-05-27-schema-hardening-m720-standardization-P01-S03]]'
+  - '[[2026-05-27-schema-hardening-m720-standardization-P01-S04]]'
+  - '[[2026-05-27-schema-hardening-m720-standardization-P01-summary]]'
+  - '[[2026-05-27-schema-hardening-m720-standardization-inventory-audit]]'
+  - '[[2026-05-27-schema-hardening-m720-standardization-plan]]'
+  - '[[2026-05-27-schema-hardening-m720-standardization-review-audit]]'
+  - '[[2026-05-27-schema-hardening-m840-standardization-P01-S01]]'
+  - '[[2026-05-27-schema-hardening-m840-standardization-P01-S02]]'
+  - '[[2026-05-27-schema-hardening-m840-standardization-P01-S03]]'
+  - '[[2026-05-27-schema-hardening-m840-standardization-P01-S04]]'
+  - '[[2026-05-27-schema-hardening-m840-standardization-inventory-audit]]'
+  - '[[2026-05-27-schema-hardening-m840-standardization-plan]]'
+  - '[[2026-05-27-schema-hardening-non-overlap-drift-inventory-exec]]'
+  - '[[2026-05-27-schema-hardening-placeholder-eradication-exec]]'
+  - '[[2026-05-27-schema-hardening-placeholder-eradication-plan]]'
+  - '[[2026-05-28-schema-hardening-P02-S02]]'
+  - '[[2026-05-28-schema-hardening-P02-S03]]'
+  - '[[2026-05-28-schema-hardening-P04-S06]]'
+  - '[[2026-05-28-schema-hardening-casilla-continuity-contract-P01-S01]]'
+  - '[[2026-05-28-schema-hardening-casilla-continuity-contract-P01-S02]]'
+  - '[[2026-05-28-schema-hardening-casilla-continuity-contract-P01-S03]]'
+  - '[[2026-05-28-schema-hardening-casilla-continuity-contract-P02-S04]]'
+  - '[[2026-05-28-schema-hardening-casilla-continuity-contract-P02-S05]]'
+  - '[[2026-05-28-schema-hardening-casilla-continuity-contract-P02-S06]]'
+  - '[[2026-05-28-schema-hardening-casilla-continuity-contract-P03-S08]]'
+  - '[[2026-05-28-schema-hardening-casilla-continuity-contract-P03-S09]]'
+  - '[[2026-05-28-schema-hardening-casilla-continuity-contract-P04-S10]]'
+  - '[[2026-05-28-schema-hardening-casilla-continuity-contract-P04-S11]]'
+  - '[[2026-05-28-schema-hardening-casilla-continuity-contract-P04-summary]]'
+  - '[[2026-05-28-schema-hardening-casilla-continuity-p01-s01-review-audit]]'
+  - '[[2026-05-28-schema-hardening-casilla-continuity-p01-s02-review-audit]]'
+  - '[[2026-05-28-schema-hardening-casilla-continuity-p01-s03-review-audit]]'
+  - '[[2026-05-28-schema-hardening-casilla-continuity-p02-s04-review-audit]]'
+  - '[[2026-05-28-schema-hardening-casilla-continuity-p02-s05-review-audit]]'
+  - '[[2026-05-28-schema-hardening-casilla-continuity-p02-s06-review-audit]]'
+  - '[[2026-05-28-schema-hardening-casilla-continuity-p03-s08-review-audit]]'
+  - '[[2026-05-28-schema-hardening-casilla-continuity-p03-s09-review-audit]]'
+  - '[[2026-05-28-schema-hardening-casilla-continuity-p04-s10-review-audit]]'
+  - '[[2026-05-28-schema-hardening-casilla-continuity-p04-s11-review-audit]]'
+  - '[[2026-05-28-schema-hardening-continuity-conformance-P01-S01]]'
+  - '[[2026-05-28-schema-hardening-continuity-conformance-P02-S02]]'
+  - '[[2026-05-28-schema-hardening-continuity-conformance-P02-S03]]'
+  - '[[2026-05-28-schema-hardening-continuity-conformance-P03-S05]]'
+  - '[[2026-05-28-schema-hardening-continuity-conformance-P03-S10]]'
+  - '[[2026-05-28-schema-hardening-continuity-conformance-P05-S07]]'
+  - '[[2026-05-28-schema-hardening-continuity-conformance-P05-S08]]'
+  - '[[2026-05-28-schema-hardening-continuity-conformance-P05-S09]]'
+  - '[[2026-05-28-schema-hardening-continuity-conformance-p01-s01-review-audit]]'
+  - '[[2026-05-28-schema-hardening-continuity-conformance-p02-s02-review-audit]]'
+  - '[[2026-05-28-schema-hardening-continuity-conformance-p02-s03-review-audit]]'
+  - '[[2026-05-28-schema-hardening-continuity-conformance-p03-s05-review-audit]]'
+  - '[[2026-05-28-schema-hardening-continuity-conformance-p03-s10-review-audit]]'
+  - '[[2026-05-28-schema-hardening-continuity-conformance-p05-s07-review-audit]]'
+  - '[[2026-05-28-schema-hardening-continuity-conformance-p05-s08-review-audit]]'
+  - '[[2026-05-28-schema-hardening-continuity-conformance-p05-s09-review-audit]]'
+  - '[[2026-05-28-schema-hardening-continuity-conformance-plan]]'
+  - '[[2026-05-28-schema-hardening-continuity-conformance-research]]'
+  - '[[2026-05-28-schema-hardening-m100-continuity-inventory-research]]'
+  - '[[2026-06-02-registry-hardening-fragment-headroom-audit]]'
+  - '[[2026-06-02-registry-hardening-m200-export-pressure-audit]]'
+  - '[[2026-06-02-registry-hardening-m303-fragment-pressure-audit]]'
+  - '[[2026-06-02-registry-hardening-next-work-P01-S01]]'
+  - '[[2026-06-02-registry-hardening-next-work-P01-S02]]'
+  - '[[2026-06-02-registry-hardening-next-work-P01-S03]]'
+  - '[[2026-06-02-registry-hardening-next-work-P01-S04]]'
+  - '[[2026-06-02-registry-hardening-next-work-P01-S05]]'
+  - '[[2026-06-02-registry-hardening-next-work-P01-S06]]'
+  - '[[2026-06-02-registry-hardening-next-work-P01-S07]]'
+  - '[[2026-06-02-registry-hardening-next-work-P01-S08]]'
+  - '[[2026-06-02-registry-hardening-next-work-P01-S09]]'
+  - '[[2026-06-02-registry-hardening-next-work-P02-S10]]'
+  - '[[2026-06-02-registry-hardening-next-work-P02-S11]]'
+  - '[[2026-06-02-registry-hardening-next-work-P02-S12]]'
+  - '[[2026-06-02-registry-hardening-next-work-P02-S13]]'
+  - '[[2026-06-02-registry-hardening-next-work-P02-S14]]'
+  - '[[2026-06-02-registry-hardening-next-work-W03-P07-S35]]'
+  - '[[2026-06-02-registry-hardening-next-work-W03-P07-S36]]'
+  - '[[2026-06-02-registry-hardening-next-work-W03-P07-S37]]'
+  - '[[2026-06-02-registry-hardening-next-work-W04-P08-S38]]'
+  - '[[2026-06-02-registry-hardening-next-work-W04-P08-S39]]'
+  - '[[2026-06-02-registry-hardening-next-work-W04-P08-S40]]'
+  - '[[2026-06-02-registry-hardening-next-work-health-audit]]'
+  - '[[2026-06-02-registry-hardening-next-work-p01-s01-review-audit]]'
+  - '[[2026-06-02-registry-hardening-next-work-p01-s02-review-audit]]'
+  - '[[2026-06-02-registry-hardening-next-work-p01-s03-review-audit]]'
+  - '[[2026-06-02-registry-hardening-next-work-p01-s04-review-audit]]'
+  - '[[2026-06-02-registry-hardening-next-work-p01-s05-review-audit]]'
+  - '[[2026-06-02-registry-hardening-next-work-p01-s06-review-audit]]'
+  - '[[2026-06-02-registry-hardening-next-work-p01-s07-review-audit]]'
+  - '[[2026-06-02-registry-hardening-next-work-p01-s08-review-audit]]'
+  - '[[2026-06-02-registry-hardening-next-work-p01-s09-review-audit]]'
+  - '[[2026-06-02-registry-hardening-next-work-p02-s10-review-audit]]'
+  - '[[2026-06-02-registry-hardening-next-work-p02-s11-review-audit]]'
+  - '[[2026-06-02-registry-hardening-next-work-p02-s12-review-audit]]'
+  - '[[2026-06-02-registry-hardening-next-work-p02-s13-review-audit]]'
+  - '[[2026-06-02-registry-hardening-next-work-p02-s14-review-audit]]'
+  - '[[2026-06-02-registry-hardening-next-work-plan]]'
+  - '[[2026-06-02-schema-hardening-P03-S15]]'
+  - '[[2026-06-02-schema-hardening-P03-S16]]'
+  - '[[2026-06-02-schema-hardening-P03-S17]]'
+  - '[[2026-06-02-schema-hardening-P04-S18]]'
+  - '[[2026-06-02-schema-hardening-P04-S19]]'
+  - '[[2026-06-02-schema-hardening-P04-S20]]'
+  - '[[2026-06-02-schema-hardening-P04-S21]]'
+  - '[[2026-06-02-schema-hardening-P04-S22]]'
+  - '[[2026-06-02-schema-hardening-P04-S23]]'
+  - '[[2026-06-02-schema-hardening-P04-S24]]'
+  - '[[2026-06-02-schema-hardening-P04-S25]]'
+  - '[[2026-06-02-schema-hardening-P04-S26]]'
+  - '[[2026-06-02-schema-hardening-P04-S27]]'
+  - '[[2026-06-02-schema-hardening-P05-S28]]'
+  - '[[2026-06-02-schema-hardening-P05-S29]]'
+  - '[[2026-06-02-schema-hardening-P05-S30]]'
+  - '[[2026-06-02-schema-hardening-P05-summary]]'
+  - '[[2026-06-02-schema-hardening-audit]]'
+  - '[[2026-06-02-schema-hardening-m100-label-legal-continuity-candidate-research]]'
+  - '[[2026-06-02-schema-hardening-m100-legal-ref-continuity-candidate-research]]'
+  - '[[2026-06-03-registry-hardening-next-work-W02-P06-S31]]'
+  - '[[2026-06-03-registry-hardening-next-work-W02-P06-S33]]'
+  - '[[2026-06-03-schema-hardening-P01-S01]]'
+  - '[[2026-06-03-schema-hardening-P02-S02]]'
+  - '[[2026-06-03-schema-hardening-P03-S03]]'
+  - '[[2026-06-03-schema-hardening-P03-summary]]'
+  - '[[2026-06-03-validator-decomposition-boundary-audit]]'
+  - '[[2026-06-03-validator-decomposition-code-review-audit]]'
+  - '[[2026-06-04-registry-reviewability-gate-code-review-audit]]'
+  - '[[2026-06-04-registry-reviewability-gate-headroom-audit]]'
+  - '[[2026-06-04-registry-validator-baseline-audit]]'
+---
+
+# `schema-hardening` feature index
+
+Auto-generated index of all documents tagged with `#schema-hardening`.
+
+## Documents
+
+### adr
+
+- `2026-05-18-schema-hardening-adr` - `schema-hardening` adr: Canonical semantic-atom layer for modelo registry | (**status:** `accepted`)
+- `2026-05-22-schema-hardening-adr` - `schema-hardening` adr: Warning-sidecar broad suppressor burn-down | (**status:** `accepted`)
+- `2026-05-27-schema-hardening-casilla-continuity-contract-adr` - `schema-hardening` adr: `casilla-continuity-evolution-contract` | (**status:** `accepted`)
+
+### audit
+
+- `2026-05-18-schema-hardening-nif-coverage-m100-audit` - schema-hardening audit: NIF coverage classification for modelo 100
+- `2026-05-18-schema-hardening-period-coverage-audit` - `schema-hardening` audit: period-code coverage across the modelo corpus
+- `2026-05-19-schema-hardening-constraint-backfill-audit` - `schema-hardening` audit: constraint-backfill candidates
+- `2026-05-19-schema-hardening-cross-revision-drift-inventory-audit` - `schema-hardening` audit: cross-revision drift inventory
+- `2026-05-19-schema-hardening-enrollment-campaign-queue-audit` - `schema-hardening` audit: enrollment campaign queue for M100 and M200
+- `2026-05-19-schema-hardening-iban-deprecation-audit` - `schema-hardening` audit: M100 IBAN rectificacion cross-revision drop
+- `2026-05-19-schema-hardening-m100-actividad-agraria-audit` - `schema-hardening` audit: M100 actividad-agraria cluster
+- `2026-05-19-schema-hardening-m100-actividad-est-directa-audit` - M100 actividad-est-directa cluster — semantic role classification
+- `2026-05-19-schema-hardening-m100-anexo-a-res-audit` - `schema-hardening` audit: M100 `resultados.anexo_a_res` cluster — Plan C semantic role classification
+- `2026-05-19-schema-hardening-m100-anexo-b-audit` - `schema-hardening` audit: M100 `resultados.datos_adicionales_anexo_b` cluster
+- `2026-05-19-schema-hardening-m100-anexo-c-audit` - `schema-hardening` audit: M100 `resultados.anexo_c_res` role assignment
+- `2026-05-19-schema-hardening-m100-calculo-impuesto-audit` - `schema-hardening` audit: M100 `resultados.calculo_impuesto_res` cluster role assignment
+- `2026-05-19-schema-hardening-m100-ccaa-deducciones-audit` - schema-hardening audit: M100 CCAA deduccion_autonomica_res cluster
+- `2026-05-19-schema-hardening-m100-deducciones-inversion-empresarial-audit` - Schema hardening — M100 deducciones-inversion-empresarial cluster
+- `2026-05-19-schema-hardening-m100-ganancias-audit` - schema-hardening: M100 toma_datos_ampliada.ganancias_patrimoniales role assignment
+- `2026-05-19-schema-hardening-m100-identity-residual-audit` - schema-hardening m100 identity-residual role assignment
+- `2026-05-19-schema-hardening-m100-inmuebles-audit` - `schema-hardening` audit: M100 `toma_datos_ampliada.inmuebles` cluster role assignment
+- `2026-05-19-schema-hardening-m100-nif-role-assignment-audit` - schema-hardening: M100 NIF semantic_role assignment
+- `2026-05-19-schema-hardening-m100-reducciones-prevision-social-audit` - M100 schema-hardening audit — reducciones-prevision-social cluster
+- `2026-05-19-schema-hardening-m100-regimenes-especiales-audit` - `schema-hardening` audit: M100 `toma_datos_ampliada.regimenes_especiales` cluster — role classification
+- `2026-05-19-schema-hardening-m100-regimenes-especiales-residual-audit` - schema-hardening m100 regimenes-especiales-residual role assignment
+- `2026-05-19-schema-hardening-m100-rendimientos-audit` - `schema-hardening` audit: M100 rendimientos clusters role classification
+- `2026-05-19-schema-hardening-m100-rendimientos-economicos-resto-audit` - schema-hardening m100 rendimientos-economicos-resto role assignments
+- `2026-05-19-schema-hardening-m100-reserva-inversiones-audit` - `schema-hardening` audit: M100 reserva-inversiones cluster role assignment
+- `2026-05-19-schema-hardening-m100-residual-clusters-audit` - `schema-hardening` audit: M100 residual clusters role classification
+- `2026-05-19-schema-hardening-m100-resultados-small-audit` - `schema-hardening` audit: M100 resultados small-cluster role classification
+- `2026-05-19-schema-hardening-m100-section-inventory-audit` - `schema-hardening` audit: M100 section inventory and first cluster role assignment
+- `2026-05-19-schema-hardening-m200-role-assignment-audit` - `schema-hardening` audit: M200 IS role assignment
+- `2026-05-19-schema-hardening-role-rollout-strategy-audit` - `schema-hardening` audit: Plan C role rollout strategy
+- `2026-05-20-schema-hardening-audit` - `schema-hardening` audit: `m200-m202 pago-fraccionado relation drop`
+- `2026-05-20-schema-hardening-m100-aeip-family-audit` - M100 AEIP Family Audit
+- `2026-05-20-schema-hardening-m200-base-imponible-ajustes-audit` - M200 schema-hardening — base-imponible-ajustes role assignments
+- `2026-05-20-schema-hardening-m200-conversion-activos-diferidos-audit` - schema-hardening m200 conversion-activos-diferidos role assignment
+- `2026-05-20-schema-hardening-m200-correcciones-reconciled-audit` - M200 correcciones al resultado — schema-hardening role reconciliation
+- `2026-05-20-schema-hardening-m200-correcciones-resultado-contable-a-audit` - schema-hardening M200 correcciones-resultado-contable-a role assignment
+- `2026-05-20-schema-hardening-m200-correcciones-resultado-contable-b-audit` - schema-hardening m200 correcciones-resultado-contable-b role assignments
+- `2026-05-20-schema-hardening-m200-deducciones-a-audit` - schema-hardening m200 deducciones-a role assignment
+- `2026-05-20-schema-hardening-m200-deducciones-b-audit` - schema-hardening audit: M200 IS deducciones-b role assignment
+- `2026-05-20-schema-hardening-m200-estados-contables-a-audit` - `schema-hardening` audit: M200 estados-contables-a cluster
+- `2026-05-20-schema-hardening-m200-estados-contables-b-audit` - schema-hardening audit: M200 estados-contables-b role assignment
+- `2026-05-20-schema-hardening-m200-liquidacion-audit` - `schema-hardening` audit: M200 IS liquidacion role assignment
+- `2026-05-20-schema-hardening-m200-regimenes-especiales-audit` - schema-hardening M200 regimenes-especiales role assignment
+- `2026-05-20-schema-hardening-r10-calc-test-investigation-audit` - schema-hardening R10 — calculation-registry test failure investigation
+- `2026-05-20-schema-hardening-r7-m100-batch-1-audit` - schema-hardening r7 m100 batch-1 semantic audit
+- `2026-05-20-schema-hardening-r7-m100-batch-10-audit` - schema-hardening r7 m100 batch-10 audit
+- `2026-05-20-schema-hardening-r7-m100-batch-11-audit` - schema-hardening r7 m100 batch-11 audit
+- `2026-05-20-schema-hardening-r7-m100-batch-12-audit` - schema-hardening r7 m100 batch-12 — semantic role audit
+- `2026-05-20-schema-hardening-r7-m100-batch-2-audit` - schema-hardening r7 m100 batch-2 semantic audit
+- `2026-05-20-schema-hardening-r7-m100-batch-3-audit` - schema-hardening r7 m100 batch-3 semantic role audit
+- `2026-05-20-schema-hardening-r7-m100-batch-4-audit` - schema-hardening r7 m100 batch-4 semantic audit
+- `2026-05-20-schema-hardening-r7-m100-batch-5-audit` - schema-hardening r7 M100 batch-5 audit
+- `2026-05-20-schema-hardening-r7-m100-batch-6-audit` - schema-hardening r7 m100 batch-6 semantic audit
+- `2026-05-20-schema-hardening-r7-m100-batch-7-audit` - schema-hardening r7 m100 batch-7 semantic audit
+- `2026-05-20-schema-hardening-r7-m100-batch-8-audit` - schema-hardening r7 m100 batch-8 semantic audit
+- `2026-05-20-schema-hardening-r7-m100-batch-9-audit` - schema-hardening r7 m100 batch-9 audit
+- `2026-05-20-schema-hardening-r7-m100-consolidated-audit` - schema-hardening r7 m100 consolidated corrections
+- `2026-05-20-schema-hardening-r7-m200-batch-1-audit` - schema-hardening r7 m200 batch-1 semantic role review
+- `2026-05-20-schema-hardening-r7-m200-batch-2-audit` - schema-hardening r7 m200 batch-2 semantic role audit
+- `2026-05-20-schema-hardening-r7-m200-batch-3-audit` - schema-hardening r7 m200 batch-3 semantic audit
+- `2026-05-20-schema-hardening-r7-m200-batch-4-audit` - schema-hardening r7 m200 batch-4 semantic review
+- `2026-05-20-schema-hardening-r7-m200-batch-5-audit` - schema-hardening R7 M200 batch-5 semantic audit
+- `2026-05-20-schema-hardening-r7-m200-batch-6-audit` - schema-hardening r7 m200 batch-6 semantic review
+- `2026-05-20-schema-hardening-r7-m200-consolidated-audit` - schema-hardening r7 m200 consolidated role corrections
+- `2026-05-20-schema-hardening-r7-small-batch-1-audit` - schema-hardening r7 small modelos — semantic role review batch 1
+- `2026-05-20-schema-hardening-r7-small-batch-2-audit` - schema-hardening r7-small batch-2 semantic role audit
+- `2026-05-20-schema-hardening-r7-small-batch-3-audit` - schema-hardening r7-small batch-3 semantic audit
+- `2026-05-20-schema-hardening-verification-ledger-audit` - `schema-hardening` verification ledger
+- `2026-05-21-schema-hardening-review-audit` - `schema-hardening` Code Review
+- `2026-05-21-schema-hardening-semantic-role-sidecar-audit` - `schema-hardening` semantic_role sidecar audit
+- `2026-05-22-schema-hardening-audit` - `schema-hardening` audit: `optional-numeric-suppressor-burn-down`
+- `2026-05-22-schema-hardening-code-review-audit` - `schema-hardening` Code Review
+- `2026-05-26-schema-hardening-code-review-audit` - `schema-hardening` Code Review
+- `2026-05-26-schema-hardening-m130-standardization-inventory-audit` - M130 Standardization Inventory
+- `2026-05-26-schema-hardening-m130-standardization-review-audit` - `schema-hardening-m130-standardization` Code Review
+- `2026-05-26-schema-hardening-m131-fragmentation-inventory-audit` - M131 Fragmentation Inventory
+- `2026-05-26-schema-hardening-m131-fragmentation-review-audit` - `schema-hardening-m131-fragmentation` Code Review
+- `2026-05-26-schema-hardening-open-edge-closeout-audit` - `schema-hardening` Open Edge Closeout
+- `2026-05-27-schema-hardening-m036-standardization-inventory-audit` - `schema-hardening-m036-standardization` inventory
+- `2026-05-27-schema-hardening-m115-standardization-inventory-audit` - `schema-hardening-m115-standardization` Inventory
+- `2026-05-27-schema-hardening-m115-standardization-review-audit` - `schema-hardening-m115-standardization` Code Review
+- `2026-05-27-schema-hardening-m184-standardization-inventory-audit` - `schema-hardening-m184-standardization` Inventory
+- `2026-05-27-schema-hardening-m184-standardization-review-audit` - `schema-hardening-m184-standardization` Code Review
+- `2026-05-27-schema-hardening-m190-standardization-inventory-audit` - `schema-hardening-m190-standardization` Inventory
+- `2026-05-27-schema-hardening-m190-standardization-review-audit` - `schema-hardening-m190-standardization` Code Review
+- `2026-05-27-schema-hardening-m193-standardization-inventory-audit` - `schema-hardening-m193-standardization` Inventory
+- `2026-05-27-schema-hardening-m308-standardization-inventory-audit` - `schema-hardening-m308-standardization` inventory
+- `2026-05-27-schema-hardening-m309-standardization-inventory-audit` - `schema-hardening-m309-standardization` inventory
+- `2026-05-27-schema-hardening-m322-standardization-inventory-audit` - `schema-hardening-m322-standardization` Inventory
+- `2026-05-27-schema-hardening-m322-standardization-review-audit` - `schema-hardening-m322-standardization` Code Review
+- `2026-05-27-schema-hardening-m347-standardization-inventory-audit` - `schema-hardening-m347-standardization` inventory
+- `2026-05-27-schema-hardening-m353-standardization-inventory-audit` - `schema-hardening-m353-standardization` Inventory
+- `2026-05-27-schema-hardening-m353-standardization-review-audit` - `schema-hardening-m353-standardization` Code Review
+- `2026-05-27-schema-hardening-m360-standardization-inventory-audit` - `schema-hardening-m360-standardization` inventory
+- `2026-05-27-schema-hardening-m390-standardization-inventory-audit` - `schema-hardening-m390-standardization` Inventory
+- `2026-05-27-schema-hardening-m390-standardization-review-audit` - `schema-hardening-m390-standardization` Code Review
+- `2026-05-27-schema-hardening-m720-standardization-inventory-audit` - `schema-hardening-m720-standardization` Inventory
+- `2026-05-27-schema-hardening-m720-standardization-review-audit` - `schema-hardening-m720-standardization` Code Review
+- `2026-05-27-schema-hardening-m840-standardization-inventory-audit` - `schema-hardening-m840-standardization` inventory
+- `2026-05-28-schema-hardening-casilla-continuity-p01-s01-review-audit` - `schema-hardening` Code Review
+- `2026-05-28-schema-hardening-casilla-continuity-p01-s02-review-audit` - `schema-hardening` Code Review
+- `2026-05-28-schema-hardening-casilla-continuity-p01-s03-review-audit` - `schema-hardening` Code Review
+- `2026-05-28-schema-hardening-casilla-continuity-p02-s04-review-audit` - `schema-hardening` Code Review
+- `2026-05-28-schema-hardening-casilla-continuity-p02-s05-review-audit` - `schema-hardening` Code Review
+- `2026-05-28-schema-hardening-casilla-continuity-p02-s06-review-audit` - `schema-hardening` Code Review
+- `2026-05-28-schema-hardening-casilla-continuity-p03-s08-review-audit` - `schema-hardening` Code Review
+- `2026-05-28-schema-hardening-casilla-continuity-p03-s09-review-audit` - `schema-hardening` Code Review
+- `2026-05-28-schema-hardening-casilla-continuity-p04-s10-review-audit` - `schema-hardening` Code Review
+- `2026-05-28-schema-hardening-casilla-continuity-p04-s11-review-audit` - `schema-hardening` Code Review
+- `2026-05-28-schema-hardening-continuity-conformance-p01-s01-review-audit` - `schema-hardening` Code Review
+- `2026-05-28-schema-hardening-continuity-conformance-p05-s07-review-audit` - `schema-hardening` Code Review
+- `2026-05-28-schema-hardening-continuity-conformance-p05-s08-review-audit` - `schema-hardening` Code Review
+- `2026-05-28-schema-hardening-continuity-conformance-p05-s09-review-audit` - `schema-hardening` Code Review
+- `2026-05-28-schema-hardening-continuity-conformance-p02-s02-review-audit` - `schema-hardening` Code Review
+- `2026-05-28-schema-hardening-continuity-conformance-p02-s03-review-audit` - `schema-hardening` Code Review
+- `2026-05-28-schema-hardening-continuity-conformance-p03-s05-review-audit` - `schema-hardening` Code Review
+- `2026-05-28-schema-hardening-continuity-conformance-p03-s10-review-audit` - `schema-hardening` Code Review
+- `2026-06-02-registry-hardening-fragment-headroom-audit` - Registry Hardening Fragment Headroom Audit
+- `2026-06-02-registry-hardening-m200-export-pressure-audit` - M200 Export Fragment Pressure Audit
+- `2026-06-02-registry-hardening-m303-fragment-pressure-audit` - M303 Fragment Pressure Audit
+- `2026-06-02-registry-hardening-next-work-health-audit` - `schema-hardening` Registry Health Audit
+- `2026-06-02-registry-hardening-next-work-p01-s01-review-audit` - P01.S01 Review
+- `2026-06-02-registry-hardening-next-work-p01-s02-review-audit` - P01.S02 Review
+- `2026-06-02-registry-hardening-next-work-p01-s03-review-audit` - P01.S03 Review
+- `2026-06-02-registry-hardening-next-work-p01-s04-review-audit` - P01.S04 Review
+- `2026-06-02-registry-hardening-next-work-p01-s05-review-audit` - P01.S05 Review
+- `2026-06-02-registry-hardening-next-work-p01-s06-review-audit` - P01.S06 Review
+- `2026-06-02-registry-hardening-next-work-p01-s07-review-audit` - P01.S07 Review
+- `2026-06-02-registry-hardening-next-work-p01-s08-review-audit` - P01.S08 Review
+- `2026-06-02-registry-hardening-next-work-p01-s09-review-audit` - P01.S09 Review
+- `2026-06-02-registry-hardening-next-work-p02-s10-review-audit` - P02.S10 Review
+- `2026-06-02-registry-hardening-next-work-p02-s11-review-audit` - P02.S11 Review
+- `2026-06-02-registry-hardening-next-work-p02-s12-review-audit` - P02.S12 Review
+- `2026-06-02-registry-hardening-next-work-p02-s13-review-audit` - P02.S13 Review
+- `2026-06-02-registry-hardening-next-work-p02-s14-review-audit` - P02.S14 Review
+- `2026-06-02-schema-hardening-audit` - `schema-hardening` audit: `M347 singleton marker audit`
+- `2026-06-03-validator-decomposition-boundary-audit` - Validator Decomposition Boundary Audit
+- `2026-06-03-validator-decomposition-code-review-audit` - Validator Decomposition Code Review
+- `2026-06-04-registry-reviewability-gate-code-review-audit` - `schema-hardening` Code Review
+- `2026-06-04-registry-reviewability-gate-headroom-audit` - `schema-hardening` audit: `Registry reviewability gate headroom`
+- `2026-06-04-registry-validator-baseline-audit` - `schema-hardening` audit: `Validator module reviewability baseline`
+
+### exec
+
+- `2026-05-21-schema-hardening-P01-S01` - `schema-hardening` `P01.S01`
+- `2026-05-21-schema-hardening-P01-S02` - `schema-hardening` `P01.S02`
+- `2026-05-21-schema-hardening-P01-S03` - `schema-hardening` `P01.S03`
+- `2026-05-21-schema-hardening-P01-S04` - `schema-hardening` `P01.S04`
+- `2026-05-21-schema-hardening-P01-summary` - `schema-hardening` `P01` summary
+- `2026-05-21-schema-hardening-P02-S07` - `schema-hardening` `P02.S07`
+- `2026-05-21-schema-hardening-P02-S08` - `schema-hardening` `P02.S08`
+- `2026-05-21-schema-hardening-P02-S09` - `schema-hardening` `P02.S09`
+- `2026-05-21-schema-hardening-P02-summary` - `schema-hardening` `P02` summary
+- `2026-05-21-schema-hardening-P03-S05` - `schema-hardening` `P03.S05`
+- `2026-05-21-schema-hardening-P03-S06` - `schema-hardening` `P03.S06`
+- `2026-05-21-schema-hardening-P03-summary` - `schema-hardening` `P03` summary
+- `2026-05-21-schema-hardening-P04-S10` - `schema-hardening` `P04.S10`
+- `2026-05-21-schema-hardening-P04-S11` - `schema-hardening` `P04.S11`
+- `2026-05-21-schema-hardening-P04-summary` - `schema-hardening` `P04` summary
+- `2026-05-21-schema-hardening-P05-S12` - `schema-hardening` `P05.S12`
+- `2026-05-21-schema-hardening-P05-summary` - `schema-hardening` `P05` summary
+- `2026-05-21-schema-hardening-P06-S13` - `schema-hardening` `P06.S13`
+- `2026-05-21-schema-hardening-P06-summary` - `schema-hardening` `P06` summary
+- `2026-05-21-schema-hardening-P07-S14` - `schema-hardening` `P07.S14`
+- `2026-05-21-schema-hardening-P07-summary` - `schema-hardening` `P07` summary
+- `2026-05-21-schema-hardening-P08-S15` - `schema-hardening` `P08.S15`
+- `2026-05-21-schema-hardening-P08-summary` - `schema-hardening` `P08` summary
+- `2026-05-21-schema-hardening-P09-S16` - `schema-hardening` `P09.S16`
+- `2026-05-21-schema-hardening-P09-summary` - `schema-hardening` `P09` summary
+- `2026-05-21-schema-hardening-W02-P10-S17` - `schema-hardening` `W02.P10.S17`
+- `2026-05-21-schema-hardening-W02-P10-S18` - `schema-hardening` `W02.P10.S18`
+- `2026-05-21-schema-hardening-W02-P10-S19` - `schema-hardening` `W02.P10.S19`
+- `2026-05-21-schema-hardening-W03-P11-S20` - `schema-hardening` `W03.P11.S20`
+- `2026-05-21-schema-hardening-W03-P11-S21` - `schema-hardening` `W03.P11.S21`
+- `2026-05-21-schema-hardening-W03-P11-S22` - `schema-hardening` `W03.P11.S22`
+- `2026-05-21-schema-hardening-W04-P12-S23` - `schema-hardening` `W04.P12.S23`
+- `2026-05-21-schema-hardening-W04-P12-S24` - `schema-hardening` `W04.P12.S24`
+- `2026-05-21-schema-hardening-W04-P13-S25` - `schema-hardening` `W04.P13.S25`
+- `2026-05-21-schema-hardening-W04-P13-S26` - `schema-hardening` `W04.P13.S26`
+- `2026-05-21-schema-hardening-W04-P14-S27` - `schema-hardening` `W04.P14.S27`
+- `2026-05-21-schema-hardening-W04-P14-S28` - `schema-hardening` `W04.P14.S28`
+- `2026-05-21-schema-hardening-W04-P15-S29` - `schema-hardening` `W04.P15.S29`
+- `2026-05-21-schema-hardening-W04-P15-S30` - `schema-hardening` `W04.P15.S30`
+- `2026-05-21-schema-hardening-W04-P15-summary` - `schema-hardening` `W04.P15` summary
+- `2026-05-21-schema-hardening-W05-P16-S31` - `schema-hardening` `W05.P16.S31`
+- `2026-05-21-schema-hardening-W05-P16-S32` - `schema-hardening` `W05.P16.S32`
+- `2026-05-21-schema-hardening-W05-P16-S33` - `schema-hardening` `W05.P16.S33`
+- `2026-05-21-schema-hardening-W05-P16-summary` - `schema-hardening` `W05.P16` summary
+- `2026-05-21-schema-hardening-W06-P17-S34` - `schema-hardening` `W06.P17.S34`
+- `2026-05-21-schema-hardening-W06-P17-S35` - `schema-hardening` `W06.P17.S35`
+- `2026-05-21-schema-hardening-W06-P17-summary` - `schema-hardening` `W06.P17` summary
+- `2026-05-21-schema-hardening-W06-P18-S36` - `schema-hardening` `W06.P18.S36`
+- `2026-05-21-schema-hardening-W06-P18-S37` - `schema-hardening` `W06.P18.S37`
+- `2026-05-21-schema-hardening-W06-P18-summary` - `schema-hardening` `W06.P18` summary
+- `2026-05-21-schema-hardening-W06-P19-S38` - `schema-hardening` `W06.P19.S38`
+- `2026-05-21-schema-hardening-W06-P19-S39` - `schema-hardening` `W06.P19.S39`
+- `2026-05-21-schema-hardening-W06-P19-summary` - `schema-hardening` `W06.P19` summary
+- `2026-05-21-schema-hardening-W07-P20-S40` - `schema-hardening` `W07.P20.S40`
+- `2026-05-21-schema-hardening-W07-P20-S41` - `schema-hardening` `W07.P20.S41`
+- `2026-05-21-schema-hardening-W07-P20-summary` - `schema-hardening` `W07.P20` summary
+- `2026-05-21-schema-hardening-W07-P21-S42` - `schema-hardening` `W07.P21.S42`
+- `2026-05-21-schema-hardening-W07-P21-S43` - `schema-hardening` `W07.P21.S43`
+- `2026-05-21-schema-hardening-W07-P21-summary` - `schema-hardening` `W07.P21` summary
+- `2026-05-21-schema-hardening-W07-P22-S44` - `schema-hardening` `W07.P22.S44`
+- `2026-05-21-schema-hardening-W07-P22-S45` - `schema-hardening` `W07.P22.S45`
+- `2026-05-21-schema-hardening-W07-P22-summary` - `schema-hardening` `W07.P22` summary
+- `2026-05-21-schema-hardening-W08-P23-S46` - `schema-hardening` `W08.P23.S46`
+- `2026-05-21-schema-hardening-W08-P23-S47` - `schema-hardening` `W08.P23.S47`
+- `2026-05-21-schema-hardening-W08-P23-summary` - `schema-hardening` `W08.P23` summary
+- `2026-05-21-schema-hardening-W08-P24-S48` - `schema-hardening` `W08.P24.S48`
+- `2026-05-21-schema-hardening-W08-P24-S49` - `schema-hardening` `W08.P24.S49`
+- `2026-05-21-schema-hardening-W08-P24-summary` - `schema-hardening` `W08.P24` summary
+- `2026-05-21-schema-hardening-W08-P25-S50` - `schema-hardening` `W08.P25.S50`
+- `2026-05-21-schema-hardening-W08-P25-S51` - `schema-hardening` `W08.P25.S51`
+- `2026-05-21-schema-hardening-W08-P25-summary` - `schema-hardening` `W08.P25` summary
+- `2026-05-21-schema-hardening-W09-P26-S52` - `schema-hardening` `W09.P26.S52`
+- `2026-05-21-schema-hardening-W09-P26-S53` - `schema-hardening` `W09.P26.S53`
+- `2026-05-21-schema-hardening-W09-P26-summary` - `schema-hardening` `W09.P26` summary
+- `2026-05-21-schema-hardening-W09-P27-S54` - `schema-hardening` `W09.P27.S54`
+- `2026-05-21-schema-hardening-W09-P27-summary` - `schema-hardening` `W09.P27` summary
+- `2026-05-21-schema-hardening-W10-P28-S55` - `schema-hardening` `W10.P28.S55`
+- `2026-05-21-schema-hardening-W10-P28-S56` - `schema-hardening` `W10.P28.S56`
+- `2026-05-21-schema-hardening-W10-P28-summary` - `schema-hardening` `W10.P28` summary
+- `2026-05-21-schema-hardening-W10-P29-S57` - `schema-hardening` `W10.P29.S57`
+- `2026-05-21-schema-hardening-W10-P29-summary` - `schema-hardening` `W10.P29` summary
+- `2026-05-21-schema-hardening-W11-P30-S58` - `schema-hardening` `W11.P30.S58`
+- `2026-05-21-schema-hardening-W11-P30-S59` - `schema-hardening` `W11.P30.S59`
+- `2026-05-21-schema-hardening-W11-P30-summary` - `schema-hardening` `W11.P30` summary
+- `2026-05-21-schema-hardening-W11-P31-S60` - `schema-hardening` `W11.P31.S60`
+- `2026-05-21-schema-hardening-W11-P31-summary` - `schema-hardening` `W11.P31` summary
+- `2026-05-21-schema-hardening-W12-P32-S61` - `schema-hardening` `W12.P32.S61`
+- `2026-05-21-schema-hardening-W12-P32-S62` - `schema-hardening` `W12.P32.S62`
+- `2026-05-21-schema-hardening-W12-P32-S64` - `schema-hardening` `W12.P32.S64`
+- `2026-05-21-schema-hardening-W12-P32-summary` - `schema-hardening` `W12.P32` summary
+- `2026-05-21-schema-hardening-W12-P33-S65` - `schema-hardening` `W12.P33.S65`
+- `2026-05-21-schema-hardening-W12-P33-summary` - `schema-hardening` `W12.P33` summary
+- `2026-05-21-schema-hardening-W13-P34-S66` - `schema-hardening` `W13.P34.S66`
+- `2026-05-21-schema-hardening-W13-P34-S67` - `schema-hardening` `W13.P34.S67`
+- `2026-05-21-schema-hardening-W13-P34-S68` - `schema-hardening` `W13.P34.S68`
+- `2026-05-21-schema-hardening-W13-P34-summary` - `schema-hardening` `W13.P34` summary
+- `2026-05-21-schema-hardening-W13-P35-S69` - `schema-hardening` `W13.P35.S69`
+- `2026-05-21-schema-hardening-W13-P35-summary` - `schema-hardening` `W13.P35` summary
+- `2026-05-21-schema-hardening-W14-P36-S70` - `schema-hardening` `W14.P36.S70`
+- `2026-05-21-schema-hardening-W14-P36-S71` - `schema-hardening` `W14.P36.S71`
+- `2026-05-21-schema-hardening-W14-P36-summary` - `schema-hardening` `W14.P36` summary
+- `2026-05-21-schema-hardening-W14-P37-S72` - `schema-hardening` `W14.P37.S72`
+- `2026-05-21-schema-hardening-W14-P37-S73` - `schema-hardening` `W14.P37.S73`
+- `2026-05-21-schema-hardening-W14-P37-summary` - `schema-hardening` `W14.P37` summary
+- `2026-05-22-schema-hardening-P01-S01` - `schema-hardening` `P01.S01`
+- `2026-05-22-schema-hardening-P01-S02` - `schema-hardening` `P01.S02`
+- `2026-05-22-schema-hardening-P01-S03` - `schema-hardening` `P01.S03`
+- `2026-05-22-schema-hardening-P01-summary` - `schema-hardening` `P01` summary
+- `2026-05-22-schema-hardening-P02-S04` - `schema-hardening` `P02.S04`
+- `2026-05-22-schema-hardening-P02-S05` - `schema-hardening` `P02.S05`
+- `2026-05-22-schema-hardening-P02-S06` - `schema-hardening` `P02.S06`
+- `2026-05-22-schema-hardening-P02-S07` - `schema-hardening` `P02.S07`
+- `2026-05-22-schema-hardening-P02-summary` - `schema-hardening` `P02` summary
+- `2026-05-22-schema-hardening-P03-S08` - `schema-hardening` `P03.S08`
+- `2026-05-22-schema-hardening-P03-S09` - `schema-hardening` `P03.S09`
+- `2026-05-22-schema-hardening-P03-S10` - `schema-hardening` `P03.S10`
+- `2026-05-22-schema-hardening-P03-summary` - `schema-hardening` `P03` summary
+- `2026-05-22-schema-hardening-P04-S11` - `schema-hardening` `P04.S11`
+- `2026-05-22-schema-hardening-P04-S12` - `schema-hardening` `P04.S12`
+- `2026-05-22-schema-hardening-P04-summary` - `schema-hardening` `P04` summary
+- `2026-05-22-schema-hardening-P06-S16` - `schema-hardening` `P06.S16`
+- `2026-05-22-schema-hardening-P06-S17` - `schema-hardening` `P06.S17`
+- `2026-05-22-schema-hardening-P06-S18` - `schema-hardening` `P06.S18`
+- `2026-05-22-schema-hardening-P06-S19` - `schema-hardening` `P06.S19`
+- `2026-05-22-schema-hardening-P06-summary` - `schema-hardening` `P06` summary
+- `2026-05-26-schema-hardening-W07-P22-S146` - schema-hardening W07.P22.S146 — hardcoded revision-id silent-regression fix
+- `2026-05-26-schema-hardening-W09-P20-S143` - `schema-hardening` `W09.P20.S143`
+- `2026-05-26-schema-hardening-W09-P21-S142` - `schema-hardening` `W09.P21.S142`
+- `2026-05-26-schema-hardening-m130-standardization-P01-S01` - `schema-hardening-m130-standardization` `P01.S01`
+- `2026-05-26-schema-hardening-m130-standardization-P01-S02` - `schema-hardening-m130-standardization` `P01.S02`
+- `2026-05-26-schema-hardening-m130-standardization-P01-S03` - `schema-hardening-m130-standardization` `P01.S03`
+- `2026-05-26-schema-hardening-m130-standardization-P01-S04` - `schema-hardening-m130-standardization` `P01.S04`
+- `2026-05-26-schema-hardening-m130-standardization-P01-summary` - `schema-hardening-m130-standardization` `P01` summary
+- `2026-05-26-schema-hardening-m131-fragmentation-P01-S01` - `schema-hardening-m131-fragmentation` `P01.S01`
+- `2026-05-26-schema-hardening-m131-fragmentation-P01-S02` - `schema-hardening-m131-fragmentation` `P01.S02`
+- `2026-05-26-schema-hardening-m131-fragmentation-P01-S03` - `schema-hardening-m131-fragmentation` `P01.S03`
+- `2026-05-26-schema-hardening-m131-fragmentation-P01-S04` - `schema-hardening-m131-fragmentation` `P01.S04`
+- `2026-05-26-schema-hardening-m131-fragmentation-P01-summary` - `schema-hardening-m131-fragmentation` `P01` summary
+- `2026-05-27-schema-hardening-W07-P23-S147` - schema-hardening W07.P23.S147 - M036 period case alignment
+- `2026-05-27-schema-hardening-label-artifact-inventory-exec` - `schema-hardening` `label-artifact-inventory`
+- `2026-05-27-schema-hardening-m036-standardization-P01-S01` - `schema-hardening-m036-standardization` `P01.S01`
+- `2026-05-27-schema-hardening-m036-standardization-P01-S02` - `schema-hardening-m036-standardization` `P01.S02`
+- `2026-05-27-schema-hardening-m036-standardization-P01-S03` - `schema-hardening-m036-standardization` `P01.S03`
+- `2026-05-27-schema-hardening-m036-standardization-P01-S04` - `schema-hardening-m036-standardization` `P01.S04`
+- `2026-05-27-schema-hardening-m100-marriage-citation-repair-exec` - `schema-hardening` `m100-marriage-citation-repair`
+- `2026-05-27-schema-hardening-m100-validation-repair-exec` - `schema-hardening` `m100-validation-repair`
+- `2026-05-27-schema-hardening-m115-standardization-P01-S01` - `schema-hardening-m115-standardization` `P01.S01`
+- `2026-05-27-schema-hardening-m115-standardization-P01-S02` - `schema-hardening-m115-standardization` `P01.S02`
+- `2026-05-27-schema-hardening-m115-standardization-P01-S03` - `schema-hardening-m115-standardization` `P01.S03`
+- `2026-05-27-schema-hardening-m115-standardization-P01-S04` - `schema-hardening-m115-standardization` `P01.S04`
+- `2026-05-27-schema-hardening-m115-standardization-P01-summary` - `schema-hardening-m115-standardization` `P01` summary
+- `2026-05-27-schema-hardening-m180-legal-ref-drift-repair-exec` - `schema-hardening` `m180-legal-ref-drift-repair`
+- `2026-05-27-schema-hardening-m184-standardization-P01-S01` - `schema-hardening-m184-standardization` `P01.S01`
+- `2026-05-27-schema-hardening-m184-standardization-P01-S02` - `schema-hardening-m184-standardization` `P01.S02`
+- `2026-05-27-schema-hardening-m184-standardization-P01-S03` - `schema-hardening-m184-standardization` `P01.S03`
+- `2026-05-27-schema-hardening-m184-standardization-P01-S04` - `schema-hardening-m184-standardization` `P01.S04`
+- `2026-05-27-schema-hardening-m184-standardization-P01-summary` - `schema-hardening-m184-standardization` `P01` summary
+- `2026-05-27-schema-hardening-m190-standardization-P01-S01` - `schema-hardening-m190-standardization` `P01.S01`
+- `2026-05-27-schema-hardening-m190-standardization-P01-S02` - `schema-hardening-m190-standardization` `P01.S02`
+- `2026-05-27-schema-hardening-m190-standardization-P01-S03` - `schema-hardening-m190-standardization` `P01.S03`
+- `2026-05-27-schema-hardening-m190-standardization-P01-S04` - `schema-hardening-m190-standardization` `P01.S04`
+- `2026-05-27-schema-hardening-m190-standardization-P01-summary` - `schema-hardening-m190-standardization` `P01` summary
+- `2026-05-27-schema-hardening-m193-standardization-P01-S01` - `schema-hardening-m193-standardization` `P01.S01`
+- `2026-05-27-schema-hardening-m193-standardization-P01-S02` - `schema-hardening-m193-standardization` `P01.S02`
+- `2026-05-27-schema-hardening-m193-standardization-P01-S03` - `schema-hardening-m193-standardization` `P01.S03`
+- `2026-05-27-schema-hardening-m193-standardization-P01-S04` - `schema-hardening-m193-standardization` `P01.S04`
+- `2026-05-27-schema-hardening-m200-estado-share-binding-repair-exec` - `schema-hardening` `m200-estado-share-binding-repair`
+- `2026-05-27-schema-hardening-m202-label-drift-repair-exec` - `schema-hardening` `m202-label-drift-repair`
+- `2026-05-27-schema-hardening-m308-standardization-P01-S01` - `schema-hardening-m308-standardization` `P01.S01`
+- `2026-05-27-schema-hardening-m308-standardization-P01-S02` - `schema-hardening-m308-standardization` `P01.S02`
+- `2026-05-27-schema-hardening-m308-standardization-P01-S03` - `schema-hardening-m308-standardization` `P01.S03`
+- `2026-05-27-schema-hardening-m308-standardization-P01-S04` - `schema-hardening-m308-standardization` `P01.S04`
+- `2026-05-27-schema-hardening-m309-standardization-P01-S01` - `schema-hardening-m309-standardization` `P01.S01`
+- `2026-05-27-schema-hardening-m309-standardization-P01-S02` - `schema-hardening-m309-standardization` `P01.S02`
+- `2026-05-27-schema-hardening-m309-standardization-P01-S03` - `schema-hardening-m309-standardization` `P01.S03`
+- `2026-05-27-schema-hardening-m309-standardization-P01-S04` - `schema-hardening-m309-standardization` `P01.S04`
+- `2026-05-27-schema-hardening-m322-standardization-P01-S01` - `schema-hardening-m322-standardization` `P01.S01`
+- `2026-05-27-schema-hardening-m322-standardization-P01-S02` - `schema-hardening-m322-standardization` `P01.S02`
+- `2026-05-27-schema-hardening-m322-standardization-P01-S03` - `schema-hardening-m322-standardization` `P01.S03`
+- `2026-05-27-schema-hardening-m322-standardization-P01-S04` - `schema-hardening-m322-standardization` `P01.S04`
+- `2026-05-27-schema-hardening-m322-standardization-P01-summary` - `schema-hardening-m322-standardization` `P01` summary
+- `2026-05-27-schema-hardening-m347-standardization-P01-S01` - `schema-hardening-m347-standardization` `P01.S01`
+- `2026-05-27-schema-hardening-m347-standardization-P01-S02` - `schema-hardening-m347-standardization` `P01.S02`
+- `2026-05-27-schema-hardening-m347-standardization-P01-S03` - `schema-hardening-m347-standardization` `P01.S03`
+- `2026-05-27-schema-hardening-m347-standardization-P01-S04` - `schema-hardening-m347-standardization` `P01.S04`
+- `2026-05-27-schema-hardening-m353-standardization-P01-S01` - `schema-hardening-m353-standardization` `P01.S01`
+- `2026-05-27-schema-hardening-m353-standardization-P01-S02` - `schema-hardening-m353-standardization` `P01.S02`
+- `2026-05-27-schema-hardening-m353-standardization-P01-S03` - `schema-hardening-m353-standardization` `P01.S03`
+- `2026-05-27-schema-hardening-m353-standardization-P01-S04` - `schema-hardening-m353-standardization` `P01.S04`
+- `2026-05-27-schema-hardening-m353-standardization-P01-summary` - `schema-hardening-m353-standardization` `P01` summary
+- `2026-05-27-schema-hardening-m360-standardization-P01-S01` - `schema-hardening-m360-standardization` `P01.S01`
+- `2026-05-27-schema-hardening-m360-standardization-P01-S02` - `schema-hardening-m360-standardization` `P01.S02`
+- `2026-05-27-schema-hardening-m360-standardization-P01-S03` - `schema-hardening-m360-standardization` `P01.S03`
+- `2026-05-27-schema-hardening-m360-standardization-P01-S04` - `schema-hardening-m360-standardization` `P01.S04`
+- `2026-05-27-schema-hardening-m390-standardization-P01-S01` - `schema-hardening-m390-standardization` `P01.S01`
+- `2026-05-27-schema-hardening-m390-standardization-P01-S02` - `schema-hardening-m390-standardization` `P01.S02`
+- `2026-05-27-schema-hardening-m390-standardization-P01-S03` - `schema-hardening-m390-standardization` `P01.S03`
+- `2026-05-27-schema-hardening-m390-standardization-P01-S04` - `schema-hardening-m390-standardization` `P01.S04`
+- `2026-05-27-schema-hardening-m390-standardization-P01-summary` - `schema-hardening-m390-standardization` `P01` summary
+- `2026-05-27-schema-hardening-m720-standardization-P01-S01` - `schema-hardening-m720-standardization` `P01.S01`
+- `2026-05-27-schema-hardening-m720-standardization-P01-S02` - `schema-hardening-m720-standardization` `P01.S02`
+- `2026-05-27-schema-hardening-m720-standardization-P01-S03` - `schema-hardening-m720-standardization` `P01.S03`
+- `2026-05-27-schema-hardening-m720-standardization-P01-S04` - `schema-hardening-m720-standardization` `P01.S04`
+- `2026-05-27-schema-hardening-m720-standardization-P01-summary` - `schema-hardening-m720-standardization` `P01` summary
+- `2026-05-27-schema-hardening-m840-standardization-P01-S01` - `schema-hardening-m840-standardization` `P01.S01`
+- `2026-05-27-schema-hardening-m840-standardization-P01-S02` - `schema-hardening-m840-standardization` `P01.S02`
+- `2026-05-27-schema-hardening-m840-standardization-P01-S03` - `schema-hardening-m840-standardization` `P01.S03`
+- `2026-05-27-schema-hardening-m840-standardization-P01-S04` - `schema-hardening-m840-standardization` `P01.S04`
+- `2026-05-27-schema-hardening-non-overlap-drift-inventory-exec` - `schema-hardening` `non-overlap-drift-inventory`
+- `2026-05-27-schema-hardening-placeholder-eradication-exec` - `schema-hardening` `placeholder-eradication`
+- `2026-05-28-schema-hardening-casilla-continuity-contract-P01-S01` - `schema-hardening` `P01.S01`
+- `2026-05-28-schema-hardening-casilla-continuity-contract-P01-S02` - `schema-hardening` `P01.S02`
+- `2026-05-28-schema-hardening-casilla-continuity-contract-P01-S03` - `schema-hardening` `P01.S03`
+- `2026-05-28-schema-hardening-casilla-continuity-contract-P02-S04` - `schema-hardening` `P02.S04`
+- `2026-05-28-schema-hardening-casilla-continuity-contract-P02-S05` - `schema-hardening` `P02.S05`
+- `2026-05-28-schema-hardening-casilla-continuity-contract-P02-S06` - `schema-hardening` `P02.S06`
+- `2026-05-28-schema-hardening-casilla-continuity-contract-P03-S08` - `schema-hardening` `P03.S08`
+- `2026-05-28-schema-hardening-casilla-continuity-contract-P03-S09` - `schema-hardening` `P03.S09`
+- `2026-05-28-schema-hardening-casilla-continuity-contract-P04-S10` - `schema-hardening` `P04.S10`
+- `2026-05-28-schema-hardening-casilla-continuity-contract-P04-S11` - `schema-hardening` `P04.S11`
+- `2026-05-28-schema-hardening-casilla-continuity-contract-P04-summary` - `schema-hardening` `P04` summary
+- `2026-05-28-schema-hardening-continuity-conformance-P01-S01` - `schema-hardening` `P01.S01`
+- `2026-05-28-schema-hardening-continuity-conformance-P05-S07` - `schema-hardening` `P05.S07`
+- `2026-05-28-schema-hardening-continuity-conformance-P05-S08` - `schema-hardening` `P05.S08`
+- `2026-05-28-schema-hardening-continuity-conformance-P05-S09` - `schema-hardening` `P05.S09`
+- `2026-05-28-schema-hardening-P04-S06` - Record verification evidence residual risks and next-step decision points
+- `2026-05-28-schema-hardening-P02-S02` - Add generic retirement and unmatched-continuity validation semantics
+- `2026-05-28-schema-hardening-P02-S03` - Add real-behavior tests for retired repurposed and unmatched continuity decisions
+- `2026-05-28-schema-hardening-continuity-conformance-P02-S02` - `schema-hardening` `P02.S02`
+- `2026-05-28-schema-hardening-continuity-conformance-P02-S03` - `schema-hardening` `P02.S03`
+- `2026-05-28-schema-hardening-continuity-conformance-P03-S05` - `schema-hardening` `P03.S05`
+- `2026-05-28-schema-hardening-continuity-conformance-P03-S10` - `schema-hardening` `P03.S10`
+- `2026-06-02-registry-hardening-next-work-P01-S01` - P01.S01 Execution Record
+- `2026-06-02-registry-hardening-next-work-P01-S02` - P01.S02 Execution Record
+- `2026-06-02-registry-hardening-next-work-P01-S03` - P01.S03 Execution Record
+- `2026-06-02-registry-hardening-next-work-P01-S04` - P01.S04 Execution Record
+- `2026-06-02-registry-hardening-next-work-P01-S05` - P01.S05 Execution Record
+- `2026-06-02-registry-hardening-next-work-P01-S06` - P01.S06 Execution Record
+- `2026-06-02-registry-hardening-next-work-P01-S07` - P01.S07 Execution Record
+- `2026-06-02-registry-hardening-next-work-P01-S08` - P01.S08 Execution Record
+- `2026-06-02-registry-hardening-next-work-P01-S09` - P01.S09 Execution Record
+- `2026-06-02-registry-hardening-next-work-P02-S10` - P02.S10 Execution Record
+- `2026-06-02-registry-hardening-next-work-P02-S11` - P02.S11 Execution Record
+- `2026-06-02-registry-hardening-next-work-P02-S12` - P02.S12 Execution Record
+- `2026-06-02-registry-hardening-next-work-P02-S13` - P02.S13 Execution Record
+- `2026-06-02-registry-hardening-next-work-P02-S14` - P02.S14 Execution Record
+- `2026-06-02-schema-hardening-P03-S15` - Re-audit M347 singleton marker state
+- `2026-06-02-schema-hardening-P03-S16` - Verify M349 base intracomunitaria role coverage
+- `2026-06-02-schema-hardening-P03-S17` - Verify signed cuota role coverage
+- `2026-06-02-schema-hardening-P04-S18` - Audit registry Python module size and ownership boundaries
+- `2026-06-02-schema-hardening-P04-S19` - Assess loader fragment compiler extraction boundaries
+- `2026-06-02-schema-hardening-P04-S20` - Assess binding resolver extraction boundaries
+- `2026-06-02-schema-hardening-P04-S21` - Assess schema model extraction boundaries and ADR need
+- `2026-06-02-schema-hardening-P04-S22` - Assess record-design extraction boundaries
+- `2026-06-02-schema-hardening-P04-S23` - Assess applicability extraction boundaries
+- `2026-06-02-schema-hardening-P04-S24` - Assess workbook parity extraction boundaries
+- `2026-06-02-schema-hardening-P04-S25` - Assess formula runtime extraction boundaries
+- `2026-06-02-schema-hardening-P04-S26` - Audit oversized registry test module decomposition
+- `2026-06-02-schema-hardening-P04-S27` - Audit M123 revision file for directory-mode fragmentation need
+- `2026-06-02-schema-hardening-P05-S28` - Split residual M200 export fragments below pressure ceiling
+- `2026-06-02-schema-hardening-P05-S29` - Split M303 casilla and export pressure fragments
+- `2026-06-02-schema-hardening-P05-S30` - Re-run corpus fragment headroom audit after residual pressure splits
+- `2026-06-02-schema-hardening-P05-summary` - `schema-hardening` `P05` summary
+- `2026-06-03-registry-hardening-next-work-W02-P06-S31` - W02.P06.S31 Validator Decomposition Boundary Audit
+- `2026-06-03-registry-hardening-next-work-W02-P06-S33` - W02.P06.S33 Cross-Revision Advisory Summary Extraction
+- `2026-06-03-schema-hardening-P01-S01` - Audit M200 construct fragment split boundaries
+- `2026-06-03-schema-hardening-P02-S02` - Split M200 constructs part 002
+- `2026-06-03-schema-hardening-P03-S03` - Re-run construct-pressure corpus headroom audit
+- `2026-06-03-schema-hardening-P03-summary` - `registry-construct-pressure` `P03` summary
+- `2026-06-02-registry-hardening-next-work-W03-P07-S35` - `schema-hardening` `W03.P07.S35` step record
+- `2026-06-02-registry-hardening-next-work-W03-P07-S36` - `schema-hardening` `W03.P07.S36` step record
+- `2026-06-02-registry-hardening-next-work-W03-P07-S37` - `schema-hardening` `W03.P07.S37` step record
+- `2026-06-02-registry-hardening-next-work-W04-P08-S38` - `schema-hardening` `W04.P08.S38` step record
+- `2026-06-02-registry-hardening-next-work-W04-P08-S39` - `schema-hardening` `W04.P08.S39` step record
+- `2026-06-02-registry-hardening-next-work-W04-P08-S40` - `schema-hardening` `W04.P08.S40` step record
+
+### plan
+
+- `2026-05-18-schema-hardening-plan` - `schema-hardening` Plan A: `data_type` Literal extension plan
+- `2026-05-19-schema-hardening-plan` - `schema-hardening` Plan B: `CasillaConstraints` expansion plan
+- `2026-05-20-schema-hardening-plan` - `schema-hardening` Plan C: inline `semantic_role` validator plan
+- `2026-05-21-schema-hardening-plan` - `schema-hardening` `semantic_role sidecar continuation` plan
+- `2026-05-22-schema-hardening-plan` - `schema-hardening` `optional-numeric-suppressor-burn-down` plan
+- `2026-05-26-schema-hardening-m130-standardization-plan` - `schema-hardening` `m130-standardization` plan
+- `2026-05-26-schema-hardening-m131-fragmentation-plan` - `schema-hardening` `m131-fragmentation` plan
+- `2026-05-27-schema-hardening-casilla-continuity-contract-plan` - `schema-hardening` `casilla-continuity-contract` plan
+- `2026-05-27-schema-hardening-m036-standardization-plan` - `schema-hardening` `m036-standardization` plan
+- `2026-05-27-schema-hardening-m115-standardization-plan` - `schema-hardening` `m115-standardization` plan
+- `2026-05-27-schema-hardening-m184-standardization-plan` - `schema-hardening` `m184-standardization` plan
+- `2026-05-27-schema-hardening-m190-standardization-plan` - `schema-hardening` `m190-standardization` plan
+- `2026-05-27-schema-hardening-m193-standardization-plan` - `schema-hardening` `m193-standardization` plan
+- `2026-05-27-schema-hardening-m308-standardization-plan` - `schema-hardening` `m308-standardization` plan
+- `2026-05-27-schema-hardening-m309-standardization-plan` - `schema-hardening` `m309-standardization` plan
+- `2026-05-27-schema-hardening-m322-standardization-plan` - `schema-hardening` `m322-standardization` plan
+- `2026-05-27-schema-hardening-m347-standardization-plan` - `schema-hardening` `m347-standardization` plan
+- `2026-05-27-schema-hardening-m353-standardization-plan` - `schema-hardening` `m353-standardization` plan
+- `2026-05-27-schema-hardening-m360-standardization-plan` - `schema-hardening` `m360-standardization` plan
+- `2026-05-27-schema-hardening-m390-standardization-plan` - `schema-hardening` `m390-standardization` plan
+- `2026-05-27-schema-hardening-m720-standardization-plan` - `schema-hardening` `m720-standardization` plan
+- `2026-05-27-schema-hardening-m840-standardization-plan` - `schema-hardening` `m840-standardization` plan
+- `2026-05-27-schema-hardening-placeholder-eradication-plan` - `schema-hardening` `placeholder-eradication` plan
+- `2026-05-28-schema-hardening-continuity-conformance-plan` - `schema-hardening` `continuity ADR conformance` plan
+- `2026-06-02-registry-hardening-next-work-plan` - `schema-hardening` `registry hardening next work` plan
+
+### reference
+
+- `2026-05-19-schema-hardening-role-taxonomy-reference` - `schema-hardening` reference: canonical semantic_role taxonomy
+- `2026-05-21-schema-hardening-reference` - `schema-hardening` reference: `semantic-role-normalization-guards`
+
+### research
+
+- `2026-05-18-schema-hardening-research` - `schema-hardening` research: Semantic-atom drift across modelo registry schemas
+- `2026-05-22-schema-hardening-research` - `schema-hardening` research: `warning-sidecar-debrief`
+- `2026-05-27-schema-hardening-casilla-continuity-contract-research` - `schema-hardening` research: `casilla-continuity-contract`
+- `2026-05-27-schema-hardening-m100-revision-drift-research` - `schema-hardening` research: `m100-revision-drift`
+- `2026-05-28-schema-hardening-continuity-conformance-research` - `schema-hardening` research: `continuity-conformance`
+- `2026-05-28-schema-hardening-m100-continuity-inventory-research` - `schema-hardening` research: `m100-continuity-inventory`
+- `2026-06-02-schema-hardening-m100-label-legal-continuity-candidate-research` - `schema-hardening` research: `m100 label-and-legal-reference continuity candidate`
+- `2026-06-02-schema-hardening-m100-legal-ref-continuity-candidate-research` - `schema-hardening` research: `m100 legal-reference-only continuity candidate`

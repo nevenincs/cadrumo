@@ -1,0 +1,9 @@
+[[revisions."2024".casillas]]
+id = "1750"
+number = "1750"
+label = "Hijo/Hija 3 (*): NIF/NIE del otro progenitor"
+section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
+data_type = "nif"
+semantic_role = "irpf_anualidades_alimentos_otro_progenitor_nif"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

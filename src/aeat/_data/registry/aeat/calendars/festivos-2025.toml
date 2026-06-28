@@ -1,0 +1,115 @@
+# Spanish national + autonomous-community holidays for the 2025 tax year.
+#
+# Source: Resolución de 23 de octubre de 2024, de la Dirección General de
+# Trabajo, por la que se publica la relación de fiestas laborales para el
+# año 2025 (BOE núm. 261, 28 de octubre de 2024).
+# https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011
+#
+# AEAT considers a deadline that falls on a sábado, domingo, fiesta nacional
+# or fiesta autonómica of the taxpayer's domicilio fiscal as a día inhábil
+# and shifts the deadline to the next business day, with documented modelo
+# exceptions (e.g. Modelo 369 - OSS/IOSS does not shift).
+
+year = 2025
+boe_ref = "boe-resolucion-festivos-2025"
+boe_url = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011"
+
+[[national]]
+date = 2025-01-01
+name = "Año Nuevo"
+
+[[national]]
+date = 2025-01-06
+name = "Epifanía del Señor"
+
+[[national]]
+date = 2025-04-18
+name = "Viernes Santo"
+
+[[national]]
+date = 2025-05-01
+name = "Fiesta del Trabajo"
+
+[[national]]
+date = 2025-08-15
+name = "Asunción de la Virgen"
+
+[[national]]
+date = 2025-11-01
+name = "Todos los Santos"
+
+[[national]]
+date = 2025-12-06
+name = "Día de la Constitución Española"
+
+[[national]]
+date = 2025-12-08
+name = "Inmaculada Concepción"
+
+[[national]]
+date = 2025-12-25
+name = "Natividad del Señor"
+
+# CCAA holidays — bootstrap covers the four most-populated CCAA. The full
+# 17-CCAA matrix lives in follow-up registry updates as the AEAT-relevant
+# coverage matures.
+
+[[ccaa]]
+ccaa_code = "ES-MD"
+date = 2025-05-02
+name = "Fiesta de la Comunidad de Madrid"
+
+[[ccaa]]
+ccaa_code = "ES-MD"
+date = 2025-07-25
+name = "Santiago Apóstol"
+
+[[ccaa]]
+ccaa_code = "ES-MD"
+date = 2025-11-10
+name = "Lunes siguiente a la Almudena (trasladada)"
+
+[[ccaa]]
+ccaa_code = "ES-CT"
+date = 2025-04-21
+name = "Lunes de Pascua Granada"
+
+[[ccaa]]
+ccaa_code = "ES-CT"
+date = 2025-06-24
+name = "San Juan"
+
+[[ccaa]]
+ccaa_code = "ES-CT"
+date = 2025-09-11
+name = "Diada Nacional de Cataluña"
+
+[[ccaa]]
+ccaa_code = "ES-CT"
+date = 2025-12-26
+name = "San Esteban"
+
+[[ccaa]]
+ccaa_code = "ES-AN"
+date = 2025-02-28
+name = "Día de Andalucía"
+
+[[ccaa]]
+ccaa_code = "ES-AN"
+date = 2025-04-17
+name = "Jueves Santo"
+
+[[ccaa]]
+ccaa_code = "ES-VC"
+date = 2025-04-17
+name = "Jueves Santo"
+
+[[ccaa]]
+ccaa_code = "ES-VC"
+date = 2025-04-21
+name = "Lunes de San Vicente Ferrer"
+
+[[ccaa]]
+ccaa_code = "ES-VC"
+date = 2025-10-09
+name = "Día de la Comunitat Valenciana"

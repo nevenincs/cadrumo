@@ -1,12 +1,20 @@
-"""SQLAlchemy engine factory.
+"""SQLAlchemy engine factory for the storage subpackage.
 
-Provides a lazy, URL-keyed singleton engine used by the rest of the storage
-subpackage. Tests can dispose the cached engines between runs via
+Provides a lazy, URL-keyed singleton engine used by the rest of
+:mod:`aeat.adapters.persistence.storage`. The factory normalises SQLite
+URLs against :data:`aeat.core.paths.PROJECT_ROOT`, ensures the parent
+directory exists, and attaches a ``connect`` listener that configures each
+SQLite connection: ``foreign_keys=ON`` (cascade enforcement) and a
+``busy_timeout`` (so concurrent invocations on one bucket no longer fail
+immediately with "database is locked").
+
+Tests can dispose the cached engines between runs via
 :func:`dispose_engine`.
 """
 
 from __future__ import annotations
 
+from hashlib import sha256
 from pathlib import Path
 from threading import Lock
 
@@ -16,6 +24,7 @@ from sqlalchemy.engine.url import URL, make_url
 from sqlalchemy.pool import ConnectionPoolEntry
 
 from .....core.config import Settings, load_settings
+from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.paths import resolve_project_path
 from ..errors import StorageError
@@ -24,12 +33,28 @@ _log = get_logger(__name__)
 _engines: dict[str, Engine] = {}
 _lock = Lock()
 
+# A writer that finds the bucket DB locked by a concurrent connection waits up to
+# this long for the lock to clear instead of failing immediately with
+# ``SQLITE_BUSY`` ("database is locked"). Five seconds comfortably covers the
+# brief windows a single-row secure-object write holds the write lock.
+_SQLITE_BUSY_TIMEOUT_MS = 5000
+
+
+def _route_marker(url: str) -> str:
+    """Return a stable non-reversible marker for a configured database route."""
+    return sha256(url.encode(UTF_8_ENCODING)).hexdigest()[:16]
+
 
 def _normalize_sqlite_url(url: str) -> str:
     """Anchor relative SQLite database files to ``PROJECT_ROOT``.
 
     Args:
         url: SQLAlchemy URL. No-op for non-SQLite URLs and in-memory databases.
+
+    Returns:
+        The original ``url`` for non-SQLite or in-memory targets, otherwise an
+        equivalent URL whose database path has been resolved through
+        :func:`aeat.core.paths.resolve_project_path`.
     """
     parsed = make_url(url)
     if not parsed.drivername.startswith("sqlite"):
@@ -51,23 +76,42 @@ def _normalize_sqlite_url(url: str) -> str:
 
 
 def _ensure_sqlite_parent(url: str) -> None:
-    """Create the parent directory of a SQLite database file if needed."""
+    """Create the parent directory of a SQLite database file if needed.
 
+    Args:
+        url: A SQLAlchemy URL. No-op for non-SQLite URLs and ``:memory:``.
+    """
     parsed = make_url(_normalize_sqlite_url(url))
     database = parsed.database
     if database and database != ":memory:":
         Path(database).parent.mkdir(parents=True, exist_ok=True)
 
 
-def _enable_sqlite_foreign_keys(engine: Engine) -> None:
-    """Attach a ``connect`` listener that enables SQLite foreign-key enforcement.
+def _attach_sqlite_pragmas(engine: Engine) -> None:
+    """Attach a ``connect`` listener that configures the SQLite bucket database.
 
-    SQLite ignores ``ON DELETE CASCADE`` and ``ON DELETE SET NULL`` unless
-    ``PRAGMA foreign_keys=ON`` is issued on every new connection. This is a
-    no-op for non-SQLite dialects.
+    Every new connection issues two pragmas (no-ops for non-SQLite dialects,
+    harmless for ``:memory:`` databases):
+
+    - ``foreign_keys=ON`` so ``ON DELETE CASCADE`` / ``SET NULL`` declared in the
+      schema are enforced (SQLite ignores them otherwise).
+    - ``busy_timeout`` so a writer that meets a held lock from a concurrent
+      ``aeat`` invocation on the same bucket waits its turn rather than failing
+      immediately with ``SQLITE_BUSY`` ("database is locked").
+    - ``journal_mode=WAL`` so readers do not block the writer and the writer does
+      not block readers — the right concurrency model for the many-concurrent-
+      ``aeat``-invocation workload. WAL keeps committed pages in a ``-wal``
+      sidecar until a checkpoint folds them into the main database file, so any
+      at-rest plaintext scan over the raw file must read the ``-wal`` sidecar too
+      (see ``read_db_at_rest_bytes`` in the shared test surface). A no-op on
+      ``:memory:`` databases, which have no on-disk journal.
+    - ``synchronous=NORMAL`` — the durability level WAL is designed for: it cannot
+      corrupt the database, and at most loses the last transaction on an OS/power
+      crash (acceptable for a build-and-export local store; never used for live
+      AEAT submission).
 
     Args:
-        engine: Engine to attach the listener to.
+        engine: :class:`~sqlalchemy.engine.Engine` to attach the listener to.
     """
     if not engine.dialect.name.startswith("sqlite"):
         return
@@ -77,12 +121,15 @@ def _enable_sqlite_foreign_keys(engine: Engine) -> None:
         cursor = dbapi_connection.cursor()
         try:
             cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.execute(f"PRAGMA busy_timeout={_SQLITE_BUSY_TIMEOUT_MS}")
+            cursor.execute("PRAGMA journal_mode=WAL")
+            cursor.execute("PRAGMA synchronous=NORMAL")
         finally:
             cursor.close()
 
 
 def create_engine_from_settings(settings: Settings) -> Engine:
-    """Create a fresh SQLAlchemy ``Engine`` from the given settings.
+    """Create a fresh SQLAlchemy :class:`~sqlalchemy.engine.Engine` from settings.
 
     When the engine targets SQLite, a ``connect`` listener enables
     ``PRAGMA foreign_keys=ON`` on every new connection so that
@@ -90,37 +137,52 @@ def create_engine_from_settings(settings: Settings) -> Engine:
     are enforced at runtime.
 
     Args:
-        settings: Application settings carrying ``aeat_database_url``.
+        settings: Application :class:`~aeat.core.config.Settings` carrying
+            ``aeat_database_url``.
 
     Returns:
         A new SQLAlchemy :class:`~sqlalchemy.engine.Engine`.
 
     Raises:
-        StorageError: If the configured URL is empty or cannot be parsed.
+        StorageError: When the configured URL is empty or cannot be parsed.
     """
     url = settings.aeat_database_url
     if not url:
-        raise StorageError("aeat_database_url is empty; set AEAT_DATABASE_URL.")
+        raise StorageError(
+            "configured database URL is empty.",
+            translated_message="errors.storage.engine.empty_database_url",
+        )
     try:
         normalized_url = _normalize_sqlite_url(url)
         _ensure_sqlite_parent(normalized_url)
         engine = create_engine(normalized_url, future=True)
-    except Exception as exc:  # pragma: no cover - defensive
-        raise StorageError(f"Failed to create engine for {url!r}: {exc}") from exc
-    _enable_sqlite_foreign_keys(engine)
-    _log.debug("created engine for url=%s", url)
+    except Exception as exc:
+        raise StorageError(
+            "failed to create storage engine.",
+            context={"route_marker": _route_marker(url), "error_type": type(exc).__name__},
+            translated_message="errors.storage.engine.create_failed",
+        ) from exc
+    _attach_sqlite_pragmas(engine)
+    _log.debug("created engine route_marker=%s", _route_marker(url))
     return engine
 
 
 def get_engine(settings: Settings | None = None) -> Engine:
     """Return a process-wide singleton engine, keyed by database URL.
 
+    On first access, materialises every ORM table declared on
+    :class:`~aeat.adapters.persistence.storage.sql._orm.Base.metadata`
+    against the new engine. The codebase is forward-only: there is no
+    migration history; the schema is whatever the current ORM defines.
+
     Args:
-        settings: Optional settings override. When ``None``, a fresh
-            :func:`load_settings` call is used.
+        settings: Optional :class:`~aeat.core.config.Settings` override.
+            When ``None``, a fresh :func:`aeat.core.config.load_settings`
+            call is used.
 
     Returns:
-        The cached engine for the resolved URL, creating it on first access.
+        The cached :class:`~sqlalchemy.engine.Engine` for the resolved URL,
+        creating it on first access.
     """
     resolved = settings or load_settings()
     url = resolved.aeat_database_url
@@ -129,17 +191,9 @@ def get_engine(settings: Settings | None = None) -> Engine:
         if cached is not None:
             return cached
         engine = create_engine_from_settings(resolved)
-        if resolved.aeat_storage_auto_migrate:
-            # Imported lazily so `engine` stays free of an Alembic dependency
-            # at module import time.
-            from .migrations_api import upgrade_to_head
+        from ._orm import Base
 
-            _log.info("aeat_storage_auto_migrate=true; running alembic upgrade head")
-            try:
-                upgrade_to_head(engine)
-            except Exception:
-                engine.dispose()
-                raise
+        Base.metadata.create_all(engine)
         _engines[url] = engine
         return engine
 
@@ -148,8 +202,8 @@ def dispose_engine(settings: Settings | None = None) -> None:
     """Dispose and forget the cached engine for the given settings.
 
     Args:
-        settings: Optional settings override. When ``None``, every cached
-            engine is disposed.
+        settings: Optional :class:`~aeat.core.config.Settings` override.
+            When ``None``, every cached engine is disposed.
     """
     with _lock:
         if settings is None:

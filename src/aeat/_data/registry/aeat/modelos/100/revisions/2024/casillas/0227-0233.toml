@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0233"
+number = "0233"
+label = "Reducción por el ejercicio de determinadas actividades económicas (artículo 32.2.3º de la Ley del Impuesto)"
+section = ["resultados", "reg_estima_directa_res"]
+semantic_role = "irpf_ed_reduccion_art_32_2_3"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

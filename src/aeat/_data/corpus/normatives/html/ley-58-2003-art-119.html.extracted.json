@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-58-2003-art-119.html",
+  "source_sha256": "bffcd136c6f62fd8c13453f77b7ea2839b866a4e8fba9977b32f40b8a9cd0831",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Se considerará declaración tributaria todo documento presentado ante la Administración tributaria donde se reconozca o manifieste la realización de cualquier hecho relevante para la aplicación de los tributos.\nLa presentación de una declaración no implica aceptación o reconocimiento por el obligado tributario de la procedencia de la obligación tributaria.\n2. Reglamentariamente podrán determinarse los supuestos en que sea admisible la declaración verbal o la realizada mediante cualquier otro acto de manifestación de conocimiento.\n3. Las opciones que según la normativa tributaria se deban ejercitar, solicitar o renunciar con la presentación de una declaración no podrán rectificarse con posterioridad a ese momento, salvo que la rectificación se presente en el período reglamentario de declaración.\n4. En la liquidación resultante de un procedimiento de aplicación de los tributos podrán aplicarse las cantidades que el obligado tributario tuviera pendientes de compensación o deducción, sin que a estos efectos sea posible modificar tales cantidades pendientes mediante la presentación de declaraciones complementarias o solicitudes de rectificación después del inicio del procedimiento de aplicación de los tributos.",
+      "title": "Artículo 119. Declaración tributaria.",
+      "section": "Artículo 119. Declaración tributaria.",
+      "anchor": null
+    }
+  ]
+}

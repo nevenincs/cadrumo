@@ -1,0 +1,49 @@
+[[revisions."2019-2023".constructs]]
+id = "modelo-131-2019-2023-objective-estimation-instalment"
+title = "Modelo 131 objective-estimation instalment filing for 2019 to 2023"
+legal_refs = [
+    "rd-439-2007:art-110",
+    "orden-eha-672-2007:art-1",
+    "orden-hac-1264-2018:art-4",
+    "orden-hac-1164-2019:art-4",
+    "orden-hac-1155-2020:art-4",
+    "orden-hfp-1335-2021:art-4",
+    "orden-hfp-1172-2022:art-4",
+    "rd-439-2007:art-95",
+]
+source_refs = [
+    "aeat-dr-131-2019-2023-v101",
+    "aeat-modelo-131-procedure",
+    "aeat-modelo-131-instructions",
+    "aeat-modelo-131-recuperacion-declaraciones",
+    "boe-modelo-131-2007-form",
+]
+casilla_ids = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "saldo-negativo-fin-periodo"]
+formulas = [
+    "modelo-131-2019-2023-pago-fraccionado-sin-datos-base",
+    "modelo-131-2019-2023-pago-fraccionado-agrario",
+    "modelo-131-2019-2023-suma-pagos-previos",
+    "modelo-131-2019-2023-diferencia",
+    "modelo-131-2019-2023-total",
+    "modelo-131-2019-2023-resultado",
+    "modelo-131-2019-2023-saldo-negativo-fin-periodo",
+]
+parameters = ["irpf.objective_no_base_fractional_payment_rate", "irpf.objective_agriculture_fractional_payment_rate"]
+bindings = ["modelo-131-2019-2023-resultados-negativos-anteriores"]
+export_layouts = ["modelo-131-2019-2023-fichero-boe"]
+extraction_profiles = ["modelo-131-2019-2023-submitted-file"]
+live_cross_references = ["modelo-131-2019-2023-filed-declarations-read"]
+workbook_parity_refs = ["modelo-131-dr-xlsx-2019-2023"]
+verification_expectations = ["modelo-131-2019-2023-calculation-verification"]
+application_links = [
+    "modelo-131-2019-2023-calculation",
+    "modelo-131-2019-2023-filing",
+    "modelo-131-2019-2023-export",
+    "modelo-131-2019-2023-extractor",
+    "modelo-131-2019-2023-verification",
+    "modelo-131-2019-2023-review",
+    "modelo-131-2019-2023-approval",
+    "modelo-131-2019-2023-reconciliation",
+    "modelo-131-2019-2023-filed-declarations-observation",
+    "modelo-131-2019-2023-workflow",
+]

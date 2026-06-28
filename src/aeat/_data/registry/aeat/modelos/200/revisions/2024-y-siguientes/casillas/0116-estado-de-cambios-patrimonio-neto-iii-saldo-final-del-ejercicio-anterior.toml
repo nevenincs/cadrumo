@@ -1,0 +1,84 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "00387"
+number = "00387"
+label = "Estado de cambios patrimonio neto (III) - Saldo final del ejercicio anterior - Resultado del ejercicio [00387]"
+section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_final_del_ejercicio_anterior"]
+data_type = "money"
+semantic_role = "is_ecpn_saldo_ejercicio_anterior_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-011-casilla-00387", "modelo-200-page-013-casilla-00387", "modelo-200-page-041-casilla-00387"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00388"
+number = "00388"
+label = "Estado de cambios patrimonio neto (III) - Saldo final del ejercicio anterior - Dividendo a cuenta [00388]"
+section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_final_del_ejercicio_anterior"]
+data_type = "money"
+semantic_role = "is_ecpn_saldo_ejercicio_anterior_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-011-casilla-00388", "modelo-200-page-013-casilla-00388", "modelo-200-page-033-casilla-00388", "modelo-200-page-041-casilla-00388"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00389"
+number = "00389"
+label = "Estado de cambios patrimonio neto (III) - Saldo final del ejercicio anterior - Otros instrumentos patrimonio neto [00389]"
+section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_final_del_ejercicio_anterior"]
+data_type = "money"
+semantic_role = "is_ecpn_saldo_ejercicio_anterior_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-011-casilla-00389", "modelo-200-page-013-casilla-00389", "modelo-200-page-041-casilla-00389"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00390"
+number = "00390"
+label = "Estado de cambios patrimonio neto (III) - Saldo final del ejercicio anterior - Ajustes por cambios de valor [00390]"
+section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_final_del_ejercicio_anterior"]
+data_type = "money"
+semantic_role = "is_ecpn_saldo_ejercicio_anterior_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-011-casilla-00390", "modelo-200-page-013-casilla-00390", "modelo-200-page-041-casilla-00390"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00391"
+number = "00391"
+label = "Estado de cambios patrimonio neto (III) - Saldo final del ejercicio anterior - Ajustes en patrimonio neto [00391]"
+section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_final_del_ejercicio_anterior"]
+data_type = "money"
+semantic_role = "is_ecpn_saldo_ejercicio_anterior_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-011-casilla-00391", "modelo-200-page-013-casilla-00391", "modelo-200-page-032-casilla-00391", "modelo-200-page-041-casilla-00391"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00392"
+number = "00392"
+label = "Estado de cambios patrimonio neto (III) - Saldo final del ejercicio anterior - Subvenciones, donaciones y legados recibidos [00392]"
+section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_final_del_ejercicio_anterior"]
+data_type = "money"
+semantic_role = "is_ecpn_saldo_ejercicio_anterior_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-011-casilla-00392", "modelo-200-page-013-casilla-00392", "modelo-200-page-041-casilla-00392"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00393"
+number = "00393"
+label = "Estado de cambios patrimonio neto (III) - Saldo final del ejercicio anterior - Total [00393]"
+section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_final_del_ejercicio_anterior"]
+data_type = "money"
+semantic_role = "is_ecpn_saldo_ejercicio_anterior_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-011-casilla-00393", "modelo-200-page-020c-casilla-00393", "modelo-200-page-032-casilla-00393", "modelo-200-page-041-casilla-00393"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

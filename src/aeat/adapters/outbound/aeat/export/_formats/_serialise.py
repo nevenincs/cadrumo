@@ -1,17 +1,21 @@
-"""Fichero-BOE serialiser reading `RECORD_SPECS` (EPIC #201 C3b,).
+"""Fichero-BOE serialiser for registry-backed fixed-width specs.
 
-Per the :doc:`fichero-BOE export ADR` the serialiser is format-generic:
-one function drives every modelo via its `RECORD_SPECS` tuple. A
-concrete modelo module supplies:
+The serialiser is format-generic: one :func:`serialise` drives every
+registry export layout via a validated tuple of :class:`RecordFieldSpec` entries. A
+registry-backed filing layout supplies:
 
-- ``RECORD_SPECS``: the field layout (validated at import time).
-- ``RECORD_LENGTH``: content bytes (excluding CRLF terminator).
-- ``ENCODING``: per-modelo wire encoding.
-- ``REQUIRED_HEADER_FIELDS``: field_ids the draft MUST provide.
+- field layout, validated before use.
+- content byte length excluding the CRLF terminator.
+- wire encoding declared by the registry layout.
+- required header ``field_id`` values the draft MUST
+  provide.
 
-The caller passes a :class:`FilingDraft` plus a ``headers`` mapping
-for metadata fields (NIF, ejercicio, período, etc.). CRLF terminator
-ownership stays with this function; encoders do not emit line endings.
+The caller passes a :class:`aeat.application.filing.ModeloDraft` plus
+a ``headers`` mapping for metadata fields (identity, year, period,
+and so on). CRLF terminator ownership stays with this function; the
+per-field encoders in
+:mod:`aeat.adapters.outbound.aeat.export._formats._record_spec` do
+not emit line endings.
 """
 
 from __future__ import annotations
@@ -20,6 +24,8 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 
+from ......domain.calculations.registry import CasillaId
+from .._errors import AeatExportFormatError
 from ._record_spec import (
     FicheroBoeEncoding,
     FieldKind,
@@ -41,7 +47,7 @@ HeaderValue = str | date
 
 def serialise(
     *,
-    casilla_values: Mapping[str, Decimal],
+    casilla_values: Mapping[CasillaId, Decimal],
     headers: Mapping[str, HeaderValue],
     specs: tuple[RecordFieldSpec, ...],
     encoding: FicheroBoeEncoding,
@@ -51,144 +57,183 @@ def serialise(
     """Emit a fichero-BOE payload for one filing draft.
 
     Args:
-        casilla_values: per-casilla numeric values. Missing casillas
-            default to :class:`Decimal` zero — AEAT expects every
-            CURRENCY field filled, zero-padded when not declared.
-        headers: metadata fields (NIF, ejercicio, período, apellidos,
-            nombre, tipo_declaracion, etc.) keyed by ``field_id``.
+        casilla_values: Per-casilla numeric values. Missing casillas
+            default to :class:`decimal.Decimal` zero — AEAT expects
+            every CURRENCY field filled, zero-padded when not declared.
+        headers: Metadata fields keyed by ``field_id``.
             Dates must be :class:`datetime.date` instances; other
-            scalar text / numeric fields are strings.
-        specs: the ordered tuple of :class:`RecordFieldSpec` entries.
-        encoding: wire encoding for the payload (typically ``"cp1252"``).
-        total_length: expected content-byte count (excluding CRLF).
+            scalar text and numeric fields are strings.
+        specs: Ordered tuple of
+            :class:`aeat.adapters.outbound.aeat.export._formats._record_spec.RecordFieldSpec`
+            entries.
+        encoding: Wire encoding for the payload (typically
+            ``"cp1252"``).
+        total_length: Expected content-byte count, excluding CRLF.
         required_field_ids: ``field_id`` values the caller guarantees
             must be present in ``headers``; missing required fields
-            raise :class:`ValueError` before any bytes are emitted.
+            raise :exc:`AeatExportFormatError` before any bytes are emitted.
 
     Returns:
         The ``total_length + 2`` byte payload (content + CRLF).
 
     Raises:
-        ValueError: on missing required headers, on serialised-length
-            mismatch, or from the individual encoders on overflow /
+        AeatExportFormatError: On missing required headers, on serialised-length
+            mismatch, or from the individual encoders on overflow or
             non-encoding-compatible characters.
     """
-    # Fail-fast on missing required headers before emitting any bytes.
-    for required in required_field_ids:
-        value = headers.get(required)
-        if value is None or (isinstance(value, str) and not value):
-            raise ValueError(f"required header {required!r} missing from draft; cannot serialise fichero-BOE payload")
-
-    parts: list[bytes] = []
-    for spec in specs:
-        match spec.kind:
-            case FieldKind.RESERVED:
-                assert spec.literal_value is not None  # invariant from model_validator
-                lit = spec.literal_value.encode(encoding)
-                if len(lit) != spec.length:
-                    raise ValueError(
-                        f"RESERVED field {spec.field_id!r} literal width {len(lit)} != declared length {spec.length}"
-                    )
-                parts.append(lit)
-
-            case FieldKind.CURRENCY:
-                # CURRENCY fields with a casilla_id draw from the
-                # ruleset draft; headerless casilla_id == None draws
-                # from the headers mapping (e.g., IMPORTE_INGRESO).
-                if spec.casilla_id is not None:
-                    value = casilla_values.get(spec.casilla_id, _ZERO)
-                else:
-                    header_val = headers.get(spec.field_id, _ZERO)
-                    if isinstance(header_val, (str, date)):
-                        raise ValueError(
-                            f"CURRENCY field {spec.field_id!r} requires a "
-                            f"Decimal in headers; got {type(header_val).__name__}"
-                        )
-                    value = header_val
-                # route inline-sign per-field via spec metadata.
-                inline_sign = spec.signed_mode is SignedMode.INLINE_SIGN
-                parts.append(
-                    encode_currency(
-                        value,
-                        length=spec.length,
-                        inline_sign=inline_sign,
-                        encoding=encoding,
-                    )
-                )
-
-            case FieldKind.DATE:
-                assert spec.date_fmt is not None  # invariant from model_validator
-                dval = headers.get(spec.field_id)
-                if not isinstance(dval, date):
-                    raise ValueError(
-                        f"DATE field {spec.field_id!r} requires a date in headers; got {type(dval).__name__}"
-                    )
-                parts.append(encode_date(dval, spec.date_fmt, encoding=encoding))
-
-            case FieldKind.ALPHANUMERIC | FieldKind.NUMERIC:
-                tval = headers.get(spec.field_id, "")
-                if isinstance(tval, date):
-                    raise ValueError(f"text field {spec.field_id!r} received a date; expected a string")
-                parts.append(
-                    encode_text(
-                        str(tval),
-                        length=spec.length,
-                        justification=spec.justification,
-                        pad_char=spec.pad_char,
-                        encoding=encoding,
-                    )
-                )
-
+    _require_headers_present(headers, required_field_ids)
+    parts = [_encode_field(spec, casilla_values=casilla_values, headers=headers, encoding=encoding) for spec in specs]
     body = b"".join(parts)
     if len(body) != total_length:
-        raise ValueError(
+        raise AeatExportFormatError(
             f"serialised body is {len(body)} bytes but total_length={total_length} "
-            f"was declared; likely an encoder width mismatch."
+            f"was declared; likely an encoder width mismatch.",
         )
     return body + _CRLF
 
 
+def _require_headers_present(headers: Mapping[str, HeaderValue], required_field_ids: frozenset[str]) -> None:
+    """Fail fast on missing-or-empty required headers before any bytes are emitted."""
+    for required in required_field_ids:
+        value = headers.get(required)
+        if value is None or (isinstance(value, str) and not value):
+            raise AeatExportFormatError(
+                f"required header {required!r} missing from draft; cannot serialise fichero-BOE payload",
+            )
+
+
+def _encode_field(
+    spec: RecordFieldSpec,
+    *,
+    casilla_values: Mapping[CasillaId, Decimal],
+    headers: Mapping[str, HeaderValue],
+    encoding: FicheroBoeEncoding,
+) -> bytes:
+    """Dispatch one field spec to its kind-specific encoder."""
+    match spec.kind:
+        case FieldKind.RESERVED:
+            return _encode_reserved_field(spec, encoding=encoding)
+        case FieldKind.CURRENCY:
+            return _encode_currency_field(spec, casilla_values=casilla_values, headers=headers, encoding=encoding)
+        case FieldKind.DATE:
+            return _encode_date_field(spec, headers=headers, encoding=encoding)
+        case FieldKind.ALPHANUMERIC | FieldKind.NUMERIC:
+            return _encode_text_field(spec, headers=headers, encoding=encoding)
+
+
+def _encode_reserved_field(spec: RecordFieldSpec, *, encoding: FicheroBoeEncoding) -> bytes:
+    """RESERVED literal field: encode declared literal verbatim, asserting width."""
+    assert spec.literal_value is not None  # invariant from model_validator
+    lit = spec.literal_value.encode(encoding)
+    if len(lit) != spec.length:
+        raise AeatExportFormatError(
+            f"RESERVED field {spec.field_id!r} literal width {len(lit)} != declared length {spec.length}",
+        )
+    return lit
+
+
+def _encode_currency_field(
+    spec: RecordFieldSpec,
+    *,
+    casilla_values: Mapping[CasillaId, Decimal],
+    headers: Mapping[str, HeaderValue],
+    encoding: FicheroBoeEncoding,
+) -> bytes:
+    """CURRENCY field: bound casilla_id draws from the draft; otherwise from headers."""
+    if spec.casilla_id is not None:
+        value = casilla_values.get(spec.casilla_id, _ZERO)
+    else:
+        header_val = headers.get(spec.field_id, _ZERO)
+        if isinstance(header_val, (str, date)):
+            raise AeatExportFormatError(
+                f"CURRENCY field {spec.field_id!r} requires a Decimal in headers; got {type(header_val).__name__}",
+            )
+        value = header_val
+    return encode_currency(
+        value,
+        length=spec.length,
+        inline_sign=spec.signed_mode is SignedMode.INLINE_SIGN,
+        encoding=encoding,
+    )
+
+
+def _encode_date_field(
+    spec: RecordFieldSpec,
+    *,
+    headers: Mapping[str, HeaderValue],
+    encoding: FicheroBoeEncoding,
+) -> bytes:
+    """DATE field: read from headers as a :class:`datetime.date`, encode per ``spec.date_fmt``."""
+    assert spec.date_fmt is not None  # invariant from model_validator
+    dval = headers.get(spec.field_id)
+    if not isinstance(dval, date):
+        raise AeatExportFormatError(
+            f"DATE field {spec.field_id!r} requires a date in headers; got {type(dval).__name__}",
+        )
+    return encode_date(dval, spec.date_fmt, encoding=encoding)
+
+
+def _encode_text_field(
+    spec: RecordFieldSpec,
+    *,
+    headers: Mapping[str, HeaderValue],
+    encoding: FicheroBoeEncoding,
+) -> bytes:
+    """ALPHANUMERIC / NUMERIC field: stringify the header value, encode with justification / padding."""
+    tval = headers.get(spec.field_id, "")
+    if isinstance(tval, date):
+        raise AeatExportFormatError(f"text field {spec.field_id!r} received a date; expected a string")
+    return encode_text(
+        str(tval),
+        length=spec.length,
+        justification=spec.justification,
+        pad_char=spec.pad_char,
+        encoding=encoding,
+    )
+
+
 def serialise_envelope(
     *,
-    casilla_values: Mapping[str, Decimal],
+    casilla_values: Mapping[CasillaId, Decimal],
     headers: Mapping[str, HeaderValue],
     segments: tuple[SegmentSpec, ...],
     encoding: FicheroBoeEncoding,
     required_field_ids: frozenset[str] = frozenset(),
 ) -> bytes:
-    """Emit a multi-segment fichero-BOE envelope (EPIC #201,).
+    """Emit a multi-segment fichero-BOE envelope.
 
-    Modelo 303+ use an XML-tagged envelope of ordered segments rather
-    than a flat record. This helper serialises each segment via
-    :func:`serialise` and concatenates the results. The CRLF terminator
-    is appended ONCE at the end (AEAT expects a single terminator per
-    file, not per segment).
+    Some AEAT record layouts use an XML-tagged envelope of ordered
+    segments rather than a flat record. This helper serialises each
+    segment via :func:`serialise` and concatenates the results. The
+    CRLF terminator is appended ONCE at the end.
 
     Args:
-        casilla_values: per-casilla values shared across every segment.
-        headers: metadata header fields shared across every segment.
+        casilla_values: Per-casilla values shared across every segment.
+        headers: Metadata header fields shared across every segment.
             Individual segments reference whichever headers they
             declare; unused headers are ignored per-segment.
-        segments: ordered tuple of :class:`SegmentSpec` to emit.
-            Callers supplying the envelope decide which optional
-            segments are present (e.g., Modelo 303 page 4 appears
-            only in exonerado-390 annual filings).
-        encoding: wire encoding shared across segments.
-        required_field_ids: fail-fast check applied ONCE at envelope
+        segments: Ordered tuple of
+            :class:`aeat.adapters.outbound.aeat.export._formats._record_spec.SegmentSpec`
+            to emit. Callers supplying the envelope decide which
+            optional segments are present.
+        encoding: Wire encoding shared across segments.
+        required_field_ids: Fail-fast check applied ONCE at envelope
             start; individual segments do not re-check.
 
     Returns:
         The full envelope byte payload with a single trailing CRLF.
 
     Raises:
-        ValueError: same conditions as :func:`serialise`, plus any
+        AeatExportFormatError: Same conditions as :func:`serialise`, plus any
             per-segment width mismatch.
     """
     # Pre-flight required headers once (not per-segment).
     for required in required_field_ids:
         value = headers.get(required)
         if value is None or (isinstance(value, str) and not value):
-            raise ValueError(f"required header {required!r} missing from draft; cannot serialise fichero-BOE envelope")
+            raise AeatExportFormatError(
+                f"required header {required!r} missing from draft; cannot serialise fichero-BOE envelope",
+            )
 
     chunks: list[bytes] = []
     for segment in segments:

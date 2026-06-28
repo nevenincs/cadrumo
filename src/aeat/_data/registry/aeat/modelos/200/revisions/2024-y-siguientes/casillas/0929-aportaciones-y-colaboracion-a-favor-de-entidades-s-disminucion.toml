@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "03266"
+number = "03266"
+label = "Aportaciones y colaboración a favor de entidades sin fines lucrativos - Disminución - Correcciones del ejercicio - Permanentes [03266]"
+section = ["aportaciones_y_colaboracion_a_favor_de_entidades_s", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_aportaciones_entidades_sin_fines_lucro_permanente_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03266"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03267"
+number = "03267"
+label = "Aportaciones y colaboración a favor de entidades sin fines lucrativos - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [03267]"
+section = ["aportaciones_y_colaboracion_a_favor_de_entidades_s", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_aportaciones_entidades_sin_fines_lucro_temporaria_ejercicio_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03267"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03268"
+number = "03268"
+label = "Aportaciones y colaboración a favor de entidades sin fines lucrativos - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [03268]"
+section = ["aportaciones_y_colaboracion_a_favor_de_entidades_s", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_aportaciones_entidades_sin_fines_lucro_temporaria_anteriores_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03268"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03269"
+number = "03269"
+label = "Aportaciones y colaboración a favor de entidades sin fines lucrativos - Disminución - Saldo pendiente a principio de ejercicio [03269]"
+section = ["aportaciones_y_colaboracion_a_favor_de_entidades_s", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_aportaciones_entidades_sin_fines_lucro_saldo_inicial"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03269"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03270"
+number = "03270"
+label = "Aportaciones y colaboración a favor de entidades sin fines lucrativos - Disminución - Saldo pendiente a fin de ejercicio [03270]"
+section = ["aportaciones_y_colaboracion_a_favor_de_entidades_s", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_aportaciones_entidades_sin_fines_lucro_saldo_final"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03270"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

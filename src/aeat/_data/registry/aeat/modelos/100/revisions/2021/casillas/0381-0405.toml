@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0405"
+number = "0405"
+label = "Valor de transmisión de las acciones o participaciones (sólo en caso de transmisión intervivos de los valores)"
+section = ["toma_datos_ampliada", "g_cambio_residencia_ext", "g4_re"]
+semantic_role = "irpf_g4_re_valor_transmision_acciones"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

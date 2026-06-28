@@ -1,20 +1,28 @@
-"""Service helpers for transaction catalogues."""
+"""Service helpers for transaction catalogues.
+
+Pure functions over :class:`aeat.domain.transactions.TransactionCatalogue`:
+each helper returns a fresh immutable catalogue rather than mutating
+the input. The module brokers the classification/percentage coupling
+rules and history-chain bookkeeping that callers must not implement
+ad-hoc.
+"""
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal
 
 from pydantic import ValidationError
 
+from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...core.logging import get_logger
+from ...core.time import now as _utc_now
 from ._enums import BusinessClassification
 from ._errors import TransactionCatalogueError, TransactionNotFoundError
 from ._models import ClassificationHistoryEntry, Transaction, TransactionCatalogue
 
 _LOGGER = get_logger(__name__)
 
-_MANUAL_CLASSIFIED_BY = "manual"
 _DEFAULT_MANUAL_CONFIDENCE = Decimal("1.0")
 
 _EntrySignature = tuple[BusinessClassification, Decimal | None, str, str, str | None, str, Decimal | None]
@@ -24,11 +32,11 @@ def find_transaction(catalogue: TransactionCatalogue, transaction_id: str) -> Tr
     """Return one transaction from a catalogue if present.
 
     Args:
-        catalogue: Catalogue to search.
+        catalogue: The :class:`TransactionCatalogue` to search.
         transaction_id: Stable transaction identifier.
 
     Returns:
-        The matching transaction, or ``None`` when absent.
+        The matching :class:`Transaction`, or ``None`` when absent.
     """
     return catalogue.get(transaction_id)
 
@@ -42,10 +50,7 @@ def link_invoice(catalogue: TransactionCatalogue, transaction_id: str, invoice_i
         invoice_id: Invoice foreign key to attach.
 
     Returns:
-        A fresh immutable catalogue with the linked invoice.
-
-    Raises:
-        TransactionNotFoundError: If ``transaction_id`` is missing.
+        A fresh immutable :class:`TransactionCatalogue` with the linked invoice.
     """
     transaction = _require_transaction(catalogue, transaction_id)
     updated_transaction = _validate_transaction_update(
@@ -91,21 +96,16 @@ def set_classification(
         reason: Free-text override justification; embedded in the
             history entry, not on the top-level transaction.
         confidence: Caller-supplied decision confidence in the inclusive
-            0..1 range (#236). When omitted, manual decisions default
+            ``[0, 1]`` range. When omitted, manual decisions default
             to ``Decimal("1.0")`` and all other classifier paths default
             to ``None``.
 
     Returns:
-        A fresh immutable catalogue with updated classification metadata.
+        A fresh :class:`TransactionCatalogue` with updated classification metadata.
 
-    Raises:
-        TransactionNotFoundError: If ``transaction_id`` is missing.
-        TransactionCatalogueError: If the resulting transaction payload
-            fails validation (invalid percentage, invalid classified_by
-            shape, out-of-range confidence).
     """
     transaction = _require_transaction(catalogue, transaction_id)
-    now = datetime.now(UTC)
+    now = _utc_now()
     normalised_reason = reason.strip()
     # Strip classified_by here so the idempotence signature below matches the
     # value the model will store (the field validator also strips, so a raw
@@ -134,8 +134,19 @@ def set_classification(
         transaction.classification_confidence,
     )
     if proposed_signature == current_signature:
+        _LOGGER.debug(
+            "set_classification: skipping idempotent re-classify for transaction %s (classification=%s)",
+            transaction_id,
+            classification.value,
+        )
         history = transaction.classification_history
     else:
+        _LOGGER.info(
+            "set_classification: updating transaction %s classification=%s classified_by=%s",
+            transaction_id,
+            classification.value,
+            normalised_classified_by,
+        )
         prior_snapshot = snapshot_classification_state(transaction, fallback_at=now)
         history = (*transaction.classification_history, prior_snapshot)
 
@@ -175,7 +186,7 @@ def _resolve_confidence(*, classified_by: str, confidence: Decimal | None) -> De
     """
     if confidence is not None:
         return confidence
-    if classified_by == _MANUAL_CLASSIFIED_BY:
+    if classified_by == CLASSIFIED_BY_MANUAL:
         return _DEFAULT_MANUAL_CONFIDENCE
     return None
 
@@ -185,7 +196,7 @@ def snapshot_classification_state(
     *,
     fallback_at: datetime | None = None,
 ) -> ClassificationHistoryEntry:
-    """Return a history entry capturing the transaction's current active state.
+    """Return a :class:`ClassificationHistoryEntry` capturing the transaction's current active state.
 
     When no explicit ``classified_at`` is present (the pipeline has
     never run against this transaction), fall back to the provenance
@@ -193,7 +204,7 @@ def snapshot_classification_state(
     the transaction first entered the catalogue. This keeps the
     chain in chronological order. ``fallback_at`` is an optional final
     fallback for callers that want to cap the synthesised timestamp
-    (e.g. ``set_classification`` uses ``datetime.now(UTC)``).
+    (e.g. ``set_classification`` uses the canonical clock helper).
     """
     snapshot_at = transaction.classified_at or transaction.raw.provenance.ingested_at or fallback_at
     if snapshot_at is None:
@@ -230,4 +241,5 @@ def _validate_transaction_update(payload: dict[str, object], *, context: str) ->
     try:
         return Transaction.model_validate(payload)
     except ValidationError as exc:
+        _LOGGER.error("transaction update validation failed: %s", context, exc_info=True)
         raise TransactionCatalogueError(context) from exc

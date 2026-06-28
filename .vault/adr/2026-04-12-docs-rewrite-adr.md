@@ -6,14 +6,25 @@ tags:
   - "#adr"
   - "#docs-rewrite"
 date: 2026-04-12
+modified: '2026-04-12'
 related:
   - "[[2026-04-12-docs-rewrite-research]]"
   - "[[2026-04-12-docs-rewrite-plan]]"
+  - "[[2026-05-30-docs-architecture-adr]]"
 issue: wgergely/aeat#67
-status: accepted
+status: superseded
 ---
 
 # adr: docs-rewrite
+
+> **Superseded (2026-05-30) by the `docs-architecture` documentation
+> surface taxonomy and conventions ADR.** This ADR's markdown-only scope
+> (it explicitly deferred Sphinx/API docs, a docs site, and translations)
+> no longer matches the codebase, and its `tests/test_docs.py` pin was
+> deleted. Its surviving intent — that the bootstrap documentation files
+> exist — is retained as an interim obligation until the superseding
+> epic's conformance test re-establishes the pin. Do not treat the
+> decisions below as current authority.
 
 ## context
 

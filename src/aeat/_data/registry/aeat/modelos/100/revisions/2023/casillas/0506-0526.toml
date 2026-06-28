@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "0526"
+number = "0526"
+label = "Correspondientes a la base liquidable del ahorro"
+section = ["resultados", "datos_adicionales_res", "rentas_exentas_res"]
+semantic_role = "irpf_rentas_exentas_base_ahorro"
+legal_refs = ["ley-35-2006:art-7"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

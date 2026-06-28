@@ -1,0 +1,12 @@
+[[revisions."2016-2017".casillas]]
+id = "decl.cnae"
+number = "2.devengo.cnae"
+label = "C.N.A.E. de la actividad principal"
+section = ["declarante", "devengo"]
+data_type = "text"
+semantic_role = "actividad_cnae"
+required = true
+input_kind = "informational"
+export_refs = ["modelo-232-2016-page-01-cnae"]
+legal_refs = ["orden-hfp-816-2017:art-1", "orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]

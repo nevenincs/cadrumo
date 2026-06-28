@@ -1,0 +1,9 @@
+[[revisions."2024".casillas]]
+id = "0055"
+number = "0055"
+label = "Reducciones de rendimientos generados en más de 2 años u obtenidos de forma notoriamente irregular  (artículo 26.2 y DT 25ª de la Ley del Impuesto)"
+section = ["toma_datos_ampliada", "rdto_capital_mobiliario", "rdto_capital_mobiliario_general"]
+data_type = "decimal"
+semantic_role = "irpf_rendimiento_capital_mobiliario_general_reduccion"
+legal_refs = ["ley-35-2006:art-26"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

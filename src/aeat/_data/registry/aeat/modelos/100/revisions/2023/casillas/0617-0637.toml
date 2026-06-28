@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "0637"
+number = "0637"
+label = "Importe del abono anticipado de la deducción correspondiente a 2023 (*)"
+section = ["resultados", "calculo_impuesto_res", "deduc_ascendiente_disc_res"]
+semantic_role = "irpf_abono_anticipado_ascendiente_discapacidad"
+legal_refs = ["ley-35-2006:art-81-bis"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

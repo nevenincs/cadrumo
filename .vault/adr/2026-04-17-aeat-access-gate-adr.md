@@ -3,6 +3,7 @@ tags:
   - "#adr"
   - "#aeat-access-gate"
 date: 2026-04-17
+modified: '2026-04-17'
 title: "Live AEAT Access Blocker & Verification Gate"
 related:
   - "[[2026-04-17-aeat-access-gate-research]]"

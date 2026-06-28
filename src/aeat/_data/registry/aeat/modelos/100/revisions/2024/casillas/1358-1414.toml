@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "1414"
+number = "1414"
+label = "Gasto 2: Importe del gasto"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+semantic_role = "irpf_inmueble_2_gasto_financiacion_importe"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

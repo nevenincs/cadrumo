@@ -1,0 +1,96 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "00833"
+number = "00833"
+label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2016 - Con reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [00833]"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_general"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-018c-casilla-00833"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00834"
+number = "00834"
+label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2016 - Con reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [00834]"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_general"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-018c-casilla-00834"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00835"
+number = "00835"
+label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2017 - Con reiteración de donaciones a una misma entidad - Deducción pendiente/generada [00835]"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_general"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-018c-casilla-00835"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00836"
+number = "00836"
+label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2017 - Con reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [00836]"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_general"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-018c-casilla-00836"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00837"
+number = "00837"
+label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2017 - Con reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [00837]"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_general"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-018c-casilla-00837"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00838"
+number = "00838"
+label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2018 - Con reiteración de donaciones a una misma entidad - Deducción pendiente/generada [00838]"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_general"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-018c-casilla-00838"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00839"
+number = "00839"
+label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2018 - Con reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [00839]"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_general"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-018c-casilla-00839"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00840"
+number = "00840"
+label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2018 - Con reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [00840]"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_general"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-018c-casilla-00840"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

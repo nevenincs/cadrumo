@@ -1,0 +1,9 @@
+[[revisions."2022".casillas]]
+id = "0397"
+number = "0397"
+label = "NIF del plan de pensiones del sistema de empleo"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
+data_type = "nif"
+semantic_role = "irpf_pension_plan_empleo_nif"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

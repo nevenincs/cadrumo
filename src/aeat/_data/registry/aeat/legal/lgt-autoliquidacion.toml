@@ -1,0 +1,113 @@
+# Procedural articles of Ley 58/2003 (Ley General Tributaria) that
+# govern what makes a Modelo declaration legally filed.
+#
+# - art-119: tax declaration regime (any document presented to AEAT
+#   that acknowledges a tax-relevant fact). Frames the locked
+#   semantics of ModeloRecord persistence.
+# - art-120: autoliquidaciones (self-assessments). The substantive
+#   regime that Modelos 100, 130, 131, 303, 390, 111, 115, 123 and
+#   others operate under. Rectificación procedures live here.
+# - art-122: complementarias / sustitutivas (amending self-assessments).
+#   Grounds amend_modelo_revision behaviour and the ModeloRecord
+#   SUPERSEDED state transition.
+
+[legal."ley-58-2003:art-93"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003-art-93.html#a93"
+document_id = "BOE-A-2003-23186"
+article = "93"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a93"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LGT art 93: obligaciones de informacion. Base sustantiva de toda obligacion informativa frente a AEAT - personas fisicas y juridicas obligadas a proporcionar datos, informes, antecedentes y justificantes con trascendencia tributaria. Enumera obligados especificos (retenedores, sociedades de cobro de honorarios profesionales, entidades bancarias y de mediacion). Base sustantiva de las declaraciones informativas: M347 (operaciones con terceros), M180/M190/M193 (resumenes anuales de retenciones), M184 (atribucion de rentas), M232 (vinculadas y paraisos), M349 (intracomunitarias), M720 (bienes en el extranjero), M193 (capital mobiliario)."
+required_text = [
+    "Obligaciones de información",
+    "trascendencia tributaria",
+    "retenedores",
+]
+
+[legal."ley-58-2003:art-27.2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003-art-27.html#a27-2"
+document_id = "BOE-A-2003-23186"
+article = "27.2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a27"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "wgergely"
+notes = "Recargos por declaración extemporánea sin requerimiento previo, apartado 2 of LGT art-27. Establishes the 1 per cent + 1 per cent additional per completed month of delay rule (post-Ley 11/2021); 15 per cent once 12 months have elapsed since the end of the original presentation deadline. The band table at registry/aeat/legal/ley-58-2003-recargo-bands.toml is parameterised against this article."
+required_text = [
+    "1 por ciento más otro 1 por ciento adicional por cada mes completo de retraso",
+    "transcurridos 12 meses",
+    "el recargo será del 15 por ciento",
+]
+
+[legal."ley-58-2003:art-119"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003-art-119.html#a119"
+document_id = "BOE-A-2003-23186"
+article = "119"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a119"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "wgergely"
+notes = "Declaracion tributaria: any document presented before AEAT acknowledging a tax-relevant fact. Filing does not imply acceptance of the tax obligation. Options exercised via a declaration cannot be rectified after the filing period closes. Pending compensation / deduction balances cannot be modified through complementarias after AEAT initiates an application procedure."
+required_text = [
+    "todo documento presentado ante la Administración tributaria",
+    "La presentación de una declaración no implica aceptación o reconocimiento",
+    "Las opciones que según la normativa tributaria se deban ejercitar",
+]
+
+[legal."ley-58-2003:art-120"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003-art-120.html#a120"
+document_id = "BOE-A-2003-23186"
+article = "120"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a120"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "wgergely"
+notes = "Autoliquidaciones: declarations in which the obligado tributario performs the calificacion + cuantificacion necessary to determine the deuda tributaria and either pays, claims a refund, or claims compensation. AEAT may verify and comprobar. Where the obligado considers the autoliquidacion has harmed their legitimate interests they may instar la rectificacion per the apartado 3 procedure; otherwise the autoliquidacion rectificativa procedure of apartado 4 applies where the tax-specific regulation so establishes."
+required_text = [
+    "Las autoliquidaciones son declaraciones en las que los obligados tributarios",
+    "operaciones de calificación y cuantificación necesarias",
+    "podrá instar la rectificación de dicha autoliquidación",
+    "presentación de una autoliquidación rectificativa",
+]
+
+[legal."ley-58-2003:art-122"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003-art-122.html#a122"
+document_id = "BOE-A-2003-23186"
+article = "122"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a122"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "wgergely"
+notes = "Declaraciones, autoliquidaciones y comunicaciones complementarias o sustitutivas. Filed within the original presentation window or extemporaneously while the right to determine the deuda has not prescribed. Complementarias are used when the new autoliquidacion yields a higher importe a ingresar or a lower devolution / compensation; otherwise art-120 rectificacion procedures apply. Loss-of-incentive scenarios (failed deduction conditions) are reported as a complementaria for the period of the breach with intereses de demora."
+required_text = [
+    "Los obligados tributarios podrán presentar autoliquidaciones complementarias",
+    "Las autoliquidaciones complementarias tendrán como finalidad completar o modificar las presentadas con anterioridad",
+    "intereses de demora",
+]

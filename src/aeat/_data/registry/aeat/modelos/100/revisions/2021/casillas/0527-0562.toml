@@ -1,0 +1,10 @@
+[[revisions."2021".casillas]]
+id = "0562"
+number = "0562"
+label = "Por alquiler de la vivienda habitual. Régimen transitorio (traslade el importe de esta misma casilla del anexo A.1): Parte estatal"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_deduccion_alquiler_vivienda_habitual_estatal"
+input_kind = "computed"
+formula = "renta-2021-deduccion-alquiler-vivienda-estatal-50-porciento"
+legal_refs = ["ley-35-2006:dt-15"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

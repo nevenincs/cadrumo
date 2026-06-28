@@ -1,0 +1,76 @@
+"""Contract test for `collect_row_sets`.
+
+Exercises the engine-side helper that walks a `ModeloRevision`'s
+row-producer bindings and emits per-grouping `SheetRowSet` records.
+The pull adapter relies on this helper to compute the same row-set
+layout the engine emitted, so the contract has to hold across
+modelo 349 (the canonical row-producer modelo, with 13 bindings
+split into operator_clave + operator_clave_period groupings).
+"""
+
+from __future__ import annotations
+
+from itertools import pairwise
+
+import pytest
+
+from .....core.resources import resources
+from .. import collect_row_sets
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _modelo_349_revision():
+    return resources().modelos.get("349").revisions["2020-y-siguientes"]
+
+
+def test_collect_row_sets_groups_modelo_349_bindings_by_grouping() -> None:
+    revision = _modelo_349_revision()
+
+    row_sets = collect_row_sets(revision)
+
+    by_grouping = {rs.grouping: rs for rs in row_sets}
+    assert "operator_clave" in by_grouping
+    assert "operator_clave_period" in by_grouping
+    assert len(by_grouping["operator_clave"].columns) == 5
+    assert len(by_grouping["operator_clave_period"].columns) == 8
+
+
+def test_collect_row_sets_assigns_distinct_header_rows_per_grouping() -> None:
+    """Each grouping occupies a contiguous block; blocks stack vertically."""
+
+    revision = _modelo_349_revision()
+
+    row_sets = collect_row_sets(revision)
+
+    header_rows = [rs.header_row for rs in row_sets]
+    assert len(set(header_rows)) == len(row_sets), "row-sets must occupy distinct header rows"
+    for prev, current in pairwise(sorted(header_rows)):
+        assert current > prev, "header rows must be monotonically increasing"
+
+
+def test_collect_row_sets_first_data_row_immediately_follows_header() -> None:
+    revision = _modelo_349_revision()
+
+    for rs in collect_row_sets(revision):
+        assert rs.first_data_row == rs.header_row + 1
+
+
+def test_collect_row_sets_columns_allocate_a_through_n_left_to_right() -> None:
+    revision = _modelo_349_revision()
+
+    for rs in collect_row_sets(revision):
+        for column_index, column in enumerate(rs.columns, start=1):
+            assert column.header_address.column == column_index, (
+                f"row-set {rs.grouping!r} column {column.binding!r} expected column "
+                f"index {column_index}, got {column.header_address.column}"
+            )
+
+
+def test_collect_row_sets_returns_empty_for_revision_without_row_producers() -> None:
+    """Modelos without any `aggregation.op = "rows"` bindings emit no row-sets."""
+
+    # Modelo 130 (IRPF pago fraccionado) has no row-producer bindings.
+    revision = resources().modelos.get("130").revisions["2019-y-siguientes"]
+
+    assert collect_row_sets(revision) == ()

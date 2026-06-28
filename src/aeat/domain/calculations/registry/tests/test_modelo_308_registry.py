@@ -1,0 +1,104 @@
+"""Tests for the committed Modelo 308 (IVA solicitud de devolución) registry foundation."""
+
+from __future__ import annotations
+
+from datetime import date
+from functools import lru_cache
+
+import pytest
+
+from .....core.resources import bundled_path
+from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@lru_cache(maxsize=1)
+def _load_modelo_308() -> tuple[ModeloDefinition, RegistryCatalogues]:
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(m for m in modelos if m.id == "308")
+    return modelo, catalogues
+
+
+def test_modelo_308_validator_accepts_committed_definition() -> None:
+    modelo, catalogues = _load_modelo_308()
+    assert modelo.id == "308"
+    assert modelo.revisions, "308 must declare at least one revision"
+    assert any(rev.casillas for rev in modelo.revisions.values()), "308 must declare casillas"
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+
+def test_modelo_308_metadata_matches_orden_eha_3786_2008_art_2() -> None:
+    modelo, _ = _load_modelo_308()
+    assert modelo.tax_domain == "iva"
+    assert modelo.cadence == "ad_hoc"
+    assert modelo.jurisdiction == "ES-AEAT"
+    assert "orden-eha-3786-2008:art-2" in modelo.legal_refs
+    assert "orden-eha-3786-2008:art-11" in modelo.legal_refs
+    assert "aeat-dr-308-2019" in modelo.source_refs
+
+
+def test_modelo_308_revision_starts_at_2009() -> None:
+    modelo, _ = _load_modelo_308()
+    revision = modelo.revisions["2009-y-siguientes"]
+    assert revision.valid_from == date(2009, 1, 1)
+    assert revision.period_selector.year_from == 2009
+    assert revision.period_selector.periods == ("AD-HOC",)
+
+
+def test_modelo_308_snapshot_builds_for_recent_filing_years() -> None:
+    modelo, catalogues = _load_modelo_308()
+    for filing_year in (2020, 2024, 2025, 2026):
+        snapshot = build_snapshot(
+            modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=filing_year,
+            period="AD-HOC",
+        )
+        assert snapshot.revision.id == "2009-y-siguientes"
+
+
+def test_modelo_308_snapshot_carries_legal_authority() -> None:
+    modelo, catalogues = _load_modelo_308()
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="AD-HOC")
+    assert "orden-eha-3786-2008:art-2" in snapshot.legal
+    assert "orden-eha-3786-2008:art-11" in snapshot.legal
+    assert snapshot.legal["orden-eha-3786-2008:art-11"].article == "11"
+    assert "aeat-dr-308-2019" in snapshot.sources
+    assert "aeat-modelo-308-procedure" in snapshot.sources
+
+
+def test_modelo_308_filing_schedule_is_ad_hoc() -> None:
+    modelo, _ = _load_modelo_308()
+    revision = modelo.revisions["2009-y-siguientes"]
+    schedule = next(s for s in revision.filing_schedules if s.id == "modelo-308-ad-hoc")
+    assert schedule.period_kind == "ad_hoc"
+    assert schedule.periods == ("AD-HOC",)
+    assert "orden-eha-3786-2008:art-11" in schedule.legal_refs
+
+
+def test_modelo_308_live_cross_references_forbid_writes() -> None:
+    modelo, _ = _load_modelo_308()
+    revision = modelo.revisions["2009-y-siguientes"]
+    cross_refs = {ref.id: ref for ref in revision.live_cross_references}
+
+    static_ref = cross_refs["modelo-308-static-documentation"]
+    assert static_ref.surface == "static_official_documentation"
+    assert static_ref.requires_authentication is False
+
+    filed_ref = cross_refs["modelo-308-filed-declarations-read"]
+    assert filed_ref.requires_authentication is True
+    assert filed_ref.requires_aeat_authorization is True
+    assert set(filed_ref.allowed_methods) == {"GET", "HEAD", "OPTIONS"}
+    assert {"presentation", "signing", "amendment", "payment"}.issubset(set(filed_ref.forbidden_actions))
+
+
+def test_modelo_308_construct_links_filing_workbook_parity() -> None:
+    modelo, _ = _load_modelo_308()
+    revision = modelo.revisions["2009-y-siguientes"]
+    construct = next(c for c in revision.constructs if c.id == "modelo-308-iva-solicitud-devolucion")
+    assert "modelo-308-filing" in construct.application_links
+    assert "modelo-308-deadline" in construct.application_links
+    assert construct.filing_schedules == ("modelo-308-ad-hoc",)
+    assert "modelo-308-dr-2019" in construct.workbook_parity_refs

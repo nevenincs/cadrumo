@@ -1,0 +1,13 @@
+[[revisions."2022".formulas]]
+id = "renta-2022-iic-paraisos-fiscales-suma"
+target_casilla_id = "0280"
+expression = { op = "sum", args = [
+    { casilla_id = "0278" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-85"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["imputación de rentas", "instituciones de inversión"]

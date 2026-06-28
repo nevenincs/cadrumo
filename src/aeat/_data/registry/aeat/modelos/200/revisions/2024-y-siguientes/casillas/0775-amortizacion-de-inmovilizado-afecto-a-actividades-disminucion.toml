@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02596"
+number = "02596"
+label = "Amortización de inmovilizado afecto a actividades de investigación y desarrollo (art. 12.3 b) LIS) - Disminución - Correcciones del ejercicio - Permanentes [02596]"
+section = ["amortizacion_de_inmovilizado_afecto_a_actividades", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_amortizacion_inmovilizado_idi_permanente_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02596"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02597"
+number = "02597"
+label = "Amortización de inmovilizado afecto a actividades de investigación y desarrollo (art. 12.3 b) LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02597]"
+section = ["amortizacion_de_inmovilizado_afecto_a_actividades", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_amortizacion_inmovilizado_idi_temporaria_ejercicio_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02597"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02598"
+number = "02598"
+label = "Amortización de inmovilizado afecto a actividades de investigación y desarrollo (art. 12.3 b) LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02..."
+section = ["amortizacion_de_inmovilizado_afecto_a_actividades", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_amortizacion_inmovilizado_idi_temporaria_anteriores_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02598"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02599"
+number = "02599"
+label = "Amortización de inmovilizado afecto a actividades de investigación y desarrollo (art. 12.3 b) LIS) - Disminución - Saldo pendiente a principio de ejercicio [02599]"
+section = ["amortizacion_de_inmovilizado_afecto_a_actividades", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_amortizacion_inmovilizado_idi_saldo_inicial"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02599"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02600"
+number = "02600"
+label = "Amortización de inmovilizado afecto a actividades de investigación y desarrollo (art. 12.3 b) LIS) - Disminución - Saldo pendiente a fin de ejercicio [02600]"
+section = ["amortizacion_de_inmovilizado_afecto_a_actividades", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_amortizacion_inmovilizado_idi_saldo_final"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02600"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

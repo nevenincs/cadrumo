@@ -3,6 +3,7 @@ tags:
   - "#adr"
   - "#release-please"
 date: 2026-04-12
+modified: '2026-04-12'
 title: Release-please LOCAL-only autorelease — ADR
 related:
   - "[[2026-04-12-release-please-research]]"

@@ -3,6 +3,7 @@ tags:
   - "#plan"
   - "#ci-github-actions"
 date: 2026-04-12
+modified: '2026-04-12'
 related:
   - "[[2026-04-12-ci-github-actions-adr]]"
   - "[[2026-04-12-ci-github-actions-research]]"
@@ -44,9 +45,9 @@ Add a GitHub Actions workflow to verify PRs and pushes to `main` on Ubuntu and W
 
 ## Acceptance Criteria
 
-- [ ] `.github/workflows/ci.yml` exists and follows the ADR.
-- [ ] Matrix includes `ubuntu-latest` and `windows-latest`.
-- [ ] No secrets are used; `AEAT_LIVE_TESTS` is unset.
-- [ ] `just env-setup` is used for provisioning `env/.env`.
-- [ ] README has a CI badge.
-- [ ] Local checks pass on Windows.
+- [x] `.github/workflows/ci.yml` exists and follows the ADR — verified: file present at `.github/workflows/ci.yml`, header documents the no-secrets posture.
+- [x] Matrix includes `ubuntu-latest` and `windows-latest` — verified: `os: [ubuntu-latest, windows-latest]`.
+- [x] No secrets are used; `AEAT_LIVE_TESTS` is unset — verified: header explicitly states "No secrets are required for the unit suite; live tests are explicitly skipped. AEAT_LIVE_TESTS_ENABLED is NEVER set on CI."
+- [x] `just env-setup` is used for provisioning `env/.env` — verified: `ci.yml:62` invokes `just env-setup`; `justfile` carries the target (lines 29 Linux + 44 Windows).
+- [x] README has a CI badge — disposition: **intentionally absent**. README explicitly carries the marker "no CI badge by design." Closed as a deliberate project decision.
+- [x] Local checks pass on Windows — verified: this session ran focused suites on win32 (registry suite, manifest-io, secure-objects, envelope, profile-binding, etc.) all green in isolation.

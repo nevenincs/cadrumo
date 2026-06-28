@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "1219"
+number = "1219"
+label = "Ejercicio 2022: Aplicado en esta  declaración"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+semantic_role = "irpf_inmueble_gastos_aplicados_declaracion"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

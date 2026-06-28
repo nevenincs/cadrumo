@@ -1,0 +1,36 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "01026"
+number = "01026"
+label = "Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Reinversión de beneficios extraordinarios (DT 24ª LIS) - Disminuciones [01026]"
+section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+data_type = "money"
+semantic_role = "is_correcciones_disminuciones_liquidacion_detalle"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-013-casilla-01026"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01027"
+number = "01027"
+label = "Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Eliminaciones pdte. de incorporar sdes.que dejen de pertenecer a un grupo - Aumentos [01027]"
+section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+data_type = "money"
+semantic_role = "is_correcciones_aumentos"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-013-casilla-01027"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01028"
+number = "01028"
+label = "Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Eliminaciones pdte. de incorporar sdes.que dejen de pertenecer a un grupo - Disminuciones [01028]"
+section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+data_type = "money"
+semantic_role = "is_correcciones_disminuciones_liquidacion_detalle"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-013-casilla-01028"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

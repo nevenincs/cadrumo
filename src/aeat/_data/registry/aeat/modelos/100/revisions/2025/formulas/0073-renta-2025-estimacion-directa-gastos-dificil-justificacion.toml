@@ -1,0 +1,23 @@
+[[revisions."2025".formulas]]
+id = "renta-2025-estimacion-directa-gastos-dificil-justificacion"
+target_casilla_id = "0222"
+expression = { op = "min", args = [
+    { op = "max", args = [
+        { op = "percent", args = [
+            { op = "subtract", args = [
+                { casilla_id = "0180" },
+                { casilla_id = "0218" },
+            ] },
+            { parameter = "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-rate" },
+        ] },
+        { literal = "0" },
+    ] },
+    { parameter = "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-cap" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-30", "rd-439-2007:art-30", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["5 por 100", "gastos de dificil justificacion"]

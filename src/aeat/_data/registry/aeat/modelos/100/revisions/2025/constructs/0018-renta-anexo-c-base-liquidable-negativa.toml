@@ -1,0 +1,31 @@
+[[revisions."2025".constructs]]
+id = "renta-anexo-c-base-liquidable-negativa-general"
+title = "Modelo 100 Anexo C base liquidable general negativa carry-forward"
+legal_refs = [
+    "ley-35-2006:art-48",
+    "ley-35-2006:art-50",
+    "orden-hac-277-2026:art-3",
+]
+source_refs = [
+    "aeat-dr-100-2025-dictionary",
+    "aeat-dr-100-2025-input-dictionary",
+    "aeat-dr-100-2025-xsd",
+    "aeat-renta-2025-manual-parte1",
+    "aeat-renta-2025-manual-deducciones-autonomicas",
+    "boe-modelo-100-2025-form",
+    "aeat-modelo-100-procedure",
+    "aeat-renta-web-open",
+]
+casilla_ids = [
+    "1388",
+    "1389",
+    "1390",
+    "base-liq-neg-general-2024-aplicada-maxima",
+]
+formulas = [
+    "renta-2025-base-liquidable-negativa-general-2024-aplicada-maxima",
+    "renta-2025-base-liquidable-negativa-general-2024-pendiente-fin",
+]
+bindings = [
+    "renta-2025-base-liquidable-negativa-general-anterior",
+]

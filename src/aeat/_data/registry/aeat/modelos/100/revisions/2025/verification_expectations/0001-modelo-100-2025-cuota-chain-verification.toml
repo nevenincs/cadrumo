@@ -1,0 +1,25 @@
+[[revisions."2025".verification_expectations]]
+id = "modelo-100-2025-cuota-chain-verification"
+computed_casilla_ids = [
+    "0519", "0520", "0521", "0522", "0523", "0524",
+    "0432", "0435", "0460", "0500", "0510",
+    "0532", "0533", "0545", "0546",
+    "0570", "0571", "0585", "0586",
+]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "1"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-67", "ley-35-2006:art-68", "ley-35-2006:art-74", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+# Per-casilla export_refs are not declared for this revision. The xml_dictionary
+# layout maps casilla numbers directly to dictionary keys via the AEAT-published
+# data dictionary (aeat-dr-100-2025-dictionary). There are no separate
+# ExportFieldId records for this format; the structural audit framework exempts
+# xml_dictionary exports from the per-casilla export_refs requirement.

@@ -1,0 +1,6 @@
+# Artículo 2. Aprobación del modelo 353.
+
+1. Se aprueba el modelo 353 de «Grupo de entidades. Modelo agregado. Autoliquidación mensual» del Impuesto sobre el Valor Añadido, que figura como anexo II en la presente Orden.
+El número de justificante que habrá de figurar en el modelo 353 de autoliquida-ción será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 353.
+2. Este modelo será presentado por quien tenga la consideración de entidad dominante del grupo de entidades según lo dispuesto en el artículo 163 quinquies. Dos de la Ley 37/1992, de 28 de diciembre, del Impuesto sobre el Valor Añadido, y en él se incluirán los resultados de las autoliquidaciones individuales del período de liquidación respectivo de las entidades que integren el grupo y hayan optado por aplicar el régimen especial regulado en el Capítulo IX Título IX de la Ley del Impuesto.
+3. La presentación de este modelo sólo podrá efectuarse por vía telemática en las condiciones y de acuerdo con el procedimiento previsto en los artículos 5 y 7 de esta Orden.

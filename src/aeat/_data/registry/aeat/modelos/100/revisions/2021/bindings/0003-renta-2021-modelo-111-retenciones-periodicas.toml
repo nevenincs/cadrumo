@@ -1,0 +1,12 @@
+[[revisions."2021".bindings]]
+id = "renta-2021-modelo-111-retenciones-periodicas"
+source = "relation_prefill"
+selector = { source_modelo = "111", source_casilla_id = "28" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108"]
+source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
+aeat_prefilled = true
+
+[[revisions."2021".bindings.source_citations]]
+source_ref = "boe-modelo-100-2021-form"
+required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercicio 2021"]

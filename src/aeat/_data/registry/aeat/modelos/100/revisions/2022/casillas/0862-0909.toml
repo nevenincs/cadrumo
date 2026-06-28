@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "0909"
+number = "0909"
+label = "Por arrendamiento de bienes inmuebles en el territorio de las Illes Balears destinados a vivienda"
+section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
+semantic_role = "irpf_deduccion_baleares_arrendador_vivienda_permanente"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

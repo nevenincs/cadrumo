@@ -1,0 +1,296 @@
+[[revisions."2020-y-siguientes".export_layouts]]
+id = "modelo-349-fichero-2020"
+
+[[revisions."2020-y-siguientes".export_layouts.records]]
+id = "modelo-349-declarante"
+record_type = "declarante"
+order = 0
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-decl-record-type"
+offset = 1
+length = 1
+kind = "literal"
+literal = "1"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-decl-modelo"
+offset = 2
+length = 3
+kind = "literal"
+literal = "349"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-decl-year"
+offset = 5
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-decl-nif"
+offset = 9
+length = 9
+kind = "draft"
+draft_attribute = "profile_tax_id"
+data_type = "text"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-decl-apellidos-filler"
+offset = 18
+length = 40
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-decl-blank-58"
+offset = 58
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-decl-telefono-filler"
+offset = 59
+length = 9
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-decl-persona-relacion-filler"
+offset = 68
+length = 40
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-decl-declaracion-id-filler"
+offset = 108
+length = 13
+kind = "filler"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-decl-complementaria-filler"
+offset = 121
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-decl-sustitutiva-filler"
+offset = 122
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-decl-declaracion-anterior-id-filler"
+offset = 123
+length = 13
+kind = "filler"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-decl-period-code"
+offset = 136
+length = 2
+kind = "draft"
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-decl-numero-operadores"
+offset = 138
+length = 9
+kind = "casilla"
+casilla_id = "decl.numero-operadores"
+data_type = "integer"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-decl-importe-operaciones"
+offset = 147
+length = 15
+kind = "casilla"
+casilla_id = "decl.importe-operaciones"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-decl-numero-rectificaciones"
+offset = 162
+length = 9
+kind = "casilla"
+casilla_id = "decl.numero-rectificaciones"
+data_type = "integer"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-decl-importe-rectificaciones"
+offset = 171
+length = 15
+kind = "casilla"
+casilla_id = "decl.importe-rectificaciones"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-decl-indicador-cambio-filler"
+offset = 186
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-decl-blancos-187"
+offset = 187
+length = 204
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-decl-representante-nif-filler"
+offset = 391
+length = 9
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-decl-blancos-400"
+offset = 400
+length = 101
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+# Tipo 2 — Registro de operador intracomunitario (500 bytes)
+# One record emitted per (operator, clave) row from the invoice ledger via the
+# iva-349-operador-row-* bindings. Discriminated from rectificacion records by
+# the rectification block (positions 147-178) being all blank.

@@ -1,0 +1,39 @@
+[[revisions."2019-y-siguientes".casillas]]
+id = "19"
+number = "19"
+label = "Ganancias patrimoniales forestales dinerarias numero de perceptores"
+section = ["ganancias_forestales_dinerario"]
+data_type = "integer"
+semantic_role = "perceptor_count"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-111-casilla-19"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "20"
+number = "20"
+label = "Ganancias patrimoniales forestales dinerarias importe de percepciones"
+section = ["ganancias_forestales_dinerario"]
+data_type = "money"
+semantic_role = "importe_percepciones_dinerario"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-111-casilla-20"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "21"
+number = "21"
+label = "Ganancias patrimoniales forestales dinerarias importe de retenciones"
+section = ["ganancias_forestales_dinerario"]
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-111-casilla-21"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80"], source_refs = ["aeat-modelo-111-instructions"] }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]

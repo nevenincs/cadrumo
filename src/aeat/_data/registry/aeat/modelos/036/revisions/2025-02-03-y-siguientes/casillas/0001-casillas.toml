@@ -1,0 +1,37 @@
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.event-kind"
+number = "tipo-declaracion"
+label = "Tipo de declaracion censal"
+section = ["declaracion", "censo"]
+data_type = "text"
+semantic_role = "tipo_evento_censal"
+required = true
+input_kind = "bound"
+binding = "modelo-036-profile-censo-status"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+]
+source_refs = ["aeat-modelo-036-procedure"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.vigencia-2025"
+number = "vigencia"
+label = "Vigencia normativa desde 3 de febrero de 2025"
+section = ["declaracion", "vigencia"]
+data_type = "text"
+semantic_role = "vigencia_normativa"
+required = true
+input_kind = "informational"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-hac-1526-2024:art-1",
+    "orden-hac-1526-2024:df-unica",
+]
+source_refs = ["aeat-dr-036-2025"]
+

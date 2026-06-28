@@ -1,0 +1,34 @@
+[[revisions."2019-y-siguientes".constructs]]
+id = "modelo-115-quarterly-rental-withholding"
+title = "Modelo 115 quarterly urban rental withholding filing"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = [
+    "aeat-dr-115-2019-v13",
+    "aeat-modelo-115-obligaciones-retenedor",
+    "aeat-modelo-115-guia-censal",
+    "aeat-modelo-115-180-folleto-actividades",
+]
+casilla_ids = ["01", "02", "03", "04", "05"]
+formulas = ["modelo-115-retenciones", "modelo-115-resultado-ingresar"]
+parameters = ["irpf.urban_rental_withholding_rate"]
+export_layouts = ["modelo-115-fichero-boe"]
+extraction_profiles = ["modelo-115-export-record", "modelo-115-declaracion-pdf"]
+live_cross_references = ["modelo-115-static-official", "modelo-115-filed-declarations-read"]
+workbook_parity_refs = ["modelo-115-dr-xls"]
+verification_expectations = ["modelo-115-calculation-verification"]
+application_links = [
+    "modelo-115-calculation",
+    "modelo-115-filing",
+    "modelo-115-export",
+    "modelo-115-verification",
+    "modelo-115-review",
+    "modelo-115-approval",
+    "modelo-115-reconciliation",
+    "modelo-115-extractor",
+    "modelo-115-portal-cross-reference",
+    "modelo-115-filed-declarations-observation",
+    "modelo-115-deadline",
+    "modelo-115-workflow",
+]
+deadline_windows = ["modelo-115-2026-1t", "modelo-115-2026-2t", "modelo-115-2026-3t", "modelo-115-2026-4t"]
+

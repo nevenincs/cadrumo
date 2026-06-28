@@ -1,0 +1,173 @@
+[[revisions."2020-y-siguientes".casillas]]
+id = "decl.numero-operadores"
+number = "138-146"
+label = "Numero total de operadores intracomunitarios"
+section = ["declarante", "resumen"]
+data_type = "integer"
+semantic_role = "intracomunitario_numero_operadores"
+required = true
+input_kind = "bound"
+binding = "iva-349-declarante-numero-operadores"
+export_refs = ["modelo-349-decl-numero-operadores"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
+
+[[revisions."2020-y-siguientes".casillas]]
+id = "decl.importe-operaciones"
+number = "147-161"
+label = "Importe de las operaciones intracomunitarias"
+section = ["declarante", "resumen"]
+data_type = "money"
+semantic_role = "intracomunitario_importe_operaciones"
+required = true
+input_kind = "bound"
+binding = "iva-349-declarante-importe-operaciones"
+export_refs = ["modelo-349-decl-importe-operaciones"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
+
+[[revisions."2020-y-siguientes".casillas]]
+id = "decl.numero-rectificaciones"
+number = "162-170"
+label = "Numero total de operadores intracomunitarios con rectificaciones"
+section = ["declarante", "resumen"]
+data_type = "integer"
+semantic_role = "intracomunitario_numero_rectificaciones"
+required = true
+input_kind = "bound"
+binding = "iva-349-declarante-numero-rectificaciones"
+export_refs = ["modelo-349-decl-numero-rectificaciones"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
+
+[[revisions."2020-y-siguientes".casillas]]
+id = "decl.importe-rectificaciones"
+number = "171-185"
+label = "Importe de las rectificaciones"
+section = ["declarante", "resumen"]
+data_type = "money"
+semantic_role = "intracomunitario_importe_rectificaciones"
+required = true
+input_kind = "bound"
+binding = "iva-349-declarante-importe-rectificaciones"
+export_refs = ["modelo-349-decl-importe-rectificaciones"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
+
+# --- Per-operator detail fields (Tipo 2 operador intracomunitario) ---
+
+[[revisions."2020-y-siguientes".casillas]]
+id = "op.codigo-pais"
+number = "76-77"
+label = "Codigo pais del operador comunitario"
+section = ["operador", "identificacion"]
+data_type = "country_code"
+semantic_role = "operador_codigo_pais"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".casillas]]
+id = "op.nif-comunitario"
+number = "78-92"
+label = "NIF del operador comunitario"
+section = ["operador", "identificacion"]
+data_type = "nif_iva"
+semantic_role = "intracomunitario_nif_iva"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".casillas]]
+id = "op.apellidos-razon-social"
+number = "93-132"
+label = "Apellidos y nombre o razon social del operador intracomunitario"
+section = ["operador", "identificacion"]
+data_type = "text"
+semantic_role = "intracomunitario_operador_nombre"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".casillas]]
+id = "op.clave-operacion"
+number = "133"
+label = "Clave de operacion intracomunitaria"
+section = ["operador", "operacion"]
+data_type = "text"
+semantic_role = "intracomunitario_clave_operacion"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".casillas]]
+id = "op.base-imponible"
+number = "134-146"
+label = "Base imponible o importe de la operacion intracomunitaria"
+section = ["operador", "operacion"]
+data_type = "money"
+semantic_role = "base_intracomunitaria"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"], source_refs = ["aeat-dr-349-2020-current"] }
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+# --- Rectification detail fields (Tipo 2 rectificaciones) ---
+
+[[revisions."2020-y-siguientes".casillas]]
+id = "rect.ejercicio-rectificado"
+number = "147-150"
+label = "Ejercicio rectificado"
+section = ["rectificacion", "periodo"]
+data_type = "year"
+semantic_role = "intracomunitario_rectificacion_ejercicio"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".casillas]]
+id = "rect.periodo-rectificado"
+number = "151-152"
+label = "Periodo rectificado"
+section = ["rectificacion", "periodo"]
+data_type = "period_code"
+semantic_role = "periodo_rectificado"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".casillas]]
+id = "rect.base-rectificada"
+number = "153-165"
+label = "Base imponible o importes rectificados"
+section = ["rectificacion", "importe"]
+data_type = "money"
+semantic_role = "base_intracomunitaria"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"], source_refs = ["aeat-dr-349-2020-current"] }
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".casillas]]
+id = "rect.base-anterior"
+number = "166-178"
+label = "Base imponible declarada anteriormente"
+section = ["rectificacion", "importe"]
+data_type = "money"
+semantic_role = "base_intracomunitaria"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"], source_refs = ["aeat-dr-349-2020-current"] }
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+# --- Live cross-reference policy ---
+

@@ -1,0 +1,11 @@
+[[revisions."2024".casillas]]
+id = "0670"
+number = "0670"
+label = "Resultado de la declaración ([0610] - [0611] + [0612] - [0613] - [0623] + [0624] - [0636] + [0637] - [0248] + [0249] - [0660] + [0661] - [0662] + [0663] + [0664] + [0666] + [0669])"
+section = ["resultados", "calculo_impuesto_res"]
+data_type = "decimal"
+semantic_role = "irpf_resultado_declaracion"
+input_kind = "computed"
+formula = "renta-2024-resultado-declaracion"
+legal_refs = ["ley-35-2006:art-103"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

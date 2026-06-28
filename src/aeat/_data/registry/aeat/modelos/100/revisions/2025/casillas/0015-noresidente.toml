@@ -1,0 +1,11 @@
+[[revisions."2025".casillas]]
+id = "NORESIDENTE"
+number = "*62"
+label = "Conyuge no residente y no contribuyente IRPF"
+section = ["datos_identificativos", "conyuge"]
+data_type = "boolean"
+semantic_role = "irpf_conyuge_no_residente_flag"
+input_kind = "bound"
+binding = "renta-2025-profile-spouse-non-resident-irpf"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]

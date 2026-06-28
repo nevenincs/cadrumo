@@ -1,0 +1,5 @@
+[modelo]
+modelo = "111"
+renta_years = [2025, 2026]
+evidence_class = "reconciliation"
+enrolling_test = "src/aeat/application/calculations/tests/test_modelo_190_111_reconciliation_continuity.py"

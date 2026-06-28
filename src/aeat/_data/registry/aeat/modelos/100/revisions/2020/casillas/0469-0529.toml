@@ -1,0 +1,8 @@
+[[revisions."2020".casillas]]
+id = "0529"
+number = "0529"
+label = "Aplicación de la escala general y autonómica del Impuesto al importe de la casilla [0505]. Importes resultantes: Parte autonómica"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_escala_sobre_base_general_autonomico"
+legal_refs = ["ley-35-2006:art-63"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

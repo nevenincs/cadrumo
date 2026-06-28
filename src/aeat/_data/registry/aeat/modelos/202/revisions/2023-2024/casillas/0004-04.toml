@@ -1,0 +1,12 @@
+[[revisions.2023-2024.casillas]]
+id = "04"
+number = "04"
+label = "Mod. 40.3 LIS — Resultado contable despues del IS"
+section = ["liquidacion", "modalidad_40_3_lis", "correcciones_resultado_contable"]
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_resultado_contable"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-202-2023-2024-page-01-casilla-04"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]

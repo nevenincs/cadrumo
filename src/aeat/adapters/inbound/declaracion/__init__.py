@@ -1,40 +1,37 @@
-"""Casilla-complete declaración PDF parsing (EPIC #305).
+"""Declaración PDF parsing boundary.
 
-The module turns a *copia de la declaración* PDF into a strict
-:class:`DeclaracionFiling` record carrying every casilla ID + printed
-value the extractor recovered. Downstream consumers:
+The module exposes strict declaration parser records and the public
+``parse_declaracion`` entry point. The parser returns observed PDF
+values. Validated registry snapshots decide extraction coverage and
+filing usability.
 
-- :mod:`aeat.application.filing.build_draft` materialises a :class:`FilingDraft`
-  from the extracted casillas via ``inputs={c.casilla_id: c.printed_value ...}``.
-- :mod:`aeat.application.verification.verify_declaracion` compares the re-derived
-  casillas against the printed ones via :class:`aeat.domain.formulas.Engine.audit_against`.
-
-Public API:
+Public API::
 
     from aeat.adapters.inbound.declaracion import (
-        DeclaracionFiling,
+        DeclaracionObservation,
         DeclaracionParseError,
         TemplateRevision,
         parse_declaracion,
+        parse_declaracion_bytes,
     )
 """
 
 from __future__ import annotations
 
-from ._errors import DeclaracionParseError
-from ._parser import parse_declaracion
+from ._errors import DeclaracionParseError, TemplateNotDetectedError
+from ._parser import parse_declaracion, parse_declaracion_bytes
 from ._schema import (
-    DeclaracionFiling,
-    ExtractionStatus,
+    DeclaracionObservation,
     ExtractionWarning,
     TemplateRevision,
 )
 
 __all__ = [
-    "DeclaracionFiling",
+    "DeclaracionObservation",
     "DeclaracionParseError",
-    "ExtractionStatus",
     "ExtractionWarning",
+    "TemplateNotDetectedError",
     "TemplateRevision",
     "parse_declaracion",
+    "parse_declaracion_bytes",
 ]

@@ -15,13 +15,13 @@ fold:
    key, and the wrapped ciphertext is persisted as
    ``master.recovery.key``. When the active master-key provider
    becomes unavailable (forgotten passphrase, locked keychain,
-   broken keyring), the operator runs ``aeat security recover
-   --recovery-key "<24 words>"`` and the substrate uses the
-   wrapping to mint a fresh ``master.key`` + ``master.kdf`` +
-   ``salt`` triplet under their chosen new backend.
+   broken keyring), operator key-management code supplies the
+   recovery mnemonic and the substrate uses the wrapping to mint a
+   fresh ``master.key`` + ``master.kdf`` + ``salt`` triplet under the
+   chosen new backend.
 
-This module exports the cryptographic primitives only. The CLI
-glue lives in :mod:`aeat.entrypoints.cli.security`.
+This module exports the cryptographic primitives only; command wiring
+must remain outside the storage substrate.
 
 The encoding follows BIP-39 (Bitcoin Improvement Proposal 0039)
 exactly — 256-bit entropy → 8-bit checksum → 24 11-bit words drawn
@@ -33,14 +33,16 @@ to the Bitcoin Core source).
 from __future__ import annotations
 
 import base64
+import binascii
 import hashlib
 import secrets
-from importlib import resources
 from pathlib import Path
 from typing import Final
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field, ValidationError
 
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ..crypto._crypto import (
     KEY_SIZE,
     EncryptedBlob,
@@ -48,8 +50,9 @@ from ..crypto._crypto import (
     derive_key,
     encrypt_record,
 )
-
-_STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ..errors import (
+    storage_validation_error as _storage_validation_error,
+)
 
 _RECOVERY_KEY_SIZE: Final[int] = 32
 _MNEMONIC_WORD_COUNT: Final[int] = 24
@@ -95,10 +98,13 @@ class WrappedMasterKey(BaseModel):
 
     def to_blob(self) -> EncryptedBlob:
         """Decode the base64 fields into an :class:`EncryptedBlob`."""
-        return EncryptedBlob(
-            nonce=base64.b64decode(self.nonce_b64.encode("ascii"), validate=True),
-            ciphertext=base64.b64decode(self.ciphertext_b64.encode("ascii"), validate=True),
-        )
+        try:
+            return EncryptedBlob(
+                nonce=base64.b64decode(self.nonce_b64.encode("ascii"), validate=True),
+                ciphertext=base64.b64decode(self.ciphertext_b64.encode("ascii"), validate=True),
+            )
+        except (ValueError, binascii.Error, ValidationError) as exc:
+            raise _storage_validation_error("wrapped recovery master key is malformed") from exc
 
     @classmethod
     def from_blob(cls, blob: EncryptedBlob) -> WrappedMasterKey:
@@ -115,12 +121,11 @@ def _load_wordlist() -> tuple[str, ...]:
     Read at import time so the per-call cost is the dict lookup, not
     the file read. The wordlist is small (~13 KB) and immutable.
     """
-    package = resources.files(__package__)
-    path = package.joinpath("_bip39_wordlist.txt")
+    path = Path(__file__).with_name("_bip39_wordlist.txt")
     text = path.read_text(encoding="ascii")
     words = tuple(line.strip() for line in text.splitlines() if line.strip())
     if len(words) != 2048:
-        raise RuntimeError(
+        raise _storage_validation_error(
             f"BIP-39 wordlist must have exactly 2048 words; got {len(words)}",
         )
     return words
@@ -140,10 +145,10 @@ def encode_mnemonic(entropy: bytes) -> str:
         A space-joined string of 24 lowercase English words.
 
     Raises:
-        ValueError: If ``entropy`` is not exactly 32 bytes.
+        StorageValidationError: When ``entropy`` is not exactly 32 bytes.
     """
     if len(entropy) != _RECOVERY_KEY_SIZE:
-        raise ValueError(
+        raise _storage_validation_error(
             f"BIP-39 24-word encoding requires exactly {_RECOVERY_KEY_SIZE} bytes; got {len(entropy)}",
         )
     # ENT (256) + CS (8) = 264 bits -> 24 x 11-bit groups.
@@ -167,25 +172,19 @@ def decode_mnemonic(mnemonic: str) -> bytes:
         The 32-byte entropy.
 
     Raises:
-        ValueError: If the mnemonic does not have 24 words, contains
-            an unknown word, or fails the BIP-39 checksum. Error
-            messages report the failing **position** but never echo
-            the operator's typed word — a wrong word at position N
-            tells an attacker watching stderr / shell history /
-            session logs nothing about the recovery-key contents
-            beyond "position N has a typo", which is a 1-of-2048
-            disclosure rather than a full-word disclosure.
+        StorageValidationError: When the mnemonic does not have 24 words, contains
+            an unknown word, or fails the BIP-39 checksum.
     """
     words = mnemonic.strip().lower().split()
     if len(words) != _MNEMONIC_WORD_COUNT:
-        raise ValueError(
+        raise _storage_validation_error(
             f"BIP-39 mnemonic must contain exactly {_MNEMONIC_WORD_COUNT} words; got {len(words)}",
         )
     payload_int = 0
     for position, word in enumerate(words, start=1):
         index = _WORD_TO_INDEX.get(word)
         if index is None:
-            raise ValueError(
+            raise _storage_validation_error(
                 f"unknown BIP-39 word at position {position}; verify the word against the BIP-39 English wordlist.",
             )
         payload_int = (payload_int << 11) | index
@@ -195,16 +194,16 @@ def decode_mnemonic(mnemonic: str) -> bytes:
     entropy = entropy_int.to_bytes(_RECOVERY_KEY_SIZE, "big")
     expected = hashlib.sha256(entropy).digest()[0]
     if checksum != expected:
-        raise ValueError("BIP-39 mnemonic checksum mismatch — verify the words")
+        raise _storage_validation_error("BIP-39 mnemonic checksum mismatch — verify the words")
     return entropy
 
 
 def generate_recovery_key() -> RecoveryKey:
-    """Mint a fresh 32-byte recovery key + its 24-word mnemonic.
+    """Mint a fresh :class:`RecoveryKey` with 32-byte entropy and its 24-word mnemonic.
 
     Uses :func:`secrets.token_bytes` for the entropy. The returned
     record is the only in-memory copy; callers must arrange for the
-    operator to copy / print the mnemonic before the record falls out
+    operator to copy or print the mnemonic before the record falls out
     of scope.
     """
     raw = secrets.token_bytes(_RECOVERY_KEY_SIZE)
@@ -234,10 +233,10 @@ def wrap_master_key(*, master_key: bytes, recovery_key: RecoveryKey) -> WrappedM
         persist to ``master.recovery.key``.
 
     Raises:
-        ValueError: If ``master_key`` is not exactly 32 bytes.
+        StorageValidationError: When ``master_key`` is not exactly 32 bytes.
     """
     if len(master_key) != KEY_SIZE:
-        raise ValueError(
+        raise _storage_validation_error(
             f"master key must be exactly {KEY_SIZE} bytes; got {len(master_key)}",
         )
     kek = _derive_recovery_kek(recovery_key.raw)
@@ -257,12 +256,10 @@ def unwrap_master_key(*, wrapped: WrappedMasterKey, recovery_key_bytes: bytes) -
         The 32-byte master key.
 
     Raises:
-        ValueError: If ``recovery_key_bytes`` is not exactly 32 bytes.
-        DecryptionError: If the AEAD tag check fails (wrong recovery
-            key or tampered file).
+        StorageValidationError: When ``recovery_key_bytes`` is not exactly 32 bytes.
     """
     if len(recovery_key_bytes) != _RECOVERY_KEY_SIZE:
-        raise ValueError(
+        raise _storage_validation_error(
             f"recovery key must be exactly {_RECOVERY_KEY_SIZE} bytes; got {len(recovery_key_bytes)}",
         )
     kek = _derive_recovery_kek(recovery_key_bytes)
@@ -279,13 +276,16 @@ def save_wrapped_master_key(wrapped: WrappedMasterKey, path: Path) -> None:
     """
     from ._master_key import atomic_write_secure_bytes
 
-    payload = wrapped.model_dump_json().encode("utf-8")
+    payload = wrapped.model_dump_json().encode(_UTF_8_ENCODING)
     atomic_write_secure_bytes(path, payload)
 
 
 def load_wrapped_master_key(path: Path) -> WrappedMasterKey:
-    """Read and validate a wrapped-master-key file."""
-    return WrappedMasterKey.model_validate_json(path.read_text(encoding="utf-8"))
+    """Read and validate a wrapped-master-key file, returning a :class:`WrappedMasterKey`."""
+    try:
+        return WrappedMasterKey.model_validate_json(path.read_text(encoding=_UTF_8_ENCODING))
+    except (OSError, ValueError, ValidationError) as exc:
+        raise _storage_validation_error("wrapped recovery master key file is malformed") from exc
 
 
 __all__ = [

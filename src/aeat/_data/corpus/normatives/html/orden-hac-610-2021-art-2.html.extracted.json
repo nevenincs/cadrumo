@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hac-610-2021-art-2.html",
+  "source_sha256": "836b554c5613b0dbe9e8facc3a033dac6b5fc2bc07786537a38ce1ed4c59c8ef",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Deberán presentar el modelo 369 «Impuesto sobre el Valor Añadido. Autoliquidación de los regímenes especiales aplicables a los sujetos pasivos que presten servicios a personas que no tengan la condición de sujetos pasivos, que efectúen ventas a distancia de bienes y ciertas entregas interiores de bienes», independientemente de que en el periodo de declaración se hayan efectuado entregas de bienes o prestaciones de servicios cubiertas por los respectivos regímenes:\na) Los empresarios o profesionales acogidos al régimen especial aplicable a los servicios prestados por sujetos pasivos no establecidos en la Comunidad, cuyo Estado miembro de identificación sea España, deberán presentar una autoliquidación por cada trimestre natural.\nb) Los empresarios o profesionales acogidos al régimen especial aplicable a las ventas intracomunitarias a distancia de bienes, a las entregas de bienes dentro de un Estado miembro efectuadas a través de interfaces electrónicas que faciliten dichas entregas y a los servicios prestados por sujetos pasivos establecidos en la Comunidad, pero no en el Estado miembro de consumo, cuyo Estado miembro de identificación sea España, deberán presentar una autoliquidación por cada trimestre natural.\nc) Los empresarios o profesionales acogidos al régimen especial aplicable a las ventas a distancia de bienes importados de territorios terceros o de terceros países, que no hayan designado a un intermediario, y cuyo Estado miembro de identificación sea España, deberán presentar una autoliquidación por cada mes natural.\nd) Los intermediarios establecidos en el territorio de aplicación del impuesto que actúen por cuenta de empresarios o profesionales acogidos al régimen especial aplicable a las ventas a distancia de bienes importados de territorios terceros o de terceros países, y cuyo Estado miembro de identificación sea España, deberán presentar una autoliquidación por cada mes natural y por cada empresario o profesional por cuya cuenta actúen.",
+      "title": "Artículo 2. Obligados a presentar el modelo 369 «Impuesto sobre el Valor Añadido. Autoliquidación de los regímenes especiales aplicables a los sujetos pasivos que presten servicios a personas que no tengan la condición de sujetos pasivos, que efectúen ventas a distancia de bienes y ciertas entregas interiores de bienes» y período de liquidación.",
+      "section": "Artículo 2. Obligados a presentar el modelo 369 «Impuesto sobre el Valor Añadido. Autoliquidación de los regímenes especiales aplicables a los sujetos pasivos que presten servicios a personas que no tengan la condición de sujetos pasivos, que efectúen ventas a distancia de bienes y ciertas entregas interiores de bienes» y período de liquidación.",
+      "anchor": null
+    }
+  ]
+}

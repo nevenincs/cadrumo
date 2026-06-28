@@ -1,15 +1,20 @@
 """Read and rewrite simple ``KEY=VALUE`` ``.env`` files in place.
 
-The bootstrap workflow needs to persist resource IDs (Drive folder,
+The bootstrap workflow persists resource identifiers (Drive folder,
 Sheets ID, Docs ID) back into ``env/.env`` after authenticated API
-calls create them. This module provides a tiny, dependency-free reader
-and writer that preserves comments, blank lines, and key ordering so
+calls create them. This module provides a dependency-free reader and
+writer that preserves comments, blank lines, and key ordering so
 hand-edited annotations survive automated rewrites.
 
 The implementation is intentionally minimal: it does not interpret
 quoting, variable expansion, or multi-line values. ``env/.env`` is a
 flat key/value file in this project and any deviation from that shape
 is treated as an error.
+
+The public surface is :func:`read_env_file`, :func:`write_env_var`, and
+:func:`write_env_vars`; each takes a :class:`~pathlib.Path` target. Malformed
+input raises :class:`~aeat.core.errors.CoreValidationError`, while writers use
+:func:`_atomic_write_text` so the ``.env`` file is replaced atomically.
 """
 
 from __future__ import annotations
@@ -18,43 +23,52 @@ import os
 import tempfile
 from pathlib import Path
 
+from .errors import CoreValidationError
+from .logging import get_logger
+
+_log = get_logger(__name__)
+
 
 def _atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> None:
-    """Atomically write ``text`` to ``path`` via tempfile + os.replace.
+    """Atomically write ``text`` to ``path`` via tempfile + :func:`os.replace`.
 
     Mirrors the substrate's atomic-write discipline at
-    :func:`aeat.adapters.persistence.storage.master_key._master_key.atomic_write_secure_bytes`. The
-    plaintext ``env/.env`` payload is operator-controlled
+    :func:`aeat.adapters.persistence.storage.master_key._master_key.atomic_write_secure_bytes`.
+    The plaintext ``env/.env`` payload is operator-controlled
     configuration, not a secret — but the durability story matters:
-    a ``path.write_text`` call truncates the existing inode in-place
-    before writing, and a power-loss / SIGKILL between the truncate
-    and the write completion leaves ``env/.env`` zero-length. The
-    operator's certificate path / database URL / live-tests-flag /
+    :meth:`pathlib.Path.write_text` truncates the existing inode in
+    place before writing, so a power-loss or ``SIGKILL`` between the
+    truncate and the write completion leaves ``env/.env`` zero-length.
+    The operator's certificate path / database URL / live-tests flag /
     storage roots silently revert to defaults, surfacing as an
-    apparently-unprovisioned installation. Use tempfile +
-    ``os.replace`` so a crash leaves either the old or the new file
-    on disk, never a torn write.
+    apparently-unprovisioned installation. Writing to a sibling tempfile
+    and then calling :func:`os.replace` guarantees the dirent transition
+    is atomic — a crash leaves either the old or the new file on disk,
+    never a torn write.
+
+    Args:
+        path: Destination file path.
+        text: Full file contents to write.
+        encoding: Text encoding (defaults to UTF-8).
     """
     path.parent.mkdir(parents=True, exist_ok=True)
     # Initialise tmp_path to None BEFORE the try so the finally
     # cleanup never hits an UnboundLocalError if NamedTemporaryFile
     # itself raises. Use try/finally (not try/except OSError) so a
     # KeyboardInterrupt or any other BaseException mid-write also
-    # unlinks the orphan tempfile. Issue #469 gemini-review MEDIUM
-    # on PR #470: the previous narrow ``except OSError`` arm leaked
-    # the tempfile on non-OSError exceptions.
+    # unlinks the orphan tempfile — a narrow ``except OSError`` arm
+    # would leak the tempfile on non-OSError exceptions.
     tmp_path: Path | None = None
     try:
-        handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
+        with tempfile.NamedTemporaryFile(
             mode="w",
             encoding=encoding,
             dir=path.parent,
             prefix=f"{path.name}.",
             suffix=".tmp",
             delete=False,
-        )
-        tmp_path = Path(handle.name)
-        with handle:
+        ) as handle:
+            tmp_path = Path(handle.name)
             handle.write(text)
             handle.flush()
             os.fsync(handle.fileno())
@@ -70,12 +84,17 @@ def _atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> Non
         # durability hardening, not a correctness gate, and the
         # storage package may be unimportable in minimal install
         # contexts where env_io still runs.
-        import contextlib
-
-        with contextlib.suppress(Exception):  # pragma: no cover - defensive
+        try:  # pragma: no cover - defensive
             from .locks import fsync_parent_dir
 
             fsync_parent_dir(path)
+        except Exception as fsync_exc:
+            _log.debug(
+                "env_io atomic_write: parent-dir fsync skipped for %s (%s)",
+                path,
+                fsync_exc,
+                exc_info=True,
+            )
     finally:
         if tmp_path is not None:
             tmp_path.unlink(missing_ok=True)
@@ -94,6 +113,10 @@ def read_env_file(path: Path) -> dict[str, str]:
     Returns:
         Mapping of variable name to its raw string value. Returns an
         empty mapping if the file does not exist.
+
+    Raises:
+        CoreValidationError: When a non-comment, non-blank line does
+            not contain an ``=`` separator.
     """
     if not path.exists():
         return {}
@@ -105,7 +128,7 @@ def read_env_file(path: Path) -> dict[str, str]:
             continue
         if "=" not in line:
             msg = f"Malformed env line in {path}: {raw_line!r}"
-            raise ValueError(msg)
+            raise CoreValidationError(msg)
         key, _, value = line.partition("=")
         result[key.strip()] = value.strip()
     return result

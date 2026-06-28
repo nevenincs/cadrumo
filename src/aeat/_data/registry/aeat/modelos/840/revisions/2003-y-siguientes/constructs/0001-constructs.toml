@@ -1,0 +1,28 @@
+[[revisions."2003-y-siguientes".constructs]]
+id = "modelo-840-iae-declaration"
+title = "Modelo 840 IAE censal declaration (alta, variacion, baja)"
+legal_refs = [
+    "rdl-2-2004:art-78",
+    "rdl-2-2004:art-82",
+    "rdl-2-2004:art-90",
+    "orden-hac-2572-2003:apartado-1",
+    "orden-hac-2572-2003:apartado-6",
+]
+source_refs = [
+    "aeat-dr-840",
+    "boe-modelo-840-2003-form",
+]
+casilla_ids = ["decl.tipo-declaracion", "decl.ejercicio"]
+workbook_parity_refs = ["modelo-840-dr"]
+live_cross_references = [
+    "modelo-840-static-documentation",
+    "modelo-840-filed-declarations-read",
+]
+application_links = [
+    "modelo-840-portal",
+    "modelo-840-filing",
+    "modelo-840-verification",
+    "modelo-840-extractor",
+]
+filing_schedules = ["modelo-840-ad-hoc"]
+extraction_profiles = ["modelo-840-declaracion-pdf"]

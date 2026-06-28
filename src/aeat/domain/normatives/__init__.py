@@ -1,29 +1,32 @@
 """Spanish tax normatives corpus subpackage.
 
-Provides a strictly-validated catalogue of the Spanish tax normatives
-the autónomo automation cites. Every record is a strict pydantic v2
-model. Every permalink points at a real BOE consolidated-text URL.
-Every committed file is hand-reviewed before it lands on ``main``.
+Provides a strictly-validated :class:`NormativeCatalogue` of the Spanish tax
+normatives the autónomo automation cites. Every :class:`NormativeReference` is a
+strict pydantic v2 model, every permalink points at a real BOE consolidated-text
+URL, and :func:`~aeat.domain.normatives._verify.verify_catalogue` checks the
+committed corpus before use.
 
 Public surface — callers from outside this subpackage must import
-exclusively from ``aeat.domain.normatives`` and MUST NOT reach into private
-``_schema``, ``_loader``, ``_lookup``, ``_cite``, or ``_verify``
-modules.
+exclusively from :mod:`aeat.domain.normatives` and MUST NOT reach into private
+``_schema``, ``_loader``, ``_lookup``, ``_cite``, or ``_verify`` modules.
 
-Example:
-    ```python
-    from . import NORMATIVE_CATALOGUE, cite, find_articulo
+Example::
 
-    reference = NORMATIVE_CATALOGUE.get("ley-35-2006")
-    if reference is not None:
-        art_32 = find_articulo(NORMATIVE_CATALOGUE, "ley-35-2006", "32")
-        print(cite(reference, art_32))
-    ```
+    >>> from aeat.domain.normatives import NORMATIVE_CATALOGUE, cite, find_articulo
+    >>> reference = NORMATIVE_CATALOGUE.get("ley-35-2006")
+    >>> if reference is not None:
+    ...     art_32 = find_articulo(NORMATIVE_CATALOGUE, "ley-35-2006", "32")
+    ...     print(cite(reference, art_32))
 """
 
 from __future__ import annotations
 
 from ._cite import cite, short_title
+from ._errors import (
+    NormativeError,
+    NormativeNotFoundError,
+    NormativeParseError,
+)
 from ._loader import load_catalogue
 from ._lookup import find_articulo, find_reference
 from ._schema import (
@@ -31,24 +34,19 @@ from ._schema import (
     NormativeCatalogue,
     NormativeKind,
     NormativeReference,
-    VerificationIssue,
-    VerificationReport,
+    NormativeVerificationIssue,
+    NormativeVerificationReport,
 )
 from ._verify import raise_on_errors, verify_catalogue
-from .errors import (
-    NormativeError,
-    NormativeNotFoundError,
-    NormativeParseError,
-)
 
 
 class _LazyCatalogue:
     """Module-level singleton that loads ``corpus/normatives/`` on demand.
 
-    The singleton lazily triggers :func:`load_catalogue` on first
+    The singleton lazily triggers :func:`~aeat.domain.normatives.load_catalogue` on first
     attribute access and caches the result for every subsequent call.
     Tests that need to rebind the corpus root on a per-test basis
-    should call :func:`load_catalogue` directly with a settings
+    should call :func:`~aeat.domain.normatives.load_catalogue` directly with a settings
     override rather than going through this singleton.
     """
 
@@ -60,7 +58,7 @@ class _LazyCatalogue:
         return self._cache
 
     def reload(self) -> NormativeCatalogue:
-        """Force a re-read of the corpus and return the fresh catalogue."""
+        """Force a re-read of the corpus and return the fresh :class:`NormativeCatalogue`."""
         self._cache = load_catalogue()
         return self._cache
 
@@ -77,13 +75,24 @@ class _LazyCatalogue:
         return key in self._ensure()
 
     def get(self, ref_id: str) -> NormativeReference | None:
-        """Return the reference keyed by ``ref_id`` or ``None`` if absent."""
+        """Return the reference keyed by ``ref_id`` or ``None`` if absent.
+
+        Returns:
+            The :class:`NormativeReference` for ``ref_id``, or ``None`` when not found.
+        """
         return self._ensure().get(ref_id)
 
 
+NORMATIVE_CATALOGUE = _LazyCatalogue()
+"""Lazily-loaded module-level :class:`NormativeCatalogue` singleton.
+
+Triggers :func:`~aeat.domain.normatives.load_catalogue` on first access and caches the result. Tests that
+rebind the corpus root per-test should call :func:`~aeat.domain.normatives.load_catalogue` directly.
+"""
 
 
 __all__ = [
+    "NORMATIVE_CATALOGUE",
     "Articulo",
     "NormativeCatalogue",
     "NormativeError",
@@ -91,8 +100,8 @@ __all__ = [
     "NormativeNotFoundError",
     "NormativeParseError",
     "NormativeReference",
-    "VerificationIssue",
-    "VerificationReport",
+    "NormativeVerificationIssue",
+    "NormativeVerificationReport",
     "cite",
     "find_articulo",
     "find_reference",

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-95.html",
+  "source_sha256": "87b691a2f1065f0eb3a5f97974f6f99a7aa7ce6ef75795620707cadd32ebe623",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Uno. Los empresarios o profesionales no podrán deducir las cuotas soportadas o satisfechas por las adquisiciones o importaciones de bienes o servicios que no se afecten, directa y exclusivamente, a su actividad empresarial o profesional.\nDos. No se entenderán afectos directa y exclusivamente a la actividad empresarial o profesional, entre otros:\n1.º Los bienes que se destinen habitualmente a dicha actividad y a otras de naturaleza no empresarial ni profesional por períodos de tiempo alternativos.\n2.º Los bienes o servicios que se utilicen simultáneamente para actividades empresariales o profesionales y para necesidades privadas.\n3.º Los bienes o derechos que no figuren en la contabilidad o registros oficiales de la actividad empresarial o profesional del sujeto pasivo.\n4.º Los bienes y derechos adquiridos por el sujeto pasivo que no se integren en su patrimonio empresarial o profesional.\n5.º Los bienes, derechos y servicios adquiridos por el sujeto pasivo para ser transmitidos, cedidos o concedidos a terceros a título gratuito.",
+      "title": "Artículo 95. Limitaciones del derecho a deducir.",
+      "section": "Artículo 95. Limitaciones del derecho a deducir.",
+      "anchor": null
+    }
+  ]
+}

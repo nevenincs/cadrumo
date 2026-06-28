@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "0851"
+number = "0851"
+label = "Por donativos con finalidad ecológica"
+section = ["resultados", "deduccion_autonomica_res", "andalucia_res"]
+semantic_role = "irpf_deduccion_andalucia_donativos_ecologicos"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

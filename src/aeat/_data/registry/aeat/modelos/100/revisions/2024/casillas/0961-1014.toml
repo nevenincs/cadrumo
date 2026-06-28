@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "1014"
+number = "1014"
+label = "Por partos múltiples"
+section = ["resultados", "deduccion_autonomica_res", "extremadura_res"]
+semantic_role = "irpf_deduccion_extremadura_partos_multiples"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

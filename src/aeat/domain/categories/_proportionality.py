@@ -1,21 +1,43 @@
-"""Proportionality and explainability primitives for category profiles."""
+"""Proportionality and explainability primitives for category profiles.
+
+Defines the closed enums and strict pydantic models that encode how
+a spending category is deducted on the autónomo filings, plus the
+citation chain back to the relevant authority that makes each rule
+explainable. Every :class:`ProportionalityRule` carries at least one
+:class:`CategoryCitation`; the consistency rules between
+``kind``-specific fields (``fixed_pct``, ``default_ratio``,
+``statutory_cap_*``) are enforced by the model validator.
+"""
 
 from __future__ import annotations
 
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, TypeAdapter, model_validator
+from pydantic import AnyHttpUrl, BaseModel, Field, TypeAdapter, model_validator
+
+from ...core import STRICT_FROZEN_CONFIG
+from ...core.i18n import Translatable as tr
+from ._errors import CategoryValidationError
 
 
-class _StrictFrozenModel(BaseModel):
+class _ProportionalityStrictFrozenModel(BaseModel):
     """Shared strict immutable boundary model."""
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
 
-class CitationSource(StrEnum):
-    """Allowed citation sources for explainable category profiles."""
+class CategoryCitationSource(StrEnum):
+    """Allowed citation sources for explainable category profiles.
+
+    Attributes:
+        MANUAL_RENTA: AEAT *Manual práctico Renta*.
+        MANUAL_IVA: AEAT *Manual práctico IVA*.
+        LEY_IRPF: Ley del Impuesto sobre la Renta de las Personas
+            Físicas.
+        REGLAMENTO_IRPF: Reglamento del IRPF.
+        AEAT_HELP: AEAT online help / portal text.
+    """
 
     MANUAL_RENTA = "manual_renta"
     MANUAL_IVA = "manual_iva"
@@ -24,27 +46,56 @@ class CitationSource(StrEnum):
     AEAT_HELP = "aeat_help"
 
 
-class Citation(_StrictFrozenModel):
-    """A traceable citation backing one category or proportionality rule."""
+class CategoryCitation(_ProportionalityStrictFrozenModel):
+    """Traceable citation backing one category or proportionality rule.
 
-    source: CitationSource
+    Attributes:
+        source: Originating :class:`CategoryCitationSource`.
+        reference: Human-readable document reference (title,
+            edition, BOE number).
+        locator: Section, article, or page locator within the
+            referenced document.
+        url: Canonical URL where the citation can be checked.
+        quote: Authoritative Spanish-language quote backing the rule.
+    """
+
+    source: CategoryCitationSource
     reference: str = Field(min_length=1, max_length=256)
     locator: str = Field(min_length=1, max_length=256)
     url: AnyHttpUrl
-    quote_es: str = Field(min_length=1, max_length=1024)
+    quote: tr = Field(description="Authoritative Spanish-language quote.")
 
 
 _HTTP_URL_ADAPTER = TypeAdapter(AnyHttpUrl)
 
 
 def parse_http_url(value: str) -> AnyHttpUrl:
-    """Parse a string into a statically typed :class:`AnyHttpUrl`."""
+    """Parse a string into a statically typed :class:`AnyHttpUrl`.
 
+    Args:
+        value: Raw HTTP / HTTPS URL string.
+
+    Returns:
+        A validated :class:`pydantic.AnyHttpUrl`.
+    """
     return _HTTP_URL_ADAPTER.validate_python(value)
 
 
 class ProportionalityKind(StrEnum):
-    """Supported proportionality kinds for downstream evaluator engines."""
+    """Supported proportionality kinds for downstream evaluator engines.
+
+    Attributes:
+        FULL_DEDUCTIBLE: Fully deductible against the activity.
+        FIXED_PERCENTAGE: Deductible at a fixed percentage; requires
+            ``fixed_pct``.
+        USAGE_RATIO_PERSONAL: Deductible at a personal-usage ratio
+            chosen by the taxpayer; may carry ``default_ratio``.
+        USAGE_RATIO_HOME_AREA: Deductible at the home-office area
+            ratio; may carry ``default_ratio``.
+        STATUTORY_CAP: Capped by a statutory daily or annual limit;
+            requires the matching ``statutory_cap_*`` fields.
+        NON_DEDUCTIBLE: Not deductible against the activity.
+    """
 
     FULL_DEDUCTIBLE = "full_deductible"
     FIXED_PERCENTAGE = "fixed_percentage"
@@ -52,57 +103,164 @@ class ProportionalityKind(StrEnum):
     USAGE_RATIO_HOME_AREA = "usage_ratio_home_area"
     STATUTORY_CAP = "statutory_cap"
     NON_DEDUCTIBLE = "non_deductible"
+    REQUIRES_EXCLUSIVE_USE = "requires_exclusive_use"
 
 
 class StatutoryCapPeriod(StrEnum):
-    """Supported statutory-cap periods."""
+    """Supported statutory-cap accounting periods.
+
+    Attributes:
+        DAY: Cap applies per day.
+        YEAR_PER_PERSON: Cap applies per year per covered person.
+    """
 
     DAY = "day"
     YEAR_PER_PERSON = "year_per_person"
 
 
-class ProportionalityRule(_StrictFrozenModel):
-    """Deductibility and proportionality rule for one spending category."""
+class StatutoryCapVariant(_ProportionalityStrictFrozenModel):
+    """One legally distinct daily cap inside a statutory-cap rule."""
+
+    id: str = Field(min_length=1, max_length=64)
+    label: tr = Field(description="Human-readable label.")
+    statutory_cap_eur_per_day: Decimal = Field(ge=Decimal("0"))
+
+
+class ProportionalityRule(_ProportionalityStrictFrozenModel):
+    """Deductibility and proportionality rule for one spending category.
+
+    Attributes:
+        kind: One of :class:`ProportionalityKind`.
+        fixed_pct: Required when ``kind`` is
+            :attr:`ProportionalityKind.FIXED_PERCENTAGE`; otherwise
+            must be ``None``.
+        default_ratio: Optional default usage ratio; only valid for
+            usage-ratio kinds.
+        statutory_multiplier: Optional statutory factor applied on
+            top of the operator-chosen usage ratio. Only valid for
+            usage-ratio kinds. The canonical example is the LIRPF
+            Art. 30.2 rule 5 (Ley 6/2017, BOE-A-2017-12544) 0.30
+            multiplier applied to suministros (utility) costs of
+            the habitual vivienda when the operator deducts under
+            estimacion directa: ``effective_deductible_pct =
+            operator_chosen_ratio * statutory_multiplier``. When
+            ``None`` no statutory factor is applied (equivalent to
+            ``Decimal("1")``); the operator's chosen ratio is the
+            effective deductible percentage.
+        statutory_cap_eur_per_day: Daily statutory cap; only valid
+            for :attr:`ProportionalityKind.STATUTORY_CAP`.
+        statutory_cap_eur: Generic statutory cap amount; only valid
+            for :attr:`ProportionalityKind.STATUTORY_CAP` and must
+            be paired with :attr:`statutory_cap_period`.
+        statutory_cap_period: :class:`StatutoryCapPeriod` that the
+            generic cap applies over; required when
+            :attr:`statutory_cap_eur` is set.
+        statutory_cap_variants: Daily statutory caps selected by a
+            legally relevant condition.
+        citations: At least one :class:`CategoryCitation` proving
+            the rule.
+        notes: Authoritative Spanish-language notes describing the rule.
+    """
 
     kind: ProportionalityKind
     fixed_pct: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
     default_ratio: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
+    statutory_multiplier: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
     statutory_cap_eur_per_day: Decimal | None = Field(default=None, ge=Decimal("0"))
     statutory_cap_eur: Decimal | None = Field(default=None, ge=Decimal("0"))
     statutory_cap_period: StatutoryCapPeriod | None = None
-    citations: tuple[Citation, ...] = Field(default_factory=tuple)
-    notes_es: str = Field(min_length=1, max_length=2048)
+    statutory_cap_variants: tuple[StatutoryCapVariant, ...] = Field(default_factory=tuple)
+    citations: tuple[CategoryCitation, ...] = Field(default_factory=tuple)
+    notes: tr = Field(description="Authoritative Spanish-language notes.")
 
     @model_validator(mode="after")
     def _validate_shape(self) -> ProportionalityRule:
         if not self.citations:
-            raise ValueError("proportionality rules require at least one citation")
+            raise CategoryValidationError("proportionality rules require at least one citation")
+        self._validate_fixed_percentage_invariants()
+        self._validate_usage_ratio_invariants()
+        if self.kind is ProportionalityKind.STATUTORY_CAP:
+            self._validate_statutory_cap_invariants()
+        else:
+            self._reject_statutory_cap_fields_outside_cap_kind()
+        return self
+
+    def _validate_fixed_percentage_invariants(self) -> None:
+        """``fixed_pct`` is required for FIXED_PERCENTAGE rules and forbidden elsewhere."""
         if self.kind is ProportionalityKind.FIXED_PERCENTAGE and self.fixed_pct is None:
-            raise ValueError("fixed_percentage rules require fixed_pct")
+            raise CategoryValidationError("fixed_percentage rules require fixed_pct")
         if self.kind is not ProportionalityKind.FIXED_PERCENTAGE and self.fixed_pct is not None:
-            raise ValueError("fixed_pct is only valid for fixed_percentage rules")
+            raise CategoryValidationError("fixed_pct is only valid for fixed_percentage rules")
+
+    def _validate_usage_ratio_invariants(self) -> None:
+        """``default_ratio`` and ``statutory_multiplier`` are only valid on usage-ratio rules."""
         is_usage_ratio = self.kind in {
             ProportionalityKind.USAGE_RATIO_HOME_AREA,
             ProportionalityKind.USAGE_RATIO_PERSONAL,
         }
         if not is_usage_ratio and self.default_ratio is not None:
-            raise ValueError("default_ratio is only valid for usage_ratio rules")
+            raise CategoryValidationError("default_ratio is only valid for usage_ratio rules")
+        if not is_usage_ratio and self.statutory_multiplier is not None:
+            raise CategoryValidationError(
+                "statutory_multiplier is only valid for usage_ratio rules",
+            )
+
+    def _validate_statutory_cap_invariants(self) -> None:
+        """STATUTORY_CAP rules require exactly one cap mode and a coherent (eur, period) pair."""
         has_daily_cap = self.statutory_cap_eur_per_day is not None
         has_generic_cap = self.statutory_cap_eur is not None or self.statutory_cap_period is not None
-        if self.kind is ProportionalityKind.STATUTORY_CAP:
-            if not has_daily_cap and not has_generic_cap:
-                raise ValueError("statutory_cap rules require a cap amount")
-            if has_daily_cap and has_generic_cap:
-                raise ValueError("statutory cap rules must use either daily or generic cap fields, not both")
-            if self.statutory_cap_eur is None and self.statutory_cap_period is not None:
-                raise ValueError("statutory_cap_period requires statutory_cap_eur")
-            if self.statutory_cap_eur is not None and self.statutory_cap_period is None:
-                raise ValueError("statutory_cap_eur requires statutory_cap_period")
-            return self
-        if has_daily_cap:
-            raise ValueError("statutory_cap_eur_per_day is only valid for statutory_cap rules")
+        has_variant_caps = bool(self.statutory_cap_variants)
+        if not has_daily_cap and not has_generic_cap and not has_variant_caps:
+            raise CategoryValidationError("statutory_cap rules require a cap amount")
+        mode_count = sum((has_daily_cap, has_generic_cap, has_variant_caps))
+        if mode_count > 1:
+            raise CategoryValidationError("statutory cap rules must use one cap mode")
+        if self.statutory_cap_eur is None and self.statutory_cap_period is not None:
+            raise CategoryValidationError("statutory_cap_period requires statutory_cap_eur")
+        if self.statutory_cap_eur is not None and self.statutory_cap_period is None:
+            raise CategoryValidationError("statutory_cap_eur requires statutory_cap_period")
+        variant_ids = [variant.id for variant in self.statutory_cap_variants]
+        if len(set(variant_ids)) != len(variant_ids):
+            raise CategoryValidationError("statutory cap variant ids must be unique")
+
+    def _reject_statutory_cap_fields_outside_cap_kind(self) -> None:
+        """Every statutory-cap field is forbidden on non-STATUTORY_CAP kinds."""
+        if self.statutory_cap_eur_per_day is not None:
+            raise CategoryValidationError("statutory_cap_eur_per_day is only valid for statutory_cap rules")
         if self.statutory_cap_eur is not None:
-            raise ValueError("statutory_cap_eur is only valid for statutory_cap rules")
+            raise CategoryValidationError("statutory_cap_eur is only valid for statutory_cap rules")
         if self.statutory_cap_period is not None:
-            raise ValueError("statutory_cap_period is only valid for statutory_cap rules")
-        return self
+            raise CategoryValidationError("statutory_cap_period is only valid for statutory_cap rules")
+        if self.statutory_cap_variants:
+            raise CategoryValidationError("statutory_cap_variants are only valid for statutory_cap rules")
+
+
+def effective_usage_ratio(rule: ProportionalityRule, chosen_ratio: Decimal) -> Decimal:
+    """Return the legally-effective deductible percentage for ``chosen_ratio``.
+
+    Applies the rule's ``statutory_multiplier`` on top of the operator-
+    chosen usage ratio. Only meaningful for usage-ratio kinds; raises
+    when called on a non-usage-ratio rule (the caller is responsible
+    for routing rules to the right evaluator).
+
+    Args:
+        rule: A :class:`ProportionalityRule` of a usage-ratio kind.
+        chosen_ratio: The operator's stored usage ratio (typically
+            derived from censo ``office_m2 / total_m2`` for HOME_AREA
+            kinds, or a personal-use proportion for PERSONAL kinds).
+
+    Returns:
+        ``chosen_ratio * (rule.statutory_multiplier or Decimal("1"))``.
+
+    Raises:
+        CategoryValidationError: When ``rule.kind`` is not a usage-ratio kind.
+    """
+    if rule.kind not in {
+        ProportionalityKind.USAGE_RATIO_HOME_AREA,
+        ProportionalityKind.USAGE_RATIO_PERSONAL,
+    }:
+        raise CategoryValidationError(
+            f"effective_usage_ratio is only valid for usage_ratio rules; got {rule.kind}",
+        )
+    multiplier = rule.statutory_multiplier if rule.statutory_multiplier is not None else Decimal("1")
+    return chosen_ratio * multiplier

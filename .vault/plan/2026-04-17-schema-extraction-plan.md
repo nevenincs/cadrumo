@@ -6,6 +6,7 @@ tags:
   - "#plan"
   - "#schema-extraction"
 date: 2026-04-17
+modified: '2026-04-17'
 related:
   - "[[2026-04-17-schema-extraction-adr]]"
   - "[[2026-04-17-schema-extraction-research]]"

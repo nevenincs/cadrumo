@@ -1,0 +1,8 @@
+[[revisions."2020".casillas]]
+id = "0915"
+number = "0915"
+label = "Por determinadas subvenciones y ayudas otorgadas por razón de una declaración de zona afectada gravemente por una emergencia de protección civil"
+section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
+semantic_role = "irpf_deduccion_baleares_subvenciones_declaracion_sinistro"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

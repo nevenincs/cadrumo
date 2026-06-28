@@ -1,0 +1,130 @@
+---
+tags:
+  - '#audit'
+  - '#legal-grounding-verification'
+date: '2026-06-14'
+modified: '2026-06-15'
+related: []
+---
+
+
+
+# `legal-grounding-verification` audit: `Legal Codification vs Code Surface — Semantic + Online Verification Pass 1`
+
+## Scope
+
+Campaign 3: semantic + online verification of the legal-law codification and the
+code surfaces that implement it — hunting calculation/legal overlaps, centralisation
+drift, and (most consequentially) regulatory values whose inlined figure DISAGREES
+with the binding law. Two indispensable instruments, used together:
+
+1. **`vaultspec-rag` semantic search** (`--type code` / `--type vault`) to map each
+   legal/calculation concept to the registry/corpus where it is codified and the
+   code surfaces that implement it.
+2. **Online search of the authoritative source** (AEAT sede + BOE consolidated
+   text) to verify that each inlined regulatory figure matches the law — a value
+   that is grounded-in-docstring but wrong is invisible to any static gate.
+
+This complements the prior `calculation-truth-registry` and registry-legal-grounding
+campaigns by auditing the post-centralisation residual: values that bypass the
+registry `legal_refs`→`corpus_ref` mechanism and carry their grounding inline.
+
+## Findings
+
+### F1 (HIGH — calculation error, FIXED) — Ley 44/2015 art. 14 reserva especial cap wrong by 4x
+
+`domain/modelos/_sal_reserva_especial.py` capped the SAL/SLL special-reserve
+obligation at **50% of capital social** (`capital_social * Decimal("0.50")`), with
+the docstring asserting "until the accumulated reserve reaches 50% of the share
+capital". The authoritative BOE text — **Ley 44/2015 art. 14.1 (BOE-A-2015-11071)**:
+"se dotará con el diez por ciento del beneficio líquido de cada ejercicio, **hasta
+que alcance al menos una cifra superior al doble del capital social**" — requires
+the reserve to accrue until it reaches **more than twice (2x) the capital social**.
+The 10% dotación was correct; the **cap was 4x too low**, stopping the mandatory
+reserve far too early and under-declaring it (`no-silent-under-declaration`). It
+feeds a production modelo calculation via `_calculate_input`
+(`is_sal_reserva_especial_dotacion`). Fixed: cap → `capital_social * Decimal("2")`,
+docstring re-grounded against the BOE wording, and the four cap-dependent tests —
+which had hand-computed against the wrong 50% cap (a tautological codification of
+the bug) — re-derived from the BOE rule. 7 reserva tests pass (`fa2f9f029`).
+Discovered by RAG (located the surface) + BOE fetch (verified the figure) — neither
+alone would have caught it.
+
+### F2 (verified correct) — LIRPF art. 23.2 rental-reducción tiers
+
+`domain/fincas/_tier_resolver.py` inlines the 90/70/60/50% reducción tiers and the
+">5% rent-cut" threshold. Online verification against AEAT and BOE-A-2023-12203
+(Ley 12/2023) confirms the figures and the transitional 60%-grandfathering of
+pre-Ley-12/2023 contracts. Values correct; grounded in code via `boe_citation_id`.
+
+### F2b (verified correct) — M202 art. 40.3 LIS INCN threshold
+
+`domain/calculations/registry/_applicability_modelo202.py:_MODELO_202_ART_40_3_INCN_THRESHOLD
+= Decimal("6000000")`. Online verification against AEAT Modelo-202 instructions and
+LIS art. 40.3 confirms the figure: the modalidad of art. 40.3 is obligatoria when
+the importe neto de la cifra de negocios exceeds 6.000.000 €. Correct.
+
+### F2c (verified correct — flagged gap resolved) — maritime art. 7.p €60 100 cap and REBECA 50%
+
+The pass-1 recommendation flagged a *possible* missing art. 7.p ceiling in the
+maritime engine. Resolved: `domain/renta/_maritime_exemption.py:calculate_art_7p_exemption`
+applies `exempt_amount = min(raw_exempt, ART_7P_EXEMPTION_CAP_EUR)`, and
+`core/external_constants.py` defines `ART_7P_EXEMPTION_CAP_EUR = Decimal("60100")`
+and `REBECA_MARITIME_EXEMPTION_FRACTION = Decimal("0.50")`. Online verification
+against LIRPF art. 7.p (Ley 35/2006) confirms the €60.100 annual cap and that the
+excess above it is taxable; the REBECA 50% fraction (Ley 19/1994) is statutory.
+Both figures are correct AND already centralised in the curated `external_constants`
+re-export layer — the right pattern per `aeat-schema-central-config`. No gap; the
+earlier concern came from reading the service wrapper rather than the engine.
+
+### F2d (verified correct — stale comment fixed) — M200 micro-empresa DT 44ª tipos
+
+`_data/registry/aeat/modelos/200/.../parameters.toml` carries the micro-empresa
+(INCN < €1M) two-tranche scale: 2024 = 23% flat; 2025 = 21% (0-50k) / 22% (rest);
+2026 = 19% / 21% — grounded `legal_refs = ["ley-27-2014:art-29", "ley-27-2014:dt-44"]`.
+Online verification against LIS DT 44ª (Ley 7/2024) and the AEAT INFORMA 2025
+confirms every figure. The registry values are correct (this is the same surface the
+`registry-calculation-legal-grounding` rule records as previously corrected from a
+wrong 0.17/0.20). One residual drift fixed: the `formulas.toml` explanatory comment
+still read "(17/20 in 2025, 19/21 in 2026)" — 17/20 is the permanent destination
+rate, NOT the 2025 transitional figure; corrected to "(21/22 in 2025, 19/21 in
+2026)" so the comment cannot mislead a future author into reverting the correct
+parameter. Comment-only; the BOE-correct parameter values were unchanged.
+
+### F3 (centralisation-mechanism observation, not wrong values) — two parallel legal-grounding mechanisms
+
+The codebase carries legal grounding two ways: the registry
+`legal_refs`→`corpus_ref` standard (recargo de equivalencia, recargo extemporáneo,
+M347 threshold, IVA rates via `lookup_rate` — all registry/corpus-grounded and gate-
+enforced, e.g. the `test_edit_iva_rate_boundary` ban on local IVA-rate literals),
+and inline-domain `boe_citation_id` strings + docstring quotes (the fincas tiers,
+the DT12 reducción, the reserva especial). The inline-grounded values are legally
+documented but bypass the registry's corpus-verified mechanism, so a wrong figure
+(F1) survives every static gate until checked against the source. This is a
+grounding-mechanism inconsistency, not a missing-grounding or (mostly) wrong-value
+drift.
+
+## Recommendations
+
+- Pass-1 outcome: of the audited inline/constant-grounded figures, one was wrong
+  (F1 reserva especial, fixed) and four verified correct against their BOE/AEAT
+  source (F2 fincas tiers, F2b M202 €6M INCN, F2c maritime €60 100 art. 7.p cap +
+  REBECA 50%). The maritime "missing ceiling" worry was a false alarm — the cap is
+  applied and centralised. F1 proves an inline-grounded figure can be wrong and
+  silently under-declare, so the method (RAG locate → BOE verify) is the durable gate.
+- Remaining pass-2 verification targets: the M202 micro-empresa tipos (LIS art. 29.1
+  + DT 44ª, Ley 7/2024 — already corrected in a prior campaign per
+  `registry-calculation-legal-grounding`, re-confirm), the DT12 40% reducción ceiling
+  conditions, and any further IS/IRPF bracket tranches carried inline rather than in
+  the registry. Each fetched against its BOE/AEAT source.
+- Where a figure is confirmed correct but inline-grounded, prefer migrating it to
+  the registry `legal_refs`→`corpus_ref` mechanism so the corpus-text cross-check
+  gate (`registry-calculation-legal-grounding`) guards it, rather than a
+  `boe_citation_id` string that no gate validates against the source.
+- Treat any test that hand-computes a calculation's expected value from the same
+  (possibly wrong) constant the code uses as tautological (`no-tautological-
+  calculation-tests`); derive cap/threshold expectations from the BOE figure.
+
+## Codification candidates
+
+

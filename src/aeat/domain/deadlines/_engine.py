@@ -1,30 +1,46 @@
-"""Pure-function deadline computation engine.
+"""Registry-backed deadline computation engine.
 
-The engine takes an :class:`AutonomoProfile` and a year and produces a
-deterministic, typed :class:`Schedule`. It performs **no I/O** after
-construction, never mutates inputs, and never reaches for global
-state. The same ``(profile, year, today)`` always yields an equal
-schedule (modulo :attr:`Schedule.generated_at`).
+Takes an :class:`TaxpayerProfile` and a year and produces a deterministic,
+typed :class:`Schedule`. Filing windows and applicability conditions are
+read from validated calculation registry data supplied by
+:class:`ValidatedRegistryAuthority`. Each window is described by a
+:class:`ModeloRevision` paired with its deadline window definitions.
 """
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import date
+from pathlib import Path
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from ...core.logging import get_logger
-from ._applies import applies_to, explain
-from ._calendar import (
-    CALENDAR,
-    KNOWN_AUTONOMO_MODELOS,
-    CanonicalWindow,
+from ...core.resources import bundled_path
+from ...core.time import now
+
+# Type-only registry references. Runtime callers below import the
+# concrete symbols lazily inside the helpers that use them so importing
+# this module does not trigger the ~870ms ValidatedRegistryAuthority
+# parse — load it only when a deadline computation actually runs.
+if TYPE_CHECKING:
+    from ..calculations.registry import (
+        DeadlineWindowDefinition,
+        ModeloRevision,
+        ProfilePredicateDefinition,
+    )
+
+from ._errors import (
+    DeadlineValidationError,
+    NoDeadlineWindowsError,
+    ScheduleComputationError,
 )
-from ._errors import ScheduleComputationError
 from ._models import (
-    AutonomoProfile,
-    FilingObligation,
+    ModeloDeadline,
     ObligationStatus,
+    Recovery,
     Schedule,
+    TaxpayerProfile,
 )
+from ._recargo import build_recovery_for_overdue
 
 _logger = get_logger(__name__)
 
@@ -53,46 +69,83 @@ def _classify(closes_on: date, today: date, due_soon_days: int) -> ObligationSta
     return ObligationStatus.UPCOMING
 
 
-def _windows_for_year(year: int) -> tuple[CanonicalWindow, ...]:
-    """Return the canonical windows whose ``year`` field equals ``year``."""
-    return tuple(window for window in CALENDAR if window.year == year)
+def _window_outside_activity_period(
+    *,
+    opens_on: date,
+    closes_on: date,
+    activity_start_date: date | None,
+    activity_end_date: date | None,
+) -> bool:
+    """Return True when an AEAT window falls entirely outside the operator's activity period.
+
+    Two gates, both grounded in RGAT Arts. 9 / 11 (censo activity
+    start / end dates published on G313):
+
+    * Pre-start: ``closes_on < activity_start_date`` — the entire
+      window precedes the alta. AEAT does not expect a filing for
+      activity that did not occur.
+    * Post-baja: ``opens_on > activity_end_date`` — the entire window
+      follows the baja. AEAT does not expect a forward-period filing
+      after the operator has declared baja.
+
+    Windows that straddle either date stay on the schedule — the
+    operator may still owe a return covering the active fraction.
+    """
+    if activity_start_date is not None and closes_on < activity_start_date:
+        return True
+    return activity_end_date is not None and opens_on > activity_end_date
 
 
 class DeadlineEngine:
-    """Pure-function engine that computes typed filing schedules.
-
-    The engine is stateless after construction. Modelo applicability
-    is closed over the in-code :data:`KNOWN_AUTONOMO_MODELOS` set
-    rather than a Protocol-injected catalogue: every modelo the v1
-    engine reasons about lives in that closed tuple, so an external
-    catalogue would only mirror the same data.
+    """Engine that computes typed filing schedules from registry data.
 
     Attributes:
-        due_soon_days: Window before ``closes_on`` that flags
-            ``DUE_SOON`` (default 14).
+        due_soon_days: Window before
+            :attr:`aeat.domain.deadlines.ModeloDeadline.closes_on` that
+            flags :attr:`aeat.domain.deadlines.ObligationStatus.DUE_SOON`
+            (default 14).
     """
 
     def __init__(
         self,
         *,
         due_soon_days: int = _DEFAULT_DUE_SOON_DAYS,
+        registry_root: Path | None = None,
+        source_root: Path | None = None,
     ) -> None:
         """Construct an engine.
 
         Args:
             due_soon_days: Days before ``closes_on`` that flag
                 ``DUE_SOON``. Must be ``>= 0``.
+            registry_root: Root containing reviewed registry TOML files.
+            source_root: Repository root for source-integrity checks.
 
         Raises:
-            ValueError: If ``due_soon_days`` is negative.
+            DeadlineValidationError: If ``due_soon_days`` is negative.
+            ScheduleComputationError: If registry loading or validation fails.
         """
         if due_soon_days < 0:
-            raise ValueError(f"due_soon_days must be >= 0, got {due_soon_days}")
+            raise DeadlineValidationError(f"due_soon_days must be >= 0, got {due_soon_days}")
         self.due_soon_days = due_soon_days
+        if registry_root is None and source_root is None:
+            from ...core.resources import resources
+
+            self._registry = resources().modelos.authority
+            self._source_root = bundled_path()
+            return
+        self._source_root = source_root if source_root is not None else bundled_path()
+        root = registry_root if registry_root is not None else bundled_path("registry", "aeat")
+        from ..calculations.registry import RegistryError, ValidatedRegistryAuthority
+
+        try:
+            self._registry = ValidatedRegistryAuthority.load(root, source_root=self._source_root)
+        except RegistryError as exc:
+            raise ScheduleComputationError(f"deadline registry load failed: {exc}") from exc
 
     def compute(
         self,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         year: int,
         *,
         today: date | None = None,
@@ -104,7 +157,7 @@ class DeadlineEngine:
         (modulo :attr:`Schedule.generated_at`).
 
         Args:
-            profile: The autónomo profile.
+            profile: The :class:`TaxpayerProfile` to compute obligations for.
             year: The fiscal year to compute for.
             today: Reference date for status classification. Defaults
                 to ``date.today()``.
@@ -114,68 +167,329 @@ class DeadlineEngine:
             applies to ``profile`` for ``year``.
 
         Raises:
-            ScheduleComputationError: If no canonical windows are
-                registered for ``year``.
+            NoDeadlineWindowsError: If no validated registry deadline windows
+                are registered for ``year`` — the benign data gap callers
+                degrade around.
         """
         reference_today = today or date.today()
-        windows = _windows_for_year(year)
-        if not windows:
-            raise ScheduleComputationError(
-                f"No canonical windows registered for year {year}; "
-                "supported years are derived from aeat.domain.deadlines._calendar.SUPPORTED_YEARS"
+        _logger.debug("computing schedule year=%d reference_today=%s", year, reference_today)
+        obligations: list[ModeloDeadline] = []
+        for modelo, revision, window in self._deadline_windows(year):
+            obligation = self._obligation_for_window(
+                profile=profile,
+                modelo=modelo,
+                revision=revision,
+                window=window,
+                reference_today=reference_today,
             )
-
-        obligations: list[FilingObligation] = []
-        for modelo in KNOWN_AUTONOMO_MODELOS:
-            if not applies_to(profile, modelo):
-                continue
-            applies_because = explain(profile, modelo)
-            for window in windows:
-                if window.modelo != modelo:
-                    continue
-                obligations.append(
-                    FilingObligation(
-                        modelo=modelo,
-                        period=window.period,
-                        opens_on=window.opens_on,
-                        closes_on=window.closes_on,
-                        payment_cutoff_on=window.payment_cutoff_on,
-                        status=_classify(
-                            window.closes_on,
-                            reference_today,
-                            self.due_soon_days,
-                        ),
-                        applies_because=applies_because,
-                        boe_references=window.boe_references,
-                    )
-                )
-
-        obligations.sort(key=lambda o: (o.closes_on, o.modelo, o.period))
+            if obligation is not None:
+                obligations.append(obligation)
+        obligations.sort(key=lambda o: (o.closes_on, o.modelo, o.period.year, o.period.registry_token))
+        if not obligations and not self._has_deadline_windows(year):
+            raise NoDeadlineWindowsError(f"No registry deadline windows registered for year {year}")
+        if obligations:
+            _logger.debug("computed schedule year=%d obligations=%d", year, len(obligations))
+        else:
+            _logger.debug("no filing obligations computed year=%d: profile conditions did not match", year)
         return Schedule(
             profile=profile,
             year=year,
             obligations=tuple(obligations),
-            generated_at=datetime.now(UTC),
+            generated_at=now(),
         )
 
+    def _obligation_for_window(
+        self,
+        *,
+        profile: TaxpayerProfile,
+        modelo: str,
+        revision: ModeloRevision,
+        window: DeadlineWindowDefinition,
+        reference_today: date,
+    ) -> ModeloDeadline | None:
+        """Project one (modelo, revision, window) tuple into a :class:`ModeloDeadline`, or ``None``.
 
-def next_deadline(schedule: Schedule, today: date | None = None) -> FilingObligation | None:
+        Returns ``None`` when the window does not apply to this
+        profile — either the revision has filing schedules and none
+        match for the window's registry period, the applicability
+        conditions do not resolve, or the window falls outside the
+        profile's activity period. Otherwise builds the obligation
+        with its classified status and, for OVERDUE obligations with
+        ≥1 day late, a registry-backed recovery payload (None when
+        the recovery registry has no entry for the modelo).
+        """
+        from ..calculations.registry import applicable_filing_schedules
+
+        registry_period = _window_registry_period(window)
+        if revision.filing_schedules and not applicable_filing_schedules(
+            revision,
+            profile,
+            period=registry_period,
+        ):
+            return None
+        condition_text = self._evaluate_conditions(
+            profile,
+            window.applicability_conditions,
+            mode=window.applicability_condition_mode,
+        )
+        if condition_text is None:
+            return None
+        if _window_outside_activity_period(
+            opens_on=window.opens_on,
+            closes_on=window.closes_on,
+            activity_start_date=profile.activity_start_date,
+            activity_end_date=profile.activity_end_date,
+        ):
+            return None
+        obligation_status = _classify(window.closes_on, reference_today, self.due_soon_days)
+        return ModeloDeadline(
+            modelo=modelo,
+            period=window.period,
+            opens_on=window.opens_on,
+            closes_on=window.closes_on,
+            payment_cutoff_on=window.payment_cutoff_on,
+            status=obligation_status,
+            applies_because=condition_text,
+            boe_references=window.legal_refs,
+            recovery=_overdue_recovery_or_none(
+                obligation_status=obligation_status,
+                reference_today=reference_today,
+                window=window,
+                modelo=modelo,
+            ),
+        )
+
+    def explain(self, profile: TaxpayerProfile, modelo: str, *, year: int | None = None) -> str:
+        """Return registry-backed deadline applicability text for ``modelo``.
+
+        Args:
+            profile: The :class:`TaxpayerProfile` to evaluate conditions against.
+            modelo: The AEAT modelo identifier to look up.
+            year: Optional fiscal year; defaults to the current year.
+        """
+        selected_year = year or date.today().year
+        windows = [
+            window
+            for code, revision, window in self._deadline_windows(selected_year)
+            if code == modelo and self._schedule_applies(profile, revision, window)
+        ]
+        if not windows:
+            raise NoDeadlineWindowsError(
+                f"No registry deadline windows registered for modelo {modelo!r} in year {selected_year}",
+            )
+        condition_text = self._evaluate_conditions(
+            profile,
+            windows[0].applicability_conditions,
+            mode=windows[0].applicability_condition_mode,
+        )
+        if condition_text is None:
+            return "No aplica segun las condiciones registrales del modelo."
+        return condition_text
+
+    def applies_to(self, profile: TaxpayerProfile, modelo: str, *, year: int | None = None) -> bool:
+        """Return whether registry deadline conditions match for ``modelo``.
+
+        Args:
+            profile: The :class:`TaxpayerProfile` to evaluate conditions against.
+            modelo: The AEAT modelo identifier to check.
+            year: Optional fiscal year; defaults to the current year.
+        """
+        selected_year = year or date.today().year
+        return any(
+            code == modelo
+            and self._schedule_applies(profile, revision, window)
+            and self._evaluate_conditions(
+                profile,
+                window.applicability_conditions,
+                mode=window.applicability_condition_mode,
+            )
+            is not None
+            for code, revision, window in self._deadline_windows(selected_year)
+        )
+
+    def _deadline_windows(self, year: int) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
+        from ..calculations.registry import RegistryError
+
+        try:
+            return self._registry.deadline_windows(year)
+        except RegistryError as exc:
+            raise ScheduleComputationError(f"deadline registry validation failed: {exc}") from exc
+
+    def _has_deadline_windows(self, year: int) -> bool:
+        return bool(self._deadline_windows(year))
+
+    @staticmethod
+    def _schedule_applies(profile: TaxpayerProfile, revision: ModeloRevision, window: DeadlineWindowDefinition) -> bool:
+        from ..calculations.registry import applicable_filing_schedules
+
+        if not revision.filing_schedules:
+            return True
+        return bool(applicable_filing_schedules(revision, profile, period=_window_registry_period(window)))
+
+    @staticmethod
+    def _evaluate_conditions(
+        profile: TaxpayerProfile,
+        conditions: tuple[ProfilePredicateDefinition, ...],
+        *,
+        mode: str,
+    ) -> str | None:
+        from ..calculations.registry import RegistryError, evaluate_profile_conditions
+
+        if not conditions:
+            return "Aplica segun la ventana registral del modelo."
+        try:
+            explanations = evaluate_profile_conditions(conditions, profile, mode=mode)
+        except RegistryError as exc:
+            raise ScheduleComputationError(f"deadline profile condition could not be evaluated: {exc}") from exc
+        if explanations is None:
+            return None
+        return " ".join(explanations)
+
+
+def _overdue_recovery_or_none(
+    *,
+    obligation_status: ObligationStatus,
+    reference_today: date,
+    window: DeadlineWindowDefinition,
+    modelo: str,
+) -> Recovery | None:
+    """Build a registry-backed recovery payload for ≥1-day-late OVERDUE obligations, or ``None``.
+
+    Same-day OVERDUE (``days_late == 0``) and non-OVERDUE statuses
+    yield ``None``. A recovery-registry lookup miss
+    (:class:`FileNotFoundError` or :class:`ValueError`) is treated as
+    "no recovery defined" rather than fatal so the obligation still
+    surfaces — the operator gets a status flag without speculative
+    surcharge math.
+    """
+    if obligation_status is not ObligationStatus.OVERDUE:
+        return None
+    days_late = (reference_today - window.closes_on).days
+    if days_late < 1:
+        return None
+    try:
+        return build_recovery_for_overdue(
+            closes_on=window.closes_on,
+            reference_today=reference_today,
+            modelo=modelo,
+            period=window.period,
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        _logger.debug(
+            "no overdue recovery registry entry for modelo=%s period=%s days_late=%d: %s",
+            modelo,
+            str(window.period),
+            days_late,
+            exc,
+        )
+        return None
+
+
+def _window_registry_period(window: DeadlineWindowDefinition) -> str:
+    """Return the bare registry period token for the deadline window."""
+    return window.period.registry_token
+
+
+def next_deadline(schedule: Schedule, today: date | None = None) -> ModeloDeadline | None:
     """Return the next obligation in ``schedule`` that has not yet closed.
 
     Pure function. Returns ``None`` if every obligation in the schedule
     is already overdue (or the schedule is empty).
 
     Args:
-        schedule: The schedule to scan.
+        schedule: The :class:`Schedule` to scan for upcoming obligations.
         today: Reference date. Defaults to ``date.today()``.
 
     Returns:
-        The earliest non-overdue :class:`FilingObligation`, or ``None``
+        The earliest non-overdue :class:`ModeloDeadline`, or ``None``
         if no such obligation exists.
     """
     reference_today = today or date.today()
     upcoming = [o for o in schedule.obligations if o.closes_on >= reference_today]
     if not upcoming:
         return None
-    upcoming.sort(key=lambda o: (o.closes_on, o.modelo, o.period))
+    upcoming.sort(key=lambda o: (o.closes_on, o.modelo, o.period.year, o.period.registry_token))
     return upcoming[0]
+
+
+@runtime_checkable
+class ScheduleProducer(Protocol):
+    """Structural surface over :class:`DeadlineEngine.compute`.
+
+    :func:`compute_obligation_schedule` is typed against this Protocol
+    rather than the concrete :class:`DeadlineEngine` so the workflow
+    engine — which injects a protocol-typed deadline engine — and the
+    state projection — which uses a concrete :class:`DeadlineEngine` —
+    can both feed the same single-producer function.
+    """
+
+    def compute(
+        self,
+        profile: TaxpayerProfile,
+        year: int,
+        *,
+        today: date | None = None,
+    ) -> Schedule:
+        """Return a :class:`Schedule` for ``profile`` in ``year``.
+
+        Args:
+            profile: The :class:`TaxpayerProfile` to compute obligations for.
+            year: The fiscal year to compute for.
+            today: Reference date for status classification.
+        """
+        ...
+
+
+def compute_obligation_schedule(
+    engine: ScheduleProducer,
+    profile: TaxpayerProfile,
+    *,
+    today: date,
+) -> Schedule:
+    """Compute the obligation :class:`Schedule` from one canonical call.
+
+    This is the single producer of the pending-obligation datum. Both
+    the operator state read-projection (``pending_obligations``) and the
+    :class:`~aeat.application.workflow.WorkflowEngine`
+    ``NO_PENDING_OBLIGATION`` gate route their schedule computation
+    through here, so the gate and the projection cannot draw a divergent
+    obligation set: identical ``(engine, profile, today)`` always yields
+    an equal schedule (modulo :attr:`Schedule.generated_at`).
+
+    The fiscal year is derived from ``today`` so neither consumer can
+    pass a mismatched ``(year, today)`` pair.
+
+    Args:
+        engine: The deadline engine to compute with. Any
+            :class:`ScheduleProducer` — a concrete
+            :class:`DeadlineEngine` or the workflow engine's
+            protocol-typed injected deadline engine.
+        profile: The :class:`TaxpayerProfile` to schedule obligations for.
+        today: Reference date; the fiscal year and obligation status
+            classification are both derived from it.
+
+    Returns:
+        The :class:`Schedule` of obligations applicable to ``profile``
+        for ``today``'s fiscal year.
+    """
+    return engine.compute(profile, today.year, today=today)
+
+
+def applies_to(profile: TaxpayerProfile, modelo: str) -> bool:
+    """Return whether registry deadline conditions match for ``modelo``.
+
+    Args:
+        profile: The :class:`TaxpayerProfile` to evaluate conditions against.
+        modelo: The AEAT modelo identifier to check.
+    """
+    return DeadlineEngine().applies_to(profile, modelo)
+
+
+def explain(profile: TaxpayerProfile, modelo: str) -> str:
+    """Return registry-backed deadline applicability text for ``modelo``.
+
+    Args:
+        profile: The :class:`TaxpayerProfile` to evaluate conditions against.
+        modelo: The AEAT modelo identifier to look up.
+    """
+    return DeadlineEngine().explain(profile, modelo)

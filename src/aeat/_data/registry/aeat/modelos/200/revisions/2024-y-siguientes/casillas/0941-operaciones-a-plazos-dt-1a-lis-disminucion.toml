@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "03326"
+number = "03326"
+label = "Operaciones a plazos (DT 1ª LIS) - Disminución - Correcciones del ejercicio - Permanentes [03326]"
+section = ["operaciones_a_plazos_dt_1a_lis", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_a_plazos_dt1_permanente_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026g-casilla-03326"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03327"
+number = "03327"
+label = "Operaciones a plazos (DT 1ª LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [03327]"
+section = ["operaciones_a_plazos_dt_1a_lis", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_a_plazos_dt1_temporaria_ejercicio_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026g-casilla-03327"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03328"
+number = "03328"
+label = "Operaciones a plazos (DT 1ª LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [03328]"
+section = ["operaciones_a_plazos_dt_1a_lis", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_a_plazos_dt1_temporaria_anteriores_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026g-casilla-03328"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03329"
+number = "03329"
+label = "Operaciones a plazos (DT 1ª LIS) - Disminución - Saldo pendiente a principio de ejercicio [03329]"
+section = ["operaciones_a_plazos_dt_1a_lis", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_a_plazos_dt1_saldo_inicial"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026g-casilla-03329"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03330"
+number = "03330"
+label = "Operaciones a plazos (DT 1ª LIS) - Disminución - Saldo pendiente a fin de ejercicio [03330]"
+section = ["operaciones_a_plazos_dt_1a_lis", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_a_plazos_dt1_saldo_final"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026g-casilla-03330"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

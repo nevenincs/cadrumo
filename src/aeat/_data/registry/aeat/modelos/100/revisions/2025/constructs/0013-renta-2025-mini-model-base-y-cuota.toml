@@ -1,0 +1,53 @@
+[[revisions."2025".constructs]]
+id = "renta-2025-mini-model-base-y-cuota"
+title = "Modelo 100 2025 base imponible / base liquidable / cuota aggregators"
+legal_refs = [
+    "ley-35-2006:art-50",
+    "ley-35-2006:art-62",
+    "ley-35-2006:art-63",
+    "ley-35-2006:art-66",
+    "ley-35-2006:art-67",
+    "ley-35-2006:art-68",
+    "ley-35-2006:art-68.3",
+    "ley-35-2006:art-68.4",
+    "ley-35-2006:art-74",
+    "ley-35-2006:art-75",
+    "ley-35-2006:art-77",
+    "ley-35-2006:art-80",
+    "ley-35-2006:art-82",
+    "ley-35-2006:art-83",
+    "ley-35-2006:art-99",
+    "real-decreto-ley-4-2024:art-3",
+    "real-decreto-ley-13-2025:art-2",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2025-cuota-irpf-comunidad-autonoma",
+    "renta-2025-doble-imposicion-50-porciento",
+    "renta-2025-tipo-medio-gravamen-estatal-base-liquidable-general",
+    "renta-2025-tipo-medio-gravamen-autonomico-base-liquidable-general",
+    "renta-2025-tipo-medio-gravamen-estatal-base-liquidable-ahorro",
+    "renta-2025-tipo-medio-gravamen-autonomico-base-liquidable-ahorro",
+    "renta-2025-deduccion-unidad-familiar-clamp-positiva",
+    "renta-2025-resto-a-ingresar-positivo",
+    "renta-2025-deduccion-doble-imposicion-internacional-suma",
+    "renta-2025-anualidades-alimentos-hijos-suma",
+    "renta-2025-importe-derecho-reduccion-pension-suma",
+    "renta-2025-cuota-liquida-autonomica-incrementada-passthrough",
+    "renta-2025-deduccion-economia-social-passthrough",
+    "renta-2025-deduccion-incentivos-inversion-empresarial-total",
+    "renta-2025-unidad-familiar-cuota-liquida-ue-formula",
+    "renta-2025-deduccion-donativos-autonomica-50-porciento",
+    "renta-2025-deduccion-donativos-estatal-50-porciento",
+    "renta-2025-deduccion-eficiencia-energetica-vivienda-suma",
+    "renta-2025-deducciones-actividades-economicas-autonomica-suma",
+    "renta-2025-deducciones-actividades-economicas-estatal-suma",
+    "renta-2025-deduccion-alquiler-vivienda-autonomica-50-porciento",
+    "renta-2025-deduccion-alquiler-vivienda-estatal-50-porciento",
+    "renta-2025-deduccion-ceuta-melilla-autonomica-50-porciento",
+    "renta-2025-deduccion-ceuta-melilla-estatal-50-porciento",
+    "renta-2025-deduccion-cultural-autonomica-50-porciento",
+    "renta-2025-deduccion-cultural-estatal-50-porciento",
+]

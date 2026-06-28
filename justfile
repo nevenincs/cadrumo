@@ -5,25 +5,78 @@ set windows-shell := ["pwsh.exe", "-NoLogo", "-Command"]
 default:
     @just --list
 
-# ── Bootstrap / install ──────────────────────────────────────────────────────
+# ── Bootstrap / Install ──────────────────────────────────────────────────────
 
-# Full bootstrap for a fresh clone or worktree:
-# sync deps, install vaultspec, provision env/.env, then run the Desktop OAuth wrapper chain.
+# Full bootstrap for a fresh clone or worktree: additively install deps,
+# install vaultspec, provision env/.env. Avoid `uv sync` here because shared
+# Windows worktrees can hold long-lived executable locks under `.venv/Scripts`.
 bootstrap:
-    uv sync
-    uv run vaultspec-core install --upgrade
+    just install
+    uv run --no-sync vaultspec-core install --upgrade
     just env-setup
-    just gsuite-bootstrap
+    -just doctor
 
-# Install / sync all runtime and dev dependencies via uv.
+# Verify the workstation for the services the active profile opts into: external
+# dependency availability (Ollama vision, provider CLIs, Playwright) + the profile's
+# capability posture, with the exact fix for any gap. Exits non-zero when an
+# opted-in capability has a missing dependency. This is the product-side
+# "is my workstation ready" check (the dev-toolchain probe is `just env-doctor`).
+doctor:
+    uv run --no-sync aeat config check
+
+# Provision the optional external dependencies a fresh workstation needs for the
+# capability surfaces: the Playwright browser binary now; Ollama + the vision model
+# are guided by `just doctor` (run `ollama pull <model>` per its remediation rows).
+provision: env-playwright
+    @echo "Playwright Chromium installed. For on-host LLM vision, run 'ollama serve' and 'ollama pull qwen2.5vl:3b' (see 'just doctor')."
+
+# Additively install runtime, workbook, and dev dependencies into the current
+# venv. This is intentionally not an exact sync: it repairs missing packages and
+# editable metadata without removing locked executables from other agents.
+[windows]
 install:
-    uv sync
+    uv pip install --python .venv/Scripts/python.exe --editable ".[workbook-windows]" --group dev
 
-# Alias for `install` — explicit name for CI clarity.
+[unix]
+install:
+    uv pip install --python .venv/bin/python --editable ".[workbook-windows]" --group dev
+
+# Alias for `install` — explicit name for CI clarity without exact pruning.
 sync:
-    uv sync
+    just install
 
-# ── Env-file provisioning ────────────────────────────────────────────────────
+# Workstation CLI prerequisites for non-Python audit recipes.
+[windows]
+workstation-tools:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
+        Write-Error 'scoop is required for workstation tool provisioning.'
+        exit 1
+    }
+    foreach ($tool in @(
+        @{Command = 'uv'; Package = 'uv'},
+        @{Command = 'just'; Package = 'just'},
+        @{Command = 'node'; Package = 'nodejs-lts'},
+        @{Command = 'npx'; Package = 'nodejs-lts'}
+    )) {
+        if (-not (Get-Command $tool.Command -ErrorAction SilentlyContinue)) {
+            scoop install $tool.Package
+        }
+    }
+
+[unix]
+workstation-tools:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for tool in uv just node npx; do
+        command -v "$tool" >/dev/null 2>&1 || {
+            echo "$tool is required; install it with the workstation package manager." >&2
+            exit 1
+        }
+    done
+
+# ── Environment Setup and Doctor ─────────────────────────────────────────────
 
 # Copy env/.env.example → env/.env if the latter is missing. No-op otherwise.
 [unix]
@@ -56,102 +109,242 @@ env-setup:
         Write-Host 'Created env/.env from env/.env.example.'
     }
 
-# ── Dev loop ─────────────────────────────────────────────────────────────────
+# Verify the local venv and workstation provide the full audit toolchain and RAG status.
+env-doctor: env-playwright
+    uv run --no-sync python -c "import aeat; print(aeat.__file__)"
+    uv run --no-sync ruff --version
+    uv run --no-sync ty --version
+    uv run --no-sync pyright --version
+    uv run --no-sync lint-imports --version
+    uv run --no-sync deptry --version
+    uv run --no-sync vulture --version
+    uv run --no-sync radon --version
+    uv run --no-sync complexipy --help
+    uvx --from semgrep semgrep --version
+    npx --yes jscpd@4.2.0 --version
+    just env-pip-check
+    -just check-rag
 
-# Lint with ruff and enforce the #162 relative-imports mandate.
-lint:
-    uv run ruff check .
-    uv run python scripts/check_relative_imports.py
+[windows]
+env-pip-check:
+    uv pip check --python .venv/Scripts/python.exe
 
-# Format with ruff.
-fmt:
-    uv run ruff format .
+[unix]
+env-pip-check:
+    uv pip check --python .venv/bin/python
 
-# Type-check with ty.
-typecheck:
-    uv run ty check src tests
+# Provision the Playwright Chromium browser binary (the post-install step that
+# `uv sync` does not perform; the AEAT sede live-capture paths need it).
+env-playwright:
+    uv run --no-sync playwright install chromium
 
-# Run the pytest suite (unit-only by default via pyproject addopts).
-test:
-    uv run pytest
+# Start the background vaultspec-rag HTTP service daemon on loopback port 8766.
+env-rag-start:
+    uv run --no-sync vaultspec-rag server start --updates --port 8766
 
-# Run the produce → verify → export end-to-end smoke tests (Modelo 130 + 303).
-# Used as the behavioural CI gate for the restructure (#476) per ADR
-# Acceptance criterion 13: structural import-resolution alone is not
-# sufficient proof of restructure correctness.
-test-smoke-produce-verify-export:
-    uv run pytest src/aeat/adapters/outbound/aeat/export/_formats/test_integration_kent_e2e.py src/aeat/adapters/outbound/aeat/export/_formats/test_integration_kent_303_e2e.py -v
+# Stop the background vaultspec-rag HTTP service daemon.
+env-rag-stop:
+    uv run --no-sync vaultspec-rag server stop
 
-# Verify every documented re-export shim still resolves its symbols
-# (Step 8 acceptance precondition for the deterministic semver-bump rule).
-verify-shims:
-    uv run --no-sync python scripts/verify_shims.py
+# ── Static checks (Verify, Read-only) ────────────────────────────────────────
 
-# Run the import-linter contract against the current layout.
-# Pre-Step-7 reports "no matches" warnings for the future paths;
-# post-Step-7 enforces the layered + independence + forbidden contracts.
-lint-imports:
-    uv run --no-sync lint-imports
+# Verify code style using ruff check. Silent on success; lists violations on failure.
+check-style:
+    @uv run --no-sync python -m dev.quality.quiet ruff check .
 
-# Run unit plus live_read tests (requires AEAT_LIVE_TESTS_ENABLED=1 for live_read items).
+# Verify code format using ruff format --check. Silent on success; lists drift on failure.
+check-format:
+    @uv run --no-sync python -m dev.quality.quiet ruff format --check .
+
+# Verify type correctness with ty (full src) and pyright (strict domain + application).
+# Wrapper emits a signal-only summary grouped by rule and file; silent on success.
+check-types:
+    @uv run --no-sync python -m dev.quality.types
+
+# Verify import structure and hexagonal boundaries. Silent on success.
+check-imports:
+    @uv run --no-sync python -m dev.quality.quiet lint-imports
+
+# Verify that all test modules only use relative imports. Silent on success.
+check-relative-imports:
+    @uv run --no-sync python -m dev.quality.relative_imports
+
+# Verify dependency declarations for drift or unused packages. Silent on success.
+check-dependencies:
+    @uv run --no-sync python -m dev.quality.quiet deptry src/aeat --known-first-party aeat --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"
+
+# Verify codebase security posture using semgrep scans.
+[unix]
+check-security:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if command -v semgrep >/dev/null 2>&1; then
+        semgrep scan --quiet --config auto src/aeat
+    else
+        uvx --from semgrep semgrep scan --quiet --config auto src/aeat
+    fi
+
+[windows]
+check-security:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    if (Get-Command semgrep -ErrorAction SilentlyContinue) {
+        semgrep scan --quiet --config auto src/aeat
+    } else {
+        uvx --from semgrep semgrep scan --quiet --config auto src/aeat
+    }
+
+# Check if the RAG service daemon is running.
+check-rag:
+    @uv run --no-sync vaultspec-rag server status
+
+# Run programmatic semantic audit checks using the local RAG daemon. Silent on success.
+check-semantic:
+    @uv run --no-sync python -m dev.audit.semantic
+
+# Run all pre-commit hooks via prek. Silent on success; replays hook output on failure.
+check-pre-commit:
+    @uv run --no-sync python -m dev.quality.quiet uv run --no-sync prek run --all-files
+
+# Excludes check-pre-commit (re-runs ruff + ty) and the local-only RAG/semantic checks.
+# Run every fast static gate to completion; report only failures; silent on full pass.
+check-all:
+    @uv run --no-sync python -m dev.quality.suite
+
+# ── Code mutations (Write) ──────────────────────────────────────────────────
+
+# Auto-repair every lint violation that carries a safe fix (ruff check --fix).
+fix-style:
+    @uv run --no-sync ruff check --fix .
+
+# Auto-sort imports only (ruff I-rule safe fixes).
+fix-imports:
+    @uv run --no-sync ruff check --select I --fix .
+
+# Auto-format all python source files (ruff format).
+fix-format:
+    @uv run --no-sync ruff format .
+
+# Action every automatically-fixable issue in one pass: safe lint fixes then formatting.
+fix-all: fix-style fix-format
+
+# Trigger incremental vector re-indexing via the loopback service.
+fix-rag:
+    @uv run --no-sync vaultspec-rag index --type all --port 8766
+
+# ── Testing ──────────────────────────────────────────────────────────────────
+
+# Run the fast test-framework ratchets for skip/xfail, mock/test-double, monkeypatch, broad raises, and tautology drift.
+test-ratchets:
+    @uv run --no-sync pytest -q -rs src/aeat/tests/test_no_skip_xfail.py src/aeat/tests/test_mock_inventory.py src/aeat/tests/test_monkeypatch_inventory.py src/aeat/tests/test_no_broad_exception_raises.py src/aeat/tests/test_no_tautology.py --tb=short
+
+# Run the unit test suite in parallel, ignoring workbook parity tests. Quiet progress; failures shown.
+test-unit:
+    @uv run --no-sync pytest -q -n auto -m unit --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity
+
+# Run the unit test suite serially for reruns after a parallel failure.
+test-unit-serial:
+    @uv run --no-sync pytest -q -m unit --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity
+
+# Run the integration test suite. Quiet progress; failures shown.
+test-integration:
+    @uv run --no-sync pytest -q -m integration
+
+# Run the live test suite. Quiet progress; failures shown.
 test-live:
-    uv run pytest -m "unit or live_read"
+    @uv run --no-sync pytest -q -m aeat_live
 
-# Run only live_read tests.
-test-live-read:
-    uv run pytest -m "live_read"
+# Run the produce, verify, and export end-to-end smoke tests.
+test-smoke:
+    uv run --no-sync pytest src/aeat/application/modelo/tests/test_file_flow_calculation.py src/aeat/application/modelo/tests/test_file_flow_verify.py src/aeat/application/modelo/tests/test_file_flow_filing.py src/aeat/application/modelo/tests/test_export.py -v
 
-# Run unit tests in a single domain, e.g. `just test-domain financial_input`.
-test-domain DOMAIN:
-    uv run pytest -m "unit and domain_{{DOMAIN}}"
+# Run the LibreOffice workbook parity tests.
+test-workbook-parity:
+    uv run --no-sync pytest src/aeat/domain/calculations/registry/tests/workbook_parity/test_workbook_parity.py
 
-# Documentation surface for @pytest.mark.live_write tests. Live AEAT writes
-# are permanently forbidden and collection-dropped with no bypass.
+# Run the unit test suite with coverage report and fail-under check. Quiet progress.
 [unix]
-test-live-write:
-    #!/usr/bin/env bash
-    echo "WARNING: @pytest.mark.live_write tests are permanently collection-dropped; there is no bypass."
-    uv run pytest -m live_write
+test-coverage:
+    @uv run --no-sync pytest -q --cov=aeat --cov-report=term-missing --cov-fail-under=60
 
 [windows]
-test-live-write:
-    #!pwsh
-    Write-Host "WARNING: @pytest.mark.live_write tests are permanently collection-dropped; there is no bypass."
-    uv run pytest -m live_write
-
-# Run the unit suite with coverage and enforce the fail-under floor.
-# See .vault/adr/2026-04-17-pytest-only-testing-adr.md (#15).
-[unix]
-test-cov:
-    uv run pytest --cov=aeat --cov-report=term-missing --cov-fail-under=60
-
-[windows]
-test-cov:
+test-coverage:
     #!pwsh
     $ErrorActionPreference = 'Stop'
-    uv run pytest --cov=aeat --cov-report=term-missing --cov-fail-under=60
+    uv run --no-sync pytest -q --cov=aeat --cov-report=term-missing --cov-fail-under=60
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-# Run the unit suite in parallel via pytest-xdist. Opt-in; never on live tests.
-[unix]
-test-parallel:
-    uv run pytest -n auto
+# ── Advisory audits ──────────────────────────────────────────────────────────
 
-[windows]
-test-parallel:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    uv run pytest -n auto
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+# List every ty + pyright diagnostic verbatim (advisory; always exits 0).
+audit-types:
+    @uv run --no-sync python -m dev.quality.types --full
 
-# Run all pre-commit hooks via prek.
-hooks:
-    uv run prek run --all-files
+# Run complexity audits for production code.
+audit-complexity:
+    @uv run --no-sync python -m dev.audit.complexity
 
-# ── Database migrations (aeat#10) ────────────────────────────────────────────
+# Scan for dead code. The whitelist clears individually-justified
+# false positives (contract-fixed signature params); see its docstring.
+# src/aeat is named explicitly because a positional whitelist path
+# overrides (not merges with) the config `paths`.
+audit-dead-code:
+    @uv run --no-sync vulture --config pyproject.toml src/aeat dev/vulture_whitelist.py
 
-# Generate a new Alembic revision from the current model metadata.
-# Usage: just db-migrate message="add foo column"
+# Scan for copy-paste code duplication. Aggregate line + capped clone list.
+audit-duplication:
+    @npx --yes jscpd@4.2.0 src/aeat --format python --min-lines 6 --min-tokens 80 --max-size 250kb --ignore "**/test_*.py,**/_test_*.py,**/tests/**,**/_data/**" --gitignore --reporters console --noTips | uv run --no-sync python -m dev.audit.duplication
+
+# Perform an on-demand semantic search query delegating to the running RAG daemon.
+audit-rag QUERY:
+    @uv run --no-sync vaultspec-rag search "{{QUERY}}" --port 8766 --timeout 45.0
+
+# Run all advisory audits with section headers; tolerant of individual findings.
+audit-debt-dashboard:
+    @echo "=== complexity ==="
+    -@just audit-complexity
+    @echo "=== dead code ==="
+    -@just audit-dead-code
+    @echo "=== duplication ==="
+    -@just audit-duplication
+    @echo "=== security ==="
+    -@just check-security
+
+# ── Documentation ────────────────────────────────────────────────────────────
+
+# Build changed narrative and API reference documents.
+docs:
+    uv run --no-sync python -m dev.docs.build docs/conf.py
+
+# Build a single narrative page.
+docs-page PAGE:
+    uv run --no-sync python -m dev.docs.build --single-page {{PAGE}}
+
+# Serve documentation on localhost with live reload on docs/ and src/aeat/ edits.
+docs-serve PORT="8000":
+    uv run --no-sync python -m dev.docs.serve --port {{PORT}} --open-browser
+
+# Build documentation changed since a base commit.
+docs-changed BASE="HEAD":
+    uv run --no-sync python -m dev.docs.build --base {{BASE}}
+
+# Build changed documentation with strict warnings-as-errors flags.
+docs-changed-strict BASE="HEAD":
+    uv run --no-sync python -m dev.docs.build --base {{BASE}} --strict
+
+# Build changed documentation and update the vector index.
+docs-changed-rag BASE="HEAD":
+    uv run --no-sync python -m dev.docs.build --base {{BASE}} --rag-index
+
+# Run docstring structure and Sphinx build checks. Quiet pytest progress.
+docs-check:
+    @uv run --no-sync pytest -q dev/docs/tests dev/docs/apidocs/tests src/aeat/tests/test_docstring_core_struct_links.py -m docs
+    @uv run --no-sync doc8 docs
+    @uv run --no-sync interrogate -c pyproject.toml src/aeat
+
+# ── Database migrations ──────────────────────────────────────────────────────
+
+# Generate a new Alembic database migration file.
 [unix]
 db-migrate message:
     uv run alembic revision --autogenerate -m "{{message}}"
@@ -160,7 +353,7 @@ db-migrate message:
 db-migrate message:
     uv run alembic revision --autogenerate -m "{{message}}"
 
-# Apply every pending migration up to head.
+# Upgrade the database schema to the latest version.
 [unix]
 db-upgrade:
     uv run alembic upgrade head
@@ -169,373 +362,9 @@ db-upgrade:
 db-upgrade:
     uv run alembic upgrade head
 
-# ── Google Cloud CLI ─────────────────────────────────────────────────────────
+# ── Release ──────────────────────────────────────────────────────────────────
 
-# Install or update the Google Cloud CLI.
-[unix]
-gcloud-install:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if command -v gcloud >/dev/null 2>&1; then
-        echo "gcloud found: $(gcloud version 2>/dev/null | head -1)"
-        gcloud components update --quiet || echo "gcloud update failed — continue manually if needed."
-        exit 0
-    fi
-    if [ "$(uname)" = "Darwin" ] && command -v brew >/dev/null 2>&1; then
-        brew install --cask google-cloud-sdk
-        echo "Restart your shell to use gcloud."
-        exit 0
-    fi
-    if command -v curl >/dev/null 2>&1; then
-        curl -fsSL https://sdk.cloud.google.com | bash -s -- --disable-prompts
-        echo "Restart your shell or run: exec -l \$SHELL"
-        exit 0
-    fi
-    echo "No supported installer (brew/curl) found." >&2
-    echo "Install manually from https://cloud.google.com/sdk/docs/install" >&2
-    exit 1
-
-[windows]
-gcloud-install:
-    #!pwsh
-    $ErrorActionPreference = 'Continue'
-    $gcloud = Get-Command gcloud -ErrorAction SilentlyContinue
-    if ($gcloud) {
-        $version = (& gcloud version 2>$null | Select-Object -First 1)
-        Write-Host "gcloud found: $version"
-        # The Windows installer ships a bundled Python that refuses to
-        # self-update in non-interactive mode. Point CLOUDSDK_PYTHON at
-        # the copied bundled interpreter before invoking `components update`.
-        try {
-            $bundled = (& $gcloud.Source components copy-bundled-python 2>$null | Select-Object -Last 1)
-            if ($bundled) { $env:CLOUDSDK_PYTHON = $bundled.Trim() }
-        } catch {
-            Write-Host "copy-bundled-python failed - attempting update without override."
-        }
-        & $gcloud.Source components update --quiet
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "gcloud update failed (exit $LASTEXITCODE) - continue manually if needed."
-        }
-        exit 0
-    }
-    $winget = Get-Command winget -ErrorAction SilentlyContinue
-    if ($winget) {
-        & winget install --id Google.CloudSDK --accept-source-agreements --accept-package-agreements
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "winget install returned $LASTEXITCODE - see https://cloud.google.com/sdk/docs/install-sdk#windows"
-        } else {
-            Write-Host "Restart your shell to use gcloud."
-        }
-        exit 0
-    }
-    Write-Host "winget not available. Install Google Cloud CLI manually:"
-    Write-Host "  https://cloud.google.com/sdk/docs/install-sdk#windows"
-    exit 1
-
-# Deprecated alias for `gcloud-install` — kept so existing muscle memory works.
-gcloud-setup: gcloud-install
-
-# Authenticate gcloud and acquire ADC with the full Workspace scope set.
-# Uses the env-managed GOOGLE_OAUTH_CLIENT_JSON path written by
-# `aeat auth init` / `aeat oauth-client init`, because Google blocks Workspace scopes when
-# requested against gcloud's built-in OAuth client. Browser flows fire here.
-[unix]
-gcloud-auth:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if ! command -v gcloud >/dev/null 2>&1; then
-        echo "gcloud not on PATH — run 'just gcloud-install' first." >&2
-        exit 1
-    fi
-    if [ ! -f env/.env ]; then
-        echo "env/.env not found — run 'just env-setup' first." >&2
-        exit 1
-    fi
-    CLIENT_JSON=$(uv run python -c "from aeat.core.config import Settings; print(Settings().google_oauth_client_json)")
-    if [ -z "$CLIENT_JSON" ]; then
-        echo "GOOGLE_OAUTH_CLIENT_JSON is empty in env/.env — run 'uv run aeat auth init --path desktop-oauth-local-dev' first." >&2
-        exit 1
-    fi
-    if [ ! -f "$CLIENT_JSON" ]; then
-        echo "OAuth client JSON not found at $CLIENT_JSON — run 'uv run aeat auth init --path desktop-oauth-local-dev' first." >&2
-        echo "Drive/Sheets/Docs scopes cannot be requested against gcloud's built-in OAuth client." >&2
-        exit 1
-    fi
-    PROJECT=$(uv run python -c "from aeat.core.config import Settings; print(Settings().google_cloud_project)")
-    if [ -z "$PROJECT" ]; then
-        echo "GOOGLE_CLOUD_PROJECT is empty in env/.env — set it before continuing." >&2
-        exit 1
-    fi
-    SCOPES=$(uv run python -c "from aeat.adapters.outbound.aeat.auth import ADC_LOGIN_SCOPE_CSV; print(ADC_LOGIN_SCOPE_CSV)")
-    echo "▶ gcloud auth login (browser will open)…"
-    gcloud auth login --quiet
-    echo "▶ gcloud config set project $PROJECT"
-    gcloud config set project "$PROJECT" --quiet
-    echo "▶ gcloud auth application-default login (with Drive/Sheets/Docs scopes via your OAuth client)…"
-    gcloud auth application-default login \
-        --client-id-file="$CLIENT_JSON" \
-        --scopes="$SCOPES"
-    echo "✔ gcloud + ADC ready for project $PROJECT"
-
-[windows]
-gcloud-auth:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    $gcloud = Get-Command gcloud -ErrorAction SilentlyContinue
-    if (-not $gcloud) {
-        Write-Error "gcloud not on PATH - run 'just gcloud-install' first."
-        exit 1
-    }
-    if (-not (Test-Path 'env/.env')) {
-        Write-Error "env/.env not found - run 'just env-setup' first."
-        exit 1
-    }
-    $clientJson = (& uv run python -c "from aeat.core.config import Settings; print(Settings().google_oauth_client_json)" | Select-Object -Last 1).Trim()
-    if (-not $clientJson) {
-        Write-Error "GOOGLE_OAUTH_CLIENT_JSON is empty in env/.env - run 'uv run aeat auth init --path desktop-oauth-local-dev' first."
-        exit 1
-    }
-    if (-not (Test-Path $clientJson)) {
-        Write-Error "OAuth client JSON not found at $clientJson - run 'uv run aeat auth init --path desktop-oauth-local-dev' first. Drive/Sheets/Docs scopes cannot be requested against gcloud's built-in OAuth client."
-        exit 1
-    }
-    # Pre-set CLOUDSDK_PYTHON once so every gcloud subcommand uses the
-    # bundled interpreter without prompting in non-interactive mode.
-    try {
-        $bundled = (& $gcloud.Source components copy-bundled-python 2>$null | Select-Object -Last 1)
-        if ($bundled) { $env:CLOUDSDK_PYTHON = $bundled.Trim() }
-    } catch {
-        Write-Host "copy-bundled-python failed - continuing without override."
-    }
-    $project = (& uv run python -c "from aeat.core.config import Settings; print(Settings().google_cloud_project)" | Select-Object -Last 1).Trim()
-    if (-not $project) {
-        Write-Error "GOOGLE_CLOUD_PROJECT is empty in env/.env"
-        exit 1
-    }
-    $scopes = (& uv run python -c "from aeat.adapters.outbound.aeat.auth import ADC_LOGIN_SCOPE_CSV; print(ADC_LOGIN_SCOPE_CSV)" | Select-Object -Last 1).Trim()
-    Write-Host "▶ gcloud auth login (browser will open)…"
-    & $gcloud.Source auth login --quiet
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "▶ gcloud config set project $project"
-    & $gcloud.Source config set project $project --quiet
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "▶ gcloud auth application-default login (with Drive/Sheets/Docs scopes via your OAuth client)…"
-    & $gcloud.Source auth application-default login `
-        --client-id-file=$clientJson `
-        --scopes=$scopes
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "✔ gcloud + ADC ready for project $project"
-
-# Enable the Google APIs the bootstrap requires (no billing needed).
-# Workspace surfaces (Drive/Sheets/Docs) plus IAM and Service Usage.
-[unix]
-gsuite-enable-apis:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if ! command -v gcloud >/dev/null 2>&1; then
-        echo "gcloud not on PATH — run 'just gcloud-install' first." >&2
-        exit 1
-    fi
-    gcloud services enable \
-        drive.googleapis.com \
-        sheets.googleapis.com \
-        docs.googleapis.com \
-        iam.googleapis.com \
-        serviceusage.googleapis.com
-    echo "✔ Required APIs enabled."
-
-[windows]
-gsuite-enable-apis:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    $gcloud = Get-Command gcloud -ErrorAction SilentlyContinue
-    if (-not $gcloud) {
-        Write-Error "gcloud not on PATH - run 'just gcloud-install' first."
-        exit 1
-    }
-    try {
-        $bundled = (& $gcloud.Source components copy-bundled-python 2>$null | Select-Object -Last 1)
-        if ($bundled) { $env:CLOUDSDK_PYTHON = $bundled.Trim() }
-    } catch {
-        Write-Host "copy-bundled-python failed - continuing without override."
-    }
-    & $gcloud.Source services enable `
-        drive.googleapis.com `
-        sheets.googleapis.com `
-        docs.googleapis.com `
-        iam.googleapis.com `
-        serviceusage.googleapis.com
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "✔ Required APIs enabled."
-
-# Enable the billing-gated APIs (Cloud Functions, Cloud Run, Cloud Storage).
-# Requires an active billing account linked to the project.
-[unix]
-gsuite-enable-apis-billing:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    gcloud services enable \
-        cloudfunctions.googleapis.com \
-        run.googleapis.com \
-        storage.googleapis.com
-    echo "✔ Billing-gated APIs enabled."
-
-[windows]
-gsuite-enable-apis-billing:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    $gcloud = Get-Command gcloud -ErrorAction SilentlyContinue
-    & $gcloud.Source services enable `
-        cloudfunctions.googleapis.com `
-        run.googleapis.com `
-        storage.googleapis.com
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "✔ Billing-gated APIs enabled."
-
-# Compose: install gcloud, authenticate, enable APIs, provision scratch, doctor.
-# This is the OAuth Desktop client / ADC path. Requires the operator to
-# create the OAuth client in Cloud Console first via `aeat auth init`.
-gsuite-bootstrap:
-    just gcloud-install
-    just gcloud-auth
-    just gsuite-enable-apis
-    uv run aeat bootstrap
-    uv run aeat doctor
-
-# Autonomous service-account-driven bootstrap. Creates a service account
-# in the active gcloud project, grants it editor, downloads a key into
-# env/sa.json, sets GOOGLE_APPLICATION_CREDENTIALS in env/.env, enables
-# the required APIs, provisions scratch resources, and runs doctor.
-# Requires gcloud already authenticated as a user with IAM admin on the
-# project. No browser flow.
-[unix]
-gsuite-bootstrap-sa:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    PROJECT=$(grep -E '^GOOGLE_CLOUD_PROJECT=' env/.env | cut -d= -f2- | tr -d '"' | tr -d "'" | tr -d '[:space:]')
-    if [ -z "$PROJECT" ]; then
-        echo "GOOGLE_CLOUD_PROJECT is empty in env/.env" >&2
-        exit 1
-    fi
-    SA="aeat-bootstrap@${PROJECT}.iam.gserviceaccount.com"
-    if ! gcloud iam service-accounts describe "$SA" --project="$PROJECT" >/dev/null 2>&1; then
-        gcloud iam service-accounts create aeat-bootstrap --project="$PROJECT" --display-name="AEAT bootstrap automation"
-    fi
-    gcloud projects add-iam-policy-binding "$PROJECT" --member="serviceAccount:$SA" --role="roles/editor" --quiet
-    if [ ! -f env/sa.json ]; then
-        gcloud iam service-accounts keys create env/sa.json --iam-account="$SA" --project="$PROJECT"
-    fi
-    uv run python -c "from pathlib import Path; from aeat.core.env_io import write_env_vars; write_env_vars(Path('env/.env'), {'GOOGLE_AUTH_PATH': 'service-account-automation', 'GOOGLE_APPLICATION_CREDENTIALS': 'env/sa.json'})"
-    just gsuite-enable-apis
-    uv run aeat bootstrap
-    uv run aeat doctor
-
-[windows]
-gsuite-bootstrap-sa:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    $gcloud = Get-Command gcloud -ErrorAction SilentlyContinue
-    if (-not $gcloud) { Write-Error "gcloud not on PATH"; exit 1 }
-    try {
-        $bundled = (& $gcloud.Source components copy-bundled-python 2>$null | Select-Object -Last 1)
-        if ($bundled) { $env:CLOUDSDK_PYTHON = $bundled.Trim() }
-    } catch {}
-    $line = (Get-Content env/.env | Where-Object { $_ -match '^GOOGLE_CLOUD_PROJECT=' })
-    if (-not $line) { Write-Error "GOOGLE_CLOUD_PROJECT not in env/.env"; exit 1 }
-    $project = ($line -replace '^GOOGLE_CLOUD_PROJECT=', '').Trim().Trim('"').Trim("'")
-    if (-not $project) { Write-Error "GOOGLE_CLOUD_PROJECT empty"; exit 1 }
-    $sa = "aeat-bootstrap@$project.iam.gserviceaccount.com"
-    & $gcloud.Source iam service-accounts describe $sa --project=$project 2>$null
-    if ($LASTEXITCODE -ne 0) {
-        & $gcloud.Source iam service-accounts create aeat-bootstrap --project=$project --display-name="AEAT bootstrap automation"
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    }
-    & $gcloud.Source projects add-iam-policy-binding $project --member="serviceAccount:$sa" --role="roles/editor" --quiet
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    if (-not (Test-Path 'env/sa.json')) {
-        & $gcloud.Source iam service-accounts keys create env/sa.json --iam-account=$sa --project=$project
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    }
-    & uv run python -c "from pathlib import Path; from aeat.core.env_io import write_env_vars; write_env_vars(Path('env/.env'), {'GOOGLE_AUTH_PATH': 'service-account-automation', 'GOOGLE_APPLICATION_CREDENTIALS': 'env/sa.json'})"
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    just gsuite-enable-apis
-    uv run aeat bootstrap
-    uv run aeat doctor
-
-# Run the doctor health check.
-gsuite-doctor:
-    uv run aeat doctor
-
-# Run the Playwright doctor health check.
-[unix]
-playwright-doctor:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    uv run python -m aeat.entrypoints.cli.browser.health
-
-[windows]
-playwright-doctor:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    uv run python -m aeat.entrypoints.cli.browser.health
-
-# Walk through OAuth Desktop client provisioning.
-gsuite-oauth-client:
-    uv run aeat auth init --path desktop-oauth-local-dev --no-acquire-cli-token --no-prepare-mcp
-
-# Fetch the AEAT PKCS#12 certificate from Google Drive into credentials/.
-# Requires `just gcloud-auth` to have been run (Drive scope on ADC).
-# Usage: `just aeat-cert-fetch WOOTSCH_GERGELY_DOMOKOS_Y4113523X.p12`.
-# After it succeeds, edit env/.env to set:
-#   AEAT_LIVE_TESTS_ENABLED=1
-#   AEAT_CERTIFICATE_PATH=<absolute path printed by this recipe>
-#   AEAT_CERTIFICATE_PASSWORD_SECRET=<your cert passphrase>
-[unix]
-aeat-cert-fetch NAME:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [ ! -f env/.env ]; then
-        echo "env/.env not found — run 'just env-setup' first." >&2
-        exit 1
-    fi
-    mkdir -p credentials
-    uv run aeat drive fetch "{{NAME}}" --out "credentials/{{NAME}}"
-    echo ""
-    echo "next steps:"
-    echo "  1. Edit env/.env and set AEAT_CERTIFICATE_PATH=$(pwd)/credentials/{{NAME}}"
-    echo "  2. Set AEAT_CERTIFICATE_PASSWORD_SECRET=<passphrase>"
-    echo "  3. Set AEAT_LIVE_TESTS_ENABLED=1"
-    echo "  4. Run 'just test-live-read' to verify the live AEAT read path."
-
-[windows]
-aeat-cert-fetch NAME:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    if (-not (Test-Path 'env/.env')) {
-        Write-Error "env/.env not found - run 'just env-setup' first."
-        exit 1
-    }
-    if (-not (Test-Path 'credentials')) {
-        New-Item -ItemType Directory -Path 'credentials' | Out-Null
-    }
-    uv run aeat drive fetch "{{NAME}}" --out "credentials/{{NAME}}"
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    $abs = (Resolve-Path "credentials/{{NAME}}").Path
-    Write-Host ""
-    Write-Host "next steps:"
-    Write-Host "  1. Edit env/.env and set AEAT_CERTIFICATE_PATH=$abs"
-    Write-Host "  2. Set AEAT_CERTIFICATE_PASSWORD_SECRET=<passphrase>"
-    Write-Host "  3. Set AEAT_LIVE_TESTS_ENABLED=1"
-    Write-Host "  4. Run 'just test-live-read' to verify the live AEAT read path."
-
-# ── Release (local-only; see RELEASING.md + aeat#60) ────────────────────────
-#
-# release-please runs LOCALLY, never in GitHub Actions (Actions is
-# permanently disabled on this repo). `just release` previews the next
-# release in --dry-run mode. `just release-apply` guides the human
-# operator through applying the bump + tagging, never pushing.
-
-# Preview the next release. Dry-run only; never writes to the tree.
+# Preview the next version release via dry-run.
 [unix]
 release:
     #!/usr/bin/env bash
@@ -597,7 +426,7 @@ release:
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     Write-Host "✔ dry-run complete - review $log, then run 'just release-apply' if the proposal is correct."
 
-# Apply the previewed release locally. Human-gated; never pushes.
+# Apply the release changes locally.
 [unix]
 release-apply:
     #!/usr/bin/env bash
@@ -662,38 +491,3 @@ release-apply:
     Write-Host '       git tag -a vX.Y.Z -m "aeat vX.Y.Z"'
     Write-Host "When ready (human decision only), push with:"
     Write-Host "  git push origin main --tags"
-
-# ── Google Workspace test fixtures ──────────────────────────────────────────
-#
-# Idempotent provisioning and teardown of the Drive/Sheets/Docs fixtures
-# consumed by `@pytest.mark.live_read` tests. See scripts/README.md and
-# .vault/adr/2026-04-12-google-fixtures-adr.md.
-
-# Provision (or discover) every fixture in scripts/_fixture_catalogue.py,
-# seed freshly-created ones, and persist their IDs into env/.env.
-[unix]
-google-fixtures-provision:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    uv run python scripts/provision_google_fixtures.py
-
-[windows]
-google-fixtures-provision:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    uv run python scripts/provision_google_fixtures.py
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# Permanently delete the fixture folder tree and clear its env footprint.
-[unix]
-google-fixtures-teardown:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    uv run python scripts/teardown_google_fixtures.py
-
-[windows]
-google-fixtures-teardown:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    uv run python scripts/teardown_google_fixtures.py
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

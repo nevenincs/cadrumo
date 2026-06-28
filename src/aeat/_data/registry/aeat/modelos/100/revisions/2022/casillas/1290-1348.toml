@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "1348"
+number = "1348"
+label = "Aportaciones y contribuciones de 2022 no aplicadas cuyo importe se solicita poder reducir en los 5 ejercicios siguientes"
+section = ["resultados", "anexo_c_res", "excesos_sistemas_prevision_social_personas_disc_parientes_res"]
+semantic_role = "irpf_anexo_c_exceso_sps_disc_parientes_generado"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

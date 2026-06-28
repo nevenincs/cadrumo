@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "1108"
+number = "1108"
+label = "Por obras de conservación o mejora en la vivienda habitual (realizadas desde el 1 de enero de 2014 hasta el 31 de diciembre de 2015)"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_obras_conservacion_1"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

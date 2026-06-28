@@ -1,0 +1,7 @@
+[[revisions.2023-2024.application_links]]
+id = "modelo-202-2023-2024-portal"
+surface = "portal"
+consumer = "aeat.domain.portals.Portal.PORTAL_M202_SOCIEDADES_FRACCIONADO"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-modelo-202-instructions-2023-2024"]

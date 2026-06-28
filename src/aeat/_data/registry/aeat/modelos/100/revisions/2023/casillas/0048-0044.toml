@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "0044"
+number = "0044"
+label = "Importe total de los capitales diferidos correspondientes a seguros de vida percibidos en 2023 a cuyo rendimiento se aplica la D.T.4.ª"
+section = ["toma_datos_ampliada", "rdto_capital_mobiliario", "rdto_capital_mobiliario_dt4"]
+semantic_role = "irpf_rendimiento_capital_mobiliario_ahorro_dt4_seguros_vida_importe"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

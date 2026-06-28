@@ -1,0 +1,14 @@
+[[revisions."2023".relations]]
+id = "renta-2023-rel-111-retenciones-mensuales"
+kind = "cross_model_output"
+dependency_role = "factual_evidence"
+source_modelo = "111"
+source_revision_selector = { year = 2023 }
+source_casilla_id = "28"
+target_binding = "renta-2023-modelo-111-retenciones-periodicas"
+period_alignment = { source_periods = "months", target_period = "0A" }
+source_periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108"]
+source_refs = ["aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]

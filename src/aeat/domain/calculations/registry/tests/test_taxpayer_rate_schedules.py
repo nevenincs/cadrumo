@@ -1,0 +1,117 @@
+"""Registry coverage tests for taxpayer-typed rate schedules."""
+
+from __future__ import annotations
+
+import pytest
+
+from .....core.resources import bundled_path
+from .. import build_snapshot, load_registry_tree
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_REGISTRY_ROOT = bundled_path("registry", "aeat")
+
+
+def _modelo_revision(modelo_id: str, revision_id: str):
+    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelo = next(modelo for modelo in modelos if modelo.id == modelo_id)
+    return build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2025,
+        period="0A",
+        revision_id=revision_id,
+    ).revision
+
+
+def test_natural_person_route_has_irpf_tarifa_bracket_schedules() -> None:
+    """Modelo 100 carries the IRPF bracket tables for a natural person."""
+
+    revision = _modelo_revision("100", "2025")
+    parameters = {parameter.id: parameter for parameter in revision.parameters}
+
+    expected = {
+        "renta-2025-escala-estatal-base-general": {
+            "ley-35-2006:art-62",
+            "ley-35-2006:art-63",
+        },
+        "renta-2025-escala-estatal-base-ahorro": {"ley-35-2006:art-66"},
+        "renta-2025-escala-autonomica-base-ahorro": {"ley-35-2006:art-76"},
+    }
+    for parameter_id, legal_refs in expected.items():
+        parameter = parameters[parameter_id]
+        assert parameter.data_type == "bracket_table", parameter_id
+        assert parameter.bracket_axis == "filing_period", parameter_id
+        assert legal_refs <= set(parameter.legal_refs), parameter_id
+        assert parameter.source_refs, parameter_id
+        assert parameter.brackets, parameter_id
+
+    autonomic_formula = next(
+        formula
+        for formula in revision.formulas
+        if formula.id == "renta-2025-cuota-escala-autonomica-sobre-base-liquidable-general"
+    )
+    dispatch_table = autonomic_formula.expression.args[2].dispatch_table
+    assert dispatch_table, "autonomic IRPF general scale must dispatch by CCAA"
+    for ccaa, parameter_id in dispatch_table.items():
+        parameter = parameters[parameter_id]
+        assert parameter.data_type == "bracket_table", ccaa
+        assert "ley-35-2006:art-74" in parameter.legal_refs, ccaa
+        assert parameter.source_refs, ccaa
+
+
+def test_legal_entity_route_has_is_rate_schedule_by_entity_form() -> None:
+    """Modelo 200 carries the LIS Art. 29 rate schedule for legal entities."""
+
+    revision = _modelo_revision("200", "2024-y-siguientes")
+    parameters = {parameter.id: parameter for parameter in revision.parameters}
+
+    scalar_rates = {
+        "is.modelo-200.tipo-gravamen-general",
+        "is.modelo-200.tipo-gravamen-new-entity-first-2-years",
+        "is.modelo-200.tipo-gravamen-cooperative-protected",
+        "is.modelo-200.tipo-gravamen-non-profit-special-regime",
+    }
+    for parameter_id in scalar_rates:
+        parameter = parameters[parameter_id]
+        assert parameter.data_type == "ratio", parameter_id
+        assert parameter.values, parameter_id
+        assert "ley-27-2014:art-29" in parameter.legal_refs, parameter_id
+        assert parameter.source_refs, parameter_id
+
+    micro_empresa = parameters["is.modelo-200.tipo-gravamen-pyme"]
+    assert micro_empresa.data_type == "bracket_table"
+    assert micro_empresa.brackets
+    assert "ley-27-2014:art-29" in micro_empresa.legal_refs
+    assert micro_empresa.source_refs
+
+    binding = next(
+        binding for binding in revision.bindings if binding.id == "modelo-200-2024-profile-legal-entity-form"
+    )
+    assert binding.source == "profile"
+    assert binding.selector["profile_model"] == "taxpayer"
+    assert binding.selector["field"] == "legal_entity_form"
+    assert binding.typed_enum == "LegalEntityForm"
+    assert "ley-27-2014:art-29" in binding.legal_refs
+
+    dispatch_formula = next(
+        formula for formula in revision.formulas if formula.id == "modelo-200-tipo-gravamen-por-forma-juridica"
+    )
+    assert {"ley-27-2014:art-29", "ley-27-2014:art-30"} <= set(dispatch_formula.legal_refs)
+    # The formula is a 3-level nested if_then_else: new-entity override
+    # (args[1]) -> ERD-threshold branch (args[2].args[1]) -> established-entity
+    # general rates (args[2].args[2]). The canonical "rate schedule by entity
+    # form" is the established-entity general branch; sal/sll (sociedades
+    # laborales) were added to every entity-form axis.
+    dispatch_by_form = dispatch_formula.expression.args[2].args[2].args[2].dispatch_table
+    assert dispatch_by_form == {
+        "sl": "is.modelo-200.tipo-gravamen-general",
+        "sa": "is.modelo-200.tipo-gravamen-general",
+        "sal": "is.modelo-200.tipo-gravamen-general",
+        "sll": "is.modelo-200.tipo-gravamen-general",
+        "sociedad_civil_mercantil": "is.modelo-200.tipo-gravamen-general",
+        "other": "is.modelo-200.tipo-gravamen-general",
+        "cooperativa": "is.modelo-200.tipo-gravamen-cooperative-protected",
+        "sin_fines_lucrativos": "is.modelo-200.tipo-gravamen-non-profit-special-regime",
+    }

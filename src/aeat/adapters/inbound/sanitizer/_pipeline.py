@@ -1,27 +1,27 @@
 """Top-level orchestrator for :mod:`aeat.adapters.inbound.sanitizer`.
 
-Implements the 8-step order of operations from the sanitiser ADR:
+Implements the canonical sanitiser pipeline:
 
 1. Open source bytes; refuse if signed; refuse if already sanitised.
 2. Strip dynamic surfaces (attachments, JS, OpenAction/AA,
    annotations, OCG, AcroForm).
 3. Drop page thumbnails.
 4. Drop outlines + page labels.
-5. Drop StructTreeRoot (lossy).
-6. Rewrite content streams against the TokenMap.
+5. Drop ``Root.StructTreeRoot`` (lossy).
+6. Rewrite content streams against the :class:`TokenMap`.
 7. Scrub static metadata (DocInfo + XMP).
 8. Save with deterministic flags.
 
-Order matters: dynamic surfaces (step 2) before content rewrite
-(step 6) so a JS action cannot re-inject PII the rewriter just
-stripped. Content rewrite before metadata scrub (step 7) because
-some XMP-write paths in pikepdf re-stamp metadata if they detect a
-content change. Save last with the named flags (step 8).
+Order matters: dynamic surfaces precede the content rewrite so a
+JS action cannot re-inject PII the rewriter just stripped. The
+content rewrite precedes the metadata scrub because some XMP-write
+paths in :mod:`pikepdf` re-stamp metadata if they detect a content
+change. The deterministic save runs last so byte-stable output
+captures every prior mutation.
 """
 
 from __future__ import annotations
 
-import hashlib
 import io
 from pathlib import Path
 from typing import Literal
@@ -29,6 +29,7 @@ from typing import Literal
 import pikepdf
 from pikepdf import PdfError as PikepdfError
 
+from ....core.hashing import hash_file, sha256_hex
 from ....core.logging import get_logger
 from . import fixtures as _fixtures
 from ._determinism import save_with_deterministic_flags
@@ -116,19 +117,17 @@ def sanitize_pdf(
         bytes, audit log, and warnings.
 
     Raises:
-        SanitizerSourceParseError: If the source bytes cannot be
-            opened by :mod:`pikepdf`.
-        SignaturePresentError: If the source carries a digital
-            signature dictionary.
-        AlreadySanitizedError: If ``refuse_if_already_sanitized``
-            is True and the source SHA-256 is in
-            :data:`fixtures.SANITIZED_SHAS`.
+        SanitizerSourceParseError: If the source bytes cannot be opened by :mod:`pikepdf`.
+        AlreadySanitizedError: If ``refuse_if_already_sanitized`` is True and the source
+            SHA-256 is in :data:`fixtures.SANITIZED_SHAS`.
     """
     source_sha, source_size_bytes = _digest_source(source)
 
     if refuse_if_already_sanitized and source_sha in _fixtures.SANITIZED_SHAS:
         raise AlreadySanitizedError(source_sha256=source_sha)
 
+    pdf: pikepdf.Pdf | None = None
+    source_parse_error: SanitizerSourceParseError | None = None
     try:
         # Path inputs feed pikepdf directly so QPDF's memory-mapping
         # path can avoid a full in-memory copy of the source bytes.
@@ -136,7 +135,14 @@ def sanitize_pdf(
         # with the bytes already in hand) take the BytesIO path.
         pdf = pikepdf.Pdf.open(io.BytesIO(source) if isinstance(source, bytes) else source)
     except PikepdfError as exc:
-        raise SanitizerSourceParseError(f"pikepdf could not parse source bytes: {exc}") from exc
+        _LOG.debug(
+            "sanitize_pdf: source=<input-pdf> failure=%s",
+            type(exc).__name__,
+        )
+        source_parse_error = SanitizerSourceParseError(failure=type(exc).__name__)
+    if source_parse_error is not None:
+        raise source_parse_error
+    assert pdf is not None
 
     _refuse_if_signed(pdf)
 
@@ -174,7 +180,15 @@ def sanitize_pdf(
         warnings.extend(xmp_warnings)
 
     output_bytes, flags = save_with_deterministic_flags(pdf)
-    output_sha = hashlib.sha256(output_bytes).hexdigest()
+    output_sha = sha256_hex(output_bytes)
+    _LOG.info(
+        "sanitize_pdf: completed source_sha=%s output_sha=%s replacements=%d surfaces=%d warnings=%d",
+        source_sha[:16],
+        output_sha[:16],
+        len(replacements),
+        len(surfaces),
+        len(warnings),
+    )
 
     return SanitizationResult(
         output_bytes=output_bytes,
@@ -193,12 +207,11 @@ def sanitize_pdf(
 def _digest_source(source: bytes | Path) -> tuple[str, int]:
     """Returns ``(sha256_hex, size_bytes)`` for ``source``.
 
-    Streams ``Path`` inputs through hashlib in 1 MiB chunks so a
-    multi-hundred-megabyte capture never has to be fully resident
-    in memory. ``bytes`` inputs (rare — used by library consumers
-    with the bytes already in hand) hash directly. Result mirrors
-    the previous ``_read_source`` + ``hashlib.sha256(...)`` pair
-    but without the load-everything intermediate buffer.
+    ``Path`` inputs delegate to the canonical chunked file digest so a
+    multi-hundred-megabyte capture never has to be fully resident in memory,
+    wrapping the ``OSError`` on an unreadable artefact in the sanitizer source
+    error. ``bytes`` inputs (rare — used by library consumers with the bytes
+    already in hand) hash directly through the canonical in-memory digest.
 
     Args:
         source: Raw bytes of the source PDF, or a :class:`Path`.
@@ -207,17 +220,23 @@ def _digest_source(source: bytes | Path) -> tuple[str, int]:
         Tuple of (lowercase hex SHA-256 digest, byte count).
     """
     if isinstance(source, bytes):
-        return hashlib.sha256(source).hexdigest(), len(source)
-    digest = hashlib.sha256()
+        return sha256_hex(source), len(source)
+    digest = ""
     size = 0
-    with source.open("rb") as fh:
-        while True:
-            chunk = fh.read(1 << 20)  # 1 MiB
-            if not chunk:
-                break
-            digest.update(chunk)
-            size += len(chunk)
-    return digest.hexdigest(), size
+    source_parse_error: SanitizerSourceParseError | None = None
+    try:
+        digest, size = hash_file(source)
+    except OSError as exc:
+        _LOG.debug(
+            "sanitize_pdf: source=<input-pdf> failure=%s",
+            type(exc).__name__,
+        )
+        source_parse_error = SanitizerSourceParseError(failure=type(exc).__name__)
+    if source_parse_error is not None:
+        # Raise outside the ``except`` block so neither ``__cause__`` nor
+        # ``__context__`` carries the OSError (which leaks the source path).
+        raise source_parse_error
+    return digest, size
 
 
 def _refuse_if_signed(pdf: pikepdf.Pdf) -> None:
@@ -233,7 +252,7 @@ def _refuse_if_signed(pdf: pikepdf.Pdf) -> None:
         if sig_flags is not None and int(sig_flags) != 0:
             raise SignaturePresentError(
                 "Source PDF carries a digital signature (SigFlags set); "
-                "the sanitiser refuses to modify signed documents."
+                "the sanitiser refuses to modify signed documents.",
             )
         fields = acroform.get("/Fields")
         if fields is not None:
@@ -242,5 +261,5 @@ def _refuse_if_signed(pdf: pikepdf.Pdf) -> None:
                 ft = field.get("/FT")
                 if ft is not None and ft == pikepdf.Name.Sig:
                     raise SignaturePresentError(
-                        "Source PDF contains a signature field; the sanitiser refuses to modify signed documents."
+                        "Source PDF contains a signature field; the sanitiser refuses to modify signed documents.",
                     )

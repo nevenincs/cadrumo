@@ -1,0 +1,29 @@
+[[revisions."2025-02-03-y-siguientes".constructs]]
+id = "modelo-036-censo-foundation"
+title = "Modelo 036 censo foundation"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+    "orden-hac-1526-2024:df-unica",
+]
+source_refs = [
+    "aeat-dr-036-2025",
+    "aeat-modelo-036-procedure",
+]
+casilla_ids = ["decl.event-kind", "decl.vigencia-2025"]
+bindings = ["modelo-036-profile-censo-status"]
+workbook_parity_refs = ["modelo-036-dr-2025"]
+verification_expectations = ["modelo-036-censo-foundation-verification"]
+application_links = [
+    "modelo-036-workflow",
+    "modelo-036-filing",
+    "modelo-036-verification",
+    "modelo-036-extractor",
+]
+filing_schedules = ["modelo-036-event-triggered"]
+extraction_profiles = ["modelo-036-declaracion-pdf"]
+

@@ -1,286 +1,298 @@
-"""Encrypted persistence for actividad economica asset ledgers."""
+"""Encrypted SQL persistence for actividad economica asset and amortizacion ledgers.
+
+:class:`aeat.domain.contribuyente.assets.AssetRecord` and
+:class:`aeat.domain.contribuyente.assets.AmortizacionLedger` payloads are stored
+as :class:`SensitivityClass` FINANCIAL secure objects in the primary database
+through :class:`SecureObjectRepository`.
+"""
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from pathlib import Path
 
-from ....core.config import load_settings
+from ....core.errors import AeatError
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
-from ....domain.profile.assets import (
-    AmortizationLedger,
-    AmortizationRecordResult,
+from ....core.time import now
+from ....domain.contribuyente.assets import (
+    AmortizacionLedger,
     AssetRecord,
+    AssetRecordError,
     AssetsLedgerDocument,
-    _flatten_entries,
-    _nested_entries,
-    compute_amortization_for_year,
 )
-from ....domain.profile.errors import AssetRecordError
-from ..storage import Envelope, SensitivityClass, exclusive_file_lock, load_encrypted_envelope, save_encrypted_envelope
-from ..storage.crypto._encrypted_columns import _resolve_master_key_provider
+from ..storage import (
+    PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
+    PROFILE_ASSETS_LEDGER_NAMESPACE,
+    SensitivityClass,
+    secure_object_logical_path,
+)
+from ..storage.runtime_repository import secure_object_repository_for_active_bucket
+from ..storage.sql import SecureObjectRepository
 
 _log = get_logger(__name__)
 
-ASSETS_LEDGER_FILENAME = "assets-ledger.envelope.json"
-ASSETS_AMORTIZATION_LEDGER_FILENAME = "assets-amortization-ledger.envelope.json"
-_ENVELOPE_VERSION = 1
-_HKDF_CONTEXT_ASSETS = b"aeat.domain.profile.assets.ledger.v1"
-_HKDF_CONTEXT_AMORTIZATION = b"aeat.domain.profile.assets.amortization-ledger.v1"
+ASSETS_LEDGER_FILENAME = "assets-ledger.secure-object"
+ASSETS_AMORTIZATION_LEDGER_FILENAME = "assets-amortization-ledger.secure-object"
+_ASSETS_SECURE_OBJECT_VERSION = PROFILE_ASSETS_LEDGER_NAMESPACE.schema_version
+_AMORTIZACION_SECURE_OBJECT_VERSION = PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE.schema_version
+_ASSETS_NAMESPACE = PROFILE_ASSETS_LEDGER_NAMESPACE.namespace
+_AMORTIZACION_NAMESPACE = PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE.namespace
+_ASSETS_OBJECT_KEY = PROFILE_ASSETS_LEDGER_NAMESPACE.require_default_object_key()
+_AMORTIZACION_OBJECT_KEY = PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE.require_default_object_key()
 
 
-def default_storage_dir() -> Path:
-    """Return the configured governed ledger storage directory."""
-
-    return Path(load_settings().aeat_ledgers_dir)
+def _secure_object_marker(namespace: str, filename: str) -> Path:
+    return secure_object_logical_path(namespace, filename)
 
 
-def load_assets(*, storage_dir: Path | None = None) -> tuple[AssetRecord, ...]:
-    """Load persisted asset records from the encrypted ledger."""
+def load_assets() -> tuple[AssetRecord, ...]:
+    """Load persisted asset records from the encrypted ledger.
 
-    return AssetsLedgerRepository(store_dir=storage_dir or default_storage_dir()).load().assets
+    Returns:
+        Tuple of :class:`AssetRecord` entries, empty when the ledger is absent.
+    """
+    return AssetsLedgerRepository().load().assets
 
 
-def save_assets(assets: tuple[AssetRecord, ...], *, storage_dir: Path | None = None) -> Path:
-    """Persist asset records as a governed encrypted envelope."""
+def save_assets(assets: tuple[AssetRecord, ...]) -> Path:
+    """Persist ``assets`` as a governed FINANCIAL-class encrypted envelope.
 
-    repository = AssetsLedgerRepository(store_dir=storage_dir or default_storage_dir())
+    Args:
+        assets: Asset records to persist.
+
+    Returns:
+        Logical secure-object marker for the persisted ledger.
+    """
+    repository = AssetsLedgerRepository()
     repository.save(AssetsLedgerDocument(assets=assets))
     return repository.envelope_path
 
 
-def add_asset(asset: AssetRecord, *, storage_dir: Path | None = None) -> AssetsLedgerDocument:
-    """Atomically add ``asset`` to the encrypted asset ledger."""
+def add_asset(asset: AssetRecord) -> AssetsLedgerDocument:
+    """Atomically add ``asset`` to the encrypted asset ledger.
 
-    return AssetsLedgerRepository(store_dir=storage_dir or default_storage_dir()).add(asset)
+    Args:
+        asset: Asset record to insert.
+
+    Returns:
+        The updated :class:`AssetsLedgerDocument` including the newly inserted asset.
+    """
+    return AssetsLedgerRepository().add(asset)
 
 
-def load_amortization_ledger(*, storage_dir: Path | None = None) -> AmortizationLedger:
-    """Load the amortization ledger, returning an empty ledger when absent."""
+def load_amortizacion_ledger() -> AmortizacionLedger:
+    """Load the amortizacion ledger, returning an empty ledger when absent.
 
-    return AmortizationLedgerRepository(store_dir=storage_dir or default_storage_dir()).load()
+    Returns:
+        Persisted :class:`AmortizacionLedger` or an empty one when no envelope exists.
+    """
+    return AmortizacionLedgerRepository().load()
 
 
-def save_amortization_ledger(ledger: AmortizationLedger, *, storage_dir: Path | None = None) -> Path:
-    """Persist the amortization ledger as a governed encrypted envelope."""
+def save_amortizacion_ledger(ledger: AmortizacionLedger) -> Path:
+    """Persist ``ledger`` as a governed FINANCIAL-class encrypted envelope.
 
-    repository = AmortizationLedgerRepository(store_dir=storage_dir or default_storage_dir())
+    Args:
+        ledger: Amortizacion ledger to persist.
+
+    Returns:
+        Logical secure-object marker for the persisted ledger.
+    """
+    repository = AmortizacionLedgerRepository()
     repository.save(ledger)
     return repository.envelope_path
-
-
-def record_amortization(asset: AssetRecord, year: int, *, storage_dir: Path | None = None) -> AmortizationLedger:
-    """Compute and record amortization for one asset/year."""
-
-    return AmortizationLedgerRepository(store_dir=storage_dir or default_storage_dir()).record(asset, year).ledger
 
 
 class AssetsLedgerRepository:
     """Governed repository for the encrypted assets ledger."""
 
-    def __init__(self, *, store_dir: Path) -> None:
-        self._store_dir = Path(store_dir)
+    def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
+        """Initialise the repository, defaulting to the active-bucket secure object store."""
+        self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
 
     @property
     def envelope_path(self) -> Path:
-        """Return the canonical encrypted envelope path."""
-
-        return self._store_dir / ASSETS_LEDGER_FILENAME
+        """Logical path retained for callers that display the storage target."""
+        return _secure_object_marker(_ASSETS_NAMESPACE, ASSETS_LEDGER_FILENAME)
 
     @property
     def lock_target(self) -> Path:
-        """Return the canonical lock sidecar path."""
-
-        return self._store_dir / "assets-ledger.lock"
+        """Logical lock marker; SQL transactions govern writes."""
+        return _secure_object_marker(_ASSETS_NAMESPACE, "assets-ledger.lock")
 
     def load(self) -> AssetsLedgerDocument:
-        """Load the ledger, returning an empty document when absent."""
+        """Load the ledger, returning an empty document when absent.
 
-        if not self.envelope_path.exists():
-            return AssetsLedgerDocument()
+        Returns:
+            Decrypted :class:`AssetsLedgerDocument`.
+
+        Raises:
+            AssetRecordError: When the envelope exists but cannot be loaded or decrypted.
+        """
         try:
-            envelope = load_encrypted_envelope(
-                self.envelope_path,
-                Envelope[AssetsLedgerDocument],
+            record = self._objects.load(
+                _ASSETS_NAMESPACE,
+                self._object_key,
                 expected_class=SensitivityClass.FINANCIAL,
-                master_key_provider=_resolve_master_key_provider(),
-                hkdf_context=_HKDF_CONTEXT_ASSETS,
-                max_supported_version=_ENVELOPE_VERSION,
+                max_supported_version=_ASSETS_SECURE_OBJECT_VERSION,
             )
-            return envelope.payload
-        except Exception as exc:
-            raise AssetRecordError(f"unable to load asset ledger: {self.envelope_path}") from exc
+            if record is None:
+                return AssetsLedgerDocument()
+            return AssetsLedgerDocument.model_validate_json(record.payload.decode(UTF_8_ENCODING))
+        except (OSError, AeatError) as exc:
+            _log.debug(
+                "asset ledger load failed",
+                extra={
+                    "namespace": _ASSETS_NAMESPACE,
+                    "object_key": self._object_key,
+                    "error_type": type(exc).__name__,
+                },
+            )
+            raise AssetRecordError(
+                f"unable to load asset ledger: {self._object_key}",
+                context={"namespace": _ASSETS_NAMESPACE, "object_key": self._object_key},
+                translated_message="adapters.persistence.profile.assets.errors.load_asset_ledger_failed",
+            ) from exc
 
     def save(self, document: AssetsLedgerDocument) -> None:
-        """Persist ``document`` as FINANCIAL-class ciphertext."""
+        """Persist ``document`` as FINANCIAL-class ciphertext.
 
-        self._store_dir.mkdir(parents=True, exist_ok=True)
-        with exclusive_file_lock(self.lock_target):
-            envelope = Envelope[AssetsLedgerDocument](
-                schema_version=_ENVELOPE_VERSION,
-                written_at=datetime.now(UTC),
-                classification=SensitivityClass.FINANCIAL,
-                payload=document,
-            )
-            save_encrypted_envelope(
-                envelope,
-                self.envelope_path,
-                master_key_provider=_resolve_master_key_provider(),
-                hkdf_context=_HKDF_CONTEXT_ASSETS,
-            )
-        _log.info("saved %d asset records to %s", len(document.assets), self.envelope_path)
+        Args:
+            document: Ledger document to encrypt and write.
+        """
+        self._save_unlocked(document)
+        _log.info("saved %d asset records to secure object %s", len(document.assets), self._object_key)
 
     def add(self, asset: AssetRecord) -> AssetsLedgerDocument:
-        """Atomically add ``asset`` and refuse duplicate identifiers."""
+        """Atomically add ``asset`` and refuse duplicate identifiers.
 
-        self._store_dir.mkdir(parents=True, exist_ok=True)
-        with exclusive_file_lock(self.lock_target):
-            current = self._load_unlocked()
-            if any(existing.identifier == asset.identifier for existing in current.assets):
-                raise AssetRecordError(
-                    f"asset {asset.identifier!r} already exists",
-                    context={"asset_id": asset.identifier},
-                    suggestion=f"aeat data ledgers assets show {asset.identifier}",
-                )
-            updated = AssetsLedgerDocument(assets=(*current.assets, asset))
-            self._save_unlocked(updated)
-            return updated
+        Args:
+            asset: Asset record to insert.
+
+        Returns:
+            The :class:`AssetsLedgerDocument` including the new asset.
+
+        Raises:
+            AssetRecordError: When an asset with the same identifier already exists.
+        """
+        current = self._load_unlocked()
+        if any(existing.identifier == asset.identifier for existing in current.assets):
+            raise AssetRecordError(
+                f"asset {asset.identifier!r} already exists",
+                context={"asset_id": asset.identifier},
+                suggestion=None,
+                translated_message="adapters.persistence.profile.assets.errors.asset_already_exists",
+            )
+        updated = AssetsLedgerDocument(assets=(*current.assets, asset))
+        self._save_unlocked(updated)
+        return updated
 
     def _load_unlocked(self) -> AssetsLedgerDocument:
-        if not self.envelope_path.exists():
-            return AssetsLedgerDocument()
-        envelope = load_encrypted_envelope(
-            self.envelope_path,
-            Envelope[AssetsLedgerDocument],
-            expected_class=SensitivityClass.FINANCIAL,
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=_HKDF_CONTEXT_ASSETS,
-            max_supported_version=_ENVELOPE_VERSION,
-        )
-        return envelope.payload
+        return self.load()
 
     def _save_unlocked(self, document: AssetsLedgerDocument) -> None:
-        envelope = Envelope[AssetsLedgerDocument](
-            schema_version=_ENVELOPE_VERSION,
-            written_at=datetime.now(UTC),
+        self._objects.save(
+            namespace=_ASSETS_NAMESPACE,
+            object_key=self._object_key,
             classification=SensitivityClass.FINANCIAL,
-            payload=document,
-        )
-        save_encrypted_envelope(
-            envelope,
-            self.envelope_path,
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=_HKDF_CONTEXT_ASSETS,
+            schema_version=_ASSETS_SECURE_OBJECT_VERSION,
+            written_at=now(),
+            payload=document.model_dump_json().encode(UTF_8_ENCODING),
         )
 
+    @property
+    def _object_key(self) -> str:
+        return _ASSETS_OBJECT_KEY
 
-class AmortizationLedgerRepository:
-    """Governed repository for the encrypted amortization ledger."""
 
-    def __init__(self, *, store_dir: Path) -> None:
-        self._store_dir = Path(store_dir)
+class AmortizacionLedgerRepository:
+    """Governed repository for the encrypted amortizacion ledger.
+
+    Mirrors :class:`AssetsLedgerRepository` for amortizacion entries; the
+    payload type is :class:`aeat.domain.contribuyente.assets.AmortizacionLedger`.
+    """
+
+    def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
+        """Initialise the repository, defaulting to the active-bucket secure object store."""
+        self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
 
     @property
     def envelope_path(self) -> Path:
-        """Return the canonical encrypted envelope path."""
-
-        return self._store_dir / ASSETS_AMORTIZATION_LEDGER_FILENAME
+        """Logical path retained for callers that display the storage target."""
+        return _secure_object_marker(_AMORTIZACION_NAMESPACE, ASSETS_AMORTIZATION_LEDGER_FILENAME)
 
     @property
     def lock_target(self) -> Path:
-        """Return the canonical lock sidecar path."""
+        """Logical lock marker; SQL transactions govern writes."""
+        return _secure_object_marker(_AMORTIZACION_NAMESPACE, "assets-amortization-ledger.lock")
 
-        return self._store_dir / "assets-amortization-ledger.lock"
+    def load(self) -> AmortizacionLedger:
+        """Load the ledger, returning an empty document when absent.
 
-    def load(self) -> AmortizationLedger:
-        """Load the ledger, returning an empty document when absent."""
+        Returns:
+            Decrypted :class:`AmortizacionLedger`.
 
-        if not self.envelope_path.exists():
-            return AmortizationLedger()
+        Raises:
+            AssetRecordError: When the envelope exists but cannot be loaded or decrypted.
+        """
         try:
-            envelope = load_encrypted_envelope(
-                self.envelope_path,
-                Envelope[AmortizationLedger],
+            record = self._objects.load(
+                _AMORTIZACION_NAMESPACE,
+                self._object_key,
                 expected_class=SensitivityClass.FINANCIAL,
-                master_key_provider=_resolve_master_key_provider(),
-                hkdf_context=_HKDF_CONTEXT_AMORTIZATION,
-                max_supported_version=_ENVELOPE_VERSION,
+                max_supported_version=_AMORTIZACION_SECURE_OBJECT_VERSION,
             )
-            return envelope.payload
-        except Exception as exc:
-            raise AssetRecordError(f"unable to load amortization ledger: {self.envelope_path}") from exc
-
-    def save(self, ledger: AmortizationLedger) -> None:
-        """Persist ``ledger`` as FINANCIAL-class ciphertext."""
-
-        self._store_dir.mkdir(parents=True, exist_ok=True)
-        with exclusive_file_lock(self.lock_target):
-            envelope = Envelope[AmortizationLedger](
-                schema_version=_ENVELOPE_VERSION,
-                written_at=datetime.now(UTC),
-                classification=SensitivityClass.FINANCIAL,
-                payload=ledger,
+            if record is None:
+                return AmortizacionLedger()
+            return AmortizacionLedger.model_validate_json(record.payload.decode(UTF_8_ENCODING))
+        except (OSError, AeatError) as exc:
+            _log.debug(
+                "asset amortizacion ledger load failed",
+                extra={
+                    "namespace": _AMORTIZACION_NAMESPACE,
+                    "object_key": self._object_key,
+                    "error_type": type(exc).__name__,
+                },
             )
-            save_encrypted_envelope(
-                envelope,
-                self.envelope_path,
-                master_key_provider=_resolve_master_key_provider(),
-                hkdf_context=_HKDF_CONTEXT_AMORTIZATION,
-            )
-        _log.info("saved amortization ledger to %s", self.envelope_path)
+            raise AssetRecordError(
+                f"unable to load amortizacion ledger: {self._object_key}",
+                context={"namespace": _AMORTIZACION_NAMESPACE, "object_key": self._object_key},
+                translated_message="adapters.persistence.profile.assets.errors.load_amortizacion_ledger_failed",
+            ) from exc
 
-    def record(self, asset: AssetRecord, year: int) -> AmortizationRecordResult:
-        """Atomically compute and record amortization for ``asset`` and ``year``."""
+    def save(self, ledger: AmortizacionLedger) -> None:
+        """Persist ``ledger`` as FINANCIAL-class ciphertext.
 
-        self._store_dir.mkdir(parents=True, exist_ok=True)
-        with exclusive_file_lock(self.lock_target):
-            current = self._load_unlocked()
-            by_asset = _nested_entries(current)
-            by_year = by_asset.setdefault(asset.identifier, {})
-            if year in by_year:
-                return AmortizationRecordResult(ledger=current, amount=by_year[year], stored=False)
-            amount = compute_amortization_for_year(asset, year, current)
-            by_year[year] = amount
-            updated = AmortizationLedger(entries=_flatten_entries(by_asset))
-            self._save_unlocked(updated)
-            return AmortizationRecordResult(ledger=updated, amount=amount, stored=True)
+        Args:
+            ledger: Amortizacion ledger to encrypt and write.
+        """
+        self._save_unlocked(ledger)
+        _log.info("saved amortizacion ledger to secure object %s", self._object_key)
 
-    def _load_unlocked(self) -> AmortizationLedger:
-        if not self.envelope_path.exists():
-            return AmortizationLedger()
-        envelope = load_encrypted_envelope(
-            self.envelope_path,
-            Envelope[AmortizationLedger],
-            expected_class=SensitivityClass.FINANCIAL,
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=_HKDF_CONTEXT_AMORTIZATION,
-            max_supported_version=_ENVELOPE_VERSION,
-        )
-        return envelope.payload
+    def _load_unlocked(self) -> AmortizacionLedger:
+        return self.load()
 
-    def _save_unlocked(self, ledger: AmortizationLedger) -> None:
-        envelope = Envelope[AmortizationLedger](
-            schema_version=_ENVELOPE_VERSION,
-            written_at=datetime.now(UTC),
+    def _save_unlocked(self, ledger: AmortizacionLedger) -> None:
+        self._objects.save(
+            namespace=_AMORTIZACION_NAMESPACE,
+            object_key=self._object_key,
             classification=SensitivityClass.FINANCIAL,
-            payload=ledger,
+            schema_version=_AMORTIZACION_SECURE_OBJECT_VERSION,
+            written_at=now(),
+            payload=ledger.model_dump_json().encode(UTF_8_ENCODING),
         )
-        save_encrypted_envelope(
-            envelope,
-            self.envelope_path,
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=_HKDF_CONTEXT_AMORTIZATION,
-        )
+
+    @property
+    def _object_key(self) -> str:
+        return _AMORTIZACION_OBJECT_KEY
 
 
 __all__ = [
-    "AmortizationLedgerRepository",
+    "AmortizacionLedgerRepository",
     "AssetsLedgerRepository",
     "add_asset",
-    "default_storage_dir",
-    "load_amortization_ledger",
+    "load_amortizacion_ledger",
     "load_assets",
-    "record_amortization",
-    "save_amortization_ledger",
+    "save_amortizacion_ledger",
     "save_assets",
 ]

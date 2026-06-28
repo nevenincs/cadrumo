@@ -23,25 +23,50 @@ a TOCTOU window.
 
 from __future__ import annotations
 
-import contextlib
 import os
 import sys
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
-from importlib import import_module
 from pathlib import Path
-from typing import Final
+from typing import Final, override
 
+from .config import load_settings as _load_settings
+from .locks_errors import LockAcquisitionError
 from .logging import get_logger
 
 _log = get_logger(__name__)
 
-DEFAULT_LOCK_TIMEOUT: Final[float] = 30.0
-"""Default timeout for :func:`exclusive_file_lock` in seconds."""
 
-_RETRY_BACKOFF: Final[float] = 0.05
-"""Sleep interval between non-blocking lock-acquire attempts."""
+def _default_lock_timeout() -> float:
+    """Return the currently effective lock-acquire timeout in seconds.
+
+    Resolved each call via :func:`load_settings` so an
+    :func:`override_settings` block (test scope) is honoured. Replaces a
+    module-level constant that snapshotted ``Settings()`` at import time
+    and could not be overridden after the module had loaded.
+    """
+    return _load_settings().aeat_file_lock_timeout_s
+
+
+def _default_retry_backoff() -> float:
+    """Return the currently effective non-blocking retry backoff in seconds."""
+    return _load_settings().aeat_file_lock_retry_backoff_s
+
+
+class _DefaultLockTimeout:
+    """Sentinel marking ``timeout`` as "resolve from settings on call"."""
+
+    @override
+    def __repr__(self) -> str:
+        return "DEFAULT_LOCK_TIMEOUT"
+
+
+DEFAULT_LOCK_TIMEOUT: Final[_DefaultLockTimeout] = _DefaultLockTimeout()
+"""Sentinel for :func:`exclusive_file_lock` ``timeout``; resolves at call time."""
+
+_DEFAULT_RETRY_BACKOFF: Final[_DefaultLockTimeout] = _DefaultLockTimeout()
+"""Sentinel for :func:`exclusive_file_lock` ``retry_backoff``; resolves at call time."""
 
 
 def _lock_path_for(target: Path) -> Path:
@@ -74,13 +99,18 @@ def fsync_parent_dir(target: Path) -> None:
     try:
         fd = os.open(parent, os.O_DIRECTORY | os.O_RDONLY)
     except OSError:
+        _log.debug("fsync_parent_dir: could not open parent directory %s", parent, exc_info=True)
         return
     try:
-        with contextlib.suppress(OSError):
+        try:
             os.fsync(fd)
+        except OSError:
+            _log.debug("fsync_parent_dir: could not fsync parent directory %s", parent, exc_info=True)
     finally:
-        with contextlib.suppress(OSError):
+        try:
             os.close(fd)
+        except OSError:
+            _log.debug("fsync_parent_dir: could not close parent directory fd for %s", parent, exc_info=True)
 
 
 if sys.platform == "win32":  # pragma: no cover - branch covered on Windows only
@@ -98,9 +128,11 @@ if sys.platform == "win32":  # pragma: no cover - branch covered on Windows only
         """Release the exclusive lock previously acquired via :func:`_try_lock`."""
         # Best-effort: the OS already releases the lock when the
         # descriptor is closed. Avoid raising during teardown.
-        with contextlib.suppress(OSError):
+        try:
             os.lseek(fd, 0, os.SEEK_SET)
             msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+        except OSError:
+            _log.debug("exclusive_file_lock: Windows lock release failed for fd %s", fd, exc_info=True)
 
 else:  # POSIX
     import fcntl
@@ -113,16 +145,18 @@ else:  # POSIX
             return False
 
     def _release_lock(fd: int) -> None:
-        with contextlib.suppress(OSError):
+        try:
             fcntl.flock(fd, fcntl.LOCK_UN)
+        except OSError:
+            _log.debug("exclusive_file_lock: POSIX lock release failed for fd %s", fd, exc_info=True)
 
 
 @contextmanager
 def exclusive_file_lock(
     target: Path,
     *,
-    timeout: float = DEFAULT_LOCK_TIMEOUT,
-    retry_backoff: float = _RETRY_BACKOFF,
+    timeout: float | _DefaultLockTimeout = DEFAULT_LOCK_TIMEOUT,
+    retry_backoff: float | _DefaultLockTimeout = _DEFAULT_RETRY_BACKOFF,
 ) -> Iterator[Path]:
     """Acquire an OS-level exclusive lock on a sidecar lock file.
 
@@ -132,6 +166,12 @@ def exclusive_file_lock(
     context manager exits, whether normally or via exception. The lock
     file itself is left on disk so a racing acquirer never sees a
     transient missing-file state.
+
+    On Windows ``msvcrt.locking`` enforces a mandatory lock against a
+    single byte of the lock file. On POSIX ``fcntl.flock`` is advisory —
+    readers that do not also acquire the lock can still observe the
+    protected resource mid-write. Callers MUST treat the lock as advisory
+    across the whole file regardless of the underlying primitive.
 
     Args:
         target: Path to the resource being protected. The lock sidecar
@@ -148,26 +188,19 @@ def exclusive_file_lock(
 
     Raises:
         LockAcquisitionError: If the lock cannot be acquired within
-            ``timeout`` seconds. The error category is ``LOCKED`` and
-            ``retryable`` is ``True``. The retryable flag means
-            "another acquirer may release shortly and the operation
-            could succeed on retry"; consumers that retry MUST bound
-            the retry budget themselves (e.g. via the existing
-            ``timeout`` argument or an outer back-off loop). The
-            substrate does not auto-retry.
-        OSError: If the lock-file descriptor cannot be opened. The
-            caller decides whether to wrap.
-
-    Note:
-        On Windows ``msvcrt.locking`` enforces a mandatory lock against
-        a single byte of the lock file. On POSIX ``fcntl.flock`` is
-        advisory — readers that do not also acquire the lock can still
-        observe the protected resource mid-write. Callers MUST treat
-        the lock as advisory across the whole file regardless of the
-        underlying primitive.
+            ``timeout`` seconds, or if ``timeout`` is negative. The
+            error category is ``LOCKED`` and ``retryable`` is ``True``.
+            The retryable flag means "another acquirer may release
+            shortly and the operation could succeed on retry"; consumers
+            that retry MUST bound the retry budget themselves.
     """
-    LockAcquisitionError = import_module("aeat.adapters.persistence.storage.errors").LockAcquisitionError
-
+    # Resolve sentinel defaults via load_settings() so override_settings()
+    # blocks (test scope) propagate. A literal float passed by the caller
+    # bypasses settings entirely.
+    if isinstance(timeout, _DefaultLockTimeout):
+        timeout = _default_lock_timeout()
+    if isinstance(retry_backoff, _DefaultLockTimeout):
+        retry_backoff = _default_retry_backoff()
     if timeout < 0:
         raise LockAcquisitionError(f"timeout must be non-negative; got {timeout}")
     lock_path = _lock_path_for(target)
@@ -178,10 +211,8 @@ def exclusive_file_lock(
     # extend the lock's lifetime to the child process and could deadlock
     # an unrelated writer if the child outlives the parent.
     open_flags = os.O_RDWR | os.O_CREAT
-    if hasattr(os, "O_CLOEXEC"):
-        open_flags |= os.O_CLOEXEC
-    if hasattr(os, "O_NOINHERIT"):
-        open_flags |= os.O_NOINHERIT  # type: ignore[attr-defined]
+    open_flags |= getattr(os, "O_CLOEXEC", 0)
+    open_flags |= getattr(os, "O_NOINHERIT", 0)
     fd = os.open(lock_path, open_flags, 0o600)
     try:
         deadline = time.monotonic() + timeout
@@ -189,13 +220,20 @@ def exclusive_file_lock(
             if _try_lock(fd):
                 break
             if time.monotonic() >= deadline:
+                _log.warning(
+                    "exclusive_file_lock: timed out waiting for %s after %.2fs",
+                    lock_path,
+                    timeout,
+                )
                 raise LockAcquisitionError(
                     f"failed to acquire exclusive lock on {lock_path} within {timeout:.2f}s",
                 )
             time.sleep(retry_backoff)
+        _log.debug("exclusive_file_lock: acquired %s", lock_path)
         try:
             yield lock_path
         finally:
             _release_lock(fd)
+            _log.debug("exclusive_file_lock: released %s", lock_path)
     finally:
         os.close(fd)

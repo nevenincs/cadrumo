@@ -3,6 +3,7 @@ tags:
   - "#exec"
   - "#notifications-inbox"
 date: 2026-04-12
+modified: '2026-04-12'
 title: AEAT notifications inbox — phase 1 exec summary
 related:
   - "[[2026-04-12-notifications-inbox-plan]]"

@@ -1,0 +1,68 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "347",
+  "retrieved_at": "2026-05-03",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99_.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
+  ],
+  "artefact_count": 4,
+  "artefacts": [
+    {
+      "modelo": "347",
+      "title": "347 - Ejercicio 2025 y siguientes. Modificados por Orden HAC/1431/2025, de 3 de diciembre (332 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/347.pdf",
+      "stored_path": "files/01-347-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1431-2025-de-3-de-diciembre-332-kb.pdf",
+      "original_filename": "347.pdf",
+      "content_type": "application/pdf",
+      "bytes": 338190,
+      "sha256": "14583ea5ee04441356c4572d30630d46bfe0818366e575ac186370dd3fe38361",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "347",
+      "title": "347 - Ejercicio 2008 y 2009 (30 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/347-2008-TIPOS.pdf",
+      "stored_path": "files/02-347-ejercicio-2008-y-2009-30-kb-pdf.pdf",
+      "original_filename": "347-2008-TIPOS.pdf",
+      "content_type": "application/pdf",
+      "bytes": 30997,
+      "sha256": "f670c1ac4b4c4d094a9657da278332f2f4f419447c60f95672f857778eaf69cb",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "347",
+      "title": "347 - Orden EHA/3062/2010. Ejercicio 2010 (181 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/347_2010_TIPOSV1.0.pdf",
+      "stored_path": "files/03-347-orden-eha-3062-2010-ejercicio-2010-181-kb-pdf.pdf",
+      "original_filename": "347_2010_TIPOSV1.0.pdf",
+      "content_type": "application/pdf",
+      "bytes": 185637,
+      "sha256": "4f9d5f9e3f7376a96408ea87b128bbb7316cd4650fbe4b9053a91e3dc5d30188",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "347",
+      "title": "347 - Orden EHA/3378/2011, de 1 de diciembre (579 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DLogicos_Registros_347.pdf",
+      "stored_path": "files/04-347-orden-eha-3378-2011-de-1-de-diciembre-579-kb-pdf.pdf",
+      "original_filename": "DLogicos_Registros_347.pdf",
+      "content_type": "application/pdf",
+      "bytes": 592831,
+      "sha256": "4cdfb401624e26abe3da3758ddcdcfc85b6b05ffa74e724b2d3f5eeb0c58e809",
+      "retrieved_at": "2026-05-03"
+    }
+  ]
+}

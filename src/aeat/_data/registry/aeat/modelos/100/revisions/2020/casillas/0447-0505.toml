@@ -1,0 +1,9 @@
+[[revisions."2020".casillas]]
+id = "0505"
+number = "0505"
+label = "Base liquidable general sometida a gravamen"
+section = ["resultados", "base_liquidable_res"]
+data_type = "decimal"
+semantic_role = "irpf_base_liquidable_general_gravamen"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "1220"
+number = "1220"
+label = "Ejercicio 2023: Pendiente de aplicación en ejercicios futuros"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+semantic_role = "irpf_inmueble_gastos_pendientes_futuros_periodo"
+legal_refs = ["ley-35-2006:art-23", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

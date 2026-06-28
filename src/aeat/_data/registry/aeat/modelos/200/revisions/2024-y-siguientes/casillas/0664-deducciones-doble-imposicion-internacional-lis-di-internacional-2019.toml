@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02201"
+number = "02201"
+label = "Deducciones doble imposición internacional LIS - DI internacional 2019 - Deducción pendiente [02201]"
+section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2019"]
+data_type = "money"
+semantic_role = "is_deduccion_di_internacional_detalle"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-016-casilla-02201"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02202"
+number = "02202"
+label = "Deducciones doble imposición internacional LIS - DI internacional 2019 - Tipo gravamen período generación [02202]"
+section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2019"]
+data_type = "decimal"
+semantic_role = "is_deduccion_di_internacional_tipo_gravamen_periodo_generacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-016-casilla-02202"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02203"
+number = "02203"
+label = "Deducciones doble imposición internacional LIS - DI internacional 2019 - 2025 Deducción pendiente [02203]"
+section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2019"]
+data_type = "money"
+semantic_role = "is_deduccion_di_internacional_detalle"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-016-casilla-02203"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02204"
+number = "02204"
+label = "Deducciones doble imposición internacional LIS - DI internacional 2019 - Aplicado en esta liquidación [02204]"
+section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2019"]
+data_type = "money"
+semantic_role = "is_deduccion_di_internacional_detalle"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-016-casilla-02204"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02205"
+number = "02205"
+label = "Deducciones doble imposición internacional LIS - DI internacional 2019 - Pendiente aplic. en períodos futuros [02205]"
+section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2019"]
+data_type = "money"
+semantic_role = "is_deduccion_di_internacional_pendiente"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-016-casilla-02205"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

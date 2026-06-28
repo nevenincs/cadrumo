@@ -1,0 +1,23 @@
+[[revisions."2024".constructs]]
+id = "renta-2024-mini-model-trabajo"
+title = "Modelo 100 2024 rendimientos del trabajo aggregators"
+legal_refs = [
+    "ley-35-2006:art-7-h",
+    "ley-35-2006:art-17",
+    "ley-35-2006:art-18",
+    "ley-35-2006:art-19",
+    "ley-35-2006:art-20",
+    "ley-35-2006:art-99",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+    "aeat-dr-100-2024-dictionary",
+]
+formulas = [
+    "renta-2024-trabajo-especie-importe-integro",
+    "renta-2024-trabajo-rendimiento-neto",
+    "renta-2024-trabajo-rendimiento-neto-previo",
+    "renta-2024-trabajo-rendimiento-neto-reducido",
+    "renta-2024-trabajo-suma-rendimientos-netos-previos",
+    "renta-2024-trabajo-total-ingresos-integros-computables",
+]

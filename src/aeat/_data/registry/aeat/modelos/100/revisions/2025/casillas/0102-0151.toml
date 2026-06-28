@@ -1,0 +1,9 @@
+[[revisions."2025".casillas]]
+id = "0151"
+number = "0151"
+label = "Reduccion por rendimientos irregulares del capital inmobiliario"
+section = ["rendimientos_capital_inmobiliario", "reducciones"]
+data_type = "decimal"
+semantic_role = "irpf_rendimiento_capital_inmobiliario_reduccion_rendimientos_irregulares"
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]

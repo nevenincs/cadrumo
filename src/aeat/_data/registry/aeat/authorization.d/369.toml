@@ -1,0 +1,5 @@
+[modelo]
+modelo = "369"
+renta_years = [2024, 2025]
+evidence_class = "calculation"
+enrolling_test = "src/aeat/application/calculations/tests/test_modelo_369_oss_fidelity.py"

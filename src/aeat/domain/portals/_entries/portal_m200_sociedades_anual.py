@@ -1,28 +1,29 @@
-"""Portal: Modelo 200 — IS autoliquidación anual."""
+"""Registry entry for Modelo 200 - annual corporate-income-tax self-assessment.
+
+Defines the :class:`PortalMetadata` record for :class:`Portal`
+``PORTAL_M200_SOCIEDADES_ANUAL`` under :class:`PortalCategory`
+``FILING``, exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY`.
+"""
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
-from ._common import build_entry
+from ._common import build_entry, portal_path
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_M200_SOCIEDADES_ANUAL,
-    url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GE04.shtml",
-    subdomain=Subdomain.SEDE,
+    path=portal_path(Portal.PORTAL_M200_SOCIEDADES_ANUAL),
+    subdomain=PortalHost.SEDE,
     category=PortalCategory.FILING,
     auth_methods=(
         AuthMethod.CERTIFICATE,
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_200,
-    label={
-        "es": "Modelo 200 — Impuesto sobre Sociedades (anual)",
-        "en": "Modelo 200 — Corporate income tax (annual)",
-        "hu": "200-as űrlap — Társasági adó (éves)",
-    },
-    purpose_es="Autoliquidación anual del Impuesto sobre Sociedades.",
+    label="entries.portal_m200_sociedades_anual.label",
+    purpose="entries.portal_m200_sociedades_anual.purpose",
 )
+"""Portal entry for Modelo 200 (annual corporate-income-tax self-assessment)."""

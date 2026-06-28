@@ -1,0 +1,20 @@
+rules:
+  - id: justify-ty-ignore-suppression
+    message: |
+      Type-checker suppression (`# ty: ignore`, `# type: ignore`,
+      `# pyright: ignore`, `# mypy: ignore`) must include an inline
+      justification comment naming the rule and the rationale. Format:
+      `<code>  # ty: ignore[rule-name]  # reason: <why>`.
+      Unjustified suppressions hide upstream typing issues from reviewers
+      and let real bugs land silently.
+    severity: ERROR
+    languages:
+      - generic
+    paths:
+      include:
+        - "/src/aeat/"
+      exclude:
+        - "/src/aeat/**/test_*.py"
+        - "/src/aeat/**/_test_*.py"
+        - "/src/aeat/tests/**/*.py"
+    pattern-regex: '#\s*(?:ty|type|pyright|mypy):\s*ignore(?:\[[^\]]+\])?\s*$'

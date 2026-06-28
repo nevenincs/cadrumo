@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02526"
+number = "02526"
+label = "Reversión del deterioro del valor de los elementos patrimoniales (art. 11.6 LIS) - Disminución - Correcciones del ejercicio - Permanentes [02526]"
+section = ["reversion_del_deterioro_del_valor_de_los_elementos", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_reversion_deterioro_elementos_permanente_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02526"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02527"
+number = "02527"
+label = "Reversión del deterioro del valor de los elementos patrimoniales (art. 11.6 LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02527]"
+section = ["reversion_del_deterioro_del_valor_de_los_elementos", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_reversion_deterioro_elementos_temporaria_ejercicio_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02527"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02528"
+number = "02528"
+label = "Reversión del deterioro del valor de los elementos patrimoniales (art. 11.6 LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02528]"
+section = ["reversion_del_deterioro_del_valor_de_los_elementos", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_reversion_deterioro_elementos_temporaria_anteriores_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02528"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02529"
+number = "02529"
+label = "Reversión del deterioro del valor de los elementos patrimoniales (art. 11.6 LIS) - Disminución - Saldo pendiente a principio de ejercicio [02529]"
+section = ["reversion_del_deterioro_del_valor_de_los_elementos", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_reversion_deterioro_elementos_saldo_inicial"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02529"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02530"
+number = "02530"
+label = "Reversión del deterioro del valor de los elementos patrimoniales (art. 11.6 LIS) - Disminución - Saldo pendiente a fin de ejercicio [02530]"
+section = ["reversion_del_deterioro_del_valor_de_los_elementos", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_reversion_deterioro_elementos_saldo_final_neto"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02530"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

@@ -1,9 +1,20 @@
-"""Run-trace observability layer (#99).
+"""Run-trace observability layer.
 
 Public API for cross-subpackage ``run_id`` propagation, JSONL audit
-logging, and deterministic read-only replay. See [[2026-04-14-run-trace-adr]]
-for the architecture and [[2026-04-14-run-trace-plan]] for the
-implementation plan.
+logging, and deterministic read-only replay.
+
+Key surface area:
+
+* :func:`run_context` — the contextvars-backed boundary that mints a
+  ``run_id``, fingerprints corpus / db / cert state, and persists a
+  :class:`RunTrace` on exit.
+* :func:`record_event` — the single emit primitive every call site uses.
+* :class:`RunEvent`, :class:`RunEventPayload`, :class:`RunTrace` —
+  strict pydantic v2 record types written to JSONL.
+* :func:`replay_run` — deterministic re-entry into a recorded run with
+  an :class:`AeatCorpusDriftError` refusal gate.
+* :func:`iter_runs` / :func:`iter_events` / :func:`load_trace` /
+  :func:`load_events` — read-only accessors over persisted traces.
 """
 
 from __future__ import annotations
@@ -19,6 +30,7 @@ from ._errors import (
     AeatCorpusDriftError,
     AeatObservabilityError,
     RunContextMissingError,
+    RunTracePersistenceError,
     RunTraceValidationError,
 )
 from ._fingerprint import (
@@ -76,6 +88,7 @@ __all__ = [
     "RunEventPayload",
     "RunOutcome",
     "RunTrace",
+    "RunTracePersistenceError",
     "RunTraceValidationError",
     "StepBoundaryPayload",
     "WorkflowLinkPayload",

@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02176"
+number = "02176"
+label = "XXXVII Copa América Barcelona (Ley 31/2022) - Aumento - Saldo pendiente a principio de ejercicio [02176]"
+section = ["xxxvii_copa_america_barcelona_ley_31_2022", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_copa_america_barcelona_saldo_inicial_neto"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-02176"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02177"
+number = "02177"
+label = "XXXVII Copa América Barcelona (Ley 31/2022) - Aumento - Correcciones del ejercicio - Permanentes [02177]"
+section = ["xxxvii_copa_america_barcelona_ley_31_2022", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_copa_america_barcelona_permanente_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-02177"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02178"
+number = "02178"
+label = "XXXVII Copa América Barcelona (Ley 31/2022) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02178]"
+section = ["xxxvii_copa_america_barcelona_ley_31_2022", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_copa_america_barcelona_temporaria_ejercicio_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-02178"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02179"
+number = "02179"
+label = "XXXVII Copa América Barcelona (Ley 31/2022) - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02179]"
+section = ["xxxvii_copa_america_barcelona_ley_31_2022", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_copa_america_barcelona_temporaria_anteriores_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-02179"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02180"
+number = "02180"
+label = "XXXVII Copa América Barcelona (Ley 31/2022) - Aumento - Saldo pendiente a fin de ejercicio [02180]"
+section = ["xxxvii_copa_america_barcelona_ley_31_2022", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_copa_america_ley_31_2022_saldo_final"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-02180"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

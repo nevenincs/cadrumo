@@ -1,0 +1,36 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "00755"
+number = "00755"
+label = "Deducciones DT 24ª.1 LIS - 2022 Periodificación - Deducción pendiente/generada [00755]"
+section = ["deducciones_dt_24a_1_lis", "2022_periodificacion"]
+data_type = "money"
+semantic_role = "is_deduccion_dt24a1_periodificacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-016-casilla-00755", "modelo-200-page-027-casilla-00755"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00756"
+number = "00756"
+label = "Deducciones DT 24ª.1 LIS - 2022 Periodificación - Aplicado en esta liquidación [00756]"
+section = ["deducciones_dt_24a_1_lis", "2022_periodificacion"]
+data_type = "money"
+semantic_role = "is_deduccion_dt24a1_periodificacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-016-casilla-00756", "modelo-200-page-028-casilla-00756"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00757"
+number = "00757"
+label = "Deducciones DT 24ª.1 LIS - 2022 Periodificación - Pendiente de aplicación en periodos futuros [00757]"
+section = ["deducciones_dt_24a_1_lis", "2022_periodificacion"]
+data_type = "money"
+semantic_role = "is_deduccion_dt24a1_periodificacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-016-casilla-00757", "modelo-200-page-028-casilla-00757"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

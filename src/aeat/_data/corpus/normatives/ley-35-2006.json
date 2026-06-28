@@ -1,0 +1,633 @@
+{
+  "articulos": [
+    {
+      "numero": "7",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a7",
+      "summary": {
+        "ca": "Enumera les rendes exemptes de l'IRPF, incloent-hi les prestacions publiques per maternitat i paternitat reconegudes per la Seguretat Social (lletra h).",
+        "en": "Lists income exempt from IRPF, including public maternity and paternity benefits recognised by Social Security (letter h).",
+        "es": "Enumera las rentas exentas del IRPF, incluyendo las prestaciones publicas por maternidad y paternidad reconocidas por la Seguridad Social (letra h).",
+        "hu": "Felsorolja az IRPF-mentes jovedelmeket, beleertve a Tarsadalombiztositas altal elismert anyasagi es apasagi juttatasokat (h. pont)."
+      },
+      "titulo": {
+        "ca": "Rendes exemptes",
+        "en": "Exempt income",
+        "es": "Rentas exentas",
+        "hu": "Mentes jovedelmek"
+      }
+    },
+    {
+      "numero": "17",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a17",
+      "summary": {
+        "ca": "Defineix els rendiments íntegres del treball com contraprestacions o utilitats derivades del treball personal o de la relació laboral o estatutària.",
+        "en": "Defines gross employment income as consideration or benefits derived from personal work or an employment or statutory relationship.",
+        "es": "Define los rendimientos integros del trabajo como contraprestaciones o utilidades derivadas del trabajo personal o de la relacion laboral o estatutaria.",
+        "hu": "Meghatározza a munkajövedelem bruttó összegét a személyes munkából vagy munkaviszonyból eredő juttatásokként."
+      },
+      "titulo": {
+        "ca": "Rendiments íntegres del treball",
+        "en": "Gross employment income",
+        "es": "Rendimientos integros del trabajo",
+        "hu": "Bruttó munkajövedelem"
+      }
+    },
+    {
+      "numero": "18",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a18",
+      "summary": {
+        "ca": "Regula els percentatges de reducció aplicables a determinats rendiments del treball, inclosos els obtinguts amb període de generació superior a dos anys.",
+        "en": "Regulates reduction percentages for certain employment income, including income generated over more than two years.",
+        "es": "Regula las reducciones aplicables a determinados rendimientos del trabajo, incluidos los obtenidos con periodo de generacion superior a dos anos.",
+        "hu": "Szabályozza egyes munkajövedelmek csökkentéseit, ideértve a két évnél hosszabb időszak alatt keletkezett jövedelmeket."
+      },
+      "titulo": {
+        "ca": "Percentatges de reducció aplicables a determinats rendiments del treball",
+        "en": "Reduction percentages applicable to certain employment income",
+        "es": "Porcentajes de reduccion aplicables a determinados rendimientos del trabajo",
+        "hu": "Egyes munkajövedelmekre alkalmazható csökkentési százalékok"
+      }
+    },
+    {
+      "numero": "19",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a19",
+      "summary": {
+        "ca": "Estableix el rendiment net del treball com el resultat de disminuir el rendiment íntegre en les despeses deduïbles.",
+        "en": "Sets net employment income as gross employment income reduced by deductible expenses.",
+        "es": "Establece el rendimiento neto del trabajo como el resultado de disminuir el rendimiento integro en los gastos deducibles.",
+        "hu": "A nettó munkajövedelmet a bruttó munkajövedelem levonható költségekkel csökkentett összegeként határozza meg."
+      },
+      "titulo": {
+        "ca": "Rendiment net del treball",
+        "en": "Net employment income",
+        "es": "Rendimiento neto del trabajo",
+        "hu": "Nettó munkajövedelem"
+      }
+    },
+    {
+      "numero": "20",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a20",
+      "summary": {
+        "ca": "Regula la reducció per obtenció de rendiments del treball aplicable al rendiment net del treball quan concorren els requisits legals.",
+        "en": "Regulates the reduction for obtaining employment income applicable to net employment income when statutory requirements are met.",
+        "es": "Regula la reduccion por obtencion de rendimientos del trabajo aplicable al rendimiento neto del trabajo cuando concurren los requisitos legales.",
+        "hu": "Szabályozza a munkajövedelem megszerzéséhez kapcsolódó csökkentést a nettó munkajövedelemre."
+      },
+      "titulo": {
+        "ca": "Reducció per obtenció de rendiments del treball",
+        "en": "Reduction for employment income",
+        "es": "Reduccion por obtencion de rendimientos del trabajo",
+        "hu": "Munkajövedelem utáni csökkentés"
+      }
+    },
+    {
+      "numero": "22",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a22",
+      "summary": {
+        "ca": "Defineix els rendiments íntegres del capital immobiliari derivats d'immobles rústics o urbans no afectes a activitats econòmiques.",
+        "en": "Defines gross real-estate capital income from rural or urban real estate not used in economic activities.",
+        "es": "Define los rendimientos integros del capital inmobiliario derivados de bienes inmuebles rusticos o urbanos no afectos a actividades economicas.",
+        "hu": "Meghatározza a gazdasági tevékenységhez nem használt ingatlanokból származó bruttó ingatlantőke-jövedelmet."
+      },
+      "titulo": {
+        "ca": "Rendiments íntegres del capital immobiliari",
+        "en": "Gross real-estate capital income",
+        "es": "Rendimientos integros del capital inmobiliario",
+        "hu": "Ingatlantőkéből származó bruttó jövedelem"
+      }
+    },
+    {
+      "numero": "23",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a23",
+      "summary": {
+        "ca": "Regula les despeses deduïbles i reduccions aplicables per determinar el rendiment net del capital immobiliari.",
+        "en": "Regulates deductible expenses and reductions for determining net real-estate capital income.",
+        "es": "Regula los gastos deducibles y reducciones aplicables para determinar el rendimiento neto del capital inmobiliario.",
+        "hu": "Szabályozza az ingatlantőke nettó jövedelmének meghatározásához alkalmazható levonható költségeket és csökkentéseket."
+      },
+      "titulo": {
+        "ca": "Despeses deduïbles i reduccions",
+        "en": "Deductible expenses and reductions",
+        "es": "Gastos deducibles y reducciones",
+        "hu": "Levonható költségek és csökkentések"
+      }
+    },
+    {
+      "numero": "24",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a24",
+      "summary": {
+        "ca": "Estableix el rendiment mínim computable en cas de parentiu per l'ús o arrendament d'immobles.",
+        "en": "Sets the minimum taxable return in kinship cases for real-estate use or leasing.",
+        "es": "Establece el rendimiento minimo computable en caso de parentesco por uso o arrendamiento de inmuebles.",
+        "hu": "Meghatározza a rokoni kapcsolatok esetén az ingatlanhasználatból vagy bérbeadásból származó minimálisan beszámítandó hozamot."
+      },
+      "titulo": {
+        "ca": "Rendiment en cas de parentiu",
+        "en": "Return in kinship cases",
+        "es": "Rendimiento en caso de parentesco",
+        "hu": "Rokoni kapcsolatok esetén számított hozam"
+      }
+    },
+    {
+      "numero": "25",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a25",
+      "summary": {
+        "ca": "Defineix els rendiments íntegres del capital mobiliari, inclosos dividends, interessos, rendes d'assegurances i altres rendiments de béns mobles.",
+        "en": "Defines gross movable-capital income, including dividends, interest, insurance income, and other returns from movable property.",
+        "es": "Define los rendimientos integros del capital mobiliario, incluidos dividendos, intereses, rentas de seguros y otros rendimientos de bienes muebles.",
+        "hu": "Meghatározza az ingó tőkéből származó bruttó jövedelmeket, ideértve az osztalékot, kamatot, biztosítási jövedelmet és egyéb hozamokat."
+      },
+      "titulo": {
+        "ca": "Rendiments íntegres del capital mobiliari",
+        "en": "Gross movable-capital income",
+        "es": "Rendimientos integros del capital mobiliario",
+        "hu": "Ingó tőkéből származó bruttó jövedelem"
+      }
+    },
+    {
+      "numero": "26",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a26",
+      "summary": {
+        "ca": "Estableix les despeses deduïbles i reduccions per determinar el rendiment net del capital mobiliari.",
+        "en": "Sets deductible expenses and reductions for determining net movable-capital income.",
+        "es": "Establece los gastos deducibles y reducciones para determinar el rendimiento neto del capital mobiliario.",
+        "hu": "Meghatározza az ingó tőke nettó jövedelmének megállapításához levonható költségeket és csökkentéseket."
+      },
+      "titulo": {
+        "ca": "Despeses deduïbles i reduccions",
+        "en": "Deductible expenses and reductions",
+        "es": "Gastos deducibles y reducciones",
+        "hu": "Levonható költségek és csökkentések"
+      }
+    },
+    {
+      "notes": "Base de la calificación autónomo / trabajador por cuenta ajena.",
+      "numero": "27",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a27",
+      "summary": {
+        "ca": "Defineix què es considera rendiment d'una activitat econòmica davant els rendiments del treball i del capital, i fixa el criteri d'ordenació per compte propi dels mitjans de producció i dels recursos humans.",
+        "en": "Defines what counts as income from an economic activity as opposed to employment or capital income, anchored on the self-employed organisation of production factors and human resources.",
+        "es": "Define qué se considera rendimiento de una actividad económica frente a los rendimientos del trabajo y del capital, y fija el criterio de ordenación por cuenta propia de los medios de producción y de los recursos humanos.",
+        "hu": "Meghatározza, mi minősül gazdasági tevékenységből származó jövedelemnek a munkaviszonyból és tőkéből származó jövedelemmel szemben."
+      },
+      "titulo": {
+        "ca": "Rendiments íntegros de actividades económicas",
+        "en": "Gross income from economic activities",
+        "es": "Rendimientos íntegros de actividades económicas",
+        "hu": "Gazdasági tevékenységből származó bruttó jövedelem"
+      }
+    },
+    {
+      "numero": "28",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a28",
+      "summary": {
+        "ca": "Fixa les regles generals per determinar el rendiment net de l'activitat econòmica, incloent-hi la remissió a l'Impost sobre Societats per als criteris d'imputació i les normes d'incompatibilitat amb els rendiments del treball.",
+        "en": "Lays out the general rules for computing the net income of an economic activity, including the reference to Corporate Income Tax for accrual criteria.",
+        "es": "Fija las reglas generales para determinar el rendimiento neto de la actividad económica, incluyendo la remisión al Impuesto sobre Sociedades para los criterios de imputación y las normas de incompatibilidad con los rendimientos del trabajo.",
+        "hu": "Rögzíti a gazdasági tevékenység nettó jövedelmének meghatározására vonatkozó általános szabályokat."
+      },
+      "titulo": {
+        "ca": "Regles generals de càlcul del rendiment net",
+        "en": "General rules for computing net income",
+        "es": "Reglas generales de cálculo del rendimiento neto",
+        "hu": "A nettó jövedelem kiszámításának általános szabályai"
+      }
+    },
+    {
+      "numero": "30",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a30",
+      "summary": {
+        "ca": "Regula el règim d'estimació directa per a la determinació del rendiment net d'activitats econòmiques i les seves modalitats normal i simplificada.",
+        "en": "Governs the direct estimation regime for determining net income from economic activities, in its normal and simplified variants.",
+        "es": "Regula el régimen de estimación directa para la determinación del rendimiento neto de actividades económicas y sus modalidades normal y simplificada.",
+        "hu": "Szabályozza a gazdasági tevékenységekből származó nettó jövedelem meghatározásának közvetlen becslési rendszerét."
+      },
+      "titulo": {
+        "ca": "Estimació directa",
+        "en": "Direct estimation method",
+        "es": "Estimación directa",
+        "hu": "Közvetlen becslés módszere"
+      }
+    },
+    {
+      "numero": "31",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a31",
+      "summary": {
+        "ca": "Regula el règim d'estimació objectiva (mòduls), les magnituds excloents i la renúncia al règim.",
+        "en": "Governs the objective estimation regime (modules), the exclusion thresholds, and renunciation of the regime.",
+        "es": "Regula el régimen de estimación objetiva (módulos), las magnitudes excluyentes y la renuncia al régimen.",
+        "hu": "Szabályozza az objektív becslési (modul) rendszert, a kizáró küszöböket és a rendszerről való lemondást."
+      },
+      "titulo": {
+        "ca": "Estimació objectiva",
+        "en": "Objective estimation method (module regime)",
+        "es": "Estimación objetiva",
+        "hu": "Objektív becslés (modulrendszer)"
+      }
+    },
+    {
+      "numero": "32",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32",
+      "summary": {
+        "ca": "Estableix les reduccions aplicables al rendiment net de l'activitat econòmica, incloses les reduccions per rendes irregulars (període de generació superior a dos anys) i la reducció per a autònoms econòmicament dependents.",
+        "en": "Sets out the reductions applicable to net economic-activity income, including reductions for irregular income and for economically dependent self-employed workers.",
+        "es": "Establece las reducciones aplicables al rendimiento neto de la actividad económica, incluidas las reducciones por rentas irregulares (período de generación superior a dos años) y la reducción para autónomos económicamente dependientes.",
+        "hu": "Meghatározza a gazdasági tevékenység nettó jövedelmére alkalmazható csökkentéseket, beleértve a szabálytalan jövedelem és a gazdaságilag függő önfoglalkoztatók csökkentését."
+      },
+      "titulo": {
+        "ca": "Reduccions aplicables a determinats rendiments",
+        "en": "Reductions applicable to certain economic-activity income",
+        "es": "Reducciones aplicables a determinados rendimientos",
+        "hu": "Egyes jövedelmekre alkalmazható csökkentések"
+      }
+    },
+    {
+      "numero": "33",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a33",
+      "summary": {
+        "ca": "Defineix el concepte de guanys i pèrdues patrimonials com a variacions en el valor del patrimoni del contribuent posades de manifest amb ocasió de qualsevol alteració en la seva composició, i precisa els supòsits que no constitueixen alteració patrimonial (divisió de la cosa comuna, dissolució de la societat de guanys, etc.) ni guany o pèrdua patrimonial (reduccions del capital, transmissions lucratives mortis causa, etc.).",
+        "en": "Defines capital gains and losses as variations in the taxpayer's wealth that arise on any change to its composition, and lists the events that do not constitute a wealth change (division of common property, dissolution of the marital community, etc.) or are not treated as gain or loss (capital reductions, mortis-causa lucrative transfers, etc.).",
+        "es": "Define el concepto de ganancias y pérdidas patrimoniales como variaciones en el valor del patrimonio del contribuyente puestas de manifiesto con ocasión de cualquier alteración en su composición, y precisa los supuestos que no constituyen alteración patrimonial (división de la cosa común, disolución de la sociedad de gananciales, etc.) ni ganancia o pérdida patrimonial (reducciones del capital, transmisiones lucrativas mortis causa, etc.).",
+        "hu": "Meghatározza a vagyoni nyereségek és veszteségek fogalmát az adózó vagyonának értékében bekövetkező, annak összetételében történt bármilyen változás során megnyilvánuló módosulásként, és felsorolja azokat az eseteket, amelyek nem minősülnek vagyoni változásnak (közös tulajdon megosztása, házassági vagyonközösség megszűnése stb.), illetve nem keletkeztetnek nyereséget vagy veszteséget (tőkecsökkentés, halál esetére szóló ingyenes átruházás stb.)."
+      },
+      "titulo": {
+        "ca": "Concepte de guanys i pèrdues patrimonials",
+        "en": "Concept of capital gains and losses",
+        "es": "Concepto de ganancias y pérdidas patrimoniales",
+        "hu": "Vagyoni nyereségek és veszteségek fogalma"
+      }
+    },
+    {
+      "numero": "34",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a34",
+      "summary": {
+        "ca": "Estableix les normes generals per determinar l'import del guany o la pèrdua patrimonial: en transmissions a títol onerós, la diferència entre el valor de transmissió i el valor d'adquisició; en altres alteracions patrimonials, el valor de mercat dels elements alterats.",
+        "en": "Sets out the general rules for computing the amount of capital gain or loss: for onerous transfers, the difference between transfer value and acquisition value; for other wealth changes, the market value of the elements affected.",
+        "es": "Establece las normas generales para determinar el importe de la ganancia o pérdida patrimonial: en transmisiones a título oneroso, la diferencia entre el valor de transmisión y el valor de adquisición; en otras alteraciones patrimoniales, el valor de mercado de los elementos alterados.",
+        "hu": "Megállapítja a vagyoni nyereség vagy veszteség összegének meghatározására vonatkozó általános szabályokat: visszterhes átruházások esetén az átruházási és a szerzési érték különbözete; egyéb vagyoni változások esetén az érintett elemek piaci értéke."
+      },
+      "titulo": {
+        "ca": "Import dels guanys o les pèrdues patrimonials. Normes generals",
+        "en": "Amount of capital gains or losses. General rules",
+        "es": "Importe de las ganancias o pérdidas patrimoniales. Normas generales",
+        "hu": "Vagyoni nyereség vagy veszteség összege. Általános szabályok"
+      }
+    },
+    {
+      "numero": "37",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a37",
+      "summary": {
+        "ca": "Estableix normes específiques de valoració per a determinats supòsits de guanys o pèrdues patrimonials: transmissió de valors admesos i no admesos a negociació, aportacions no dineràries a societats, separació de socis, transmissió d'elements patrimonials a canvi d'una renda, indemnitzacions, permutes, transmissions lucratives d'empreses familiars, i altres.",
+        "en": "Sets specific valuation rules for particular capital-gain or capital-loss situations: transfer of listed and unlisted securities, non-cash contributions to companies, partner exit, transfer of assets in exchange for an annuity, damages, exchanges, lucrative transfers of family businesses, and others.",
+        "es": "Establece normas específicas de valoración para determinados supuestos de ganancias o pérdidas patrimoniales: transmisión de valores admitidos y no admitidos a negociación, aportaciones no dinerarias a sociedades, separación de socios, transmisión de elementos patrimoniales a cambio de una renta, indemnizaciones, permutas, transmisiones lucrativas de empresas familiares, y otras.",
+        "hu": "Egyedi értékelési szabályokat határoz meg meghatározott vagyoni nyereségre vagy veszteségre vonatkozóan: tőzsdén jegyzett és nem jegyzett értékpapírok átruházása, nem pénzbeli hozzájárulások társaságokhoz, tulajdonostárs kiválása, vagyoni elemek átruházása járadékért cserébe, kártérítések, cserék, családi vállalkozások ingyenes átruházásai és egyéb esetek."
+      },
+      "titulo": {
+        "ca": "Normes específiques de valoració",
+        "en": "Specific valuation rules",
+        "es": "Normas específicas de valoración",
+        "hu": "Egyedi értékelési szabályok"
+      }
+    },
+    {
+      "numero": "49",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a49",
+      "summary": {
+        "ca": "Estableix les regles d'integració i compensació entre els rendiments del capital mobiliari i les guanys i pèrdues patrimonials que componen la base imposable de l'estalvi, així com la compensació en els quatre anys següents dels saldos negatius no aplicats, amb un límit del 25 per cent de l'import del saldo positiu de l'altra classe de renda.",
+        "en": "Sets the integration and offsetting rules between movable-capital yields and capital gains and losses that make up the savings taxable base, together with the four-year carry-forward of unused negative balances, capped at 25 per cent of the positive balance of the other income class.",
+        "es": "Establece las reglas de integración y compensación entre los rendimientos del capital mobiliario y las ganancias y pérdidas patrimoniales que componen la base imponible del ahorro, así como la compensación en los cuatro años siguientes de los saldos negativos no aplicados, con un límite del 25 por ciento del importe del saldo positivo de la otra clase de renta.",
+        "hu": "Megállapítja a megtakarítási adóalapot képező tőkejövedelmek és vagyoni nyereségek és veszteségek beszámításának és kompenzációjának szabályait, valamint a fel nem használt negatív egyenlegek négy évre szóló továbbvitelét, a másik jövedelemosztály pozitív egyenlegének 25 százalékáig."
+      },
+      "titulo": {
+        "ca": "Integració i compensació de rendes en la base imposable de l'estalvi",
+        "en": "Integration and offsetting of income in the savings taxable base",
+        "es": "Integración y compensación de rentas en la base imponible del ahorro",
+        "hu": "Jövedelmek beszámítása és kompenzációja a megtakarítási adóalapban"
+      }
+    },
+    {
+      "numero": "50",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a50",
+      "summary": {
+        "ca": "Defineix la base liquidable general com el resultat d'aplicar a la base imposable general les reduccions aplicables (plans de pensions, tributació conjunta, pensions compensatòries i altres instruments previstos), sense que pugui resultar negativa, i la base liquidable de l'estalvi com la base imposable de l'estalvi menys el remanent no aplicat de les reduccions de tributació conjunta i pensions compensatòries, igualment sense possibilitat de signe negatiu.",
+        "en": "Defines the general taxable base (base liquidable general) as the result of applying to the general gross base the applicable reductions (pension plans, joint taxation, compensatory pensions and other statutory instruments), with no negative result allowed, and the savings taxable base (base liquidable del ahorro) as the savings gross base less any unused remainder of the joint-taxation and compensatory-pension reductions, likewise with no negative result allowed.",
+        "es": "Define la base liquidable general como el resultado de practicar en la base imponible general las reducciones aplicables (aportaciones a planes de pensiones, tributación conjunta, pensiones compensatorias y otros instrumentos previstos), sin que pueda resultar negativa, y la base liquidable del ahorro como la base imponible del ahorro menos el remanente no aplicado de las reducciones de tributación conjunta y pensiones compensatorias, igualmente sin posibilidad de signo negativo.",
+        "hu": "Meghatározza az általános adóalapot (base liquidable general) az általános bruttó adóalap és az alkalmazandó csökkentések (nyugdíjpénztári befizetések, közös adózás, kompenzációs nyugdíjak és egyéb törvényi eszközök) különbségeként, negatív eredmény kizárásával, valamint a megtakarítási adóalapot (base liquidable del ahorro) a megtakarítási bruttó adóalap mínusz a közös adózási és kompenzációs nyugdíj-csökkentések fel nem használt maradványaként, szintén negatív eredmény kizárásával."
+      },
+      "titulo": {
+        "ca": "Base liquidable general i de l'estalvi",
+        "en": "General and savings taxable bases",
+        "es": "Base liquidable general y del ahorro",
+        "hu": "Általános és megtakarítási adóalap"
+      }
+    },
+    {
+      "numero": "56",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a56",
+      "summary": {
+        "ca": "Defineix el mínim personal i familiar com la part de la base liquidable que, per destinar-se a satisfer les necessitats bàsiques personals i familiars del contribuent, no es sotmet a tributació, integrat pel mínim del contribuent i els mínims per descendents, ascendents i discapacitat regulats en els articles 57, 58, 59 i 60 d'aquesta Llei.",
+        "en": "Defines the personal and family minimum (mínimo personal y familiar) as the portion of the taxable base that is exempt from tax because it is allocated to satisfying the basic personal and family needs of the taxpayer, made up of the taxpayer minimum and the minimums for descendants, ascendants and disability regulated in articles 57, 58, 59 and 60 of this Law.",
+        "es": "Define el mínimo personal y familiar como la parte de la base liquidable que, por destinarse a satisfacer las necesidades básicas personales y familiares del contribuyente, no se somete a tributación, integrado por el mínimo del contribuyente y los mínimos por descendientes, ascendientes y discapacidad regulados en los artículos 57, 58, 59 y 60 de esta Ley.",
+        "hu": "Meghatározza a személyi és családi minimumot (mínimo personal y familiar) az adóalapnak azon részeként, amely az adózó és családja alapvető szükségleteinek kielégítésére szolgál, és ezért adómentes; ez tartalmazza az adózó minimumát és a leszármazottak, felmenők és fogyatékosság utáni minimumokat, melyeket a törvény 57., 58., 59. és 60. cikke szabályoz."
+      },
+      "titulo": {
+        "ca": "Mínim personal i familiar",
+        "en": "Personal and family minimum",
+        "es": "Mínimo personal y familiar",
+        "hu": "Személyi és családi minimum"
+      }
+    },
+    {
+      "numero": "62",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a62",
+      "summary": {
+        "ca": "Defineix la quota íntegra com la suma dels resultats d'aplicar les escales i tipus de gravamen a les bases liquidables general i de l'estalvi, i precisa que la quota íntegra estatal és la corresponent al part estatal i la quota íntegra autonòmica la corresponent al part autonòmica.",
+        "en": "Defines the gross tax liability (cuota íntegra) as the sum of the amounts resulting from applying the scales and tax rates to the general and savings taxable bases, and specifies that the state gross tax liability is the one matching the state share and the autonomic gross tax liability the one matching the autonomic share.",
+        "es": "Define la cuota íntegra como la suma de los resultados de aplicar las escalas y los tipos de gravamen a las bases liquidables general y del ahorro, precisando que la cuota íntegra estatal es la correspondiente a la parte estatal y la cuota íntegra autonómica la correspondiente a la parte autonómica.",
+        "hu": "Meghatározza a bruttó adókötelezettséget (cuota íntegra) az általános és megtakarítási adóalapra alkalmazott skálák és adókulcsok eredményeinek összegeként, és pontosítja, hogy az állami bruttó adókötelezettség az állami résznek, az autonóm közösségi bruttó adókötelezettség pedig az autonóm közösségi résznek felel meg."
+      },
+      "titulo": {
+        "ca": "Quota íntegra",
+        "en": "Gross tax liability",
+        "es": "Cuota íntegra",
+        "hu": "Bruttó adókötelezettség"
+      }
+    },
+    {
+      "numero": "63",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a63",
+      "summary": {
+        "ca": "Estableix l'escala general progressiva del Impost sobre la Renda de les Persones Físiques aplicable a la part estatal de la base liquidable general per determinar la quota íntegra estatal, amb trams de bases liquidables i tipus marginals creixents.",
+        "en": "Establishes the progressive general scale of Personal Income Tax applicable to the state share of the general taxable base in order to compute the state gross tax liability, with rising taxable-base brackets and marginal rates.",
+        "es": "Establece la escala general progresiva del Impuesto sobre la Renta de las Personas Físicas aplicable a la parte estatal de la base liquidable general para determinar la cuota íntegra estatal, con tramos de bases liquidables y tipos marginales crecientes.",
+        "hu": "Megállapítja a Személyi Jövedelemadó általános, progresszív állami skáláját, amely az általános adóalap állami részére alkalmazandó az állami bruttó adókötelezettség kiszámításához, növekvő adóalap-sávokkal és határadókulcsokkal."
+      },
+      "titulo": {
+        "ca": "Escala general de l'Impost",
+        "en": "General scale of the Tax",
+        "es": "Escala general del Impuesto",
+        "hu": "Az adó általános skálája"
+      }
+    },
+    {
+      "numero": "66",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a66",
+      "summary": {
+        "ca": "Fixa els tipus de gravamen aplicables a la base liquidable de l'estalvi en la part estatal de l'Impost, amb una escala progressiva pròpia diferenciada de la general.",
+        "en": "Sets the tax rates applicable to the savings taxable base in the state share of the Tax, using a progressive scale specific to savings income and distinct from the general scale.",
+        "es": "Fija los tipos de gravamen aplicables a la base liquidable del ahorro en la parte estatal del Impuesto, con una escala progresiva propia diferenciada de la general.",
+        "hu": "Meghatározza a megtakarítási adóalapra alkalmazandó adókulcsokat az adó állami részében, az általánostól különböző, saját progresszív skála szerint."
+      },
+      "titulo": {
+        "ca": "Tipus de gravamen de l'estalvi",
+        "en": "Savings tax rates",
+        "es": "Tipos de gravamen del ahorro",
+        "hu": "A megtakarítás adókulcsai"
+      }
+    },
+    {
+      "numero": "67",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a67",
+      "summary": {
+        "ca": "Defineix la quota líquida estatal com el resultat de minorar la quota íntegra estatal en la deducció per inversió en empresa de nova o recent creació i en el 50 per cent de l'import total de les deduccions previstes als apartats 2, 3, 4 i 5 de l'article 68 d'aquesta Llei.",
+        "en": "Defines the state net tax liability (cuota líquida estatal) as the result of reducing the state gross tax liability by the deduction for investment in newly created enterprises and by 50 per cent of the total amount of the deductions in sections 2, 3, 4 and 5 of article 68 of this Law.",
+        "es": "Define la cuota líquida estatal como el resultado de minorar la cuota íntegra estatal en la deducción por inversión en empresa de nueva o reciente creación y en el 50 por ciento del importe total de las deducciones previstas en los apartados 2, 3, 4 y 5 del artículo 68 de esta Ley.",
+        "hu": "Meghatározza az állami nettó adókötelezettséget (cuota líquida estatal) az állami bruttó adókötelezettség azon csökkentett összegeként, amelyet az újonnan létrehozott vállalkozásokba történő befektetés utáni levonás és a törvény 68. cikke (2), (3), (4) és (5) bekezdésében meghatározott levonások teljes összegének 50 százaléka után kapunk."
+      },
+      "titulo": {
+        "ca": "Quota líquida estatal",
+        "en": "State net tax liability",
+        "es": "Cuota líquida estatal",
+        "hu": "Állami nettó adókötelezettség"
+      }
+    },
+    {
+      "numero": "68",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a68",
+      "summary": {
+        "ca": "Regula el catàleg de deduccions de la quota íntegra estatal: deducció per inversió en empresa de nova o recent creació, deduccions per activitats econòmiques, deduccions per donatius, deduccions per rendes obtingudes a Ceuta i Melilla, deducció per actuacions de protecció i difusió del patrimoni històric espanyol i deducció per lloguer de l'habitatge habitual en règim transitori.",
+        "en": "Regulates the catalogue of deductions from the state gross tax liability: investment in newly created enterprises, economic-activity deductions, charitable donations, income obtained in Ceuta and Melilla, protection and outreach of Spanish historical heritage, and the transitional habitual-dwelling rental deduction.",
+        "es": "Regula el catálogo de deducciones de la cuota íntegra estatal: deducción por inversión en empresa de nueva o reciente creación, deducciones por actividades económicas, deducciones por donativos, deducciones por rentas obtenidas en Ceuta y Melilla, deducción por actuaciones de protección y difusión del patrimonio histórico español y deducción por alquiler de la vivienda habitual en régimen transitorio.",
+        "hu": "Szabályozza az állami bruttó adókötelezettségből történő levonások katalógusát: újonnan létrehozott vállalkozásokba történő befektetés, gazdasági tevékenységek levonásai, jótékonysági adományok, Ceutában és Melillában szerzett jövedelmek, spanyol történelmi örökség védelme és terjesztése, valamint a szokásos lakóhely bérlésének átmeneti levonása."
+      },
+      "titulo": {
+        "ca": "Deduccions",
+        "en": "Deductions",
+        "es": "Deducciones",
+        "hu": "Levonások"
+      }
+    },
+    {
+      "numero": "73",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a73",
+      "summary": {
+        "ca": "Estableix la part autonòmica de la base liquidable general i de la base liquidable de l'estalvi sotmesa a gravamen, com a base de càlcul per als gravàmens autonòmics regulats pels articles 74 i següents.",
+        "en": "Establishes the autonomic share of the general taxable base and of the savings taxable base subject to tax, as the calculation base for the autonomic tax rates regulated by articles 74 and following.",
+        "es": "Establece la parte autonómica de la base liquidable general y de la base liquidable del ahorro sometida a gravamen, como base de cálculo para los gravámenes autonómicos regulados por los artículos 74 y siguientes.",
+        "hu": "Megállapítja az általános és megtakarítási adóalap autonóm közösségi részét, mint a 74. és azt követő cikkek által szabályozott autonóm közösségi adókulcsok kiszámítási alapját."
+      },
+      "titulo": {
+        "ca": "Base liquidable autonòmica",
+        "en": "Autonomic taxable base",
+        "es": "Base liquidable autonómica",
+        "hu": "Autonóm közösségi adóalap"
+      }
+    },
+    {
+      "numero": "74",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a74",
+      "summary": {
+        "ca": "Regula l'escala autonòmica progressiva aplicable a la part autonòmica de la base liquidable general per determinar la quota íntegra autonòmica, amb tipus marginals establerts per cada Comunitat Autònoma dins els seus marges normatius.",
+        "en": "Regulates the progressive autonomic scale applied to the autonomic share of the general taxable base to determine the autonomic gross tax liability, with marginal rates set by each Autonomous Community within its statutory ranges.",
+        "es": "Regula la escala autonómica progresiva aplicable a la parte autonómica de la base liquidable general para determinar la cuota íntegra autonómica, con tipos marginales establecidos por cada Comunidad Autónoma dentro de sus márgenes normativos.",
+        "hu": "Szabályozza az általános adóalap autonóm közösségi részére alkalmazandó progresszív autonóm közösségi skálát, az autonóm közösségi bruttó adókötelezettség meghatározásához, amelyben a határadókulcsokat minden Autonóm Közösség saját szabályozási mozgásterén belül állapítja meg."
+      },
+      "titulo": {
+        "ca": "Escala autonòmica de l'Impost",
+        "en": "Autonomic scale of the Tax",
+        "es": "Escala autonómica del Impuesto",
+        "hu": "Az adó autonóm közösségi skálája"
+      }
+    },
+    {
+      "numero": "75",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a75",
+      "summary": {
+        "ca": "Defineix la quota íntegra autonòmica com el resultat d'aplicar a la base liquidable general la part autonòmica de l'escala progressiva i a la base liquidable de l'estalvi els tipus de gravamen autonòmics, sumant les quotes resultants.",
+        "en": "Defines the autonomic gross tax liability (cuota íntegra autonómica) as the result of applying to the general taxable base the autonomic share of the progressive scale and to the savings taxable base the autonomic tax rates, adding the resulting tax amounts.",
+        "es": "Define la cuota íntegra autonómica como el resultado de aplicar a la base liquidable general la parte autonómica de la escala progresiva y a la base liquidable del ahorro los tipos de gravamen autonómicos, sumando las cuotas resultantes.",
+        "hu": "Meghatározza az autonóm közösségi bruttó adókötelezettséget (cuota íntegra autonómica) annak eredményeként, hogy az általános adóalapra a progresszív skála autonóm közösségi részét és a megtakarítási adóalapra az autonóm közösségi adókulcsokat alkalmazzák, majd az így kapott adóösszegeket összeadják."
+      },
+      "titulo": {
+        "ca": "Quota íntegra autonòmica",
+        "en": "Autonomic gross tax liability",
+        "es": "Cuota íntegra autonómica",
+        "hu": "Autonóm közösségi bruttó adókötelezettség"
+      }
+    },
+    {
+      "numero": "76",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a76",
+      "summary": {
+        "ca": "Fixa els tipus de gravamen aplicables a la base liquidable de l'estalvi en la part autonòmica de l'Impost, amb una escala progressiva pròpia idèntica a l'estatal de l'article 66.",
+        "en": "Sets the tax rates applicable to the savings taxable base in the autonomic share of the Tax, using a progressive scale specific to savings income and identical to the state scale of Article 66.",
+        "es": "Fija los tipos de gravamen aplicables a la base liquidable del ahorro en la parte autonómica del Impuesto, con una escala progresiva propia idéntica a la estatal del artículo 66.",
+        "hu": "Meghatározza a megtakarítási adóalapra alkalmazandó adókulcsokat az adó autonóm közösségi részében, a 66. cikk állami skálájával azonos, saját progresszív skála szerint."
+      },
+      "titulo": {
+        "ca": "Tipus de gravamen de l'estalvi",
+        "en": "Savings tax rate",
+        "es": "Tipo de gravamen del ahorro",
+        "hu": "A megtakarítás adókulcsa"
+      }
+    },
+    {
+      "numero": "77",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a77",
+      "summary": {
+        "ca": "Defineix la quota líquida autonòmica com el resultat de minorar la quota íntegra autonòmica en el 50 per cent de l'import total de les deduccions previstes als apartats 2, 3, 4 i 5 de l'article 68 d'aquesta Llei i en l'import de les deduccions establertes per la Comunitat Autònoma corresponent en l'exercici de les seves competències normatives.",
+        "en": "Defines the autonomic net tax liability (cuota líquida autonómica) as the result of reducing the autonomic gross tax liability by 50 per cent of the total amount of the deductions in sections 2, 3, 4 and 5 of article 68 of this Law and by the deductions established by the corresponding Autonomous Community in exercise of its statutory powers.",
+        "es": "Define la cuota líquida autonómica como el resultado de minorar la cuota íntegra autonómica en el 50 por ciento del importe total de las deducciones previstas en los apartados 2, 3, 4 y 5 del artículo 68 de esta Ley y en el importe de las deducciones establecidas por la Comunidad Autónoma correspondiente en ejercicio de sus competencias normativas.",
+        "hu": "Meghatározza az autonóm közösségi nettó adókötelezettséget (cuota líquida autonómica) az autonóm közösségi bruttó adókötelezettség azon csökkentett összegeként, amelyet a törvény 68. cikke (2), (3), (4) és (5) bekezdésében meghatározott levonások teljes összegének 50 százaléka és a megfelelő Autonóm Közösség által szabályozási hatáskörén belül megállapított levonások levonása után kapunk."
+      },
+      "titulo": {
+        "ca": "Quota líquida autonòmica",
+        "en": "Autonomic net tax liability",
+        "es": "Cuota líquida autonómica",
+        "hu": "Autonóm közösségi nettó adókötelezettség"
+      }
+    },
+    {
+      "numero": "80",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a80",
+      "summary": {
+        "ca": "Estableix la deducció per doble imposició internacional sobre les rendes obtingudes a l estranger gravades pel mateix impost o anàleg, amb el límit de la quota íntegra que correspondria a aquestes rendes a Espanya.",
+        "en": "Sets the deduction for international double taxation on income obtained abroad and taxed there by an analogous tax, capped by the IRPF cuota íntegra that would correspond to that income in Spain.",
+        "es": "Regula la deduccion por doble imposicion internacional sobre las rentas obtenidas y gravadas en el extranjero por un impuesto analogo, con el limite de la cuota integra que en Espana correspondiera a esas rentas.",
+        "hu": "Szabalyozza a kettos adoztatas elkerulesere szolgalo nemzetkozi levonast a kulfoldon megszerzett es ott megadoztatott jovedelmekre, az IRPF-ben raju eso bruttó adóhányad határáig."
+      },
+      "titulo": {
+        "ca": "Deducció per doble imposició internacional",
+        "en": "Deduction for international double taxation",
+        "es": "Deduccion por doble imposicion internacional",
+        "hu": "Nemzetközi kettős adóztatás miatti levonás"
+      }
+    },
+    {
+      "numero": "82",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a82",
+      "summary": {
+        "ca": "Regula la tributació conjunta com a opció dels membres d'una unitat familiar; defineix els supòsits en què s'apliquen les normes de tributació conjunta i les particularitats de la determinació del rendiment net, la base imposable, les reduccions i el mínim personal i familiar quan els membres de la unitat hagin optat per aquest règim.",
+        "en": "Regulates joint taxation as an election available to members of a family unit; defines the cases in which the joint-taxation rules apply and the particularities for computing net income, taxable base, reductions and the personal and family minimum when family-unit members elect joint taxation.",
+        "es": "Regula la tributación conjunta como opción de los miembros de una unidad familiar; define los supuestos en que se aplican las normas de tributación conjunta y las particularidades de la determinación del rendimiento neto, la base imponible, las reducciones y el mínimo personal y familiar cuando los miembros de la unidad hayan optado por este régimen.",
+        "hu": "Szabályozza a közös adózást a családi egység tagjai számára választható lehetőségként; meghatározza azokat az eseteket, amelyekben a közös adózási szabályokat kell alkalmazni, valamint a nettó jövedelem, az adóalap, a csökkentések és a személyi és családi minimum kiszámításának sajátosságait, amennyiben a családi egység tagjai a közös adózást választják."
+      },
+      "titulo": {
+        "ca": "Tributació conjunta",
+        "en": "Joint taxation",
+        "es": "Tributación conjunta",
+        "hu": "Közös adózás"
+      }
+    },
+    {
+      "numero": "83",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a83",
+      "summary": {
+        "ca": "Defineix les modalitats de la unitat familiar a efectes de tributació conjunta: la integrada pels cònjuges no separats legalment i, si n'hi ha, els fills menors o majors d'edat incapacitats judicialment subjectes a pàtria potestat prorrogada o rehabilitada (modalitat 1) i, en absència de matrimoni o en cas de separació legal, la formada pel pare o la mare i tots els fills que conviuen amb un dels dos (modalitat 2).",
+        "en": "Defines the family-unit modalities for joint-taxation purposes: the unit composed of legally non-separated spouses and, if any, the minor children (or judicially incapacitated adult children under extended or restored parental authority) — modality 1; and, in the absence of marriage or in case of legal separation, the unit composed of the father or mother and all children cohabiting with that parent — modality 2.",
+        "es": "Define las modalidades de la unidad familiar a efectos de tributación conjunta: la integrada por los cónyuges no separados legalmente y, si los hubiere, los hijos menores o mayores de edad incapacitados judicialmente sujetos a patria potestad prorrogada o rehabilitada (modalidad 1) y, en ausencia de matrimonio o en caso de separación legal, la formada por el padre o la madre y todos los hijos que convivan con uno u otro (modalidad 2).",
+        "hu": "Meghatározza a családi egység lehetséges formáit a közös adózás szempontjából: a jogilag külön nem élő házastársakból és — amennyiben vannak — a kiskorú vagy meghosszabbított, illetve helyreállított szülői felügyelet alatt álló, bíróságilag cselekvőképtelennek nyilvánított nagykorú gyermekekből álló egység (1. modalitás); valamint házasság hiányában vagy jogi különélés esetén az apából vagy anyából és valamennyi vele együtt élő gyermekből álló egység (2. modalitás)."
+      },
+      "titulo": {
+        "ca": "Modalitats de la unitat familiar",
+        "en": "Family-unit modalities",
+        "es": "Modalidades de la unidad familiar",
+        "hu": "A családi egység formái"
+      }
+    },
+    {
+      "numero": "86",
+      "titulo": {
+        "es": "Régimen de atribución"
+      },
+      "summary": {
+        "es": "Las rentas correspondientes a las entidades en régimen de atribución de rentas se atribuirán a los socios, herederos, comuneros o partícipes, respectivamente, de acuerdo con lo establecido en esta Sección 2.ª del Título X (artículos 86 a 90 LIRPF). El régimen de atribución de rentas no será aplicable a las sociedades agrarias de transformación que tributarán por el Impuesto sobre Sociedades."
+      },
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a86"
+    },
+    {
+      "numero": "87",
+      "titulo": {
+        "es": "Entidades en régimen de atribución de rentas"
+      },
+      "summary": {
+        "es": "Tendrán la consideración de entidades en régimen de atribución de rentas las sociedades civiles que no tengan objeto mercantil, herencias yacentes, comunidades de bienes y demás entidades a que se refiere el artículo 35.4 de la Ley General Tributaria. Las entidades constituidas en el extranjero cuya naturaleza jurídica sea idéntica o análoga a la de las entidades en atribución de rentas constituidas conforme a las leyes españolas también tributarán bajo este régimen."
+      },
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a87"
+    },
+    {
+      "numero": "88",
+      "titulo": {
+        "es": "Calificación de la renta atribuida"
+      },
+      "summary": {
+        "es": "Las rentas de las entidades en régimen de atribución de rentas atribuidas a los socios, herederos, comuneros o partícipes tendrán la naturaleza derivada de la actividad o fuente de donde procedan para cada uno de ellos."
+      },
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a88"
+    },
+    {
+      "numero": "89",
+      "titulo": {
+        "es": "Cálculo de la renta atribuible y pagos a cuenta"
+      },
+      "summary": {
+        "es": "Para el cálculo de las rentas a atribuir a cada uno de los socios, herederos, comuneros o partícipes se aplicarán las siguientes reglas: las rentas se determinarán con arreglo a las normas del IRPF y no serán aplicables las reducciones previstas en los artículos 23.2, 23.3, 26.2 y 32 LIRPF. La parte de renta atribuible a los socios, herederos, comuneros o partícipes contribuyentes del IS o del IRNR con establecimiento permanente se determinará con arreglo a las normas del Impuesto sobre Sociedades. Las retenciones e ingresos a cuenta soportados por la entidad se atribuirán a sus socios, herederos, comuneros o partícipes en la misma proporción en que se atribuyan las rentas correspondientes."
+      },
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a89"
+    },
+    {
+      "numero": "91",
+      "titulo": {
+        "es": "Imputación de rentas en régimen de transparencia fiscal internacional"
+      },
+      "summary": {
+        "es": "Establece el régimen de imputación de rentas obtenidas por entidades no residentes (sociedades, patrimonios, fondos de inversión u otras entidades) cuando los contribuyentes del IRPF posean en ellas una participación significativa que les atribuya control de hecho. Las rentas pasivas (intereses, dividendos, ganancias patrimoniales, rentas inmobiliarias, actividades crediticias y financieras) generadas por la entidad no residente y no distribuidas se imputan al contribuyente residente en proporción a su participación. Aplica salvo que la entidad no residente tribute en su país por un impuesto análogo al IS español a un tipo nominal de al menos el 75 por ciento del que correspondería conforme a la normativa española, o salvo que se demuestre que dispone de los medios materiales y personales necesarios para realizar la actividad. El régimen evita diferimientos artificiales mediante la interposición de entidades en jurisdicciones de baja tributación."
+      },
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a91"
+    },
+    {
+      "numero": "99",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a99",
+      "summary": {
+        "ca": "Estableix l'obligació general de practicar retencions, ingressos a compte i pagaments fraccionats com a pagaments a compte de l'IRPF.",
+        "en": "Establishes the general obligation to withhold, to make payments on account, and to file fractional payments as IRPF advance payments.",
+        "es": "Establece la obligación general de practicar retenciones, ingresos a cuenta y pagos fraccionados como pagos a cuenta del IRPF.",
+        "hu": "Általános kötelezettséget állapít meg a forrásadó levonására, a számlára történő befizetésre és a részletfizetésekre az IRPF előlegeként."
+      },
+      "titulo": {
+        "ca": "Obligació de practicar pagaments a compte",
+        "en": "Duty to withhold and make payments on account",
+        "es": "Obligación de practicar pagos a cuenta",
+        "hu": "Előleg- és forrásadó-levonási kötelezettség"
+      }
+    }
+  ],
+  "boe_id": "BOE-A-2006-20764",
+  "boe_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
+  "id": "ley-35-2006",
+  "kind": "ley",
+  "last_reviewed_at": "2026-04-12",
+  "number": "35/2006",
+  "published_at": "2006-11-29",
+  "reviewed_by": "wgergely",
+  "tags": [
+    "irpf",
+    "general"
+  ],
+  "title": {
+    "ca": "Llei 35/2006, de 28 de novembre, de l'Impost sobre la Renda de les Persones Físiques i de modificació parcial de les lleis dels Impostos sobre Societats, sobre la Renda de no Residents i sobre el Patrimoni",
+    "en": "Law 35/2006, of 28 November, on Personal Income Tax and partial amendment of the Corporate Income Tax, Non-Resident Income Tax, and Wealth Tax laws",
+    "es": "Ley 35/2006, de 28 de noviembre, del Impuesto sobre la Renta de las Personas Físicas y de modificación parcial de las leyes de los Impuestos sobre Sociedades, sobre la Renta de no Residentes y sobre el Patrimonio",
+    "hu": "35/2006. törvény, 2006. november 28., a személyi jövedelemadóról (IRPF)"
+  }
+}

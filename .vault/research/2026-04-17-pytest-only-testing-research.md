@@ -5,6 +5,7 @@ tags:
   - "#research"
   - "#pytest-only-testing"
 date: 2026-04-17
+modified: '2026-04-17'
 related:
   - "[[2026-04-12-base-module-structure-adr]]"
   - "[[2026-04-12-dev-scaffolding-adr]]"

@@ -1,0 +1,84 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "00429"
+number = "00429"
+label = "Estado de cambios patrimonio neto (III) - Saldo ajustado, inicio del ejercicio - Resultado del ejercicio [00429]"
+section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_ajustado_inicio_del_ejercicio"]
+data_type = "money"
+semantic_role = "is_ecpn_saldo_ajustado_inicio_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-011-casilla-00429", "modelo-200-page-032-casilla-00429", "modelo-200-page-042-casilla-00429"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00430"
+number = "00430"
+label = "Estado de cambios patrimonio neto (III) - Saldo ajustado, inicio del ejercicio - Dividendo a cuenta [00430]"
+section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_ajustado_inicio_del_ejercicio"]
+data_type = "money"
+semantic_role = "is_ecpn_saldo_ajustado_inicio_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-011-casilla-00430", "modelo-200-page-018c-casilla-00430", "modelo-200-page-032-casilla-00430", "modelo-200-page-042-casilla-00430"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00431"
+number = "00431"
+label = "Estado de cambios patrimonio neto (III) - Saldo ajustado, inicio del ejercicio - Otros instrumentos patrimonio neto [00431]"
+section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_ajustado_inicio_del_ejercicio"]
+data_type = "money"
+semantic_role = "is_ecpn_saldo_ajustado_inicio_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-011-casilla-00431", "modelo-200-page-018c-casilla-00431", "modelo-200-page-033-casilla-00431", "modelo-200-page-042-casilla-00431"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00432"
+number = "00432"
+label = "Estado de cambios patrimonio neto (III) - Saldo ajustado, inicio del ejercicio - Ajustes por cambios de valor [00432]"
+section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_ajustado_inicio_del_ejercicio"]
+data_type = "money"
+semantic_role = "is_ecpn_saldo_ajustado_inicio_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-011-casilla-00432", "modelo-200-page-018c-casilla-00432", "modelo-200-page-033-casilla-00432", "modelo-200-page-042-casilla-00432"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00433"
+number = "00433"
+label = "Estado de cambios patrimonio neto (III) - Saldo ajustado, inicio del ejercicio - Ajustes en patrimonio neto [00433]"
+section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_ajustado_inicio_del_ejercicio"]
+data_type = "money"
+semantic_role = "is_ecpn_saldo_ajustado_inicio_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-011-casilla-00433", "modelo-200-page-033-casilla-00433", "modelo-200-page-043-casilla-00433"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00434"
+number = "00434"
+label = "Estado de cambios patrimonio neto (III) - Saldo ajustado, inicio del ejercicio - Subvenciones, donaciones y legados recibidos [00434]"
+section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_ajustado_inicio_del_ejercicio"]
+data_type = "money"
+semantic_role = "is_ecpn_saldo_ajustado_inicio_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-011-casilla-00434", "modelo-200-page-043-casilla-00434"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00435"
+number = "00435"
+label = "Estado de cambios patrimonio neto (III) - Saldo ajustado, inicio del ejercicio - Total [00435]"
+section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_ajustado_inicio_del_ejercicio"]
+data_type = "money"
+semantic_role = "is_ecpn_saldo_ajustado_inicio_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-011-casilla-00435", "modelo-200-page-043-casilla-00435"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

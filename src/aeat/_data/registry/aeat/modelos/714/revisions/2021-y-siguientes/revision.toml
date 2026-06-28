@@ -1,0 +1,15 @@
+[revisions."2021-y-siguientes"]
+label = "Modelo 714 ejercicios 2021 y siguientes (Orden HAC/1023/2021)"
+valid_from = 2021-09-28
+period_selector = { year_from = 2021, periods = ["0A"] }
+legal_refs = [
+    "ley-19-1991:art-28",
+    "ley-19-1991:art-30",
+    "ley-19-1991:art-31",
+    "ley-19-1991:art-4-9",
+]
+source_refs = [
+    "aeat-modelo-714-procedure",
+    "boe-modelo-714-form",
+    "boe-modelo-714-layout",
+]

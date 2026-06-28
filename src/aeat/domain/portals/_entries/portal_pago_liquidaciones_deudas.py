@@ -1,16 +1,22 @@
-"""Portal: Pago de liquidaciones y deudas."""
+"""Registry entry for payment of AEAT-issued liquidations and debts.
+
+Defines the :class:`PortalMetadata` record for :class:`Portal`
+``PORTAL_PAGO_LIQUIDACIONES_DEUDAS`` under :class:`PortalCategory`
+``PAYMENT``, exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY`.
+"""
 
 from __future__ import annotations
 
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
-from ._common import build_entry
+from ._common import build_entry, portal_path
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_PAGO_LIQUIDACIONES_DEUDAS,
-    url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/ES15.shtml",
-    subdomain=Subdomain.SEDE,
+    path=portal_path(Portal.PORTAL_PAGO_LIQUIDACIONES_DEUDAS),
+    subdomain=PortalHost.SEDE,
     category=PortalCategory.PAYMENT,
     auth_methods=(
         AuthMethod.CERTIFICATE,
@@ -19,10 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label={
-        "es": "Pago de liquidaciones y deudas",
-        "en": "Payment of liquidations and debts",
-        "hu": "Adókivetések és tartozások kifizetése",
-    },
-    purpose_es="Pago de liquidaciones tributarias y deudas notificadas por la AEAT.",
+    label="entries.portal_pago_liquidaciones_deudas.label",
+    purpose="entries.portal_pago_liquidaciones_deudas.purpose",
 )
+"""Portal entry for paying AEAT-notified tax liquidations and debts."""

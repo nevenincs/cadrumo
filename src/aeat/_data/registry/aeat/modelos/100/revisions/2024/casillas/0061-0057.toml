@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0057"
+number = "0057"
+label = "Reducción de rendimientos acogidos al régimen fiscal del acontecimiento \"XXXVII Copa América Barcelona\" (Disposición final trigésima sexta de la Ley 31/2022 de PGE-2023)"
+section = ["resultados", "rdto_trabajo_res"]
+semantic_role = "irpf_rendimiento_trabajo_copa_america_reduccion"
+legal_refs = ["ley-35-2006:art-17"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

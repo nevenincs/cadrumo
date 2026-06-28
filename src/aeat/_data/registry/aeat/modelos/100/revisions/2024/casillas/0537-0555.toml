@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0555"
+number = "0555"
+label = "Por incentivos y estímulos a la inversión empresarial (traslade los importes de estas mismas casillas del anexo A.7): Parte autonómica"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_deduccion_incentivos_inversion_empresarial_autonomica"
+legal_refs = ["ley-35-2006:art-68"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

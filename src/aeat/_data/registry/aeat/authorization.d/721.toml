@@ -1,0 +1,5 @@
+[modelo]
+modelo = "721"
+renta_years = [2023, 2024]
+evidence_class = "data_fidelity"
+enrolling_test = "src/aeat/application/calculations/tests/test_modelo_721_cripto_extranjero_fidelity.py"

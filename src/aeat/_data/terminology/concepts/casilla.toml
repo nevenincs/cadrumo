@@ -1,0 +1,74 @@
+# Terminology Handbook concept fragment for the structural concept
+# "casilla". This is a domain-vocabulary concept (the numbered box on a
+# modelo), not a casilla projection: the 18,885 individual casillas are
+# machine-projected from registry snapshots at compile time, never
+# enrolled as Handbook fragments. This concept defines the WORD.
+
+[concept]
+concept_id = "casilla"
+domain = "casilla-namespace"
+lifecycle = "approved"
+legal_refs = ["ley-58-2003:art-98"]
+related = ["modelo", "revision"]
+created_at = 2026-06-10
+updated_at = 2026-06-10
+
+[language.es]
+short_description = "Cada uno de los recuadros numerados de un modelo en los que se anota un dato de la declaracion."
+definition = "Recuadro numerado de un modelo tributario en el que se consigna un importe, una base, una cuota o un dato identificativo de la declaracion. Cada casilla tiene un numero, una etiqueta oficial y, cuando procede, una formula que la relaciona con otras casillas."
+scope_note = "El termino designa el recuadro en abstracto. Las casillas concretas de cada modelo y revision se proyectan desde el registro y se buscan por modelo mas numero."
+
+[language.es.source]
+citation = "Disenos de Registro y manuales practicos publicados por la AEAT."
+authority = "aeat"
+
+[[language.es.term]]
+label = "casilla"
+term_status = "preferred"
+part_of_speech = "noun"
+grammatical_gender = "feminine"
+
+[[language.es.term]]
+label = "recuadro"
+term_status = "admitted"
+part_of_speech = "noun"
+
+[[language.es.term]]
+label = "box"
+term_status = "forbidden"
+part_of_speech = "noun"
+
+[language.en]
+short_description = "A numbered box on a modelo where one figure or identifying value of the return is recorded."
+definition = "A numbered box on an AEAT tax form (modelo) that holds an amount, a base, a tax due figure, or an identifying value of the return. Each box has a number, an official label, and where applicable a formula linking it to other boxes."
+
+[language.en.source]
+citation = "AEAT Disenos de Registro and manuales practicos."
+authority = "aeat"
+
+[[language.en.term]]
+label = "box"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[[language.en.term]]
+label = "casilla"
+term_status = "admitted"
+part_of_speech = "noun"
+
+[language.ca]
+short_description = "Cadascun dels requadres numerats d'un model on s'anota una dada de la declaracio."
+
+[[language.ca.term]]
+label = "casella"
+term_status = "preferred"
+part_of_speech = "noun"
+grammatical_gender = "feminine"
+
+[language.hu]
+short_description = "Egy modelo szamozott rovata, ahova a bevallas egy adatat irjak be."
+
+[[language.hu.term]]
+label = "rovat"
+term_status = "admitted"
+part_of_speech = "noun"

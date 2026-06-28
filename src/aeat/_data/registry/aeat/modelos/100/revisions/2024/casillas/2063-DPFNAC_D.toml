@@ -1,0 +1,12 @@
+[[revisions."2024".casillas]]
+id = "DPFNAC_D"
+number = "*10"
+label = "Primer declarante fecha de nacimiento"
+section = ["datos_identificativos", "declarante"]
+data_type = "text"
+semantic_role = "irpf_declarante_fecha_nacimiento"
+required = true
+input_kind = "bound"
+binding = "renta-2024-profile-taxpayer-birth-date"
+legal_refs = ["ley-35-2006:art-57", "orden-hac-1347-2024:art-4"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]

@@ -1,0 +1,14 @@
+[[revisions."2010-y-siguientes".relations]]
+id = "modelo-390-rel-303-cuota-devengada-total"
+kind = "cross_model_output"
+dependency_role = "factual_evidence"
+source_modelo = "303"
+source_revision_selector = { year_from = 2009 }
+source_casilla_id = "iva.cuota-devengada-total"
+target_binding = "modelo-390-prev-303-cuota-devengada-total"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]

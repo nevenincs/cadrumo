@@ -1,10 +1,9 @@
 ---
-# REQUIRED TAGS (minimum 2): one directory tag + one feature tag
-# DIRECTORY TAGS: #adr #audit #exec #plan #reference #research
 tags:
   - '#audit'
   - '#workflow-live-flag-excision'
 date: '2026-04-25'
+modified: '2026-04-25'
 related:
   - "[[2026-04-25-workflow-live-flag-excision-research]]"
   - "[[2026-04-25-workflow-live-flag-excision-adr]]"

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#rename-corpus-review'
 date: '2026-04-18'
+modified: '2026-04-18'
 related:
   - '[[2026-04-18-rename-corpus-review-research]]'
-  - '[[2026-04-17-kent-revise-review-audit]]'
 ---
 
 # `rename-corpus-review` adr: rename corpus review fields to definition-scoped names | (**status:** `accepted`)

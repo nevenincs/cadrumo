@@ -1,0 +1,142 @@
+=== <button> elements ===
+  [0] text='ÁREA PERSONAL' disabled=None
+  [1] text='ES' disabled=None
+  [2] text='Apartados declaración' disabled=None
+  [3] text='Resumen de declaraciones' disabled=None
+  [4] text='Resumen' disabled=None
+  [5] text='Presentar declaración' disabled=None
+  [6] text='Presentar' disabled=None
+  [7] text='' disabled=None
+  [8] text='Ayuda' disabled=None
+  [9] text='Mostrar opciones' disabled=None
+  [10] text='Datos personales' disabled=None
+  [11] text='Datos fiscales' disabled=None
+  [12] text='Buscar casilla' disabled=None
+  [13] text='Notas' disabled=None
+  [14] text='Validar' disabled=None
+  [15] text='Guardar' disabled=None
+  [16] text='' disabled=None
+  [17] text='' disabled='disabled'
+  [18] text='' disabled='disabled'
+  [19] text='' disabled=None
+  [20] text='' disabled=None
+  [21] text='' disabled=None
+  [22] text='Descargar listado de errores' disabled=None
+  [23] text='Ver avisos ocultos' disabled=None
+  [24] text='Editar' disabled=None
+  [25] text='Agencia Tributaria' disabled=None
+  [26] text='Contacta con nosotros' disabled=None
+  [27] text='Ayuda' disabled=None
+  [28] text='Enlaces de interés' disabled=None
+  [29] text='' disabled=None
+  [30] text='' disabled=None
+  [31] text='' disabled=None
+  [32] text='' disabled='disabled'
+  [33] text='' disabled='disabled'
+  [34] text='' disabled=None
+  [35] text='Ir a la página' disabled='disabled'
+  [36] text='Cancelar' disabled=None
+
+=== <a> link elements ===
+  [0] text='Saltar al contenido principal' href='#acc-main'
+  [1] text='Logotipo del Gobierno de España\nLogotipo de la Agencia Tributaria\nSede electrónica' href='https://sede.agenciatributaria.gob.es/Sede/inicio.html'
+  [2] text='10/05/2026 09:29:59\nHora oficial' href='https://sede.agenciatributaria.gob.es/Sede/Calendario_fecha_y_hora_oficial.html'
+  [3] text='ÁREA PERSONAL' href='https://sede.agenciatributaria.gob.es/Sede/mi-area-personal.html'
+  [4] text='Cambiar                                    usuario representado' href=''
+  [5] text='Área personal' href='https://sede.agenciatributaria.gob.es/Sede/mi-area-personal.html'
+  [6] text='Mis alertas' href='/wlpl/IIIC-ALER/SvObtAlertas'
+  [7] text='Desconectarse' href='https://sede.agenciatributaria.gob.es/Sede/Desconectar.html'
+  [8] text='Català' href='https://www2.agenciatributaria.gob.es/wlpl/PARE-RW25/OPEN/index.zul?EJER=2025&TACCESO=COLAB'
+  [9] text='Galego' href='https://www2.agenciatributaria.gob.es/wlpl/PARE-RW25/OPEN/index.zul?EJER=2025&TACCESO=COLAB'
+  [10] text='Valencià' href='https://www2.agenciatributaria.gob.es/wlpl/PARE-RW25/OPEN/index.zul?EJER=2025&TACCESO=COLAB'
+  [11] text='English' href='https://www2.agenciatributaria.gob.es/wlpl/PARE-RW25/OPEN/index.zul?EJER=2025&TACCESO=COLAB'
+  [12] text='Castellano' href='https://www2.agenciatributaria.gob.es/wlpl/PARE-RW25/OPEN/index.zul?EJER=2025&TACCESO=COLAB'
+  [13] text='' href=None
+  [14] text='' href=None
+  [15] text='' href=None
+  [16] text='Accesibilidad' href='https://sede.agenciatributaria.gob.es/Sede/condiciones-uso-sede-electronica/accesibilidad/declaracion-accesibilidad.html'
+  [17] text='Aviso de seguridad' href='https://sede.agenciatributaria.gob.es/Sede/condiciones-uso-sede-electronica/aviso-seguridad.html'
+  [18] text='Aviso legal' href='https://sede.agenciatributaria.gob.es/Sede/condiciones-uso-sede-electronica/aviso-legal.html'
+  [19] text='Validación del certificado de sede' href='https://sede.agenciatributaria.gob.es/Sede/condiciones-uso-sede-electronica/validacion-certificado-sede.html'
+  [20] text='Protección de datos' href='https://sede.agenciatributaria.gob.es/Sede/condiciones-uso-sede-electronica/datos-personales.html'
+  [21] text='Política lingüística' href='https://sede.agenciatributaria.gob.es/Sede/condiciones-uso-sede-electronica/politica-linguistica.html'
+  [22] text='Estructura y navegación en la sede electrónica' href='https://sede.agenciatributaria.gob.es/Sede/condiciones-uso-sede-electronica/estructura-navegacion-sede-electronica.html'
+  [23] text='Códigos de identificación de la Agencia Tributaria (DIR3)Se abre en ventana nueva' href='https://administracion.gob.es/pagFront/espanaAdmon/directorioOrganigrama/fichaUnidadOrganica.htm?codigoUnidad=EA0028512'
+  [24] text='Asistencia y Cita' href='https://sede.agenciatributaria.gob.es/Sede/cita-previa.html'
+  [25] text='Teléfonos de interés' href='https://sede.agenciatributaria.gob.es/Sede/contacta-nosotros/telefonos-interes.html'
+  [26] text='Buscador de oficinas' href='https://sede.agenciatributaria.gob.es/Sede/buscador-oficinas.html'
+  [27] text='Buzones de sugerencias' href='https://sede.agenciatributaria.gob.es/Sede/buzones-sugerencias.html'
+  [28] text='Encuesta de satisfacción de usuariosSe abre en ventana nueva' href='https://forma.administracionelectronica.gob.es/form/open/corp/95fd4f0b-5c6e-4d91-a036-0717b277b7dd/RtHF/oauQDQlm'
+  [29] text='Denuncias' href='https://sede.agenciatributaria.gob.es/Sede/colaborar-agencia-tributaria/denuncias.html'
+  [30] text='Suscripción newsletter' href='https://sede.agenciatributaria.gob.es/Sede/informacion-institucional/suscripcion-rss-newsletter/newsletter.html'
+  [31] text='Suscripción RSS' href='https://sede.agenciatributaria.gob.es/Sede/informacion-institucional/suscripcion-rss-newsletter/rss.html'
+  [32] text='Buscar' href='https://sede.agenciatributaria.gob.es/Sede/search.html'
+  [33] text='Consultas informáticas' href='https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas.html'
+  [34] text='Contenidos en lectura fácil' href='https://sede.agenciatributaria.gob.es/Sede/ayuda/contenidos-lectura-facil.html'
+  [35] text='Diseños de registro' href='https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro.html'
+  [36] text='Horario de interrupciones de sede' href='https://sede.agenciatributaria.gob.es/Sede/ayuda/horario-interrupciones-sede-electronica.html'
+  [37] text='Manuales, vídeos y folletos' href='https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos.html'
+  [38] text='Simuladores' href='https://sede.agenciatributaria.gob.es/Sede/procedimientoini/ZZ08.shtml'
+  [39] text='Todas las ayudas' href='https://sede.agenciatributaria.gob.es/Sede/ayuda.html'
+  [40] text='Ministerio de Hacienda' href='https://www.hacienda.gob.es/'
+  [41] text='Fiscalidad autonómica y localSe abre en ventana nueva' href='https://www.agenciatributaria.es/AEAT.fisterritorial/InicioF.shtml'
+  [42] text='Tribunales Económico - Administrativos' href='https://sede.tea.hacienda.gob.es/'
+  [43] text='Consejo para la Defensa del Contribuyente' href='https://www2.agenciatributaria.gob.es/static_files/common/dep/planificacion/CDC/IFRD0001.html'
+  [44] text='Punto de Acceso GeneralSe abre en ventana nueva' href='https://administracion.gob.es/'
+  [45] text='Portal de la transparenciaSe abre en ventana nueva' href='https://transparencia.gob.es'
+  [46] text='Otros enlaces de interés' href='https://sede.agenciatributaria.gob.es/Sede/enlaces-interes.html'
+  [47] text='' href=None
+
+=== ZK-shape elements with click handlers ===
+
+  -- .z-button (26 found) --
+    [0] text='Apartados declaración'
+    [1] text='Resumen de declaraciones'
+    [2] text='Resumen'
+    [3] text='Presentar declaración'
+    [4] text='Presentar'
+    [5] text=''
+    [6] text='Ayuda'
+    [7] text='Mostrar opciones'
+    [8] text='Datos personales'
+    [9] text='Datos fiscales'
+    [10] text='Buscar casilla'
+    [11] text='Notas'
+    [12] text='Validar'
+    [13] text='Guardar'
+    [14] text=''
+    [15] text=''
+    [16] text=''
+    [17] text=''
+    [18] text=''
+    [19] text='Descargar listado de errores'
+    [20] text='Ver avisos ocultos'
+    [21] text='Editar'
+    [22] text=''
+    [23] text=''
+    [24] text='Ir a la página'
+    [25] text='Cancelar'
+
+  -- .z-toolbarbutton (0 found) --
+
+  -- .z-menuitem (0 found) --
+
+  -- .z-listitem (0 found) --
+
+=== input elements (dialog textboxes etc.) ===
+  [0] type='text' title=None placeholder=None name=None value='DECLARANTE'
+  [1] type='text' title='Estado Civil (a 31/12/2025):' placeholder=None name=None value='SOLTERO/A'
+  [2] type='text' title='Si el declarante ha fallecido en el año 2025 (antes del 31-12), indique la fecha de fallecimiento:' placeholder=None name=None value=''
+  [3] type='text' title='NIF:' placeholder=None name=None value='12345678Z'
+  [4] type='text' title='Apellidos, Nombre:' placeholder=None name=None value='DECLARANTE PRUEBA'
+  [5] type='text' title=None placeholder=None name=None value='01/01/1980'
+  [6] type='text' title=None placeholder=None name=None value=' '
+  [7] type='radio' title=None placeholder=None name='dIiBba0' value='on'
+  [8] type='radio' title=None placeholder=None name='dIiBla0' value='on'
+  [9] type='text' title=None placeholder=None name=None value=''
+  [10] type='text' title=None placeholder=None name=None value=''
+
+=== visible dialogs / modals ===
+  .z-window[0] visible text-preview='Buscar casilla\n- Número de casilla\n- Concepto\nSeleccione una página\n Ir a la página Cancelar'
+  .z-window-modal[0] visible text-preview='Buscar casilla\n- Número de casilla\n- Concepto\nSeleccione una página\n Ir a la página Cancelar'
+  [role='dialog'][0] visible text-preview='Buscar casilla\n- Número de casilla\n- Concepto\nSeleccione una página\n Ir a la página Cancelar'

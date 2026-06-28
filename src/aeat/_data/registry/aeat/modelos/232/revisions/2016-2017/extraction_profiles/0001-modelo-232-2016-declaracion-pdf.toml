@@ -1,0 +1,29 @@
+[[revisions."2016-2017".extraction_profiles]]
+id = "modelo-232-2016-declaracion-pdf"
+surface = "declaracion_pdf"
+artefact_kind = "declaration_pdf"
+accepted_artefact_kinds = ["declaration_pdf"]
+parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
+target_casillas = [
+    {casilla_id = "decl.ejercicio", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Ejercicio\s+de\s+devengo'},
+    {casilla_id = "decl.tipo-ejercicio", match_strategy = "named_label", value_kind = "enum", label_pattern = 'Tipo\s+de\s+ejercicio'},
+    {casilla_id = "decl.cnae", match_strategy = "named_label", value_kind = "text", label_pattern = 'C\.N\.A\.E\.?\s+actividad\s+principal'},
+]
+# Grounded against AEAT-published Diseño de Registro (DR23200/DR23201), both XLSX files:
+#   01-232-orden-hfp-816-2017-ejercicio-2016-y-siguientes-actualizado-15-01-2020-145-kb-xlsx.xlsx
+#   02-232-orden-hfp-816-2017-ejercicios-2016-2017-146-kb-xlsx.xlsx
+# DR23200 row 9 (verbatim): "Ejercicio de devengo (EEEE)"
+#   → label_pattern 'Ejercicio\s+de\s+devengo' CONFIRMED.
+# DR23201 row 17 (verbatim): "2.Devengo - Tipo de Ejercicio"
+#   → label_pattern 'Tipo\s+de\s+ejercicio' CONFIRMED (case-insensitive match).
+# DR23201 row 20 (verbatim): "2.Devengo - C.N.A.E. actividad principal"
+#   → label_pattern FIXED: removed spurious "de la" connector; correct form is
+#     'C\.N\.A\.E\.?\s+actividad\s+principal'.
+# Both XLSX revisions carry identical DR23201 field descriptions; verdict applies to both.
+confidence = "strict"
+corpus_round_trip_verified = true
+verification_source = "synthetic_from_aeat_published_text"
+min_coverage = "1.0"
+failure_semantics = "fail_hard"
+legal_refs = ["orden-hfp-816-2017:art-1", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]

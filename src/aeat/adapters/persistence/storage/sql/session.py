@@ -1,7 +1,10 @@
-"""Session / unit-of-work helpers.
+"""Session and unit-of-work helpers for the SQL persistence layer.
 
 Thin wrappers around :class:`sqlalchemy.orm.sessionmaker` that enforce
-commit-on-success / rollback-on-exception semantics via a context manager.
+commit-on-success and rollback-on-exception semantics via a context
+manager. Pairs with :func:`aeat.adapters.persistence.storage.sql.engine.get_engine`
+to provide a default binding when callers do not pass an explicit
+engine.
 """
 
 from __future__ import annotations
@@ -44,14 +47,17 @@ def session_scope(engine: Engine | None = None) -> Iterator[Session]:
 
     Yields:
         A live :class:`~sqlalchemy.orm.Session`.
+
+    Raises:
+        Exception: Re-raised after rolling back when the session body raises.
     """
     factory = get_sessionmaker(engine)
     session = factory()
     try:
         yield session
         session.commit()
-    except Exception:
-        _log.debug("session_scope rolling back due to exception")
+    except Exception:  # rollback on any error then re-raise; SQLAlchemy exception surface is too broad to enumerate
+        _log.debug("session_scope rolling back due to exception", exc_info=True)
         session.rollback()
         raise
     finally:

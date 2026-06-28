@@ -6,6 +6,7 @@ tags:
   - "#adr"
   - "#modelo-inventory"
 date: 2026-04-13
+modified: '2026-04-13'
 related:
   - "[[2026-04-13-modelo-inventory-research]]"
   - "[[2026-04-12-modelo-303-390-adr]]"

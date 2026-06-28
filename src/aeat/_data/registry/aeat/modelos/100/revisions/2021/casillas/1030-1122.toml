@@ -1,0 +1,9 @@
+[[revisions."2021".casillas]]
+id = "1122"
+number = "1122"
+label = "NIF/NIE del arrendador 1"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_arr"]
+data_type = "text"
+semantic_role = "irpf_arrendador_nif_o_id_extranjero"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

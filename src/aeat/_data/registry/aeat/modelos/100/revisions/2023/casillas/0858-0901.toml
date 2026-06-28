@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "0901"
+number = "0901"
+label = "Por donaciones a determinadas entidades destinadas a la investigación, el desarrollo científico o tecnológico, o a la innovación"
+section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
+semantic_role = "irpf_deduccion_baleares_donaciones_investigacion"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

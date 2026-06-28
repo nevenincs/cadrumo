@@ -1,0 +1,8 @@
+[[revisions."2010-y-siguientes".filing_schedules]]
+id = "modelo-360-ad-hoc"
+period_kind = "ad_hoc"
+periods = ["AD-HOC"]
+profile_condition_mode = "all"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4"]
+source_refs = ["boe-modelo-360-2010-form", "aeat-modelo-360-procedure"]
+

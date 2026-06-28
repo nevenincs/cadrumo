@@ -1,0 +1,8 @@
+[[revisions."2020".casillas]]
+id = "0485"
+number = "0485"
+label = "Importe de la pensión o anualidad satisfecha en 2020 por decisión judicial"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_pensiones_comensatorias_alimentos"]
+semantic_role = "irpf_red_pensiones_compensatorias_importe"
+legal_refs = ["ley-35-2006:art-55"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

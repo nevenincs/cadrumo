@@ -1,0 +1,24 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02368"
+number = "02368"
+label = "Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - i6) Ingresos,gastos o rentas que forman parte del beneficio operativo que no se integran en la base imponible [02368]"
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+data_type = "money"
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020-casilla-02368"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02369"
+number = "02369"
+label = "Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - k) Límite total a la deducción de gastos financieros netos, en todo caso, 1 millón de euros si el límite a la deducción d..."
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+data_type = "money"
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020-casilla-02369"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

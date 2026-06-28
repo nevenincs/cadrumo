@@ -37,11 +37,24 @@ class UnknownPortalError(PortalRegistryError):
 class PortalIntegrityError(PortalRegistryError):
     """Raised at import time when the registry fails a structural check.
 
-    Signals that a portal registry entry violates a cross-reference
-    invariant (missing member, extra member, duplicate entry,
-    dangling ``replaced_by``, unresolved ``related_modelo``, or
-    ``ModeloCode`` member without a backing FILING/CENSUS portal).
-    Always raised from
-    :func:`aeat.domain.portals._registry._finalise_registry` and therefore
-    never crosses a user call stack — it aborts package import.
+    Signals that a portal registry entry violates a structural
+    invariant, such as a missing member, extra member, duplicate entry,
+    or dangling ``replaced_by`` reference. It can also surface invalid
+    registry-backed portal bindings during lookup.
     """
+
+
+class PortalValidationError(PortalRegistryError, ValueError):
+    """Raised when portal metadata violates state or shape invariants.
+
+    Inherits from ValueError to maintain compatibility with Pydantic
+    validators.
+    """
+
+
+__all__ = [
+    "PortalIntegrityError",
+    "PortalRegistryError",
+    "PortalValidationError",
+    "UnknownPortalError",
+]

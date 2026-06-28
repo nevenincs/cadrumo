@@ -1,0 +1,10 @@
+[[revisions."2021".casillas]]
+id = "0325"
+number = "0325"
+label = "Suma de pérdidas patrimoniales derivadas de transmisiones o reembolsos de acciones o participaciones de instituciones de inversión colectiva o SOCIMI (suma de las casillas [0322])"
+section = ["resultados", "gp_fondos_res"]
+semantic_role = "irpf_gyp_renta_fija_suma_perdidas"
+input_kind = "computed"
+formula = "renta-2021-iic-perdidas-reducidas-suma"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

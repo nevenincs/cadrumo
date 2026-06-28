@@ -1,0 +1,16 @@
+[[revisions."2023".parameters]]
+id = "renta-2023-rental-reduccion-rate-tier-60"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions."2023".parameters.values]]
+value = "0.60"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31

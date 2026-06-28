@@ -1,0 +1,16 @@
+# Modelo 202 (IS pago fraccionado) — modalidad art. 40.2 prior-year cuota
+# base. Enrolled by the cross-renta 2P carry: the October instalment's base
+# (casilla 01) is copied from the immediately prior year's Modelo 200 cuota
+# líquida (DP200014B:00592) via the cross_model_output relation
+# modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p (filing_year_delta = -1),
+# and casilla 03 recomputes as 18% of that base (LIS art. 40.2). The enrolling
+# test drives the real M200 + M202 engines across two distinct target renta
+# years (2026, 2027), each sourcing the prior M200 (2025, 2026).
+#
+# The same enrolling test also verifies the 1P (April) two-years-back relation
+# using target year 2026, so both source M200 observations are modelled years.
+[modelo]
+modelo = "202"
+renta_years = [2026, 2027]
+evidence_class = "calculation"
+enrolling_test = "src/aeat/application/calculations/tests/test_modelo_202_cuota_base_ejercicio_anterior_continuity.py"

@@ -1,0 +1,9 @@
+[[revisions."2020".casillas]]
+id = "0268"
+number = "0268"
+label = "Denominación de la entidad no residente participada"
+section = ["toma_datos_ampliada", "regimenes_especiales", "re_tr_fiscal_inter"]
+data_type = "text"
+semantic_role = "irpf_re_tfi_entidad_denominacion"
+legal_refs = ["ley-35-2006:art-91"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

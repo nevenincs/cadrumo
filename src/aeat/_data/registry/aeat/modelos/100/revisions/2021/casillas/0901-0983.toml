@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0983"
+number = "0983"
+label = "Importe generado en 2020 pendiente de aplicación"
+section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
+semantic_role = "irpf_deduccion_castilla_y_leon_generado_2022_pendiente"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0247"
+number = "0247"
+label = "Último mes completo de 2021 en que estuvo vigente el matrimonio"
+section = ["resultados", "calculo_impuesto_res", "deduc_conyuge_disc_res"]
+semantic_role = "irpf_matrimonio_mes_fin"
+legal_refs = ["ley-35-2006:art-81-bis"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

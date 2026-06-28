@@ -1,0 +1,8 @@
+[[revisions."2020".casillas]]
+id = "0465"
+number = "0465"
+label = "Aportaciones y contribuciones del ejercicio 2020 (excepto contribuciones empresariales a seguros colectivos de dependencia)"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
+semantic_role = "irpf_red_prevision_social_aportaciones_trabajador"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

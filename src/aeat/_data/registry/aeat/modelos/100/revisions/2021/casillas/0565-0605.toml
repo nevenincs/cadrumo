@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0605"
+number = "0605"
+label = "Cuotas del Impuesto sobre la Renta de no Residentes (**)"
+section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
+semantic_role = "irpf_cuota_irnr_imputada"
+legal_refs = ["ley-35-2006:art-99"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

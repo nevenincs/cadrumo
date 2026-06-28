@@ -1,0 +1,10 @@
+[[revisions."2025".casillas]]
+id = "0222"
+number = "0222"
+label = "Provisiones deducibles y gastos de dificil justificacion"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+semantic_role = "irpf_ed_provisiones_gastos_dificil_justificacion"
+input_kind = "computed"
+formula = "renta-2025-estimacion-directa-gastos-dificil-justificacion"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "rd-439-2007:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]

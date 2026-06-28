@@ -1,0 +1,12 @@
+[[revisions.2019-2022.casillas]]
+id = "52"
+number = "52"
+label = "Mod. 40.3 LIS B2 — Reserva de nivelacion (art. 105 LIS) — Disminuciones"
+section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_b2_reserva_nivelacion_disminuciones"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-202-2019-2022-page-02-casilla-52"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2019", "aeat-modelo-202-instructions-2023-2024"]

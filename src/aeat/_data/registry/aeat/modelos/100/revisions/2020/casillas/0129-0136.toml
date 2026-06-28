@@ -1,0 +1,9 @@
+[[revisions."2020".casillas]]
+id = "0136"
+number = "0136"
+label = "Fecha de transmisión, en su caso, en el ejercicio 2020, del inmueble (día, mes y año)"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+data_type = "text"
+semantic_role = "irpf_inmueble_fecha_transmision"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

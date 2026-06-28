@@ -1,4 +1,4 @@
-"""Closed enumeration of every AEAT portal tracked by the registry.
+"""Enumeration of AEAT portal identifiers tracked by the portal registry.
 
 The :class:`Portal` members name every portal that the v1 catalogue
 materialises under :mod:`aeat.domain.portals`. Member values are the member
@@ -6,13 +6,10 @@ name lowercased (e.g. ``"portal_m303_iva_autoliquidacion"``), which
 gives callers a stable, machine-predictable identifier safe to emit
 over CLI / JSON without further mapping.
 
-Membership is fixed at 42 entries grouped as follows (see the
-portal-catalogue research doc §6 for the enumeration):
-
 - 8 AUTH entry points (Sede root, Mi área personal, Cl@ve + cert + DNIe
   gateways).
-- 21 FILING / CENSUS procedures (one per :class:`aeat.domain.modelos.ModeloCode`,
-  including the retired Modelo 037 simplificada).
+- FILING / CENSO procedures for curated Sede entries, including the inactive
+  Modelo 037 simplificada history entry.
 - 2 BORRADOR entries (Renta Web borrador, Pre303 ayuda).
 - 4 CONSULTATION entries (Mis expedientes, Mis notificaciones, Mis datos
   censales, Documentos pendientes de firma).
@@ -45,7 +42,7 @@ class Portal(StrEnum):
     PORTAL_CERT_VALIDATION_REST = "portal_cert_validation_rest"
     PORTAL_DNIE_SEDE_ENTRY = "portal_dnie_sede_entry"
 
-    # Filing / census (21 — includes retired M037)
+    # Filing / censo
     PORTAL_M036_CENSAL = "portal_m036_censal"
     PORTAL_M037_CENSAL_SIMPLIFICADA = "portal_m037_censal_simplificada"
     PORTAL_M100_RENTA = "portal_m100_renta"

@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "03276"
+number = "03276"
+label = "Régimen fiscal entidades sin fines lucrativos (Ley 49/2002) - Disminución - Correcciones del ejercicio - Permanentes [03276]"
+section = ["regimen_fiscal_entidades_sin_fines_lucrativos_ley", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03276"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03277"
+number = "03277"
+label = "Régimen fiscal entidades sin fines lucrativos (Ley 49/2002) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [03277]"
+section = ["regimen_fiscal_entidades_sin_fines_lucrativos_ley", "disminucion"]
+data_type = "money"
+semantic_role = "is_entidad_sin_fines_lucrativos_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03277"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03278"
+number = "03278"
+label = "Régimen fiscal entidades sin fines lucrativos (Ley 49/2002) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [03278]"
+section = ["regimen_fiscal_entidades_sin_fines_lucrativos_ley", "disminucion"]
+data_type = "money"
+semantic_role = "is_entidad_sin_fines_lucrativos_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03278"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03279"
+number = "03279"
+label = "Régimen fiscal entidades sin fines lucrativos (Ley 49/2002) - Disminución - Saldo pendiente a principio de ejercicio [03279]"
+section = ["regimen_fiscal_entidades_sin_fines_lucrativos_ley", "disminucion"]
+data_type = "money"
+semantic_role = "is_entidad_sin_fines_lucrativos_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03279"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03280"
+number = "03280"
+label = "Régimen fiscal entidades sin fines lucrativos (Ley 49/2002) - Disminución - Saldo pendiente a fin de ejercicio [03280]"
+section = ["regimen_fiscal_entidades_sin_fines_lucrativos_ley", "disminucion"]
+data_type = "money"
+semantic_role = "is_entidad_sin_fines_lucrativos_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03280"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

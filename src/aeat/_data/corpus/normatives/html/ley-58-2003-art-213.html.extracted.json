@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-58-2003-art-213.html",
+  "source_sha256": "65900024f17541f96f6c6935d3748e086e7e0c4b957b7211f1d17b6402f23798",
+  "preprocessor_id": "normatives-html-example",
+  "preprocessor_version": "0.1",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution; consult the sibling normatives manifest for the BOE permalink.",
+  "units": [
+    {
+      "text": "1. Los actos y actuaciones de aplicación de los tributos y los actos de imposición de sanciones tributarias podrán revisarse, conforme a lo establecido en los capítulos siguientes, mediante:\n\na) Los procedimientos especiales de revisión.\n\nb) El recurso de reposición.\n\nc) Las reclamaciones económico-administrativas.\n\n2. Las resoluciones firmes de los órganos económico-administrativos, así como los actos de aplicación de los tributos y de imposición de sanciones sobre los que hubiera recaído resolución económico-administrativa, no podrán ser revisados en vía administrativa, cualquiera que sea la causa alegada, salvo en los supuestos de nulidad de pleno derecho previstos en el artículo 217, rectificación de errores del artículo 220 y recurso extraordinario de revisión regulado en el artículo 244 de esta ley.\n\nLas resoluciones de los órganos económico-administrativos podrán ser declaradas lesivas conforme a lo previsto en el artículo 218 de esta ley.\n\n3. Cuando hayan sido confirmados por sentencia judicial firme, no serán revisables en ningún caso los actos de aplicación de los tributos y de imposición de sanciones ni las resoluciones de las reclamaciones económico-administrativas.",
+      "title": "Artículo 213. Medios de revisión.",
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

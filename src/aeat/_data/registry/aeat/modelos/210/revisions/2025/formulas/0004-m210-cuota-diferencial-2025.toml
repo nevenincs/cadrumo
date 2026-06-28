@@ -1,0 +1,20 @@
+# M210 IRNR Phase 1 cuota-diferencial formula.
+#
+# `cuota_diferencial = cuota_integra - retencion_practicada` per
+# TRLIRNR Art 24 (pagos a cuenta deducidos de la cuota íntegra para
+# arribar al saldo de autoliquidación).
+
+[[revisions."2025".formulas]]
+id = "m210-cuota-diferencial-2025"
+target_casilla_id = "cuota_diferencial"
+expression = { op = "subtract", args = [
+    { casilla_id = "cuota_integra" },
+    { casilla_id = "retencion_practicada" },
+] }
+rounding = "money-2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["retención", "pagos a cuenta"]

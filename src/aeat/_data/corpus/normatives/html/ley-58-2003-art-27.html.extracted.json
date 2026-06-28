@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-58-2003-art-27.html",
+  "source_sha256": "cf4d7692e678cd2305b1449839994fe7c0c245bb3543ac7c22d7a96a6fc9658f",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Los recargos por declaración extemporánea son prestaciones accesorias que deben satisfacer los obligados tributarios como consecuencia de la presentación de autoliquidaciones o declaraciones fuera de plazo sin requerimiento previo de la Administración tributaria.\nA los efectos de este artículo, se considera requerimiento previo cualquier actuación administrativa realizada con conocimiento formal del obligado tributario conducente al reconocimiento, regularización, comprobación, inspección, aseguramiento o liquidación de la deuda tributaria.\n2. El recargo será un porcentaje igual al 1 por ciento más otro 1 por ciento adicional por cada mes completo de retraso con que se presente la autoliquidación o declaración respecto al término del plazo establecido para la presentación e ingreso.\nDicho recargo se calculará sobre el importe a ingresar resultante de las autoliquidaciones o sobre el importe de la liquidación derivado de las declaraciones extemporáneas y excluirá las sanciones que hubieran podido exigirse y los intereses de demora devengados hasta la presentación de la autoliquidación o declaración.\nSi la presentación de la autoliquidación o declaración se efectúa una vez transcurridos 12 meses desde el término del plazo establecido para la presentación, el recargo será del 15 por ciento y excluirá las sanciones que hubieran podido exigirse. En estos casos, se exigirán los intereses de demora por el período transcurrido desde el día siguiente al término de los 12 meses posteriores a la finalización del plazo establecido para la presentación hasta el momento en que la autoliquidación o declaración se haya presentado.\n5. El importe de los recargos a que se refiere el apartado 2 anterior se reducirá en el 25 por ciento siempre que se realice el ingreso total del importe restante del recargo en el plazo del apartado 2 del artículo 62 de esta Ley abierto con la notificación de la liquidación de dicho recargo y siempre que se realice el ingreso total del importe de la deuda resultante de la autoliquidación extemporánea o de la liquidación practicada por la Administración derivada de la declaración extemporánea.",
+      "title": "Artículo 27. Recargos por declaración extemporánea sin requerimiento previo.",
+      "section": "Artículo 27. Recargos por declaración extemporánea sin requerimiento previo.",
+      "anchor": null
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0410"
+number = "0410"
+label = "Reducción aplicable (DT 9.ª)"
+section = ["toma_datos_ampliada", "g_cambio_residencia_ext", "g4_re"]
+semantic_role = "irpf_g4_re_reduccion_dt9"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

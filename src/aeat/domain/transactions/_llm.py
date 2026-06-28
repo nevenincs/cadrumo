@@ -1,31 +1,31 @@
-"""LLM-backed transaction classifiers with parametric prompt builder (#236).
+"""LLM-backed transaction classifiers with a parametric prompt builder.
 
 Defines the :class:`LLMClassifier` protocol plus subprocess-based
-reference implementations for the three local LLM CLIs (claude,
-gemini, codex). The prompt is built PROGRAMMATICALLY from the
-available enum values so the LLM prompt stays in sync with the
-Python enum — adding a new :class:`BusinessClassification` value
-automatically requires a developer to decide whether it belongs in
-the default LLM choice set (via the
-``test_default_spec_accounts_for_every_classification_member`` guard
-in ``test_llm.py``).
+reference implementations for the three local LLM CLIs
+(:func:`build_claude_classifier`, :func:`build_antigravity_classifier`,
+:func:`build_codex_classifier`). The prompt is built
+PROGRAMMATICALLY from the available enum values so the LLM prompt
+stays in sync with :class:`aeat.domain.transactions.BusinessClassification`:
+adding a new value automatically requires a developer to decide
+whether it belongs in the default LLM choice set.
 
 The prompt spec is parametrized:
 
-- ``classifications``: which :class:`BusinessClassification` values
-  the LLM may pick. Defaults to the four *decision* states
+- ``classifications``: which :class:`aeat.domain.transactions.BusinessClassification`
+  values the LLM may pick. Defaults to the four *decision* states
   (``BUSINESS`` / ``PERSONAL`` / ``MIXED`` / ``PROCESSED_UNCLASSIFIED``).
   Pipeline-state values (``NOT_YET_PROCESSED``, ``SKIPPED_BY_RULE``,
   ``FAILED_VALIDATION``) are excluded because they are not LLM
-  decisions — they are internal pipeline bookkeeping.
-- ``categories``: optional :class:`SpendingCategory` values the LLM
-  may additionally attach. Empty by default (classification-only).
-  When populated, the response includes a ``category`` field.
+  decisions -- they are internal pipeline bookkeeping.
+- ``categories``: optional :class:`aeat.domain.categories.SpendingCategory`
+  values the LLM may additionally attach. Empty by default
+  (classification-only). When populated, the response includes a
+  ``category`` field.
 
 Every decision the LLM emits is validated against the spec's
-allow-list: a response that picks a value outside the allowed set
-raises :class:`LLMClassifierError`, so a hallucinating model cannot
-corrupt the catalogue.
+allow-list via :func:`parse_response`: a response that picks a value
+outside the allowed set raises :class:`LLMClassifierError`, so a
+hallucinating model cannot corrupt the catalogue.
 """
 
 from __future__ import annotations
@@ -33,30 +33,29 @@ from __future__ import annotations
 import re
 import shutil
 import subprocess
-import tempfile
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from decimal import Decimal
-from pathlib import Path
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
-from ..categories import CATEGORY_PROFILES_2025, SpendingCategory
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.i18n import Translatable as tr
+from ...core.logging import get_logger
+from ..categories import SpendingCategory, resolve_category_profiles
+from ..iva import IvaCategory
 from ._enums import BusinessClassification
+from ._errors import LLMClassifierError, TransactionValidationError
 from ._model_tier import MINIMUM_CLASSIFICATION_TIER, ModelProfile, ModelTier, resolve_profile
 from ._models import Transaction
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+_logger = get_logger(__name__)
+
 _CONFIDENCE_MIN = Decimal("0")
 _CONFIDENCE_MAX = Decimal("1")
 _DEFAULT_TIMEOUT_SECONDS = 120.0
 _REASON_MAX_LENGTH = 2048
-
-
-class LLMClassifierError(Exception):
-    """Raised when an LLM classification attempt fails."""
-
 
 # ── response model ────────────────────────────────────────────────
 
@@ -70,13 +69,35 @@ class LLMClassificationResponse(BaseModel):
     confidence: Decimal
     reason: str = Field(min_length=1, max_length=_REASON_MAX_LENGTH)
     category: SpendingCategory | None = None
+    iva_category: IvaCategory | None = None
+    business_pct: Decimal | None = None
+    multiple_components: bool | None = None
+    """Evidence-read multiplicity judgement: True when the attached invoice carries
+    multiple distinct rate/category lines that warrant a split into independently
+    filable base/IVA children. ``None`` when no evidence was read (the model cannot
+    judge multiplicity from the bank row alone). A boolean judgement, not an
+    allow-list value, so hallucination containment is unaffected; it only drives a
+    non-blocking split *recommendation*, never a write."""
 
     @field_validator("confidence")
     @classmethod
     def _check_confidence_range(cls, value: Decimal) -> Decimal:
         """Restrict confidence to the inclusive 0..1 range."""
         if not _CONFIDENCE_MIN <= value <= _CONFIDENCE_MAX:
-            raise ValueError("confidence must be within the inclusive 0..1 range")
+            raise TransactionValidationError("confidence must be within the inclusive 0..1 range")
+        return value
+
+    @field_validator("business_pct")
+    @classmethod
+    def _check_business_pct_range(cls, value: Decimal | None) -> Decimal | None:
+        """Restrict the proposed MIXED business percentage to the inclusive 0..1 range.
+
+        The model only *proposes* the split direction; the percentage is a
+        non-regulated hint the operator confirms. ``None`` is the common case
+        (BUSINESS / PERSONAL suggestions carry no percentage).
+        """
+        if value is not None and not _CONFIDENCE_MIN <= value <= _CONFIDENCE_MAX:
+            raise TransactionValidationError("business_pct must be within the inclusive 0..1 range")
         return value
 
     @field_validator("reason")
@@ -85,7 +106,78 @@ class LLMClassificationResponse(BaseModel):
         """Trim whitespace and reject empty reasons."""
         trimmed = value.strip()
         if not trimmed:
-            raise ValueError("reason must not be empty")
+            raise TransactionValidationError("reason must not be empty")
+        return trimmed
+
+
+class LLMSplitChild(BaseModel):
+    """One proposed child of an evidence-driven transaction split.
+
+    The model proposes a *proportion* of the parent (a fraction, like
+    ``business_pct``) plus the selections for that child; the application derives
+    each child's euro amount from the parent gross and the regulated tax substrate
+    from the registry. The model never emits a euro amount or a regulated number
+    (``llm-selects-system-derives-tax-numbers``).
+    """
+
+    model_config = _STRICT_FROZEN
+
+    proportion: Decimal
+    category: SpendingCategory | None = None
+    iva_category: IvaCategory | None = None
+    evidence_citation: str = Field(default="", max_length=_REASON_MAX_LENGTH)
+
+    @field_validator("proportion")
+    @classmethod
+    def _check_proportion(cls, value: Decimal) -> Decimal:
+        """Restrict each child proportion to the half-open (0, 1] range."""
+        if not (_CONFIDENCE_MIN < value <= _CONFIDENCE_MAX):
+            raise TransactionValidationError("each split child proportion must be within (0, 1]")
+        return value
+
+
+class LLMSplitResponse(BaseModel):
+    """An evidence-driven split proposal: children whose proportions sum to one.
+
+    A proposal of **one** child (proportion ``1.0``) is the "no split warranted"
+    verdict — the model read the invoice and judged it a single line/rate. The
+    application surfaces that verdict for review and never applies a degenerate
+    one-way split. Two or more children is a genuine split recommendation.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    children: tuple[LLMSplitChild, ...]
+    reason: str = Field(min_length=1, max_length=_REASON_MAX_LENGTH)
+
+    @property
+    def recommends_split(self) -> bool:
+        """True when the model proposes more than one child (a genuine split)."""
+        return len(self.children) > 1
+
+    @field_validator("children")
+    @classmethod
+    def _check_children(cls, value: tuple[LLMSplitChild, ...]) -> tuple[LLMSplitChild, ...]:
+        """Require at least one child whose proportions sum to ~1.0.
+
+        One child is the no-split verdict; two or more is a split. Either way the
+        proportions must sum to approximately 1.0 (a single child must therefore
+        carry proportion 1.0).
+        """
+        if not value:
+            raise TransactionValidationError("a split proposal must carry at least one child")
+        total = sum((child.proportion for child in value), Decimal("0"))
+        if abs(total - _CONFIDENCE_MAX) > Decimal("0.01"):
+            raise TransactionValidationError("split child proportions must sum to approximately 1.0")
+        return value
+
+    @field_validator("reason")
+    @classmethod
+    def _strip_reason(cls, value: str) -> str:
+        """Trim whitespace and reject empty reasons."""
+        trimmed = value.strip()
+        if not trimmed:
+            raise TransactionValidationError("reason must not be empty")
         return trimmed
 
 
@@ -98,9 +190,44 @@ class LLMClassifier(Protocol):
     @property
     def decided_by(self) -> str:
         """Return the ``classified_by`` identifier this classifier emits."""
+        ...
 
-    def classify(self, transaction: Transaction) -> LLMClassificationResponse:
-        """Return one classification decision for ``transaction``."""
+    def classify(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMClassificationResponse:
+        """Return one classification decision for ``transaction``.
+
+        Args:
+            transaction: The transaction to classify.
+            evidence_text: Optional on-host-extracted attached-evidence text to
+                inject into the prompt. Gating of whether evidence may reach a given
+                (on-host vs cloud) classifier is the caller's responsibility.
+
+        Returns:
+            A :class:`LLMClassificationResponse` with the classification result.
+        """
+        ...
+
+
+@runtime_checkable
+class LLMSplitProposer(Protocol):
+    """Propose an evidence-driven N-way split for one transaction."""
+
+    @property
+    def decided_by(self) -> str:
+        """Return the ``classified_by`` identifier this proposer emits."""
+        ...
+
+    def propose_split(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMSplitResponse:
+        """Return an N-way split proposal for ``transaction``.
+
+        Args:
+            transaction: The transaction to split.
+            evidence_text: Optional on-host-extracted attached-evidence text to
+                inject into the prompt.
+
+        Returns:
+            A validated :class:`LLMSplitResponse`.
+        """
+        ...
 
 
 # ── parametric prompt builder ─────────────────────────────────────
@@ -122,6 +249,14 @@ class CategoryChoice:
     hint: str
 
 
+@dataclass(frozen=True)
+class IvaCategoryChoice:
+    """One allowed :class:`aeat.domain.iva.IvaCategory` paired with an LLM-facing hint."""
+
+    value: IvaCategory
+    hint: str
+
+
 # Descriptive hints for the four LLM-addressable classification states. Kept
 # as module constants so the descriptions live next to their values and can
 # be overridden by callers that build a custom PromptSpec.
@@ -139,12 +274,16 @@ PIPELINE_ONLY_CLASSIFICATIONS: frozenset[BusinessClassification] = frozenset(
         BusinessClassification.NOT_YET_PROCESSED,
         BusinessClassification.SKIPPED_BY_RULE,
         BusinessClassification.FAILED_VALIDATION,
-    }
+    },
 )
 
 
 def default_classification_choices() -> tuple[ClassificationChoice, ...]:
-    """Return the default allowed-classifications tuple used by the prompt."""
+    """Return the default allowed-classifications tuple used by the prompt.
+
+    Returns:
+        Tuple of :class:`ClassificationChoice` objects for each allowed category.
+    """
     return tuple(ClassificationChoice(value=value, hint=hint) for value, hint in _DEFAULT_CLASSIFICATION_HINTS.items())
 
 
@@ -162,23 +301,60 @@ class PromptSpec:
         default_factory=default_classification_choices,
     )
     categories: tuple[CategoryChoice, ...] = ()
+    iva_categories: tuple[IvaCategoryChoice, ...] = ()
     header: str = "You are classifying a Spanish autónomo's bank transaction for tax purposes."
 
     def allowed_classifications(self) -> frozenset[BusinessClassification]:
-        """Return the set of classification values the LLM is allowed to emit."""
+        """Return the set of :class:`BusinessClassification` values the LLM is allowed to emit."""
         return frozenset(choice.value for choice in self.classifications)
 
     def allowed_categories(self) -> frozenset[SpendingCategory]:
-        """Return the set of category values the LLM is allowed to emit (empty = none)."""
+        """Return the set of category values the LLM is allowed to emit (empty = none).
+
+        Returns:
+            Frozenset of :class:`SpendingCategory` values the LLM may emit.
+        """
         return frozenset(choice.value for choice in self.categories)
 
-    def render(self, transaction: Transaction) -> str:
-        """Render the prompt for ``transaction`` against this spec."""
-        return _render_prompt(self, transaction)
+    def allowed_iva_categories(self) -> frozenset[IvaCategory]:
+        """Return the set of :class:`aeat.domain.iva.IvaCategory` values the LLM may emit (empty = none).
+
+        Returns:
+            Frozenset of :class:`aeat.domain.iva.IvaCategory` values the LLM may
+            select from; empty when the spec does not ask for an IVA category.
+        """
+        return frozenset(choice.value for choice in self.iva_categories)
+
+    def render(
+        self,
+        transaction: Transaction,
+        *,
+        evidence_text: str | None = None,
+        evidence_image_present: bool = False,
+    ) -> str:
+        """Render the prompt for ``transaction`` against this spec.
+
+        Args:
+            transaction: The transaction to classify.
+            evidence_text: Optional on-host-extracted text of an attached evidence
+                document (e.g. a purchase invoice). When present it is injected into
+                the prompt for the model to read; the model uses it only to select
+                the classification/category/iva_category and must never copy a euro
+                figure from it (the regulated numbers stay registry-derived).
+            evidence_image_present: Set when the evidence is attached as an image
+                (the on-host vision-read path) instead of inlined text; the prompt
+                then points the model at the attached image.
+        """
+        return _render_prompt(
+            self,
+            transaction,
+            evidence_text=evidence_text,
+            evidence_image_present=evidence_image_present,
+        )
 
 
 def default_prompt_spec() -> PromptSpec:
-    """Return the default prompt spec: classification-only, four decision states."""
+    """Return the default :class:`PromptSpec`: classification-only, four decision states."""
     return PromptSpec()
 
 
@@ -189,12 +365,21 @@ def prompt_spec_with_every_spending_category(
     """Return a prompt spec that also asks the LLM to suggest a SpendingCategory.
 
     Pulls authoritative Spanish display labels from
-    :data:`aeat.domain.categories.CATEGORY_PROFILES_2025` (shipped by
-    #253) rather than inventing ad-hoc hints from the enum value —
-    the LLM picks categories far more accurately against the real AEAT
-    terminology than against mangled snake_case. Categories with no
-    registered profile (none today; every :class:`SpendingCategory`
-    member is covered) fall back to the humanised enum value.
+    :data:`aeat.domain.categories.resolve_category_profiles(2025)` rather than
+    inventing ad-hoc hints from the enum value -- the LLM picks
+    categories far more accurately against the real AEAT terminology
+    than against mangled snake_case. Categories with no registered
+    profile (none today; every
+    :class:`aeat.domain.categories.SpendingCategory` member is covered)
+    fall back to the humanised enum value.
+
+    Args:
+        classifications: Optional override for the classification
+            choices; defaults to :func:`default_classification_choices`.
+
+    Returns:
+        A :class:`PromptSpec` whose ``categories`` tuple covers every
+        registered :class:`aeat.domain.categories.SpendingCategory`.
     """
     category_choices = tuple(CategoryChoice(value=value, hint=_category_hint(value)) for value in SpendingCategory)
     return PromptSpec(
@@ -203,26 +388,104 @@ def prompt_spec_with_every_spending_category(
     )
 
 
+# Concise operator-/LLM-facing descriptions for each closed Spanish IVA
+# situation. These hint the model's SELECTION; they do not ground a number —
+# the rate is looked up from the registry and the base/amount derived
+# downstream. The IVA catalogue's own ``label`` fields are i18n keys that are
+# not carried in the locale catalogues, so they cannot serve as hints; these
+# curated one-liners are the authoritative prompt descriptions instead.
+_IVA_CATEGORY_HINTS: dict[IvaCategory, str] = {
+    IvaCategory.DOMESTIC_GENERAL_21: "domestic supply at the general 21% rate",
+    IvaCategory.DOMESTIC_REDUCED_10: "reduced 10% rate (hospitality, transport, some foods)",
+    IvaCategory.DOMESTIC_SUPER_REDUCED_4: "super-reduced 4% rate (basic foods, books, medicines)",
+    IvaCategory.DOMESTIC_ZERO: "domestic supply at a 0% rate",
+    IvaCategory.DOMESTIC_EXEMPT: "domestic supply exempt from IVA (education, health, finance — Art. 20)",
+    IvaCategory.DOMESTIC_NOT_SUBJECT: "operation not subject to Spanish IVA",
+    IvaCategory.DOMESTIC_REVERSE_CHARGE: "domestic reverse charge — the recipient self-assesses IVA (Art. 84)",
+    IvaCategory.INTRA_COMMUNITY_SUPPLY: "exempt intra-community supply of goods to an EU business (Art. 25)",
+    IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE: "reverse-charge EU goods acquisition",
+    IvaCategory.INTRA_COMMUNITY_TRIANGULATION: "intra-community triangular operation",
+    IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED: "export of goods outside the EU, zero-rated (Art. 21)",
+    IvaCategory.IMPORT_THIRD_COUNTRY: "import of goods from outside the EU",
+    IvaCategory.RECARGO_EQUIVALENCIA: "purchase subject to the recargo de equivalencia surcharge",
+    IvaCategory.REGIMEN_SIMPLIFICADO: "régimen simplificado (modules), not a general-regime invoice",
+    IvaCategory.OPERACION_NO_SUJETA: "operation outside the scope of Spanish IVA",
+    IvaCategory.ERRONEOUS_INVOICE: "erroneous invoice flagged for correction",
+    IvaCategory.UNKNOWN: "IVA situation not yet determined",
+}
+
+
+def default_iva_category_choices() -> tuple[IvaCategoryChoice, ...]:
+    """Return the grounded IVA-category choices for the saturation prompt.
+
+    The allow-list is the closed :class:`aeat.domain.iva.IvaCategory` enum (the
+    registry :class:`aeat.domain.iva.IvaCatalogue` is validated to carry a
+    regulation for every member, so the enum and the catalogue set are
+    identical). Each choice is hinted with a concise description from
+    :data:`_IVA_CATEGORY_HINTS`. The model SELECTS a category only; every
+    regulated euro figure is derived downstream from the registry rate, never
+    emitted by the model (``2026-06-04-llm-ledger-classification-adr``).
+
+    Returns:
+        One :class:`IvaCategoryChoice` per :class:`aeat.domain.iva.IvaCategory`,
+        ordered by enum declaration.
+    """
+    return tuple(
+        IvaCategoryChoice(value=category, hint=_IVA_CATEGORY_HINTS.get(category, category.value.replace("_", " ")))
+        for category in IvaCategory
+    )
+
+
+def prompt_spec_with_saturation_fields(
+    *,
+    classifications: tuple[ClassificationChoice, ...] | None = None,
+) -> PromptSpec:
+    """Return a prompt spec for full saturation: spending + IVA category selection.
+
+    Extends :func:`prompt_spec_with_every_spending_category` with the
+    registry-grounded IVA-category allow-list (and invites a proposed MIXED
+    ``business_pct``) so one reviewed suggestion can carry the rich tax
+    metadata. The model selects categories only; the regulated rate, taxable
+    base, and IVA amount are derived downstream from the registry, never
+    emitted by the model (``2026-06-04-llm-ledger-classification-adr``).
+
+    Args:
+        classifications: Optional override for the classification choices;
+            defaults to :func:`default_classification_choices`.
+
+    Returns:
+        A :class:`PromptSpec` carrying both the spending-category and the
+        IVA-category allow-lists.
+    """
+    category_choices = tuple(CategoryChoice(value=value, hint=_category_hint(value)) for value in SpendingCategory)
+    return PromptSpec(
+        classifications=classifications or default_classification_choices(),
+        categories=category_choices,
+        iva_categories=default_iva_category_choices(),
+    )
+
+
 def _category_hint(value: SpendingCategory) -> str:
     """Return the best available hint string for a SpendingCategory.
 
     Pulls the Spanish display label plus the proportionality kind and
-    (first 80 chars of) ``notes_es`` from :data:`CATEGORY_PROFILES_2025`
-    shipped by #253 — gives the LLM the authoritative AEAT terminology
-    AND the deductibility context (e.g. ``full_deductible``,
-    ``usage_ratio_home_area``) that disambiguates home-office from
-    premises rent or drives MIXED vs BUSINESS decisions. Falls back to
-    the humanised enum value when a category has no registered profile.
+    (first 80 chars of) ``notes`` from
+    :data:`aeat.domain.categories.resolve_category_profiles(2025)` -- gives the
+    LLM the authoritative AEAT terminology AND the deductibility
+    context (e.g. ``full_deductible``, ``usage_ratio_home_area``) that
+    disambiguates home-office from premises rent or drives MIXED vs
+    BUSINESS decisions. Falls back to the humanised enum value when a
+    category has no registered profile.
     """
-    profile = CATEGORY_PROFILES_2025.get(value)
+    profile = resolve_category_profiles(2025).get(value)
     if profile is None:
         return value.value.replace("_", " ")
-    spanish_label = profile.display_label.get("es") or value.value.replace("_", " ")
+    spanish_label = profile.display_label or value.value.replace("_", " ")
     rule = profile.proportionality
-    notes_preview = rule.notes_es.strip().splitlines()[0][:120] if rule.notes_es else ""
+    notes_preview = rule.notes.strip().splitlines()[0][:120] if rule.notes else ""
     segments = [spanish_label, f"[{rule.kind.value}]"]
     if notes_preview:
-        segments.append(notes_preview)
+        segments.append(tr(notes_preview))
     return " — ".join(segments)
 
 
@@ -235,8 +498,61 @@ def _render_choices(lines: Iterable[tuple[str, str]]) -> str:
     return "\n".join(f"  {value:<{width}} — {hint}" for value, hint in rows)
 
 
-def _render_prompt(spec: PromptSpec, transaction: Transaction) -> str:
-    """Build the full prompt string for one transaction against a spec."""
+def _evidence_section(evidence_text: str) -> list[str]:
+    """Render the attached-evidence block (selection-only; never emit its numbers)."""
+    return [
+        "Attached evidence document for this transaction (read it carefully; it is "
+        "authoritative for what was purchased). Use it ONLY to choose the "
+        "classification, category, and iva_category. Do NOT copy or output any euro "
+        "amount, rate, taxable base, or IVA figure from it -- those are computed "
+        "elsewhere from the registry.",
+        "--- begin evidence ---",
+        evidence_text,
+        "--- end evidence ---",
+        "",
+    ]
+
+
+def _vision_evidence_section() -> list[str]:
+    """Render the attached-image evidence instruction (selection-only; never emit numbers).
+
+    Used when the evidence is a scanned or image invoice read on-host by a local
+    vision model: the document is attached as an image rather than inlined as
+    text, so the prompt points the model at the attached image instead of
+    embedding extracted text.
+    """
+    return [
+        "An invoice or receipt image is attached to this message. Read it carefully; "
+        "it is authoritative for what was purchased. Use it ONLY to choose the "
+        "classification, category, and iva_category. Do NOT copy or output any euro "
+        "amount, rate, taxable base, or IVA figure from it -- those are computed "
+        "elsewhere from the registry.",
+        "",
+    ]
+
+
+def _evidence_block(evidence_text: str | None, evidence_image_present: bool) -> list[str]:
+    """Select the evidence instruction: inlined text, attached image, or none."""
+    if evidence_text:
+        return _evidence_section(evidence_text)
+    if evidence_image_present:
+        return _vision_evidence_section()
+    return []
+
+
+def _render_prompt(
+    spec: PromptSpec,
+    transaction: Transaction,
+    *,
+    evidence_text: str | None = None,
+    evidence_image_present: bool = False,
+) -> str:
+    """Build the full prompt string for one transaction against a spec.
+
+    When ``evidence_text`` is given it is inlined for the model to read. When
+    ``evidence_image_present`` is set (and no text), the prompt instead points the
+    model at an attached invoice image (the on-host vision-read path).
+    """
     raw = transaction.raw
     effective_date = raw.value_date or raw.booked_date
     classification_block = _render_choices((choice.value.value, choice.hint) for choice in spec.classifications)
@@ -253,6 +569,7 @@ def _render_prompt(spec: PromptSpec, transaction: Transaction) -> str:
         f"  Counterparty: {raw.counterparty or '(unknown)'}",
         f"  Description: {raw.description}",
         "",
+        *_evidence_block(evidence_text, evidence_image_present),
         "Classify it as exactly one of these BusinessClassification values:",
         classification_block,
     ]
@@ -268,15 +585,42 @@ def _render_prompt(spec: PromptSpec, transaction: Transaction) -> str:
                 "",
                 "When classification is BUSINESS or MIXED, also pick exactly one SpendingCategory:",
                 category_block,
-            ]
+            ],
         )
         schema_fields.append('"category": "<one SpendingCategory or null>"')
+    if spec.iva_categories:
+        iva_block = _render_choices((choice.value.value, choice.hint) for choice in spec.iva_categories)
+        sections.extend(
+            [
+                "",
+                "Also pick exactly one iva_category — the IVA situation that fits this transaction. "
+                "Pick the category only; do NOT compute or output any rate, base, or IVA amount.",
+                iva_block,
+            ],
+        )
+        schema_fields.append('"iva_category": "<one IvaCategory or null>"')
+        schema_fields.append('"business_pct": <0.0-1.0 when MIXED, else null>')
+    evidence_present = bool(evidence_text) or evidence_image_present
+    if evidence_present:
+        sections.extend(
+            [
+                "",
+                "Also judge whether the attached invoice carries MULTIPLE distinct lines at "
+                "different IVA rates or expense categories that should be split into separate "
+                "entries (so each line's deductible IVA and base-rate expense file independently). "
+                "Set multiple_components true only when two or more distinct rate/category lines are "
+                "present; set it false for a single-line, single-rate invoice.",
+            ],
+        )
+        schema_fields.append('"multiple_components": <true|false>')
     schema_line = "{" + ", ".join(schema_fields) + "}"
     example_confidence = "0.85"
     example_reason = "restaurante meal with a named client strongly suggests business meal"
     example = f'{{"classification": "BUSINESS", "confidence": {example_confidence}, "reason": "{example_reason}"'
     if spec.categories:
         example += ', "category": "manutencion_dietas_nacional"'
+    if spec.iva_categories:
+        example += ', "iva_category": "domestic_general_21", "business_pct": null'
     example += "}"
     sections.extend(
         [
@@ -284,19 +628,12 @@ def _render_prompt(spec: PromptSpec, transaction: Transaction) -> str:
             "Respond ONLY with a single JSON object. No prose before or after. No markdown fences.",
             f"Schema: {schema_line}",
             f"Example response format: {example}",
-        ]
+        ],
     )
     return "\n".join(sections)
 
 
-# Kept for backward-compatible imports from earlier drafts/tests.
-def build_prompt(transaction: Transaction, *, spec: PromptSpec | None = None) -> str:
-    """Render the classification prompt for one transaction against ``spec``."""
-    return (spec or default_prompt_spec()).render(transaction)
-
-
 # ── response parsing ──────────────────────────────────────────────
-
 
 _JSON_OBJECT_RE = re.compile(r"\{[^{}]*\}")
 
@@ -330,6 +667,7 @@ def parse_response(
     resolved_spec = spec or default_prompt_spec()
     allowed_classifications = resolved_spec.allowed_classifications()
     allowed_categories = resolved_spec.allowed_categories()
+    allowed_iva_categories = resolved_spec.allowed_iva_categories()
     failures: list[str] = []
     any_candidate_seen = False
 
@@ -351,13 +689,146 @@ def parse_response(
             if response.category not in allowed_categories:
                 failures.append(f"disallowed category {response.category.value!r} (payload {payload[:100]!r})")
                 continue
+        if response.iva_category is not None:
+            if not allowed_iva_categories:
+                failures.append(f"unexpected iva_category {response.iva_category.value!r} (payload {payload[:100]!r})")
+                continue
+            if response.iva_category not in allowed_iva_categories:
+                failures.append(f"disallowed iva_category {response.iva_category.value!r} (payload {payload[:100]!r})")
+                continue
         return response
 
     if not any_candidate_seen:
         raise LLMClassifierError(f"no JSON object in LLM output: {stdout[:400]!r}")
     raise LLMClassifierError(
-        f"no JSON candidate matched schema + spec; tried {len(failures)}: " + "; ".join(failures[:3])
+        f"no JSON candidate matched schema + spec; tried {len(failures)}: " + "; ".join(failures[:3]),
     )
+
+
+def build_split_prompt(
+    transaction: Transaction,
+    *,
+    spec: PromptSpec | None = None,
+    evidence_text: str | None = None,
+    evidence_image_present: bool = False,
+) -> str:
+    """Build a prompt asking the model to propose an evidence-driven N-way split.
+
+    The model reads the attached invoice and proposes per-child *proportions* plus
+    selections; it must never emit a euro amount (the application derives the
+    amounts from the parent gross and the tax substrate from the registry). The
+    invoice is supplied as inlined text (``evidence_text``) or, on the on-host
+    vision-read path, as an attached image (``evidence_image_present``).
+    """
+    resolved_spec = spec or default_prompt_spec()
+    raw = transaction.raw
+    effective_date = (raw.value_date or raw.booked_date).isoformat()
+    sections = [
+        "You are dividing one Spanish autonomo bank transaction into the lines of its attached invoice.",
+        "",
+        "Transaction:",
+        f"  Date: {effective_date}",
+        f"  Amount: {raw.amount} {raw.currency}",
+        f"  Counterparty: {raw.counterparty or '(unknown)'}",
+        f"  Description: {raw.description}",
+        "",
+        *_evidence_block(evidence_text, evidence_image_present),
+        "Propose how to divide this transaction into children, one per distinct line or category on "
+        "the invoice. If the invoice is a SINGLE line at a single IVA rate (no split warranted), "
+        "return EXACTLY ONE child with proportion 1.0. If it carries two or more distinct lines or "
+        "IVA rates, return one child per line. For each child give a proportion (a fraction of the "
+        "total; all proportions MUST sum to 1.0), a spending category, an iva_category, and a short "
+        "evidence_citation naming the line. Do NOT output any euro amount, rate, base, or IVA figure.",
+    ]
+    if resolved_spec.categories:
+        category_block = _render_choices((choice.value.value, choice.hint) for choice in resolved_spec.categories)
+        sections.extend(["", "Pick each child's spending category from:", category_block])
+    if resolved_spec.iva_categories:
+        iva_block = _render_choices((choice.value.value, choice.hint) for choice in resolved_spec.iva_categories)
+        sections.extend(["", "Pick each child's iva_category from:", iva_block])
+    sections.extend(
+        [
+            "",
+            "Respond ONLY with a single JSON object. No prose before or after. No markdown fences.",
+            'Schema: {"reason": "<one sentence>", "children": [{"proportion": <0..1>, '
+            '"category": "<SpendingCategory or null>", "iva_category": "<IvaCategory or null>", '
+            '"evidence_citation": "<short>"}, ...]}',
+        ]
+    )
+    return "\n".join(sections)
+
+
+def _extract_json_object(text: str) -> str | None:
+    """Return the first balanced top-level JSON object substring, or ``None``.
+
+    Unlike the flat :data:`_JSON_OBJECT_RE`, this walks brace depth (ignoring
+    braces inside strings) so a nested object -- such as a split proposal whose
+    ``children`` is an array of objects -- is captured whole.
+    """
+    start = text.find("{")
+    if start < 0:
+        return None
+    depth = 0
+    in_string = False
+    escaped = False
+    for index in range(start, len(text)):
+        char = text[index]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+            continue
+        if char == '"':
+            in_string = True
+        elif char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start : index + 1]
+    return None
+
+
+def parse_split_response(stdout: str, *, spec: PromptSpec | None = None) -> LLMSplitResponse:
+    """Extract and validate an N-way split proposal from LLM stdout.
+
+    Finds the first balanced JSON object, validates it as
+    :class:`LLMSplitResponse`, and rejects any child whose ``category`` or
+    ``iva_category`` falls outside the spec's allow-list -- the same hallucination
+    guard :func:`parse_response` applies to a flat classification.
+
+    Args:
+        stdout: Raw stdout captured from the LLM CLI.
+        spec: Prompt spec whose allow-lists each child must satisfy.
+
+    Returns:
+        A validated :class:`LLMSplitResponse`.
+
+    Raises:
+        LLMClassifierError: When no JSON object is present, the schema is
+            violated, or a child selection is outside the allow-list.
+    """
+    resolved_spec = spec or default_prompt_spec()
+    allowed_categories = resolved_spec.allowed_categories()
+    allowed_iva_categories = resolved_spec.allowed_iva_categories()
+    payload = _extract_json_object(stdout)
+    if payload is None:
+        raise LLMClassifierError(f"no JSON object in LLM split output: {stdout[:400]!r}")
+    try:
+        response = LLMSplitResponse.model_validate_json(payload)
+    except ValueError as exc:
+        raise LLMClassifierError(f"split response failed schema validation: {str(exc)[:200]}") from exc
+    for child in response.children:
+        if child.category is not None and (not allowed_categories or child.category not in allowed_categories):
+            raise LLMClassifierError(f"disallowed split child category {child.category.value!r}")
+        if child.iva_category is not None and (
+            not allowed_iva_categories or child.iva_category not in allowed_iva_categories
+        ):
+            raise LLMClassifierError(f"disallowed split child iva_category {child.iva_category.value!r}")
+    return response
 
 
 # ── subprocess-based classifier ───────────────────────────────────
@@ -371,12 +842,9 @@ class SubprocessLLMClassifier:
     positional argument for long multi-line prompts, especially on
     Windows where CreateProcess quoting can corrupt arguments).
 
-    Reads output from stdout by default. Some CLIs (notably ``codex``)
-    emit event-stream noise on stdout but write the final agent
-    message to a separate file; set ``output_from_file_flag`` to the
-    CLI's flag name for that file (e.g. ``"--output-last-message"``)
-    and the classifier will append a tempfile path, read it back, and
-    parse that instead of stdout.
+    Reads output from stdout. Transaction prompts and classifier
+    responses are sensitive financial data, so this adapter deliberately
+    avoids file-backed subprocess handoff.
 
     Set ``prompt_via_argument=True`` for CLIs that reject stdin and
     require the prompt as the final positional argument.
@@ -387,7 +855,6 @@ class SubprocessLLMClassifier:
     model: str | None = None
     timeout_seconds: float = _DEFAULT_TIMEOUT_SECONDS
     spec: PromptSpec = field(default_factory=default_prompt_spec)
-    output_from_file_flag: str | None = None
     prompt_via_argument: bool = False
 
     @property
@@ -397,65 +864,99 @@ class SubprocessLLMClassifier:
             return f"llm:{self.name}:{self.model}"
         return f"llm:{self.name}"
 
-    def classify(self, transaction: Transaction) -> LLMClassificationResponse:
-        """Shell out to the LLM CLI, parse, validate, return."""
-        prompt = self.spec.render(transaction)
+    def classify(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMClassificationResponse:
+        """Shell out to the LLM CLI, parse, validate, return.
+
+        Args:
+            transaction: The transaction to classify.
+            evidence_text: Optional on-host-extracted attached-evidence text injected
+                into the prompt (sent via stdin, never a file).
+
+        Returns:
+            A :class:`LLMClassificationResponse` with the parsed classification result.
+        """
+        stdout = self._run_cli(
+            self.spec.render(transaction, evidence_text=evidence_text),
+            transaction_id=transaction.transaction_id,
+        )
+        response = parse_response(stdout, spec=self.spec)
+        _logger.debug(
+            "llm classify: %s returned classification=%s confidence=%s for transaction %s",
+            self.name,
+            response.classification.value,
+            response.confidence,
+            transaction.transaction_id,
+        )
+        return response
+
+    def propose_split(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMSplitResponse:
+        """Shell out with a split-proposal prompt, parse and validate the split.
+
+        Args:
+            transaction: The transaction to split.
+            evidence_text: Optional on-host-extracted attached-evidence text injected
+                into the prompt (sent via stdin, never a file).
+
+        Returns:
+            A validated :class:`LLMSplitResponse`.
+        """
+        stdout = self._run_cli(
+            build_split_prompt(transaction, spec=self.spec, evidence_text=evidence_text),
+            transaction_id=transaction.transaction_id,
+        )
+        return parse_split_response(stdout, spec=self.spec)
+
+    def _run_cli(self, prompt: str, *, transaction_id: str) -> str:
+        """Shell out to the CLI with ``prompt`` via stdin (never a file) and return stdout."""
         resolved_binary = shutil.which(self.command[0])
         if resolved_binary is None:
+            _logger.warning("llm classifier %s not found on PATH: %s", self.name, self.command[0])
             raise LLMClassifierError(f"{self.name} CLI not found on PATH: {self.command[0]}")
 
-        output_file: Path | None = None
-        extra_flags: tuple[str, ...] = ()
-        if self.output_from_file_flag is not None:
-            # Create an empty tempfile and close it immediately; the LLM CLI
-            # will write into it, we read it back after the subprocess exits.
-            with tempfile.NamedTemporaryFile(
-                mode="w",
-                encoding="utf-8",
-                suffix=f".{self.name}.out",
-                delete=False,
-            ) as handle:
-                output_file = Path(handle.name)
-            extra_flags = (self.output_from_file_flag, str(output_file))
-
-        argv: list[str] = [resolved_binary, *self.command[1:], *extra_flags]
+        argv: list[str] = [resolved_binary, *self.command[1:]]
         stdin_input: str | None = None
         if self.prompt_via_argument:
             argv.append(prompt)
         else:
             stdin_input = prompt
 
+        _logger.debug("llm classify: spawning %s argv=%s transaction_id=%s", self.name, argv[0], transaction_id)
         try:
-            try:
-                completed = subprocess.run(  # noqa: S603 — explicit command list, trusted binary.
-                    argv,
-                    input=stdin_input,
-                    capture_output=True,
-                    text=True,
-                    encoding="utf-8",
-                    timeout=self.timeout_seconds,
-                    check=False,
-                )
-            except subprocess.TimeoutExpired as exc:
-                raise LLMClassifierError(f"{self.name} CLI timed out after {self.timeout_seconds}s") from exc
-            except OSError as exc:
-                # Spawn-time failures (PermissionError, ENOEXEC, ENOMEM, Windows
-                # CreateProcess errors). Translate so the --all CLI loop can
-                # skip this one transaction and continue on the next.
-                raise LLMClassifierError(f"{self.name} CLI spawn failed: {exc}") from exc
-            if completed.returncode != 0:
-                raise LLMClassifierError(
-                    f"{self.name} CLI exited with {completed.returncode}: "
-                    f"{(completed.stderr or completed.stdout)[:400]!r}"
-                )
-            try:
-                output = output_file.read_text(encoding="utf-8") if output_file else completed.stdout
-            except OSError as exc:
-                raise LLMClassifierError(f"{self.name} CLI output file unreadable: {exc}") from exc
-            return parse_response(output, spec=self.spec)
-        finally:
-            if output_file is not None:
-                output_file.unlink(missing_ok=True)
+            completed = subprocess.run(
+                argv,
+                input=stdin_input,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                timeout=self.timeout_seconds,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as exc:
+            _logger.warning(
+                "llm classify: %s timed out after %ss for transaction %s",
+                self.name,
+                self.timeout_seconds,
+                transaction_id,
+                exc_info=True,
+            )
+            raise LLMClassifierError(f"{self.name} CLI timed out after {self.timeout_seconds}s") from exc
+        except OSError as exc:
+            # Spawn-time failures (PermissionError, ENOEXEC, ENOMEM, Windows
+            # CreateProcess errors). Translate so the --all CLI loop can
+            # skip this one transaction and continue on the next.
+            _logger.error("llm classify: %s spawn failed", self.name, exc_info=True)
+            raise LLMClassifierError(f"{self.name} CLI spawn failed: {exc}") from exc
+        if completed.returncode != 0:
+            _logger.warning(
+                "llm classify: %s exited with returncode=%d for transaction %s",
+                self.name,
+                completed.returncode,
+                transaction_id,
+            )
+            raise LLMClassifierError(
+                f"{self.name} CLI exited with {completed.returncode}: {(completed.stderr or completed.stdout)[:400]!r}",
+            )
+        return completed.stdout
 
 
 # ── builders + registry ───────────────────────────────────────────
@@ -481,6 +982,10 @@ def build_claude_classifier(
         spec: Prompt spec override.
         minimum_tier: Refuses aliases below this tier (default:
             :data:`MINIMUM_CLASSIFICATION_TIER`).
+
+    Returns:
+        A :class:`SubprocessLLMClassifier` configured for the
+        ``claude`` CLI.
     """
     resolved_model = _resolve_model_id(provider="claude", alias=alias, explicit_model=model, minimum_tier=minimum_tier)
     command: tuple[str, ...] = ("claude", "--bare", "-p")
@@ -494,32 +999,47 @@ def build_claude_classifier(
     )
 
 
-def build_gemini_classifier(
+def build_antigravity_classifier(
     *,
     alias: str | None = None,
     model: str | None = None,
     spec: PromptSpec | None = None,
     minimum_tier: ModelTier = MINIMUM_CLASSIFICATION_TIER,
 ) -> SubprocessLLMClassifier:
-    """Build a classifier that shells out to ``gemini -p <prompt>``.
+    """Build a classifier that shells out to ``agy --prompt <prompt>``.
 
-    Gemini expects the prompt as the positional argument to ``-p``
-    (its ``--prompt`` flag); stdin piping alongside ``-p`` without a
-    value raises "Not enough arguments following: p". Gemini's stdout
-    is often polluted with MCP tool-registration warnings; the JSON
-    iterator in :func:`parse_response` tolerates the noise.
+    Antigravity (Google's agentic CLI ``agy``) is the supported successor to
+    the retired standalone ``gemini`` CLI. Its ``--print`` / ``-p`` /
+    ``--prompt`` mode runs a single prompt non-interactively; the prompt is the
+    VALUE of that flag, so it is passed as the final positional argument
+    (``prompt_via_argument=True``). Unlike the old ``gemini`` CLI (a Node
+    wrapper whose command line overflowed a ~8 KB limit on the larger
+    saturation prompt), ``agy`` is a native binary invoked through the
+    subprocess argument list, so it carries the full platform command-line
+    budget. ``--model`` selects a model when one is pinned; otherwise ``agy``
+    uses its own current default. Its stdout may carry start-up noise; the JSON
+    iterator in :func:`parse_response` tolerates it.
 
     Args:
-        alias: Capability-tier alias (``gemini-flash`` / ``gemini-pro``).
-            Enforces ``minimum_tier``.
+        alias: Capability-tier alias (``antigravity-default``). Enforces
+            ``minimum_tier``.
         model: Explicit provider-specific model override.
         spec: Prompt spec override.
         minimum_tier: Refuses aliases below this tier.
+
+    Returns:
+        A :class:`SubprocessLLMClassifier` configured for the ``agy`` CLI with
+        ``prompt_via_argument=True``.
     """
-    resolved_model = _resolve_model_id(provider="gemini", alias=alias, explicit_model=model, minimum_tier=minimum_tier)
-    command = ("gemini", "-p") if not resolved_model else ("gemini", "-m", resolved_model, "-p")
+    resolved_model = _resolve_model_id(
+        provider="antigravity",
+        alias=alias,
+        explicit_model=model,
+        minimum_tier=minimum_tier,
+    )
+    command = ("agy", "--prompt") if not resolved_model else ("agy", "--model", resolved_model, "--prompt")
     return SubprocessLLMClassifier(
-        name="gemini",
+        name="antigravity",
         command=command,
         model=resolved_model or None,
         spec=spec or default_prompt_spec(),
@@ -538,8 +1058,8 @@ def build_codex_classifier(
 
     Uses ``--ephemeral`` + ``--skip-git-repo-check`` so the invocation
     does not require a git repo and does not persist sessions. The
-    final agent message is written via ``--output-last-message`` so
-    stdout chatter (reasoning events, warnings) is ignored.
+    The subprocess adapter parses JSON candidates from stdout so no
+    transaction data is written to a temporary file.
 
     Args:
         alias: Capability-tier alias (``codex-default`` / ``codex-o3``).
@@ -547,6 +1067,10 @@ def build_codex_classifier(
         model: Explicit provider-specific model override.
         spec: Prompt spec override.
         minimum_tier: Refuses aliases below this tier.
+
+    Returns:
+        A :class:`SubprocessLLMClassifier` configured for the
+        ``codex`` CLI.
     """
     resolved_model = _resolve_model_id(provider="codex", alias=alias, explicit_model=model, minimum_tier=minimum_tier)
     command: tuple[str, ...] = ("codex", "exec", "--ephemeral", "--skip-git-repo-check")
@@ -557,7 +1081,6 @@ def build_codex_classifier(
         command=command,
         model=resolved_model or None,
         spec=spec or default_prompt_spec(),
-        output_from_file_flag="--output-last-message",
     )
 
 
@@ -586,7 +1109,7 @@ def _resolve_model_id(
 
 _BUILDERS: dict[str, Callable[..., LLMClassifier]] = {
     "claude": build_claude_classifier,
-    "gemini": build_gemini_classifier,
+    "antigravity": build_antigravity_classifier,
     "codex": build_codex_classifier,
 }
 
@@ -602,7 +1125,7 @@ def resolve_classifier(
     """Return a classifier for the given provider name.
 
     Args:
-        provider: One of ``"claude"``, ``"gemini"``, ``"codex"``, or a
+        provider: One of ``"claude"``, ``"antigravity"``, ``"codex"``, or a
             name registered via :func:`register_classifier`.
         alias: Optional capability-tier alias (see
             :class:`aeat.domain.transactions._model_tier.ModelProfile`).
@@ -634,7 +1157,39 @@ def resolve_classifier(
         # Test-only builders registered via register_classifier may not take
         # the alias/minimum_tier kwargs. Fall back to the simple form so the
         # dependency-injected concrete classifiers keep working.
+        _logger.debug(
+            "resolve_classifier: builder for provider %r does not accept alias/minimum_tier kwargs; "
+            "falling back to simple form",
+            provider,
+        )
         return builder(model=model, spec=spec)
+
+
+def resolve_split_proposer(provider: str, *, spec: PromptSpec | None = None) -> LLMSplitProposer:
+    """Resolve the production split proposer for ``provider``.
+
+    Resolves the provider's classifier (via :func:`resolve_classifier`) and
+    narrows it to an :class:`LLMSplitProposer`. The subprocess classifiers are
+    the only production proposers; a registered classifier that does not also
+    propose splits is refused instructively.
+
+    Args:
+        provider: One of ``"claude"``, ``"antigravity"``, ``"codex"``.
+        spec: Optional prompt spec override (the category + IVA-category
+            saturation spec is the natural choice so split children carry the
+            same allow-list-guarded selections).
+
+    Returns:
+        An :class:`LLMSplitProposer` for ``provider``.
+
+    Raises:
+        LLMClassifierError: If ``provider`` resolves to a classifier that does
+            not support evidence-driven splitting.
+    """
+    classifier = resolve_classifier(provider, spec=spec)
+    if not isinstance(classifier, LLMSplitProposer):
+        raise LLMClassifierError(f"provider {provider!r} does not support evidence-driven splitting")
+    return classifier
 
 
 def register_classifier(name: str, builder: Callable[..., LLMClassifier]) -> None:
@@ -657,6 +1212,7 @@ __all__ = [
     "PIPELINE_ONLY_CLASSIFICATIONS",
     "CategoryChoice",
     "ClassificationChoice",
+    "IvaCategoryChoice",
     "LLMClassificationResponse",
     "LLMClassifier",
     "LLMClassifierError",
@@ -664,15 +1220,17 @@ __all__ = [
     "ModelTier",
     "PromptSpec",
     "SubprocessLLMClassifier",
+    "build_antigravity_classifier",
     "build_claude_classifier",
     "build_codex_classifier",
-    "build_gemini_classifier",
-    "build_prompt",
     "default_classification_choices",
+    "default_iva_category_choices",
     "default_prompt_spec",
     "parse_response",
     "prompt_spec_with_every_spending_category",
+    "prompt_spec_with_saturation_fields",
     "register_classifier",
     "resolve_classifier",
+    "resolve_split_proposer",
     "unregister_classifier",
 ]

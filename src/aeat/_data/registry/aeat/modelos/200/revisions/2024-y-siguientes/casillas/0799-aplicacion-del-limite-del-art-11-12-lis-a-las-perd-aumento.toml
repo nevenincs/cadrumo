@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02721"
+number = "02721"
+label = "Aplicación del límite del art. 11.12 LIS a las pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS) - Aumento - Correcciones del ejercicio - Permanentes [02721]"
+section = ["aplicacion_del_limite_del_art_11_12_lis_a_las_perd", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_limite_art11_12_perdidas_deterioro_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02721"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02722"
+number = "02722"
+label = "Aplicación del límite del art. 11.12 LIS a las pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS) - Aumento - Correcciones del ejercicio - Temporarias (con orige..."
+section = ["aplicacion_del_limite_del_art_11_12_lis_a_las_perd", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_limite_art11_12_perdidas_deterioro_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02722"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02723"
+number = "02723"
+label = "Aplicación del límite del art. 11.12 LIS a las pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS) - Aumento - Correcciones del ejercicio - Temporarias (con orige..."
+section = ["aplicacion_del_limite_del_art_11_12_lis_a_las_perd", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_limite_art11_12_perdidas_deterioro_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02723"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02724"
+number = "02724"
+label = "Aplicación del límite del art. 11.12 LIS a las pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS) - Aumento - Saldo pendiente a principio de ejercicio [02724]"
+section = ["aplicacion_del_limite_del_art_11_12_lis_a_las_perd", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_limite_art11_12_perdidas_deterioro_saldo_inicial"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02724"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02725"
+number = "02725"
+label = "Aplicación del límite del art. 11.12 LIS a las pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS) - Aumento - Saldo pendiente a fin de ejercicio [02725]"
+section = ["aplicacion_del_limite_del_art_11_12_lis_a_las_perd", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_limite_art11_12_perdidas_deterioro_saldo_final"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02725"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

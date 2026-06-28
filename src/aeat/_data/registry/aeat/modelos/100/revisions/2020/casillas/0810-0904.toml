@@ -1,0 +1,8 @@
+[[revisions."2020".casillas]]
+id = "0904"
+number = "0904"
+label = "Por donaciones, cesiones de uso o contratos de comodato y convenios de colaboración, relativos al mecenazgo deportivo"
+section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
+semantic_role = "irpf_deduccion_baleares_mecenazgo_deportivo"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

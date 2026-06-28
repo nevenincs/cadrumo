@@ -3,14 +3,13 @@ tags:
   - "#research"
   - "#aeat-filing-detail-fetch"
 date: 2026-04-18
+modified: '2026-04-18'
 title: Research — StatusReader.fetch_filing_detail (#227)
 issue: wgergely/aeat#227
 epic: wgergely/aeat#70
 related:
   - "[[2026-04-12-status-reader-adr]]"
   - "[[2026-04-16-aeat-history-fetch-adr]]"
-  - "[[2026-04-17-kent-revise-review-audit]]"
-  - "[[2026-04-17-kent-ux-journey-audit]]"
 ---
 
 # research — StatusReader.fetch_filing_detail (#227)

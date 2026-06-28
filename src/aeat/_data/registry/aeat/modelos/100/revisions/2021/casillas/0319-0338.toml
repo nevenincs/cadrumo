@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0338"
+number = "0338"
+label = "Pérdidas patrimoniales. Importe computable"
+section = ["toma_datos_ampliada", "gp_acciones", "entidad_accion"]
+semantic_role = "irpf_perdida_acciones_importe_computable"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

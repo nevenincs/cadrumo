@@ -3,7 +3,7 @@
 When :func:`sanitize_pdf` is called with bytes whose SHA-256 lives
 in :data:`SANITIZED_SHAS`, the sanitiser refuses with
 :class:`AlreadySanitizedError`. The set is populated with every
-fixture committed under ``tests/fixtures/justificantes/`` so an
+fixture committed under ``src/aeat/tests/fixtures/justificantes/`` so an
 operator who points the sanitiser at a previously-sanitised fixture
 gets a hard error rather than a silent no-op or double-stripped
 output.
@@ -18,7 +18,7 @@ PII surface against an existing capture).
 from __future__ import annotations
 
 # Lowercase hex SHA-256 of every committed sanitised PDF under
-# ``tests/fixtures/justificantes/``. Updated whenever a new
+# ``src/aeat/tests/fixtures/justificantes/``. Updated whenever a new
 # fixture lands.
 SANITIZED_SHAS: frozenset[str] = frozenset(
     {

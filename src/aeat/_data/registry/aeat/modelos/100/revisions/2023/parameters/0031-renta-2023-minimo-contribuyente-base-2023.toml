@@ -1,0 +1,16 @@
+[[revisions."2023".parameters]]
+id = "renta-2023-minimo-contribuyente-base-2023"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-57"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Mínimo del contribuyente"]
+
+[[revisions."2023".parameters.values]]
+value = "5550"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31

@@ -1,4 +1,11 @@
-"""AEAT-aligned spending-category taxonomy."""
+"""AEAT-aligned spending-category taxonomy.
+
+Defines the closed enum :class:`SpendingCategory` of deductible
+autónomo expense classes, the coarse :class:`SpendingCategoryFamily`
+groups, and the static :data:`CATEGORY_FAMILY_MEMBERS` membership
+table. The taxonomy is the stable identifier surface every other
+package binds to; renaming a member is a breaking change.
+"""
 
 from __future__ import annotations
 
@@ -6,7 +13,12 @@ from enum import StrEnum
 
 
 class SpendingCategory(StrEnum):
-    """Stable spending-category identifiers for deductible autónomo expenses."""
+    """Stable identifiers for deductible autónomo spending categories.
+
+    Members map one-to-one to the deductible expense classes
+    recognised by AEAT. Each value is the stable kebab-style
+    Spanish identifier used in the on-disk corpus and in CLI flags.
+    """
 
     CUOTAS_COLEGIALES = "cuotas_colegiales"
     CUOTAS_AUTONOMOS_SS = "cuotas_autonomos_ss"
@@ -18,6 +30,9 @@ class SpendingCategory(StrEnum):
     SUMINISTROS_HOME_OFFICE_AGUA = "suministros_home_office_agua"
     SUMINISTROS_HOME_OFFICE_GAS = "suministros_home_office_gas"
     SUMINISTROS_HOME_OFFICE_INTERNET = "suministros_home_office_internet"
+    AMORTIZACION_VIVIENDA_AFECTO = "amortizacion_vivienda_afecto"
+    IBI_VIVIENDA_AFECTO = "ibi_vivienda_afecto"
+    COMUNIDAD_VIVIENDA_AFECTO = "comunidad_vivienda_afecto"
     TELEFONIA_MOVIL = "telefonia_movil"
     TELEFONIA_FIJA = "telefonia_fija"
     MATERIAL_OFICINA = "material_oficina"
@@ -49,11 +64,28 @@ class SpendingCategory(StrEnum):
 
 
 class SpendingCategoryFamily(StrEnum):
-    """Coarse families used by CLI listings and downstream classifiers."""
+    """Coarse families used by CLI listings and downstream classifiers.
+
+    Each :class:`SpendingCategory` belongs to exactly one family —
+    the membership table is :data:`CATEGORY_FAMILY_MEMBERS` and the
+    invariant is enforced by
+    :func:`aeat.domain.categories.test_spending_category.test_every_category_belongs_to_exactly_one_family`.
+
+    The home-office bucket is split into two distinct families per
+    LIRPF Art. 30.2 rule 5 (Ley 6/2017, BOE-A-2017-12544): the
+    :attr:`HOME_OFFICE_SUMINISTROS` family carries the utility costs
+    on which the statutory 0.30 multiplier applies on top of the
+    operator-chosen vivienda afectación ratio; the
+    :attr:`HOME_OFFICE_OWNERSHIP` family carries the
+    titularity-attached costs (amortización, IBI, comunidad) that
+    deduct at the raw vivienda afectación ratio with no statutory
+    multiplier.
+    """
 
     SOCIAL_SECURITY = "social_security"
     PREMISES = "premises"
-    HOME_OFFICE = "home_office"
+    HOME_OFFICE_SUMINISTROS = "home_office_suministros"
+    HOME_OFFICE_OWNERSHIP = "home_office_ownership"
     TELECOMS = "telecoms"
     OFFICE = "office"
     VEHICLE = "vehicle"
@@ -77,11 +109,16 @@ CATEGORY_FAMILY_MEMBERS: dict[SpendingCategoryFamily, tuple[SpendingCategory, ..
         SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO,
         SpendingCategory.IBI_LOCAL_AFECTO,
     ),
-    SpendingCategoryFamily.HOME_OFFICE: (
+    SpendingCategoryFamily.HOME_OFFICE_SUMINISTROS: (
         SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,
         SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA,
         SpendingCategory.SUMINISTROS_HOME_OFFICE_GAS,
         SpendingCategory.SUMINISTROS_HOME_OFFICE_INTERNET,
+    ),
+    SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP: (
+        SpendingCategory.AMORTIZACION_VIVIENDA_AFECTO,
+        SpendingCategory.IBI_VIVIENDA_AFECTO,
+        SpendingCategory.COMUNIDAD_VIVIENDA_AFECTO,
     ),
     SpendingCategoryFamily.TELECOMS: (
         SpendingCategory.TELEFONIA_MOVIL,
@@ -130,11 +167,28 @@ CATEGORY_FAMILY_MEMBERS: dict[SpendingCategoryFamily, tuple[SpendingCategory, ..
     ),
     SpendingCategoryFamily.TAXES: (SpendingCategory.TRIBUTOS_FISCALMENTE_DEDUCIBLES,),
 }
+"""Static membership table from :class:`SpendingCategoryFamily` to its members.
+
+Every :class:`SpendingCategory` appears in exactly one entry. The
+table is the source of truth for :func:`family_for` and
+:func:`categories_for_family`.
+"""
 
 
 def family_for(category: SpendingCategory) -> SpendingCategoryFamily:
-    """Return the coarse family for a spending category."""
+    """Return the coarse family that a spending category belongs to.
 
+    Args:
+        category: A :class:`SpendingCategory` member.
+
+    Returns:
+        The unique :class:`SpendingCategoryFamily` containing
+        ``category``.
+
+    Raises:
+        KeyError: If ``category`` is not registered in
+            :data:`CATEGORY_FAMILY_MEMBERS`.
+    """
     for family, members in CATEGORY_FAMILY_MEMBERS.items():
         if category in members:
             return family
@@ -142,6 +196,12 @@ def family_for(category: SpendingCategory) -> SpendingCategoryFamily:
 
 
 def categories_for_family(family: SpendingCategoryFamily) -> tuple[SpendingCategory, ...]:
-    """Return the categories belonging to a given family."""
+    """Return the categories belonging to a coarse family.
 
+    Args:
+        family: A :class:`SpendingCategoryFamily` member.
+
+    Returns:
+        Tuple of :class:`SpendingCategory` members in the family.
+    """
     return CATEGORY_FAMILY_MEMBERS[family]

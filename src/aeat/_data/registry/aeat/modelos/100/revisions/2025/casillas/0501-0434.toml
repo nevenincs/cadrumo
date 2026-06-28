@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0434"
+number = "0434"
+label = "Resto de saldos netos negativos de las ganancias y pérdidas patrimoniales de 2021 a 2024 no derivadas de transmisiones, pendientes de compensación a 1 de enero de 2025, a integrar en la base imponi..."
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_saldo_neto_gyp_general_pendiente"
+legal_refs = ["ley-35-2006:art-48", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

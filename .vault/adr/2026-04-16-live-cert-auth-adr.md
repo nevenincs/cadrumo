@@ -3,6 +3,7 @@ tags:
   - "#adr"
   - "#live-cert-auth"
 date: 2026-04-16
+modified: '2026-04-16'
 related:
   - "[[2026-04-16-live-cert-auth-research]]"
   - "[[2026-04-12-cert-auth-adr]]"

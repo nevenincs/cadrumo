@@ -14,20 +14,40 @@ The class tree:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from ....core.errors import AeatError
-from ....core.locks import LockAcquisitionError
 
 
-class StorageError(AeatError):
+class SecureStorageError(AeatError):
+    """Base class for secure-storage failures.
+
+    This named base keeps the encrypted persistence, secret-store,
+    bucket-session, and per-bucket lifecycle surfaces catchable as one
+    family while still deriving from the central AEAT error registry.
+    """
+
+
+class StorageError(SecureStorageError):
     """Base class for every error raised by :mod:`aeat.adapters.persistence.storage`."""
-
-
-class MigrationError(StorageError):
-    """Raised when an Alembic migration operation fails."""
 
 
 class RepositoryError(StorageError):
     """Raised when a repository operation fails (not-found, integrity, etc.)."""
+
+
+class RepositorySetupError(RepositoryError):
+    """Raised when a concrete repository subclass is missing a required class attribute.
+
+    Programming-contract guard: the attribute must be declared on the subclass
+    before instantiation. Unlike a plain :class:`TypeError`, this error is
+    enrolled in the AEAT error registry so it produces a structured envelope
+    rather than an opaque interpreter-level exception.
+    """
+
+
+class SecureObjectRevisionConflictError(RepositoryError):
+    """Raised when a revision-aware secure-object write sees a stale revision."""
 
 
 class PersistenceError(StorageError):
@@ -40,6 +60,29 @@ class PersistenceError(StorageError):
     """
 
 
+class StorageValidationError(PersistenceError, ValueError):
+    """Raised when a storage parameter fails validation (e.g. key length).
+
+    Inherits from both :class:`PersistenceError` and :class:`ValueError`
+    to remain compatible with Pydantic's validator-failure contract while
+    allowing catch-all :class:`StorageError` handlers to detect integrity
+    failures.
+    """
+
+
+_STORAGE_VALIDATION_MESSAGE_KEY = "errors.integrity.integrity_storage_validation"
+
+
+def storage_validation_error(message: str) -> StorageValidationError:
+    """Build a :class:`StorageValidationError` carrying the shared integrity message key.
+
+    Single canonical factory for the storage-validation error that the
+    persistence-storage submodules (crypto, envelope, runtime, secret store,
+    and the master-key helpers) previously each declared identically.
+    """
+    return StorageValidationError(message, translated_message=_STORAGE_VALIDATION_MESSAGE_KEY)
+
+
 class EncryptionError(PersistenceError):
     """Base class for AEAD encryption / decryption failures."""
 
@@ -48,8 +91,29 @@ class DecryptionError(EncryptionError):
     """Raised when AEAD decryption fails (tag mismatch, malformed input)."""
 
 
+class SecureObjectUnreadableError(DecryptionError):
+    """Raised when one stored secure object cannot be decrypted under the current master key.
+
+    Distinct from the generic :class:`DecryptionError` so iterator-shaped
+    consumers can surface a structured per-row failure (namespace, row id,
+    underlying cause) without aborting the iteration. The plaintext bound
+    to such a row is cryptographically unrecoverable from this process: the
+    master key under which it was sealed is no longer available.
+    """
+
+    def __init__(self, namespace: str, row_id: int, *, cause: BaseException | None = None) -> None:
+        """Construct the error, binding the affected namespace, row identifier, and optional root cause."""
+        super().__init__(
+            context={"namespace": namespace, "row_id": row_id},
+            translated_message="errors.integrity.integrity_storage_secure_object_unreadable",
+        )
+        self.namespace = namespace
+        self.row_id = row_id
+        self.__cause__ = cause
+
+
 class KeyDerivationError(EncryptionError):
-    """Raised when an HKDF / scrypt key-derivation step fails."""
+    """Raised when a key-derivation step fails."""
 
 
 class NonceCollisionError(EncryptionError):
@@ -58,6 +122,27 @@ class NonceCollisionError(EncryptionError):
 
 class SecretStoreError(PersistenceError):
     """Base class for secret-store I/O failures."""
+
+
+class SessionExpiredError(SecretStoreError):
+    """Raised when the active :class:`BucketSession` has crossed its idle deadline.
+
+    The session was opened earlier in the process lifetime but the
+    operator did not act before the configured idle-lock window
+    elapsed. The session is sealed; the operator must re-activate by
+    running ``aeat config switch NAME`` (or a subsequent
+    bootstrap-exempt verb that opens a fresh session).
+    """
+
+
+class PassphraseTooShortError(SecretStoreError):
+    """Raised when an operator-supplied passphrase falls below the NIST floor.
+
+    NIST SP 800-63B §5.1.1.1 mandates that verifiers SHALL require user-
+    chosen memorized secrets to be at least 8 characters in length. The
+    :class:`FileFallbackMasterKeyProvider` rejects shorter passphrases at
+    resolution time.
+    """
 
 
 class KeyringUnavailableError(SecretStoreError):
@@ -76,11 +161,9 @@ class MasterKeyUnavailableError(SecretStoreError):
 class MasterKeyKdfVersionError(MasterKeyUnavailableError):
     """Raised when the on-disk ``master.kdf`` declares a KDF version this build cannot consume.
 
-    The substrate gates the master.kdf parameters by version. Mismatch
-    means the operator is on a build that has rotated the password-derived
-    KDF (e.g. the scrypt -> Argon2id transition); the operator
-    must run ``aeat security migrate-master-key-kdf`` to re-wrap the
-    master key under the new KDF.
+    The substrate gates the master.kdf parameters by version. Mismatch means
+    the operator's passphrase may be correct, but the on-disk parameters do not
+    match this build's supported key-derivation contract.
     """
 
 
@@ -99,7 +182,7 @@ class MasterKeyPassphraseMismatchError(MasterKeyUnavailableError):
 
     Recoverable by re-entering the passphrase. If the passphrase has
     been forgotten, the operator can use
-    ``aeat security recover --recovery-key`` to re-mint the master key
+    ``aeat config recover`` to re-mint the master key
     from a recovery-key backup. The CLI's error envelope distinguishes
     this case from :class:`MasterKeyMaterialMissingError` so retries
     do not waste backoff budget on missing-file errors.
@@ -112,16 +195,13 @@ class MasterKeyMaterialMissingError(MasterKeyUnavailableError):
     Neither the keyring entry nor the file-fallback artefacts
     (``master.key`` / ``master.kdf`` / ``salt``) are present. The
     substrate has not been provisioned. The operator's actionable
-    next step is ``aeat security provision`` or, if a recovery key
-    is available, ``aeat security recover --recovery-key``.
+    next step is ``aeat config profile create NAME`` or, if a recovery key
+    is available, ``aeat config recover``.
 
-    Reserved for callers that need to distinguish "not provisioned"
-    from "wrong passphrase" — the default ``get_master_key`` path
-    silently mints when material is absent (the first-
-    run mint contract), so this class does not fire on the canonical
-    load path. Future load-only / probe-only entry points (e.g. a
-    diagnostic API or a ``--no-mint`` CLI option) raise this class
-    instead of triggering a silent mint.
+    Raised by canonical read paths to distinguish "not provisioned"
+    from "wrong passphrase" without minting key material. Explicit
+    profile creation is responsible for provisioning; ordinary load
+    paths fail closed with this class when material is absent.
     """
 
 
@@ -153,28 +233,26 @@ class EnvelopeVersionError(PersistenceError):
     """Raised when an on-disk envelope is older or newer than the consumer expects.
 
     Older envelopes may be migrated forward via
-    :func:`migrate_envelope`; newer envelopes are not safely
+    ``migrate_envelope``; newer envelopes are not safely
     consumable by older code and refuse to load.
     """
 
 
 class PathContainmentError(PersistenceError, ValueError):
-    """Raised when a computed path escapes its configured root directory.
+    """Raised when a computed path escapes its configured root directory."""
 
-    Inherits from :class:`ValueError` as well as :class:`PersistenceError` so
-    legacy call-sites that catch ``ValueError`` from the path helpers in
-    :mod:`aeat.core.paths` continue to work; new code should catch the
-    typed :class:`PathContainmentError` instead.
-
-    Method-resolution order: :class:`PathContainmentError` ->
-    :class:`PersistenceError` -> :class:`StorageError` ->
-    :class:`AeatError` -> :class:`Exception` and (separately)
-    :class:`ValueError` -> :class:`Exception`. Python's C3 linearisation
-    resolves cleanly because both bases share :class:`Exception` as their
-    common ancestor; the registered :class:`ErrorCode`
-    (``INTEGRITY_STORAGE_PATH_CONTAINMENT``) is keyed by fully qualified
-    class name, so the multi-inheritance does not introduce shadowing.
-    """
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+    ) -> None:
+        """Construct a path-containment error with localized operator output."""
+        super().__init__(
+            message,
+            context=context,
+            translated_message="errors.integrity.integrity_storage_path_containment",
+        )
 
 
 class BlobNotFoundError(PersistenceError):
@@ -197,20 +275,21 @@ class RetentionPolicyError(PersistenceError):
     """Raised when a record's retention metadata violates its classification policy."""
 
 
-class CorpusManifestError(PersistenceError):
-    """Raised when a corpus manifest cannot be parsed or is structurally invalid."""
+class NamespaceRegistryError(StorageError, ValueError):
+    """Raised when a namespace-registry key or definition violates a boot-time invariant.
 
+    Fires from Pydantic field and model validators on
+    :class:`~aeat.adapters.persistence.storage.SecureObjectNamespaceDefinition`,
+    :class:`~aeat.adapters.persistence.storage.StoragePathDefinition`, and
+    :class:`~aeat.adapters.persistence.storage.StorageHierarchyRegistry` when a
+    registry key, namespace slug, path segment, or uniqueness constraint is
+    violated at construction time.  Inherits from :class:`StorageError` and
+    ultimately from :class:`~aeat.core.errors.AeatError` so callers can catch
+    it without importing Pydantic internals.
 
-class CorpusManifestTamperError(CorpusManifestError):
-    """Raised when a corpus manifest's self-attesting digest does not match its body.
-
-    The manifest's ``manifest_sha256`` field is computed over the canonical
-    serialisation of the rest of the manifest at write time. On load, the
-    same digest is re-derived and compared; mismatch means an attacker
-    edited the manifest body without recomputing the digest.
+    Because these validators are called by Pydantic during model construction
+    the exception propagates wrapped inside a :class:`pydantic.ValidationError`
+    when raised from a field validator; direct callers of
+    :class:`~aeat.adapters.persistence.storage.StorageHierarchyRegistry`
+    model validators receive the raw :class:`NamespaceRegistryError`.
     """
-
-
-class CorpusManifestDriftError(CorpusManifestError):
-    """Raised by ``aeat security verify-corpus`` when the on-disk corpus
-    diverges from the manifest (added / removed / changed files)."""

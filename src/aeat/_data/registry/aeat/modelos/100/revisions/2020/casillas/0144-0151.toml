@@ -1,0 +1,9 @@
+[[revisions."2020".casillas]]
+id = "0151"
+number = "0151"
+label = "Reducción por rendimientos generados en más de 2 años u obtenidos de forma notoriamente irregular (artículo 23.3 y DT 25.ª de la Ley del Impuesto)"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+data_type = "decimal"
+semantic_role = "irpf_rendimiento_capital_inmobiliario_reduccion_rendimientos_irregulares"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

@@ -1,0 +1,12 @@
+[[revisions.2019-2022.casillas]]
+id = "14"
+number = "14"
+label = "Mod. 40.3 LIS — Compensacion de bases negativas de ejercicios anteriores"
+section = ["liquidacion", "modalidad_40_3_lis", "base_imponible"]
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_compensacion_bases_negativas"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-202-2019-2022-page-01-casilla-14"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2019", "aeat-modelo-202-instructions-2023-2024"]

@@ -1,0 +1,74 @@
+[revisions."2010-y-siguientes".completeness_manifest]
+source_ref = "aeat-dr-390-2025"
+legal_refs = [
+    "ley-37-1992:art-115",
+    "ley-37-1992:art-116",
+    "ley-37-1992:art-17",
+    "ley-37-1992:art-84",
+    "ley-37-1992:art-88",
+    "ley-37-1992:art-90",
+    "ley-37-1992:art-91",
+    "ley-37-1992:art-92",
+    "ley-37-1992:art-99",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-29",
+    "rd-1624-1992:art-30",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.compensacion-generada-ejercicio-no-97"
+number = "662"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.compensacion-ultimo-periodo-97"
+number = "97"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.autorepercutido.intracomunitaria"
+number = "iva.anual.autorepercutido.intracomunitaria"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.cuota-deducible-total"
+number = "iva.anual.cuota-deducible-total"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.cuota-devengada-total"
+number = "iva.anual.cuota-devengada-total"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.reconciliacion.deducible-303"
+number = "iva.anual.reconciliacion.deducible-303"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.reconciliacion.devengada-303"
+number = "iva.anual.reconciliacion.devengada-303"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.reconciliacion.resultado-303"
+number = "iva.anual.reconciliacion.resultado-303"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.general"
+number = "iva.anual.repercutido.general"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.reducido"
+number = "iva.anual.repercutido.reducido"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.super-reducido"
+number = "iva.anual.repercutido.super-reducido"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.resultado-regimen-general"
+number = "iva.anual.resultado-regimen-general"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.soportado.interiores"
+number = "iva.anual.soportado.interiores"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.soportado.importaciones"
+number = "iva.anual.soportado.importaciones"

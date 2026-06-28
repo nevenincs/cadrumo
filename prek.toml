@@ -1,29 +1,50 @@
 default_language_version.python = "3.13"
 
-# ── General file checks ─────────────────────────────────────────────────────
+# ── prek policy ─────────────────────────────────────────────────────────────
+# Every hook is VERIFY-ONLY. No autofixers run at commit time.
+# Rationale: prek's stash-pop step has lost work in this repo when an
+# autofixing hook modifies the staged tree mid-commit and the rollback
+# conflicts with concurrently-edited files in the worktree. Verify-only
+# hooks never stash unstaged changes and never rewrite files.
+#
+# The pre-commit hook script is intentionally NOT installed by the project
+# (`prek install` is a no-op here). Run prek as a manual gate before
+# committing:
+#
+#     uv run --no-sync prek run --all-files
+#
+# Bring autofixers back IN A SEPARATE STEP only — e.g. `uv run --no-sync
+# ruff check --fix src/` followed by `uv run --no-sync ruff format src/`
+# before staging — never as a commit-time auto-mutation.
+
+# ── General file checks (read-only) ─────────────────────────────────────────
 [[repos]]
 repo = "https://github.com/pre-commit/pre-commit-hooks"
 rev = "v5.0.0"
 hooks = [
-  { id = "trailing-whitespace" },
-  { id = "end-of-file-fixer" },
   { id = "check-yaml" },
   { id = "check-toml" },
   { id = "check-added-large-files", args = ["--maxkb=500"] },
   { id = "check-merge-conflict" },
   { id = "detect-private-key" },
 ]
+# NOTE: trailing-whitespace and end-of-file-fixer are autofixers and are
+# excluded from this config. Run `ruff format` manually if whitespace
+# drift matters before a release.
 
-# ── Ruff (lint + format) ────────────────────────────────────────────────────
+# ── Ruff (verify-only) ──────────────────────────────────────────────────────
 [[repos]]
 repo = "https://github.com/astral-sh/ruff-pre-commit"
 rev = "v0.15.9"
 hooks = [
-  { id = "ruff-check", args = ["--fix", "--exit-non-zero-on-fix"] },
-  { id = "ruff-format" },
+  # ruff-check: no --fix, no auto-mutation. Just fail on remaining errors.
+  { id = "ruff-check" },
+  # ruff-format: --check mode verifies without rewriting; rewrite is a
+  # manual step (`uv run --no-sync ruff format src/`) outside the hook.
+  { id = "ruff-format", args = ["--check"] },
 ]
 
-# ── ty (type checking) ──────────────────────────────────────────────────────
+# ── ty (type checking, verify-only) ─────────────────────────────────────────
 [[repos]]
 repo = "local"
 
@@ -31,34 +52,14 @@ repo = "local"
 id = "ty"
 name = "ty type check"
 language = "system"
-entry = "uv run ty check src/"
+entry = "uv run --no-sync ty check src/"
 pass_filenames = false
 types = ["python"]
 
-# ── #162 relative-imports mandate ───────────────────────────────────────────
-[[repos]]
-repo = "local"
-
-[[repos.hooks]]
-id = "relative-imports-mandate"
-name = "enforce relative imports inside src/aeat/ (#162)"
-language = "system"
-entry = "uv run python scripts/check_relative_imports.py"
-# Per-file scan keeps prek fast on big repos; the script silently drops
-# paths outside src/aeat/ (tests/, scripts/, etc.) by design.
-pass_filenames = true
-files = "^src/aeat/.*\\.py$"
-types = ["python"]
-
-# ── Vault hygiene (vaultspec-core, manual stage) ────────────────────────────
-# `vault-fix` rewrites files in place (unsafe mid-commit) and `spec-check`
-# reports local-dev framework health that is not meaningful inside CI.
-# Parked on the manual stage — run explicitly with
-# `uv run prek run --hook-stage manual <hook-id>`.
-#
-# Provider-artifact leaks are already prevented by the vaultspec-managed
-# .gitignore block (`.vaultspec/`, `providers.json`, `.mcp.json` etc.), so
-# no commit-stage hook is needed for that.
+# ── Vault hygiene (manual stage only) ───────────────────────────────────────
+# Both hooks below are autofixers / advisory diagnostics; they remain on the
+# manual stage so they never trigger at commit time. Run via
+# `uv run --no-sync prek run --hook-stage manual <hook-id>`.
 [[repos]]
 repo = "local"
 

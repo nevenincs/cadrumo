@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "03001"
+number = "03001"
+label = "Exención sobre la renta obtenida en los supuestos del art. 21.3, 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades residentes - Aumento - Correcciones del ejercicio - Permanentes [0..."
+section = ["exencion_sobre_la_renta_obtenida_en_los_supuestos", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_exencion_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03001"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03002"
+number = "03002"
+label = "Exención sobre la renta obtenida en los supuestos del art. 21.3, 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades residentes - Aumento - Correcciones del ejercicio - Temporarias (c..."
+section = ["exencion_sobre_la_renta_obtenida_en_los_supuestos", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_exencion_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03002"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03003"
+number = "03003"
+label = "Exención sobre la renta obtenida en los supuestos del art. 21.3, 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades residentes - Aumento - Correcciones del ejercicio - Temporarias (c..."
+section = ["exencion_sobre_la_renta_obtenida_en_los_supuestos", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_exencion_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03003"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03004"
+number = "03004"
+label = "Exención sobre la renta obtenida en los supuestos del art. 21.3, 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades residentes - Aumento - Saldo pendiente a principio de ejercicio [0..."
+section = ["exencion_sobre_la_renta_obtenida_en_los_supuestos", "aumento"]
+data_type = "money"
+semantic_role = "is_exencion_rentas_ajuste_saldo_inicio"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03004"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03005"
+number = "03005"
+label = "Exención sobre la renta obtenida en los supuestos del art. 21.3, 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades residentes - Aumento - Saldo pendiente a fin de ejercicio [03005]"
+section = ["exencion_sobre_la_renta_obtenida_en_los_supuestos", "aumento"]
+data_type = "money"
+semantic_role = "is_exencion_transmision_saldo_fin"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03005"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

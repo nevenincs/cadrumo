@@ -1,0 +1,102 @@
+# Modelo 303 official-Diseño box consistency predicates (Stage 2).
+#
+# The M303 2023-y-siguientes revision carries TWO casilla layers: the semantic
+# aggregate cuota casillas (iva.repercutido.general, iva.soportado.interiores,
+# iva.autorepercutido.intracomunitaria, ...) which carry ledger bindings and
+# feed the resultado chain, AND the official Diseño-de-Registros numbered boxes
+# (ids "01".."77", semantic_role "dr303_NN") which carry the official export_refs
+# the operator transcribes to the AEAT sede.
+#
+# Stage 1 (commit 330ab6771) made the silent-under-declaration non-silent with
+# two ADVISORY implies_any_nonzero predicates (cuota-devengada-total implies at
+# least one of 03/06/09/11/13; cuota-deducible-total implies at least one of
+# 29/33/37). Those predicates fired because every official numbered cuota box was
+# input_kind = "manual" and stayed zero while the semantic total was positive.
+#
+# Stage 2 (2026-06-13 dual-keying ADR) POPULATES every in-scope cuota box by a
+# single-source projection formula (input_kind = "computed"), so each box copies
+# its semantic source. EVERY constituent of BOTH Stage-1 implies_any_nonzero
+# predicates (03/06/09/11/13 devengado; 29/33/37 deducible) is now a computed
+# projection. The implication antecedent-positive -> consequent-positive
+# therefore holds by construction (the projection copies the same positive
+# value), so the Stage-1 advisories are satisfied-by-construction and have been
+# RETIRED rather than left as dead always-green predicates. The calculate-path
+# advisory in _official_box_advisory.py reads these same predicates as its single
+# source of truth, so retiring them narrows the calculate advisory in lock-step.
+# No manual cuota box remains in either constituent list (box 37 is wired to the
+# AIC-deducible leg, not deferred), so no narrowed-and-retained predicate is
+# warranted.
+#
+# In their place, one box-equals-source CONSISTENCY predicate per populated box
+# (the new equals DSL operator) asserts that the projection did not drift: the
+# numbered box value MUST equal its semantic source value. The projection cannot
+# drift from its source within one evaluation, so a live filing always satisfies
+# these; their value is catching a FUTURE mis-edit (a box re-flipped to manual,
+# or a projection pointed at the wrong source). They are BLOCKING_RULE so such a
+# broken filing is refused. Each is grounded in the populated box's own
+# legal_refs (devengado cuotas in LIVA art. 88; deducible cuotas in art. 92).
+
+# ── Devengado régimen-general cuota boxes (LIVA art. 88) ───────────────────
+[[revisions.2023-y-siguientes.verification_predicates]]
+predicate_id = "modelo-303-dr303-09-equals-iva-repercutido-general"
+expression = 'equals(["09", "iva.repercutido.general"])'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023-y-siguientes.verification_predicates]]
+predicate_id = "modelo-303-dr303-06-equals-iva-repercutido-reducido"
+expression = 'equals(["06", "iva.repercutido.reducido"])'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023-y-siguientes.verification_predicates]]
+predicate_id = "modelo-303-dr303-03-equals-iva-repercutido-super-reducido"
+expression = 'equals(["03", "iva.repercutido.super-reducido"])'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+# ── Devengado inversión del sujeto pasivo cuota boxes (LIVA art. 88) ────────
+[[revisions.2023-y-siguientes.verification_predicates]]
+predicate_id = "modelo-303-dr303-11-equals-iva-autorepercutido-intracomunitaria-devengado"
+expression = 'equals(["11", "iva.autorepercutido.intracomunitaria.devengado"])'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023-y-siguientes.verification_predicates]]
+predicate_id = "modelo-303-dr303-13-equals-iva-autorepercutido-interior-devengado"
+expression = 'equals(["13", "iva.autorepercutido.interior.devengado"])'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+# ── Devengado total (LIVA art. 88) ─────────────────────────────────────────
+[[revisions.2023-y-siguientes.verification_predicates]]
+predicate_id = "modelo-303-dr303-27-equals-iva-cuota-devengada-total"
+expression = 'equals(["27", "iva.cuota-devengada-total"])'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+# ── Deducible cuota boxes (LIVA art. 92) ───────────────────────────────────
+[[revisions.2023-y-siguientes.verification_predicates]]
+predicate_id = "modelo-303-dr303-29-equals-iva-soportado-interiores"
+expression = 'equals(["29", "iva.soportado.interiores"])'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023-y-siguientes.verification_predicates]]
+predicate_id = "modelo-303-dr303-33-equals-iva-soportado-importaciones"
+expression = 'equals(["33", "iva.soportado.importaciones"])'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023-y-siguientes.verification_predicates]]
+predicate_id = "modelo-303-dr303-37-equals-iva-autorepercutido-intracomunitaria-deducible"
+expression = 'equals(["37", "iva.autorepercutido.intracomunitaria.deducible"])'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+# ── Deducible total (LIVA art. 92) ─────────────────────────────────────────
+[[revisions.2023-y-siguientes.verification_predicates]]
+predicate_id = "modelo-303-dr303-45-equals-iva-cuota-deducible-total"
+expression = 'equals(["45", "iva.cuota-deducible-total"])'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]

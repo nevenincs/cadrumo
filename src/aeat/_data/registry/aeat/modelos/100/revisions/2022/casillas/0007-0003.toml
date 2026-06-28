@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "0003"
+number = "0003"
+label = "Retribuciones dinerarias (incluidas pensiones compensatorias y anualidades por alimentos no exentas). Importe íntegro"
+section = ["toma_datos_ampliada", "rdto_trabajo"]
+semantic_role = "irpf_rendimiento_trabajo_importe_integro_dinerario"
+legal_refs = ["ley-35-2006:art-17"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

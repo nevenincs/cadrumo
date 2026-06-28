@@ -1,0 +1,10 @@
+[[revisions."2020".casillas]]
+id = "0419"
+number = "0419"
+label = "Suma de pérdidas patrimoniales ( [1607] + [0307] )"
+section = ["resultados", "integracion_res", "gp_patrimoniales_res"]
+semantic_role = "irpf_integracion_gyp_general_suma_perdidas"
+input_kind = "computed"
+formula = "renta-2020-perdidas-patrimoniales-base-general-suma"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

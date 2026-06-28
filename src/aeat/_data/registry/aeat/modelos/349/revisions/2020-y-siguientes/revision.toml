@@ -1,0 +1,16 @@
+[revisions."2020-y-siguientes"]
+id = "2020-y-siguientes"
+label = "Modelo 349 ejercicio 2020 y siguientes (Orden HAC/174/2020)"
+valid_from = 2020-01-01
+period_selector = { year_from = 2020, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "1T", "2T", "3T", "4T"] }
+legal_refs = [
+    "orden-eha-769-2010:art-1",
+    "orden-hac-174-2020:art-1",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-349-2020-current",
+    "aeat-modelo-349-procedure",
+]
+
+# --- Declarant header summary fields (Tipo 1, positions 138-185) ---

@@ -1,0 +1,37 @@
+rules:
+  - id: no-any-annotation-in-domain-application
+    message: |
+      `Any` annotation forbidden in src/aeat/domain/ and src/aeat/application/.
+      Replace with a typed alternative: pydantic model, TypedDict, Union, or
+      `object` if the value is truly polymorphic. Type-system escapes in the
+      core domain and application layers undermine the strictness contract
+      enforced elsewhere.
+    severity: ERROR
+    languages:
+      - python
+    paths:
+      include:
+        - "/src/aeat/domain/"
+        - "/src/aeat/application/"
+    pattern-either:
+      - pattern: |
+          $X: Any
+      - pattern: |
+          $X: Any = $Y
+      - pattern: |
+          def $F(...) -> Any:
+              ...
+      - patterns:
+          - pattern: |
+              def $F(..., $PARAM: Any, ...) -> $R:
+                  ...
+          - pattern-not: |
+              def $F(..., **$KW: Any) -> $R:
+                  ...
+      - patterns:
+          - pattern: |
+              def $F(..., **$KW: Any) -> $R:
+                  ...
+          - pattern-not-inside: |
+              def reconfigure(self, ...) -> None:
+                  ...

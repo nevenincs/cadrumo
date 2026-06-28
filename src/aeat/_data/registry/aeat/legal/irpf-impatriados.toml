@@ -1,0 +1,85 @@
+# Legal authority catalogue — IRPF régimen especial de impatriados (Art. 93 LIRPF)
+#
+# Art. 93 LIRPF establishes the optional special IRPF regime for workers
+# displaced to Spain under employment contracts, allowing eligible impatriados
+# to be taxed as non-residents (IRNR flat-rate) during the first 6 years of
+# Spanish residence, subject to conditions. The corresponding declaración is
+# Modelo 151 (Orden EHA/2887/2008). Colloquially known as "Ley Beckham"
+# following its 2003 introduction, though the original regime was substantially
+# modified by Ley 26/2014.
+
+[legal."ley-35-2006:art-93"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-93.html#art-93"
+document_id = "BOE-A-2006-20764"
+article = "93"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a93"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "LIRPF Art. 93 — régimen especial aplicable a los trabajadores desplazados a territorio español. Permite optar por tributar por IRNR durante el período impositivo del desplazamiento y los cinco siguientes. Desarrollado por RD 439/2007 (RIRPF) Art. 113-120 y presentado mediante Modelo 151 (Orden EHA/2887/2008)."
+required_text = [
+    "desplazados",
+    "territorio español",
+]
+
+[legal."rd-439-2007:art-113"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "reglamento"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-113.html#a113"
+document_id = "BOE-A-2007-6820"
+article = "113"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a113"
+published_at = 2007-03-31
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "RIRPF Art. 113-120 — condiciones y procedimiento para ejercer la opción del régimen especial de impatriados: comunicación a la AEAT en plazo de 6 meses, mantenimiento de la residencia fiscal española, rentas aplicables."
+required_text = [
+    "desplazados",
+    "opción",
+]
+
+[sources."aeat-modelo-151-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_151/files/modelo-151-procedure.html"
+sha256 = "e1a2a58ca8852868facf2222f2ec16657d4875b85245346c5c8413705b346428"
+bytes = 853
+retrieved_at = 2026-05-27
+applies_from = 2008-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G416.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-151-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-2887-2008.html"
+sha256 = "6b97fd0c646467eac203fa64d18b811d1aa71acd35f61946956e378a0dd3caf3"
+bytes = 915
+retrieved_at = 2026-05-27
+published_at = 2008-10-08
+applies_from = 2008-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-16237"
+review_status = "reviewed"
+
+[sources."boe-modelo-151-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-2887-2008.html"
+sha256 = "6b97fd0c646467eac203fa64d18b811d1aa71acd35f61946956e378a0dd3caf3"
+bytes = 915
+retrieved_at = 2026-05-27
+published_at = 2008-10-08
+applies_from = 2008-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-16237"
+review_status = "reviewed"

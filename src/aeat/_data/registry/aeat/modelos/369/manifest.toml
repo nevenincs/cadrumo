@@ -1,0 +1,26 @@
+[modelo]
+id = "369"
+title = "IVA. Autoliquidación regímenes especiales OSS / IOSS"
+official_name = "Modelo 369. Impuesto sobre el Valor Añadido. Autoliquidación de los regímenes especiales aplicables a los sujetos pasivos que presten servicios a personas que no tengan la condición de sujetos pasivos, que efectúen ventas a distancia de bienes y ciertas entregas interiores de bienes."
+tax_domain = "iva"
+cadence = "ad_hoc"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "orden-hac-610-2021:art-1",
+    "orden-hac-610-2021:art-2",
+    "orden-hac-610-2021:art-3",
+    "ley-37-1992:art-163-octiesdecies",
+    "ley-37-1992:art-163-unvicies",
+    "ley-37-1992:art-163-quinvicies",
+]
+source_refs = [
+    "aeat-dr-369-2021",
+    "aeat-modelo-369-procedure",
+    "boe-modelo-369-2021-form",
+]
+
+# -----------------------------------------------------------------------------
+# Esquema Exterior — quarterly per HAC/610/2021 art 2(a) and LIVA 163 octiesdecies
+# -----------------------------------------------------------------------------
+

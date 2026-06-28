@@ -1,4 +1,4 @@
-"""Protocol stubs for every component the workflow engine composes.
+"""Protocol contracts for every component the workflow engine composes.
 
 The composite workflow engine is defined against ``typing.Protocol``
 surfaces — not concrete classes — for two reasons:
@@ -8,26 +8,32 @@ surfaces — not concrete classes — for two reasons:
    hard import dependency at the engine layer; adapters in
    :mod:`aeat.application.workflow._adapters` translate the richer real surfaces
    onto these narrow Protocols.
-2. **No-mocks testing.** The project forbids mocks/patches/fakes/stubs
-   in its test suite. Protocols let us substitute hand-rolled
-   Protocol-conforming classes in tests instead, one per scenario.
+2. **Protocol-shaped tests.** Tests can supply narrow
+   Protocol-conforming classes per scenario without importing the
+   production adapters at the workflow layer.
 
 Every Protocol here describes **only** the attributes the workflow
-engine actually reads.
+engine actually reads. :class:`DeadlineEngineProtocol` wraps the
+deadline engine's ``compute`` method that returns a :class:`Schedule`
+for a given :class:`TaxpayerProfile`.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Sequence
 from datetime import date
 from typing import Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field
+from ...application.auth import AuthProviderDescription
+from ...core import Period
+from ...domain.deadlines import Schedule, TaxpayerProfile
 
-from ...adapters.outbound.aeat.export import AuthProviderDescription, FilingDraftLike
-from ...domain.deadlines import AutonomoProfile, Schedule
-
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+# ``ModeloInputs`` and its element aliases have a single canonical
+# definition in :mod:`aeat.domain.filing._protocols`. The workflow
+# engine re-exports them here so adapters can import the contract from
+# the workflow package without taking a second divergent definition.
+from ...domain.filing import ModeloInputs, ModeloInputScalar, ModeloInputValue
+from ...domain.submission._protocols import ModeloDraftLike
 
 
 @runtime_checkable
@@ -36,29 +42,45 @@ class DeadlineEngineProtocol(Protocol):
 
     def compute(
         self,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         year: int,
         *,
         today: date | None = None,
     ) -> Schedule:
-        """Return a :class:`Schedule` for ``profile`` in ``year``."""
+        """Return a :class:`Schedule` for ``profile`` in ``year``.
+
+        Args:
+            profile: The :class:`TaxpayerProfile` whose filing obligations are scheduled.
+            year: The calendar year for which the schedule is computed.
+            today: Optional reference date for open-period classification.
+        """
         ...
 
 
 @runtime_checkable
-class FilingDraftBuilderProtocol(Protocol):
+class RegistryModeloDraftProtocol(ModeloDraftLike, Protocol):
+    """Workflow draft surface after registry-backed filing construction."""
+
+    schema_version: str
+
+
+@runtime_checkable
+class ModeloDraftBuilderProtocol(Protocol):
     """Narrow surface over :func:`aeat.application.filing.build_draft`."""
 
     def build(
         self,
         *,
         modelo: str,
-        period: str,
-        profile: AutonomoProfile,
-        inputs: Mapping[str, object],
+        period: Period,
+        profile: TaxpayerProfile,
+        inputs: ModeloInputs,
         fail_on_warning: bool = False,
-    ) -> FilingDraftLike:
-        """Build and return a :class:`FilingDraftLike`."""
+    ) -> RegistryModeloDraftProtocol:
+        """Build a registry-backed filing draft for the given :class:`TaxpayerProfile`.
+
+        Returns a :class:`RegistryModeloDraftProtocol`.
+        """
         ...
 
 
@@ -66,45 +88,25 @@ class FilingDraftBuilderProtocol(Protocol):
 class SubmissionEngineProtocol(Protocol):
     """Read-only preflight surface over :class:`aeat.adapters.outbound.aeat.export.SubmissionEngine`."""
 
-    def preflight(self, draft: FilingDraftLike, *, today: date) -> None:
-        """Run preflight gates against ``draft``; raise on failure."""
-        ...
-
-
-class SyncRunSummary(BaseModel):
-    """Narrow stub for a sync run outcome.
-
-    The workflow engine only needs to know whether the sync succeeded
-    and surface a numeric summary for diagnostics; the full
-    :class:`aeat.application.sync.SyncRunResult` graph is intentionally not
-    imported here.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    divergence_count: int = Field(ge=0)
-    auto_healed_count: int = Field(ge=0)
-    escalated_count: int = Field(ge=0)
-
-
-@runtime_checkable
-class SyncRunnerProtocol(Protocol):
-    """Narrow surface over :class:`aeat.application.sync.LiveSyncRunner`."""
-
-    async def run(
+    def preflight(
         self,
+        draft: RegistryModeloDraftProtocol,
         *,
-        modelo: str | None = None,
-        period: str | None = None,
-        auto_heal: bool = False,
-    ) -> SyncRunSummary:
-        """Execute one sync cycle and return a narrow summary."""
+        today: date,
+        skip_deadline_window: bool = False,
+    ) -> None:
+        """Run preflight gates against ``draft``; raise on failure.
+
+        ``skip_deadline_window`` skips the AEAT filing-window gate so a
+        calculation can be verified independently of the filing
+        calendar; filing always runs the window gate.
+        """
         ...
 
 
 @runtime_checkable
 class CertificateBundleProtocol(Protocol):
-    """Narrow stub for the auth-provider probe used by workflow preflight.
+    """Narrow contract for the auth-provider probe used by workflow preflight.
 
     The workflow engine calls :meth:`describe` once during the
     preflight stage to prove the configured auth provider is present
@@ -114,28 +116,103 @@ class CertificateBundleProtocol(Protocol):
     """
 
     def describe(self) -> AuthProviderDescription:
-        """Return the current auth-provider description; raise on failure."""
+        """Return the current auth-provider description; raise on failure.
+
+        Returns an :class:`AuthProviderDescription` with the provider's
+        configured and available state.
+        """
         ...
 
 
 @runtime_checkable
-class FilingInputsProviderProtocol(Protocol):
-    """Provides raw casilla inputs for the draft stage.
+class ModeloInputsProviderProtocol(Protocol):
+    """Provides filing inputs for the draft stage.
 
-    The default adapter reads the inputs from a JSON file at
-    ``settings.aeat_workflow_draft_inputs_path``; tests inject a
-    hand-rolled Protocol-conforming provider to control the shape.
+    Production adapters load inputs from bucket-scoped, secure application
+    services rather than operator-supplied files.
     """
 
     def load_inputs(
         self,
         *,
         modelo: str,
-        period: str,
-        profile: AutonomoProfile,
-    ) -> Mapping[str, object]:
-        """Return the raw casilla inputs for the draft build."""
+        period: Period,
+        profile: TaxpayerProfile,
+    ) -> ModeloInputs:
+        """Return the filing inputs for the draft build against the given :class:`TaxpayerProfile`."""
         ...
+
+
+class WorkflowExpedienteProtocol(Protocol):
+    """Narrow read surface for one AEAT expediente (open proceeding) entry.
+
+    An expediente is an administrative dossier AEAT associates with one
+    modelo (e.g. ``"303"``) and one ejercicio (tax year). The workflow
+    engine reads these two fields to decide whether an open proceeding
+    blocks filing.
+    """
+
+    @property
+    def modelo(self) -> str | None: ...
+
+    @property
+    def ejercicio(self) -> int | None: ...
+
+
+class WorkflowNotificationProtocol(Protocol):
+    """Narrow read surface for one AEAT inbox notification entry.
+
+    The workflow engine reads ``tipo``, ``leida``, ``certificado_id``,
+    and ``concepto`` to decide whether an unread blocking notification
+    (typically a requerimiento) should abort the current run.
+    """
+
+    @property
+    def tipo(self) -> str: ...
+
+    @property
+    def leida(self) -> bool | None: ...
+
+    @property
+    def certificado_id(self) -> str: ...
+
+    @property
+    def concepto(self) -> str: ...
+
+
+class WorkflowNotificationsSnapshotProtocol(Protocol):
+    """Container protocol for a point-in-time AEAT inbox snapshot.
+
+    Wraps a sequence of :class:`WorkflowNotificationProtocol` rows returned
+    by the AEAT inbox adapter. The engine iterates ``rows`` once to find
+    blocking requerimientos.
+    """
+
+    @property
+    def rows(self) -> Sequence[WorkflowNotificationProtocol]: ...
+
+
+ExpedientesSource = Callable[[object, str | None], Awaitable[tuple[WorkflowExpedienteProtocol, ...]]]
+"""Async callable that fetches open expedientes for a session.
+
+Args:
+    arg0: The authenticated AEAT session object.
+    arg1: Optional modelo filter; ``None`` returns all open expedientes.
+
+Returns:
+    A tuple of :class:`WorkflowExpedienteProtocol` entries.
+"""
+
+NotificationsSource = Callable[[object], Awaitable[WorkflowNotificationsSnapshotProtocol]]
+"""Async callable that fetches the AEAT inbox snapshot for a session.
+
+Args:
+    arg0: The authenticated AEAT session object.
+
+Returns:
+    A :class:`WorkflowNotificationsSnapshotProtocol` with all current
+    notification rows.
+"""
 
 
 # Re-exported for adapter convenience (tests use the fully-qualified
@@ -143,9 +220,16 @@ class FilingInputsProviderProtocol(Protocol):
 __all__ = [
     "CertificateBundleProtocol",
     "DeadlineEngineProtocol",
-    "FilingDraftBuilderProtocol",
-    "FilingInputsProviderProtocol",
+    "ExpedientesSource",
+    "ModeloDraftBuilderProtocol",
+    "ModeloInputScalar",
+    "ModeloInputValue",
+    "ModeloInputs",
+    "ModeloInputsProviderProtocol",
+    "NotificationsSource",
+    "RegistryModeloDraftProtocol",
     "SubmissionEngineProtocol",
-    "SyncRunSummary",
-    "SyncRunnerProtocol",
+    "WorkflowExpedienteProtocol",
+    "WorkflowNotificationProtocol",
+    "WorkflowNotificationsSnapshotProtocol",
 ]

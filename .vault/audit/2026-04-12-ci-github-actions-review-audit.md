@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#ci-github-actions'
 date: '2026-04-12'
+modified: '2026-04-12'
 related:
   - '[[2026-04-12-ci-github-actions-plan]]'
   - '[[2026-04-12-ci-github-actions-adr]]'

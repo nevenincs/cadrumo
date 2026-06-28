@@ -1,0 +1,43 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "modelo"
+domain = "concepto"
+lifecycle = "approved"
+legal_refs = ["ley-58-2003:art-98"]
+related = ["modelo-100", "modelo-130", "modelo-303", "modelo-390", "casilla", "declaracion"]
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "Un formulario oficial de declaracion de la AEAT, identificado por un numero."
+definition = "Formulario normalizado de declaracion que la AEAT prescribe para una obligacion tributaria y un periodo concretos, identificado de forma unica por su numero oficial de tres digitos (por ejemplo, Modelo 100, Modelo 303, Modelo 720). Cada modelo se publica mediante Orden Ministerial en el BOE y se cataloga en la Sede Electronica de la AEAT. El numero forma parte del nombre legal: el Modelo 303 y el Modelo 100 no son intercambiables. No designa informes ad hoc, hojas de calculo internas ni documentos censales."
+
+[language.es.source]
+citation = "AEAT, Sede Electronica - Todas las gestiones / Modelos y formularios; cada modelo se aprueba por Orden Ministerial publicada en el BOE."
+authority = "aeat"
+
+[[language.es.term]]
+label = "modelo"
+term_status = "preferred"
+part_of_speech = "noun"
+grammatical_gender = "masculine"
+
+[language.en]
+short_description = "An official AEAT declaration form, identified by a number (for example Modelo 303)."
+
+[[language.en.term]]
+label = "tax form"
+term_status = "admitted"
+part_of_speech = "noun"
+
+[language.ca]
+short_description = "Un formulari oficial de declaracio de l'AEAT, identificat per un numero (per exemple Model 303)."
+
+[language.hu]
+short_description = "Az AEAT hivatalos bevallasi urlapja, amelyet egy szam azonosit (peldaul Modelo 303)."

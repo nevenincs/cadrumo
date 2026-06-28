@@ -1,0 +1,7 @@
+[revisions.2023-2024]
+label = "Modelo 202 ejercicios 2023 a 2024 (DR202e23.xlsx)"
+valid_from = 2023-01-01
+valid_to = 2024-12-31
+period_selector = { year_from = 2023, year_to = 2024, periods = ["1P", "2P", "3P"] }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]

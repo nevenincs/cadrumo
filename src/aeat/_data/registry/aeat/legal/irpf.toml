@@ -1,0 +1,3532 @@
+[legal."ley-35-2006:art-85"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-85.html#a85"
+document_id = "BOE-A-2006-20764"
+article = "85"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a85"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "LIRPF art 85: imputacion de rentas inmobiliarias. Tipo general 2 por ciento del valor catastral; tipo reducido 1,1 por ciento cuando los valores catastrales hayan sido revisados en el periodo impositivo o en los diez periodos impositivos anteriores."
+required_text = [
+    "Imputación de rentas inmobiliarias",
+    "2 por ciento al valor catastral",
+    "diez períodos impositivos anteriores",
+    "1,1 por ciento",
+]
+
+[parameters."lirpf-art-85:imputacion-rate-recent-revision"]
+evidence_tier = "legal_authority"
+value = "0.011"
+unit = "fraction"
+applies_to = "lirpf-imputacion-renta-inmobiliaria"
+legal_refs = ["ley-35-2006:art-85"]
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "LIRPF art 85: tipo reducido 1,1 por ciento aplicable cuando el valor catastral del inmueble fue revisado, modificado o determinado mediante procedimiento de valoracion colectiva en el periodo impositivo o en los diez periodos anteriores."
+
+[parameters."lirpf-art-85:imputacion-rate-old-or-no-revision"]
+evidence_tier = "legal_authority"
+value = "0.02"
+unit = "fraction"
+applies_to = "lirpf-imputacion-renta-inmobiliaria"
+legal_refs = ["ley-35-2006:art-85"]
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "LIRPF art 85: tipo general 2 por ciento aplicable cuando no concurre revision catastral reciente o el inmueble carece de revision en los diez periodos anteriores."
+
+[parameters."lirpf-art-85:catastral-revision-lookback-years"]
+evidence_tier = "legal_authority"
+value = "10"
+unit = "years"
+applies_to = "lirpf-imputacion-renta-inmobiliaria"
+legal_refs = ["ley-35-2006:art-85"]
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "LIRPF art 85: ventana 'en los diez periodos impositivos anteriores' que delimita la aplicacion del tipo reducido del 1,1 por ciento sobre el valor catastral revisado."
+
+[legal."rd-439-2007:art-13"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-13.html#a13"
+document_id = "BOE-A-2007-6820"
+article = "13"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a13"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "RIRPF art 13: gastos deducibles de los rendimientos del capital inmobiliario. Detalla las categorias de gasto que reducen el rendimiento integro del capital inmobiliario: intereses y gastos de financiacion, reparacion y conservacion, tributos no estatales, contraprestaciones por servicios, gastos de formalizacion, saldos de dudoso cobro, primas de seguro, suministros y amortizacion. Base reglamentaria del articulo 23 LIRPF y de la seccion rendimientos_capital_inmobiliario > gastos_deducibles del Modelo 100."
+required_text = [
+    "Gastos deducibles de los rendimientos del capital inmobiliario",
+    "intereses de los capitales ajenos",
+    "amortización",
+]
+
+[legal."rd-439-2007:art-14"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-14.html#a14"
+document_id = "BOE-A-2007-6820"
+article = "14"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a14"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "reviewed"
+reviewed_at = 2026-06-10
+reviewed_by = "wgergely"
+notes = "RIRPF art 14: gastos de amortizacion de los rendimientos del capital inmobiliario. Fija la efectividad de la amortizacion de inmuebles arrendados en el 3 por ciento sobre el mayor del coste de adquisicion satisfecho o el valor catastral, excluido el suelo. Provision reglamentaria que establece el tipo del 3 por ciento citado por la seccion rendimientos_capital_inmobiliario > gastos_deducibles > amortizacion del Modelo 100 y por AMORTIZACION_INMUEBLE_RATE. Base sustantiva: articulo 23 LIRPF."
+required_text = [
+    "Gastos de amortización de los rendimientos del capital inmobiliario",
+    "3 por ciento",
+    "el coste de adquisición satisfecho o el valor catastral",
+]
+
+[legal."rd-439-2007:art-86"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-86.html#a86"
+document_id = "BOE-A-2007-6820"
+article = "86"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a86"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "RIRPF art 86: tipo de retencion. Heart of the personalized retention scheme for trabajo rendimientos. Define el tipo como cuota de retencion / cuantia total de retribuciones (art-83.2) expresado con dos decimales. Aplica tipo cero cuando la base menos el minimo personal-familiar es no positiva, reduccion de 2 puntos para contribuyentes con vivienda-habitual DT-18 (cifra inferior a 33.007,2 EUR), y un suelo del 2 por ciento para contratos de duracion inferior al anio. Base reglamentaria del calculo del tipo personalizado de retencion del trabajo, citado por art-80 RIRPF."
+required_text = [
+    "Tipo de retención",
+    "cociente obtenido de dividir la cuota de retención",
+    "mínimo personal y familiar",
+]
+
+[legal."rd-439-2007:art-88"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-88.html#a88"
+document_id = "BOE-A-2007-6820"
+article = "88"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a88"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex-legal-grounding"
+notes = "RIRPF art 88: comunicacion de datos del perceptor de rentas del trabajo a su pagador. Base reglamentaria del Modelo 145: el perceptor comunica circunstancias personales y familiares al pagador, el pagador conserva la comunicacion firmada, y el contenido se ajusta al modelo aprobado por resolucion del Departamento de Gestion Tributaria de la AEAT."
+required_text = [
+    "Comunicación de datos del perceptor de rentas del trabajo a su pagador",
+    "deberán comunicar al pagador la situación personal y familiar",
+    "El contenido de las comunicaciones se ajustará al modelo que se apruebe por Resolución",
+    "no será preciso reiterar en cada ejercicio la comunicación de datos al pagador",
+]
+
+[legal."rd-439-2007:art-80"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-80.html#a80"
+document_id = "BOE-A-2007-6820"
+article = "80"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a80"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "RIRPF art 80: importe de las retenciones sobre rendimientos del trabajo. Establece el regimen de tipos de retencion: regla general personalizada via tablas del art 86; 35 por ciento para retribuciones de administradores y consejeros (reducido al 19 por ciento si la cifra de negocios de la entidad es inferior a 100.000 euros); 15 por ciento para rendimientos por cursos, conferencias, seminarios y obras literarias, artisticas o cientificas. Base reglamentaria de la retencion sobre rendimientos del trabajo en Modelo 111 (trimestral) y Modelo 190 (resumen anual)."
+required_text = [
+    "Importe de las retenciones sobre rendimientos del trabajo",
+    "35 por ciento",
+    "15 por ciento",
+]
+
+[legal."rd-439-2007:art-90"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-90.html#a90"
+document_id = "BOE-A-2007-6820"
+article = "90"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a90"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "RIRPF art 90: importe de las retenciones sobre rendimientos del capital mobiliario. Establece el tipo general del 19 por ciento aplicado a la base de retencion, con reduccion del 60 por ciento para rendimientos amparados en la deduccion del articulo 68.4 LIRPF (sociedades de capital semilla). Base reglamentaria de la retencion sobre rendimientos del capital mobiliario en Modelo 123 (trimestral) y Modelo 193 (resumen anual)."
+required_text = [
+    "Importe de las retenciones sobre rendimientos del capital mobiliario",
+    "19 por ciento",
+    "se reducirá en un 60 por ciento",
+]
+
+[legal."rd-439-2007:art-95"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-95.html#a95"
+document_id = "BOE-A-2007-6820"
+article = "95"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a95"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "RIRPF art 95: importe de las retenciones sobre rendimientos de actividades economicas. Establece el tipo del 15 por ciento general para actividades profesionales, el tipo reducido del 7 por ciento para nuevos profesionales (inicio + dos siguientes) y para colectivos especificos (recaudadores municipales, mediadores de seguros con auxiliares, delegados comerciales SELAE, actividades artisticas IAE grupos 851-869). Base reglamentaria de la retencion sobre rendimientos de actividades economicas profesionales en Modelo 111."
+required_text = [
+    "Importe de las retenciones sobre rendimientos de actividades económicas",
+    "15 por ciento sobre los ingresos íntegros",
+    "7 por ciento",
+]
+
+[legal."rd-439-2007:art-108"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-108.html#a108"
+document_id = "BOE-A-2007-6820"
+article = "108"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a108"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "RIRPF art 108: obligaciones formales del retenedor y del obligado a ingresar a cuenta. Establece la obligacion de presentar declaracion-liquidacion trimestral de las cantidades retenidas e ingresadas (M111, M115, M123, art-71 RIVA enlaza mensual cuando aplica), la declaracion negativa, y la declaracion anual resumen (M180, M190, M193). Base reglamentaria comun de los modelos de retencion IRPF."
+required_text = [
+    "Obligaciones formales del retenedor y del obligado a ingresar a cuenta",
+    "declaración de las cantidades retenidas y de los ingresos a cuenta",
+    "declaración anual de las retenciones e ingresos a cuenta",
+]
+
+[legal."rd-439-2007:art-110"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/rd-439-2007.json#art-110"
+document_id = "BOE-A-2007-6820"
+article = "110"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a110"
+published_at = 2007-03-31
+effective_from = 2007-03-31
+review_status = "reviewed"
+reviewed_at = 2026-04-12
+reviewed_by = "wgergely"
+notes = "Base reglamentaria del importe del pago fraccionado de actividades economicas. Para la revision 2019-y-siguientes, la regla especifica de resultados negativos de trimestres anteriores del Modelo 130 se verifica contra las instrucciones AEAT del modelo; no contra un apartado 110.5 vigente."
+required_text = [
+    "20 por ciento del rendimiento neto",
+    "2 por ciento del volumen de ingresos del trimestre",
+    "se reducirán en un 60 por ciento",
+    "33.007,2 euros",
+    "trimestres anteriores del mismo año",
+]
+
+[legal."rd-439-2007:art-110-3-b"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/rd-439-2007.json#110-3-b"
+document_id = "BOE-A-2007-6820"
+article = "110.3.b"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a110"
+published_at = 2007-03-31
+effective_from = 2007-03-31
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Exención de presentar M130 cuando las retenciones e ingresos a cuenta del trimestre (y anteriores del año) superen el 70% de los rendimientos íntegros del mismo período. Autónomo exento de pago fraccionado."
+required_text = [
+    "70 por ciento",
+    "retenciones e ingresos a cuenta",
+    "rendimientos íntegros",
+]
+
+[legal."orden-eha-586-2011:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-586-2011.html#articulo-1"
+document_id = "BOE-A-2011-4948"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-4948#a1"
+published_at = 2011-03-18
+effective_from = 2011-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "wgergely"
+notes = "Aprobacion del modelo 111 — autoliquidacion de retenciones e ingresos a cuenta del IRPF sobre rendimientos del trabajo, actividades economicas, premios, determinadas ganancias patrimoniales e imputaciones de renta. Foundational orden for the Modelo 111 quarterly retenciones return."
+required_text = [
+    "Aprobación del modelo 111",
+    "Retenciones e ingresos a cuenta del Impuesto sobre la Renta de las Personas Físicas",
+    "Rendimientos del trabajo y de actividades económicas",
+]
+
+[legal."orden-2000-11-20:apartado-primero"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-2000-11-20-modelo-115-apartado-primero.html#apartado-primero"
+document_id = "BOE-A-2000-21430"
+article = "primero"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2000-21430"
+published_at = 2000-11-28
+effective_from = 2001-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "Aprobacion del modelo 115 — declaracion-documento de ingreso de retenciones e ingresos a cuenta sobre rentas o rendimientos procedentes del arrendamiento o subarrendamiento de inmuebles urbanos. Foundational orden for the Modelo 115 quarterly return."
+required_text = [
+    "Se aprueban los modelos 115",
+    "Retenciones e ingresos a cuenta sobre determinadas rentas o rendimientos procedentes del arrendamiento o subarrendamiento de inmuebles urbanos",
+    "Declaración-documento de ingreso",
+]
+
+[legal."orden-eha-672-2007:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-672-2007.html#articulo-1"
+document_id = "BOE-A-2007-6032"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6032"
+published_at = 2007-03-22
+effective_from = 2007-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion de los modelos 130 y 131 para autoliquidacion de pagos fraccionados de IRPF."
+required_text = [
+    "modelos 130 y 131",
+    "actividades económicas en estimación objetiva",
+    "pagos fraccionados a cuenta del Impuesto sobre la Renta",
+]
+
+[legal."ley-35-2006:art-68.1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-68-1.html#articulo-68-1"
+document_id = "BOE-A-2006-20764"
+article = "68.1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a68"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "wgergely"
+notes = "Deduccion por inversion en empresas de nueva o reciente creacion. 50 per cent of amounts paid in the period for the subscription of shares or holdings in new or recent-creation enterprises, subject to the conditions set out in the sub-paragraphs 2 and 3, plus contribution of business or professional knowledge per the investment agreement. Maximum annual deduction base is 100,000 euros."
+required_text = [
+    "Deducción por inversión en empresas de nueva o reciente creación",
+    "50 por ciento de las cantidades satisfechas",
+    "La base máxima de deducción será de 100.000 euros anuales",
+]
+
+[legal."ley-35-2006:art-68.2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-68-2.html#articulo-68-2"
+document_id = "BOE-A-2006-20764"
+article = "68.2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a68"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "wgergely"
+notes = "Deducciones en actividades economicas. Cross-references the Impuesto sobre Sociedades incentives and inversion empresarial regime at equal percentages and limits, with carve-outs for the IS article 39 paragraphs 2 and 3. Adds a Modelo-100-specific 5 per cent (or 2.5 per cent) reinversion-of-net-business-income deduction for taxpayers meeting the Impuesto sobre Sociedades art. 101 requirements."
+required_text = [
+    "Deducciones en actividades económicas",
+    "incentivos y estímulos a la inversión empresarial",
+    "El porcentaje de deducción será del 5 por ciento",
+    "2,5 por ciento cuando el contribuyente hubiera practicado la reducción",
+]
+
+[legal."ley-35-2006:art-68.3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-68-3.html#articulo-68-3"
+document_id = "BOE-A-2006-20764"
+article = "68.3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a68"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "wgergely"
+notes = "Deducciones por donativos y otras aportaciones. Three concurrent regimes: (a) Ley 49/2002 mecenazgo deductions; (b) 10 per cent of donations to legally recognised foundations and public-utility associations not covered by Ley 49/2002; (c) 20 per cent of party-affiliation fees and political contributions with a 600 euro annual base cap."
+required_text = [
+    "Deducciones por donativos y otras aportaciones",
+    "10 por ciento de las cantidades donadas",
+    "20 por ciento de las cuotas de afiliación",
+    "La base máxima de esta deducción será de 600 euros anuales",
+]
+
+[legal."ley-35-2006:art-68.4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-68-4.html#articulo-68-4"
+document_id = "BOE-A-2006-20764"
+article = "68.4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a68"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Deduccion por rentas obtenidas en Ceuta o Melilla, including economic activities effectively carried out there."
+required_text = [
+    "Deducción por rentas obtenidas en Ceuta o Melilla",
+    "ejercicio de actividades económicas",
+    "60 por ciento",
+]
+
+[legal."ley-35-2006:art-68.5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-68-5.html#articulo-68-5"
+document_id = "BOE-A-2006-20764"
+article = "68.5"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a68"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "wgergely"
+notes = "Deduccion por actuaciones para la proteccion y difusion del Patrimonio Historico Espanol y de las ciudades, conjuntos y bienes declarados Patrimonio Mundial. 15 per cent of investments or expenses for: (a) acquisition of Patrimonio Historico Espanol assets from abroad with permanence + cultural-interest declaration requirements; (b) conservation/restoration/exhibition of bienes de interes cultural; (c) rehabilitation of buildings in protected city perimeters or Patrimonio Mundial sites."
+required_text = [
+    "Deducción por actuaciones para la protección y difusión del Patrimonio Histórico Español",
+    "deducción en la cuota del 15 por ciento",
+    "bienes de interés cultural",
+    "Patrimonio Mundial",
+]
+
+[legal."ley-35-2006:art-69"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-69.html#articulo-69"
+document_id = "BOE-A-2006-20764"
+article = "69"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a69"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "wgergely"
+notes = "Limites de determinadas deducciones. Caps the base of the art. 68.3 (donativos) and art. 68.5 (Patrimonio Historico) deductions at 10 per cent of the contribuyente's base liquidable. The limits on art. 68.2 (actividades economicas) follow the Impuesto sobre Sociedades incentivos regime and are computed after subtracting art. 68.1 (empresas nueva creacion) and art. 68.5 (Patrimonio Historico) from the combined estatal + autonomica cuota integra."
+required_text = [
+    "Límites de determinadas deducciones",
+    "no podrá exceder para cada una de ellas del 10 por ciento de la base liquidable del contribuyente",
+    "los que establezca la normativa del Impuesto sobre Sociedades",
+]
+
+[legal."orden-hac-1264-2018:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1264-2018.html#articulo-4"
+document_id = "BOE-A-2018-16340"
+article = "4"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2018-16340"
+published_at = 2018-11-30
+effective_from = 2019-01-01
+effective_to = 2019-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2019."
+required_text = [
+    "Aprobación de los signos, índices o módulos",
+    "método de estimación objetiva",
+    "año 2019",
+]
+
+[legal."orden-hac-1164-2019:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1164-2019.html#articulo-4"
+document_id = "BOE-A-2019-17252"
+article = "4"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2019-17252"
+published_at = 2019-11-30
+effective_from = 2020-01-01
+effective_to = 2020-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2020."
+required_text = [
+    "Aprobación de los signos, índices o módulos",
+    "método de estimación objetiva",
+    "año 2020",
+]
+
+[legal."orden-hac-1155-2020:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1155-2020.html#articulo-4"
+document_id = "BOE-A-2020-15599"
+article = "4"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2020-15599"
+published_at = 2020-12-04
+effective_from = 2021-01-01
+effective_to = 2021-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2021."
+required_text = [
+    "Aprobación de los signos, índices o módulos",
+    "método de estimación objetiva",
+    "año\u00a02021",
+]
+
+[legal."orden-hfp-1335-2021:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1335-2021.html#articulo-4"
+document_id = "BOE-A-2021-19904"
+article = "4"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2021-19904"
+published_at = 2021-12-02
+effective_from = 2022-01-01
+effective_to = 2022-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2022."
+required_text = [
+    "Aprobación de los signos, índices o módulos",
+    "método de estimación objetiva",
+    "año\u00a02022",
+]
+
+[legal."orden-hfp-1172-2022:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1172-2022.html#articulo-4"
+document_id = "BOE-A-2022-20025"
+article = "4"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20025"
+published_at = 2022-12-01
+effective_from = 2023-01-01
+effective_to = 2023-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2023."
+required_text = [
+    "Aprobación de los signos, índices o módulos",
+    "método de estimación objetiva",
+    "año\u00a02023",
+]
+
+[legal."orden-hfp-1359-2023:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#articulo-4"
+document_id = "BOE-A-2023-25882"
+article = "4"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
+published_at = 2023-12-21
+effective_from = 2024-01-01
+effective_to = 2024-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2024."
+required_text = [
+    "Artículo\u00a04.\u2003Aprobación de los signos, índices o módulos.",
+    "método de estimación objetiva",
+    "aplicables durante el año\u00a02024",
+]
+
+[legal."orden-hfp-1359-2023:da-5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#disposicion-adicional-quinta"
+document_id = "BOE-A-2023-25882"
+section = "disposición adicional quinta"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
+published_at = 2023-12-21
+effective_from = 2024-01-01
+effective_to = 2024-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Reduccion especial 2024 para actividades en estimacion objetiva desarrolladas en el termino municipal de Lorca."
+required_text = [
+    "Disposición adicional quinta",
+    "término municipal de Lorca",
+    "rendimiento neto de módulos de\u00a02024",
+]
+
+[legal."orden-hfp-1359-2023:da-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#disposicion-adicional-sexta"
+document_id = "BOE-A-2023-25882"
+section = "disposición adicional sexta"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
+published_at = 2023-12-21
+effective_from = 2024-01-01
+effective_to = 2024-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Reduccion especial 2024 para actividades en estimacion objetiva desarrolladas en la Isla de La Palma."
+required_text = [
+    "Disposición adicional sexta",
+    "Isla de la Palma",
+    "rendimiento neto de módulos de\u00a02024",
+]
+
+[legal."real-decreto-ley-7-2024:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/html/real-decreto-ley-7-2024-art-11.html#articulo-11"
+document_id = "BOE-A-2024-23422"
+article = "11"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-23422#a1-3"
+published_at = 2024-11-12
+effective_from = 2024-11-13
+effective_to = 2024-12-31
+consolidated_as_of = 2025-10-29
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Reduccion DANA 2024 para actividades economicas en estimacion objetiva en municipios afectados."
+required_text = [
+    "Artículo 11",
+    "rendimiento neto de módulos de\u00a02024",
+    "pago fraccionado correspondiente al último trimestre de\u00a02024",
+]
+
+[legal."real-decreto-ley-4-2024:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/html/real-decreto-ley-4-2024-art-3.html#articulo-3"
+document_id = "BOE-A-2024-12944"
+article = "3"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-12944"
+published_at = 2024-06-27
+effective_from = 2024-06-28
+effective_to = 2024-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Extends Ley 35/2006 additional provision 57 La Palma article 68.4 deduction treatment to the 2024 tax period."
+required_text = [
+    "disposición adicional quincuagésima séptima",
+    "períodos impositivos 2022, 2023 y 2024",
+    "pago fraccionado",
+]
+
+[legal."orden-hac-1347-2024:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1347-2024.html#articulo-4"
+document_id = "BOE-A-2024-24949"
+article = "4"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+published_at = 2024-11-30
+effective_from = 2025-01-01
+effective_to = 2025-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2025."
+required_text = [
+    "Artículo\u00a04.\u2003Aprobación de los signos, índices o módulos.",
+    "método de estimación objetiva",
+    "aplicables durante el año\u00a02025",
+]
+
+[legal."real-decreto-ley-13-2025:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/html/real-decreto-ley-13-2025-art-2.html#articulo-2"
+document_id = "BOE-A-2025-23911"
+article = "2"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-23911"
+published_at = 2025-11-26
+effective_from = 2025-11-27
+effective_to = 2025-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Extends Ley 35/2006 additional provision 57 La Palma article 68.4 deduction treatment to the 2025 tax period."
+required_text = [
+    "disposición adicional quincuagésima séptima",
+    "períodos impositivos 2022, 2023, 2024 y 2025",
+    "pago fraccionado",
+]
+
+[legal."orden-hac-1425-2025:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1425-2025.html#articulo-4"
+document_id = "BOE-A-2025-25272"
+article = "4"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25272"
+published_at = 2025-12-11
+effective_from = 2026-01-01
+effective_to = 2026-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2026."
+required_text = [
+    "Artículo\u00a04.\u2003Aprobación de los signos, índices o módulos.",
+    "método de estimación objetiva",
+    "aplicables durante el año\u00a02026",
+]
+
+[legal."ley-35-2006:art-99"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-99"
+document_id = "BOE-A-2006-20764"
+article = "99"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a99"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Obligacion general de practicar pagos a cuenta del IRPF."
+required_text = [
+    "obligación general de practicar retenciones",
+    "pagos fraccionados como pagos a cuenta del IRPF",
+]
+
+[legal."rd-439-2007:art-30"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/rd-439-2007.json#art-30"
+document_id = "BOE-A-2007-6820"
+article = "30"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a30"
+published_at = 2007-03-31
+effective_from = 2007-03-31
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Reglas de estimacion directa simplificada para actividades economicas."
+required_text = [
+    "gastos de dificil justificacion",
+    "5 por ciento",
+    "2.000 euros anuales",
+]
+
+[legal."rd-439-2007:art-31"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-31.html#a31"
+document_id = "BOE-A-2007-6820"
+article = "31"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a31"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "RIRPF art 31: entidades en regimen de atribucion. Establece la aplicacion de la modalidad simplificada de estimacion directa a actividades economicas desarrolladas por entidades de atribucion de rentas cuando todos sus miembros sean contribuyentes IRPF y la entidad cumpla los requisitos reglamentarios."
+required_text = [
+    "Entidades en régimen de atribución",
+    "La modalidad simplificada del método de estimación directa",
+    "con independencia de las circunstancias",
+    "se atribuirá por partes iguales",
+]
+
+[legal."rd-439-2007:art-39"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-39.html#a39"
+document_id = "BOE-A-2007-6820"
+article = "39"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a39"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "RIRPF art 39: entidades en regimen de atribucion. Establece la aplicacion del metodo de estimacion objetiva a actividades economicas desarrolladas por entidades de atribucion de rentas, con independencia de las circunstancias individuales de sus miembros y con reglas de computo del ambito de aplicacion."
+required_text = [
+    "El método de estimación objetiva",
+    "todos sus socios, herederos, comuneros o partícipes sean personas físicas",
+    "definición del ámbito de aplicación",
+    "se atribuirá por partes iguales",
+]
+
+[legal."rd-439-2007:art-109"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-109.html#a109"
+document_id = "BOE-A-2007-6820"
+article = "109"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a109"
+published_at = 2007-03-31
+effective_from = 2007-03-31
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "RIRPF art 109: obligados al pago fraccionado. Establece que los contribuyentes que ejercen actividades economicas autoliquidan e ingresan pagos fraccionados de IRPF y recoge las excepciones por retenciones o ingresos a cuenta iguales o superiores al 70 por ciento."
+required_text = [
+    "Obligados al pago fraccionado",
+    "actividades económicas estarán obligados a autoliquidar e ingresar en el Tesoro",
+    "70 por ciento de los ingresos",
+    "inicio de la actividad",
+]
+
+[legal."rd-439-2007:art-100"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/rd-439-2007.json#art-100"
+document_id = "BOE-A-2007-6820"
+article = "100"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a100"
+published_at = 2007-03-31
+effective_from = 2007-03-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Base reglamentaria del importe de las retenciones sobre arrendamientos y subarrendamientos de inmuebles urbanos."
+required_text = [
+    "arrendamiento o subarrendamiento de inmuebles urbanos",
+    "19 por ciento",
+    "excluido el Impuesto sobre el Valor Añadido",
+]
+
+[legal."orden-eha-3435-2007:anexo-ii"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3435-2007.html#anexo-ii"
+document_id = "BOE-A-2007-20485"
+section = "Anexo II"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485#ai-2"
+published_at = 2007-11-29
+effective_from = 2008-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion de Modelo 123 como autoliquidacion periodica de retenciones e ingresos a cuenta sobre determinados rendimientos del capital mobiliario y determinadas rentas."
+required_text = [
+    "Modelo 123",
+    "Retenciones e ingresos a cuenta sobre determinados rendimientos del capital mobiliario",
+    "Autoliquidación periódica-Modelo 123",
+]
+
+[legal."orden-hac-56-2024:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-56-2024.html#articulo-primero"
+document_id = "BOE-A-2024-1772"
+article = "primero"
+section = "Anexo I"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-1772"
+published_at = 2024-01-31
+effective_from = 2024-02-01
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Sustituye el anexo II de Orden EHA/3435/2007 para Modelo 123 y desglosa dividendos y otras rentas de participacion frente al resto de rentas."
+required_text = [
+    "El anexo II, modelo 123",
+    "se sustituye por el anexo I de esta orden",
+    "dividendos y otras rentas de participación",
+]
+
+[legal."orden-hap-1732-2014:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-1732-2014.html#articulo-segundo"
+document_id = "BOE-A-2014-9740"
+article = "segundo"
+section = "Anexo III"
+permalink = "https://www.boe.es/eli/es/o/2014/09/24/hap1732"
+published_at = 2014-09-26
+effective_from = 2014-09-27
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Sustituye el anexo VI de la Orden de 20 de noviembre de 2000 para los disenos fisicos y logicos del Modelo 180."
+required_text = [
+    "Se sustituye el anexo VI",
+    "modelo 180",
+    "resumen anual de retenciones",
+]
+
+[legal."orden-hfp-1284-2023:art-7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1284-2023.html#articulo-7"
+document_id = "BOE-A-2023-24412"
+article = "7"
+section = "Modelo 180"
+permalink = "https://www.boe.es/eli/es/o/2023/11/28/hfp1284"
+published_at = 2023-11-30
+effective_from = 2023-12-01
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Actualiza campos del registro de perceptor del Modelo 180 para identificar Isla de La Palma."
+required_text = [
+    "Artículo 7",
+    "modelo 180",
+    "Isla de La Palma",
+    "CÓDIGO PROVINCIA",
+]
+
+[legal."orden-eha-3377-2011:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3377-2011.html#articulo-1"
+document_id = "BOE-A-2011-19396"
+article = "1"
+section = "Anexos I y II"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396#a1"
+published_at = 2011-12-12
+effective_from = 2011-12-13
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion del Modelo 193 y de sus disenos fisicos y logicos para resumen anual de retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario y determinadas rentas."
+required_text = [
+    "Se aprueba el modelo 193",
+    "Declaración resumen anual de retenciones e ingresos a cuenta",
+    "Ambos diseños, físicos y lógicos, figuran en el anexo II",
+]
+
+[legal."orden-eha-3127-2009:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3127-2009.html#articulo-1"
+document_id = "BOE-A-2009-18567"
+article = "1"
+section = "Modelo 190"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18567#a1"
+published_at = 2009-11-23
+effective_from = 2009-11-24
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion del Modelo 190 como resumen anual de retenciones e ingresos a cuenta de IRPF sobre rendimientos del trabajo, actividades economicas, premios, ganancias patrimoniales e imputaciones de renta."
+required_text = [
+    "Se aprueba el modelo 190",
+    "Retenciones e ingresos a cuenta",
+    "Resumen anual",
+]
+
+[legal."orden-hac-1431-2025:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1431-2025.html#articulo-2"
+document_id = "BOE-A-2025-25390"
+article = "2"
+section = "Modelo 190"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25390"
+published_at = 2025-12-12
+effective_from = 2025-12-13
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Modifica la Orden EHA/3127/2009 para el Modelo 190 y aplica por primera vez al ejercicio 2025 y siguientes."
+required_text = [
+    "Modificación de la Orden EHA/3127/2009",
+    "modelo 190",
+    "ejercicio 2025 y siguientes",
+]
+
+[sources."aeat-dr-130-2019-v12"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_130/files/01-130-orden-hap-258-2015-ejercicios-2019-y-siguientes-actualizado-marzo-2019-176-kb-xls.xlsx"
+sha256 = "5d370a9dd13124dbfa596ee903d7a4f3e8801c4d153aa922e1f445790e181e4f"
+bytes = 39633
+retrieved_at = 2026-05-03
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR130e15v12.xls"
+review_status = "reviewed"
+
+[sources."aeat-modelo-130-instructions"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_130/files/modelo-130-instrucciones.html"
+sha256 = "39292ded8acc71fe6cdf1cf1deb7565a042a939920dd005485726fff124c3f8f"
+bytes = 40030
+retrieved_at = 2026-05-04
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-130-irpf______esionales-estimacion-directa-fraccionado_/instrucciones.html"
+review_status = "reviewed"
+
+[sources."aeat-dr-131-2026"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_131/files/01-131-ejercicios-2026-actualizado-04-03-26-180-kb-xlsx.xlsx"
+sha256 = "6d7704aa438c30dd538dbba471ac68f28d22e478bcd679ba8b49b2776a6c964a"
+bytes = 183978
+retrieved_at = 2026-05-03
+applies_from = 2026-01-01
+applies_to = 2026-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_26/DR131_2026.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-131-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_131/files/07-131-ejercicios-2025-actualizado-11-12-25-179-kb-xlsx.xlsx"
+sha256 = "df4c23a10d836c7d1b4ba16a7758e735c6ae113c5c6c01ff6c439692d0ad4935"
+bytes = 183949
+retrieved_at = 2026-05-03
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_25/DR131e2025.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-131-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx"
+sha256 = "83e40d7d4d64c3b2da570d5e70a650685de036277df3ce077b0569a2235aa06f"
+bytes = 184936
+retrieved_at = 2026-05-03
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/DR131e2024.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-131-2019-2023-v101"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_131/files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx"
+sha256 = "2b36ae9d4712a94d3b0a798d813c9f560b29fdd2a00062b7d7b4ba9f72f970f3"
+bytes = 115613
+retrieved_at = 2026-05-03
+applies_from = 2019-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_20/DR131e2020_v1.01.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-modelo-131-instructions"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_131/files/modelo-131-instrucciones.html"
+sha256 = "ff50d8e986968d3c2dd01f7146caa2084406cd083f4041b007b439c4493b9eac"
+bytes = 43854
+retrieved_at = 2026-05-05
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-131-irpf______sionales-estimacion-objetiva-fraccionado_/instrucciones.html"
+review_status = "reviewed"
+
+[sources."aeat-modelo-131-formulario-presentacion"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_131/files/modelo-131-presentacion-electronica-formulario.html"
+sha256 = "e6ada0aa1a35c7dc11cdf1d325301e5b7afce0a5746ce41261bc8f9edc75dd18"
+bytes = 31838
+retrieved_at = 2026-05-05
+applies_from = 2026-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas/presentacion-declaraciones-ayuda-tecnica/modelo-131/presentacion-electronica-mediante-formulario-modelo-131.html"
+review_status = "reviewed"
+
+[sources."aeat-modelo-131-recuperacion-declaraciones"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_131/files/modelo-131-recuperar-declaraciones-presentadas.html"
+sha256 = "26c7351d50e60c4e6b3e7f71d1d16c0adf2d518ee0ca730d99012c80529ebbed"
+bytes = 13954
+retrieved_at = 2026-05-05
+applies_from = 2026-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas/presentacion-declaraciones-ayuda-tecnica/modelo-131/presentacion-utilizando-datos-anteriores.html"
+review_status = "reviewed"
+
+[sources."aeat-dr-111-2019-v18"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_111/files/01-111-orden-eha-3127-2009-ejercicios-2019-y-siguientes-actualizado-mayo-2021-179-kb-xls.xlsx"
+sha256 = "3a533d3f4cb888416da9ccfe856c1252001233303d712a83d7efc5b214b9add0"
+bytes = 39564
+retrieved_at = 2026-05-03
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/dr111e16v18.xls"
+review_status = "reviewed"
+
+[sources."aeat-modelo-111-instructions"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_111/files/modelo-111-instrucciones.html"
+sha256 = "baaabd139e1dcff461b0c9b70e3ceb90d2287001fc8be3abb0a7a219fde6f19e"
+bytes = 34536
+retrieved_at = 2026-05-05
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/pagos-cuenta/modelo-111-reten_____moniales-imputaciones-renta-autoliquidacion_/instrucciones.html"
+review_status = "reviewed"
+
+[sources."aeat-dr-115-2019-v13"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_115/files/01-115-orden-eha-3435-2007-ejercicios-2019-y-siguientes-actualizado-febrero-2019-172-kb-xls.xlsx"
+sha256 = "b2c9f24fe77967ec460d355efb0a21158a4c41b53745524c70ae37a2634839a0"
+bytes = 40607
+retrieved_at = 2026-05-03
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR115e15v13.xls"
+review_status = "reviewed"
+
+[sources."aeat-modelo-115-obligaciones-retenedor"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_115/files/modelo-115-obligaciones-retenedor.html"
+sha256 = "a47173aedb3abd042298de8db3ecc5a3c67b3d3f3922feca14dd2ed8a0d1a1f0"
+bytes = 21553
+retrieved_at = 2026-05-05
+applies_from = 2020-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/irpf/retenciones-ingresos-cuenta-pagos-fraccionados/retenciones-ingresos-cuenta/obligaciones-retenedor/modelo-115.html"
+review_status = "reviewed"
+
+[sources."aeat-modelo-115-guia-censal"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_115/files/modelo-115-guia-censal-036.html"
+sha256 = "e254906fcda783466e0b3b51fac6d685a5de2f5e230febb7d1bbc87363652177"
+bytes = 9847
+retrieved_at = 2026-05-05
+applies_from = 2020-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/guia-practica-cumplimentacion-modelo-censal-036/capitulo-09-retenciones-ingresos-cuenta/modelo-115.html"
+review_status = "reviewed"
+
+[sources."aeat-modelo-115-180-folleto-actividades"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_115/files/modelo-115-180-folleto-actividades.html"
+sha256 = "95795c37241546ebd2461d449c9927e664b398beea7315cbc77ae5202dde78cb"
+bytes = 9832
+retrieved_at = 2026-05-05
+applies_from = 2020-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/folleto-actividades-economicas/7-otras-obligaciones-fiscales-retenciones/7_3-retenciones-arrendamiento-bienes-inmuebles-180.html"
+review_status = "reviewed"
+
+[sources."aeat-dr-180-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_180/files/01-180-orden-hap-1732-2014-actualizado-por-orden-hfp-1284-2023-de-28-de-noviembre-251-kb-pdf.pdf"
+sha256 = "f4f4a0e9c8150288489e0a3058bedbd9a3b9f58bdba5e58b1599b7c7f5fc6cda"
+bytes = 256994
+retrieved_at = 2026-05-03
+published_at = 2023-11-30
+applies_from = 2023-12-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/DR_Mod_180_2023.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-180-2014"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_180/files/03-180-orden-hap-1732-2014-de-24-de-septiembre-105-kb-pdf.pdf"
+sha256 = "281ddf824a9c5de2cd54b377ac4072cb9a1f1e1b6231fce9e775b6d814bcd741"
+bytes = 107660
+retrieved_at = 2026-05-03
+published_at = 2014-09-26
+applies_from = 2014-09-27
+applies_to = 2023-11-30
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/180.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-180-2000"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_180/files/02-180-orden-de-20-de-noviembre-de-2000-12-kb-pdf.pdf"
+sha256 = "d24f733078f69cd28923ac7d9a3ccab5222634c0cd9d1fb725c1c53214e4ad1f"
+bytes = 454595
+retrieved_at = 2026-05-03
+published_at = 2000-11-28
+applies_from = 2000-11-28
+applies_to = 2014-09-26
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/TIPOS18000.pdf"
+review_status = "reviewed"
+
+[sources."aeat-modelo-180-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_180/files/modelo-180-procedure.html"
+sha256 = "66b503e97bccba1a49816745bcc5d396e2fc2f263730785cc72e5fdcd24cfc51"
+bytes = 49456
+retrieved_at = 2026-05-05
+applies_from = 2020-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI00.shtml"
+review_status = "reviewed"
+
+[sources."aeat-modelo-180-ayuda-presentacion"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_180/files/modelo-180-ayuda-presentacion.html"
+sha256 = "92f4b00c9ac56905ad9763268eef463dda274a8b007e15a7b81eec9e0f005663"
+bytes = 21684
+retrieved_at = 2026-05-05
+applies_from = 2016-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/AyudaPresentacion/180.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-180-2014-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hap-1732-2014.html"
+sha256 = "e8f84f86c7ae147a0c7c0617f9ca6180cd61b54258d5277c7e0e06c5897e507e"
+bytes = 200750
+retrieved_at = 2026-05-05
+published_at = 2014-09-26
+applies_from = 2014-09-27
+source_url = "https://www.boe.es/eli/es/o/2014/09/24/hap1732"
+review_status = "reviewed"
+
+[sources."boe-modelo-180-2023-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-1284-2023.html"
+sha256 = "cbef954c1142e44e6fe5c50fd31f4fc7502e58ccc2c11ddae36a122fc1a50569"
+bytes = 308005
+retrieved_at = 2026-05-05
+published_at = 2023-11-30
+applies_from = 2023-12-01
+source_url = "https://www.boe.es/eli/es/o/2023/11/28/hfp1284"
+review_status = "reviewed"
+
+[sources."aeat-dr-123-2024-v20"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xlsx"
+sha256 = "835520ea0edf8d182e7e5c839920a208040fcdc78c97d1628d5433518ef2f2dd"
+bytes = 38812
+retrieved_at = 2026-05-03
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/DR123e24.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-123-2019-2023-v13"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xlsx"
+sha256 = "035c322eadef3cd90211734216dc5e308c3f213b9a22226be8b4b67f8886a4d4"
+bytes = 38734
+retrieved_at = 2026-05-03
+applies_from = 2019-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR123e15v13.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-123-2024-v20-form-text"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "form_spec"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.txt"
+sha256 = "8b231a85b7df3eb49d5cc8c5d1b8cbd5a99b5e93a1063fee1348191035aa4594"
+bytes = 7077
+retrieved_at = 2026-05-03
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/DR123e24.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-123-2019-2023-v13-form-text"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "form_spec"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.txt"
+sha256 = "5e02b4d3096b8241c563074e63926ff913b44ce692b8ebf1f0f5c2ef0148e913"
+bytes = 6472
+retrieved_at = 2026-05-03
+applies_from = 2019-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR123e15v13.xls"
+review_status = "reviewed"
+
+[sources."aeat-modelo-123-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_123/files/modelo-123-procedure.html"
+sha256 = "0bff3b6bc3ad111b5eac728bfd59e8983b3a59993b393fa45e3421925e3ce308"
+bytes = 21475
+retrieved_at = 2026-05-05
+applies_from = 2020-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GH04.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-123-2007-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3435-2007.html"
+sha256 = "8e1bf71197d1eab6f75571bbb8dc3cdc4b7a83bf8725b72c3d3777b0295b3243"
+bytes = 150144
+retrieved_at = 2026-05-05
+published_at = 2007-11-29
+applies_from = 2008-04-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485"
+review_status = "reviewed"
+
+[sources."boe-modelo-123-2024-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-56-2024.html"
+sha256 = "1adcf839bcda32e2aaf1cd2df49f27ea4925f85095b67b2ae7f035d69c015a3c"
+bytes = 141318
+retrieved_at = 2026-05-05
+published_at = 2024-01-31
+applies_from = 2024-02-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-1772"
+review_status = "reviewed"
+
+[sources."aeat-dr-193-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_193/files/02-193-orden-eha-3377-2011-actualizado-por-orden-hac-1504-2024-de-26-de-diciembre-352-kb-pdf.pdf"
+sha256 = "36184283123fec6827bf830a0b7d1b3e84a45937d7d85d9504d807f334caff8e"
+bytes = 359614
+retrieved_at = 2026-05-05
+published_at = 2024-01-01
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_193_2024.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-190-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_190/files/01-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hac-1431-2025-de-3-de-dicie.pdf"
+sha256 = "a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d"
+bytes = 1110488
+retrieved_at = 2026-05-03
+published_at = 2025-12-12
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_25/DISENOS_LOGICOS_190_2025.pdf"
+review_status = "reviewed"
+
+[sources."aeat-modelo-190-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_190/files/modelo-190-procedure.html"
+sha256 = "b845bec1120bbc152b888ea03f15527f04618abe8d35365e5ba91400b2df0e86"
+bytes = 58856
+retrieved_at = 2026-05-05
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI10.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-190-2025-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3127-2009.html"
+sha256 = "f130e3d934a926998f382b2bd1c6304da131c14911dee1a1eee4aacd0d931512"
+bytes = 445578
+retrieved_at = 2026-05-05
+published_at = 2009-11-23
+applies_from = 2025-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18567"
+review_status = "reviewed"
+
+[sources."boe-modelo-190-2025-amendment"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-1431-2025.html"
+sha256 = "dcdc2692cb90d8acaabb4ddc967d5941eddbeaf199b85ad02ac3e33ceb8a0af5"
+bytes = 60609
+retrieved_at = 2026-05-05
+published_at = 2025-12-12
+applies_from = 2025-01-01
+source_url = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25390"
+review_status = "reviewed"
+
+[sources."aeat-modelo-193-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_193/files/modelo-193-procedure.html"
+sha256 = "d6b7a7149965ab27ac5b3af4467226f306b12340d12ec4514450c3daed464d27"
+bytes = 57001
+retrieved_at = 2026-05-05
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI12.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-193-2011-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3377-2011.html"
+sha256 = "6a5405402732de445caf7bbb801142f4dd0e7247f79747e2f0cf289b59cfcb6b"
+bytes = 251495
+retrieved_at = 2026-05-05
+published_at = 2011-12-12
+applies_from = 2011-12-13
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396"
+review_status = "reviewed"
+
+[sources."aeat-modelo-131-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_131/files/modelo-131-procedure.html"
+sha256 = "ecf228f15c1fc3be9884a995400317d396ab25f9511087c3eb1b984e1181702d"
+bytes = 20659
+retrieved_at = 2026-05-05
+applies_from = 2026-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G602.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-131-2007-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-672-2007.html"
+sha256 = "c68fdce63a62792afa0dfe9f96ea8dd9a9456c9890269e41921d2d67c7a9fd4d"
+bytes = 132539
+retrieved_at = 2026-05-05
+published_at = 2007-03-22
+applies_from = 2007-04-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6032"
+review_status = "reviewed"
+
+[legal."ley-35-2006:art-27"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-27"
+document_id = "BOE-A-2006-20764"
+article = "27"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a27"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Base legal para identificar rendimientos integros de actividades economicas en Modelo 100."
+required_text = [
+    "rendimiento de una actividad económica",
+    "rendimientos del trabajo y del capital",
+]
+
+[legal."ley-35-2006:art-28"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-28"
+document_id = "BOE-A-2006-20764"
+article = "28"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a28"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Base legal para reglas generales de calculo del rendimiento neto de actividades economicas en Modelo 100."
+required_text = [
+    "rendimiento neto de la actividad económica",
+    "Impuesto sobre Sociedades",
+]
+
+[legal."ley-35-2006:art-30"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-30"
+document_id = "BOE-A-2006-20764"
+article = "30"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a30"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Base legal para estimacion directa en actividades economicas de Modelo 100."
+required_text = [
+    "estimación directa",
+    "rendimiento neto de actividades económicas",
+]
+
+[legal."ley-35-2006:art-31"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-31"
+document_id = "BOE-A-2006-20764"
+article = "31"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a31"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Base legal para estimacion objetiva en actividades economicas de Modelo 100."
+required_text = [
+    "estimación objetiva",
+    "renuncia",
+]
+
+[legal."ley-35-2006:art-32"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-32"
+document_id = "BOE-A-2006-20764"
+article = "32"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Base legal para reducciones aplicables a determinados rendimientos de actividades economicas en Modelo 100."
+required_text = [
+    "reducciones aplicables",
+    "rendimiento neto de la actividad económica",
+]
+
+[legal."ley-35-2006:art-33"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-33"
+document_id = "BOE-A-2006-20764"
+article = "33"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a33"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-07
+reviewed_by = "wgergely"
+notes = "Base legal para el concepto de ganancias y pérdidas patrimoniales en Modelo 100, casillas 0418-0455."
+required_text = [
+    "ganancias y pérdidas patrimoniales",
+    "alteración",
+    "patrimonio",
+]
+
+[legal."ley-35-2006:art-34"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-34"
+document_id = "BOE-A-2006-20764"
+article = "34"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a34"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-07
+reviewed_by = "wgergely"
+notes = "Base legal para las normas generales de cálculo del importe de ganancias y pérdidas patrimoniales en Modelo 100."
+required_text = [
+    "valor de transmisión",
+    "valor de adquisición",
+]
+
+[legal."ley-35-2006:art-37"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-37"
+document_id = "BOE-A-2006-20764"
+article = "37"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a37"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-07
+reviewed_by = "wgergely"
+notes = "Base legal para las normas específicas de valoración de ganancias y pérdidas patrimoniales en Modelo 100 (anexos C y G)."
+required_text = [
+    "normas específicas de valoración",
+    "transmisión",
+]
+
+[legal."ley-35-2006:art-35"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a35"
+document_id = "BOE-A-2006-20764"
+article = "35"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a35"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a35; operator to re-stamp)"
+notes = "LIRPF art 35: transmisiones a título oneroso — el valor de adquisición (importe real + inversiones/mejoras + gastos y tributos inherentes, menos amortizaciones) y el valor de transmisión (importe real menos gastos y tributos inherentes a cargo del transmitente). Base legal del cálculo de ganancia/pérdida por transmisión onerosa en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a35; operator to confirm and re-stamp."
+required_text = [
+    "Transmisiones a título oneroso",
+    "valor de adquisición",
+]
+
+[legal."ley-35-2006:art-36"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a36"
+document_id = "BOE-A-2006-20764"
+article = "36"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a36"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a36; operator to re-stamp)"
+notes = "LIRPF art 36: transmisiones a título lucrativo — se aplican las reglas del art. 35 tomando por importe real los valores del Impuesto sobre Sucesiones y Donaciones (sin exceder el valor de mercado). Base legal del cálculo de ganancia/pérdida por transmisión lucrativa en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a36; operator to confirm and re-stamp."
+required_text = [
+    "Transmisiones a título lucrativo",
+]
+
+[legal."ley-35-2006:art-38"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a38"
+document_id = "BOE-A-2006-20764"
+article = "38"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a38"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a38; operator to re-stamp)"
+notes = "LIRPF art 38: ganancias excluidas de gravamen en supuestos de reinversión — exención de la ganancia por transmisión de la vivienda habitual reinvertida en otra vivienda habitual, y de acciones/participaciones de entidades de nueva o reciente creación. Base legal de las casillas de exención por reinversión en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a38; operator to confirm and re-stamp."
+required_text = [
+    "Ganancias excluidas de gravamen en supuestos de reinversión",
+]
+
+[legal."ley-35-2006:art-39"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a39"
+document_id = "BOE-A-2006-20764"
+article = "39"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a39"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a39; operator to re-stamp)"
+notes = "LIRPF art 39: ganancias patrimoniales no justificadas — bienes o derechos cuya tenencia/declaración/adquisición no se corresponde con la renta o patrimonio declarados, integradas en la base liquidable general del periodo. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a39; operator to confirm and re-stamp."
+required_text = [
+    "Ganancias patrimoniales no justificadas",
+]
+
+[legal."ley-35-2006:dt-9"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#dtnovena"
+document_id = "BOE-A-2006-20764"
+article = "DT-9"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dtnovena"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#dtnovena; operator to re-stamp)"
+notes = "LIRPF disposición transitoria 9ª: régimen transitorio (coeficientes de abatimiento) de las ganancias patrimoniales derivadas de elementos patrimoniales adquiridos antes del 31-12-1994, con el límite acumulado de 400.000 € de valor de transmisión. Base legal de la reducción DT-9ª en las casillas de ganancia patrimonial por transmisión de inmuebles en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#dtnovena; operator to confirm and re-stamp."
+required_text = [
+    "adquiridos con anterioridad a 31 de diciembre de 1994",
+]
+
+[legal."ley-35-2006:art-82"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-82"
+document_id = "BOE-A-2006-20764"
+article = "82"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a82"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-07
+reviewed_by = "wgergely"
+notes = "Base legal para la tributación conjunta en Modelo 100 (casillas 0461 reducción tributación conjunta)."
+required_text = [
+    "tributación conjunta",
+    "unidad familiar",
+]
+
+[legal."ley-35-2006:art-83"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-83"
+document_id = "BOE-A-2006-20764"
+article = "83"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a83"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-07
+reviewed_by = "wgergely"
+notes = "Base legal para las modalidades de la unidad familiar en Modelo 100."
+required_text = [
+    "unidad familiar",
+    "cónyuges",
+]
+
+[legal."ley-35-2006:art-84"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a84"
+document_id = "BOE-A-2006-20764"
+article = "84"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a84"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Reducción en la base imponible por tributación conjunta: €3.400 para unidades familiares tipo 1 (matrimonio, Art. 82.1) y €2.150 para unidades familiares tipo 2 (monoparental, Art. 82.2). Casilla 0461 Modelo 100."
+required_text = [
+    "Normas aplicables en la tributación conjunta",
+    "se reducirá en 3.400 euros anuales",
+    "se reducirá en 2.150 euros anuales",
+]
+
+[legal."ley-35-2006:art-86"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-86"
+document_id = "BOE-A-2006-20764"
+article = "86"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a86"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-08
+reviewed_by = "wgergely"
+notes = "Régimen general de atribución de rentas: las rentas de las entidades sin personalidad jurídica se atribuyen a los socios, herederos, comuneros o partícipes según su porcentaje de participación. Base legal del Modelo 184 y de las casillas atribución en Modelo 100."
+required_text = [
+    "régimen de atribución",
+    "socios, herederos, comuneros o partícipes",
+]
+
+[legal."ley-35-2006:art-87"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-87"
+document_id = "BOE-A-2006-20764"
+article = "87"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a87"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-08
+reviewed_by = "wgergely"
+notes = "Define qué entidades están en régimen de atribución de rentas: sociedades civiles sin objeto mercantil, herencias yacentes, comunidades de bienes y entidades del artículo 35.4 LGT, así como entidades extranjeras de naturaleza análoga."
+required_text = [
+    "entidades en régimen de atribución",
+    "sociedades civiles",
+    "comunidades de bienes",
+]
+
+[legal."ley-35-2006:art-88"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-88"
+document_id = "BOE-A-2006-20764"
+article = "88"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a88"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-08
+reviewed_by = "wgergely"
+notes = "Calificación de la renta atribuida: la renta conserva la naturaleza de la fuente de donde procede para cada partícipe (rendimientos del trabajo, capital, actividades económicas, ganancias / pérdidas patrimoniales). Determina cómo se integran las rentas atribuidas en la base imponible del IRPF del socio."
+required_text = [
+    "calificación de la renta atribuida",
+    "naturaleza derivada de la actividad",
+]
+
+[legal."ley-35-2006:art-89"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-89"
+document_id = "BOE-A-2006-20764"
+article = "89"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a89"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-08
+reviewed_by = "wgergely"
+notes = "Cálculo de la renta atribuible y pagos a cuenta: las rentas se determinan con arreglo a las normas del IRPF excluyendo reducciones de los artículos 23.2, 23.3, 26.2 y 32. Las retenciones soportadas por la entidad se atribuyen al partícipe en la misma proporción que la renta. Para socios sujetos al IS o IRNR con EP, la renta atribuible se determina con arreglo a las normas del IS."
+required_text = [
+    "cálculo de la renta atribuible",
+    "retenciones e ingresos a cuenta",
+]
+
+[legal."ley-35-2006:art-91"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-91"
+document_id = "BOE-A-2006-20764"
+article = "91"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a91"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-08
+reviewed_by = "wgergely"
+notes = "Imputación de rentas en régimen de transparencia fiscal internacional: imputa al contribuyente las rentas pasivas (dividendos, intereses, capital inmobiliario, ganancias, etc.) generadas por entidades no residentes que controla, salvo que la entidad tribute por un impuesto análogo al IS al menos al 75 por ciento del tipo español o disponga de medios materiales y personales para la actividad. Base legal de las casillas de transparencia fiscal internacional en Modelo 100."
+required_text = [
+    "transparencia fiscal internacional",
+    "rentas",
+]
+
+[legal."ley-19-1994:art-27"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-19-1994.json#art-27"
+document_id = "BOE-A-1994-15794"
+article = "27"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-15794#a27"
+published_at = 1994-07-07
+effective_from = 1994-07-08
+review_status = "reviewed"
+reviewed_at = 2026-05-08
+reviewed_by = "wgergely"
+notes = "Reserva para Inversiones en Canarias (RIC): permite a personas físicas con domicilio fiscal en Canarias o con establecimiento permanente en Canarias reducir hasta el 80 por ciento del rendimiento neto de explotación destinado a una reserva con cargo a beneficios, materializable en inversiones cualificadas en el plazo de tres años y mantenidas durante un mínimo de cinco años. Base legal de las casillas RIC en Modelo 100 (Anexo C — secciones reserva_inversiones_canarias_res)."
+required_text = [
+    "Reserva para Inversiones en Canarias",
+    "rendimiento neto",
+]
+
+[legal."ley-19-1994:art-43"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-19-1994.json#art-43"
+document_id = "BOE-A-1994-15794"
+article = "43"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-15794#a43"
+published_at = 1994-07-07
+effective_from = 1994-07-08
+review_status = "reviewed"
+reviewed_at = 2026-05-08
+reviewed_by = "wgergely"
+notes = "Ámbito de aplicación de la Zona Especial Canaria (ZEC): define el ámbito territorial (archipiélago canario) y subjetivo (entidades de nueva creación, sucursales de extranjeras, entidades preexistentes que cumplan condiciones de empleo, inversión inicial y actividad exclusivamente ZEC). Foundation article para las casillas de imputación de rentas de socios/partícipes ZEC en Modelo 100."
+required_text = [
+    "Zona Especial Canaria",
+    "ámbito",
+]
+
+[legal."ley-19-1994:art-50"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-19-1994.json#art-50"
+document_id = "BOE-A-1994-15794"
+article = "50"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-15794#a50"
+published_at = 1994-07-07
+effective_from = 1994-07-08
+review_status = "reviewed"
+reviewed_at = 2026-05-08
+reviewed_by = "wgergely"
+notes = "Tipo de gravamen reducido del 4 por ciento aplicable a las entidades ZEC sobre la parte de la base imponible derivada de operaciones realizadas material y efectivamente en el ámbito ZEC, hasta los límites por trabajadores. Para socios IRPF la renta atribuida se imputa conforme al régimen ZEC."
+required_text = [
+    "tipo de gravamen",
+    "Zona Especial Canaria",
+]
+
+[legal."ley-19-1994:art-75"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-19-1994-art-75.html#a75"
+document_id = "BOE-A-1994-15794"
+article = "75"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-15794#a75"
+published_at = 1994-07-07
+effective_from = 1994-07-08
+review_status = "reviewed"
+reviewed_at = 2026-06-10
+reviewed_by = "wgergely"
+notes = "REBECA (Registro Especial de Buques de Canarias): el art 75.1 fija como renta exenta el 50 por 100 de los rendimientos del trabajo personal de los tripulantes de buques inscritos en el Registro Especial de Buques y Empresas Navieras devengados con ocasion de la navegacion. Provision que establece el 50 por 100 aplicado por REBECA_MARITIME_EXEMPTION_FRACTION y por la seccion renta exenta del Modelo 100 para trabajadores del mar."
+required_text = [
+    "renta exenta el 50 por 100",
+    "Registro Especial de Buques y Empresas Navieras",
+]
+
+[legal."ley-35-2006:art-48"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-48.html#a48"
+document_id = "BOE-A-2006-20764"
+article = "48"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a48"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-02
+reviewed_by = "wgergely"
+notes = "Base legal para la integracion y compensacion de rentas en la base imponible GENERAL del IRPF (Modelo 100). El saldo negativo de ganancias y perdidas patrimoniales de la base general se compensa con el saldo positivo de rendimientos e imputaciones con el limite del 25 por ciento; el saldo negativo restante se compensa en los cuatro anios siguientes (casillas 1391 saldo pendiente -> 1388 aplicacion). Distinto del art.49, que rige la base imponible del AHORRO."
+required_text = [
+    "La base imponible general será el resultado de sumar los siguientes saldos",
+    "con el límite del 25 por ciento",
+    "se compensará en los cuatro años siguientes",
+]
+
+[legal."ley-35-2006:art-49"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-49"
+document_id = "BOE-A-2006-20764"
+article = "49"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a49"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para la integracion y compensacion de rentas en la base imponible del ahorro en Modelo 100, casillas 0429-0460."
+required_text = [
+    "integración y compensación",
+    "base imponible del ahorro",
+    "saldos negativos",
+]
+
+[legal."ley-35-2006:art-57"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-57.html#a57"
+document_id = "BOE-A-2006-20764"
+article = "57"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a57"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIRPF art 57: minimo del contribuyente. Establece el minimo personal del contribuyente con caracter general (5.550 euros anuales), con incrementos por edad: +1.150 euros anuales para contribuyentes mayores de 65 anios, y +1.400 euros adicionales para mayores de 75 anios. Base sustantiva de las casillas del minimo-del-contribuyente de Modelo 100 (0511 y similares)."
+required_text = [
+    "Mínimo del contribuyente",
+    "5.550 euros anuales",
+    "1.150 euros anuales",
+]
+
+[legal."ley-35-2006:art-58"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-58.html#a58"
+document_id = "BOE-A-2006-20764"
+article = "58"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a58"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "LIRPF art 58: minimo por descendientes. 2.400 euros por el primero, 2.700 por el segundo, 4.000 por el tercero, 4.500 por el cuarto y siguientes. Incremento de 2.800 euros por descendiente menor de 3 anios."
+required_text = [
+    "Mínimo por descendientes",
+    "2.400 euros",
+    "2.700 euros",
+]
+
+[legal."ley-35-2006:art-59"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-59.html#a59"
+document_id = "BOE-A-2006-20764"
+article = "59"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a59"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "LIRPF art 59: minimo por ascendientes. 1.150 euros por ascendiente mayor de 65 anios o con discapacidad, 1.400 euros adicionales por ascendiente mayor de 75 anios."
+required_text = [
+    "Mínimo por ascendientes",
+    "1.150 euros",
+]
+
+[legal."ley-35-2006:art-60"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a60"
+document_id = "BOE-A-2006-20764"
+article = "60"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a60"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-14
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a60; operator to re-stamp)"
+notes = "LIRPF art 60: minimo por discapacidad. Del contribuyente: 3.000 euros (discapacidad grado >=33%<65%), 9.000 euros (grado >=65%); +3.000 euros en concepto de gastos de asistencia (ayuda de terceras personas, movilidad reducida, o grado >=65%). De ascendientes o descendientes con discapacidad: 3.000 euros por cada uno (>=33%), 9.000 euros (>=65%); +3.000 euros gastos de asistencia. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a60; operator to confirm and re-stamp."
+required_text = [
+    "Mínimo por discapacidad",
+    "3.000 euros anuales cuando sea una persona con discapacidad",
+    "9.000 euros anuales",
+]
+
+[legal."ley-35-2006:art-56"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-56"
+document_id = "BOE-A-2006-20764"
+article = "56"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a56"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para el minimo personal y familiar en Modelo 100, casillas 0511-0524."
+required_text = [
+    "mínimo personal y familiar",
+    "base liquidable",
+    "necesidades básicas",
+]
+
+[legal."ley-35-2006:art-62"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-62"
+document_id = "BOE-A-2006-20764"
+article = "62"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a62"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para la cuota integra estatal y autonomica en Modelo 100, casillas 0545 y 0546."
+required_text = [
+    "cuota íntegra",
+    "base liquidable general",
+    "base liquidable del ahorro",
+]
+
+[legal."ley-35-2006:art-63"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-63"
+document_id = "BOE-A-2006-20764"
+article = "63"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a63"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para la escala general progresiva estatal del IRPF aplicable a la base liquidable general en Modelo 100, casillas 0528-0531."
+required_text = [
+    "escala general",
+    "base liquidable general",
+    "cuota íntegra estatal",
+]
+
+[legal."ley-35-2006:art-66"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-66"
+document_id = "BOE-A-2006-20764"
+article = "66"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a66"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para los tipos de gravamen estatales aplicables a la base liquidable del ahorro en Modelo 100, casillas 0540-0543."
+required_text = [
+    "tipos de gravamen",
+    "base liquidable del ahorro",
+    "estatal",
+]
+
+[legal."ley-35-2006:art-67"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-67"
+document_id = "BOE-A-2006-20764"
+article = "67"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a67"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para la cuota liquida estatal en Modelo 100, casilla 0570 y 0585 (cuota liquida estatal incrementada)."
+required_text = [
+    "cuota líquida estatal",
+    "cuota íntegra estatal",
+    "deducción",
+]
+
+[legal."ley-35-2006:art-68"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-68"
+document_id = "BOE-A-2006-20764"
+article = "68"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a68"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para las deducciones de la cuota integra estatal aplicables en Modelo 100, casillas 0547-0567."
+required_text = [
+    "deducciones",
+    "cuota íntegra estatal",
+    "inversión",
+]
+
+[legal."ley-35-2006:art-7-h"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a7"
+document_id = "BOE-A-2006-20764"
+article = "7"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a7"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "LIRPF art 7.h: rentas exentas — prestaciones publicas por maternidad y paternidad reconocidas por la Seguridad Social (INSS) y por las Comunidades Autonomas. Las prestaciones de la Seguridad Social por baja de maternidad y paternidad son integras del IRPF (art 7.h ley 35/2006, en vigor tras la STC 207/2013 que declaro inconstitucional la exencion para funcionarios). Desde 2018 la exencion vuelve para todos los contribuyentes. El importe de estas prestaciones NO debe incluirse en la casilla 0003 (Retribuciones dinerarias) ya que no constituye rendimiento de trabajo tributable conforme al art 17."
+required_text = [
+    "Rentas exentas",
+    "Las prestaciones por maternidad o paternidad",
+    "Igualmente estarán exentas las demás prestaciones públicas",
+]
+
+[legal."ley-35-2006:art-73"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-73"
+document_id = "BOE-A-2006-20764"
+article = "73"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a73"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para la base liquidable autonomica sometida a gravamen en Modelo 100, casillas 0500 y 0510 (parte autonomica)."
+required_text = [
+    "base liquidable general",
+    "base liquidable del ahorro",
+    "autonómica",
+]
+
+[legal."ley-35-2006:art-74"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-74"
+document_id = "BOE-A-2006-20764"
+article = "74"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a74"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para la escala autonomica progresiva del IRPF aplicable a la base liquidable general en Modelo 100, casillas 0529 y 0531."
+required_text = [
+    "escala autonómica",
+    "base liquidable general",
+    "Comunidad Autónoma",
+]
+
+[legal."ley-35-2006:art-75"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-75"
+document_id = "BOE-A-2006-20764"
+article = "75"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a75"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para la cuota integra autonomica en Modelo 100, casilla 0546."
+required_text = [
+    "cuota íntegra autonómica",
+    "base liquidable",
+    "tipos de gravamen autonómicos",
+]
+
+[legal."ley-35-2006:art-76"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-76"
+document_id = "BOE-A-2006-20764"
+article = "76"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a76"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-21
+reviewed_by = "wgergely"
+notes = "Base legal para los tipos de gravamen autonomicos aplicables a la base liquidable del ahorro en Modelo 100, casillas 0537, 0539, 0541 y 0543; la escala del ahorro autonomica del art.76 es identica a la escala estatal del art.66."
+required_text = [
+    "tipos de gravamen",
+    "base liquidable del ahorro",
+    "autonómico",
+]
+
+[legal."ley-35-2006:art-77"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-77"
+document_id = "BOE-A-2006-20764"
+article = "77"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a77"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para la cuota liquida autonomica en Modelo 100, casillas 0571 y 0586 (cuota liquida autonomica incrementada)."
+required_text = [
+    "cuota líquida autonómica",
+    "cuota íntegra autonómica",
+    "deducciones",
+]
+
+[legal."ley-35-2006:art-80"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-80"
+document_id = "BOE-A-2006-20764"
+article = "80"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a80"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-07
+reviewed_by = "wgergely"
+notes = "Deduccion por doble imposicion internacional para rentas obtenidas en el extranjero gravadas alli; base legal para Modelo 100 casillas 1124, 1127, 1128."
+required_text = [
+    "deducción por doble imposición internacional",
+    "extranjero",
+]
+
+[legal."ley-35-2006:art-50"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-50"
+document_id = "BOE-A-2006-20764"
+article = "50"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a50"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para la composicion de la base liquidable general y de la base liquidable del ahorro en Modelo 100, casillas 0500 y 0510."
+required_text = [
+    "base liquidable general",
+    "base imponible general",
+    "base liquidable del ahorro",
+]
+
+[legal."ley-35-2006:art-51"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a51"
+document_id = "BOE-A-2006-20764"
+article = "51"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a51"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a51; operator to re-stamp)"
+notes = "LIRPF art 51: reducciones de la base imponible general por aportaciones y contribuciones a sistemas de previsión social (planes de pensiones, mutualidades de previsión social, planes de previsión asegurados, planes de previsión social empresarial, seguros de dependencia, y sistemas a favor de personas con discapacidad). Base legal de las casillas de reducción/exceso por previsión social en Modelo 100; el límite conjunto lo fija el art. 52. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a51; operator to confirm and re-stamp."
+required_text = [
+    "Reducciones por aportaciones y contribuciones a sistemas de previsión social",
+]
+
+[legal."ley-35-2006:art-52"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-52"
+document_id = "BOE-A-2006-20764"
+article = "52"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a52"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Limite maximo a las reducciones por aportaciones y contribuciones a sistemas de prevision social (planes de pensiones, planes de empleo, PPSE, mutualidades). Aplicable a las reducciones que confluyen en casilla 0468."
+required_text = [
+    "planes de pensiones",
+    "reducción",
+    "límite",
+]
+
+[legal."ley-35-2006:art-54"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a54"
+document_id = "BOE-A-2006-20764"
+article = "54"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a54"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a54; operator to re-stamp)"
+notes = "LIRPF art 54: reducciones de la base imponible general por aportaciones a patrimonios protegidos de las personas con discapacidad (límite 10.000 € por aportante, 24.250 € conjunto). Base legal de las casillas de reducción/exceso por patrimonio protegido en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a54; operator to confirm and re-stamp."
+required_text = [
+    "Reducciones por aportaciones a patrimonios protegidos de las personas con discapacidad",
+]
+
+[legal."ley-35-2006:art-64"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a64"
+document_id = "BOE-A-2006-20764"
+article = "64"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a64"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a64; operator to re-stamp)"
+notes = "LIRPF art 64: especialidades aplicables en los supuestos de anualidades por alimentos a favor de los hijos satisfechas por decisión judicial — la escala se aplica separadamente al importe de las anualidades y al resto de la base liquidable general. Base legal de las casillas de anualidades por alimentos en Modelo 100 (junto con el art. 75 para la parte autonómica). AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a64; operator to confirm and re-stamp."
+required_text = [
+    "anualidades por alimentos a favor de los hijos",
+]
+
+[legal."ley-35-2006:da-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#daundecima"
+document_id = "BOE-A-2006-20764"
+article = "DA-11"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#daundecima"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#daundecima; operator to re-stamp)"
+notes = "LIRPF disposición adicional 11ª: mutualidad de previsión social de deportistas profesionales y de alto nivel — aportaciones reducibles de la base imponible general con su propio límite (la menor de 24.250 € o la suma de rendimientos netos de trabajo y actividades económicas). Base legal de las casillas de reducción/exceso por mutualidad de deportistas en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#daundecima; operator to confirm and re-stamp."
+required_text = [
+    "Mutualidad de previsión social de deportistas profesionales",
+]
+
+[legal."ley-35-2006:dt-18"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#dtdecimoctava"
+document_id = "BOE-A-2006-20764"
+article = "DT-18"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dtdecimoctava"
+published_at = 2006-11-29
+effective_from = 2013-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#dtdecimoctava; operator to re-stamp)"
+notes = "LIRPF disposición transitoria 18ª: régimen transitorio de la deducción por inversión en vivienda habitual — aplicable a contribuyentes que adquirieron su vivienda habitual (o satisficieron cantidades para su construcción) antes del 01-01-2013 y venían deduciéndose. Base legal de las casillas de deducción por vivienda habitual en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#dtdecimoctava; operator to confirm and re-stamp."
+required_text = [
+    "Deducción por inversión en vivienda habitual",
+]
+
+[legal."ley-35-2006:dt-15"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#dtdecimoquinta"
+document_id = "BOE-A-2006-20764"
+article = "DT-15"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dtdecimoquinta"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#dtdecimoquinta; operator to re-stamp)"
+notes = "LIRPF disposición transitoria 15ª: régimen transitorio de la deducción por alquiler de la vivienda habitual — aplicable a contribuyentes con contrato de arrendamiento anterior al 01-01-2015 que venían deduciéndose (10,05% con base máxima según base imponible). Base legal de las casillas informativas y de cálculo de la deducción por alquiler en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#dtdecimoquinta; operator to confirm and re-stamp."
+required_text = [
+    "Deducción por alquiler de la vivienda habitual",
+]
+
+[legal."ley-35-2006:da-50"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#da-4"
+document_id = "BOE-A-2006-20764"
+article = "DA-50"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#da-4"
+published_at = 2006-11-29
+effective_from = 2021-10-06
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#da-4; operator to re-stamp)"
+notes = "LIRPF disposición adicional 50ª: deducción por obras de mejora de la eficiencia energética de viviendas (20%/40%/60% según el tipo de obra y la reducción de demanda/consumo acreditada por certificado energético). Base legal de las casillas de deducción y exceso por mejoras energéticas de vivienda en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#da-4 (DA quincuagésima); operator to confirm and re-stamp."
+required_text = [
+    "Deducción por obras de mejora de la eficiencia energética de viviendas",
+]
+
+[legal."ley-35-2006:da-58"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#da-11"
+document_id = "BOE-A-2006-20764"
+article = "DA-58"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#da-11"
+published_at = 2006-11-29
+effective_from = 2023-06-30
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#da-11; operator to re-stamp)"
+notes = "LIRPF disposición adicional 58ª: deducción por la adquisición de vehículos eléctricos enchufables y de pila de combustible y por la instalación de puntos de recarga (15% sobre el valor de adquisición, con límites). Base legal de las casillas de deducción por vehículos eléctricos y puntos de recarga en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#da-11 (DA quincuagésima octava); operator to confirm and re-stamp."
+required_text = [
+    "Deducción por la adquisición de vehículos eléctricos",
+]
+
+[legal."ley-35-2006:da-60"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#da-14"
+document_id = "BOE-A-2006-20764"
+article = "DA-60"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#da-14"
+published_at = 2006-11-29
+effective_from = 2025-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex (agent-authored from bundled ley-35-2006.html#da-14; operator to re-stamp)"
+notes = "LIRPF disposición adicional 60ª: reducción del 30% sobre rendimientos de actividades artísticas obtenidos de manera excepcional, con base máxima anual de 150.000 euros, para rendimientos del trabajo artísticos y rendimientos netos de actividades económicas artísticas que excedan del 130% de la media de los tres periodos impositivos anteriores. Base legal de las casillas Modelo 100 2025 de reducción por rendimientos artísticos excepcionales. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#da-14 (DA sexagésima); operator to confirm and re-stamp."
+required_text = [
+    "Rendimientos de actividades artísticas obtenidos de manera excepcional",
+    "se reducirá en un 30 por ciento",
+    "La cuantía sobre la que se aplicará esta reducción no podrá superar los 150.000 euros anuales",
+]
+
+[legal."ley-35-2006:art-79"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-79.html#a79"
+document_id = "BOE-A-2006-20764"
+article = "79"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a79"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIRPF art 79: cuota diferencial. Define el resultado de minorar la suma estatal + autonomica por las deducciones siguientes: doble imposicion internacional (art 80), deducciones art 91.10 y 92.4, retenciones art 99.11 y 99.8, cuotas IRNR por cambio de residencia, retenciones y pagos fraccionados. Base sustantiva del Modelo 100 casilla 0610 (cuota diferencial) y 0595 (cuota resultante de la autoliquidacion)."
+required_text = [
+    "Cuota diferencial",
+    "resultado de minorar",
+    "retenciones, los ingresos a cuenta y los pagos fraccionados",
+]
+
+[legal."ley-35-2006:art-81"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-81.html#a81"
+document_id = "BOE-A-2006-20764"
+article = "81"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a81"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIRPF art 81: deduccion por maternidad. Establece la deduccion de hasta 1.200 euros anuales por cada hijo menor de tres anios para madres trabajadoras, con incremento de hasta 1.000 euros por gastos en guarderias. Base sustantiva del Modelo 100 casillas 0611 (deduccion), 0612 (abono anticipado), 0613 (incremento guarderias)."
+required_text = [
+    "Deducción por maternidad",
+    "hijos menores de tres años",
+    "1.200 euros anuales",
+]
+
+[legal."ley-35-2006:art-81-bis"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-81-bis.html#a81bis"
+document_id = "BOE-A-2006-20764"
+article = "81 bis"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a81bis"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIRPF art 81 bis: deducciones por familia numerosa o personas con discapacidad a cargo. Establece deducciones de hasta 1.200 euros anuales por: descendiente con discapacidad (a), ascendiente con discapacidad (b), familia numerosa o ascendiente separado legalmente con dos hijos (c), conyuge con discapacidad (d). Base sustantiva del Modelo 100 casillas 0623/0624 (descendiente), 0636/0637 (ascendiente), 0248/0249 (conyuge), 0660/0661 (familia numerosa), 0662/0663 (ascendiente separado), 0664/0666 (regularizacion)."
+required_text = [
+    "Deducciones por familia numerosa o personas con discapacidad a cargo",
+    "descendiente con discapacidad",
+    "1.200 euros anuales",
+]
+
+[legal."ley-35-2006:art-101"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-101.html#a101"
+document_id = "BOE-A-2006-20764"
+article = "101"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a101"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIRPF art 101: importe de los pagos a cuenta. Base sustantiva del regimen de tipos de retencion para rendimientos del trabajo (escala personalizada 19/24/30/37/45/47 por ciento), administradores y consejeros (35 por ciento, 19 por ciento para entidades de cifra de negocios inferior a 100.000 euros), atrasos imputados a ejercicios anteriores (15 por ciento), y reduccion del 60 por ciento para rendimientos de Ceuta o Melilla amparados en la deduccion del art 68.4. Espejo legal del articulo 80 RIRPF que desarrolla el procedimiento."
+required_text = [
+    "Importe de los pagos a cuenta",
+    "rendimientos del trabajo",
+    "35 por ciento",
+]
+
+[legal."ley-35-2006:art-103"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-103.html#a103"
+document_id = "BOE-A-2006-20764"
+article = "103"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a103"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIRPF art 103: devolucion derivada de la normativa del tributo. Establece que cuando la suma de retenciones, ingresos a cuenta, pagos fraccionados y deducciones art 81 / 81 bis supera la cuota resultante de la autoliquidacion, la Administracion practica liquidacion provisional en seis meses y devuelve de oficio el exceso. Base sustantiva del Modelo 100 casilla 0670 (resultado de la declaracion) cuando es a devolver."
+required_text = [
+    "Devolución derivada de la normativa del tributo",
+    "superior al importe de la cuota resultante de la autoliquidación",
+    "devolver de oficio el exceso",
+]
+
+[legal."orden-hac-277-2026:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-277-2026.html#articulo-3"
+document_id = "BOE-A-2026-7041"
+article = "3"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-7041"
+published_at = 2026-03-27
+effective_from = 2026-03-28
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2025."
+required_text = [
+    "Artículo 3",
+    "Modelo D-100",
+    "Declaración del Impuesto sobre la Renta de las Personas Físicas. Ejercicio 2025",
+]
+
+[legal."orden-hac-277-2026:art-7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-277-2026.html#articulo-7"
+document_id = "BOE-A-2026-7041"
+article = "7"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-7041"
+published_at = 2026-03-27
+effective_from = 2026-03-28
+review_status = "reviewed"
+reviewed_at = 2026-05-21
+reviewed_by = "wgergely"
+notes = "Articulo 7 de la Orden HAC/277/2026: plazo de presentacion de la declaracion del IRPF ejercicio 2025. El plazo general comprende del 8 de abril al 30 de junio de 2026. La domiciliacion bancaria del pago puede realizarse desde el 8 de abril hasta el 25 de junio de 2026."
+required_text = [
+    "Plazo de presentación del borrador de declaración",
+    "8 de abril y 30 de junio de 2026",
+    "desde el día 8 de abril hasta el 25 de junio de 2026",
+]
+
+[legal."orden-hac-265-2024:art-8"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-265-2024.html#articulo-8"
+document_id = "BOE-A-2024-5721"
+article = "8"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-5721"
+published_at = 2024-03-22
+effective_from = 2024-03-23
+review_status = "reviewed"
+reviewed_at = 2026-05-21
+reviewed_by = "wgergely"
+notes = "Articulo 8 de la Orden HAC/265/2024: plazo de presentacion de la declaracion del IRPF ejercicio 2023. El plazo general comprende del 3 de abril al 1 de julio de 2024. La domiciliacion bancaria del pago puede realizarse desde el 3 de abril hasta el 26 de junio de 2024."
+required_text = [
+    "Plazo de presentación del borrador de declaración",
+    "3 de abril y 1 de julio de 2024",
+    "desde el día 3 de abril hasta el 26 de junio de 2024",
+]
+
+[legal."orden-hac-248-2021:art-8"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-248-2021.html#articulo-8"
+document_id = "BOE-A-2021-4238"
+article = "8"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-4238"
+published_at = 2021-03-18
+effective_from = 2021-03-18
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Articulo 8 de la Orden HAC/248/2021: plazo de presentacion de la declaracion del IRPF ejercicio 2020. El plazo general comprende del 7 de abril al 30 de junio de 2021. La domiciliacion bancaria del pago puede realizarse desde el 7 de abril hasta el 25 de junio de 2021."
+required_text = [
+    "Plazo de presentación del borrador de declaración",
+    "7 de abril y 30 de junio de 2021",
+    "desde el día 7 de abril hasta el 25 de junio de 2021",
+]
+
+[legal."orden-hfp-207-2022:art-8"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-207-2022.html#articulo-8"
+document_id = "BOE-A-2022-4296"
+article = "8"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-4296"
+published_at = 2022-03-18
+effective_from = 2022-03-18
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Articulo 8 de la Orden HFP/207/2022: plazo de presentacion de la declaracion del IRPF ejercicio 2021. El plazo general comprende del 6 de abril al 30 de junio de 2022. La domiciliacion bancaria del pago puede realizarse desde el 6 de abril hasta el 27 de junio de 2022."
+required_text = [
+    "Plazo de presentación del borrador de declaración",
+    "6 de abril y 30 de junio de 2022",
+    "desde el día 6 de abril hasta el 27 de junio de 2022",
+]
+
+[legal."orden-hfp-310-2023:art-8"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-310-2023.html#articulo-8"
+document_id = "BOE-A-2023-8118"
+article = "8"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-8118"
+published_at = 2023-03-31
+effective_from = 2023-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Articulo 8 de la Orden HFP/310/2023: plazo de presentacion de la declaracion del IRPF ejercicio 2022. El plazo general comprende del 11 de abril al 30 de junio de 2023. La domiciliacion bancaria del pago puede realizarse desde el 11 de abril hasta el 27 de junio de 2023."
+required_text = [
+    "Plazo de presentación del borrador de declaración",
+    "11 de abril y 30 de junio de 2023",
+    "desde el día 11 de abril hasta el 27 de junio de 2023",
+]
+
+[legal."orden-hac-242-2025:art-8"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/orden-hac-242-2025.json#articulo-8"
+document_id = "BOE-A-2025-5049"
+article = "8"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-5049"
+published_at = 2025-03-14
+effective_from = 2025-03-15
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Articulo 8 de la Orden HAC/242/2025: plazo de presentacion de la declaracion del IRPF ejercicio 2024. El plazo general comprende del 2 de abril al 30 de junio de 2025. La domiciliacion bancaria del pago puede realizarse desde el 2 de abril hasta el 25 de junio de 2025. Corpus contiene solo articulo primero; art-8 pendiente de extraccion al corpus HTML."
+
+[legal."ley-35-2006:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a11"
+document_id = "BOE-A-2006-20764"
+article = "11"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a11"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a11; operator to re-stamp)"
+notes = "LIRPF art 11: individualización de rentas — la renta se entiende obtenida por los contribuyentes en función del origen o fuente (rendimientos del trabajo por quien genera el derecho, del capital por los titulares de los elementos, de actividades por quien las realiza, ganancias por los titulares). Base legal de las casillas 'Contribuyente que obtiene los rendimientos / a quien corresponde la imputación / titular' del Modelo 100 (toma de datos ampliada). AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a11; operator to confirm and re-stamp."
+required_text = [
+    "Individualización de rentas",
+]
+
+[legal."ley-35-2006:art-17"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-17"
+document_id = "BOE-A-2006-20764"
+article = "17"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a17"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para rendimientos integros del trabajo en Modelo 100."
+required_text = [
+    "rendimientos integros del trabajo",
+    "trabajo personal",
+]
+
+[legal."ley-35-2006:art-18"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-18"
+document_id = "BOE-A-2006-20764"
+article = "18"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a18"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para reducciones de determinados rendimientos del trabajo en Modelo 100."
+required_text = [
+    "reducciones aplicables",
+    "rendimientos del trabajo",
+]
+
+[legal."ley-35-2006:art-19"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-19"
+document_id = "BOE-A-2006-20764"
+article = "19"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a19"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para rendimiento neto y gastos deducibles del trabajo en Modelo 100."
+required_text = [
+    "rendimiento neto del trabajo",
+    "gastos deducibles",
+]
+
+[legal."ley-35-2006:art-20"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-20"
+document_id = "BOE-A-2006-20764"
+article = "20"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a20"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para reduccion por obtencion de rendimientos del trabajo en Modelo 100."
+required_text = [
+    "reduccion por obtencion de rendimientos del trabajo",
+    "rendimiento neto del trabajo",
+]
+
+[legal."ley-35-2006:art-22"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-22"
+document_id = "BOE-A-2006-20764"
+article = "22"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a22"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para rendimientos integros del capital inmobiliario en Modelo 100."
+required_text = [
+    "rendimientos integros del capital inmobiliario",
+    "bienes inmuebles",
+]
+
+[legal."ley-35-2006:art-23"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-23"
+document_id = "BOE-A-2006-20764"
+article = "23"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a23"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para gastos deducibles y reducciones del capital inmobiliario en Modelo 100."
+required_text = [
+    "gastos deducibles",
+    "rendimiento neto del capital inmobiliario",
+]
+
+[legal."ley-35-2006:art-24"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-24"
+document_id = "BOE-A-2006-20764"
+article = "24"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a24"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para rendimiento minimo computable en caso de parentesco en capital inmobiliario."
+required_text = [
+    "rendimiento minimo computable",
+    "parentesco",
+]
+
+[legal."ley-35-2006:art-25"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-25"
+document_id = "BOE-A-2006-20764"
+article = "25"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a25"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para rendimientos integros del capital mobiliario en Modelo 100."
+required_text = [
+    "rendimientos integros del capital mobiliario",
+    "dividendos",
+]
+
+[legal."ley-35-2006:art-26"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-26"
+document_id = "BOE-A-2006-20764"
+article = "26"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a26"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para gastos deducibles, rendimiento neto y reducciones de capital mobiliario en Modelo 100."
+required_text = [
+    "gastos deducibles",
+    "rendimiento neto del capital mobiliario",
+]
+
+[sources."boe-modelo-100-2020-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-248-2021.html"
+sha256 = "4ba1c2d5e161cf5425e2512f094c8f0d75883ecd3a6b48dbf47a1875c7744d9d"
+bytes = 143508
+retrieved_at = 2026-05-06
+published_at = 2021-03-18
+applies_from = 2020-01-01
+applies_to = 2020-12-31
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-4238"
+review_status = "reviewed"
+
+[sources."boe-modelo-100-2021-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-207-2022.html"
+sha256 = "6a488558b26a805676e3705171339df0bfd4ae27f3f29221777a4794d8da4e1f"
+bytes = 156515
+retrieved_at = 2026-05-06
+published_at = 2022-03-18
+applies_from = 2021-01-01
+applies_to = 2021-12-31
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-4296"
+review_status = "reviewed"
+
+[sources."boe-modelo-100-2022-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-310-2023.html"
+sha256 = "fe725626f992b4a3cabf69b4a472551bd52481d4cc742604f33336b18093294c"
+bytes = 153278
+retrieved_at = 2026-05-06
+published_at = 2023-03-31
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-8118"
+review_status = "reviewed"
+
+[sources."boe-modelo-100-2023-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-265-2024.html"
+sha256 = "de39535931a2324d4776a7ce92cefb5fcb464b91b4752b2775b5ba6c12b34eb1"
+bytes = 177147
+retrieved_at = 2026-05-06
+published_at = 2024-03-22
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-5721"
+review_status = "reviewed"
+
+[sources."boe-modelo-100-2024-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/orden-hac-242-2025.json"
+sha256 = "21989f88f4f10c66209d2b7bb616be5fb901d5ab065bc11781542e103be368f8"
+bytes = 3051
+retrieved_at = 2026-04-12
+published_at = 2025-03-14
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2025-5049"
+review_status = "reviewed"
+
+[sources."boe-modelo-100-2025-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-277-2026.html"
+sha256 = "27afe5db5ebc310cf9c1c2164661a6c682d1c9301e8f2e55b800a9707a21b324"
+bytes = 129608
+retrieved_at = 2026-05-05
+published_at = 2026-03-27
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-7041"
+review_status = "reviewed"
+
+[sources."aeat-modelo-100-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_100/files/modelo-100-procedure.html"
+sha256 = "ebf7c31fb625c17405d1c37a3f67203a20bc66468eeb29df7dd8e02ab7e18bb4"
+bytes = 24849
+retrieved_at = 2026-05-05
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G229.shtml"
+review_status = "reviewed"
+
+[sources."aeat-renta-web-open"]
+evidence_tier = "executable_parity_evidence"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/renta_web_open/renta-web-open.html"
+sha256 = "db2366b0846404ebf8f04a81c294f8e4f2d2c8881235c1d240b6f25db9ef2cfe"
+bytes = 14346
+retrieved_at = 2026-05-05
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas/renta-ayuda-tecnica/renta-web-open.html"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2020-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/04-100-diccionario-declaracion-individual-ejercicio-2020-actualizado-03-06-2021-296-kb-otros-fi.properties"
+sha256 = "b7639e957131063c48e3774061b8c5c9005b720fb638ab951093833fda9e595f"
+bytes = 303288
+retrieved_at = 2026-05-03
+applies_from = 2020-01-01
+applies_to = 2020-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_20/diccionarioXSD_2020.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2020-input-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/09-100-diccionario-declaracion-individual-toma-de-datos-ejercicio-2020-actualizado-30-04-2021-4.properties"
+sha256 = "59c9b58b6f17604d1e1434c1ddf1d99fedb3c7e5fb7c960df19a1c0b186c6a80"
+bytes = 462591
+retrieved_at = 2026-05-03
+applies_from = 2020-01-01
+applies_to = 2020-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_20/diccionarioDlgXSD_2020.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2020-xsd"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "xsd"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/25-100-esquema-xsd-ejercicio-2020-actualizado-23-10-2024-529-kb-ejecutable.xsd"
+sha256 = "90b24c21624120a7724d2ea25b9e546126e713914ccb765d42123376df8b3a46"
+bytes = 541059
+retrieved_at = 2026-05-03
+applies_from = 2020-01-01
+applies_to = 2020-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_20/Renta2020.xsd"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2021-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/05-100-diccionario-declaracion-individual-ejercicio-2021-actualizado-18-03-2022-330-kb-otros-fi.properties"
+sha256 = "2aaf5c7fe7df35458dc50c0b9fe1925853b2778a26f493baee524a926ae6d817"
+bytes = 337669
+retrieved_at = 2026-05-03
+applies_from = 2021-01-01
+applies_to = 2021-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_21/diccionarioXSD_2021.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2021-input-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/10-100-diccionario-declaracion-individual-toma-de-datos-ejercicio-2021-actualizado-18-03-2022-6.properties"
+sha256 = "aa0370162f5db5088e6cc8b3be839aea6efac82467af80c2c29c2c142dbd98a2"
+bytes = 705287
+retrieved_at = 2026-05-03
+applies_from = 2021-01-01
+applies_to = 2021-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_21/diccionarioDlgXSD_2021.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2021-xsd"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "xsd"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/26-100-esquema-xsd-ejercicio-2021-actualizado-23-10-2024-606-kb-ejecutable.xsd"
+sha256 = "850db5851a715738943c85495c37043f6e5235d5f3f22cd9188533ab18706872"
+bytes = 620508
+retrieved_at = 2026-05-03
+applies_from = 2021-01-01
+applies_to = 2021-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_21/Renta2021.xsd"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2022-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/06-100-diccionario-declaracion-individual-ejercicio-2022-actualizado-17-05-2023-365-kb-otros-fi.properties"
+sha256 = "081d872040b3e7690a0b38f5da49ff1ade390dc806bef72560d00ee0fdb858dc"
+bytes = 373009
+retrieved_at = 2026-05-03
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_22/diccionarioXSD_2022.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2022-input-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/11-100-diccionario-declaracion-individual-toma-de-datos-ejercicio-2022-actualizado-28-06-2023-7.properties"
+sha256 = "78dec12e9028fe009d65f56188fedf74f7b5187378a67fe2b35ae0e1a4e54a36"
+bytes = 782610
+retrieved_at = 2026-05-03
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_22/diccionarioDlgXSD_2022.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2022-xsd"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "xsd"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/27-100-esquema-xsd-ejercicio-2022-actualizado-07-11-2024-675-kb-ejecutable.xsd"
+sha256 = "68bc8ff758148d5c584cbc5b4ae394aa28792997f3bc40ab6d1123caa0a81016"
+bytes = 691669
+retrieved_at = 2026-05-03
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_22/Renta2022.xsd"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2023-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/07-100-diccionario-declaracion-individual-ejercicio-2023-actualizado-29-01-2026-382-kb-otros-fi.properties"
+sha256 = "a9b8d0e24878b550870666870107b66af2df3eb7d341739e59accce6f1108024"
+bytes = 391473
+retrieved_at = 2026-05-03
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/diccionarioXSD_2023.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2023-input-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/12-100-diccionario-declaracion-individual-toma-de-datos-ejercicio-2023-actualizado-29-01-2026-8.properties"
+sha256 = "183692c1a5a4785d9a04508e2ab928b25e44742ced448e19359ea7afb22c37cd"
+bytes = 823153
+retrieved_at = 2026-05-03
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/diccionarioDlgXSD_2023.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2023-xsd"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "xsd"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/28-100-esquema-xsd-ejercicio-2023-actualizado-19-01-2026-709-kb-ejecutable.xsd"
+sha256 = "dc476d5040051eeb478ba5eb3dd2656ad87afef4b284e0d5cb32702e6fb9e990"
+bytes = 726173
+retrieved_at = 2026-05-03
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/Renta2023.xsd"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2024-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/08-100-diccionario-declaracion-individual-ejercicio-2024-actualizado-29-01-2026-393-kb-otros-fi.properties"
+sha256 = "0e190a5b1fe95047785832797ff15d5070441e37d49e4062d20ca95b65e37884"
+bytes = 402796
+retrieved_at = 2026-05-03
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/diccionarioXSD_2024.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2024-input-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/13-100-diccionario-declaracion-individual-toma-de-datos-ejercicio-2024-actualizado-29-01-2026-8.properties"
+sha256 = "9c9e64543f26ef2b21e13de41ed9c6f8f591264ea39962a3ec974cde79411be6"
+bytes = 888091
+retrieved_at = 2026-05-03
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/diccionarioDlgXSD_2024.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2024-xsd"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "xsd"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/29-100-esquema-xsd-ejercicio-2024-actualizado-19-01-2026-747-kb-ejecutable.xsd"
+sha256 = "1e6c7a84167de06acc574c1e4965312365c455fbd126e2c2d5ca767be4f5cb12"
+bytes = 765342
+retrieved_at = 2026-05-03
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/Renta2024.xsd"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2025-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/01-100-diccionario-declaracion-individual-ejercicio-2025-actualizado-14-04-2026-416-kb-otros-fi.properties"
+sha256 = "67409ad3027f2548d90bd64ea5eeff7fa344ace87377a048527d2c7de92fe93b"
+bytes = 425375
+retrieved_at = 2026-05-03
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/diccionarioXSD_2025.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2025-input-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/02-100-diccionario-declaracion-individual-toma-de-datos-ejercicio-2025-actualizado-14-04-2026-9.properties"
+sha256 = "ef63737b6d52e22a4c1c4b7934975488b93b0f37f9a8bc10f6c365219b6ecade"
+bytes = 962802
+retrieved_at = 2026-05-03
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/diccionarioDlgXSD_2025.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2025-xsd"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "xsd"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/03-100-esquema-xsd-ejercicio-2025-actualizado-14-04-2026-796-kb-ejecutable.xsd"
+sha256 = "208e9cf5367bd7d009eb66152902f149bc90693f9734fe4831951c763d128864"
+bytes = 812095
+retrieved_at = 2026-05-03
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/Renta2025.xsd"
+review_status = "reviewed"
+
+[sources."aeat-renta-2020-manual-parte1"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/renta/2020/part1/source.pdf"
+sha256 = "2916a4ee52ec0cf6d5c68600fdc1de8604d2eda19db4a8aa3232e23ff34ef8ab"
+bytes = 32387072
+retrieved_at = 2026-05-06
+applies_from = 2020-01-01
+applies_to = 2020-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2020/ManualRenta2020_es_es.pdf"
+review_status = "reviewed"
+
+[sources."aeat-renta-2021-manual-parte1"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/renta/2021/part1/source.pdf"
+sha256 = "76949adf843e46b4c552923cd268249c954d8761c983bac449479543533164e0"
+bytes = 26314752
+retrieved_at = 2026-05-06
+applies_from = 2021-01-01
+applies_to = 2021-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2021/ManualRenta2021_es_es.pdf"
+review_status = "reviewed"
+
+[sources."aeat-renta-2022-manual-parte1"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/renta/2022/part1/source.pdf"
+sha256 = "b8ddf161891630ab5b130128257f9b1307fbfe7f8519b775d3022b41bd1316be"
+bytes = 9706572
+retrieved_at = 2026-05-06
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2022/ManualRenta2022_es_es.pdf"
+review_status = "reviewed"
+
+[sources."aeat-renta-2023-manual-parte1"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/renta/2023/part1/source.pdf"
+sha256 = "c048be1b2fba82c5d8f99abe1eec9a8865a617aa99f6d3488c88540c59e6a0a0"
+bytes = 11604722
+retrieved_at = 2026-05-06
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2023/ManualRenta2023_es_es.pdf"
+review_status = "reviewed"
+
+[sources."aeat-renta-2024-manual-parte1"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/renta/2024/part1/source.pdf"
+sha256 = "15ff0d1fa69b5a2b7094a6c498403b1c55aa89a0e6eed4d87a5a2632eab34923"
+bytes = 9214502
+retrieved_at = 2026-05-06
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2024/ManualRenta2024Tomo1_es_es.pdf"
+review_status = "reviewed"
+
+[sources."aeat-renta-2025-manual-parte1"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/renta/2025/part1/source.pdf"
+sha256 = "60e6b2d71c97d93a9e0943e6ff8c886f4dd6d3741a797cb8001dcbcadfb33528"
+bytes = 7543283
+retrieved_at = 2026-04-12
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+review_status = "reviewed"
+
+[sources."aeat-renta-2025-manual-deducciones-autonomicas"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf"
+sha256 = "88a12fbe5ce9de01fc6a04941db498cd30ef959c85bf6106bfdc3611c13f3481"
+bytes = 3801341
+retrieved_at = 2026-05-05
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025-Deducciones-autonomicas/ManualRenta2025Parte2_es_es.pdf"
+review_status = "reviewed"
+
+[sources."lirpf-cuota-chain-authority"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/ley-35-2006.html"
+sha256 = "b55ba6f2ee97c045290277acd5be1e6493e95b8e5ba7cb7e5e776ff5a572d9f0"
+bytes = 1921157
+retrieved_at = 2026-05-06
+applies_from = 2007-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+review_status = "reviewed"
+
+[legal."ley-35-2006:art-7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a7"
+document_id = "BOE-A-2006-20764"
+article = "7"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a7"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a7; operator to re-stamp)"
+notes = "LIRPF art 7: rentas exentas. Base legal de las casillas informativas de rentas exentas (importes que no se integran en la base imponible) del Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a7; operator to confirm and re-stamp."
+required_text = [
+    "Rentas exentas",
+]
+
+[legal."ley-35-2006:art-53"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a53"
+document_id = "BOE-A-2006-20764"
+article = "53"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a53"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a53; operator to re-stamp)"
+notes = "LIRPF art 53: reducciones de la base imponible general por aportaciones y contribuciones a sistemas de previsión social constituidos a favor de personas con discapacidad. Base legal de las casillas de reducción/exceso por previsión social de personas con discapacidad en Modelo 100 (distinto del patrimonio protegido del art. 54). AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a53; operator to confirm and re-stamp."
+required_text = [
+    "Reducciones por aportaciones y contribuciones a sistemas de previsión social constituidos a favor de personas con discapacidad",
+]
+
+[legal."ley-35-2006:art-55"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a55"
+document_id = "BOE-A-2006-20764"
+article = "55"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a55"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a55; operator to re-stamp)"
+notes = "LIRPF art 55: reducciones de la base imponible por pensiones compensatorias satisfechas al cónyuge y anualidades por alimentos (salvo las fijadas a favor de los hijos) por decisión judicial. Base legal de las casillas de reducción por pensiones compensatorias y anualidades por alimentos en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a55; operator to confirm and re-stamp."
+required_text = [
+    "Reducciones por pensiones compensatorias",
+]
+
+[legal."ley-35-2006:art-92"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a92"
+document_id = "BOE-A-2006-20764"
+article = "92"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a92"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a92; operator to re-stamp)"
+notes = "LIRPF art 92: imputación de rentas por la cesión de derechos de imagen. Base legal de las casillas del régimen especial de imputación por cesión de derechos de imagen en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a92; operator to confirm and re-stamp."
+required_text = [
+    "Imputación de rentas por la cesión de derechos de imagen",
+]
+
+[legal."ley-35-2006:art-95"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a95"
+document_id = "BOE-A-2006-20764"
+article = "95"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a95"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a95; operator to re-stamp)"
+notes = "LIRPF art 95: tributación de los socios o partícipes de las instituciones de inversión colectiva constituidas en países o territorios considerados como paraísos fiscales. Base legal de las casillas del régimen especial de imputación por IIC en paraísos fiscales en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a95; operator to confirm and re-stamp."
+required_text = [
+    "instituciones de inversión colectiva constituidas en países o territorios considerados como paraísos fiscales",
+]
+
+[legal."ley-35-2006:art-97"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a97"
+document_id = "BOE-A-2006-20764"
+article = "97"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a97"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a97; operator to re-stamp)"
+notes = "LIRPF art 97: autoliquidación. Incluye en su apartado 6 la compensación entre cónyuges cuando, en tributación individual, el resultado de una declaración es a ingresar y el de la otra a devolver. Base legal de las casillas de resultado de la autoliquidación, compensación entre cónyuges (datos de la cuenta SEPA) y autoliquidación rectificativa en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a97; operator to confirm and re-stamp."
+required_text = [
+    "Autoliquidación",
+]
+
+[legal."ley-35-2006:da-48"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#da-48"
+document_id = "BOE-A-2006-20764"
+article = "DA-48"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#da-48"
+published_at = 2006-11-29
+effective_from = 2018-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html (DA cuadragésima octava); operator to re-stamp)"
+notes = "LIRPF disposición adicional 48ª: deducción aplicable a las unidades familiares formadas por residentes fiscales en Estados miembros de la Unión Europea o del Espacio Económico Europeo, que equipara el tratamiento al de la tributación conjunta cuando uno de los miembros no es residente en España. Base legal de las casillas de la deducción por unidad familiar de residentes en la UE/EEE en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html (DA cuadragésima octava); operator to confirm and re-stamp."
+required_text = [
+    "Deducción aplicable a las unidades familiares formadas por residentes fiscales en Estados miembros de la Unión Europea",
+]
+
+[legal."ley-31-2022:da-70"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-31-2022-da-70.html#da-70"
+document_id = "BOE-A-2022-22128"
+article = "DA-70"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-22128#da-70"
+published_at = 2022-12-23
+effective_from = 2023-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (verified against official BOE-A-2022-22128 consolidated DA-70; corpus excerpt bundled)"
+notes = "Ley 31/2022 (Presupuestos Generales del Estado para 2023) disposición adicional 70ª: Régimen fiscal especial de las Illes Balears. DA-70.Cuatro grounds the Reserva para Inversiones en las Illes Balears (RIB), including the reserve/materialisation tracking fields and the IRPF estimación-directa cuota deduction for Modelo 100 RIB casillas. Corpus excerpt bundled from the official BOE consolidated text."
+required_text = [
+    "Reserva para inversiones en las Illes Balears",
+    "El importe de la reserva pendiente de materialización",
+    "Los contribuyentes del Impuesto sobre la Renta de las Personas Físicas",
+    "tendrán derecho a una deducción en la cuota íntegra",
+]

@@ -1,0 +1,39 @@
+[[revisions."2019-y-siguientes".casillas]]
+id = "13"
+number = "13"
+label = "Premios dinerarios numero de perceptores"
+section = ["premios_dinerario"]
+data_type = "integer"
+semantic_role = "perceptor_count"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-111-casilla-13"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "14"
+number = "14"
+label = "Premios dinerarios importe de percepciones"
+section = ["premios_dinerario"]
+data_type = "money"
+semantic_role = "importe_percepciones_dinerario"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-111-casilla-14"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "15"
+number = "15"
+label = "Premios dinerarios importe de retenciones"
+section = ["premios_dinerario"]
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-111-casilla-15"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80"], source_refs = ["aeat-modelo-111-instructions"] }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]

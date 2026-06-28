@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "0488"
+number = "0488"
+label = "Excesos pendientes de reducir procedentes de los ejercicios 2017 a 2021 (Vea el anexo C.4)"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_deportistas"]
+semantic_role = "irpf_red_deportistas_exceso"
+legal_refs = ["ley-35-2006:da-11"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

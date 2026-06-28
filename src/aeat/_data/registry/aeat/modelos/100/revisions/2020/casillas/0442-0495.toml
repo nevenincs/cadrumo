@@ -1,0 +1,8 @@
+[[revisions."2020".casillas]]
+id = "0495"
+number = "0495"
+label = "Por aportaciones a patrimonios protegidos de personas con discapacidad. Importe de la casilla [0481] que se aplica"
+section = ["resultados", "base_liquidable_res"]
+semantic_role = "irpf_reduccion_patrimonio_protegido_aplicada"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

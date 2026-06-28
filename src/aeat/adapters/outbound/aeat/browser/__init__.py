@@ -1,45 +1,54 @@
-"""Browser automation subpackage for the AEAT client.
+"""Central browser-automation surface for AEAT outbound adapters.
 
-Provides the `BrowserSession` factory to manage Playwright contexts with
-anti-bot evasion strategies and persistent profiles.
+Owns the Playwright-backed browser sessions every outbound AEAT adapter
+shares, plus the site-health probing that classifies whether the Sede is
+reachable, rate-limiting, under maintenance, or serving a WAF challenge.
 
-Example:
-    ```python
-    from pathlib import Path
-    from playwright.async_api import async_playwright
-    from .....core.config import load_settings
-    from . import BrowserSession, Profile
+Major declarations:
 
-    async def main():
-        settings = load_settings()
-        profile = Profile(name="test", storage_state_path=Path(".tokens/state.json"))
-
-        async with async_playwright() as p:
-            session = BrowserSession(playwright=p, settings=settings, profile=profile)
-            context = await session.create_context()
-            page = await context.new_page()
-            await page.goto("https://sede.agenciatributaria.gob.es")
-            await context.close()
-    ```
+* :class:`BrowserSession` and :class:`DefaultBrowserSession`, with
+  :func:`create_browser_session` and :func:`default_browser_session_factory`
+  — the session abstraction and its factories.
+* :func:`run_health_check` with :class:`SiteHealthStatus` and
+  :class:`SiteHealthState` — the reachability probe and its verdict.
+* :class:`EvasionStrategy` and :class:`PlaywrightStealthEvasion` — the
+  bot-detection evasion seam.
+* :class:`BrowserError`, :class:`BrowserValidationError`, and
+  :class:`BrowserFailureMode` — the failure taxonomy.
 """
 
 from __future__ import annotations
 
-from ._factory import DefaultBrowserSession, default_browser_session_factory
+from ._errors import BrowserError, BrowserFailureMode, BrowserValidationError
+from ._factory import (
+    DefaultBrowserSession,
+    create_browser_session,
+    default_browser_session_factory,
+    opened_browser_page,
+    shared_playwright_runtime,
+)
 from ._site_health import (
     SiteHealthEvidence,
     SiteHealthState,
     SiteHealthStatus,
 )
-from ._site_health_parsers import evaluate_response
-from .evasion import EvasionStrategy, PlaywrightStealthEvasion
+from ._site_health_parsers import (
+    evaluate_response,
+    parse_mantenimiento_banner,
+    parse_rate_limit_response,
+    parse_waf_challenge,
+)
+from .evasion import BrowserEvasionError, EvasionStrategy, PlaywrightStealthEvasion
 from .health import run_health_check
 from .profile import Profile
-from .session import BrowserError, BrowserSession
+from .session import BrowserSession
 
 __all__ = [
     "BrowserError",
+    "BrowserEvasionError",
+    "BrowserFailureMode",
     "BrowserSession",
+    "BrowserValidationError",
     "DefaultBrowserSession",
     "EvasionStrategy",
     "PlaywrightStealthEvasion",
@@ -47,7 +56,13 @@ __all__ = [
     "SiteHealthEvidence",
     "SiteHealthState",
     "SiteHealthStatus",
+    "create_browser_session",
     "default_browser_session_factory",
     "evaluate_response",
+    "opened_browser_page",
+    "parse_mantenimiento_banner",
+    "parse_rate_limit_response",
+    "parse_waf_challenge",
     "run_health_check",
+    "shared_playwright_runtime",
 ]

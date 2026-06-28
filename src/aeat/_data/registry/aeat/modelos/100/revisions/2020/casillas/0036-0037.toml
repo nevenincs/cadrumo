@@ -1,0 +1,8 @@
+[[revisions."2020".casillas]]
+id = "0037"
+number = "0037"
+label = "gastos de administración y depósito de valores negociables, exclusivamente"
+section = ["toma_datos_ampliada", "rdto_capital_mobiliario", "rdto_capital_mobiliario_ahorro"]
+semantic_role = "irpf_rendimiento_capital_mobiliario_ahorro_gastos_deducibles"
+legal_refs = ["ley-35-2006:art-26"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

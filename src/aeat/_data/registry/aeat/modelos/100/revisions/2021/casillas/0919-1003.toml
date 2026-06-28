@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "1003"
+number = "1003"
+label = "Por alquiler de la vivienda habitual (se traslada este importe a la casilla [1130] del anexo B.8)"
+section = ["resultados", "deduccion_autonomica_res", "catalunya_res"]
+semantic_role = "irpf_deduccion_catalunya_alquiler_vivienda"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

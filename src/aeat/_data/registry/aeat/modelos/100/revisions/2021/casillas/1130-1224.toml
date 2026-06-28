@@ -1,0 +1,10 @@
+[[revisions."2021".casillas]]
+id = "1224"
+number = "1224"
+label = "Ejercicio 2021. Intereses de los capitales invertidos en la adquisición o mejora del inmueble y gastos de reparación y conservación (traslade el importe de la casilla [0108] )"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+semantic_role = "irpf_inmueble_gastos_financiacion_ejercicio"
+input_kind = "computed"
+formula = "renta-2021-capital-inmobiliario-intereses-gastos-passthrough"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

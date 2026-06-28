@@ -1,297 +1,430 @@
-"""Aggregation service from classified transactions to casilla inputs."""
+"""Central per-modelo aggregation service contracts.
+
+Used by: :mod:`aeat.application.aggregation` package to route aggregation commands to appropriate providers.
+
+This module owns the non-CLI aggregation boundary required by the CLI
+workflow redesign. It routes strict Pydantic command payloads to the
+implemented family aggregators without adding CLI-local conversion logic.
+
+Providers: ``retenciones`` (111/115/123/180/190/193), ``counterpart`` (347/349), ``foreign_assets`` (720).
+"""
 
 from __future__ import annotations
 
 from collections.abc import Mapping
-from decimal import Decimal
+from enum import StrEnum
+from functools import lru_cache
 
-from ...domain.modelos import ModeloCode
-from ...domain.categories import (
-    CasillaMapping,
-    CategoryProfile,
-    ProportionalityKind,
-    SpendingCategory,
-    load_category_profiles_from_manual,
+from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
+
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import BindingSourceKind, Modelo, Period
+from ...core.external_constants import COUNTERPART_MODELOS, FOREIGN_ASSET_MODELOS, RETENCIONES_MODELOS
+from ...core.logging import get_logger
+from ...domain.calculations.registry import WithholdingObservation
+from ._counterpart import (
+    CounterpartAggregation,
+    CounterpartObservation,
+    aggregate_counterpart_347,
+    aggregate_counterpart_349,
 )
-from ...domain.transactions import (
-    BusinessClassification,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    is_classified,
+from ._errors import AggregationConfigError, AggregationUnsupportedModeloError, t
+from ._foreign_assets import ForeignAssetIngestObservation, ForeignAssetsAggregation, aggregate_foreign_assets_720
+from ._retenciones import (
+    RetencionesAggregation,
+    RetencionObservation,
+    aggregate_retenciones_111,
+    aggregate_retenciones_115,
+    aggregate_retenciones_123,
+    aggregate_retenciones_180,
+    aggregate_retenciones_190,
+    aggregate_retenciones_193,
 )
-from ._errors import (
-    AggregationCasillaMappingError,
-    AggregationCategoryCoverageError,
-    AggregationMissingClassificationError,
-    AggregationPeriodError,
-    AggregationUnsupportedModeloError,
-    t,
+
+LOGGER = get_logger(__name__)
+
+
+class PerModeloAggregationContributor(StrEnum):
+    """Implemented aggregation-contributor families owned by ``aeat.application.aggregation``.
+
+    Names the contributor-role axis (which backend family aggregates a
+    modelo's ledger evidence), distinct from the settled
+    :class:`ModeloSourceResolver` calculate-mesh port. The member string
+    values (``retenciones`` / ``counterpart`` / ``foreign_assets``) are
+    unchanged.
+    """
+
+    RETENCIONES = "retenciones"
+    COUNTERPART = "counterpart"
+    FOREIGN_ASSETS = "foreign_assets"
+
+
+ACCEPTED_SOURCE_KINDS: tuple[BindingSourceKind, ...] = (
+    BindingSourceKind.LEDGER_TRANSACTION,
+    BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+    BindingSourceKind.PAYABLE_INVOICE,
+    BindingSourceKind.COLLECTIBLE_INVOICE,
 )
-from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
 
-_ZERO = Decimal("0")
-_ONE = Decimal("1")
-_SUPPORTED_MODELOS = {ModeloCode.MODELO_130}
-_MODELO_130_INPUT_CASILLAS = frozenset({"01", "02", "05", "06", "08", "10", "13", "15", "16", "18"})
+AggregationErrorCodes: tuple[str, ...] = (
+    "ERROR_FINANCIAL_AGGREGATION",
+    "REFUSED_FINANCIAL_AGGREGATION_UNSUPPORTED_MODELO",
+    "ERROR_FINANCIAL_AGGREGATION_VALIDATION",
+)
+
+_RETENCIONES_MODELOS = RETENCIONES_MODELOS
+_COUNTERPART_MODELOS = COUNTERPART_MODELOS
+_FOREIGN_ASSET_MODELOS = FOREIGN_ASSET_MODELOS
 
 
-def aggregate_catalogue(
-    catalogue: TransactionCatalogue,
-    *,
-    modelo: str | ModeloCode,
-    period: str | Period,
-    category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
-) -> CasillaAggregation:
-    """Aggregate a classified transaction catalogue into casilla totals."""
+class PerModeloAggregationContributorContract(BaseModel):
+    """Backend-owned contract for one aggregation provider family."""
 
-    modelo_code = _parse_modelo(modelo)
-    if modelo_code not in _SUPPORTED_MODELOS:
-        raise AggregationUnsupportedModeloError(
-            translated_message=t(
-                "La agregacion T6 solo esta implementada para Modelo 130.",
-                "T6 aggregation is currently implemented only for Modelo 130.",
-                "A T6 osszesites jelenleg csak a 130-as nyomtatvanyhoz elerheto.",
-            ),
-            context={"modelo": modelo_code.value},
+    model_config = _STRICT_FROZEN
+
+    provider: PerModeloAggregationContributor
+    modelos: tuple[str, ...] = Field(min_length=1)
+    service_owner: str = Field(pattern=r"^aeat\.application\.aggregation$")
+    accepted_source_kinds: tuple[BindingSourceKind, ...] = Field(min_length=1)
+
+    @field_validator("modelos")
+    @classmethod
+    def _modelos_are_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(value) != len(set(value)):
+            raise AggregationConfigError(
+                "provider modelos must be unique",
+                translated_message="aggregation.service.errors.provider_modelos_not_unique",
+            )
+        return value
+
+
+class PerModeloAggregationLogFields(BaseModel):
+    """Stable, non-secret log fields emitted by the aggregation service."""
+
+    model_config = _STRICT_FROZEN
+
+    service_name: str = "per_modelo_aggregation"
+    modelo: str = Field(min_length=1)
+    period: Period
+    provider: PerModeloAggregationContributor
+    observation_count: int = Field(ge=0)
+    source_kind_count: int = Field(ge=0)
+    result_row_count: int = Field(ge=0)
+
+    def as_extra(self) -> Mapping[str, object]:
+        """Return a logging ``extra`` payload with stable field names."""
+        return {
+            "service_name": self.service_name,
+            "modelo": self.modelo,
+            "period": self.period.registry_token,
+            "provider": self.provider.value,
+            "observation_count": self.observation_count,
+            "source_kind_count": self.source_kind_count,
+            "result_row_count": self.result_row_count,
+        }
+
+
+class PerModeloAggregationContract(BaseModel):
+    """Complete backend contract consumed by current and future adapters."""
+
+    model_config = _STRICT_FROZEN
+
+    schema_version: str = "1"
+    service_owner: str = "aeat.application.aggregation"
+    providers: tuple[PerModeloAggregationContributorContract, ...]
+    accepted_source_kinds: tuple[BindingSourceKind, ...]
+    error_codes: tuple[str, ...]
+
+    @field_validator("providers")
+    @classmethod
+    def _providers_are_unique(
+        cls,
+        value: tuple[PerModeloAggregationContributorContract, ...],
+    ) -> tuple[PerModeloAggregationContributorContract, ...]:
+        providers = tuple(provider.provider for provider in value)
+        if len(providers) != len(set(providers)):
+            raise AggregationConfigError(
+                "per-modelo aggregation providers must be unique",
+                translated_message="aggregation.service.errors.per_modelo_providers_not_unique",
+            )
+        modelos = tuple(modelo for provider in value for modelo in provider.modelos)
+        if len(modelos) != len(set(modelos)):
+            raise AggregationConfigError(
+                "per-modelo aggregation modelos must be owned by exactly one provider",
+                translated_message="aggregation.service.errors.per_modelo_modelos_not_unique",
+            )
+        return value
+
+    @field_validator("accepted_source_kinds")
+    @classmethod
+    def _source_kinds_are_exact(cls, value: tuple[BindingSourceKind, ...]) -> tuple[BindingSourceKind, ...]:
+        if value != ACCEPTED_SOURCE_KINDS:
+            raise AggregationConfigError(
+                "source kinds must match the accepted four-kind taxonomy",
+                translated_message="aggregation.service.errors.source_kinds_mismatch",
+            )
+        return value
+
+
+class PerModeloAggregationCommand(BaseModel):
+    """Command payload for a per-modelo aggregation run."""
+
+    model_config = _STRICT_FROZEN
+
+    modelo: str = Field(min_length=1, max_length=16)
+    period: Period
+    retencion_observations: tuple[RetencionObservation, ...] = Field(default_factory=tuple)
+    counterpart_observations: tuple[CounterpartObservation, ...] = Field(default_factory=tuple)
+    foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...] = Field(default_factory=tuple)
+    withholding_observations: tuple[WithholdingObservation, ...] = Field(default_factory=tuple)
+
+    @model_validator(mode="after")
+    def _only_matching_observation_family_is_populated(self) -> PerModeloAggregationCommand:
+        provider = provider_for_modelo(self.modelo)
+        populated = {
+            PerModeloAggregationContributor.RETENCIONES: bool(self.retencion_observations),
+            PerModeloAggregationContributor.COUNTERPART: bool(self.counterpart_observations),
+            PerModeloAggregationContributor.FOREIGN_ASSETS: bool(self.foreign_asset_observations),
+        }
+        invalid = tuple(
+            candidate for candidate, has_rows in populated.items() if candidate is not provider and has_rows
         )
-    resolved_period = period if isinstance(period, Period) else Period.model_validate(period)
-    if resolved_period.kind is not PeriodKind.QUARTERLY:
-        raise AggregationPeriodError(
-            translated_message=t(
-                "Modelo 130 requiere un periodo trimestral.",
-                "Modelo 130 requires a quarterly period.",
-                "A 130-as nyomtatvany negyedeves idoszakot igenyel.",
-            ),
-            context={"period": resolved_period.raw},
-        )
-    resolved_profiles = category_profiles or _category_profiles_for_year(resolved_period.year)
+        if invalid:
+            names = ", ".join(candidate.value for candidate in invalid)
+            raise AggregationConfigError(
+                f"observations for {names} cannot be supplied for modelo {self.modelo}",
+                translated_message="aggregation.service.errors.observations_mismatch",
+                context={"names": names, "modelo": self.modelo},
+            )
+        return self
 
-    in_period = tuple(
-        transaction
-        for transaction in catalogue.values()
-        if resolved_period.contains(transaction.raw.value_date or transaction.raw.booked_date)
-    )
-    missing = tuple(tx.transaction_id for tx in in_period if not is_classified(tx.business_classification))
-    if missing:
-        raise AggregationMissingClassificationError(
-            translated_message=t(
-                "Hay transacciones del periodo sin clasificacion de negocio.",
-                "Some transactions in this period still need business classification.",
-                "Az idoszakban vannak uzleti besorolas nelkuli tranzakciok.",
-            ),
-            context={"period": resolved_period.raw, "transaction_ids": ", ".join(sorted(missing))},
-            suggestion="aeat financial txs classify <transaction-id> --as BUSINESS --category <category>",
-        )
+    @computed_field
+    @property
+    def provider(self) -> PerModeloAggregationContributor:
+        """Return the provider family selected by ``modelo``.
 
-    totals: dict[str, Decimal] = {}
-    provenance_buckets: dict[tuple[str, str | None], list[tuple[str, Decimal]]] = {}
-    for transaction in in_period:
-        contribution = _transaction_contribution(
-            transaction,
-            modelo=modelo_code,
-            period=resolved_period,
-            category_profiles=resolved_profiles,
-        )
-        if contribution is None:
-            continue
-        casilla, category_id, amount = contribution
-        if amount == _ZERO:
-            continue
-        totals[casilla] = totals.get(casilla, _ZERO) + amount
-        provenance_buckets.setdefault((casilla, category_id), []).append((transaction.transaction_id, amount))
-
-    provenance = tuple(
-        CasillaProvenance(
-            casilla=casilla,
-            category_id=category_id,
-            transaction_ids=tuple(sorted(transaction_id for transaction_id, _ in rows)),
-            subtotal=sum((amount for _, amount in rows), _ZERO),
-        )
-        for (casilla, category_id), rows in sorted(
-            provenance_buckets.items(),
-            key=lambda item: (item[0][0], item[0][1] or ""),
-        )
-    )
-    return CasillaAggregation(
-        modelo=modelo_code.value,
-        period=resolved_period,
-        casilla_values=totals,
-        provenance=provenance,
-    )
+        Returns a :class:`PerModeloAggregationContributor`.
+        """
+        return provider_for_modelo(self.modelo)
 
 
-def _category_profiles_for_year(year: int) -> Mapping[SpendingCategory, CategoryProfile]:
-    try:
-        return load_category_profiles_from_manual(year)
-    except ValueError as exc:
-        raise AggregationCasillaMappingError(
-            translated_message=t(
-                "No hay perfiles fiscales de categorias para el ejercicio solicitado.",
-                "No fiscal category profiles are available for the requested tax year.",
-                "A kert adoevre nem erheto el adozasi kategoriaprofil.",
-            ),
-            context={"year": year},
-        ) from exc
+PerModeloAggregationPayload = RetencionesAggregation | CounterpartAggregation | ForeignAssetsAggregation
 
 
-def _transaction_contribution(
-    transaction: Transaction,
-    *,
-    modelo: ModeloCode,
-    period: Period,
-    category_profiles: Mapping[SpendingCategory, CategoryProfile],
-) -> tuple[str, str | None, Decimal] | None:
-    if transaction.business_classification is BusinessClassification.PERSONAL:
-        return None
-    if transaction.direction is TransactionDirection.INTERNAL_TRANSFER:
-        return None
+class PerModeloAggregationResult(BaseModel):
+    """Result envelope returned by the central per-modelo aggregation service."""
 
-    business_factor = _business_factor(transaction)
-    if transaction.direction is TransactionDirection.INCOMING:
-        return ("01", transaction.category_id, abs(transaction.raw.amount) * business_factor)
+    model_config = _STRICT_FROZEN
 
-    category = _require_category(transaction)
-    profile = category_profiles.get(category)
-    if profile is None:
-        raise AggregationCategoryCoverageError(
-            translated_message=t(
-                "La categoria de una transaccion no tiene perfil fiscal.",
-                "A transaction category has no fiscal profile.",
-                "Egy tranzakcio kategoriajahoz nincs adozasi profil.",
-            ),
-            context={"transaction_id": transaction.transaction_id, "category_id": category.value},
-        )
-    factor = business_factor * _profile_factor(transaction, profile)
-    casilla = _resolve_casilla(profile, modelo=modelo, period=period, transaction=transaction)
-    return (casilla, category.value, abs(transaction.raw.amount) * factor)
+    modelo: str = Field(min_length=1, max_length=16)
+    period: Period
+    provider: PerModeloAggregationContributor
+    aggregation: PerModeloAggregationPayload
+    source_kinds: tuple[BindingSourceKind, ...]
+    log_fields: PerModeloAggregationLogFields
 
+    @field_validator("source_kinds")
+    @classmethod
+    def _source_kinds_are_unique(cls, value: tuple[BindingSourceKind, ...]) -> tuple[BindingSourceKind, ...]:
+        if len(value) != len(set(value)):
+            raise AggregationConfigError(
+                "result source_kinds must be unique",
+                translated_message="aggregation.service.errors.result_source_kinds_not_unique",
+            )
+        return value
 
-def _business_factor(transaction: Transaction) -> Decimal:
-    if transaction.business_classification is BusinessClassification.MIXED:
-        assert transaction.business_pct is not None
-        return transaction.business_pct
-    return _ONE
-
-
-def _profile_factor(transaction: Transaction, profile: CategoryProfile) -> Decimal:
-    rule = profile.proportionality
-    if rule.kind is ProportionalityKind.NON_DEDUCTIBLE:
-        return _ZERO
-    if rule.kind is ProportionalityKind.FIXED_PERCENTAGE:
-        assert rule.fixed_pct is not None
-        return rule.fixed_pct
-    if rule.default_ratio is not None:
-        return rule.default_ratio
-    return _ONE
-
-
-def _require_category(transaction: Transaction) -> SpendingCategory:
-    if transaction.category_id is None:
-        raise AggregationCategoryCoverageError(
-            translated_message=t(
-                "Una transaccion de gasto de negocio no tiene categoria fiscal.",
-                "A business expense transaction has no fiscal category.",
-                "Egy uzleti kiadas tranzakcionak nincs adozasi kategoriaja.",
-            ),
-            context={"transaction_id": transaction.transaction_id},
-            suggestion="aeat financial txs classify <transaction-id> --category <category>",
-        )
-    try:
-        return SpendingCategory(transaction.category_id)
-    except ValueError as exc:
-        raise AggregationCategoryCoverageError(
-            translated_message=t(
-                "La categoria de una transaccion no existe en el catalogo fiscal.",
-                "A transaction category is not in the fiscal category catalogue.",
-                "Egy tranzakcio kategoriaja nincs az adozasi katalogusban.",
-            ),
-            context={"transaction_id": transaction.transaction_id, "category_id": transaction.category_id},
-        ) from exc
-
-
-def _resolve_casilla(
-    profile: CategoryProfile,
-    *,
-    modelo: ModeloCode,
-    period: Period,
-    transaction: Transaction,
-) -> str:
-    mappings = tuple(
-        mapping
-        for mapping in profile.casilla_mappings
-        if _mapping_modelo(mapping) == modelo and mapping.period_type is period.period_type
-    )
-    if not mappings:
-        raise AggregationCasillaMappingError(
-            translated_message=t(
-                "La categoria no tiene mapeo de casilla para este modelo y periodo.",
-                "The category has no casilla mapping for this modelo and period.",
-                "A kategorianak nincs casilla-lekepezese ehhez a nyomtatvanyhoz es idoszakhoz.",
-            ),
-            context={
-                "transaction_id": transaction.transaction_id,
-                "category_id": profile.category.value,
-                "modelo": modelo.value,
-            },
-        )
-    if len(mappings) != 1:
-        raise AggregationCasillaMappingError(
-            translated_message=t(
-                "La categoria tiene mas de un mapeo de casilla compatible.",
-                "The category has more than one compatible casilla mapping.",
-                "A kategorianak egynel tobb kompatibilis casilla-lekepezese van.",
-            ),
-            context={
-                "transaction_id": transaction.transaction_id,
-                "category_id": profile.category.value,
-                "modelo": modelo.value,
-                "mapping_count": len(mappings),
-            },
-        )
-    mapping = mappings[0]
-    if modelo is ModeloCode.MODELO_130:
-        if mapping.casilla_code == "01":
-            return "02"
-        if mapping.casilla_code not in _MODELO_130_INPUT_CASILLAS:
-            raise AggregationCasillaMappingError(
-                translated_message=t(
-                    "El mapeo de la categoria apunta a una casilla calculada o no compatible.",
-                    "The category mapping points to a computed or incompatible casilla.",
-                    "A kategoria lekepezese szamitott vagy nem kompatibilis casillara mutat.",
-                ),
+    @model_validator(mode="after")
+    def _envelope_matches_payload(self) -> PerModeloAggregationResult:
+        if self.aggregation.modelo != self.modelo:
+            raise AggregationConfigError(
+                f"aggregation modelo {self.aggregation.modelo!r} does not match result modelo {self.modelo!r}",
+                translated_message="aggregation.service.errors.envelope_modelo_mismatch",
+                context={"aggregation_modelo": self.aggregation.modelo, "result_modelo": self.modelo},
+            )
+        if self.aggregation.period != self.period:
+            raise AggregationConfigError(
+                f"aggregation period {self.aggregation.period!r} does not match result period {self.period!r}",
+                translated_message="aggregation.service.errors.envelope_period_mismatch",
+                context={"aggregation_period": self.aggregation.period, "result_period": self.period},
+            )
+        expected_payload_types = {
+            PerModeloAggregationContributor.RETENCIONES: RetencionesAggregation,
+            PerModeloAggregationContributor.COUNTERPART: CounterpartAggregation,
+            PerModeloAggregationContributor.FOREIGN_ASSETS: ForeignAssetsAggregation,
+        }
+        expected_type = expected_payload_types[self.provider]
+        if not isinstance(self.aggregation, expected_type):
+            raise AggregationConfigError(
+                f"provider {self.provider.value!r} does not match aggregation payload "
+                f"{type(self.aggregation).__name__!r}",
+                translated_message="aggregation.service.errors.envelope_provider_payload_mismatch",
                 context={
-                    "transaction_id": transaction.transaction_id,
-                    "category_id": profile.category.value,
-                    "modelo": modelo.value,
-                    "casilla": mapping.casilla_code,
+                    "provider": self.provider.value,
+                    "payload_type": type(self.aggregation).__name__,
                 },
             )
-        return mapping.casilla_code
-    return mapping.casilla_code
+        return self
 
 
-def _mapping_modelo(mapping: CasillaMapping) -> ModeloCode | None:
-    if isinstance(mapping.modelo, ModeloCode):
-        return mapping.modelo
-    return _parse_modelo(str(mapping.modelo))
+def build_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
+    """Build the immutable backend-owned aggregation contract.
 
-
-def _parse_modelo(modelo: str | ModeloCode) -> ModeloCode:
-    if isinstance(modelo, ModeloCode):
-        return modelo
-    text = modelo.strip().upper()
-    for candidate in ModeloCode:
-        if text in {candidate.value, candidate.name}:
-            return candidate
-    raise AggregationUnsupportedModeloError(
-        translated_message=t(
-            "Modelo desconocido para agregacion financiera.",
-            "Unknown modelo for financial aggregation.",
-            "Ismeretlen nyomtatvany penzugyi osszesiteshez.",
+    Returns a :class:`PerModeloAggregationContract` enumerating every
+    registered provider, accepted source kinds, and known error codes.
+    """
+    providers = (
+        PerModeloAggregationContributorContract(
+            provider=PerModeloAggregationContributor.RETENCIONES,
+            modelos=_RETENCIONES_MODELOS,
+            service_owner="aeat.application.aggregation",
+            accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
         ),
+        PerModeloAggregationContributorContract(
+            provider=PerModeloAggregationContributor.COUNTERPART,
+            modelos=_COUNTERPART_MODELOS,
+            service_owner="aeat.application.aggregation",
+            accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
+        ),
+        PerModeloAggregationContributorContract(
+            provider=PerModeloAggregationContributor.FOREIGN_ASSETS,
+            modelos=_FOREIGN_ASSET_MODELOS,
+            service_owner="aeat.application.aggregation",
+            accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
+        ),
+    )
+    contract = PerModeloAggregationContract(
+        providers=providers,
+        accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
+        error_codes=AggregationErrorCodes,
+    )
+    LOGGER.debug(
+        "built per-modelo aggregation contract",
+        extra={
+            "service_name": "per_modelo_aggregation",
+            "provider_count": len(contract.providers),
+            "source_kind_count": len(contract.accepted_source_kinds),
+        },
+    )
+    return contract
+
+
+@lru_cache(maxsize=1)
+def get_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
+    """Return the cached backend-owned :class:`PerModeloAggregationContract`."""
+    return build_per_modelo_aggregation_contract()
+
+
+def provider_for_modelo(modelo: str) -> PerModeloAggregationContributor:
+    """Return the provider family for a supported modelo.
+
+    Returns a :class:`PerModeloAggregationContributor` member identifying
+    the aggregation family that owns the given modelo number.
+    """
+    if modelo != modelo.strip():
+        raise AggregationUnsupportedModeloError(
+            t("aggregation.per_modelo.errors.unsupported_modelo"),
+            context={"modelo": modelo},
+            suggestion="use one of 111, 115, 123, 180, 190, 193, 347, 349, 720",
+        )
+    if modelo in _RETENCIONES_MODELOS:
+        return PerModeloAggregationContributor.RETENCIONES
+    if modelo in _COUNTERPART_MODELOS:
+        return PerModeloAggregationContributor.COUNTERPART
+    if modelo in _FOREIGN_ASSET_MODELOS:
+        return PerModeloAggregationContributor.FOREIGN_ASSETS
+    raise AggregationUnsupportedModeloError(
+        t("aggregation.per_modelo.errors.unsupported_modelo"),
         context={"modelo": modelo},
+        suggestion="use one of 111, 115, 123, 180, 190, 193, 347, 349, 720",
     )
 
 
-__all__ = ["aggregate_catalogue"]
+def aggregate_per_modelo(command: PerModeloAggregationCommand) -> PerModeloAggregationResult:
+    """Run the central application aggregation service for one modelo.
+
+    Returns a :class:`PerModeloAggregationResult`.
+    """
+    provider = provider_for_modelo(command.modelo)
+    if provider is PerModeloAggregationContributor.RETENCIONES:
+        aggregation = _aggregate_retenciones(command.modelo, command.period, command.retencion_observations)
+    elif provider is PerModeloAggregationContributor.COUNTERPART:
+        aggregation = _aggregate_counterpart(command.modelo, command.period, command.counterpart_observations)
+    else:
+        aggregation = aggregate_foreign_assets_720(command.foreign_asset_observations, period=command.period)
+
+    result = PerModeloAggregationResult(
+        modelo=command.modelo,
+        period=command.period,
+        provider=provider,
+        aggregation=aggregation,
+        source_kinds=_source_kinds_for_payload(aggregation),
+        log_fields=PerModeloAggregationLogFields(
+            modelo=command.modelo,
+            period=command.period,
+            provider=provider,
+            observation_count=_observation_count_for_command(command, provider),
+            source_kind_count=len(_source_kinds_for_payload(aggregation)),
+            result_row_count=len(aggregation.rollups),
+        ),
+    )
+    LOGGER.debug("ran per-modelo aggregation", extra=result.log_fields.as_extra())
+    return result
+
+
+def _aggregate_retenciones(
+    modelo: str,
+    period: Period,
+    observations: tuple[RetencionObservation, ...],
+) -> RetencionesAggregation:
+    dispatch = {
+        Modelo.M111.value: aggregate_retenciones_111,
+        Modelo.M115.value: aggregate_retenciones_115,
+        Modelo.M123.value: aggregate_retenciones_123,
+        Modelo.M180.value: aggregate_retenciones_180,
+        Modelo.M190.value: aggregate_retenciones_190,
+        Modelo.M193.value: aggregate_retenciones_193,
+    }
+    return dispatch[modelo](observations, period=period)
+
+
+def _aggregate_counterpart(
+    modelo: str,
+    period: Period,
+    observations: tuple[CounterpartObservation, ...],
+) -> CounterpartAggregation:
+    if modelo == Modelo.M347.value:
+        return aggregate_counterpart_347(observations, period=period)
+    return aggregate_counterpart_349(observations, period=period)
+
+
+def _source_kinds_for_payload(payload: PerModeloAggregationPayload) -> tuple[BindingSourceKind, ...]:
+    source_kind_values = sorted({row.source_kind for row in payload.rollups})
+    return tuple(BindingSourceKind(value) for value in source_kind_values)
+
+
+def _observation_count_for_command(
+    command: PerModeloAggregationCommand,
+    provider: PerModeloAggregationContributor,
+) -> int:
+    if provider is PerModeloAggregationContributor.RETENCIONES:
+        return len(command.retencion_observations)
+    if provider is PerModeloAggregationContributor.COUNTERPART:
+        return len(command.counterpart_observations)
+    return len(command.foreign_asset_observations)
+
+
+__all__ = [
+    "ACCEPTED_SOURCE_KINDS",
+    "AggregationErrorCodes",
+    "PerModeloAggregationCommand",
+    "PerModeloAggregationContract",
+    "PerModeloAggregationContributor",
+    "PerModeloAggregationContributorContract",
+    "PerModeloAggregationLogFields",
+    "PerModeloAggregationPayload",
+    "PerModeloAggregationResult",
+    "aggregate_per_modelo",
+    "build_per_modelo_aggregation_contract",
+    "get_per_modelo_aggregation_contract",
+    "provider_for_modelo",
+]

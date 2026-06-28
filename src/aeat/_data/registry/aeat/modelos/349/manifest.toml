@@ -1,0 +1,18 @@
+[modelo]
+id = "349"
+title = "Declaración recapitulativa de operaciones intracomunitarias"
+official_name = "Modelo 349. Declaración Informativa. Declaración recapitulativa de operaciones intracomunitarias."
+tax_domain = "iva"
+cadence = "profile_based"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "orden-eha-769-2010:art-1",
+    "orden-hac-174-2020:art-1",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-349-2020-current",
+    "aeat-modelo-349-procedure",
+]
+

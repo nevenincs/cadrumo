@@ -1,0 +1,10 @@
+{
+  "ca": {
+    "untranslated_pending": "The ca locale still mirrors en for keys captured in this slice. A\nfollow-up translation pass replaces the English strings with real\nCatalan translations and removes entries from this allowlist.\n",
+    "_untranslated_ceiling": 158
+  },
+  "hu": {
+    "untranslated_pending": "The hu locale still mirrors en for keys captured in this slice. A\nfollow-up translation pass replaces the English strings with real\nHungarian translations and removes entries from this allowlist.\n",
+    "_untranslated_ceiling": 118
+  }
+}

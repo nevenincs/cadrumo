@@ -1,0 +1,24 @@
+[[revisions."2024".formulas]]
+id = "renta-2024-ganancias-patrimoniales-base-ahorro-suma"
+target_casilla_id = "0422"
+expression = { op = "sum", args = [
+    { casilla_id = "1608" },
+    { casilla_id = "0324" },
+    { casilla_id = "0339" },
+    { casilla_id = "0354" },
+    { casilla_id = "1814" },
+    { casilla_id = "1845" },
+    { casilla_id = "1846" },
+    { casilla_id = "0386" },
+    { casilla_id = "0387" },
+    { casilla_id = "0390" },
+    { casilla_id = "0393" },
+    { casilla_id = "0412" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37", "ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "base imponible del ahorro"]

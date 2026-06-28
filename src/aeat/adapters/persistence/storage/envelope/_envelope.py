@@ -13,9 +13,10 @@ consumer adheres to. It pins:
 
 The :func:`save_envelope` and :func:`load_envelope` helpers atomically
 write and read the envelope JSON via the project's standard
-``tempfile.NamedTemporaryFile + os.replace`` pattern.
+``tempfile.NamedTemporaryFile + os.replace`` pattern. Encrypted envelopes
+derive their key from the active :class:`MasterKeyProvider` via HKDF-SHA256.
 
-Per-domain migrators are not implemented at the substrate level — the
+Per-domain migrators are not implemented at the substrate level - the
 :class:`EnvelopeMigrator` protocol is the extension point consumers
 register their own migrators against. The substrate simply refuses to
 load a payload whose ``schema_version`` exceeds the consumer's
@@ -25,28 +26,63 @@ expected version, or which fails classification validation.
 from __future__ import annotations
 
 import base64
+import binascii
 import os
 import tempfile
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Protocol, runtime_checkable
+from typing import Protocol, cast, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from .....core.logging import get_logger
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.classification import SensitivityClass
-from ..crypto._crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
+from .....core.errors import CoreValidationError
+from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.locks import fsync_parent_dir
-from ..master_key._master_key import MasterKeyProvider
+from .....core.logging import get_logger
+from .....core.time._utc import validate_utc_aware
+from ..crypto._crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
 from ..errors import (
     ClassificationError,
     DecryptionError,
     EnvelopeVersionError,
+    StorageValidationError,
 )
+from ..errors import (
+    storage_validation_error as _storage_validation_error,
+)
+from ..master_key._master_key import MasterKeyProvider
 
 _log = get_logger(__name__)
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+
+def _read_envelope_text(path: Path) -> str:
+    try:
+        return path.read_text(encoding=_UTF_8_ENCODING)
+    except (OSError, UnicodeDecodeError) as exc:
+        _log.debug("envelope read failed error_type=%s", type(exc).__name__)
+        raise _storage_validation_error("envelope cannot be read") from exc
+
+
+def _parse_model_json[T: BaseModel](model_type: type[T], raw: str, *, label: str) -> T:
+    try:
+        return model_type.model_validate_json(raw)
+    except (ValidationError, ValueError) as exc:
+        _log.debug("envelope JSON validation failed label=%s error_type=%s", label, type(exc).__name__)
+        raise _storage_validation_error(f"{label} envelope JSON is not valid") from exc
+
+
+def _cleanup_tmp_file(tmp_path: Path | None) -> None:
+    if tmp_path is None:
+        return
+    try:
+        tmp_path.unlink()
+    except FileNotFoundError:
+        _log.debug("envelope temp cleanup skipped because temp file is absent")
+    except OSError as exc:
+        _log.debug("envelope temp cleanup failed error_type=%s", type(exc).__name__)
 
 
 class AeadAlgorithm(StrEnum):
@@ -70,7 +106,10 @@ class EncryptionMetadata(BaseModel):
             register their own identifier.
         nonce_b64: Base64-encoded 12-byte nonce.
         ciphertext_b64: Base64-encoded ``ciphertext_with_tag``.
-        associated_data_b64: Base64-encoded AAD bytes (may be empty).
+        associated_data_b64: Base64-encoded AAD bytes. The field is
+            required so persisted metadata distinguishes an explicitly
+            empty AAD from legacy or malformed metadata where the AAD
+            member is missing.
     """
 
     model_config = _STRICT_FROZEN
@@ -78,11 +117,11 @@ class EncryptionMetadata(BaseModel):
     algorithm: AeadAlgorithm = Field(default=AeadAlgorithm.AES_256_GCM_V1)
     nonce_b64: str
     ciphertext_b64: str
-    associated_data_b64: str = Field(default="")
+    associated_data_b64: str
 
     @classmethod
     def from_blob(cls, blob: EncryptedBlob, *, associated_data: bytes = b"") -> EncryptionMetadata:
-        """Build encryption metadata from an :class:`EncryptedBlob`."""
+        """Build :class:`EncryptionMetadata` from an :class:`EncryptedBlob`."""
         return cls(
             nonce_b64=base64.b64encode(blob.nonce).decode("ascii"),
             ciphertext_b64=base64.b64encode(blob.ciphertext).decode("ascii"),
@@ -91,14 +130,20 @@ class EncryptionMetadata(BaseModel):
 
     def to_blob(self) -> EncryptedBlob:
         """Reconstruct the :class:`EncryptedBlob` from encoded fields."""
-        return EncryptedBlob(
-            nonce=base64.b64decode(self.nonce_b64.encode("ascii"), validate=True),
-            ciphertext=base64.b64decode(self.ciphertext_b64.encode("ascii"), validate=True),
-        )
+        try:
+            return EncryptedBlob(
+                nonce=base64.b64decode(self.nonce_b64.encode("ascii"), validate=True),
+                ciphertext=base64.b64decode(self.ciphertext_b64.encode("ascii"), validate=True),
+            )
+        except (binascii.Error, UnicodeEncodeError, ValidationError, ValueError) as exc:
+            raise DecryptionError("cipher envelope encryption metadata is not valid") from exc
 
     def associated_data(self) -> bytes:
         """Decode the associated-data bytes."""
-        return base64.b64decode(self.associated_data_b64.encode("ascii"), validate=True)
+        try:
+            return base64.b64decode(self.associated_data_b64.encode("ascii"), validate=True)
+        except (binascii.Error, UnicodeEncodeError, ValueError) as exc:
+            raise DecryptionError("cipher envelope associated data is not valid") from exc
 
 
 class Envelope[PayloadT: BaseModel](BaseModel):
@@ -131,9 +176,26 @@ class Envelope[PayloadT: BaseModel](BaseModel):
     @field_validator("written_at")
     @classmethod
     def _require_aware(cls, value: datetime) -> datetime:
-        if value.tzinfo is None or value.utcoffset() is None:
-            raise ValueError("written_at must be timezone-aware")
-        return value
+        try:
+            return validate_utc_aware(value)
+        except CoreValidationError as exc:
+            raise _storage_validation_error(str(exc)) from exc
+
+    @classmethod
+    def for_payload_type(cls, payload_cls: type[PayloadT]) -> type[Envelope[PayloadT]]:
+        """Return the :class:`Envelope` parameterised for ``payload_cls``.
+
+        This typed factory avoids a bare ``cast(Any, Envelope).__class_getitem__(...)``
+        at call sites. The returned class is the concrete generic alias Pydantic
+        needs at the JSON validation boundary. The cast to ``type[Envelope[PayloadT]]``
+        is safe because ``__class_getitem__`` on a PEP-695 generic model returns
+        exactly the parameterised subtype; Pydantic registers it as a model class
+        whose ``payload`` field is constrained to ``payload_cls``.
+        """
+        # CAST-RATIONALE-GENERIC-CLASSGETITEM: __class_getitem__ on a pydantic
+        # generic model returns type[Envelope[PayloadT]] at runtime; the stub
+        # annotates it as type[Self], so make the runtime contract explicit.
+        return cast("type[Envelope[PayloadT]]", cls.__class_getitem__(payload_cls))
 
 
 @runtime_checkable
@@ -144,42 +206,45 @@ class EnvelopeMigrator[PayloadT: BaseModel](Protocol):
     target_version: int
 
     def migrate(self, envelope: Envelope[PayloadT]) -> Envelope[PayloadT]:
-        """Return the migrated envelope advanced to ``target_version``."""
+        """Return the migrated :class:`Envelope` advanced to ``target_version``."""
         ...
 
 
-def save_envelope(envelope: Envelope[Any], path: Path) -> None:
+def save_envelope[T: BaseModel](envelope: Envelope[T], path: Path) -> None:
     """Atomically persist ``envelope`` as JSON to ``path``.
 
     Args:
-        envelope: The envelope to write.
+        envelope: The :class:`Envelope` to write.
         path: Destination file. Parent directory is created if absent.
+
+    Raises:
+        StorageValidationError: When the temporary file or atomic replace operation fails.
     """
     target = path.resolve()
-    target.parent.mkdir(parents=True, exist_ok=True)
     payload = envelope.model_dump_json()
-    # Assign tmp_path BEFORE the ``with`` so cleanup works even when
-    # context entry raises. NamedTemporaryFile raising means no file
-    # was created; the outer except re-raises cleanly.
-    handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
-        mode="w",
-        encoding="utf-8",
-        dir=target.parent,
-        prefix=f"{target.stem}.",
-        suffix=".tmp",
-        delete=False,
-    )
-    tmp_path = Path(handle.name)
+    # NamedTemporaryFile raising means no file was created; the outer
+    # except re-raises cleanly.
+    tmp_path: Path | None = None
     try:
-        with handle:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding=_UTF_8_ENCODING,
+            dir=target.parent,
+            prefix=f"{target.stem}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            tmp_path = Path(handle.name)
             handle.write(payload)
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(tmp_path, target)
         fsync_parent_dir(target)
-    except OSError:
-        tmp_path.unlink(missing_ok=True)
-        raise
+    except OSError as exc:
+        _log.error("envelope atomic write failed error_type=%s", type(exc).__name__)
+        _cleanup_tmp_file(tmp_path)
+        raise _storage_validation_error("envelope cannot be written") from exc
 
 
 def load_envelope[PayloadT: BaseModel](
@@ -208,7 +273,7 @@ def load_envelope[PayloadT: BaseModel](
             :class:`EnvelopeVersionError`.
 
     Returns:
-        The validated envelope at the consumer's expected version.
+        The validated :class:`Envelope` at the consumer's expected version.
 
     Raises:
         ClassificationError: If the on-disk classification does not
@@ -217,16 +282,15 @@ def load_envelope[PayloadT: BaseModel](
             ``max_supported_version`` or no migrator chain advances it
             to ``max_supported_version``.
     """
-    raw = path.read_text(encoding="utf-8")
-    envelope = envelope_type.model_validate_json(raw)
+    raw = _read_envelope_text(path)
+    envelope = _parse_model_json(envelope_type, raw, label="plaintext")
     if envelope.classification != expected_class:
         raise ClassificationError(
-            f"envelope at {path} has classification {envelope.classification}; consumer expected {expected_class}",
+            f"envelope classification {envelope.classification}; consumer expected {expected_class}",
         )
     if envelope.schema_version > max_supported_version:
         raise EnvelopeVersionError(
-            f"envelope at {path} is at version {envelope.schema_version}; "
-            f"consumer supports up to {max_supported_version}",
+            f"envelope is at version {envelope.schema_version}; consumer supports up to {max_supported_version}",
         )
     if envelope.schema_version < max_supported_version:
         envelope = _apply_migrators(envelope, max_supported_version, migrators)
@@ -293,7 +357,7 @@ class CipherEnvelope(BaseModel):
     encryption metadata and the same classification gate. The
     plaintext :class:`Envelope` (with payload) is JSON-serialised,
     encrypted with AES-256-GCM, and the ciphertext lives inside
-    :attr:`encryption.ciphertext_b64`.
+    ``encryption.ciphertext_b64``.
 
     Attributes:
         cipher_schema_version: Wire-format version of the cipher
@@ -317,9 +381,10 @@ class CipherEnvelope(BaseModel):
     @field_validator("written_at")
     @classmethod
     def _require_aware(cls, value: datetime) -> datetime:
-        if value.tzinfo is None or value.utcoffset() is None:
-            raise ValueError("written_at must be timezone-aware")
-        return value
+        try:
+            return validate_utc_aware(value)
+        except CoreValidationError as exc:
+            raise _storage_validation_error(str(exc)) from exc
 
 
 def _build_aad(classification: SensitivityClass, hkdf_context: bytes) -> bytes:
@@ -346,8 +411,8 @@ def _derive_envelope_key(
     )
 
 
-def save_encrypted_envelope(
-    envelope: Envelope[Any],
+def save_encrypted_envelope[T: BaseModel](
+    envelope: Envelope[T],
     path: Path,
     *,
     master_key_provider: MasterKeyProvider,
@@ -363,22 +428,25 @@ def save_encrypted_envelope(
     graft.
 
     The same master-key provider that the test substrate already
-    overrides via :func:`override_master_key_provider` is honoured here;
+    overrides via ``override_master_key_provider`` is honoured here;
     callers can therefore exercise this code path against ephemeral
     keys in tests.
 
     Args:
         envelope: The plaintext envelope to encrypt and persist.
         path: Destination file. Parent directory is created if absent.
-        master_key_provider: Source of the master key.
+        master_key_provider: :class:`MasterKeyProvider` supplying the master key
+            used to derive the per-consumer encryption key via HKDF-SHA256.
         hkdf_context: Per-consumer context bytes (e.g.
             ``b"aeat.domain.transactions.v1"``). Different
             consumers MUST use distinct contexts so cross-consumer
             ciphertext substitution fails.
+
+    Raises:
+        StorageValidationError: When the temporary file or atomic replace operation fails.
     """
     target = path.resolve()
-    target.parent.mkdir(parents=True, exist_ok=True)
-    plaintext = envelope.model_dump_json().encode("utf-8")
+    plaintext = envelope.model_dump_json().encode(_UTF_8_ENCODING)
     aad = _build_aad(envelope.classification, hkdf_context)
     derived_key = _derive_envelope_key(
         master_key=master_key_provider.get_master_key(),
@@ -391,28 +459,29 @@ def save_encrypted_envelope(
         encryption=EncryptionMetadata.from_blob(blob, associated_data=aad),
     )
     serialised = cipher_envelope.model_dump_json()
-    # Assign tmp_path BEFORE the ``with`` so cleanup works even when
-    # context entry raises. NamedTemporaryFile raising means no file
-    # was created; the outer except re-raises cleanly.
-    handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
-        mode="w",
-        encoding="utf-8",
-        dir=target.parent,
-        prefix=f"{target.stem}.",
-        suffix=".tmp",
-        delete=False,
-    )
-    tmp_path = Path(handle.name)
+    # NamedTemporaryFile raising means no file was created; the outer
+    # except re-raises cleanly.
+    tmp_path: Path | None = None
     try:
-        with handle:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding=_UTF_8_ENCODING,
+            dir=target.parent,
+            prefix=f"{target.stem}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            tmp_path = Path(handle.name)
             handle.write(serialised)
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(tmp_path, target)
         fsync_parent_dir(target)
-    except OSError:
-        tmp_path.unlink(missing_ok=True)
-        raise
+    except OSError as exc:
+        _log.error("envelope encrypted atomic write failed error_type=%s", type(exc).__name__)
+        _cleanup_tmp_file(tmp_path)
+        raise _storage_validation_error("encrypted envelope cannot be written") from exc
 
 
 def load_encrypted_envelope[PayloadT: BaseModel](
@@ -437,13 +506,19 @@ def load_encrypted_envelope[PayloadT: BaseModel](
     Args:
         path: Source file (must exist).
         envelope_type: The parameterised envelope class.
-        expected_class: The sensitivity class the consumer expects.
-        master_key_provider: Source of the master key.
+        expected_class: The :class:`SensitivityClass` the consumer expects.
+            Mismatch raises :class:`ClassificationError` before any crypto
+            attempt.
+        master_key_provider: :class:`MasterKeyProvider` supplying the master key
+            used to derive the per-consumer decryption key via HKDF-SHA256.
         hkdf_context: Per-consumer context bytes; MUST match the
             value supplied at save time.
         max_supported_version: Highest inner-envelope schema version
             the consumer supports.
         migrators: Optional ordered tuple of forward migrators.
+
+    Returns:
+        The decrypted and version-migrated inner :class:`Envelope`.
 
     Raises:
         ClassificationError: If the cipher envelope's class differs
@@ -455,33 +530,34 @@ def load_encrypted_envelope[PayloadT: BaseModel](
             schema version exceeds ``max_supported_version`` or no
             migrator chain can advance it.
     """
-    raw = path.read_text(encoding="utf-8")
-    cipher_envelope = CipherEnvelope.model_validate_json(raw)
+    raw = _read_envelope_text(path)
+    cipher_envelope = _parse_model_json(CipherEnvelope, raw, label="cipher")
     if cipher_envelope.classification != expected_class:
         raise ClassificationError(
-            f"cipher envelope at {path} has classification "
-            f"{cipher_envelope.classification}; consumer expected {expected_class}",
+            f"cipher envelope classification {cipher_envelope.classification}; consumer expected {expected_class}",
         )
     blob = cipher_envelope.encryption.to_blob()
     aad = _build_aad(cipher_envelope.classification, hkdf_context)
     if cipher_envelope.encryption.associated_data() != aad:
         raise DecryptionError(
-            f"cipher envelope at {path}: AAD mismatch (classification or HKDF-context drift)",
+            "cipher envelope AAD mismatch (classification or HKDF-context drift)",
         )
     derived_key = _derive_envelope_key(
         master_key=master_key_provider.get_master_key(),
         hkdf_context=hkdf_context,
     )
     plaintext = decrypt_record(blob, key=derived_key, associated_data=aad)
-    inner = envelope_type.model_validate_json(plaintext.decode("utf-8"))
+    try:
+        inner = envelope_type.model_validate_json(plaintext.decode(_UTF_8_ENCODING))
+    except (UnicodeDecodeError, ValidationError, ValueError) as exc:
+        raise DecryptionError("inner envelope plaintext is not valid JSON") from exc
     if inner.classification != expected_class:
         raise ClassificationError(
-            f"inner envelope at {path} drifted to {inner.classification}; consumer expected {expected_class}",
+            f"inner envelope drifted to {inner.classification}; consumer expected {expected_class}",
         )
     if inner.schema_version > max_supported_version:
         raise EnvelopeVersionError(
-            f"inner envelope at {path} is at version {inner.schema_version}; "
-            f"consumer supports up to {max_supported_version}",
+            f"inner envelope is at version {inner.schema_version}; consumer supports up to {max_supported_version}",
         )
     if inner.schema_version < max_supported_version:
         inner = _apply_migrators(inner, max_supported_version, migrators)
@@ -513,28 +589,47 @@ def reencrypt_envelope_file[PayloadT: BaseModel](
 
     Repository load paths are strict ciphertext-only; this function
     is the only sanctioned path that touches plaintext envelopes.
+
+    Args:
+        path: Target file to re-encrypt in place.
+        envelope_type: The parameterised envelope class.
+        expected_class: The :class:`SensitivityClass` the consumer expects.
+        master_key_provider: :class:`MasterKeyProvider` supplying the master key
+            used to derive the per-consumer encryption key via HKDF-SHA256.
+        hkdf_context: Per-consumer context bytes; MUST match those used
+            for subsequent load calls.
+        max_supported_version: Highest inner-envelope schema version
+            the consumer supports.
+        migrators: Optional ordered tuple of forward migrators.
     """
     if not path.exists():
         return False
-    raw = path.read_text(encoding="utf-8")
+    try:
+        raw = _read_envelope_text(path)
+    except StorageValidationError as exc:
+        if isinstance(exc.__cause__, FileNotFoundError):
+            _log.debug("envelope reencrypt skipped because source file disappeared")
+            return False
+        raise
     # If the file already round-trips as a CipherEnvelope, it is
     # already ciphertext-at-rest; nothing to do.
     try:
         CipherEnvelope.model_validate_json(raw)
-    except Exception:  # noqa: S110 - any parse failure means "not yet ciphertext"
-        pass
+    except (ValidationError, ValueError) as exc:
+        _log.debug("envelope reencrypt source is not cipher JSON error_type=%s", type(exc).__name__)
+        # Any parse failure (bad JSON, schema mismatch) means "not yet ciphertext".
     else:
         return False
-    plaintext_envelope = envelope_type.model_validate_json(raw)
+    plaintext_envelope = _parse_model_json(envelope_type, raw, label="plaintext")
     if plaintext_envelope.classification != expected_class:
         raise ClassificationError(
-            f"plaintext envelope at {path} has classification "
-            f"{plaintext_envelope.classification}; consumer expected {expected_class}",
+            f"plaintext envelope classification {plaintext_envelope.classification}; "
+            f"consumer expected {expected_class}",
         )
     if plaintext_envelope.schema_version > max_supported_version:
         raise EnvelopeVersionError(
-            f"plaintext envelope at {path} is at version "
-            f"{plaintext_envelope.schema_version}; consumer supports up to {max_supported_version}",
+            f"plaintext envelope is at version {plaintext_envelope.schema_version}; "
+            f"consumer supports up to {max_supported_version}",
         )
     if plaintext_envelope.schema_version < max_supported_version:
         plaintext_envelope = _apply_migrators(plaintext_envelope, max_supported_version, migrators)
@@ -552,6 +647,8 @@ __all__ = [
     "EncryptionMetadata",
     "Envelope",
     "EnvelopeMigrator",
+    "_build_aad",
+    "_derive_envelope_key",
     "load_encrypted_envelope",
     "load_envelope",
     "reencrypt_envelope_file",

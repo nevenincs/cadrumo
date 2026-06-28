@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "1637"
+number = "1637"
+label = "Valor de adquisición"
+section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
+semantic_role = "irpf_ganancia_otros_valor_adquisicion"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

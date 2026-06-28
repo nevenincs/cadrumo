@@ -1,0 +1,9 @@
+[[revisions."2023".casillas]]
+id = "1570"
+number = "1570"
+label = "Rendimiento derivado de valores de deuda subordinada o de participaciones preferentes"
+section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
+data_type = "decimal"
+semantic_role = "irpf_re_atrib_deuda_subordinada"
+legal_refs = ["ley-35-2006:art-86"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

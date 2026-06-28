@@ -1,0 +1,12 @@
+[[revisions.2019-2022.casillas]]
+id = "29"
+number = "29"
+label = "Mod. 40.3 LIS — Volumen operaciones en Territorio Comun (%)"
+section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
+data_type = "decimal"
+semantic_role = "is_pf_mod_40_3_volumen_territorio_comun_pct"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-202-2019-2022-page-02-casilla-29"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2019", "aeat-modelo-202-instructions-2023-2024"]

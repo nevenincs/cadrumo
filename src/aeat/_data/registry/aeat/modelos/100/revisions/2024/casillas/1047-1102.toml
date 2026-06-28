@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "1102"
+number = "1102"
+label = "Por cantidades destinadas por sus titulares a la conservación, reparación y restauración de bienes integrantes del Patrimonio Cultural Valenciano"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_titulares_conservacion_patrimonio"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

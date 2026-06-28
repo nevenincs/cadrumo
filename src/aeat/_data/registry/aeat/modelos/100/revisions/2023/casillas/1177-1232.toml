@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "1232"
+number = "1232"
+label = "Importe total obtenido como consecuencia de la transmisión de acciones o participaciones que es susceptible de reinversión a afectos de la exención por reinversión en empresa nueva o de reciente cr..."
+section = ["resultados", "anexo_c_res", "exencion_nuevas_empresas_res"]
+semantic_role = "irpf_anexo_c_exencion_reinversion_importe_total_transmision"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-38"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

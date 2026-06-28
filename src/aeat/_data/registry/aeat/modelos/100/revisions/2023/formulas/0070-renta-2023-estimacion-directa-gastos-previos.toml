@@ -1,0 +1,40 @@
+[[revisions."2023".formulas]]
+id = "renta-2023-estimacion-directa-gastos-previos"
+target_casilla_id = "0218"
+expression = { op = "sum", args = [
+        { casilla_id = "0181" },
+        { casilla_id = "0182" },
+        { casilla_id = "0183" },
+        { casilla_id = "0184" },
+        { casilla_id = "0185" },
+        { casilla_id = "0186" },
+        { casilla_id = "0187" },
+        { casilla_id = "0188" },
+        { casilla_id = "0189" },
+        { casilla_id = "0190" },
+        { casilla_id = "0191" },
+        { casilla_id = "0192" },
+        { casilla_id = "0193" },
+        { casilla_id = "0194" },
+        { casilla_id = "0195" },
+        { casilla_id = "0198" },
+        { casilla_id = "0199" },
+        { casilla_id = "0200" },
+        { casilla_id = "0202" },
+        { casilla_id = "0203" },
+        { casilla_id = "0205" },
+        { casilla_id = "0206" },
+        { casilla_id = "0208" },
+        { casilla_id = "0227" },
+        { casilla_id = "0214" },
+        { casilla_id = "0215" },
+        { casilla_id = "0216" },
+        { casilla_id = "0217" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]

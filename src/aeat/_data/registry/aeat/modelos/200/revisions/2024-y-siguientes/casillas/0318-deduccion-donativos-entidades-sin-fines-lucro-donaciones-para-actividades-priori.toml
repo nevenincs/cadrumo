@@ -1,0 +1,84 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "00979"
+number = "00979"
+label = "Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2019 Sin reiteración de donaciones a una misma e..."
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_prioritarias"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-018c-casilla-00979"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00980"
+number = "00980"
+label = "Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2019 - Con reiteración de donaciones a una misma..."
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_prioritarias"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-018c-casilla-00980"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00981"
+number = "00981"
+label = "Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2019 - Con reiteración de donaciones a una misma..."
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_prioritarias"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-018c-casilla-00981"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00982"
+number = "00982"
+label = "Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2019 - Con reiteración de donaciones a una misma..."
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_prioritarias"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-018c-casilla-00982"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00983"
+number = "00983"
+label = "Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2020 Sin reiteración de donaciones a una misma e..."
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_prioritarias"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-018c-casilla-00983"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00984"
+number = "00984"
+label = "Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2020 Sin reiteración de donaciones a una misma e..."
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_prioritarias"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-018c-casilla-00984"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00985"
+number = "00985"
+label = "Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2020 Sin reiteración de donaciones a una misma e..."
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_prioritarias"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-018c-casilla-00985"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

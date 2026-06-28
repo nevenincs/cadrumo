@@ -1,0 +1,10 @@
+[[revisions."2022".casillas]]
+id = "0586"
+number = "0586"
+label = "Cuota líquida autonómica incrementada ( [0586] = [0571] + [0569] + [0583] + [0577] + [0578] + [0579] + [0581] ): Parte autonómica"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_cuota_liquida_autonomica_incrementada"
+input_kind = "computed"
+formula = "renta-2022-cuota-liquida-autonomica-incrementada"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

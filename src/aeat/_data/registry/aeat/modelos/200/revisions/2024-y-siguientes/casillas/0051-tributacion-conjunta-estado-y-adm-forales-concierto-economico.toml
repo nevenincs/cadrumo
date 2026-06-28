@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "00050"
+number = "00050"
+label = "Tributación conjunta Estado y Adm.Forales - Concierto económico - Volumen total de operaciones [00050]"
+section = ["tributacion_conjunta_estado_y_adm_forales", "concierto_economico"]
+data_type = "money"
+semantic_role = "is_tributacion_conjunta_proporcion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026-casilla-00050"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00051"
+number = "00051"
+label = "Tributación conjunta Estado y Adm.Forales - Concierto económico - Volumen operaciones en el extranjero [00051]"
+section = ["tributacion_conjunta_estado_y_adm_forales", "concierto_economico"]
+data_type = "money"
+semantic_role = "is_tributacion_conjunta_proporcion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026-casilla-00051"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00052"
+number = "00052"
+label = "Tributación conjunta Estado y Adm.Forales - Concierto económico - Volumen operaciones en Araba/Álava [00052]"
+section = ["tributacion_conjunta_estado_y_adm_forales", "concierto_economico"]
+data_type = "money"
+semantic_role = "is_tributacion_conjunta_proporcion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026-casilla-00052"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00053"
+number = "00053"
+label = "Tributación conjunta Estado y Adm.Forales - Concierto económico - Volumen operaciones en Gipuzkoa [00053]"
+section = ["tributacion_conjunta_estado_y_adm_forales", "concierto_economico"]
+data_type = "money"
+semantic_role = "is_tributacion_conjunta_proporcion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026-casilla-00053"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00054"
+number = "00054"
+label = "Tributación conjunta Estado y Adm.Forales - Concierto económico - Volumen operaciones en Bizkaia [00054]"
+section = ["tributacion_conjunta_estado_y_adm_forales", "concierto_economico"]
+data_type = "money"
+semantic_role = "is_tributacion_conjunta_proporcion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026-casilla-00054"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

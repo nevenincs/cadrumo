@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0566"
+number = "0566"
+label = "Deducción aplicable a las unidades familiares formadas por residentes fiscales en Estados miembros de la Unión Europea o del Espacio Economico Europeo  (traslade los importes de estas mismas casill..."
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_deduccion_unidades_familiares_ue_eee_autonomica"
+legal_refs = ["ley-35-2006:art-81-bis"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

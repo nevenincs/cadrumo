@@ -1,0 +1,9 @@
+[[revisions."2020".casillas]]
+id = "0456"
+number = "0456"
+label = "NIF/NIE del hijo 1(*)"
+section = ["toma_datos_ampliada", "datos_adicionales"]
+data_type = "nif"
+semantic_role = "irpf_descendiente_nif"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-81-bis"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

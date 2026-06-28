@@ -1,0 +1,11 @@
+[[revisions."2025".casillas]]
+id = "RESIDENTEUE"
+number = "*64"
+label = "Conyuge residente UE o EEE"
+section = ["datos_identificativos", "conyuge"]
+data_type = "boolean"
+semantic_role = "irpf_conyuge_residente_ue_eee_flag"
+input_kind = "bound"
+binding = "renta-2025-profile-spouse-eu-eea-resident"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]

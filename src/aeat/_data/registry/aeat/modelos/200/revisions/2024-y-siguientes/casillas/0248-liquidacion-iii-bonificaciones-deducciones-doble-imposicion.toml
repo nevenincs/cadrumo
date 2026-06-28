@@ -1,0 +1,13 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "00815"
+number = "00815"
+segmento = "DP200014"
+label = "Liquidación III - Bonificaciones/Deducciones doble imposición - Bonificación rendimientos por venta de bienes corporales producidos en Illes Balears (DA 70.Cinco Ley 31/2022) [00815]"
+section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
+data_type = "money"
+semantic_role = "is_liquidacion_iii_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014-casilla-00815"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

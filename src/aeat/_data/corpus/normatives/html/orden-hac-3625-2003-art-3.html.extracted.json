@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hac-3625-2003-art-3.html",
+  "source_sha256": "8d6417c9da7c65e38e2223510734a92f3854cb1d0d436881c7a810f95ada08a2",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Modificación de la Orden de 15 de junio de 1995, por la que se desarrolla parcialmente el Reglamento General de Recaudación en la redacción dada al mismo por el Real Decreto 448/1995, de 24 de marzo, en relación con las entidades de depósito que prestan el servicio de colaboración en la gestión recaudatoria.\nEn el anexo I, Código 021 autoliquidaciones, se incluye el siguiente modelo de declaración:\nCódigo de modelo: 309.\nDenominación: Impuesto sobre el Valor Añadido. Declaración-liquidación no periódica.",
+      "title": "Disposición adicional única.",
+      "section": "Disposición adicional única.",
+      "anchor": null
+    },
+    {
+      "text": "Desde la entrada en vigor de la presente Orden quedan derogadas cuantas disposiciones de igual o inferior rango se opongan a lo dispuesto en la misma y, en particular, la Orden de 10 de octubre de 2001 por la que se aprueba el modelo 309 de declaración-liquidación no periódica, en pesetas y en euros, del Impuesto sobre el Valor Añadido.",
+      "title": "Disposición derogatoria única.",
+      "section": "Disposición derogatoria única.",
+      "anchor": null
+    },
+    {
+      "text": "La presente Orden entrará en vigor el día 1 de enero de 2004.\nLo que comunico a VV. II. para su conocimiento y efectos.\nMadrid, 23 de diciembre de 2003.\nMONTORO ROMERO\nIlmo. Sr. Director general de la Agencia Es",
+      "title": "Disposición final única.",
+      "section": "Disposición final única.",
+      "anchor": null
+    }
+  ]
+}

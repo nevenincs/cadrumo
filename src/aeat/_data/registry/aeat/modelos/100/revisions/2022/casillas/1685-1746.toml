@@ -1,0 +1,9 @@
+[[revisions."2022".casillas]]
+id = "1746"
+number = "1746"
+label = "Hijo/Hija 2 (*): Si no tiene NIF o NIE, marque con una \"X\""
+section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
+data_type = "boolean"
+semantic_role = "irpf_descendiente_adicional_nif_ausente_flag"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

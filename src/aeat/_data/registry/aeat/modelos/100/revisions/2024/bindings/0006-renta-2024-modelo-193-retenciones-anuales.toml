@@ -1,0 +1,11 @@
+[[revisions."2024".bindings]]
+id = "renta-2024-modelo-193-retenciones-anuales"
+source = "relation_prefill"
+selector = { source_modelo = "193", source_casilla_id = "decl.retenciones-total" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3377-2011:art-1"]
+source_refs = ["boe-modelo-193-2011-form"]
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "boe-modelo-193-2011-form"
+required_text = ["RETENCIONES E INGRESOS A CUENTA", "posiciones 169 a 181"]

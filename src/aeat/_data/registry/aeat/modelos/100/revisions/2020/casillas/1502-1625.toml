@@ -1,0 +1,9 @@
+[[revisions."2020".casillas]]
+id = "1625"
+number = "1625"
+label = "Imputación temporal: opción criterio operaciones a plazos o con precio aplazado. Consigne una \"X\""
+section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
+data_type = "boolean"
+semantic_role = "irpf_ganancia_otros_imputacion_plazos"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

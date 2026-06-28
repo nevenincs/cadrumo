@@ -1,0 +1,14 @@
+# Modelo 322 (IVA grupo de entidades — autoliquidación individual mensual,
+# REGE). Enrolled by driving the individual member's monthly régimen-general
+# calculation through the real registry engine for the same period (December)
+# of two distinct renta years (2025, 2026). The 2008-y-siguientes revision is
+# year-stable (Orden EHA/3434/2007 art. 1, LIVA arts. 163 quinquies-nonies):
+# the form and rate set are unchanged across both ejercicios, so the second
+# year is a real filing. Non-tautological invariant: iva.resultado-regimen-
+# general == iva.cuota-devengada-total - iva.cuota-deducible-total per year,
+# over real ledger-derived cuotas. No compensación carry, no profile-gap.
+[modelo]
+modelo = "322"
+renta_years = [2025, 2026]
+evidence_class = "calculation"
+enrolling_test = "src/aeat/application/calculations/tests/test_modelo_322_grupo_individual_continuity.py"
