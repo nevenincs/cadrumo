@@ -1653,6 +1653,7 @@ cli:
         invalid_evidence_kind: --evidence-kind debe ser uno de {canonical}; se recibió
           {kind}.
         list_help: Listar los filing records registrados
+        modelo_help: Filtrar por código de modelo (p. ej. 303, 130, 100)
         view_help: Mostrar un filing record por id
       formulas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
@@ -2888,6 +2889,9 @@ cli:
       confirm_required: Pasa --yes para confirmar esta operación destructiva del libro.
       filter_parse_error: 'Fallo al analizar el filtro del libro cerca de %{token}:
         %{reason}.'
+      period_year_pairing: Los filtros de periodo del libro requieren periodo y ejercicio
+        juntos. Para un año completo use --period 0A --year %{year}, o --filter
+        period=0A --filter year=%{year}.
       id_prefix_collision: 'El prefijo de id %{prefix!r} coincide con varias transacciones:
         %{candidates}. Amplía el prefijo para desambiguar.'
       id_prefix_empty: El prefijo de id de transacción está vacío; indica al menos

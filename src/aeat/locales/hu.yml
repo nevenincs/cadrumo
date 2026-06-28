@@ -1576,6 +1576,7 @@ cli:
         invalid_evidence_kind: 'A --evidence-kind értéke csak {canonical} egyike lehet;
           kapott: {kind}.'
         list_help: Regisztrált benyújtási rekordok listázása.
+        modelo_help: Szűrés nyomtatványkód szerint (pl. 303, 130, 100).
         view_help: Egy benyújtási rekord megjelenítése azonosító alapján.
       formulas:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
@@ -2805,6 +2806,9 @@ cli:
       confirm_required: Adja meg a --yes kapcsolót e romboló főkönyvi művelet megerősítéséhez.
       filter_parse_error: 'A főkönyvi szűrő elemzése sikertelen %{token} közelében:
         %{reason}.'
+      period_year_pairing: A főkönyvi időszakszűrőkhöz időszak és év együtt szükséges.
+        Teljes évhez használja a --period 0A --year %{year} kapcsolókat, vagy
+        a --filter period=0A --filter year=%{year} párost.
       id_prefix_collision: 'A(z) %{prefix!r} tranzakcióazonosító-előtag több tranzakcióra
         illeszkedik: %{candidates}. Hosszabbítsa meg az előtagot az egyértelműsítéshez.'
       id_prefix_empty: A tranzakcióazonosító-előtag üres; adjon meg legalább egy hexadecimális
