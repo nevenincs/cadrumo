@@ -82,6 +82,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
         status=UserProfileStatus.ACTIVE,
         facts=(
             UserProfileFact(path="identity.name", value="Oracle Test Operator"),
+            UserProfileFact(path="identity.surnames", value="Calculation"),
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
             # Spanish enum value: autónomo en estimación directa.
@@ -116,6 +117,7 @@ def _seed_legal_entity_profile(
 
     facts: list[UserProfileFact] = [
         UserProfileFact(path="identity.name", value="Oracle IS Operator"),
+        UserProfileFact(path="identity.legal_name", value="Oracle IS Operator SL"),
         UserProfileFact(path="identity.tax_id", value="B12345678"),
         UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
         UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),

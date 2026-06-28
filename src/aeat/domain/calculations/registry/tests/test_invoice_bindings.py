@@ -346,6 +346,52 @@ def test_resolve_invoice_binding_row_values_groups_by_operator_and_clave_summing
     }
 
 
+def test_resolve_invoice_binding_row_values_strips_m349_export_nif_prefix() -> None:
+    """M349 Tipo-2 exports split country code and the VAT number subfield."""
+    revision = _revision(
+        _with_selector(
+            _binding("iva-349-operador-row-codigo-pais"),
+            claves=("E",),
+            rectification_scope="exclude_rectifications",
+        ),
+        _with_selector(
+            _binding("iva-349-operador-row-nif"),
+            claves=("E",),
+            rectification_scope="exclude_rectifications",
+        ),
+        _with_selector(
+            _binding("iva-349-rectificacion-row-codigo-pais"),
+            claves=("E",),
+            rectification_scope="only_rectifications",
+        ),
+        _with_selector(
+            _binding("iva-349-rectificacion-row-nif"),
+            claves=("E",),
+            rectification_scope="only_rectifications",
+        ),
+    )
+    observations = (
+        _observation(party="DE123456789", country="DE", base="1000.00", clave="E"),
+        _observation(
+            party="IT12345678901",
+            country="IT",
+            base="200.00",
+            clave="E",
+            is_rectification=True,
+            previous="180.00",
+            period="4T",
+            year=2025,
+        ),
+    )
+
+    rows = resolve_invoice_binding_row_values(revision, observations)
+
+    assert rows[("iva-349-operador-row-codigo-pais", 1)] == "DE"
+    assert rows[("iva-349-operador-row-nif", 1)] == "123456789"
+    assert rows[("iva-349-rectificacion-row-codigo-pais", 1)] == "IT"
+    assert rows[("iva-349-rectificacion-row-nif", 1)] == "12345678901"
+
+
 def test_resolve_invoice_binding_row_values_period_grouping_carries_rectification_metadata() -> None:
     revision = _revision(
         _with_selector(

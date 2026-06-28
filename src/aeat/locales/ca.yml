@@ -844,6 +844,10 @@ application:
         a la revisió %{revision_id}: el registre declara un origen de vinculació que
         cap resolutor de càlcul gestiona. Registreu un resolutor o marqueu-lo com
         a ajornat abans de calcular.'
+      profile_readiness_missing: 'El perfil és incomplet per al model %{modelo} %{filing_year}
+        %{period}; completa abans aquestes dades de perfil: %{missing}.'
+      profile_readiness_profile_missing: No existeix cap perfil actiu persistit per
+        a aquest treball de model; crea o repara el perfil abans de continuar.
       reconcile_declaration_unsupported: La reconciliació des de PDF de declaració
         encara no està disponible; reconcilia un justificant descarregat amb aeat
         app modelo reconcile file fins que el parser de declaracions estigui disponible.
@@ -1186,6 +1190,9 @@ application:
       quiet_missing_flags: 'A aquesta execució amb --quiet li falten dades obligatòries.
         Afegeix aquests flags i torna a executar l''ordre: %{missing_flags}. O executa-la
         sense --quiet des d''un terminal interactiu per fer servir l''assistent guiat.'
+      create_missing_filing_baseline: 'A la creació del perfil li falten dades
+        d''identitat per presentar models. Afegeix aquests flags i torna a executar
+        l''ordre: %{missing_flags}.'
     next_hint:
       modelo_work_create: aeat app modelo work create
     output_labels:
@@ -1208,6 +1215,8 @@ application:
         un adaptador filing_draft_builder.
       adapter_missing_inputs_provider: El motor de flux de treball requereix un proveïdor
         d'entrades basat en dipòsit.
+      adapter_missing_submission_engine: El motor de flux de treball requereix un
+        adaptador submission_engine.
       no_active_profile_bucket: No hi ha cap perfil actiu.
       no_run_for_period: No s'ha trobat cap execució de flux de treball per al model
         {modelo} període {period}. Executeu el flux almenys una vegada abans de reprendre.
@@ -1539,6 +1548,8 @@ cli:
         unknown_keys: 'Clau(s) de --binding desconeguda(es) {keys}; vinculacions conegudes
           per a {code}@{revision} ({period}): {suggestion}.'
         year_help: Exercici fiscal del model (p. ex. 2026)
+        m200_m202_relation_guidance: 'Els pagos fraccionados M202 del Modelo 200 alimenten DP200014B:00611 mitjancant valors --relation, no mitjancant ids de binding desti en --binding. Els canals M202 40.3 casilla 34 i 40.2 casilla 03 son mutuament exclusius per declaracio; en introduir valors manuals de relacio, posa la suma anual a la modalitat elegida i 0 a la modalitat no usada.'
+        m200_m202_relation_channel: "%{relation_id}\tM202 %{modality} casilla %{casilla}\tusar --relation %{relation_id}=VALUE\tbinding desti associat %{binding_id}"
       casillas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         explain_help: Incloure el text d'ajuda localitzat a la sortida de text.
@@ -1993,8 +2004,7 @@ cli:
           fora del territori espanyol en l'exercici. Obligatori juntament amb --annual-salary
           quan s'aplica l'Art. 7.p).
         reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
-        relation_help: Valor de relació de període anterior amb sintaxi KEY=VALUE.
-          KEY és un id de relació del registry; VALUE és un decimal. Repetible.
+        relation_help: 'Valor de relacio del registre amb sintaxi KEY=VALUE (repetible). KEY es un id de relacio del registre, no un id de binding; fes-lo servir per a entrades de relacio entre periodes o entre models. Executa aeat app modelo bindings list --missing per veure la guia de relacions de l ambit. Per als pagos fraccionados M202 del Modelo 200, usa els canals de relacio mutuament exclusius 40.3 casilla 34 i 40.2 casilla 03, posant 0 a la modalitat no usada quan introdueixis valors manuals.'
         rename_help: Actualitzar el nom de visualització d'una unitat de treball
         rescate_plan_pensiones_aportaciones_pre_2007_help: Aportacions fetes al pla
           de pensions fins al 31-des-2006 (base de prorrateig DT 12a LIRPF). Necessari
@@ -2078,6 +2088,8 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
+        missing_relation_guidance: '%{base} Aporta el valor amb --relation KEY=VALUE en aquest comandament; KEY es un id de relacio del registre, no un id de binding. Executa %{discover} per llistar la guia de relacions i els altres bindings que encara necessita el calcul.'
+        missing_relation_guidance_m200_m202: '%{base} Aporta els pagos fraccionados del Modelo 202 al Modelo 200 amb --relation RELATION_ID=VALUE, no amb --binding. DP200014B:00611 resta dos canals de relacio M202 mutuament exclusius: modelo-200-2024-rel-202-pagos-fraccionados per a 40.3 casilla 34 i modelo-200-2024-rel-202-pagos-fraccionados-40-2 per a 40.2 casilla 03. En introduir valors manuals, posa 0 a la modalitat no usada. Executa %{discover} per llistar la guia de relacions i els bindings restants.'
   common:
     errors:
       draft_id_not_found: ID d'esborrany %{draft_id} no trobat
@@ -2253,9 +2265,15 @@ cli:
       sync:
         calc:
           compute:
-            refused_stale: 'rebutjant calcular contra un llibre les marques de metadades del qual no coincideixen amb el snapshot subministrat (metadata_match={metadata_match}); reexporteu i torneu a recuperar'
-            spreadsheet_id_help: 'Identificador del fitxer de Drive del llibre del qual llegir les edicions de l''operador (ha de pertànyer a l''app i estar vinculat al snapshot subministrat)'
-          compute_help: 'Recupera les edicions de les cel·les del llibre de calc-sheets, executa el motor Decimal local sobre elles i emet els valors calculats de les caselles (no persisteix res)'
+            refused_stale: rebutjant calcular contra un llibre les marques de metadades
+              del qual no coincideixen amb el snapshot subministrat (metadata_match={metadata_match});
+              reexporteu i torneu a recuperar
+            spreadsheet_id_help: Identificador del fitxer de Drive del llibre del
+              qual llegir les edicions de l'operador (ha de pertànyer a l'app i estar
+              vinculat al snapshot subministrat)
+          compute_help: Recupera les edicions de les cel·les del llibre de calc-sheets,
+            executa el motor Decimal local sobre elles i emet els valors calculats
+            de les caselles (no persisteix res)
           export:
             capability_disabled: L'exportació a Google està desactivada per a aquest
               perfil; activa-la amb 'aeat config profile capabilities set google_export
@@ -2274,7 +2292,7 @@ cli:
             year_help: Any de declaració (p. ex. 2025)
           export_help: Exporta la superfície de càlcul del registre per a un model
             i període a un full de Google Sheets dins de `aeat-vault/`
-          help: 'Superfície de càlcul esquema-a-full (exportar, recuperar i calcular)'
+          help: Superfície de càlcul esquema-a-full (exportar, recuperar i calcular)
           pull:
             assemble_observations_help: Després de recuperar, reensambla les cel·les
               de files de la pestanya Detalle en observacions tipades (perceptors,
@@ -2732,6 +2750,8 @@ cli:
         la classifica al lloc'
       bulk_summary: 'classificació massiva: %{total} files, %{applied} aplicades,
         %{skipped} omeses, %{fail} fallides'
+      bulk_all_failed: 'classificació massiva fallida: totes les files han fallat;
+        no s''ha actualitzat cap moviment del llibre'
       business_pct_help: Percentatge d'ús professional de 0 a 1; obligatori amb --classification
         MIXED i rebutjat per a qualsevol altra classificació
       business_pct_requires_mixed: Rebutjat. --business-pct només s'aplica a una classificació
@@ -2749,7 +2769,8 @@ cli:
       from_csv_exclusive: --from-csv no pot combinar-se amb un id de transacció ni
         --classification.
       from_csv_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
-        category_id, business_pct, taxable_base, iva_rate, iva_amount].
+        category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category,
+        irpf_category].
       from_csv_not_found: 'Fitxer CSV no trobat: %{path}'
       help: Classificar un moviment del llibre al perfil actiu
       id_help: Id del moviment del llibre a classificar
@@ -2904,6 +2925,7 @@ cli:
       child_id: Id de transacció filla
       children: filles
       counterparty: Contrapart
+      counterparty_eu_member_state: Contrapart UE
       created_event_id: Esdeveniment bucket de creació
       currency: Moneda
       date: Data
@@ -3326,6 +3348,7 @@ cli:
       next_import_command: '  aeat app ledger import <extracte-bancari.csv> --provider
         csv - importar moviments bancaris.'
       next_landing_command: '  aeat --help - tornar a la guia de comandes.'
+      next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - El Modelo 210 es visible per descobriment IRNR, pero la creacio local de treballs encara no esta suportada; presenta per AEAT Sede G320.'
       next_modelo_work_command: '  aeat app modelo work create - iniciar una declaració
         de model a partir de les dades del teu llibre.'
       next_review_command: '  aeat app ledger review - revisar files importades.'
@@ -3795,6 +3818,10 @@ errors:
     lookup_dispatch_arg_count: L''operador {op} de la fórmula espera {expected} arguments.
     lookup_dispatch_arg_kind: L''operador {op} de la fórmula requereix que {position}
       sigui una fulla de tipus {expected_kind}.
+    m210_imputation_coefficient_invalid: errors.calc.m210_imputation_coefficient_invalid
+    m210_imputation_days_invalid: errors.calc.m210_imputation_days_invalid
+    m210_imputation_no_catastral_value_missing: errors.calc.m210_imputation_no_catastral_value_missing
+    m210_imputation_no_filing_year: errors.calc.m210_imputation_no_filing_year
     parameter_unknown: El paràmetre {parameter_id} no està registrat.
     relation_value_missing: La relació {relation_id} no té cap valor assignat.
     text_input_non_text_casillas: 'Entrada de text subministrada per a caselles no
@@ -4079,6 +4106,8 @@ errors:
     fail_justificante_parse: No s'ha pogut interpretar el PDF com un justificant.
     fail_llm_cache: No s'ha pogut llegir, escriure o interpretar una entrada de la
       memòria cau del model de llenguatge.
+    fail_llm_pdf_rasterisation: No s'ha pogut renderitzar el PDF per a l'entrada de
+      visió local.
     fail_llm_provider: El proveïdor del model de llenguatge ha retornat un error irrecuperable.
     fail_llm_rate_limit: El proveïdor del model de llenguatge ha rebutjat la sol·licitud
       per límit d'ús. Espera uns minuts i torna-ho a provar.
@@ -5054,6 +5083,8 @@ wizard:
         help: Si el contribuent està inscrit al SII
       legal-entity-form:
         help: Forma jurídica reconeguda quan el tipus d'entitat és persona jurídica
+      legal-name:
+        help: Raó social de la persona jurídica per a capçaleres d'exportació
       llm-vision:
         help: Activar la visió LLM local per llegir factures.
       name:
@@ -5244,6 +5275,10 @@ wizard:
             label: Règim simplificat
       name:
         prompt: Nom visible mostrat en revisions locals
+      legal-name:
+        help: Per a persones jurídiques, és el nom fiscal usat a les capçaleres d'exportació.
+          És diferent del nom visible local.
+        prompt: Raó social de l'entitat per a capçaleres d'exportació
       output-language:
         choices:
           ca:

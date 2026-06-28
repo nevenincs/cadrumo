@@ -222,6 +222,11 @@ class TestParseRowSpecM349:
             # DE requires 9 digits; this has only 8
             _parse_row_spec("operador codigo_pais=DE nif_comunitario=DE12345678 clave_operacion=E importe=1000")
 
+    def test_parse_operador_unsupported_country_rejected(self) -> None:
+        """operador rejects country prefixes absent from the Modelo 349 table."""
+        with pytest.raises(typer.BadParameter, match="NIF-IVA"):
+            _parse_row_spec("operador codigo_pais=ZZ nif_comunitario=BADVAT clave_operacion=E importe=1000")
+
     def test_parse_operador_invalid_clave_raises(self) -> None:
         """Invalid clave_operacion raises BadParameter."""
         with pytest.raises(typer.BadParameter):
@@ -408,8 +413,12 @@ class TestRevisionViewSurfacesDetailRows:
                 "cb",
                 "--tax-id",
                 "E12345674",
-                "--legal-entity-form",
-                "sociedad_civil_mercantil",
+                "--entity-type",
+                "attribution_entity",
+                "--name",
+                "M184 Row Test CB",
+                "--activity",
+                "arrendamiento conjunto",
                 "--quiet",
             ],
         )
@@ -456,3 +465,134 @@ class TestRevisionViewSurfacesDetailRows:
         assert len(detail_lines) == 2, f"expected 2 detail rows, got: {calc.stdout}"
         assert "porcentaje=60" in calc.stdout and "importe=10000" in calc.stdout, calc.stdout
         assert "porcentaje=40" in calc.stdout and "importe=5000" in calc.stdout, calc.stdout
+
+    def test_m349_operador_rows_feed_summary_and_verify(self, tmp_path: Path) -> None:
+        """Cold M349 operador rows produce Tipo-1 summary casillas and verify.
+
+        The two Tipo-2 operador rows are the operator-facing source of truth in
+        this manual-entry path. The persisted draft must hash those rows, expose
+        them in the revision output, and populate the declarant summary totals
+        that the M349 fixed-width record defines over the operator records.
+        """
+        setup = self._run_cli(
+            tmp_path,
+            [
+                "config",
+                "profile",
+                "create",
+                "m349",
+                "--tax-id",
+                "12345678Z",
+                "--entity-type",
+                "natural_person",
+                "--name",
+                "Ana",
+                "--surnames",
+                "M349",
+                "--irpf-income-categories",
+                "actividad_economica",
+                "--activity",
+                "consultoria intracomunitaria",
+                "--quiet",
+            ],
+        )
+        assert setup.returncode == 0, f"profile create failed: {setup.stdout}\n{setup.stderr}"
+        created = self._run_cli(
+            tmp_path,
+            [
+                "app",
+                "modelo",
+                "work",
+                "create",
+                "--modelo",
+                "349",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+                "--revision",
+                "2020-y-siguientes",
+            ],
+        )
+        assert created.returncode == 0, f"work create failed: {created.stdout}\n{created.stderr}"
+
+        calc = self._run_cli(
+            tmp_path,
+            [
+                "app",
+                "modelo",
+                "work",
+                "calculate",
+                "--modelo",
+                "349",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+                "--row",
+                (
+                    "operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=EntidadDE "
+                    "clave_operacion=E importe=1500.00"
+                ),
+                "--row",
+                (
+                    "operador codigo_pais=FR nif_comunitario=FR12345678901 razon_social=EntidadFR "
+                    "clave_operacion=E importe=900.00"
+                ),
+            ],
+        )
+        assert calc.returncode == 0, f"calculate failed: {calc.stdout}\n{calc.stderr}"
+        assert "casilla\tdecl.numero-operadores\t2" in calc.stdout, calc.stdout
+        assert "casilla\tdecl.importe-operaciones\t2400.00" in calc.stdout, calc.stdout
+        assert len([line for line in calc.stdout.splitlines() if line.startswith("detail_row\t")]) == 2, calc.stdout
+
+        verified = self._run_cli(
+            tmp_path,
+            [
+                "app",
+                "modelo",
+                "work",
+                "verify",
+                "--modelo",
+                "349",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+            ],
+        )
+        assert verified.returncode == 0, f"verify failed: {verified.stdout}\n{verified.stderr}"
+        assert "content-address mismatch" not in verified.stdout + verified.stderr
+
+        output_path = tmp_path / "modelo-349.txt"
+        exported = self._run_cli(
+            tmp_path,
+            [
+                "app",
+                "modelo",
+                "export",
+                "--modelo",
+                "349",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+                "--output",
+                str(output_path),
+            ],
+        )
+        assert exported.returncode == 0, f"export failed: {exported.stdout}\n{exported.stderr}"
+
+        text = output_path.read_bytes().decode("latin-1")
+        assert len(text) % 500 == 0, f"unexpected M349 fixed-width length: {len(text)}"
+        records = [text[index : index + 500] for index in range(0, len(text), 500)]
+        operator_records = {
+            record[75:77]: record
+            for record in records
+            if record.startswith("2349") and not record[146:178].strip()
+        }
+
+        assert operator_records["DE"][77:92].rstrip() == "123456789"
+        assert operator_records["FR"][77:92].rstrip() == "12345678901"
+        assert "DEDE123456789" not in text
+        assert "FRFR12345678901" not in text

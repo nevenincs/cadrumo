@@ -35,6 +35,7 @@ def _period(year: int, code: str) -> Period:
 
 
 _Q2_2026 = _period(2026, "2T")
+_AD_HOC_2026 = _period(2026, "AD-HOC")
 
 
 @pytest.fixture
@@ -104,6 +105,31 @@ def _transaction(
             "classified_by": "manual",
         },
     )
+
+
+def test_preflight_refuses_non_span_period_even_with_empty_catalogue() -> None:
+    report = preflight_transaction_catalogue(
+        bucket_id="bucket-a",
+        period=_AD_HOC_2026,
+        transactions=TransactionCatalogue.from_transactions(()),
+    )
+
+    assert report.ready is False
+    assert report.checked_transaction_count == 0
+    assert [issue.reason for issue in report.issues] == [LedgerPreflightIssueReason.UNSUPPORTED_PERIOD]
+    assert "no date span" in report.issues[0].detail
+
+
+def test_preflight_refuses_non_span_period_before_touching_transactions() -> None:
+    report = preflight_transaction_catalogue(
+        bucket_id="bucket-a",
+        period=_AD_HOC_2026,
+        transactions=TransactionCatalogue.from_transactions((_transaction("row-ready"),)),
+    )
+
+    assert report.ready is False
+    assert report.checked_transaction_count == 0
+    assert [issue.reason for issue in report.issues] == [LedgerPreflightIssueReason.UNSUPPORTED_PERIOD]
 
 
 def test_preflight_reports_all_missing_modelo_readiness_facts() -> None:

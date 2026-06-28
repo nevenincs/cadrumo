@@ -40,6 +40,7 @@ import click
 import click.types
 import typer
 import typer._click.types
+from pydantic import BaseModel
 
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ._catalogue import SETUP_FLOW
@@ -56,7 +57,7 @@ from ._prompter import (
 from ._runner import run_flow
 
 
-def _choice(values: list[str]) -> typer._click.types.ParamType:
+def _choice(values: list[str], *, case_sensitive: bool = True) -> typer._click.types.ParamType:
     """Wrap ``click.Choice`` and present it as ``typer._click.types.ParamType``.
 
     ``click.Choice`` is generic (``Choice[T]``), but the ``typer.Option``
@@ -73,7 +74,7 @@ def _choice(values: list[str]) -> typer._click.types.ParamType:
     """
     # CAST-RATIONALE-CHOICE-PARAM-TYPE: runtime object is a real click.Choice;
     # only the static view is narrowed to typer's vendored ParamType (see docstring).
-    return typing.cast("typer._click.types.ParamType", click.Choice(values))
+    return typing.cast("typer._click.types.ParamType", click.Choice(values, case_sensitive=case_sensitive))
 
 
 def _ccaa_choice_values() -> list[str]:
@@ -190,6 +191,7 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "tax-id": typer.Option("--tax-id", help=tr("wizard.setup.flags.tax-id.help")),
     "name": typer.Option("--name", help=tr("wizard.setup.flags.name.help")),
     "surnames": typer.Option("--surnames", help=tr("wizard.setup.flags.surnames.help")),
+    "legal-name": typer.Option("--legal-name", help=tr("wizard.setup.flags.legal-name.help")),
     "activity": typer.Option("--activity", help=tr("wizard.setup.flags.activity.help")),
     "address-postcode": typer.Option("--address-postcode", help=tr("wizard.setup.flags.address-postcode.help")),
     "activity-start-date": typer.Option(
@@ -271,7 +273,7 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     ),
     "iva-regime": typer.Option(
         "--iva-regime",
-        click_type=_choice(_IVA_REGIME_CHOICE_VALUES),
+        click_type=_choice(_IVA_REGIME_CHOICE_VALUES, case_sensitive=False),
         help=tr("wizard.setup.flags.iva-regime.help"),
     ),
     "iva-roi-enrolled": typer.Option(
@@ -477,6 +479,41 @@ def _format_missing_flags(missing: tuple[str, ...]) -> str:
     tuple.
     """
     return " ".join(f"--{question_id}" for question_id in missing)
+
+
+def _missing_filing_baseline_flags(flow: WizardFlow, answers: BaseModel) -> tuple[str, ...]:
+    """Return create-time profile facts that must exist before persistence.
+
+    The schema keeps filing identity facts optional so legacy profiles and
+    targeted patch edits remain repairable. New non-interactive profile
+    creation is stricter: it must leave a taxpayer-type axis and a filing
+    identity, otherwise modelo work will refuse later and the user has to
+    diagnose a broken persisted profile.
+    """
+    from ._persistence import serialise_answers
+
+    values = serialise_answers(flow, answers)
+    missing: list[str] = []
+    entity_type = _profile_token(values, "taxpayer_type.entity_type")
+    if not entity_type:
+        missing.append("entity-type")
+    if entity_type == "legal_entity":
+        if not _profile_token(values, "identity.legal_name"):
+            missing.append("legal-name")
+        return tuple(dict.fromkeys(missing))
+    if entity_type == "attribution_entity":
+        if not _profile_token(values, "identity.name"):
+            missing.append("name")
+        return tuple(dict.fromkeys(missing))
+    if not entity_type or not _profile_token(values, "identity.name"):
+        missing.append("name")
+    if not entity_type or not _profile_token(values, "identity.surnames"):
+        missing.append("surnames")
+    return tuple(dict.fromkeys(missing))
+
+
+def _profile_token(values: dict[str, str], path: str) -> str:
+    return (values.get(path) or "").strip()
 
 
 def _scripted_from_canonical(
@@ -752,6 +789,17 @@ def _run_full_flow(
     # re-walks every visible question, so the full answer set is the
     # operator's confirmed intent.
     supplied_question_ids = frozenset(question.id for section in flow.sections for question in section.questions)
+    if mode == "create":
+        missing_baseline = _missing_filing_baseline_flags(flow, answers)
+        if missing_baseline:
+            raise WizardMissingFlagError(
+                translated_message="application.wizard.errors.create_missing_filing_baseline",
+                context={
+                    "flow_id": flow.id,
+                    "missing": missing_baseline,
+                    "missing_flags": _format_missing_flags(missing_baseline),
+                },
+            )
 
     span = profile_create_storage_span(profile_id) if mode == "create" else profile_storage_session(profile_id)
     with span as routing_profile_id:

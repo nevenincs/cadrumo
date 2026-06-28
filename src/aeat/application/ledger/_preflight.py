@@ -48,10 +48,11 @@ class LedgerPreflightIssueReason(StrEnum):
     MISSING_IVA_RATE = "missing_iva_rate"
     MISSING_PROPORTIONALITY_REFERENCE = "missing_proportionality_reference"
     UNSUPPORTED_CURRENCY = "unsupported_currency"
+    UNSUPPORTED_PERIOD = "unsupported_period"
     # Anomaly channel: present-but-suspicious rows (distinct from missing-fact),
     # so an asesor sees real anomalies without first classifying every row.
     ANOMALY_NON_DECLARABLE_IVA_CATEGORY = "anomaly_non_declarable_iva_category"
-    ANOMALY_RECARGO_ON_NON_RETAILER = "anomaly_recargo_on_non_retailer"
+    ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA = "anomaly_non_declarable_recargo_equivalencia"
 
 
 class LedgerPreflightIssue(BaseModel):
@@ -129,6 +130,13 @@ def preflight_transaction_catalogue(
     Returns a :class:`LedgerPreflightReport`.
     """
     resolved_period = period
+    if not resolved_period.has_date_span():
+        return LedgerPreflightReport(
+            bucket_id=bucket_id,
+            period=resolved_period,
+            checked_transaction_count=0,
+            issues=(_unsupported_period_issue(resolved_period),),
+        )
     issues: list[LedgerPreflightIssue] = []
     checked = 0
     for transaction in _sorted_transactions(transactions):
@@ -144,6 +152,17 @@ def preflight_transaction_catalogue(
         period=resolved_period,
         checked_transaction_count=checked,
         issues=tuple(issues),
+    )
+
+
+def _unsupported_period_issue(period: Period) -> LedgerPreflightIssue:
+    return LedgerPreflightIssue(
+        transaction_id="__period__",
+        reason=LedgerPreflightIssueReason.UNSUPPORTED_PERIOD,
+        detail=(
+            f"ledger preflight requires a calendar date-span period; {period.registry_token!r} has no date span "
+            "and cannot be checked through ledger aggregation"
+        ),
     )
 
 
@@ -187,11 +206,6 @@ _ANOMALY_IVA_REASONS: dict[IvaCategory, tuple[LedgerPreflightIssueReason, str]] 
         LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_IVA_CATEGORY,
         "iva_category 'erroneous_invoice' marks a rectified/void row; not declarable",
     ),
-    IvaCategory.RECARGO_EQUIVALENCIA: (
-        LedgerPreflightIssueReason.ANOMALY_RECARGO_ON_NON_RETAILER,
-        "recargo equivalencia on a purchase implies the retailer regime; IVA+RE is "
-        "non-deductible cost — query the supplier if this is not a retailer activity",
-    ),
 }
 
 
@@ -221,6 +235,14 @@ def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIs
     if anomaly is not None:
         reason, detail = anomaly
         return (LedgerPreflightIssue(**common, reason=reason, detail=detail),)
+    if iva_cat is IvaCategory.RECARGO_EQUIVALENCIA:
+        return (
+            LedgerPreflightIssue(
+                **common,
+                reason=LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA,
+                detail=_recargo_equivalencia_preflight_detail(transaction),
+            ),
+        )
     # A foreign row is only unsupported when no EUR conversion was applied at
     # import; a converted row (value_in_eur set) aggregates normally.
     if transaction.raw.currency != DEFAULT_CURRENCY and transaction.value_in_eur is None:
@@ -265,6 +287,20 @@ def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIs
             ),
         )
     return tuple(issues)
+
+
+def _recargo_equivalencia_preflight_detail(transaction: Transaction) -> str:
+    if transaction.direction is TransactionDirection.OUTGOING:
+        return (
+            "iva_category 'recargo_equivalencia' is the retailer purchase-side surcharge; "
+            "IVA+RE is non-deductible acquisition cost and is not declared as M303 input IVA"
+        )
+    if transaction.direction is TransactionDirection.INCOMING:
+        return (
+            "iva_category 'recargo_equivalencia' is not the supplier-side recargo sales channel; "
+            "record supplier recargo on a taxable output sale through recargo_amount"
+        )
+    return "iva_category 'recargo_equivalencia' is not declarable through IVA ledger aggregation"
 
 
 def _transaction_is_trabajo_income(transaction: Transaction) -> bool:

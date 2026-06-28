@@ -855,6 +855,10 @@ application:
         en la revisión %{revision_id}: el registro declara un origen de vinculación
         que ningún resolutor de cálculo gestiona. Registre un resolutor o márquelo
         como diferido antes de calcular.'
+      profile_readiness_missing: 'El perfil esta incompleto para el Modelo %{modelo}
+        %{filing_year} %{period}; completa antes estos datos de perfil: %{missing}.'
+      profile_readiness_profile_missing: No existe un perfil activo persistido para
+        este trabajo de modelo; crea o repara el perfil antes de continuar.
       reconcile_declaration_unsupported: La reconciliación desde PDF de declaración
         aún no está disponible; reconcilia un justificante descargado con aeat app
         modelo reconcile file hasta que el parser de declaraciones esté disponible.
@@ -1198,6 +1202,9 @@ application:
       quiet_missing_flags: 'A esta ejecución con --quiet le faltan datos obligatorios.
         Añade estos flags y vuelve a ejecutar el comando: %{missing_flags}. O ejecútalo
         sin --quiet desde una terminal interactiva para usar el asistente guiado.'
+      create_missing_filing_baseline: 'A la creación del perfil le faltan datos
+        de identidad para presentar modelos. Añade estos flags y vuelve a ejecutar
+        el comando: %{missing_flags}.'
     next_hint:
       modelo_work_create: aeat app modelo work create
     output_labels:
@@ -1220,6 +1227,8 @@ application:
         un adaptador filing_draft_builder.
       adapter_missing_inputs_provider: El motor de flujo de trabajo requiere un proveedor
         de entradas respaldado por depósito.
+      adapter_missing_submission_engine: El motor de flujo de trabajo requiere un
+        adaptador submission_engine.
       no_active_profile_bucket: No hay un perfil activo.
       no_run_for_period: No se encontró ejecución de flujo de trabajo para el modelo
         {modelo} período {period}. Ejecute el flujo al menos una vez antes de reanudar.
@@ -1561,6 +1570,8 @@ cli:
         unknown_keys: 'Clave(s) de --binding desconocida(s) {keys}; vinculaciones
           conocidas para {code}@{revision} ({period}): {suggestion}.'
         year_help: Ejercicio fiscal del modelo (p. ej. 2026)
+        m200_m202_relation_guidance: 'Los pagos fraccionados M202 del Modelo 200 alimentan DP200014B:00611 mediante valores --relation, no mediante ids de binding destino en --binding. Los canales M202 40.3 casilla 34 y 40.2 casilla 03 son mutuamente exclusivos por declaracion; al introducir valores manuales de relacion, pon la suma anual en la modalidad elegida y 0 en la modalidad no usada.'
+        m200_m202_relation_channel: "%{relation_id}\tM202 %{modality} casilla %{casilla}\tusar --relation %{relation_id}=VALUE\tbinding destino asociado %{binding_id}"
       casillas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
@@ -2027,8 +2038,7 @@ cli:
           fuera del territorio espanol en el ejercicio. Obligatorio junto con --annual-salary
           cuando se aplica el Art. 7.p).
         reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
-        relation_help: Valor de relación de periodo anterior con sintaxis KEY=VALUE.
-          KEY es un id de relación del registry; VALUE es un decimal. Repetible.
+        relation_help: 'Valor de relacion del registro con sintaxis KEY=VALUE (repetible). KEY es un id de relacion del registro, no un id de binding; usalo para entradas de relacion entre periodos o entre modelos. Ejecuta aeat app modelo bindings list --missing para ver la guia de relaciones del ambito. Para los pagos fraccionados M202 del Modelo 200, usa los canales de relacion mutuamente exclusivos 40.3 casilla 34 y 40.2 casilla 03, poniendo 0 en la modalidad no usada cuando introduzcas valores manuales.'
         rename_help: Actualizar el nombre de visualización de una unidad de trabajo
         rescate_plan_pensiones_aportaciones_pre_2007_help: Aportaciones realizadas
           al plan de pensiones hasta el 31-dic-2006 (base de prorrateo DT 12ª LIRPF).
@@ -2112,6 +2122,8 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
+        missing_relation_guidance: '%{base} Aporta el valor con --relation KEY=VALUE en este comando; KEY es un id de relacion del registro, no un id de binding. Ejecuta %{discover} para listar la guia de relaciones y los demas bindings que aun necesita el calculo.'
+        missing_relation_guidance_m200_m202: '%{base} Aporta los pagos fraccionados del Modelo 202 al Modelo 200 con --relation RELATION_ID=VALUE, no con --binding. DP200014B:00611 resta dos canales de relacion M202 mutuamente exclusivos: modelo-200-2024-rel-202-pagos-fraccionados para 40.3 casilla 34 y modelo-200-2024-rel-202-pagos-fraccionados-40-2 para 40.2 casilla 03. Al introducir valores manuales, pon 0 en la modalidad no usada. Ejecuta %{discover} para listar la guia de relaciones y los bindings restantes.'
   common:
     errors:
       draft_id_not_found: ID de borrador %{draft_id} no encontrado
@@ -2289,9 +2301,15 @@ cli:
       sync:
         calc:
           compute:
-            refused_stale: 'rechazo a calcular contra un libro cuyas marcas de metadatos no coinciden con el snapshot suministrado (metadata_match={metadata_match}); reexporte y vuelva a recuperar'
-            spreadsheet_id_help: 'Identificador del archivo de Drive del libro del que leer las ediciones del operador (debe pertenecer a la app y estar vinculado al snapshot suministrado)'
-          compute_help: 'Recupera las ediciones de las celdas del libro de calc-sheets, ejecuta el motor Decimal local sobre ellas y emite los valores calculados de las casillas (no persiste nada)'
+            refused_stale: rechazo a calcular contra un libro cuyas marcas de metadatos
+              no coinciden con el snapshot suministrado (metadata_match={metadata_match});
+              reexporte y vuelva a recuperar
+            spreadsheet_id_help: Identificador del archivo de Drive del libro del
+              que leer las ediciones del operador (debe pertenecer a la app y estar
+              vinculado al snapshot suministrado)
+          compute_help: Recupera las ediciones de las celdas del libro de calc-sheets,
+            ejecuta el motor Decimal local sobre ellas y emite los valores calculados
+            de las casillas (no persiste nada)
           export:
             capability_disabled: La exportación a Google está desactivada para este
               perfil; actívala con 'aeat config profile capabilities set google_export
@@ -2310,7 +2328,7 @@ cli:
             year_help: Año de declaración (p. ej. 2025)
           export_help: Exporta la superficie de cálculo del registro para un modelo
             y período a una hoja de Google Sheets dentro de `aeat-vault/`
-          help: 'Superficie de cálculo esquema-a-hoja (exportar, recuperar y calcular)'
+          help: Superficie de cálculo esquema-a-hoja (exportar, recuperar y calcular)
           pull:
             assemble_observations_help: Tras recuperar, reensambla las celdas de filas
               de la pestaña Detalle en observaciones tipadas (perceptores, bienes
@@ -2772,6 +2790,8 @@ cli:
         la clasifica en su sitio'
       bulk_summary: 'clasificación masiva: %{total} filas, %{applied} aplicadas, %{skipped}
         omitidas, %{fail} fallidas'
+      bulk_all_failed: 'clasificación masiva fallida: todas las filas fallaron; no
+        se actualizó ningún movimiento del libro'
       business_pct_help: Porcentaje de uso profesional de 0 a 1; obligatorio con --classification
         MIXED y rechazado para cualquier otra clasificación
       business_pct_requires_mixed: Rechazado. --business-pct solo se aplica a una
@@ -2789,7 +2809,8 @@ cli:
       from_csv_exclusive: --from-csv no puede combinarse con un id de transacción
         ni --classification.
       from_csv_help: Ruta a un archivo CSV con columnas transaction_id, classification[,
-        category_id, business_pct, taxable_base, iva_rate, iva_amount].
+        category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category,
+        irpf_category].
       from_csv_not_found: 'Archivo CSV no encontrado: %{path}'
       help: Clasificar un movimiento del libro en el perfil activo
       id_help: Id del movimiento del libro a clasificar
@@ -2942,6 +2963,7 @@ cli:
       child_id: Id de transacción hija
       children: hijas
       counterparty: Contraparte
+      counterparty_eu_member_state: Contraparte UE
       created_event_id: Evento bucket de creación
       currency: Moneda
       date: Fecha
@@ -3366,6 +3388,7 @@ cli:
       next_import_command: '  aeat app ledger import <extracto-bancario.csv> --provider
         csv - importar movimientos bancarios.'
       next_landing_command: '  aeat --help - volver a la guia de comandos.'
+      next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - Modelo 210 esta visible para descubrimiento IRNR, pero la creacion local de trabajos aun no esta soportada; presenta por AEAT Sede G320.'
       next_modelo_work_command: '  aeat app modelo work create - iniciar una declaración
         de modelo a partir de los datos de tu libro.'
       next_review_command: '  aeat app ledger review - revisar filas importadas.'
@@ -3841,6 +3864,10 @@ errors:
     lookup_dispatch_arg_count: El operador {op} de la fórmula espera {expected} argumentos.
     lookup_dispatch_arg_kind: El operador {op} de la fórmula requiere que {position}
       sea una hoja de tipo {expected_kind}.
+    m210_imputation_coefficient_invalid: errors.calc.m210_imputation_coefficient_invalid
+    m210_imputation_days_invalid: errors.calc.m210_imputation_days_invalid
+    m210_imputation_no_catastral_value_missing: errors.calc.m210_imputation_no_catastral_value_missing
+    m210_imputation_no_filing_year: errors.calc.m210_imputation_no_filing_year
     parameter_unknown: El parámetro {parameter_id} no está registrado.
     relation_value_missing: La relación {relation_id} no tiene valor asignado.
     text_input_non_text_casillas: 'Entrada de texto suministrada para casillas no
@@ -4030,7 +4057,7 @@ errors:
     error_renta_profile_completeness_warning: 'Aviso de declaración obligatoria RETMAR:
       este trabajador figura inscrito en RETMAR. Desde enero de 2023, todos los trabajadores
       inscritos en RETMAR deben presentar declaración del IRPF independientemente
-      del nivel de ingresos (Ley 47/2015 BOE-A-2015-11346).'
+      del nivel de ingresos (Ley 35/2006 Art. 96 BOE-A-2006-20764).'
     error_renta_validation: Un valor de la declaración de la Renta no es válido.
     error_rental_amortization_cap_exceeded: La amortización acumulada superaría el
       límite legal del activo arrendado.
@@ -4126,6 +4153,8 @@ errors:
     fail_justificante_parse: No se pudo interpretar el PDF como un justificante.
     fail_llm_cache: No se pudo leer, escribir o interpretar una entrada de la caché
       del modelo de lenguaje.
+    fail_llm_pdf_rasterisation: No se pudo renderizar el PDF para la entrada de visión
+      local.
     fail_llm_provider: El proveedor del modelo de lenguaje devolvió un error irrecuperable.
     fail_llm_rate_limit: El proveedor del modelo de lenguaje rechazó la solicitud
       por límite de uso. Espera unos minutos y vuelve a intentarlo.
@@ -4614,7 +4643,7 @@ errors:
       está inactiva: no se ha concedido la autorización de ayudas de Estado de la
       UE para 2024/2025. La AEAT confirma su no aplicabilidad. Active esta exención
       solo tras la concesión de la autorización europea (Ley 35/2006 DA 41 BOE-A-2006-20764,
-      Ley 6/2018 BOE-A-2018-9268).'
+      añadida por Ley 26/2014 BOE-A-2014-12327).'
     refused_review_edit_parse: No se pudo interpretar `--set CLAVE=VALOR`. Comprueba
       la sintaxis del valor indicado.
     refused_review_filter_parse: No se pudo interpretar `--filter CLAVE=VALOR`. Comprueba
@@ -5103,6 +5132,8 @@ wizard:
         help: Si el contribuyente está inscrito en el SII
       legal-entity-form:
         help: Forma jurídica reconocida cuando el tipo de entidad es persona jurídica
+      legal-name:
+        help: Razón social de la persona jurídica para cabeceras de exportación
       llm-vision:
         help: Activar la visión LLM local para leer facturas.
       name:
@@ -5298,6 +5329,10 @@ wizard:
             label: Régimen simplificado
       name:
         prompt: Nombre visible mostrado en revisiones locales
+      legal-name:
+        help: Para personas jurídicas, este es el nombre fiscal usado en cabeceras
+          de exportación. Es distinto del nombre visible local.
+        prompt: Razón social de la entidad para cabeceras de exportación
       output-language:
         choices:
           ca:

@@ -3,8 +3,9 @@
 A second, smaller hand-authored corpus for a **different taxpayer in a different
 profile bucket**, exercising the **cross-profile runtime-pegged ledger** goal and
 the **recargo de equivalencia regime** end-to-end. It is the regime
-counterpart to the Marta autónoma corpus, where an RE line is only a non-retailer
-anomaly.
+counterpart to the Marta autónoma corpus, where the same RE purchase category is
+an unexpected non-declarable recargo-equivalence preflight issue rather than an
+expected retailer-regime acquisition cost.
 
 ## Taxpayer
 
@@ -27,8 +28,9 @@ anomaly.
   input IVA on these either; the gross is the renta cost.
 
 This contrasts with `ledger-corpus/` (Marta), where a `recargo_equivalencia`
-purchase row is flagged as a **non-retailer anomaly** by preflight. Same IVA
-category, opposite disposition by profile — the point of the cross-profile pair.
+purchase row is surfaced as a **non-declarable recargo-equivalence preflight
+issue** for a non-retailer persona. Same IVA category, different persona
+rationale; both remain outside IVA ledger aggregation.
 
 ## Files
 

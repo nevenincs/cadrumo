@@ -61,6 +61,23 @@ _DECLARANT_SUMMARY_CASILLAS: tuple[CasillaId, ...] = (
     _DECL_NUMERO_RECTIFICACIONES_CASILLA,
     _DECL_IMPORTE_RECTIFICACIONES_CASILLA,
 )
+_M349_SUBSTANTIVE_BINDING_LEGAL_REFS = frozenset(
+    {
+        "rd-1624-1992:art-79",
+        "rd-1624-1992:art-80",
+        "ley-37-1992:art-9-bis",
+        "ley-37-1992:art-13",
+        "ley-37-1992:art-15",
+        "ley-37-1992:art-25",
+        "ley-37-1992:art-26",
+        "ley-37-1992:art-27",
+        "ley-37-1992:art-69",
+        "ley-37-1992:art-70",
+        "ley-37-1992:art-80",
+        "ley-37-1992:art-84",
+        "ley-37-1992:art-86",
+    },
+)
 
 _OFFICIAL_FIELD_POSITIONS: dict[CasillaId, tuple[int, int]] = {
     _DECL_NUMERO_OPERADORES_CASILLA: (138, 146),
@@ -699,6 +716,28 @@ def test_committed_modelo_349_invoice_binding_requirements_split_by_rectificatio
     assert set(by_scope["only_rectifications"].binding_ids) == expected_only
 
 
+def test_committed_modelo_349_invoice_bindings_resolve_substantive_legal_refs() -> None:
+    modelo, catalogues = _load_modelo_349()
+    revision = modelo.revisions["2020-y-siguientes"]
+    invoice_bindings = [binding for binding in revision.bindings if binding.source == "collectible_invoice"]
+
+    assert len(invoice_bindings) == 17
+    assert set(catalogues.legal) >= _M349_SUBSTANTIVE_BINDING_LEGAL_REFS
+
+    for binding in invoice_bindings:
+        refs = set(binding.legal_refs)
+        unresolved_refs = sorted(ref for ref in refs if ref not in catalogues.legal)
+        assert not unresolved_refs, f"binding {binding.id!r} has unresolved legal refs: {unresolved_refs!r}"
+        assert refs >= _M349_SUBSTANTIVE_BINDING_LEGAL_REFS, (
+            f"binding {binding.id!r} is missing substantive M349 legal refs: "
+            f"{sorted(_M349_SUBSTANTIVE_BINDING_LEGAL_REFS - refs)!r}"
+        )
+        assert "ley-37-1992:art-141" not in refs, (
+            f"binding {binding.id!r} must not cite LIVA art. 141; that article is the travel-agency "
+            "special regime, not M349 triangular or intracommunity operation grounding"
+        )
+
+
 def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledger() -> None:
     modelo, _ = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
@@ -706,7 +745,7 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
     non_rect_obs = (
         InvoiceObservation(
             invoice_id="inv-de-1",
-            party_tax_id="DE111",
+            party_tax_id="DE123456789",
             country_code="DE",
             transaction_date=date(2026, 3, 1),
             base_amount=Decimal("1000.00"),
@@ -714,7 +753,7 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
         ),
         InvoiceObservation(
             invoice_id="inv-fr-1",
-            party_tax_id="FR222",
+            party_tax_id="FR12345678901",
             country_code="FR",
             transaction_date=date(2026, 3, 5),
             base_amount=Decimal("500.50"),
@@ -723,7 +762,7 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
     )
     rect_obs = InvoiceObservation(
         invoice_id="inv-it-1-rect",
-        party_tax_id="IT333",
+        party_tax_id="IT12345678901",
         country_code="IT",
         transaction_date=date(2026, 3, 8),
         base_amount=Decimal("200.00"),
@@ -830,7 +869,7 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
     observations = (
         InvoiceObservation(
             invoice_id="inv-de-1",
-            party_tax_id="DE111",
+            party_tax_id="DE123456789",
             country_code="DE",
             transaction_date=date(2026, 3, 1),
             base_amount=Decimal("1000.00"),
@@ -839,7 +878,7 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
         ),
         InvoiceObservation(
             invoice_id="inv-de-2",
-            party_tax_id="DE111",
+            party_tax_id="DE123456789",
             country_code="DE",
             transaction_date=date(2026, 3, 5),
             base_amount=Decimal("500.00"),
@@ -848,7 +887,7 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
         ),
         InvoiceObservation(
             invoice_id="inv-fr-1",
-            party_tax_id="FR222",
+            party_tax_id="FR12345678901",
             country_code="FR",
             transaction_date=date(2026, 3, 7),
             base_amount=Decimal("300.50"),
@@ -859,9 +898,9 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
 
     rows = resolve_invoice_binding_row_values(revision, observations)
 
-    # Two row groups: (DE, DE111, E) at row 1 and (FR, FR222, S) at row 2.
+    # Two row groups: (DE, DE123456789, E) at row 1 and (FR, FR12345678901, S) at row 2.
     assert rows[("iva-349-operador-row-codigo-pais", 1)] == "DE"
-    assert rows[("iva-349-operador-row-nif", 1)] == "DE111"
+    assert rows[("iva-349-operador-row-nif", 1)] == "123456789"
     assert rows[("iva-349-operador-row-apellidos", 1)] == "ALEMAN GMBH"
     assert rows[("iva-349-operador-row-clave", 1)] == "E"
     # Both German observations must contribute to row 1's base.
@@ -874,7 +913,7 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
         f"second German observation did not contribute to the group"
     )
     assert rows[("iva-349-operador-row-codigo-pais", 2)] == "FR"
-    assert rows[("iva-349-operador-row-nif", 2)] == "FR222"
+    assert rows[("iva-349-operador-row-nif", 2)] == "12345678901"
     assert rows[("iva-349-operador-row-apellidos", 2)] == "FRANCE SARL"
     assert rows[("iva-349-operador-row-clave", 2)] == "S"
     # Single-observation row: identity passthrough of the fixture value.
@@ -888,7 +927,7 @@ def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clav
     observations = (
         InvoiceObservation(
             invoice_id="inv-de-rect",
-            party_tax_id="DE111",
+            party_tax_id="DE123456789",
             country_code="DE",
             transaction_date=date(2026, 3, 1),
             base_amount=Decimal("1100.00"),
@@ -901,7 +940,7 @@ def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clav
         ),
         InvoiceObservation(
             invoice_id="inv-it-rect",
-            party_tax_id="IT333",
+            party_tax_id="IT12345678901",
             country_code="IT",
             transaction_date=date(2026, 3, 5),
             base_amount=Decimal("200.00"),
@@ -916,9 +955,9 @@ def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clav
 
     rows = resolve_invoice_binding_row_values(revision, observations)
 
-    # DE/DE111/E/2025/2T at row 1, IT/IT333/E/2025/4T at row 2.
+    # DE/DE123456789/E/2025/2T at row 1, IT/IT12345678901/E/2025/4T at row 2.
     assert rows[("iva-349-rectificacion-row-codigo-pais", 1)] == "DE"
-    assert rows[("iva-349-rectificacion-row-nif", 1)] == "DE111"
+    assert rows[("iva-349-rectificacion-row-nif", 1)] == "123456789"
     assert rows[("iva-349-rectificacion-row-apellidos", 1)] == "ALEMAN GMBH"
     assert rows[("iva-349-rectificacion-row-clave", 1)] == "E"
     assert rows[("iva-349-rectificacion-row-ejercicio", 1)] == "2025"
@@ -937,7 +976,7 @@ def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
     non_rect_obs = (
         InvoiceObservation(
             invoice_id="inv-de-1",
-            party_tax_id="DE111",
+            party_tax_id="DE123456789",
             country_code="DE",
             transaction_date=date(2026, 3, 1),
             base_amount=Decimal("1000.00"),
@@ -945,7 +984,7 @@ def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
         ),
         InvoiceObservation(
             invoice_id="inv-fr-1",
-            party_tax_id="FR222",
+            party_tax_id="FR12345678901",
             country_code="FR",
             transaction_date=date(2026, 3, 5),
             base_amount=Decimal("500.50"),
@@ -954,7 +993,7 @@ def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
     )
     rect_obs = InvoiceObservation(
         invoice_id="inv-it-1-rect",
-        party_tax_id="IT333",
+        party_tax_id="IT12345678901",
         country_code="IT",
         transaction_date=date(2026, 3, 8),
         base_amount=Decimal("200.00"),

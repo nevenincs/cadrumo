@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "description": "Ground-truth oracle for the recargo-equivalencia RETAILER corpus (cross-profile sibling of the Marta autonoma corpus). Same first-match-wins rule shape. The retailer is under regimen de recargo de equivalencia: on purchases the supplier charges IVA + RE and the retailer deducts NEITHER (full gross is acquisition cost); on retail sales the retailer charges IVA but does NOT file M303 for the retail activity (IVA is settled via the RE paid to suppliers). This is the regime treatment of recargo_equivalencia, contrasted with the Marta corpus where an RE line is a non-retailer anomaly.",
+  "description": "Ground-truth oracle for the recargo-equivalencia RETAILER corpus (cross-profile sibling of the Marta autonoma corpus). Same first-match-wins rule shape. The retailer is under regimen de recargo de equivalencia: on purchases the supplier charges IVA + RE and the retailer deducts NEITHER (full gross is acquisition cost); on retail sales the retailer charges IVA but does NOT file M303 for the retail activity (IVA is settled via the RE paid to suppliers). This is the regime treatment of recargo_equivalencia, contrasted with the Marta corpus where the same RE purchase category is an unexpected non-declarable recargo-equivalence preflight issue for a non-retailer persona.",
   "taxpayer": {
     "name": "Comercio Minorista Garcia",
     "nif": "23456789J",

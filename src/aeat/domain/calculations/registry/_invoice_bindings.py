@@ -92,9 +92,9 @@ class InvoiceObservation(BaseModel):
     _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
     _clave_uppercase = field_validator("intracommunity_clave")(intracommunity_clave_validator())
 
-    @field_validator("base_amount", "rectified_base_previous")
+    @field_validator("base_amount", "rectified_base_previous", mode="before")
     @classmethod
-    def _decimal_amount(cls, value: Decimal | None) -> Decimal | None:
+    def _decimal_amount(cls, value: object) -> object:
         if value is None:
             return None
         if isinstance(value, bool) or not isinstance(value, Decimal):
@@ -466,13 +466,35 @@ def resolve_invoice_binding_row_values(
             bindings group, filter, and aggregate into indexed row values.
     """
     available = tuple(observations)
-    return resolve_invoice_family_row_values(
+    rows = resolve_invoice_family_row_values(
         revision,
         source_kinds=INVOICE_BINDING_SOURCE_KINDS,
         validate_selector=_validated_invoice_selector,
         observations_for_binding=lambda _binding: available,
         cohort_by_source=False,
     )
+    return _normalise_m349_nif_export_rows(rows)
+
+
+_M349_EXPORT_NIF_COUNTRY_BINDINGS: dict[BindingId, BindingId] = {
+    "iva-349-operador-row-nif": "iva-349-operador-row-codigo-pais",
+    "iva-349-rectificacion-row-nif": "iva-349-rectificacion-row-codigo-pais",
+}
+
+
+def _normalise_m349_nif_export_rows(
+    rows: dict[tuple[BindingId, int], Decimal | str],
+) -> dict[tuple[BindingId, int], Decimal | str]:
+    normalised = dict(rows)
+    for (binding_id, row_index), value in rows.items():
+        country_binding = _M349_EXPORT_NIF_COUNTRY_BINDINGS.get(binding_id)
+        if country_binding is None:
+            continue
+        country_value = rows.get((country_binding, row_index))
+        if not isinstance(value, str) or not isinstance(country_value, str):
+            continue
+        normalised[(binding_id, row_index)] = _m349_export_nif_number(value, country_value)
+    return normalised
 
 
 def _build_invoice_rows(
@@ -582,6 +604,15 @@ def _build_operator_clave_period_rows(
             row["party_legal_name"] = bucket.party_legal_name
         rows.append(row)
     return tuple(rows)
+
+
+def _m349_export_nif_number(party_tax_id: str, country_code: str) -> str:
+    from ...modelos._row_models import m349_nif_number_for_export
+
+    try:
+        return m349_nif_number_for_export(party_tax_id, country_code)
+    except ValueError as exc:
+        raise RegistryValidationError(str(exc)) from exc
 
 
 class _OperatorClaveAccumulator(BaseModel):

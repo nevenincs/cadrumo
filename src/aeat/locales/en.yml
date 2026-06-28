@@ -778,6 +778,10 @@ application:
         on revision %{revision_id}: the registry declares a binding source no enrolled
         calculation resolver handles. Enroll a resolver or register it as deferred
         before calculating.'
+      profile_readiness_missing: 'Profile is incomplete for Modelo %{modelo} %{filing_year}
+        %{period}; complete these profile facts first: %{missing}.'
+      profile_readiness_profile_missing: No persisted active profile exists for this
+        modelo work target; create or repair the profile before continuing.
       reconcile_declaration_unsupported: Declaration-PDF reconcile source is not yet
         implemented; reconcile a downloaded justificante via aeat app modelo reconcile
         file until the declaration parser lands.
@@ -1113,6 +1117,8 @@ application:
       quiet_missing_flags: 'This --quiet run is missing required details. Add these
         flags and run the command again: %{missing_flags}. Or run it without --quiet
         from an interactive terminal to use the guided setup.'
+      create_missing_filing_baseline: 'Profile creation is missing filing identity
+        details. Add these flags and run the command again: %{missing_flags}.'
     next_hint:
       modelo_work_create: aeat app modelo work create
     output_labels:
@@ -1134,6 +1140,8 @@ application:
         adapter.
       adapter_missing_inputs_provider: Workflow engine requires a bucket-backed filing
         inputs provider.
+      adapter_missing_submission_engine: Workflow engine requires a submission_engine
+        adapter.
       no_active_profile_bucket: No active profile bucket.
       no_run_for_period: No persisted workflow run found for modelo {modelo} period
         {period}. Drive the workflow at least once before resuming.
@@ -1449,6 +1457,8 @@ cli:
         unknown_keys: 'Unknown --binding key(s) {keys}; known bindings for {code}@{revision}
           ({period}): {suggestion}.'
         year_help: Tax year of the modelo (e.g. 2026)
+        m200_m202_relation_guidance: 'Modelo 200 M202 pagos fraccionados feed DP200014B:00611 through --relation values, not --binding target binding ids. The M202 40.3 casilla 34 and 40.2 casilla 03 channels are mutually exclusive per filing; when entering manual relation values, put the annual sum on the elected modality and 0 on the unused modality.'
+        m200_m202_relation_channel: "%{relation_id}\tM202 %{modality} casilla %{casilla}\tuse --relation %{relation_id}=VALUE\tpaired target binding %{binding_id}"
       casillas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         explain_help: Include localized help text in the text output.
@@ -1887,8 +1897,7 @@ cli:
           Spanish territory in the tax year. Required alongside --annual-salary when
           Art. 7.p) applies.
         reason_help: Optional free-text reason for the discard (up to 500 chars)
-        relation_help: Prior-period relation value as KEY=VALUE. The KEY is a registry
-          relation id; the VALUE is a decimal. Repeat to supply multiple relations.
+        relation_help: 'Registry relation value as KEY=VALUE (repeatable). KEY is a registry relation id, not a binding id; use this for cross-period or cross-modelo relation inputs. Run aeat app modelo bindings list --missing for scoped relation guidance. For Modelo 200 M202 pagos fraccionados, use the mutually exclusive 40.3 casilla 34 and 40.2 casilla 03 relation channels, setting the unused modality to 0 when entering manual values.'
         rename_help: Update the display name of a work unit
         rescate_plan_pensiones_aportaciones_pre_2007_help: Contributions made to the
           pension plan up to 31 Dec 2006 (LIRPF transitional provision 12 proration
@@ -1968,6 +1977,8 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
+        missing_relation_guidance: '%{base} Supply the value with --relation KEY=VALUE on this command; KEY is a registry relation id, not a binding id. Run %{discover} to list relation guidance and the remaining bindings the calculation still needs.'
+        missing_relation_guidance_m200_m202: '%{base} Supply Modelo 200 pagos fraccionados from Modelo 202 with --relation RELATION_ID=VALUE, not --binding. DP200014B:00611 subtracts two mutually exclusive M202 payment relation channels: modelo-200-2024-rel-202-pagos-fraccionados for 40.3 casilla 34 and modelo-200-2024-rel-202-pagos-fraccionados-40-2 for 40.2 casilla 03. When entering manual values, set the unused modality to 0. Run %{discover} to list the relation guidance and remaining bindings.'
   common:
     errors:
       draft_id_not_found: Draft ID %{draft_id} not found
@@ -2131,8 +2142,11 @@ cli:
       sync:
         calc:
           compute:
-            refused_stale: 'refusing to compute against a workbook whose metadata stamps do not match the supplied snapshot (metadata_match={metadata_match}); re-export, then re-pull'
-            spreadsheet_id_help: 'Drive file id of the workbook to read operator edits from (must be app-owned and bound to the supplied snapshot)'
+            refused_stale: refusing to compute against a workbook whose metadata stamps
+              do not match the supplied snapshot (metadata_match={metadata_match});
+              re-export, then re-pull
+            spreadsheet_id_help: Drive file id of the workbook to read operator edits
+              from (must be app-owned and bound to the supplied snapshot)
           compute_help: Pull operator-edited cells from a calc-sheets workbook, run
             the local Decimal runtime over them, and emit the computed casilla values
             (persists nothing)
@@ -2152,7 +2166,7 @@ cli:
             year_help: Filing year (e.g. 2025)
           export_help: Export the registry calculation surface for a modelo+period
             to a Google Sheets workbook in the operator's `aeat-vault/`
-          help: 'Schema-to-sheet calc surface (export, pull, and compute)'
+          help: Schema-to-sheet calc surface (export, pull, and compute)
           pull:
             assemble_observations_help: After pulling, reassemble Detalle-tab row-set
               cells into typed observations (perceptors, foreign assets, related-party
@@ -2589,6 +2603,8 @@ cli:
         it in place'
       bulk_summary: 'bulk classify: %{total} rows, %{applied} applied, %{skipped}
         skipped, %{fail} failed'
+      bulk_all_failed: 'bulk classify failed: every row failed; no ledger rows were
+        updated'
       business_pct_help: Business-use share from 0 to 1; required with --classification
         MIXED and rejected for any other classification
       business_pct_requires_mixed: Refused. --business-pct only applies to a MIXED
@@ -2606,7 +2622,8 @@ cli:
         uploads it off your machine (required by the consent gate).
       from_csv_exclusive: --from-csv cannot be combined with a transaction id or --classification.
       from_csv_help: Path to a CSV file with columns transaction_id, classification[,
-        category_id, business_pct, taxable_base, iva_rate, iva_amount].
+        category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category,
+        irpf_category].
       from_csv_not_found: 'CSV file not found: %{path}'
       help: Classify one ledger transaction in the active profile
       id_help: Ledger transaction id to classify
@@ -2750,6 +2767,7 @@ cli:
       child_id: Child transaction id
       children: Children
       counterparty: Counterparty
+      counterparty_eu_member_state: EU counterparty
       created_event_id: Created bucket event
       currency: Currency
       date: Date
@@ -3160,6 +3178,7 @@ cli:
       next_import_command: '  aeat app ledger import <bank-statement.csv> --provider
         csv - import bank transactions.'
       next_landing_command: '  aeat --help - return to the command guide.'
+      next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - Modelo 210 is visible for IRNR discovery, but local work-unit creation is not supported yet; file through AEAT Sede G320.'
       next_modelo_work_command: '  aeat app modelo work create - start a modelo declaration
         from your ledger data.'
       next_review_command: '  aeat app ledger review - review imported rows.'
@@ -3619,6 +3638,10 @@ errors:
     lookup_dispatch_arg_count: Formula op {op} expects {expected} arguments.
     lookup_dispatch_arg_kind: Formula op {op} requires {position} to be a {expected_kind}
       leaf.
+    m210_imputation_coefficient_invalid: errors.calc.m210_imputation_coefficient_invalid
+    m210_imputation_days_invalid: errors.calc.m210_imputation_days_invalid
+    m210_imputation_no_catastral_value_missing: errors.calc.m210_imputation_no_catastral_value_missing
+    m210_imputation_no_filing_year: errors.calc.m210_imputation_no_filing_year
     parameter_unknown: Parameter {parameter_id} is not registered.
     relation_value_missing: Relation {relation_id} has no supplied value.
     text_input_non_text_casillas: 'Text input supplied for non-text fields: %{casilla_ids}.'
@@ -3871,6 +3894,7 @@ errors:
       connection and try again.
     fail_justificante_parse: The PDF could not be parsed into a receipt.
     fail_llm_cache: A language-model cache entry could not be read, written or parsed.
+    fail_llm_pdf_rasterisation: The PDF could not be rendered for local vision input.
     fail_llm_provider: The language-model provider returned an unrecoverable error.
     fail_llm_rate_limit: The language-model provider rejected the request due to rate
       limits. Wait a few minutes and try again.
@@ -4800,6 +4824,8 @@ wizard:
         help: Whether the taxpayer is enrolled in the SII
       legal-entity-form:
         help: Recognised legal form when the entity type is a legal entity
+      legal-name:
+        help: Legal or company name for legal-entity export headers
       llm-vision:
         help: Enable on-host LLM vision for reading invoices.
       name:
@@ -4987,6 +5013,10 @@ wizard:
             label: Simplified regime
       name:
         prompt: Display name shown in local reviews
+      legal-name:
+        help: For legal entities this is the filing name used in entity-style export
+          headers. It is separate from the local display name.
+        prompt: Legal or company name for export headers
       output-language:
         choices:
           ca:

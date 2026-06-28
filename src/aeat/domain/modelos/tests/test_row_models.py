@@ -24,6 +24,7 @@ from .._row_models import (
     Modelo232VinculadaRow,
     Modelo347ContraparteRow,
     Modelo349OperadorRow,
+    m349_nif_number_for_export,
     validate_m349_nif_format,
 )
 
@@ -134,7 +135,7 @@ class TestModelo184MemberRow:
         """Modelo184MemberRow is frozen — mutation attempts raise TypeError."""
         row = Modelo184MemberRow(nif="55555555E", porcentaje=Decimal("50"), importe=Decimal("0"))
         with pytest.raises((ValidationError, TypeError)):
-            row.nif = "99999999Z"  # type: ignore[misc]
+            row.__setattr__("nif", "99999999Z")
 
 
 # ---------------------------------------------------------------------------
@@ -212,7 +213,7 @@ class TestModelo232VinculadaRow:
         """Modelo232VinculadaRow is frozen."""
         row = Modelo232VinculadaRow(nif="A12345678", importe=Decimal("1"))
         with pytest.raises((ValidationError, TypeError)):
-            row.nif = "Z99999999"  # type: ignore[misc]
+            row.__setattr__("nif", "Z99999999")
 
 
 # ---------------------------------------------------------------------------
@@ -399,11 +400,13 @@ class TestModelo349OperadorRow:
     def test_invalid_clave_operacion_rejected(self) -> None:
         """Clave not in the Orden HAC/174/2020 catalogue is rejected."""
         with pytest.raises(ValidationError):
-            Modelo349OperadorRow(
-                codigo_pais="DE",
-                nif_comunitario="DE123456789",
-                clave_operacion="Z",  # pyright: ignore[reportArgumentType] # ty: ignore[invalid-argument-type]
-                importe=Decimal("1"),
+            Modelo349OperadorRow.model_validate(
+                {
+                    "codigo_pais": "DE",
+                    "nif_comunitario": "DE123456789",
+                    "clave_operacion": "Z",
+                    "importe": Decimal("1"),
+                },
             )
 
     def test_frozen_model_immutable(self) -> None:
@@ -415,7 +418,7 @@ class TestModelo349OperadorRow:
             importe=Decimal("1"),
         )
         with pytest.raises((ValidationError, TypeError)):
-            row.codigo_pais = "FR"  # type: ignore[misc]
+            row.__setattr__("codigo_pais", "FR")
 
     def test_two_rows_distinguish_by_importe(self) -> None:
         """Anti-tautology: two rows with different importes are distinct.
@@ -473,13 +476,21 @@ class TestValidateM349NifFormat:
         """NL + 9 digits + B + 2 digits matches Dutch pattern."""
         assert validate_m349_nif_format("NL123456789B01", "NL") is True
 
-    def test_unknown_country_fallback(self) -> None:
-        """Unknown country uses fallback (2-letter prefix + 2-15 alphanum)."""
-        assert validate_m349_nif_format("XX12345", "XX") is True
+    def test_official_greece_country_code_is_supported(self) -> None:
+        """EL + 9 digits matches the AEAT Modelo 349 instruction table."""
+        assert validate_m349_nif_format("EL123456789", "EL") is True
 
-    def test_unknown_country_too_short_rejected(self) -> None:
-        """Fallback rejects NIF with only 1 character after prefix."""
-        assert validate_m349_nif_format("XX1", "XX") is False
+    def test_unknown_country_rejected(self) -> None:
+        """Country prefixes absent from the M349 instructions fail closed."""
+        assert validate_m349_nif_format("XX12345", "XX") is False
+
+    def test_unknown_country_badvat_rejected(self) -> None:
+        """Persona repro: an unsupported country cannot pass via generic NIF shape."""
+        assert validate_m349_nif_format("BADVAT", "ZZ") is False
+
+    def test_supported_country_too_short_rejected(self) -> None:
+        """Known country patterns still reject malformed NIFs."""
+        assert validate_m349_nif_format("EL1", "EL") is False
 
     def test_antitautology_de_pattern_rejects_fr_shaped_nif(self) -> None:
         """Anti-tautology: a FR-format NIF does not pass the DE validator.
@@ -488,6 +499,18 @@ class TestValidateM349NifFormat:
         The DE pattern would reject a 13-character FR NIF.
         """
         assert validate_m349_nif_format("FR12345678901", "DE") is False
+
+
+class TestM349NifNumberForExport:
+    def test_strips_country_prefix_for_boe_nif_subfield(self) -> None:
+        """The fixed-width NIF slot excludes the separately-exported country code."""
+        assert m349_nif_number_for_export("DE123456789", "DE") == "123456789"
+        assert m349_nif_number_for_export("FR12345678901", "FR") == "12345678901"
+
+    def test_rejects_invalid_or_mismatched_prefixed_nif(self) -> None:
+        """Export normalization keeps the same validation as row input."""
+        with pytest.raises(ValueError, match="expected NIF-IVA format"):
+            m349_nif_number_for_export("FR12345678901", "DE")
 
 
 # ---------------------------------------------------------------------------
@@ -566,7 +589,7 @@ class TestModelo347ContraparteRow:
         """Modelo347ContraparteRow is frozen."""
         row = Modelo347ContraparteRow(nif="12345678A")
         with pytest.raises((ValidationError, TypeError)):
-            row.nif = "99999999Z"  # type: ignore[misc]
+            row.__setattr__("nif", "99999999Z")
 
     def test_threshold_constant_matches_rd_1065_2007(self) -> None:
         """M347_THRESHOLD_EUR equals €3,005.06 per RD 1065/2007 art. 33.1.
