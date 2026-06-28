@@ -209,6 +209,68 @@ def test_ledger_add_gross_mismatch_surfaces_clean_refusal_not_pydantic_repr(
     assert "mappingproxy(" not in combined, combined
 
 
+def test_ledger_classify_persists_professional_income_net_of_irpf_withholding(
+    tmp_path: Path,
+) -> None:
+    """A net bank receipt can still carry the invoice base and IVA facts.
+
+    Persona repro: professional invoice 2000 + 420 IVA, 300 IRPF withheld,
+    bank receipt 2120. The operator first records the bank movement and then
+    classifies it with the invoice substrate. The production CLI path must
+    persist those facts so Modelo 303 and Renta aggregation can read them.
+    """
+    added = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2025-07-15",
+            "--amount",
+            "2120.00",
+            "--direction",
+            "INCOMING",
+            "--description",
+            "Factura profesional neta de retencion",
+        ],
+    )
+    assert added.exit_code == 0, added.output
+    transaction_id = json.loads(added.output)["result"]["transaction_id"]
+
+    classified = _invoke(
+        [
+            "app",
+            "ledger",
+            "classify",
+            transaction_id,
+            "--classification",
+            "BUSINESS",
+            "--taxable-base",
+            "2000.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "420.00",
+            "--irpf-category",
+            "actividad_economica",
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+    assert classified.exit_code == 0, classified.output
+
+    viewed = _invoke(["--format", "json", "app", "ledger", "view", transaction_id])
+    assert viewed.exit_code == 0, viewed.output
+    transaction = json.loads(viewed.output)["result"]["transaction"]
+
+    assert transaction["amount"] == "2120"
+    assert transaction["taxable_base"] == "2000"
+    assert transaction["iva_amount"] == "420"
+    assert transaction["iva_rate"] == "0.21"
+    assert transaction["irpf_category"] == "actividad_economica"
+
+
 def test_ledger_add_accepts_nonnegative_amount_with_direction(tmp_path: Path) -> None:
     """``ledger add --amount=49.99 --direction OUTGOING`` is accepted."""
     result = _invoke(

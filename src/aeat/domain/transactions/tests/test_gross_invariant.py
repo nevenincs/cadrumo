@@ -80,6 +80,80 @@ def test_consistent_triple_validates_against_magnitude_gross() -> None:
     assert tx.iva_amount == Decimal("21.00")
 
 
+def test_professional_income_net_of_irpf_withholding_validates() -> None:
+    """Professional income can keep invoice base/IVA when the bank receipt is net.
+
+    A Spanish professional invoice for 2000.00 + 420.00 IVA with 300.00 IRPF
+    withheld lands as a 2120.00 bank receipt. The ledger must preserve the
+    invoice substrate so IVA and Renta aggregations can read the declared base
+    and cuota instead of losing those facts.
+    """
+    tx = Transaction.model_validate(
+        {
+            "raw": _raw(amount=Decimal("2120.00")),
+            "direction": TransactionDirection.INCOMING,
+            "business_classification": BusinessClassification.BUSINESS,
+            "taxable_base": Decimal("2000.00"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("420.00"),
+            "irpf_category": "actividad_economica",
+        },
+    )
+
+    assert tx.raw.amount == Decimal("2120.00")
+    assert tx.taxable_base is not None
+    assert tx.iva_amount is not None
+    assert tx.taxable_base + tx.iva_amount == Decimal("2420.00")
+    assert tx.taxable_base + tx.iva_amount > tx.raw.amount
+
+
+def test_invoice_gross_above_cash_without_irpf_category_is_rejected() -> None:
+    """The net-cash relaxation requires an explicit IRPF category."""
+    with pytest.raises(ValidationError, match="set irpf_category"):
+        Transaction.model_validate(
+            {
+                "raw": _raw(amount=Decimal("2120.00")),
+                "direction": TransactionDirection.INCOMING,
+                "business_classification": BusinessClassification.BUSINESS,
+                "taxable_base": Decimal("2000.00"),
+                "iva_rate": Decimal("0.21"),
+                "iva_amount": Decimal("420.00"),
+            },
+        )
+
+
+def test_work_irpf_category_does_not_relax_professional_invoice_gross() -> None:
+    """Salary/work tags must not unlock invoice-gross validation."""
+    with pytest.raises(ValidationError, match="must equal the gross to the cent"):
+        Transaction.model_validate(
+            {
+                "raw": _raw(amount=Decimal("2120.00")),
+                "direction": TransactionDirection.INCOMING,
+                "business_classification": BusinessClassification.BUSINESS,
+                "taxable_base": Decimal("2000.00"),
+                "iva_rate": Decimal("0.21"),
+                "iva_amount": Decimal("420.00"),
+                "irpf_category": "trabajo",
+            },
+        )
+
+
+def test_irpf_category_does_not_accept_understated_invoice_gross() -> None:
+    """Withholding may explain cash below invoice gross, never invoice gross below cash."""
+    with pytest.raises(ValidationError, match="must equal the gross to the cent"):
+        Transaction.model_validate(
+            {
+                "raw": _raw(amount=Decimal("2420.00")),
+                "direction": TransactionDirection.INCOMING,
+                "business_classification": BusinessClassification.BUSINESS,
+                "taxable_base": Decimal("2000.00"),
+                "iva_rate": Decimal("0.21"),
+                "iva_amount": Decimal("300.00"),
+                "irpf_category": "actividad_economica",
+            },
+        )
+
+
 def test_drifted_triple_is_rejected() -> None:
     """A triple that does not reconstitute the gross raises ValidationError."""
     with pytest.raises(ValidationError, match="must equal the gross to the cent"):
