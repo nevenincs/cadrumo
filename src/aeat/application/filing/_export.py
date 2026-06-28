@@ -1,4 +1,4 @@
-"""Typed records for the declaration export / verify lifecycle.
+"""Typed records for the local declaration export / verify lifecycle.
 
 The CLI exposes two primitives the application layer must back end-to-end:
 
@@ -14,11 +14,23 @@ The CLI exposes two primitives the application layer must back end-to-end:
   can render a deterministic table.
 
 The records are structured return values for renderers, persistence, and
-JSON round trips. Runtime export requires registry-backed schemas.
+JSON round trips. Runtime export requires registry-backed
+:class:`aeat.domain.calculations.registry.ExportLayoutDefinition` records,
+and verification parses payloads through
+:func:`aeat.domain.calculations.registry.parse_export_payload`.
 
 The records intentionally do not embed the AEAT submission lifecycle
 (:mod:`aeat.domain.submission`) — local export and live submit are
 separate concerns and live submit is permanently forbidden.
+
+See Also:
+    :mod:`aeat.adapters.outbound.aeat.export`
+        Outbound export-format adapter errors and fixed-width helper
+        namespace.
+    :class:`aeat.core.access_gate.LiveSubmitForbiddenError`
+        Core refusal raised for every attempted live AEAT write.
+    :mod:`aeat.domain.submission`
+        Local-only submitted-state lifecycle, separate from file export.
 """
 
 from __future__ import annotations
@@ -79,8 +91,11 @@ class DeclaracionVerifyVerdict(StrEnum):
     """Closed verdict the verify command surfaces to the operator.
 
     Attributes:
-        MATCH: Every casilla in the file equals the approved draft's
-            casilla value. The exported artefact is still in sync.
+        MATCH: Every parser-covered casilla in the file equals the
+            approved draft's casilla value. Check
+            :attr:`DeclaracionVerifyResult.unchecked_casilla_ids` for
+            draft casillas that the registry parser cannot re-read from
+            the wire layout.
         DRIFT: At least one casilla diverges between the file and the
             approved draft. The CLI renders the per-casilla diff.
         MISSING: The file is unreadable, malformed, or does not cover
@@ -116,6 +131,15 @@ class DeclaracionExportResult(BaseModel):
             file-vs-draft comparison.
         exported_at: UTC timestamp of when the file was written.
         narrative: Translation key for operator-facing summary.
+        casilla_provenance: Regulatory grounding for the draft casillas
+            represented by the selected registry export layout.
+
+    See Also:
+        :class:`DeclaracionVerifyResult`
+            Verification record that re-reads the exported bytes and
+            anchors the comparison by ``file_sha256``.
+        :class:`aeat.domain.calculations.registry.ExportLayoutDefinition`
+            Registry layout used to render the fixed-width payload.
     """
 
     model_config = _STRICT_FROZEN
@@ -176,6 +200,14 @@ class DeclaracionVerifyResult(BaseModel):
             casillas covered by the export parser/layout.
         mismatched_casilla_provenance: Regulatory grounding for the
             subset of ``mismatched_casilla_ids``.
+
+    See Also:
+        :func:`aeat.domain.calculations.registry.parse_export_payload`
+            Registry parser used to compute parser-covered casillas.
+        :class:`DeclaracionVerifyVerdict`
+            Closed verdict enum rendered by the CLI.
+        :class:`DeclaracionExportResult`
+            Export receipt whose digest anchors later verification.
     """
 
     model_config = _STRICT_FROZEN
@@ -226,7 +258,13 @@ def export_draft(
     headers: dict[str, str],
     schema_provider: RegistrySchemaAccessor | None = None,
 ) -> DeclaracionExportResult:
-    """Write an approved draft to a fichero-BOE file and return a receipt.
+    """Write an approved draft to a local fichero-BOE file and return a receipt.
+
+    The function selects the active registry
+    :class:`~aeat.domain.calculations.registry.ExportLayoutDefinition`,
+    renders its fixed-width records, writes only ``output_path``, and
+    never contacts AEAT. Live submission is outside this surface and is
+    refused by :class:`aeat.core.access_gate.LiveSubmitForbiddenError`.
 
     Args:
         draft: The :class:`ModeloDraft` to export; must be in ``APROBADO`` status.
@@ -234,8 +272,16 @@ def export_draft(
         headers: Registry header fields (NIF, ejercicio, etc.) embedded in the file.
         schema_provider: Optional registry schema provider override.
 
-    Returns a :class:`DeclaracionExportResult` with the output path and
-    casilla provenance for the exported declaration.
+    Returns:
+        A :class:`DeclaracionExportResult` with the output path, digest,
+        byte size, and casilla provenance for the exported declaration.
+
+    See Also:
+        :func:`verify_export`
+            Re-read a local export file and compare parser-covered casillas
+            against the approved draft.
+        :func:`aeat.domain.calculations.registry.parse_export_payload`
+            Registry parser used by the verification path.
     """
     provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
     subview = provider.get_subview(draft.modelo)
@@ -293,9 +339,25 @@ def verify_export(
     file_path: Path,
     schema_provider: RegistrySchemaAccessor | None = None,
 ) -> DeclaracionVerifyResult:
-    """Verify an exported file against an approved :class:`ModeloDraft`.
+    """Verify a local export file against an approved :class:`ModeloDraft`.
 
-    Returns a :class:`DeclaracionVerifyResult`.
+    The verifier parses the file through the draft's active registry
+    export layout and compares parser-covered casillas against the
+    draft. ``MATCH`` means the covered casillas agree; it does not imply
+    every draft casilla was present on the wire. Draft casillas outside
+    parser coverage are reported in
+    :attr:`DeclaracionVerifyResult.unchecked_casilla_ids`.
+
+    Returns:
+        A :class:`DeclaracionVerifyResult` with a closed
+        :class:`DeclaracionVerifyVerdict`, file digest when available,
+        mismatched casillas, unchecked casillas, and provenance.
+
+    See Also:
+        :func:`export_draft`
+            Write the local fichero-BOE artefact being verified.
+        :func:`aeat.domain.calculations.registry.parse_export_payload`
+            Registry parser used to read the file.
     """
     provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
     subview = provider.get_subview(draft.modelo)
@@ -409,6 +471,9 @@ def _render_layout(layout: ExportLayoutDefinition, *, draft: ModeloDraft, header
                 text += "\n"
             chunks.append(text.encode(record.encoding))
     return b"".join(chunks)
+
+
+render_layout = _render_layout
 
 
 def _record_row_indexes(
@@ -721,5 +786,6 @@ __all__ = [
     "DeclaracionVerifyResult",
     "DeclaracionVerifyVerdict",
     "export_draft",
+    "render_layout",
     "verify_export",
 ]

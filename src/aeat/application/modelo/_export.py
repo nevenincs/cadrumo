@@ -75,20 +75,20 @@ from ..filing import (
     export_draft,
     filing_profile_from_taxpayer,
 )
-from . import _iva_wallet_gate
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloRefundAccountMissingError,
     WorkUnitNotFoundError,
 )
+from ._iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from ._result_disposition_resolution import resolve_modelo_result_disposition
 from ._revision_persistence import emit_bucket_event as _emit_bucket_event
 from ._revision_replay_inputs import revision_filing_replay_inputs
 from ._verification_actions import (
-    _cross_period_expected_member_sets_from_profile,
-    _require_cross_period_clean_state,
+    cross_period_expected_member_sets_from_profile,
     derive_taxpayer_files_economic_activity,
+    require_cross_period_clean_state,
 )
 
 #: AEAT-assigned program-identifier code stamped into the optional
@@ -106,9 +106,6 @@ _PROFILE_LEGAL_NAME_PATH = "identity.legal_name"
 _PROFILE_ENTITY_TYPE_PATH = "taxpayer_type.entity_type"
 _LEGAL_ENTITY_TYPE = "legal_entity"
 _LOGGER = get_logger(__name__)
-_require_persisted_iva_compensation_decision_matches_revision = (
-    _iva_wallet_gate.require_persisted_iva_compensation_decision_matches_revision
-)
 
 
 def _compose_legal_full_name(*, surnames: str, name: str) -> str:
@@ -317,6 +314,9 @@ def _iva_wallet_decision_export_provenance(
         authority_source_kinds=tuple(str(source.source_kind) for source in decision.authority_sources),
         authority_source_refs=tuple(_sha256_ref(source.source_locator) for source in decision.authority_sources),
     )
+
+
+iva_wallet_decision_export_provenance = _iva_wallet_decision_export_provenance
 
 
 def _raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> None:
@@ -590,6 +590,9 @@ def _compose_export_headers(
     return headers
 
 
+compose_export_headers = _compose_export_headers
+
+
 def _resolve_work_unit_period(work_unit: WorkUnit) -> Period:
     """Return the typed :class:`~aeat.core.Period` carried by the work unit."""
     if work_unit.period.filing_year != work_unit.filing_year:
@@ -718,19 +721,19 @@ def export_modelo_revision(
     from ._profile_readiness_gate import require_profile_ready_for_work_unit
 
     require_profile_ready_for_work_unit(work_unit)
-    iva_wallet_decision = _require_persisted_iva_compensation_decision_matches_revision(
+    iva_wallet_decision = require_persisted_iva_compensation_decision_matches_revision(
         work_unit,
         revision,
         repository=iva_compensation_decision_repository,
     )
-    _require_cross_period_clean_state(
+    require_cross_period_clean_state(
         work_unit,
         observation_repository=obs_repo,
         filing_repository=fr_repo,
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
         iva_compensation_decision=iva_wallet_decision,
-        expected_member_sets=_cross_period_expected_member_sets_from_profile(
+        expected_member_sets=cross_period_expected_member_sets_from_profile(
             workflow_profile,
             cross_period_expected_member_sets,
         ),
@@ -876,5 +879,7 @@ __all__ = [
     "ModeloExportResult",
     "ModeloIvaWalletDecisionProvenance",
     "_raise_if_ledger_export_evidence_missing",
+    "compose_export_headers",
     "export_modelo_revision",
+    "iva_wallet_decision_export_provenance",
 ]

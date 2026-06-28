@@ -463,6 +463,9 @@ def _rewrite_m210_sentinels(
     return tuple(rewritten), findings
 
 
+rewrite_m210_sentinels = _rewrite_m210_sentinels
+
+
 def _evaluate_advisory_predicate_fires(
     expression: str,
     casilla_values: Mapping[CasillaId, Decimal],
@@ -592,6 +595,11 @@ def _evaluate_verification_predicates(
     return findings
 
 
+evaluate_advisory_predicate_fires = _evaluate_advisory_predicate_fires
+evaluate_predicate_expression = _evaluate_predicate_expression
+evaluate_verification_predicates = _evaluate_verification_predicates
+
+
 def _manual_fact_basis_entries(input_values_by_casilla_id: Mapping[CasillaId, str]) -> tuple[ManualFactBasisEntry, ...]:
     """Project a revision's operator casilla inputs into manual fact-basis entries.
 
@@ -645,6 +653,9 @@ def _cross_period_expected_member_sets_from_profile(
         for roster in getattr(profile, "cross_period_group_member_rosters", ())
     )
     return (*profile_sets, *tuple(explicit_member_sets))
+
+
+cross_period_expected_member_sets_from_profile = _cross_period_expected_member_sets_from_profile
 
 
 def derive_taxpayer_files_economic_activity(profile: TaxpayerProfile) -> bool | None:
@@ -1867,10 +1878,12 @@ def _detail_row_template_casilla_is_satisfied(
         return any(getattr(row, "row_type", None) == "operador" for row in target.detail_rows)
     if section != "rectificacion":
         return False
-    return (
-        target.casilla_values.get(_M349_NUMERO_RECTIFICACIONES_CASILLA, Decimal("0")) == Decimal("0")
-        and target.casilla_values.get(_M349_IMPORTE_RECTIFICACIONES_CASILLA, Decimal("0")) == Decimal("0")
-    )
+    return target.casilla_values.get(_M349_NUMERO_RECTIFICACIONES_CASILLA, Decimal("0")) == Decimal(
+        "0"
+    ) and target.casilla_values.get(_M349_IMPORTE_RECTIFICACIONES_CASILLA, Decimal("0")) == Decimal("0")
+
+
+require_cross_period_clean_state = _require_cross_period_clean_state
 
 
 def _missing_required_casilla_finding(
@@ -1900,6 +1913,9 @@ def _missing_required_casilla_finding(
     )
 
 
+missing_required_casilla_finding = _missing_required_casilla_finding
+
+
 def _iva_wallet_blocking_verification_finding(
     decision: IvaCompensationReconciliationDecision,
 ) -> ModeloVerificationFinding:
@@ -1910,6 +1926,9 @@ def _iva_wallet_blocking_verification_finding(
         next_action=tr("application.modelo.findings.iva_wallet_next_action"),
         legal_refs=(_IVA_COMPENSATION_CARRY_LEGAL_REF,),
     )
+
+
+iva_wallet_blocking_verification_finding = _iva_wallet_blocking_verification_finding
 
 
 def _iva_wallet_error_verification_finding(error: ModeloIvaWalletReconciliationBlocked) -> ModeloVerificationFinding:

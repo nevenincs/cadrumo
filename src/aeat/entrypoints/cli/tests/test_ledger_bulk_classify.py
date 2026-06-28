@@ -200,6 +200,28 @@ def test_classify_from_csv_accepts_iva_category_column(tmp_path: Path) -> None:
     assert _stored_transaction(tx1).iva_category is IvaCategory.DOMESTIC_GENERAL_21
 
 
+def test_classify_from_csv_accepts_irpf_category_column(tmp_path: Path) -> None:
+    """Bulk CSV accepts the same IRPF category field as single-row classify."""
+    tx1, _tx2 = _import_two_transactions(tmp_path)
+    csv_file = tmp_path / "irpf_category.csv"
+    csv_file.write_text(
+        "transaction_id,classification,irpf_category\n"
+        f"{tx1},BUSINESS,actividades_economicas_directa_simplificada\n",
+        encoding="utf-8",
+    )
+
+    result = _RUNNER.invoke(
+        app,
+        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)["result"]
+    assert payload["applied"] == 1, payload
+    assert payload["failures"] == [], payload
+    assert _stored_transaction(tx1).irpf_category == "actividades_economicas_directa_simplificada"
+
+
 def test_classify_from_csv_accepts_display_id_prefix(tmp_path: Path) -> None:
     """Bulk CSV resolves transaction ids like single-row classify does."""
     tx1, _tx2 = _import_two_transactions(tmp_path)

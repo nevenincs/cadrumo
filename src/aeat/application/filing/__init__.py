@@ -1,8 +1,35 @@
-"""Typed filing draft API guarded by registry-backed runtime providers.
+"""Public application facade for registry-backed filing drafts.
 
-All draft creation, input validation, and calculation entry points consume
-a :class:`RegistrySnapshot` to resolve the active revision, its casilla
-schema, and its formula graph.
+This package builds, reviews, approves, exports, verifies, imports, and
+summarises local filing artefacts. All draft creation and validation consume
+a :class:`aeat.domain.calculations.registry.RegistrySnapshot` to resolve the
+active modelo revision, its casilla schema, relation inputs, and formula graph.
+
+Major entry points:
+
+* :func:`build_draft` constructs a validated
+  :class:`aeat.domain.filing.ModeloDraft` from registry-backed inputs.
+* :func:`approve_draft`, :func:`unapprove_draft`, and
+  :func:`refresh_review_status` manage local review state and approval basis.
+* :func:`export_draft` writes a local fichero-BOE artefact, and
+  :func:`verify_export` re-reads that file through the registry export parser.
+* :func:`build_runtime_schema_provider` supplies the runtime registry view used
+  by draft construction, review, export, and verification.
+
+The facade deliberately separates local filing state from live submission.
+Remote AEAT submission is not exposed here; attempted live writes are refused
+by :class:`aeat.core.access_gate.LiveSubmitForbiddenError`.
+
+See Also:
+    :mod:`aeat.application.modelo`
+        Operator-facing modelo facade that carries calculation revisions into
+        this filing surface.
+    :mod:`aeat.domain.filing`
+        Canonical draft records, values, provenance, validation findings, and
+        review helpers.
+    :mod:`aeat.domain.calculations.registry`
+        Registry authority, snapshots, export layouts, and formula execution
+        used by this application facade.
 """
 
 from __future__ import annotations
@@ -99,6 +126,7 @@ from ._export import (
     DeclaracionVerifyResult,
     DeclaracionVerifyVerdict,
     export_draft,
+    render_layout,
     verify_export,
 )
 from ._history_models import ModeloHistory, ModeloHistoryEntry
@@ -332,7 +360,7 @@ def _load_registry_snapshot(*, modelo: str, period: _Period) -> _RegistrySnapsho
         ) from exc
 
 
-def _registry_period(period: _Period) -> tuple[int, str]:
+def _registry_period(period: object) -> tuple[int, str]:
     if not isinstance(period, _Period):
         raise ModeloBuilderError(
             "filing period must be an aeat.core.Period built from a filing year and bare registry token",
@@ -396,7 +424,7 @@ def _validate_filing_input_keys(
     snapshot: _RegistrySnapshot,
 ) -> None:
     """Reject input keys that are not canonical registry input ids."""
-    non_string = tuple(repr(key) for key in inputs if not isinstance(key, str))
+    non_string = tuple(repr(key) for key in inputs if type(key) is not str)
     if non_string:
         raise ModeloBuilderError(
             "filing input keys must be string registry ids; "
@@ -778,6 +806,7 @@ __all__ = [
     "load_default_filing_profile",
     "make_amendment_id",
     "refresh_review_status",
+    "render_layout",
     "summarise_calculation",
     "unapprove_draft",
     "verify_export",

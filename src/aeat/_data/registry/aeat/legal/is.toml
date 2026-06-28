@@ -1,3 +1,24 @@
+[legal."ley-27-2014:art-7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-7.html#a7"
+document_id = "BOE-A-2014-12328"
+article = "7"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a7"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (verified against official BOE-A-2014-12328 consolidated art. 7; corpus excerpt bundled)"
+notes = "LIS art 7 defines contributors to Impuesto sobre Sociedades, including resident legal persons and using the abbreviated designations sociedades or entidades. Grounds the legal_entity branch of the profile entity-type axis."
+required_text = [
+    "Contribuyentes",
+    "Serán contribuyentes del Impuesto",
+    "Las personas jurídicas",
+    "sociedades o entidades",
+]
+
 [legal."ley-27-2014:art-10"]
 evidence_tier = "legal_authority"
 authority = "boe"

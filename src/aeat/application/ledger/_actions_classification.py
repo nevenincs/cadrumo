@@ -74,16 +74,18 @@ def bulk_classify_from_csv(
     """Apply batch classifications from a CSV string.
 
     The CSV must contain ``transaction_id`` and ``classification`` columns;
-    ``category_id``, ``business_pct``, ``taxable_base``, ``iva_rate``, and
-    ``iva_amount`` are optional. The IVA facts ride the same
+    ``category_id``, ``business_pct``, ``taxable_base``, ``iva_rate``,
+    ``iva_amount``, ``iva_category``, and ``irpf_category`` are optional. The
+    tax facts ride the same
     :class:`ManualLedgerTransactionPatch` and
     :func:`update_manual_transaction_fields` write path the single-classify
     surface uses, so a bulk row persists the same typed
-    ``taxable_base``/``iva_rate``/``iva_amount`` values as ``--id``-mode
-    classify with identical validation. Unknown columns are rejected before
-    any writes. Rows that fail validation (unknown transaction id, invalid
-    classification value, malformed IVA-fact Decimal, pydantic error) are
-    collected in ``failures`` and the remaining valid rows are applied
+    ``taxable_base``/``iva_rate``/``iva_amount``/``iva_category``/
+    ``irpf_category`` values as ``--id``-mode classify with identical
+    validation. Unknown columns are rejected before any writes. Rows that fail
+    validation (unknown transaction id, invalid classification value, malformed
+    tax fact, pydantic error) are collected in ``failures`` and the remaining
+    valid rows are applied
     (partial-success semantics matching the ledger import pattern).
 
     Returns a :class:`BulkClassifyResult`.
@@ -175,6 +177,7 @@ def bulk_classify_from_csv(
             iva_rate=row.iva_rate,
             iva_amount=row.iva_amount,
             iva_category=row.iva_category,
+            irpf_category=row.irpf_category,
         )
         try:
             resolved_transaction_id = resolve_transaction_id(row.transaction_id, working.transactions.keys())

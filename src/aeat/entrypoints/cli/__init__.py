@@ -379,7 +379,8 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     write_policy = inspect_storage_write_policy(verb_path, bootstrap_exempt=exempt)
     if not write_policy.allowed:
         raise CliRefusedBoundaryError(write_policy.render_refusal_message())
-    if resolve_active_bucket_id() is None:
+    active_bucket_id = resolve_active_bucket_id()
+    if active_bucket_id is None:
         # No active profile: each non-exempt verb refuses for itself
         # with a translated message (see the per-verb
         # ``resolve_active_bucket_id() is None`` guards). Returning here
@@ -387,6 +388,8 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
         # database and keeps the bare-invocation landing card path
         # (handled by the caller) intact. Bootstrap-exempt verbs also
         # return — they run cleanly with no profile by design.
+        return
+    if _is_unregistered_profile_status_probe(verb_path, active_bucket_id):
         return
     _register_wizard_catalogue_for_profile_keys()
     if has_active_bucket_session():
@@ -404,6 +407,15 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     from ...core.i18n._render import clear_output_language_cache
 
     clear_output_language_cache()
+
+
+def _is_unregistered_profile_status_probe(verb_path: str | None, active_bucket_id: str) -> bool:
+    """Let ``config profile status`` diagnose a dangling active pointer."""
+    if verb_path != "config profile status":
+        return False
+    from ...application.workflow import read_profile_bucket_by_id
+
+    return read_profile_bucket_by_id(active_bucket_id) is None
 
 
 def _register_wizard_catalogue_for_profile_keys() -> None:
@@ -488,10 +500,21 @@ def _verb_path_from_context(ctx: typer.Context) -> str | None:
     subcommand plus the unparsed remainder so prefix matching against
     :data:`BOOTSTRAP_EXEMPT_VERB_PATHS` continues to work.
     """
+    from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
+
+    captured = list(ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
+    if captured:
+        tokens: list[str] = []
+        for token in captured:
+            if token.startswith("-"):
+                break
+            tokens.append(token)
+        return " ".join(tokens) if tokens else None
+
     invoked = ctx.invoked_subcommand
     if invoked is None:
         return None
-    tokens: list[str] = [invoked]
+    tokens = [invoked]
     # Click 9 exposes the unparsed remainder on ``ctx.args``. Click 8 still
     # stages the same data on the internal protected list during root-callback
     # execution; reading the deprecated public ``protected_args`` property emits

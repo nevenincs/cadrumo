@@ -23,15 +23,22 @@ No mocks.  Real ``isolated_profile_storage_root`` fixture, real
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from click.testing import Result
 from pydantic import ValidationError
 
-from ....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
+from ....domain.calculations.registry import (
+    CasillaId,
+    CasillaObservation,
+    LegalRefId,
+    SourceRefId,
+    validated_casilla_id,
+)
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from .envelope_helpers import unwrap_envelope_notices
@@ -51,6 +58,9 @@ _IVA_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
 )
 _CASILLA_01: CasillaId = validated_casilla_id("casilla-01", surface="_CASILLA_01")
 _CASILLA_12: CasillaId = validated_casilla_id("casilla-12", surface="_CASILLA_12")
+_LEGAL_REF_BASE: LegalRefId = "ley-37-1992:art-78"
+_LEGAL_REF_QUOTA: LegalRefId = "ley-37-1992:art-90"
+_SOURCE_REF_303: SourceRefId = "aeat-modelo-303-instrucciones-2026"
 
 
 @pytest.fixture(autouse=True)
@@ -59,8 +69,45 @@ def _isolated_source(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _invoke(args: list[str]):
+def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
+
+
+def _create_profile(
+    name: str,
+    *,
+    tax_id: str,
+    activity: str,
+    output_language: str | None = None,
+) -> Result:
+    args = [
+        "config",
+        "profile",
+        "create",
+        name,
+        "--quiet",
+        "--tax-id",
+        tax_id,
+        "--activity",
+        activity,
+    ]
+    if output_language is not None:
+        args.extend(("--output-language", output_language))
+    return _invoke(args)
+
+
+def _export_profile(name: str, bundle_path: Path, *, json_format: bool = False) -> Result:
+    args = ["config", "profile", "export", name, "--to", str(bundle_path)]
+    if json_format:
+        args = ["--format", "json", *args]
+    return _invoke(args)
+
+
+def _import_bundle(bundle_path: Path, *, json_format: bool = False) -> Result:
+    args = ["config", "profile", "import", str(bundle_path)]
+    if json_format:
+        args = ["--format", "json", *args]
+    return _invoke(args)
 
 
 def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
@@ -100,20 +147,11 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
         "2026-01-10,Client SL,Factura 001,1210.00,EUR,txn-001\n",
         encoding="utf-8",
     )
-    r = _invoke(
-        [
-            "config",
-            "profile",
-            "create",
-            "source",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--activity",
-            "design",
-            "--output-language",
-            "en",
-        ],
+    r = _create_profile(
+        "source",
+        tax_id="12345678Z",
+        activity="design",
+        output_language="en",
     )
     assert r.exit_code == 0, r.output
 
@@ -160,8 +198,8 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
                 casilla_id=_CASILLA_01,
                 value=Decimal("1000.00"),
                 formula_id=None,
-                legal_refs=("Ley 37/1992 art. 78",),
-                source_refs=("aeat-modelo-303-instrucciones-2026",),
+                legal_refs=(_LEGAL_REF_BASE,),
+                source_refs=(_SOURCE_REF_303,),
             ),
             CasillaObservation(
                 casilla_id=_CASILLA_12,
@@ -170,8 +208,8 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
                 operand_refs=(_CASILLA_01,),
                 operand_casilla_refs=(_CASILLA_01,),
                 operand_values=(Decimal("1000.00"),),
-                legal_refs=("Ley 37/1992 art. 90",),
-                source_refs=("aeat-modelo-303-instrucciones-2026",),
+                legal_refs=(_LEGAL_REF_QUOTA,),
+                source_refs=(_SOURCE_REF_303,),
             ),
         )
         revision = CalculationRevision(
@@ -214,7 +252,7 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
         filing_repo.save(upsert_filing_record(filing_repo.load(), filing_record))
 
     # 4. Export via CLI.
-    r_export = _invoke(["config", "profile", "export", "source", "--to", str(bundle_path)])
+    r_export = _export_profile("source", bundle_path)
     assert r_export.exit_code == 0, r_export.output
     assert_public_profile_id_redacted(r_export.output, bucket_id)
     assert bundle_path.is_file()
@@ -244,7 +282,7 @@ def test_v2_bundle_export_import_roundtrip(tmp_path: Path) -> None:
     assert exported_bundle["profile"]["profile_id"] == source_bucket_id
 
     json_bundle_path = tmp_path / "source-bundle-json.json"
-    json_export = _invoke(["--format", "json", "config", "profile", "export", "source", "--to", str(json_bundle_path)])
+    json_export = _export_profile("source", json_bundle_path, json_format=True)
     assert json_export.exit_code == 0, json_export.output
     json_export_payload = assert_public_profile_payload_redacted(json_export.output, source_bucket_id)
     assert json_export_payload["display_name"] == "source"
@@ -268,7 +306,7 @@ def test_v2_bundle_export_import_roundtrip(tmp_path: Path) -> None:
     # Import into a fresh isolated storage root.
     import_tmp = tmp_path / "import-root"
     with isolated_profile_storage_root(tmp_path=import_tmp):
-        r_import = _invoke(["--format", "json", "config", "profile", "import", str(bundle_path)])
+        r_import = _import_bundle(bundle_path, json_format=True)
         assert r_import.exit_code == 0, r_import.output
         import_payload = assert_public_profile_payload_redacted(r_import.output, source_bucket_id)
         assert import_payload["display_name"] == "source"
@@ -297,8 +335,8 @@ def test_v2_bundle_export_import_roundtrip(tmp_path: Path) -> None:
     (revision,) = imported_revisions
     assert len(revision.observations) == 2
     computed = next(o for o in revision.observations if o.formula_id is not None)
-    assert computed.legal_refs == ("Ley 37/1992 art. 90",)
-    assert computed.source_refs == ("aeat-modelo-303-instrucciones-2026",)
+    assert computed.legal_refs == (_LEGAL_REF_QUOTA,)
+    assert computed.source_refs == (_SOURCE_REF_303,)
 
 
 # ---------------------------------------------------------------------------
@@ -340,7 +378,7 @@ def test_v2_bundle_anti_tautology_legal_refs_mutation(tmp_path: Path) -> None:
     for rev in raw_json.get("calculation_revisions", []):
         for obs in rev.get("observations", []):
             if obs.get("legal_refs"):
-                obs["legal_refs"][0] = "MUTATED-legal-ref"
+                obs["legal_refs"][0] = "mutated-legal-ref"
                 mutated = True
                 break
         if mutated:
@@ -355,7 +393,7 @@ def test_v2_bundle_anti_tautology_legal_refs_mutation(tmp_path: Path) -> None:
         # Validation passed — the mutated observation's legal_refs must differ
         # from the original bundle's version of that same observation.
         # The mutated JSON has "MUTATED-legal-ref" in the first observation's
-        # legal_refs; the original had "Ley 37/1992 art. 78".
+        # legal_refs; the original had ``_LEGAL_REF_BASE``.
         (original_bundle_revision,) = tuple(
             UserProfilePortableExport.model_validate_json(
                 bundle_path.read_text(encoding="utf-8")
@@ -384,7 +422,7 @@ def test_import_refuses_uuid_collision(tmp_path: Path) -> None:
     source_bucket_id = _seed_and_export(tmp_path, bundle_path)
 
     # Re-import into the same storage root where the profile_id already exists.
-    r = _invoke(["config", "profile", "import", str(bundle_path)])
+    r = _import_bundle(bundle_path)
     assert r.exit_code != 0, r.output
     assert_public_profile_id_not_leaked(r.output, source_bucket_id)
     # The refusal must name the recovery action or "already registered".
@@ -401,24 +439,16 @@ def test_import_label_collision_different_uuid_is_refused(tmp_path: Path) -> Non
     import_tmp = tmp_path / "label-collision-root"
     with isolated_profile_storage_root(tmp_path=import_tmp):
         # Occupy the label "source" in this fresh root with a different UUID profile.
-        r_create = _invoke(
-            [
-                "config",
-                "profile",
-                "create",
-                "source",
-                "--quiet",
-                "--tax-id",
-                "87654321X",
-                "--activity",
-                "consulting",
-            ],
+        r_create = _create_profile(
+            "source",
+            tax_id="87654321X",
+            activity="consulting",
         )
         assert r_create.exit_code == 0, r_create.output
 
         # Now attempt to import the bundle whose display_name is also "source"
         # but whose profile_id is a different UUID.
-        r_import = _invoke(["config", "profile", "import", str(bundle_path)])
+        r_import = _import_bundle(bundle_path)
         assert r_import.exit_code != 0, r_import.output
         assert_public_profile_id_not_leaked(r_import.output, source_bucket_id)
         assert "Traceback" not in r_import.output
@@ -449,9 +479,7 @@ def test_export_emits_cleartext_sensitivity_warning_notice(tmp_path: Path) -> No
     assert "12345678Z" in bundle_text
 
     json_bundle_path = tmp_path / "warn-bundle-json.json"
-    r = _invoke(
-        ["--format", "json", "config", "profile", "export", "source", "--to", str(json_bundle_path)],
-    )
+    r = _export_profile("source", json_bundle_path, json_format=True)
     assert r.exit_code == 0, r.output
 
     notices = unwrap_envelope_notices(r.output)
@@ -485,7 +513,7 @@ def test_import_surfaces_active_profile_switch_info_notice(tmp_path: Path) -> No
 
     import_tmp = tmp_path / "switch-import-root"
     with isolated_profile_storage_root(tmp_path=import_tmp):
-        r_import = _invoke(["--format", "json", "config", "profile", "import", str(bundle_path)])
+        r_import = _import_bundle(bundle_path, json_format=True)
         assert r_import.exit_code == 0, r_import.output
         assert_public_profile_payload_redacted(r_import.output, source_bucket_id)
 

@@ -81,9 +81,9 @@ from .._export import (
     ModeloExportOutputPathError,
     ModeloExportResult,
     ModeloIvaWalletDecisionProvenance,
-    _compose_export_headers,  # pyright: ignore[reportPrivateUsage]
-    _iva_wallet_decision_export_provenance,  # pyright: ignore[reportPrivateUsage]
+    compose_export_headers,
     export_modelo_revision,
+    iva_wallet_decision_export_provenance,
 )
 from .._selectors import ModeloCalculationRevisionSelectorStateError, select_exportable_revision
 from .justificante_metadata import persist_justificante_metadata
@@ -431,10 +431,10 @@ def test_compose_export_headers_emits_devolucion_for_redeme_negative_303(isolate
         iva=ModeloIVAProfile(redeme_enrolled=True, refund_account=RefundAccount(iban=_SPANISH_IBAN)),
     )
 
-    headers_redeme = _compose_export_headers(
+    headers_redeme = compose_export_headers(
         work_unit=work_unit, revision=revision, workflow_profile=redeme, period=period
     )
-    headers_ordinary = _compose_export_headers(
+    headers_ordinary = compose_export_headers(
         work_unit=work_unit, revision=revision, workflow_profile=_profile(), period=period
     )
 
@@ -467,7 +467,7 @@ def test_export_headers_use_typed_instalment_period_dates(isolated_backend: None
     assert work_unit is not None
     assert revision is not None
 
-    headers = _compose_export_headers(
+    headers = compose_export_headers(
         work_unit=work_unit,
         revision=revision,
         workflow_profile=_profile(),
@@ -522,7 +522,7 @@ def test_modelo_202_legal_entity_exports_company_name_in_razon_social_slot(
         new_entity_first_two_profit_periods=False,
     )
 
-    headers = _compose_export_headers(
+    headers = compose_export_headers(
         work_unit=work_unit,
         revision=revision,
         workflow_profile=workflow_profile,
@@ -580,7 +580,7 @@ def test_modelo_202_legal_entity_export_requires_legal_name(isolated_backend: No
     assert revision is not None
 
     with pytest.raises(ModeloExportError) as exc_info:
-        _compose_export_headers(
+        compose_export_headers(
             work_unit=work_unit,
             revision=revision,
             workflow_profile=TaxpayerProfile(
@@ -871,7 +871,7 @@ def test_iva_wallet_export_provenance_redacts_taxpayer_amounts_and_source_locato
         decided_at=decided_at,
     )
 
-    provenance = _iva_wallet_decision_export_provenance(decision)
+    provenance = iva_wallet_decision_export_provenance(decision)
 
     assert provenance is not None
     payload_text = provenance.model_dump_json()
@@ -1552,16 +1552,15 @@ def _render_modelo_303_fichero(
 ) -> str:
     """Compose real headers and render the real M303 layout as latin-1 text.
 
-    Drives the genuine ``_compose_export_headers`` into the genuine
-    registry-backed ``filing._export._render_layout`` against the live DR303
+    Drives the genuine ``compose_export_headers`` into the genuine
+    registry-backed ``filing.render_layout`` against the live DR303
     export layout — a minimal hand-built :class:`ModeloDraft` carries only the
     casilla-71 result that determines the disposition, so the test exercises the
     REDEME byte, the DID block, and the disposition-keyed page suppression without
     re-running the full registry calculation. The returned text is decoded latin-1
     so per-offset assertions read the actual serialised positions.
     """
-    from ....application.filing import build_runtime_schema_provider
-    from ....application.filing._export import _render_layout  # pyright: ignore[reportPrivateUsage]
+    from ....application.filing import build_runtime_schema_provider, render_layout
     from ....domain.filing import ModeloDraft
     from ....domain.filing._schema import ModeloValue, ModeloValueKind
     from ....domain.submission._protocols import ModeloDraftStatus
@@ -1581,7 +1580,7 @@ def _render_modelo_303_fichero(
     assert revision is not None
 
     period = Period.from_year_and_code(2026, period_code)
-    headers = _compose_export_headers(
+    headers = compose_export_headers(
         work_unit=work_unit,
         revision=revision,
         workflow_profile=workflow_profile,
@@ -1609,7 +1608,7 @@ def _render_modelo_303_fichero(
         updated_at=now_ts,
         schema_version=subview.schema_version,
     )
-    payload = _render_layout(subview.export_layouts[0], draft=draft, headers=headers)
+    payload = render_layout(subview.export_layouts[0], draft=draft, headers=headers)
     return payload.decode("latin-1")
 
 

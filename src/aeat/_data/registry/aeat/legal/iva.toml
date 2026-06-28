@@ -1315,3 +1315,44 @@ required_text = [
     "régimen simplificado",
     "libro registro",
 ]
+
+[legal."rd-596-2016"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-596-2016.html#documento"
+document_id = "BOE-A-2016-11575"
+article = "documento"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2016-11575"
+published_at = 2016-12-06
+effective_from = 2017-07-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex"
+notes = "Real Decreto 596/2016: moderniza la gestion del IVA e introduce la llevanza de libros registro a traves de la Sede electronica de la AEAT mediante el suministro electronico de registros de facturacion."
+required_text = [
+    "nuevo sistema de llevanza de libros registro a través de la Sede electrónica de la Agencia Tributaria",
+    "suministro electrónico de los registros de facturación",
+    "Fecha de entrada en vigor: 01/07/2017",
+]
+
+[legal."rd-1007-2023"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1007-2023.html#documento"
+document_id = "BOE-A-2023-24840"
+article = "documento"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-24840"
+published_at = 2023-12-06
+effective_from = 2023-12-07
+consolidated_as_of = 2025-12-03
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex"
+notes = "Real Decreto 1007/2023: aprueba el reglamento de requisitos de los sistemas informaticos de facturacion y define los Sistemas de emision de facturas verificables o Sistemas VERI*FACTU."
+required_text = [
+    "requisitos que deben adoptar los sistemas y programas informáticos o electrónicos que soporten los procesos de facturación",
+    "garantizar la integridad, conservación, accesibilidad, legibilidad, trazabilidad e inalterabilidad",
+    "Sistemas de emisión de facturas verificables",
+]

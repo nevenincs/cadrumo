@@ -40,7 +40,7 @@ from ...core import BindingSourceKind
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.logging import get_logger
-from ...core.parsing._dates import _parse_iso8601_date
+from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import (
     BindingId,
     DataBindingDefinition,
@@ -193,7 +193,7 @@ def _inject_derived_family_facts(
         convive = str(convivencia_raw).lower() not in ("false", "0")
         if convive:
             try:
-                birth = _parse_iso8601_date(str(birth_raw))
+                birth = parse_iso8601_date(str(birth_raw))
                 if birth is None:
                     raise ValueError("birth date parsed as None")
                 age_at_year_end = filing_year - birth.year
@@ -473,7 +473,15 @@ def _resolve_one(
     return None
 
 
+inject_derived_marriage_facts = _inject_derived_marriage_facts
+profile_fact_index = _profile_fact_index
+resolve_profile_binding_value = _resolve_one
+
+
 __all__ = [
     "ProfileBindingResolutionError",
+    "inject_derived_marriage_facts",
+    "profile_fact_index",
+    "resolve_profile_binding_value",
     "resolve_profile_sourced_bindings",
 ]

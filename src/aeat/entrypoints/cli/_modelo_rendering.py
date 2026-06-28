@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ...application.modelo import calculation_result_summary, modelo_work_plazo_summary
+from ...application.modelo import ModeloWorkPlazoSummary, calculation_result_summary, modelo_work_plazo_summary
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ._modelo_payloads import (
@@ -17,6 +17,8 @@ from ._modelo_payloads import (
     WorkRecargoPayload,
     WorkUnitPayload,
 )
+
+_EXTEMPORANEOUS_RECARGO_LEGAL_REF = "ley-58-2003:art-27.2"
 
 
 def advisory_notice(
@@ -187,8 +189,10 @@ def work_unit_plazo_lines(unit) -> list[str]:
     return out
 
 
-def work_unit_deadline_output(unit) -> tuple[WorkPlazoDeadlinePayload | None, list[Notice]]:
-    """Project the work-unit filing-deadline summary onto a payload + notices.
+def _work_unit_deadline_output_from_summary(
+    summary: ModeloWorkPlazoSummary | None,
+) -> tuple[WorkPlazoDeadlinePayload | None, list[Notice]]:
+    """Project a filing-deadline summary onto a payload + notices.
 
     Returns the typed :class:`WorkPlazoDeadlinePayload` (structured result
     data — the voluntary-filing close date and overdue posture) and a
@@ -198,7 +202,6 @@ def work_unit_deadline_output(unit) -> tuple[WorkPlazoDeadlinePayload | None, li
     surface preserves the regulatory grounding the text-mode plazo lines
     render. An in-time (or unknown) deadline raises no notice.
     """
-    summary = modelo_work_plazo_summary(unit)
     if summary is None:
         return None, []
 
@@ -240,7 +243,7 @@ def work_unit_deadline_output(unit) -> tuple[WorkPlazoDeadlinePayload | None, li
         # No recargo band resolved (e.g. deadline-validation failure), but the
         # filing is still extemporáneo under Art. 27 LGT; carry the binding
         # article so the JSON grounding survives even without a band.
-        context["legal_refs"] = "lgt:art-27"
+        context["legal_refs"] = _EXTEMPORANEOUS_RECARGO_LEGAL_REF
     return deadline_payload, [
         Notice(
             severity=NoticeSeverity.WARNING,
@@ -249,6 +252,11 @@ def work_unit_deadline_output(unit) -> tuple[WorkPlazoDeadlinePayload | None, li
             context=context,
         ),
     ]
+
+
+def work_unit_deadline_output(unit) -> tuple[WorkPlazoDeadlinePayload | None, list[Notice]]:
+    """Project a work unit's filing deadline onto a payload + notices."""
+    return _work_unit_deadline_output_from_summary(modelo_work_plazo_summary(unit))
 
 
 def calculation_revision_payload(rev) -> CalculationRevisionPayload:

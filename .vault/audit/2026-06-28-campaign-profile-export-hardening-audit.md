@@ -645,6 +645,167 @@ activity-mode binding accepts decimal `1` while rejecting `normal`; and at
 least one calculation-preflight path can leak a raw `%{detail}` placeholder.
 Those were retained as backlog rather than collapsed into this pass.
 
+### wave-nine-persona-campaign | high | Cross-period personas separated safety gates from bounded bulk-classify parity
+
+Wave nine continued the reframed campaign with four fresh CLI-only personas:
+Adrian, a UK-resident non-resident property owner; Beatriz, an employee who
+also invoices freelance work; Clara, a small S.L. administrator closing annual
+IVA; and Nuria, a retailer under recargo de equivalencia assumptions. Each used
+a blank `AEAT_LOCAL_STORAGE_ROOT`, a fake `AEAT_SECRET_PASSPHRASE`, fake
+taxpayer identities, no source-code access, no `.vault` reading, no live AEAT
+login, CLI help, scratch CSV/export files, and public AEAT/BOE pages for limited
+external sanity checks. Each completed a testimonial; each completed
+testimonial was routed to a separate read-only code triage subagent before the
+coordinator selected any code change.
+
+Adrian confirmed the current Modelo 210 boundary rather than discovering a new
+calculation implementation gap. The non-resident profile and rental ledger
+import/classify/export path worked, and his manual ledger arithmetic matched
+the exported ledger rows. M210 local work creation remained intentionally
+refused with the Sede G320 handoff. Code triage confirmed that refusal is
+covered by the M210 Path-B tests and should not be weakened. The actionable
+backlog is the contradictory period vocabulary: registry discovery still
+advertises `evento`, the core `Period` boundary accepts `AD-HOC` and `EVENT-N`,
+and readiness can fail closed only after the operator tries several incompatible
+tokens. Adrian also externally grounded that 2026 Modelo 210 property-rental
+changes under BOE-A-2026-13573 need registry/legal work before any local 2026
+support can be claimed.
+
+Beatriz completed M130 2025 1T create/calculate/verify/export with manual
+arithmetic matching the CLI. Her Q2 and annual M100 path then hit the existing
+clean-state dependency boundary: export artifacts are not observed filings, and
+local filing can be refused outside the active obligation window. Code triage
+classified the carry and M100 verification blocks as intentional safety gates
+under the local-filed-observations rule, but retained UX debt: continuity
+messages must say plainly that export alone does not satisfy
+`previous_filing`, M100 employment withholding guidance around casilla `0596`
+must point to the correct Modelo 111 binding rather than internal-error wording,
+and unsupported M100 first-slice expense categories should list the currently
+mapped category/casilla set.
+
+Clara completed a legal-entity blank-state IVA annual run through four Modelo
+303 quarters. Quarterly M303 calculate/verify/export worked and her manual
+checks matched: annual output IVA 1470, deductible IVA 252, and annual result
+1218. Modelo 390 calculation matched the same annual arithmetic, but verification
+and export blocked because the four M303 dependencies lacked clean filed
+evidence. RAG and triage classified this as the documented M390 safety boundary:
+verified/exported local drafts are not clean official evidence, and IVA wallet
+override only unblocks calculation. The residual product work is guidance and
+noise reduction, not a calculation fix.
+
+Nuria's recargo-equivalence retailer run separated legal modelling from bounded
+CLI parity. Profile creation accepted `iva_regime=RECARGO_EQUIVALENCIA`, ledger
+import/export worked, and manual ledger arithmetic matched. Her M303/M390 path
+then blocked late on `anomaly_recargo_on_non_retailer`. Code triage confirmed
+retailer-side recargo purchases are intentionally non-declarable and must not
+feed deductible M303 IVA, while supplier-side recargo belongs to the separate
+`recargo_amount` flow. The real hardening debt is earlier applicability: a pure
+recargo-equivalence retailer should not look M303/M390-ready before a late
+ledger anomaly. The bounded fix from Nuria's testimonial was narrower and safe:
+bulk `ledger classify --from-csv` rejected `irpf_category` even though single-row
+classify/update and export already support it. The fix adds `irpf_category` to
+the typed bulk CSV row, allowed-column set, shared manual patch handoff, help
+text, and real CLI persistence coverage.
+
+### wave-ten-persona-campaign | high | CLI-only personas exposed AD-HOC, recargo wording, and annual M100 guidance gaps
+
+Wave ten continued with three fresh CLI-only personas from blank local storage:
+Tomas, an ad-hoc IVA operator exercising Modelos 308/309; Laura, an
+employed-plus-autonomous annual Modelo 100 filer; and Pilar, a
+recargo-equivalence retailer rerunning the bulk `irpf_category` path. Each used
+fake taxpayer identities, scratch CSV/export files, no source-code or `.vault`
+access, no live AEAT login, and public AEAT/BOE pages only as external sanity
+checks. Their testimonials were each routed to read-only code triage agents
+before implementation.
+
+Tomas confirmed a real AD-HOC consistency split. Modelo 308 and 309 discovery
+and work creation accept `AD-HOC`, but M308 calculation still reaches the
+legacy `period_end_date()` helper and raises `invalid registry period
+'AD-HOC'`. Modelo 309 is a different boundary: its ledger aggregation requires
+a calendar date span, and triage classified full-year aggregation for `AD-HOC`
+as legally unsafe without event-date or selected-transaction semantics. The
+safe backlog is therefore two-part: fix M308 calculation so non-span AD-HOC
+filings do not call the legacy date helper, and make M309 readiness/guidance
+fail closed up front instead of suggesting `ledger preflight --period AD-HOC`.
+The likely owner files are dirty in this shared worktree, so no overlapping
+patch was made in this wave.
+
+Laura proved that Modelo 100 casilla `0596` can be populated correctly via the
+Modelo 111 relation-prefill binding, and her manual annual arithmetic matched
+the CLI for employment gross income, autonomous income, deductible expenses,
+net activity income, and the `0596` withholding credit. Triage classified her
+remaining blockers as guidance, not calculation math: direct `--casilla
+0596=...` hits an internal-style bound-input refusal instead of naming the
+correct `--binding`; `0604`/`0609` depend on prior filed M130/M131 relation
+observations rather than arbitrary binding values; `--form-number 0596` filters
+a physical form field, not the printed casilla number; and the estimation-mode
+binding exposes a decimal-coded value where the operator expected a named enum.
+The related CLI and locale files are carrying unrelated WIP, so these were
+retained as UX backlog rather than edited here.
+
+Pilar confirmed the wave-nine `irpf_category` bulk classify fix from a fresh
+operator seat: the CSV with both `iva_category` and `irpf_category` applied
+five rows, and `ledger view` plus CSV/JSONL exports preserved the IRPF
+categories. Her recargo run also reproduced the late M303/M390 retailer
+boundary, but added a narrower clean defect: ledger preflight labelled every
+`recargo_equivalencia` row as `anomaly_recargo_on_non_retailer` and used
+purchase wording even for incoming rows. The calculation boundary remains
+unchanged: retailer-side recargo purchases are non-deductible and must not feed
+M303 input IVA, while supplier-side recargo belongs to the `recargo_amount`
+channel. The bounded fix changes only the preflight issue reason/detail so the
+row is reported as non-declarable recargo-equivalence and incoming rows point
+to `recargo_amount` instead of purchase/non-retailer wording.
+
+### wave-eleven-persona-campaign | high | Profile hard-stop passed; AD-HOC ledger readiness now fails closed
+
+Wave eleven dispatched three fresh CLI-only personas from blank/scratch
+storage: Isabel, a new translator worried about incomplete profile creation;
+Mateo, an autónomo trying to drive quarterly filings into annual Modelo 100 and
+390 summaries; and Noelia, an occasional non-periodic IVA operator re-testing
+Modelos 308/309. Each used fake taxpayer data, no source-code or `.vault`
+access, no live AEAT login, scratch artifacts, and public AEAT/BOE pages for
+external sanity checks. Each completed testimonial was routed to a separate
+read-only source triage agent before implementation.
+
+Isabel proved the critical profile hard-stop works at the filing boundary. A
+schema-valid but filing-incomplete profile could be created, but
+`config profile preflight --modelo 303/130` reported missing
+`identity.name` and `identity.surnames`, and `modelo work create` for both
+M303 and M130 refused before any work unit was created. Follow-up
+calculate/export attempts then failed with no-work-unit guidance rather than a
+late calculation or export error. After completing the profile, M303/M130 work
+creation and calculation succeeded; export refused draft/no-verified-revision
+state; verification refused auth-not-ready. Triage confirmed this is the
+desired safety boundary. Remaining UX debt is separate: `config profile
+validate` says `readiness ready` for a schema-valid but filing-incomplete
+profile, readiness suggestions use bucket ids rather than friendly names, M130
+concurrent calculate may have a stale work-unit pointer race, and enum token
+discoverability remains weak.
+
+Mateo exposed the blank-state state-root usability problem from the opposite
+direction. He correctly found `uv run aeat`, but stateful commands kept using
+workspace `var/storage`; changing `AEAT_SECRET_PASSPHRASE` then failed to open
+the existing master key, and common guessed variables such as `AEAT_HOME`,
+`AEAT_STORAGE_DIR`, and `AEAT_STATE_DIR` did not redirect storage. Triage
+classified this as a high UX/config blocker, not calculation data loss: the
+documented setting is `AEAT_LOCAL_STORAGE_ROOT`, and related config/root
+derivation files are already carrying broader WIP. The annual M130/M303 to
+M100/M390 arithmetic baseline Mateo prepared remains useful for future
+workflow validation, but his run did not reach stateful filing execution.
+
+Noelia reproduced the AD-HOC defect from a clean operator path and externally
+grounded why quarterly/full-year assumptions would be unsafe. M308/M309 list
+and describe as `ad_hoc`, and work creation accepts `AD-HOC`. M308 calculate
+still fails late through the legacy `period_end_date()` path. M309 readiness
+previously reported `ready True` with `ledger_period 2026 AD-HOC` on an empty
+ledger, while the ledger CLI itself rejects `AD-HOC`; after a ledger row was
+added, readiness leaked an internal `has_date_span()` integrity message. Triage
+confirmed the root cause: ledger preflight iterated by
+`Period.contains()` without first rejecting non-span periods. The bounded fix
+in this wave adds a typed `unsupported_period` ledger-preflight issue for any
+non-calendar-span period, including empty catalogues, so M309 readiness now
+fails closed instead of pretending an AD-HOC ledger preflight is ready.
+
 ## Recommendations
 
 Implemented and reviewed in this wave:
@@ -767,6 +928,19 @@ Implemented and reviewed in this wave:
   `src/aeat/entrypoints/cli/_ledger_payloads.py`, and
   `src/aeat/entrypoints/cli/_ledger_read_cli.py`, with CLI coverage in
   `src/aeat/entrypoints/cli/tests/test_ledger_ux_defect_cluster.py`.
+- Bulk `ledger classify --from-csv` parity for `irpf_category` in
+  `src/aeat/application/ledger/_models.py`,
+  `src/aeat/application/ledger/_actions_classification.py`,
+  `src/aeat/entrypoints/cli/_ledger.py`, and
+  `src/aeat/locales/{ca,en,es,hu}.yml`, with real CLI persistence coverage in
+  `src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`.
+- Recargo-equivalence ledger preflight wording/direction hardening in
+  `src/aeat/application/ledger/_preflight.py`, with focused coverage in
+  `src/aeat/application/ledger/tests/test_preflight_anomaly.py`.
+- Non-span ledger-preflight fail-closed handling for AD-HOC/readiness surfaces
+  in `src/aeat/application/ledger/_preflight.py`, with service coverage in
+  `src/aeat/application/ledger/tests/test_preflight.py` and projection coverage
+  in `src/aeat/application/tests/test_state_projection.py`.
 
 Verification passed:
 
@@ -843,6 +1017,15 @@ Verification passed:
 - `uv run --no-sync ruff check src/aeat/core/setup_answers.py src/aeat/application/wizard/_catalogue.py src/aeat/application/wizard/_commands.py src/aeat/entrypoints/cli/_config/__init__.py src/aeat/application/ledger/_actions_common.py src/aeat/application/ledger/_models.py src/aeat/application/ledger/_actions_manual.py src/aeat/application/ledger/_actions_classification.py src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_payloads.py src/aeat/entrypoints/cli/_ledger_read_cli.py src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py src/aeat/entrypoints/cli/tests/test_config_preflight_revision_default.py src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py src/aeat/entrypoints/cli/tests/test_ledger_ux_defect_cluster.py`
 - `uv run --no-sync python -m aeat.locales scaffold --check`
 - `uv run --no-sync python -m aeat.locales audit`
+- Wave-nine focused bulk IRPF-category fix: `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_accepts_irpf_category_column`
+- Wave-nine affected bulk-classify set: `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_accepts_iva_category_column src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_accepts_irpf_category_column src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_accepts_display_id_prefix src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_ambiguous_prefix_is_row_failure src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_rejects_unknown_column`
+- Wave-nine focused ruff: `uv run --no-sync ruff check src/aeat/application/ledger/_models.py src/aeat/application/ledger/_actions_classification.py src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`
+- Wave-nine locale scaffold: `uv run --no-sync python -m aeat.locales scaffold --check`
+- Wave-ten recargo preflight focused tests: `uv run --no-sync pytest src/aeat/application/ledger/tests/test_preflight_anomaly.py src/aeat/application/ledger/tests/test_preflight.py -q`
+- Wave-ten recargo preflight ruff: `uv run --no-sync ruff check src/aeat/application/ledger/_preflight.py src/aeat/application/ledger/tests/test_preflight_anomaly.py`
+- Wave-ten bulk-classify regression suite: `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`
+- Wave-eleven AD-HOC ledger-preflight regression: `uv run --no-sync pytest src/aeat/application/ledger/tests/test_preflight.py src/aeat/application/ledger/tests/test_preflight_anomaly.py src/aeat/application/tests/test_state_projection.py::test_modelo_309_ad_hoc_readiness_fails_closed_for_non_span_ledger_period -q`
+- Wave-eleven AD-HOC/recargo preflight ruff: `uv run --no-sync ruff check src/aeat/application/ledger/_preflight.py src/aeat/application/ledger/tests/test_preflight.py src/aeat/application/ledger/tests/test_preflight_anomaly.py src/aeat/application/tests/test_state_projection.py`
 
 Independent read-only reviews reported no findings for the IVA wallet patch,
 the Modelo 202 modality gate, the stage-1 readiness hardening, the M390 export
@@ -867,6 +1050,8 @@ Residual backlog:
 - Decide and implement the M210 event-period registry token migration so
   `EVENT-N` is consistently advertised and accepted, while `evento` is no
   longer advertised as a CLI-valid period.
+- Decide the M210 2026 property-rental registry/legal update under
+  BOE-A-2026-13573 before claiming local 2026 M210 support.
 - Add or explicitly scope the 2026 Modelo 100 annual path for employed-plus-
   autonomous personas; current registry coverage stops at 2025.
 - Resolve Modelo 100 export for verified 2025 revisions that currently refuse
@@ -897,11 +1082,30 @@ Residual backlog:
 - Clarify local export versus local filing versus official/imported filing
   evidence in cross-period dependency guidance, especially for M130/M100 annual
   carry paths.
+- Add earlier applicability/preflight refusal for pure recargo-equivalence
+  retailer profiles on M303/M390, or otherwise make the unsupported-retailer
+  boundary explicit before work creation.
+- Fix M308 `AD-HOC` consistency so describe/create/calculate use the same
+  period boundary or fail closed at the first CLI boundary.
+- Extend M309 `AD-HOC` fail-closed handling beyond the ledger-preflight
+  boundary into calculate/guidance, so operators never receive impossible
+  ledger CLI commands; true M309 support needs grounded event-date or
+  transaction-selection semantics.
+- Decide whether profile creation/import/edit should reject schema-valid but
+  modelo-incomplete profiles at save time, or keep the current model-work gate
+  and change post-create guidance so it does not send operators toward filing
+  work before profile preflight is ready.
+- Rename or split `config profile validate` output so schema validity cannot
+  read as filing readiness, and prefer profile display names over bucket ids in
+  readiness repair suggestions.
 - Clarify `casillas --form-number` or add a separate casilla-number filter so
   operators can find M100 casilla `0003` from the full casilla listing.
 - Improve M100 employed-plus-autonomous discoverability: employment withholdings,
   valid activity expense taxonomy, M130 fold-in dependency, and annual export
   remain hard for CLI-only users to cross-reference.
+- Improve M100 casilla `0596` guidance so direct `--casilla` attempts name the
+  correct bound input channel and distinguish Modelo 111 periodic withholding
+  from Modelo 190 annual summary.
 - Make mixed-use allocation/category recovery more understandable; the all-failed
   bulk classify exit-code defect is fixed, but personas still saw category/ratio
   contradictions.

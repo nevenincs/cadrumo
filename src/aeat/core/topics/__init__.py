@@ -54,7 +54,7 @@ class Topic(BaseModel):
         body_key: i18n key resolving to the topic body. Convention:
             ``topic.<slug>.body``.
         see_also: Slugs of related topics for cross-referencing.
-        legal_refs: Stable corpus references (``ley-58-2003:art-27``,
+        legal_refs: Stable corpus references (``ley-58-2003:art-27.2``,
             ``rd-439-2007:art-110``) the topic anchors against.
     """
 

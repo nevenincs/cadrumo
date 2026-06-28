@@ -1,7 +1,7 @@
 """Verification substance tests: Layer 1 + Layer 2 predicate gate (contract, contract).
 
-contract: Unit tests for the predicate DSL evaluator (_evaluate_predicate_expression,
-     _evaluate_verification_predicates).
+contract: Unit tests for the predicate DSL evaluator (evaluate_predicate_expression,
+     evaluate_verification_predicates).
 
 contract: Regression — Modelo 130 casilla 02 (Gastos) is now ledger-bound
      (the H1 fix), so the gasto resolver populates it (0 when there are no
@@ -46,11 +46,11 @@ from .. import (
     create_work_unit,
     verify_modelo_revision,
 )
-from .._actions import (
-    StoredCalculationDriftError,
-    _evaluate_advisory_predicate_fires,  # pyright: ignore[reportPrivateUsage]
-    _evaluate_predicate_expression,  # pyright: ignore[reportPrivateUsage]
-    _evaluate_verification_predicates,  # pyright: ignore[reportPrivateUsage]
+from .._actions import StoredCalculationDriftError
+from .._verification_actions import (
+    evaluate_advisory_predicate_fires,
+    evaluate_predicate_expression,
+    evaluate_verification_predicates,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -126,7 +126,7 @@ def _seed_ready_profile(repository: UserProfileLifecycleRepository, *, bucket_id
 
 
 # ---------------------------------------------------------------------------
-# contract: unit tests for _evaluate_predicate_expression
+# contract: unit tests for evaluate_predicate_expression
 # ---------------------------------------------------------------------------
 
 
@@ -171,7 +171,7 @@ def _seed_ready_profile(repository: UserProfileLifecycleRepository, *, bucket_id
 )
 def test_nonzero_collection_predicates(expression: str, values: dict[CasillaId, Decimal], expected: bool) -> None:
     """all_nonzero and any_nonzero evaluate present, zero, and absent casillas explicitly."""
-    assert _evaluate_predicate_expression(expression, values, _workflow_profile()) is expected
+    assert evaluate_predicate_expression(expression, values, _workflow_profile()) is expected
 
 
 def test_predicate_expression_rejects_noncanonical_casilla_id_token() -> None:
@@ -179,13 +179,13 @@ def test_predicate_expression_rejects_noncanonical_casilla_id_token() -> None:
     values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000")}
 
     with pytest.raises(ModeloError, match=r"non-canonical casilla\.id"):
-        _evaluate_predicate_expression('all_nonzero(["01", "bad key"])', values, _workflow_profile())
+        evaluate_predicate_expression('all_nonzero(["01", "bad key"])', values, _workflow_profile())
 
 
 def test_cap_le_when_positive_passes_when_limited_within_ceiling() -> None:
     """cap_le_when_positive: passes when ceiling > 0 AND limited ≤ ceiling."""
     values: dict[CasillaId, Decimal] = {_CASILLA_11: Decimal("300"), _CASILLA_10: Decimal("500")}
-    assert _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values, _workflow_profile()) is True
+    assert evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values, _workflow_profile()) is True
 
 
 def test_cap_le_when_positive_fails_when_limited_exceeds_ceiling() -> None:
@@ -197,7 +197,7 @@ def test_cap_le_when_positive_fails_when_limited_exceeds_ceiling() -> None:
     a la cantidad positiva consignada en la casilla 10".
     """
     values: dict[CasillaId, Decimal] = {_CASILLA_11: Decimal("750"), _CASILLA_10: Decimal("500")}
-    assert _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values, _workflow_profile()) is False
+    assert evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values, _workflow_profile()) is False
 
 
 def test_cap_le_when_positive_emits_blocking_rule_finding_for_violated_predicate() -> None:
@@ -205,7 +205,7 @@ def test_cap_le_when_positive_emits_blocking_rule_finding_for_violated_predicate
 
     Constructs the exact M130 C15-cap predicate used in the
     registry (modelo-130-c15-cap-by-c14) and runs it through
-    _evaluate_verification_predicates with a casilla_values map
+    evaluate_verification_predicates with a casilla_values map
     where C15 (limited) exceeds C14 (ceiling). The predicate must
     fire with a BLOCKING_RULE finding citing the predicate_id and
     the legal_refs from the registry declaration.
@@ -219,7 +219,7 @@ def test_cap_le_when_positive_emits_blocking_rule_finding_for_violated_predicate
     # C14 = 1000 (positive ceiling), C15 = 1500 (exceeds cap)
     casilla_values = {_CASILLA_14: Decimal("1000"), _CASILLA_15: Decimal("1500")}
 
-    findings = _evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
 
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
@@ -237,7 +237,7 @@ def test_cap_le_when_positive_emits_no_finding_when_within_cap() -> None:
     # C14 = 1000, C15 = 600 — within cap
     casilla_values = {_CASILLA_14: Decimal("1000"), _CASILLA_15: Decimal("600")}
 
-    findings = _evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
     assert findings == []
 
 
@@ -249,12 +249,10 @@ def test_cap_le_when_positive_holds_when_ceiling_is_zero_or_negative() -> None:
     enforce; the predicate must NOT block in that case.
     """
     values_zero: dict[CasillaId, Decimal] = {_CASILLA_11: Decimal("750"), _CASILLA_10: Decimal("0")}
-    assert (
-        _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values_zero, _workflow_profile()) is True
-    )
+    assert evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values_zero, _workflow_profile()) is True
     values_negative: dict[CasillaId, Decimal] = {_CASILLA_11: Decimal("750"), _CASILLA_10: Decimal("-50")}
     assert (
-        _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values_negative, _workflow_profile())
+        evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values_negative, _workflow_profile())
         is True
     )
 
@@ -325,8 +323,8 @@ def test_roll_forward_balances_core_cases(
     advisory_fires: bool,
 ) -> None:
     """The BIN roll-forward predicate distinguishes continuous filings from dropped stock."""
-    assert _evaluate_predicate_expression(_BIN_ROLL_FORWARD, values, _workflow_profile()) is predicate_holds
-    assert _evaluate_advisory_predicate_fires(_BIN_ROLL_FORWARD, values) is advisory_fires
+    assert evaluate_predicate_expression(_BIN_ROLL_FORWARD, values, _workflow_profile()) is predicate_holds
+    assert evaluate_advisory_predicate_fires(_BIN_ROLL_FORWARD, values) is advisory_fires
 
 
 def test_roll_forward_balances_tolerates_one_cent_but_not_euros() -> None:
@@ -337,9 +335,9 @@ def test_roll_forward_balances_tolerates_one_cent_but_not_euros() -> None:
         _M200_BIN_GENERATED_CASILLA: Decimal("5000"),
     }
     within = {**base, _M200_BIN_CLOSING_CASILLA: Decimal("7000.01")}
-    assert _evaluate_advisory_predicate_fires(_BIN_ROLL_FORWARD, within) is False
+    assert evaluate_advisory_predicate_fires(_BIN_ROLL_FORWARD, within) is False
     beyond = {**base, _M200_BIN_CLOSING_CASILLA: Decimal("7001")}
-    assert _evaluate_advisory_predicate_fires(_BIN_ROLL_FORWARD, beyond) is True
+    assert evaluate_advisory_predicate_fires(_BIN_ROLL_FORWARD, beyond) is True
 
 
 def test_roll_forward_balances_bad_arity_holds_and_does_not_fire() -> None:
@@ -349,8 +347,8 @@ def test_roll_forward_balances_bad_arity_holds_and_does_not_fire() -> None:
         _M200_BIN_CLOSING_CASILLA: Decimal("0"),
         _M200_BIN_OPEN_CASILLA: Decimal("9999"),
     }
-    assert _evaluate_predicate_expression(expr, values, _workflow_profile()) is True
-    assert _evaluate_advisory_predicate_fires(expr, values) is False
+    assert evaluate_predicate_expression(expr, values, _workflow_profile()) is True
+    assert evaluate_advisory_predicate_fires(expr, values) is False
 
 
 def test_roll_forward_balances_emits_advisory_finding_on_discontinuity() -> None:
@@ -368,7 +366,7 @@ def test_roll_forward_balances_emits_advisory_finding_on_discontinuity() -> None
         _M200_BIN_GENERATED_CASILLA: Decimal("5000"),
         _M200_BIN_CLOSING_CASILLA: Decimal("0"),
     }
-    findings = _evaluate_verification_predicates((predicate,), values, _workflow_profile())
+    findings = evaluate_verification_predicates((predicate,), values, _workflow_profile())
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
     assert "ley-27-2014:art-26" in findings[0].legal_refs
@@ -388,14 +386,14 @@ def test_roll_forward_balances_emits_no_finding_when_continuous() -> None:
         _M200_BIN_GENERATED_CASILLA: Decimal("5000"),
         _M200_BIN_CLOSING_CASILLA: Decimal("7000"),
     }
-    assert _evaluate_verification_predicates((predicate,), values, _workflow_profile()) == []
+    assert evaluate_verification_predicates((predicate,), values, _workflow_profile()) == []
 
 
 def test_unknown_expression_does_not_block() -> None:
     """An unrecognised expression pattern does not produce a blocking finding."""
     values: dict[CasillaId, Decimal] = {}
     # Passes through — unknown DSL extensions do not block legacy registry data.
-    assert _evaluate_predicate_expression('threshold(["01"], 100)', values, _workflow_profile()) is True
+    assert evaluate_predicate_expression('threshold(["01"], 100)', values, _workflow_profile()) is True
 
 
 # ---------------------------------------------------------------------------
@@ -425,12 +423,12 @@ _IMPLIES_NONZERO_C01_C07 = 'implies_nonzero(["01", "07"])'
 )
 def test_predicate_implies_nonzero_cases(values: dict[CasillaId, Decimal], expected: bool) -> None:
     """implies_nonzero engages only for strictly-positive antecedents and treats absent consequents as zero."""
-    assert _evaluate_predicate_expression(_IMPLIES_NONZERO_C01_C07, values, _workflow_profile()) is expected
+    assert evaluate_predicate_expression(_IMPLIES_NONZERO_C01_C07, values, _workflow_profile()) is expected
 
 
 def test_evaluate_verification_predicates_empty_returns_no_findings() -> None:
     """Empty predicate tuple yields empty findings list."""
-    findings = _evaluate_verification_predicates((), {}, _workflow_profile())
+    findings = evaluate_verification_predicates((), {}, _workflow_profile())
     assert findings == []
 
 
@@ -443,7 +441,7 @@ def test_evaluate_verification_predicates_violation_produces_blocking_rule() -> 
         finding_kind="BLOCKING_RULE",
     )
     values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000"), _CASILLA_02: Decimal("0")}
-    findings = _evaluate_verification_predicates((predicate,), values, _workflow_profile())
+    findings = evaluate_verification_predicates((predicate,), values, _workflow_profile())
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
     assert "test-invariant" in findings[0].message
@@ -458,7 +456,7 @@ def test_evaluate_verification_predicates_passing_predicate_no_finding() -> None
         finding_kind="BLOCKING_RULE",
     )
     values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000"), _CASILLA_02: Decimal("500")}
-    findings = _evaluate_verification_predicates((predicate,), values, _workflow_profile())
+    findings = evaluate_verification_predicates((predicate,), values, _workflow_profile())
     assert findings == []
 
 
@@ -481,14 +479,14 @@ _ADVISORY_RATIO_GE = 'advisory_when_ratio_ge(["06", "01", "0.70"])'
 )
 def test_advisory_when_ratio_ge_cases(values: dict[CasillaId, Decimal], expected: bool) -> None:
     """advisory_when_ratio_ge fires at or above the threshold and stays silent below it or with no denominator."""
-    assert _evaluate_advisory_predicate_fires(_ADVISORY_RATIO_GE, values) is expected
+    assert evaluate_advisory_predicate_fires(_ADVISORY_RATIO_GE, values) is expected
 
 
 def test_advisory_when_ratio_ge_rejects_noncanonical_casilla_id_token() -> None:
     values: dict[CasillaId, Decimal] = {_CASILLA_06: Decimal("100"), _CASILLA_01: Decimal("100")}
 
     with pytest.raises(ModeloError, match=r"non-canonical casilla\.id"):
-        _evaluate_advisory_predicate_fires('advisory_when_ratio_ge(["06", "bad key", "0.70"])', values)
+        evaluate_advisory_predicate_fires('advisory_when_ratio_ge(["06", "bad key", "0.70"])', values)
 
 
 _ADVISORY_IMPLIES_M200_BASE = 'implies_nonzero(["00501", "DP200014:00552"])'
@@ -506,14 +504,14 @@ _ADVISORY_IMPLIES_M200_BASE = 'implies_nonzero(["00501", "DP200014:00552"])'
 )
 def test_advisory_implies_nonzero_cases(values: dict[CasillaId, Decimal], expected: bool) -> None:
     """The M200 advisory fires only when positive resultado contable has no determined base."""
-    assert _evaluate_advisory_predicate_fires(_ADVISORY_IMPLIES_M200_BASE, values) is expected
+    assert evaluate_advisory_predicate_fires(_ADVISORY_IMPLIES_M200_BASE, values) is expected
 
 
 def test_advisory_predicate_emits_warning_advisory_finding_when_condition_met() -> None:
     """Art. 110.3.b ADVISORY predicate produces a WARNING-severity ADVISORY finding when ratio >= 70%.
 
     The predicate is constructed with finding_kind='ADVISORY' (the new value added
-    in this task). When the ratio condition holds, _evaluate_verification_predicates
+    in this task). When the ratio condition holds, evaluate_verification_predicates
     must produce exactly one finding of kind ADVISORY and severity WARNING.
     No BLOCKING_RULE finding is produced; the operator can still receive
     VERIFICADO_COMPLETO if all other gates pass.
@@ -532,7 +530,7 @@ def test_advisory_predicate_emits_warning_advisory_finding_when_condition_met() 
 
     from ....domain.modelos._verification_report import ModeloVerificationFindingSeverity
 
-    findings = _evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
 
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
@@ -554,7 +552,7 @@ def test_advisory_predicate_emits_no_finding_when_condition_not_met() -> None:
         _CASILLA_01: Decimal("15000"),
     }
 
-    findings = _evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
     assert findings == []
 
 
@@ -667,7 +665,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
     aeat.domain.calculations.registry.KNOWN_VERIFICATION_PREDICATE_OPERATORS.
     The validator (in _validate_surfaces) uses it to reject unknown
     operators at registry-load time. The runtime evaluator
-    (_evaluate_predicate_expression) has its own regex per operator.
+    (evaluate_predicate_expression) has its own regex per operator.
     Drift between the two sets is a silent-pass hazard.
 
     Structural gate: each known operator MUST have a matching
@@ -988,7 +986,7 @@ def test_missing_required_casilla_finding_carries_registry_provenance() -> None:
     hand-copied list. The companion refusal test proves a missing registry
     definition is a hard error, not an empty-provenance finding.
     """
-    from .._verification_actions import _missing_required_casilla_finding  # pyright: ignore[reportPrivateUsage]
+    from .._verification_actions import missing_required_casilla_finding
 
     snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
     casilla_02 = next(c for c in snapshot.revision.casillas if c.id == _CASILLA_02)
@@ -997,7 +995,7 @@ def test_missing_required_casilla_finding_carries_registry_provenance() -> None:
     assert expected_legal_refs, "registry casilla 02 must declare legal_refs (oracle precondition)"
     assert expected_source_refs, "registry casilla 02 must declare source_refs (oracle precondition)"
 
-    finding = _missing_required_casilla_finding(_CASILLA_02, "wu-test-id", casilla_def=casilla_02)
+    finding = missing_required_casilla_finding(_CASILLA_02, "wu-test-id", casilla_def=casilla_02)
 
     assert finding.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
     assert finding.casilla_id == _CASILLA_02
@@ -1012,10 +1010,10 @@ def test_missing_required_casilla_finding_carries_registry_provenance() -> None:
 
 def test_missing_casilla_finding_refuses_absent_registry_definition() -> None:
     """Missing-required findings must not be emitted without registry provenance."""
-    from .._actions import _missing_required_casilla_finding  # pyright: ignore[reportPrivateUsage]
+    from .._verification_actions import missing_required_casilla_finding
 
     with pytest.raises(ModeloValidationError, match="requires registry casilla definition provenance"):
-        _missing_required_casilla_finding(_ABSENT_REGISTRY_CASILLA, "wu-test-id", casilla_def=None)
+        missing_required_casilla_finding(_ABSENT_REGISTRY_CASILLA, "wu-test-id", casilla_def=None)
 
 
 # ---------------------------------------------------------------------------
@@ -1043,7 +1041,7 @@ def test_missing_casilla_finding_refuses_absent_registry_definition() -> None:
 #
 # These tests load the REAL shipped predicate from the registry authority
 # (not a hand-built one) so they assert the declaration actually rides in
-# every M131 revision, and exercise the real _evaluate_verification_predicates
+# every M131 revision, and exercise the real evaluate_verification_predicates
 # path. Non-tautological: the expected firing/non-firing is derived from the
 # M131-instructions scale minimum (2 por 100 > 0), not from re-running the
 # (unmodelled) módulos formula.
@@ -1097,7 +1095,7 @@ def test_m131_advisory_fires_when_rendimientos_positive_but_pago_zero(revision_i
         _CASILLA_02: Decimal("0"),
     }
 
-    findings = _evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
 
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
@@ -1118,7 +1116,7 @@ def test_m131_advisory_silent_when_pago_fraccionado_present(revision_id: str) ->
         _CASILLA_02: Decimal("360.00"),
     }
 
-    findings = _evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
     assert findings == []
 
 
@@ -1136,5 +1134,5 @@ def test_m131_advisory_silent_when_no_datos_base_activity(revision_id: str) -> N
     explicit_zero: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("0"), _CASILLA_02: Decimal("0")}
     absent: dict[CasillaId, Decimal] = {}
 
-    assert _evaluate_verification_predicates((predicate,), explicit_zero, _workflow_profile()) == []
-    assert _evaluate_verification_predicates((predicate,), absent, _workflow_profile()) == []
+    assert evaluate_verification_predicates((predicate,), explicit_zero, _workflow_profile()) == []
+    assert evaluate_verification_predicates((predicate,), absent, _workflow_profile()) == []

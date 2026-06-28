@@ -1496,6 +1496,26 @@ required_text = [
     "Impuesto sobre Sociedades",
 ]
 
+[legal."ley-35-2006:art-29"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a29"
+document_id = "BOE-A-2006-20764"
+article = "29"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a29"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (agent-authored from bundled ley-35-2006.html#a29; operator to re-stamp)"
+notes = "LIRPF art 29 defines elementos patrimoniales afectos to an economic activity, including business premises and partially used assets. Grounds censo establishment type and activity-affectation profile selectors."
+required_text = [
+    "Elementos patrimoniales afectos",
+    "bienes inmuebles en los que se desarrolla la actividad",
+    "elementos patrimoniales que sirvan sólo parcialmente",
+]
+
 [legal."ley-35-2006:art-30"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -2440,6 +2460,26 @@ required_text = [
     "Deducción por inversión en vivienda habitual",
 ]
 
+[legal."ley-35-2006:da-23"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#davigesimatercera"
+document_id = "BOE-A-2006-20764"
+article = "DA-23"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#davigesimatercera"
+published_at = 2006-11-29
+effective_from = 2013-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (agent-authored from bundled ley-35-2006.html#davigesimatercera; operator to re-stamp)"
+notes = "LIRPF disposición adicional 23ª defines vivienda habitual for specified exemptions as the dwelling where the taxpayer resides for a continuous three-year period, with statutory exceptions for forced changes such as marriage, separation, job relocation, or first/better employment. Grounds the profile flag that marks whether the fiscal address is the operator's habitual dwelling before the LIRPF art 30 home-office affectation rule is applied."
+required_text = [
+    "Consideración de vivienda habitual",
+    "plazo continuado de tres años",
+    "circunstancias que necesariamente exijan el cambio de vivienda",
+]
+
 [legal."ley-35-2006:dt-12"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -2768,6 +2808,47 @@ review_status = "reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "wgergely"
 notes = "Articulo 8 de la Orden HAC/242/2025: plazo de presentacion de la declaracion del IRPF ejercicio 2024. El plazo general comprende del 2 de abril al 30 de junio de 2025. La domiciliacion bancaria del pago puede realizarse desde el 2 de abril hasta el 25 de junio de 2025. Corpus contiene solo articulo primero; art-8 pendiente de extraccion al corpus HTML."
+
+[legal."ley-35-2006:art-8"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a8"
+document_id = "BOE-A-2006-20764"
+article = "8"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a8"
+published_at = 2006-11-29
+effective_from = 2016-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (verified against bundled ley-35-2006.html#a8; operator to re-stamp)"
+notes = "LIRPF art 8 defines IRPF taxpayers as natural persons with habitual residence in Spain or the foreign-residence circumstances in art 10, and excludes non-IS civil societies, herencias yacentes, comunidades de bienes, and LGT art 35.4 entities from direct IRPF taxpayer status. Grounds the natural_person and attribution_entity split on the profile entity-type axis."
+required_text = [
+    "Son contribuyentes por este impuesto",
+    "Las personas físicas",
+    "No tendrán la consideración de contribuyente las sociedades civiles no sujetas al Impuesto sobre Sociedades",
+    "Sección 2.ª del Título X",
+]
+
+[legal."ley-35-2006:art-9"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a9"
+document_id = "BOE-A-2006-20764"
+article = "9"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a9"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (agent-authored from bundled ley-35-2006.html#a9; operator to re-stamp)"
+notes = "LIRPF art 9 defines habitual residence in Spanish territory for IRPF taxpayers using the 183-day permanence test, the main centre/base of activities or economic interests, and the family presumption. Grounds the resident_irpf branch of taxpayer fiscal-residency profile selection."
+required_text = [
+    "residencia habitual en territorio español",
+    "más de 183 días",
+    "núcleo principal o la base de sus actividades",
+]
 
 [legal."ley-35-2006:art-11"]
 evidence_tier = "legal_authority"
@@ -3404,6 +3485,30 @@ applies_from = 2007-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 review_status = "reviewed"
 
+[sources."boe-lirpf-art-7-authority"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/ley-35-2006.html"
+sha256 = "b55ba6f2ee97c045290277acd5be1e6493e95b8e5ba7cb7e5e776ff5a572d9f0"
+bytes = 1921157
+retrieved_at = 2026-05-06
+applies_from = 2007-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a7"
+review_status = "reviewed"
+
+[sources."boe-ley-19-1994-art-75-authority"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/ley-19-1994-art-75.html"
+sha256 = "344657dee928cc9c7728dcd3ceab364b60252db3bf13dd2d5ee8aa8e77155dbe"
+bytes = 2188
+retrieved_at = 2026-06-10
+applies_from = 1994-07-08
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-15794#a75"
+review_status = "reviewed"
+
 [legal."ley-35-2006:art-7"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -3420,6 +3525,26 @@ reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a7; ope
 notes = "LIRPF art 7: rentas exentas. Base legal de las casillas informativas de rentas exentas (importes que no se integran en la base imponible) del Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a7; operator to confirm and re-stamp."
 required_text = [
     "Rentas exentas",
+]
+
+[legal."ley-35-2006:da-41"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#dacuadragesimaprimera"
+document_id = "BOE-A-2006-20764"
+article = "DA 41"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dacuadragesimaprimera"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (agent-authored from bundled ley-35-2006.html#dacuadragesimaprimera; operator to re-stamp)"
+notes = "LIRPF DA 41: tripulantes de determinados buques de pesca. Establishes a 50 por ciento exempt-income rule for qualifying tuna fleet crew, conditioned on compatibility with EU law. Added by Ley 26/2014 art. 1.98; currently guarded inactive by the maritime worker engine until state-aid clearance is granted."
+required_text = [
+    "Tripulantes de determinados buques de pesca",
+    "renta exenta el 50 por ciento",
+    "condicionada a su compatibilidad con el ordenamiento comunitario",
 ]
 
 [legal."ley-35-2006:art-53"]
