@@ -9,11 +9,14 @@ value_in_eur; EUR rows remain unconverted (native).
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+import csv
+import json
+from collections.abc import Iterator, Sequence
 from pathlib import Path
+from typing import Any
 
 import pytest
-from typer.testing import CliRunner
+from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile._orchestration import profile_create_storage_span
@@ -23,13 +26,33 @@ from ....core import resolve_active_bucket_id
 from ....core.config import override_settings
 from ....domain.transactions import TransactionCatalogueRepository
 from ....tests import FIXTURES_DIR
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_RUNNER = CliRunner()
 _CORPUS = FIXTURES_DIR / "financial" / "ledger-corpus"
+
+
+def _invoke(args: Sequence[str]) -> Result:
+    return invoke_cached_cli(args)
+
+
+def _import_statement(source: Path, *, json_format: bool = False) -> Result:
+    args = ["app", "ledger", "import", str(source), "--provider", "csv"]
+    if json_format:
+        args = ["--format", "json", *args]
+    return _invoke(args)
+
+
+def _json_result(result: Result) -> dict[str, Any]:
+    return json.loads(result.output)["result"]
+
+
+def _ledger_rows() -> list[dict[str, Any]]:
+    listed = _invoke(["--format", "json", "app", "ledger", "list"])
+    assert listed.exit_code == 0, listed.output
+    return _json_result(listed)["rows"]
 
 
 @pytest.fixture(autouse=True)
@@ -48,7 +71,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def test_cli_import_converts_foreign_rows_to_eur() -> None:
-    result = _RUNNER.invoke(app, ["app", "ledger", "import", str(_CORPUS / "revolut-multi.csv"), "--provider", "csv"])
+    result = _import_statement(_CORPUS / "revolut-multi.csv")
     assert result.exit_code == 0, result.output
 
     bucket_id = resolve_active_bucket_id()
@@ -71,13 +94,9 @@ def test_cli_import_converts_foreign_rows_to_eur() -> None:
 
 
 def test_list_surfaces_eur_value_and_fx_rate_for_foreign_rows() -> None:
-    import json
-
-    result = _RUNNER.invoke(app, ["app", "ledger", "import", str(_CORPUS / "revolut-multi.csv"), "--provider", "csv"])
+    result = _import_statement(_CORPUS / "revolut-multi.csv")
     assert result.exit_code == 0, result.output
-    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
-    assert listed.exit_code == 0, listed.output
-    rows = json.loads(listed.output)["result"]["rows"]
+    rows = _ledger_rows()
     foreign = [r for r in rows if r.get("currency") in {"GBP", "USD"}]
     eur = [r for r in rows if r.get("currency") == "EUR"]
     assert foreign
@@ -105,15 +124,7 @@ def test_view_single_foreign_row_surfaces_value_in_eur_and_fx_rate() -> None:
     declaration this view exits non-zero with extra_forbidden; after, it exits 0
     and surfaces the persisted EUR-equivalent and applied rate.
     """
-    import json
-
-    assert (
-        _RUNNER.invoke(
-            app,
-            ["app", "ledger", "import", str(_CORPUS / "revolut-multi.csv"), "--provider", "csv"],
-        ).exit_code
-        == 0
-    )
+    assert _import_statement(_CORPUS / "revolut-multi.csv").exit_code == 0
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
@@ -123,13 +134,13 @@ def test_view_single_foreign_row_surfaces_value_in_eur_and_fx_rate() -> None:
     target = foreign[0]
     assert target.value_in_eur is not None and target.fx_rate is not None
 
-    viewed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "view", target.transaction_id])
+    viewed = _invoke(["--format", "json", "app", "ledger", "view", target.transaction_id])
     # Before the fix this exits non-zero: the strict CLI payload rejects the
     # persisted FX fields as extra_forbidden. The exit-0 assertion fails loudly
     # then and passes once the fields are declared.
     assert viewed.exit_code == 0, viewed.output
 
-    transaction = json.loads(viewed.output)["result"]["transaction"]
+    transaction = _json_result(viewed)["transaction"]
     assert transaction["currency"] in {"GBP", "USD"}
     # The persisted FX provenance round-trips through the single-transaction
     # read surface, not only the list/export surfaces. The view payload renders
@@ -143,15 +154,7 @@ def test_view_single_foreign_row_surfaces_value_in_eur_and_fx_rate() -> None:
 
 def test_view_single_eur_row_keeps_fx_fields_null() -> None:
     """`ledger view <id>` on an EUR-native row surfaces null FX fields (no false conversion)."""
-    import json
-
-    assert (
-        _RUNNER.invoke(
-            app,
-            ["app", "ledger", "import", str(_CORPUS / "revolut-multi.csv"), "--provider", "csv"],
-        ).exit_code
-        == 0
-    )
+    assert _import_statement(_CORPUS / "revolut-multi.csv").exit_code == 0
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     catalogue = TransactionCatalogueRepository(bucket_id=bucket_id).load()
@@ -160,9 +163,9 @@ def test_view_single_eur_row_keeps_fx_fields_null() -> None:
     target = eur[0]
     assert target.value_in_eur is None and target.fx_rate is None
 
-    viewed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "view", target.transaction_id])
+    viewed = _invoke(["--format", "json", "app", "ledger", "view", target.transaction_id])
     assert viewed.exit_code == 0, viewed.output
-    transaction = json.loads(viewed.output)["result"]["transaction"]
+    transaction = _json_result(viewed)["transaction"]
     assert transaction["currency"] == "EUR"
     assert transaction["value_in_eur"] is None
     assert transaction["fx_rate"] is None
@@ -170,16 +173,13 @@ def test_view_single_eur_row_keeps_fx_fields_null() -> None:
 
 def test_export_period_filters_to_the_quarter(tmp_path: Path) -> None:
     """export --period restricts the hand-off to one quarter's rows."""
-    import csv
-
-    res = _RUNNER.invoke(app, ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"])
+    res = _import_statement(_CORPUS / "bbva-business-eur.csv")
     assert res.exit_code == 0, res.output
     full = tmp_path / "full.csv"
     q1 = tmp_path / "q1.csv"
-    full_res = _RUNNER.invoke(app, ["app", "ledger", "export", "--output", str(full), "--export-format", "csv"])
+    full_res = _invoke(["app", "ledger", "export", "--output", str(full), "--export-format", "csv"])
     assert full_res.exit_code == 0, full_res.output
-    r = _RUNNER.invoke(
-        app,
+    r = _invoke(
         [
             "app",
             "ledger",
@@ -204,37 +204,32 @@ def test_export_period_filters_to_the_quarter(tmp_path: Path) -> None:
 
 def test_folder_import_aggregates_all_statement_files() -> None:
     """Importing a directory imports every supported file with aggregated counts."""
-    import json
 
-    result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "import", str(_CORPUS), "--provider", "csv"])
+    result = _import_statement(_CORPUS, json_format=True)
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)["result"]
+    payload = _json_result(result)
     # The four corpus CSVs (manifest.json / README.md are skipped by extension).
     assert payload["rows"] >= 500, payload
     assert payload["imported"] >= 500, payload
-    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
-    assert listed.exit_code == 0
-    assert len(json.loads(listed.output)["result"]["rows"]) == payload["imported"]
+    assert len(_ledger_rows()) == payload["imported"]
 
 
 def test_review_filter_by_classification() -> None:
     """review --filter classification= lets an asesor triage by disposition."""
-    res = _RUNNER.invoke(app, ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"])
+    res = _import_statement(_CORPUS / "bbva-business-eur.csv")
     assert res.exit_code == 0, res.output
     # Fresh import: everything is NOT_YET_PROCESSED; no BUSINESS rows yet.
-    not_proc = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "classification=NOT_YET_PROCESSED"])
+    not_proc = _invoke(["app", "ledger", "review", "--filter", "classification=NOT_YET_PROCESSED"])
     assert not_proc.exit_code == 0, not_proc.output
-    business = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "classification=BUSINESS"])
+    business = _invoke(["app", "ledger", "review", "--filter", "classification=BUSINESS"])
     assert business.exit_code == 0, business.output
     # Classify one row BUSINESS, then it must surface under the classification filter.
-    import json
-
-    rows = json.loads(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"]).output)["result"]["rows"]
+    rows = _ledger_rows()
     tx = next(r["transaction_id"] for r in rows if "ACME" in r["description"])
-    assert _RUNNER.invoke(app, ["app", "ledger", "classify", tx, "--classification", "BUSINESS"]).exit_code == 0
-    after = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "review", "--filter", "classification=BUSINESS"])
+    assert _invoke(["app", "ledger", "classify", tx, "--classification", "BUSINESS"]).exit_code == 0
+    after = _invoke(["--format", "json", "app", "ledger", "review", "--filter", "classification=BUSINESS"])
     assert after.exit_code == 0, after.output
-    matched = json.loads(after.output)["result"]["rows"]
+    matched = _json_result(after)["rows"]
     assert (
         any(r.get("id") == tx or r.get("full_id") == tx or tx.startswith(str(r.get("id", ""))) for r in matched)
         or len(matched) >= 1
@@ -243,13 +238,12 @@ def test_review_filter_by_classification() -> None:
 
 def test_track_surfaces_import_provenance_for_imported_rows() -> None:
     """track names the import batch (provider/source/ingest) instead of a bare '-'."""
-    import json
 
-    res = _RUNNER.invoke(app, ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"])
+    res = _import_statement(_CORPUS / "bbva-business-eur.csv")
     assert res.exit_code == 0, res.output
-    rows = json.loads(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"]).output)["result"]["rows"]
+    rows = _ledger_rows()
     tx = rows[0].get("full_id") or rows[0]["transaction_id"]
-    tracked = _RUNNER.invoke(app, ["app", "ledger", "track", tx])
+    tracked = _invoke(["app", "ledger", "track", tx])
     assert tracked.exit_code == 0, tracked.output
     assert "import_provider" in tracked.output
     assert "import_source" in tracked.output
@@ -259,22 +253,15 @@ def test_track_surfaces_import_provenance_for_imported_rows() -> None:
 
 def test_status_surfaces_income_expense_net_rollup() -> None:
     """status carries an income/expense/net money roll-up (year-end finding)."""
-    import json
 
-    assert (
-        _RUNNER.invoke(
-            app,
-            ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"],
-        ).exit_code
-        == 0
-    )
-    rows = json.loads(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"]).output)["result"]["rows"]
+    assert _import_statement(_CORPUS / "bbva-business-eur.csv").exit_code == 0
+    rows = _ledger_rows()
     income = next(r.get("full_id") or r["transaction_id"] for r in rows if "ACME" in r["description"])
     expense = next(r.get("full_id") or r["transaction_id"] for r in rows if "Gestoria" in r["description"])
     for tx in (income, expense):
-        classify_result = _RUNNER.invoke(app, ["app", "ledger", "classify", tx, "--classification", "BUSINESS"])
+        classify_result = _invoke(["app", "ledger", "classify", tx, "--classification", "BUSINESS"])
         assert classify_result.exit_code == 0
-    report = json.loads(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "status"]).output)["result"]
+    report = _json_result(_invoke(["--format", "json", "app", "ledger", "status"]))
     assert report["income_total"] != "0.00"
     assert report["expense_total"] != "0.00"
     assert "net_total" in report
@@ -282,25 +269,18 @@ def test_status_surfaces_income_expense_net_rollup() -> None:
 
 def test_review_filter_text_search() -> None:
     """review --filter text= searches description/counterparty/category."""
-    import json
 
-    assert (
-        _RUNNER.invoke(
-            app,
-            ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"],
-        ).exit_code
-        == 0
-    )
-    res = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "review", "--filter", "text=ACME"])
+    assert _import_statement(_CORPUS / "bbva-business-eur.csv").exit_code == 0
+    res = _invoke(["--format", "json", "app", "ledger", "review", "--filter", "text=ACME"])
     assert res.exit_code == 0, res.output
-    rows = json.loads(res.output)["result"]["rows"]
+    rows = _json_result(res)["rows"]
     assert rows
     assert all("ACME" in r["description"] for r in rows)
 
 
 def test_import_records_fx_rate_provenance_through_persistence() -> None:
     """Foreign rows persist rate_source + rate_date provenance (survives roundtrip)."""
-    res = _RUNNER.invoke(app, ["app", "ledger", "import", str(_CORPUS / "revolut-multi.csv"), "--provider", "csv"])
+    res = _import_statement(_CORPUS / "revolut-multi.csv")
     assert res.exit_code == 0, res.output
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None

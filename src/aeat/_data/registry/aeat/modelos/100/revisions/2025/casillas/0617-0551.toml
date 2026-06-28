@@ -6,5 +6,5 @@ section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deduccion_interes_cultural_autonomica"
 input_kind = "computed"
 formula = "renta-2025-deduccion-cultural-autonomica-50-porciento"
-legal_refs = ["ley-35-2006:art-68", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.5", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

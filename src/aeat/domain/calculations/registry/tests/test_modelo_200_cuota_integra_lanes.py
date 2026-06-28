@@ -266,7 +266,7 @@ def test_micro_empresa_lane_anchor_at_50000_eur_first_tranche_boundary() -> None
 
     For INCN < 1.000.000 € the cuota integra (casilla 00562) is routed
     through ``modelo-200-cuota-integra`` against the year-segmented
-    ``is.modelo-200.cuota-integra-bracket-erd`` bracket, whose
+    ``is.modelo-200.tipo-gravamen-pyme`` bracket, whose
     ``filing_period`` axis selects the binding rate per ejercicio:
 
     - **2024**: flat 23 % (Ley 31/2022 Art. 39, reduced rate for

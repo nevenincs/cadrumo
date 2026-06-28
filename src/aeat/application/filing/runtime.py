@@ -1,7 +1,9 @@
 """Production runtime helpers for :mod:`aeat.application.filing`.
 
 Exposes concrete profile helpers used by the CLI and workflow surfaces.
-The production schema provider requires validated registry snapshots.
+The production schema provider requires validated registry snapshots and
+projects them into the :class:`aeat.domain.filing.CasillaSchemaProvider`
+surface consumed by :func:`aeat.application.filing.build_draft`.
 
 The filing runtime must not depend on
 :mod:`aeat.application.filing.testing`; this module is the production
@@ -22,6 +24,17 @@ Key entry points:
 The schema provider consumes a :class:`RegistrySnapshot` built from a
 :class:`ModeloRevision` within a :class:`ModeloDefinition`, accessed through
 a :class:`ValidatedRegistryAuthority` loaded from the configured registry root.
+
+See Also:
+    :func:`aeat.application.wizard._status.load_active_taxpayer_profile`
+        Active-profile bridge that supplies the
+        :class:`aeat.domain.deadlines.TaxpayerProfile` projected here.
+    :mod:`aeat.application.modelo._workflow_gate`
+        Calculation-revision workflow gate that uses this runtime provider to
+        build and approve filing drafts.
+    :mod:`aeat.application.modelo._revision_replay_inputs`
+        Converts stored calculation revisions into the flat filing inputs
+        accepted by this runtime surface.
 """
 
 from __future__ import annotations
@@ -233,14 +246,16 @@ def filing_profile_from_taxpayer(
     *,
     display_name: str | None = None,
 ) -> ModeloOperatorProfile:
-    """Project an :class:`TaxpayerProfile` into a :class:`ModeloOperatorProfile`.
+    """Project taxpayer identity into a :class:`ModeloOperatorProfile`.
 
-    This helper deliberately copies only taxpayer identity. Modelo
-    applicability is legal filing truth and must come from validated
-    registry data, not a filing-runtime tuple or the deadline engine.
+    The common caller passes :class:`aeat.domain.deadlines.TaxpayerProfile`, but
+    the accepted contract is the narrower :class:`TaxpayerProfileIdentity`
+    Protocol. This helper deliberately copies only taxpayer identity. Modelo
+    applicability is legal filing truth and must come from validated registry
+    data, not a filing-runtime tuple or the deadline engine.
 
     Args:
-        profile: Source domain profile.
+        profile: Source identity object exposing ``tax_id``.
         display_name: Optional friendly label; defaults to
             ``profile.tax_id``.
 
@@ -298,7 +313,32 @@ def build_runtime_schema_provider(
     period: object | None = None,
     modelos: Sequence[str] | None = None,
 ) -> RegistrySchemaAccessor:
-    """Build and return the :class:`RegistrySchemaAccessor` from validated registry TOML."""
+    """Build a :class:`RegistrySchemaAccessor` from validated registry TOML.
+
+    When ``filing_year`` and ``period`` are supplied, both are required and
+    ``period`` must be a typed :class:`~aeat.core.Period`; raw registry tokens
+    are rejected before snapshot lookup. Without an explicit period, the
+    provider selects the current open revision for each modelo.
+
+    Args:
+        registry_root: Optional registry root. Defaults to the bundled AEAT
+            registry.
+        source_root: Optional source-material root used by
+            :class:`ValidatedRegistryAuthority`.
+        filing_year: Optional filing year; must be paired with ``period``.
+        period: Optional typed :class:`~aeat.core.Period`; must match
+            ``filing_year``.
+        modelos: Optional modelo id selection. Blank ids are rejected.
+
+    Returns:
+        A :class:`RegistrySchemaAccessor` implementing the filing
+        :class:`aeat.domain.filing.CasillaSchemaProvider` surface.
+
+    Raises:
+        ModeloBuilderError: When the registry is empty, a requested modelo is
+            missing, the period arguments are invalid, or no snapshot exists for
+            the requested filing context.
+    """
     validated_period = _validate_period_arguments(filing_year=filing_year, period=period)
     root = (registry_root or bundled_path("registry", "aeat")).resolve()
     resolved_source_root = (source_root or bundled_path()).resolve()
@@ -378,7 +418,14 @@ def clear_runtime_fingerprint_cache() -> None:
 def registry_tree_fingerprint(  # ALT-FINGERPRINT-RATIONALE-REGISTRY-TREE
     root: Path,
 ) -> tuple[tuple[str, int, int], ...]:
-    """Return the TTL-cached registry tree fingerprint for runtime schema loading."""
+    """Return the TTL-cached registry tree fingerprint for runtime schema loading.
+
+    The fingerprint covers ``legal`` and ``modelos`` TOML files under
+    ``root`` and is keyed by relative path, mtime, and size. It is used as a
+    cache key for :func:`build_runtime_schema_provider`; call
+    :func:`clear_runtime_fingerprint_cache` when tests or tooling mutate the
+    registry tree inside the one-second TTL.
+    """
     # ALT-FINGERPRINT-RATIONALE-REGISTRY-TREE:
     # relative-path keyed for tree-walk change detection (distinct from
     # filename-keyed canonical file_stat_fingerprint).
@@ -477,8 +524,9 @@ def collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaColle
     """Project a validated registry snapshot into a runtime casilla collection.
 
     Args:
-        snapshot: The :class:`RegistrySnapshot` whose modelo revision is
-            projected into filing-runtime casilla schemas.
+        snapshot: The :class:`RegistrySnapshot` whose
+            :class:`ModeloRevision` is projected into filing-runtime casilla
+            schemas.
 
     Returns:
         A :class:`RegistryCasillaCollection` with the snapshot revision's
@@ -565,7 +613,16 @@ def _casilla_schema(
 
 
 def registry_value_type(data_type: str) -> str:
-    """Map a registry casilla data type to the filing runtime value type."""
+    """Map a registry casilla data type to the filing runtime value type.
+
+    Returns one of the value-type tags consumed by
+    :class:`aeat.domain.filing.CasillaSchema`: ``"decimal"``, ``"int"``,
+    ``"str"``, ``"bool"``, or ``"date"``.
+
+    Raises:
+        ModeloBuilderError: When ``data_type`` is not a supported registry
+            casilla type.
+    """
     if data_type in {"decimal", "money", "ratio"}:
         return "decimal"
     if data_type in {"integer", "year"}:

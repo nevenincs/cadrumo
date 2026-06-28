@@ -40,6 +40,7 @@ import click
 import click.types
 import typer
 import typer._click.types
+from pydantic import BaseModel
 
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ._catalogue import SETUP_FLOW
@@ -480,6 +481,21 @@ def _format_missing_flags(missing: tuple[str, ...]) -> str:
     return " ".join(f"--{question_id}" for question_id in missing)
 
 
+def _missing_filing_baseline_flags(flow: WizardFlow, answers: BaseModel) -> tuple[str, ...]:
+    """Return create-time profile facts that must exist before persistence.
+
+    The schema keeps filing identity facts optional so old records can still be
+    loaded and projected. New non-interactive profile creation and edits are
+    stricter: they must leave a taxpayer-type axis and a filing identity,
+    otherwise modelo work will refuse later and the user has to diagnose a
+    broken persisted profile.
+    """
+    from ..user_profile import missing_filing_baseline_flags as _missing_profile_filing_baseline_flags
+    from ._persistence import serialise_answers
+
+    return _missing_profile_filing_baseline_flags(serialise_answers(flow, answers))
+
+
 def _scripted_from_canonical(
     flow: WizardFlow,
     canonical: dict[str, str],
@@ -661,13 +677,29 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     every other stored field is left untouched. No full-flow walk, no
     ``SetupAnswers`` model construction, no descriptor-default seeding.
     """
-    from ..user_profile._orchestration import profile_storage_session
+    from ..user_profile import profile_storage_session, read_active_profile, record_to_path_values
     from ..workflow._persistence import workflow_state_repository
-    from ._persistence import persist_patch
+    from ._persistence import persist_patch, profile_values_from_patch, project_answers
 
     with profile_storage_session(profile_id):
         repository = workflow_state_repository()
-        repository.update(lambda state: persist_patch(flow, explicit_flags, state=state))
+
+        def _persist_if_filing_baseline_survives(state):
+            values = record_to_path_values(read_active_profile(state))
+            values.update(profile_values_from_patch(flow, explicit_flags))
+            missing_baseline = _missing_filing_baseline_flags(flow, project_answers(flow, values))
+            if missing_baseline:
+                raise WizardMissingFlagError(
+                    translated_message="application.wizard.errors.edit_missing_filing_baseline",
+                    context={
+                        "flow_id": flow.id,
+                        "missing": missing_baseline,
+                        "missing_flags": _format_missing_flags(missing_baseline),
+                    },
+                )
+            return persist_patch(flow, explicit_flags, state=state)
+
+        repository.update(_persist_if_filing_baseline_survives)
 
 
 def _run_full_flow(
@@ -692,12 +724,14 @@ def _run_full_flow(
     question is collected even when its ``visible_when`` gate would
     hide it, so an explicitly-given flag value is always honoured.
     """
-    from ..user_profile._orchestration import (
+    from ..user_profile import (
         profile_create_storage_span,
         profile_storage_session,
+        read_active_profile,
+        record_to_path_values,
     )
     from ..workflow._persistence import workflow_state_repository
-    from ._persistence import persist_answers
+    from ._persistence import persist_answers, project_answers, serialise_answers
 
     if accept_defaults:
         seeded: dict[str, str] = {
@@ -753,11 +787,35 @@ def _run_full_flow(
     # re-walks every visible question, so the full answer set is the
     # operator's confirmed intent.
     supplied_question_ids = frozenset(question.id for section in flow.sections for question in section.questions)
+    if mode == "create":
+        missing_baseline = _missing_filing_baseline_flags(flow, answers)
+        if missing_baseline:
+            raise WizardMissingFlagError(
+                translated_message="application.wizard.errors.create_missing_filing_baseline",
+                context={
+                    "flow_id": flow.id,
+                    "missing": missing_baseline,
+                    "missing_flags": _format_missing_flags(missing_baseline),
+                },
+            )
 
     span = profile_create_storage_span(profile_id) if mode == "create" else profile_storage_session(profile_id)
     with span as routing_profile_id:
-        workflow_state_repository().update(
-            lambda state: persist_answers(
+        def _persist_if_filing_baseline_survives(state):
+            if mode == "edit":
+                values = record_to_path_values(read_active_profile(state))
+                values.update({path: value for path, value in serialise_answers(flow, answers).items() if value})
+                missing_baseline = _missing_filing_baseline_flags(flow, project_answers(flow, values))
+                if missing_baseline:
+                    raise WizardMissingFlagError(
+                        translated_message="application.wizard.errors.edit_missing_filing_baseline",
+                        context={
+                            "flow_id": flow.id,
+                            "missing": missing_baseline,
+                            "missing_flags": _format_missing_flags(missing_baseline),
+                        },
+                    )
+            return persist_answers(
                 flow,
                 answers,
                 state=state,
@@ -766,8 +824,9 @@ def _run_full_flow(
                 mode=mode,
                 supplied_question_ids=supplied_question_ids,
                 routing_profile_id=routing_profile_id if mode == "create" else None,
-            ),
-        )
+            )
+
+        workflow_state_repository().update(_persist_if_filing_baseline_survives)
 
 
 def _enter_requested_output_language(kwargs: dict[str, object], language_stack: contextlib.ExitStack) -> None:

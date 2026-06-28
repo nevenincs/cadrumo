@@ -47,6 +47,8 @@ legal_refs = [
     "ley-35-2006:art-66",
     "ley-35-2006:art-67",
     "ley-35-2006:art-68",
+    "ley-35-2006:art-68.1",
+    "ley-35-2006:art-68.2",
     "ley-35-2006:art-68.3",
     "ley-35-2006:art-68.4",
     "ley-35-2006:art-68.5",
@@ -90,4 +92,3 @@ legal_refs = [
     "rd-439-2007:art-95",
 ]
 source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
-

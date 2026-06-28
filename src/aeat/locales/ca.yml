@@ -1190,6 +1190,12 @@ application:
       quiet_missing_flags: 'A aquesta execució amb --quiet li falten dades obligatòries.
         Afegeix aquests flags i torna a executar l''ordre: %{missing_flags}. O executa-la
         sense --quiet des d''un terminal interactiu per fer servir l''assistent guiat.'
+      create_missing_filing_baseline: 'A la creació del perfil li falten dades
+        d''identitat per presentar models. Afegeix aquests flags i torna a executar
+        l''ordre: %{missing_flags}.'
+      edit_missing_filing_baseline: 'Aquesta edició deixaria incompletes les
+        dades d''identitat per presentar models. Afegeix aquests flags a la mateixa
+        ordre i torna-la a executar: %{missing_flags}.'
     next_hint:
       modelo_work_create: aeat app modelo work create
     output_labels:
@@ -1625,6 +1631,7 @@ cli:
         invalid_evidence_kind: --evidence-kind ha de ser un de {canonical}; s'ha rebut
           {kind}.
         list_help: Llistar els filing records registrats
+        modelo_help: Filtrar per codi de model (p. ex. 303, 130, 100)
         view_help: Mostrar un filing record per id
       formulas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
@@ -2419,6 +2426,9 @@ cli:
       import_invalid_tax_id: 'L''identificador fiscal del paquet de perfil no és vàlid:
         %{error}. Corregeix l''identificador i torna a exportar, o importa un paquet
         vàlid.'
+      import_missing_filing_baseline: 'Al paquet de perfil li falten dades d''identitat
+        per presentar models. Corregeix el paquet o torna a exportar un perfil complet
+        amb aquests camps: %{missing_flags}.'
       import_label_help: Nom visible per al perfil importat; per defecte el nom desat
         al paquet. Fes-lo servir per importar una segona còpia amb un altre nom.
       import_label_taken: Ja existeix un perfil amb el nom %{name}. Torna a executar
@@ -2766,8 +2776,8 @@ cli:
       from_csv_exclusive: --from-csv no pot combinar-se amb un id de transacció ni
         --classification.
       from_csv_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
-        category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category,
-        irpf_category].
+        category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
+        iva_category, irpf_category].
       from_csv_not_found: 'Fitxer CSV no trobat: %{path}'
       help: Classificar un moviment del llibre al perfil actiu
       id_help: Id del moviment del llibre a classificar
@@ -2847,6 +2857,9 @@ cli:
         llibre.
       filter_parse_error: 'Fallada en analitzar el filtre del llibre prop de %{token}:
         %{reason}.'
+      period_year_pairing: Els filtres de període del llibre requereixen període
+        i exercici junts. Per a un any complet useu --period 0A --year %{year},
+        o --filter period=0A --filter year=%{year}.
       id_prefix_collision: 'El prefix d''id de transacció %{prefix!r} coincideix amb
         més d''una transacció: %{candidates}. Allarga el prefix per desambiguar.'
       id_prefix_empty: El prefix d'id de transacció és buit; passa almenys un caràcter

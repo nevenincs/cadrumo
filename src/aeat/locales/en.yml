@@ -1117,6 +1117,11 @@ application:
       quiet_missing_flags: 'This --quiet run is missing required details. Add these
         flags and run the command again: %{missing_flags}. Or run it without --quiet
         from an interactive terminal to use the guided setup.'
+      create_missing_filing_baseline: 'Profile creation is missing filing identity
+        details. Add these flags and run the command again: %{missing_flags}.'
+      edit_missing_filing_baseline: 'This profile edit would leave filing identity
+        details incomplete. Add these flags to the same command and run it again:
+        %{missing_flags}.'
     next_hint:
       modelo_work_create: aeat app modelo work create
     output_labels:
@@ -1530,6 +1535,7 @@ cli:
         include_superseded_help: Include superseded filing records (excluded by default)
         invalid_evidence_kind: --evidence-kind must be one of {canonical}; got {kind}.
         list_help: List registered filing records
+        modelo_help: Filter by modelo code (e.g. 303, 130, 100)
         view_help: Show one filing record by id
       formulas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
@@ -2287,6 +2293,9 @@ cli:
         the profile bundle schema.'
       import_invalid_tax_id: 'The profile bundle''s tax identifier is invalid: %{error}.
         Fix the identifier and re-export, or import a valid bundle.'
+      import_missing_filing_baseline: 'The profile bundle is missing filing identity
+        details. Fix the bundle or re-export a complete profile with these fields:
+        %{missing_flags}.'
       import_label_help: Display name for the imported profile; defaults to the name
         stored in the bundle. Use it to import a second copy under a fresh label.
       import_label_taken: A profile named %{name} already exists. Re-run with `--label
@@ -2620,8 +2629,8 @@ cli:
         uploads it off your machine (required by the consent gate).
       from_csv_exclusive: --from-csv cannot be combined with a transaction id or --classification.
       from_csv_help: Path to a CSV file with columns transaction_id, classification[,
-        category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category,
-        irpf_category].
+        category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
+        iva_category, irpf_category].
       from_csv_not_found: 'CSV file not found: %{path}'
       help: Classify one ledger transaction in the active profile
       id_help: Ledger transaction id to classify
@@ -2694,6 +2703,9 @@ cli:
       command_input_invalid_fallback: one or more fields failed validation
       confirm_required: Pass --yes to confirm this destructive ledger operation.
       filter_parse_error: 'Failed to parse ledger filter near %{token}: %{reason}.'
+      period_year_pairing: Ledger period filters require period and year together.
+        For a full year use --period 0A --year %{year}, or --filter period=0A
+        --filter year=%{year}.
       id_prefix_collision: 'Transaction id prefix %{prefix!r} matches more than one
         transaction: %{candidates}. Lengthen the prefix to disambiguate.'
       id_prefix_empty: Transaction id prefix is empty; pass at least one hex character.

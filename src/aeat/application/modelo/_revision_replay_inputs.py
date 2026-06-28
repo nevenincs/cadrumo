@@ -32,7 +32,7 @@ from ...domain.calculations.registry import (
 )
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos._calculation_revision import CalculationRevision
-from ...domain.modelos._row_models import Modelo349OperadorRow
+from ...domain.modelos._row_models import Modelo349OperadorRow, m349_nif_number_for_export
 from ...domain.modelos._work_unit import WorkUnit
 
 _ZERO_DECIMAL_TEXT = canonical_decimal_string(Decimal("0"))
@@ -81,10 +81,17 @@ def _m349_detail_row_replay_inputs(
     rows = tuple(row for row in revision.detail_rows if isinstance(row, Modelo349OperadorRow))
     if not rows:
         return {}
-    return {
-        binding_id: {str(index): getattr(row, attr) for index, row in enumerate(rows, start=1)}
-        for binding_id, attr in _M349_OPERADOR_ROW_BINDINGS.items()
-    }
+    replay_inputs: dict[BindingId, dict[str, filing_domain.ModeloInputScalar]] = {}
+    for binding_id, attr in _M349_OPERADOR_ROW_BINDINGS.items():
+        values: dict[str, filing_domain.ModeloInputScalar] = {}
+        for index, row in enumerate(rows, start=1):
+            if attr == "nif_comunitario":
+                value = m349_nif_number_for_export(row.nif_comunitario, row.codigo_pais)
+            else:
+                value = getattr(row, attr)
+            values[str(index)] = value
+        replay_inputs[binding_id] = values
+    return replay_inputs
 
 
 def _snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnapshot | None:

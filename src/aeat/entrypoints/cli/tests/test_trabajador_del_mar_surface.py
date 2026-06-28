@@ -64,13 +64,14 @@ class TestWorkerClassProfileFactAcceptance:
     def test_schema_field_carries_legal_refs_for_all_pathways(self) -> None:
         schema = load_user_profile_schema()
         field = schema.field("maritime_worker.worker_class")
-        combined = " ".join(field.legal_refs)
         # All three exemption pathways and the RETMAR completeness gate
-        # must be cited in the field definition that the CLI surfaces.
-        assert "BOE-A-2006-20764" in combined  # Art. 7.p) / DA 41
-        assert "BOE-A-1994-15794" in combined  # REBECA
-        assert "BOE-A-2014-12327" in combined  # DA 41 adding law
-        assert "Art. 96" in combined  # RETM/RETMAR filing obligation
+        # must be cited through canonical legal catalogue ids.
+        assert set(field.legal_refs) == {
+            "ley-35-2006:art-7",
+            "ley-19-1994:art-75",
+            "ley-35-2006:da-41",
+            "ley-35-2006:art-96",
+        }
 
 
 class TestMaritimeExemptionEnvelopeCarriesLegalRefs:

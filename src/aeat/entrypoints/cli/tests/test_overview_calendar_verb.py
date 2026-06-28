@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from click.testing import Result
 from pydantic import AnyHttpUrl, TypeAdapter
-from typer.testing import CliRunner
 
 from ....adapters.outbound.aeat.sede import Declaracion
 from ....adapters.outbound.aeat.sede._notifications import NotificationsSnapshot, RemoteNotification
@@ -50,9 +50,9 @@ from ....domain.modelos import (
 from ....domain.user_profile import UserProfileFact
 from ....tests import FIXTURES_DIR
 from ....tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 from .._overview import _local_calendar_filing_evidence
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -60,6 +60,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _SOURCE_URL = AnyHttpUrl(aeat_url("sede", "/"))
 _WORK_UNIT_ID = "a" * 64
 _CALCULATION_REVISION_ID = "b" * 64
+
+
+def _invoke(args: Sequence[str]) -> Result:
+    return invoke_cached_cli(args)
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -178,18 +182,17 @@ _INVALID_CALENDAR_CLI_ARGS = (
 
 
 @pytest.mark.parametrize("args", _INVALID_CALENDAR_CLI_ARGS)
-def test_calendar_rejects_invalid_invocation(cli_runner: CliRunner, args: list[str]) -> None:
-    result = cli_runner.invoke(app, args)
+def test_calendar_rejects_invalid_invocation(args: list[str]) -> None:
+    result = _invoke(args)
     assert result.exit_code != 0, result.output
 
 
-def test_calendar_renders_entries_for_q1_window(cli_runner: CliRunner) -> None:
+def test_calendar_renders_entries_for_q1_window() -> None:
     """A valid Q1 window over the minimal profile yields the entries
     header lines plus zero-or-more entry rows. With profile incomplete
     warnings present the verb still refuses without --allow-incomplete."""
 
-    result_strict = cli_runner.invoke(
-        app,
+    result_strict = _invoke(
         [
             "app",
             "overview",
@@ -202,8 +205,7 @@ def test_calendar_renders_entries_for_q1_window(cli_runner: CliRunner) -> None:
     )
     # Minimal profile triggers completeness warnings; strict mode refuses.
     if result_strict.exit_code != 0:
-        result_lax = cli_runner.invoke(
-            app,
+        result_lax = _invoke(
             [
                 "app",
                 "overview",
@@ -226,9 +228,8 @@ def test_calendar_renders_entries_for_q1_window(cli_runner: CliRunner) -> None:
         assert "to\t2026-03-31" in result_strict.output
 
 
-def test_calendar_blocks_profile_derived_enrolment_without_live_censo(cli_runner: CliRunner) -> None:
-    result = cli_runner.invoke(
-        app,
+def test_calendar_blocks_profile_derived_enrolment_without_live_censo() -> None:
+    result = _invoke(
         [
             "app",
             "overview",
@@ -243,8 +244,7 @@ def test_calendar_blocks_profile_derived_enrolment_without_live_censo(cli_runner
     assert result.exit_code != 0, result.output
     assert "censo.enrolment_unverified" in result.output
 
-    lax = cli_runner.invoke(
-        app,
+    lax = _invoke(
         [
             "--format",
             "json",
@@ -266,11 +266,10 @@ def test_calendar_blocks_profile_derived_enrolment_without_live_censo(cli_runner
     assert any(entry["censo_enrolment_state"] == "unverified" for entry in entries)
 
 
-def test_calendar_accepts_censo_stamped_enrolment(cli_runner: CliRunner) -> None:
+def test_calendar_accepts_censo_stamped_enrolment() -> None:
     _stamp_calendar_enrolment_from_censo()
 
-    result = cli_runner.invoke(
-        app,
+    result = _invoke(
         [
             "--format",
             "json",
@@ -312,14 +311,12 @@ _CORRUPT_LOCAL_EVIDENCE_CALENDAR_ARGS = (
 
 @pytest.mark.parametrize(("extra_args", "assert_no_profile_skipped"), _CORRUPT_LOCAL_EVIDENCE_CALENDAR_ARGS)
 def test_calendar_refuses_when_local_filing_evidence_store_is_unreadable(
-    cli_runner: CliRunner,
     extra_args: tuple[str, ...],
     assert_no_profile_skipped: bool,
 ) -> None:
     _store_corrupt_local_filing_evidence()
 
-    result = cli_runner.invoke(
-        app,
+    result = _invoke(
         [
             "app",
             "overview",
@@ -339,18 +336,18 @@ def test_calendar_refuses_when_local_filing_evidence_store_is_unreadable(
         assert "profile_skipped" not in result.output
 
 
-def test_calendar_help_advertises_local_only(cli_runner: CliRunner) -> None:
+def test_calendar_help_advertises_local_only() -> None:
     """Help text must signal `local-only` so the operator cannot
     mistake the verb for an AEAT-contacting probe."""
 
-    result = cli_runner.invoke(app, ["app", "overview", "calendar", "--help"])
+    result = _invoke(["app", "overview", "calendar", "--help"])
     assert result.exit_code == 0, result.output
     assert any(
         token in result.output.lower() for token in ("local-only", "local;", "nunca", "mai contacta", "csak helyi")
     ), result.output
 
 
-def test_calendar_json_includes_local_live_snapshot_events(cli_runner: CliRunner) -> None:
+def test_calendar_json_includes_local_live_snapshot_events() -> None:
     ExpedientesService().capture(
         bucket_id="operator",
         capture=ExpedientesCapture(
@@ -405,8 +402,7 @@ def test_calendar_json_includes_local_live_snapshot_events(cli_runner: CliRunner
         ),
     )
 
-    result = cli_runner.invoke(
-        app,
+    result = _invoke(
         [
             "--format",
             "json",
@@ -434,7 +430,7 @@ def test_calendar_json_includes_local_live_snapshot_events(cli_runner: CliRunner
     assert filing_event["justificante_verified"] is False
 
 
-def test_calendar_strict_mode_refuses_unverified_aeat_filing(cli_runner: CliRunner) -> None:
+def test_calendar_strict_mode_refuses_unverified_aeat_filing() -> None:
     _stamp_calendar_enrolment_from_censo()
     ExpedientesService().capture(
         bucket_id="operator",
@@ -455,8 +451,7 @@ def test_calendar_strict_mode_refuses_unverified_aeat_filing(cli_runner: CliRunn
         ),
     )
 
-    strict = cli_runner.invoke(
-        app,
+    strict = _invoke(
         [
             "app",
             "overview",
@@ -471,8 +466,7 @@ def test_calendar_strict_mode_refuses_unverified_aeat_filing(cli_runner: CliRunn
     assert strict.exit_code != 0, strict.output
     assert "filing.justificante_unverified" in strict.output
 
-    lax = cli_runner.invoke(
-        app,
+    lax = _invoke(
         [
             "--format",
             "json",
@@ -493,9 +487,7 @@ def test_calendar_strict_mode_refuses_unverified_aeat_filing(cli_runner: CliRunn
     assert warning["fix_command"] == "aeat app live filed pull --modelo 303 --year 2025 --period 1T"
 
 
-def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references(
-    cli_runner: CliRunner,
-) -> None:
+def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references() -> None:
     _stamp_calendar_enrolment_from_censo()
     local_ref = "LOCAL-LIVE-CAPTURE-CSV"
     remote_ref = "12345678901234567890"
@@ -525,8 +517,7 @@ def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references(
         ),
     )
 
-    strict = cli_runner.invoke(
-        app,
+    strict = _invoke(
         [
             "app",
             "overview",
@@ -541,8 +532,7 @@ def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references(
     assert strict.exit_code != 0, strict.output
     assert "filing.aeat_evidence_conflict" in strict.output
 
-    lax_json = cli_runner.invoke(
-        app,
+    lax_json = _invoke(
         [
             "--format",
             "json",
@@ -569,8 +559,7 @@ def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references(
     assert warning["affected_modelos"] == ["303"]
     assert warning["fix_command"] == "aeat app live filed pull --modelo 303 --year 2025 --period 1T"
 
-    lax_text = cli_runner.invoke(
-        app,
+    lax_text = _invoke(
         [
             "app",
             "overview",
@@ -586,9 +575,7 @@ def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references(
     assert f"aeat_conflict_refs={remote_ref},{local_ref}" in lax_text.output
 
 
-def test_calendar_all_profiles_strict_mode_refuses_conflicting_aeat_evidence_references(
-    cli_runner: CliRunner,
-) -> None:
+def test_calendar_all_profiles_strict_mode_refuses_conflicting_aeat_evidence_references() -> None:
     _stamp_calendar_enrolment_from_censo()
     local_ref = "LOCAL-LIVE-CAPTURE-CSV"
     remote_ref = "12345678901234567890"
@@ -618,8 +605,7 @@ def test_calendar_all_profiles_strict_mode_refuses_conflicting_aeat_evidence_ref
         ),
     )
 
-    strict = cli_runner.invoke(
-        app,
+    strict = _invoke(
         [
             "app",
             "overview",
@@ -635,8 +621,7 @@ def test_calendar_all_profiles_strict_mode_refuses_conflicting_aeat_evidence_ref
     assert strict.exit_code != 0, strict.output
     assert "filing.aeat_evidence_conflict" in strict.output
 
-    lax = cli_runner.invoke(
-        app,
+    lax = _invoke(
         [
             "--format",
             "json",
@@ -657,9 +642,7 @@ def test_calendar_all_profiles_strict_mode_refuses_conflicting_aeat_evidence_ref
     assert warning["affected_modelos"] == ["303"]
 
 
-def test_calendar_strict_mode_refuses_imported_csv_register_without_justificante(
-    cli_runner: CliRunner,
-) -> None:
+def test_calendar_strict_mode_refuses_imported_csv_register_without_justificante() -> None:
     _stamp_calendar_enrolment_from_censo()
     csv = "CSVREG-303-2025-1T"
     record = _modelo_record_with_external_justificante(
@@ -670,8 +653,7 @@ def test_calendar_strict_mode_refuses_imported_csv_register_without_justificante
         repo = ModeloRecordCatalogueRepository(bucket_id="operator")
         repo.save(upsert_filing_record(repo.load(), record))
 
-    strict = cli_runner.invoke(
-        app,
+    strict = _invoke(
         [
             "app",
             "overview",
@@ -686,8 +668,7 @@ def test_calendar_strict_mode_refuses_imported_csv_register_without_justificante
     assert strict.exit_code != 0, strict.output
     assert "filing.justificante_unverified" in strict.output
 
-    lax = cli_runner.invoke(
-        app,
+    lax = _invoke(
         [
             "--format",
             "json",
@@ -959,7 +940,7 @@ def test_local_calendar_filing_evidence_resolves_persisted_justificante_metadata
     assert row.justificante_verified is True
 
 
-def test_calendar_text_output_names_verified_aeat_evidence(cli_runner: CliRunner) -> None:
+def test_calendar_text_output_names_verified_aeat_evidence() -> None:
     csv = "JUST-303-2025-1T"
     record = _modelo_record_with_external_justificante(csv=csv)
     _stamp_calendar_enrolment_from_censo()
@@ -968,8 +949,7 @@ def test_calendar_text_output_names_verified_aeat_evidence(cli_runner: CliRunner
         repo.save(upsert_filing_record(repo.load(), record))
         JustificanteRepository().save(_justificante_metadata(csv=csv, tax_id="88874275K"))
 
-    result = cli_runner.invoke(
-        app,
+    result = _invoke(
         [
             "app",
             "overview",
@@ -1006,7 +986,7 @@ def test_calendar_text_output_names_verified_aeat_evidence(cli_runner: CliRunner
     assert f"\tverified_justificante_csv={csv}" in event_row
 
 
-def test_all_profiles_flag_iterates_every_registered_profile(cli_runner: CliRunner) -> None:
+def test_all_profiles_flag_iterates_every_registered_profile() -> None:
     """--all-profiles iterates every registered profile.
 
     Two profiles are registered; the flag must emit a `profile` header
@@ -1025,8 +1005,7 @@ def test_all_profiles_flag_iterates_every_registered_profile(cli_runner: CliRunn
             ),
         )
 
-    result = cli_runner.invoke(
-        app,
+    result = _invoke(
         [
             "app",
             "overview",

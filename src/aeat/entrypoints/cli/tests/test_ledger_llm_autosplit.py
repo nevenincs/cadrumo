@@ -22,13 +22,13 @@ multi-component.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
 import pytest
-from typer.testing import CliRunner
+from click.testing import Result
 
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
@@ -44,12 +44,22 @@ from ....domain.transactions import (
     Transaction,
     register_classifier,
 )
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_RUNNER = CliRunner()
+
+def _invoke(args: Sequence[str]) -> Result:
+    return invoke_cached_cli(args)
+
+
+def _json_envelope(result: Result) -> dict[str, Any]:
+    return json.loads(result.output)
+
+
+def _json_result(result: Result) -> dict[str, Any]:
+    return _json_envelope(result)["result"]
 
 
 @pytest.fixture(autouse=True)
@@ -143,23 +153,23 @@ def _import_one_transaction(tmp_path: Path) -> str:
     )
     csv_path = tmp_path / "import.csv"
     csv_path.write_text(csv_content, encoding="utf-8")
-    result = _RUNNER.invoke(app, ["app", "ledger", "import", str(csv_path), "--provider", "csv"])
+    result = _invoke(["app", "ledger", "import", str(csv_path), "--provider", "csv"])
     assert result.exit_code == 0, result.output
-    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
-    return json.loads(listed.output)["result"]["rows"][0]["transaction_id"]
+    return _json_result(listed)["rows"][0]["transaction_id"]
 
 
 def _rows() -> list[dict[str, Any]]:
-    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
-    return json.loads(listed.output)["result"]["rows"]
+    return _json_result(listed)["rows"]
 
 
 def test_auto_split_requires_read_evidence(tmp_path: Path) -> None:
     _register(_RouterModel(multi=True))
     tx = _import_one_transaction(tmp_path)
-    result = _RUNNER.invoke(app, ["app", "ledger", "classify", tx, "--llm", "claude", "--auto-split"])
+    result = _invoke(["app", "ledger", "classify", tx, "--llm", "claude", "--auto-split"])
     assert result.exit_code != 0
     assert "--read-evidence" in result.output
 
@@ -167,12 +177,11 @@ def test_auto_split_requires_read_evidence(tmp_path: Path) -> None:
 def test_auto_split_multi_component_suggest_previews_split(tmp_path: Path) -> None:
     _register(_RouterModel(multi=True))
     tx = _import_one_transaction(tmp_path)
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         ["--format", "json", "app", "ledger", "classify", tx, "--llm", "claude", "--read-evidence", "--auto-split"],
     )
     assert result.exit_code == 0, result.output
-    envelope = json.loads(result.output)
+    envelope = _json_envelope(result)
     assert envelope["command"] == "ledger.split"
     payload = envelope["result"]
     assert payload["persisted"] is False
@@ -184,8 +193,7 @@ def test_auto_split_multi_component_suggest_previews_split(tmp_path: Path) -> No
 def test_auto_split_multi_component_apply_persists_split(tmp_path: Path) -> None:
     _register(_RouterModel(multi=True))
     tx = _import_one_transaction(tmp_path)
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "--format",
             "json",
@@ -201,7 +209,7 @@ def test_auto_split_multi_component_apply_persists_split(tmp_path: Path) -> None
         ],
     )
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)["result"]
+    payload = _json_result(result)
     assert payload["persisted"] is True
     child_ids = payload["child_transaction_ids"]
     assert len(child_ids) == 2
@@ -219,8 +227,7 @@ def test_auto_split_multi_component_apply_persists_split(tmp_path: Path) -> None
 def test_auto_split_single_line_apply_classifies_in_place(tmp_path: Path) -> None:
     _register(_RouterModel(multi=False))
     tx = _import_one_transaction(tmp_path)
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "--format",
             "json",
@@ -236,7 +243,7 @@ def test_auto_split_single_line_apply_classifies_in_place(tmp_path: Path) -> Non
         ],
     )
     assert result.exit_code == 0, result.output
-    envelope = json.loads(result.output)
+    envelope = _json_envelope(result)
     assert envelope["command"] == "ledger.classify"
     # No split happened: still one row, classified in place.
     rows = _rows()
@@ -251,12 +258,11 @@ def test_auto_split_single_line_apply_classifies_in_place(tmp_path: Path) -> Non
 def test_classify_read_evidence_emits_split_recommendation_notice(tmp_path: Path) -> None:
     _register(_RouterModel(multi=True))
     tx = _import_one_transaction(tmp_path)
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         ["--format", "json", "app", "ledger", "classify", tx, "--llm", "claude", "--read-evidence"],
     )
     assert result.exit_code == 0, result.output
-    envelope = json.loads(result.output)
+    envelope = _json_envelope(result)
     notices = envelope["notices"]
     recommend = [n for n in notices if n["code"] == "ledger.classify.split_recommended"]
     assert recommend, envelope
@@ -268,27 +274,25 @@ def test_classify_read_evidence_emits_split_recommendation_notice(tmp_path: Path
 def test_classify_read_evidence_single_line_emits_no_recommendation(tmp_path: Path) -> None:
     _register(_RouterModel(multi=False))
     tx = _import_one_transaction(tmp_path)
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         ["--format", "json", "app", "ledger", "classify", tx, "--llm", "claude", "--read-evidence"],
     )
     assert result.exit_code == 0, result.output
-    envelope = json.loads(result.output)
+    envelope = _json_envelope(result)
     codes = [n["code"] for n in envelope["notices"]]
     assert "ledger.classify.split_recommended" not in codes
 
 
 def _history(tx: str) -> list[dict[str, Any]]:
-    out = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", tx])
+    out = _invoke(["--format", "json", "app", "ledger", "history", tx])
     assert out.exit_code == 0, out.output
-    return json.loads(out.output)["result"]["events"]
+    return _json_result(out)["events"]
 
 
 def test_classify_reject_records_event_without_classifying(tmp_path: Path) -> None:
     _register(_RouterModel(multi=False))
     tx = _import_one_transaction(tmp_path)
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "--format",
             "json",
@@ -304,7 +308,7 @@ def test_classify_reject_records_event_without_classifying(tmp_path: Path) -> No
         ],
     )
     assert result.exit_code == 0, result.output
-    envelope = json.loads(result.output)
+    envelope = _json_envelope(result)
     assert envelope["command"] == "ledger.classify"
     payload = envelope["result"]
     assert payload["rejected"] is True
@@ -330,8 +334,7 @@ def test_classify_reject_records_event_without_classifying(tmp_path: Path) -> No
 def test_classify_reject_and_apply_are_mutually_exclusive(tmp_path: Path, extra_flags: list[str]) -> None:
     _register(_RouterModel(multi=False))
     tx = _import_one_transaction(tmp_path)
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         ["app", "ledger", "classify", tx, "--llm", "claude", "--reject", "--apply", *extra_flags],
     )
     assert result.exit_code != 0
@@ -346,7 +349,7 @@ def _import_two_transactions(tmp_path: Path) -> list[str]:
     )
     csv_path = tmp_path / "import.csv"
     csv_path.write_text(csv_content, encoding="utf-8")
-    result = _RUNNER.invoke(app, ["app", "ledger", "import", str(csv_path), "--provider", "csv"])
+    result = _invoke(["app", "ledger", "import", str(csv_path), "--provider", "csv"])
     assert result.exit_code == 0, result.output
     return [r["transaction_id"] for r in _rows()]
 
@@ -356,8 +359,7 @@ def test_list_hide_llm_rejected_drops_the_declined_row(tmp_path: Path) -> None:
     ids = _import_two_transactions(tmp_path)
     assert len(ids) == 2
     rejected_id = ids[0]
-    rej = _RUNNER.invoke(
-        app,
+    rej = _invoke(
         ["app", "ledger", "classify", rejected_id, "--llm", "claude", "--reject", "--reason", "no"],
     )
     assert rej.exit_code == 0, rej.output
@@ -366,9 +368,9 @@ def test_list_hide_llm_rejected_drops_the_declined_row(tmp_path: Path) -> None:
     all_ids = {r["transaction_id"] for r in _rows()}
     assert rejected_id in all_ids
 
-    filtered = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list", "--hide-llm-rejected"])
+    filtered = _invoke(["--format", "json", "app", "ledger", "list", "--hide-llm-rejected"])
     assert filtered.exit_code == 0, filtered.output
-    shown = {r["transaction_id"] for r in json.loads(filtered.output)["result"]["rows"]}
+    shown = {r["transaction_id"] for r in _json_result(filtered)["rows"]}
     assert rejected_id not in shown
     assert ids[1] in shown
 
@@ -376,15 +378,14 @@ def test_list_hide_llm_rejected_drops_the_declined_row(tmp_path: Path) -> None:
 def test_view_surfaces_the_latest_rejection(tmp_path: Path) -> None:
     _register(_RouterModel(multi=False))
     tx = _import_one_transaction(tmp_path)
-    rejected = _RUNNER.invoke(
-        app,
+    rejected = _invoke(
         ["app", "ledger", "classify", tx, "--llm", "claude", "--reject", "--reason", "not a business cost"],
     )
     assert rejected.exit_code == 0, rejected.output
 
-    viewed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "view", tx])
+    viewed = _invoke(["--format", "json", "app", "ledger", "view", tx])
     assert viewed.exit_code == 0, viewed.output
-    envelope = json.loads(viewed.output)
+    envelope = _json_envelope(viewed)
     rej = [n for n in envelope["notices"] if n["code"] == "ledger.view.llm_suggestion_rejected"]
     assert rej, envelope
     assert rej[0]["severity"] == "info"
@@ -394,17 +395,16 @@ def test_view_surfaces_the_latest_rejection(tmp_path: Path) -> None:
 def test_view_shows_no_rejection_notice_when_none(tmp_path: Path) -> None:
     _register(_RouterModel(multi=False))
     tx = _import_one_transaction(tmp_path)
-    viewed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "view", tx])
+    viewed = _invoke(["--format", "json", "app", "ledger", "view", tx])
     assert viewed.exit_code == 0, viewed.output
-    codes = [n["code"] for n in json.loads(viewed.output)["notices"]]
+    codes = [n["code"] for n in _json_envelope(viewed)["notices"]]
     assert "ledger.view.llm_suggestion_rejected" not in codes
 
 
 def test_auto_split_reject_records_split_rejection(tmp_path: Path) -> None:
     _register(_RouterModel(multi=True))
     tx = _import_one_transaction(tmp_path)
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "--format",
             "json",
@@ -422,7 +422,7 @@ def test_auto_split_reject_records_split_rejection(tmp_path: Path) -> None:
         ],
     )
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)["result"]
+    payload = _json_result(result)
     assert payload["rejected"] is True
     assert payload["suggestion_kind"] == "split"
     # No split happened: still one row.

@@ -212,9 +212,9 @@ class Modelo232VinculadaRow(BaseModel):
 # Council Directive 2006/112/EC Annex XI (the VIES registry format rules).
 # ---------------------------------------------------------------------------
 
-# Country-specific NIF-IVA format patterns.
-# Pattern values are anchored regexes applied to the full NIF string
-# including the two-letter country prefix.
+# Country-specific NIF-IVA format patterns from the bundled Modelo 349 AEAT
+# instructions. Pattern values are anchored regexes applied to the full NIF
+# string including the two-letter country prefix.
 _M349_NIF_PATTERNS: dict[str, re.Pattern[str]] = {
     "DE": re.compile(r"^DE\d{9}$"),
     "FR": re.compile(r"^FR[0-9A-Z]{2}\d{9}$"),
@@ -230,9 +230,21 @@ _M349_NIF_PATTERNS: dict[str, re.Pattern[str]] = {
     "FI": re.compile(r"^FI\d{8}$"),
     "LU": re.compile(r"^LU\d{8}$"),
     "GB": re.compile(r"^GB(\d{9}|\d{12}|GD\d{3}|HA\d{3})$"),
+    "BG": re.compile(r"^BG\d{9,10}$"),
+    "CY": re.compile(r"^CY[0-9A-Z]{9}$"),
+    "HR": re.compile(r"^HR\d{11}$"),
+    "SI": re.compile(r"^SI\d{8}$"),
+    "EE": re.compile(r"^EE\d{9}$"),
+    "EL": re.compile(r"^EL\d{9}$"),
+    "XI": re.compile(r"^XI[0-9A-Z]{5}$|^XI[0-9A-Z]{9}$|^XI[0-9A-Z]{12}$"),
+    "HU": re.compile(r"^HU\d{8}$"),
+    "LV": re.compile(r"^LV\d{11}$"),
+    "LT": re.compile(r"^LT(\d{9}|\d{12})$"),
+    "MT": re.compile(r"^MT\d{8}$"),
+    "CZ": re.compile(r"^CZ\d{8,10}$"),
+    "SK": re.compile(r"^SK\d{10}$"),
+    "RO": re.compile(r"^RO\d{2,10}$"),
 }
-# Fallback: 2-letter country code + 2-15 alphanumeric characters.
-_M349_NIF_FALLBACK: re.Pattern[str] = re.compile(r"^[A-Z]{2}[A-Z0-9]{2,15}$")
 
 # Valid clave de operación codes per Orden HAC/174/2020 Anexo II.
 _M349_CLAVE_OPERACION = Literal["E", "S", "T", "R", "A", "I", "M"]
@@ -289,12 +301,35 @@ class Modelo349OperadorRow(BaseModel):
 def validate_m349_nif_format(nif: str, pais: str) -> bool:
     """Return True when ``nif`` matches the expected NIF-IVA format for ``pais``.
 
-    Uses country-specific patterns where known; falls back to the generic
-    EU IVA format (2-letter prefix + 2-15 alphanumerics) for other countries.
-    The NIF string must already include the two-letter country prefix.
+    Uses the country-code catalogue and NIF composition table in the bundled
+    Modelo 349 AEAT instructions. Unsupported country prefixes fail closed.
+    The NIF string must include the same two-letter country prefix.
     """
-    pattern = _M349_NIF_PATTERNS.get(pais.upper(), _M349_NIF_FALLBACK)
-    return bool(pattern.match(nif.upper()))
+    normalized_pais = pais.upper()
+    normalized_nif = nif.upper()
+    if not normalized_nif.startswith(normalized_pais):
+        return False
+    pattern = _M349_NIF_PATTERNS.get(normalized_pais)
+    if pattern is None:
+        return False
+    return bool(pattern.match(normalized_nif))
+
+
+def m349_nif_number_for_export(nif: str, pais: str) -> str:
+    """Return the BOE NIF subfield without the separate country-code prefix.
+
+    Modelo 349 operator records split the VAT identifier into ``codigo_pais``
+    and ``nif_comunitario`` fields. The CLI accepts and validates the full
+    prefixed VAT identifier for operator ergonomics, but the fixed-width export
+    must write only the number part into positions 78-92.
+    """
+    normalized_pais = pais.upper()
+    normalized_nif = nif.upper()
+    if not validate_m349_nif_format(normalized_nif, normalized_pais):
+        raise ValueError(
+            f"nif_comunitario {nif} does not match the expected NIF-IVA format for country {pais}",
+        )
+    return normalized_nif[len(normalized_pais) :]
 
 
 # ---------------------------------------------------------------------------
@@ -447,6 +482,7 @@ __all__ = [
     "Modelo347ThresholdError",
     "Modelo349OperadorRow",
     "ModeloDetailRow",
+    "m349_nif_number_for_export",
     "validate_m184_member_share_sum",
     "validate_m347_threshold",
     "validate_m349_nif_format",

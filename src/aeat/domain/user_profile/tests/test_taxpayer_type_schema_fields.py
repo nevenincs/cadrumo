@@ -64,8 +64,17 @@ def test_irpf_income_categories_field_is_present_and_grounded(
 ) -> None:
     field = schema.field("taxpayer_type.irpf_income_categories")
     assert field.type.value == "string"
-    assert field.legal_refs
     assert field.schedule_predicates
+    expected_refs = {
+        "ley-35-2006:art-17",
+        "ley-35-2006:art-22",
+        "ley-35-2006:art-25",
+        "ley-35-2006:art-27",
+        "ley-35-2006:art-33",
+    }
+    assert set(field.legal_refs) == expected_refs
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    assert expected_refs <= set(catalogues.legal)
 
 
 def test_irpf_estimation_regime_enum_covers_directa_and_objetiva(
@@ -145,6 +154,7 @@ def test_selected_sociedades_profile_refs_resolve_against_catalogue(
         "taxpayer_type.legal_entity_form": {"ley-27-2014:art-29", "ley-44-2015:art-1"},
         "taxpayer_type.incn_prior_12_months": {"ley-27-2014:art-40-3"},
         "taxpayer_type.new_entity_first_two_profit_periods": {"ley-27-2014:art-29"},
+        "taxpayer_type.tributacion_estado_porcentaje": {"ley-12-2002:art-15", "ley-28-1990:art-19"},
         "taxpayer_type.sal_socios_trabajadores_count": {"ley-44-2015:art-1", "ley-44-2015:art-2"},
         "taxpayer_type.sal_reserva_especial_dotada": {"ley-44-2015:art-14"},
         "taxpayer_type.sal_capital_social": {"ley-44-2015:art-14"},
@@ -154,6 +164,25 @@ def test_selected_sociedades_profile_refs_resolve_against_catalogue(
         refs = set(schema.field(field_path).legal_refs)
         assert refs == expected_refs
         assert refs <= legal_ids
+
+
+def test_sal_reserva_profile_description_uses_twice_capital_threshold(
+    schema: ProfileSchemaDefinition,
+) -> None:
+    """The registry schema must not preserve the old 50 percent SAL cap prose."""
+    descriptions = " ".join(
+        schema.field(field_path).description
+        for field_path in (
+            "taxpayer_type.sal_reserva_especial_dotada",
+            "taxpayer_type.sal_capital_social",
+        )
+    ).casefold()
+
+    assert "50 percent" not in descriptions
+    assert "0.50" not in descriptions
+    assert "twice" in descriptions
+    assert "2 * capital_social" in descriptions
+    assert "ley 44/2015 art. 14" in descriptions
 
 
 def test_iva_regime_enum_includes_reagp(schema: ProfileSchemaDefinition) -> None:

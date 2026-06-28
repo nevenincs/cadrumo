@@ -116,6 +116,30 @@ def test_period_year_options_match_filter_clauses() -> None:
     assert option_rows, "period/year options must match the same non-empty annual subset as --filter"
 
 
+def test_year_option_without_period_refuses_with_annual_guidance() -> None:
+    """Bare ``--year`` refuses with annual-period guidance, not an internal parser token."""
+    result = _RUNNER.invoke(app, ["app", "ledger", "list", "--year", "2025"])
+
+    assert result.exit_code != 0
+    assert "ledger-period-year-pairing" not in result.output
+    assert "--period 0A --year 2025" in result.output
+    assert "--filter" in result.output
+    assert "period=0A" in result.output
+    assert "year=2025" in result.output
+
+
+def test_year_filter_without_period_refuses_with_matching_annual_guidance() -> None:
+    """Bare ``--filter year=...`` guidance keeps the operator's requested year."""
+    result = _RUNNER.invoke(app, ["app", "ledger", "list", "--filter", "year=2026"])
+
+    assert result.exit_code != 0
+    assert "ledger-period-year-pairing" not in result.output
+    assert "--period 0A --year 2026" in result.output
+    assert "period=0A" in result.output
+    assert "year=2026" in result.output
+    assert "year=2025" not in result.output
+
+
 def test_classification_filter_narrows_to_one_class() -> None:
     """A classification filter returns only rows of that business class.
 

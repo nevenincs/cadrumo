@@ -51,7 +51,7 @@ def ledger_classify_bulk_csv(
         bucket_id=transaction_repository.bucket_id,
         csv_text=csv_text,
         actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger classify",
+        source_command="aeat app ledger classify --from-csv",
         transaction_repository=transaction_repository
         if isinstance(transaction_repository, TransactionCatalogueRepository)
         else None,

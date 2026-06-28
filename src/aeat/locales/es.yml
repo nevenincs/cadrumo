@@ -1202,6 +1202,12 @@ application:
       quiet_missing_flags: 'A esta ejecución con --quiet le faltan datos obligatorios.
         Añade estos flags y vuelve a ejecutar el comando: %{missing_flags}. O ejecútalo
         sin --quiet desde una terminal interactiva para usar el asistente guiado.'
+      create_missing_filing_baseline: 'A la creación del perfil le faltan datos
+        de identidad para presentar modelos. Añade estos flags y vuelve a ejecutar
+        el comando: %{missing_flags}.'
+      edit_missing_filing_baseline: 'Esta edición dejaría incompletos los datos
+        de identidad para presentar modelos. Añade estos flags al mismo comando
+        y vuelve a ejecutarlo: %{missing_flags}.'
     next_hint:
       modelo_work_create: aeat app modelo work create
     output_labels:
@@ -1650,6 +1656,7 @@ cli:
         invalid_evidence_kind: --evidence-kind debe ser uno de {canonical}; se recibió
           {kind}.
         list_help: Listar los filing records registrados
+        modelo_help: Filtrar por código de modelo (p. ej. 303, 130, 100)
         view_help: Mostrar un filing record por id
       formulas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
@@ -2454,6 +2461,9 @@ cli:
       import_invalid_tax_id: 'El identificador fiscal del paquete de perfil no es
         válido: %{error}. Corrige el identificador y vuelve a exportar, o importa
         un paquete válido.'
+      import_missing_filing_baseline: 'Al paquete de perfil le faltan datos de identidad
+        para presentar modelos. Corrige el paquete o vuelve a exportar un perfil
+        completo con estos campos: %{missing_flags}.'
       import_label_help: Nombre visible para el perfil importado; por defecto el nombre
         guardado en el paquete. Úsalo para importar una segunda copia con otro nombre.
       import_label_taken: Ya existe un perfil con el nombre %{name}. Vuelve a ejecutar
@@ -2806,8 +2816,8 @@ cli:
       from_csv_exclusive: --from-csv no puede combinarse con un id de transacción
         ni --classification.
       from_csv_help: Ruta a un archivo CSV con columnas transaction_id, classification[,
-        category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category,
-        irpf_category].
+        category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
+        iva_category, irpf_category].
       from_csv_not_found: 'Archivo CSV no encontrado: %{path}'
       help: Clasificar un movimiento del libro en el perfil activo
       id_help: Id del movimiento del libro a clasificar
@@ -2885,6 +2895,9 @@ cli:
       confirm_required: Pasa --yes para confirmar esta operación destructiva del libro.
       filter_parse_error: 'Fallo al analizar el filtro del libro cerca de %{token}:
         %{reason}.'
+      period_year_pairing: Los filtros de periodo del libro requieren periodo y ejercicio
+        juntos. Para un año completo use --period 0A --year %{year}, o --filter
+        period=0A --filter year=%{year}.
       id_prefix_collision: 'El prefijo de id %{prefix!r} coincide con varias transacciones:
         %{candidates}. Amplía el prefijo para desambiguar.'
       id_prefix_empty: El prefijo de id de transacción está vacío; indica al menos

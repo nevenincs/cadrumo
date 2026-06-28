@@ -22,6 +22,8 @@ from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
+_PROFILE_TAX_ID_PATH = "identity.tax_id"
+
 if TYPE_CHECKING:
     from ....application.workflow import ProfileBucketPointer, WorkflowStateRepository
     from ....domain.buckets import BucketEventType
@@ -216,7 +218,9 @@ def _register_profile_import_command(
             ProfileAlreadyRegisteredError,
             UnsupportedBundleSchemaVersionError,
             deserialize_profile_bundle,
+            missing_filing_baseline_flags,
             profile_storage_session,
+            record_to_path_values,
         )
         from ....application.workflow import read_profile_bucket as _read_profile_bucket
         from ....application.workflow import read_profile_bucket_by_id
@@ -246,24 +250,10 @@ def _register_profile_import_command(
         except UnsupportedBundleSchemaVersionError as exc:
             raise _CliRefusedBoundaryError(str(exc)) from exc
         record = bundle.profile
-        # The bundle is plaintext and may be tampered. `config profile create`
-        # validates the NIF/CIF/NIE checksum via SubjectTaxId; the import path must
-        # enforce the same gate so an invalid identifier cannot become an active,
-        # filing-grade profile (a tampered or garbage tax id otherwise imports clean).
-        from ....core.identity import IdentityError, validate_spanish_tax_id
-
-        _imported_tax_id = next(
-            (fact.value for fact in record.facts if fact.path == "identity.tax_id"),
-            None,
+        _validate_imported_profile_tax_id(record)
+        _validate_imported_profile_filing_baseline(
+            missing_filing_baseline_flags(record_to_path_values(record)),
         )
-        if isinstance(_imported_tax_id, str) and _imported_tax_id.strip():
-            try:
-                validate_spanish_tax_id(_imported_tax_id)
-            except IdentityError as exc:
-                raise _CliRefusedBoundaryError(
-                    translated_message="cli.config.profile.import_invalid_tax_id",
-                    context={"error": str(exc)},
-                ) from exc
         bundle_profile_id = record.profile_id
 
         explicit_label = label.strip() if label is not None and label.strip() else None
@@ -370,6 +360,53 @@ def _validate_bundle_schema_version(bundle: object) -> None:
             f"supported versions: {sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)}",
             translated_message="application.user_profile.errors.unsupported_bundle_schema_version",
         )
+
+
+def _validate_imported_profile_tax_id(record: object) -> None:
+    """Refuse portable bundles whose filing identity tax id is absent or invalid."""
+    # The bundle is plaintext and may be tampered. `config profile create`
+    # validates the NIF/CIF/NIE checksum via SubjectTaxId; the import path must
+    # enforce the same gate so an invalid identifier cannot become an active,
+    # filing-grade profile (a tampered or garbage tax id otherwise imports clean).
+    from ....core.identity import IdentityError, validate_spanish_tax_id
+
+    tax_id_values = [
+        fact.value
+        for fact in getattr(record, "facts", ())
+        if getattr(fact, "path", None) == _PROFILE_TAX_ID_PATH
+    ]
+    if len(tax_id_values) != 1:
+        raise _invalid_import_tax_id(
+            f"{_PROFILE_TAX_ID_PATH} must appear exactly once in the profile bundle",
+        )
+    tax_id = tax_id_values[0]
+    if not isinstance(tax_id, str) or not tax_id.strip():
+        raise _invalid_import_tax_id(f"{_PROFILE_TAX_ID_PATH} must be a non-empty string")
+    try:
+        validate_spanish_tax_id(tax_id.strip())
+    except IdentityError as exc:
+        raise _invalid_import_tax_id(str(exc)) from exc
+
+
+def _validate_imported_profile_filing_baseline(missing_flags: tuple[str, ...]) -> None:
+    """Refuse portable bundles that would register filing-incomplete profiles."""
+    if not missing_flags:
+        return
+    raise _CliRefusedBoundaryError(
+        translated_message="cli.config.profile.import_missing_filing_baseline",
+        context={"missing_flags": _format_missing_flags(missing_flags)},
+    )
+
+
+def _format_missing_flags(missing_flags: tuple[str, ...]) -> str:
+    return " ".join(f"--{flag}" for flag in missing_flags)
+
+
+def _invalid_import_tax_id(error: str) -> _CliRefusedBoundaryError:
+    return _CliRefusedBoundaryError(
+        translated_message="cli.config.profile.import_invalid_tax_id",
+        context={"error": error},
+    )
 
 
 def _emit_profile_lifecycle_event(

@@ -13,18 +13,15 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from typer.testing import CliRunner
 
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import override_settings
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_RUNNER = CliRunner()
 
 
 @pytest.fixture(autouse=True)
@@ -39,7 +36,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def _show() -> dict[str, Any]:
-    result = _RUNNER.invoke(app, ["--format", "json", "config", "profile", "capabilities", "show"])
+    result = invoke_cached_cli(["--format", "json", "config", "profile", "capabilities", "show"])
     assert result.exit_code == 0, result.output
     rows = json.loads(result.output)["result"]["capabilities"]
     return {row["capability"]: row for row in rows}
@@ -55,8 +52,7 @@ def test_show_reports_every_capability_with_default_posture() -> None:
 
 
 def test_set_disables_a_capability_and_show_reflects_it() -> None:
-    setres = _RUNNER.invoke(
-        app,
+    setres = invoke_cached_cli(
         ["--format", "json", "config", "profile", "capabilities", "set", "llm_vision", "off"],
     )
     assert setres.exit_code == 0, setres.output
@@ -71,10 +67,10 @@ def test_set_disables_a_capability_and_show_reflects_it() -> None:
 def test_config_check_reports_capabilities_and_dependencies() -> None:
     # Opt out of llm_vision so the report is deterministic regardless of whether a
     # real Ollama is running in the test environment (no opted-in dependency gap).
-    off = _RUNNER.invoke(app, ["config", "profile", "capabilities", "set", "llm_vision", "off"])
+    off = invoke_cached_cli(["config", "profile", "capabilities", "set", "llm_vision", "off"])
     assert off.exit_code == 0, off.output
 
-    result = _RUNNER.invoke(app, ["--format", "json", "config", "check"])
+    result = invoke_cached_cli(["--format", "json", "config", "check"])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
     assert payload["ok"] is True
@@ -94,7 +90,7 @@ def test_config_check_flags_opted_in_capability_with_missing_dependency() -> Non
     # llm_vision is on by default; point Ollama at a closed port so the dependency
     # is reliably unavailable. The doctor must surface the gap and exit non-zero.
     with override_settings(aeat_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
-        result = _RUNNER.invoke(app, ["--format", "json", "config", "check"])
+        result = invoke_cached_cli(["--format", "json", "config", "check"])
     assert result.exit_code == 2, result.output
     payload = json.loads(result.output)["result"]
     assert payload["ok"] is False
@@ -117,18 +113,17 @@ def test_every_google_write_verb_refuses_when_google_export_disabled(argv: list[
     Closes honesty-review finding H1: with the capability off, each Drive/Sheets
     write verb refuses with the capability message *before* any Google call.
     """
-    off = _RUNNER.invoke(app, ["config", "profile", "capabilities", "set", "google_export", "off"])
+    off = invoke_cached_cli(["config", "profile", "capabilities", "set", "google_export", "off"])
     assert off.exit_code == 0, off.output
 
-    result = _RUNNER.invoke(app, argv)
+    result = invoke_cached_cli(argv)
     assert result.exit_code != 0, result.output
     combined = result.output + str(result.exception or "")
     assert "Google export is disabled" in combined, combined
 
 
 def test_set_enables_cloud_upload_via_profile_opt_in() -> None:
-    setres = _RUNNER.invoke(
-        app,
+    setres = invoke_cached_cli(
         ["config", "profile", "capabilities", "set", "cloud_evidence_upload", "on"],
     )
     assert setres.exit_code == 0, setres.output

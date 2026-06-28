@@ -180,7 +180,13 @@ _BASE_LIQUIDABLE_ART_50_REF = "ley-35-2006:art-50"
 _GENERAL_SCALE_ART_63_REF = "ley-35-2006:art-63"
 _SAVINGS_STATE_SCALE_ART_66_REF = "ley-35-2006:art-66"
 _STATE_DEDUCTION_ART_67_REF = "ley-35-2006:art-67"
+_NEW_COMPANY_INVESTMENT_ART_68_1_REF = "ley-35-2006:art-68.1"
+_BUSINESS_INVESTMENT_ART_68_2_REF = "ley-35-2006:art-68.2"
 _DONATION_DEDUCTION_ART_68_3_REF = "ley-35-2006:art-68.3"
+_CULTURAL_INTEREST_DEDUCTION_ART_68_5_REF = "ley-35-2006:art-68.5"
+_DEDUCTION_LIMITS_ART_69_REF = "ley-35-2006:art-69"
+_ENERGY_EFFICIENCY_DEDUCTION_DA_50_REF = "ley-35-2006:da-50"
+_RENTAL_HOUSING_DEDUCTION_DT_15_REF = "ley-35-2006:dt-15"
 _AUTONOMIC_GENERAL_SCALE_ART_74_REF = "ley-35-2006:art-74"
 _AUTONOMIC_SAVINGS_SCALE_ART_76_REF = "ley-35-2006:art-76"
 _AUTONOMIC_DEDUCTION_ART_77_REF = "ley-35-2006:art-77"
@@ -623,6 +629,142 @@ def test_modelo_100_donation_deduction_surface_cites_art_68_3(filing_year: int) 
     assert _STATE_DEDUCTION_ART_67_REF in estatal.legal_refs
     assert _DONATION_DEDUCTION_ART_68_3_REF in autonomica.legal_refs
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in autonomica.legal_refs
+
+
+@pytest.mark.parametrize("filing_year", range(2020, 2026))
+def test_modelo_100_cultural_interest_deduction_cites_art_68_5(filing_year: int) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    role_refs = {
+        "irpf_deduccion_interes_cultural_estatal": _STATE_DEDUCTION_ART_67_REF,
+        "irpf_deduccion_interes_cultural_autonomica": _AUTONOMIC_DEDUCTION_ART_77_REF,
+    }
+    formula_suffixes = {
+        "irpf_deduccion_interes_cultural_estatal": "estatal",
+        "irpf_deduccion_interes_cultural_autonomica": "autonomica",
+    }
+
+    casillas_by_role = {
+        casilla.semantic_role: casilla for casilla in revision.casillas if casilla.semantic_role in role_refs
+    }
+    assert set(casillas_by_role) == set(role_refs)
+
+    anexo_casilla = next(
+        casilla
+        for casilla in revision.casillas
+        if casilla.semantic_role == "irpf_anexo_a_interes_cultural_deduccion_importe"
+    )
+    assert anexo_casilla.id == _casilla_id("0726")
+    assert _CULTURAL_INTEREST_DEDUCTION_ART_68_5_REF in anexo_casilla.legal_refs
+    assert _DEDUCTION_LIMITS_ART_69_REF in anexo_casilla.legal_refs
+
+    formulas_by_id = {formula.id: formula for formula in revision.formulas}
+    for role, quota_ref in role_refs.items():
+        suffix = formula_suffixes[role]
+        formula_id = f"renta-{filing_year}-deduccion-cultural-{suffix}-50-porciento"
+        casilla = casillas_by_role[role]
+        formula = formulas_by_id[formula_id]
+
+        assert _CULTURAL_INTEREST_DEDUCTION_ART_68_5_REF in casilla.legal_refs
+        assert _CULTURAL_INTEREST_DEDUCTION_ART_68_5_REF in formula.legal_refs
+        assert quota_ref in formula.legal_refs
+        assert "ley-35-2006:art-68" not in formula.legal_refs
+
+
+@pytest.mark.parametrize("filing_year", range(2020, 2026))
+def test_modelo_100_new_company_investment_deduction_cites_art_68_1(filing_year: int) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    anexo_section = ("resultados", "anexo_a_res", "deduccion_empresas_nueva_creacion_res")
+    state_casilla = next(
+        casilla
+        for casilla in revision.casillas
+        if casilla.semantic_role == "irpf_deduccion_empresa_nueva_creacion"
+    )
+    detail_casillas = [casilla for casilla in revision.casillas if tuple(casilla.section[:3]) == anexo_section]
+
+    assert state_casilla.id == _casilla_id("0549")
+    assert {casilla.id for casilla in detail_casillas} == _casilla_ids("0711", "0712", "0713", "0714")
+
+    offenders = {
+        casilla.id: casilla.legal_refs
+        for casilla in [state_casilla, *detail_casillas]
+        if _NEW_COMPANY_INVESTMENT_ART_68_1_REF not in casilla.legal_refs
+        or "ley-35-2006:art-68" in casilla.legal_refs
+    }
+    assert not offenders
+
+
+@pytest.mark.parametrize("filing_year", range(2020, 2026))
+def test_modelo_100_business_investment_deductions_cite_art_68_2(filing_year: int) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    section = ("resultados", "anexo_a_res", "deducciones_inversion_empresarial_res")
+    checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:3]) == section]
+
+    assert checked
+    offenders = {
+        casilla.id: casilla.legal_refs
+        for casilla in checked
+        if _BUSINESS_INVESTMENT_ART_68_2_REF not in casilla.legal_refs
+        or "ley-35-2006:art-68" in casilla.legal_refs
+    }
+    assert not offenders
+
+    formula = next(
+        formula
+        for formula in revision.formulas
+        if formula.id == f"renta-{filing_year}-deduccion-incentivos-inversion-empresarial-total"
+    )
+    assert _BUSINESS_INVESTMENT_ART_68_2_REF in formula.legal_refs
+    assert "ley-35-2006:art-68" not in formula.legal_refs
+
+
+@pytest.mark.parametrize("filing_year", range(2021, 2026))
+def test_modelo_100_energy_efficiency_deduction_formula_cites_da_50(filing_year: int) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    casilla = next(
+        casilla
+        for casilla in revision.casillas
+        if casilla.semantic_role == "irpf_deduccion_eficiencia_energetica_viviendas"
+    )
+    formula = next(
+        formula
+        for formula in revision.formulas
+        if formula.id == f"renta-{filing_year}-deduccion-eficiencia-energetica-vivienda-suma"
+    )
+
+    assert _ENERGY_EFFICIENCY_DEDUCTION_DA_50_REF in casilla.legal_refs
+    assert _ENERGY_EFFICIENCY_DEDUCTION_DA_50_REF in formula.legal_refs
+    assert _STATE_DEDUCTION_ART_67_REF in formula.legal_refs
+    assert "ley-35-2006:art-68" not in formula.legal_refs
+
+
+@pytest.mark.parametrize("filing_year", range(2020, 2026))
+def test_modelo_100_rental_housing_transitional_deduction_cites_dt_15(filing_year: int) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    role_refs = {
+        "irpf_deduccion_alquiler_vivienda_habitual_estatal": _STATE_DEDUCTION_ART_67_REF,
+        "irpf_deduccion_alquiler_vivienda_habitual_autonomica": _AUTONOMIC_DEDUCTION_ART_77_REF,
+    }
+    formula_suffixes = {
+        "irpf_deduccion_alquiler_vivienda_habitual_estatal": "estatal",
+        "irpf_deduccion_alquiler_vivienda_habitual_autonomica": "autonomica",
+    }
+
+    casillas_by_role = {
+        casilla.semantic_role: casilla for casilla in revision.casillas if casilla.semantic_role in role_refs
+    }
+    assert set(casillas_by_role) == set(role_refs)
+
+    formulas_by_id = {formula.id: formula for formula in revision.formulas}
+    for role, quota_ref in role_refs.items():
+        suffix = formula_suffixes[role]
+        formula_id = f"renta-{filing_year}-deduccion-alquiler-vivienda-{suffix}-50-porciento"
+        casilla = casillas_by_role[role]
+        formula = formulas_by_id[formula_id]
+
+        assert _RENTAL_HOUSING_DEDUCTION_DT_15_REF in casilla.legal_refs
+        assert _RENTAL_HOUSING_DEDUCTION_DT_15_REF in formula.legal_refs
+        assert quota_ref in formula.legal_refs
+        assert "ley-35-2006:art-68" not in formula.legal_refs
 
 
 @pytest.mark.parametrize(

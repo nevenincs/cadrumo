@@ -75,6 +75,8 @@ def _create_profile(*, activity_start_date: str | None = None) -> None:
     args = [
         "config", "profile", "create", "operator",
         "--quiet", "--accept-defaults",
+        "--entity-type", "natural_person",
+        "--irpf-income-categories", "actividad_economica",
         "--tax-id", "12345678Z",
         "--name", "Operator",
         "--surnames", "Readiness",
@@ -98,10 +100,15 @@ def _set_gb_non_resident_axes() -> None:
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["status"] == "success"
+    assert payload["result"]["active_profile"] == _PROFILE_ID
+    assert "profile-key registry" not in result.output
+    assert "Traceback" not in result.output
 
 
-def _create_incomplete_profile() -> None:
-    result = _invoke(
+def _attempt_incomplete_profile_create():
+    return _invoke(
         [
             "--format", "json",
             "config", "profile", "create", _PROFILE_ID,
@@ -110,12 +117,6 @@ def _create_incomplete_profile() -> None:
             "--activity", "design",
         ],
     )  # fmt: skip
-    assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
-    assert payload["status"] == "success"
-    assert payload["result"]["active_profile"] == _PROFILE_ID
-    assert "profile-key registry" not in result.output
-    assert "Traceback" not in result.output
 
 
 def _create_work_unit() -> str:
@@ -131,32 +132,23 @@ def _create_work_unit() -> str:
     return _payload(result.output)["work_unit_id"]
 
 
-def test_work_create_refuses_incomplete_profile_with_actionable_readiness_error() -> None:
-    """Filing-grade modelo work must stop at profile readiness, not an internal error."""
+def test_profile_create_refuses_incomplete_profile_before_modelo_work() -> None:
+    """Incomplete profiles must fail before a modelo work unit can exist."""
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket
 
-    _create_incomplete_profile()
-
-    result = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", "303", "--year", "2025", "--period", "1T",
-            "--by", "gate-smoke",
-        ],
-    )  # fmt: skip
+    result = _attempt_incomplete_profile_create()
 
     assert result.exit_code != 0
     payload = json.loads(result.output)
     assert payload["status"] == "error"
-    assert payload["error"]["code"] == "REFUSED_MODELO_PROFILE_READINESS"
+    assert payload["error"]["code"] == "REFUSED_WIZARD_MISSING_FLAG"
     assert payload["error"]["category"] == "REFUSED"
     message = payload["error"]["message"]
-    assert "Profile is incomplete for Modelo 303 2025 1T" in message
-    assert "identity.name" in message
-    assert "identity.surnames" in message
-    assert payload["error"]["suggestion"].startswith("aeat config profile edit")
+    assert "--entity-type" in message
+    assert "--name" in message
+    assert "--surnames" in message
+    assert read_profile_bucket(_PROFILE_ID) is None
     assert "work_unit_id" not in result.output
-    assert "missing a declared ErrorCode registry entry" not in result.output
     assert "Traceback" not in result.output
 
 

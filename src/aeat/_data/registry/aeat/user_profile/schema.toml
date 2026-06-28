@@ -327,7 +327,7 @@ sensitivity = "financial"
 effective_dated = true
 description = "Porcentaje de tributación al Estado for Modelo 200 casilla DP200026:00625. Standard (régimen común) entities are 100. Foral entities (Bizkaia, Gipuzkoa, Álava, Navarra) declare a partial percentage. An undeclared value is treated as 100 by the engine binding default so common-regime SLs file without configuring this field."
 model_selectors = ["taxpayer.tributacion_estado_porcentaje"]
-legal_refs = ["LIS Art. 29 (BOE-A-2014-12328)", "Ley Orgánica 8/1980 LOFCA Art. 3 (BOE-A-1980-22492)"]
+legal_refs = ["ley-12-2002:art-15", "ley-28-1990:art-19"]
 
 [[sections.fields]]
 key = "sal_socios_trabajadores_count"
@@ -345,7 +345,7 @@ type = "decimal"
 required = false
 sensitivity = "financial"
 effective_dated = true
-description = "Accumulated reserva especial balance already dotada in prior periods (Ley 44/2015 Art. 14). Used to test the 50 percent capital social cap: dotacion = 0 once reserva_dotada >= 0.50 * capital_social."
+description = "Accumulated reserva especial balance already dotada in prior periods (Ley 44/2015 Art. 14). Used to test the twice-capital threshold: dotacion = 0 once reserva_dotada reaches at least 2 * capital_social."
 model_selectors = ["taxpayer.sal_reserva_especial_dotada"]
 legal_refs = ["ley-44-2015:art-14"]
 
@@ -355,7 +355,7 @@ type = "decimal"
 required = false
 sensitivity = "financial"
 effective_dated = true
-description = "Capital social of the Sociedad Laboral. Denominator of the 50 percent cap test under Ley 44/2015 Art. 14. Dotacion is capped such that accumulated reserva does not exceed 50 percent of capital social."
+description = "Capital social of the Sociedad Laboral. Basis for the twice-capital reserve threshold under Ley 44/2015 Art. 14. Dotacion is capped such that accumulated reserva does not exceed twice capital social."
 model_selectors = ["taxpayer.sal_capital_social"]
 legal_refs = ["ley-44-2015:art-14"]
 
@@ -368,7 +368,7 @@ effective_dated = true
 description = "Comma-separated set of IRPF income categories a natural person declares: actividad_economica, trabajo, capital_inmobiliario, capital_mobiliario, ganancias_patrimoniales, pension. Only actividad_economica triggers the Modelo 130/131 pago fraccionado. The closed-set validation is enforced by the wizard checkbox widget."
 model_selectors = ["taxpayer.irpf_income_categories"]
 schedule_predicates = ["taxpayer.irpf_income_categories"]
-legal_refs = ["LIRPF Arts. 17-39 (BOE-A-2006-20764)"]
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-22", "ley-35-2006:art-25", "ley-35-2006:art-27", "ley-35-2006:art-33"]
 
 [[sections.fields]]
 key = "fiscal_residency"
@@ -1241,11 +1241,10 @@ description = "Maritime worker classification. trabajador_del_mar gates three ex
 enum_values = ["trabajador_del_mar"]
 schedule_predicates = ["maritime_worker.worker_class"]
 legal_refs = [
-  "Ley 35/2006 Art. 7.p) BOE-A-2006-20764",
-  "Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-15794",
-  "Ley 35/2006 DA 41 BOE-A-2006-20764",
-  "Ley 26/2014 Art. 1.98 BOE-A-2014-12327",
-  "Ley 35/2006 Art. 96 BOE-A-2006-20764",
+  "ley-35-2006:art-7",
+  "ley-19-1994:art-75",
+  "ley-35-2006:da-41",
+  "ley-35-2006:art-96",
 ]
 
 [[sections.fields]]
@@ -1256,7 +1255,7 @@ sensitivity = "financial"
 effective_dated = true
 description = "Flag state of the vessel. ES (Spanish flag) or foreign. Art. 7.p) eligibility requires work performed outside Spanish territory; foreign-flagged vessels in international waters satisfy this when the employer is a non-resident entity or has a permanent establishment abroad (AEAT accepted practice confirmed by TEAR Galicia December 2024)."
 enum_values = ["ES", "foreign"]
-legal_refs = ["Ley 35/2006 Art. 7.p) BOE-A-2006-20764"]
+legal_refs = ["ley-35-2006:art-7"]
 
 [[sections.fields]]
 key = "waters_type"
@@ -1266,7 +1265,7 @@ sensitivity = "financial"
 effective_dated = true
 description = "Waters classification for the vessel's operating area. international waters qualify as effectively performing work outside Spain under Art. 7.p) LIRPF in AEAT accepted practice."
 enum_values = ["national", "international"]
-legal_refs = ["Ley 35/2006 Art. 7.p) BOE-A-2006-20764"]
+legal_refs = ["ley-35-2006:art-7"]
 
 [[sections.fields]]
 key = "vessel_registry"
@@ -1277,7 +1276,7 @@ effective_dated = true
 description = "Vessel registry classification. REBECA is the Registro Especial de Buques y Empresas Navieras de Canarias (Ley 19/1994). rebeca_eu_eea covers the 2021 extension to vessels of REBECA-registered companies enrolled in another EU/EEA member state registry. scheduled_canary_route covers vessels on Canary Islands to mainland Spain scheduled routes. Absent this field no REBECA exemption is evaluated."
 enum_values = ["REBECA", "rebeca_eu_eea", "scheduled_canary_route", "other"]
 legal_refs = [
-  "Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-15794",
+  "ley-19-1994:art-75",
 ]
 
 [[sections.fields]]
@@ -1288,7 +1287,7 @@ sensitivity = "financial"
 effective_dated = true
 description = "Whether the taxpayer is registered in RETMAR/RETM (Regimen Especial de la Seguridad Social de los Trabajadores del Mar). Since 2023 workers registered in this maritime special Social Security regime must file an IRPF declaration regardless of income level under LIRPF art. 96. This field drives a mandatory-filing profile completeness warning; it does not alter casilla values or formula paths."
 schedule_predicates = ["maritime_worker.retmar_registered"]
-legal_refs = ["Ley 35/2006 Art. 96 BOE-A-2006-20764"]
+legal_refs = ["ley-35-2006:art-96"]
 
 [[sections.fields]]
 key = "tuna_fleet"
@@ -1300,8 +1299,7 @@ description = "Whether the vessel is a qualifying tuna fleet (flota de pesca de 
 model_selectors = ["maritime_worker.tuna_fleet"]
 schedule_predicates = ["maritime_worker.tuna_fleet"]
 legal_refs = [
-  "Ley 35/2006 DA 41 BOE-A-2006-20764",
-  "Ley 26/2014 Art. 1.98 BOE-A-2014-12327",
+  "ley-35-2006:da-41",
 ]
 
 [[sections.fields]]
@@ -1314,8 +1312,7 @@ description = "Whether the DA 41 LIRPF tuna-fleet exemption is pending European 
 model_selectors = ["maritime_worker.pending_eu_clearance"]
 schedule_predicates = ["maritime_worker.pending_eu_clearance"]
 legal_refs = [
-  "Ley 35/2006 DA 41 BOE-A-2006-20764",
-  "Ley 26/2014 Art. 1.98 BOE-A-2014-12327",
+  "ley-35-2006:da-41",
 ]
 
 [[sections]]

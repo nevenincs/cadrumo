@@ -17,23 +17,21 @@ Harness mirrors the persona-journey suites: an isolated profile backend via
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
+from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import override_settings
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_RUNNER = CliRunner()
 
 _ROWS = (
     ("2026-03-01", "49.99", "Software subscription"),
@@ -41,6 +39,10 @@ _ROWS = (
     ("2026-03-09", "15.50", "Domain renewal"),
     ("2026-03-12", "300.00", "Accountant fee"),
 )
+
+
+def _invoke(args: Sequence[str]) -> Result:
+    return invoke_cached_cli(args)
 
 
 @pytest.fixture(autouse=True)
@@ -59,7 +61,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def _list_rows() -> list[dict[str, object]]:
-    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
     return payload.get("result", payload).get("rows", [])
@@ -68,8 +70,7 @@ def _list_rows() -> list[dict[str, object]]:
 def _add_rows() -> list[str]:
     ids: list[str] = []
     for booked_date, amount, description in _ROWS:
-        added = _RUNNER.invoke(
-            app,
+        added = _invoke(
             [
                 "--format",
                 "json",
@@ -100,8 +101,7 @@ def test_bulk_stash_recovery_restores_every_row_without_a_reset() -> None:
 
     # Stash every row by mistake.
     for transaction_id in added_ids:
-        stashed = _RUNNER.invoke(
-            app,
+        stashed = _invoke(
             ["app", "ledger", "stash", transaction_id, "--reason", "bulk stash slip", "--yes"],
         )
         assert stashed.exit_code == 0, stashed.output
@@ -112,8 +112,7 @@ def test_bulk_stash_recovery_restores_every_row_without_a_reset() -> None:
     # Restore every row to active -- the recovery the audit said did not exist.
     restored_event_ids: list[str] = []
     for transaction_id in added_ids:
-        restored = _RUNNER.invoke(
-            app,
+        restored = _invoke(
             [
                 "--format",
                 "json",
@@ -139,7 +138,7 @@ def test_bulk_stash_recovery_restores_every_row_without_a_reset() -> None:
 
     # Each row's history records the restore as the latest lifecycle action.
     for transaction_id in added_ids:
-        history = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", transaction_id])
+        history = _invoke(["--format", "json", "app", "ledger", "history", transaction_id])
         assert history.exit_code == 0, history.output
         rendered = history.output
         assert "ledger.transaction.restored" in rendered, rendered
@@ -149,8 +148,7 @@ def test_restore_refuses_an_already_active_row_with_an_instructive_message() -> 
     """Restoring an already-active row refuses, naming the reason rather than
     emitting a bare error."""
     [active_id] = _add_rows()[:1]
-    refused = _RUNNER.invoke(
-        app,
+    refused = _invoke(
         ["app", "ledger", "restore", active_id, "--reason", "no-op", "--yes"],
     )
     assert refused.exit_code != 0
@@ -160,6 +158,6 @@ def test_restore_refuses_an_already_active_row_with_an_instructive_message() -> 
 def test_restore_requires_explicit_confirmation() -> None:
     """``restore`` without ``--yes`` refuses, mirroring the forward verbs."""
     [transaction_id] = _add_rows()[:1]
-    _RUNNER.invoke(app, ["app", "ledger", "stash", transaction_id, "--reason", "park", "--yes"])
-    unconfirmed = _RUNNER.invoke(app, ["app", "ledger", "restore", transaction_id])
+    _invoke(["app", "ledger", "stash", transaction_id, "--reason", "park", "--yes"])
+    unconfirmed = _invoke(["app", "ledger", "restore", transaction_id])
     assert unconfirmed.exit_code != 0, unconfirmed.output

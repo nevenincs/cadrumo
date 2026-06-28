@@ -15,11 +15,11 @@ flags and therefore have no ValidationError path to exercise here.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
+from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile._orchestration import profile_create_storage_span, set_active_fields
@@ -27,15 +27,17 @@ from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....domain.user_profile import UserProfileFact
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_RUNNER = CliRunner()
-
 #: Profile id every test in this module creates via the CLI inside the span.
 _PROFILE_ID = "tester"
+
+
+def _invoke(args: Sequence[str], *, env: Mapping[str, str] | None = None) -> Result:
+    return invoke_cached_cli(args, env=env)
 
 
 @pytest.fixture(autouse=True)
@@ -74,10 +76,10 @@ def _create_profile_and_import(tmp_path: Path) -> str:
         "2026-04-15,Client SL,Invoice 1,-50.00,EUR,n26-001\n",
         encoding="utf-8",
     )
-    imported = _RUNNER.invoke(app, ["app", "ledger", "import", str(statement), "--provider", "csv"])
+    imported = _invoke(["app", "ledger", "import", str(statement), "--provider", "csv"])
     assert imported.exit_code == 0, imported.output
 
-    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
     rows = payload.get("result", payload).get("rows", [])
@@ -99,8 +101,7 @@ def test_ledger_add_rejects_business_pct_on_non_mixed_classification(tmp_path: P
     MIXED".  ``_ledger_validation_bad`` must route this through the CLI
     refusal rather than letting it bubble to the generic boundary."""
 
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "app",
             "ledger",
@@ -135,8 +136,7 @@ def test_ledger_add_rejects_negative_amount_with_instructive_error(tmp_path: Pat
     ``aeat-architecture-boundaries`` instructive-refusal rule — never a bare
     "value invalid".
     """
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "app",
             "ledger",
@@ -171,8 +171,7 @@ def test_ledger_add_gross_mismatch_surfaces_clean_refusal_not_pydantic_repr(
     whole ``RawTransaction(...)`` repr (~30 lines). The CLI handler must catch it
     and route the human-readable validator message through ``_ledger_validation_bad``.
     """
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "app",
             "ledger",
@@ -212,8 +211,7 @@ def test_ledger_add_gross_mismatch_surfaces_clean_refusal_not_pydantic_repr(
 
 def test_ledger_add_accepts_nonnegative_amount_with_direction(tmp_path: Path) -> None:
     """``ledger add --amount=49.99 --direction OUTGOING`` is accepted."""
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "--format",
             "json",
@@ -251,8 +249,7 @@ def test_ledger_update_rejects_empty_patch(tmp_path: Path) -> None:
 
     txn_id = _create_profile_and_import(tmp_path)
 
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         ["app", "ledger", "update", txn_id],
     )
 
@@ -266,8 +263,7 @@ def test_ledger_update_rejects_negative_amount_with_instructive_error(tmp_path: 
 
     txn_id = _create_profile_and_import(tmp_path)
 
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "app",
             "ledger",
@@ -299,8 +295,7 @@ def test_ledger_allocate_rejects_out_of_range_business_pct(tmp_path: Path) -> No
 
     txn_id = _create_profile_and_import(tmp_path)
 
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "app",
             "ledger",
@@ -334,8 +329,7 @@ def test_ledger_split_rejects_blank_child_description(tmp_path: Path) -> None:
 
     txn_id = _create_profile_and_import(tmp_path)
 
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "app",
             "ledger",
@@ -376,8 +370,7 @@ def test_ledger_classify_rejects_business_pct_without_mixed_classification(
 
     txn_id = _create_profile_and_import(tmp_path)
 
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "app",
             "ledger",
@@ -430,8 +423,7 @@ def test_ledger_add_defaults_source_jurisdiction_to_es_for_resident_general(
 
     # Default profile is already RESIDENT_IRPF / GENERAL, so no fact mutation is needed.
 
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "--format",
             "json",
@@ -471,8 +463,7 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_impatriado(
     _set_profile_axis("irpf.special_regime", "impatriado")
     _set_profile_axis("irpf.special_regime_start_date", "2023-01-01")
 
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "app",
             "ledger",
@@ -514,7 +505,6 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_non_resident(
     service so the ledger command sees the same stored facts it would read
     after the operator wizard updates the active profile."""
 
-    _set_profile_axis("taxpayer_type.fiscal_residency", "non_resident_irnr")
     # UE/EEE country chosen so ue_eee_status is True and the
     # TaxpayerProfile _check_representante_fiscal_required validator does
     # not fire; this lets the source-jurisdiction refusal surface cleanly
@@ -522,9 +512,9 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_non_resident(
     # The non-EU/EEA path (Argentina, Morocco) is tracked under the schema-
     # fix follow-up that resolves the representante_fiscal_nombre catalogue gap.
     _set_profile_axis("taxpayer_type.country_of_fiscal_residence", "FR")
+    _set_profile_axis("taxpayer_type.fiscal_residency", "non_resident_irnr")
 
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "app",
             "ledger",
@@ -559,8 +549,7 @@ def test_ledger_add_honours_operator_source_jurisdiction_override_for_resident(
     row (e.g. dividendos de fuente extranjera). The default-ES rule must
     not override an explicit operator value."""
 
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "--format",
             "json",
@@ -606,8 +595,7 @@ def _add_eligible_mixed_expense() -> str:
     carries consistent IVA facts so the only outstanding preflight finding is
     the proportionality reference.
     """
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "--format",
             "json",
@@ -644,8 +632,7 @@ def test_mixed_row_with_business_pct_alone_is_not_preflight_ready(tmp_path: Path
     """
     txn_id = _add_eligible_mixed_expense()
 
-    classified = _RUNNER.invoke(
-        app,
+    classified = _invoke(
         [
             "app",
             "ledger",
@@ -662,8 +649,7 @@ def test_mixed_row_with_business_pct_alone_is_not_preflight_ready(tmp_path: Path
     )
     assert classified.exit_code == 0, classified.output
 
-    preflight = _RUNNER.invoke(
-        app,
+    preflight = _invoke(
         ["app", "ledger", "preflight", "--year", "2026", "--period", "1T"],
         env={"AEAT_OUTPUT_LANGUAGE": "en"},
     )
@@ -682,15 +668,13 @@ def test_documented_mixed_use_flow_reaches_preflight_ready(tmp_path: Path) -> No
     """
     txn_id = _add_eligible_mixed_expense()
 
-    ratios_set = _RUNNER.invoke(
-        app,
+    ratios_set = _invoke(
         ["app", "ledger", "ratios", "set", "telefonia_movil", "0.5"],
         env={"AEAT_OUTPUT_LANGUAGE": "en"},
     )
     assert ratios_set.exit_code == 0, ratios_set.output
 
-    allocate = _RUNNER.invoke(
-        app,
+    allocate = _invoke(
         [
             "app",
             "ledger",
@@ -707,8 +691,7 @@ def test_documented_mixed_use_flow_reaches_preflight_ready(tmp_path: Path) -> No
     )
     assert allocate.exit_code == 0, allocate.output
 
-    preflight = _RUNNER.invoke(
-        app,
+    preflight = _invoke(
         ["app", "ledger", "preflight", "--year", "2026", "--period", "1T"],
         env={"AEAT_OUTPUT_LANGUAGE": "en"},
     )
@@ -724,7 +707,7 @@ def test_documented_mixed_use_flow_reaches_preflight_ready(tmp_path: Path) -> No
 # NOT_YET_PROCESSED / PROCESSED_UNCLASSIFIED / SKIPPED_BY_RULE / FAILED_VALIDATION
 # are produced by the pipeline (rule apply, LLM, validation) and MUST NOT be
 # assignable by hand through ``add`` or ``classify``. The doc states this
-# contract ("others are set automatically by aeat"); these tests pin it.
+# contract ("others are set automatically by the application"); these tests pin it.
 # ---------------------------------------------------------------------------
 
 
@@ -737,28 +720,31 @@ def _flatten_box(text: str) -> str:
     return " ".join(text.replace("│", " ").split())
 
 
+def _assert_pipeline_managed_state_refusal(flat: str, output: str) -> None:
+    assert "set automatically" in flat, output
+    assert "cannot be assigned by hand" in flat, output
+    assert "BUSINESS, PERSONAL, MIXED" in flat, output
+
+
 @pytest.mark.parametrize("system_state", ["SKIPPED_BY_RULE", "FAILED_VALIDATION", "PROCESSED_UNCLASSIFIED"])
 def test_ledger_classify_refuses_pipeline_managed_state(tmp_path: Path, system_state: str) -> None:
     """``ledger classify`` refuses a pipeline-managed state with an instructive error."""
     txn_id = _add_eligible_mixed_expense()
 
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         ["app", "ledger", "classify", txn_id, "--classification", system_state],
         env={"AEAT_OUTPUT_LANGUAGE": "en"},
     )
 
     assert result.exit_code != 0, result.output
     flat = _flatten_box(result.output or "")
-    assert "set automatically by aeat" in flat, result.output
-    assert "BUSINESS, PERSONAL, MIXED" in flat, result.output
+    _assert_pipeline_managed_state_refusal(flat, result.output)
 
 
 @pytest.mark.parametrize("system_state", ["SKIPPED_BY_RULE", "FAILED_VALIDATION", "PROCESSED_UNCLASSIFIED"])
 def test_ledger_add_refuses_pipeline_managed_state(tmp_path: Path, system_state: str) -> None:
     """``ledger add --classification <system state>`` is refused instructively."""
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "app",
             "ledger",
@@ -779,7 +765,8 @@ def test_ledger_add_refuses_pipeline_managed_state(tmp_path: Path, system_state:
 
     assert result.exit_code != 0, result.output
     flat = _flatten_box(result.output or "")
-    assert "set automatically by aeat" in flat, result.output
+    _assert_pipeline_managed_state_refusal(flat, result.output)
+    assert "omit --classification" in flat, result.output
 
 
 def test_ledger_add_default_classification_is_accepted(tmp_path: Path) -> None:
@@ -789,8 +776,7 @@ def test_ledger_add_default_classification_is_accepted(tmp_path: Path) -> None:
     truly-internal states (PROCESSED_UNCLASSIFIED / SKIPPED_BY_RULE /
     FAILED_VALIDATION) are blocked.
     """
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "--format",
             "json",

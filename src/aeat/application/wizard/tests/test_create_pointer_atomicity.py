@@ -28,9 +28,11 @@ from ....core import read_pointer
 from ....core.config import load_settings
 from ....domain.user_profile import new_profile_id
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile._orchestration import ProfileAlreadyRegisteredError
+from ...user_profile import ProfileAlreadyRegisteredError, fact_value, profile_storage_session
+from ...workflow._persistence import workflow_state_repository
 from .._catalogue import SETUP_FLOW
 from .._commands import _run_full_flow
+from .._errors import WizardMissingFlagError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -43,7 +45,13 @@ def _backend(tmp_path: Path) -> Iterator[Path]:
         yield storage_root
 
 
-_QUIET_CREATE_FLAGS = {"tax-id": "00000000T", "activity": "Servicios"}
+_QUIET_CREATE_FLAGS = {
+    "entity-type": "natural_person",
+    "tax-id": "00000000T",
+    "name": "Test",
+    "surnames": "Operator",
+    "activity": "Servicios",
+}
 
 
 def _quiet_create(profile_name: str) -> None:
@@ -111,3 +119,38 @@ def test_failed_create_restores_the_prior_active_profile_pointer(_backend: Path)
     from ...workflow._profile_bucket_scan import read_profile_bucket_by_id
 
     assert read_profile_bucket_by_id(surviving_id) is not None
+
+
+def test_full_flow_edit_refuses_branch_change_without_legal_name(_backend: Path) -> None:
+    """A full-flow edit must not persist a legal entity without legal name."""
+
+    _quiet_create("Editable")
+    pointer = read_pointer(load_settings().aeat_local_storage_root)
+    assert pointer is not None
+
+    with pytest.raises(WizardMissingFlagError) as excinfo:
+        _run_full_flow(
+            SETUP_FLOW,
+            {
+                "entity-type": "legal_entity",
+                "legal-entity-form": "sl",
+                "tax-id": "00000000T",
+                "activity": "Servicios",
+            },
+            _prompter=None,
+            quiet=False,
+            accept_defaults=True,
+            profile_name="Editable",
+            profile_id=pointer.bucket_id,
+            mode="edit",
+            explicit_question_ids=frozenset({"entity-type", "legal-entity-form"}),
+        )
+
+    assert excinfo.value.translated_message == "application.wizard.errors.edit_missing_filing_baseline"
+    assert excinfo.value.context["missing_flags"] == "--legal-name"
+
+    with profile_storage_session(pointer.bucket_id):
+        record = workflow_state_repository().load().active_profile_record()
+    assert record is not None
+    assert fact_value(record, "taxpayer_type.entity_type") == "natural_person"
+    assert fact_value(record, "identity.name") == "Test"

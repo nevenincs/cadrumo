@@ -4,7 +4,7 @@ Covers two surfaces:
 - user_profile/schema.toml: maritime_worker section with worker_class and
   vessel/RETMAR supporting facts (contract profile-load tests).
 - categories/trabajador_del_mar.toml: three exemption binding entries each
-  carrying legal_refs populated from BOE-grounded sources (contract integrity tests).
+  carrying canonical legal catalogue ids (contract integrity tests).
 """
 
 from __future__ import annotations
@@ -16,14 +16,10 @@ import pytest
 
 from .....core.resources import bundled_path
 from ....user_profile import ProfileFieldType, load_user_profile_schema
+from .. import load_registry_tree
+from .._legal import verify_legal_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-
-class LegalRefEntry(TypedDict, total=False):
-    reference: str
-    document_id: str
-    notes: str
 
 
 class BindingEntry(TypedDict, total=False):
@@ -32,7 +28,7 @@ class BindingEntry(TypedDict, total=False):
     annual_cap_eur: str
     exempt_fraction: str
     formula: str
-    legal_refs: list[LegalRefEntry]
+    legal_refs: list[str]
 
 
 def _load_trabajador_del_mar_bindings() -> list[BindingEntry]:
@@ -62,28 +58,12 @@ def _load_trabajador_del_mar_bindings() -> list[BindingEntry]:
             assert isinstance(formula, str), "binding formula must be a string"
             binding["formula"] = formula
         if (legal_refs := raw_binding.get("legal_refs")) is not None:
-            binding["legal_refs"] = _legal_ref_entries(legal_refs)
+            assert isinstance(legal_refs, list), "legal_refs must be a list of legal catalogue ids"
+            for legal_ref in legal_refs:
+                assert isinstance(legal_ref, str), "legal_refs entries must be strings"
+            binding["legal_refs"] = legal_refs
         bindings.append(binding)
     return bindings
-
-
-def _legal_ref_entries(raw_legal_refs: object) -> list[LegalRefEntry]:
-    assert isinstance(raw_legal_refs, list), "legal_refs must be a list of TOML tables"
-    legal_refs: list[LegalRefEntry] = []
-    for raw_ref in raw_legal_refs:
-        assert isinstance(raw_ref, dict), "each legal_ref must be a TOML table"
-        ref: LegalRefEntry = {}
-        if (reference := raw_ref.get("reference")) is not None:
-            assert isinstance(reference, str), "legal_ref reference must be a string"
-            ref["reference"] = reference
-        if (document_id := raw_ref.get("document_id")) is not None:
-            assert isinstance(document_id, str), "legal_ref document_id must be a string"
-            ref["document_id"] = document_id
-        if (notes := raw_ref.get("notes")) is not None:
-            assert isinstance(notes, str), "legal_ref notes must be a string"
-            ref["notes"] = notes
-        legal_refs.append(ref)
-    return legal_refs
 
 
 def test_user_profile_schema_loads_with_maritime_worker_section() -> None:
@@ -110,16 +90,12 @@ def test_worker_class_carries_legal_refs_for_all_three_maritime_axes() -> None:
 
     field = schema.field("maritime_worker.worker_class")
 
-    # Art. 7.p) foreign-work exemption
-    assert any("Art. 7.p)" in ref for ref in field.legal_refs)
-    assert any("BOE-A-2006-20764" in ref for ref in field.legal_refs)
-    # REBECA exemption
-    assert any("BOE-A-1994-15794" in ref for ref in field.legal_refs)
-    # DA 41 inactive binding and its enabling law
-    assert any("DA 41" in ref for ref in field.legal_refs)
-    assert any("BOE-A-2014-12327" in ref for ref in field.legal_refs)
-    # RETMAR mandatory filing
-    assert any("BOE-A-2006-20764" in ref and "Art. 96" in ref for ref in field.legal_refs)
+    assert set(field.legal_refs) == {
+        "ley-35-2006:art-7",
+        "ley-19-1994:art-75",
+        "ley-35-2006:da-41",
+        "ley-35-2006:art-96",
+    }
 
 
 def test_vessel_flag_fact_is_enum_with_es_and_foreign() -> None:
@@ -131,7 +107,7 @@ def test_vessel_flag_fact_is_enum_with_es_and_foreign() -> None:
     assert "ES" in field.enum_values
     assert "foreign" in field.enum_values
     assert field.required is False
-    assert any("Art. 7.p)" in ref for ref in field.legal_refs)
+    assert field.legal_refs == ("ley-35-2006:art-7",)
 
 
 def test_waters_type_fact_is_enum_with_national_and_international() -> None:
@@ -143,7 +119,7 @@ def test_waters_type_fact_is_enum_with_national_and_international() -> None:
     assert "national" in field.enum_values
     assert "international" in field.enum_values
     assert field.required is False
-    assert any("Art. 7.p)" in ref for ref in field.legal_refs)
+    assert field.legal_refs == ("ley-35-2006:art-7",)
 
 
 def test_vessel_registry_fact_is_enum_covering_rebeca_variants() -> None:
@@ -156,7 +132,7 @@ def test_vessel_registry_fact_is_enum_covering_rebeca_variants() -> None:
     assert "rebeca_eu_eea" in field.enum_values
     assert "scheduled_canary_route" in field.enum_values
     assert field.required is False
-    assert any("BOE-A-1994-15794" in ref for ref in field.legal_refs)
+    assert field.legal_refs == ("ley-19-1994:art-75",)
 
 
 def test_retmar_registered_fact_is_boolean_with_schedule_predicate() -> None:
@@ -168,7 +144,7 @@ def test_retmar_registered_fact_is_boolean_with_schedule_predicate() -> None:
     assert field.required is False
     assert field.effective_dated is True
     assert "maritime_worker.retmar_registered" in field.schedule_predicates
-    assert any("BOE-A-2006-20764" in ref and "Art. 96" in ref for ref in field.legal_refs)
+    assert field.legal_refs == ("ley-35-2006:art-96",)
 
 
 def test_no_da24_reference_in_maritime_worker_section() -> None:
@@ -204,11 +180,7 @@ def test_art7p_binding_has_required_fields_and_legal_refs() -> None:
     assert binding.get("annual_cap_eur") == "60100"
     assert "formula" in binding
 
-    legal_refs = binding.get("legal_refs", [])
-    assert isinstance(legal_refs, list) and legal_refs, "art-7p binding must carry legal_refs"
-    combined = " ".join(str(r.get("reference", "")) + " " + str(r.get("document_id", "")) for r in legal_refs)
-    assert "7.p" in combined, "legal_refs must reference Art. 7.p)"
-    assert "BOE-A-2006-20764" in combined, "legal_refs must cite BOE-A-2006-20764"
+    assert binding.get("legal_refs") == ["ley-35-2006:art-7"]
 
 
 def test_rebeca_binding_has_required_fields_and_legal_refs() -> None:
@@ -218,12 +190,7 @@ def test_rebeca_binding_has_required_fields_and_legal_refs() -> None:
     assert binding.get("status") == "active"
     assert binding.get("exempt_fraction") == "0.50"
 
-    legal_refs = binding.get("legal_refs", [])
-    assert isinstance(legal_refs, list) and len(legal_refs) >= 2, "REBECA binding must carry at least 2 legal_refs"
-    combined = " ".join(str(r.get("reference", "")) + " " + str(r.get("document_id", "")) for r in legal_refs)
-    assert "BOE-A-1994-15794" in combined, "REBECA legal_refs must cite Ley 19/1994 BOE-A-1994-15794"
-    assert "73" in combined, "REBECA legal_refs must reference Art. 73"
-    assert "75" in combined, "REBECA legal_refs must reference Art. 75"
+    assert binding.get("legal_refs") == ["ley-19-1994:art-75"]
 
 
 def test_da41_binding_is_inactive_and_has_legal_refs() -> None:
@@ -236,12 +203,24 @@ def test_da41_binding_is_inactive_and_has_legal_refs() -> None:
     )
     assert binding.get("exempt_fraction") == "0.50"
 
-    legal_refs = binding.get("legal_refs", [])
-    assert isinstance(legal_refs, list) and len(legal_refs) >= 2, "DA 41 binding must carry at least 2 legal_refs"
-    combined = " ".join(str(r.get("reference", "")) + " " + str(r.get("document_id", "")) for r in legal_refs)
-    assert "DA 41" in combined, "DA 41 legal_refs must reference DA 41 LIRPF"
-    assert "BOE-A-2006-20764" in combined, "DA 41 legal_refs must cite BOE-A-2006-20764"
-    assert "BOE-A-2014-12327" in combined, "DA 41 legal_refs must cite adding Ley 26/2014 BOE-A-2014-12327"
+    assert binding.get("legal_refs") == ["ley-35-2006:da-41"]
+
+
+def test_binding_legal_refs_resolve_against_catalogue_and_corpus() -> None:
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    refs = {
+        legal_ref
+        for binding in _load_trabajador_del_mar_bindings()
+        for legal_ref in binding.get("legal_refs", [])
+    }
+
+    assert refs == {
+        "ley-35-2006:art-7",
+        "ley-19-1994:art-75",
+        "ley-35-2006:da-41",
+    }
+    assert refs <= set(catalogues.legal)
+    verify_legal_catalogue({ref: catalogues.legal[ref] for ref in refs}, source_root=bundled_path())
 
 
 def test_no_da24_reference_in_trabajador_del_mar_toml() -> None:
@@ -251,10 +230,7 @@ def test_no_da24_reference_in_trabajador_del_mar_toml() -> None:
     for binding in bindings:
         bid = binding.get("id", "unknown")
         for ref in binding.get("legal_refs", []):
-            assert "DA 24" not in str(ref.get("reference", "")), (
-                f"binding {bid!r} legal_ref references DA 24 LIRPF which has no maritime content"
-            )
-            assert "DA 24" not in str(ref.get("notes", "")), f"binding {bid!r} legal_ref notes mention DA 24 LIRPF"
+            assert "DA 24" not in ref, f"binding {bid!r} legal_ref references DA 24 LIRPF"
 
 
 def test_all_binding_entries_carry_nonempty_legal_refs() -> None:
@@ -263,9 +239,6 @@ def test_all_binding_entries_carry_nonempty_legal_refs() -> None:
     for binding in bindings:
         bid = binding.get("id", "unknown")
         legal_refs = binding.get("legal_refs")
-        assert isinstance(legal_refs, list) and legal_refs, (
-            f"binding {bid!r} must declare at least one [[exemption_bindings.legal_refs]] entry"
-        )
+        assert isinstance(legal_refs, list) and legal_refs, f"binding {bid!r} must declare legal_refs ids"
         for ref in legal_refs:
-            assert ref.get("reference"), f"binding {bid!r} has legal_ref with empty reference"
-            assert ref.get("document_id"), f"binding {bid!r} has legal_ref with empty document_id"
+            assert isinstance(ref, str) and ref, f"binding {bid!r} has an empty legal_ref id"
