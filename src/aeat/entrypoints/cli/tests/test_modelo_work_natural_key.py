@@ -48,6 +48,7 @@ def _create_profile() -> None:
         [
             "config", "profile", "create", "operator",
             "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
             "--tax-id", "12345678Z",
             "--name", "Operator",
             "--surnames", "Natural Key",
@@ -163,6 +164,14 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
     assert payload["findings"][0]["kind"] == "cross_period_dependency_unclean"
     assert (
         "aeat app live filed pull-sources --modelo 130 --year 2025 --period 1T" in payload["findings"][0]["next_action"]
+    )
+    assert (
+        "aeat app live justificante pull --modelo 100 --year 2024 --period 0A"
+        in payload["findings"][0]["next_action"]
+    )
+    assert (
+        "aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf"
+        in payload["findings"][0]["next_action"]
     )
     assert "aeat app modelo reconcile file WORK_UNIT_ID --file PATH" in payload["findings"][0]["next_action"]
 

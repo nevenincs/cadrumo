@@ -45,6 +45,45 @@ _M303_AUTOCONSUMO_PROMOTOR_BASE_CASILLA: CasillaId = _casilla_id("iva.autoconsum
 _M303_AUTOCONSUMO_PROMOTOR_CUOTA_CASILLA: CasillaId = _casilla_id("iva.autoconsumo.promotor.cuota")
 _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
 _M303_PRORRATA_PORCENTAJE_CASILLA: CasillaId = _casilla_id("iva.prorrata-porcentaje")
+_M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION = {
+    "2009-y-siguientes": frozenset(
+        {
+            "ley-37-1992:art-84",
+            "ley-37-1992:art-88",
+            "ley-37-1992:art-90",
+            "ley-37-1992:art-91",
+            "ley-37-1992:art-92",
+            "ley-37-1992:art-94",
+            "ley-37-1992:art-95",
+            "orden-eha-3786-2008:art-1",
+            "rd-1624-1992:art-71",
+        }
+    ),
+    "2023-y-siguientes": frozenset(
+        {
+            "ley-37-1992:art-9",
+            "ley-37-1992:art-79",
+            "ley-37-1992:art-84",
+            "ley-37-1992:art-88",
+            "ley-37-1992:art-90",
+            "ley-37-1992:art-91",
+            "ley-37-1992:art-92",
+            "ley-37-1992:art-94",
+            "ley-37-1992:art-95",
+            "ley-37-1992:art-99",
+            "ley-37-1992:art-115",
+            "ley-37-1992:art-116",
+            "ley-37-1992:art-122",
+            "ley-37-1992:art-123",
+            "ley-37-1992:art-124",
+            "orden-eha-3786-2008:art-1",
+            "orden-hac-819-2024:art-1",
+            "rd-1624-1992:art-29",
+            "rd-1624-1992:art-30",
+            "rd-1624-1992:art-71",
+        }
+    ),
+}
 
 
 @lru_cache(maxsize=1)
@@ -129,6 +168,30 @@ def test_modelo_303_snapshot_carries_legal_authority_and_record_design() -> None
     assert "aeat-dr-303-2025" in snapshot.sources
     assert "aeat-modelo-303-procedure" in snapshot.sources
     assert "boe-modelo-303-2008-form" in snapshot.sources
+
+
+@pytest.mark.parametrize(
+    ("revision_id", "expected_refs"),
+    _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION.items(),
+)
+def test_modelo_303_extraction_profile_legal_refs_match_target_casillas(
+    revision_id: str,
+    expected_refs: frozenset[str],
+) -> None:
+    modelo, _ = _load_modelo_303()
+    revision = modelo.revisions[revision_id]
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+
+    assert revision.extraction_profiles, revision_id
+    profile = next(item for item in revision.extraction_profiles if item.id == "modelo-303-declaracion-pdf")
+    target_refs = frozenset(
+        legal_ref
+        for target in profile.target_casillas
+        for legal_ref in casillas_by_id[target.casilla_id].legal_refs
+    )
+
+    assert target_refs == expected_refs
+    assert set(profile.legal_refs) == expected_refs
 
 
 def test_modelo_303_quarterly_deadlines_match_orden_eha_3786_2008_art_7() -> None:

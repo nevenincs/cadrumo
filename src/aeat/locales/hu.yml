@@ -854,8 +854,12 @@ application:
           (app_filing), nem az AEAT altal igazolt; nyujtsa be minden idoszakot az
           AEAT-nal kulsoleg.'
         next_action: Exportalja es nyujtsa be minden idoszakot az AEAT-nal kulsoleg,
-          majd importalja a hivatalos justificante/CSV/elo bizonyitekot a helyi lanc
-          frissitesehez, amint elerheto.
+          majd frissitse a helyi lancot hivatalos bizonyitekkal; hasznalja az
+          `aeat app live justificante pull` parancsot, ha van elo hozzaferes, vagy
+          az `aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind
+          aeat_justificante_pdf --evidence-id CSV --set CASILLA=VALUE` / `aeat
+          app modelo reconcile file WORK_UNIT_ID --file PATH` parancsot a mar
+          rendelkezesre allo bizonyitekhoz.
       dt12a_reduccion_next_action: Adja meg a --rescate-plan-pensiones-capital ÖSSZEG
         --rescate-plan-pensiones-aportaciones-pre-2007 ÖSSZEG --rescate-plan-pensiones-aportaciones-totales
         ÖSSZEG paramétereket a számításhoz a DT 12a csökkentés automatikus beillesztéséhez

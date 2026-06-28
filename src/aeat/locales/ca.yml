@@ -906,8 +906,11 @@ application:
           esta evidenciat localment (app_filing), no per l''AEAT; presenteu cada periode
           a l''AEAT de manera externa.'
         next_action: Exporteu i presenteu cada periode a l'AEAT de manera externa,
-          despres importeu el justificant/CSV/evidencia en viu oficial per actualitzar
-          la cadena local quan estigui disponible.
+          despres actualitzeu la cadena local amb evidencia oficial; useu `aeat
+          app live justificante pull` quan hi hagi acces en viu, o `aeat app modelo
+          filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf
+          --evidence-id CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file
+          WORK_UNIT_ID --file PATH` per a evidencia que ja tingueu.
       dt12a_reduccion_next_action: Proporcioneu --rescate-plan-pensiones-capital IMPORT
         --rescate-plan-pensiones-aportaciones-pre-2007 IMPORT --rescate-plan-pensiones-aportaciones-totales
         IMPORT per injectar automàticament la reducció DT 12a a la casella corresponent

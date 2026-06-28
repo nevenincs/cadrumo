@@ -1319,6 +1319,65 @@ blocking issues and one non-blocking missing negative test for invalid
 `usage_ratio_id`; that validator regression was added before `53a0b0ddc`
 landed.
 
+Wave sixteen re-ran the campaign with three fresh CLI-only personas starting
+from blank state:
+
+- Noah exercised EU/XI cross-border IVA from a clean profile. Q1 Modelo 303
+  calculate, verify, local-file, and local evidence paths worked. The CLI
+  correctly refused XI as an EU member-state argument, but the campaign still
+  needs a grounded M349 XI scenario that reaches calculation/export. Noah also
+  exposed a locale YAML startup break in the English cross-period guidance,
+  fixed here and covered by the locale scaffold/audit checks.
+- Rocio exercised a small SLU-style legal-entity path. Profile setup accepted
+  `sl` rather than `slu`, Q1 Modelo 303 local-file/export completed, and Q2
+  correctly hit the IVA-wallet `filed_history_only` guard. The same run exposed
+  the Modelo 303 registry-validation failure caused by missing legal references
+  for `ley-37-1992:art-94` and `ley-37-1992:art-95`; those references are now
+  present on the 2009 construct path and the extraction-profile parity guard is
+  covered by registry tests. The legal anchor was checked against the official
+  BOE consolidated Ley 37/1992 page.
+- Helena exercised employed-plus-autonomous activity, mixed-use allocations,
+  Modelo 303, Modelo 390, Modelo 130, and annual Modelo 100. The bulk
+  `usage_ratio_id` path worked after the persona configured the missing ratio,
+  Modelo 303/390/130 arithmetic matched manual checks, and the campaign exposed
+  two remaining user-risk areas: partial bulk-classify CSV rows can clear tax
+  facts the user did not include, and several activity expense categories still
+  do not map into Modelo 100 annual activity expenses.
+
+Wave-sixteen hardening changes:
+
+- The local-filed evidence rule was brought back into line with the implemented
+  same-filing-year local-chain advisory: `app_filing` remains non-official, but
+  a present, value-consistent, revision-confirmed local chain may continue to
+  local verify/export with a non-blocking advisory; cross-year, manual, missing,
+  or divergent chains still block.
+- Cross-period evidence remediation now names the actual operator commands:
+  `aeat app live filed pull-sources`, `aeat app live justificante pull`,
+  `aeat app modelo filing-record import ... --evidence-kind
+  aeat_justificante_pdf`, and `aeat app modelo reconcile file`.
+- The English/Spanish/Catalan/Hungarian locale guidance was updated with those
+  exact commands, and the YAML parse regression from the English message was
+  corrected.
+- Modelo 100 revision `2025` casilla fragment `0680-0645.toml` now declares
+  its `[revisions."2025"]` owner before the casilla rows, fixing the loader
+  error reported by the annual-persona path.
+- Modelo 303 registry legal grounding was verified after the current
+  concurrent registry patch added the missing Art. 94/95 references and the
+  extraction-profile legal-ref parity regression.
+
+Wave-sixteen verification:
+
+- `vaultspec-rag search "wave sixteen persona audit local filing evidence registry legal refs modelo 303 modelo 100" --type code --json --timeout 30`
+- `uv run --no-sync pytest -q src/aeat/application/modelo/tests/test_cross_period_clean_state_gates.py src/aeat/entrypoints/cli/tests/test_modelo_work_natural_key.py src/aeat/application/modelo/tests/test_revision_stamp_advisory_finding.py src/aeat/domain/calculations/registry/tests/test_modelo_303_registry.py -m "unit or integration"`
+- `uv run --no-sync ruff check src/aeat/application/modelo/_verification_actions.py src/aeat/application/modelo/tests/test_cross_period_clean_state_gates.py src/aeat/entrypoints/cli/tests/test_modelo_work_natural_key.py src/aeat/domain/calculations/registry/tests/test_modelo_303_registry.py`
+- `uv run --no-sync python -m aeat.locales scaffold --check`
+- `uv run --no-sync python -m aeat.locales audit`
+- `vaultspec-core spec rules status`
+- Direct registry validator smoke over the bundled AEAT registry loaded and
+  validated 30 modelos. The CLI `app registry verify` path was not used for
+  this check because this profile-bound command failed closed without an active
+  synthetic profile/passphrase in the shared worktree.
+
 Full-suite verification was intentionally not claimed because this shared
 worktree carries extensive unrelated WIP.
 
@@ -1382,12 +1441,21 @@ Residual backlog:
 - Improve M100 employed-plus-autonomous discoverability: employment withholdings,
   valid activity expense taxonomy, M130 fold-in dependency, and annual export
   remain hard for CLI-only users to cross-reference.
+- Add Modelo 100 activity-expense mappings or user-facing category guidance for
+  persona-observed categories such as `telefonia_movil`,
+  `suministros_home_office_internet`, `software_suscripcion`, and
+  `material_oficina`, which currently leave annual activity expenses
+  undercounted.
 - Improve M100 casilla `0596` guidance so direct `--casilla` attempts name the
   correct bound input channel and distinguish Modelo 111 periodic withholding
   from Modelo 190 annual summary.
 - Make mixed-use allocation/category recovery more understandable; the all-failed
   bulk classify exit-code defect is fixed, but personas still saw category/ratio
   contradictions.
+- Preserve existing taxable base, IVA, and IRPF facts when bulk-classify CSV
+  rows omit those columns; Helena's partial CSV classification path showed that
+  omitted fields can be cleared while the operator is only trying to set
+  classification metadata.
 - Reduce repeated local-evidence advisory noise in M390 verification output.
 - Add text-output coverage for readiness missing-binding detail rows and direct
   legacy verified-revision coverage for M202 file/export guards if legacy state

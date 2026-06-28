@@ -918,8 +918,11 @@ application:
           esta evidenciado localmente (app_filing), no por la AEAT; presente cada
           periodo ante la AEAT de forma externa.'
         next_action: Exporte y presente cada periodo ante la AEAT de forma externa,
-          despues importe el justificante/CSV/evidencia en vivo oficial para actualizar
-          la cadena local cuando este disponible.
+          despues actualice la cadena local con evidencia oficial; use `aeat app
+          live justificante pull` cuando haya acceso en vivo, o `aeat app modelo
+          filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf
+          --evidence-id CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file
+          WORK_UNIT_ID --file PATH` para evidencia que ya tenga.
       dt12a_reduccion_next_action: Proporcione --rescate-plan-pensiones-capital IMPORTE
         --rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE --rescate-plan-pensiones-aportaciones-totales
         IMPORTE al calcular para inyectar automáticamente la reducción DT 12ª en la
