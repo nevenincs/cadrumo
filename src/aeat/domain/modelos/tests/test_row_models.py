@@ -19,6 +19,7 @@ from typing import TypedDict
 import pytest
 from pydantic import ValidationError
 
+from ....core.errors import AeatError, get_registered_error_code, resolve_error_message
 from ...calculations.registry import CasillaId
 from .._row_models import (
     M347_THRESHOLD_EUR,
@@ -213,7 +214,7 @@ _M349_CONTEXT_REJECTED_CASES = (
             period="4T",
         ),
         "post-transition",
-        "Authority: AEAT Brexit IVA NIF-IVA / Modelo 349 instructions",
+        "AEAT Brexit IVA NIF-IVA",
     ),
 )
 
@@ -611,10 +612,18 @@ class TestValidateM349CountryPrefixContext:
     def test_rejected_country_prefix_contexts(self, case: _CountryContextCase) -> None:
         """Invalid M349 GB/XI transition contexts fail with the domain error."""
         assert case.match is not None
-        with pytest.raises(Modelo349CountryPrefixContextError, match=case.match) as exc:
+        with pytest.raises(Modelo349CountryPrefixContextError) as exc:
             case.call()
+        assert isinstance(exc.value, AeatError)
+        assert isinstance(exc.value, ValueError)
+        code = get_registered_error_code(exc.value)
+        assert code.code == "REFUSED_MODELO_349_COUNTRY_PREFIX_CONTEXT"
+        message = resolve_error_message(exc.value)
+        assert "Modelo 349" in message
+        assert "AEAT Brexit IVA NIF-IVA" in message
+        assert case.match in message
         if case.must_contain is not None:
-            assert case.must_contain in str(exc.value)
+            assert case.must_contain in message
 
 
 class TestM349NifNumberForExport:

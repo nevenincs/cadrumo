@@ -4427,6 +4427,7 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
+    modelo_349_country_prefix_context: 'Modelo 349 rejects country prefix {country_code} for operation key {clave_operacion} in {filing_year}/{period}: {reason}. Authority: AEAT Brexit IVA NIF-IVA / Modelo 349 instructions.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'

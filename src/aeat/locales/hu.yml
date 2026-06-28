@@ -4562,6 +4562,7 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
+    modelo_349_country_prefix_context: 'A 349-es Modelo elutasitja a(z) {country_code} orszagprefixet a(z) {clave_operacion} muveletkulcshoz {filing_year}/{period} idoszakban: {reason}. Jogalap: AEAT Brexit IVA NIF-IVA / Modelo 349 utmutato.'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'

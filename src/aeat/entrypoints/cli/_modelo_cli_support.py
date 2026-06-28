@@ -440,7 +440,7 @@ def _validate_m349_detail_rows_for_work_unit(work_unit_id: str, rows: tuple[Mode
                 period=unit.period.registry_token,
             )
         except Modelo349CountryPrefixContextError as exc:
-            raise typer.BadParameter(str(exc)) from exc
+            raise bad_parameter_from_error(exc) from exc
 
 
 def bad_parameter_from_error(exc: BaseException) -> typer.BadParameter:
