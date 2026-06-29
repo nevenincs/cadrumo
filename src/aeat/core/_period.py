@@ -13,6 +13,12 @@ the basic period codes (1T-4T, 1P-4P, 0A, 01-12). Extended forms
 (EXT-*, AD-HOC, EVENT-*) are validated via separate regex patterns for
 modeller flexibility. :class:`Period` combines one accepted code with a
 filing year, and :class:`PeriodKind` classifies the resulting cadence.
+
+This module is the runtime counterpart to the registry
+:data:`aeat.domain.calculations.registry.PeriodCode` alias and
+:class:`aeat.domain.calculations.registry.PeriodSelector` schema. Registry
+objects carry bare period tokens; application services that need a concrete
+filing window compose those tokens with a year into :class:`Period`.
 """
 
 from __future__ import annotations
@@ -165,7 +171,9 @@ class Period(BaseModel):
 
     The model is frozen and hashes by ``(filing_year, code)``, so a ``Period`` is
     a drop-in dict key, set member, and equality target wherever a typed period
-    is required.
+    is required. The ledger and aggregation boundary routes through
+    :func:`aeat.application.aggregation.aggregation_period_for_modelo`, then uses
+    :meth:`contains` as the single date-boundary authority.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -216,7 +224,12 @@ class Period(BaseModel):
 
     @property
     def registry_token(self) -> str:
-        """Return the bare registry period code as a string (e.g. ``"1T"``)."""
+        """Return the bare registry period code as a string (e.g. ``"1T"``).
+
+        Use this when calling registry APIs that expect the bare
+        :data:`aeat.domain.calculations.registry.PeriodCode` token rather than a
+        structured :class:`Period`.
+        """
         return str(self.code)
 
     @property
