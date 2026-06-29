@@ -547,6 +547,35 @@ def test_modelo_readiness_reports_missing_calculation_bindings() -> None:
     assert "relation_prefill" in missing_sources
 
 
+def test_modelo_200_legal_entity_readiness_does_not_request_retired_objective_boolean() -> None:
+    """A legal-entity M200 profile must not ask for the retired IRPF objective flag."""
+
+    _create_legal_entity_profile()
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "readiness",
+            "--modelo",
+            "200",
+            "--revision-id",
+            "2024-y-siguientes",
+            "--year",
+            "2026",
+            "--period",
+            "0A",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = _payload(result.output)
+    assert payload["profile_ready"] is True
+    assert "irpf.uses_objective_estimation" not in result.output
+    assert "uses_objective_estimation_irpf" not in result.output
+
+
 # ---------------------------------------------------------------------------
 # F1 - work calculate / work revision lead with a result summary
 # ---------------------------------------------------------------------------
