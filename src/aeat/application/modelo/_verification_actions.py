@@ -91,6 +91,7 @@ from ..aggregation import (
     CalculationSourceDiagnostic,
     missing_evidence_advisory_observations,
 )
+from ..aggregation._evidence_advisory import MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND
 from ..aggregation._ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
@@ -1412,11 +1413,10 @@ def _iva_wallet_decision_covers_cross_period_dependency(
     return False
 
 
-#: Legal grounding for the missing-evidence advisory. Deducting input IVA
-#: requires the original factura (LIVA art. 97, RD 1619/2012 art. 2); a
-#: business income/expense must be documentally justified (LIRPF art. 28.1 via
-#: LGT art. 106.4). The advisory is non-blocking, so the citation is a pointer,
-#: not a gate.
+#: Legal grounding for missing IVA evidence. Deducting input IVA requires the
+#: original factura (LIVA art. 97, RD 1619/2012 art. 2). Output-IVA evidence
+#: gaps stay advisory until the transaction model can distinguish every valid
+#: issued-invoice support path without over-blocking.
 _MISSING_EVIDENCE_LEGAL_REFS: tuple[str, ...] = (
     "ley-37-1992:art-97",
     "rd-1619-2012:art-2",
@@ -1429,14 +1429,15 @@ def _missing_evidence_advisory_findings(
     work_unit: WorkUnit,
     transaction_repository: TransactionCatalogueRepository | None,
 ) -> list[ModeloVerificationFinding]:
-    """Build non-blocking ADVISORY findings for evidence-less significant rows.
+    """Build verification findings for evidence-less positive IVA rows.
 
     Loads the revision's source transactions and projects each
     :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
-    (reason ``missing_transaction_evidence``) into an ADVISORY
-    :class:`ModeloVerificationFinding`. A revision with no contributing
+    (reason ``missing_transaction_evidence``) into a
+    :class:`ModeloVerificationFinding`. Deductible input-IVA gaps are blocking;
+    output-IVA gaps remain advisory. A revision with no contributing
     transactions, or whose significant rows all carry evidence, yields no
-    findings (``no-silent-under-declaration``: visible but non-blocking).
+    findings.
     """
     if not target.source_transaction_ids:
         return []
@@ -1448,20 +1449,32 @@ def _missing_evidence_advisory_findings(
         if (transaction := catalogue.get(transaction_id)) is not None
     ]
     diagnostics: tuple[CalculationSourceDiagnostic, ...] = missing_evidence_advisory_observations(transactions)
-    return [
-        ModeloVerificationFinding(
-            kind=ModeloVerificationFindingKind.ADVISORY,
-            severity=ModeloVerificationFindingSeverity.WARNING,
-            message=diagnostic.message,
-            next_action=(
-                "Attach the supporting invoice with "
-                f"`aeat app ledger attach {diagnostic.binding_id} --attachment-id ATTACHMENT_ID` "
-                "(or --purchase-invoice-evidence-id), then rerun verification."
+    findings: list[ModeloVerificationFinding] = []
+    for diagnostic in diagnostics:
+        is_deductible_gap = diagnostic.source_kind == MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND
+        findings.append(
+            ModeloVerificationFinding(
+                kind=(
+                    ModeloVerificationFindingKind.BLOCKING_RULE
+                    if is_deductible_gap
+                    else ModeloVerificationFindingKind.ADVISORY
+                ),
+                severity=(
+                    ModeloVerificationFindingSeverity.BLOCKING
+                    if is_deductible_gap
+                    else ModeloVerificationFindingSeverity.WARNING
+                ),
+                message=diagnostic.message,
+                next_action=(
+                    f"Attach supplier evidence to ledger row {diagnostic.binding_id}, then rerun verification."
+                    if is_deductible_gap
+                    else f"Attach supporting evidence to ledger row {diagnostic.binding_id}, then rerun verification."
+                ),
+                legal_refs=_MISSING_EVIDENCE_LEGAL_REFS,
+                source_refs=(diagnostic.source_kind,),
             ),
-            legal_refs=_MISSING_EVIDENCE_LEGAL_REFS,
         )
-        for diagnostic in diagnostics
-    ]
+    return findings
 
 
 def verify_modelo_revision(
