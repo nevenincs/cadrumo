@@ -491,12 +491,54 @@ def _relation_prefill_source_ids(selector: _RelationPrefillSelector) -> tuple[Ca
     return ()
 
 
+_IVA_COMPENSATION_ANNUAL_PARTITION_SOURCE_IDS: tuple[CasillaId, ...] = (
+    "iva.compensacion-generada-periodo",
+    "iva.compensacion-aplicada-periodo",
+    "iva.compensacion-disponible-fin-periodo",
+    "iva.compensacion-pendiente-periodos-posteriores",
+)
+_IVA_COMPENSATION_ANNUAL_PARTITION_PERIODS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
+
+
+class _IvaCompensationAnnualPartitionSelector(BaseModel):
+    """Selector for Modelo 390 AEAT boxes 97 / 662 as one FIFO partition."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_modelo: Literal["303"]
+    source_casilla_ids: tuple[CasillaId, ...]
+    source_periods: tuple[str, ...]
+    partition_output: Literal["last_period_amount", "generated_not_in_last_amount"]
+
+    @field_validator("source_casilla_ids")
+    @classmethod
+    def _source_casilla_ids_match_fifo_state(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
+        if value != _IVA_COMPENSATION_ANNUAL_PARTITION_SOURCE_IDS:
+            raise RegistryValidationError(
+                "iva_compensation_annual_partition selector must declare the current Modelo 303 "
+                "compensation state casilla ids in canonical order",
+            )
+        return value
+
+    @field_validator("source_periods")
+    @classmethod
+    def _source_periods_are_full_year(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if value != _IVA_COMPENSATION_ANNUAL_PARTITION_PERIODS:
+            raise RegistryValidationError(
+                "iva_compensation_annual_partition selector must declare source_periods "
+                "('1T', '2T', '3T', '4T')",
+            )
+        return value
+
+
 def binding_source_casilla_ids(binding: DataBindingDefinition) -> tuple[CasillaId, ...]:
     """Return typed source casilla ids declared by binding families that have them."""
     if binding.source == "previous_filing":
         return previous_filing_source_reference(binding).source_casilla_ids
     if binding.source == "relation_prefill":
         return _relation_prefill_source_ids(_relation_prefill_selector(binding))
+    if binding.source == BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION:
+        return _IvaCompensationAnnualPartitionSelector.model_validate(selector_as_dict(binding)).source_casilla_ids
     return ()
 
 
@@ -506,6 +548,8 @@ def binding_source_modelo(binding: DataBindingDefinition) -> ModeloId | None:
         return previous_filing_source_reference(binding).source_modelo
     if binding.source == "relation_prefill":
         return _relation_prefill_selector(binding).source_modelo
+    if binding.source == BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION:
+        return _IvaCompensationAnnualPartitionSelector.model_validate(selector_as_dict(binding)).source_modelo
     return None
 
 
@@ -680,6 +724,7 @@ class _ManualInputSelector(BaseModel):
 _BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
     "previous_filing": _PreviousModeloSelector,
     "relation_prefill": _RelationPrefillSelector,
+    BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION: _IvaCompensationAnnualPartitionSelector,
     # Counterpart-aggregation family: every source whose selector shape
     # mirrors the invoice family (fact + claves + rectification_scope +
     # optional row_field / grouping / record) is validated against
@@ -759,6 +804,9 @@ def _validate_selector_only(selector_model: type[BaseModel]) -> _BindingFamilyVa
 _BINDING_VALIDATOR_REGISTRY: dict[str, _BindingFamilyValidator] = {
     "previous_filing": validate_previous_filing_binding,
     "relation_prefill": _validate_selector_only(_RelationPrefillSelector),
+    BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION: _validate_selector_only(
+        _IvaCompensationAnnualPartitionSelector,
+    ),
     # The three invoice-shaped sources run the stricter invoice validator (the
     # union of the prior dual path: selector-shape + counterpart fact/op
     # invariants + the two invoice-only scalar-shape guards). ledger_transaction

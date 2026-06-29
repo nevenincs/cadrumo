@@ -294,9 +294,9 @@ def test_registry_validator_rejects_relation_source_casilla_display_token() -> N
     relation = next(
         item
         for item in revision.relations
-        if item.id == "modelo-390-rel-303-compensacion-ultimo-periodo"
+        if item.id == "modelo-390-rel-303-cuota-devengada-total"
     )
-    source_casilla = next(item for item in source_revision.casillas if item.id == relation.source_casilla_id)
+    source_casilla = next(item for item in source_revision.casillas if item.number != item.id)
     assert source_casilla.number != source_casilla.id
 
     noncanonical_source_id = validated_casilla_id(

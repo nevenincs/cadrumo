@@ -16,7 +16,10 @@ source owners. :class:`PreviousFilingSourceResolver` resolves
 their materialised target bindings; :class:`IvaWalletDecisionSourceResolver`
 resolves the Modelo 303
 :attr:`~aeat.core.BindingSourceKind.IVA_WALLET_DECISION` compensation authority
-outside the ordinary previous-filing carry.
+outside the ordinary previous-filing carry; and
+:class:`IvaCompensationAnnualPartitionSourceResolver` resolves Modelo 390
+:attr:`~aeat.core.BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION` boxes 97
+and 662 from the same FIFO carry projection.
 
 The main public surfaces are:
 
@@ -79,6 +82,10 @@ from ._cross_period_clean_state import (
     evaluate_cross_period_clean_state,
     filing_external_evidence_blockers,
     partition_cross_period_requirements_by_activity_start,
+)
+from ._iva_compensation_annual_partition import (
+    IvaCompensationAnnualPartitionSourceResolver,
+    resolve_iva_compensation_annual_partition_binding_values,
 )
 from ._iva_compensation_history import (
     IvaCompensationAnnualCrossCheck,
@@ -147,6 +154,7 @@ __all__ = [
     "EnrollmentRecorder",
     "EnrollmentYearObservation",
     "IvaCompensationAnnualCrossCheck",
+    "IvaCompensationAnnualPartitionSourceResolver",
     "IvaCompensationAnnualSummary",
     "IvaCompensationHistoryRepository",
     "IvaCompensationReconciliationReport",
@@ -184,6 +192,7 @@ __all__ = [
     "reconcile_iva_compensation_wallet",
     "reconcile_modelo_303_iva_compensation",
     "resolve_bindings_from_local_store",
+    "resolve_iva_compensation_annual_partition_binding_values",
     "resolve_maritime_exemption",
     "resolve_relations_from_local_store",
     "seed_iva_compensation_period",

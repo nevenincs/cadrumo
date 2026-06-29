@@ -118,9 +118,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2010-y-siguientes".bindings]]
 id = "modelo-390-prev-303-compensacion-ultimo-periodo"
-source = "relation_prefill"
-selector = { source_modelo = "303", source_casilla_id = "iva.compensacion-generada-periodo" }
-aggregation = { op = "copy" }
+source = "iva_compensation_annual_partition"
+selector = { source_modelo = "303", source_casilla_ids = ["iva.compensacion-generada-periodo", "iva.compensacion-aplicada-periodo", "iva.compensacion-disponible-fin-periodo", "iva.compensacion-pendiente-periodos-posteriores"], source_periods = ["1T", "2T", "3T", "4T"], partition_output = "last_period_amount" }
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
 
@@ -130,9 +129,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2010-y-siguientes".bindings]]
 id = "modelo-390-prev-303-compensacion-generada-ejercicio-no-97"
-source = "relation_prefill"
-selector = { source_modelo = "303", source_casilla_id = "iva.compensacion-generada-periodo" }
-aggregation = { op = "sum" }
+source = "iva_compensation_annual_partition"
+selector = { source_modelo = "303", source_casilla_ids = ["iva.compensacion-generada-periodo", "iva.compensacion-aplicada-periodo", "iva.compensacion-disponible-fin-periodo", "iva.compensacion-pendiente-periodos-posteriores"], source_periods = ["1T", "2T", "3T", "4T"], partition_output = "generated_not_in_last_amount" }
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
 

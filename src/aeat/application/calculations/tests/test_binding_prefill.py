@@ -27,6 +27,7 @@ from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from ....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
 from ....domain.iva_compensation._errors import IvaCompensationCasillaReferenceError
 from ....tests.secure_sql import isolated_runtime_profile
+from ...aggregation import CalculationSourceContext
 from .._binding_prefill import (
     _iva_compensation_history_observation,
     _observation_from_iva_compensation_history,
@@ -36,6 +37,7 @@ from .._binding_prefill import (
     resolve_bindings_from_local_store,
 )
 from .._errors import BindingPrefillTypeError
+from .._iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
 from .._iva_compensation_history import IvaCompensationHistoryRepository
 from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import resolve_relations_from_local_store
@@ -159,10 +161,11 @@ def _registry_observation(
 def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observations(
     tmp_path: Path,
 ) -> None:
-    """M390←M303 bindings are now ``relation_prefill``; resolve via the relation path.
+    """M390 ordinary M303 annual-total bindings resolve via the relation path.
 
-    The five M390←M303 fold bindings migrated from ``previous_filing`` to
-    ``relation_prefill`` backed by ``cross_model_output`` relations.
+    The three M390←M303 annual-total fold bindings migrated from
+    ``previous_filing`` to ``relation_prefill`` backed by ``cross_model_output``
+    relations.
     This test verifies that persisted 303 quarterly observations
     resolve through :func:`resolve_relations_from_local_store` and that the
     annual reconciliation casillas equal the ledger-derived annual totals.
@@ -215,16 +218,14 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
 
         snapshot = resources().modelos.authority.snapshot("390", filing_year=2025, period="0A")
 
-        # The five M390←M303 bindings are now relation_prefill — resolve
-        # them through the relation resolver, not the previous_filing path.
+        # The ordinary M390←M303 annual totals are relation_prefill; the
+        # compensation carry partition is owned by iva_compensation_annual_partition.
         relation_vals = resolve_relations_from_local_store(snapshot, repository=repository)
         resolved_relation_ids = {rv.relation for rv in relation_vals.values if rv.value is not None}
-        assert resolved_relation_ids >= {
+        assert resolved_relation_ids == {
             "modelo-390-rel-303-cuota-devengada-total",
             "modelo-390-rel-303-cuota-deducible-total",
             "modelo-390-rel-303-resultado-regimen-general",
-            "modelo-390-rel-303-compensacion-ultimo-periodo",
-            "modelo-390-rel-303-compensacion-generada-ejercicio-no-97",
         }
         # Provenance: resolved entries carry local_filing provenance.
         assert all(rv.provenance == "local_filing" for rv in relation_vals.values if rv.value is not None)
@@ -234,11 +235,28 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
             relation_values_map,
             period="0A",
         )
+        annual_partition = IvaCompensationAnnualPartitionSourceResolver(
+            repository=repository,
+            registry_snapshot=snapshot,
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id="m390-binding-prefill",
+                modelo="390",
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "0A"),
+                revision=snapshot.revision,
+            ),
+        )
+        assert not annual_partition.unresolved_binding_ids
         annual_ledger_values = resolve_ledger_iva_aggregation_binding_values(
             snapshot.revision,
             tuple(row for rows in quarterly_observations.values() for row in rows),
         )
-        binding_values = {**annual_ledger_values, **relation_binding_values}
+        binding_values = {
+            **annual_ledger_values,
+            **relation_binding_values,
+            **annual_partition.binding_values,
+        }
         result = calculate_registry_snapshot(
             snapshot,
             inputs=resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
