@@ -565,6 +565,32 @@ def test_manual_transaction_tax_fields_feed_renta_observation_without_invoice_ca
     assert result.casilla_values == {_M100_ASESORIA_CASILLA: Decimal("100.00")}
 
 
+def test_unsupported_first_slice_category_lists_current_supported_mappings() -> None:
+    phone = _transaction(
+        "phone",
+        category=SpendingCategory.TELEFONIA_MOVIL,
+    )
+
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((phone,)),
+        InvoiceCatalogue(),
+        bucket_id="test",
+        period=_ANNUAL_2025,
+        profile_year=2025,
+    )
+
+    assert result.observations == ()
+    assert result.issues[0].reason is RentaLedgerAggregationIssueReason.CATEGORY_OUTSIDE_FIRST_SLICE
+    detail = result.issues[0].detail
+    assert "telefonia_movil" in detail
+    assert "0186=cuotas_autonomos_ss" in detail
+    assert "0192=arrendamiento_local" in detail
+    assert "0199=" in detail
+    assert "material_oficina" in detail
+    assert "software_suscripcion" in detail
+    assert "0203=gastos_bancarios, gastos_financieros" in detail
+
+
 def test_linked_invoice_issue_date_controls_period_filtering() -> None:
     initial = _transaction("row-outside")
     invoice = _invoice(initial.transaction_id, issued_at=date(2024, 12, 31))
