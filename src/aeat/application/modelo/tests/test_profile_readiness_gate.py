@@ -27,6 +27,7 @@ from ...calculations import IvaWalletDecisionRepository
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     ModeloProfileReadinessError,
+    WorkUnitMutationRefusedError,
     calculate_modelo_revision,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
@@ -184,6 +185,33 @@ def test_create_work_unit_service_refuses_profile_missing_activity(tmp_path: Pat
             "filing_year": 2025,
             "period": "1T",
             "missing": "activities.description",
+        }
+        assert len(repository.load()) == 0
+
+
+def test_create_work_unit_service_refuses_period_year_mismatch_with_typed_error(tmp_path: Path) -> None:
+    """A mismatched Period/year pair refuses through the modelo error hierarchy."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator") as profile:
+        repository = WorkUnitCatalogueRepository(objects=profile.repository)
+
+        with pytest.raises(WorkUnitMutationRefusedError) as excinfo:
+            create_work_unit(
+                bucket_id="operator",
+                modelo=Modelo.M303.value,
+                filing_year=2025,
+                period=Period.from_year_and_code(2026, "1T"),
+                revision_id=_M303_REVISION,
+                repository=repository,
+                clock=_NOW,
+            )
+
+        assert "filing_year 2025 does not match period year 2026" in str(excinfo.value)
+        assert excinfo.value.context == {
+            "modelo": Modelo.M303.value,
+            "filing_year": 2025,
+            "period_year": 2026,
+            "period": "1T",
+            "revision_id": _M303_REVISION,
         }
         assert len(repository.load()) == 0
 
