@@ -14,13 +14,10 @@ Cl@ve state; the live handshake is covered by gated probes elsewhere.
 
 from __future__ import annotations
 
-import asyncio
 import json
 import time
-from collections.abc import Callable, Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, override
 
 import pytest
 from pydantic import SecretStr
@@ -35,7 +32,6 @@ from ......domain.calculations.registry._errors import RegistryValidationError
 from ......tests.aeat_literal_fixtures import CLAVE_MOVIL_BROWSER_GLOBAL_EXPECTED
 from ......tests.secure_sql import isolated_runtime_profile
 from .....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ..._playwright import PlaywrightError, PlaywrightTimeoutError
 from .. import _session_store
 from .._clave_movil import (
     CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
@@ -50,16 +46,28 @@ from .._clave_movil import (
 )
 from .._clave_movil_metadata import ClaveMovilSessionMetadata
 from .._providers import AuthProviderKind, ClaveMovilSessionDetail
+from ._clave_movil_support import (
+    _CLAVE_SURFACE,
+    _DOMAINS,
+    _PRE303_SURFACE,
+    _aeat_url,
+    _CancelableClavePage,
+    _HangingCloseBrowserSession,
+    _HangingCloseContext,
+    _InitialNavigationTimeoutBrowserSession,
+    _NoPushWaitStatePage,
+    _OwnNameInputOnlyRepresentationPage,
+    _PendingPetitionPage,
+    _RecordingBrowserSession,
+    _RecordingPage,
+    _RepresentationAlertPage,
+    _run,
+    _SelectorDispatchBrowserSession,
+    _SelectorDispatchContext,
+    _settings_for,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
-
-if TYPE_CHECKING:
-    from .._authenticator import BrowserResponseLike
-
-_EXTERNAL = Settings.external_constants()
-_DOMAINS = _EXTERNAL.aeat.domains
-_CLAVE_SURFACE = _EXTERNAL.aeat.clave_movil
-_PRE303_SURFACE = _EXTERNAL.aeat.pre303
 
 
 def test_auth_browser_action_policy_allows_configured_own_name_representation_action(tmp_path: Path) -> None:
@@ -88,347 +96,10 @@ def test_auth_browser_action_policy_rejects_unclassified_representation_action(t
         )
 
 
-def _aeat_url(origin: str, path: str) -> str:
-    return f"{origin}{path}"
-
-
 @pytest.fixture(autouse=True)
 def _isolated_secure_session_backend(tmp_path: Path):
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="clave-movil-test"):
         yield
-
-
-# ── Browser-session stand-ins ────────────────────────────────────────────────
-
-
-class _RecordingPage:
-    def __init__(
-        self,
-        *,
-        target_path: str,
-        verification_code: str = "YLL",
-        authenticated: bool = False,
-    ) -> None:
-        self._target_path = target_path
-        self._verification_code = verification_code
-        self._authenticated = authenticated
-        self.clicks: list[str] = []
-        self.fills: list[tuple[str, str]] = []
-        self.types: list[tuple[str, str]] = []
-        self.gotos: list[str] = []
-        self.url: str = ""
-        self.closed = False
-
-    async def goto(self, url: str, *, timeout: float | None = None) -> BrowserResponseLike | None:
-        del timeout
-        self.gotos.append(url)
-        # Simulate AEAT's selector dispatch. An authenticated resume
-        # navigation to the AEAT selector bounces straight through to
-        # the protected target path. Fresh-login navigations land on the
-        # selector page itself (then our provider clicks through).
-        if self._authenticated and _CLAVE_SURFACE.selector_access_path_marker in url:
-            self.url = _aeat_url(_DOMAINS.www6, self._target_path)
-        else:
-            self.url = url
-
-        class _RecordingResponse:
-            status = 200
-
-        return _RecordingResponse()
-
-    async def click(self, selector: str) -> None:
-        self.clicks.append(selector)
-        # First click advances the selector to the QR page; subsequent clicks
-        # are for the non-QR fallback (continue, continuar).
-        if selector == _CLAVE_SURFACE.authorize_button_selector:
-            self.url = _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.obtener_clave_movil_qr_path)
-        elif selector == _CLAVE_SURFACE.non_qr_link_selector:
-            self.url = _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.autentica_dni_nie_contraste_path)
-        elif selector in (_CLAVE_SURFACE.continue_button_selector, _PRE303_SURFACE.representation_submit_selector):
-            self.url = _aeat_url(_DOMAINS.www6, self._target_path)
-
-    async def fill(self, selector: str, value: str) -> None:
-        self.fills.append((selector, value))
-
-    async def type(self, selector: str, value: str, *, delay: float | None = None) -> None:
-        del delay
-        self.types.append((selector, value))
-
-    async def wait_for_selector(self, selector: str, *, timeout: float | None = None) -> None:
-        del selector, timeout
-
-    async def text_content(self, selector: str) -> str | None:
-        if selector == _CLAVE_SURFACE.verification_code_selector:
-            self.url = _aeat_url(_DOMAINS.www6, self._target_path)
-            return self._verification_code
-        return None
-
-    async def content(self) -> str:
-        return "<html></html>"
-
-    async def wait_for_url(self, matcher: str | Callable[[str], bool], *, timeout: float | None = None) -> None:
-        del timeout
-        # Simulate AEAT browser completion that redirects to the target.
-        self.url = _aeat_url(_DOMAINS.www6, self._target_path)
-        if not isinstance(matcher, str) and not matcher(self.url):
-            raise TimeoutError("matcher rejected simulated URL")
-
-    async def close(self) -> None:
-        self.closed = True
-
-
-class _InitialNavigationTimeoutPage(_RecordingPage):
-    @override
-    async def goto(self, url: str, *, timeout: float | None = None) -> BrowserResponseLike | None:
-        del timeout
-        self.gotos.append(url)
-        raise PlaywrightTimeoutError("selector navigation timed out")
-
-
-class _RepresentationAlertPage(_RecordingPage):
-    @override
-    async def content(self) -> str:
-        return f"""
-        <div id="{_PRE303_SURFACE.alert_modal_selector.lstrip("#")}" class="modal show">
-          <button>{_PRE303_SURFACE.alert_continue_button_text.title()}</button>
-        </div>
-        """
-
-
-class _OwnNameInputOnlyRepresentationPage(_RecordingPage):
-    @override
-    async def wait_for_selector(self, selector: str, *, timeout: float | None = None) -> None:
-        del timeout
-        if selector == _PRE303_SURFACE.representation_own_name_label_selector:
-            raise PlaywrightError("label not present")
-        if selector == _PRE303_SURFACE.representation_own_name_selector:
-            return
-        await super().wait_for_selector(selector)
-
-
-class _SelectorDispatchPage(_RecordingPage):
-    @override
-    async def goto(self, url: str, *, timeout: float | None = None) -> BrowserResponseLike | None:
-        del timeout
-        self.gotos.append(url)
-        self.url = url
-
-        class _RecordingResponse:
-            status = 200
-
-        return _RecordingResponse()
-
-    @override
-    async def click(self, selector: str) -> None:
-        self.clicks.append(selector)
-        if selector == _CLAVE_SURFACE.authorize_button_selector:
-            self.url = _aeat_url(_DOMAINS.www1, self._target_path)
-
-
-class _PendingPetitionPage(_RecordingPage):
-    @override
-    async def content(self) -> str:
-        return (
-            "<html><body>No ha sido posible generar una nueva petición de autenticación "
-            "con Cl@ve Móvil. Rechace la petición pendiente en la APP Cl@ve.</body></html>"
-        )
-
-
-class _NoPushWaitStatePage(_RecordingPage):
-    @override
-    async def content(self) -> str:
-        return "<html><body>Servicio no disponible temporalmente</body></html>"
-
-
-class _CancelResponse:
-    def __init__(self, *, status: int = 200) -> None:
-        self.status = status
-        self.url = _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.cancelar_clave_movil_path)
-
-
-class _CancelableClavePage(_RecordingPage):
-    def __init__(self, *, target_path: str, status: int = 200) -> None:
-        super().__init__(target_path=target_path)
-        self.url = _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.obtener_clave_movil_non_qr_path)
-        self.cancel_response = _CancelResponse(status=status)
-        self.evaluate_calls = 0
-        self.wait_for_response_calls = 0
-        self.evaluated_script = ""
-
-    async def evaluate(self, script: str) -> bool:
-        self.evaluated_script = script
-        self.evaluate_calls += 1
-        return True
-
-    async def wait_for_response(self, matcher: Callable[[object], bool], *, timeout: float | None = None) -> object:
-        del timeout
-        self.wait_for_response_calls += 1
-        if matcher(self.cancel_response):
-            return self.cancel_response
-        raise TimeoutError("cancel response matcher did not match")
-
-
-class _RecordingContext:
-    def __init__(
-        self,
-        *,
-        target_path: str,
-        verification_code: str = "YLL",
-        authenticated: bool = False,
-    ) -> None:
-        self._target_path = target_path
-        self._verification_code = verification_code
-        self._authenticated = authenticated
-        self.pages: list[_RecordingPage] = []
-        self.closed = False
-        self._storage_state: dict[str, object] = {
-            "cookies": [{"name": "AEAT_SESSION"}],
-            "origins": [],
-        }
-
-    async def new_page(self) -> _RecordingPage:
-        page = _RecordingPage(
-            target_path=self._target_path,
-            verification_code=self._verification_code,
-            authenticated=self._authenticated,
-        )
-        self.pages.append(page)
-        return page
-
-    async def storage_state(self) -> dict[str, object]:
-        return self._storage_state
-
-    async def close(self) -> None:
-        self.closed = True
-
-
-class _HangingCloseContext(_RecordingContext):
-    @override
-    async def close(self) -> None:
-        await asyncio.sleep(60)
-
-
-class _SelectorDispatchContext(_RecordingContext):
-    @override
-    async def new_page(self) -> _SelectorDispatchPage:
-        page = _SelectorDispatchPage(target_path=self._target_path)
-        self.pages.append(page)
-        return page
-
-
-class _InitialNavigationTimeoutContext(_RecordingContext):
-    @override
-    async def new_page(self) -> _InitialNavigationTimeoutPage:
-        page = _InitialNavigationTimeoutPage(target_path=self._target_path)
-        self.pages.append(page)
-        return page
-
-
-class _RecordingBrowserSession:
-    """Stand-in for :class:`aeat.adapters.outbound.aeat.browser.BrowserSession`.
-
-    Implements only the surface the Cl@ve Movil provider uses:
-    :meth:`create_context` and :meth:`close`. Resume contexts (those
-    constructed with a ``storage_state_path``) are simulated as
-    already-authenticated; fresh-login contexts land on the selector
-    page so the provider can drive the click-through.
-    """
-
-    def __init__(self, *, target_path: str, verification_code: str = "YLL") -> None:
-        self._target_path = target_path
-        self._verification_code = verification_code
-        self.contexts: list[_RecordingContext] = []
-        self.closed = False
-
-    async def create_context(
-        self,
-        *,
-        provisioner: object | None = None,
-        storage_state_path: Path | None = None,
-        storage_state: Mapping[str, object] | None = None,
-    ) -> _RecordingContext:
-        del provisioner
-        # Resume paths construct contexts with a storage-state path; those
-        # get the authenticated simulation. Fresh-login contexts don't.
-        authenticated = storage_state_path is not None or storage_state is not None
-        context = _RecordingContext(
-            target_path=self._target_path,
-            verification_code=self._verification_code,
-            authenticated=authenticated,
-        )
-        self.contexts.append(context)
-        return context
-
-    async def close(self) -> None:
-        self.closed = True
-
-
-class _HangingCloseBrowserSession(_RecordingBrowserSession):
-    @override
-    async def close(self) -> None:
-        await asyncio.sleep(60)
-
-
-class _SelectorDispatchBrowserSession(_RecordingBrowserSession):
-    @override
-    async def create_context(
-        self,
-        *,
-        provisioner: object | None = None,
-        storage_state_path: Path | None = None,
-        storage_state: Mapping[str, object] | None = None,
-    ) -> _SelectorDispatchContext:
-        del provisioner, storage_state_path, storage_state
-        context = _SelectorDispatchContext(target_path=self._target_path)
-        self.contexts.append(context)
-        return context
-
-
-class _InitialNavigationTimeoutBrowserSession(_RecordingBrowserSession):
-    @override
-    async def create_context(
-        self,
-        *,
-        provisioner: object | None = None,
-        storage_state_path: Path | None = None,
-        storage_state: Mapping[str, object] | None = None,
-    ) -> _InitialNavigationTimeoutContext:
-        del provisioner, storage_state_path, storage_state
-        context = _InitialNavigationTimeoutContext(target_path=self._target_path)
-        self.contexts.append(context)
-        return context
-
-
-def _settings_for(tmp_path: Path, **env: str) -> Settings:
-    # Explicit baseline so that operator-local ``env/.env`` entries
-    # (AEAT_CLAVE_MOVIL_DNI_NIE, AEAT_CLAVE_MOVIL_NIE_SOPORTE,
-    # AEAT_CLAVE_PREFER_NON_QR, etc.) do not silently mutate test
-    # expectations; the per-test env-overrides explicitly opt in.
-    env_overrides = {key.lower(): value for key, value in env.items()}
-    expected_keys = {
-        "aeat_clave_movil_dni_fecha",
-        "aeat_clave_movil_dni_nie",
-        "aeat_clave_movil_nie_soporte",
-        "aeat_clave_prefer_non_qr",
-    }
-    unexpected = set(env_overrides) - expected_keys
-    assert unexpected == set()
-    return Settings(
-        aeat_token_dir=tmp_path,
-        aeat_local_storage_root=tmp_path / "storage",
-        aeat_clave_prefer_non_qr=_bool_setting(env_overrides.get("aeat_clave_prefer_non_qr")),
-        aeat_clave_movil_dni_nie=_secret_or_none(env_overrides.get("aeat_clave_movil_dni_nie")),
-        aeat_clave_movil_dni_fecha=env_overrides.get("aeat_clave_movil_dni_fecha"),
-        aeat_clave_movil_nie_soporte=_secret_or_none(env_overrides.get("aeat_clave_movil_nie_soporte")),
-    )
-
-
-def _secret_or_none(value: str | None) -> SecretStr | None:
-    return None if value is None else SecretStr(value)
-
-
-def _bool_setting(value: str | None) -> bool:
-    return False if value is None else value.lower() == "true"
 
 
 # ── cleanup bounds ───────────────────────────────────────────────────────────
@@ -446,7 +117,7 @@ def test_context_cleanup_is_bounded_by_settings_timeout(tmp_path: Path) -> None:
         await provider._close_context(context, reason="timeout-regression")
         assert time.perf_counter() - started < 0.5
 
-    asyncio.run(run())
+    _run(run())
 
 
 def test_browser_session_cleanup_is_bounded_by_settings_timeout(tmp_path: Path) -> None:
@@ -461,7 +132,7 @@ def test_browser_session_cleanup_is_bounded_by_settings_timeout(tmp_path: Path) 
         await provider._close_browser_session(session)
         assert time.perf_counter() - started < 0.5
 
-    asyncio.run(run())
+    _run(run())
 
 
 # ── identity classification ──────────────────────────────────────────────────
@@ -600,7 +271,7 @@ class TestAuthenticateFresh:
             assert session.provider_detail.dni_nie == "12345678Z"
             assert session.provider_detail.landing_url == _aeat_url(_DOMAINS.www6, target_path)
 
-        asyncio.run(run())
+        _run(run())
 
     def test_non_qr_fallback_fills_dni_form(
         self,
@@ -626,7 +297,7 @@ class TestAuthenticateFresh:
             assert page.clicks.count(_CLAVE_SURFACE.authorize_button_selector) == 1
             assert _CLAVE_SURFACE.continue_button_selector in page.clicks
 
-        asyncio.run(run())
+        _run(run())
 
     def test_initial_selector_navigation_timeout_is_typed(
         self,
@@ -644,7 +315,7 @@ class TestAuthenticateFresh:
             assert excinfo.value.context["failure_mode"] == ClaveMovilFailureMode.INITIAL_NAVIGATION_TIMEOUT
             assert excinfo.value.context["target_path"] == settings.aeat_sede_expedientes_path
 
-        asyncio.run(run())
+        _run(run())
         assert browser_session.contexts
         assert browser_session.contexts[0].pages[0].gotos
 
@@ -672,7 +343,7 @@ class TestAuthenticateFresh:
             assert page.clicks.count(_CLAVE_SURFACE.authorize_button_selector) == 1
             assert _CLAVE_SURFACE.continue_button_selector in page.clicks
 
-        asyncio.run(run())
+        _run(run())
 
     def test_non_qr_fallback_rejects_missing_nie_support(
         self,
@@ -690,7 +361,7 @@ class TestAuthenticateFresh:
             with pytest.raises(ClaveMovilConfigurationError, match=r"AEAT_CLAVE_MOVIL_NIE_SOPORTE|non-QR|NIE"):
                 await provider.authenticate(browser_session=browser_session)
 
-        asyncio.run(run())
+        _run(run())
 
     def test_non_qr_fallback_rejects_missing_fecha(
         self,
@@ -708,7 +379,7 @@ class TestAuthenticateFresh:
             with pytest.raises(ClaveMovilConfigurationError, match=r"AEAT_CLAVE_MOVIL_DNI_FECHA|non-QR|fallback"):
                 await provider.authenticate(browser_session=browser_session)
 
-        asyncio.run(run())
+        _run(run())
 
     def test_missing_identity_raises_configuration_error(
         self,
@@ -722,7 +393,7 @@ class TestAuthenticateFresh:
             with pytest.raises(ClaveMovilConfigurationError, match=r"identity|NIF|NIE|configuration"):
                 await provider.authenticate(browser_session=browser_session)
 
-        asyncio.run(run())
+        _run(run())
 
 
 class TestPostAuthLanding:
@@ -758,7 +429,7 @@ class TestPostAuthLanding:
             assertion = await provider.verify(session, target_url=target_url)
             assert assertion.is_valid is True
 
-        asyncio.run(run())
+        _run(run())
 
         page = context.pages[0]
         assert external.aeat.clave_movil.selector_access_path_marker in page.gotos[0]
@@ -845,7 +516,7 @@ class TestPostAuthLanding:
         async def run() -> None:
             await provider._wait_for_post_auth_landing(page, settings.aeat_sede_expedientes_path, timeout_ms=1_000)
 
-        asyncio.run(run())
+        _run(run())
         assert page.clicks == [
             _PRE303_SURFACE.representation_own_name_label_selector,
             _PRE303_SURFACE.representation_submit_selector,
@@ -863,7 +534,7 @@ class TestPostAuthLanding:
         async def run() -> None:
             await provider._wait_for_post_auth_landing(page, settings.aeat_sede_expedientes_path, timeout_ms=1_000)
 
-        asyncio.run(run())
+        _run(run())
         continue_selector = (
             f"{_PRE303_SURFACE.alert_modal_selector}.show "
             f'button:has-text("{_PRE303_SURFACE.alert_continue_button_text.title()}")'
@@ -886,7 +557,7 @@ class TestPostAuthLanding:
         async def run() -> None:
             await provider._wait_for_post_auth_landing(page, settings.aeat_sede_expedientes_path, timeout_ms=1_000)
 
-        asyncio.run(run())
+        _run(run())
         assert page.clicks == [
             _PRE303_SURFACE.representation_own_name_selector,
             _PRE303_SURFACE.representation_submit_selector,
@@ -915,7 +586,7 @@ class TestPendingPetitionRefusal:
             assert excinfo.value.suggestion is not None
             return diagnostic_id
 
-        diagnostic_id = asyncio.run(run())
+        diagnostic_id = _run(run())
         record = secure_object_repository_for_active_bucket().load(
             CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
             diagnostic_id,
@@ -943,7 +614,7 @@ class TestPendingPetitionRefusal:
             assert excinfo.value.context is not None
             assert excinfo.value.context["reason"] == "aeat-refused-new-clave-movil-petition"
 
-        asyncio.run(run())
+        _run(run())
 
     def test_pending_request_cancellation_waits_for_aeat_cancel_response(
         self,
@@ -956,7 +627,7 @@ class TestPendingPetitionRefusal:
         async def run() -> None:
             await provider._cancel_pending_auth_request(page)
 
-        asyncio.run(run())
+        _run(run())
 
         assert page.evaluate_calls == 1
         assert page.wait_for_response_calls == 1
@@ -976,7 +647,7 @@ class TestPendingPetitionRefusal:
         async def run() -> bool:
             return await provider._wait_for_cancel_confirmation(page)
 
-        assert asyncio.run(run()) is False
+        assert _run(run()) is False
 
 
 class TestClaveWaitState:
@@ -1012,7 +683,7 @@ class TestClaveWaitState:
             assert excinfo.value.context["verification_code_present"] is False
             assert "diagnostic_id" in excinfo.value.context
 
-        asyncio.run(run())
+        _run(run())
 
     def test_login_accepts_observed_verification_code_as_wait_state(
         self,
@@ -1031,7 +702,7 @@ class TestClaveWaitState:
                 used_non_qr_fallback=True,
             )
 
-        asyncio.run(run())
+        _run(run())
 
 
 # ── authenticate() — resume path ─────────────────────────────────────────────
@@ -1054,7 +725,7 @@ class TestProbePersistedSession:
             with pytest.raises(AeatLoginAssertionError, match="no persisted"):
                 await provider.probe_persisted_session(browser_session=browser_session)
 
-        asyncio.run(run())
+        _run(run())
 
     def test_probe_uses_existing_encrypted_session_without_invalidating_on_failure(
         self,
@@ -1070,7 +741,7 @@ class TestProbePersistedSession:
             await provider.authenticate(browser_session=browser_session_login)
             await provider.close()
 
-        asyncio.run(seed())
+        _run(seed())
 
         from ......core import require_active_bucket_id
         from ......core.auth_session_keys import aeat_auth_session_storage_state_path
@@ -1093,7 +764,7 @@ class TestProbePersistedSession:
             assert assertion.target_url
             await probe_provider.close()
 
-        asyncio.run(probe())
+        _run(probe())
         assert _session_store.exists(storage_path)
         assert not storage_path.exists()
         assert not storage_path.with_suffix(".meta.json").exists()
@@ -1111,7 +782,7 @@ class TestProbePersistedSession:
             await provider.authenticate(browser_session=browser_session_login)
             await provider.close()
 
-        asyncio.run(seed())
+        _run(seed())
 
         target_url = f"{external.aeat.domains.www1}{external.aeat.pre303.presentation_service_path}"
         target_path = provider._target_path_from_url(target_url)
@@ -1127,7 +798,7 @@ class TestProbePersistedSession:
             assert assertion.is_valid is True
             await probe_provider.close()
 
-        asyncio.run(probe())
+        _run(probe())
 
         page = browser_session_probe.contexts[0].pages[0]
         assert external.aeat.clave_movil.selector_access_path_marker not in page.gotos[0]
@@ -1151,7 +822,7 @@ class TestResume:
             await provider.authenticate(browser_session=browser_session_a)
             await provider.close()
 
-        asyncio.run(run_first())
+        _run(run_first())
 
         # Fresh provider instance picks up the on-disk session.
         resumed_provider = ClaveMovilAuthProvider(settings)
@@ -1166,7 +837,7 @@ class TestResume:
             assert page.gotos == [_aeat_url(_DOMAINS.www6, target_path)]
             await resumed_provider.close()
 
-        asyncio.run(run_resume())
+        _run(run_resume())
 
 
 # ── contract: auth waiting banner routes through structured logger ─────────────────
@@ -1197,29 +868,27 @@ def test_render_progress_banner_emits_via_logger_not_stdout(
     )
 
 
-def test_render_progress_banner_qr_branch_logged(caplog: pytest.LogCaptureFixture) -> None:
-    """QR-branch banner must appear in the structured log record."""
+@pytest.mark.parametrize(
+    ("verification_code", "timeout_seconds", "used_non_qr_fallback"),
+    (
+        pytest.param(None, 60, False, id="qr"),
+        pytest.param("XYZ", 300, True, id="non-qr"),
+    ),
+)
+def test_render_progress_banner_branch_logged(
+    caplog: pytest.LogCaptureFixture,
+    verification_code: str | None,
+    timeout_seconds: int,
+    used_non_qr_fallback: bool,
+) -> None:
+    """QR and non-QR branch banners must appear in structured log records."""
     import logging
 
     with caplog.at_level(logging.INFO, logger="aeat.adapters.outbound.aeat.auth._clave_movil"):
         _render_progress_banner(
-            verification_code=None,
-            timeout_seconds=60,
-            used_non_qr_fallback=False,
-        )
-
-    assert any("auth.waiting_banner" in r.message for r in caplog.records)
-
-
-def test_render_progress_banner_non_qr_branch_logged(caplog: pytest.LogCaptureFixture) -> None:
-    """Non-QR-branch banner must appear in the structured log record."""
-    import logging
-
-    with caplog.at_level(logging.INFO, logger="aeat.adapters.outbound.aeat.auth._clave_movil"):
-        _render_progress_banner(
-            verification_code="XYZ",
-            timeout_seconds=300,
-            used_non_qr_fallback=True,
+            verification_code=verification_code,
+            timeout_seconds=timeout_seconds,
+            used_non_qr_fallback=used_non_qr_fallback,
         )
 
     assert any("auth.waiting_banner" in r.message for r in caplog.records)

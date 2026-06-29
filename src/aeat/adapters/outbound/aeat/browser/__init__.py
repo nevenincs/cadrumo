@@ -3,6 +3,11 @@
 Owns the Playwright-backed browser sessions every outbound AEAT adapter
 shares, plus the site-health probing that classifies whether the Sede is
 reachable, rate-limiting, under maintenance, or serving a WAF challenge.
+The optional browser runtime is materialised only by the session factories;
+importing this facade exposes types and factories without opening a browser.
+Non-OK site-health classifications are carried through
+:class:`~aeat.core.errors.SiteHealthError` so diagnostics and live-read
+application code can inspect one status envelope instead of re-parsing pages.
 
 Major declarations:
 
@@ -22,6 +27,8 @@ See Also:
     :class:`aeat.adapters.outbound.aeat.auth.CertificateContextProvisioner`
         Certificate-auth provisioner that adds Playwright client-certificate
         kwargs and the context thumbprint marker.
+    :mod:`aeat.adapters.outbound.aeat.sede`
+        Read-only Sede readers that consume these browser sessions.
 """
 
 from __future__ import annotations

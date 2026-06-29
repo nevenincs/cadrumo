@@ -1,6 +1,6 @@
 """Live CSV verification test for :func:`aeat.adapters.outbound.aeat.verify.verify_csv`.
 
-This test is **opt-in**: it is skipped unless
+This test is **opt-in**: it is deselected unless
 ``AEAT_LIVE_TESTS_ENABLED=1`` is set in the environment. It spins up a
 real Playwright browser session against
 AEAT's Sede electrónica and round-trips one CSV. Per the project rule,
@@ -30,5 +30,5 @@ async def test_verify_csv_round_trip() -> None:
     try:
         result = await verify_csv("ABCD1234EFGH5678")
     except JustificanteVerificationError as exc:
-        pytest.skip(f"live verification unavailable: {exc}")
+        pytest.fail(f"live verification unavailable after live opt-in: {exc}")
     assert isinstance(result, bool)

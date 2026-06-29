@@ -150,7 +150,7 @@ class BrowserPageLike(Protocol):
         *,
         timeout: float | None = None,
     ) -> BrowserResponseLike | None:
-        """Navigate to ``url`` and return the observed response, if any."""
+        """Navigate to ``url`` and return the observed :class:`BrowserResponseLike`, if any."""
         ...
 
     async def close(self) -> None:
@@ -173,7 +173,7 @@ class BrowserContextLike(Protocol):
     """Minimal Playwright context surface used by auth providers."""
 
     async def new_page(self) -> BrowserPageLike:
-        """Create a page for a live verification or selector flow."""
+        """Create a :class:`BrowserPageLike` for a live verification or selector flow."""
         ...
 
     async def storage_state(self) -> Mapping[str, object]:
@@ -202,7 +202,7 @@ class BrowserSessionLike(Protocol):
         storage_state_path: Path | None = None,
         storage_state: Mapping[str, object] | None = None,
     ) -> BrowserContextLike:
-        """Create a browser context with optional auth provider state."""
+        """Create a :class:`BrowserContextLike` with optional auth provider state."""
         ...
 
 

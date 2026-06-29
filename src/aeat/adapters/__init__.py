@@ -1,9 +1,13 @@
-"""Adapter layer of the hexagonal architecture.
+"""Adapter-layer namespace for external and persistence infrastructure.
 
-Houses the inbound (:mod:`aeat.adapters.inbound`) and outbound concrete
-integrations that translate between external interfaces (PDFs, banks,
-AEAT endpoints) and the pure :mod:`aeat.domain` model.
+This root package is intentionally import-light and exports no concrete adapter
+classes. Import focused child facades instead: :mod:`aeat.adapters.inbound` for
+parsers and import pipelines, :mod:`aeat.adapters.outbound` for integrations
+with external services, and :mod:`aeat.adapters.persistence` for profile and
+secure-storage adapters.
 
-This module uses :class:`SensitivityClass` for data classification policies
-and :class:`Envelope` for encrypted storage.
+Application services own orchestration and domain authorities own business
+semantics. Adapter packages translate between those internal contracts and
+external artefacts such as PDFs, financial statements, AEAT Sede pages, browser
+sessions, Google services, LLM providers, and encrypted local storage.
 """

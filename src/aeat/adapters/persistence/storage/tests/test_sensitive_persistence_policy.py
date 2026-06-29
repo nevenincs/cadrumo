@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import ast
-from collections.abc import Mapping
 from functools import cache
 from pathlib import Path
 from typing import override
@@ -400,24 +399,22 @@ def _function_for_line(path: Path, line_number: int) -> str:
     return best_name
 
 
-def test_sensitive_financial_surfaces_do_not_bypass_secure_object_backend(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
+def test_sensitive_financial_surfaces_do_not_bypass_secure_object_backend() -> None:
     """Financial/tax state must not write plaintext or file-envelope payloads directly."""
 
     violations: list[str] = []
     for surface in _SENSITIVE_SURFACES:
         for path in _iter_python_files(surface):
-            violations.extend(_sensitive_surface_violations(path, source_tree_ast))
+            violations.extend(_sensitive_surface_violations(path))
     assert violations == []
 
 
-def _sensitive_surface_violations(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> list[str]:
+def _sensitive_surface_violations(path: Path) -> list[str]:
     """Return every forbidden-text + forbidden-call offence in one source file."""
     text = path.read_text(encoding="utf-8")
     relative = repo_relative(path)
     violations = [f"{relative}: contains {token!r}" for token in _FORBIDDEN_TEXT if token in text]
-    tree = ast_for_path(path, source_tree_ast)
+    tree = ast_for_path(path)
     assert tree is not None, f"{relative} must be parseable"
     for node in ast.walk(tree):
         if isinstance(node, ast.Call):
@@ -439,12 +436,12 @@ def _sensitive_call_violations(node: ast.Call, *, path: Path, relative: str) -> 
     return offences
 
 
-def test_production_file_write_inventory_is_reviewed(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_production_file_write_inventory_is_reviewed() -> None:
     """Any new production file writer must be classified before merge."""
 
     observed: set[tuple[str, str, str]] = set()
     for path in _iter_production_python_files():
-        tree = ast_for_path(path, source_tree_ast)
+        tree = ast_for_path(path)
         assert tree is not None, f"{repo_relative(path)} must be parseable"
         visitor = _FileWriteVisitor(path)
         visitor.visit(tree)

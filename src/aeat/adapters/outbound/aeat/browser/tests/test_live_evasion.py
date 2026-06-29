@@ -34,7 +34,7 @@ def _require_executable(name: str) -> str:
     """Resolve a required system executable for local process inspection."""
     resolved = shutil.which(name)
     if resolved is None:
-        pytest.skip(f"required system executable is unavailable: {name}")
+        pytest.fail(f"required system executable is unavailable after live opt-in: {name}")
     return resolved
 
 

@@ -3,6 +3,28 @@
 Pydantic v2 strict records, error types, and the filesystem
 provisioning, manifest read/write, keystore separation, pointer-file,
 and lockfile primitives that compose the multi-bucket on-disk layout.
+
+The sealed-archive surface re-exports :class:`ExportArchiveHeader`,
+:class:`SealedArchiveContents`, :func:`write_sealed_archive`, and
+:func:`read_sealed_archive` for application-level bucket export/import. These
+helpers own archive shape and metadata normalisation only; profile payload
+composition remains in :mod:`aeat.application.user_profile`, while
+:mod:`aeat.application.bucket_maintenance` orchestrates operator-facing export
+and import.
+
+See Also:
+    :class:`BucketManifest`
+        Strict per-bucket manifest record stored beside the bucket directory.
+    :class:`ExportArchiveHeader`
+        Plaintext frontmatter for sealed bucket-export archives.
+    :func:`write_sealed_archive`
+        Host-metadata-normalising writer for sealed export archives.
+    :func:`read_sealed_archive`
+        Reader that validates archive member order and header shape before
+        returning encrypted payload bytes.
+    :mod:`aeat.application.bucket_maintenance`
+        Application service facade that composes these archive primitives with
+        profile lifecycle and domain event history.
 """
 
 from __future__ import annotations

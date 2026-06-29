@@ -3,7 +3,9 @@
 Defines the financial-statement provider contract and the concrete
 per-format parsers behind ``aeat app ledger import``. Detection picks the
 right provider for a file; each provider parses a bank statement into the
-domain transaction records.
+domain transaction records. The provider layer parses rows only; application
+ledger import owns active-bucket routing, transaction persistence, currency
+normalization, and bucket events.
 
 Major declarations:
 
@@ -17,6 +19,14 @@ Major declarations:
   :class:`UnsupportedFinancialSourceError`,
   :class:`InvalidFinancialSourceError`, :class:`FinancialValidationError`)
   — the failure taxonomy.
+
+See Also:
+    - :mod:`aeat.adapters.inbound.financial` for the parent financial-import
+      facade.
+    - :mod:`aeat.application.ledger` for the operator-facing import service that
+      calls these providers and persists ledger transactions.
+    - :mod:`aeat.domain.transactions` for the raw transaction records produced
+      by successful parsing.
 """
 
 from __future__ import annotations

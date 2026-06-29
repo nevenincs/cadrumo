@@ -115,34 +115,27 @@ class CalcSheetsApplyResult(BaseModel):
     tab_count: int = Field(ge=1)
 
 
+def _google_service(credentials: object, service_name: str, version: str) -> Any:
+    try:
+        from googleapiclient.discovery import build
+    except ImportError as exc:
+        raise OutboundStorageNetworkError(
+            f"googleapiclient not importable: {exc}",
+            suggestion="pip install aeat[google]",
+            translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
+        ) from exc
+    return build(service_name, version, credentials=credentials, cache_discovery=False)
+
+
 # ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY:
 # googleapiclient.discovery.build() returns an untyped Resource object; no stub
 # narrows the concrete type.
 def _drive_service(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY
-    try:
-        from googleapiclient.discovery import build
-    except ImportError as exc:
-        raise OutboundStorageNetworkError(
-            f"googleapiclient not importable: {exc}",
-            suggestion="pip install aeat[google]",
-            translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
-        ) from exc
-    return build("drive", "v3", credentials=credentials, cache_discovery=False)
+    return _google_service(credentials, "drive", "v3")
 
 
-# ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY:
-# googleapiclient.discovery.build() returns an untyped Resource object; no stub
-# narrows the concrete type.
 def _sheets_service(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY
-    try:
-        from googleapiclient.discovery import build
-    except ImportError as exc:
-        raise OutboundStorageNetworkError(
-            f"googleapiclient not importable: {exc}",
-            suggestion="pip install aeat[google]",
-            translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
-        ) from exc
-    return build("sheets", "v4", credentials=credentials, cache_discovery=False)
+    return _google_service(credentials, "sheets", "v4")
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE:

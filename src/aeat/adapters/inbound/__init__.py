@@ -1,9 +1,14 @@
-"""Inbound adapters: parse external artefacts into strict domain records.
+"""Inbound adapter namespace for external artefact import.
 
-Subpackages turn AEAT-side artefacts (declaración / borrador PDFs,
-financial statements, etc.) into pydantic v2 records consumable by
-:mod:`aeat.application` and :mod:`aeat.domain`.
+This package root exports no parser classes. Focused child packages own the
+actual import contracts: :mod:`aeat.adapters.inbound.declaracion`,
+:mod:`aeat.adapters.inbound.borrador`,
+:mod:`aeat.adapters.inbound.justificante`, :mod:`aeat.adapters.inbound.pdf`,
+:mod:`aeat.adapters.inbound.financial`, :mod:`aeat.adapters.inbound.identity`,
+and :mod:`aeat.adapters.inbound.sanitizer`.
 
-This module uses :class:`Declaracion`, :class:`BorradorObservation`,
-:class:`FinancialProvider`, and :class:`Justificante` for parsing external inputs.
+Inbound adapters parse AEAT-side PDFs, financial statements, identity inputs,
+and sanitised fixture artefacts into strict records consumed by
+:mod:`aeat.application` and :mod:`aeat.domain`. They do not own application
+workflow, persistence policy, or CLI presentation.
 """

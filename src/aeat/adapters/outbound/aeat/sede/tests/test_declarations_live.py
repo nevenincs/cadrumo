@@ -1,11 +1,13 @@
 """Live test for :func:`aeat.adapters.outbound.aeat.sede.walk_declarations_register` (#239).
 
 Drives the *Consultar declaraciones presentadas* form against
-the real AEAT sede with a Cl@ve-móvil session. Skips cleanly when:
+the real AEAT sede with a Cl@ve-móvil session. It is deselected when:
 
 * ``AEAT_LIVE_TESTS_ENABLED`` is unset (every live test gates on
   this), OR
 * Cl@ve-móvil credentials are not configured for the live backend.
+
+After live opt-in, unavailable sessions or missing account data are failures.
 
 The test is read-only by construction — every public surface in
 :mod:`aeat.adapters.outbound.aeat.sede._declarations` is structurally incapable of
@@ -25,12 +27,11 @@ pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
 
 
 async def _load_active_clave_session():
-    """Return an active Cl@ve session or skip the test cleanly.
+    """Return an active Cl@ve session or fail when live auth is unavailable.
 
     Returns:
         The :class:`AeatSession` reconstructed from the on-disk
-        Cl@ve cookies. Skips when no session is persisted or the
-        operator has not opted into live tests.
+        Cl@ve cookies.
     """
     # Local imports keep the test file lightweight when skipped.
     from ......application.auth import (
@@ -49,7 +50,7 @@ async def _load_active_clave_session():
         )
         return result.session
     except AeatError as exc:
-        pytest.skip(f"Cl@ve-móvil live authentication is not available: {exc}")
+        pytest.fail(f"Cl@ve-móvil live authentication is not available after live opt-in: {exc}")
 
 
 @pytest.mark.asyncio
@@ -69,19 +70,19 @@ async def test_walk_modelo_100_returns_at_least_one_declaration() -> None:
             ejercicio=2022,
         )
     except SedeError as exc:
-        pytest.skip(f"live walk failed (likely session-expired): {exc}")
+        pytest.fail(f"live walk failed after live opt-in: {exc}")
 
     # Ejercicio 2022 is the year operator's M100 fixture was captured;
     # the live account should still expose it.
     assert isinstance(declarations, tuple)
     assert all(isinstance(d, Declaracion) for d in declarations)
-    if declarations:
-        first = declarations[0]
-        assert first.modelo == "100"
-        assert first.ejercicio == 2022
-        assert first.expediente_id  # non-empty
-        assert first.estado  # non-empty
-        assert first.mode == "read"  # five-layer write guard
+    assert declarations, "expected at least one Modelo 100 / 2022 declaration on the live account"
+    first = declarations[0]
+    assert first.modelo == "100"
+    assert first.ejercicio == 2022
+    assert first.expediente_id  # non-empty
+    assert first.estado  # non-empty
+    assert first.mode == "read"  # five-layer write guard
 
 
 @pytest.mark.asyncio
@@ -103,17 +104,14 @@ async def test_capture_declaration_returns_pdf_bytes() -> None:
             ejercicio=2022,
         )
     except SedeError as exc:
-        pytest.skip(f"live walk failed (likely session-expired): {exc}")
+        pytest.fail(f"live walk failed after live opt-in: {exc}")
 
-    if not declarations:
-        pytest.skip(
-            "no Modelo 100 / 2022 declaration on this account; capture cannot be exercised without a live row.",
-        )
+    assert declarations, "no Modelo 100 / 2022 declaration on this account; capture cannot run without a live row"
 
     try:
         capture = await capture_declaration(session, declarations[0])
     except SedeError as exc:
-        pytest.skip(f"live capture failed (likely session-expired): {exc}")
+        pytest.fail(f"live capture failed after live opt-in: {exc}")
 
     assert isinstance(capture, SedeCapture)
     assert capture.pdf_bytes  # non-empty body
