@@ -15,19 +15,21 @@ calculation tautologies.
 from __future__ import annotations
 
 import tomllib
-from decimal import Decimal
 from typing import Any
 
 import pytest
 
 from .....core.resources import bundled_path
+from .._binding_selector_utils import (
+    BindingFixedExportSelector,
+    BindingRowExportSelector,
+    binding_export_selector,
+)
 from .._errors import RegistryValidationError
 from .._export import (
-    _binding_data_type,
     _export_fields_overlap,
     _justification_for_binding_data_type,
     _padding_for_binding_data_type,
-    _selector_int,
 )
 from .._schema import DataBindingDefinition, ExportFieldDefinition
 
@@ -191,60 +193,87 @@ def test_export_fields_overlap_returns_false_for_separated_fields() -> None:
 
 
 # ---------------------------------------------------------------------------
-# _selector_int
+# binding_export_selector
 # ---------------------------------------------------------------------------
 
 
-def test_selector_int_accepts_int_value() -> None:
-    binding = _binding({"offset": 42})
+def test_binding_export_selector_accepts_fixed_field_shape() -> None:
+    binding = _binding(
+        {
+            "record": "DPA",
+            "field": "ingresos-integros",
+            "offset": 42,
+            "length": 10,
+            "data_type": "money",
+        },
+    )
 
-    assert _selector_int(binding, "offset") == 42
+    selector = binding_export_selector(binding)
 
-
-def test_selector_int_coerces_decimal_value() -> None:
-    binding = _binding({"offset": Decimal("17")})
-
-    assert _selector_int(binding, "offset") == 17
-
-
-def test_selector_int_raises_when_selector_value_is_tuple() -> None:
-    binding = _binding({"offset": ("1", "2")})
-
-    with pytest.raises(RegistryValidationError, match="must be numeric"):
-        _selector_int(binding, "offset")
-
-
-def test_selector_int_raises_when_selector_key_is_absent() -> None:
-    binding = _binding({"offset": 5})
-
-    with pytest.raises(RegistryValidationError, match="'length'"):
-        _selector_int(binding, "length")
+    assert isinstance(selector, BindingFixedExportSelector)
+    assert selector.record == "DPA"
+    assert selector.field == "ingresos-integros"
+    assert selector.offset == 42
+    assert selector.length == 10
+    assert selector.data_type == "money"
 
 
-# ---------------------------------------------------------------------------
-# _binding_data_type
-# ---------------------------------------------------------------------------
+def test_binding_export_selector_accepts_row_field_shape() -> None:
+    binding = _binding({"record": "operador", "row_field": "base_imponible", "fact": "row_field"})
+
+    selector = binding_export_selector(binding)
+
+    assert isinstance(selector, BindingRowExportSelector)
+    assert selector.record == "operador"
+    assert selector.row_field == "base_imponible"
 
 
-@pytest.mark.parametrize("data_type", ["text", "integer", "decimal", "money", "date", "boolean"])
-def test_binding_data_type_accepts_each_allowed_type(data_type: str) -> None:
-    binding = _binding({"data_type": data_type})
+def test_binding_export_selector_ignores_non_export_row_fact_without_record() -> None:
+    binding = _binding({"row_field": "base_imponible", "fact": "row_field"})
 
-    assert _binding_data_type(binding, data_type) == data_type
-
-
-def test_binding_data_type_raises_on_unknown_type_string() -> None:
-    binding = _binding({"data_type": "weird"})
-
-    with pytest.raises(RegistryValidationError, match="not exportable"):
-        _binding_data_type(binding, "weird")
+    assert binding_export_selector(binding) is None
 
 
-def test_binding_data_type_raises_when_value_is_not_a_string() -> None:
-    binding = _binding({"data_type": "text"})
+def test_binding_export_selector_ignores_value_data_type_without_record() -> None:
+    binding = _binding({"casilla_id": "0168", "data_type": "boolean", "true_value": "N", "false_value": "S"})
 
-    with pytest.raises(RegistryValidationError, match="not exportable"):
-        _binding_data_type(binding, 42)
+    assert binding_export_selector(binding) is None
+
+
+def test_binding_export_selector_rejects_partial_fixed_field_shape() -> None:
+    binding = _binding({"record": "DPA", "offset": 42, "data_type": "money"})
+
+    with pytest.raises(RegistryValidationError, match="missing fixed-field keys"):
+        binding_export_selector(binding)
+
+
+def test_binding_export_selector_rejects_ambiguous_fixed_and_row_shape() -> None:
+    binding = _binding(
+        {
+            "record": "DPA",
+            "row_field": "importe",
+            "offset": 42,
+            "length": 10,
+            "data_type": "money",
+        },
+    )
+
+    with pytest.raises(RegistryValidationError, match="cannot declare row_field"):
+        binding_export_selector(binding)
+
+
+def test_binding_export_selector_rejects_unknown_data_type() -> None:
+    binding = _binding({"record": "DPA", "offset": 42, "length": 10, "data_type": "weird"})
+
+    with pytest.raises(RegistryValidationError, match="malformed export selector projection"):
+        binding_export_selector(binding)
+
+
+def test_binding_export_selector_rejects_non_integer_offset() -> None:
+    binding = _binding({"record": "DPA", "offset": ("1", "2"), "length": 10, "data_type": "money"})
+
+    with pytest.raises(RegistryValidationError, match="malformed export selector projection"):
+        binding_export_selector(binding)
 
 
 # ---------------------------------------------------------------------------
