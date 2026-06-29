@@ -26,6 +26,7 @@ from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import (
     BindingId,
     CasillaId,
+    CasillaObservation,
     InputKind,
     ModeloRevision,
     RelationId,
@@ -276,6 +277,33 @@ _M349_NUMERO_RECTIFICACIONES_BINDING: BindingId = "iva-349-declarante-numero-rec
 _M349_IMPORTE_RECTIFICACIONES_BINDING: BindingId = "iva-349-declarante-importe-rectificaciones"
 
 
+def _m349_row_field_template_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
+    return frozenset(
+        casilla_id
+        for export_layout in revision.export_layouts
+        for record in export_layout.records
+        for casilla_id in record.row_field_casilla_ids.values()
+    )
+
+
+def _suppress_m349_row_field_template_outputs(
+    *,
+    work_unit: WorkUnit,
+    revision: ModeloRevision,
+    casilla_values: dict[CasillaId, Decimal],
+    observations: tuple[CasillaObservation, ...],
+) -> tuple[dict[CasillaId, Decimal], tuple[CasillaObservation, ...]]:
+    if str(work_unit.modelo) != Modelo.M349.value:
+        return casilla_values, observations
+    row_field_casilla_ids = _m349_row_field_template_casilla_ids(revision)
+    if not row_field_casilla_ids:
+        return casilla_values, observations
+    return (
+        {casilla_id: value for casilla_id, value in casilla_values.items() if casilla_id not in row_field_casilla_ids},
+        tuple(observation for observation in observations if observation.casilla_id not in row_field_casilla_ids),
+    )
+
+
 def _add_required_profile_bindings(
     *,
     work_unit: WorkUnit,
@@ -474,6 +502,12 @@ def calculate_modelo_revision(
     )
     casilla_values = dict(engine_result.values)
     typed_observations = _build_typed_observations(engine_result=engine_result, snapshot=snapshot)
+    casilla_values, typed_observations = _suppress_m349_row_field_template_outputs(
+        work_unit=work_unit,
+        revision=snapshot.revision,
+        casilla_values=casilla_values,
+        observations=typed_observations,
+    )
 
     now = clock or _utc_now()
     return persist_calculation_revision(
