@@ -33,15 +33,18 @@ from ...application.modelo import (
     WorkCalculateInputBundle,
     WorkUnitNotFoundError,
     build_work_calculate_input_bundle,
+    declared_modelo_period_tokens,
     get_work_unit,
+    modelo_work_create_refusal_locale_key,
     validate_m349_country_prefix_context,
     validate_m349_nif_format,
 )
-from ...core.errors import build_error_envelope, resolve_error_message
+from ...core.errors import AeatError, build_error_envelope, resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry import BindingId, CasillaId, RelationId, validated_casilla_id
+from ._errors import CliRefusedBoundaryError
 from ._modelo_rendering import short_id
 
 _log = get_logger(__name__)
@@ -152,6 +155,47 @@ def parse_binding_override(spec: str) -> tuple[BindingId, str]:
         key_validator=validate_binding_key,
     )
     return _BINDING_ID_ADAPTER.validate_python(key), value
+
+
+def unsupported_local_work_period_refusal(
+    *,
+    modelo: str | None,
+    token: str | None,
+) -> CliRefusedBoundaryError | None:
+    """Return the central unsupported-work refusal for declared non-Period tokens.
+
+    Some registry-visible modelos declare event tokens such as ``evento`` that
+    are valid registry metadata but cannot become a local typed
+    :class:`aeat.core.Period`. Commands that require a local filing period must
+    not report those tokens as both valid and invalid. If the modelo is
+    centrally marked unsupported for local work, reuse that refusal.
+    """
+    if modelo is None or token is None:
+        return None
+    modelo_code = modelo.strip()
+    period_token = token.strip()
+    if not modelo_code or not period_token:
+        return None
+
+    locale_key = modelo_work_create_refusal_locale_key(modelo_code)
+    if locale_key is None:
+        return None
+
+    try:
+        declared = declared_modelo_period_tokens(modelo_code)
+    except AeatError:
+        return None
+    except Exception:
+        _log.debug(
+            "unsupported_local_work_period_refusal: unexpected period lookup failure for modelo=%r",
+            modelo_code,
+            exc_info=True,
+        )
+        return None
+
+    if not any(period_token.casefold() == declared_token.casefold() for declared_token in declared):
+        return None
+    return CliRefusedBoundaryError(translated_message=locale_key, context={"modelo": modelo_code})
 
 
 def validate_relation_key(key: str, spec: str) -> None:
