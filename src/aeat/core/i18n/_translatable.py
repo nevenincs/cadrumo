@@ -7,8 +7,6 @@ catalogues and diagnostic records whose importance is carried separately by
 
 from __future__ import annotations
 
-from typing import Any
-
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema
 
@@ -24,7 +22,7 @@ class Translatable(str):
     @classmethod
     def __get_pydantic_core_schema__(
         cls,
-        source_type: type[Any],
+        source_type: type[object],
         handler: GetCoreSchemaHandler,
     ) -> core_schema.CoreSchema:
         del source_type, handler

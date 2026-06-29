@@ -17,6 +17,20 @@ substitutable. That anti-injection stance preserves the
 "no substitutable dependency on the write-gate" property: tests
 cannot swap the gate for a no-op because there is no seam to swap
 through.
+
+See Also:
+    :class:`AeatAccessGate`
+        Inline gate object used by read-only live surfaces and permanent
+        write-refusal checks.
+    :class:`AuthorizationManifest`
+        Directory-mode modelo authorization manifest re-exported by this
+        package for registry capability derivation.
+    :mod:`aeat.application.live`
+        Read-only application-live facade that calls the read gate before
+        opening AEAT remote surfaces.
+    :mod:`aeat.adapters.outbound.aeat.export._submitters`
+        Empty outbound namespace documenting the deliberately absent remote
+        submitter transport.
 """
 
 from __future__ import annotations

@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Annotated
 from pydantic import BeforeValidator, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import SettingsConfigDict
 
+from . import _config_live_tests as _live_test_config
 from ._config_storage_route import classify_storage_route_for_settings, settings_for_bucket_route
 from ._config_support import (
     AuthProviderKindSetting,
@@ -57,20 +58,11 @@ DEV_TEST_DATABASE_PASSWORD = "aeat-dev-test-database-password"
 """Shared development/test password for database-backed secure-storage tests."""
 DEV_TEST_DATABASE_PASSWORD_ENV_VAR = "AEAT_DEV_TEST_DATABASE_PASSWORD"
 """Environment variable backing :attr:`Settings.aeat_dev_test_database_password`."""
-LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD = "aeat_live_tests_enabled"
-"""Settings field backing the pytest-only live-read opt-in."""
-LIVE_READ_TEST_OPT_IN_ENV_VAR = "AEAT_LIVE_TESTS_ENABLED"
-"""Environment variable backing :attr:`Settings.aeat_live_tests_enabled`."""
-LIVE_READ_TEST_OPT_IN_VALUE = "1"
-"""The only literal value that opts in to live tests.
-
-Strict by design: ``"true"``/``"yes"``/``"on"`` are rejected so the opt-in
-surface cannot widen through bool coercion. This is the single canonical
-constant the :class:`Settings` predicates compare against."""
-LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD = "aeat_live_tests_google"
-"""Settings field backing the pytest-only Google live-test opt-in."""
-LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR = "AEAT_LIVE_TESTS_GOOGLE"
-"""Environment variable backing :attr:`Settings.aeat_live_tests_google`."""
+LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD = _live_test_config.LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD
+LIVE_READ_TEST_OPT_IN_ENV_VAR = _live_test_config.LIVE_READ_TEST_OPT_IN_ENV_VAR
+LIVE_READ_TEST_OPT_IN_VALUE = _live_test_config.LIVE_READ_TEST_OPT_IN_VALUE
+LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD = _live_test_config.LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD
+LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR = _live_test_config.LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR
 
 _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
     "aeat_secret_store_dir": "secrets",
@@ -429,10 +421,7 @@ class Settings(AeatTimeoutSettings):
     )
 
     # ── Live tests ──────────────────────────────────────────────────────────
-    # Typed as ``str`` (not ``bool``) so the strict-match safety property is
-    # preserved for pytest live-test opt-in: only the literal "1" enables
-    # live tests. Pydantic's bool coercion would accept "true"/"yes"/"on" —
-    # a wider opt-in surface than the test-gate intent allows.
+    # Typed as ``str`` to preserve the strict literal-"1" opt-in predicate.
     aeat_live_tests_enabled: str = Field(
         default="",
         description="Opt-in flag (set to '1') to run @pytest.mark.aeat_live tests against real external services",
@@ -447,20 +436,13 @@ class Settings(AeatTimeoutSettings):
 
     @property
     def live_tests_enabled(self) -> bool:
-        """Whether the pytest live-read opt-in is enabled (strict literal ``"1"``).
-
-        Single source of truth for the live-test gate: both the test-side
-        ``aeat.tests.live_gate`` helpers and the production
-        ``AeatAccessGate`` read this property, so the strict-match safety
-        rule (only ``"1"`` opts in; ``"true"`` / ``"yes"`` / ``"on"`` are
-        rejected) lives in exactly one place.
-        """
-        return self.aeat_live_tests_enabled == LIVE_READ_TEST_OPT_IN_VALUE
+        """Whether the pytest live-read opt-in is enabled."""
+        return _live_test_config.strict_live_test_opt_in(self.aeat_live_tests_enabled)
 
     @property
     def live_tests_google_enabled(self) -> bool:
         """Whether the Google (OAuth / Drive) live-test opt-in is enabled (strict ``"1"``)."""
-        return self.aeat_live_tests_google == LIVE_READ_TEST_OPT_IN_VALUE
+        return _live_test_config.strict_live_test_opt_in(self.aeat_live_tests_google)
 
     # ── Replay IPC ──────────────────────────────────────────────────────────
     # Set by ``aeat.core.observability._replay.replay_run`` on the parent
@@ -559,12 +541,6 @@ class Settings(AeatTimeoutSettings):
             "When True, manual corpus verification rejects any Manual/Section/Rule record "
             "missing definition-review metadata; when False the rejection is downgraded to a warning"
         ),
-    )
-
-    # ── Normatives corpus (aeat.domain.normatives) ─────────────────────────────────
-    aeat_normatives_root: Path = Field(
-        default_factory=lambda: bundled_path("corpus", "normatives"),
-        description="Root directory for the Spanish tax normatives JSON catalogue",
     )
 
     # ── IVA catalogue (aeat.domain.iva) ──────────────────────────────────
@@ -1207,7 +1183,6 @@ class Settings(AeatTimeoutSettings):
         "aeat_audit_dir",
         "aeat_registry_parity_store_dir",
         "aeat_manuals_root",
-        "aeat_normatives_root",
         "aeat_iva_catalogue_root",
         "aeat_certificate_path",
         "aeat_llm_cache_dir",
