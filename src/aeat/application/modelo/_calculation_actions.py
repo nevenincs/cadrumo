@@ -90,6 +90,9 @@ from ._calculation_resolution import (
 from ._calculation_resolution import (
     resolve_calculation_inputs as _resolve_calculation_inputs,
 )
+from ._m349_ledger_guard import (
+    raise_if_m349_intracom_ledger_rows_need_operator_rows as _raise_if_m349_intracom_ledger_rows_need_operator_rows,
+)
 from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
 from ._registry_resources import authority_via_resources as _authority_via_resources
 from ._registry_resources import registry_root as _registry_root
@@ -906,6 +909,11 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         caller_casilla_inputs=casilla_inputs or {},
     )
     all_detail_rows = (*source_resolution.detail_rows, *detail_rows)
+    _raise_if_m349_intracom_ledger_rows_need_operator_rows(
+        work_unit=work_unit,
+        transaction_repository=transaction_repository,
+        detail_rows=all_detail_rows,
+    )
     detail_row_binding_values = _detail_row_binding_values_for_calculation(
         work_unit=work_unit,
         detail_rows=detail_rows,
