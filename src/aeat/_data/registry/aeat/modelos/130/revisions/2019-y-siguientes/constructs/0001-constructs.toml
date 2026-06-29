@@ -45,4 +45,13 @@ application_links = [
     "modelo-130-deadline",
     "modelo-130-workflow",
 ]
-deadline_windows = ["modelo-130-2026-1t", "modelo-130-2026-2t", "modelo-130-2026-3t", "modelo-130-2026-4t"]
+deadline_windows = [
+    "modelo-130-2025-1t",
+    "modelo-130-2025-2t",
+    "modelo-130-2025-3t",
+    "modelo-130-2025-4t",
+    "modelo-130-2026-1t",
+    "modelo-130-2026-2t",
+    "modelo-130-2026-3t",
+    "modelo-130-2026-4t",
+]

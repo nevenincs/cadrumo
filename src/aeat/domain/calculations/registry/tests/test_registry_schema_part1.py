@@ -9,11 +9,11 @@ import pytest
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from ..._export_field_kind import CasillaFieldKind
 from .. import CasillaId, RegistrySnapshot, validated_casilla_id
+from .._authority import ValidatedRegistryAuthority
 from .._schema import DataBindingDefinition
 from ._registry_schema_support import (
     _EXPECTED_DEADLINE_WINDOWS,
     _EXPECTED_LIVE_CROSS_REFERENCES,
-    _REGISTRY_ROOT,
     _REQUIRED_APPLICATION_LINKS,
     _SNAPSHOT_HEADER_EXPECTATIONS,
     CasillaContinuidadEvolutionDefinition,
@@ -41,7 +41,6 @@ from ._registry_schema_support import (
     bundled_path,
     date,
     load_modelo_file,
-    load_registry_tree,
     re,
 )
 
@@ -169,12 +168,12 @@ def test_committed_snapshot_declares_no_support_removal_decisions(modelo_130_sna
     assert modelo_130_snapshot.support_removal_decisions == {}
 
 
-def test_committed_registry_contains_no_zero_casilla_revisions() -> None:
-    modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
-
+def test_committed_registry_contains_no_zero_casilla_revisions(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
     zero_casilla_revisions = [
         (modelo.id, revision.id)
-        for modelo in modelos
+        for modelo in registry_authority.modelos
         for revision in modelo.revisions.values()
         if not revision.casillas
     ]
@@ -204,7 +203,7 @@ def test_revision_without_casillas_is_registry_validation_failure() -> None:
         _validate_revision(modelo, catalogues, empty_revision)
 
 
-def test_committed_snapshot_lists_four_quarterly_deadline_windows(modelo_130_snapshot: RegistrySnapshot) -> None:
+def test_committed_snapshot_lists_registered_quarterly_deadline_windows(modelo_130_snapshot: RegistrySnapshot) -> None:
     assert tuple(modelo_130_snapshot.deadline_windows) == _EXPECTED_DEADLINE_WINDOWS
 
 
