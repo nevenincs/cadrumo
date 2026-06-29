@@ -6,7 +6,7 @@ label = "Ejercicio 2025 y siguientes"
 # with no annual coefficient table. A separate revision is authored only when a
 # genuine statutory rate change takes effect. Phase-1 engine covers 2025+.
 valid_from = 2025-01-01
-period_selector = { year_from = 2025, periods = ["evento"] }
+period_selector = { year_from = 2025, periods = ["EVENT-N"] }
 orden_aplicabilidad = ["orden-eha-3316-2010:art-1"]
 legal_refs = [
     "orden-eha-3316-2010:art-1",

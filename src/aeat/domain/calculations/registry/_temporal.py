@@ -9,6 +9,7 @@ from __future__ import annotations
 from datetime import date
 
 from ._errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError
+from ._period_selector_match import selector_token_for_request
 from ._schema import ModeloDefinition, ModeloRevision
 
 
@@ -43,12 +44,13 @@ def select_revision(
         # declaracion parser calls .upper() on every period string before it
         # reaches the registry, producing "ALTA"/"MODIFICACION"/"BAJA" for M036
         # whose canonical registry periods are lowercase.  All other period
-        # formats ("0A", "1T".."4T", "01".."12") are case-invariant, so the
-        # normalisation is harmless for them.  Downstream consumers receive the
-        # caller-supplied period (the RegistrySnapshot stores it verbatim), not
-        # the registry's canonical form, so no case-sensitive downstream
-        # regression is possible from this comparison.
-        if period.lower() not in {p.lower() for p in revision.period_selector.periods}:
+        # literal formats are case-invariant, and the shared matcher also lets
+        # symbolic EVENT-N selectors cover concrete EVENT-1/EVENT-2 operator
+        # scopes. Downstream consumers receive the caller-supplied period (the
+        # RegistrySnapshot stores it verbatim), not the registry's canonical
+        # form, so no case-sensitive downstream regression is possible from
+        # this comparison.
+        if selector_token_for_request(revision.period_selector.periods, period) is None:
             continue
         if on is not None and (revision.valid_from > on or (revision.valid_to is not None and revision.valid_to < on)):
             continue

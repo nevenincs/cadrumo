@@ -9,6 +9,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
+from .._errors import NoRevisionForPeriodError
 from .._legal import verify_legal_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -73,14 +74,30 @@ def test_modelo_210_revision_2025_formula_targets_resolve() -> None:
 
 def test_modelo_210_snapshot_builds_for_2025_event_period() -> None:
     modelo, catalogues = _load_modelo_210()
+    assert modelo.revisions["2025"].period_selector.periods == ("EVENT-N",)
     snapshot = build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
         filing_year=2025,
-        period="evento",
+        period="EVENT-1",
     )
     assert snapshot.revision.id == "2025"
+    assert snapshot.filing_period is not None
+    assert str(snapshot.filing_period.code) == "EVENT-1"
+
+
+def test_modelo_210_legacy_evento_period_is_not_supported() -> None:
+    modelo, catalogues = _load_modelo_210()
+
+    with pytest.raises(NoRevisionForPeriodError):
+        build_snapshot(
+            modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=2025,
+            period="evento",
+        )
 
 
 def test_modelo_210_form_order_is_boe_corpus_backed() -> None:

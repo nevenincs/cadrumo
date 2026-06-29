@@ -139,7 +139,7 @@ def _calculate_210(
 
     Returns the casilla_values dict and the produced-value count.
     """
-    snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period="evento")
+    snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period="EVENT-1")
     # Text casillas (tipo_renta) and enum bindings (country_of_fiscal_residence)
     # are supplied through text_inputs and enum_binding_values respectively.
     # Numeric manual casillas go through casilla_inputs.

@@ -250,7 +250,7 @@ def test_stub_only_modelo_work_create_reaches_leaf_refusal_on_root_fallback_data
             "--year",
             "2025",
             "--period",
-            "evento",
+            "EVENT-1",
             "--revision",
             "2025",
         ),

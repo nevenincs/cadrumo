@@ -21,6 +21,7 @@ from ....core import Period
 from ._authority import ValidatedRegistryAuthority
 from ._errors import AmbiguousRevisionSelectionError, RegistryValidationError
 from ._ids import BindingId, CasillaId, FormulaId, LegalRefId, ParameterId, RelationId, SourceRefId
+from ._period_selector_match import registry_period_for_request, selector_token_for_request
 from ._runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
@@ -909,30 +910,34 @@ class RegistryQueryService:
         # A bare period token is one of: a registry time-code
         # (``0A``, ``1T``-``4T``, ``01``-``12``, ...) matched by
         # ``_BARE_PERIOD_RE``, or a non-date censo / event token
-        # (``alta``, ``modificacion``, ``baja``, ``AD-HOC``) declared
+        # (``alta``, ``modificacion``, ``baja``, ``AD-HOC``, ``EVENT-N``) declared
         # verbatim by a censo modelo's ``period_selector``. Both are
         # resolved by matching the token against each revision's
         # declared periods, so a censo token is accepted on the same
         # path as a quarterly time-code.
-        declared_by_revision = {
+        declared_by_revision = tuple(
             token for revision in definition.revisions.values() for token in revision.period_selector.periods
-        }
-        token_is_declared = any(token.upper() == bare_upper for token in declared_by_revision)
+        )
+        token_is_declared = selector_token_for_request(declared_by_revision, bare) is not None
         if _BARE_PERIOD_RE.fullmatch(bare_upper) or token_is_declared:
             candidates = [
                 revision
                 for revision in definition.revisions.values()
-                if bare_upper in {token.upper() for token in revision.period_selector.periods}
+                if selector_token_for_request(revision.period_selector.periods, bare) is not None
             ]
             if not candidates:
-                declared = sorted(declared_by_revision)
+                declared = sorted(set(declared_by_revision))
                 raise RegistryValidationError(
                     f"period {period!r} is not declared by any revision of modelo "
                     f"{definition.id}; declared periods: {', '.join(declared)}",
                 )
             revision = max(candidates, key=lambda item: (item.valid_from, str(item.id)))
             # Return the registry's own casing for the period token.
-            registry_token = next(token for token in revision.period_selector.periods if token.upper() == bare_upper)
+            registry_token = selector_token_for_request(revision.period_selector.periods, bare)
+            if registry_token is None:
+                raise RegistryValidationError(
+                    f"period {period!r} is not declared by revision {revision.id} of modelo {definition.id}",
+                )
             return definition, revision, None, registry_token
         raise RegistryValidationError(
             f"period must be a bare registry token; pass the filing year separately; got {period!r}",
@@ -948,11 +953,13 @@ class RegistryQueryService:
     ) -> tuple[ModeloDefinition, ModeloRevision, str]:
         definition = self._authority.validate_modelo(modelo.strip())
         requested_period = period.strip()
-        declared_by_revision = {
+        declared_by_revision = tuple(
             token for revision in definition.revisions.values() for token in revision.period_selector.periods
-        }
-        declared_by_upper = {token.upper(): token for token in declared_by_revision}
-        registry_period = declared_by_upper.get(requested_period.upper(), requested_period.upper())
+        )
+        registry_period = (
+            registry_period_for_request(declared_by_revision, requested_period)
+            or requested_period.upper()
+        )
         snapshot = self._authority.snapshot(
             str(definition.id),
             filing_year=filing_year,
