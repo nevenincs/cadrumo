@@ -1,14 +1,22 @@
 """Shared primitives for the CLI's strict ``--json`` output contract.
 
-Defines the strict pydantic v2 base classes (:class:`OutputSchema`,
-:class:`OutputRootSchema`), the canonical envelope shape
-(:class:`SchemaEnvelope`), the schema registry
-(:data:`SCHEMA_REGISTRY`), and the streaming helpers
-(:func:`emit_json_document`, :func:`emit_json_success`) used by every
-``--json`` code path. :func:`emit_json_success` applies
+Defines the strict pydantic v2 bases (:class:`OutputSchema`,
+:class:`OutputRootSchema`), the canonical success envelope
+(:class:`SchemaEnvelope`), the typed diagnostic channel
+(:class:`Notice`), the schema registry (:data:`SCHEMA_REGISTRY`), and
+the emit helpers (:func:`emit_json_document`, :func:`emit_json_success`)
+used by every registered machine-output path.  CLI payload modules import
+these primitives through :mod:`aeat.entrypoints.cli._schemas`, register
+result models with :func:`register_schema`, and route JSON mode through
+:func:`aeat.entrypoints.cli._common._emit_envelope`.
+
+:func:`emit_json_success` derives :class:`EnvelopeStatus` from supplied
+:class:`Notice` values via :func:`derive_status` and applies
 :func:`aeat.core.redaction.redact_structured_for_cli_output` to the
-entire envelope before writing stdout, so the result and
-:class:`Notice` channel share the same public-output redaction policy.
+entire envelope before writing stdout.  Text output remains owned by
+:func:`aeat.core.output_rendering.render_command_output`, so redaction
+and the ``reveal_cli_identifiers_opt_in`` switch stay consistent across
+text and JSON surfaces.
 
 Living in :mod:`aeat.core` keeps domain and adapter packages free of any
 dependency on :mod:`aeat.entrypoints.cli`: a wrapped command emits its
@@ -57,9 +65,10 @@ class EnvelopeStatus(StrEnum):
 
     ``success`` and ``warning`` ride on the stdout :class:`SchemaEnvelope`
     (``warning`` when the command attached at least one warning-severity
-    notice); ``error`` rides on the stderr error envelope. A machine
-    consumer reads this single field to learn the outcome instead of
-    branching on stdout-vs-stderr.
+    :class:`Notice`); ``error`` rides on the stderr error envelope. A
+    machine consumer reads this single field to learn the outcome instead
+    of branching on stdout-vs-stderr, and :func:`derive_status` is the
+    success-envelope authority for computing it.
     """
 
     SUCCESS = "success"
@@ -73,7 +82,7 @@ class NoticeSeverity(StrEnum):
     ``info`` is a non-fatal next-step hint or informational advisory;
     ``warning`` is a non-blocking advisory the operator should act on. A
     command that attaches any ``warning`` notice resolves to
-    :attr:`EnvelopeStatus.WARNING`.
+    :attr:`EnvelopeStatus.WARNING` through :func:`derive_status`.
     """
 
     INFO = "info"
@@ -87,7 +96,10 @@ class Notice(BaseModel):
     and next-step hints across every command. Domain diagnostics (e.g.
     ``ModeloFinding``, source-resolution advisories) are projected into
     this shape rather than re-modelled as bespoke per-command payload
-    fields.
+    fields.  CLI helpers such as
+    :func:`aeat.entrypoints.cli._common._emit_envelope` pass these values
+    to :func:`emit_json_success`, while text renderers fold equivalent
+    prose into their line output.
 
     Attributes:
         severity: ``info`` or ``warning``; drives the envelope ``status``.
@@ -116,7 +128,8 @@ def derive_status(notices: Sequence[Notice]) -> EnvelopeStatus:
 
     Success documents never carry :attr:`EnvelopeStatus.ERROR`; that
     status is reserved for the stderr error envelope. The returned
-    :class:`EnvelopeStatus` is the stdout envelope status.
+    :class:`EnvelopeStatus` is the stdout :class:`SchemaEnvelope` status
+    used by :func:`emit_json_success`.
     """
     for notice in notices:
         if notice.severity is NoticeSeverity.WARNING:
@@ -129,7 +142,9 @@ class OutputSchemaError(AeatError):
 
     Triggered by :func:`register_schema` when a non-schema class is
     decorated, when a command path is registered twice with different
-    schemas, or when the command path is blank.
+    schemas, or when the command path is blank.  It deliberately inherits
+    :class:`aeat.core.errors.AeatError` so registry defects route through
+    the shared CLI error boundary instead of bypassing structured output.
     """
 
 
@@ -139,7 +154,9 @@ class OutputSchema(BaseModel):
     Subclasses inherit ``extra="forbid"``, ``frozen=True``, ``strict=True``,
     and ``validate_assignment=True`` so accidental field drift between
     contract and implementation surfaces as a validation error rather
-    than a silently-extended payload.
+    than a silently-extended payload.  Each concrete result model should
+    be decorated with :func:`register_schema` so the CLI conformance gate
+    can match command leaves against :data:`SCHEMA_REGISTRY`.
     """
 
     model_config = _STRICT_FROZEN_CONFIG
@@ -150,7 +167,8 @@ class OutputRootSchema[RootT](RootModel[RootT]):
 
     Use this for commands whose top-level JSON value is a list or scalar
     rather than an object. Carries the same strict / frozen / validate-on-
-    assignment configuration as :class:`OutputSchema`.
+    assignment configuration as :class:`OutputSchema`, and participates in
+    the same :func:`register_schema` registry contract.
     """
 
     model_config = _STRICT_ROOT_CONFIG
@@ -164,6 +182,9 @@ class SchemaEnvelope[ResultT: OutputSchema](BaseModel):
     the inner payload shape. The outer spine (``schema_version``,
     ``command``, ``status``, ``notices``) is shared with the stderr error
     envelope so one shape describes success, warning, and error outcomes.
+    :func:`emit_json_success` constructs the runtime mapping and the
+    JSON-contract conformance gate specialises this generic envelope over
+    every schema in :data:`SCHEMA_REGISTRY`.
 
     Attributes:
         schema_version: Envelope version; bumped only on
@@ -231,7 +252,9 @@ def emit_json_document(
     When ``stream`` exposes ``_ReconfigurableStream.reconfigure``,
     the helper pins it to ``encoding="utf-8", errors="strict"`` first so
     downstream cp1252 consoles can not silently corrupt non-ASCII
-    characters in the rendered output.
+    characters in the rendered output. This is the low-level writer used
+    by :func:`emit_json_success`; it does not itself apply the envelope or
+    redaction policy.
 
     Args:
         payload: Any object reachable by :func:`_jsonable_payload`
@@ -326,7 +349,10 @@ def register_schema[RegisteredSchemaT: OutputSchema | OutputRootSchema[Any]](
 
     The same schema may register the same path more than once
     (idempotent re-import); registering a *different* schema under an
-    existing path raises :class:`OutputSchemaError`.
+    existing path raises :class:`OutputSchemaError`.  Registered paths are
+    the authoritative command strings emitted as
+    :attr:`SchemaEnvelope.command` and compared against the Typer command
+    tree by the JSON-schema conformance tests.
 
     Args:
         command_path: Stable command-path string used both as the
