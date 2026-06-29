@@ -9,6 +9,9 @@ legal_refs = [
     "orden-eha-3786-2008:art-11",
     "ley-37-1992:art-161",
 ]
+orden_aplicabilidad = [
+    "orden-eha-3786-2008:art-2",
+]
 source_refs = [
     "aeat-dr-308-2019",
     "aeat-modelo-308-procedure",
