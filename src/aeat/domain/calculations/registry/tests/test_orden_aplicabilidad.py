@@ -317,9 +317,11 @@ def _committed_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCa
         ("303", "2009-y-siguientes"),
         ("308", "2009-y-siguientes"),
         ("309", "2004-y-siguientes"),
+        ("360", "2010-y-siguientes"),
         ("369", "esquema-exterior"),
         ("369", "esquema-union"),
         ("369", "esquema-importacion"),
+        ("390", "2010-y-siguientes"),
     ],
 )
 def test_backfilled_revision_has_valid_orden_aplicabilidad(modelo_id: str, revision_id: str) -> None:
@@ -362,9 +364,11 @@ def test_backfilled_revision_has_valid_orden_aplicabilidad(modelo_id: str, revis
         ("303", "2009-y-siguientes"),
         ("308", "2009-y-siguientes"),
         ("309", "2004-y-siguientes"),
+        ("360", "2010-y-siguientes"),
         ("369", "esquema-exterior"),
         ("369", "esquema-union"),
         ("369", "esquema-importacion"),
+        ("390", "2010-y-siguientes"),
     ],
 )
 def test_s24_open_ended_backfilled_revision_has_orden_aplicabilidad(modelo_id: str, revision_id: str) -> None:

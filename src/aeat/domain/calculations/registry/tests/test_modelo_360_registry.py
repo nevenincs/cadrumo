@@ -42,6 +42,7 @@ def test_modelo_360_revision_starts_at_2010() -> None:
     revision = modelo.revisions["2010-y-siguientes"]
     assert revision.valid_from == date(2010, 4, 1)
     assert revision.period_selector.year_from == 2010
+    assert revision.orden_aplicabilidad == ("orden-eha-789-2010:art-1",)
 
 
 def test_modelo_360_september_30_deadline_matches_orden_eha_789_2010_art_4() -> None:
@@ -63,6 +64,7 @@ def test_modelo_360_snapshot_builds_for_ad_hoc_period() -> None:
     modelo, catalogues = _load_modelo_360()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="AD-HOC")
     assert snapshot.revision.id == "2010-y-siguientes"
+    assert snapshot.revision.orden_aplicabilidad == ("orden-eha-789-2010:art-1",)
     assert "orden-eha-789-2010:art-1" in snapshot.legal
 
 

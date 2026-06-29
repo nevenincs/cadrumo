@@ -92,6 +92,7 @@ def test_modelo_390_revision_period_selector_starts_at_2010() -> None:
     assert revision.valid_from == date(2010, 1, 1)
     assert revision.period_selector.year_from == 2010
     assert revision.period_selector.periods == ("0A",)
+    assert revision.orden_aplicabilidad == ("orden-eha-3111-2009:art-1",)
 
 
 def test_modelo_390_snapshot_builds_for_each_published_filing_year() -> None:
@@ -112,6 +113,7 @@ def test_modelo_390_snapshot_carries_legal_authority_and_record_design() -> None
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="0A")
     assert "orden-eha-3111-2009:art-1" in snapshot.legal
     assert "orden-eha-3111-2009:art-8" in snapshot.legal
+    assert snapshot.revision.orden_aplicabilidad == ("orden-eha-3111-2009:art-1",)
     assert snapshot.legal["orden-eha-3111-2009:art-8"].article == "8"
     assert "aeat-dr-390-2025" in snapshot.sources
     assert "aeat-modelo-390-procedure" in snapshot.sources
