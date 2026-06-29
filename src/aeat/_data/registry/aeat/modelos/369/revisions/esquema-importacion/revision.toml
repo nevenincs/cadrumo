@@ -8,6 +8,9 @@ legal_refs = [
     "orden-hac-610-2021:art-2",
     "orden-hac-610-2021:art-3",
     "ley-37-1992:art-163-quinvicies",
+    "ley-37-1992:art-163-sexvicies",
+    "ley-37-1992:art-163-septvicies",
+    "ley-37-1992:art-163-octovicies",
 ]
 source_refs = [
     "aeat-dr-369-2021",
@@ -37,7 +40,13 @@ discrepancy_causes = [
     "rounding",
     "correctness_divergence",
 ]
-legal_refs = ["ley-37-1992:art-163-quinvicies", "orden-hac-610-2021:art-1"]
+legal_refs = [
+    "ley-37-1992:art-163-quinvicies",
+    "ley-37-1992:art-163-sexvicies",
+    "ley-37-1992:art-163-septvicies",
+    "ley-37-1992:art-163-octovicies",
+    "orden-hac-610-2021:art-1",
+]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
@@ -99,7 +108,13 @@ semantic_role = "iva_ioss_importacion_cuota_total"
 required = false
 input_kind = "computed"
 formula = "modelo-369-importacion-cuota-total"
-legal_refs = ["ley-37-1992:art-163-quinvicies", "orden-hac-610-2021:art-1"]
+legal_refs = [
+    "ley-37-1992:art-163-quinvicies",
+    "ley-37-1992:art-163-sexvicies",
+    "ley-37-1992:art-163-septvicies",
+    "ley-37-1992:art-163-octovicies",
+    "orden-hac-610-2021:art-1",
+]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".formulas]]
@@ -109,7 +124,13 @@ expression = { op = "add", args = [
     { casilla_id = "iva.importacion.de.low-value-cuota" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-37-1992:art-163-quinvicies", "orden-hac-610-2021:art-1"]
+legal_refs = [
+    "ley-37-1992:art-163-quinvicies",
+    "ley-37-1992:art-163-sexvicies",
+    "ley-37-1992:art-163-septvicies",
+    "ley-37-1992:art-163-octovicies",
+    "orden-hac-610-2021:art-1",
+]
 source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
 
 [[revisions."esquema-importacion".formulas.source_citations]]
@@ -205,7 +226,13 @@ id = "modelo-369-importacion-calculation"
 surface = "calculation"
 consumer = "aeat.domain.calculations.registry"
 requires_snapshot = true
-legal_refs = ["orden-hac-610-2021:art-1", "ley-37-1992:art-163-quinvicies"]
+legal_refs = [
+    "orden-hac-610-2021:art-1",
+    "ley-37-1992:art-163-quinvicies",
+    "ley-37-1992:art-163-sexvicies",
+    "ley-37-1992:art-163-septvicies",
+    "ley-37-1992:art-163-octovicies",
+]
 source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
 
 [[revisions."esquema-importacion".application_links]]
@@ -304,6 +331,9 @@ legal_refs = [
     "orden-hac-610-2021:art-2",
     "orden-hac-610-2021:art-3",
     "ley-37-1992:art-163-quinvicies",
+    "ley-37-1992:art-163-sexvicies",
+    "ley-37-1992:art-163-septvicies",
+    "ley-37-1992:art-163-octovicies",
 ]
 source_refs = [
     "aeat-dr-369-2021",

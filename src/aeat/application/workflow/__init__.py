@@ -1,28 +1,52 @@
-"""End-user composite workflow engine for the modelo lifecycle.
+"""Public facade for workflow runs and profile-bucket discovery.
 
-Composes the auth, filing, and submission layers into a single resumable
-workflow that drives a modelo from setup through draft, verification, and
-export. Run state is persisted per bucket, so an interrupted run resumes
-where it left off.
+The workflow engine surface composes auth, filing, draft-building, and
+submission collaborators into resumable modelo runs. A
+:class:`~aeat.application.workflow.WorkflowEngine` advances
+:class:`~aeat.application.workflow.WorkflowStage` values and persists
+:class:`~aeat.application.workflow.WorkflowResult` records through
+:class:`~aeat.application.workflow.WorkflowRunRepository`. The companion
+:class:`~aeat.application.workflow.WorkflowState` envelope carries progress
+pointers, auth readiness, review annotations, and bucket events; it does not
+store profile facts or profile-value maps.
 
-Major declarations:
+The profile-discovery surface is manifest-backed and intentionally cheap.
+:func:`~aeat.application.workflow.list_profile_buckets`,
+:func:`~aeat.application.workflow.read_profile_bucket`,
+:func:`~aeat.application.workflow.read_profile_bucket_by_id`, and
+:func:`~aeat.application.workflow.resolve_profile_bucket` scan plaintext
+bucket manifests and return
+:class:`~aeat.application.workflow.ProfileBucketPointer` records without
+opening an encrypted database. Active-profile status and repair use the
+redacted :class:`~aeat.application.workflow.ActiveProfileHealth` projection;
+sensitive profile records are loaded only through the active bucket and the
+user-profile orchestration layer.
 
-* :class:`WorkflowEngine` — the orchestrator that advances a run through
-  its :class:`WorkflowStage` sequence.
-* :class:`WorkflowState` and :class:`WorkflowResult` — the persisted run
-  record and its terminal outcome.
-* :func:`resume_modelo_workflow` and :func:`find_latest_run_for_period` —
-  the resume entry points.
-* :class:`WorkflowRunRepository` and :class:`WorkflowStateRepository` —
-  the persistence boundaries.
-* :class:`WorkflowError` and its subclasses (:class:`WorkflowAbortedError`,
-  :class:`WorkflowComponentError`, :class:`WorkflowInputMismatchError`) — the
-  failure taxonomy. The active-profile refusal :class:`NoActiveProfileError` is
-  core-owned (:mod:`aeat.core.errors`); import it from there, not from this package.
+This initializer is only the public re-export boundary. Manifest parsing stays
+in :mod:`aeat.application.workflow._profile_bucket_scan`; health projection and
+pointer repair stay in :mod:`aeat.application.workflow._profile_health`;
+encrypted state and run storage stay behind
+:class:`~aeat.application.workflow.WorkflowStateRepository` and
+:class:`~aeat.application.workflow.WorkflowRunRepository`; and engine
+orchestration stays in :mod:`aeat.application.workflow._engine`. Callers must
+not duplicate pointer parsing, manifest resolution, secure-repository opening,
+SQL routing, or master-key handling here. The active-profile refusal
+``NoActiveProfileError`` remains core-owned and is imported from
+:mod:`aeat.core.errors`.
 
-The engine speaks to its dependencies through the protocols defined here
-(:class:`DeadlineEngineProtocol`, :class:`ModeloDraftBuilderProtocol`,
-:class:`SubmissionEngineProtocol`), so the concrete adapters stay swappable.
+See Also:
+    :class:`aeat.application.workflow.WorkflowState`: Encrypted progress,
+        readiness, review, and event state for the active bucket.
+    :class:`aeat.application.workflow.WorkflowResult`: Persisted terminal
+        result for one modelo workflow run.
+    :func:`aeat.application.workflow.resume_modelo_workflow`: Build the
+        resume context for a persisted aborted workflow run.
+    :func:`aeat.application.workflow.list_profile_buckets`: Enumerate live
+        manifest-backed profile buckets without opening secure storage.
+    :func:`aeat.application.workflow.assess_active_profile_health`: Produce
+        the redacted active-profile status used by CLI status surfaces.
+    :class:`aeat.application.workflow.DeadlineEngineProtocol`: Protocol
+        boundary for pluggable deadline calculation collaborators.
 """
 
 from __future__ import annotations
@@ -90,10 +114,8 @@ from ._profile_bucket_scan import (
 )
 from ._profile_health import (
     ActiveProfileHealth,
-    ActiveProfileManifestStatusRepairResult,
     ActiveProfileRepairResult,
     assess_active_profile_health,
-    repair_active_profile_manifest_status,
     repair_active_profile_pointer,
 )
 
@@ -129,7 +151,6 @@ from ._resume import (
 
 __all__ = [
     "ActiveProfileHealth",
-    "ActiveProfileManifestStatusRepairResult",
     "ActiveProfileRepairResult",
     "CertificateBundleProtocol",
     "DeadlineEngineAdapter",
@@ -180,7 +201,6 @@ __all__ = [
     "load_run",
     "read_profile_bucket",
     "read_profile_bucket_by_id",
-    "repair_active_profile_manifest_status",
     "repair_active_profile_pointer",
     "reset_workflow_state",
     "resolve_modelo_exact_workflow_run_for_resume",

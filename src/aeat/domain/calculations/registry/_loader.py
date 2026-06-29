@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field, ValidationError
 from ....core import freeze_toml, read_toml
 from ._errors import RegistryLoadError, RegistryValidationError
 from ._ids import CasillaId, validated_casilla_id
+from ._loader_cache import registry_disk_cache_enabled
 from ._schema import (
     LegalParameter,
     LegalReference,
@@ -1154,23 +1155,6 @@ def _modelo_directory_fingerprints(entry: Path) -> tuple[tuple[str, int, int], .
         for rev_path in sorted(revisions_dir.rglob("*.toml")):
             fingerprints.append(_toml_fingerprint(rev_path))
     return tuple(fingerprints)
-
-
-def registry_disk_cache_enabled() -> bool:
-    """Whether the cross-process ``/tmp`` registry pickle is read/written.
-
-    Disabled under pytest (``PYTEST_CURRENT_TEST`` / ``PYTEST_XDIST_WORKER`` set):
-    the pickle is keyed by file mtime and SHARED across pytest-xdist worker
-    processes, so a parallel run could serve a stale/transient compiled registry
-    from one worker to another -- a test-isolation race (#44). The per-process
-    :func:`functools.lru_cache` on :func:`_load_registry_tree_cached` still
-    memoises within a worker, so in-run perf is unaffected and each worker
-    compiles from the current TOML. Production loads the registry once at
-    startup with no concurrent edits, so it keeps the disk cache.
-    """
-    import os
-
-    return "PYTEST_CURRENT_TEST" not in os.environ and "PYTEST_XDIST_WORKER" not in os.environ
 
 
 @lru_cache(maxsize=32)

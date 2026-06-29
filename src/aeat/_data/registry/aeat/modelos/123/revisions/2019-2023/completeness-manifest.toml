@@ -20,21 +20,21 @@ legal_refs = ["ley-35-2006:art-101", "ley-35-2006:art-25", "ley-35-2006:art-99",
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
 
 [[revisions."2019-2023".completeness_manifest.casillas]]
-casilla_id = "03-legacy"
+casilla_id = "03"
 number = "03"
 
 [[revisions."2019-2023".completeness_manifest.casillas]]
-casilla_id = "05-legacy"
+casilla_id = "05"
 number = "05"
 
 [[revisions."2019-2023".completeness_manifest.casillas]]
-casilla_id = "06-legacy"
+casilla_id = "06"
 number = "06"
 
 [[revisions."2019-2023".completeness_manifest.casillas]]
-casilla_id = "07-legacy"
+casilla_id = "07"
 number = "07"
 
 [[revisions."2019-2023".completeness_manifest.casillas]]
-casilla_id = "08-legacy"
+casilla_id = "08"
 number = "08"

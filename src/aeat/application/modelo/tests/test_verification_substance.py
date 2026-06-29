@@ -14,7 +14,6 @@ contract: Regression — Modelo 130 casilla 02 (Gastos) is now ledger-bound
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -28,9 +27,7 @@ from ....domain.calculations.registry import (
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     CasillaId,
     VerificationPredicateDefinition,
-    validated_casilla_id,
 )
-from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -45,92 +42,51 @@ from ....domain.modelos._verification_report import (
     ModeloVerificationFindingKind,
 )
 from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
+    StoredCalculationDriftError,
     calculate_modelo_revision,
     create_work_unit,
     verify_modelo_revision,
 )
-from .._actions import StoredCalculationDriftError
 from .._verification_actions import (
     evaluate_advisory_predicate_fires,
     evaluate_predicate_expression,
     evaluate_verification_predicates,
 )
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_Repos = tuple[
-    WorkUnitCatalogueRepository,
-    CalculationRevisionCatalogueRepository,
-    VerificationReportCatalogueRepository,
-    BucketEventHistoryRepository,
-]
-
-_T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
-_T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
-_T2 = datetime(2026, 4, 14, 14, 0, 0, tzinfo=UTC)
-
-
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"verification substance fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_CASILLA_01: CasillaId = _casilla_id("01")
-_CASILLA_02: CasillaId = _casilla_id("02")
-_CASILLA_03: CasillaId = _casilla_id("03")
-_CASILLA_05: CasillaId = _casilla_id("05")
-_CASILLA_06: CasillaId = _casilla_id("06")
-_CASILLA_07: CasillaId = _casilla_id("07")
-_CASILLA_08: CasillaId = _casilla_id("08")
-_CASILLA_09: CasillaId = _casilla_id("09")
-_CASILLA_10: CasillaId = _casilla_id("10")
-_CASILLA_11: CasillaId = _casilla_id("11")
-_CASILLA_12: CasillaId = _casilla_id("12")
-_CASILLA_14: CasillaId = _casilla_id("14")
-_CASILLA_15: CasillaId = _casilla_id("15")
-_CASILLA_16: CasillaId = _casilla_id("16")
-_CASILLA_18: CasillaId = _casilla_id("18")
-_CASILLA_00501: CasillaId = _casilla_id("00501")
-_ABSENT_REGISTRY_CASILLA: CasillaId = _casilla_id("99")
-_M200_BIN_OPEN_CASILLA: CasillaId = _casilla_id("00670")
-_M200_BIN_CLOSING_CASILLA: CasillaId = _casilla_id("00671")
-_M200_BIN_APPLIED_CASILLA: CasillaId = _casilla_id("DP200014:00547")
-_M200_BIN_GENERATED_CASILLA: CasillaId = _casilla_id("DP200014:00552")
-
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Test"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+from ._verification_substance_support import (
+    _ABSENT_REGISTRY_CASILLA,
+    _CASILLA_00501,
+    _CASILLA_01,
+    _CASILLA_02,
+    _CASILLA_03,
+    _CASILLA_05,
+    _CASILLA_06,
+    _CASILLA_07,
+    _CASILLA_08,
+    _CASILLA_09,
+    _CASILLA_10,
+    _CASILLA_11,
+    _CASILLA_12,
+    _CASILLA_14,
+    _CASILLA_15,
+    _CASILLA_16,
+    _CASILLA_18,
+    _M200_BIN_APPLIED_CASILLA,
+    _M200_BIN_CLOSING_CASILLA,
+    _M200_BIN_GENERATED_CASILLA,
+    _M200_BIN_OPEN_CASILLA,
+    _T0,
+    _T1,
+    _T2,
+    _casilla_values,
+    _Repos,
+    _seed_ready_profile,
+    _workflow_profile,
 )
 
-
-def _casilla_values(*entries: tuple[CasillaId, str]) -> dict[CasillaId, Decimal]:
-    return {casilla_id: Decimal(value) for casilla_id, value in entries}
-
-
-def _seed_ready_profile(repository: UserProfileLifecycleRepository, *, bucket_id: str) -> None:
-    repository.save(
-        UserProfileRecord(
-            profile_id=bucket_id,
-            display_name="Test Operator",
-            facts=_READY_PROFILE_FACTS,
-            created_at=_T0,
-            updated_at=_T0,
-        ),
-    )
-
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # ---------------------------------------------------------------------------
 # contract: unit tests for evaluate_predicate_expression
@@ -399,7 +355,7 @@ def test_roll_forward_balances_emits_no_finding_when_continuous() -> None:
 def test_unknown_expression_does_not_block() -> None:
     """An unrecognised expression pattern does not produce a blocking finding."""
     values: dict[CasillaId, Decimal] = {}
-    # Passes through — unknown DSL extensions do not block legacy registry data.
+    # Passes through — unknown DSL extensions do not block existing registry data.
     assert evaluate_predicate_expression('threshold(["01"], 100)', values, _workflow_profile()) is True
 
 
@@ -568,17 +524,6 @@ def test_advisory_predicate_emits_no_finding_when_condition_not_met() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(
-        tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
-    )
-
-
 @pytest.fixture
 def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over a fresh isolated profile."""
@@ -676,7 +621,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
     Drift between the two sets is a silent-pass hazard.
 
     Structural gate: each known operator MUST have a matching
-    regex registered in _actions._PREDICATE_<NAME_UPPER>. The probe
+    regex registered in _verification_actions._PREDICATE_<NAME_UPPER>. The probe
     map below names the expected module-level regex variable per
     operator; the test asserts (a) the regex exists, (b) it matches
     the canonical probe expression for the operator. If the parallel
@@ -684,7 +629,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
     removes that regex without updating the canonical set, this
     test fires.
     """
-    from .. import _actions
+    from .. import _verification_actions
 
     probe_expressions: dict[str, str] = {
         "all_nonzero": 'all_nonzero(["01", "02"])',
@@ -717,7 +662,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
 
     for operator_name in KNOWN_VERIFICATION_PREDICATE_OPERATORS:
         regex_attr = regex_attr_names[operator_name]
-        regex = getattr(_actions, regex_attr, None)
+        regex = getattr(_verification_actions, regex_attr, None)
         assert regex is not None, (
             f"Runtime evaluator missing regex {regex_attr!r} for known operator "
             f"{operator_name!r}; the canonical set "
@@ -781,9 +726,7 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     invalid_values = dict(revision.casilla_values)
     invalid_values[_CASILLA_15] = invalid_c15
     invalid_observations = tuple(
-        observation.model_copy(update={"value": invalid_c15})
-        if observation.casilla_id == _CASILLA_15
-        else observation
+        observation.model_copy(update={"value": invalid_c15}) if observation.casilla_id == _CASILLA_15 else observation
         for observation in revision.observations
     )
     invalid_revision_id = derive_calculation_revision_id(
@@ -959,14 +902,14 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
         "The revision must carry at least one typed observation for S211 to be valid"
     )
 
-    # Demonstrate that _assert_revision_content_integrity raises on provenance drift.
+    # Demonstrate that assert_revision_content_integrity raises on provenance drift.
     # The CalculationRevision model validator already enforces consistency between
     # casilla_values and observations at construction time (preventing in-band
     # injection of inconsistent state). The runtime check is a defense-in-depth
     # layer against raw storage corruption that bypasses pydantic. We bypass
     # model_validator here via model_construct to simulate that scenario.
     from ....domain.calculations.registry import CasillaObservation
-    from .._actions import _assert_revision_content_integrity
+    from .._registry_helpers import assert_revision_content_integrity as _assert_revision_content_integrity
 
     target_obs = revision.observations[0]
     tampered_obs = CasillaObservation.model_construct(
@@ -1041,125 +984,3 @@ def test_missing_casilla_finding_refuses_absent_registry_definition() -> None:
 
     with pytest.raises(ModeloValidationError, match="requires registry casilla definition provenance"):
         missing_required_casilla_finding(_ABSENT_REGISTRY_CASILLA, "wu-test-id", casilla_def=None)
-
-
-# ---------------------------------------------------------------------------
-# M131 no-silent-under-declaration advisory
-#
-# C01 ("Suma de rendimientos netos" — manual módulos sum) and C02 ("Pago
-# fraccionado previo por datos-base" — manual) are operator inputs because
-# the módulos rendimiento is determined externally (the annual Orden de
-# módulos, not modelled in the registry).
-#
-# Legal attribution:
-# - RD 439/2007 art. 110.1.b establishes the datos-base determination
-#   obligation with a 4 por 100 headline rate, making C02 derivable from C01.
-# - The official M131 instructions (aeat-modelo-131-instructions, Casilla 02)
-#   establish the 4/3/2 por 100 personal-asalariado percentage scale; the
-#   2 por 100 is the scale minimum.
-# - RD 439/2007 art. 110.4 grants the right to apply higher percentages;
-#   the instructions confirm "no se permiten porcentajes inferiores".
-#
-# A strictly positive C01 therefore ALWAYS yields a strictly positive C02
-# (the scale minimum is 2 por 100 > 0). A positive C01 with C02 = 0 is a
-# silent under-declaration: the datos-base section contributes nothing to
-# C07 = C02 + C04 + C06 and the resultado collapses to zero on positive
-# módulos activity.
-#
-# These tests load the REAL shipped predicate from the registry authority
-# (not a hand-built one) so they assert the declaration actually rides in
-# every M131 revision, and exercise the real evaluate_verification_predicates
-# path. Non-tautological: the expected firing/non-firing is derived from the
-# M131-instructions scale minimum (2 por 100 > 0), not from re-running the
-# (unmodelled) módulos formula.
-# ---------------------------------------------------------------------------
-
-_M131_ADVISORY_PREDICATE_IDS = {
-    "2019-2023": "modelo-131-2019-2023-pago-fraccionado-determinado-cuando-rendimientos-positivos",
-    "2024": "modelo-131-2024-pago-fraccionado-determinado-cuando-rendimientos-positivos",
-    "2025": "modelo-131-2025-pago-fraccionado-determinado-cuando-rendimientos-positivos",
-    "2026": "modelo-131-2026-pago-fraccionado-determinado-cuando-rendimientos-positivos",
-}
-
-
-def _m131_advisory_predicate(revision_id: str) -> VerificationPredicateDefinition:
-    """Load the shipped M131 silent-under-declaration advisory from the authority."""
-    revision = resources().modelos.authority.validate_modelo("131").revisions[revision_id]
-    predicate_id = _M131_ADVISORY_PREDICATE_IDS[revision_id]
-    predicate = next(p for p in revision.verification_predicates if p.predicate_id == predicate_id)
-    assert predicate.finding_kind == "ADVISORY"
-    assert predicate.expression == 'implies_nonzero(["01", "02"])'
-    return predicate
-
-
-@pytest.mark.parametrize("revision_id", sorted(_M131_ADVISORY_PREDICATE_IDS))
-def test_m131_advisory_ships_in_every_revision(revision_id: str) -> None:
-    """Every M131 revision carries the C01→C02 silent-under-declaration advisory.
-
-    The advisory is grounded in RD 439/2007 art. 110 (the binding provision that
-    sets the objective-estimation pago-fraccionado percentage), which is present
-    in the legal catalogue with a corpus_ref to the real BOE text.
-    """
-    predicate = _m131_advisory_predicate(revision_id)
-    assert "rd-439-2007:art-110" in tuple(str(r) for r in predicate.legal_refs)
-
-
-@pytest.mark.parametrize("revision_id", sorted(_M131_ADVISORY_PREDICATE_IDS))
-def test_m131_advisory_fires_when_rendimientos_positive_but_pago_zero(revision_id: str) -> None:
-    """Positive C01 (rendimientos netos) but C02 (pago fraccionado) = 0 surfaces a WARNING advisory.
-
-    The silent under-declaration: módulos activity declares €18.000 rendimientos
-    netos but the operator leaves the datos-base pago fraccionado at zero. Because
-    the floor rate is 2 por 100 (> 0), this is never a legitimate zero; the gate
-    must alert. Non-blocking so a filer with genuinely no datos-base activity
-    (C01 = 0) is never flagged.
-    """
-    from ....domain.modelos._verification_report import ModeloVerificationFindingSeverity
-
-    predicate = _m131_advisory_predicate(revision_id)
-    casilla_values: dict[CasillaId, Decimal] = {
-        _CASILLA_01: Decimal("18000.00"),
-        _CASILLA_02: Decimal("0"),
-    }
-
-    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
-
-    assert len(findings) == 1
-    assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
-    assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING
-    assert "rd-439-2007:art-110" in findings[0].legal_refs
-
-
-@pytest.mark.parametrize("revision_id", sorted(_M131_ADVISORY_PREDICATE_IDS))
-def test_m131_advisory_silent_when_pago_fraccionado_present(revision_id: str) -> None:
-    """Positive C01 AND positive C02 satisfies the implication; no advisory.
-
-    The expected happy path: €18.000 rendimientos with the 2 por 100 pago
-    fraccionado (€360) entered. A determined pago fraccionado clears the advisory.
-    """
-    predicate = _m131_advisory_predicate(revision_id)
-    casilla_values: dict[CasillaId, Decimal] = {
-        _CASILLA_01: Decimal("18000.00"),
-        _CASILLA_02: Decimal("360.00"),
-    }
-
-    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
-    assert findings == []
-
-
-@pytest.mark.parametrize("revision_id", sorted(_M131_ADVISORY_PREDICATE_IDS))
-def test_m131_advisory_silent_when_no_datos_base_activity(revision_id: str) -> None:
-    """No datos-base rendimientos (C01 = 0 or absent) holds trivially; no false positive.
-
-    A filer with only sin-datos-base or agrarian activity (the C03/C04 and
-    C05/C06 sections) legitimately leaves C01 = 0, so the C01→C02 implication
-    must NOT fire. Both the explicit-zero and absent-casilla cases are checked
-    (the evaluator reads an absent casilla as Decimal(0)).
-    """
-    predicate = _m131_advisory_predicate(revision_id)
-
-    explicit_zero: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("0"), _CASILLA_02: Decimal("0")}
-    absent: dict[CasillaId, Decimal] = {}
-
-    assert evaluate_verification_predicates((predicate,), explicit_zero, _workflow_profile()) == []
-    assert evaluate_verification_predicates((predicate,), absent, _workflow_profile()) == []

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -140,8 +141,24 @@ def _profile() -> ModeloTestProfile:
     )
 
 
+@cache
 def _schema_provider() -> CasillaSchemaProvider:
     return build_runtime_schema_provider(modelos=("130",), filing_year=_PERIOD.filing_year, period=_PERIOD)
+
+
+@cache
+def _modelo_130_unscoped_provider() -> CasillaSchemaProvider:
+    return build_runtime_schema_provider(modelos=("130",))
+
+
+@cache
+def _unscoped_schema_provider() -> CasillaSchemaProvider:
+    return build_runtime_schema_provider()
+
+
+@cache
+def _period_schema_provider() -> CasillaSchemaProvider:
+    return build_runtime_schema_provider(filing_year=_PERIOD.filing_year, period=_PERIOD)
 
 
 def _draft(schema_provider: CasillaSchemaProvider | None = None) -> ModeloDraft:
@@ -216,7 +233,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_130() -> None:
             _M130_CASILLA_16: Decimal("0"),
             _M130_CASILLA_18: Decimal("0"),
         },
-        schema_provider=build_runtime_schema_provider(modelos=("130",)),
+        schema_provider=_modelo_130_unscoped_provider(),
     )
 
     values = {value.casilla_id: value for value in draft.values}
@@ -244,7 +261,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_111() -> None:
             _M111_CASILLA_27: Decimal("9.00"),
             _M111_CASILLA_29: Decimal("40.00"),
         },
-        schema_provider=build_runtime_schema_provider(),
+        schema_provider=_unscoped_schema_provider(),
     )
 
     values = {value.casilla_id: value for value in draft.values}
@@ -266,7 +283,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_115() -> None:
             _M115_CASILLA_02: Decimal("1250.50"),
             _M115_CASILLA_04: Decimal("10.00"),
         },
-        schema_provider=build_runtime_schema_provider(),
+        schema_provider=_unscoped_schema_provider(),
     )
 
     values = {value.casilla_id: value for value in draft.values}
@@ -295,7 +312,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_123() -> None:
             _M123_CASILLA_11: Decimal("7.50"),
             _M123_CASILLA_13: Decimal("12.25"),
         },
-        schema_provider=build_runtime_schema_provider(),
+        schema_provider=_unscoped_schema_provider(),
     )
 
     values = {value.casilla_id: value for value in draft.values}
@@ -326,7 +343,7 @@ def test_build_draft_preserves_modelo_131_structured_binding_values() -> None:
             "modelo-131.dpa.031-032.vehiculos-afectos": "2",
             "modelo-131.did.012-045.iban": "ES9121000418450200051332",
         },
-        schema_provider=build_runtime_schema_provider(filing_year=_PERIOD.filing_year, period=_PERIOD),
+        schema_provider=_period_schema_provider(),
     )
 
     values = {value.casilla_id: value for value in draft.values}
@@ -351,7 +368,7 @@ def test_build_draft_preserves_modelo_131_repeating_activity_binding_values() ->
             "modelo-131.dpa.013-016.epigrafe-iae": ["722", "845"],
             "modelo-131.dpa.031-032.vehiculos-afectos": {"1": "2", "2": "3"},
         },
-        schema_provider=build_runtime_schema_provider(filing_year=_PERIOD.filing_year, period=_PERIOD),
+        schema_provider=_period_schema_provider(),
     )
 
     rows = {(value.binding_id, value.row_index): value.value for value in draft.binding_values}
@@ -377,7 +394,7 @@ def test_build_draft_preserves_modelo_131_page_one_structured_binding_values() -
             "modelo-131.page1.692-692.declaracion-complementaria": "no",
             "modelo-131.page1.693-705.justificante-anterior": "1234567890123",
         },
-        schema_provider=build_runtime_schema_provider(filing_year=_PERIOD.filing_year, period=_PERIOD),
+        schema_provider=_period_schema_provider(),
     )
 
     binding_values = {value.binding_id: value.value for value in draft.binding_values}
@@ -465,7 +482,7 @@ def test_iter_findings_threshold() -> None:
 
 
 def test_approve_draft_uses_registry_schema_fingerprint() -> None:
-    schema_provider = build_runtime_schema_provider()
+    schema_provider = _unscoped_schema_provider()
     draft = build_draft(
         modelo="130",
         period=_PERIOD,
@@ -574,7 +591,7 @@ def test_approve_draft_rejects_unready_draft_with_translated_message() -> None:
 
 
 def test_approve_modelo_111_draft_uses_registry_schema_fingerprint() -> None:
-    schema_provider = build_runtime_schema_provider()
+    schema_provider = _unscoped_schema_provider()
     draft = build_draft(
         modelo="111",
         period=_PERIOD,
@@ -609,7 +626,7 @@ def test_approve_modelo_111_draft_uses_registry_schema_fingerprint() -> None:
 
 
 def test_approve_modelo_115_draft_uses_registry_schema_fingerprint() -> None:
-    schema_provider = build_runtime_schema_provider()
+    schema_provider = _unscoped_schema_provider()
     draft = build_draft(
         modelo="115",
         period=_PERIOD,
@@ -638,7 +655,7 @@ def test_approve_modelo_115_draft_uses_registry_schema_fingerprint() -> None:
 
 def test_approve_modelo_123_draft_uses_registry_schema_fingerprint() -> None:
     snapshot = resources().modelos.authority.snapshot("123", filing_year=2026, period="1T", on=date(2026, 4, 1))
-    schema_provider = build_runtime_schema_provider()
+    schema_provider = _unscoped_schema_provider()
     draft = build_draft(
         modelo="123",
         period=_PERIOD,

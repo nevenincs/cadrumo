@@ -845,9 +845,11 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
 source_refs = ["boe-modelo-303-2008-form"]
 
 # Monthly deadline windows for SII-enrolled taxpayers (Art. 62.6 RD 1624/1992,
-# Orden HFP/187/2017). Period closes on the 30th of the following month; January
-# closes on the last day of February. Representative anchors registered here to
-# keep the registry minimal; months 02-05, 07-11 follow the same pattern.
+# Orden HFP/187/2017). Period closes on the 30th of the following month, with
+# AEAT annual-calendar shifts when the statutory date falls on a non-working day.
+# Representative anchors registered here keep the registry minimal; months 02-05,
+# 07-11 follow the same legal pattern and must be checked against the annual AEAT
+# calendar before materialising a concrete date.
 [[revisions.2023-y-siguientes.deadline_windows]]
 id = "modelo-303-2025-01-mensual"
 filing_year = 2025
@@ -884,9 +886,14 @@ filing_year = 2026
 period = "2026-01"
 period_kind = "monthly"
 opens_on = 2026-02-01
-closes_on = 2026-02-28
+closes_on = 2026-03-02
+payment_cutoff_on = 2026-02-25
 legal_refs = ["rd-1624-1992:art-71"]
-source_refs = ["boe-modelo-303-2008-form"]
+source_refs = [
+    "boe-modelo-303-2008-form",
+    "aeat-calendario-contribuyente-2026-hasta-2-marzo",
+    "aeat-calendario-contribuyente-2026-domiciliacion",
+]
 
 [[revisions.2023-y-siguientes.constructs]]
 id = "modelo-303-iva-autoliquidacion"
@@ -924,7 +931,13 @@ legal_refs = [
     "ley-37-1992:art-123",
     "ley-37-1992:art-124",
 ]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = [
+    "aeat-dr-303-2025",
+    "aeat-modelo-303-procedure",
+    "boe-modelo-303-2008-form",
+    "aeat-calendario-contribuyente-2026-hasta-2-marzo",
+    "aeat-calendario-contribuyente-2026-domiciliacion",
+]
 casilla_ids = [
     "iva.repercutido.general",
     "iva.repercutido.reducido",

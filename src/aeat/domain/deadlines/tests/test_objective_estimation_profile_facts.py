@@ -17,6 +17,7 @@ def test_taxpayer_profile_projects_objective_estimation_exclusion_volumes() -> N
             "irpf.estimation_regime": "objetiva",
             "irpf.objective_estimation_prior_year_gross_income_eur": "250000.01",
             "irpf.objective_estimation_prior_year_invoice_gross_income_eur": "125000.01",
+            "irpf.objective_estimation_prior_year_agri_livestock_forest_gross_eur": "250000.01",
             "irpf.objective_estimation_prior_year_purchases_eur": "250000.01",
         },
         tax_id_default="X1234567L",
@@ -25,6 +26,9 @@ def test_taxpayer_profile_projects_objective_estimation_exclusion_volumes() -> N
     assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
     assert profile.objective_estimation_prior_year_gross_income_eur == Decimal("250000.01")
     assert profile.objective_estimation_prior_year_invoice_gross_income_eur == Decimal("125000.01")
+    assert profile.objective_estimation_prior_year_agri_livestock_forest_gross_eur == Decimal(
+        "250000.01",
+    )
     assert profile.objective_estimation_prior_year_purchases_eur == Decimal("250000.01")
 
 
@@ -35,6 +39,7 @@ def test_taxpayer_profile_round_trips_objective_estimation_exclusion_volumes() -
         irpf_estimation_regime=IrpfEstimationRegime.OBJETIVA,
         objective_estimation_prior_year_gross_income_eur=Decimal("250000.01"),
         objective_estimation_prior_year_invoice_gross_income_eur=Decimal("125000.01"),
+        objective_estimation_prior_year_agri_livestock_forest_gross_eur=Decimal("250000.01"),
         objective_estimation_prior_year_purchases_eur=Decimal("250000.01"),
     )
 
@@ -43,4 +48,7 @@ def test_taxpayer_profile_round_trips_objective_estimation_exclusion_volumes() -
     assert restored == original
     assert restored.objective_estimation_prior_year_gross_income_eur == Decimal("250000.01")
     assert restored.objective_estimation_prior_year_invoice_gross_income_eur == Decimal("125000.01")
+    assert restored.objective_estimation_prior_year_agri_livestock_forest_gross_eur == Decimal(
+        "250000.01",
+    )
     assert restored.objective_estimation_prior_year_purchases_eur == Decimal("250000.01")

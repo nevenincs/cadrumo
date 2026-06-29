@@ -2283,13 +2283,6 @@
           "kind": "page",
           "surface": "legal",
           "ranking_weight": 0.388086
-        },
-        {
-          "record_id": "code:aeat.application.aggregation._prorrata",
-          "target": "api/aeat.application.aggregation._prorrata.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.378365
         }
       ],
       "dropped_count": 13,
@@ -2352,13 +2345,6 @@
           "kind": "page",
           "surface": "legal",
           "ranking_weight": 0.460583
-        },
-        {
-          "record_id": "code:aeat.application.aggregation._prorrata",
-          "target": "api/aeat.application.aggregation._prorrata.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.440079
         }
       ],
       "dropped_count": 9,

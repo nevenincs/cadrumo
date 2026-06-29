@@ -1,13 +1,30 @@
-"""Registry-backed filing-deadline computation engine for autónomo profiles.
+"""Registry-backed filing-deadline computation engine for taxpayer profiles.
 
 :class:`DeadlineEngine` is the project's first user-visible
 "answer-the-user" surface: given an :class:`TaxpayerProfile` and a
 year, it produces a deterministic typed :class:`Schedule` of every
-filing the autónomo is obliged to submit, with concrete opens /
-closes dates and a current :class:`ObligationStatus`.
+filing the taxpayer profile is obliged to submit, with concrete
+opens / closes dates and a current :class:`ObligationStatus`.
 
 The engine is read-only — it never touches the storage layer, never
 files anything, and never mutates its inputs.
+
+See Also:
+    :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority`
+        Registry authority that supplies modelo deadline windows and
+        applicability predicates consumed by :class:`DeadlineEngine`.
+    :func:`compute_obligation_schedule`
+        Single producer used by workflow gates and state projections to avoid
+        divergent pending-obligation calculations.
+    :func:`taxpayer_profile_from_mapping`
+        Profile-value mapper used by application profile projections before
+        calling this domain engine.
+    :mod:`aeat.application.workflow`
+        Application workflow gate that evaluates deadline obligations before
+        verification and local filing steps.
+    :mod:`aeat.application.overview`
+        Local overview read model that merges this schedule with stored filing
+        evidence.
 
 Examples:
     >>> from datetime import date

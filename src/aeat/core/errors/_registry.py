@@ -168,7 +168,7 @@ ERROR_REGISTRY: Mapping[str, ErrorCode] = MappingProxyType(_ERROR_REGISTRY_MUTAB
 
 
 def declared_error_codes() -> tuple[tuple[str, ErrorCode], ...]:
-    """Return declared ``(qualified class name, ErrorCode)`` registry rows."""
+    """Return declared ``(qualified class name, :class:`ErrorCode`)`` registry rows."""
     return tuple(_DECLARED_CODE_BY_QUALNAME.items())
 
 

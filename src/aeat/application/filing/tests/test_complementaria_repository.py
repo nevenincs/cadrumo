@@ -17,7 +17,7 @@ import pytest
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import Period
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
 from ....domain.filing._amendment import CasillaChange, ModeloComplementaria
 from ....domain.filing._complementaria_repository import (
     ModeloAmendmentRepository,
@@ -32,6 +32,15 @@ from ....domain.filing._schema import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _AMENDMENT_CASILLA: CasillaId = validated_casilla_id("01", surface="_AMENDMENT_CASILLA")
+
+
+def _snapshot_ref(*, modelo: str, period: Period, schema_version: str) -> RegistrySnapshotRef:
+    return RegistrySnapshotRef(
+        modelo=modelo,
+        revision_id=schema_version,
+        modelo_year=period.filing_year,
+        period=period.registry_token,
+    )
 
 
 def _make_amendment(*, amendment_id: str = "amend-001") -> ModeloComplementaria:
@@ -56,6 +65,8 @@ def _make_amendment(*, amendment_id: str = "amend-001") -> ModeloComplementaria:
         modelo="130",
         period=_period,
         profile_tax_id="00000000T",
+        subject_tax_id="00000000T",
+        snapshot_ref=_snapshot_ref(modelo="130", period=_period, schema_version="test-schema-v1"),
         status=ModeloDraftStatus.VALIDADO,
         values=values,
         created_at=now,

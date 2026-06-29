@@ -51,7 +51,12 @@ def reject_incomplete_amendment_casillas(
     period: Period,
     casilla_values: Mapping[CasillaId, Decimal],
 ) -> None:
-    """Mirror the verify-modelo-revision required-manual gate on amend."""
+    """Mirror the verify-modelo-revision required-manual gate on amend.
+
+    The supplied :class:`~aeat.core.Period` selects the registry snapshot. Missing
+    required manual casillas raise :class:`AmendmentVerificationRefusedError`
+    before an amendment can be accepted as complete.
+    """
     required_optional = required_input_casilla_ids_for_revision(modelo=modelo, filing_year=filing_year, period=period)
     if required_optional is None:
         raise AmendmentVerificationRefusedError(
@@ -180,7 +185,13 @@ def reject_unknown_override_casillas[CasillaKey](
     period: Period,
     overrides: Mapping[CasillaKey, Decimal],
 ) -> dict[CasillaId, Decimal]:
-    """Refuse override casilla ids the registry does not declare for the modelo / year / period."""
+    """Refuse amendment override casillas outside the resolved revision.
+
+    Keys are canonicalised as :class:`CasillaId` values and checked against the
+    :class:`RegistrySnapshot` selected by ``modelo``, ``filing_year``, and
+    :class:`~aeat.core.Period`. Printed-number aliases and ambiguous reused
+    numbers are refused instead of being projected to a declared casilla.
+    """
     if not overrides:
         return {}
 
@@ -257,7 +268,12 @@ def reject_unknown_import_casillas[CasillaKey](
     period: Period,
     casilla_values: Mapping[CasillaKey, Decimal],
 ) -> tuple[RegistrySnapshot, dict[CasillaId, Decimal]]:
-    """Refuse imported casilla ids the registry does not declare and return the resolved :class:`RegistrySnapshot`."""
+    """Validate imported casilla ids and return the resolved :class:`RegistrySnapshot`.
+
+    The returned mapping is keyed by canonical :class:`CasillaId` values declared
+    by the selected revision. Unknown, malformed, and non-canonical printed
+    numbers raise :class:`ExternalModeloImportError`.
+    """
     from ...domain.calculations.registry import RegistrySnapshotError
 
     try:
@@ -330,7 +346,13 @@ def required_input_casilla_ids_for_revision(
     filing_year: int,
     period: Period,
 ) -> tuple[tuple[CasillaId, ...], tuple[CasillaId, ...]] | None:
-    """Resolve the registry's required and informational input casilla ids."""
+    """Resolve required manual and replayable input casilla ids for a revision.
+
+    Returns ``None`` when the registry root or snapshot cannot be loaded. The
+    first tuple contains required manual casillas; the second contains declared
+    manual, bound, and computed casillas that amendment/import paths may need to
+    carry through replay.
+    """
     from ...domain.calculations.registry import RegistrySnapshotError
 
     try:
@@ -360,7 +382,11 @@ def verification_predicates_for_revision(
     filing_year: int,
     period: Period,
 ) -> tuple[VerificationPredicateDefinition, ...]:
-    """Return a tuple of :class:`VerificationPredicateDefinition` records for the registry revision, or empty tuple."""
+    """Return :class:`VerificationPredicateDefinition` rows for the selected revision.
+
+    Missing registry roots or unresolved snapshots produce an empty tuple so
+    callers can degrade to their existing verification paths.
+    """
     from ...domain.calculations.registry import RegistrySnapshotError
 
     try:

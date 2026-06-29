@@ -1,7 +1,11 @@
 """Strict pydantic v2 records for AEAT auth readiness.
 
-:class:`AuthState` is the workflow-state auth snapshot updated by
-:func:`aeat.application.auth.update_auth`.
+:class:`AuthState` is the workflow-state auth snapshot embedded in
+:class:`~aeat.application.workflow.WorkflowState` and updated by
+:func:`aeat.application.auth.update_auth`. Operator-facing status and test
+surfaces expose redacted readiness through
+:class:`~aeat.application.state_projection.ProjectionAuthReadiness` rather than
+re-reading this model independently.
 """
 
 from __future__ import annotations
@@ -14,7 +18,15 @@ from ...core import STRICT_FROZEN_CONFIG
 
 
 class AuthState(BaseModel):
-    """Local AEAT access readiness state."""
+    """Persisted local AEAT access readiness state.
+
+    This record stores provider selection, the certificate filesystem
+    reference, and local session timestamps inside
+    :class:`~aeat.application.workflow.WorkflowState`. Public CLI emit shapes
+    read the canonical projection into
+    :class:`~aeat.application.auth.AuthStatusResult` and
+    :class:`~aeat.application.auth.AuthTestResult`.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 

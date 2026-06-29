@@ -61,7 +61,6 @@ from .. import (
     file_modelo_revision,
     verify_modelo_revision,
 )
-from ._file_flow_support import _seed_clean_cross_period_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -112,7 +111,19 @@ def _store_operator_profile() -> None:
         UserProfileRecord(
             profile_id="operator",
             display_name="Test runtime profile",
-            facts=(UserProfileFact(path="identity.tax_id", value=_TAX_ID),),
+            facts=(
+                UserProfileFact(path="identity.tax_id", value=_TAX_ID),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="censo.activity_start_date", value=date(_YEAR, 4, 1)),
+            ),
             created_at=_DECIDED_AT,
             updated_at=_DECIDED_AT,
         ),
@@ -127,6 +138,7 @@ def _workflow_profile(*, redeme_enrolled: bool) -> TaxpayerProfile:
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
+        activity_start_date=date(_YEAR, 4, 1),
         iva=ModeloIVAProfile(redeme_enrolled=redeme_enrolled),
     )
 
@@ -185,13 +197,6 @@ def _file_negative_2t_period(*, redeme_enrolled: bool) -> Decimal:
     saldo = revision.casilla_values[_SALDO_CASILLA]
     assert saldo > Decimal("0")
 
-    _seed_clean_cross_period_sources(
-        work_unit,
-        work_unit_repository=work_repo,
-        calculation_repository=calc_repo,
-        filing_repository=filing_repo,
-        bucket_event_repository=event_repo,
-    )
     verification = verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator",

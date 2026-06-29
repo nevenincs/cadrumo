@@ -178,7 +178,7 @@ def test_unimplemented_repository_all_raises_not_implemented_error() -> None:
 
 
 def test_resources_factory_composes_every_repository() -> None:
-    """The factory wires all twelve Repositories into the registry."""
+    """The factory wires every current Repository into the registry."""
 
     resources.cache_clear()
     registry = resources()
@@ -190,7 +190,6 @@ def test_resources_factory_composes_every_repository() -> None:
         "legal_parameters",
         "manuals",
         "modelos",
-        "normatives",
         "recargo_bands",
         "topics",
         "user_profile_schema",

@@ -3,6 +3,22 @@
 :func:`assess_active_profile_health` reads the persisted
 :class:`UserProfileRecord` from the active bucket and returns an
 :class:`ActiveProfileHealth` verdict used by every operator status surface.
+
+See Also:
+    :class:`~aeat.application.workflow.ProfileBucketPointer`
+        Manifest-backed active-bucket pointer resolved before secure profile
+        records are loaded.
+    :mod:`aeat.application.workflow._profile_bucket_scan`
+        Reads plaintext bucket manifests without opening encrypted storage.
+    :class:`~aeat.application.workflow.WorkflowState`
+        Supplies the active profile record through the secure workflow-state
+        repository when the active bucket is readable.
+    :class:`~aeat.domain.user_profile.UserProfileRecord`
+        Encrypted profile facts whose completeness determines the final health
+        status.
+    :class:`~aeat.application.state_projection.ProjectionActiveProfile`
+        Operator-state projection that carries this redacted health verdict to
+        status and diagnostics surfaces.
 """
 
 from __future__ import annotations
@@ -12,21 +28,12 @@ from typing import Literal
 
 from pydantic import BaseModel, ValidationError
 
-from ...adapters.persistence.storage.bucket import (
-    BucketLifecycleStatus,
-    BucketManifest,
-    bucket_paths,
-    manifest_path,
-    write_manifest,
-)
 from ...adapters.persistence.storage.errors import StorageValidationError
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import pointer_path, read_pointer
 from ...core.config import load_settings
 from ...core.errors import AeatError
-from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.logging import get_logger
-from ...domain.user_profile import UserProfileRecord
 from ..user_profile._keys_validation import list_profile_key_records, validate_profile_values
 from ..user_profile._projections import record_to_path_values
 from ._models import WorkflowState
@@ -47,7 +54,7 @@ ProfileSource = Literal["none", "env_override", "pointer"]
 
 
 class ActiveProfileHealth(BaseModel):
-    """Redacted active-profile health snapshot."""
+    """Redacted active-profile health snapshot returned by :func:`assess_active_profile_health`."""
 
     model_config = _STRICT_FROZEN
 
@@ -65,7 +72,7 @@ class ActiveProfileHealth(BaseModel):
 
 
 class ActiveProfileRepairResult(BaseModel):
-    """Result of a safe active-profile repair probe/action."""
+    """Result of a safe active-profile pointer repair probe/action."""
 
     model_config = _STRICT_FROZEN
 
@@ -73,19 +80,6 @@ class ActiveProfileRepairResult(BaseModel):
     cleared_pointer: bool
     before: ActiveProfileHealth
     after: ActiveProfileHealth | None = None
-
-
-class ActiveProfileManifestStatusRepairResult(BaseModel):
-    """Result of a safe manifest lifecycle-status repair probe/action."""
-
-    model_config = _STRICT_FROZEN
-
-    dry_run: bool
-    repaired: bool
-    before: ActiveProfileHealth
-    after: ActiveProfileHealth | None = None
-    status: str = ""
-    reason: str = ""
 
 
 _log = get_logger(__name__)
@@ -132,7 +126,12 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             registered_bucket=True,
             profile_record_error=_compact_error(exc),
             profile_total_keys=total_keys,
-            next_action="aeat config repair profile --repair-manifest-status --yes",
+            repairable_by_clearing_pointer=source == "pointer",
+            next_action=(
+                "aeat config repair profile --clear-active --yes"
+                if source == "pointer"
+                else "unset AEAT_ACTIVE_PROFILE or switch to a readable profile"
+            ),
         )
     registered = registered_pointer is not None
     if not registered:
@@ -246,57 +245,6 @@ def repair_active_profile_pointer(*, clear_active: bool, confirmed: bool) -> Act
     )
 
 
-def repair_active_profile_manifest_status(*, confirmed: bool) -> ActiveProfileManifestStatusRepairResult:
-    """Backfill a legacy active-bucket manifest status from the encrypted record.
-
-    Returns an :class:`ActiveProfileManifestStatusRepairResult` indicating
-    whether a repair was performed and the before/after health states.
-    """
-    before = _assess_with_best_effort_session()
-    if before.status != "manifest_unreadable" or before.active_profile is None:
-        return ActiveProfileManifestStatusRepairResult(
-            dry_run=True,
-            repaired=False,
-            before=before,
-            reason="active profile manifest does not need lifecycle-status repair",
-        )
-    if not confirmed:
-        return ActiveProfileManifestStatusRepairResult(
-            dry_run=True,
-            repaired=False,
-            before=before,
-            reason="confirmation required",
-        )
-
-    record = _load_active_profile_record()
-    status = BucketLifecycleStatus(record.status.value)
-    paths = bucket_paths(load_settings().aeat_local_storage_root, before.active_profile)
-    payload = dict(tomllib.loads(manifest_path(paths).read_text(encoding=_UTF_8_ENCODING)))
-    payload.setdefault("last_unlocked_at", None)
-    payload.setdefault("idle_lock_minutes", None)
-    payload["status"] = status.value
-    manifest = BucketManifest.model_validate(payload)
-    write_manifest(paths, manifest)
-    return ActiveProfileManifestStatusRepairResult(
-        dry_run=False,
-        repaired=True,
-        before=before,
-        after=_assess_with_best_effort_session(),
-        status=status.value,
-    )
-
-
-def _load_active_profile_record() -> UserProfileRecord:
-    """Load the encrypted active-profile record or raise a precise refusal."""
-    state = workflow_state_repository().load()
-    record = state.active_profile_record()
-    if record is None:
-        from ...domain.user_profile import ProfileNotFoundError
-
-        raise ProfileNotFoundError("active profile record is missing; manifest status cannot be repaired")
-    return record
-
-
 def _assess_with_best_effort_session() -> ActiveProfileHealth:
     """Assess profile health, opening the active bucket session when available."""
     before = assess_active_profile_health()
@@ -327,9 +275,7 @@ def _compact_error(exc: Exception) -> str:
 
 __all__ = [
     "ActiveProfileHealth",
-    "ActiveProfileManifestStatusRepairResult",
     "ActiveProfileRepairResult",
     "assess_active_profile_health",
-    "repair_active_profile_manifest_status",
     "repair_active_profile_pointer",
 ]

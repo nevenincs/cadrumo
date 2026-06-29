@@ -22,7 +22,8 @@ _EXPECTED_TOPICS = frozenset(
         "casilla",
         "pago-fraccionado",
         "recargo-extemporaneo",
-        "sii-verifactu",
+        "sii",
+        "verifactu",
         "authentication",
         "profile",
         "calendar",
@@ -33,13 +34,14 @@ _EXPECTED_TOPICS = frozenset(
 )
 
 
-def test_catalogue_loads_all_thirteen_audit_named_topics() -> None:
+def test_catalogue_loads_all_current_audit_named_topics() -> None:
     """Every audit-named slug must be registered in the canonical catalogue."""
     catalogue = resources().topics.singleton
     assert isinstance(catalogue, TopicCatalogue)
     slugs = set(catalogue.slugs())
     missing = _EXPECTED_TOPICS - slugs
     assert not missing, f"audit-named topics missing from catalogue: {missing}"
+    assert "sii-verifactu" not in slugs
 
 
 def test_catalogue_topic_lookup_returns_typed_record() -> None:

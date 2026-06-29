@@ -89,7 +89,7 @@ from .. import (
     mark_revision_verificado_completo,
     verify_modelo_revision,
 )
-from .._actions import workflow_period_for_work_unit
+from .._workflow_gate import workflow_period_for_work_unit
 from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

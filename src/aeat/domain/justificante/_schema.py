@@ -45,7 +45,7 @@ class Justificante(BaseModel):
         period: Typed filing period resolved from the AEAT period token
             printed on the receipt and ``ejercicio``.
         ejercicio: Four-digit tax year as printed on the receipt, when
-            present. ``None`` for legacy receipts that omit the label.
+            present. ``None`` for receipts that omit the label.
         presentation_id: AEAT's internal ``Número de justificante`` if
             present on the receipt; ``None`` when the modelo does not print
             a separate presentation ID.

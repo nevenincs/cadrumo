@@ -48,7 +48,7 @@ _YEAR = 2025
 _PERIOD = "1T"
 _SOURCE_KIND = "aeat_sede_justificante"
 _CLOCK = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
-_FAKE_REVISION_ID = "definitely-not-the-right-revision-id-xyzzy"
+_DIVERGENT_REVISION_ID = "definitely-not-the-right-revision-id-xyzzy"
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -116,7 +116,7 @@ def test_stamped_revision_id_survives_encrypted_storage_roundtrip(tmp_path: Path
 
 
 def test_stamped_revision_id_none_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
-    """Legacy records (stamped_revision_id=None) also roundtrip correctly."""
+    """Unstamped records (stamped_revision_id=None) also roundtrip correctly."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         repo.save_observation(
@@ -171,6 +171,7 @@ def test_stamped_revision_id_anti_tautology_drop_surfaces_as_inequality(tmp_path
         secure_object_payload_aad,
     )
     from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ....adapters.persistence.storage.sql.engine import get_engine
     from ....adapters.persistence.storage.sql.session import session_scope
 
     namespace = CalculationObservationRepository.namespace
@@ -186,7 +187,7 @@ def test_stamped_revision_id_anti_tautology_drop_surfaces_as_inequality(tmp_path
         )
 
         object_key = observation_key(_MODELO, _filing_period())
-        with session_scope(profile.repository._engine) as session:
+        with session_scope(get_engine(profile.settings)) as session:
             stmt = select(SecureObjectRow).where(
                 SecureObjectRow.namespace == namespace,
                 SecureObjectRow.object_key == object_key,
@@ -288,7 +289,7 @@ def test_carry_divergent_stamp_refuses_single_observation(tmp_path: Path) -> Non
             _m303_carry_source_observation(),
             source_kind=_SOURCE_KIND,
             captured_at=_CLOCK,
-            stamped_revision_id=_FAKE_REVISION_ID,  # divergent: wrong revision
+            stamped_revision_id=_DIVERGENT_REVISION_ID,  # divergent: wrong revision
         )
 
         snapshot = resources().modelos.authority.snapshot(
@@ -316,7 +317,7 @@ def test_carry_missing_stamp_advises_and_carries(tmp_path: Path) -> None:
     Subject: M303/2025/2T prefill; the single ``previous_filing`` binding
     ``modelo-303-compensacion-pendiente-anteriores`` reads M303/2025/1T.
 
-    Save 303/2025/1T with no stamp (legacy record).
+    Save 303/2025/1T with no stamp.
     resolve_bindings_from_local_store must include it in binding resolution
     and the BindingPrefillReport must surface has_unstamped_revision_advisory.
     """
@@ -326,7 +327,7 @@ def test_carry_missing_stamp_advises_and_carries(tmp_path: Path) -> None:
             _m303_carry_source_observation(),
             source_kind=_SOURCE_KIND,
             captured_at=_CLOCK,
-            stamped_revision_id=None,  # legacy: no stamp
+            stamped_revision_id=None,  # intentionally unstamped
         )
 
         snapshot = resources().modelos.authority.snapshot(
@@ -337,13 +338,13 @@ def test_carry_missing_stamp_advises_and_carries(tmp_path: Path) -> None:
         report = resolve_bindings_from_local_store(snapshot, repository=repo)
 
         assert isinstance(report, BindingPrefillReport)
-        # Carry must proceed (legacy unstamped observation is not refused).
+        # Carry must proceed (unstamped observation is not refused).
         assert report.prefilled, "missing-stamp observation must still carry; the prefill must not be empty."
         assert _M303_CARRY_BINDING_ID in report.binding_values, (
             f"binding {_M303_CARRY_BINDING_ID!r} must be resolved from the unstamped 1T observation."
         )
         assert report.has_unstamped_revision_advisory, (
-            "legacy unstamped observation must set has_unstamped_revision_advisory on the report."
+            "unstamped observation must set has_unstamped_revision_advisory on the report."
         )
 
 

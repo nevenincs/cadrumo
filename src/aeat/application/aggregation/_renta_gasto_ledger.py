@@ -1,6 +1,7 @@
 """Repository-backed Renta deductible-expense (gasto) aggregation for Modelo 130.
 
-Loads ledger rows through :class:`TransactionCatalogueRepository`.
+Loads ledger rows through
+:class:`~aeat.domain.transactions.TransactionCatalogueRepository`.
 
 Used by: :mod:`~._modelo_bindings` (source mesh) for Modelo 130 casilla 02
 ("Gastos") aggregation.
@@ -17,10 +18,11 @@ Cumulative window rule (RD 439/2007 art. 110.2):
 
 Only ACTIVE, EUR-denominated, OUTGOING transactions whose
 ``business_classification`` is BUSINESS or MIXED are eligible. The deductible
-amount is the IVA-exclusive base imponible (``taxable_base``) when the
-transaction carries an explicit IVA tagging — IVA soportado is recovered through
-Modelo 303 and is not a Renta gasto — falling back to the gross transfer amount
-when no base is declared. A MIXED transaction contributes its business fraction.
+amount is the IVA-exclusive base imponible (``taxable_base``). IVA soportado is
+recovered through Modelo 303 and is not a Renta gasto, so a declarable expense
+without ``taxable_base`` is surfaced as ``missing_taxable_base`` instead of being
+gross-folded into casilla 02. A MIXED transaction contributes its business
+fraction.
 
 This module deliberately does NOT reuse the Modelo 100 first-slice expense
 pipeline (:mod:`~._renta_ledger`): that path layers invoice-evidence

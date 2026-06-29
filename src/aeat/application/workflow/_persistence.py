@@ -4,6 +4,21 @@ Workflow state is stored as an :class:`Envelope`-wrapped record in the
 secure-object backend. The load path deserialises the envelope and
 validates it; callers receive a typed :class:`WorkflowState` or a
 diagnostic error class rather than a raw payload.
+
+See Also:
+    :class:`~aeat.application.workflow.WorkflowState`
+        Typed encrypted state payload persisted by
+        :class:`WorkflowStateRepository`.
+    :class:`~aeat.application.workflow.WorkflowStateResetFingerprint`
+        Row-level, plaintext-free reset audit summary emitted before deletion.
+    :func:`aeat.application.workflow._events.emit_workflow_state_reset`
+        Writes the append-only ``workflow_state.reset`` bucket event before the
+        state row is removed.
+    :class:`~aeat.domain.buckets.BucketEventHistoryRepository`
+        Stores the emitted reset event in the bucket event history.
+    :class:`~aeat.application.workflow.WorkflowResult`
+        Terminal workflow run record persisted separately by
+        :class:`WorkflowRunRepository`.
 """
 
 from __future__ import annotations

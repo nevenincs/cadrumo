@@ -367,7 +367,7 @@ class RunTrace(BaseModel):
         run_id: 16-char lowercase hex identifier for the run.
         started_at: UTC enter time of the outermost run context.
         finished_at: UTC exit time, or ``None`` if persistence happens
-            before exit (legacy traces only).
+            before exit.
         entrypoint: Stable CLI entrypoint string.
         arguments: Tuple of :class:`ArgumentRecord` captured for replay.
         corpus_sha256: Fingerprint of ``.vault/`` plus
@@ -384,8 +384,7 @@ class RunTrace(BaseModel):
             points at the second-level trace, NOT at the chain root —
             walk the chain by following each ``replay_of`` link until
             you reach ``None``. Each link is a supervised replay in its
-            own right. The default keeps strict validation backwards-
-            compatible with traces produced before the field was added.
+            own right.
     """
 
     model_config = _STRICT_FROZEN

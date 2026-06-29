@@ -7,9 +7,9 @@
 # fact). These bindings supersede the dormant application-tier
 # casilla_59_base_imponible / casilla_60_base_imponible helpers (zero production
 # callers), moving the category->casilla routing from feature code into the
-# registry per aeat-schema-central-config. The art. 22 "operaciones asimiladas a
-# las exportaciones" leg of casilla 60 is not yet captured (no IvaCategory member
-# exists for it), matching the prior helper's scope.
+# registry per aeat-schema-central-config. Casilla 60 covers both art. 21 exports
+# and art. 22 operations assimilated to exports, so the selector accepts both
+# zero-rated category members.
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-303-casilla-59-entregas-intracomunitarias-base"
 source = "ledger_iva_aggregation"
@@ -32,7 +32,7 @@ op = "sum"
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-303-casilla-60-exportaciones-base"
 source = "ledger_iva_aggregation"
-legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-21", "ley-37-1992:art-22", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.bindings.source_citations]]
@@ -40,7 +40,7 @@ source_ref = "boe-modelo-303-2008-form"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.bindings.selector]
-categories = ["export_third_country_zero_rated"]
+categories = ["export_third_country_zero_rated", "export_assimilated_zero_rated"]
 rate_kinds = ["zero"]
 flow_direction = "repercutido"
 fact = "base_amount_sum"

@@ -25,10 +25,9 @@ This file pins:
   * a misshapen selector for a typed source is REFUSED AT CONSTRUCTION
     (the F8 tightening), with the diagnostic naming the binding id and
     the violated typed model;
-  * a binding whose source is intentionally free-form (no entry in
-    the discriminator registry) constructs and returns no diagnostics,
-    so the contract remains incremental rather than fail-closed for
-    free-form sources.
+  * registry-declared binding sources are fail-closed: every live source must
+    have a selector model, and mesh-only source kinds are refused as
+    ``DataBindingDefinition.source`` values.
 """
 
 from __future__ import annotations
@@ -38,6 +37,7 @@ from pydantic import ValidationError
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .. import CasillaId, validated_casilla_id
+from .._binding_selector_utils import selector_as_dict
 from .._bindings import (
     _BINDING_SELECTOR_REGISTRY,
     selector_model_for_source,
@@ -66,7 +66,7 @@ _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id(
 
 def _binding(
     *,
-    source: str,
+    source: str | BindingSourceKind,
     selector: dict[str, object],
     binding_id: str = "test-binding",
 ) -> DataBindingDefinition:
@@ -121,6 +121,8 @@ def test_binding_selector_registry_covers_typed_sources() -> None:
         "ledger_renta_expense_aggregation",
         "ledger_renta_income_aggregation",
         "ledger_renta_gasto_aggregation",
+        "retenciones_aggregation",
+        "withholding",
         "related_party_operation",
         "foreign_asset",
         "atribucion_member",
@@ -135,29 +137,38 @@ def test_construction_gate_dispatches_through_selector_model_for_source() -> Non
     """F8: the model construction gate dispatches via ``selector_model_for_source``.
 
     The accessor surfaces the same ``_BINDING_SELECTOR_REGISTRY`` table the model
-    validator consumes, so the construction gate covers exactly the typed sources
-    and leaves the free-form sources unconstrained.
+    validator consumes, so the construction gate covers every registry-declared
+    binding source.
     """
     for source, model in _BINDING_SELECTOR_REGISTRY.items():
         assert selector_model_for_source(source) is model
 
 
-def test_free_form_source_constructs_with_any_selector() -> None:
-    """A source absent from the selector registry is not constrained at construction.
+def test_constructed_binding_stores_hydrated_selector_model() -> None:
+    """The canonical binding schema stores a source-family selector model."""
 
-    ``withholding`` has no entry in ``_BINDING_SELECTOR_REGISTRY`` (its op/fact
-    shape is validated by the snapshot-build dispatch validator, not a selector
-    model), so the F8 construction gate leaves an arbitrary selector intact —
-    keeping the contract incremental rather than fail-closed for free-form
-    sources.
-    """
-    assert selector_model_for_source("withholding") is None
-    binding = _binding(
-        source="withholding",
-        selector={"anything": "goes", "offset": 7},
-        binding_id="free-form-withholding",
-    )
-    assert isinstance(binding, DataBindingDefinition)
+    binding = _binding(source=BindingSourceKind.PROFILE, selector={"profile_key": "taxpayer.nif"})
+    selector_model = selector_model_for_source(BindingSourceKind.PROFILE)
+
+    assert selector_model is not None
+    assert isinstance(binding.selector, selector_model)
+    assert selector_as_dict(binding) == {"profile_key": "taxpayer.nif"}
+    assert binding.model_dump(mode="json")["selector"] == {"profile_key": "taxpayer.nif"}
+
+
+@pytest.mark.parametrize("source", (BindingSourceKind.BORRADOR, BindingSourceKind.IVA_WALLET_DECISION))
+def test_mesh_only_source_kind_is_not_constructible_as_registry_binding(source: BindingSourceKind) -> None:
+    """Mesh-only source kinds are first-class enum members, not registry bindings."""
+
+    with pytest.raises(ValidationError) as excinfo:
+        _binding(
+            source=source,
+            selector={"profile_key": "tax.id"},
+            binding_id=f"bad-mesh-only-{source.value}",
+        )
+    message = str(excinfo.value)
+    assert source.value in message
+    assert "not a registry binding source" in message
 
 
 def test_previous_filing_selector_accepts_well_shaped_selector() -> None:
@@ -223,6 +234,20 @@ def test_relation_prefill_selector_rejects_legacy_source_output_key() -> None:
         },
         binding_id="bad-relation-prefill-source-output",
         expected_substrings=("source_casilla_id", "source_output"),
+    )
+
+
+@pytest.mark.parametrize("source", ("previous_filing", "relation_prefill"))
+def test_cross_filing_selectors_reject_non_modelo_id_source_modelo(source: str) -> None:
+    selector: dict[str, object] = {
+        "source_modelo": "modelo-303",
+        "source_casilla_id": _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
+    }
+    _assert_selector_refused_at_construction(
+        source=source,
+        selector=selector,
+        binding_id=f"bad-{source}-source-modelo",
+        expected_substrings=("source_modelo", r"^\d{3}$"),
     )
 
 
@@ -324,17 +349,40 @@ def test_withholding_selector_rejects_unknown_fact() -> None:
     the gate catches them now.
     """
 
-    binding = _binding(
+    _assert_selector_refused_at_construction(
         source="withholding",
         selector={
             "fact": "bogus_fact_value",
             "claves": ("A",),
         },
         binding_id="bad-withholding-fact",
+        expected_substrings=("bad-withholding-fact", "_WithholdingSelector", "bogus_fact_value"),
     )
-    failures = validate_binding_selector_shape(binding)
-    assert failures
-    assert "bad-withholding-fact" in failures[0]
+
+
+def test_retenciones_aggregation_selector_accepts_well_shaped_selector() -> None:
+    """The annual retenciones count source validates at construction."""
+
+    binding = _binding(
+        source="retenciones_aggregation",
+        selector={
+            "target_casilla_id": _M111_RETENCIONES_CASILLA,
+            "fact": "perceptor_count_distinct",
+        },
+    )
+    assert validate_binding_selector_shape(binding) == []
+
+
+def test_retenciones_aggregation_selector_rejects_unknown_fact() -> None:
+    _assert_selector_refused_at_construction(
+        source="retenciones_aggregation",
+        selector={
+            "target_casilla_id": _M111_RETENCIONES_CASILLA,
+            "fact": "percepcion_count",
+        },
+        binding_id="bad-retenciones-fact",
+        expected_substrings=("bad-retenciones-fact", "_RetencionesAggregationSelector", "percepcion_count"),
+    )
 
 
 def test_collectible_invoice_selector_accepts_well_shaped_selector() -> None:
@@ -358,17 +406,19 @@ def test_collectible_invoice_selector_accepts_well_shaped_selector() -> None:
 def test_collectible_invoice_row_field_selector_accepts_grouping() -> None:
     """A row-producer invoice-shaped binding declares row_field + grouping + op rows."""
 
-    binding = DataBindingDefinition(
-        id="collectible-rows",
-        source=BindingSourceKind.COLLECTIBLE_INVOICE,
-        selector={
-            "fact": "row_field",
-            "row_field": "country_code",
-            "grouping": "operator_clave",
+    binding = DataBindingDefinition.model_validate(
+        {
+            "id": "collectible-rows",
+            "source": BindingSourceKind.COLLECTIBLE_INVOICE,
+            "selector": {
+                "fact": "row_field",
+                "row_field": "country_code",
+                "grouping": "operator_clave",
+            },
+            "aggregation": BindingAggregation(op=BindingAggregationOp.ROWS),
+            "legal_refs": ("lirpf.art-99",),
+            "source_refs": ("aeat.test",),
         },
-        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
-        legal_refs=("lirpf.art-99",),
-        source_refs=("aeat.test",),
     )
     assert validate_binding_selector_shape(binding) == []
 
@@ -596,17 +646,19 @@ def test_invoice_binding_fact_op_mismatch_caught_at_snapshot_build() -> None:
     selector-drift F3.
     """
     # NEGATIVE TEST: source="collectible_invoice" is valid but the fact/op pair is invalid
-    binding = DataBindingDefinition(
-        id="bad-invoice-fact-op",
-        source=BindingSourceKind.COLLECTIBLE_INVOICE,
-        selector={
-            "fact": "operator_count",
-            "claves": ("E", "M"),
-            "rectification_scope": "exclude_rectifications",
+    binding = DataBindingDefinition.model_validate(
+        {
+            "id": "bad-invoice-fact-op",
+            "source": BindingSourceKind.COLLECTIBLE_INVOICE,
+            "selector": {
+                "fact": "operator_count",
+                "claves": ("E", "M"),
+                "rectification_scope": "exclude_rectifications",
+            },
+            "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),  # mismatched op
+            "legal_refs": ("lirpf.art-99",),
+            "source_refs": ("aeat.test",),
         },
-        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),  # mismatched op — should be "count_distinct"
-        legal_refs=("lirpf.art-99",),
-        source_refs=("aeat.test",),
     )
     failures = validate_binding_selector_shape(binding)
     assert failures
@@ -623,17 +675,19 @@ def test_counterpart_binding_fact_op_mismatch_caught_at_snapshot_build() -> None
     structurally malformed; the lifted counterpart invariant catches it at
     snapshot build. Audit selector-drift F3.
     """
-    binding = DataBindingDefinition(
-        id="bad-counterpart-fact-op",
-        source=BindingSourceKind.LEDGER_TRANSACTION,
-        selector={
-            "fact": "operator_count",
-            "claves": ("E", "M"),
-            "rectification_scope": "exclude_rectifications",
+    binding = DataBindingDefinition.model_validate(
+        {
+            "id": "bad-counterpart-fact-op",
+            "source": BindingSourceKind.LEDGER_TRANSACTION,
+            "selector": {
+                "fact": "operator_count",
+                "claves": ("E", "M"),
+                "rectification_scope": "exclude_rectifications",
+            },
+            "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),  # mismatched op
+            "legal_refs": ("lirpf.art-99",),
+            "source_refs": ("aeat.test",),
         },
-        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),  # mismatched op — should be "count_distinct"
-        legal_refs=("lirpf.art-99",),
-        source_refs=("aeat.test",),
     )
     failures = validate_binding_selector_shape(binding)
     assert failures

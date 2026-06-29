@@ -1,14 +1,17 @@
-"""Retenciones aggregator for Modelo 111 (withholding on labor + economic activities).
+"""Pure aggregation primitives for the retenciones modelo family.
 
-Used by: :mod:`~._service` (per-modelo aggregation service) for retenciones modelos.
+This module groups typed :class:`RetencionObservation` rows into stable
+per-perceptor rollups and totals for Modelos 111, 115, 123, 180, 190, and 193.
+Observations must carry canonical source kinds from
+:class:`~aeat.core.aggregation.BindingSourceKind`; bare ``invoice`` provenance
+is rejected in favour of ``payable_invoice`` or ``collectible_invoice``.
 
-Implements the slim aggregation contract for the retenciones family.
-The aggregator consumes typed observations carrying the canonical
-source kind (``ledger_transaction``) and produces per-perceptor
-rollups plus a totals payload suitable for Modelo 111 binding
-consumption.
-
-Modelos: 111, 115, 123, 180, 190, 193.
+The live calculation mesh uses these primitives through
+:class:`~._modelo_bindings.RetencionesAggregationSourceResolver` for the RET-1
+Modelo 180/193 distinct-NIF perceptor count. Modelo 190's distinct
+perceptor/clave/subclave percepciones count is intentionally handled by
+:class:`~._withholding_source.WithholdingSourceResolver`, not by this rollup
+family.
 """
 
 from __future__ import annotations

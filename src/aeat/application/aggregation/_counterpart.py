@@ -1,16 +1,17 @@
-"""347/349 counterpart aggregator (informational declarations).
+"""Modelo 347/349 counterpart aggregation for informativa declarations.
 
-Used by: :mod:`~._service` (per-modelo aggregation service) for Modelo 347/349.
+Used by :mod:`aeat.application.aggregation._service`, the per-modelo
+aggregation service. This is not the live calculate source mesh: standalone
+``CounterpartObservation`` rows are currently operator-supplied to the aggregate
+surface, while calculation-facing source values use
+:class:`~aeat.application.aggregation.CalculationSourceResolution`.
 
-Modelo 347: Operaciones con terceros — annual declaration of operations
-with the same counterparty whose total in the year exceeds €3,005.06.
-Modelo 349: Operaciones intracomunitarias — quarterly + annual EU
-member-state operations (delivery, acquisition, services).
-
-Both modelos aggregate per (source_kind, counterparty_nif, operation_kind)
-and apply a declaration threshold downstream. The aggregator here produces
-the raw per-counterparty rollups; the threshold gate (€3005.06 for 347)
-lives in the modelo binding consumer.
+Modelo 347 covers annual operations with third parties whose total exceeds the
+declaration floor. Modelo 349 covers intra-EU operations by member-state
+operation kind. Both aggregate per ``(source_kind, counterparty_nif,
+operation_kind)`` using the counterpart subset of the canonical source-kind
+taxonomy, then expose helpers such as :func:`declarable_counterparty_nifs_347`
+for consumers that need the 347 threshold decision.
 """
 
 from __future__ import annotations

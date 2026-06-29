@@ -90,7 +90,7 @@ class SnapshotRepository[TPayload: BaseModel](Protocol):
     """Structural contract for bucket-scoped snapshot persistence backends.
 
     Implementations may be SecureObjectRepository-backed (Borrador100, Censo)
-    or file-system-backed (legacy stateless services).
+    or file-system-backed (stateless services).
     """
 
     @property

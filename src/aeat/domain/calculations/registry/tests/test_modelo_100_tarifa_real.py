@@ -25,7 +25,7 @@ Calculation authority:
   +1,400 additional age >=75)
 - LIRPF Art. 58 (mínimo por descendientes)
 - LIRPF Art. 59 (mínimo por ascendientes)
-- LIRPF Art. 74-75 (escala autonómica, Cataluña 2024)
+- LIRPF Art. 73-74 (cuota íntegra autonómica y escala autonómica, Cataluña 2024)
 - AEAT Renta 2024 Manual, Part 1, "Liquidación del impuesto"
 - BOE Orden HAC-563-2024 (confirming 5,550 EUR unchanged for 2024)
 """
@@ -77,7 +77,7 @@ def _casilla_id(value: object) -> CasillaId:
 # Mínimo del contribuyente (same 5,550 EUR, autonómica):
 #   0-5,550 @ 10.500% = 582.75
 #
-# Cuota íntegra autonómica (LIRPF Art. 75):
+# Cuota íntegra autonómica (LIRPF Art. 73-74):
 #   0546 = 4,650.03 - 582.75 = 4,067.28
 # -----------------------------------------------------------------------
 
@@ -185,7 +185,7 @@ def test_m100_2024_cuota_integra_autonomica_cataluna_matches_lirpf_tables(
 ) -> None:
     """Cuota íntegra autonómica (0546) must equal the Cataluña 2024 table result.
 
-    Expected derivation (LIRPF Art. 74-75, Ley 5/2020 Cataluña escala 2024):
+    Expected derivation (LIRPF Art. 73-74, Ley 5/2020 Cataluña escala 2024):
       tarifa_cat(35400) - tarifa_cat(5550) = 4650.03 - 582.75 = 4,067.28 EUR.
     """
     result = calculate_registry_snapshot(
@@ -440,7 +440,7 @@ def test_m100_2024_cuota_estatal_ascendant_over_75(
 
 
 # -----------------------------------------------------------------------
-# contract tests — LIRPF Art. 56 casilla 0505 formula derivation.
+# contract tests — LIRPF arts. 50, 63, 64, and 75 casilla 0505 formula derivation.
 #
 # Root cause: casilla 0505 (base liquidable general sometida a gravamen)
 # was manual — when not supplied the engine used 0 and cuota silently
@@ -448,8 +448,8 @@ def test_m100_2024_cuota_estatal_ascendant_over_75(
 # sometida-a-gravamen: max(0, [0500] - [0527]).
 #
 # 0500 = base liquidable general (formula, feeds from rendimiento trabajo).
-# 0527 = anualidades alimentos hijos judicial (formula, sum of casillas
-#        1741, 1744, 1749, 1754, 1759 — Art. 75.3 LIRPF).
+# 0527 = anualidades alimentos hijos (formula, sum of casillas
+#        1741, 1744, 1749, 1754, 1759 — arts. 64/75 LIRPF).
 #
 # Oracle: LIRPF Art. 63 escala estatal 2024 (unchanged from prior years).
 #
@@ -508,7 +508,7 @@ def test_0505_computed_from_0500_no_anualidades(m100_2024_snapshot: RegistrySnap
 
 
 def test_anualidades_alimentos_reduces_0505(m100_2024_snapshot: RegistrySnapshot) -> None:
-    """Anualidades por alimentos hijos judicial reduce 0505 per LIRPF Art. 75.3.
+    """Anualidades por alimentos hijos reduce 0505 per LIRPF arts. 64 and 75.
 
     With base liquidable 14,896 EUR and judicial anualidades 3,000 EUR:
       0527 = 3,000 (computed from casilla 1741, first child)

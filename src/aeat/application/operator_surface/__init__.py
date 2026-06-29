@@ -5,6 +5,13 @@ accepted root command families, the canonical CRUD verb vocabulary, and
 the help/landing documents. The CLI is a thin renderer of this contract
 rather than its author.
 
+Source-kind aliases are parser-only conveniences. They resolve to canonical
+:class:`~aeat.core.BindingSourceKind` members through
+:func:`resolve_source_kind_alias`; no operator-only source-kind taxonomy is
+introduced here. This package also stays free of command-framework and CLI
+imports so the application layer owns command-shape data without depending on
+entrypoint mechanics.
+
 Major declarations:
 
 * :func:`get_operator_surface_contract` returning
@@ -16,6 +23,11 @@ Major declarations:
   :class:`HelpDocument` and :class:`RootLandingReport` — the rendered
   help and landing surfaces.
 * :class:`OperatorSurfaceContractError` — the contract-violation failure.
+
+See Also:
+    - The entrypoint command tree renders this backend-owned contract.
+    - :mod:`aeat.core` for the canonical :class:`~aeat.core.BindingSourceKind`
+      values accepted by source-kind aliases.
 """
 
 from __future__ import annotations

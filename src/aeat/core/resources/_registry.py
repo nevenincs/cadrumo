@@ -22,7 +22,6 @@ from ._repos import (
     IvaRateTableRepository,
     LegalParameterRepository,
     ManualRepository,
-    NormativeRepository,
     RecargoBandsRepository,
     TopicCatalogueRepository,
     UserProfileSchemaRepository,
@@ -47,7 +46,6 @@ class ResourceRegistry:
     legal_parameters: LegalParameterRepository = field(default_factory=LegalParameterRepository)
     manuals: ManualRepository = field(default_factory=ManualRepository)
     modelos: StaticModeloRepository = field(default_factory=StaticModeloRepository)
-    normatives: NormativeRepository = field(default_factory=NormativeRepository)
     recargo_bands: RecargoBandsRepository = field(default_factory=RecargoBandsRepository)
     topics: TopicCatalogueRepository = field(default_factory=TopicCatalogueRepository)
     user_profile_schema: UserProfileSchemaRepository = field(default_factory=UserProfileSchemaRepository)
@@ -70,10 +68,9 @@ def resources() -> ResourceRegistry:
 
     Cached at first call. The factory reads Settings once at
     construction and threads operator-supplied roots through to
-    the Repositories that honour an env-override seam
-    (manuals, normatives, iva catalogues). Tests that mutate
-    Settings between cases call ``resources.cache_clear()`` to
-    rebuild with the new values.
+    the Repositories that honour an env-override seam (manuals and
+    iva catalogues). Tests that mutate Settings between cases call
+    ``resources.cache_clear()`` to rebuild with the new values.
 
     Returns:
         The process-wide cached :class:`ResourceRegistry` instance.
@@ -83,6 +80,5 @@ def resources() -> ResourceRegistry:
     settings = load_settings()
     return ResourceRegistry(
         manuals=ManualRepository(root=settings.aeat_manuals_root),
-        normatives=NormativeRepository(root=settings.aeat_normatives_root),
         iva_catalogues=IvaCatalogueRepository(root=settings.aeat_iva_catalogue_root),
     )

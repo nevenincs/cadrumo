@@ -11,6 +11,7 @@ import pytest
 from .....core.aggregation import RelationAggregationOp
 from .....core.resources import bundled_path
 from .. import binding_source_casilla_ids
+from .._binding_selector_utils import selector_as_dict
 from .._errors import RegistryValidationError
 from .._loader import load_registry_tree
 from .._relation_aggregation import relation_aggregation_op
@@ -26,6 +27,7 @@ from .._schema import (
     RelationDefinition,
 )
 from .._validate import RegistryValidator
+from .._validate_relation_periods import select_relation_source_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -61,25 +63,6 @@ def _algorithm_relation_refs(revision: ModeloRevision) -> set[str]:
     }
 
 
-def _revision_matches_selector(revision: ModeloRevision, selector: Mapping[str, str | int]) -> bool:
-    year = selector.get("year")
-    if isinstance(year, int):
-        return revision.period_selector.includes_year(year)
-    year_from = selector.get("year_from")
-    if isinstance(year_from, int):
-        year_to = selector.get("year_to")
-        if not isinstance(year_to, int):
-            year_to = 2999
-        revision_from = revision.period_selector.year_from or min(revision.period_selector.years)
-        revision_to = revision.period_selector.year_to
-        if revision_to is None and revision.period_selector.years:
-            revision_to = max(revision.period_selector.years)
-        if revision_to is None:
-            revision_to = 2999
-        return revision_from <= year_to and year_from <= revision_to
-    return isinstance(selector.get("filing_year_delta"), int)
-
-
 def test_cross_dependency_roles_match_supported_modelo_hierarchy() -> None:
     modelos, _catalogues = _validated_registry_tree()
     for modelo in modelos:
@@ -89,11 +72,7 @@ def test_cross_dependency_roles_match_supported_modelo_hierarchy() -> None:
                 # previous period or a prior filing year; same-period
                 # self-source relations would be circular.
                 if relation.source_modelo == modelo.id:
-                    selector = relation.source_revision_selector or {}
-                    filing_year_delta = selector.get("filing_year_delta", 0)
-                    assert isinstance(filing_year_delta, int), (
-                        f"filing_year_delta must be int, got {type(filing_year_delta).__name__}"
-                    )
+                    filing_year_delta = relation.source_revision_selector.filing_year_delta or 0
                     assert relation.kind == "previous_period" or filing_year_delta < 0, (
                         f"{modelo.id}/{revision.id}/{relation.id}"
                     )
@@ -256,7 +235,7 @@ def _assert_relation_binding_mirrors_source(
     materialisation strategy agrees with what the relation
     declared.
     """
-    selector = binding.selector
+    selector = selector_as_dict(binding)
     selector_modelo = selector.get("source_modelo", selector.get("modelo"))
     selector_periods = selector.get("source_periods")
     selector_source_casilla_ids = binding_source_casilla_ids(binding)
@@ -299,11 +278,11 @@ def test_relation_source_casilla_ids_are_filing_grade_source_casilla_ids() -> No
         for revision in modelo.revisions.values():
             for relation in revision.relations:
                 source_modelo = modelos_by_id[relation.source_modelo]
-                source_revisions = tuple(
-                    source_revision
-                    for source_revision in source_modelo.revisions.values()
-                    if _revision_matches_selector(source_revision, relation.source_revision_selector)
+                source_revisions, selector_failures = select_relation_source_revisions(
+                    source_modelo,
+                    relation.source_revision_selector,
                 )
+                assert not selector_failures, f"{modelo.id}/{revision.id}/{relation.id}: {selector_failures!r}"
                 assert source_revisions, f"{modelo.id}/{revision.id}/{relation.id}"
                 for source_revision in source_revisions:
                     casillas = {casilla.id: casilla for casilla in source_revision.casillas}

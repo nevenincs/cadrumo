@@ -99,7 +99,7 @@ _M111_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("30", surface="_M1
 _M115_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("05", surface="_M115_RESULT_CASILLA")
 _M123_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("14", surface="_M123_RESULT_CASILLA")
 _M123_2019_2023_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id(
-    "08-legacy",
+    "08",
     surface="_M123_2019_2023_RESULT_CASILLA",
 )
 _M200_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id(

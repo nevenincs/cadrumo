@@ -36,8 +36,7 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation._source_mesh import CalculationSourceResolution
 from ...user_profile import UserProfileLifecycleRepository
-from .. import calculate_modelo_revision, create_work_unit
-from .._actions import ModeloError
+from .. import ModeloError, calculate_modelo_revision, create_work_unit
 from .._profile_binding import (
     ProfileBindingResolutionError,
     resolve_profile_sourced_bindings,
@@ -97,6 +96,8 @@ def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="activities.description", value="economic activity"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
             UserProfileFact(path="tax_residence.ccaa", value=ccaa),
             # M100 2025 added age_at_year_end date binding + declaration-type
             # and derived marriage facts. Seed minimum values so M100 calculate

@@ -12,9 +12,8 @@ The constraint shape mirrors the canonical pin already established by
 matching ``^[A-Za-z0-9][A-Za-z0-9_.-]*$``. Profile identities are
 minted as canonical UUIDv4 strings via
 :func:`aeat.domain.user_profile._values.new_profile_id`, but the
-constraint stays permissive enough to accept the legacy short-label
-identities that pre-cutover fixtures and operator-supplied bucket
-names still carry on the persistence boundary.
+constraint stays permissive enough to accept operator labels that are
+still valid on the persistence boundary.
 """
 
 from __future__ import annotations
@@ -32,6 +31,6 @@ ProfileId = Annotated[
         pattern=r"^[A-Za-z0-9][A-Za-z_0-9.-]*$",
     ),
 ]
-"""Per-operator profile identity (canonical UUIDv4 or legacy label)."""
+"""Per-operator profile identity (canonical UUIDv4 or operator label)."""
 
 __all__ = ("ProfileId",)

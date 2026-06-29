@@ -4,8 +4,9 @@ implementation.
 
 from __future__ import annotations
 
+import errno
+import os
 from collections import deque
-from typing import override
 
 import pytest
 
@@ -86,42 +87,38 @@ def test_questionary_prompter_translates_no_console_error() -> None:
     prompt_toolkit exception.
 
     The test drives the prompter with a real ``Output`` implementation
-    that raises a stand-in ``OSError`` from its ``write`` method on
-    first use; that is the same exception shape the catch handler
-    accepts as a NoConsoleScreenBufferError stand-in.
+    backed by a closed OS pipe, producing the same ``OSError`` family
+    accepted as a NoConsoleScreenBufferError fallback.
     """
 
     from prompt_toolkit.input import create_pipe_input
-    from prompt_toolkit.output import DummyOutput
+    from prompt_toolkit.output.plain_text import PlainTextOutput
 
+    from ....core.errors._registry import resolve_error_message
     from .._prompter import (
         QuestionaryPrompter,
         WizardUnsupportedConsoleError,
     )
 
-    class _RaisingOutput(DummyOutput):
-        """Real ``Output`` whose first write raises an
-        unsupported-console OSError. Stand-in for
-        ``prompt_toolkit.output.win32.NoConsoleScreenBufferError``.
-        """
+    read_fd, write_fd = os.pipe()
+    os.close(read_fd)
+    stream = os.fdopen(write_fd, "w", encoding="utf-8")
+    try:
+        with create_pipe_input() as pipe_input:
+            prompter = QuestionaryPrompter(input=pipe_input, output=PlainTextOutput(stream))
+            with pytest.raises(WizardUnsupportedConsoleError) as raised:
+                prompter.ask(_question("tax-id", _PROMPT_TAX), default=None)
+    finally:
+        try:
+            stream.close()
+        except OSError as exc:
+            assert exc.errno in {errno.EINVAL, errno.EPIPE}
 
-        @override
-        def write(self, data: str) -> None:  # pragma: no cover - first call raises
-            raise OSError("No console screen buffer attached")
-
-        @override
-        def write_raw(self, data: str) -> None:  # pragma: no cover - first call raises
-            raise OSError("No console screen buffer attached")
-
-    from ....core.errors._registry import resolve_error_message
-
-    with create_pipe_input() as pipe_input:
-        prompter = QuestionaryPrompter(input=pipe_input, output=_RaisingOutput())
-        with pytest.raises(WizardUnsupportedConsoleError) as raised:
-            prompter.ask(_question("tax-id", _PROMPT_TAX), default=None)
+    cause = raised.value.__cause__
+    assert isinstance(cause, OSError)
     message = resolve_error_message(raised.value)
     assert "aeat config profile create NAME" in message
-    assert "No console screen buffer attached" not in message
+    assert str(cause) not in message
 
 
 # ── contract: QuestionaryPrompter.emit_progress routes through structured logger ───

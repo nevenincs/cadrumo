@@ -6,26 +6,21 @@ Validates :class:`ModeloDefinition` instances and their constituent
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ._corpus_catalogue import verify_source_catalogue
 from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
-from ._schema import (
-    LegalReference,
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-    SourceReference,
-)
+from ._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ._validate_cache import (
     CATALOGUE_FAILURE_CACHE,
     MODELO_VALIDATION_CACHE,
     REGISTRY_VALIDATION_CACHE,
 )
 from ._validate_evidence import EvidenceValidator
+from ._validate_helpers import _missing_refs
 from ._validate_registry_scope import validate_registry_scope
 from ._validate_revision_rules import (
     validate_informative_class_invariant,
@@ -148,8 +143,8 @@ class RegistryValidator:
         failures: list[str] = []
         if validate_catalogues:
             failures.extend(self._validate_catalogues())
-        failures.extend(self._missing_refs("modelo", modelo.id, modelo.legal_refs, self._legal, "legal"))
-        failures.extend(self._missing_refs("modelo", modelo.id, modelo.source_refs, self._sources, "source"))
+        failures.extend(_missing_refs("modelo", modelo.id, modelo.legal_refs, self._legal, "legal"))
+        failures.extend(_missing_refs("modelo", modelo.id, modelo.source_refs, self._sources, "source"))
         for revision in modelo.revisions.values():
             failures.extend(self._validate_revision(modelo, revision))
         failures.extend(self._validate_user_profile_contract((modelo,)))
@@ -210,13 +205,3 @@ class RegistryValidator:
             evidence=self._evidence,
             justificante_corpus_root=self._justificante_corpus_root,
         )
-
-    @staticmethod
-    def _missing_refs(
-        scope: str,
-        owner: str,
-        refs: Iterable[str],
-        catalogue: Mapping[str, LegalReference] | Mapping[str, SourceReference],
-        ref_kind: str,
-    ) -> list[str]:
-        return [f"{scope}: {owner} references unknown {ref_kind} id {ref!r}" for ref in refs if ref not in catalogue]

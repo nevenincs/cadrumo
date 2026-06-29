@@ -1,16 +1,26 @@
-"""AEAT apoderamientos scope vocabulary domain layer.
+"""AEAT apoderamiento scope catalogue and token parser.
 
-Loads the shipped scopes catalogue from ``registry/aeat/apoderamientos/
-scopes.toml`` and exposes typed parsing for operator-supplied scope
-flags. Contract:
+This package loads the shipped ``registry/aeat/apoderamientos/scopes.toml``
+catalogue as an :class:`ApoderamientosCatalogue` of :class:`ApoderadoScope`
+records and exposes :func:`parse_scope_tokens` for operator-supplied ``--scope``
+values. The parser is a domain validation boundary: scope codes must be
+uppercase catalogue tokens, ``ALL`` expands to every catalogue code,
+comma-separated values are rejected, duplicate scopes are deduplicated, and
+unknown codes raise :class:`UnknownScopeError`.
 
-  * scope codes are uppercase tokens drawn from the shipped catalogue
-  * the literal ``ALL`` expands at command time into every catalogue code
-  * comma-separated values are rejected at the parser boundary
-  * duplicate scopes in one invocation are silently deduplicated
-  * unknown scopes refuse with a typed validation error
+The package only defines the scope vocabulary and validation rules. Persisted
+represented-party configuration, active-bucket routing, and the permanent
+refusal of live AEAT-side apoderamiento mutation are application concerns owned
+by :class:`~aeat.application.auth.ApoderadoService`.
 
-This module uses :class:`ApoderadoScope` for parsing and validating scope tokens.
+See Also:
+    - :mod:`aeat.domain.auth` for the parent re-export facade.
+    - :class:`~aeat.application.auth.ApoderadoService` for the encrypted
+      bucket-scoped configuration service that consumes these parsed scope
+      codes.
+    - :mod:`aeat.entrypoints.cli._config._apoderado` for CLI commands that
+      collect repeated ``--scope`` options before calling the application
+      service.
 """
 
 from __future__ import annotations

@@ -38,8 +38,10 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import CasillaId, build_snapshot, load_registry_tree, validated_casilla_id
+from .._binding_selector_utils import selector_as_dict
 from .._errors import RegistryValidationError
 from .._formula_runtime import calculate_registry_snapshot
+from .._legal import verify_legal_catalogue
 from .._schema import ParameterDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -127,10 +129,11 @@ def test_scalar_tipo_gravamen_parameters_carry_the_lis_art_29_rates() -> None:
 
     LIS Art. 29 (BOE-A-2014-12328) fixes: general 25 %; cooperativas
     fiscalmente protegidas a rate that, after the 3-pp reduction, does
-    not exceed 20 %; entidades sin fines lucrativos (Ley 49/2002) 10 %;
-    entidades de nueva creación 15 % for the first two profit-making
-    periods. The registry must encode exactly those figures, each cited
-    to ``ley-27-2014:art-29``.
+    not exceed 20 %; entidades sin fines lucrativos (Ley 49/2002 art. 10)
+    10 %; entidades de nueva creación 15 % for the first two profit-making
+    periods. The registry must encode exactly those figures. The
+    non-profit branch cites both the LIS dispatch article and the
+    regime-specific Ley 49/2002 rate article.
     """
     parameters = _parameters()
     expected = {
@@ -147,6 +150,52 @@ def test_scalar_tipo_gravamen_parameters_carry_the_lis_art_29_rates() -> None:
         assert len(parameter.values) == 1, f"{parameter_id!r} must carry one dated value"
         assert parameter.values[0].value == rate, f"{parameter_id!r} must encode the LIS Art. 29 rate {rate}"
         assert "ley-27-2014:art-29" in parameter.legal_refs, f"{parameter_id!r} must be grounded in LIS Art. 29"
+
+    nonprofit = parameters["is.modelo-200.tipo-gravamen-non-profit-special-regime"]
+    assert "ley-49-2002:art-10" in nonprofit.legal_refs, (
+        "the 10% special-regime branch must cite its regime-specific Ley 49/2002 Art. 10 authority"
+    )
+
+
+def test_nonprofit_cuota_bracket_carries_the_ley_49_2002_rate_authority() -> None:
+    """The 10% cuota branch is grounded in both LIS Art. 29 and Ley 49/2002 Art. 10.
+
+    LIS Art. 29.3 points to the Ley 49/2002 regime; Ley 49/2002 Art. 10
+    is the article-level authority for the positive taxable base from
+    non-exempt economic activities being taxed at 10%. The bracket used
+    by casilla 00562 must carry both references so the calculation path
+    is legally traceable from the dispatched rate through cuota íntegra.
+    """
+    bracket = _parameters()["is.modelo-200.cuota-integra-bracket-non-profit-special-regime"]
+
+    assert bracket.data_type == "bracket_table"
+    assert bracket.bracket_axis == "filing_period"
+    assert "ley-27-2014:art-29" in bracket.legal_refs
+    assert "ley-27-2014:art-30" in bracket.legal_refs
+    assert "ley-49-2002:art-10" in bracket.legal_refs
+    assert len(bracket.brackets) == 1
+    assert bracket.brackets[0].marginal_rate == Decimal("0.10")
+
+    formula_refs = {formula.id: formula.legal_refs for formula in _snapshot().revision.formulas}
+    assert "ley-49-2002:art-10" in formula_refs["modelo-200-tipo-gravamen-por-forma-juridica"]
+    assert "ley-49-2002:art-10" in formula_refs["modelo-200-cuota-integra"]
+
+
+def test_ley_49_2002_art_10_nonprofit_rate_links_to_bundled_corpus() -> None:
+    """The regime-specific 10% legal reference resolves to the bundled BOE excerpt."""
+    _, catalogues = _load_modelo_200()
+    reference = catalogues.legal["ley-49-2002:art-10"]
+
+    assert reference.corpus_ref == "corpus/normatives/html/ley-49-2002-art-10.html#a10"
+    assert reference.permalink.endswith("#a10")
+    assert reference.effective_from == date(2002, 12, 25)
+    assert reference.required_text == (
+        "Artículo 10. Tipo de gravamen.",
+        "La base imponible positiva",
+        "explotaciones económicas no exentas",
+        "tipo del 10 por 100",
+    )
+    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
 
 
 def test_micro_empresa_rate_is_a_two_bracket_scale_not_a_flat_value() -> None:
@@ -295,6 +344,28 @@ def test_tipo_gravamen_dispatch_routes_00558_by_legal_entity_form() -> None:
     assert nonprofit_cuota == Decimal("100000.00")
 
 
+def test_nonprofit_special_regime_stays_at_10_percent_inside_erd_threshold() -> None:
+    """Ley 49/2002 entities keep the 10% special-regime rate below 1M INCN."""
+    result = calculate_registry_snapshot(
+        _snapshot(),
+        inputs=_base_inputs(Decimal("1000000")),
+        enum_binding_values={_DISPATCH_BINDING: "sin_fines_lucrativos"},
+        binding_values={
+            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-2024-profile-incn-prior-12-months": Decimal("500000"),
+            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+        },
+        relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
+        date_context={"filing_period": date(2024, 12, 31)},
+    )
+
+    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("10")
+    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("100000.00")
+
+
 def test_tipo_gravamen_dispatch_raises_when_legal_entity_form_is_unsupplied() -> None:
     """A cuota chain with no legal_entity_form binding fails loudly.
 
@@ -358,7 +429,7 @@ def test_dispatch_binding_is_a_profile_sourced_enum_binding() -> None:
     binding = next(b for b in _snapshot().revision.bindings if b.id == _DISPATCH_BINDING)
     assert binding.source == "profile"
     assert binding.typed_enum == "LegalEntityForm"
-    assert binding.selector.get("field") == "legal_entity_form"
+    assert selector_as_dict(binding).get("field") == "legal_entity_form"
     assert "ley-27-2014:art-29" in binding.legal_refs
 
 

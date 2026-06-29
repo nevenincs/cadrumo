@@ -18,6 +18,11 @@ No AEAT certificate authentication or network call is involved — the
 command is a pure offline transform from (PDF bytes) → (draft, submission,
 warnings).
 
+This is not the production external-evidence import path for current filing
+records. It does not create a :class:`aeat.domain.modelos.ModeloRecord`, attach
+:class:`aeat.domain.modelos.ExternalEvidence`, or infer missing casilla values
+from receipt metadata.
+
 See Also:
     :mod:`aeat.adapters.inbound.justificante`
         Local PDF parser that extracts the typed receipt record.
@@ -26,6 +31,10 @@ See Also:
         and build the draft scaffold.
     :func:`aeat.application.filing.build_complementaria`
         Amendment flow that can consume the imported submission baseline.
+    :func:`aeat.application.modelo._external_import_actions.import_external_filing_evidence`
+        External-evidence import path that builds the current
+        :class:`aeat.domain.modelos.ModeloRecord` baseline consumed by
+        work-unit amendments.
 """
 
 from __future__ import annotations

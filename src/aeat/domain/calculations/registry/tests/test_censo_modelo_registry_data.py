@@ -7,6 +7,7 @@ import pytest
 from .....core.paths import PROJECT_ROOT
 from .....core.resources import bundled_path
 from .. import build_snapshot, discover_modelo_sources, load_registry_tree
+from .._binding_selector_utils import selector_as_dict
 from .._corpus_catalogue import verify_source_file
 from .._coverage import build_model_law_coverage_ledger
 from .._errors import RegistrySnapshotError
@@ -51,7 +52,7 @@ def test_committed_modelo_036_binds_censo_status_from_profile() -> None:
 
     assert binding.id == "modelo-036-profile-censo-status"
     assert binding.source == "profile"
-    assert binding.selector == {"profile_key": "censo.status"}
+    assert selector_as_dict(binding) == {"profile_key": "censo.status"}
     assert binding.typed_enum == "censo_event_kind"
     assert casilla.input_kind == InputKind.BOUND
     assert casilla.binding == binding.id

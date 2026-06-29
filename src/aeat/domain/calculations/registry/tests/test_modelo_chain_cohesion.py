@@ -25,6 +25,7 @@ from collections.abc import Mapping
 import pytest
 
 from .....core.resources import bundled_path
+from .._binding_selector_utils import selector_as_dict
 from .._loader import load_registry_tree
 from .._schema import ModeloDefinition, RelationDefinition
 from .._validate_relation_periods import select_relation_source_revisions
@@ -80,7 +81,7 @@ def _summary_previous_filing_source_modelos(modelo: ModeloDefinition) -> set[str
         for binding in revision.bindings:
             if binding.source != "previous_filing":
                 continue
-            source_modelo = binding.selector.get("source_modelo")
+            source_modelo = selector_as_dict(binding).get("source_modelo")
             if isinstance(source_modelo, str):
                 seen.add(source_modelo)
     return seen
@@ -223,10 +224,10 @@ def _relation_source_offence(
     if selector_failures:
         return f"modelo {modelo_id} relation {relation.id!r} source selector errors: {selector_failures!r}"
     if not source_revisions:
+        selector = relation.source_revision_selector.model_dump(exclude_none=True)
         return (
             f"modelo {modelo_id} relation {relation.id!r} selector "
-            f"{dict(relation.source_revision_selector)!r} matches no source revisions on modelo "
-            f"{relation.source_modelo!r}"
+            f"{selector!r} matches no source revisions on modelo {relation.source_modelo!r}"
         )
     for source_revision in source_revisions:
         source_casilla_ids = {casilla.id for casilla in source_revision.casillas}

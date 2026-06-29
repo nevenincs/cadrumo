@@ -13,6 +13,14 @@ This module owns the cross-domain step (registry snapshot + user
 profile) so the registry-query CLI stays a thin caller. The revision is
 fetched through a :class:`ValidatedRegistryAuthority` given the
 requested modelo, year, and period.
+
+See Also:
+    :func:`aeat.application.modelo._profile_binding.resolve_profile_sourced_bindings`
+        Profile binding resolver whose typed binding channels become the
+        profile-resolved id set returned here.
+    :mod:`aeat.application.state_projection`
+        Broader modelo readiness projection that reports formula-consumed
+        profile/manual bindings for the readiness command.
 """
 
 from __future__ import annotations
@@ -40,13 +48,14 @@ def profile_resolvable_binding_ids(
 ) -> frozenset[str]:
     """Return binding ids resolvable from the active profile's stored facts.
 
-    Resolves the registry snapshot for ``(modelo, filing_year,
-    period)`` — or, when ``period`` is ``None``, the revision covering
-    ``filing_year`` — and projects the bucket's user profile onto its
-    ``source = "profile"`` bindings. The returned set is the binding
-    ids the profile already satisfies; ``constant_value`` bindings are
-    handled separately by the caller because they carry a literal value
-    independent of any profile.
+    Resolves the registry snapshot for ``(modelo, filing_year, period)`` — or,
+    when ``period`` is ``None``, the revision covering ``filing_year`` — and
+    projects the bucket's user profile onto its ``source = "profile"`` bindings.
+    A supplied :class:`Period` must match ``filing_year`` and contributes the
+    registry token used at the snapshot boundary. The returned set is the binding
+    ids the profile already satisfies; ``constant_value`` bindings are handled
+    separately by the caller because they carry a literal value independent of
+    any profile.
 
     Returns an empty set when the snapshot cannot be resolved or the
     bucket has no profile — the caller then treats every non-constant
@@ -118,6 +127,10 @@ def _annual_period_for_year(authority: ValidatedRegistryAuthority, *, modelo: st
     first period the covering revision declares so the snapshot
     resolves. The binding *set* is revision-wide, so the period choice
     does not change which bindings the revision declares.
+
+    Raises:
+        AmbiguousRevisionSelectionError: When more than one revision covers the
+            requested year and no period is available to select between them.
     """
     try:
         definition = authority.validate_modelo(modelo.strip())

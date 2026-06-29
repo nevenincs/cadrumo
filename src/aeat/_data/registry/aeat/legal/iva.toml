@@ -648,6 +648,18 @@ applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI28.shtml"
 review_status = "reviewed"
 
+[sources."aeat-modelo-349-instructions"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_349/files/instr_mod_349.txt"
+sha256 = "da88207bffeb21d0ea94a28229f8657cec0d88769d132d10ecdb74b66ce9e5e8"
+bytes = 70701
+retrieved_at = 2026-05-26
+applies_from = 2021-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/GI28/instr_mod_349.pdf"
+review_status = "reviewed"
+
 [sources."aeat-vies-gestiones-procedure"]
 evidence_tier = "executable_parity_evidence"
 authority = "aeat"
@@ -750,6 +762,28 @@ required_text = [
     "Artículo 163 octiesdecies",
     "empresarios o profesionales no establecidos en la Comunidad",
     "régimen especial previsto en esta sección",
+]
+
+[legal."ley-37-1992:art-163-noniesdecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163noniesdecies"
+document_id = "BOE-A-1992-28740"
+article = "163 noniesdecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163noniesdecies"
+published_at = 1992-12-29
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "wgergely"
+notes = "Ley 37/1992, articulo 163 noniesdecies: obligaciones formales del regimen exterior OSS cuando Espana es Estado miembro de identificacion."
+required_text = [
+    "Artículo 163 noniesdecies. Obligaciones formales.",
+    "En caso de que el Reino de España sea el Estado miembro de identificación elegido",
+    "Presentar por vía electrónica una declaración-liquidación",
+    "por cada trimestre natural",
+    "Mantener un registro de las operaciones incluidas en este régimen especial",
 ]
 
 [legal."ley-37-1992:art-163-unvicies"]
@@ -1143,6 +1177,27 @@ required_text = [
     "Dos. En caso de que el Reino de España sea el Estado miembro de consumo, sin perjuicio de lo dispuesto en el artículo 119.Dos.2.º ",
 ]
 
+[legal."ley-37-1992:art-163-quatervicies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163quatervicies"
+document_id = "BOE-A-1992-28740"
+article = "163 quatervicies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163quatervicies"
+published_at = 1992-12-29
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "wgergely"
+notes = "Ley 37/1992, articulo 163 quatervicies: exclusion del regimen de la Union para prestaciones realizadas en el territorio de aplicacion del impuesto por establecidos en el mismo."
+required_text = [
+    "Artículo 163 quatervicies. Prestaciones de servicios realizadas en el territorio de aplicación del impuesto por empresarios o profesionales establecidos en el mismo.",
+    "El régimen especial previsto en esta sección no resultará aplicable",
+    "prestaciones de servicios realizadas en el territorio de aplicación del impuesto",
+    "régimen general del impuesto",
+]
+
 [legal."ley-37-1992:art-163-septiesdecies"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -1348,11 +1403,60 @@ published_at = 2023-12-06
 effective_from = 2023-12-07
 consolidated_as_of = 2025-12-03
 review_status = "reviewed"
-reviewed_at = 2026-06-28
+reviewed_at = 2026-06-29
 reviewed_by = "codex"
-notes = "Real Decreto 1007/2023: aprueba el reglamento de requisitos de los sistemas informaticos de facturacion y define los Sistemas de emision de facturas verificables o Sistemas VERI*FACTU."
+notes = "Real Decreto 1007/2023: aprueba el reglamento de requisitos de los sistemas informaticos de facturacion y define los Sistemas de emision de facturas verificables o Sistemas VERI*FACTU; las fechas de adaptacion estan en la disposicion final cuarta consolidada tras el Real Decreto-ley 15/2025."
 required_text = [
     "requisitos que deben adoptar los sistemas y programas informáticos o electrónicos que soporten los procesos de facturación",
     "garantizar la integridad, conservación, accesibilidad, legibilidad, trazabilidad e inalterabilidad",
     "Sistemas de emisión de facturas verificables",
+]
+
+[legal."rd-1007-2023:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1007-2023.html#a3"
+document_id = "BOE-A-2023-24840"
+article = "3"
+section = "Ámbito subjetivo"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-24840#a3"
+published_at = 2023-12-06
+effective_from = 2023-12-07
+consolidated_as_of = 2025-12-03
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "codex"
+notes = "RD 1007/2023 Art. 3 delimita los obligados tributarios que usan sistemas informaticos de facturacion: IS, IRPF con actividades economicas, IRNR con establecimiento permanente y entidades en atribucion de rentas con actividades economicas; excluye a quienes llevan libros registro por RIVA Art. 62.6 y aplica tambien a productores/comercializadores en su actividad."
+required_text = [
+    "El presente Reglamento se aplicará a los obligados tributarios que se indican a continuación, que utilicen sistemas informáticos de facturación",
+    "Los contribuyentes del Impuesto sobre Sociedades",
+    "Los contribuyentes del Impuesto sobre la Renta de las Personas Físicas que desarrollen actividades económicas",
+    "Los contribuyentes del Impuesto sobre la Renta de no Residentes que obtengan rentas mediante establecimiento permanente",
+    "Las entidades en régimen de atribución de rentas que desarrollen actividades económicas",
+    "productores y comercializadores de los sistemas informáticos",
+    "no se aplicará a los contribuyentes que lleven los libros registros en los términos establecidos en el apartado 6",
+]
+
+[legal."rd-1007-2023:df-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1007-2023.html#df-4"
+document_id = "BOE-A-2023-24840"
+article = "disposicion final cuarta"
+section = "Entrada en vigor y efectos"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-24840#df-4"
+published_at = 2023-12-06
+effective_from = 2025-12-04
+consolidated_as_of = 2025-12-03
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "codex"
+notes = "La disposicion final cuarta, modificada por el Real Decreto-ley 15/2025, fija los hitos actuales de adaptacion: antes del 1 de enero de 2027 para los obligados del art. 3.1.a y antes del 1 de julio de 2027 para el resto de obligados del art. 3.1."
+required_text = [
+    "antes del 1 de enero de 2027",
+    "antes del 1 de julio de 2027",
+    "Los obligados tributarios del artículo 3.2",
+    "Se modifica por la disposición final 1 del Real Decreto-ley 15/2025",
 ]

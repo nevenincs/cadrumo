@@ -48,7 +48,7 @@ import pytest
 
 from ....adapters.inbound.financial.providers import ParsedLedgerRow
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....application.ledger._actions import import_ledger_transactions
+from ....application.ledger._actions_import import import_ledger_transactions
 from ....domain.currency import (
     CurrencyNormalizationService,
 )

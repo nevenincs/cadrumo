@@ -44,8 +44,8 @@ def schema_provider() -> RegistrySchemaAccessor:
     return build_runtime_schema_provider()
 
 
-def test_runtime_schema_provider_exposes_imported_modelo_schema() -> None:
-    collection = build_runtime_schema_provider().get_collection("130")
+def test_runtime_schema_provider_exposes_imported_modelo_schema(schema_provider: RegistrySchemaAccessor) -> None:
+    collection = schema_provider.get_collection("130")
 
     casilla_19 = collection.get(_M130_RESULTADO_FINAL_CASILLA)
     assert casilla_19 is not None

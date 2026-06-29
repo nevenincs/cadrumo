@@ -61,7 +61,6 @@ from .. import (
     verify_modelo_revision,
 )
 from .._result_disposition_resolution import resolve_modelo_result_disposition
-from ._file_flow_support import _seed_clean_cross_period_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -105,18 +104,35 @@ def _secure_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def _store_operator_profile(*, created_at: datetime) -> None:
+    activity_start_date = _activity_start_date_for_period(_LAST_PERIOD if created_at.month == 12 else _MID_PERIOD)
     UserProfileLifecycleRepository(bucket_id="operator").save(
         UserProfileRecord(
             profile_id="operator",
             display_name="Test runtime profile",
-            facts=(UserProfileFact(path="identity.tax_id", value=_TAX_ID),),
+            facts=(
+                UserProfileFact(path="identity.tax_id", value=_TAX_ID),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="censo.activity_start_date", value=activity_start_date),
+            ),
             created_at=created_at,
             updated_at=created_at,
         ),
     )
 
 
-def _workflow_profile(*, redeme_enrolled: bool) -> TaxpayerProfile:
+def _activity_start_date_for_period(period_token: str) -> date:
+    return date(_YEAR, 10, 1) if period_token == _LAST_PERIOD else date(_YEAR, 4, 1)
+
+
+def _workflow_profile(*, redeme_enrolled: bool, activity_start_date: date) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAX_ID,
         iva_regime=IVARegime.GENERAL,
@@ -124,6 +140,7 @@ def _workflow_profile(*, redeme_enrolled: bool) -> TaxpayerProfile:
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
+        activity_start_date=activity_start_date,
         iva=ModeloIVAProfile(redeme_enrolled=redeme_enrolled),
     )
 
@@ -213,17 +230,13 @@ def _calculate_negative_period(
     saldo = revision.casilla_values[_SALDO_CASILLA]
     assert saldo > Decimal("0")
 
-    _seed_clean_cross_period_sources(
-        work_unit,
-        work_unit_repository=work_repo,
-        calculation_repository=calc_repo,
-        filing_repository=filing_repo,
-        bucket_event_repository=event_repo,
-    )
     verification = verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator",
-        workflow_profile=_workflow_profile(redeme_enrolled=redeme_enrolled),
+        workflow_profile=_workflow_profile(
+            redeme_enrolled=redeme_enrolled,
+            activity_start_date=_activity_start_date_for_period(period_token),
+        ),
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,
         filing_repository=filing_repo,
@@ -258,7 +271,10 @@ def _file_period(
     file_modelo_revision(
         calculation_revision_id,
         actor="operator",
-        workflow_profile=_workflow_profile(redeme_enrolled=redeme_enrolled),
+        workflow_profile=_workflow_profile(
+            redeme_enrolled=redeme_enrolled,
+            activity_start_date=_activity_start_date_for_period(work_unit.period.code),
+        ),
         refund_election=refund_election,
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,
@@ -274,7 +290,10 @@ def _file_period(
     return resolve_modelo_result_disposition(
         work_unit=work_unit,
         revision=revision,
-        workflow_profile=_workflow_profile(redeme_enrolled=redeme_enrolled),
+        workflow_profile=_workflow_profile(
+            redeme_enrolled=redeme_enrolled,
+            activity_start_date=_activity_start_date_for_period(work_unit.period.code),
+        ),
         period=work_unit.period,
         refund_election=refund_election,
     )

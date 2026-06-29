@@ -1,6 +1,6 @@
 """Provenance-erasure guard for the typed-observation build.
 
-`_build_typed_observations` projects every casilla in a
+`build_typed_observations` projects every casilla in a
 :class:`RegistryCalculationResult` into a :class:`CasillaObservation`.
 A casilla present in ``engine_result.values`` but absent from the
 registry snapshot revision is a referential-integrity violation:
@@ -11,7 +11,7 @@ hard-fails on such a casilla instead of yielding a stripped row.
 The :class:`RegistryCalculationResult` fed to the build is assembled
 directly from the real Modelo 100 registry snapshot — every casilla
 id, formula target, legal_ref and source_ref is registry-authored.
-No values are invented: ``_build_typed_observations`` only consumes
+No values are invented: ``build_typed_observations`` only consumes
 ``values`` keys, ``entries`` targets, and the snapshot's casilla
 definitions, so a structurally faithful result exercises the exact
 referential-integrity contract under test.
@@ -38,10 +38,12 @@ from ....domain.modelos._calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from .._actions import (
-    CasillaProvenanceMissingError,
-    _amendment_observations,
-    _build_typed_observations,
+from .. import CasillaProvenanceMissingError
+from .._calculation_helpers import (
+    amendment_observations as _amendment_observations,
+)
+from .._calculation_helpers import (
+    build_typed_observations as _build_typed_observations,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -166,7 +168,7 @@ def _baseline_revision(
 
 
 def test_amendment_override_orphan_casilla_raises_instead_of_emitting_empty_provenance() -> None:
-    """``_amendment_observations`` hard-fails on an orphan casilla.
+    """``amendment_observations`` hard-fails on an orphan casilla.
 
     An overridden casilla that is absent from the registry snapshot revision
     has no provenance source. Projecting it would emit empty legal_refs /

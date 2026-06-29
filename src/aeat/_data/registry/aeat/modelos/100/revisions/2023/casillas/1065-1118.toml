@@ -3,6 +3,6 @@ id = "1118"
 number = "1118"
 label = "Por el pago de intereses de préstamos a estudios de Grado, Master y Doctorado"
 section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
-semantic_role = "irpf_deduccion_estudios_intereses_prestamo_pendiente"
+semantic_role = "irpf_deduccion_madrid_intereses_prestamos_estudios"
 legal_refs = ["ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

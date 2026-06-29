@@ -1,8 +1,20 @@
 """Canonical application-layer source resolution contracts.
 
-:class:`CalculationSourceContext` carries the :class:`ModeloRevision` that
-the source mesh resolvers consult when projecting binding slots onto
-available data sources.
+The source mesh is the calculation-facing envelope for values derived from
+bucket-local ledgers, invoices, prior filings, profile facts, borrador data,
+relation prefill, and other registry-declared sources. A
+:class:`CalculationSourceContext` binds the active bucket, modelo,
+:class:`Period`, and selected :class:`ModeloRevision`; each
+:class:`ModeloSourceResolver` claims one or more :class:`BindingSourceKind`
+members and returns a :class:`CalculationSourceResolution`.
+
+``CalculationSourceResolution`` is the single resolved-source carrier consumed
+by modelo calculation. It carries decimal, enum, date, relation, bound-casilla,
+detail-row, transaction-id, diagnostic, and provenance channels. Exclusive
+merges use :func:`merge_source_resolutions`; precedence overlays use
+:func:`merge_source_resolutions_by_precedence`; and
+:func:`collect_unhandled_source_diagnostics` is the no-silent-blank safety net
+for declared binding sources without an enrolled resolver.
 """
 
 from __future__ import annotations

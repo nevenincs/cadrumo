@@ -12,7 +12,7 @@ from ....core import STRICT_FROZEN_CONFIG, Period
 from ._bindings import CasillaObservation, RegistryModeloObservation
 from ._errors import RegistryValidationError
 from ._formula_runtime import RegistryCalculationResult
-from ._ids import CasillaId
+from ._ids import CasillaId, ModeloId
 
 __all__ = [
     "RegistryFiledStateComparison",
@@ -45,7 +45,7 @@ class RegistryFiledStateComparison(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: ModeloId
     revision: str = Field(min_length=1)
     filing_period: Period | None = None
     filing_year: int = Field(ge=2000, le=2099)

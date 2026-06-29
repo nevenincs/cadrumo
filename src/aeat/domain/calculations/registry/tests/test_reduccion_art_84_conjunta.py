@@ -93,6 +93,28 @@ _BASE_BINDINGS_2025 = {
 }
 
 
+def test_0461_casilla_grounding_uses_art84_not_base_liquidable_art50() -> None:
+    """Casilla 0461 itself is the Art. 84 joint-taxation reduction amount."""
+    from .._loader import load_registry_tree
+
+    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
+    art_84 = catalogues.legal["ley-35-2006:art-84"]
+    assert any("3.400 euros" in text for text in art_84.required_text)
+    assert any("2.150 euros" in text for text in art_84.required_text)
+
+    modelo = next(modelo for modelo in modelos if modelo.id == "100")
+    for revision_id in ("2024", "2025"):
+        revision = modelo.revisions[revision_id]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _REDUCCION_ART_84_CASILLA)
+        formula = next(
+            formula for formula in revision.formulas if formula.target_casilla_id == _REDUCCION_ART_84_CASILLA
+        )
+
+        assert "ley-35-2006:art-84" in casilla.legal_refs
+        assert "ley-35-2006:art-50" not in casilla.legal_refs
+        assert "ley-35-2006:art-84" in formula.legal_refs
+
+
 def _scenario_2024(
     scenario_id: str,
     declaration_type: Decimal,

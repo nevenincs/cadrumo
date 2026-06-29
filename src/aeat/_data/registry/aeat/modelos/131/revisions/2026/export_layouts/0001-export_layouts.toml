@@ -1,6 +1,6 @@
 [[revisions."2026".export_layouts]]
 id = "modelo-131-fichero-boe"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".export_layouts.records]]
 id = "modelo-131-page-01"

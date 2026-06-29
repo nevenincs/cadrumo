@@ -1,8 +1,10 @@
 """Backend service for workspace initialization.
 
 :func:`initialize_workspace` transforms an :class:`InitializeWorkspaceCommand`
-into persisted :class:`UserProfileFact` records and returns an
-:class:`InitializeWorkspaceResult` for the newly created profile/bucket pair.
+into persisted :class:`UserProfileFact` records, creates a UUID
+:class:`ProfileId`, provisions the matching storage :class:`BucketId`, and
+returns an :class:`InitializeWorkspaceResult` for the newly created
+profile/bucket pair.
 """
 
 from __future__ import annotations
@@ -24,8 +26,10 @@ def initialize_workspace(command: InitializeWorkspaceCommand) -> InitializeWorks
     """Initialize a new active workspace profile and bucket.
 
     The service records :class:`UserProfileFact` values, registers the active
-    profile, provisions the corresponding storage bucket, and returns an
-    :class:`InitializeWorkspaceResult`.
+    profile inside the create-storage span, provisions the corresponding
+    storage bucket, and returns an :class:`InitializeWorkspaceResult`. Reserved
+    authentication providers are logged and reported as
+    ``auth_configured=False`` without rolling back the profile/bucket creation.
     """
     facts: list[UserProfileFact] = [
         UserProfileFact(path="identity.tax_id", value=command.tax_id),

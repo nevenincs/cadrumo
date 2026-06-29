@@ -48,6 +48,28 @@ _M369_IMPORTACION_DE_LOW_VALUE_CUOTA_CASILLA: CasillaId = _casilla_id(
     "iva.importacion.de.low-value-cuota",
 )
 _M369_IMPORTACION_CUOTA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.importacion.cuota-total")
+_M369_EXTERIOR_SCHEME_LEGAL_REFS = (
+    "ley-37-1992:art-163-octiesdecies",
+    "ley-37-1992:art-163-noniesdecies",
+    "ley-37-1992:art-163-vicies",
+)
+_M369_UNION_SCHEME_LEGAL_REFS = (
+    "ley-37-1992:art-163-unvicies",
+    "ley-37-1992:art-163-duovicies",
+    "ley-37-1992:art-163-tervicies",
+    "ley-37-1992:art-163-quatervicies",
+)
+_M369_IMPORTACION_SCHEME_LEGAL_REFS = (
+    "ley-37-1992:art-163-quinvicies",
+    "ley-37-1992:art-163-sexvicies",
+    "ley-37-1992:art-163-septvicies",
+    "ley-37-1992:art-163-octovicies",
+)
+_M369_SCHEME_LEGAL_REFS_BY_REVISION = {
+    "esquema-exterior": _M369_EXTERIOR_SCHEME_LEGAL_REFS,
+    "esquema-union": _M369_UNION_SCHEME_LEGAL_REFS,
+    "esquema-importacion": _M369_IMPORTACION_SCHEME_LEGAL_REFS,
+}
 
 
 _FORBIDDEN_REMOTE_ACTIONS = frozenset(
@@ -88,6 +110,8 @@ def test_modelo_369_metadata_matches_hac_610_2021() -> None:
     assert "orden-hac-610-2021:art-1" in modelo.legal_refs
     assert "orden-hac-610-2021:art-2" in modelo.legal_refs
     assert "orden-hac-610-2021:art-3" in modelo.legal_refs
+    for scheme_refs in _M369_SCHEME_LEGAL_REFS_BY_REVISION.values():
+        assert set(scheme_refs).issubset(modelo.legal_refs)
     assert "aeat-dr-369-2021" in modelo.source_refs
     assert "aeat-modelo-369-procedure" in modelo.source_refs
 
@@ -148,14 +172,18 @@ def test_modelo_369_snapshot_selects_scheme_by_period(period: str, expected_revi
 
 
 @pytest.mark.parametrize(
-    ("period", "revision_id", "legal_ref"),
+    ("period", "revision_id", "expected_legal_refs"),
     [
-        ("EXT-1T", "esquema-exterior", "ley-37-1992:art-163-octiesdecies"),
-        ("1T", "esquema-union", "ley-37-1992:art-163-unvicies"),
-        ("01", "esquema-importacion", "ley-37-1992:art-163-quinvicies"),
+        ("EXT-1T", "esquema-exterior", _M369_EXTERIOR_SCHEME_LEGAL_REFS),
+        ("1T", "esquema-union", _M369_UNION_SCHEME_LEGAL_REFS),
+        ("01", "esquema-importacion", _M369_IMPORTACION_SCHEME_LEGAL_REFS),
     ],
 )
-def test_modelo_369_snapshots_carry_scheme_authority(period: str, revision_id: str, legal_ref: str) -> None:
+def test_modelo_369_snapshots_carry_scheme_authority(
+    period: str,
+    revision_id: str,
+    expected_legal_refs: tuple[str, ...],
+) -> None:
     modelo, catalogues = _load_modelo_369()
 
     snapshot = build_snapshot(
@@ -170,7 +198,8 @@ def test_modelo_369_snapshots_carry_scheme_authority(period: str, revision_id: s
     assert "orden-hac-610-2021:art-1" in snapshot.legal
     assert "orden-hac-610-2021:art-2" in snapshot.legal
     assert "orden-hac-610-2021:art-3" in snapshot.legal
-    assert legal_ref in snapshot.legal
+    for legal_ref in expected_legal_refs:
+        assert legal_ref in snapshot.legal
     assert "aeat-dr-369-2021" in snapshot.sources
     assert "aeat-modelo-369-procedure" in snapshot.sources
     assert "boe-modelo-369-2021-form" in snapshot.sources
@@ -342,6 +371,28 @@ def test_modelo_369_constructs_close_over_revision_members() -> None:
         assert construct.application_links == tuple(link.id for link in revision.application_links)
         assert construct.deadline_windows == tuple(w.id for w in revision.deadline_windows)
         assert construct.filing_schedules == tuple(s.id for s in revision.filing_schedules)
+
+
+def test_modelo_369_revision_envelopes_carry_full_liva_scheme_ranges() -> None:
+    modelo, _ = _load_modelo_369()
+
+    for revision_id, expected_refs in _M369_SCHEME_LEGAL_REFS_BY_REVISION.items():
+        revision = modelo.revisions[revision_id]
+        expected = set(expected_refs)
+        construct = revision.constructs[0]
+        manifest = revision.completeness_manifest
+        formula = revision.formulas[0]
+        total_casilla = next(casilla for casilla in revision.casillas if casilla.id == formula.target_casilla_id)
+        calculation_link = next(link for link in revision.application_links if link.surface == "calculation")
+
+        assert expected.issubset(revision.legal_refs)
+        assert expected.issubset(revision.verification_expectations[0].legal_refs)
+        assert expected.issubset(construct.legal_refs)
+        assert manifest is not None
+        assert expected.issubset(manifest.legal_refs)
+        assert expected.issubset(total_casilla.legal_refs)
+        assert expected.issubset(formula.legal_refs)
+        assert expected.issubset(calculation_link.legal_refs)
 
 
 def test_modelo_369_each_revision_declares_at_least_one_oss_aggregation_binding() -> None:

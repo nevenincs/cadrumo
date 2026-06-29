@@ -1,12 +1,12 @@
-"""Repository-backed Renta income aggregation for actividad economía (Modelo 130).
+"""Repository-backed Renta actividad-income aggregation.
 
-Used by: :mod:`~._service` (per-modelo aggregation service) for Modelo 130 income aggregation.
-
-The primary entry point :func:`aggregate_renta_income_ledger_from_repositories`
+This is the ledger projection behind the
+``ledger_renta_income_aggregation`` source for Modelo 130 and Modelo 100. The
+quarterly entry point :func:`aggregate_renta_income_ledger_from_repositories`
 loads a :class:`~aeat.domain.transactions.TransactionCatalogue` via
-:class:`~aeat.domain.transactions.TransactionCatalogueRepository`
-from the active bucket and delegates to :func:`aggregate_renta_income_ledger`
-for period-scoped aggregation.
+:class:`~aeat.domain.transactions.TransactionCatalogueRepository` from the
+active bucket and delegates to :func:`aggregate_renta_income_ledger` for
+period-scoped aggregation.
 
 Modelo 130 casilla 01 (Ingresos íntegros) accumulates professional-service
 revenue from the start of the fiscal year through the end of the declared
@@ -22,6 +22,13 @@ Only ACTIVE, EUR-denominated, INCOMING transactions whose
 ``business_classification`` is BUSINESS or MIXED are eligible. Transactions
 whose ``value_date`` (or ``booked_date`` if absent) falls outside the
 cumulative window are excluded with a traceable issue record.
+
+Modelo 100 uses the annual counterpart
+:func:`aggregate_renta_m100_income_ledger`, which keeps the same activity-income
+eligibility rules but targets the annual IRPF income leaf. The source-mesh
+resolver in :mod:`~._modelo_bindings` chooses the correct path for the
+requested modelo and returns the binding values as a
+:class:`~._source_mesh.CalculationSourceResolution`.
 """
 
 from __future__ import annotations

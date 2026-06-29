@@ -1,16 +1,29 @@
-"""WorkflowState-aware orchestration over :class:`ProfileLifecycleService`.
+"""WorkflowState-aware orchestration for profile lifecycle services.
 
 The lifecycle service handles secure-DB persistence via a
-:class:`SecureObjectRepository` and emits bucket events to
-:class:`BucketEventHistoryRepository` per profile. This module threads
-:class:`WorkflowState` pointers (``active_profile``) and the
-workflow-level :class:`WorkflowEvent` audit stream around those calls
-so CLI surfaces do not duplicate that wiring.
+:class:`~aeat.application.user_profile.ProfileLifecycleService`, which wraps a
+:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+and emits bucket events to
+:class:`~aeat.domain.buckets.BucketEventHistoryRepository` per profile.
+This module threads active-profile selection through
+:class:`~aeat.application.workflow.WorkflowState`, the plaintext
+:class:`~aeat.core.BucketPointer`, and the workflow-level
+:class:`~aeat.application.workflow.WorkflowEvent` audit stream around
+those calls so CLI surfaces do not duplicate that wiring.
 
 Profile identity is an immutable UUIDv4 minted at creation. The bucket
 directory, keystore directory, secure-object key, and active-profile
 pointer all key on that UUID; the operator-chosen display name is a
-fully decoupled mutable label carried in the bucket manifest.
+fully decoupled mutable label carried in the
+:class:`~aeat.adapters.persistence.storage.bucket.BucketManifest`.
+
+See Also:
+    :class:`~aeat.application.user_profile.ProfileRepository`
+        Sole writer for the cross-store profile aggregate.
+    :func:`~aeat.application.user_profile.profile_create_storage_span`
+        Create-time bucket session used before the encrypted record exists.
+    :func:`~aeat.application.user_profile.profile_storage_session`
+        Existing-profile bucket session used for application-owned writes.
 """
 
 from __future__ import annotations
@@ -65,20 +78,26 @@ def build_lifecycle_service(
     secure_objects: SecureObjectRepository | None = None,
     schema: ProfileSchemaDefinition | None = None,
 ) -> ProfileLifecycleService:
-    """Construct a :class:`ProfileLifecycleService` for one bucket.
+    """Construct a lifecycle service for one bucket.
 
-    ``secure_objects`` is an optional :class:`SecureObjectRepository` override; a
-    per-bucket store is resolved when ``None``.
+    Returns a
+    :class:`~aeat.application.user_profile.ProfileLifecycleService`.
+
+    ``secure_objects`` is an optional
+    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    override; a per-bucket store is resolved when ``None``.
 
     The profile aggregate AND the bucket-event-history catalogue both
     belong to the named bucket's own database. When no repository is
     injected, a single per-bucket secure-object store is resolved and
-    handed to both the lifecycle repository and the event-history
-    repository, so the audit trail can never split from the records
-    it describes. The prior wiring left the event-history repository
-    on the process-global engine, which had no URL until an active
-    profile existed — every ``register`` then crashed before its
-    first event landed.
+    handed to both the
+    :class:`~aeat.application.user_profile.UserProfileLifecycleRepository`
+    and the
+    :class:`~aeat.domain.buckets.BucketEventHistoryRepository`, so the
+    audit trail can never split from the records it describes. The
+    prior wiring left the event-history repository on the process-global
+    engine, which had no URL until an active profile existed - every
+    ``register`` then crashed before its first event landed.
     """
     from ...domain.buckets import BucketEventHistoryRepository
     from ._repository import _secure_objects_for_bucket
@@ -100,11 +119,12 @@ def _append_workflow_event(state: WorkflowState, *, action: str, bucket_id: str,
 def _write_active_profile_pointer(bucket_id: str) -> None:
     """Atomically materialise the active-profile pointer file on disk.
 
-    The pointer file is the canonical default for the active-profile
-    precedence chain. Writing happens here so a successful register /
-    select call leaves the on-disk state self-consistent: the next
-    process invocation resolves the active profile from the pointer
-    before any encrypted state row needs to load.
+    The :class:`~aeat.core.BucketPointer` file is the canonical default
+    for the active-profile precedence chain. Writing happens here so a
+    successful register / select call leaves the on-disk state
+    self-consistent: the next process invocation resolves the active
+    profile from the pointer before any encrypted state row needs to
+    load.
     """
     from ...core.config import load_settings
 
@@ -117,7 +137,15 @@ def _write_active_profile_pointer(bucket_id: str) -> None:
 
 @contextmanager
 def profile_create_storage_span(profile_id: str):
-    """Open the first-profile storage span for a bucket being created."""
+    """Open the first-profile storage span for a bucket being created.
+
+    The span writes the provisional :class:`~aeat.core.BucketPointer`
+    needed to resolve the create-time bucket route, then enters
+    :func:`~aeat.adapters.persistence.storage.activate_master_key_provider`
+    with DEK enrollment enabled. If bucket setup fails before
+    :meth:`~aeat.application.user_profile.ProfileRepository.create`
+    owns rollback, the prior pointer bytes are restored.
+    """
     from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from ...adapters.persistence.storage.errors import MasterKeyMaterialMissingError, SecretAlreadyExistsError
     from ...core.config import override_settings
@@ -151,7 +179,12 @@ def profile_create_storage_span(profile_id: str):
 
 @contextmanager
 def profile_storage_session(profile_id: str):
-    """Open a storage session scoped to ``profile_id`` for application-owned writes."""
+    """Open a storage session scoped to ``profile_id`` for application-owned writes.
+
+    Existing-profile operations use this span to bind the active
+    :class:`~aeat.core.BucketPointer` route and master-key session before
+    repositories open encrypted bucket-local storage.
+    """
     from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from ...core.config import override_settings
 
@@ -202,37 +235,43 @@ def register_active_profile(
     """Atomically register a new profile and make it the active one.
 
     Args:
-        state: The current :class:`WorkflowState`; the returned state carries
-            the registration event appended to the audit stream.
+        state: The current :class:`~aeat.application.workflow.WorkflowState`;
+            the returned state carries the registration event appended to the
+            audit stream.
         profile_id: Immutable UUIDv4 profile identity, minted by the caller
-            (see :func:`aeat.domain.user_profile.new_profile_id`).
+            (see :func:`~aeat.domain.user_profile.new_profile_id`).
         display_name: Operator-chosen label carried in the bucket manifest and
             the encrypted record; plays no role in any key or path.
         facts: Initial profile facts to persist alongside the registration.
-        secure_objects: Optional :class:`SecureObjectRepository` override for
-            the encrypted profile store.
+        secure_objects: Optional
+            :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+            override for the encrypted profile store.
         schema: Optional profile schema definition override.
         enforce_unique_tax_id: When ``True``, refuses if another live profile
             already carries the same tax id.
         routing_profile_id: When set, wires a cross-bucket routing entry so
             the new profile can inherit data from an existing bucket.
 
-    This function is a thin :class:`WorkflowState` coordinator: the
+    This function is a thin
+    :class:`~aeat.application.workflow.WorkflowState` coordinator: the
     entire cross-store write — bucket directory, manifest, encrypted
     record, AND the active-profile pointer — plus the duplicate-label
     refusal and the all-or-nothing rollback are a single unit of work
-    owned by :meth:`ProfileRepository.create`. This function delegates
-    that create and threads the workflow-level event audit stream onto
-    the supplied :class:`WorkflowState`.
+    owned by
+    :meth:`~aeat.application.user_profile.ProfileRepository.create`.
+    This function delegates that create and threads the workflow-level
+    event audit stream onto the supplied
+    :class:`~aeat.application.workflow.WorkflowState`.
 
     The repository owns every store write, the pointer included. A
     caller that performs the cold-start pointer write early (so the
     workflow-state engine can resolve before this function runs inside
     ``workflow_state_repository().update``) is responsible for
     restoring that early pointer if the surrounding span fails before
-    or after ``create`` - :func:`capture_active_profile_pointer` and a
-    ``try``/``except`` around the span cover the steps the repository's
-    own rollback cannot see (engine open, master-key activation).
+    or after ``create`` - :func:`capture_active_profile_pointer` and
+    :func:`restore_active_profile_pointer` cover the steps the
+    repository's own rollback cannot see (engine open, master-key
+    activation).
     """
     repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
     repository.create(
@@ -304,7 +343,11 @@ def _append_profile_activated_event(*, profile_id: str, active_profile: str | No
 
 
 def select_profile_with_lifecycle_span(profile_id: str) -> None:
-    """Select ``profile_id`` inside an application-owned bucket session."""
+    """Select ``profile_id`` inside an application-owned bucket session.
+
+    Opens :func:`profile_storage_session`, delegates the pointer write to
+    :func:`select_profile`, then appends the bucket-level activation event.
+    """
     from ...core import resolve_active_bucket_id
     from ..workflow._persistence import workflow_state_repository
 
@@ -316,7 +359,8 @@ def select_profile_with_lifecycle_span(profile_id: str) -> None:
 def delete_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord:
     """Tombstone ``profile_id`` inside an application-owned bucket session.
 
-    Returns the deleted :class:`UserProfileRecord`.
+    Returns the deleted :class:`~aeat.domain.user_profile.UserProfileRecord`
+    from :meth:`~aeat.application.user_profile.ProfileRepository.delete`.
     """
     with profile_storage_session(profile_id):
         aggregate = ProfileRepository().delete(profile_id)
@@ -341,9 +385,10 @@ def capture_active_profile_pointer() -> str | None:
     genuine pre-write pointer with this helper, then restores it in a
     ``try``/``except`` if the create span fails. This closes the window
     the repository's own rollback cannot reach: a failure between the
-    early pointer write and ``ProfileRepository.create`` (engine open,
-    master-key activation) would otherwise strand the pointer at a
-    profile whose record was never persisted.
+    early pointer write and
+    :meth:`~aeat.application.user_profile.ProfileRepository.create`
+    (engine open, master-key activation) would otherwise strand the
+    pointer at a profile whose record was never persisted.
     """
     from ...core import pointer_path
 
@@ -382,7 +427,8 @@ def _refuse_duplicate_label(
     case-insensitively. A bucket manifest already carrying ``display_name``
     is an existence claim; recreating in place would silently mix new
     profile data into the existing bucket, so the create is refused and
-    the operator is routed to ``switch`` or ``delete``.
+    the operator is routed to ``switch`` or ``delete``. The live-label
+    lookup is :func:`~aeat.application.workflow.read_profile_bucket`.
     """
     from ..workflow._profile_bucket_scan import read_profile_bucket
 
@@ -399,7 +445,9 @@ def _require_registered_label(display_name: str) -> None:
 
     Symmetric to :func:`_refuse_duplicate_label`: ``profile edit``
     re-runs the wizard against an *existing* profile, so an unknown
-    label is an operator error, not an implicit create.
+    label is an operator error, not an implicit create. The registered
+    label authority is
+    :func:`~aeat.application.workflow.read_profile_bucket`.
     """
     from ..workflow._profile_bucket_scan import read_profile_bucket
 
@@ -413,11 +461,12 @@ def _require_registered_label(display_name: str) -> None:
 def remove_profile_bucket_directory(profile_id: str) -> None:
     """Trash-rename and remove a profile's on-disk bucket directory.
 
-    Used both by atomic-create rollback and by scoped config reset. The
+    Used both by atomic-create rollback and by
+    :func:`~aeat.application.config_reset.reset_config`. The
     directory is first renamed to a trash-prefix sibling so a crashed
     removal leaves a recoverable on-disk trace, then recursively
-    deleted. When the rename is refused — Windows denies renaming a
-    directory whose SQLite file was only just closed — the directory is
+    deleted. When the rename is refused - Windows denies renaming a
+    directory whose SQLite file was only just closed - the directory is
     removed in place so the bucket does not survive the reset.
 
     Raises :class:`OSError` if the in-place removal also fails and the
@@ -470,15 +519,19 @@ def select_profile(
 ) -> WorkflowState:
     """Select an existing profile as active.
 
-    ``secure_objects`` is an optional :class:`SecureObjectRepository` override.
+    ``secure_objects`` is an optional
+    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    override.
 
     Raises :class:`ProfileNotFoundError` if the profile does not
     already exist; registration is the explicit path
     (:func:`register_active_profile`).
 
-    This function is a thin :class:`WorkflowState` coordinator: the
+    This function is a thin
+    :class:`~aeat.application.workflow.WorkflowState` coordinator: the
     profile load + integrity check + active-profile pointer write live
-    solely in :meth:`ProfileRepository.select`.
+    solely in
+    :meth:`~aeat.application.user_profile.ProfileRepository.select`.
     """
     repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
     repository.select(profile_id)  # raises ProfileNotFoundError if missing
@@ -493,14 +546,18 @@ def set_active_field(
     secure_objects: SecureObjectRepository | None = None,
     schema: ProfileSchemaDefinition | None = None,
 ) -> WorkflowState:
-    """Upsert one fact on the active profile, append a WorkflowEvent, and return the updated :class:`WorkflowState`.
+    """Upsert one fact on the active profile and append a workflow event.
 
     Args:
         state: The current workflow state.
         fact: The profile fact to upsert.
-        secure_objects: Optional :class:`SecureObjectRepository` override for
-            the encrypted profile store.
+        secure_objects: Optional
+            :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+            override for the encrypted profile store.
         schema: Optional profile schema definition override.
+
+    Returns:
+        The updated :class:`~aeat.application.workflow.WorkflowState`.
     """
     profile_id = _require_active(state)
     service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
@@ -527,9 +584,11 @@ def set_active_fields(
 ) -> WorkflowState:
     """Upsert several facts on the active profile in sequence.
 
-    ``secure_objects`` is an optional :class:`SecureObjectRepository` override.
+    ``secure_objects`` is an optional
+    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    override.
 
-    Returns a :class:`WorkflowState`.
+    Returns a :class:`~aeat.application.workflow.WorkflowState`.
     """
     updated = state
     for fact in facts:
@@ -545,16 +604,22 @@ def remove_active_profile(
 ) -> WorkflowState:
     """Tombstone the active profile and clear the active pointer.
 
-    ``secure_objects`` is an optional :class:`SecureObjectRepository` override.
+    ``secure_objects`` is an optional
+    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    override.
 
-    The bucket pointer in :attr:`WorkflowState.profiles` is retained so
-    audit and history reads can still resolve the bucket; selecting
-    the tombstoned profile via :func:`select_profile` will raise
-    because the record is no longer live.
+    The bucket directory and
+    :class:`~aeat.adapters.persistence.storage.bucket.BucketManifest`
+    stay on disk so audit and history reads can still resolve the
+    tombstoned bucket; selecting the tombstoned profile via
+    :func:`select_profile` will raise because the record is no longer
+    live.
 
-    This function is a thin :class:`WorkflowState` coordinator: the
+    This function is a thin
+    :class:`~aeat.application.workflow.WorkflowState` coordinator: the
     cross-store tombstone (encrypted-record tombstone + active-profile
-    pointer clear) lives solely in :meth:`ProfileRepository.delete`.
+    pointer clear) lives solely in
+    :meth:`~aeat.application.user_profile.ProfileRepository.delete`.
     """
     profile_id = _require_active(state)
     repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
@@ -569,9 +634,19 @@ def read_active_profile(
     secure_objects: SecureObjectRepository | None = None,
     schema: ProfileSchemaDefinition | None = None,
 ) -> UserProfileRecord | None:
-    """Return the active :class:`UserProfileRecord`, or ``None`` when none is selected.
+    """Return the active profile record, or ``None`` when none is selected.
 
-    ``secure_objects`` is an optional :class:`SecureObjectRepository` override.
+    The active bucket id resolves through
+    :func:`~aeat.core.resolve_active_bucket_id`, then the record is read
+    through :func:`~aeat.application.user_profile.build_lifecycle_service`.
+
+    ``secure_objects`` is an optional
+    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    override.
+
+    Returns:
+        The active :class:`~aeat.domain.user_profile.UserProfileRecord`,
+        or :data:`None` when no active pointer or readable record exists.
     """
     from ...core import resolve_active_bucket_id
 
@@ -590,7 +665,8 @@ def fact_value(record: UserProfileRecord | None, path: str) -> str | None:
     """Return the live string-rendered value of one fact path on ``record``.
 
     Args:
-        record: The :class:`UserProfileRecord` to inspect, or ``None``.
+        record: The :class:`~aeat.domain.user_profile.UserProfileRecord`
+            to inspect, or ``None``.
         path: Schema fact path (e.g. ``"identity.tax_id"``).
 
     Returns ``None`` when ``record`` is ``None``, when the path has no
@@ -610,8 +686,10 @@ def fact_value(record: UserProfileRecord | None, path: str) -> str | None:
 def _require_active(state: WorkflowState) -> str:
     """Return the active bucket id or raise.
 
-    Reads through the precedence chain (Settings > pointer file >
-    `state.active_profile` while the field migration is in flight).
+    Reads through :func:`~aeat.core.resolve_active_bucket_id`, whose
+    current precedence chain is settings override, then plaintext
+    :class:`~aeat.core.BucketPointer`. The ``state`` argument keeps the
+    workflow-coordinator call shape; it is not a fallback source.
     """
     from ...core import resolve_active_bucket_id
 
@@ -635,22 +713,28 @@ def rename_profile(
     Args:
         profile_id: The immutable UUIDv4 identity of the profile to rename.
         new_label: The new display label.
-        secure_objects: Optional :class:`SecureObjectRepository` override for
-            the encrypted profile store.
+        secure_objects: Optional
+            :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+            override for the encrypted profile store.
         schema: Optional profile schema definition override.
 
     The profile identity (``profile_id``), bucket directory, keystore
     directory, and secure-object key are immutable and never move. A
     rename is a pure label edit across the two stores that hold a copy
-    of the label - the encrypted :class:`UserProfileRecord.display_name`
-    and the plaintext manifest ``label``.
+    of the label - the encrypted
+    :class:`~aeat.domain.user_profile.UserProfileRecord`
+    ``display_name`` and the plaintext
+    :class:`~aeat.adapters.persistence.storage.bucket.BucketManifest`
+    ``label``.
 
     This function is a thin coordinator: the cross-store label write -
-    record AND manifest - lives solely in :meth:`ProfileRepository.rename`.
+    record AND manifest - lives solely in
+    :meth:`~aeat.application.user_profile.ProfileRepository.rename`.
     Refuses if ``new_label`` is already carried by another live profile.
 
-    Returns the updated :class:`UserProfileRecord` after the label change
-    is persisted.
+    Returns the updated
+    :class:`~aeat.domain.user_profile.UserProfileRecord` after the label
+    change is persisted.
     """
     repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
     aggregate = repository.rename(profile_id, new_label=new_label)

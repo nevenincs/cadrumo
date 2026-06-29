@@ -1,28 +1,50 @@
 """Core cross-cutting infrastructure shared by every ``aeat`` layer.
 
-The core layer holds the typed primitives, configuration, and boundary
-utilities that the domain, application, adapter, and entrypoint layers all
-build on, while depending on none of them — the innermost ring of the
-hexagonal architecture.
+The core layer is the innermost package in the hexagonal architecture. It
+exports typed primitives, configuration-adjacent helpers, parsing utilities,
+and layer-neutral policies that domain, application, adapter, and entrypoint
+modules can import without depending outward.
 
-Direct exports:
+The public facade groups four stable surfaces. Immutable modelling primitives
+include :data:`STRICT_FROZEN_CONFIG`, :class:`CasillaId`, :class:`Modelo`,
+:class:`Period`, :class:`StandardPeriodCode`, ``PeriodKind``,
+:class:`TaxDomain`, :class:`RefundElection`, :class:`ResultDisposition`, and
+the lazily resolved :class:`BindingSourceKind` registry-source taxonomy.
+Active-bucket context uses the plaintext :class:`BucketPointer` value object
+plus :func:`pointer_path`, :func:`read_pointer`, :func:`write_pointer`,
+:func:`resolve_active_bucket_id`, :func:`require_active_bucket_id`, and
+:func:`resolve_repository_bucket_id`. TOML and option utilities expose
+:func:`read_toml`, :func:`parse_toml_text`, :func:`freeze_toml`,
+:class:`OptionalExtra`, and :func:`require_optional_extra`. Filing-result
+helpers expose the codified :class:`ResultDisposition` mapping and its
+casilla/refund predicates.
 
-* :data:`STRICT_FROZEN_CONFIG` — the frozen-strict pydantic ``ConfigDict``
-  shared by immutable boundary models.
-* :class:`CasillaId` — the canonical casilla identifier primitive.
-* :class:`StandardPeriodCode` — the closed set of AEAT filing-period tokens.
-* :class:`Modelo` — the closed set of AEAT modelo identifier codes.
-* :class:`BindingSourceKind` — the single canonical closed set of registry
-  binding ``source`` tokens, resolved lazily to avoid an import cycle.
+``BindingSourceKind``, ``BucketPointer``, and the active-bucket IO helpers are
+resolved through ``__getattr__`` so storage, config, and aggregation callers
+can import the public core facade without recreating the cycles those helpers
+break internally.
 
-Major subpackages: :mod:`aeat.core.config` (the central settings surface),
-:mod:`aeat.core.errors` (the error taxonomy and registry),
-:mod:`aeat.core.money` and :mod:`aeat.core.decimal` (Decimal primitives),
-:mod:`aeat.core.time` (clock helpers), :mod:`aeat.core.identity`
-(NIF / NIE parsing), :mod:`aeat.core.access_gate` (live-read and
-write-refusal gating), :mod:`aeat.core.redaction` (output redaction),
-:mod:`aeat.core.classification` (sensitivity policy), and
-:mod:`aeat.core.observability` (run-trace logging).
+Major subpackages remain the specialised homes for broader contracts:
+:mod:`aeat.core.config` owns settings, :mod:`aeat.core.errors` owns the error
+taxonomy and registry, :mod:`aeat.core.money` and :mod:`aeat.core.decimal` own
+Decimal primitives, :mod:`aeat.core.time` owns clocks, :mod:`aeat.core.identity`
+owns NIF/NIE/bucket/profile identifiers, :mod:`aeat.core.access_gate` owns
+live-read and write-refusal gating, :mod:`aeat.core.redaction` owns safe output,
+and :mod:`aeat.core.classification` owns sensitivity policy.
+
+See Also:
+    :class:`aeat.core.Period`: Canonical filing year plus registry period-code
+        value used across registry, deadline, and workflow boundaries.
+    :class:`aeat.core.BucketPointer`: Typed value for the plaintext
+        ``active-profile`` pointer file.
+    :func:`aeat.core.resolve_active_bucket_id`: Central active-bucket
+        precedence resolver for storage and CLI startup paths.
+    :func:`aeat.core.read_toml`: Shared committed-TOML loader with
+        caller-owned error wrapping.
+    :class:`aeat.core.ResultDisposition`: Codified fichero result-disposition
+        code set grounded in bundled AEAT diseños.
+    :class:`aeat.core.BindingSourceKind`: Canonical registry binding-source
+        taxonomy resolved lazily from :mod:`aeat.core.aggregation`.
 """
 
 from __future__ import annotations

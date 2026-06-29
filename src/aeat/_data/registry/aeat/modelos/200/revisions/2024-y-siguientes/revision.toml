@@ -2,5 +2,32 @@
 label = "Modelo 200 ejercicios 2024 y siguientes (DR200e25.xls)"
 valid_from = 2024-01-01
 period_selector = { year_from = 2024, periods = ["0A"] }
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-124", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "ley-27-2014:art-101", "ley-27-2014:art-12", "rd-634-2015:art-3", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-105", "ley-27-2014:dt-44"]
+legal_refs = [
+    "ley-27-2014:art-40",
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-124",
+    "ley-27-2014:art-10",
+    "ley-27-2014:art-11",
+    "ley-27-2014:art-29",
+    "ley-27-2014:art-30",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-36",
+    "ley-27-2014:art-100",
+    "ley-27-2014:art-101",
+    "ley-27-2014:art-12",
+    "rd-634-2015:art-3",
+    "ley-27-2014:art-15",
+    "ley-27-2014:art-21",
+    "ley-27-2014:art-22",
+    "ley-27-2014:art-31",
+    "ley-27-2014:art-32",
+    "ley-27-2014:art-13",
+    "ley-27-2014:art-16",
+    "ley-27-2014:art-25",
+    "ley-27-2014:art-26",
+    "ley-27-2014:art-105",
+    "ley-27-2014:dt-44",
+    "ley-49-2002:art-10",
+]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024", "boe-modelo-200-2025-form"]

@@ -32,9 +32,28 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # Shared fixture constants — pattern mirrors test_referential_integrity
 # ---------------------------------------------------------------------------
 
-_DUMMY_LEGAL_ID = "lirpf:art-test"
-_DUMMY_SOURCE_ID = "aeat-test-source-001"
-_DUMMY_CASILLA_ID: CasillaId = validated_casilla_id("01", surface="_DUMMY_CASILLA_ID")
+_SCHEMA_LEGAL_ID = "lirpf:art-test"
+_SCHEMA_SOURCE_ID = "aeat-test-source-001"
+_SCHEMA_CASILLA_ID: CasillaId = validated_casilla_id("01", surface="_SCHEMA_CASILLA_ID")
+
+
+def _relation_payload(**overrides: object) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "id": "test-rel",
+        "kind": "cross_model_output",
+        "dependency_role": "factual_evidence",
+        "source_modelo": "303",
+        "source_revision_selector": {"year_from": 2024},
+        "source_casilla_id": _SCHEMA_CASILLA_ID,
+        "target_binding": "test.binding",
+        "period_alignment": {"source_periods": "quarters", "target_period": "0A"},
+        "source_periods": ("1T", "2T", "3T", "4T"),
+        "target_periods": ("0A",),
+        "legal_refs": (_SCHEMA_LEGAL_ID,),
+        "source_refs": (_SCHEMA_SOURCE_ID,),
+    }
+    payload.update(overrides)
+    return payload
 
 
 # ---------------------------------------------------------------------------
@@ -76,35 +95,35 @@ def test_casilla_roundtrip_valid_input_kind(member: InputKind, raw_string: str) 
     # same boundary production registry loading uses.
     if member == InputKind.COMPUTED:
         payload: dict[str, object] = {
-            "id": _DUMMY_CASILLA_ID,
+            "id": _SCHEMA_CASILLA_ID,
             "number": "01",
             "label": "Test casilla",
             "section": ("test",),
             "input_kind": raw_string,
             "formula": "test.formula",
-            "legal_refs": (_DUMMY_LEGAL_ID,),
-            "source_refs": (_DUMMY_SOURCE_ID,),
+            "legal_refs": (_SCHEMA_LEGAL_ID,),
+            "source_refs": (_SCHEMA_SOURCE_ID,),
         }
     elif member == InputKind.BOUND:
         payload = {
-            "id": _DUMMY_CASILLA_ID,
+            "id": _SCHEMA_CASILLA_ID,
             "number": "01",
             "label": "Test casilla",
             "section": ("test",),
             "input_kind": raw_string,
             "binding": "test.binding",
-            "legal_refs": (_DUMMY_LEGAL_ID,),
-            "source_refs": (_DUMMY_SOURCE_ID,),
+            "legal_refs": (_SCHEMA_LEGAL_ID,),
+            "source_refs": (_SCHEMA_SOURCE_ID,),
         }
     else:
         payload = {
-            "id": _DUMMY_CASILLA_ID,
+            "id": _SCHEMA_CASILLA_ID,
             "number": "01",
             "label": "Test casilla",
             "section": ("test",),
             "input_kind": raw_string,
-            "legal_refs": (_DUMMY_LEGAL_ID,),
-            "source_refs": (_DUMMY_SOURCE_ID,),
+            "legal_refs": (_SCHEMA_LEGAL_ID,),
+            "source_refs": (_SCHEMA_SOURCE_ID,),
         }
     casilla = CasillaDefinition.model_validate(payload)
 
@@ -125,13 +144,13 @@ def test_casilla_rejects_unknown_input_kind() -> None:
     with pytest.raises(ValidationError):
         CasillaDefinition.model_validate(
             {
-                "id": _DUMMY_CASILLA_ID,
+                "id": _SCHEMA_CASILLA_ID,
                 "number": "01",
                 "label": "Test casilla",
                 "section": ("test",),
                 "input_kind": "garbage",
-                "legal_refs": (_DUMMY_LEGAL_ID,),
-                "source_refs": (_DUMMY_SOURCE_ID,),
+                "legal_refs": (_SCHEMA_LEGAL_ID,),
+                "source_refs": (_SCHEMA_SOURCE_ID,),
             },
         )
 
@@ -141,13 +160,13 @@ def test_casilla_rejects_empty_string_input_kind() -> None:
     with pytest.raises(ValidationError):
         CasillaDefinition.model_validate(
             {
-                "id": _DUMMY_CASILLA_ID,
+                "id": _SCHEMA_CASILLA_ID,
                 "number": "01",
                 "label": "Test casilla",
                 "section": ("test",),
                 "input_kind": "",
-                "legal_refs": (_DUMMY_LEGAL_ID,),
-                "source_refs": (_DUMMY_SOURCE_ID,),
+                "legal_refs": (_SCHEMA_LEGAL_ID,),
+                "source_refs": (_SCHEMA_SOURCE_ID,),
             },
         )
 
@@ -157,13 +176,13 @@ def test_casilla_rejects_numeric_input_kind() -> None:
     with pytest.raises(ValidationError):
         CasillaDefinition.model_validate(
             {
-                "id": _DUMMY_CASILLA_ID,
+                "id": _SCHEMA_CASILLA_ID,
                 "number": "01",
                 "label": "Test casilla",
                 "section": ("test",),
                 "input_kind": 42,
-                "legal_refs": (_DUMMY_LEGAL_ID,),
-                "source_refs": (_DUMMY_SOURCE_ID,),
+                "legal_refs": (_SCHEMA_LEGAL_ID,),
+                "source_refs": (_SCHEMA_SOURCE_ID,),
             },
         )
 
@@ -176,19 +195,19 @@ def test_casilla_rejects_numeric_input_kind() -> None:
 def test_casilla_default_input_kind_is_manual() -> None:
     """When input_kind is omitted, CasillaDefinition defaults to MANUAL."""
     casilla = CasillaDefinition(
-        id=_DUMMY_CASILLA_ID,
+        id=_SCHEMA_CASILLA_ID,
         number="01",
         label="Test casilla",
         section=("test",),
-        legal_refs=(_DUMMY_LEGAL_ID,),
-        source_refs=(_DUMMY_SOURCE_ID,),
+        legal_refs=(_SCHEMA_LEGAL_ID,),
+        source_refs=(_SCHEMA_SOURCE_ID,),
     )
     assert casilla.input_kind is InputKind.MANUAL
 
 
 def test_formula_expression_rejects_generic_casilla_key() -> None:
     with pytest.raises(ValidationError):
-        FormulaExpression.model_validate({"casilla": _DUMMY_CASILLA_ID})
+        FormulaExpression.model_validate({"casilla": _SCHEMA_CASILLA_ID})
 
 
 def test_formula_definition_rejects_legacy_target_key() -> None:
@@ -196,10 +215,10 @@ def test_formula_definition_rejects_legacy_target_key() -> None:
         FormulaDefinition.model_validate(
             {
                 "id": "test.formula",
-                "target": _DUMMY_CASILLA_ID,
+                "target": _SCHEMA_CASILLA_ID,
                 "expression": {"literal": "0"},
-                "legal_refs": (_DUMMY_LEGAL_ID,),
-                "source_refs": (_DUMMY_SOURCE_ID,),
+                "legal_refs": (_SCHEMA_LEGAL_ID,),
+                "source_refs": (_SCHEMA_SOURCE_ID,),
             },
         )
 
@@ -214,11 +233,11 @@ def test_algorithm_binding_definition_rejects_legacy_target_key() -> None:
             {
                 "id": "test.algorithm-binding",
                 "provider": "test.algorithm-provider",
-                "target": _DUMMY_CASILLA_ID,
-                "inputs": {"value": _DUMMY_CASILLA_ID},
-                "output_casilla_ids": {"result": _DUMMY_CASILLA_ID},
-                "legal_refs": (_DUMMY_LEGAL_ID,),
-                "source_refs": (_DUMMY_SOURCE_ID,),
+                "target": _SCHEMA_CASILLA_ID,
+                "inputs": {"value": _SCHEMA_CASILLA_ID},
+                "output_casilla_ids": {"result": _SCHEMA_CASILLA_ID},
+                "legal_refs": (_SCHEMA_LEGAL_ID,),
+                "source_refs": (_SCHEMA_SOURCE_ID,),
             },
         )
 
@@ -233,11 +252,11 @@ def test_algorithm_binding_definition_rejects_legacy_outputs_key() -> None:
             {
                 "id": "test.algorithm-binding",
                 "provider": "test.algorithm-provider",
-                "target_casilla_id": _DUMMY_CASILLA_ID,
-                "inputs": {"value": _DUMMY_CASILLA_ID},
-                "outputs": {"result": _DUMMY_CASILLA_ID},
-                "legal_refs": (_DUMMY_LEGAL_ID,),
-                "source_refs": (_DUMMY_SOURCE_ID,),
+                "target_casilla_id": _SCHEMA_CASILLA_ID,
+                "inputs": {"value": _SCHEMA_CASILLA_ID},
+                "outputs": {"result": _SCHEMA_CASILLA_ID},
+                "legal_refs": (_SCHEMA_LEGAL_ID,),
+                "source_refs": (_SCHEMA_SOURCE_ID,),
             },
         )
 
@@ -255,11 +274,11 @@ def test_relation_definition_rejects_legacy_source_output_key() -> None:
                 "dependency_role": "direct_calculation",
                 "source_modelo": "303",
                 "source_revision_selector": {"filing_year_delta": 0},
-                "source_output": _DUMMY_CASILLA_ID,
+                "source_output": _SCHEMA_CASILLA_ID,
                 "target_binding": "test.binding",
-                "period_alignment": {"mode": "same_period"},
-                "legal_refs": (_DUMMY_LEGAL_ID,),
-                "source_refs": (_DUMMY_SOURCE_ID,),
+                "period_alignment": {"mode": "previous_quarter"},
+                "legal_refs": (_SCHEMA_LEGAL_ID,),
+                "source_refs": (_SCHEMA_SOURCE_ID,),
             },
         )
 
@@ -268,18 +287,61 @@ def test_relation_definition_rejects_legacy_source_output_key() -> None:
     assert "source_output" in message
 
 
+@pytest.mark.parametrize(
+    ("selector", "expected"),
+    [
+        ({}, "must declare year, year_from, or filing_year_delta"),
+        ({"revision": "2025"}, "revision"),
+        ({"revision_id": "2025"}, "revision_id"),
+        ({"year": 2025, "filing_year_delta": 0}, "absolute year bounds or filing_year_delta"),
+        ({"year": 2025, "year_from": 2024}, "year or year_from/year_to"),
+        ({"year_to": 2025}, "year_to requires year_from"),
+        ({"year_from": 2025, "year_to": 2024}, "year_to must be on or after year_from"),
+    ],
+)
+def test_relation_definition_rejects_invalid_source_revision_selector(
+    selector: dict[str, object],
+    expected: str,
+) -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        RelationDefinition.model_validate(_relation_payload(source_revision_selector=selector))
+
+    assert expected in str(exc_info.value)
+
+
+@pytest.mark.parametrize(
+    ("period_alignment", "expected"),
+    [
+        ({}, "must declare a current alignment shape"),
+        ({"mode": "same_period"}, "same_period"),
+        ({"source_periods": "quarters"}, "source_periods requires target_period"),
+        ({"source_period_kind": "quarterly"}, "source_period_kind requires target_period"),
+        ({"source_period": "0A", "target_period": "0A"}, "requires target_period and filing_year_delta"),
+        ({"target_period": "0A"}, "declares target/delta fields without source alignment"),
+    ],
+)
+def test_relation_definition_rejects_invalid_period_alignment(
+    period_alignment: dict[str, object],
+    expected: str,
+) -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        RelationDefinition.model_validate(_relation_payload(period_alignment=period_alignment))
+
+    assert expected in str(exc_info.value)
+
+
 def test_verification_expectation_definition_rejects_legacy_computed_casillas_key() -> None:
     with pytest.raises(ValidationError) as exc_info:
         VerificationExpectationDefinition.model_validate(
             {
                 "id": "test.expectation",
-                "computed_casillas": (_DUMMY_CASILLA_ID,),
+                "computed_casillas": (_SCHEMA_CASILLA_ID,),
                 "tolerance": "0.01",
                 "rounding": "cent",
                 "min_coverage": "1",
                 "discrepancy_causes": ("rounding",),
-                "legal_refs": (_DUMMY_LEGAL_ID,),
-                "source_refs": (_DUMMY_SOURCE_ID,),
+                "legal_refs": (_SCHEMA_LEGAL_ID,),
+                "source_refs": (_SCHEMA_SOURCE_ID,),
             },
         )
 
@@ -293,14 +355,14 @@ def test_verification_expectation_definition_rejects_legacy_reconciliation_total
         VerificationExpectationDefinition.model_validate(
             {
                 "id": "test.expectation",
-                "computed_casilla_ids": (_DUMMY_CASILLA_ID,),
-                "reconciliation_totals": {"ingresar": _DUMMY_CASILLA_ID},
+                "computed_casilla_ids": (_SCHEMA_CASILLA_ID,),
+                "reconciliation_totals": {"ingresar": _SCHEMA_CASILLA_ID},
                 "tolerance": "0.01",
                 "rounding": "cent",
                 "min_coverage": "1",
                 "discrepancy_causes": ("rounding",),
-                "legal_refs": (_DUMMY_LEGAL_ID,),
-                "source_refs": (_DUMMY_SOURCE_ID,),
+                "legal_refs": (_SCHEMA_LEGAL_ID,),
+                "source_refs": (_SCHEMA_SOURCE_ID,),
             },
         )
 
@@ -314,9 +376,9 @@ def test_construct_definition_rejects_legacy_casillas_key() -> None:
             {
                 "id": "test.construct",
                 "title": "Test construct",
-                "casillas": (_DUMMY_CASILLA_ID,),
-                "legal_refs": (_DUMMY_LEGAL_ID,),
-                "source_refs": (_DUMMY_SOURCE_ID,),
+                "casillas": (_SCHEMA_CASILLA_ID,),
+                "legal_refs": (_SCHEMA_LEGAL_ID,),
+                "source_refs": (_SCHEMA_SOURCE_ID,),
             },
         )
 
@@ -350,8 +412,8 @@ _FIELD_BASE: _FieldBase = _FieldBase(
     padding="none",
     justification="left",
     signed=False,
-    legal_refs=(_DUMMY_LEGAL_ID,),
-    source_refs=(_DUMMY_SOURCE_ID,),
+    legal_refs=(_SCHEMA_LEGAL_ID,),
+    source_refs=(_SCHEMA_SOURCE_ID,),
 )
 
 
@@ -418,7 +480,7 @@ def test_export_field_roundtrip_valid_casilla_field_kind(
     if member == CasillaFieldKind.LITERAL:
         field = _make_export_field_literal(raw_string, "TEST")
     elif member == CasillaFieldKind.CASILLA:
-        field = _make_export_field_casilla(raw_string, _DUMMY_CASILLA_ID)
+        field = _make_export_field_casilla(raw_string, _SCHEMA_CASILLA_ID)
     elif member == CasillaFieldKind.BINDING:
         field = _make_export_field_binding(raw_string, "some.binding")
     else:
@@ -431,7 +493,7 @@ def test_export_field_roundtrip_valid_casilla_field_kind(
 
 def test_export_field_rejects_generic_casilla_key() -> None:
     with pytest.raises(ValidationError):
-        ExportFieldDefinition.model_validate({**_FIELD_BASE, "kind": "casilla", "casilla": _DUMMY_CASILLA_ID})
+        ExportFieldDefinition.model_validate({**_FIELD_BASE, "kind": "casilla", "casilla": _SCHEMA_CASILLA_ID})
 
 
 def test_export_field_rejects_unknown_kind() -> None:

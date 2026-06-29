@@ -22,8 +22,8 @@ applicability research grounding, not hand-invented:
   rationale, distinct from the undeclared one even on a declared
   profile.
 
-No mocks, no skips, no tautologies — every verdict is the real output
-of :func:`derive_modelo_applicability` over a constructed profile.
+Every verdict is the real output of :func:`derive_modelo_applicability`
+over a constructed profile, with no shortcut fixtures or circular assertions.
 """
 
 from __future__ import annotations
@@ -32,6 +32,7 @@ from collections.abc import Callable
 
 import pytest
 
+from ....core.resources import resources
 from ....domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     TaxRoute,
@@ -576,9 +577,8 @@ def test_autonomo_without_declared_regime_defaults_to_directa_owes_modelo_130() 
     regime owes Modelo 130, not Modelo 131.
 
     Estimación directa is the LIRPF default method (art. 16; RIRPF art. 32
-    makes módulos opt-in), so an undeclared regime resolves to directa via
-    the always-definite ``uses_objective_estimation_irpf`` boolean (default
-    ``False``). The engine must not refuse to decide: dropping every M130
+    makes módulos opt-in), so an undeclared regime resolves to directa.
+    The engine must not refuse to decide: dropping every M130
     row for an actividad-económica filer with no regime declared was the
     silent-omission defect this assertion now guards against. M130 / M131
     stay mutually exclusive — directa owes only the 130."""
@@ -590,28 +590,21 @@ def test_autonomo_without_declared_regime_defaults_to_directa_owes_modelo_130() 
         iva_regime=IVARegime.GENERAL,
     )
     assert profile.irpf_estimation_regime is None
-    assert profile.uses_objective_estimation_irpf is False
     assert derive_modelo_applicability(profile, "130").verdict is ApplicabilityVerdict.APPLICABLE
     assert derive_modelo_applicability(profile, "131").verdict is ApplicabilityVerdict.NOT_APPLICABLE
 
 
-def test_autonomo_modulos_boolean_without_declared_regime_owes_modelo_131() -> None:
-    """An autónomo who positively flags módulos but leaves the structured
-    regime undeclared owes Modelo 131, not Modelo 130.
-
-    ``uses_objective_estimation_irpf=True`` is the definite objetiva
-    signal: the undeclared-regime resolution routes to estimación objetiva
-    so Modelo 131 is APPLICABLE and Modelo 130 NOT_APPLICABLE — the directa
-    default never overrides a positively-declared módulos election."""
+def test_autonomo_modulos_regime_owes_modelo_131() -> None:
+    """An autónomo who declares módulos owes Modelo 131, not Modelo 130."""
 
     profile = TaxpayerProfile(
         tax_id="A4567890B",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         iva_regime=IVARegime.GENERAL,
-        uses_objective_estimation_irpf=True,
+        irpf_estimation_regime=IrpfEstimationRegime.OBJETIVA,
     )
-    assert profile.irpf_estimation_regime is None
+    assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
     assert derive_modelo_applicability(profile, "131").verdict is ApplicabilityVerdict.APPLICABLE
     assert derive_modelo_applicability(profile, "130").verdict is ApplicabilityVerdict.NOT_APPLICABLE
 
@@ -857,11 +850,7 @@ def test_seed_legal_refs_resolve_against_the_registry() -> None:
     law-only slug would fail loudly here.
     """
 
-    from ....core.resources import bundled_path
-    from ....domain.calculations.registry import ValidatedRegistryAuthority
-
-    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
-    registered_legal_ids = set(authority.catalogues.legal)
+    registered_legal_ids = set(resources().modelos.authority.catalogues.legal)
     assert registered_legal_ids, "registry legal catalogue is empty"
 
     seed_refs: set[str] = set()

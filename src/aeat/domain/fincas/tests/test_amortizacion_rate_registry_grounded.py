@@ -15,7 +15,7 @@ These tests confirm:
   - The registry holds the parameter for every supported ejercicio.
   - The resolver consumes the registry value (the documented constant
     ``ART_23_1_F_RATE`` / ``AMORTIZACION_INMUEBLE_RATE`` is ``0.03``).
-  - The fallback path (registry lookup miss) returns the grounded constant.
+  - Unsupported ejercicios fail closed instead of falling back to the constant.
 """
 
 from __future__ import annotations
@@ -25,8 +25,8 @@ from decimal import Decimal
 
 import pytest
 
-from ...calculations.registry import read_parameter
-from .._amortization_ledger import ART_23_1_F_RATE, _resolve_amortizacion_inmueble_rate
+from ...calculations.registry import RegistryValidationError, read_parameter
+from .._amortization_ledger import _resolve_amortizacion_inmueble_rate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -49,7 +49,6 @@ def test_resolver_returns_registry_value(year: int) -> None:
     assert _resolve_amortizacion_inmueble_rate(year) == Decimal("0.03")
 
 
-def test_resolver_falls_back_to_constant_for_unregistered_year() -> None:
-    # 1999 has no Modelo 100 registry revision, so read_parameter raises and the
-    # resolver returns the grounded module constant rather than a registry value.
-    assert _resolve_amortizacion_inmueble_rate(1999) == ART_23_1_F_RATE
+def test_resolver_refuses_unregistered_year() -> None:
+    with pytest.raises(RegistryValidationError, match="has no revision '1999'"):
+        _resolve_amortizacion_inmueble_rate(1999)

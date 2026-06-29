@@ -4,6 +4,17 @@
 :class:`AuthenticatedAeatSessionResult` after coordinating
 :class:`AuthProviderKind` selection, :class:`SessionStoreProtocol` persistence,
 and :class:`PersistedAuthSession` reuse.
+
+See Also:
+    :mod:`aeat.application.auth`
+        Public auth facade that re-exports this session lifecycle.
+    :class:`~aeat.application.auth.AuthAcquisitionLockRecord`
+        Profile/provider lock record used to serialize live authentication.
+    :mod:`aeat.application.live._session`
+        Read-only live-entry helper that calls this module only after
+        :class:`~aeat.core.access_gate.AeatAccessGate` allows a live read.
+    :mod:`aeat.adapters.outbound.aeat.auth`
+        Concrete providers and persisted-session store implementations.
 """
 
 from __future__ import annotations
@@ -123,9 +134,7 @@ class SessionDeserializationError(AuthSessionUnavailableError):
 
     Replaces the bare :exc:`TypeError` raised by :func:`_session_metadata_datetime`
     so callers catch a typed, registry-bound error that inherits from
-    :class:`AuthSessionUnavailableError`.  Inheriting from
-    :class:`AuthSessionUnavailableError` preserves backward compatibility with
-    any ``except AuthSessionUnavailableError`` guard at the call site.
+    :class:`AuthSessionUnavailableError`.
     """
 
 
@@ -172,7 +181,6 @@ _STEM_BY_KIND: dict[AuthProviderKind, str] = {
 
 
 def storage_state_paths(
-    settings: Settings,
     kind: AuthProviderKind | None = None,
 ) -> StorageStatePaths:
     """Return the logical storage-state identifier for ``kind``.
@@ -183,9 +191,6 @@ def storage_state_paths(
     from ...core import require_active_bucket_id
     from ...core.auth_session_keys import aeat_auth_session_storage_state_path
 
-    # Retained for API compatibility; encrypted session object identity is
-    # active-bucket/provider scoped and must not drift with aeat_token_dir.
-    del settings
     resolved = kind or AuthProviderKind.CERTIFICATE
     stem = _STEM_BY_KIND[resolved]
     storage_state = aeat_auth_session_storage_state_path(require_active_bucket_id(), stem)
@@ -200,14 +205,14 @@ def load_persisted_session(settings: Settings, kind: AuthProviderKind | None = N
     if kind is None and settings.aeat_auth_provider is not None:
         kind = AuthProviderKind(settings.aeat_auth_provider.value)
     if kind is not None:
-        paths = storage_state_paths(settings, kind)
+        paths = storage_state_paths(kind)
         if not _get_session_store().exists(paths.storage_state):
             _logger.debug("load_persisted_session: no session metadata found for provider %s", kind.value)
             return None
         return _parse_single(paths.storage_state, kind)
 
     for candidate in AuthProviderKind:
-        paths = storage_state_paths(settings, candidate)
+        paths = storage_state_paths(candidate)
         if _get_session_store().exists(paths.storage_state):
             return _parse_single(paths.storage_state, candidate)
     _logger.debug("load_persisted_session: no session metadata found for any registered provider")
@@ -219,7 +224,7 @@ def delete_persisted_session(settings: Settings, kind: AuthProviderKind | None =
     removed: list[Path] = []
     kinds = [kind] if kind is not None else list(AuthProviderKind)
     for candidate_kind in kinds:
-        paths = storage_state_paths(settings, candidate_kind)
+        paths = storage_state_paths(candidate_kind)
         if not _get_session_store().delete(paths.storage_state):
             continue
         _logger.debug("delete_persisted_session: removed auth session %s", paths.storage_state)
@@ -245,7 +250,7 @@ async def require_verified_aeat_session(
         raise AuthSessionUnavailableError(
             translated_message="application.auth.sessions.errors.session_expired",
         )
-    paths = storage_state_paths(settings, persisted.provider_kind)
+    paths = storage_state_paths(persisted.provider_kind)
     if not _get_session_store().exists(paths.storage_state):
         raise AuthSessionUnavailableError(
             translated_message="application.auth.sessions.errors.state_missing",

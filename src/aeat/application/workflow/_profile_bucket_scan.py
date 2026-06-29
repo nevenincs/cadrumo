@@ -21,6 +21,19 @@ profile never leaks into ``list`` / ``switch`` / name-uniqueness. The
 by-id resolver ``read_profile_bucket_by_id`` resolves a profile
 regardless of status: surfaces that legitimately inspect a tombstoned
 profile (``show``, diagnostics) address it by UUID.
+
+See Also:
+    :class:`~aeat.application.workflow.ProfileBucketPointer`
+        Public pointer record returned by the manifest scanners.
+    :mod:`aeat.application.workflow._profile_health`
+        Consumes by-id manifest lookup to classify active-profile readiness.
+    :class:`~aeat.adapters.persistence.storage.bucket.BucketManifest`
+        Plaintext manifest shape parsed from each profile bucket directory.
+    :class:`~aeat.adapters.persistence.storage.bucket.BucketLifecycleStatus`
+        Lifecycle marker used to hide tombstoned profiles from live surfaces.
+    :mod:`aeat.application.user_profile._orchestration`
+        Owns profile creation, selection, and encrypted profile-record access
+        around the same bucket identity.
 """
 
 from __future__ import annotations

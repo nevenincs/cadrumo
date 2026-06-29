@@ -1,7 +1,26 @@
 """Filed-declaration capture services for live AEAT workflows.
 
+The listing helpers read AEAT declaration-register rows without downloading
+artefacts. The capture helpers download the selected filed-declaration artefacts
+through the authenticated Sede adapter, persist encrypted
+:class:`FiledDeclaracionObservation` payloads and artefacts, promote extracted
+casillas into registry-grounded calculation observations, and attempt to stamp
+matching current :class:`ModeloRecord` filings with live
+:class:`ExternalEvidence`.
+
 Source capture resolves a :class:`ValidatedRegistryAuthority` snapshot before
-asking the Sede adapter which prior declarations a target filing needs.
+asking the Sede adapter which prior declarations a target filing needs, so
+cross-period inputs remain registry-authored rather than adapter-inferred.
+
+See Also:
+    :func:`aeat.application.live._session.active_verified_session`
+        Enforces the read-only live gate before the register walker is opened.
+    :func:`aeat.application.live._filed_observation_persistence.persist_latest_filed_calculation_observations`
+        Persists the latest captured filed observations as calculation-history
+        evidence.
+    :func:`aeat.application.live._filed_observation_persistence.enroll_filed_justificante_evidence`
+        Persists matching justificante metadata and stamps current filing
+        records when the receipt matches.
 """
 
 from __future__ import annotations
@@ -248,7 +267,13 @@ async def capture_filed_data(
     expediente_id: str | None = None,
     limit: int | None = None,
 ) -> FiledDataCaptureReport:
-    """Capture filed-declaration artefacts and return a :class:`FiledDataCaptureReport`."""
+    """Capture filed-declaration artefacts and return a :class:`FiledDataCaptureReport`.
+
+    The report accounts for persisted observation manifests, encrypted artefact
+    references, saved justificante CSVs, stamped
+    :class:`aeat.domain.modelos.ModeloRecord` ids, conflicts, and calculation
+    observation keys produced from the captured AEAT rows.
+    """
     session, settings = await active_verified_session()
     walk_timeout_ms = settings.aeat_live_filed_register_walk_timeout_ms
     store = FiledDeclaracionObservationStore(output_root)
@@ -336,7 +361,13 @@ async def capture_filed_data_bulk(
     modelos: tuple[str, ...] | None = None,
     limit: int | None = None,
 ) -> BulkFiledDataCaptureReport:
-    """Capture filed declarations across a year range and return a :class:`BulkFiledDataCaptureReport`."""
+    """Capture filed declarations across a year range and return a :class:`BulkFiledDataCaptureReport`.
+
+    Unsupported modelo/year pairs are recorded as failures before live contact.
+    Supported pairs share one authenticated register session and then follow the
+    same persistence, justificante enrolment, and calculation-observation path as
+    :func:`capture_filed_data`.
+    """
     if year_from > year_to:
         raise LiveApplicationInputError(
             message="from-year must be less than or equal to to-year",

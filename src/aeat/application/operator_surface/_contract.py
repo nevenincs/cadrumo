@@ -1,4 +1,11 @@
-"""Application-owned operator surface contract for the CLI workflow redesign."""
+"""Application-owned operator surface contract for the CLI workflow redesign.
+
+This module declares the accepted :class:`RootSurface` records, parser
+:class:`BindingSourceKind` aliases, mounted :class:`MountedCommandFamily`
+records, and :class:`ServiceOwner` inventory that build the immutable
+:class:`OperatorSurfaceContract`. It owns contract data only; CLI entrypoints
+render and enforce this shape without redefining it.
+"""
 
 from __future__ import annotations
 
@@ -289,10 +296,11 @@ OperatorSurfaceErrorCodes: tuple[str, ...] = ("REFUSED_OPERATOR_SURFACE_CONTRACT
 def build_operator_surface_contract() -> OperatorSurfaceContract:
     """Build the immutable :class:`OperatorSurfaceContract`.
 
-    Returns the canonical declaration of the modelo lifecycle steps,
-    operator-facing CLI surfaces, and orthogonal verb axes the rest
-    of the codebase reads from. The contract is constructed once at
-    import time so every consumer sees the same shape.
+    Returns the canonical declaration of modelo lifecycle steps, accepted
+    :class:`RootSurface` values, parser-only :class:`SourceKindAlias` records,
+    mounted :class:`MountedCommandFamily` values, and backend
+    :class:`ServiceOwner` mappings. The contract is constructed once at import
+    time so every consumer sees the same shape.
     """
     lifecycle = LifecycleContract(
         steps=(
@@ -325,13 +333,18 @@ def get_operator_surface_contract() -> OperatorSurfaceContract:
     """Return the cached backend-owned operator surface contract.
 
     Returns the :class:`OperatorSurfaceContract` describing the accepted
-    root surfaces and registered feature flags.
+    root surfaces, source-kind aliases, command families, service owners, log
+    fields, and registered error-code contract.
     """
     return build_operator_surface_contract()
 
 
 def require_accepted_root(name: str) -> RootSurface:
-    """Return the :class:`RootSurface` for an accepted root, or raise a registered application error."""
+    """Return the :class:`RootSurface` for an accepted root.
+
+    Raises :class:`OperatorSurfaceContractError` when ``name`` is outside the
+    backend-owned root contract.
+    """
     normalized = name.strip().lower()
     for root in get_operator_surface_contract().roots:
         if root.name.value == normalized:
@@ -349,7 +362,8 @@ def require_accepted_root(name: str) -> RootSurface:
 def resolve_source_kind_alias(value: str) -> BindingSourceKind:
     """Resolve canonical source kinds and parser-only aliases.
 
-    Returns a :class:`BindingSourceKind`.
+    Returns a canonical :class:`BindingSourceKind` from either the enum token
+    itself or an input-only :class:`SourceKindAlias`.
     """
     normalized = value.strip().lower()
     for source_kind in SOURCE_KINDS:

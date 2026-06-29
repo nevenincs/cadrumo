@@ -11,6 +11,12 @@ end-to-end JSON round trip without drift.
 The :attr:`VerificationVerdict.period` field is typed as the canonical
 :class:`~aeat.core.Period` value object (``filing_year`` + ``code``),
 serialising to ``{"filing_year": YYYY, "code": "1T"}`` in JSON.
+
+See Also:
+    :class:`VerificationVerdict`,
+    :class:`ClassifiedDiscrepancy`,
+    :class:`DiscrepancyCause`, and
+    :class:`VerificationStatus`.
 """
 
 from __future__ import annotations
@@ -28,6 +34,10 @@ from ...domain.calculations.registry import CasillaId
 
 class DiscrepancyCause(StrEnum):
     """Cause classification for a printed-vs-computed value mismatch.
+
+    The categories mirror the local verification classifier in
+    :func:`aeat.application.verification.verify_declaracion`; they are not
+    remote AEAT status values.
 
     Attributes:
         EXTRACTION_UNRELIABLE: The extractor warned about this casilla
@@ -68,7 +78,7 @@ class ClassifiedDiscrepancy(BaseModel):
     """One discrepancy with its cause classification and operator-facing rationale.
 
     Attributes:
-        casilla_id: Identifier of the casilla that diverged.
+        casilla_id: :class:`CasillaId` of the casilla that diverged.
         expected: The value the formula engine derived.
         actual: The value extracted from the printed PDF.
         delta: ``actual - expected`` (signed).
@@ -94,8 +104,11 @@ class VerificationVerdict(BaseModel):
     Attributes:
         modelo: AEAT modelo identifier.
         period: The filing :class:`~aeat.core.Period` (year + registry code).
-        registry_snapshot_id: Identifier of the registry snapshot used for the audit,
-        verification_expectation_ids: Registry expectation ids that governed the verdict.
+        registry_snapshot_id: Identifier of the
+            :class:`~aeat.domain.calculations.registry.RegistrySnapshot`
+            used for the audit.
+        verification_expectation_ids: Registry expectation ids that
+            governed the verdict.
         status: The :class:`VerificationStatus` summarising the verdict.
         discrepancies: Every :class:`ClassifiedDiscrepancy` produced by
             the engine audit.

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
+from ._binding_selector_utils import selector_as_dict
 from ._bindings import (
     is_layout_binding_selector,
     validate_binding_selector_shape,
@@ -189,7 +190,7 @@ def validate_binding_section(
 
 def _is_layout_binding(binding: DataBindingDefinition) -> bool:
     """Layout-binding predicate, delegated to the typed manual_input shape."""
-    return is_layout_binding_selector(binding.selector)
+    return is_layout_binding_selector(selector_as_dict(binding))
 
 
 def validate_extraction_profile_section(

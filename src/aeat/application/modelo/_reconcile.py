@@ -1,15 +1,16 @@
-"""Modelo reconciliation: compare a work unit against external evidence.
+"""Modelo reconciliation: compare work-unit metadata against evidence.
 
-``modelo_reconcile`` accepts a modelo work unit and one source of external
-evidence (either an AEAT justificante PDF or a filed-declaration PDF)
-and produces a ``ModeloReconciliationReport`` recording whether
-the work unit's most recent calculation matches the external evidence.
+``modelo_reconcile`` accepts a modelo work unit and an AEAT justificante PDF,
+then produces a :class:`ModeloReconciliationReport` recording whether the work
+unit's modelo, period, ``ejercicio``, and active-profile tax id match the
+external evidence. Filed-declaration reconciliation is named in the command
+contract but refused until the declaration parser ships.
 
-The service is local-only: it never contacts AEAT and never invokes
-``require_live_read``. It reimplements the metadata-level comparison
-(modelo, period, ``ejercicio``, tax id) inline against the justificante
-parser for the supplied source kind. :class:`BucketEventHistoryRepository`
-receives a ``MODELO_RECONCILED`` event for each reconciliation run.
+The path-based service is local-only: it never contacts AEAT and never invokes
+``require_live_read``. Authenticated live pulls use ``modelo_reconcile_bytes``
+after storing captured justificante bytes in secure storage. Both paths append a
+``MODELO_RECONCILED`` :class:`~aeat.domain.buckets.BucketEvent` through
+:class:`~aeat.domain.buckets.BucketEventHistoryRepository`.
 """
 
 from __future__ import annotations
@@ -33,7 +34,11 @@ if TYPE_CHECKING:
 
 
 class ModeloReconciliationEvidenceKind(StrEnum):
-    """Closed set of external-evidence kinds the operator can supply."""
+    """Closed external-evidence labels accepted by reconciliation commands.
+
+    ``DECLARATION`` is reserved for the filed-declaration parser and currently
+    raises :class:`ReconciliationDeclaracionSourceUnsupportedError`.
+    """
 
     JUSTIFICANTE = "justificante"
     DECLARATION = "declaration"
@@ -77,7 +82,7 @@ class ModeloReconciliationHistoryEntry(BaseModel):
 
 
 class ModeloReconciliationDiff(BaseModel):
-    """One per-casilla disagreement between work unit and evidence."""
+    """One metadata disagreement between work unit/profile state and evidence."""
 
     model_config = _STRICT_FROZEN
 
@@ -90,9 +95,9 @@ class ModeloReconciliationDiff(BaseModel):
 class ModeloReconciliationCommand(BaseModel):
     """Strict input contract for ``modelo_reconcile``.
 
-    Exactly one of ``from_justificante`` or ``from_declaration`` must be
-    supplied. The CLI handler enforces the exclusivity before constructing
-    the command; the model itself records the chosen source.
+    ``source_path`` points to the operator-supplied evidence file and
+    ``source_kind`` records how that file must be parsed. Only justificante PDFs
+    are supported today; declaration sources are refused before parsing.
     """
 
     model_config = _STRICT_FROZEN
@@ -104,7 +109,7 @@ class ModeloReconciliationCommand(BaseModel):
 
 
 class ModeloReconciliationBytesCommand(BaseModel):
-    """Strict input contract for reconciling secure-storage evidence bytes.
+    """Strict input contract for reconciling secure-storage justificante bytes.
 
     Used by authenticated live pulls after the captured justificante has
     already been persisted in secure storage. The raw bytes remain in memory;
@@ -196,22 +201,22 @@ class ReconciliationCrossBucketRefusedError(AeatError):
 
 
 def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliationReport:
-    """Reconcile a modelo work unit against external evidence and return a :class:`ModeloReconciliationReport`.
+    """Reconcile a modelo work unit against a justificante PDF file.
 
     Local-only: never contacts AEAT and never invokes ``require_live_read``.
     Reimplements the metadata comparison inline against the justificante
-    parser at :mod:`aeat.adapters.inbound.justificante`.
+    parser at :mod:`aeat.adapters.inbound.justificante`, then returns a
+    :class:`ModeloReconciliationReport`.
 
     Emits ``MODELO_RECONCILED`` into the bucket-event-history catalogue.
     The verdict is included in the event payload so downstream
     auditors can replay the reconciliation timeline without
     re-parsing the evidence.
 
-    Per-casilla diff coverage is bounded by what the source can
-    expose. A justificante PDF carries only modelo, period,
-    ``ejercicio``, ``tax_id``, and totals; per-casilla diffs against
-    the full declaration require the modelo-specific declaration
-    parser that has not shipped yet.
+    Casilla-level diff coverage is unavailable on this path because a
+    justificante PDF carries only modelo, period, ``ejercicio``, ``tax_id``,
+    and totals. Per-casilla diffs against the full declaration require the
+    modelo-specific declaration parser that has not shipped yet.
     """
     if command.source_kind is ModeloReconciliationEvidenceKind.DECLARATION:
         raise ReconciliationDeclaracionSourceUnsupportedError(
@@ -238,8 +243,8 @@ def modelo_reconcile_bytes(command: ModeloReconciliationBytesCommand) -> ModeloR
     """Reconcile secure-storage evidence bytes without materialising a plaintext file.
 
     Returns:
-        The :class:`ModeloReconciliationReport` comparing the parsed evidence to
-        the work unit.
+        The :class:`ModeloReconciliationReport` comparing the parsed
+        justificante metadata to the work unit and active profile.
     """
     if command.source_kind is ModeloReconciliationEvidenceKind.DECLARATION:
         raise ReconciliationDeclaracionSourceUnsupportedError(

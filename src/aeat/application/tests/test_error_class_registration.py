@@ -141,7 +141,7 @@ def test_iva_compensation_year_range_error_raised_on_out_of_range_as_of_year() -
 
 
 def test_modelo_applicability_filter_error_is_registered_and_roundtrips() -> None:
-    from ..modelo._actions import ModeloApplicabilityFilterError
+    from ..modelo import ModeloApplicabilityFilterError
 
     _assert_registered_and_roundtrip(ModeloApplicabilityFilterError)
 

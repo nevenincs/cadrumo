@@ -8,8 +8,8 @@ already performs:
   :class:`aeat.domain.iva.IvaCitation`.
 * Every citation must have non-empty
   :attr:`aeat.domain.iva.IvaCitation.quoted_text`.
-* Every ``boe_references`` id must match the kebab-case shape used by
-  :mod:`aeat.domain.normatives`.
+* Every ``boe_references`` id must match the kebab-case document-id
+  shape used by the registry legal catalogue.
 """
 
 from __future__ import annotations
@@ -78,8 +78,8 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
                 issues.append(
                     IvaVerificationIssue(
                         level="error",
-                        code="invalid_normative_id",
-                        message=f"boe_reference {ref!r} is not a kebab-case normative id",
+                        code="invalid_legal_reference_id",
+                        message=f"boe_reference {ref!r} is not a kebab-case legal reference id",
                         category_id=regulation.category.value,
                     ),
                 )

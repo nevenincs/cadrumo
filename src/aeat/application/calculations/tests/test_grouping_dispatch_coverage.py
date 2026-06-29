@@ -22,6 +22,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.resources import resources
+from ....domain.calculations.registry._binding_selector_utils import selector_as_dict
 from .._row_set_assembly import _GROUPING_DISPATCH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -41,7 +42,7 @@ def _all_row_producer_groupings() -> set[str]:
             for binding in revision.bindings:
                 if binding.aggregation is None or binding.aggregation.op != "rows":
                     continue
-                grouping = binding.selector.get("grouping")
+                grouping = selector_as_dict(binding).get("grouping")
                 if isinstance(grouping, str) and grouping:
                     groupings.add(grouping)
     return groupings

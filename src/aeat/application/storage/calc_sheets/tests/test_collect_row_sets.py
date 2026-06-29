@@ -14,7 +14,14 @@ from itertools import pairwise
 
 import pytest
 
+from .....core import BindingSourceKind
+from .....core.aggregation import BindingAggregation
 from .....core.resources import resources
+from .....domain.calculations.registry import (
+    BindingAggregationOp,
+    DataBindingDefinition,
+    RegistryValidationError,
+)
 from .. import collect_row_sets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -34,6 +41,17 @@ def test_collect_row_sets_groups_modelo_349_bindings_by_grouping() -> None:
     assert "operator_clave_period" in by_grouping
     assert len(by_grouping["operator_clave"].columns) == 5
     assert len(by_grouping["operator_clave_period"].columns) == 8
+
+
+def test_collect_row_sets_suppresses_payable_acquisition_mirror_rows() -> None:
+    revision = _modelo_349_revision()
+
+    row_sets = collect_row_sets(revision)
+
+    column_bindings = {str(column.binding) for row_set in row_sets for column in row_set.columns}
+    assert "iva-349-operador-row-base" in column_bindings
+    assert "iva-349-rectificacion-row-base-anterior" in column_bindings
+    assert not any(binding_id.endswith("-adquisicion") for binding_id in column_bindings)
 
 
 def test_collect_row_sets_assigns_distinct_header_rows_per_grouping() -> None:
@@ -74,3 +92,19 @@ def test_collect_row_sets_returns_empty_for_revision_without_row_producers() -> 
     revision = resources().modelos.get("130").revisions["2019-y-siguientes"]
 
     assert collect_row_sets(revision) == ()
+
+
+def test_collect_row_sets_rejects_rows_binding_without_row_set_projection() -> None:
+    revision = resources().modelos.get("130").revisions["2019-y-siguientes"]
+    malformed_row_binding = DataBindingDefinition(
+        id="synthetic-row-without-grouping",
+        source=BindingSourceKind.COLLECTIBLE_INVOICE,
+        selector={"fact": "row_field", "row_field": "country_code"},
+        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
+        legal_refs=("ley-37-1992:art-1",),
+        source_refs=("aeat-dr-349",),
+    )
+    revision_with_malformed_row = revision.model_copy(update={"bindings": (malformed_row_binding,)})
+
+    with pytest.raises(RegistryValidationError, match="missing grouping"):
+        collect_row_sets(revision_with_malformed_row)

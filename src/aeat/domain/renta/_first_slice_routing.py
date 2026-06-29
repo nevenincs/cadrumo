@@ -45,6 +45,18 @@ FIRST_SLICE_EXPENSE_CASILLAS: Mapping[SpendingCategory, CasillaId] = {
         "0199",
         surface="FIRST_SLICE_EXPENSE_CASILLAS.ASESORIA_JURIDICA",
     ),
+    SpendingCategory.MATERIAL_OFICINA: validated_casilla_id(
+        "0199",
+        surface="FIRST_SLICE_EXPENSE_CASILLAS.MATERIAL_OFICINA",
+    ),
+    SpendingCategory.SOFTWARE_SUSCRIPCION: validated_casilla_id(
+        "0199",
+        surface="FIRST_SLICE_EXPENSE_CASILLAS.SOFTWARE_SUSCRIPCION",
+    ),
+    SpendingCategory.PUBLICIDAD_MARKETING: validated_casilla_id(
+        "0199",
+        surface="FIRST_SLICE_EXPENSE_CASILLAS.PUBLICIDAD_MARKETING",
+    ),
     SpendingCategory.GASTOS_BANCARIOS: validated_casilla_id(
         "0203",
         surface="FIRST_SLICE_EXPENSE_CASILLAS.GASTOS_BANCARIOS",

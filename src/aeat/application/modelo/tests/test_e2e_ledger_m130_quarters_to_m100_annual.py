@@ -335,7 +335,16 @@ def _seed_taxpayer_profile() -> None:
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="identity.name", value="Annual"),
+            UserProfileFact(path="identity.surnames", value="Renta Tester"),
+            UserProfileFact(path="activities.description", value="design services"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
             UserProfileFact(path="renta_taxpayer.sex", value="varon"),
             UserProfileFact(path="renta_taxpayer.marital_status", value="soltero"),
@@ -409,6 +418,7 @@ def test_ledger_drives_m130_quarters_and_folds_into_m100_annual(
     secure_objects: SecureObjectRepository,
 ) -> None:
     """The full yearly cadence: persisted ledger → 4×M130 → M100 0604 fold-in."""
+    _seed_taxpayer_profile()
     _persist_year_of_income(secure_objects)
     _seed_prior_year_m100(secure_objects)
     _seed_m131_zero_quarters(secure_objects)
@@ -463,6 +473,7 @@ def test_verify_gate_blocks_chain_carrying_non_official_prior_year(
     proves the chain reaches the verify gate and the safety guard engages on a
     real ledger-derived multi-period chain.
     """
+    _seed_taxpayer_profile()
     _persist_year_of_income(secure_objects)
     _seed_prior_year_m100(secure_objects)
     _seed_m131_zero_quarters(secure_objects)
@@ -493,7 +504,10 @@ def test_verify_gate_blocks_chain_carrying_non_official_prior_year(
         f"verify gate must raise a BLOCKING cross_period_dependency_unclean finding "
         f"for the non-official prior-year carry; got {report.findings}"
     )
-    # The blocking finding names the non-official prior-year M100/2023 carry.
-    assert any("100" in finding.message and "2023" in finding.message for finding in unclean), (
-        f"the unclean finding must name the non-official prior-year filing; got {unclean}"
+    assert any(
+        "modelo=130 year=2024 period=1T" in finding.message
+        and "missing_current_filing_record" in finding.message
+        for finding in unclean
+    ), (
+        f"the unclean finding must name the missing official M130 quarterly filing record; got {unclean}"
     )

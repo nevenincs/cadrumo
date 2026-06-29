@@ -406,6 +406,7 @@ _IVA_CATEGORY_HINTS: dict[IvaCategory, str] = {
     IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE: "reverse-charge EU goods acquisition",
     IvaCategory.INTRA_COMMUNITY_TRIANGULATION: "intra-community triangular operation",
     IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED: "export of goods outside the EU, zero-rated (Art. 21)",
+    IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED: "operation assimilated to an export, exempt/zero-rated (Art. 22)",
     IvaCategory.IMPORT_THIRD_COUNTRY: "import of goods from outside the EU",
     IvaCategory.RECARGO_EQUIVALENCIA: "purchase subject to the recargo de equivalencia surcharge",
     IvaCategory.REGIMEN_SIMPLIFICADO: "régimen simplificado (modules), not a general-regime invoice",

@@ -18,6 +18,7 @@ from ....core import Period
 from ....core.config import Settings, load_settings, override_settings
 from ....core.time import now as utc_now
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ....domain.calculations.registry import RegistrySnapshotRef
 from ....domain.filing import ModeloDraft, ModeloDraftRepository
 from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -69,6 +70,13 @@ def test_auth_status_is_not_blocked_by_unreadable_workspace_drafts() -> None:
             modelo="303",
             period=Period.from_year_and_code(2026, "1T"),
             profile_tax_id="00000000T",
+            subject_tax_id="00000000T",
+            snapshot_ref=RegistrySnapshotRef(
+                modelo="303",
+                revision_id="2026-v1",
+                modelo_year=2026,
+                period="1T",
+            ),
             status=ModeloDraftStatus.BORRADOR,
             values=(),
             created_at=now,
@@ -492,7 +500,7 @@ def test_live_auth_preflight_reports_expired_persisted_session_state() -> None:
     with override_settings(aeat_clave_movil_dni_nie=SecretStr("12345678Z")):
         configure_operator_auth("clave_movil")
         captured_at = utc_now() - timedelta(minutes=30)
-        path = storage_state_paths(load_settings(), AuthProviderKind.CLAVE_MOVIL).storage_state
+        path = storage_state_paths(AuthProviderKind.CLAVE_MOVIL).storage_state
         _session_store.save(
             path,
             storage_state={"cookies": [], "origins": []},
@@ -632,7 +640,7 @@ def test_operator_auth_test_reports_profile_scoped_clave_session() -> None:
     with override_settings(aeat_clave_movil_dni_nie=SecretStr("TEST-IDENTITY")):
         configure_operator_auth("clave_movil")
         captured_at = utc_now()
-        path = storage_state_paths(load_settings(), AuthProviderKind.CLAVE_MOVIL).storage_state
+        path = storage_state_paths(AuthProviderKind.CLAVE_MOVIL).storage_state
         _session_store.save(
             path,
             storage_state={"cookies": [], "origins": []},

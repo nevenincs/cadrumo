@@ -17,6 +17,7 @@ from .. import (
     build_snapshot,
     load_registry_tree,
 )
+from .._binding_selector_utils import selector_as_dict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
@@ -41,6 +42,21 @@ _FORBIDDEN_REMOTE_ACTIONS = frozenset(
         "document-submission",
         "declaration-submission",
     ],
+)
+_DECLARATION_PROFILE_TARGET_LEGAL_REFS = frozenset(
+    [
+        "ley-58-2003:art-93",
+        "orden-hap-72-2013:art-1",
+        "orden-hap-72-2013:art-7",
+    ]
+)
+_COMPLETENESS_MANIFEST_LEGAL_REFS = frozenset(
+    [
+        "ley-58-2003:art-93",
+        "orden-hap-72-2013:art-1",
+        "orden-hap-72-2013:art-2",
+        "orden-hap-72-2013:art-7",
+    ]
 )
 
 
@@ -141,6 +157,29 @@ def test_committed_modelo_720_declaration_pdf_extraction_profile_targets_declara
             assert {t.casilla_id for t in profile.target_casillas} <= casilla_ids
 
 
+def test_committed_modelo_720_declaration_pdf_profile_legal_refs_match_target_casillas() -> None:
+    modelo, _ = _load_modelo_720()
+    for revision in modelo.revisions.values():
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+        pdf_profiles = [profile for profile in revision.extraction_profiles if profile.surface == "declaracion_pdf"]
+        assert pdf_profiles, revision.id
+        for profile in pdf_profiles:
+            target_refs = frozenset(
+                legal_ref
+                for target in profile.target_casillas
+                for legal_ref in casillas_by_id[target.casilla_id].legal_refs
+            )
+            assert target_refs == _DECLARATION_PROFILE_TARGET_LEGAL_REFS
+            assert frozenset(profile.legal_refs) == _DECLARATION_PROFILE_TARGET_LEGAL_REFS
+
+
+def test_committed_modelo_720_completeness_manifest_legal_refs_match_declarante_closure() -> None:
+    modelo, _ = _load_modelo_720()
+    for revision in modelo.revisions.values():
+        assert revision.completeness_manifest is not None, revision.id
+        assert frozenset(revision.completeness_manifest.legal_refs) == _COMPLETENESS_MANIFEST_LEGAL_REFS
+
+
 def test_committed_modelo_720_verification_expectation_is_informative_strict() -> None:
     modelo, _ = _load_modelo_720()
     for revision in modelo.revisions.values():
@@ -196,7 +235,7 @@ def _layout_bindings_for(revision: ModeloRevision, record_name: str):
     return tuple(
         binding
         for binding in revision.bindings
-        if isinstance(binding.selector.get("record"), str) and binding.selector["record"] == record_name
+        if selector_as_dict(binding).get("record") == record_name
     )
 
 
@@ -206,7 +245,7 @@ def test_committed_modelo_720_type_1_bindings_target_declarante_record() -> None
         bindings = _layout_bindings_for(revision, "type_1")
         assert bindings, revision.id
         # Type 1 starts at position 1 (TIPO DE REGISTRO constant) per Orden HAP/72/2013 anexo
-        first_offset = min(int(cast(int, b.selector["offset"])) for b in bindings)
+        first_offset = min(int(cast(int, selector_as_dict(b)["offset"])) for b in bindings)
         assert first_offset == 1, first_offset
 
 
@@ -215,10 +254,13 @@ def test_committed_modelo_720_type_2_bindings_target_detalle_record() -> None:
     for revision in modelo.revisions.values():
         bindings = _layout_bindings_for(revision, "type_2")
         assert bindings, revision.id
-        first_offset = min(int(cast(int, b.selector["offset"])) for b in bindings)
+        first_offset = min(int(cast(int, selector_as_dict(b)["offset"])) for b in bindings)
         assert first_offset == 1, first_offset
         # Type 2 closes at position 480 (PORCENTAJE DE PARTICIPACIÓN, last field of detalle record)
-        ranges = sorted((int(cast(int, b.selector["offset"])), int(cast(int, b.selector["length"]))) for b in bindings)
+        ranges = sorted(
+            (int(cast(int, selector_as_dict(b)["offset"])), int(cast(int, selector_as_dict(b)["length"])))
+            for b in bindings
+        )
         last_offset, last_length = ranges[-1]
         assert last_offset + last_length - 1 == 480, last_offset + last_length - 1
 

@@ -61,51 +61,18 @@ from ._models import (
 
 _BULK_CLASSIFY_NON_PATCH_COLUMNS = frozenset({"transaction_id"})
 _BULK_CLASSIFY_PATCH_COLUMNS = BULK_CLASSIFY_ALLOWED_COLUMNS - _BULK_CLASSIFY_NON_PATCH_COLUMNS
+type _ParsedBulkClassifyRow = tuple[int, BulkClassifyRow, frozenset[str]]
 
 
 def _raw_csv_text(value: object) -> str:
     return value.strip() if isinstance(value, str) else ""
 
 
-def bulk_classify_from_csv(
-    *,
-    bucket_id: str,
-    csv_text: str,
-    actor: str,
-    source_command: str = "aeat app ledger classify --from-csv",
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-) -> BulkClassifyResult:
-    """Apply batch classifications from a CSV string.
-
-    The CSV must contain ``transaction_id`` and ``classification`` columns;
-    ``category_id``, ``business_pct``, ``usage_ratio_id``, ``taxable_base``,
-    ``iva_rate``, ``iva_amount``, ``iva_category``, and ``irpf_category`` are
-    optional. Blank optional cells are treated as omitted, so a partial CSV
-    classification row preserves existing tax facts instead of clearing them
-    accidentally. Populated tax facts ride the same
-    :class:`ManualLedgerTransactionPatch` and
-    :func:`update_manual_transaction_fields` write path the single-classify
-    surface uses, so a bulk row persists the same typed
-    ``taxable_base``/``iva_rate``/``iva_amount``/``iva_category``/
-    ``irpf_category`` values as ``--id``-mode classify with identical
-    validation. Unknown columns are rejected before any writes. Rows that fail
-    validation (unknown transaction id, invalid classification value, malformed
-    tax fact, pydantic error) are collected in ``failures`` and the remaining
-    valid rows are applied
-    (partial-success semantics matching the ledger import pattern).
-
-    Returns a :class:`BulkClassifyResult`.
-    """
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repo = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
-
+def _parse_bulk_classify_rows(csv_text: str) -> tuple[list[_ParsedBulkClassifyRow], list[BulkClassifyFailure]]:
     # Parse the CSV header to detect unknown columns before touching storage.
     reader = csv.DictReader(io.StringIO(csv_text))
     if reader.fieldnames is None:
-        return BulkClassifyResult(total=0, applied=0, skipped=0)
+        return [], []
     unknown = frozenset(reader.fieldnames) - BULK_CLASSIFY_ALLOWED_COLUMNS
     if unknown:
         raise TransactionValidationError(
@@ -117,7 +84,7 @@ def bulk_classify_from_csv(
             "bulk classify CSV must include 'transaction_id' and 'classification' columns",
         )
 
-    parsed_rows: list[tuple[int, BulkClassifyRow, frozenset[str]]] = []
+    parsed_rows: list[_ParsedBulkClassifyRow] = []
     parse_failures: list[BulkClassifyFailure] = []
     for idx, raw_row in enumerate(reader):
         transaction_id = _raw_csv_text(raw_row.get("transaction_id", ""))
@@ -174,7 +141,7 @@ def bulk_classify_from_csv(
         if not is_classified(parsed.classification):
             # Mirror the single-classify guard: only BUSINESS / PERSONAL / MIXED
             # are operator-assignable. A row naming a pipeline-managed state
-            # (SKIPPED_BY_RULE, FAILED_VALIDATION, …) reds rather than applying.
+            # (SKIPPED_BY_RULE, FAILED_VALIDATION, ...) reds rather than applying.
             parse_failures.append(
                 BulkClassifyFailure(
                     row_index=idx,
@@ -192,7 +159,20 @@ def bulk_classify_from_csv(
             if column != "classification" and normalised_row.get(column) is not None
         )
         parsed_rows.append((idx, parsed, provided_patch_columns))
+    return parsed_rows, parse_failures
 
+
+def _apply_bulk_classify_rows(
+    *,
+    bucket_id: str,
+    actor: str,
+    source_command: str,
+    repository: TransactionCatalogueRepositoryProtocol,
+    event_repo: BucketEventHistoryRepositoryProtocol,
+    parsed_rows: list[_ParsedBulkClassifyRow],
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+) -> tuple[int, int, list[BulkClassifyFailure], list[str]]:
     apply_failures: list[BulkClassifyFailure] = []
     all_event_ids: list[str] = []
     applied = 0
@@ -214,12 +194,7 @@ def bulk_classify_from_csv(
 
     for idx, row, provided_patch_columns in parsed_rows:
         patch_values: dict[str, object] = {"business_classification": row.classification}
-        patch_values.update(
-            {
-                column: getattr(row, column)
-                for column in provided_patch_columns
-            }
-        )
+        patch_values.update({column: getattr(row, column) for column in provided_patch_columns})
         patch = ManualLedgerTransactionPatch.model_validate(patch_values)
         try:
             resolved_transaction_id = resolve_transaction_id(row.transaction_id, working.transactions.keys())
@@ -280,6 +255,57 @@ def bulk_classify_from_csv(
             events=tuple(all_events),
         )
 
+    return applied, skipped, apply_failures, all_event_ids
+
+
+def bulk_classify_from_csv(
+    *,
+    bucket_id: str,
+    csv_text: str,
+    actor: str,
+    source_command: str = "aeat app ledger classify --from-csv",
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+) -> BulkClassifyResult:
+    """Apply batch classifications from a CSV string.
+
+    The CSV must contain ``transaction_id`` and ``classification`` columns;
+    ``category_id``, ``business_pct``, ``usage_ratio_id``, ``taxable_base``,
+    ``iva_rate``, ``iva_amount``, ``iva_category``, and ``irpf_category`` are
+    optional. Blank optional cells are treated as omitted, so a partial CSV
+    classification row preserves existing tax facts instead of clearing them
+    accidentally. Populated tax facts ride the same
+    :class:`ManualLedgerTransactionPatch` and
+    :func:`update_manual_transaction_fields` write path the single-classify
+    surface uses, so a bulk row persists the same typed
+    ``taxable_base``/``iva_rate``/``iva_amount``/``iva_category``/
+    ``irpf_category`` values as ``--id``-mode classify with identical
+    validation. Unknown columns are rejected before any writes. Rows that fail
+    validation (unknown transaction id, invalid classification value, malformed
+    tax fact, pydantic error) are collected in ``failures`` and the remaining
+    valid rows are applied
+    (partial-success semantics matching the ledger import pattern).
+
+    Returns a :class:`BulkClassifyResult`.
+    """
+    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    event_repo = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    parsed_rows, parse_failures = _parse_bulk_classify_rows(csv_text)
+    if not parsed_rows and not parse_failures:
+        return BulkClassifyResult(total=0, applied=0, skipped=0)
+
+    applied, skipped, apply_failures, all_event_ids = _apply_bulk_classify_rows(
+        bucket_id=bucket_id,
+        actor=actor,
+        source_command=source_command,
+        repository=repository,
+        event_repo=event_repo,
+        parsed_rows=parsed_rows,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+    )
     all_failures = parse_failures + apply_failures
     return BulkClassifyResult(
         total=len(parsed_rows) + len(parse_failures),

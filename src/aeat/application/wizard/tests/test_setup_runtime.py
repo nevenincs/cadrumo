@@ -83,13 +83,13 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
             "false",  # professional-income-withholding-ge-70pct
             "false",  # pays-rent-with-retencion
             "false",  # pays-capital-income-with-retencion
-            "false",  # uses-objective-estimation-irpf
             "directa_normal",  # irpf-estimation-regime
             "",  # irpf-special-regime (visible: natural person; blank = no special regime)
             # irpf-special-regime-start-date SKIPPED (conditional on irpf-special-regime == IMPATRIADO)
             "false",  # does-intracomunitario
             "false",  # third-party-transactions-above-347-threshold
             "false",  # bienes-extranjero-above-threshold
+            "false",  # monedas-virtuales-extranjero-above-threshold
             # ── residence (non-resident axis #197) ────────────
             "resident_irpf",  # fiscal-residency
             # country-of-fiscal-residence + representante-fiscal-* SKIPPED
@@ -227,13 +227,13 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
             "false",  # professional-income-withholding-ge-70pct
             "false",  # pays-rent-with-retencion
             "false",  # pays-capital-income-with-retencion
-            "false",  # uses-objective-estimation-irpf
             "directa_normal",  # irpf-estimation-regime
             "",  # irpf-special-regime (visible: natural person)
             # irpf-special-regime-start-date SKIPPED (conditional on impatriado)
             "false",  # does-intracomunitario
             "false",  # third-party-transactions-above-347-threshold
             "false",  # bienes-extranjero-above-threshold
+            "false",  # monedas-virtuales-extranjero-above-threshold
             "resident_irpf",  # fiscal-residency (#197 non-resident axis)
             # country-of-fiscal-residence + representante-fiscal-* SKIPPED (resident)
             "madrid",  # tax-residence-ccaa

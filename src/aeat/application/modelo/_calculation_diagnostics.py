@@ -1,4 +1,28 @@
-"""Post-calculation advisory coordination for :class:`ModeloRevision` work calculations."""
+"""Post-calculation advisory coordination for bucket aggregation calculations.
+
+The bucket aggregation calculate path first resolves source-backed values and
+persists the calculated revision. This module then fans out advisory-only checks
+over the loaded :class:`ModeloRevision` and the computed :class:`CasillaId` value
+map, returning non-blocking
+:class:`~aeat.application.aggregation.CalculationSourceDiagnostic` rows for the
+caller to append to source mesh diagnostics. It does not compute, override, or
+persist casilla values.
+
+The prior-payment collectors need persisted filing observations, so the
+coordinator shares one :class:`CalculationObservationRepository` instance across
+them. The official-box and settlement collectors read only the revision
+structure and calculated casilla values.
+
+See Also:
+    :func:`aeat.application.modelo._calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+        Calls this coordinator after the calculation revision has been created.
+    :func:`aeat.application.modelo._official_box_advisory.collect_official_box_unpopulated_diagnostics`:
+        Mirrors registry-authored ADVISORY predicates as calculate diagnostics.
+    :mod:`aeat.application.modelo._prior_payment_advisory`:
+        Emits Modelo 130 prior-payment carry degradation advisories.
+    :func:`aeat.application.modelo._settlement_grade_advisory.collect_settlement_not_computed_diagnostics`:
+        Emits structural settlement-completeness advisories for partially modelled revisions.
+"""
 
 from __future__ import annotations
 
@@ -26,6 +50,39 @@ def collect_bucket_aggregation_advisory_diagnostics(
     period_token: str,
     filing_year: int,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Return advisory diagnostics raised after bucket aggregation calculation.
+
+    Runs the calculate-path advisory collectors in tuple order:
+    official-box transcription, Modelo 130 prior-payment under-deduction, Modelo
+    130 prior-payment minoracion capture, and settlement-not-computed structure.
+    These diagnostics are informational and non-blocking; the calculation result
+    already exists, and the caller merely appends these rows to the source mesh's
+    existing :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
+    sequence.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose predicates, casillas, and
+            formulas are inspected.
+        casilla_values: Computed engine values keyed by :class:`CasillaId`.
+        modelo: Target modelo identifier used by modelo-specific advisory
+            collectors.
+        period_token: Bare registry period token for the filing being
+            calculated.
+        filing_year: Filing year whose same-ejercicio prior observations may be
+            inspected.
+
+    Returns:
+        Tuple of :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
+        advisory rows, or an empty tuple when no post-calculation advisory fires.
+
+    See Also:
+        :class:`CalculationObservationRepository`:
+            Supplies the prior-filing observation catalogue used by the Modelo
+            130 prior-payment advisory collectors.
+        :func:`aeat.application.modelo._calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+            Appends this tuple to the source mesh diagnostics on the returned
+            bucket aggregation result.
+    """
     observation_repository = CalculationObservationRepository()
     return (
         collect_official_box_unpopulated_diagnostics(revision, casilla_values)

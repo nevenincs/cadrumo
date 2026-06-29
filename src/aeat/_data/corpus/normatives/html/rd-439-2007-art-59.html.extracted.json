@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-439-2007-art-59.html",
+  "source_sha256": "2d2e37709497694cbb5e2c4ff687f3cae7f4689b413cde08bafe79f5803cea3f",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Cuando, en períodos impositivos posteriores al de su aplicación se pierda el derecho, en todo o en parte, a las deducciones practicadas, el contribuyente estará obligado a sumar a la cuota líquida estatal y a la cuota líquida autonómica o complementaria devengadas en el ejercicio en que se hayan incumplido los requisitos, las cantidades indebidamente deducidas, más los intereses de demora a que se refiere el artículo 26.6 de la Ley 58/2003, de 17 de diciembre, General Tributaria.\n2. Esta adición se aplicará de la siguiente forma:\na) Cuando se trate de la deducción por inversión en vivienda habitual aplicable a la cuota íntegra estatal o la deducción por inversión en empresas de nueva o reciente creación, se añadirá a la cuota líquida estatal la totalidad de las deducciones indebidamente practicadas.\nb) Cuando se trate de las deducciones previstas en los apartados 2, 3 y 5 del artículo 68 de la Ley del Impuesto, se añadirá a la cuota líquida estatal el 50 por ciento de las deducciones indebidamente practicadas y a la cuota líquida autonómica o complementaria el 50 por ciento restante.\nc) Cuando se trate de deducciones establecidas por la Comunidad Autónoma en el ejercicio de las competencias normativas previstas en el artículo 46.1 de la Ley 22/2009, de 18 de diciembre, por la que se regula el sistema de financiación de las Comunidades Autónomas de régimen común y Ciudades con Estatuto de Autonomía y se modifican determinadas normas tributarias, y del tramo autonómico de la deducción por inversión en vivienda habitual, se añadirá a la cuota líquida autonómica la totalidad de las deducciones indebidamente practicadas.",
+      "title": "Artículo 59. Pérdida del derecho a deducir.",
+      "section": "Artículo 59. Pérdida del derecho a deducir.",
+      "anchor": null
+    }
+  ]
+}

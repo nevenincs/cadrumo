@@ -47,7 +47,7 @@ def test_load_persisted_session_accepts_provider_specific_clave_metadata(tmp_pat
             ],
             "origins": [],
         }
-        path = storage_state_paths(settings, AuthProviderKind.CLAVE_MOVIL).storage_state
+        path = storage_state_paths(AuthProviderKind.CLAVE_MOVIL).storage_state
         _session_store.save(
             path,
             storage_state=storage_state,

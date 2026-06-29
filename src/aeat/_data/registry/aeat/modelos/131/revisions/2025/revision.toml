@@ -4,8 +4,8 @@ label = "Ejercicio 2025"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
 period_selector = { years = [2025], periods = ["1T", "2T", "3T", "4T"] }
-orden_aplicabilidad = ["orden-eha-672-2007:art-1", "orden-hac-1347-2024:art-4"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1347-2024:art-4", "ley-35-2006:art-68.4", "real-decreto-ley-13-2025:art-2", "rd-439-2007:art-95"]
+orden_aplicabilidad = ["orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "ley-35-2006:art-68.4", "real-decreto-ley-13-2025:art-2", "rd-439-2007:art-95"]
 source_refs = [
     "aeat-dr-131-2025",
     "aeat-modelo-131-procedure",

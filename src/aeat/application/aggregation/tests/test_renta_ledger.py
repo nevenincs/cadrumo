@@ -270,6 +270,50 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
     assert binding_values["renta-2025-ledger-expense-0203-deductible"] == Decimal("0")
 
 
+def test_renta_filing_aggregation_routes_office_software_and_marketing_to_m100_expenses(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Ordinary business operating costs must not disappear from M100."""
+    transactions = (
+        _transaction(
+            "row-office",
+            amount=Decimal("240.00"),
+            category=SpendingCategory.MATERIAL_OFICINA,
+        ),
+        _transaction(
+            "row-software",
+            amount=Decimal("360.00"),
+            category=SpendingCategory.SOFTWARE_SUSCRIPCION,
+        ),
+        _transaction(
+            "row-marketing",
+            amount=Decimal("180.00"),
+            category=SpendingCategory.PUBLICIDAD_MARKETING,
+        ),
+    )
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(TransactionCatalogue.from_transactions(transactions))
+    invoice_repo.save(InvoiceCatalogue())
+
+    snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+    resolution = LedgerRentaExpenseAggregationSourceResolver(
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id="test",
+            modelo="100",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
+            revision=snapshot.revision,
+        ),
+    )
+
+    assert resolution.diagnostics == ()
+    assert resolution.binding_values["renta-2025-ledger-expense-0199-deductible"] == Decimal("780.00")
+
+
 def test_m100_expense_aggregation_uses_taxable_base_for_iva_bearing_business_expenses(
     secure_objects: SecureObjectRepository,
 ) -> None:

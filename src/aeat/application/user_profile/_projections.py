@@ -66,7 +66,7 @@ def facts_to_values(
 ) -> dict[str, str]:
     """Project a tuple of profile facts into the flat ``selector -> str(value)`` map.
 
-    The flat shape is the legacy mapping shape consumed by
+    The flat shape is the selector-keyed mapping consumed by
     :func:`taxpayer_profile_from_mapping` and similar coercers. Each
     schema field's ``model_selectors`` are honored: a fact at
     ``identity.tax_id`` whose schema declares
@@ -91,7 +91,7 @@ def record_to_values(
     *,
     schema: ProfileSchemaDefinition | None = None,
 ) -> dict[str, str]:
-    """Project a live profile record into the legacy flat values mapping.
+    """Project a live profile record into the selector-keyed flat values mapping.
 
     Args:
         record: The :class:`UserProfileRecord` to project.
@@ -105,7 +105,7 @@ def snapshot_to_values(
     *,
     schema: ProfileSchemaDefinition | None = None,
 ) -> dict[str, str]:
-    """Project an immutable filing snapshot into the legacy flat values mapping."""
+    """Project an immutable filing snapshot into the selector-keyed flat values mapping."""
     return facts_to_values(snapshot.facts, schema=schema)
 
 

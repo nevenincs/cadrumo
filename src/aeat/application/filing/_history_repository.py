@@ -3,7 +3,8 @@
 This repository persists lightweight :class:`aeat.application.filing.ModeloHistory`
 payloads keyed by modelo. Each payload contains submitted modelos, typed
 periods, timestamps, and recorded status strings; richer current /
-superseded filing lifecycle records live in :mod:`aeat.domain.modelos`.
+superseded filing lifecycle records live in
+:class:`aeat.domain.modelos.ModeloRecordCatalogue`.
 
 Records are stored as encrypted byte objects in the primary SQL backend at
 :class:`SensitivityClass` ``AUDIT`` via a :class:`SecureObjectRepository`;
@@ -14,6 +15,8 @@ See Also:
         Strict payload persisted by this repository.
     :mod:`aeat.application.filing._runtime_repository`
         Active-profile bucket resolution and runtime secure-object creation.
+    :class:`aeat.domain.modelos.ModeloRecordCatalogueRepository`
+        FINANCIAL-class repository for authoritative work-unit filing records.
     :data:`aeat.adapters.persistence.storage.APPLICATION_FILING_HISTORY_NAMESPACE`
         Namespace, sensitivity, schema-version, and object-key contract for
         these secure objects.

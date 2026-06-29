@@ -14,6 +14,7 @@ legal_refs = [
     "rd-1065-2007:art-11",
     "orden-eha-1274-2007:art-1",
     "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
 ]
 source_refs = ["aeat-modelo-036-procedure"]
 

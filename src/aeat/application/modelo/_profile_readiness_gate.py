@@ -1,7 +1,8 @@
 """Profile readiness gate for filing-grade modelo work.
 
 Loads the active :class:`UserProfileRecord`, builds a
-:class:`ProfilePreflightReport`, and raises :class:`ModeloProfileReadinessError`
+:class:`ProfilePreflightReport`, projects local-work applicability through
+:class:`TaxpayerProfile`, and raises :class:`ModeloProfileReadinessError`
 before filing-grade work proceeds when required profile facts are missing. The
 same gate also refuses Modelo 130 and Modelo 303 target periods whose date span
 ends before the profile's ``censo.activity_start_date``; those pre-activity
@@ -20,15 +21,24 @@ from __future__ import annotations
 from datetime import date
 
 from ...core import Modelo, Period
+from ...core.parsing import parse_iso8601_date
 from ...core.resources import resources
 from ...domain.calculations.registry import ApplicabilityVerdict, RegistrySnapshotError, derive_modelo_applicability
+from ...domain.deadlines import (
+    EntityType,
+    FiscalResidency,
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
+    IVARegime,
+    LegalEntityForm,
+    TaxpayerProfile,
+)
 from ...domain.modelos._work_unit import WorkUnit
 from ...domain.user_profile import ProfileNotFoundError, UserProfileRecord
 from ..user_profile import (
     ProfilePreflightReport,
     ProfileValidationService,
     UserProfileLifecycleRepository,
-    projection_for_taxpayer,
     record_to_path_values,
 )
 from ..user_profile._preflight import ProfilePreflightService
@@ -80,7 +90,7 @@ def _profile_activity_start_date(record: UserProfileRecord) -> date | None:
             return fact.value
         if isinstance(fact.value, str):
             try:
-                return date.fromisoformat(fact.value.strip())
+                return parse_iso8601_date(fact.value)
             except ValueError:
                 return None
         return None
@@ -129,6 +139,33 @@ def _require_modelo_applicable_for_local_work(
     )
 
 
+def _local_work_taxpayer_profile(record: UserProfileRecord) -> TaxpayerProfile:
+    """Project a :class:`UserProfileRecord` into the :class:`TaxpayerProfile` applicability model."""
+    values = record_to_path_values(record)
+    entity_type = values.get("taxpayer_type.entity_type")
+    legal_entity_form = values.get("taxpayer_type.legal_entity_form")
+    income_categories = tuple(
+        token.strip()
+        for token in values.get("taxpayer_type.irpf_income_categories", "").split(",")
+        if token.strip()
+    )
+    estimation_regime = values.get("irpf.estimation_regime")
+    fiscal_residency = values.get("taxpayer_type.fiscal_residency")
+    iva_regime = values.get("iva.regime", IVARegime.GENERAL.value).strip().upper().replace("-", "_")
+    return TaxpayerProfile(
+        tax_id=values.get("identity.tax_id", "00000000T"),
+        entity_type=EntityType(entity_type) if entity_type else None,
+        legal_entity_form=LegalEntityForm(legal_entity_form) if legal_entity_form else None,
+        irpf_income_categories=frozenset(IrpfIncomeCategory(token) for token in income_categories),
+        irpf_estimation_regime=IrpfEstimationRegime(estimation_regime) if estimation_regime else None,
+        iva_regime=IVARegime(iva_regime),
+        fiscal_residency=FiscalResidency(fiscal_residency) if fiscal_residency else None,
+        country_of_fiscal_residence=values.get("taxpayer_type.country_of_fiscal_residence") or None,
+        representante_fiscal_nif=values.get("taxpayer_type.representante_fiscal_nif") or None,
+        representante_fiscal_nombre=values.get("taxpayer_type.representante_fiscal_nombre") or None,
+    )
+
+
 def modelo_applicability_refusal(
     *,
     record: UserProfileRecord,
@@ -147,7 +184,7 @@ def modelo_applicability_refusal(
     modelo_code = modelo.strip()
     if modelo_code not in _LOCAL_WORK_APPLICABILITY_MODELOS:
         return None
-    profile = projection_for_taxpayer(record, tax_id_default="00000000T")
+    profile = _local_work_taxpayer_profile(record)
     applicability = derive_modelo_applicability(profile, modelo_code)
     if applicability.verdict not in _BLOCKING_APPLICABILITY_VERDICTS:
         return None

@@ -1,30 +1,67 @@
-"""Application-layer command and result contracts for the user profile backend.
+"""Lazy application facade for schema-driven user-profile operations.
 
-This package owns the lifecycle API contracts for the centralised
-schema-driven profile backend. The domain layer
-(``aeat.domain.user_profile``) owns the schema, value records, and
-registry-contract validation; this package owns the application-layer
-service surface: strict Pydantic command and result records that flow
-between the CLI thin adapters, the secure-storage persistence wiring,
-and the calculation/filing/aggregation consumers.
+This package is the application boundary for the centralised profile
+backend. The domain layer (:mod:`aeat.domain.user_profile`) owns the
+schema, value records, selector registry contract, and portable-export
+payload type :class:`~aeat.domain.user_profile.UserProfilePortableExport`.
+This package owns the command/result records and service entry points
+that operate on that contract: lifecycle orchestration, validation and
+preflight checks, Censo synchronisation, capability and custody helpers,
+consumer projections, bucket-scoped storage sessions, and portable
+bundle serialisation.
 
-The records here have no business logic — they are the typed contract.
-The service implementations live in sibling modules
-(``ProfileLifecycleService``, ``ProfileSnapshotService``,
-``ProfileValidationService``, ``ProfilePreflightService``) and the
-secure-storage adapters that consume these records. The aggregate passed
-across service boundaries is :class:`UserProfileRecord`.
+The records here have no business logic; they are the typed contract
+passed between CLI adapters, secure-storage persistence wiring,
+bucket-maintenance flows, Modelo readiness gates, workflow adapters, and
+calculation/filing/aggregation consumers. The aggregate passed across
+service boundaries is :class:`~aeat.domain.user_profile.UserProfileRecord`.
+The service implementations live in sibling modules and are exposed as
+lazy facade members, including
+:class:`~aeat.application.user_profile.ProfileLifecycleService`,
+:class:`~aeat.application.user_profile.UserProfileSnapshotRepository`,
+:class:`~aeat.application.user_profile.ProfileValidationService`, and
+:class:`~aeat.application.user_profile.ProfilePreflightService`.
+
+Portable export composition follows the same split.
+:func:`~aeat.application.user_profile.serialize_profile_bundle` and
+:func:`~aeat.application.user_profile.deserialize_profile_bundle` live on
+this facade so CLI config and bucket-maintenance code compose through
+top-level re-exports, while the bundle payload remains the domain-layer
+:class:`~aeat.domain.user_profile.UserProfilePortableExport`. Projection
+and baseline helpers such as
+:func:`~aeat.application.user_profile.record_to_path_values`,
+:func:`~aeat.application.user_profile.projection_for_taxpayer`, and
+:func:`~aeat.application.user_profile.missing_filing_baseline_flags`
+provide the canonical schema-path and deadline-engine shapes consumed by
+filing gates instead of recreating profile fact decoding downstream.
 
 Every re-exported name is resolved on demand through module-level
 ``__getattr__`` (PEP 562). Top-level imports in this file are reserved
-for genuinely lightweight setup (the active-profile language-resolver
-registration) so the boundary itself does not drag the domain-record /
-registry / service module surfaces into ``sys.modules``. The
-state-free CLI surfaces (``aeat``, ``aeat --version``, ``aeat --help``)
-must not pay the registry cost via this boundary, which the
+for genuinely lightweight setup (:class:`~aeat.core.identity.ProfileId`
+and the active-profile language-resolver registration) so the boundary
+itself does not drag the domain portable-export / registry / service
+module surfaces into ``sys.modules``. The state-free CLI surfaces
+(``aeat``, ``aeat --version``, ``aeat --help``) must not pay the
+registry cost via this boundary, which the
 :mod:`aeat.entrypoints.cli.test_lazy_command_tree` gate and the
 producer-side probe in
 :mod:`aeat.application.user_profile.test_lazy_boundary` both enforce.
+
+See Also:
+    :mod:`aeat.domain.user_profile`
+        Domain schema, value records, registry-selector contract, and lazy
+        portable-export payload consumed by this facade.
+    :class:`~aeat.application.user_profile.ProfileLifecycleService`
+        Application service for register, edit, rename, duplicate, snapshot, and
+        remove operations over :class:`~aeat.domain.user_profile.UserProfileRecord`.
+    :class:`~aeat.application.user_profile.CensoSyncService`
+        Censo snapshot comparison and profile-fact application service.
+    :mod:`aeat.application.bucket_maintenance`
+        Bucket lifecycle facade that composes this package's portable-bundle
+        serialiser and deserialiser for sealed export/import.
+    :mod:`aeat.application.modelo`
+        Filing-grade modelo workflows that consume profile preflight and
+        projection helpers from this boundary.
 """
 
 from __future__ import annotations

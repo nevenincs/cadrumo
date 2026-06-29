@@ -36,6 +36,7 @@ from .. import (
     validate_ledger_renta_income_aggregation_binding_definition,
     validated_casilla_id,
 )
+from .._binding_selector_utils import selector_as_dict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -80,7 +81,7 @@ def test_committed_m130_casilla_01_binds_ingresos_integros_fact() -> None:
 
     binding = next(binding for binding in revision.bindings if binding.id == _INGRESOS_BINDING)
     assert binding.source == "ledger_renta_income_aggregation"
-    assert dict(binding.selector)["fact"] == "ingresos_integros_sum"
+    assert selector_as_dict(binding)["fact"] == "ingresos_integros_sum"
     validate_ledger_renta_income_aggregation_binding_definition(binding)
 
 
@@ -128,7 +129,7 @@ def test_committed_m130_retenciones_binding_reads_withheld_amount_fact() -> None
 
     binding = next(binding for binding in revision.bindings if binding.id == _RETENCIONES_BINDING)
     assert binding.source == "ledger_renta_income_aggregation"
-    assert dict(binding.selector) == {
+    assert selector_as_dict(binding) == {
         "modelo": "130",
         "target_casilla_id": _M130_INGRESOS_CASILLA,
         "fact": "withheld_amount_sum",

@@ -48,7 +48,7 @@ from ._detail_record_bindings import (
     validate_related_party_binding,
 )
 from ._errors import RegistryValidationError
-from ._ids import BindingId, CasillaId, FormulaId, LegalRefId, OracleId, SourceRefId
+from ._ids import BindingId, CasillaId, FormulaId, LegalRefId, ModeloId, OracleId, SourceRefId
 from ._invoice_bindings import (
     INVOICE_BINDING_SOURCE_KINDS,
     InvoiceObservation,
@@ -94,6 +94,7 @@ from ._ledger_bindings import (
     validate_ledger_renta_income_aggregation_binding_definition,
 )
 from ._retenciones_bindings import (
+    _RetencionesAggregationSelector,
     resolve_retenciones_aggregation_binding_values,
     validate_retenciones_aggregation_binding,
 )
@@ -101,6 +102,7 @@ from ._schema import DataBindingDefinition, InputKind, ModeloRevision
 from ._withholding_bindings import (
     WithholdingObservation,
     WithholdingObservationRequirement,
+    _WithholdingSelector,
     resolve_withholding_binding_row_values,
     resolve_withholding_binding_values,
     validate_withholding_binding_selector_shape,
@@ -135,6 +137,7 @@ __all__ = [
     "_build_related_party_rows",
     "binding_aggregation_op",
     "binding_source_casilla_ids",
+    "binding_source_modelo",
     "counterpart_binding_requirements",
     "default_binding_aggregation_op",
     "invoice_binding_requirements",
@@ -211,7 +214,7 @@ class CasillaObservation(BaseModel):
     (manual / bound) and the trace fields are empty.
 
     Used as the primary storage for :class:`RegistryCalculationResult`;
-    legacy ``values`` and ``entries`` views derive from it.
+    derived ``values`` and ``entries`` views project from it.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -284,7 +287,7 @@ class RegistryModeloObservation(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: ModeloId
     filing_period: Period | None = None
     filing_year: int = Field(ge=2000, le=2099)
     period: str = Field(min_length=1, max_length=32)
@@ -410,7 +413,7 @@ class _RelationPrefillSelector(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    source_modelo: str = Field(min_length=1, max_length=8)
+    source_modelo: ModeloId
     source_casilla_id: CasillaId | None = Field(default=None, min_length=1)
     source_casilla_ids: tuple[CasillaId, ...] = ()
     source_periods: tuple[str, ...] = ()
@@ -453,6 +456,15 @@ def binding_source_casilla_ids(binding: DataBindingDefinition) -> tuple[CasillaI
     if binding.source == "relation_prefill":
         return _relation_prefill_source_ids(_relation_prefill_selector(binding))
     return ()
+
+
+def binding_source_modelo(binding: DataBindingDefinition) -> ModeloId | None:
+    """Return the typed source modelo declared by binding families that have one."""
+    if binding.source == "previous_filing":
+        return previous_filing_source_reference(binding).source_modelo
+    if binding.source == "relation_prefill":
+        return _relation_prefill_selector(binding).source_modelo
+    return None
 
 
 class _ProfileSelector(BaseModel):
@@ -616,12 +628,10 @@ class _ManualInputSelector(BaseModel):
 # ---------------------------------------------------------------------------
 # Discriminated-selector registry
 #
-# Each entry pairs a ``DataBindingDefinition.source`` literal with the strict
-# pydantic model that the binding's selector must validate against. Sources
-# absent from this map are intentionally free-form for now: their selector
-# shape varies across legacy registries or is consumed by ad-hoc validators
-# elsewhere. As new typed selectors land, they should be registered here so
-# the snapshot-build gate validates them automatically.
+# Each entry pairs a registry-declared ``DataBindingDefinition.source`` literal
+# with the strict pydantic model that the binding's selector must validate
+# against. Mesh-only ``BindingSourceKind`` members stay absent because they are
+# not legal registry binding sources.
 # ---------------------------------------------------------------------------
 
 
@@ -643,6 +653,8 @@ _BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
     "ledger_renta_expense_aggregation": _RentaLedgerExpenseSelector,
     "ledger_renta_income_aggregation": _RentaLedgerIncomeSelector,
     "ledger_renta_gasto_aggregation": _RentaLedgerGastoSelector,
+    "retenciones_aggregation": _RetencionesAggregationSelector,
+    RowSetGroupingKind.WITHHOLDING: _WithholdingSelector,
     "related_party_operation": _RelatedPartySelector,
     RowSetGroupingKind.FOREIGN_ASSET: _ForeignAssetSelector,
     "atribucion_member": _AtributionSelector,
@@ -658,10 +670,9 @@ def selector_model_for_source(source: object) -> type[BaseModel] | None:
     Read-only accessor over :data:`_BINDING_SELECTOR_REGISTRY`, the
     discriminated-union table keyed by :class:`~aeat.core.BindingSourceKind`
     (the canonical ``DataBindingDefinition.source`` axis). Returns the
-    per-family selector model when the source carries a typed selector schema,
-    or ``None`` when the source is intentionally free-form (absent from the
-    table) — so callers can short-circuit selector-shape validation for
-    free-form sources exactly as the snapshot-build gate does.
+    per-family selector model when the source is a registry-declared binding
+    source, or ``None`` for mesh-only source kinds that are not legal
+    ``DataBindingDefinition.source`` values.
 
     The model-level selector validator on
     :class:`~aeat.domain.calculations.registry.DataBindingDefinition` consumes
@@ -752,8 +763,9 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
     snapshot build rather than only when a taxpayer calculation invokes the
     resolver.
 
-    Sources NOT in the dispatch table are intentionally free-form today; those
-    bindings short-circuit with an empty failure list.
+    Sources not in the dispatch table are mesh-only and should not appear on a
+    registry binding; construction rejects them before this build-time validator
+    runs.
     """
     validator = _BINDING_VALIDATOR_REGISTRY.get(binding.source)
     if validator is None:

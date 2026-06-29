@@ -15,15 +15,16 @@ The resolved bindings use :class:`ProfileSchemaDefinition` and
 :class:`UserProfileFactValue` to translate raw facts.
 
 Channel selection is the load-bearing decision. The registry runtime
-resolves a binding leaf from one of two channels depending on *how a
-formula consumes it*: a binding that is the enum-key argument of a
-dispatch op (``lookup_bracket_by_ccaa`` /
-``lookup_parameter_by_entity_type``) is read from the string-valued
-``enum_binding_values`` channel; every other binding leaf is read from
-the Decimal-valued ``binding_values`` channel. The channel is therefore
-NOT determined by the binding's ``typed_enum`` annotation -- a binding
-may carry ``typed_enum`` yet still be consumed as a Decimal operand.
-:func:`enum_consumed_binding_ids` is the authoritative discriminator.
+resolves profile bindings through three engine channels:
+``date_binding_values`` for date operands, ``enum_binding_values`` for
+dispatch keys, and Decimal-valued ``binding_values`` for numeric
+operands. The channel is determined by the consumer shape, not by the
+binding's ``typed_enum`` annotation: :func:`expression_date_binding_refs`
+finds date operands, :func:`enum_consumed_binding_ids` finds enum
+dispatch operands, and formula-consumed or bound numeric casillas use
+the Decimal channel. Profile bindings that only populate identity or
+export-layout fields are intentionally left out of the calculation
+source mesh.
 """
 
 from __future__ import annotations
@@ -356,8 +357,8 @@ def resolve_profile_sourced_bindings(
 
     Walks the registry revision's ``source = "profile"`` bindings,
     matches each against a fact on the bucket's user profile, and routes
-    the value into the Decimal channel or the enum channel per
-    :func:`enum_consumed_binding_ids`.
+    the value into the Decimal, enum, or date channel according to the
+    consuming formula or bound numeric casilla.
 
     A binding the profile cannot satisfy is skipped silently: the engine
     surfaces the missing-binding error only if a formula needs it.
@@ -366,6 +367,12 @@ def resolve_profile_sourced_bindings(
     Returns a :class:`CalculationSourceResolution` with resolved binding
     values split across the Decimal, enum, and date engine channels and a
     :class:`CalculationSourceProvenance` row per profile-sourced binding.
+
+    See Also:
+        :func:`enum_consumed_binding_ids`:
+            Identifies profile bindings consumed as enum dispatch keys.
+        :func:`expression_date_binding_refs`:
+            Identifies profile bindings consumed by date-aware formula ops.
     """
     # A profile binding matters to the engine when a formula consumes it OR when
     # it feeds a ``bound`` NUMERIC input casilla (e.g. M303 casilla 65, the

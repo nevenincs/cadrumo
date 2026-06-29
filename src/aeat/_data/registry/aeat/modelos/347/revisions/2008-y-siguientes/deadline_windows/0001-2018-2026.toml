@@ -74,9 +74,9 @@ filing_year = 2025
 period = "2025-0A"
 period_kind = "annual"
 opens_on = 2026-02-01
-closes_on = 2026-02-28
+closes_on = 2026-03-02
 legal_refs = ["orden-eha-3012-2008:art-10", "ley-58-2003:art-93"]
-source_refs = ["boe-modelo-347-2008-form"]
+source_refs = ["boe-modelo-347-2008-form", "aeat-calendario-contribuyente-2026-hasta-2-marzo"]
 
 [[revisions."2008-y-siguientes".deadline_windows]]
 id = "modelo-347-2026-0a"

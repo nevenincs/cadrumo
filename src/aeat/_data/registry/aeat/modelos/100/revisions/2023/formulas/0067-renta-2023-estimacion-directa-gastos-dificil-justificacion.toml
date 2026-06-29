@@ -15,8 +15,12 @@ expression = { op = "min", args = [
     { parameter = "renta-2023-estimacion-directa-simplificada-gastos-dificil-justificacion-cap" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-30", "rd-439-2007:art-30"]
-source_refs = ["lirpf-cuota-chain-authority"]
+legal_refs = ["ley-35-2006:art-30", "ley-35-2006:da-56", "rd-439-2007:art-30"]
+source_refs = ["aeat-renta-2023-manual-parte1", "lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["7 por 100", "2.000 euros", "gastos de difícil justificación"]
 
 [[revisions."2023".formulas.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"

@@ -1,7 +1,11 @@
-"""Application-level domain errors for the diagnostics surface.
+"""Typed application errors for diagnostics model construction.
 
-Used by :mod:`aeat.application.diagnostics` to signal contract violations
-in :class:`~aeat.application.diagnostics.DiagnosticCheck`.
+This module currently owns the diagnostics-specific validation error raised by
+:class:`~aeat.application.diagnostics.DiagnosticCheck` validators. The class
+inherits from :class:`~aeat.core.errors.CoreValidationError`, so it remains
+catchable as ``ValueError`` for Pydantic validator compatibility while still
+participating in the project-wide :class:`~aeat.core.errors.AeatError` registry
+and :class:`~aeat.core.errors.ErrorEnvelope` rendering path.
 """
 
 from __future__ import annotations
@@ -10,14 +14,15 @@ from ..core.errors import CoreValidationError
 
 
 class DiagnosticModelError(CoreValidationError):
-    """Raised when a :class:`~aeat.application.diagnostics.DiagnosticCheck` violates its construction invariants.
+    """Raised when :class:`~aeat.application.diagnostics.DiagnosticCheck` violates its invariants.
 
-    Replaces bare :exc:`ValueError` / :exc:`TypeError` raises inside
-    Pydantic ``model_validator`` hooks so callers can catch a typed error
-    without importing pydantic internals.  The error inherits from
-    :class:`~aeat.core.errors.CoreValidationError` (which itself inherits
-    from :exc:`ValueError`) so any existing ``except ValueError`` guard
-    continues to match during the migration window.
+    ``DiagnosticCheck`` rows with status ``fail`` or ``warn`` must carry exactly
+    one of ``next_action`` or ``dead_end``; ``ok`` rows must carry neither. The
+    validator raises this typed :class:`~aeat.core.errors.CoreValidationError`
+    instead of a bare :class:`ValueError` so Pydantic can wrap it as the cause of
+    a validation failure while CLI and JSON callers can still render a registered
+    :class:`~aeat.core.errors.ErrorEnvelope` through
+    :func:`~aeat.core.errors.build_error_envelope`.
     """
 
 

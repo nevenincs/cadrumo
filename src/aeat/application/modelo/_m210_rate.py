@@ -1,10 +1,27 @@
-"""Modelo 210 treaty-rate resolution helpers.
+"""Modelo 210 IRNR treaty-rate resolution helpers.
 
-The resolver reads baseline and Convenio rate parameters from the
-:class:`RegistrySnapshot`, selects the treaty country from the
-:class:`TaxpayerProfile`, and returns either the resolved IRNR rate or
-blocking :class:`ModeloVerificationFinding` records for deferred baseline
-coverage, missing treaty rows, or ``NOT_YET_AUTHORED`` convenio entries.
+The registry formula runtime computes the filing values and emits sentinel
+rates when a Modelo 210 rate cannot be applied directly. This application helper
+reads the same ``m210-tipo-gravamen-2025`` and ``m210-convenio-rates`` parameter
+rows from a :class:`~aeat.domain.calculations.registry.RegistrySnapshot`, selects
+the treaty country from :class:`~aeat.domain.deadlines.TaxpayerProfile`, and
+returns either a scalar IRNR rate or blocking
+:class:`~aeat.domain.modelos.ModeloVerificationFinding` records for deferred
+baseline coverage or missing treaty rows.
+
+``DOMESTIC_TARIFF`` rows are not scalar rates. They delegate to the live
+base-aware tariff path in the registry runtime, so this helper returns
+``(None, [])`` for that branch instead of inventing an effective rate without the
+tax base.
+
+See Also:
+    :mod:`aeat.domain.calculations.registry._formula_runtime`
+        Formula-runtime implementation of ``m210_resolve_rate`` and the M210
+        sentinel values this application layer rewrites into findings.
+    :func:`aeat.application.modelo._verification_actions.verify_modelo_revision`
+        Verification path that replays this resolver for Modelo 210 observations.
+    :mod:`aeat.application.calculations.tests.test_modelo_210_irnr_continuity`
+        Cross-renta enrollment coverage for the registry-backed M210 engine.
 """
 
 from __future__ import annotations
@@ -34,7 +51,13 @@ def _m210_blocking_finding(
     legal_refs: tuple[str, ...],
     source_refs: tuple[str, ...],
 ) -> ModeloVerificationFinding:
-    """Build a BLOCKING_RULE M210 rate finding with the shared severity/kind."""
+    """Build a BLOCKING_RULE M210 rate finding with the shared severity/kind.
+
+    The returned :class:`~aeat.domain.modelos.ModeloVerificationFinding` is the
+    application-facing companion to the formula-runtime sentinel: callers surface
+    it to the operator instead of letting an unavailable M210 rate silently
+    produce filing output.
+    """
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
@@ -79,9 +102,10 @@ def _resolve_convenio_rate(
 ) -> tuple[Decimal | None, list[ModeloVerificationFinding]]:
     """Resolve the Convenio (treaty) override rate for a treaty-country profile.
 
-    Emits the ``m210-convenio-rate-missing`` BLOCKING finding when no row exists
-    and the ``m210-convenio-rate-not-yet-authored`` BLOCKING finding when the row
-    carries the ``NOT_YET_AUTHORED`` placeholder.
+    Emits the ``m210-convenio-rate-missing`` BLOCKING finding when no row exists.
+    Rows whose rate is ``DOMESTIC_TARIFF`` intentionally return ``(None, [])``
+    because the base-aware tariff branch in the registry runtime remains the
+    calculation authority.
     """
     convenio_lookup: dict[tuple[str, str], ConvenioRateRow] = {}
     if convenio_param is not None:
@@ -112,24 +136,6 @@ def _resolve_convenio_rate(
         )
         return None, [finding]
 
-    if matched_row.rate == "NOT_YET_AUTHORED":
-        finding = _m210_blocking_finding(
-            message=(
-                f"M210 Convenio rate row for country={country_code!r} "
-                f"tipo_renta={tipo_renta!r} year={year} carries the "
-                "NOT_YET_AUTHORED placeholder; predicate "
-                "'m210-convenio-rate-not-yet-authored' fires"
-            ),
-            next_action=tr(
-                "application.modelo.findings.m210_convenio_rate_not_yet_authored.next_action",
-                cc=country_code,
-                tipo_renta=tipo_renta,
-            ),
-            legal_refs=legal_refs,
-            source_refs=source_refs,
-        )
-        return None, [finding]
-
     if matched_row.rate == _M210_DOMESTIC_TARIFF_RATE:
         return None, []
 
@@ -137,6 +143,7 @@ def _resolve_convenio_rate(
 
 
 def _has_live_pension_tariff(snapshot: RegistrySnapshot, year: int) -> bool:
+    """Return whether the snapshot contains an applicable M210 pension tariff table."""
     for parameter in snapshot.revision.parameters:
         if parameter.id != "m210-pension-tarifa-2025" or parameter.data_type != "bracket_table":
             continue
@@ -155,12 +162,24 @@ def resolve_m210_rate(
 ) -> tuple[Decimal | None, list[ModeloVerificationFinding]]:
     """Resolve the M210 rate for (profile, tipo_renta, year).
 
-    The :class:`RegistrySnapshot` supplies the ``m210-tipo-gravamen-2025`` and
-    ``m210-convenio-rates`` parameter rows; the :class:`TaxpayerProfile`
-    supplies ``country_of_fiscal_residence`` for treaty lookup. Returns
-    ``(rate, findings)`` where ``findings`` contains blocking
-    :class:`ModeloVerificationFinding` records when a required rate is deferred
-    or unavailable.
+    The :class:`~aeat.domain.calculations.registry.RegistrySnapshot` supplies the
+    ``m210-tipo-gravamen-2025`` and ``m210-convenio-rates`` parameter rows; the
+    :class:`~aeat.domain.deadlines.TaxpayerProfile` supplies
+    ``country_of_fiscal_residence`` for treaty lookup. Returns ``(rate,
+    findings)`` where ``findings`` contains blocking
+    :class:`~aeat.domain.modelos.ModeloVerificationFinding` records when a
+    required rate is deferred or unavailable.
+
+    A profile with no treaty country uses the baseline table. A profile with a
+    treaty country must match a Convenio row for ``(country, tipo_renta)`` unless
+    the row explicitly delegates back to the domestic tariff. The resolver
+    returns no scalar rate for live pension tariffs because those depend on the
+    actual base amount and are computed by the formula runtime.
+
+    See Also:
+        :func:`aeat.domain.calculations.registry._formula_runtime._evaluate_m210_resolve_rate`
+        :class:`aeat.domain.calculations.registry.ConvenioRateRow`
+        :class:`aeat.domain.deadlines.TaxpayerProfile`
     """
     baseline_param = None
     convenio_param = None

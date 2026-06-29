@@ -1,10 +1,23 @@
-"""Application services for bucket-scoped ledger transaction workflows.
+"""Application facade for bucket-scoped ledger and invoice-adjacent workflows.
 
 Owns the operator-facing ledger lifecycle: importing bank statements and
 records, classifying transactions for tax, splitting and merging entries,
 attaching evidence, and checking a period's tax-readiness before a modelo
-calculation consumes it. Every service operates on the active profile's
-bucket.
+calculation consumes it. The primary movement fact remains
+``ledger_transaction``. Purchase invoice evidence and payable / collectible
+business invoices are related bucket-scoped records, not ledger rows, and their
+source-kind identity is carried by
+:class:`BusinessOperationInvoiceDirection`.
+
+The ledger-mounted invoice surface is intentionally slim:
+:class:`BusinessOperationInvoice` records carry the
+:class:`BusinessOperationInvoiceDirection` source-kind discriminator consumed by
+:class:`PayableInvoiceService` and :class:`CollectibleInvoiceService`. Rich
+invoice-line detail and reconciliation links stay in
+:mod:`aeat.domain.invoices`, while the application invoice package maps issued /
+received invoice directions back onto
+:attr:`~aeat.core.BindingSourceKind.PAYABLE_INVOICE` and
+:attr:`~aeat.core.BindingSourceKind.COLLECTIBLE_INVOICE`.
 
 Major declarations:
 
@@ -15,6 +28,11 @@ Major declarations:
 * :func:`preflight_ledger_tax_readiness` with :class:`LedgerPreflightReport`
   and :class:`LedgerPreflightIssue` — the readiness gate that reports rows
   missing a category, base, IVA rate, currency, or prorrata reference.
+* :class:`PurchaseInvoiceEvidenceService` — the evidence lifecycle for receipts
+  or supplier invoice artefacts attached to ledger transactions.
+* :class:`PayableInvoiceService`, :class:`CollectibleInvoiceService`, and
+  :class:`BusinessOperationInvoiceRepository` — the encrypted CRUD surface behind
+  ``aeat app ledger invoice --kind issued|received``.
 * :func:`resolve_transaction_id` — the unambiguous-prefix id resolver, and
   :func:`resolve_lineage_transaction_id` — its read-side lineage-aware
   variant that resolves a superseded (pre-edit) handle to the live row.
@@ -22,41 +40,56 @@ Major declarations:
   :class:`LedgerImportOperationResult`, :class:`LedgerReviewQueryResult`,
   :class:`LedgerStatusReport`, and siblings) that carry each operation
   across the CLI boundary.
+
+See Also:
+    :mod:`aeat.application.invoices`
+        Rich invoice orchestration and the
+        :class:`~aeat.application.invoices.InvoiceCatalogueSourceResolver` that
+        adapts invoice records into the calculation source mesh.
+    :mod:`aeat.application.aggregation`
+        Ledger aggregation resolvers such as
+        :class:`~aeat.application.aggregation.LedgerIvaAggregationSourceResolver`
+        and the shared
+        :class:`~aeat.application.aggregation.CalculationSourceResolution`
+        envelope consumed by modelo calculation.
+    :mod:`aeat.application.modelo`
+        Work-unit calculation actions that call
+        :func:`preflight_ledger_tax_readiness` before resolving
+        ledger-backed bindings for a :class:`~aeat.domain.modelos.WorkUnit`.
+    :mod:`aeat.domain.transactions`
+        The transaction catalogue and lifecycle states that remain the ledger's
+        durable movement authority.
 """
 
 from __future__ import annotations
 
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ..export import ExportSerializationFormat
-from ._actions import (
-    LedgerProviderID,
-    add_classification_rule,
-    apply_classification_rules,
+from ._actions_classification import add_classification_rule, apply_classification_rules, bulk_classify_from_csv
+from ._actions_export import export_ledger_transactions
+from ._actions_import import LedgerProviderID, import_ledger_source, import_ledger_transactions
+from ._actions_lifecycle import (
     archive_manual_transaction,
-    attach_manual_transaction_evidence,
-    bulk_classify_from_csv,
-    create_manual_transaction,
-    export_ledger_transactions,
-    get_manual_transaction,
-    import_ledger_source,
-    import_ledger_transactions,
-    ledger_transaction_payload,
-    ledger_transaction_result_payload,
-    ledger_transaction_review_payload,
-    ledger_transaction_review_status,
-    ledger_transaction_tracking_payload,
-    list_manual_transactions,
-    merge_transactions,
-    query_ledger_review_rows,
     remove_manual_transaction,
     reset_ledger_catalogue,
     restore_manual_transaction,
-    split_transaction,
     stash_manual_transaction,
+)
+from ._actions_manual import (
+    attach_manual_transaction_evidence,
+    create_manual_transaction,
+    get_manual_transaction,
+    ledger_transaction_payload,
+    ledger_transaction_result_payload,
+    ledger_transaction_review_payload,
+    ledger_transaction_tracking_payload,
+    list_manual_transactions,
+    query_ledger_review_rows,
     summarize_manual_transactions,
     update_manual_transaction,
     update_manual_transaction_fields,
 )
+from ._actions_split_merge import merge_transactions, split_transaction
 from ._business_operation_invoice import (
     BusinessOperationInvoice,
     BusinessOperationInvoiceDirection,
@@ -162,6 +195,7 @@ from ._ratios import (
     validate_ratios_for_bucket,
     validate_ratios_profile,
 )
+from ._review_projection import ledger_transaction_review_status
 from ._rule_repository import LedgerClassificationRuleRepository
 
 __all__ = [

@@ -8,17 +8,6 @@ from .._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "aeat.domain.normatives._errors.NormativeValidationError",
-        ErrorCode(
-            code="ERROR_NORMATIVES_VALIDATION",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_normatives_validation",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.domain.portals._errors.PortalValidationError",
         ErrorCode(
             code="ERROR_PORTALS_VALIDATION",

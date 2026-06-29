@@ -100,6 +100,7 @@ from ...deadlines.taxpayer_model import (
     IrpfIncomeCategory,
     TaxpayerProfile,
 )
+from ._applicability_labels import PAYER_FACT_INCOMPLETE_LABELS as _PAYER_FACT_INCOMPLETE_LABELS
 from ._applicability_modelo202 import (
     Modelo202Modality,
     Modelo202ModalityVerdict,
@@ -109,6 +110,7 @@ from ._applicability_modelo202 import (
 from ._applicability_payer_facts import PayerFact, payer_fact_holds
 from ._applicability_routes import TAX_ROUTE_FOR_ENTITY_TYPE as _TAX_ROUTE_FOR_ENTITY_TYPE
 from ._applicability_routes import TaxRoute
+from ._ids import ModeloId
 
 _SEED_COVERAGE_NOTICE = (
     "Seed coverage only — the modelos in this table are the core "
@@ -178,7 +180,7 @@ class ModeloApplicability(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: ModeloId
     verdict: ApplicabilityVerdict
     reason: str = Field(min_length=1)
     legal_refs: tuple[str, ...] = Field(min_length=1)
@@ -222,15 +224,14 @@ class ModeloApplicabilityRule(BaseModel):
             modelo applies to. Empty means the modelo does not gate on
             the estimation regime. Non-empty means a natural person
             whose ``irpf_estimation_regime`` is outside the set gets
-            ``NOT_APPLICABLE``. An *undeclared* regime is resolved from
-            the always-definite ``uses_objective_estimation_irpf``
-            boolean (default ``False``): estimación directa is the
-            default IRPF method (LIRPF art. 16; RIRPF art. 32 makes
-            módulos opt-in), so an undeclared regime defaults to directa
-            and an actividad-económica autónomo who has not elected
-            módulos owes Modelo 130. This is the axis that splits Modelo
-            130 (estimación directa) from Modelo 131 (estimación
-            objetiva): the two are mutually exclusive on the regime.
+            ``NOT_APPLICABLE``. An undeclared regime resolves to the
+            direct-estimation default: estimación directa is the default
+            IRPF method (LIRPF art. 16; RIRPF art. 32 makes módulos
+            opt-in), so an actividad-económica autónomo who has not
+            explicitly elected módulos owes Modelo 130. This is the axis
+            that splits Modelo 130 (estimación directa) from Modelo 131
+            (estimación objetiva): the two are mutually exclusive on the
+            regime.
         applicable_fiscal_residencies: The fiscal residency categories
             the modelo applies to. Empty means the modelo does not gate
             on fiscal residency. An undeclared residency is kept on the
@@ -265,7 +266,7 @@ class ModeloApplicabilityRule(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: ModeloId
     applicable_entity_types: frozenset[EntityType] = Field(min_length=1)
     required_income_categories: frozenset[IrpfIncomeCategory] = frozenset()
     required_estimation_regimes: frozenset[IrpfEstimationRegime] = frozenset()
@@ -332,30 +333,13 @@ class ModeloApplicabilityRule(BaseModel):
             # directa) from Modelo 131 (estimación objetiva). A regime
             # outside the rule's set is a positive exclusion.
             #
-            # When the structured ``irpf_estimation_regime`` is undeclared
-            # the engine still resolves the directa-vs-objetiva split from
-            # the always-definite ``uses_objective_estimation_irpf``
-            # boolean (default ``False``, kept in lockstep with the regime
-            # by ``TaxpayerProfile._derive_objective_estimation_flag`` /
-            # ``_check_objective_estimation_consistency``). Estimación
-            # directa is the default IRPF method for actividad-económica
-            # income (LIRPF art. 16; RIRPF RD 439/2007 art. 32 makes
-            # estimación objetiva an opt-in módulos regime that requires
-            # eligibility and non-renuncia): an autónomo who declares
-            # actividad económica but has not elected módulos files under
-            # estimación directa and owes Modelo 130. Reading the boolean
-            # rather than refusing to decide is grounded in that default —
-            # it does not invent profile data, and M130 / M131 stay
-            # mutually exclusive (``False`` ⇒ directa ⇒ M130, ``True`` ⇒
-            # objetiva ⇒ M131).
+            # When ``irpf_estimation_regime`` is undeclared, resolve the
+            # split to the direct-estimation default. Estimación objetiva
+            # is an explicit módulos election; without that enum value the
+            # current profile stays on Modelo 130 rather than a retained
+            # boolean side channel.
             if self.required_estimation_regimes:
-                regime = profile.irpf_estimation_regime
-                if regime is None:
-                    regime = (
-                        IrpfEstimationRegime.OBJETIVA
-                        if profile.uses_objective_estimation_irpf
-                        else IrpfEstimationRegime.DIRECTA_NORMAL
-                    )
+                regime = profile.irpf_estimation_regime or IrpfEstimationRegime.DIRECTA_NORMAL
                 if regime not in self.required_estimation_regimes:
                     return self._not_applicable()
         # The payer-fact axis (Modelo 111 / 115 / 349 / 347) can only be
@@ -460,28 +444,6 @@ _INCOMPLETE_UNDETERMINED_REASON = (
     "hecho se declara positivamente; en otro caso no se conjetura una "
     "obligación."
 )
-_PAYER_FACT_INCOMPLETE_LABELS: dict[PayerFact, str] = {
-    PayerFact.PAYS_WITHHELD_INCOME: "paga retribuciones sujetas a retención",
-    PayerFact.PAYS_RENT_WITH_RETENCION: "paga alquileres sujetos a retención",
-    PayerFact.TRADES_INTRACOMMUNITY: "realiza operaciones intracomunitarias",
-    PayerFact.EXCEEDS_THIRD_PARTY_THRESHOLD: "supera el umbral anual de operaciones con terceras personas",
-    PayerFact.BIENES_EXTRANJERO_ABOVE_THRESHOLD: "posee bienes o derechos en el extranjero por encima del umbral",
-    PayerFact.MONEDAS_VIRTUALES_EXTRANJERO_ABOVE_THRESHOLD: (
-        "posee monedas virtuales situadas en el extranjero por encima del umbral"
-    ),
-}
-"""``INCOMPLETE`` rationale for a *payer fact the profile cannot decide*.
-
-Used by :func:`_undetermined_applicability` when a modelo gates on a
-:class:`PayerFact` (Modelo 111 / 115 / 349 / 347 / 720 / 721) and the profile does
-not positively declare it. The underlying boolean has no tri-state, so
-a ``False`` value is indistinguishable from "not declared" — the engine
-refuses to guess a ``NOT_APPLICABLE`` it cannot positively justify.
-This is structurally distinct from the *undeclared taxpayer model*
-rationale: the entity type and regime can be fully declared and this
-verdict still holds.
-"""
-
 _IMPATRIADO_M720_LEGAL_REFS: tuple[str, ...] = (
     "ley-35-2006:art-93",  # LIRPF Art. 93 — régimen especial impatriados.
     "ley-7-2012:da-1",  # Ley 7/2012 DA 1ª — obligación Modelo 720.
@@ -714,12 +676,11 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
         # verdict.
         cuota_bearing=True,
         # RD 439/2007 art. 110 — pago fraccionado del IRPF, importe y
-        # cálculo; Orden EHA/672/2007 art. 1 — aprobación del Modelo 131
-        # junto con el 130; LIRPF art. 99 — pagos fraccionados como pagos
-        # a cuenta del IRPF.
+        # cálculo; Orden EHA/672/2007 art. 3 — aprobación del Modelo 131;
+        # LIRPF art. 99 — pagos fraccionados como pagos a cuenta del IRPF.
         legal_refs=(
             "rd-439-2007:art-110",
-            "orden-eha-672-2007:art-1",
+            "orden-eha-672-2007:art-3",
             "ley-35-2006:art-99",
         ),
     ),

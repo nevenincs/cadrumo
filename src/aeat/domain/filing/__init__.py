@@ -15,6 +15,24 @@ The orchestration entry points (:func:`aeat.application.filing.build_draft`,
 live at :mod:`aeat.application.filing`: domain records are stable
 boundary-crossing types; the use cases that compose them belong on
 the connector layer.
+
+See Also:
+    :mod:`aeat.application.filing`
+        Application facade that builds, reviews, approves, exports, verifies,
+        imports, and amends these draft records.
+    :class:`ModeloDraft`
+        Registry-backed draft aggregate persisted by
+        :class:`ModeloDraftRepository`.
+    :class:`ModeloValidator`
+        Domain validator used by application review and approval flows.
+    :class:`ModeloAmendmentRepository`
+        Governed AUDIT persistence for complementaria and sustitutiva records.
+    :mod:`aeat.domain.submission`
+        Local-only submitted-state lifecycle that consumes approved draft-like
+        records before any live-write path is refused elsewhere.
+    :mod:`aeat.domain.calculations.registry`
+        Registry snapshot and export-layout authority used to construct and
+        verify draft casilla payloads.
 """
 
 from __future__ import annotations

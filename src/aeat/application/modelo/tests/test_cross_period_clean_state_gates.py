@@ -55,7 +55,7 @@ from ...calculations import (
 )
 from ...user_profile import UserProfileLifecycleRepository
 from .. import create_work_unit, import_external_filing_evidence, verify_modelo_revision
-from .._actions import _cross_period_clean_state_next_action
+from .._verification_actions import _cross_period_clean_state_next_action
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -203,7 +203,7 @@ def _seed_303_cross_period_sources(
         )
         values = _source_values(period, tuple(sorted(source_casilla_ids)))
         if evidence_kind is ExternalEvidenceKind.AEAT_CSV_REGISTER:
-            _seed_legacy_source_filing_record(
+            _seed_source_filing_record_without_import_flow(
                 work_unit=work_unit,
                 casilla_values=values,
                 evidence_kind=evidence_kind,
@@ -248,7 +248,7 @@ def _seed_303_cross_period_sources(
         )
 
 
-def _seed_legacy_source_filing_record(
+def _seed_source_filing_record_without_import_flow(
     *,
     work_unit: WorkUnit,
     casilla_values: dict[CasillaId, Decimal],

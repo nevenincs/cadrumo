@@ -39,6 +39,12 @@ _FORBIDDEN_REMOTE_ACTIONS = frozenset(
         "declaration-submission",
     ],
 )
+_DECLARATION_PROFILE_TARGET_LEGAL_REFS = frozenset(
+    [
+        "orden-hac-2572-2003:apartado-1",
+        "orden-hac-2572-2003:apartado-6",
+    ]
+)
 
 
 def test_committed_modelo_840_validates_against_catalogues() -> None:
@@ -136,3 +142,19 @@ def test_committed_modelo_840_construct_includes_revision_members() -> None:
         assert construct.filing_schedules == tuple(s.id for s in revision.filing_schedules)
         link_surfaces = {link.surface for link in revision.application_links}
         assert {"portal", "filing", "extractor", "verification"} <= link_surfaces, revision.id
+
+
+def test_committed_modelo_840_declaration_pdf_profile_legal_refs_match_target_casillas() -> None:
+    modelo, _ = _load_modelo_840()
+    for revision in modelo.revisions.values():
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+        pdf_profiles = [profile for profile in revision.extraction_profiles if profile.surface == "declaracion_pdf"]
+        assert pdf_profiles, revision.id
+        for profile in pdf_profiles:
+            target_refs = frozenset(
+                legal_ref
+                for target in profile.target_casillas
+                for legal_ref in casillas_by_id[target.casilla_id].legal_refs
+            )
+            assert target_refs == _DECLARATION_PROFILE_TARGET_LEGAL_REFS
+            assert set(profile.legal_refs) == _DECLARATION_PROFILE_TARGET_LEGAL_REFS

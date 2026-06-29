@@ -683,14 +683,12 @@ def test_keyed_bracket_table_rejects_mixed_brackets_and_keyed_brackets() -> None
         )
 
 
-def test_convenio_rate_table_parses_with_mixed_decimal_and_not_yet_authored() -> None:
-    """A convenio_rate_table accepts both parseable Decimal rates and NOT_YET_AUTHORED.
+def test_convenio_rate_table_parses_with_decimal_and_domestic_tariff_rows() -> None:
+    """A convenio_rate_table accepts concrete Decimal rates and DOMESTIC_TARIFF rows.
 
     Anti-tautology: the fixture mixes a concrete 0.10 row with a
-    NOT_YET_AUTHORED row so the assertion proves both pathways
-    persist their declared ``rate`` field literally — i.e. the
-    sentinel is not coerced to None or to a Decimal, and the
-    concrete Decimal row is not coerced to the sentinel.
+    DOMESTIC_TARIFF row so the assertion proves both current pathways
+    persist their declared ``rate`` field literally.
     """
     parameter = ParameterDefinition(
         id="test-convenio-rates",
@@ -698,7 +696,7 @@ def test_convenio_rate_table_parses_with_mixed_decimal_and_not_yet_authored() ->
         unit="ratio",
         convenio_rates=(
             _convenio_row("MA", "interest", "0.10", legal_ref_anchor="convenio-es-ma-art-14"),
-            _convenio_row("AR", "pension", "NOT_YET_AUTHORED", legal_ref_anchor="convenio-es-ar-pending"),
+            _convenio_row("AR", "pension", "DOMESTIC_TARIFF", legal_ref_anchor="convenio-es-ar-art-19"),
         ),
         legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
         source_refs=("aeat-modelo-210-procedure",),
@@ -712,7 +710,7 @@ def test_convenio_rate_table_parses_with_mixed_decimal_and_not_yet_authored() ->
     assert parameter.convenio_rates[0].legal_refs == ("convenio-es-ma-art-14",)
     assert parameter.convenio_rates[1].country_code == "AR"
     assert parameter.convenio_rates[1].tipo_renta == "pension"
-    assert parameter.convenio_rates[1].rate == "NOT_YET_AUTHORED"
+    assert parameter.convenio_rates[1].rate == "DOMESTIC_TARIFF"
 
 
 def test_convenio_rate_table_rejects_duplicate_triple() -> None:
@@ -741,13 +739,12 @@ def test_convenio_rate_table_rejects_duplicate_triple() -> None:
 
 
 def test_convenio_rate_table_rejects_malformed_rate_string() -> None:
-    """A ConvenioRateRow with a rate field that is neither a Decimal nor the sentinel is rejected.
+    """A ConvenioRateRow with a rate field that is neither Decimal nor DOMESTIC_TARIFF is rejected.
 
     Anti-tautology: the fixture uses a clearly-malformed rate
-    (``"not-a-rate"``) that cannot parse as Decimal AND is not the
-    NOT_YET_AUTHORED literal. If the row-level validator silently
-    accepted any string the test would pass without surfacing the
-    parse failure. The expected outcome is ValidationError wrapping
+    (``"not-a-rate"``) that cannot parse as Decimal. If the row-level
+    validator silently accepted any string the test would pass without
+    surfacing the parse failure. The expected outcome is ValidationError wrapping
     the row's RegistryValidationError raised from
     ``_validate_convenio_rate_row``.
     """
@@ -757,6 +754,21 @@ def test_convenio_rate_table_rejects_malformed_rate_string() -> None:
             tipo_renta="interest",
             rate="not-a-rate",
             legal_ref_anchor="convenio-es-ma-art-14",
+            valid_from=date(2025, 1, 1),
+            valid_to=date(2025, 12, 31),
+        )
+
+
+def test_convenio_rate_table_rejects_not_yet_authored_placeholder() -> None:
+    """Convenio rows must be current, not placeholder-authored."""
+
+    with pytest.raises(ValidationError, match="parseable Decimal"):
+        ConvenioRateRow(
+            country_code="AR",
+            tipo_renta="pension",
+            rate="NOT_YET_AUTHORED",
+            legal_ref_anchor="convenio-es-ar-1992:art-19",
+            legal_refs=("convenio-es-ar-1992:art-19",),
             valid_from=date(2025, 1, 1),
             valid_to=date(2025, 12, 31),
         )
@@ -811,16 +823,12 @@ def test_validator_rejects_convenio_rate_row_with_unknown_legal_ref() -> None:
     mutated_row = target_row.model_copy(update={"legal_refs": ("convenio-es-ma-1978:missing-art",)})
     mutated_parameter = parameter.model_copy(
         update={
-            "convenio_rates": tuple(
-                mutated_row if row is target_row else row for row in parameter.convenio_rates
-            ),
+            "convenio_rates": tuple(mutated_row if row is target_row else row for row in parameter.convenio_rates),
         },
     )
     mutated_revision = revision.model_copy(
         update={
-            "parameters": tuple(
-                mutated_parameter if item.id == parameter.id else item for item in revision.parameters
-            ),
+            "parameters": tuple(mutated_parameter if item.id == parameter.id else item for item in revision.parameters),
         },
     )
 

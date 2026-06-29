@@ -4,9 +4,25 @@ This module creates, lists, renames, and discards
 :class:`~aeat.domain.modelos._work_unit.WorkUnit` records in the
 :class:`~aeat.domain.modelos._repository.WorkUnitCatalogueRepository`.
 Each mutating action emits a typed event through
-:class:`BucketEventHistoryRepository`, giving
+:class:`~aeat.domain.buckets.BucketEventHistoryRepository`, giving
 :func:`~aeat.application.modelo._history.assemble_work_unit_history` a complete
 timeline from creation through discard.
+
+The lifecycle layer mutates the work-unit catalogue only. It does not choose
+visible filing targets (see :mod:`aeat.application.modelo._work_addressing`),
+does not decide unsupported-modelo or applicability policy (see
+:mod:`aeat.application.modelo._work_create_policy`), and does not persist
+calculation revisions or filing records. Creation still performs the profile
+readiness and registry revision/period gates before inserting the work unit, so
+programmatic callers observe the same safety boundary as the CLI.
+
+See Also:
+    :mod:`aeat.application.modelo._work_addressing`:
+        Resolves natural or exact operator targets before lifecycle mutation.
+    :mod:`aeat.application.modelo._history`:
+        Reads the emitted bucket events into a chronological work-unit timeline.
+    :mod:`aeat.domain.modelos._calculation_revision`:
+        Defines calculation attempts and current/filed pointers under a work unit.
 """
 
 from __future__ import annotations
@@ -46,7 +62,17 @@ def create_work_unit(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     clock: datetime | None = None,
 ) -> WorkUnit:
-    """Create or load a :class:`WorkUnit` for the filing target key."""
+    """Create or load the :class:`WorkUnit` for an exact filing target key.
+
+    The key is ``bucket_id`` + ``modelo`` + ``filing_year`` + ``period`` +
+    ``revision_id``. The revision id must be known to the bundled registry and
+    the period must be declared for that revision. The active profile must also
+    be ready for the requested modelo work before any record is inserted.
+
+    If the derived work-unit id already exists, the existing record is returned
+    without emitting another creation event. Otherwise a BORRADOR work unit is
+    inserted and a ``MODELO_WORK_UNIT_CREATED`` bucket event is appended.
+    """
     reject_unknown_revision(modelo=modelo, revision_id=revision_id)
     if period.filing_year != filing_year:
         raise WorkUnitMutationRefusedError(
@@ -122,7 +148,12 @@ def list_work_units(
     include_discarded: bool = False,
     repository: WorkUnitCatalogueRepositoryProtocol | None = None,
 ) -> tuple[WorkUnit, ...]:
-    """Return :class:`WorkUnit` records, optionally filtered to one bucket."""
+    """Return :class:`WorkUnit` records, optionally filtered to one bucket.
+
+    Discarded work units are hidden by default so operator-facing discovery sees
+    only active draft roots. Pass ``include_discarded=True`` for audit/history
+    views that need the abandoned records.
+    """
     repo = repository or WorkUnitCatalogueRepository()
     catalogue = repo.load()
     units = tuple(
@@ -149,7 +180,7 @@ def get_work_unit(
     *,
     repository: WorkUnitCatalogueRepositoryProtocol | None = None,
 ) -> WorkUnit:
-    """Return one :class:`WorkUnit` by id."""
+    """Return one :class:`WorkUnit` by id or raise :class:`WorkUnitNotFoundError`."""
     repo = repository or WorkUnitCatalogueRepository()
     catalogue = repo.load()
     unit = catalogue.get(work_unit_id)
@@ -170,7 +201,13 @@ def rename_work_unit(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     clock: datetime | None = None,
 ) -> WorkUnit:
-    """Update a :class:`WorkUnit` display name, bump ``updated_at``, and return the updated record."""
+    """Update a :class:`WorkUnit` display name and emit a rename event.
+
+    Discarded work units are immutable through this lifecycle surface; callers
+    must create a fresh work unit for renewed work on the same filing target.
+    Successful renames preserve the content-addressed work-unit id and update
+    only display metadata plus ``updated_at``.
+    """
     repo = repository or WorkUnitCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     catalogue: WorkUnitCatalogue = repo.load()
@@ -219,7 +256,13 @@ def discard_work_unit(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     clock: datetime | None = None,
 ) -> WorkUnit:
-    """Transition a :class:`WorkUnit` to ``DISCARDED`` state and return the updated record."""
+    """Transition a :class:`WorkUnit` to ``DESCARTADO`` and emit a discard event.
+
+    Discard is a durable state transition, not a physical delete. The work-unit
+    record remains available for history/audit reads, repeated discards refuse
+    with :class:`WorkUnitAlreadyDiscardedError`, and active-listing callers must
+    opt in with ``include_discarded=True`` to see the abandoned root.
+    """
     repo = repository or WorkUnitCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     catalogue: WorkUnitCatalogue = repo.load()

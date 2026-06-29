@@ -29,6 +29,19 @@ live-capture concern.
 The projection reads :class:`CalculationRevision` observations, rewrites the
 affected :class:`CasillaObservation` rows for refunded Modelo 303 filings, and
 persists a :class:`RegistryModeloObservation` record.
+
+See Also:
+    :func:`aeat.application.modelo._revision_persistence.persist_filed_revision`:
+        Calls this projection after the filing catalogue write and
+        ``MODELO_FILED`` event succeed.
+    :func:`aeat.domain.calculations.registry.resolve_previous_filing_binding_values`:
+        Consumes stored :class:`RegistryModeloObservation` rows for
+        ``previous_filing`` bindings during calculation.
+    :mod:`aeat.application.calculations._cross_period_clean_state`:
+        Classifies ``app_filing`` as non-official evidence for filing-grade
+        readiness.
+    :func:`aeat.application.calculations.iva_compensation_state_from_registry_observation`:
+        Projects local Modelo 303 observations into the IVA compensation history.
 """
 
 from __future__ import annotations
@@ -54,9 +67,18 @@ from ..calculations import (
 )
 
 APP_FILING_SOURCE_KIND: Final = "app_filing"
+"""Non-official ``source_kind`` stamped on locally-filed observations.
+
+Deliberately NOT a member of
+``aeat.application.calculations._cross_period_clean_state._OFFICIAL_SOURCE_KINDS``:
+a locally-filed value is not external AEAT evidence and must never satisfy the
+cross-period clean-state filing gate. See ADR
+``2026-06-09-modelo-iva-routing-carry`` ruling D1.
+"""
 
 
 def _casilla_id(value: object) -> CasillaId:
+    """Validate a static filed-observation casilla constant as a :class:`CasillaId`."""
     try:
         return validated_casilla_id(value, surface="filed-revision observation casilla constant")
     except ValueError as exc:
@@ -74,14 +96,6 @@ _M303_POSTERIOR_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-pendie
 #: The per-period generated-credit casilla, zeroed on a refunded period.
 _M303_GENERADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-generada-periodo")
 _ZERO: Final = Decimal("0")
-"""Non-official ``source_kind`` stamped on locally-filed observations.
-
-Deliberately NOT a member of
-``aeat.application.calculations._cross_period_clean_state._OFFICIAL_SOURCE_KINDS``:
-a locally-filed value is not external AEAT evidence and must never satisfy the
-cross-period clean-state filing gate. See ADR
-``2026-06-09-modelo-iva-routing-carry`` ruling D1.
-"""
 
 
 def _refunded_303_observations(
@@ -97,6 +111,11 @@ def _refunded_303_observations(
     casilla is preserved verbatim — including its provenance — so the carried
     observation stays a faithful projection of the filed revision except for the
     one disposition-determined correction.
+
+    The rewrite is applied only to the :class:`CasillaObservation` rows that
+    encode the generated compensation credit. It leaves the filed revision's
+    remaining observations and provenance unchanged so the saved
+    :class:`RegistryModeloObservation` still represents the local filing.
     """
     by_id = {item.casilla_id: item for item in observations}
     posterior = by_id.get(_M303_POSTERIOR_CASILLA)
@@ -113,6 +132,7 @@ def _refunded_303_observations(
 
 
 def _local_iva_history_expediente_id(filing_ref: str) -> str:
+    """Derive the non-AEAT expediente marker stored for local IVA history rows."""
     return f"local-{filing_ref[:26]}"
 
 
@@ -166,6 +186,24 @@ def persist_filed_revision_observation(
     Returns:
         The ``(modelo, filing_year, period)`` observation key string the record
         was stored under.
+
+    The saved :class:`RegistryModeloObservation` feeds later calculations
+    through the registry ``previous_filing`` path, but its
+    ``source_kind = "app_filing"`` keeps it outside official evidence. For
+    locally filed Modelo 303 rows with a taxpayer NIF, the same observation is
+    also converted into an :class:`IvaCompensationPeriodState` via
+    :func:`iva_compensation_state_from_registry_observation` and saved through
+    :class:`IvaCompensationHistoryRepository`; that history is read only by the
+    explicit IVA-wallet recurrence comparison path, not as a second direct owner
+    of the effective casilla 110 value.
+
+    See Also:
+        :class:`CalculationObservationRepository`:
+            Stores the non-official cross-period observation envelope.
+        :class:`IvaCompensationHistoryRepository`:
+            Stores the profile-local Modelo 303 compensation period state.
+        :func:`aeat.application.calculations.extract_modelo_303_local_iva_compensation_recurrence`:
+            Reads the local IVA history for wallet reconciliation.
     """
     observations = revision.observations
     if refunded and work_unit.modelo == Modelo.M303.value:

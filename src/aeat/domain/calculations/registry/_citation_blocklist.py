@@ -7,7 +7,15 @@ from typing import Literal, NamedTuple
 
 from ....core.i18n import Translatable as tr
 
-CitationSource = Literal["ley", "real_decreto", "orden", "reglamento", "manual", "instruction"]
+CitationSource = Literal[
+    "ley",
+    "real_decreto",
+    "real_decreto_legislativo",
+    "orden",
+    "reglamento",
+    "manual",
+    "instruction",
+]
 """Closed set of Spanish-law source types a registry legal citation may reference.
 
 Maps to the ``source`` field on ``legal_refs`` entries in the modelo registry
@@ -15,6 +23,8 @@ TOML authoring tree. Values are lowercase identifiers:
 
 * ``"ley"`` — primary legislation (e.g. LIRPF, LIS, LIVA).
 * ``"real_decreto"`` — Royal Decree (e.g. RIRPF, RIS).
+* ``"real_decreto_legislativo"`` — consolidated legislative text
+  approved by royal legislative decree (e.g. TRLIRNR).
 * ``"orden"`` — Ministerial Order (HAC/EHA prefixes).
 * ``"reglamento"`` — secondary regulation.
 * ``"manual"`` — AEAT published guidance manual.
@@ -136,6 +146,11 @@ _KNOWN_BAD_CITATIONS: tuple[KnownBadCitation, ...] = (
 )
 
 
+def known_bad_citations() -> tuple[KnownBadCitation, ...]:
+    """Return the reviewed :class:`KnownBadCitation` guardrail entries."""
+    return _KNOWN_BAD_CITATIONS
+
+
 def find_known_bad(source: CitationSource, article: str, role_text: str) -> KnownBadCitation | None:
     """Return the first blocklist entry that matches the supplied citation, or ``None``.
 
@@ -160,4 +175,4 @@ def find_known_bad(source: CitationSource, article: str, role_text: str) -> Know
     return None
 
 
-__all__ = ["CitationSource", "KnownBadCitation", "find_known_bad"]
+__all__ = ["CitationSource", "KnownBadCitation", "find_known_bad", "known_bad_citations"]

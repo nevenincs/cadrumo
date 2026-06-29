@@ -105,63 +105,45 @@ class TestTaxpayerModelRoundTrip:
             ),
         )
 
-    def test_objetiva_regime_round_trips_with_derived_objective_boolean(self) -> None:
-        """An OBJETIVA regime derives uses_objective_estimation_irpf and survives."""
+    def test_objetiva_regime_round_trips_as_structured_axis(self) -> None:
+        """An OBJETIVA regime survives without a derived boolean side channel."""
 
         original = TaxpayerProfile(
             tax_id="X1234567L",
             iva_regime=IVARegime.SIMPLIFICADO,
             irpf_estimation_regime=IrpfEstimationRegime.OBJETIVA,
         )
-        assert original.uses_objective_estimation_irpf is True
         restored = TaxpayerProfile.model_validate_json(original.model_dump_json())
         assert restored == original
-        assert restored.uses_objective_estimation_irpf is True
         assert restored.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
 
 
-class TestObjectiveEstimationConsistency:
-    """The legacy objective-estimation boolean stays in lockstep with the regime."""
+class TestObjectiveEstimationRegimeAxis:
+    """Objective estimation is represented by the structured regime axis only."""
 
-    def test_objetiva_regime_forces_objective_boolean_true(self) -> None:
+    def test_objetiva_regime_is_the_current_objective_estimation_signal(self) -> None:
         profile = TaxpayerProfile(
             tax_id="X1234567L",
             iva_regime=IVARegime.GENERAL,
             irpf_estimation_regime=IrpfEstimationRegime.OBJETIVA,
         )
-        assert profile.uses_objective_estimation_irpf is True
+        assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
 
-    def test_directa_regime_keeps_objective_boolean_false(self) -> None:
+    def test_directa_regime_is_not_objective_estimation(self) -> None:
         profile = TaxpayerProfile(
             tax_id="X1234567L",
             iva_regime=IVARegime.GENERAL,
             irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
         )
-        assert profile.uses_objective_estimation_irpf is False
+        assert profile.irpf_estimation_regime is IrpfEstimationRegime.DIRECTA_NORMAL
 
-    def test_undeclared_regime_leaves_legacy_boolean_untouched(self) -> None:
-        """An undeclared regime keeps an explicit legacy boolean working.
+    def test_old_objective_estimation_boolean_is_rejected(self) -> None:
+        """The retired objective-estimation boolean is no longer a profile input."""
 
-        Existing profiles that set only uses_objective_estimation_irpf
-        must keep resolving until the engine reads the enum directly.
-        """
-
-        profile = TaxpayerProfile(
-            tax_id="X1234567L",
-            iva_regime=IVARegime.GENERAL,
-            uses_objective_estimation_irpf=True,
-        )
-        assert profile.irpf_estimation_regime is None
-        assert profile.uses_objective_estimation_irpf is True
-
-    def test_contradictory_regime_and_boolean_are_rejected(self) -> None:
-        """A non-objective regime with a True objective boolean is rejected."""
-
-        with pytest.raises(ValidationError, match=r"contradicts uses_objective_estimation"):
+        with pytest.raises(ValidationError, match=r"uses_objective_estimation_irpf"):
             TaxpayerProfile(
                 tax_id="X1234567L",
                 iva_regime=IVARegime.GENERAL,
-                irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
                 uses_objective_estimation_irpf=True,
             )
 

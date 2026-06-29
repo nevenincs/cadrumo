@@ -61,7 +61,6 @@ from .. import (
 )
 from .._action_errors import ModeloRefundAccountMissingError
 from .._result_disposition_resolution import resolve_modelo_result_disposition
-from ._file_flow_support import _seed_clean_cross_period_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -102,6 +101,14 @@ def _store_operator_profile(*, created_at: datetime) -> None:
                 UserProfileFact(path="identity.tax_id", value=_TAX_ID),
                 UserProfileFact(path="identity.surnames", value="Garcia Lopez"),
                 UserProfileFact(path="identity.name", value="Juan"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="censo.activity_start_date", value=date(_YEAR, 4, 1)),
             ),
             created_at=created_at,
             updated_at=created_at,
@@ -123,6 +130,7 @@ def _redeme_profile_without_refund_account() -> TaxpayerProfile:
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
+        activity_start_date=date(_YEAR, 4, 1),
         iva=ModeloIVAProfile(redeme_enrolled=True, refund_account=None),
     )
 
@@ -181,13 +189,6 @@ def _calculate_verified_negative_period() -> str:
     # The engine produced a genuine negative result (anti-tautology anchor).
     assert revision.casilla_values[_M303_RESULTADO_CASILLA] < Decimal("0")
 
-    _seed_clean_cross_period_sources(
-        work_unit,
-        work_unit_repository=work_repo,
-        calculation_repository=calc_repo,
-        filing_repository=filing_repo,
-        bucket_event_repository=event_repo,
-    )
     verification = verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator",

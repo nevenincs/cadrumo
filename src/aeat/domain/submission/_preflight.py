@@ -4,6 +4,16 @@
 :class:`aeat.domain.submission._protocols.ModeloDraftLike` before any
 browser work begins. Every failure raises
 :class:`SubmissionPreflightError`; the happy path is silent.
+
+See Also:
+    :class:`~aeat.domain.submission.SubmissionEngine`
+        Public read-only engine that owns this preflight runner.
+    :class:`~aeat.domain.submission.DeadlineWindowChecker`
+        Gate-3 protocol used only when the caller has not skipped the filing
+        window check.
+    :class:`~aeat.application.workflow.WorkflowPurpose`
+        Application policy input that decides whether workflow callers pass
+        ``skip_deadline_window`` for local verification or filing.
 """
 
 from __future__ import annotations
@@ -119,12 +129,12 @@ class Preflight:
             draft: The :class:`ModeloDraftLike` to validate.
             today: Reference date for the deadline-window gate.
             skip_deadline_window: When ``True``, gate 3 (the AEAT
-                filing-window check) is skipped. Verification of a
-                calculation is independent of the filing calendar (see
-                the work-verify deadline-independence ADR): the verify
-                path runs gates 1, 2, and 4 to confirm the draft is
-                sound but must not refuse because the filing window is
-                closed or absent. Filing always runs gate 3.
+                filing-window check) is skipped. Workflow callers use
+                this for local VERIFY and local FILE purposes: gates 1,
+                2, and 4 still confirm draft soundness and auth-provider
+                readiness, while the redundant AEAT submission-window
+                check remains disabled for paths that do not submit to
+                AEAT.
 
         Raises:
             SubmissionPreflightError: If any gate fails. The exception

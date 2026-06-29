@@ -62,14 +62,12 @@ def test_declared_registry_sources_are_a_subset_of_the_enum() -> None:
 # resolver routing) but are not yet declared by any compiled registry binding.
 # These are the source-kind analogue of ``NON_REGISTRY_MODELOS``: each is fenced
 # as out-of-scope-but-tracked by the binding-source-kind taxonomy design
-# (``payable_invoice`` declared by no registry binding; the
-# ``PurchaseInvoiceEvidenceSourceResolver`` data-shape blocker; the
+# (the ``PurchaseInvoiceEvidenceSourceResolver`` data-shape blocker and the
 # counterpart-shaped ``ledger_transaction`` source). A member dropping off this
 # set without gaining a registry declaration is a genuine orphan and fails the
 # gate below.
 _RESERVED_UNDECLARED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
     {
-        BindingSourceKind.PAYABLE_INVOICE,
         BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
         BindingSourceKind.LEDGER_TRANSACTION,
     },

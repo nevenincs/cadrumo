@@ -1,21 +1,29 @@
-"""Strict records describing a Google Sheets workbook produced from a registry snapshot.
+"""Strict records describing workbook plans produced from registry snapshots.
 
 Every record is a frozen pydantic v2 model with `extra="forbid"` so that
 schema drift surfaces as validation failures at the moment the engine
 assembles the plan rather than as silent payload divergence at the
-Sheets API. The records are intentionally narrow: the engine produces
-them, the apply adapter consumes them, and the pull adapter compares
-incoming Sheet cell values back against them.
+renderer boundary. The records are intentionally narrow: the engine produces
+them, the Google apply adapter and offline XLSX materializer consume them, and
+the pull/parity adapters compare incoming workbook cell values back against the
+same plan.
 
 A1 addressing
 -------------
 
-Sheets cell addresses are expressed by the `SheetCellAddress` record
+Workbook cell addresses are expressed by the `SheetCellAddress` record
 which carries the human-readable A1 string plus the structured tab
 name, row index, and column index. Row and column indices are 1-based
-to match Sheets' convention. The `a1` string is recomputed from the
+to match Sheets/openpyxl convention. The `a1` string is recomputed from the
 tab + row + column at construction time, so callers never hand-roll
 A1 strings — they always go through this record.
+
+See Also:
+    :class:`aeat.domain.calculations.registry.RegistrySnapshot`
+        Registry snapshot compiled into these records by the engine.
+    :class:`SheetEvidenceFacet`
+        Evidence facet carried by the plan and rendered by both workbook
+        export paths.
 """
 
 from __future__ import annotations
@@ -526,7 +534,12 @@ class SheetEvidenceManualEntry(BaseModel):
 
 
 class SheetEvidenceFacet(BaseModel):
-    """Evidence rows attached to a workbook export plan."""
+    """Evidence rows attached to a workbook export plan.
+
+    Contributor rows carry ledger-derived transaction facts by casilla; manual
+    entries carry non-ledger fact basis values. The offline serializer writes
+    this facet to both the Evidencia worksheet and the adjacent JSON sidecar.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -742,7 +755,13 @@ class SheetExportMetadata(BaseModel):
 
 
 class SheetExportPlan(BaseModel):
-    """Complete description of the workbook the apply adapter will write."""
+    """Complete description of the workbook every renderer will write.
+
+    The plan is the shared contract between the registry-backed engine, Google
+    Sheets apply adapter, offline XLSX materializer, pull adapter, and parity
+    harness. It includes calculation cells, protected ranges, display facets,
+    registry metadata, relation provenance, row sets, and workbook evidence.
+    """
 
     model_config = _STRICT_FROZEN
 

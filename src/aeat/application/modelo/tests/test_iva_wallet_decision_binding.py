@@ -11,7 +11,12 @@ from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import BindingId, CasillaId, validated_casilla_id
 from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
-from .._actions import ModeloIvaWalletReconciliationBlocked, _apply_iva_compensation_decision_binding
+from .._iva_wallet_gate import (
+    ModeloIvaWalletReconciliationBlocked,
+)
+from .._iva_wallet_gate import (
+    apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

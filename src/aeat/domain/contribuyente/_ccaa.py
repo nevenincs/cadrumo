@@ -18,11 +18,11 @@ table keys in ``registry/aeat/modelos/100/revisions/2025.toml`` are
 deliberately written to match these values so no translation is
 required at the binding-resolution boundary.
 
-Legacy ISO-code alias
-~~~~~~~~~~~~~~~~~~~~~
+Retired ISO-code Mapping
+~~~~~~~~~~~~~~~~~~~~~~~~
 :meth:`CCAA.from_iso_code` maps the 3-letter codes that were used by
 the now-deleted ``RentaCCAA`` enum (``AND`` → ``ANDALUCIA``, etc.) for
-any call site or fixture that still carries those codes.
+call sites that still need to translate those retired codes.
 """
 
 from __future__ import annotations

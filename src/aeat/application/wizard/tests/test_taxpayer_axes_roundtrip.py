@@ -156,12 +156,8 @@ class TestTaxpayerProfileProjection:
         assert profile.cross_period_group_member_rosters[0].member_nifs == ("C00000002", "D00000003")
         assert profile.cross_period_group_member_rosters[1].member_nifs == ("A00000000", "B00000001")
 
-    def test_objetiva_regime_derives_objective_estimation_boolean(self) -> None:
-        """The projection keeps uses_objective_estimation_irpf consistent.
-
-        An OBJETIVA estimation regime from the wizard must derive the
-        legacy boolean the registry schedule predicates still test.
-        """
+    def test_objetiva_regime_projects_structured_axis(self) -> None:
+        """The wizard projects objective estimation through the enum axis."""
 
         profile = taxpayer_profile_from_mapping(
             {
@@ -172,7 +168,6 @@ class TestTaxpayerProfileProjection:
             tax_id_default="00000000T",
         )
         assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
-        assert profile.uses_objective_estimation_irpf is True
 
     def test_undeclared_axes_project_to_safe_empty_defaults(self) -> None:
         """A profile with no taxpayer-axis facts projects to undeclared.

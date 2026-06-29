@@ -16,7 +16,6 @@ from .iva_rate_tables import IvaRateTableRepository
 from .legal_parameters import LegalParameterRepository
 from .manuals import ManualKey, ManualRepository
 from .modelos import StaticModeloRepository
-from .normatives import NormativeRepository
 from .recargo_bands import RecargoBandsRepository
 from .topics import TopicCatalogueRepository
 from .user_profile import UserProfileSchemaRepository
@@ -30,7 +29,6 @@ __all__ = [
     "LegalParameterRepository",
     "ManualKey",
     "ManualRepository",
-    "NormativeRepository",
     "RecargoBandsRepository",
     "StaticModeloRepository",
     "TopicCatalogueRepository",

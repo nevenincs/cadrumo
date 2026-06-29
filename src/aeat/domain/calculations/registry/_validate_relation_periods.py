@@ -7,42 +7,34 @@ target relation window.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 
-from ._schema import ModeloDefinition, ModeloRevision, PeriodSelector
+from ._schema import ModeloDefinition, ModeloRevision, PeriodSelector, RelationRevisionSelector
 
 
 def select_relation_source_revisions(
     modelo: ModeloDefinition,
-    selector: Mapping[str, str | int],
+    selector: RelationRevisionSelector,
 ) -> tuple[tuple[ModeloRevision, ...], list[str]]:
-    failures = _validate_relation_source_selector_keys(selector)
-    revision_id = selector.get("revision_id", selector.get("revision"))
-    year = selector.get("year")
-    year_from = selector.get("year_from")
-    year_to = selector.get("year_to")
     selected = tuple(
         revision
         for revision in modelo.revisions.values()
         if _relation_source_revision_matches(
             revision,
-            revision_id=revision_id if isinstance(revision_id, str) else None,
-            year=year if isinstance(year, int) else None,
-            year_from=year_from if isinstance(year_from, int) else None,
-            year_to=year_to if isinstance(year_to, int) else None,
+            year=selector.year,
+            year_from=selector.year_from,
+            year_to=selector.year_to,
         )
     )
-    return selected, failures
+    return selected, []
 
 
-def relation_filing_year_delta(selector: Mapping[str, str | int]) -> int:
-    delta = 0 if "year" in selector else selector.get("filing_year_delta", 0)
-    return delta if isinstance(delta, int) else 0
+def relation_filing_year_delta(selector: RelationRevisionSelector) -> int:
+    return selector.filing_year_delta or 0
 
 
-def relation_fixed_source_year(selector: Mapping[str, str | int]) -> int | None:
-    year = selector.get("year")
-    return year if isinstance(year, int) else None
+def relation_fixed_source_year(selector: RelationRevisionSelector) -> int | None:
+    return selector.year
 
 
 def validate_source_year_coverage(
@@ -103,42 +95,13 @@ def period_selectors_overlap(left: PeriodSelector, right: PeriodSelector) -> boo
     return _year_selectors_overlap(left, right)
 
 
-def _validate_relation_source_selector_keys(selector: Mapping[str, str | int]) -> list[str]:
-    """Return every shape failure on the relation source-revision selector dict."""
-    allowed = {"revision", "revision_id", "year", "year_from", "year_to", "filing_year_delta"}
-    failures = [f"selector uses unknown key {key!r}" for key in sorted(set(selector).difference(allowed))]
-    revision_id = selector.get("revision_id", selector.get("revision"))
-    if revision_id is not None and not isinstance(revision_id, str):
-        failures.append("selector revision_id must be a string")
-    for key in ("year", "year_from", "year_to"):
-        value = selector.get(key)
-        if value is not None and not isinstance(value, int):
-            failures.append(f"selector {key} must be an integer")
-    delta = selector.get("filing_year_delta")
-    if delta is not None and not isinstance(delta, int):
-        failures.append("selector filing_year_delta must be an integer")
-    year = selector.get("year")
-    year_from = selector.get("year_from")
-    year_to = selector.get("year_to")
-    if year is not None and (year_from is not None or year_to is not None):
-        failures.append("selector must use year or year_from/year_to, not both")
-    if year_to is not None and year_from is None:
-        failures.append("selector year_to requires year_from")
-    if isinstance(year_from, int) and isinstance(year_to, int) and year_to < year_from:
-        failures.append("selector year_to must be on or after year_from")
-    return failures
-
-
 def _relation_source_revision_matches(
     revision: ModeloRevision,
     *,
-    revision_id: str | None,
     year: int | None,
     year_from: int | None,
     year_to: int | None,
 ) -> bool:
-    if revision_id is not None and revision.id != revision_id:
-        return False
     if year is not None and not revision.period_selector.includes_year(year):
         return False
     return year_from is None or _revision_intersects_year_range(
@@ -182,9 +145,8 @@ def _revision_intersects_year_range(
     year_to: int | None,
 ) -> bool:
     if revision.period_selector.years:
-        return any(
-            year >= year_from and (year_to is None or year <= year_to) for year in revision.period_selector.years
-        )
+        years = revision.period_selector.years
+        return any(year >= year_from and (year_to is None or year <= year_to) for year in years)
     revision_from = revision.period_selector.year_from
     if revision_from is None:
         return False
@@ -201,12 +163,10 @@ def _year_selectors_overlap(left: PeriodSelector, right: PeriodSelector) -> bool
         return any(right.includes_year(year) for year in left.years)
     if right.years:
         return any(left.includes_year(year) for year in right.years)
-    left_from = left.year_from
-    right_from = right.year_from
+    left_from, right_from = left.year_from, right.year_from
     if left_from is None or right_from is None:
         return False
-    left_to = left.year_to
-    right_to = right.year_to
+    left_to, right_to = left.year_to, right.year_to
     if left_to is not None and left_to < right_from:
         return False
     return not (right_to is not None and right_to < left_from)

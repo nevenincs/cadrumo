@@ -47,6 +47,7 @@ def test_classification_result_stamps_exemption_article_when_domestic_exempt() -
         IvaCategory.DOMESTIC_REDUCED_10,
         IvaCategory.INTRA_COMMUNITY_SUPPLY,
         IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
         IvaCategory.OPERACION_NO_SUJETA,
     ],
 )

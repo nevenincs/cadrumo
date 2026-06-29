@@ -190,14 +190,9 @@ class ConvenioRateRow(RegistryModel):
     helper authored in S389b.
 
     The ``rate`` field is a string carrying a parseable Decimal (e.g.
-    ``"0.10"``), the literal ``"DOMESTIC_TARIFF"`` for treaties that
-    allocate taxation to Spain while leaving the TRLIRNR tariff to
-    compute the amount, or the literal ``"NOT_YET_AUTHORED"`` sentinel
-    that triggers a BLOCKING finding at lookup time. The sentinel
-    allows the parameter to carry a placeholder row for a country +
-    tipo_renta combination whose Convenio article number is known
-    but whose rate has not been corpus-verified yet, without
-    deferring the entire row to a follow-up Step.
+    ``"0.10"``), or the literal ``"DOMESTIC_TARIFF"`` for treaties
+    that allocate taxation to Spain while leaving the TRLIRNR tariff to
+    compute the amount.
 
     First consumer: M210 IRNR Phase 1 ``m210-convenio-rates`` per
     the m210-irnr-full-engine ADR §D2.4.
@@ -219,22 +214,21 @@ class ConvenioRateRow(RegistryModel):
         # The rate field is either a symbolic M210 value or a parseable
         # Decimal string. Parsing here surfaces malformed values at
         # construction time rather than at lookup time.
-        if self.rate != "NOT_YET_AUTHORED":
-            if self.rate == "DOMESTIC_TARIFF":
-                if not self.legal_refs:
-                    raise RegistryValidationError("convenio_rate_row DOMESTIC_TARIFF rows must declare legal_refs")
-                self._validate_authored_legal_anchor()
-                return self
-            try:
-                Decimal(self.rate)
-            except (ArithmeticError, ValueError) as exc:
-                raise RegistryValidationError(
-                    "convenio_rate_row rate must be a parseable Decimal, "
-                    f"'DOMESTIC_TARIFF', or 'NOT_YET_AUTHORED'; got {self.rate!r}",
-                ) from exc
+        if self.rate == "DOMESTIC_TARIFF":
             if not self.legal_refs:
-                raise RegistryValidationError("convenio_rate_row concrete rates must declare legal_refs")
+                raise RegistryValidationError("convenio_rate_row DOMESTIC_TARIFF rows must declare legal_refs")
             self._validate_authored_legal_anchor()
+            return self
+        try:
+            Decimal(self.rate)
+        except (ArithmeticError, ValueError) as exc:
+            raise RegistryValidationError(
+                "convenio_rate_row rate must be a parseable Decimal "
+                f"or 'DOMESTIC_TARIFF'; got {self.rate!r}",
+            ) from exc
+        if not self.legal_refs:
+            raise RegistryValidationError("convenio_rate_row concrete rates must declare legal_refs")
+        self._validate_authored_legal_anchor()
         return self
 
     def _validate_authored_legal_anchor(self) -> None:

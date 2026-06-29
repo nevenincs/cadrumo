@@ -163,9 +163,10 @@ class RetencionObservationRepository(SecureBoundRepository[_RetencionObservation
         DROPPED a perceptor must not leave the stale row behind — otherwise the
         next calculate's distinct count is inflated by a perceptor no longer
         declared (a silent over-count, the inverse of the bug RET-1 fixes). An
-        empty ``observations`` clears the window (the operator declared none); the
-        P02 resolver surfaces a no-silent advisory when it then reads empty on
-        positive activity.
+        empty ``observations`` clears the window (the operator declared none);
+        the P02 resolver raises a no-silent
+        :class:`~._errors.AggregationValidationError` when a declaring revision
+        then reads an empty store, before a zero perceptor count can be filed.
         """
         safe_repository_id(modelo, context="modelo")
         when = captured_at if captured_at is not None else now()
@@ -196,8 +197,8 @@ class RetencionObservationRepository(SecureBoundRepository[_RetencionObservation
 
         The calc-mesh perceptor-count resolver (P02) folds these through the
         validated distinct-count primitive. An empty tuple means no per-perceptor
-        records were persisted for the window — the resolver MUST surface a
-        no-silent advisory rather than materialising a zero count.
+        records were persisted for the window — the resolver MUST fail loudly
+        rather than materialising a zero count.
 
         Returns:
             Persisted :class:`RetencionObservation` records for the requested window.
@@ -231,7 +232,7 @@ def persist_retencion_observations(
 
     Factoring the persist behind a single application helper makes store
     completeness STRUCTURAL rather than per-entrypoint discipline a future
-    producer could forget (an unwritten producer → an incomplete store → the exact
+    producer could forget (an unwritten producer -> an incomplete store -> the exact
     pull≠calculate divergence RET-1 fixes). Writes to the active bucket's encrypted
     store with SET-REPLACE semantics so pull and calculate read one source.
     aggregate_per_modelo stays pure — persistence is the entrypoint's job, not the

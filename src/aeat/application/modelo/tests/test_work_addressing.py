@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos._calculation_repository import (
@@ -22,8 +23,10 @@ from ....domain.modelos._calculation_revision import (
 )
 from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ....domain.modelos._work_unit import WorkUnit
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
+from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     ModeloCalculationRevisionSelector,
     ModeloExactWorkUnitTarget,
@@ -38,6 +41,31 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _T0 = datetime(2026, 6, 5, 9, 0, 0, tzinfo=UTC)
+_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
+    UserProfileFact(path="identity.tax_id", value="00000000T"),
+    UserProfileFact(path="identity.name", value="Test Operator"),
+    UserProfileFact(path="identity.surnames", value="Modelo Work"),
+    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="activities.description", value="economic activity"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="provenance.source", value="test_fixture"),
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+)
+
+
+def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
+    UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name="Modelo work addressing profile",
+            facts=_READY_PROFILE_FACTS,
+            created_at=_T0,
+            updated_at=_T0,
+        ),
+    )
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -57,6 +85,7 @@ def addressing_repos(
     """Yield real repositories over one isolated runtime profile."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="modelo-addressing-test") as profile:
         objects = profile.repository
+        _seed_ready_profile(objects, bucket_id=profile.bucket_id)
         yield (
             profile.bucket_id,
             WorkUnitCatalogueRepository(objects=objects),

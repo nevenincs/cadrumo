@@ -321,7 +321,7 @@ class CalculationRevision(BaseModel):
     observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
     # Immutable content-addressed snapshot of the ledger state this revision was
     # computed from (per the modelo-filing-ledger-snapshot ADR). Captured at
-    # verify/file time over ``source_transaction_ids``; ``None`` for legacy
+    # verify/file time over ``source_transaction_ids``; ``None`` for unsnapshotted
     # revisions and for borradores not yet snapshotted. Deliberately NOT threaded
     # into ``derive_calculation_revision_id`` so the content-addressed id is
     # unaffected. A non-ledger modelo carries an empty-but-valid snapshot.
@@ -332,8 +332,8 @@ class CalculationRevision(BaseModel):
     # snapshot's ``snapshot_fingerprint``. Where ``ledger_filing_snapshot`` proves
     # *whether* the ledger drifted, this carries *what the ledger said* so the
     # fact basis can be reconstituted and exported as filing evidence. Captured at
-    # verify/file time; ``None`` for legacy revisions. Deliberately NOT threaded
-    # into ``derive_calculation_revision_id``.
+    # verify/file time; ``None`` for revisions without ledger evidence. Deliberately
+    # NOT threaded into ``derive_calculation_revision_id``.
     ledger_filing_evidence: LedgerFilingEvidence | None = None
     # Operator-supplied detail rows for informational modelos whose
     # content is a list of repeating records rather than scalar casilla
@@ -384,7 +384,7 @@ class CalculationRevision(BaseModel):
         # The typed `observations` envelope is the logical source of truth;
         # the flat `casilla_values` field is a denormalised cache enforced
         # equal to the projection of observations. A non-empty flat map
-        # without observations is an incomplete revision, not a legacy shape
+        # without observations is an incomplete revision, not a shape
         # to tolerate in this unreleased project.
         if self.casilla_values and not self.observations:
             raise ModeloValidationError(

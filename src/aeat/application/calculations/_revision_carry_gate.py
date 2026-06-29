@@ -34,7 +34,7 @@ def revision_carry_outcome(
 
     ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2:
 
-    - Missing stamp (legacy record) → ``(False, True)``: carry proceeds, advisory set.
+    - Missing stamp (unstamped record) → ``(False, True)``: carry proceeds, advisory set.
     - Indeterminate (source context fails to resolve) → ``(False, True)``: carry
       proceeds, but the stamp could not be re-confirmed so the advisory MUST be set
       rather than carrying silently clean.
@@ -44,7 +44,7 @@ def revision_carry_outcome(
 
     Args:
         stamped_revision_id: The revision the source filing was stamped with, or
-            ``None`` for a legacy record that carries no stamp.
+            ``None`` for a record that carries no stamp.
         source_modelo: The carried observation's source modelo id.
         source_filing_year: The source filing year.
         source_period: The source period as the bare registry token

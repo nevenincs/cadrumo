@@ -199,14 +199,14 @@ def test_verify_declaracion_uses_modelo_123_historical_registry_snapshot() -> No
         period="1T",
         ejercicio="2023",
         values=(
-            ("01-legacy", Decimal("2")),
-            ("02-legacy", Decimal("1000.25")),
-            ("03-legacy", Decimal("190.05")),
-            ("04-legacy", Decimal("0")),
-            ("05-legacy", Decimal("7.50")),
-            ("06-legacy", Decimal("197.55")),
-            ("07-legacy", Decimal("12.25")),
-            ("08-legacy", Decimal("185.30")),
+            ("01", Decimal("2")),
+            ("02", Decimal("1000.25")),
+            ("03", Decimal("190.05")),
+            ("04", Decimal("0")),
+            ("05", Decimal("7.50")),
+            ("06", Decimal("197.55")),
+            ("07", Decimal("12.25")),
+            ("08", Decimal("185.30")),
         ),
     )
 

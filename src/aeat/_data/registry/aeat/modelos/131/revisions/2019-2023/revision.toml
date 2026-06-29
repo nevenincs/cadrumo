@@ -4,10 +4,10 @@ label = "Ejercicios 2019 a 2023"
 valid_from = 2019-01-01
 valid_to = 2023-12-31
 period_selector = { year_from = 2019, year_to = 2023, periods = ["1T", "2T", "3T", "4T"] }
-orden_aplicabilidad = ["orden-eha-672-2007:art-1"]
+orden_aplicabilidad = ["orden-eha-672-2007:art-3"]
 legal_refs = [
     "rd-439-2007:art-110",
-    "orden-eha-672-2007:art-1",
+    "orden-eha-672-2007:art-3",
     "orden-hac-1264-2018:art-4",
     "orden-hac-1164-2019:art-4",
     "orden-hac-1155-2020:art-4",

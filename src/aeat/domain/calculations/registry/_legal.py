@@ -13,6 +13,7 @@ from ._text import normalise_corpus_text
 _SOURCE_BY_KIND: dict[str, CitationSource] = {
     "ley": "ley",
     "real_decreto": "reglamento",
+    "real_decreto_legislativo": "real_decreto_legislativo",
     "real_decreto_ley": "reglamento",
     "orden": "orden",
     "reglamento": "reglamento",

@@ -4,6 +4,19 @@ Filed Sede rows are promoted to registry-grounded :class:`CasillaObservation`
 records, matching :class:`ModeloRecord` filings are stamped with justificante
 evidence, and the enrolment is appended through
 :class:`BucketEventHistoryRepository`.
+
+The module treats AEAT live captures as official external evidence only after
+the captured justificante matches the filed observation and an existing current
+:class:`ModeloRecord`. It never creates the filing record itself and refuses to
+overwrite conflicting :class:`ExternalEvidence`.
+
+See Also:
+    :class:`aeat.domain.modelos.ExternalEvidenceKind`
+        Closed evidence-kind catalogue; live captures stamp
+        ``AEAT_LIVE_CAPTURE``.
+    :class:`aeat.application.calculations.CalculationObservationRepository`
+        Repository that receives the registry-grounded filed-declaration
+        observations consumed by cross-period resolvers.
 """
 
 from __future__ import annotations
@@ -101,7 +114,12 @@ def persist_filed_calculation_observation(
     repository: CalculationObservationRepository | None = None,
     justificante_csvs: tuple[str, ...] = (),
 ) -> str:
-    """Promote one AEAT filed-declaration observation into calculation history."""
+    """Promote one AEAT filed-declaration observation into calculation history.
+
+    The persisted row is a registry-grounded
+    :class:`aeat.domain.calculations.registry.RegistryModeloObservation`
+    stamped with the law-selected registry revision when it can be resolved.
+    """
     if not _is_active_filed_observation(observation):
         raise LiveApplicationInputError(
             f"refusing to persist non-active AEAT filed observation "
@@ -196,6 +214,11 @@ def enroll_filed_justificante_evidence(
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
 ) -> FiledJustificanteEnrollmentResult:
     """Persist matching justificante metadata and stamp matching current filings.
+
+    A filing is stamped only when the parsed :class:`Justificante` matches the
+    observation, the authenticated identity, and the current
+    :class:`ModeloRecord`. Existing matching evidence is accepted idempotently;
+    conflicting evidence is reported rather than overwritten.
 
     Returns:
         A :class:`FiledJustificanteEnrollmentResult` of saved CSVs and stamped

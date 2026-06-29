@@ -15,7 +15,15 @@ entries use ``reconciliation_total_casilla_ids`` for result-to-pay /
 result-to-refund casillas and ``computed_casilla_ids`` for the modelo's
 key computed outputs.
 
+This is a presentation summary only. It does not derive the fichero
+``Tipo de declaración`` result disposition, apply Modelo 303 refund elections,
+or decide cross-period carry-forward; that single determined fact belongs to
+:func:`aeat.application.modelo.resolve_modelo_result_disposition`.
+
 See Also:
+    :func:`aeat.application.modelo.resolve_modelo_result_disposition`
+        Determines the filed result disposition that export and carry-forward
+        persistence read.
     :func:`aeat.application.filing.summarise_calculation`
         Draft-calculation summary surface for filing workflows; this module
         handles persisted modelo revisions instead.
@@ -88,7 +96,7 @@ def calculation_result_summary(
     *,
     work_unit_resolver: Callable[[str], WorkUnit] = get_work_unit,
 ) -> CalculationResultSummary | None:
-    """Return the registry-derived headline summary for ``revision``, if available.
+    """Return the :class:`CalculationResultSummary` for ``revision``, if available.
 
     ``revision`` is the persisted :class:`CalculationRevision` attempt and
     provides ``casilla_values``. The function resolves its parent

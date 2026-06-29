@@ -1,5 +1,9 @@
 """Strict Pydantic records for the backend-owned operator surface contract.
 
+The records describe accepted roots, help documents, mounted command
+families, parser-only :class:`BindingSourceKind` aliases, service owners, log
+fields, and the aggregate :class:`OperatorSurfaceContract`.
+
 S538 invariant-guard classification note
 -----------------------------------------
 All :class:`ValueError` raises in this module appear inside Pydantic v2
@@ -165,7 +169,7 @@ class LifecycleContract(BaseModel):
 
 
 class SourceKindAlias(BaseModel):
-    """Input-only alias mapped to a canonical source kind."""
+    """Input-only alias mapped to a canonical :class:`BindingSourceKind`."""
 
     model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -234,7 +238,7 @@ class OperatorSurfaceLogFields(BaseModel):
 
 
 class OperatorSurfaceContract(BaseModel):
-    """Complete backend-owned contract consumed by future CLI adapters."""
+    """Complete backend-owned contract consumed by CLI adapters."""
 
     model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 

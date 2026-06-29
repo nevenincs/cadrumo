@@ -1,9 +1,34 @@
-"""Calendar aggregation and evidence merge for the overview application facade.
+"""Calendar aggregation and evidence merge for the overview read model.
 
 The facade composes a :class:`~aeat.domain.deadlines.Schedule` from
-:class:`~aeat.domain.deadlines.TaxpayerProfile` facts and merges filed
-:class:`~aeat.domain.modelos.ModeloRecord` evidence so the calendar reflects
-which obligations already carry a justificante.
+:class:`~aeat.domain.deadlines.TaxpayerProfile` facts and projects
+already-loaded local state into :class:`OverviewCalendar` DTOs. Legal
+obligation rows come from the deadline engine; observed
+:class:`OverviewCalendarEvent` rows and :class:`OverviewCalendarFilingEvidence`
+rows come from persisted Modelo records, local live-read snapshots, and
+loaded justificante metadata supplied by the caller.
+
+This module is local-only and pure with respect to I/O: it never starts a
+live AEAT read and never verifies a justificante by fetching external
+state. It only reconciles evidence the storage or CLI layer has already
+loaded, preserving distinct :class:`OverviewLocalFilingState` and
+:class:`OverviewAeatSubmissionState` axes.
+
+See Also:
+    :mod:`aeat.application.overview`
+        Public facade that re-exports these calendar builders and DTOs.
+    :class:`~aeat.domain.deadlines.DeadlineEngine`
+        Deadline authority that produces the legal obligation schedule merged
+        into the overview calendar.
+    :func:`~aeat.application.overview.calendar_filing_evidence_from_sources`
+        Pure evidence merge for local filing records, live captures,
+        filed-declaration observations, and loaded justificante metadata.
+    :class:`~aeat.application.live.JustificanteCaptureSnapshot`
+        Persisted live justificante capture projected as AEAT-side evidence
+        only when matching metadata is already loaded.
+    :class:`~aeat.domain.modelos.ModeloRecord`
+        Local filing record projected on the local filing axis, separate from
+        AEAT submission state.
 """
 
 from __future__ import annotations
@@ -303,7 +328,12 @@ def build_overview_calendar_events(
     justificantes: tuple[Justificante, ...] = (),
     expected_tax_id: str | None = None,
 ) -> tuple[OverviewCalendarEvent, ...]:
-    """Build :class:`OverviewCalendarEvent` tuples from persisted local live-read snapshots."""
+    """Build observed events from persisted live-read snapshots.
+
+    The snapshots are inputs loaded by the caller. This helper only
+    projects them into :class:`OverviewCalendarEvent` tuples and filters
+    them by range and authenticated taxpayer identity.
+    """
     events = [
         *calendar_events_from_expedientes_snapshots(
             expedientes_snapshots,
@@ -396,7 +426,7 @@ def calendar_filing_evidence_from_sources(
     justificantes: tuple[Justificante, ...] = (),
     expected_tax_id: str | None = None,
 ) -> tuple[OverviewCalendarFilingEvidence, ...]:
-    """Build :class:`OverviewCalendarFilingEvidence` tuples from local records and AEAT observations.
+    """Build :class:`OverviewCalendarFilingEvidence` from local records and observed AEAT signals.
 
     The function is pure and intentionally accepts already-loaded
     records. CLI/storage code owns I/O; this projection only reconciles
@@ -411,6 +441,11 @@ def calendar_filing_evidence_from_sources(
     their justificante artefact storage reference is listed in
     ``verified_filed_declaration_artefact_refs`` by the storage layer
     that loaded and hashed the encrypted artefact body.
+
+    The result keeps :class:`OverviewLocalFilingState` and
+    :class:`OverviewAeatSubmissionState` independent so imported AEAT
+    baselines, local filings, observed submissions, and verified
+    justificantes do not overwrite each other's meaning.
     """
     by_key: dict[tuple[str, int, str], OverviewCalendarFilingEvidence] = {}  # (modelo, year, registry_token)
     event_specific: list[OverviewCalendarFilingEvidence] = []
@@ -1155,7 +1190,9 @@ def build_overview_calendar(
     Composes the existing :class:`aeat.domain.deadlines.DeadlineEngine`
     over each year the range spans, filters obligations to those whose
     filing window intersects the range, attaches the user-state
-    mapping, and returns the typed result.
+    mapping, merges already-loaded filing evidence, and returns the
+    typed result. The builder does not load repositories and does not
+    contact AEAT.
 
     Args:
         profile: The operator's :class:`_TaxpayerProfile`.

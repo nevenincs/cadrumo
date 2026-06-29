@@ -8,9 +8,10 @@ tolerance = "0.00"
 legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30"]
 source_refs = ["boe-modelo-714-layout"]
 
-# Record-design-layout parity only (Phase A, no calc): the 714 casilla schema is
-# authored from the AEAT diseño de registro DR714_2025.xls
-# (corpus/aeat_official/disenos_registro/modelo_714/, Orden HAC/1023/2021). No
-# formula runner is required at Phase A — runner_required = false — because the
-# casillas are input_kind = manual and no cuota is computed yet. The Phase-B calc
-# engine (tarifa art. 30 lookup_bracket + límite art. 31) will add formula parity.
+# Record-design-layout parity only: this reference proves the 714 casilla schema
+# was authored from the AEAT diseño de registro DR714_2025.xls
+# (corpus/aeat_official/disenos_registro/modelo_714/, Orden HAC/1023/2021).
+# `runner_required = false` because this fixture is layout authority, not a
+# formula oracle. Current formula coverage for the art. 30 cuota íntegra scale
+# and the art. 31 80%-floor reference is pinned by the dedicated M714 registry
+# tests and BOE-backed legal corpus checks.

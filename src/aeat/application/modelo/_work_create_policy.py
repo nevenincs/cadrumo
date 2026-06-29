@@ -1,4 +1,25 @@
-"""Application policies for creating modelo work units."""
+"""Application policies for creating modelo work units.
+
+The work-create command runs these guards before provisioning a work unit. They
+cover three distinct policy surfaces: modelo codes that are still stub-only in
+the local work-unit flow, modelos that do not apply to the active profile's
+taxpayer model, and active profiles whose CCAA points at a foral tax regime.
+
+Stub-only checks are locale-key lookups over :class:`Modelo` members and a few
+registry-known numeric forms. Applicability checks derive a profile projection
+from the active workflow state, then ask the registry-owned applicability rules
+whether the requested modelo is excluded. The foral check delegates to the
+canonical tax-region parser so the CLI renders the same refusal text as profile
+setup.
+
+See Also:
+    :mod:`aeat.entrypoints.cli._modelo_work_lifecycle_cli`:
+        Calls these guards from ``app modelo work create``.
+    :mod:`aeat.domain.calculations.registry.applicability`:
+        Public bridge for registry-owned modelo applicability rules.
+    :func:`aeat.domain.contribuyente.parse_tax_region`:
+        Canonical CCAA parser that raises foral-regime refusals.
+"""
 
 from __future__ import annotations
 
@@ -23,14 +44,31 @@ STUB_ONLY_MODELOS: frozenset[str] = frozenset(STUB_MODELO_LOCALE_KEYS)
 
 @dataclass(frozen=True, slots=True)
 class ModeloWorkCreateApplicabilityRefusal:
-    """Application refusal for a modelo the active profile should not file."""
+    """Application refusal for a modelo the active profile should not file.
+
+    ``modelo`` is the stripped requested modelo code. ``reason`` is the
+    registry-derived applicability reason surfaced by the CLI together with its
+    ``--allow-not-applicable`` escape hatch.
+    """
 
     modelo: str
     reason: str
 
 
 def modelo_work_create_refusal_locale_key(modelo: str) -> str | None:
-    """Return the locale key for a refused stub-modelo create request."""
+    """Return the locale key for a refused stub-modelo create request.
+
+    The lookup normalises whitespace and returns ``None`` when the modelo is not
+    in :data:`STUB_ONLY_MODELOS`. Modelo 210 is conditionally released when the
+    ``aeat_m210_engine_live`` setting is enabled; all other entries remain
+    refused by this policy surface.
+
+    See Also:
+        :class:`Modelo`:
+            Closed modelo enum used for the core stub-only entries.
+        :mod:`aeat.entrypoints.cli._modelo_work_lifecycle_cli`:
+            Converts the locale key into a typed CLI refusal.
+    """
     modelo_code = modelo.strip()
     if modelo_code not in STUB_ONLY_MODELOS:
         return None
@@ -44,7 +82,26 @@ def modelo_work_create_applicability_refusal(
     *,
     allow_not_applicable: bool,
 ) -> ModeloWorkCreateApplicabilityRefusal | None:
-    """Return a :class:`ModeloWorkCreateApplicabilityRefusal` for the active profile, or ``None`` when applicable."""
+    """Return an applicability refusal for the active profile, if one applies.
+
+    When ``allow_not_applicable`` is true, the guard deliberately returns
+    ``None`` so the CLI can provision the work unit and record that the operator
+    bypassed the applicability guard. Otherwise the active profile record is
+    projected into taxpayer facts and checked against the registry-owned
+    applicability rules. Only ``NOT_APPLICABLE`` and
+    ``ATTRIBUTION_PASS_THROUGH`` verdicts block creation.
+
+    Returns:
+        A :class:`ModeloWorkCreateApplicabilityRefusal` for a blocking verdict,
+        or ``None`` when the modelo is applicable, unsupported by an explicit
+        rule, or deliberately bypassed.
+
+    See Also:
+        :func:`aeat.domain.calculations.registry.applicability.derive_modelo_applicability`:
+            Registry-owned applicability classifier used by this guard.
+        :func:`aeat.application.user_profile.projection_for_taxpayer`:
+            Builds the taxpayer profile consumed by the classifier.
+    """
     if allow_not_applicable:
         return None
 
@@ -69,7 +126,13 @@ def modelo_work_create_applicability_refusal(
 
 
 def guard_active_profile_foral_ccaa() -> None:
-    """Raise the canonical foral-regime refusal for the active profile, if present."""
+    """Raise the canonical foral-regime refusal for the active profile, if present.
+
+    The guard reads ``tax_residence.ccaa`` from the active profile and delegates
+    to :func:`aeat.domain.contribuyente.parse_tax_region`. Common-regime CCAA
+    values pass through; foral values raise the domain refusal before work-unit
+    creation reaches the generic unsupported-modelo checks.
+    """
     from ...application.user_profile import fact_value
     from ...application.workflow import workflow_state_repository
     from ...domain.contribuyente import parse_tax_region

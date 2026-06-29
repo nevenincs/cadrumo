@@ -1,9 +1,23 @@
-"""Governed-persistence repository for submitted-filing audit records.
+"""Governed-persistence repository for submission audit records.
 
-Submitted filings capture uploaded payload bytes, AEAT responses, and
-identity-bearing filing context. They are stored as encrypted byte
-objects in the primary SQL backend at :class:`SensitivityClass` AUDIT;
-no plaintext submission JSON or envelope file lands on disk.
+Submission audit records keep the local or imported
+:class:`aeat.domain.submission.ModeloPresentado` lifecycle: draft id, modelo,
+period, taxpayer identity, AEAT receipt metadata when observed, and attempt
+summaries. They are stored as encrypted byte objects in the primary SQL backend
+at :class:`SensitivityClass` AUDIT; no plaintext submission JSON or envelope
+file lands on disk.
+
+See Also:
+    :class:`aeat.domain.submission.ModeloPresentado`
+        Payload model encrypted by this repository.
+    :class:`aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+        SQL object store underlying the bound repository.
+    :mod:`aeat.application.filing._import`
+        Offline justificante import path that can create companion submission
+        audit records.
+    :mod:`aeat.application.live`
+        Read-only live-evidence capture surface; it does not create live
+        submission attempts.
 """
 
 from __future__ import annotations
@@ -24,7 +38,7 @@ _log = get_logger(__name__)
 
 
 class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
-    """Repository over encrypted SQL-backed submitted filing records."""
+    """Repository over encrypted SQL-backed :class:`ModeloPresentado` audit records."""
 
     namespace: ClassVar[str] = "aeat.domain.submission.records"
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT

@@ -1,9 +1,14 @@
 """Read-only portal discovery wrapping the domain registry.
 
 :class:`PortalsService` exposes a local read surface over the immutable portal
-registry. Each entry is identified by a :class:`Portal` value and carries
-a :class:`PortalCategory` axis so callers can filter by portal kind without
-inspecting the raw registry.
+registry. Each entry is identified by a :class:`Portal` value, carries a
+:class:`PortalCategory` axis, and may be associated with a
+:class:`ModeloCode` so callers can filter portal metadata without inspecting
+the raw registry.
+
+The service returns :class:`PortalRow` projections of
+:class:`PortalMetadata`; it never opens URLs, checks reachability, requires a
+live-read gate, or emits bucket events.
 """
 
 from __future__ import annotations
@@ -25,13 +30,13 @@ from ...domain.portals import (
 
 
 class PortalNotFoundError(AeatError):
-    """Raised when ``aeat app live portals view`` targets an unknown portal."""
+    """Raised when portal lookup targets a :class:`Portal` absent from the registry."""
 
 
 class PortalRow(BaseModel):
     """Operator-facing row in ``aeat app live portals list`` output.
 
-    Slimmer than the underlying :class:`PortalMetadata` — we elide the
+    Slimmer than the underlying :class:`PortalMetadata`: we elide the
     translation-key indirection for notes and surface only the
     primary fields the operator can act on. The CLI renderer applies
     i18n where needed.
@@ -69,6 +74,9 @@ class PortalsService:
 
     No remote contact, no bucket events, no mutation. Pure projection
     over the immutable :data:`aeat.domain.portals.PORTAL_REGISTRY`.
+    Injecting a registry supports tests and alternate catalogue snapshots
+    while preserving the same :class:`Portal` to :class:`PortalMetadata`
+    contract.
     """
 
     def __init__(self, registry: dict[Portal, PortalMetadata] | None = None) -> None:
@@ -85,7 +93,7 @@ class PortalsService:
 
         Args:
             category: When set, restricts rows to portals in that :class:`PortalCategory`.
-            modelo: When set, restricts rows to portals associated with that modelo code.
+            modelo: When set, restricts rows to portals associated with that :class:`ModeloCode`.
             include_retired: When ``True``, includes portals with ``active=False``.
 
         ``category`` and ``modelo`` are independent filters. Retired
@@ -107,7 +115,11 @@ class PortalsService:
         return tuple(sorted(rows, key=lambda row: row.portal.value))
 
     def show(self, portal: Portal) -> PortalRow:
-        """Return the :class:`PortalRow` for one :class:`Portal`. Raises if the code is not registered."""
+        """Return the :class:`PortalRow` for one :class:`Portal`.
+
+        Raises :class:`PortalNotFoundError` when the requested portal code is
+        absent from the injected registry.
+        """
         metadata = self._registry.get(portal)
         if metadata is None:
             raise PortalNotFoundError(

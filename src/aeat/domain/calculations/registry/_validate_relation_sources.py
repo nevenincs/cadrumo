@@ -90,7 +90,7 @@ def _validate_single_relation(
     failures.extend(f"{relation_scope} {failure}" for failure in selector_failures)
     if not source_revisions:
         failures.append(
-            f"{relation_scope} selector {dict(relation.source_revision_selector)!r} "
+            f"{relation_scope} selector {relation.source_revision_selector.model_dump(exclude_none=True)!r} "
             f"matches no source revisions in modelo {source_modelo.id}",
         )
         return failures
@@ -156,8 +156,8 @@ def _relation_is_prior_year_filing_carry(relation: RelationDefinition, revision:
     )
     if not targets_observation_slot:
         return False
-    delta = relation.source_revision_selector.get("filing_year_delta")
-    return isinstance(delta, int) and delta < 0
+    delta = relation.source_revision_selector.filing_year_delta
+    return delta is not None and delta < 0
 
 
 def _validate_relation_source_revision(

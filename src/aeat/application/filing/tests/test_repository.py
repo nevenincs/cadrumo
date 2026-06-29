@@ -16,7 +16,7 @@ import pytest
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import Period
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
 from ....domain.filing._repository import ModeloDraftRepository
 from ....domain.filing._schema import (
     ModeloDraft,
@@ -31,6 +31,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _P_Q1 = Period.from_year_and_code(2026, "1T")
 _P_Q2 = Period.from_year_and_code(2026, "2T")
 _DRAFT_INPUT_CASILLA: CasillaId = validated_casilla_id("01", surface="_DRAFT_INPUT_CASILLA")
+
+
+def _snapshot_ref(*, modelo: str, period: Period, schema_version: str) -> RegistrySnapshotRef:
+    return RegistrySnapshotRef(
+        modelo=modelo,
+        revision_id=schema_version,
+        modelo_year=period.filing_year,
+        period=period.registry_token,
+    )
 
 
 def _make_draft(*, period: Period = _P_Q1, ingresos: int = 12500) -> ModeloDraft:
@@ -55,6 +64,8 @@ def _make_draft(*, period: Period = _P_Q1, ingresos: int = 12500) -> ModeloDraft
         modelo="130",
         period=period,
         profile_tax_id="00000000T",
+        subject_tax_id="00000000T",
+        snapshot_ref=_snapshot_ref(modelo="130", period=period, schema_version="test-schema-v1"),
         status=ModeloDraftStatus.VALIDADO,
         values=values,
         created_at=now,

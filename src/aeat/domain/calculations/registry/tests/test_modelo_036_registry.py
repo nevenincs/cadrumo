@@ -11,6 +11,16 @@ from .....core.resources import bundled_path
 from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+_DECLARATION_PROFILE_TARGET_LEGAL_REFS = frozenset(
+    [
+        "orden-eha-1274-2007:art-1",
+        "orden-eha-1274-2007:art-2",
+        "orden-hac-1526-2024:art-1",
+        "rd-1065-2007:art-10",
+        "rd-1065-2007:art-11",
+        "rd-1065-2007:art-9",
+    ]
+)
 
 
 @lru_cache(maxsize=1)
@@ -75,6 +85,22 @@ def test_modelo_036_snapshot_carries_rgat_substantive_grounding() -> None:
     assert snapshot.legal["rd-1065-2007:art-9"].article == "9"
     assert "orden-eha-1274-2007:art-1" in snapshot.legal
     assert "aeat-modelo-036-procedure" in snapshot.sources
+
+
+def test_modelo_036_declaration_pdf_profile_legal_refs_match_target_casillas() -> None:
+    modelo, _ = _load_modelo_036()
+    revision = modelo.revisions["2025-02-03-y-siguientes"]
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+    profile = next(profile for profile in revision.extraction_profiles if profile.id == "modelo-036-declaracion-pdf")
+
+    target_refs = frozenset(
+        legal_ref
+        for target in profile.target_casillas
+        for legal_ref in casillas_by_id[target.casilla_id].legal_refs
+    )
+
+    assert target_refs == _DECLARATION_PROFILE_TARGET_LEGAL_REFS
+    assert frozenset(profile.legal_refs) == _DECLARATION_PROFILE_TARGET_LEGAL_REFS
 
 
 def test_modelo_036_filing_schedule_is_event_triggered() -> None:

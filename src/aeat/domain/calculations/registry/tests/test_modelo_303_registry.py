@@ -216,6 +216,19 @@ def test_modelo_303_quarterly_deadlines_match_orden_eha_3786_2008_art_7() -> Non
         assert windows[window_id].closes_on == closes
 
 
+def test_modelo_303_sii_january_2026_deadline_uses_aeat_2026_calendar_shift() -> None:
+    """January 2026 monthly IVA closes on 2026-03-02 in the AEAT 2026 calendar."""
+    modelo, _ = _load_modelo_303()
+    revision = modelo.revisions["2023-y-siguientes"]
+    window = next(w for w in revision.deadline_windows if w.id == "modelo-303-2026-01-mensual")
+
+    assert window.opens_on == date(2026, 2, 1)
+    assert window.closes_on == date(2026, 3, 2)
+    assert window.payment_cutoff_on == date(2026, 2, 25)
+    assert "aeat-calendario-contribuyente-2026-hasta-2-marzo" in window.source_refs
+    assert "aeat-calendario-contribuyente-2026-domiciliacion" in window.source_refs
+
+
 def test_modelo_303_live_cross_references_forbid_writes() -> None:
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2009-y-siguientes"]

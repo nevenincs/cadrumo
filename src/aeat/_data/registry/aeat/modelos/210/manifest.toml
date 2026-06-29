@@ -16,4 +16,6 @@ legal_refs = [
 source_refs = [
     "aeat-modelo-210-procedure",
     "boe-modelo-210-2024-form-layout",
+    "boe-modelo-210-2026-deadline-update",
+    "boe-modelo-210-2026-form-layout",
 ]

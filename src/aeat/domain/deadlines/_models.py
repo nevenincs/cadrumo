@@ -412,12 +412,6 @@ class TaxpayerProfile(BaseModel):
             local with retención.
         pays_capital_income_with_retencion: Whether the taxpayer pays
             capital-income rents subject to withholding.
-        uses_objective_estimation_irpf: Whether the taxpayer computes
-            IRPF economic-activity income under estimación objetiva.
-            Kept in lockstep with ``irpf_estimation_regime``: when the
-            regime is ``OBJETIVA`` this flag is forced ``True``. The
-            registry ``schedule_predicates`` / ``model_selectors`` that
-            test ``uses_objective_estimation_irpf`` still resolve.
         does_intracomunitario: Whether the taxpayer conducts
             operaciones intracomunitarias.
         third_party_transactions_above_347_threshold: Whether the
@@ -471,9 +465,9 @@ class TaxpayerProfile(BaseModel):
     professional_income_withholding_ge_70pct: bool = False
     pays_rent_with_retencion: bool = False
     pays_capital_income_with_retencion: bool = False
-    uses_objective_estimation_irpf: bool = False
     objective_estimation_prior_year_gross_income_eur: Decimal | None = None
     objective_estimation_prior_year_invoice_gross_income_eur: Decimal | None = None
+    objective_estimation_prior_year_agri_livestock_forest_gross_eur: Decimal | None = None
     objective_estimation_prior_year_purchases_eur: Decimal | None = None
     does_intracomunitario: bool = False
     third_party_transactions_above_347_threshold: bool = False
@@ -591,6 +585,7 @@ class TaxpayerProfile(BaseModel):
     @field_validator(
         "objective_estimation_prior_year_gross_income_eur",
         "objective_estimation_prior_year_invoice_gross_income_eur",
+        "objective_estimation_prior_year_agri_livestock_forest_gross_eur",
         "objective_estimation_prior_year_purchases_eur",
         mode="before",
     )
@@ -606,39 +601,8 @@ class TaxpayerProfile(BaseModel):
             try:
                 return Decimal(stripped)
             except InvalidOperation as exc:
-                raise DeadlineValidationError(
-                    "objective-estimation declared volume must be a decimal"
-                ) from exc
+                raise DeadlineValidationError("objective-estimation declared volume must be a decimal") from exc
         return value
-
-    @model_validator(mode="after")
-    def _check_objective_estimation_consistency(self) -> Self:
-        """Reject a regime that contradicts ``uses_objective_estimation_irpf``.
-
-        ``irpf_estimation_regime`` is the structured tax-regime axis;
-        ``uses_objective_estimation_irpf`` is the legacy boolean that
-        the registry ``schedule_predicates`` and ``model_selectors``
-        still test. The two must not contradict: a non-objective
-        regime declared together with a ``True`` boolean is rejected,
-        and an ``OBJETIVA`` regime declared with a ``False`` boolean is
-        rejected. The boolean is *derived* from the regime by the
-        ``mode="before"`` validator below, so this check only fires
-        when a caller bypasses that derivation. When the regime is
-        undeclared the boolean is left untouched so existing profiles
-        keep working until the engine is rewired.
-        """
-        regime = self.irpf_estimation_regime
-        if regime is None:
-            return self
-        wants_objective = regime is IrpfEstimationRegime.OBJETIVA
-        if wants_objective != self.uses_objective_estimation_irpf:
-            raise DeadlineValidationError(
-                f"irpf_estimation_regime {regime.value!r} contradicts "
-                f"uses_objective_estimation_irpf={self.uses_objective_estimation_irpf}; "
-                "the objective-estimation boolean must be True only for the "
-                "OBJETIVA regime",
-            )
-        return self
 
     @model_validator(mode="after")
     def _check_impatriado_requires_start_date(self) -> Self:
@@ -682,9 +646,8 @@ class TaxpayerProfile(BaseModel):
         representative in Spain. Both NIF and name are required together;
         partial declaration is rejected.
         """
-        if (
-            self.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR
-            and irnr_representante_fiscal_required(self.country_of_fiscal_residence)
+        if self.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR and irnr_representante_fiscal_required(
+            self.country_of_fiscal_residence
         ):
             nif_missing = self.representante_fiscal_nif is None
             nombre_missing = self.representante_fiscal_nombre is None
@@ -699,29 +662,6 @@ class TaxpayerProfile(BaseModel):
                     "(Art. 47 LGT + Art. 10 TRLIRNR RDLeg 5/2004)",
                 )
         return self
-
-    @model_validator(mode="before")
-    @classmethod
-    def _derive_objective_estimation_flag(cls, data: object) -> object:
-        """Derive ``uses_objective_estimation_irpf`` from the regime axis.
-
-        When the structured ``irpf_estimation_regime`` is supplied
-        without an explicit ``uses_objective_estimation_irpf``, the
-        boolean is set from the regime (``OBJETIVA`` ⇒ ``True``) so the
-        registry conditions that still test the boolean keep resolving
-        correctly. An explicit boolean is left in place for the
-        consistency check above to adjudicate.
-        """
-        if not isinstance(data, dict):
-            return data
-        data_map: dict[object, object] = {k: v for k, v in data.items()}
-        regime = data_map.get("irpf_estimation_regime")
-        if regime is None or "uses_objective_estimation_irpf" in data:
-            return data
-        parsed = regime if isinstance(regime, IrpfEstimationRegime) else IrpfEstimationRegime(regime)
-        derived = dict(data)
-        derived["uses_objective_estimation_irpf"] = parsed is IrpfEstimationRegime.OBJETIVA
-        return derived
 
     def beckham_window_active(self, today: date) -> bool:
         """Return True if the Beckham window (Art. 93 LIRPF) is active on *today*.
@@ -977,7 +917,7 @@ class ModeloDeadline(BaseModel):
 
 
 class Schedule(BaseModel):
-    """The full filing schedule for an autónomo for a given year.
+    """The full filing schedule for a taxpayer profile for a given year.
 
     Attributes:
         profile: The :class:`TaxpayerProfile` the schedule was computed

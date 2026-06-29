@@ -65,6 +65,13 @@ def _explicit_database(db_path: Path) -> Generator[None]:
             dispose_engine(settings)
 
 
+@pytest.fixture(scope="module")
+def config_repair_report(tmp_path_factory: pytest.TempPathFactory) -> ConfigRepairReport:
+    tmp_path = tmp_path_factory.mktemp("diagnostics-config-repair")
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        return build_config_repair_report()
+
+
 def _save_probe_row(namespace: str, object_key: str, payload: bytes) -> None:
     SecureObjectRepository().save(
         namespace=namespace,
@@ -165,12 +172,8 @@ def test_diagnostic_check_model_dump_surfaces_both_recovery_fields() -> None:
     assert dumped["dead_end"] is None
 
 
-def test_config_repair_report_contains_registry_and_setup_checks(
-    tmp_path: Path,
-) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        report = build_config_repair_report()
-
+def test_config_repair_report_contains_registry_and_setup_checks(config_repair_report: ConfigRepairReport) -> None:
+    report = config_repair_report
     assert report.package_name == "aeat"
     assert report.registry.available is True
     assert report.registry.modelo_count > 0
@@ -186,12 +189,8 @@ def test_config_repair_report_contains_registry_and_setup_checks(
     assert report.overall == expected_overall
 
 
-def test_render_config_repair_text_is_operator_readable(
-    tmp_path: Path,
-) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        rendered = render_config_repair_text(build_config_repair_report())
-
+def test_render_config_repair_text_is_operator_readable(config_repair_report: ConfigRepairReport) -> None:
+    rendered = render_config_repair_text(config_repair_report)
     from ...core.i18n import tr
 
     assert f"{tr('cli.diagnostics.repair.overall_label')}\t" in rendered

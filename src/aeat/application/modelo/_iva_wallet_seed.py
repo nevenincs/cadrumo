@@ -1,12 +1,31 @@
-"""Application facade for Modelo IVA wallet seed and correction operations.
+"""Application facade for Modelo 303 IVA wallet seed and override operations.
 
-This module uses :class:`IvaCompensationPeriodState` for seeding and correcting
-the IVA compensation history. Every mutation appends a typed audit event via
-:class:`BucketEventHistoryRepository`. :func:`correct_iva_compensation_period_for_bucket`
-guards the correction against a sealed (already-filed) Modelo 303 revision that
-consumed the seeded compensation basis, reusing the same
-:class:`~aeat.domain.modelos._calculation_revision.CalculationRevisionState`
-sealed-state set the ledger restore guard enforces.
+This module resolves the active bucket to a taxpayer NIF, validates the
+operator-supplied amount, and then delegates the persistence write to the
+calculation layer. Seed and correction flows write
+:class:`~aeat.domain.iva_compensation.IvaCompensationPeriodState` records through
+``seed_iva_compensation_period`` / ``correct_iva_compensation_period``; override
+flows persist an
+:class:`~aeat.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`
+through ``reconcile_modelo_303_iva_compensation``. Every mutation appends a typed
+bucket event via :class:`~aeat.domain.buckets.BucketEventHistoryRepository`.
+
+The facade is intentionally above the pure writers. It can scan work units and
+calculation revisions before changing an opening carry-forward basis, so
+:func:`correct_iva_compensation_period_for_bucket` and
+:func:`record_iva_compensation_override_for_bucket` refuse changes once a sealed
+Modelo 303 revision has consumed that basis.
+
+See Also:
+    :mod:`aeat.application.calculations._iva_compensation_history`
+    Single-writer seed and correction primitives for local IVA compensation
+    history.
+    :mod:`aeat.application.calculations._iva_wallet_reconciliation`
+    Reconciliation service that turns wallet/local/override evidence into a
+    persisted Modelo 303 prior-compensation decision.
+    :mod:`aeat.application.modelo._iva_wallet_gate`
+    Calculation/export gate that replays the persisted wallet decision before a
+    Modelo 303 revision is allowed to use the binding.
 """
 
 from __future__ import annotations
@@ -53,7 +72,7 @@ def _period_order_key(period: Period) -> tuple[int, str]:
 
 
 class ModeloIvaWalletSeedError(ModeloError):
-    """Base class for Modelo IVA wallet seed application errors."""
+    """Base class for Modelo IVA wallet seed, correction, and override errors."""
 
     def __init__(self, *, translated_message: str, context: dict[str, object] | None = None) -> None:
         super().__init__(
@@ -64,11 +83,16 @@ class ModeloIvaWalletSeedError(ModeloError):
 
 
 class ModeloIvaWalletSeedNoTaxpayerError(ModeloIvaWalletSeedError):
-    """Raised when the selected bucket cannot provide a taxpayer NIF."""
+    """Raised when the selected bucket cannot provide a taxpayer NIF.
+
+    The seed facade uses :func:`aeat.application.modelo._iva_wallet_gate.taxpayer_nif_for_bucket`
+    so the same bucket/profile identity authority feeds seed, correction, override,
+    and persisted-decision replay paths.
+    """
 
 
 class ModeloIvaWalletSeedNegativeAmountError(ModeloIvaWalletSeedError):
-    """Raised when a seed amount is negative."""
+    """Raised when an operator supplies a negative seed, correction, or override amount."""
 
 
 class ModeloIvaWalletCorrectionNoRecordError(ModeloIvaWalletSeedError):
@@ -123,7 +147,23 @@ def seed_iva_compensation_period_for_bucket(
     period: Period,
     amount: Decimal,
 ) -> IvaCompensationPeriodState:
-    """Seed IVA compensation history and return an :class:`IvaCompensationPeriodState`."""
+    """Seed local IVA compensation history for the bucket taxpayer.
+
+    Returns an :class:`~aeat.domain.iva_compensation.IvaCompensationPeriodState`
+    stored by :func:`aeat.application.calculations.seed_iva_compensation_period`.
+    The stored state represents an operator-declared opening carry-forward
+    balance for a Modelo 303 period that predates local history. It is not a live
+    AEAT wallet observation and it does not by itself authorize a Modelo 303
+    calculation; the wallet reconciliation/gate path still owns the effective
+    ``modelo-303-compensacion-pendiente-anteriores`` decision.
+
+    See Also:
+        :func:`aeat.application.calculations.seed_iva_compensation_period`
+        Pure single-writer primitive that stores the seeded period state.
+        :func:`aeat.application.modelo._iva_wallet_gate.resolve_iva_compensation_decision_for_calculation`
+        Gate-side resolver that requires a persisted decision before applying
+        the prior-compensation binding.
+    """
     if amount < Decimal("0"):
         raise ModeloIvaWalletSeedNegativeAmountError(
             translated_message="application.modelo.iva_wallet.seed_negative_amount",
@@ -200,7 +240,8 @@ def correct_iva_compensation_period_for_bucket(
 ) -> IvaCompensationPeriodState:
     """Correct a wrong opening IVA compensation balance, guarded and audited.
 
-    Returns the corrected :class:`IvaCompensationPeriodState`.
+    Returns the corrected
+    :class:`~aeat.domain.iva_compensation.IvaCompensationPeriodState`.
 
     The seed verb is one-shot: it refuses to overwrite an existing record, so a
     wrong opening carry-forward balance for a pre-history period is otherwise
@@ -223,6 +264,13 @@ def correct_iva_compensation_period_for_bucket(
 
     The local app never files; correcting the wallet basis touches no AEAT write
     surface.
+
+    See Also:
+        :func:`aeat.application.calculations.correct_iva_compensation_period`
+        Single-writer primitive that replaces the stored seed after this facade's
+        filed-basis guard passes.
+        :class:`aeat.domain.buckets.BucketEventType`
+        Declares the ``MODELO_IVA_WALLET_CORRECTED`` audit event emitted here.
     """
     if amount < Decimal("0"):
         raise ModeloIvaWalletSeedNegativeAmountError(
@@ -350,8 +398,9 @@ def record_iva_compensation_override_for_bucket(
 ) -> IvaCompensationReconciliationDecision:
     """Record an explicit taxpayer override for Modelo 303 prior compensation.
 
-    Returns the persisted :class:`IvaCompensationReconciliationDecision` with the
-    ``taxpayer_override`` source.
+    Returns the persisted
+    :class:`~aeat.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`
+    with the ``taxpayer_override`` source.
 
     The Modelo 303 reconciliation refuses to AUTO-apply a seeded or local-recurrence
     prior-compensation balance when no live AEAT wallet evidence is available; the
@@ -390,6 +439,17 @@ def record_iva_compensation_override_for_bucket(
     ``resolve_iva_compensation_decision_for_calculation``); recording an override
     therefore takes precedence for the period until explicitly re-recorded or
     corrected. That re-reconciliation is tracked as a separate follow-up.
+
+    See Also:
+        :func:`aeat.application.calculations.reconcile_modelo_303_iva_compensation`
+        Persists the non-blocking taxpayer-override wallet decision consumed by
+        later Modelo 303 calculations.
+        :class:`aeat.application.calculations.IvaWalletDecisionRepository`
+        Repository used to detect an existing fresh AEAT-wallet decision before
+        allowing an override.
+        :func:`aeat.application.modelo._iva_wallet_gate.require_persisted_iva_compensation_decision_matches_revision`
+        Replay gate that ensures exported/filed revisions still match the
+        persisted decision.
     """
     if amount < Decimal("0"):
         raise ModeloIvaWalletSeedNegativeAmountError(

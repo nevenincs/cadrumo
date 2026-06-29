@@ -1,6 +1,6 @@
 """Category profile access through committed registry data.
 
-:func:`load_category_profiles_from_manual` is the legacy-facing facade over
+:func:`load_category_profiles_from_manual` is the registry-backed facade over
 :func:`resolve_category_profiles`, returning year-keyed mappings from
 :class:`SpendingCategory` to :class:`CategoryProfile`.
 """

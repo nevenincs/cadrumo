@@ -43,6 +43,7 @@ _REQUIRED_PLACEHOLDERS: Mapping[str, str] = {
     "identity.surnames": "Test Operator",
     "tax_residence.ccaa": "madrid",
     "tax_residence.jurisdiction_scope": "common_regime",
+    "activities.description": "economic activity",
     "iva.regime": IVARegime.GENERAL,
     "provenance.source": _PROVENANCE_SOURCE_MANUAL_CLI,
     # A minimal profile declares a minimal taxpayer model: an autónomo

@@ -21,10 +21,9 @@ Covered:
   as an explicit ``UNSUPPORTED_IVA_CATEGORY`` issue (non-silent), never a silent
   mis-bucket into a normal deduction.
 
-The export / domestic-reverse-charge routing gaps surfaced during this verification
-are reported separately (no M303 binding selects ``export_third_country_zero_rated``
-or ``domestic_reverse_charge``); they are findings for the coordinator to grade, not
-fixed here.
+The domestic-reverse-charge routing gap surfaced during this verification is
+reported separately; export and export-assimilated base rows are current Modelo 303
+ledger bindings.
 
 Legal grounding: LIVA (Ley 37/1992) art. 84.Uno.2 (inversion del sujeto pasivo en
 adquisiciones intracomunitarias), art. 92 (cuotas deducibles), arts. 148-163

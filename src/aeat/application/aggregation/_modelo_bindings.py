@@ -1,14 +1,28 @@
-"""Modelo binding values derived from bucket-local ledger catalogues.
+"""Repository-backed source-mesh resolvers for modelo registry bindings.
 
-Used by: :mod:`~._service` (per-modelo aggregation provider) to resolve registry bindings.
+This module is the calculation-facing bridge from bucket-local stores to
+:class:`~._source_mesh.CalculationSourceResolution`. Each resolver owns one
+:class:`~aeat.core.aggregation.BindingSourceKind`, reads the active
+:class:`~._source_mesh.CalculationSourceContext`, and materialises binding
+values declared on the snapshot's
+:class:`~aeat.domain.calculations.registry.ModeloRevision`.
 
-Accepts a :class:`~aeat.domain.calculations.registry.ModeloRevision` to drive ledger aggregation binding
-resolution across IVA, renta income, and renta expense source kinds.
-Expense aggregation reads from both a :class:`~aeat.domain.transactions.TransactionCatalogueRepository`
-and an :class:`~aeat.domain.invoices.InvoiceCatalogueRepository`; the invoice repository supplies
-purchase-invoice evidence that the renta expense pipeline requires.
+The IVA, Renta income, Renta expense, and M130 gasto resolvers delegate their
+ledger projection to :mod:`~._iva_ledger`, :mod:`~._renta_income_ledger`,
+:mod:`~._renta_ledger`, and :mod:`~._renta_gasto_ledger`. The retenciones
+resolver reads the dedicated per-perceptor store through
+:mod:`~._retencion_observations_repository`. The separate
+:mod:`~._oss_ioss` and :mod:`~._withholding_source` modules follow the same
+source-mesh contract for Modelo 369 and Modelo 190 detail counts.
 
-Related: :mod:`~._iva_ledger`, :mod:`~._renta_ledger`, :mod:`~._renta_income_ledger` for ledger aggregation.
+Invoice-backed checks use
+:class:`~aeat.domain.invoices.InvoiceCatalogueRepository` only as supporting
+evidence: Modelo 303 domestic IVA remains ledger-owned, while Renta expense
+aggregation can attach purchase-invoice evidence to transaction rows before
+producing the shared :class:`~._source_mesh.CalculationSourceResolution`.
+
+Declarable observations that no registry binding consumes are reported as
+source diagnostics rather than silently blanking the filed calculation.
 """
 
 from __future__ import annotations
@@ -95,7 +109,13 @@ _M303_INVOICE_EVIDENCE_SAMPLE_LIMIT = 5
 
 
 class LedgerIvaAggregationSourceResolver:
-    """Source mesh resolver for repository-backed IVA ledger bindings."""
+    """Resolve ``ledger_iva_aggregation`` bindings from the transaction ledger.
+
+    Owns :attr:`BindingSourceKind.LEDGER_IVA_AGGREGATION`, projects IVA
+    observations through :func:`~._iva_ledger.aggregate_iva_ledger_observations_from_repositories`,
+    and returns a :class:`~._source_mesh.CalculationSourceResolution` with
+    source issues, unrouted-observation diagnostics, and transaction provenance.
+    """
 
     resolver_id = "ledger_iva_aggregation"
     owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_IVA_AGGREGATION,)
@@ -200,7 +220,14 @@ class LedgerIvaAggregationSourceResolver:
 
 
 class LedgerRentaExpenseAggregationSourceResolver:
-    """Source mesh resolver for repository-backed Renta expense bindings."""
+    """Resolve ``ledger_renta_expense_aggregation`` bindings for Renta expenses.
+
+    Owns :attr:`BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION` and folds
+    transaction rows plus purchase-invoice evidence through
+    :func:`~._renta_ledger.aggregate_renta_ledger_expenses_from_repositories`.
+    It reports source issues and unrouted deductible expenses on the returned
+    :class:`~._source_mesh.CalculationSourceResolution`.
+    """
 
     resolver_id = "ledger_renta_expense_aggregation"
     owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,)
@@ -287,7 +314,12 @@ class LedgerRentaExpenseAggregationSourceResolver:
 
 
 class LedgerRentaIncomeAggregationSourceResolver:
-    """Source mesh resolver for repository-backed M130 actividad-económica income bindings."""
+    """Resolve ``ledger_renta_income_aggregation`` actividad-income bindings.
+
+    Owns :attr:`BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION`. Modelo 130
+    uses the cumulative-quarter income path, while Modelo 100 uses the annual
+    activity-income path over the same ledger eligibility rules.
+    """
 
     resolver_id = "ledger_renta_income_aggregation"
     owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,)
@@ -388,9 +420,11 @@ def _m130_retenciones_backend_inputs(
 class LedgerRentaGastoAggregationSourceResolver:
     """Source mesh resolver for repository-backed M130 deductible-expense (gasto) bindings.
 
-    The OUTGOING sibling of :class:`LedgerRentaIncomeAggregationSourceResolver`:
+    Owns :attr:`BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION`. This is the
+    OUTGOING sibling of :class:`LedgerRentaIncomeAggregationSourceResolver`: it
     folds deductible business expenses into Modelo 130 casilla 02 over the same
-    cumulative year-to-date quarterly window.
+    cumulative year-to-date quarterly window and emits an unrouted-observation
+    diagnostic for declarable gastos no binding consumes.
     """
 
     resolver_id = "ledger_renta_gasto_aggregation"
@@ -625,12 +659,13 @@ class RetencionesAggregationSourceResolver:
     """Source mesh resolver for the dedicated per-perceptor retención store (RET-1).
 
     Reads the bucket-scoped per-perceptor retención observations
-    (:class:`RetencionObservationRepository`) for the modelo's annual window and
-    materialises the Modelo 180/193 "número total de perceptores" box with the
-    validated DISTINCT-NIF count (``aggregate_retenciones_{180,193}``'s
-    ``total_perceptors``) — replacing the wrong sum-of-quarterly-M115-counts
-    relation. The pull and calculate surfaces read this one store
-    (one-aggregation-path).
+    (:class:`~._retencion_observations_repository.RetencionObservationRepository`)
+    for the modelo's annual window and materialises the Modelo 180/193 "número
+    total de perceptores" box with the validated DISTINCT-NIF count
+    (``aggregate_retenciones_{180,193}``'s ``total_perceptors``). This replaces
+    the wrong sum-of-quarterly-counts relation; pull and calculate read this one
+    store (one-aggregation-path). Modelo 190's percepciones count is handled by
+    :class:`~._withholding_source.WithholdingSourceResolver`.
     """
 
     resolver_id = "retenciones_aggregation"

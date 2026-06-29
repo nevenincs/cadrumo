@@ -5,9 +5,9 @@ four heavy domain types it composes (:class:`CalculationRevision`,
 ``WorkUnit``, ``Transaction``, :class:`ModeloRecord`) and their transitive
 registry-parse cost do not enter ``sys.modules`` at user-profile package
 init. The :class:`UserProfileRecord` is included via the ``profile`` field
-of :class:`UserProfilePortableExport`. Callers that need the bundle import
-directly from this canonical-site path; the package surface intentionally
-does not re-export it.
+of :class:`UserProfilePortableExport`. This module is the canonical
+definition site; :mod:`aeat.domain.user_profile` exposes the same class
+through lazy ``__getattr__`` resolution so package import stays light.
 """
 
 from __future__ import annotations

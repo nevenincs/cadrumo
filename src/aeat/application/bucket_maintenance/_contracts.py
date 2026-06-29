@@ -1,11 +1,12 @@
-"""Pydantic command + result records for ``BucketMaintenanceService``.
+"""Pydantic command + result records for :class:`BucketMaintenanceService`.
 
-Used by: :mod:`~._service` (BucketMaintenanceService) to implement bucket operations.
+Used by: :mod:`~._service` to implement bucket operations.
 
 The contract records sit at the package boundary so a programmatic
 caller (the CLI handler, a future MCP surface) gets the same typed
 input + output shape that the service consumes. Closed-value axes are
 typed as their core enums per the architecture-boundaries discipline.
+Every bucket selector is a :class:`BucketId`.
 """
 
 from __future__ import annotations
@@ -22,11 +23,11 @@ from ...core.identity import BucketId
 class RenameBucketCommand(BaseModel):
     """Operator request to relabel a bucket.
 
-    Bucket identity is the stable UUID; only the operator-visible label
-    moves. The service forwards the relabel to the profile-rename
-    single-writer primitive, which holds the cross-store atomicity
-    (encrypted record ``display_name`` and plaintext manifest ``label``
-    move together).
+    ``bucket_id`` is the stable :class:`BucketId`; only the
+    operator-visible label moves. The service forwards the relabel to
+    the profile-rename single-writer primitive, which holds the
+    cross-store atomicity (encrypted record ``display_name`` and
+    plaintext manifest ``label`` move together).
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -141,10 +142,11 @@ class ExportBucketCommand(BaseModel):
 class ExportBucketResult(BaseModel):
     """Outcome of a successful bucket export.
 
-    Carries the written archive path plus the manifest digest that
-    the importer cross-checks at unseal time. Operator emitters
-    render the archive path so the operator can locate the file for
-    backup or transfer.
+    Carries the written archive path plus the manifest digest recorded
+    in the sealed archive header. The digest is bound into the payload's
+    AEAD associated data, so import refuses a tampered header at
+    decryption; operator emitters render the path so the operator can
+    locate the file for backup or transfer.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -176,10 +178,11 @@ class ImportBucketCommand(BaseModel):
 class ImportBucketResult(BaseModel):
     """Outcome of a successful bucket import.
 
-    Carries the imported bucket's identity and the manifest digest
-    the archive header declared. Downstream consumers cross-check
-    the digest against the freshly-provisioned manifest as a
-    pre-flight integrity gate.
+    Carries the imported :class:`BucketId` and the manifest digest the
+    archive header declared. The digest is evidence of the sealed
+    archive header that authenticated the payload; it is not recomputed
+    against the freshly provisioned host manifest because import-host
+    lifecycle timestamps legitimately differ.
     """
 
     model_config = STRICT_FROZEN_CONFIG

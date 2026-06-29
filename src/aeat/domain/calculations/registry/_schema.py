@@ -13,7 +13,15 @@ from datetime import date
 from decimal import Decimal
 from typing import Annotated, Literal
 
-from pydantic import BeforeValidator, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    Field,
+    ValidationInfo,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
 
 from ....core import Period, TaxDomain
 from ....core.aggregation import BindingAggregation, BindingSourceKind, BindingTypedEnumKind
@@ -58,6 +66,7 @@ __all__ = [
     "AlgorithmProviderDefinition",
     "ApplicationLinkDefinition",
     "BboxAnchorSpec",
+    "BindingSelector",
     "BracketEntry",
     "CalculationClass",
     "CalculationCompletenessCasilla",
@@ -106,6 +115,8 @@ __all__ = [
     "RegistrySnapshot",
     "RegistrySnapshotRef",
     "RegistryVerificationPolicy",
+    "RelationPeriodAlignment",
+    "RelationRevisionSelector",
     "ReviewStatus",
     "SensitivityClassField",
     "SourceCitation",
@@ -162,6 +173,8 @@ from ._schema_surfaces import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
     RelationDefinition,
+    RelationPeriodAlignment,
+    RelationRevisionSelector,
 )
 
 DecimalValue = _scalars.DecimalValue
@@ -181,6 +194,7 @@ CalendarDate = _scalars.CalendarDate
 WorkbookCellRefStr = _scalars.WorkbookCellRefStr
 BindingSelectorValue = _scalars.BindingSelectorValue
 BindingSelectorMap = _scalars.BindingSelectorMap
+BindingSelector = _scalars.BindingSelector
 _coerce_modelo_year = _scalars._coerce_modelo_year
 _validate_country_code = _scalars._validate_country_code
 _validate_iban_string = _scalars._validate_iban_string
@@ -246,7 +260,7 @@ class ExtractionTargetDefinition(RegistryModel):
             ``"numeric_casilla"`` anchors on the target casilla's printed
             ``number`` at line start and emits the canonical ``casilla_id``
             (numeric forms, e.g. printed ``"01"`` -> id ``"01"`` or
-            ``"01-legacy"``).
+            ``"01"``).
             ``"named_label"`` anchors on the human-readable printed label
             (for text-field modelos where a slug id is never printed).
             ``"bbox_anchored"`` locates the box number in the PDF word stream
@@ -822,7 +836,7 @@ class ModeloScheduleDefinition(RegistryModel):
 class DataBindingDefinition(RegistryModel):
     id: BindingId
     source: BindingSourceKind
-    selector: BindingSelectorMap
+    selector: BindingSelector
     aggregation: BindingAggregation | None = None
     typed_enum: BindingTypedEnumKind | None = None
     """Closed-set enum class name a consumer routes the binding value through.
@@ -872,6 +886,53 @@ class DataBindingDefinition(RegistryModel):
             return BindingSourceKind(value)
         return value
 
+    @field_validator("selector", mode="before")
+    @classmethod
+    def _coerce_selector(cls, value: object, info: ValidationInfo) -> object:
+        """Hydrate a raw selector mapping into its source-family model."""
+        if isinstance(value, BaseModel):
+            return value
+        source = info.data.get("source") if isinstance(info.data, Mapping) else None
+        binding_id = info.data.get("id") if isinstance(info.data, Mapping) else "<unknown>"
+
+        from ._binding_selector_utils import _canonical_selector_key_hint
+        from ._bindings import selector_model_for_source
+
+        selector_model = selector_model_for_source(source)
+        if selector_model is None:
+            source_value = source.value if isinstance(source, BindingSourceKind) else str(source)
+            raise RegistryValidationError(
+                f"binding {binding_id!r} source {source_value!r} is not a registry binding source "
+                "or has no selector model",
+            )
+        try:
+            return selector_model.model_validate(value)
+        except ValueError as exc:
+            selector = {str(key): item for key, item in value.items()} if isinstance(value, Mapping) else {}
+            hint = _canonical_selector_key_hint(selector, selector_model)
+            raise RegistryValidationError(
+                f"binding {binding_id!r} (source={source!r}) selector violates "
+                f"{selector_model.__name__}: {exc}{hint}",
+            ) from exc
+
+    @field_serializer("selector")
+    def _serialize_selector(self, selector: object) -> dict[str, object]:
+        """Serialise the concrete selector model as the authored selector mapping."""
+        if isinstance(selector, BaseModel):
+            return {
+                str(key): value
+                for key, value in selector.model_dump(
+                    exclude={"source"},
+                    exclude_none=True,
+                    exclude_unset=True,
+                ).items()
+            }
+        if isinstance(selector, Mapping):
+            return {str(key): value for key, value in selector.items() if key != "source"}
+        raise RegistryValidationError(
+            f"binding {self.id!r} selector serializer requires a mapping or model, got {type(selector).__name__}",
+        )
+
     @field_validator("typed_enum", mode="before")
     @classmethod
     def _coerce_typed_enum(cls, value: object) -> object:
@@ -894,24 +955,25 @@ class DataBindingDefinition(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_selector_shape(self) -> DataBindingDefinition:
-        """Validate the selector mapping against its source family's schema at construction.
+        """Validate the hydrated selector against its source family's schema at construction.
 
         Dispatches on :attr:`source` through the discriminated-union selector
         table (``_BINDING_SELECTOR_REGISTRY`` in :mod:`._bindings`, surfaced by
-        :func:`._bindings.selector_model_for_source`): a source carrying a typed
-        selector schema re-validates the as-stored selector mapping against that
-        per-family model the moment the binding is constructed, promoting the
+        :func:`._bindings.selector_model_for_source`): the raw authoring mapping
+        is hydrated into the per-family model and re-validated the moment the
+        binding is constructed, promoting the
         selector-shape half of the former snapshot-build-only gate
         (:func:`._bindings.validate_binding_selector_shape`) up into the model.
 
         This strictly TIGHTENS validation: a misshapen selector (an unknown key,
-        a legacy key name, an out-of-set ``fact`` literal) now fails at
+        a retired key name, an out-of-set ``fact`` literal) now fails at
         construction rather than only when the snapshot-build section validator
         runs. The op/fact cross-invariants — which depend on the separate
         :attr:`aggregation` field — remain owned by ``validate_binding_selector_shape``
         at snapshot build, so a binding whose selector is well-shaped but whose
         op/fact pairing is wrong stays constructible (the build gate rejects it).
-        A free-form source absent from the table is not constrained here.
+        A source absent from the selector registry is mesh-only or unregistered
+        and is refused as a registry binding source.
 
         The accessor and validator are imported lazily because :mod:`._bindings`
         imports :class:`DataBindingDefinition` from this module; the lazy import
@@ -927,7 +989,10 @@ class DataBindingDefinition(RegistryModel):
 
         selector_model = selector_model_for_source(self.source)
         if selector_model is None:
-            return self
+            raise RegistryValidationError(
+                f"binding {self.id!r} source {self.source.value!r} is not a registry binding source "
+                "or has no selector model",
+            )
         diagnostics = selector_against_model(self, selector_model)
         if diagnostics:
             raise RegistryValidationError(diagnostics[0])

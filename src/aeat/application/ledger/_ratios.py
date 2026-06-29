@@ -140,7 +140,7 @@ def validate_ratios_profile(
 
     # The domain-layer profile already rejects out-of-bounds ratios at
     # construction time; surfacing those here is a defensive guard for
-    # legacy on-disk records that bypass validation on read.
+    # malformed on-disk records that bypass validation on read.
     for category, ratio in profile.ratios.items():
         if category not in ELIGIBLE_USAGE_RATIO_CATEGORIES:
             findings.append(

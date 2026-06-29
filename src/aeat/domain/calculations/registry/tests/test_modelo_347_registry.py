@@ -120,13 +120,15 @@ def test_committed_modelo_347_filing_schedule_is_annual() -> None:
 @pytest.mark.parametrize(
     ("filing_year", "expected_open", "expected_close"),
     [
-        # Plazo per Orden EHA/3012/2008 art 10: durante el mes de febrero
+        # Plazo per Orden EHA/3012/2008 art. 10: durante el mes de febrero,
+        # shifted by the AEAT annual calendar when February ends on a non-working day.
         (2018, date(2019, 2, 1), date(2019, 2, 28)),
         (2019, date(2020, 2, 1), date(2020, 2, 29)),
         (2024, date(2025, 2, 1), date(2025, 2, 28)),
+        (2025, date(2026, 2, 1), date(2026, 3, 2)),
     ],
 )
-def test_committed_modelo_347_deadline_window_is_february_following_ejercicio(
+def test_committed_modelo_347_deadline_window_matches_official_calendar(
     filing_year: int,
     expected_open: date,
     expected_close: date,
@@ -143,6 +145,8 @@ def test_committed_modelo_347_deadline_window_is_february_following_ejercicio(
     assert window.period_kind == "annual"
     assert window.opens_on == expected_open
     assert window.closes_on == expected_close
+    if filing_year == 2025:
+        assert "aeat-calendario-contribuyente-2026-hasta-2-marzo" in window.source_refs
 
 
 def test_committed_modelo_347_construct_includes_revision_members() -> None:

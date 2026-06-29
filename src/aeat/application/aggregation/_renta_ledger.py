@@ -1,15 +1,23 @@
-"""Repository-backed Renta expense aggregation from ledger catalogues.
+"""Repository-backed Modelo 100 Renta expense aggregation.
 
-Used by: :mod:`~._service` (per-modelo aggregation service) for Modelo 100 expense aggregation.
+This is the annual first-slice expense projection behind the
+``ledger_renta_expense_aggregation`` source. It loads both a
+:class:`~aeat.domain.transactions.TransactionCatalogue` and a
+:class:`~aeat.domain.invoices.InvoiceCatalogue` from the active bucket through
+:class:`~aeat.domain.transactions.TransactionCatalogueRepository` and
+:class:`~aeat.domain.invoices.InvoiceCatalogueRepository`, uses
+purchase-invoice evidence to validate deductible-expense facts, and returns
+binding-ready :class:`~aeat.domain.renta.RentaDeductibleExpenseObservation`
+records.
 
-The main entry point :func:`aggregate_renta_ledger_expenses_from_repositories`
-loads both a :class:`~aeat.domain.transactions.TransactionCatalogue`
-via :class:`~aeat.domain.transactions.TransactionCatalogueRepository` and an
-:class:`~aeat.domain.invoices.InvoiceCatalogue` via
-:class:`~aeat.domain.invoices.InvoiceCatalogueRepository` from the
-active bucket and feeds them to :func:`aggregate_renta_ledger_expenses`.
+The source-mesh resolver in :mod:`~._modelo_bindings` applies the target
+:class:`~aeat.domain.calculations.registry.ModeloRevision`, resolves registry
+bindings, and reports source issues or unrouted expenses on its
+:class:`~._source_mesh.CalculationSourceResolution`. The M130 quarterly gasto
+projection is intentionally separate in :mod:`~._renta_gasto_ledger`.
 
-Related: :mod:`~._iva_ledger`, :mod:`~._renta_income_ledger` for similar pipelines.
+Related: :mod:`~._iva_ledger` and :mod:`~._renta_income_ledger` for sibling
+ledger projections.
 """
 
 from __future__ import annotations

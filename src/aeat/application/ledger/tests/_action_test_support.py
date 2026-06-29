@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import csv
 import hashlib
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -257,8 +257,10 @@ def _persist_verified_revision_citing_transaction(
     objects: SecureObjectRepository,
     *,
     transaction_id: str,
+    additional_transaction_ids: Iterable[str] = (),
     bucket_id: str = "bucket-a",
 ) -> None:
+    source_transaction_ids = (transaction_id, *tuple(additional_transaction_ids))
     period = Period.from_year_and_code(2026, "1T")
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
@@ -272,7 +274,7 @@ def _persist_verified_revision_citing_transaction(
         input_values_by_casilla_id={_REVISION_CASILLA: "1"},
         binding_overrides={},
         casilla_values={_REVISION_CASILLA: Decimal("1")},
-        source_transaction_ids=(transaction_id,),
+        source_transaction_ids=source_transaction_ids,
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
@@ -292,7 +294,7 @@ def _persist_verified_revision_citing_transaction(
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         input_values_by_casilla_id={_REVISION_CASILLA: "1"},
         binding_overrides={},
-        source_transaction_ids=(transaction_id,),
+        source_transaction_ids=source_transaction_ids,
         casilla_values={_REVISION_CASILLA: Decimal("1")},
         observations=registry_grounded_observations(
             modelo="303",
@@ -319,9 +321,15 @@ def persist_verified_revision_citing_transaction(
     objects: SecureObjectRepository,
     *,
     transaction_id: str,
+    additional_transaction_ids: Iterable[str] = (),
     bucket_id: str = "bucket-a",
 ) -> None:
-    _persist_verified_revision_citing_transaction(objects, transaction_id=transaction_id, bucket_id=bucket_id)
+    _persist_verified_revision_citing_transaction(
+        objects,
+        transaction_id=transaction_id,
+        additional_transaction_ids=additional_transaction_ids,
+        bucket_id=bucket_id,
+    )
 
 
 @dataclass(frozen=True, slots=True)

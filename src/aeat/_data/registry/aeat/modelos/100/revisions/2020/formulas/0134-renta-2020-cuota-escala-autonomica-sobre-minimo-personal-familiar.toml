@@ -23,7 +23,7 @@ expression = { op = "lookup_bracket_by_ccaa", args = [
     ] },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-74", "ley-35-2006:art-75"]
+legal_refs = ["ley-35-2006:art-73", "ley-35-2006:art-74"]
 source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
 
 [[revisions."2020".formulas.source_citations]]

@@ -16,7 +16,12 @@
 
 [revisions."esquema-exterior".completeness_manifest]
 source_ref = "aeat-dr-369-2021"
-legal_refs = ["ley-37-1992:art-163-octiesdecies", "orden-hac-610-2021:art-1"]
+legal_refs = [
+    "ley-37-1992:art-163-octiesdecies",
+    "ley-37-1992:art-163-noniesdecies",
+    "ley-37-1992:art-163-vicies",
+    "orden-hac-610-2021:art-1",
+]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".completeness_manifest.casillas]]

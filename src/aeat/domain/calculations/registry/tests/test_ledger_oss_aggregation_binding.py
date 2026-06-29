@@ -32,6 +32,7 @@ from .. import (
     unsupported_ledger_oss_observations,
     validate_ledger_oss_aggregation_binding_definition,
 )
+from .._binding_selector_utils import selector_as_dict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -47,7 +48,7 @@ def _binding(binding_id: str = "modelo-369-union-de-services-21pct") -> DataBind
 
 
 def _with_selector(binding: DataBindingDefinition, **updates: object) -> DataBindingDefinition:
-    return binding.model_copy(update={"selector": {**binding.selector, **updates}})
+    return binding.model_copy(update={"selector": {**selector_as_dict(binding), **updates}})
 
 
 def _with_aggregation(binding: DataBindingDefinition, op: BindingAggregationOp) -> DataBindingDefinition:

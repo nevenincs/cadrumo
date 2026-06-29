@@ -33,6 +33,6 @@ corpus_round_trip_verified = true
 verification_source = "synthetic_from_aeat_published_text"
 min_coverage = "0"
 failure_semantics = "fail_hard"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
 

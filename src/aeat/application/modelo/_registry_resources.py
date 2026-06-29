@@ -1,10 +1,22 @@
 """Registry resource helpers shared by modelo application actions.
 
-All modelo application services access the packaged registry through the
-central :class:`ValidatedRegistryAuthority` exposed by
-``resources().modelos.authority``. The create-work-unit guards below use that
-authority to reject unknown revisions or periods before a work unit records a
-law-determined registry identity.
+Modelo application services access the packaged registry through the central
+:class:`ValidatedRegistryAuthority` exposed by ``resources().modelos.authority``.
+This module keeps that access path in one place for work-unit creation,
+calculation, verification, import, and comparison code that needs the bundled
+``registry/aeat`` tree or its cached authority.
+
+The revision and period guards are create-work-unit checks: they reject user
+input that names a modelo revision or filing period the committed registry does
+not declare, before a work unit records a law-determined registry identity.
+
+See Also:
+    :mod:`aeat.core.resources`:
+        Owns the packaged resource registry and bundled-path resolution.
+    :class:`aeat.domain.calculations.registry.ValidatedRegistryAuthority`:
+        Loads and validates modelo definitions, then serves registry snapshots.
+    :mod:`aeat.application.modelo._registry_helpers`:
+        Uses this authority shim for import/amendment registry checks.
 """
 
 from __future__ import annotations
@@ -20,21 +32,37 @@ if TYPE_CHECKING:
 
 
 def registry_root() -> Path:
-    """Resolve the registry root from the packaged data tree."""
+    """Return the bundled ``registry/aeat`` root used by modelo services.
+
+    The returned :class:`~pathlib.Path` is the path passed to registry-facing
+    errors when the packaged registry cannot be loaded. It intentionally mirrors
+    the root used by :func:`authority_via_resources`.
+    """
     from ...core.resources import bundled_path
 
     return bundled_path("registry", "aeat")
 
 
 def authority_via_resources() -> ValidatedRegistryAuthority:
-    """Return the :class:`ValidatedRegistryAuthority` via the central resource registry."""
+    """Return the central :class:`ValidatedRegistryAuthority` for modelo registry access.
+
+    Callers use this instead of constructing a local authority so calculation,
+    verification, import, and create-work-unit paths share the same packaged
+    registry cache and source-root configuration.
+    """
     from ...core.resources import resources
 
     return resources().modelos.authority
 
 
 def reject_unknown_revision(*, modelo: str, revision_id: str) -> None:
-    """Refuse a work-unit create that names a revision the registry does not declare."""
+    """Refuse a work-unit create that names an undeclared revision id.
+
+    The central :class:`ValidatedRegistryAuthority` first resolves the modelo
+    definition. If the modelo exists but ``revision_id`` is absent from its
+    revision map, this raises :class:`ModeloError` with the available revision
+    ids.
+    """
     from ...domain.calculations.registry import RegistrySnapshotError
 
     try:
@@ -50,7 +78,13 @@ def reject_unknown_revision(*, modelo: str, revision_id: str) -> None:
 
 
 def reject_unknown_period_for_revision(*, modelo: str, revision_id: str, period: Period) -> None:
-    """Refuse a work-unit create that names a period the revision does not declare."""
+    """Refuse a work-unit create whose :class:`Period` is absent from the revision schedules.
+
+    The guard inspects the named revision's filing schedules and compares the
+    caller's ``period.registry_token`` to the declared period tokens. A revision
+    with no declared schedule is accepted here; a missing revision is also left
+    alone because :func:`reject_unknown_revision` owns that refusal.
+    """
     from ...domain.calculations.registry import RegistrySnapshotError
 
     try:

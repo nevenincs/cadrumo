@@ -11,7 +11,7 @@
 #
 # S389b runtime helper (_resolve_m210_rate) emits BLOCKING findings
 # when a profile-declared treaty country has no row for the requested
-# tipo_renta, or when the row carries the NOT_YET_AUTHORED placeholder.
+# tipo_renta.
 
 [[revisions."2025".parameters]]
 id = "m210-convenio-rates"

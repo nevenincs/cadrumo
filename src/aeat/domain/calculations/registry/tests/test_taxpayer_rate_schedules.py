@@ -6,6 +6,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import build_snapshot, load_registry_tree
+from .._binding_selector_utils import selector_as_dict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -69,6 +70,8 @@ def test_legal_entity_route_has_is_rate_schedule_by_entity_form() -> None:
 
     scalar_rates = {
         "is.modelo-200.tipo-gravamen-general",
+        "is.modelo-200.tipo-gravamen-pyme-display",
+        "is.modelo-200.tipo-gravamen-erd-art101",
         "is.modelo-200.tipo-gravamen-new-entity-first-2-years",
         "is.modelo-200.tipo-gravamen-cooperative-protected",
         "is.modelo-200.tipo-gravamen-non-profit-special-regime",
@@ -89,9 +92,10 @@ def test_legal_entity_route_has_is_rate_schedule_by_entity_form() -> None:
     binding = next(
         binding for binding in revision.bindings if binding.id == "modelo-200-2024-profile-legal-entity-form"
     )
+    selector = selector_as_dict(binding)
     assert binding.source == "profile"
-    assert binding.selector["profile_model"] == "taxpayer"
-    assert binding.selector["field"] == "legal_entity_form"
+    assert selector["profile_model"] == "taxpayer"
+    assert selector["field"] == "legal_entity_form"
     assert binding.typed_enum == "LegalEntityForm"
     assert "ley-27-2014:art-29" in binding.legal_refs
 
@@ -99,13 +103,7 @@ def test_legal_entity_route_has_is_rate_schedule_by_entity_form() -> None:
         formula for formula in revision.formulas if formula.id == "modelo-200-tipo-gravamen-por-forma-juridica"
     )
     assert {"ley-27-2014:art-29", "ley-27-2014:art-30"} <= set(dispatch_formula.legal_refs)
-    # The formula is a 3-level nested if_then_else: new-entity override
-    # (args[1]) -> ERD-threshold branch (args[2].args[1]) -> established-entity
-    # general rates (args[2].args[2]). The canonical "rate schedule by entity
-    # form" is the established-entity general branch; sal/sll (sociedades
-    # laborales) were added to every entity-form axis.
-    dispatch_by_form = dispatch_formula.expression.args[2].args[2].args[2].dispatch_table
-    assert dispatch_by_form == {
+    general_form_dispatch = {
         "sl": "is.modelo-200.tipo-gravamen-general",
         "sa": "is.modelo-200.tipo-gravamen-general",
         "sal": "is.modelo-200.tipo-gravamen-general",
@@ -115,3 +113,36 @@ def test_legal_entity_route_has_is_rate_schedule_by_entity_form() -> None:
         "cooperativa": "is.modelo-200.tipo-gravamen-cooperative-protected",
         "sin_fines_lucrativos": "is.modelo-200.tipo-gravamen-non-profit-special-regime",
     }
+    micro_form_dispatch = {
+        **general_form_dispatch,
+        "sl": "is.modelo-200.tipo-gravamen-pyme-display",
+        "sa": "is.modelo-200.tipo-gravamen-pyme-display",
+        "sal": "is.modelo-200.tipo-gravamen-pyme-display",
+        "sll": "is.modelo-200.tipo-gravamen-pyme-display",
+        "sociedad_civil_mercantil": "is.modelo-200.tipo-gravamen-pyme-display",
+        "other": "is.modelo-200.tipo-gravamen-pyme-display",
+    }
+    erd_form_dispatch = {
+        **general_form_dispatch,
+        "sl": "is.modelo-200.tipo-gravamen-erd-art101",
+        "sa": "is.modelo-200.tipo-gravamen-erd-art101",
+        "sal": "is.modelo-200.tipo-gravamen-erd-art101",
+        "sll": "is.modelo-200.tipo-gravamen-erd-art101",
+        "sociedad_civil_mercantil": "is.modelo-200.tipo-gravamen-erd-art101",
+        "other": "is.modelo-200.tipo-gravamen-erd-art101",
+    }
+
+    # The formula is a four-lane nested if_then_else:
+    # new-entity override -> micro-empresa -> ERD art.101 -> general sub-form.
+    # Each lane keeps sal/sll on the legal-entity axis.
+    new_entity_dispatch = dispatch_formula.expression.args[1].args[2].dispatch_table
+    micro_dispatch = dispatch_formula.expression.args[2].args[1].args[2].dispatch_table
+    erd_dispatch = dispatch_formula.expression.args[2].args[2].args[1].args[2].dispatch_table
+    general_dispatch = dispatch_formula.expression.args[2].args[2].args[2].args[2].dispatch_table
+
+    assert new_entity_dispatch == {
+        key: "is.modelo-200.tipo-gravamen-new-entity-first-2-years" for key in general_form_dispatch
+    }
+    assert micro_dispatch == micro_form_dispatch
+    assert erd_dispatch == erd_form_dispatch
+    assert general_dispatch == general_form_dispatch

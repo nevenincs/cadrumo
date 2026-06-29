@@ -1,4 +1,22 @@
-"""Art. 20 LIRPF trabajo-reducción advisory helper for modelo verification."""
+"""Art. 20 LIRPF trabajo-reducción advisory helper for modelo verification.
+
+The Art. 20 reduction remains a manual Modelo 100 casilla until the engine has
+the cross-section ``otras rentas distintas del trabajo`` aggregate needed to
+prove eligibility. This module implements the ADR's Phase-1 choice: emit a
+non-blocking :class:`ModeloVerificationFinding` when the RNT band makes a
+zero general reduction suspicious, but do not block a legitimate zero.
+
+See Also:
+    :func:`aeat.application.modelo._verification_actions._collect_revision_verification_findings`
+        Verification collector that appends this advisory beside the DT 12ª
+        advisory.
+    :func:`aeat.application.modelo._dt12_advisory._dt12_reduccion_advisory_finding`
+        Sibling registry-independent reduction advisory using the same helper
+        mechanism.
+    :func:`aeat.application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`
+        Structural revision semantic-role lookup used to find the RNT and
+        reduction casillas without hard-coding numbers.
+"""
 
 from __future__ import annotations
 
@@ -40,6 +58,12 @@ def _art20_reduccion_advisory_finding(
     cross-section aggregate the engine cannot yet evaluate, so a legitimately-zero
     reduction (otras rentas above the gate) must remain permissible
     (``no-silent-under-declaration``).
+
+    The ``revision`` is a structural registry revision compatible with
+    :func:`aeat.application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`.
+    A matching case returns a :class:`ModeloVerificationFinding` with
+    ``ley-35-2006:art-20`` grounding; absent roles or out-of-band values return
+    ``None``.
     """
     try:
         rnt_id = casilla_id_for_unique_revision_semantic_role(revision, _ART20_RNT_ROLE)

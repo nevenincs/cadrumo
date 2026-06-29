@@ -98,7 +98,7 @@ class WorkflowInputMismatchError(CoreValidationError):
 
     Used both by the engine's ``run_for_period`` gate (malformed
     ``resumed_from`` run id shape) and by
-    :class:`aeat.application.modelo._actions._RevisionInputsProvider`
+    :class:`aeat.application.modelo._workflow_gate._RevisionInputsProvider`
     (modelo code or period mismatch against the baked revision).  Any
     deviation signals a programming error or a stale work-unit reference
     and must be rejected before inputs reach the engine.

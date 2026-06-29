@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -25,6 +26,19 @@ def _trlirnr_corpus_paragraph(anchor: str) -> str:
     start_marker = f'<p id="{anchor}">'
     assert start_marker in text
     return text.split(start_marker, 1)[1].split("</p>", 1)[0]
+
+
+def _trlirnr_extracted_markdown() -> str:
+    return bundled_path("corpus", "normatives", "html", "trlirnr-rdleg-5-2004.html.extracted.md").read_text(
+        encoding="utf-8",
+    )
+
+
+def _orden_hac_623_2026_extracted_markdown() -> str:
+    text = bundled_path("corpus", "normatives", "html", "orden-hac-623-2026.html.extracted.md").read_text(
+        encoding="utf-8",
+    )
+    return text.replace("\xa0", " ")
 
 
 def test_modelo_210_validator_accepts_committed_definition() -> None:
@@ -66,6 +80,39 @@ def test_modelo_210_snapshot_builds_for_2025_event_period() -> None:
     assert snapshot.revision.id == "2025"
 
 
+def test_modelo_210_2026_order_is_bundled_and_referenced_by_current_surfaces() -> None:
+    modelo, catalogues = _load_modelo_210()
+    revision = modelo.revisions["2025"]
+
+    deadline_source = catalogues.sources["boe-modelo-210-2026-deadline-update"]
+    layout_2026_source = catalogues.sources["boe-modelo-210-2026-form-layout"]
+    layout_2024_source = catalogues.sources["boe-modelo-210-2024-form-layout"]
+
+    assert deadline_source.corpus_path == "corpus/normatives/html/orden-hac-623-2026.html"
+    assert deadline_source.sha256 == "6377e90dadde044d6872ad025171391275f18b88be67bd47f7ad64437725c56c"
+    assert deadline_source.bytes == 64700
+    assert deadline_source.source_url == "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-13573"
+    assert deadline_source.published_at == date(2026, 6, 23)
+    assert deadline_source.applies_from == date(2026, 1, 1)
+
+    assert layout_2024_source.applies_to == date(2026, 12, 31)
+    assert layout_2026_source.corpus_path == deadline_source.corpus_path
+    assert layout_2026_source.applies_from == date(2027, 1, 1)
+
+    assert "boe-modelo-210-2026-deadline-update" in revision.source_refs
+    assert "boe-modelo-210-2026-form-layout" in revision.source_refs
+    filing_link = next(link for link in revision.application_links if link.surface == "filing")
+    assert "boe-modelo-210-2026-deadline-update" in filing_link.source_refs
+    assert any(ref.workbook_source == "boe-modelo-210-2026-form-layout" for ref in revision.workbook_parity_refs)
+
+    extracted_order = _orden_hac_623_2026_extracted_markdown()
+    assert "anexo de “desglose de dividendos”" in extracted_order
+    assert "desglose de gastos deducibles de inmuebles arrendados o subarrendados" in extracted_order
+    assert "desde el día 1 de abril hasta el 23 de diciembre" in extracted_order
+    assert "autoliquidaciones que se presenten desde el 1 de enero de 2027" in extracted_order
+    assert "devengos correspondientes a 2026" in extracted_order
+
+
 def test_modelo_210_interest_rate_is_grounded_in_unconditional_art_25_1_f() -> None:
     modelo, catalogues = _load_modelo_210()
     revision = modelo.revisions["2025"]
@@ -86,6 +133,17 @@ def test_modelo_210_interest_rate_is_grounded_in_unconditional_art_25_1_f() -> N
     assert "Ganancias patrimoniales" in corpus_paragraph
     assert "Union Europea" not in corpus_paragraph
     assert "Espacio Economico Europeo" not in corpus_paragraph
+
+
+def test_modelo_210_searchable_extract_preserves_unconditional_art_25_1_f() -> None:
+    corpus_paragraph = _trlirnr_corpus_paragraph("a25-1-f")
+    extracted_lines = _trlirnr_extracted_markdown().splitlines()
+    extracted_art_25_1_f = next(line for line in extracted_lines if line.startswith("f) "))
+
+    assert extracted_art_25_1_f == corpus_paragraph
+    assert "Intereses y otros rendimientos obtenidos por la cesion a terceros" in extracted_art_25_1_f
+    assert "Ganancias patrimoniales" in extracted_art_25_1_f
+    assert "residentes en otro Estado miembro" not in extracted_art_25_1_f
 
 
 def test_modelo_210_imputed_real_estate_art_13_1_h_is_catalogued_for_deferred_branch() -> None:

@@ -32,6 +32,7 @@ from .. import (
     validate_ledger_renta_expense_aggregation_binding_definition,
     validated_casilla_id,
 )
+from .._binding_selector_utils import selector_as_dict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -57,16 +58,20 @@ _UNKNOWN_RENTA_EXPENSE_CASILLA: CasillaId = validated_casilla_id(
 )
 
 
-def _modelo_100_2025_snapshot():
+def _modelo_100_snapshot(filing_year: int):
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(item for item in modelos if item.id == "100")
     return build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=filing_year,
         period="0A",
     )
+
+
+def _modelo_100_2025_snapshot():
+    return _modelo_100_snapshot(2025)
 
 
 def _expense_observation(
@@ -124,6 +129,21 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
             category=SpendingCategory.ASESORIA_CONTABLE,
             gross_amount=Decimal("79.00"),
         ),
+        _expense_observation(
+            "tx-software",
+            category=SpendingCategory.SOFTWARE_SUSCRIPCION,
+            gross_amount=Decimal("360.00"),
+        ),
+        _expense_observation(
+            "tx-material",
+            category=SpendingCategory.MATERIAL_OFICINA,
+            gross_amount=Decimal("240.00"),
+        ),
+        _expense_observation(
+            "tx-marketing",
+            category=SpendingCategory.PUBLICIDAD_MARKETING,
+            gross_amount=Decimal("180.00"),
+        ),
     )
 
     binding_values = resolve_ledger_renta_expense_aggregation_binding_values(revision, observations)
@@ -145,7 +165,7 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
         "no observation in 0192's category — must aggregate to zero"
     )
     assert casilla_inputs[_M100_GASTO_OTROS_CONCEPTOS_CASILLA] > Decimal("0"), (
-        "ASESORIA_FISCAL + ASESORIA_CONTABLE must both route to 0199"
+        "ASESORIA, office, software, and marketing observations must route to 0199"
     )
     assert casilla_inputs[_M100_GASTO_AMORTIZACIONES_CASILLA] == Decimal("0"), (
         "no observation in 0203's category — must aggregate to zero"
@@ -158,6 +178,11 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
     ss_observation = observations[0]
     assert casilla_inputs[_M100_GASTO_SS_CASILLA] == ss_observation.deductible_amount, (
         "0186 binding aggregate of one observation must equal that observation's deductible amount"
+    )
+    otros_observations = observations[1:]
+    assert casilla_inputs[_M100_GASTO_OTROS_CONCEPTOS_CASILLA] == sum(
+        (observation.deductible_amount for observation in otros_observations),
+        start=Decimal("0"),
     )
 
     calculation = calculate_registry_snapshot(
@@ -195,6 +220,56 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
     assert calculation.values[_M100_GASTO_OTROS_CONCEPTOS_CASILLA] == binding_values[
         "renta-2025-ledger-expense-0199-deductible"
     ]
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "manual_source_ref", "manual_heading", "fase_heading"),
+    [
+        (
+            2024,
+            "aeat-renta-2024-manual-parte1",
+            "Concepto y ámbito de aplicación del método de estimación directa",
+            "Fase 1ª. Determinación del rendimiento neto",
+        ),
+        (
+            2025,
+            "aeat-renta-2025-manual-parte1",
+            "Concepto y ambito de aplicacion del metodo de estimacion directa",
+            "Fase 1ª. Determinacion del rendimiento neto",
+        ),
+    ],
+)
+def test_modelo_100_renta_ledger_expense_bindings_cite_year_manual(
+    filing_year: int,
+    manual_source_ref: str,
+    manual_heading: str,
+    fase_heading: str,
+) -> None:
+    """First-slice expense bindings must cite the AEAT manual for their filing year."""
+    revision = _modelo_100_snapshot(filing_year).revision
+    expected_targets = {
+        _M100_GASTO_SS_CASILLA,
+        _M100_GASTO_ARRENDAMIENTOS_CASILLA,
+        _M100_GASTO_OTROS_CONCEPTOS_CASILLA,
+        _M100_GASTO_AMORTIZACIONES_CASILLA,
+    }
+    bindings = {
+        selector_as_dict(binding)["target_casilla_id"]: binding
+        for binding in revision.bindings
+        if binding.source == "ledger_renta_expense_aggregation"
+    }
+
+    assert expected_targets <= set(bindings)
+    for target in expected_targets:
+        binding = bindings[target]
+        assert manual_source_ref in binding.source_refs, f"{binding.id} is missing {manual_source_ref}"
+        manual_citations = [
+            citation for citation in binding.source_citations if citation.source_ref == manual_source_ref
+        ]
+        assert manual_citations, f"{binding.id} must carry required_text for {manual_source_ref}"
+        required_text = set(manual_citations[0].required_text)
+        assert manual_heading in required_text
+        assert fase_heading in required_text
 
 
 def test_renta_ledger_expense_binding_rejects_noncanonical_selector() -> None:
@@ -258,7 +333,7 @@ def _single_expense_binding_revision(snapshot: RegistrySnapshot, target_casilla_
         item
         for item in revision.bindings
         if item.source == "ledger_renta_expense_aggregation"
-        and dict(item.selector).get("target_casilla_id") == target_casilla_id
+        and selector_as_dict(item).get("target_casilla_id") == target_casilla_id
     )
     return revision.model_copy(update={"bindings": (binding,)})
 

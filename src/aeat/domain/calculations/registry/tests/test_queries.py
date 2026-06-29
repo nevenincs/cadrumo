@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -11,7 +12,7 @@ from .....core.resources import bundled_path
 from .. import CasillaId, validated_casilla_id
 from .._authority import ValidatedRegistryAuthority
 from .._errors import AmbiguousRevisionSelectionError, RegistryValidationError
-from .._queries import ModeloFormulaRow, RegistryQueryService
+from .._queries import BindingSelectorQueryProjection, ModeloFormulaRow, RegistryQueryService
 from .._schema import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -184,6 +185,53 @@ def test_query_service_exposes_casillas_bindings_and_formulas_from_same_revision
     assert formulas.code == "303"
     assert formulas.rows
     assert any(row.input_casilla_ids or row.input_bindings or row.input_parameters for row in formulas.rows)
+
+
+def test_binding_query_rows_expose_typed_selector_projection() -> None:
+    service = _service()
+
+    report = service.bindings_for_scope("130", filing_year=2026, period="1T")
+    row = next(item for item in report.rows if item.binding_id == "modelo-130-resultados-negativos-anteriores")
+
+    assert isinstance(row.selector, BindingSelectorQueryProjection)
+    assert not isinstance(row.selector, Mapping)
+    assert row.selector.source == "previous_filing"
+    assert row.selector.keys == (
+        "max_year_delta",
+        "source_casilla_id",
+        "source_modelo",
+        "source_period_offset_from_target",
+    )
+    assert {entry.key: entry.value for entry in row.selector.entries} == {
+        "max_year_delta": 0,
+        "source_casilla_id": "saldo-negativo-fin-periodo",
+        "source_modelo": "130",
+        "source_period_offset_from_target": -1,
+    }
+
+
+def test_binding_query_rows_dump_selector_as_ordered_entries() -> None:
+    service = _service()
+
+    report = service.bindings_for_scope("130", filing_year=2026, period="1T")
+    row = next(item for item in report.rows if item.binding_id == "modelo-130-resultados-negativos-anteriores")
+    dumped = row.model_dump(mode="json")
+
+    assert dumped["selector"] == {
+        "source": "previous_filing",
+        "keys": [
+            "max_year_delta",
+            "source_casilla_id",
+            "source_modelo",
+            "source_period_offset_from_target",
+        ],
+        "entries": [
+            {"key": "max_year_delta", "value": 0},
+            {"key": "source_casilla_id", "value": "saldo-negativo-fin-periodo"},
+            {"key": "source_modelo", "value": "130"},
+            {"key": "source_period_offset_from_target", "value": -1},
+        ],
+    }
 
 
 def test_formula_row_rejects_legacy_input_casillas_key() -> None:

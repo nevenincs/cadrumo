@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import base64
 from datetime import UTC, date, datetime
-from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
@@ -13,14 +12,9 @@ from ....adapters.outbound.aeat.sede import Declaracion
 from ....core import Period
 from ....domain.calculations.registry import (
     ApplicabilityVerdict,
-    CasillaId,
-    RegistryModeloObservation,
-    validated_casilla_id,
 )
 from ....domain.deadlines import ObligationStatus
-from ....domain.modelos import ExternalEvidence, ExternalEvidenceKind, ModeloRecord
-from ....tests.registry_observations import registry_grounded_observations
-from ...calculations import CalculationObservationRepository
+from ....domain.modelos import ExternalEvidenceKind, ModeloRecord
 from ...live._expedientes import PersistedExpedientesSnapshot
 from ...live._justificante import JustificanteCaptureSnapshot
 from ...live._snapshot_base import SnapshotLifecycleState
@@ -34,14 +28,10 @@ from .. import (
     OverviewLocalFilingState,
     OverviewPeriodState,
     SuppressedCalendarEntry,
-    build_overview_calendar,
     calendar_events_from_expedientes_snapshots,
     calendar_events_from_justificante_capture_snapshots,
     calendar_events_from_modelo_records,
     calendar_filing_evidence_from_sources,
-)
-from .calendar_test_support import (
-    FILED_JUSTIFICANTE_STORAGE_REF as _FILED_JUSTIFICANTE_STORAGE_REF,
 )
 from .calendar_test_support import (
     PERIOD_2025_1T as _PERIOD_2025_1T,
@@ -50,10 +40,13 @@ from .calendar_test_support import (
     SOURCE_URL as _SOURCE_URL,
 )
 from .calendar_test_support import (
-    filed_declaration_artefact as _filed_declaration_artefact,
+    calculation_observation_payload as _calculation_observation_payload,
 )
 from .calendar_test_support import (
-    filed_declaration_observation as _filed_declaration_observation,
+    calendar_with_evidence as _calendar_with_evidence,
+)
+from .calendar_test_support import (
+    external_evidence as _external_evidence,
 )
 from .calendar_test_support import (
     justificante_metadata as _justificante_metadata,
@@ -61,56 +54,8 @@ from .calendar_test_support import (
 from .calendar_test_support import (
     modelo_record as _modelo_record,
 )
-from .calendar_test_support import (
-    profile as _profile,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"overview filing evidence fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_OBSERVED_CASILLA: CasillaId = _casilla_id("01")
-
-
-def _observed_casilla_observations(value: Decimal):
-    return registry_grounded_observations(
-        modelo="303",
-        filing_year=2025,
-        period="1T",
-        casilla_values={_OBSERVED_CASILLA: value},
-    )
-
-
-def _calculation_observation_payload(
-    *,
-    source_kind: str,
-    source_metadata: dict[str, str] | None = None,
-    value: Decimal = Decimal("123.45"),
-) -> object:
-    observation = RegistryModeloObservation(
-        modelo="303",
-        filing_year=2025,
-        period="1T",
-        observations=_observed_casilla_observations(value),
-    )
-    if source_metadata is None:
-        return CalculationObservationRepository.payload_type(
-            observation=observation,
-            captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
-            source_kind=source_kind,
-        )
-    return CalculationObservationRepository.payload_type(
-        observation=observation,
-        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
-        source_kind=source_kind,
-        source_metadata=source_metadata,
-    )
 
 
 def _justificante_capture_snapshot(
@@ -177,11 +122,7 @@ def test_modelo_record_calendar_event_reports_verified_aeat_justificante_axis() 
         (
             _modelo_record(
                 aeat_accepted=True,
-                external_evidence=ExternalEvidence(
-                    kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
-                    reference_id=csv,
-                    imported_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
-                ),
+                external_evidence=_external_evidence(ExternalEvidenceKind.AEAT_LIVE_CAPTURE, csv),
             ),
         ),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
@@ -367,11 +308,7 @@ def test_live_capture_external_evidence_requires_persisted_justificante_to_verif
         filing_records=(
             _modelo_record(
                 aeat_accepted=True,
-                external_evidence=ExternalEvidence(
-                    kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
-                    reference_id=csv,
-                    imported_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
-                ),
+                external_evidence=_external_evidence(ExternalEvidenceKind.AEAT_LIVE_CAPTURE, csv),
             ),
         ),
         justificantes=(_justificante_metadata(csv=csv),),
@@ -388,52 +325,30 @@ def test_live_capture_external_evidence_requires_persisted_justificante_to_verif
     assert row.verified_justificante_csv == csv
 
 
-def test_justificante_taxpayer_match_is_case_insensitive() -> None:
+def test_modelo_record_justificante_matching_is_case_insensitive() -> None:
     csv = "CSVLIVE3031T2025"
-    evidence = calendar_filing_evidence_from_sources(
-        filing_records=(
-            _modelo_record(
-                aeat_accepted=True,
-                external_evidence=ExternalEvidence(
-                    kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
-                    reference_id=csv,
-                    imported_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
-                ),
-            ),
-        ),
-        justificantes=(_justificante_metadata(csv=csv, tax_id="X1234567L"),),
-        expected_tax_id="x1234567l",
+    cases = (
+        ("taxpayer-id", csv, csv, "X1234567L", "x1234567l"),
+        ("csv", csv.lower(), csv, "X1234567L", "X1234567L"),
     )
 
-    assert len(evidence) == 1
-    row = evidence[0]
-    assert row.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
-    assert row.justificante_verified is True
-    assert row.verified_justificante_csv == csv
-
-
-def test_modelo_record_justificante_csv_match_is_case_insensitive() -> None:
-    csv = "CSVLIVE3031T2025"
-    evidence = calendar_filing_evidence_from_sources(
-        filing_records=(
-            _modelo_record(
-                aeat_accepted=True,
-                external_evidence=ExternalEvidence(
-                    kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
-                    reference_id=csv.lower(),
-                    imported_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+    for case_id, evidence_csv, justificante_csv, justificante_tax_id, expected_tax_id in cases:
+        evidence = calendar_filing_evidence_from_sources(
+            filing_records=(
+                _modelo_record(
+                    aeat_accepted=True,
+                    external_evidence=_external_evidence(ExternalEvidenceKind.AEAT_LIVE_CAPTURE, evidence_csv),
                 ),
             ),
-        ),
-        justificantes=(_justificante_metadata(csv=csv),),
-        expected_tax_id="X1234567L",
-    )
+            justificantes=(_justificante_metadata(csv=justificante_csv, tax_id=justificante_tax_id),),
+            expected_tax_id=expected_tax_id,
+        )
 
-    assert len(evidence) == 1
-    row = evidence[0]
-    assert row.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
-    assert row.justificante_verified is True
-    assert row.verified_justificante_csv == csv
+        assert len(evidence) == 1, case_id
+        row = evidence[0]
+        assert row.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED, case_id
+        assert row.justificante_verified is True, case_id
+        assert row.verified_justificante_csv == justificante_csv, case_id
 
 
 def test_modelo_record_csv_register_external_evidence_is_justificante_backed() -> None:
@@ -442,11 +357,7 @@ def test_modelo_record_csv_register_external_evidence_is_justificante_backed() -
         filing_records=(
             _modelo_record(
                 aeat_accepted=True,
-                external_evidence=ExternalEvidence(
-                    kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
-                    reference_id=csv,
-                    imported_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
-                ),
+                external_evidence=_external_evidence(ExternalEvidenceKind.AEAT_CSV_REGISTER, csv),
             ),
         ),
         justificantes=(_justificante_metadata(csv=csv),),
@@ -467,11 +378,7 @@ def test_modelo_record_case_equivalent_conflicting_justificantes_do_not_verify()
         filing_records=(
             _modelo_record(
                 aeat_accepted=True,
-                external_evidence=ExternalEvidence(
-                    kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
-                    reference_id=csv.lower(),
-                    imported_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
-                ),
+                external_evidence=_external_evidence(ExternalEvidenceKind.AEAT_LIVE_CAPTURE, csv.lower()),
             ),
         ),
         justificantes=(
@@ -493,11 +400,7 @@ def test_live_capture_external_evidence_without_metadata_is_not_justificante_ver
         filing_records=(
             _modelo_record(
                 aeat_accepted=True,
-                external_evidence=ExternalEvidence(
-                    kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
-                    reference_id="CSVLIVE3031T2025",
-                    imported_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
-                ),
+                external_evidence=_external_evidence(ExternalEvidenceKind.AEAT_LIVE_CAPTURE, "CSVLIVE3031T2025"),
             ),
         ),
         expected_tax_id="X1234567L",
@@ -534,11 +437,7 @@ def test_external_evidence_without_acceptance_does_not_upgrade_submission_state(
     csv = "CSVLIVE303TORN"
     base = _modelo_record()
     legacy_payload = base.model_dump(mode="python")
-    legacy_payload["external_evidence"] = ExternalEvidence(
-        kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
-        reference_id=csv,
-        imported_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
-    )
+    legacy_payload["external_evidence"] = _external_evidence(ExternalEvidenceKind.AEAT_LIVE_CAPTURE, csv)
     legacy_payload["aeat_accepted"] = False
     legacy_torn_record = ModeloRecord.model_construct(**legacy_payload)
 
@@ -682,10 +581,7 @@ def test_non_alta_calendar_event_is_not_enriched_by_matching_verified_evidence()
         justificante_verified=True,
     )
 
-    calendar = build_overview_calendar(
-        _profile(),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-        today=date(2025, 4, 10),
+    calendar = _calendar_with_evidence(
         events=(event,),
         filing_evidence=(verified_evidence,),
     )
@@ -787,9 +683,9 @@ def test_verified_modelo_record_receipt_time_survives_calculation_observation_me
         filing_records=(
             _modelo_record(
                 aeat_accepted=True,
-                external_evidence=ExternalEvidence(
-                    kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-                    reference_id=csv,
+                external_evidence=_external_evidence(
+                    ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+                    csv,
                     imported_at=datetime(2025, 4, 16, 11, 0, tzinfo=UTC),
                 ),
             ),
@@ -892,20 +788,20 @@ def test_sede_calculation_observation_with_wrong_justificante_metadata_is_not_ve
     assert evidence[0].justificante_verified is False
 
 
-@pytest.mark.parametrize(
-    ("source_metadata", "expected_tax_id", "justificante_csv"),
-    (
-        pytest.param(None, "X1234567L", None, id="missing-metadata"),
-        pytest.param(
+def test_sede_calculation_observation_requires_valid_register_metadata() -> None:
+    cases = (
+        ("missing-metadata", None, "X1234567L", None),
+        (
+            "non-alta",
             {
                 "aeat_register_status": "BAJA",
                 "aeat_expediente_id": "12345678901234567890",
             },
             None,
             None,
-            id="non-alta",
         ),
-        pytest.param(
+        (
+            "missing-register-reference",
             {
                 "aeat_register_status": "ALTA",
                 "authenticated_identity": "X1234567L",
@@ -913,18 +809,18 @@ def test_sede_calculation_observation_with_wrong_justificante_metadata_is_not_ve
             },
             "X1234567L",
             "JUST-303-2025-1T",
-            id="missing-register-reference",
         ),
-        pytest.param(
+        (
+            "missing-authenticated-identity",
             {
                 "aeat_register_status": "ALTA",
                 "aeat_expediente_id": "12345678901234567890",
             },
             "X1234567L",
             None,
-            id="missing-authenticated-identity",
         ),
-        pytest.param(
+        (
+            "wrong-authenticated-identity",
             {
                 "aeat_register_status": "ALTA",
                 "aeat_expediente_id": "12345678901234567890",
@@ -932,481 +828,22 @@ def test_sede_calculation_observation_with_wrong_justificante_metadata_is_not_ve
             },
             "X1234567L",
             None,
-            id="wrong-authenticated-identity",
-        ),
-    ),
-)
-def test_sede_calculation_observation_requires_valid_register_metadata(
-    source_metadata: dict[str, str] | None,
-    expected_tax_id: str | None,
-    justificante_csv: str | None,
-) -> None:
-    payload = _calculation_observation_payload(
-        source_kind="aeat_sede_justificante",
-        source_metadata=source_metadata,
-    )
-
-    evidence = calendar_filing_evidence_from_sources(
-        calculation_observations=(payload,),
-        justificantes=(_justificante_metadata(csv=justificante_csv),) if justificante_csv is not None else (),
-        expected_tax_id=expected_tax_id,
-    )
-
-    assert evidence == ()
-
-
-def test_filed_declaration_observation_with_stored_justificante_marks_verified() -> None:
-    csv = "CSVFILED3031T2025"
-    evidence = calendar_filing_evidence_from_sources(
-        filed_declaration_observations=(_filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),),
-        verified_filed_declaration_artefact_refs=(_FILED_JUSTIFICANTE_STORAGE_REF,),
-        verified_filed_declaration_artefact_csvs={_FILED_JUSTIFICANTE_STORAGE_REF: csv},
-        expected_tax_id="X1234567L",
-    )
-
-    assert len(evidence) == 1
-    row = evidence[0]
-    assert row.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
-    assert row.aeat_evidence_kind == "aeat_justificante_pdf"
-    assert row.aeat_reference_id == "12345678901234567890"
-    assert row.justificante_verified is True
-    assert row.verified_justificante_csv == csv
-
-
-def test_filed_declaration_observation_identity_match_is_case_insensitive() -> None:
-    csv = "CSVFILED3031T2025"
-    evidence = calendar_filing_evidence_from_sources(
-        filed_declaration_observations=(
-            _filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)).model_copy(
-                update={"authenticated_identity": "x1234567l"},
-            ),
-        ),
-        verified_filed_declaration_artefact_refs=(_FILED_JUSTIFICANTE_STORAGE_REF,),
-        verified_filed_declaration_artefact_csvs={_FILED_JUSTIFICANTE_STORAGE_REF: csv},
-        expected_tax_id="X1234567L",
-    )
-
-    assert len(evidence) == 1
-    assert evidence[0].aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
-    assert evidence[0].justificante_verified is True
-    assert evidence[0].verified_justificante_csv == csv
-
-
-def test_filed_declaration_observation_with_dangling_justificante_manifest_is_observed_only() -> None:
-    evidence = calendar_filing_evidence_from_sources(
-        filed_declaration_observations=(_filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),),
-        expected_tax_id="X1234567L",
-    )
-
-    assert len(evidence) == 1
-    row = evidence[0]
-    assert row.aeat_submission_state is OverviewAeatSubmissionState.SUBMITTED_OBSERVED
-    assert row.aeat_evidence_kind == "filed_declaration_observation"
-    assert row.justificante_verified is False
-
-
-def test_non_alta_filed_declaration_observation_does_not_mark_verified() -> None:
-    evidence = calendar_filing_evidence_from_sources(
-        filed_declaration_observations=(
-            _filed_declaration_observation(
-                artefacts=(_filed_declaration_artefact(),),
-            ).model_copy(update={"status": "BAJA"}),
-        ),
-        expected_tax_id="X1234567L",
-    )
-
-    assert evidence == ()
-
-
-def test_filed_declaration_observation_for_wrong_taxpayer_is_ignored() -> None:
-    evidence = calendar_filing_evidence_from_sources(
-        filed_declaration_observations=(
-            _filed_declaration_observation(
-                artefacts=(_filed_declaration_artefact(),),
-            ).model_copy(update={"authenticated_identity": "Y7654321Z"}),
-        ),
-        expected_tax_id="X1234567L",
-    )
-
-    assert evidence == ()
-
-
-def test_filed_declaration_observation_without_stored_justificante_is_observed_only() -> None:
-    evidence = calendar_filing_evidence_from_sources(
-        filed_declaration_observations=(
-            _filed_declaration_observation(
-                artefacts=(
-                    _filed_declaration_artefact(
-                        kind="submitted_file",
-                        storage_ref="secure-object:financial:" + "e" * 64,
-                    ),
-                    _filed_declaration_artefact(storage_ref=None),
-                ),
-            ),
         ),
     )
 
-    assert len(evidence) == 1
-    row = evidence[0]
-    assert row.aeat_submission_state is OverviewAeatSubmissionState.SUBMITTED_OBSERVED
-    assert row.aeat_evidence_kind == "filed_declaration_observation"
-    assert row.justificante_verified is False
+    for case_id, source_metadata, expected_tax_id, justificante_csv in cases:
+        payload = _calculation_observation_payload(
+            source_kind="aeat_sede_justificante",
+            source_metadata=source_metadata,
+        )
 
+        evidence = calendar_filing_evidence_from_sources(
+            calculation_observations=(payload,),
+            justificantes=(_justificante_metadata(csv=justificante_csv),) if justificante_csv is not None else (),
+            expected_tax_id=expected_tax_id,
+        )
 
-def test_imported_justificante_record_marks_aeat_verified_without_implying_local_calculation() -> None:
-    imported_at = datetime(2025, 4, 16, 11, 0, tzinfo=UTC)
-    csv = "JUST-303-2025-1T"
-    evidence = calendar_filing_evidence_from_sources(
-        filing_records=(
-            _modelo_record(
-                aeat_accepted=True,
-                external_evidence=ExternalEvidence(
-                    kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-                    reference_id=csv,
-                    imported_at=imported_at,
-                ),
-                filed_by="aeat-import",
-            ),
-        ),
-        justificantes=(_justificante_metadata(csv=csv),),
-        expected_tax_id="X1234567L",
-    )
-
-    row = evidence[0]
-    assert row.local_filing_state is OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED
-    assert row.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
-    assert row.aeat_evidence_kind == "aeat_justificante_pdf"
-    assert row.justificante_verified is True
-    assert row.verified_justificante_csv == csv
-
-
-def test_imported_justificante_record_for_wrong_taxpayer_is_not_verified() -> None:
-    csv = "JUST-303-2025-1T"
-    evidence = calendar_filing_evidence_from_sources(
-        filing_records=(
-            _modelo_record(
-                aeat_accepted=True,
-                external_evidence=ExternalEvidence(
-                    kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-                    reference_id=csv,
-                    imported_at=datetime(2025, 4, 16, 11, 0, tzinfo=UTC),
-                ),
-                filed_by="aeat-import",
-            ),
-        ),
-        justificantes=(_justificante_metadata(csv=csv, tax_id="Y7654321Z"),),
-        expected_tax_id="X1234567L",
-    )
-
-    row = evidence[0]
-    assert row.local_filing_state is OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED
-    assert row.aeat_submission_state is OverviewAeatSubmissionState.ACCEPTED
-    assert row.aeat_evidence_kind == "aeat_justificante_pdf"
-    assert row.justificante_verified is False
-
-
-@pytest.mark.parametrize(
-    ("modelo", "filing_year", "period"),
-    [
-        pytest.param("130", 2025, _PERIOD_2025_1T, id="wrong-modelo"),
-        pytest.param("303", 2024, _PERIOD_2025_1T, id="wrong-ejercicio"),
-        pytest.param("303", 2025, Period.from_year_and_code(2025, "2T"), id="wrong-period"),
-    ],
-)
-def test_imported_justificante_record_for_wrong_obligation_is_not_verified(
-    modelo: str,
-    filing_year: int,
-    period: Period,
-) -> None:
-    csv = "JUST-303-2025-1T"
-    evidence = calendar_filing_evidence_from_sources(
-        filing_records=(
-            _modelo_record(
-                aeat_accepted=True,
-                external_evidence=ExternalEvidence(
-                    kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-                    reference_id=csv,
-                    imported_at=datetime(2025, 4, 16, 11, 0, tzinfo=UTC),
-                ),
-                filed_by="aeat-import",
-            ),
-        ),
-        justificantes=(_justificante_metadata(csv=csv, modelo=modelo, filing_year=filing_year, period=period),),
-        expected_tax_id="X1234567L",
-    )
-
-    row = evidence[0]
-    assert row.local_filing_state is OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED
-    assert row.aeat_submission_state is OverviewAeatSubmissionState.ACCEPTED
-    assert row.aeat_evidence_kind == "aeat_justificante_pdf"
-    assert row.justificante_verified is False
-
-
-def test_calendar_entry_carries_distinct_local_and_aeat_states() -> None:
-    record = _modelo_record()
-    event = calendar_events_from_expedientes_snapshots(
-        (
-            PersistedExpedientesSnapshot(
-                snapshot_id="f" * 64,
-                bucket_id="bucket-1",
-                captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
-                source_url=_SOURCE_URL,
-                declarations=(
-                    Declaracion(
-                        modelo="303",
-                        ejercicio=2025,
-                        period=_PERIOD_2025_1T,
-                        expediente_id="12345678901234567890",
-                        estado="ALTA",
-                        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
-                    ),
-                ),
-                persisted_at=datetime(2025, 4, 16, 10, 5, tzinfo=UTC),
-            ),
-        ),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-    )
-    evidence = calendar_filing_evidence_from_sources(filing_records=(record,), observed_events=event)
-
-    calendar = build_overview_calendar(
-        _profile(),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-        today=date(2025, 4, 10),
-        events=event,
-        filing_evidence=evidence,
-    )
-
-    matching = [entry for entry in calendar.entries if entry.modelo == "303" and entry.filing_year == 2025]
-    assert matching, [(entry.modelo, entry.period, entry.filing_year) for entry in calendar.entries]
-    row = matching[0].filing_evidence
-    assert row.local_filing_state is OverviewLocalFilingState.READY_TO_FILE
-    assert row.aeat_submission_state is OverviewAeatSubmissionState.SUBMITTED_OBSERVED
-    assert row.justificante_verified is False
-
-
-def test_calendar_warns_when_aeat_submission_lacks_verified_justificante() -> None:
-    event = calendar_events_from_expedientes_snapshots(
-        (
-            PersistedExpedientesSnapshot(
-                snapshot_id="f" * 64,
-                bucket_id="bucket-1",
-                captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
-                source_url=_SOURCE_URL,
-                declarations=(
-                    Declaracion(
-                        modelo="303",
-                        ejercicio=2025,
-                        period=_PERIOD_2025_1T,
-                        expediente_id="12345678901234567890",
-                        estado="ALTA",
-                        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
-                    ),
-                ),
-                persisted_at=datetime(2025, 4, 16, 10, 5, tzinfo=UTC),
-            ),
-        ),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-    )
-    evidence = calendar_filing_evidence_from_sources(observed_events=event)
-
-    calendar = build_overview_calendar(
-        _profile(),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-        today=date(2025, 4, 10),
-        events=event,
-        filing_evidence=evidence,
-    )
-
-    warning = next(item for item in calendar.warnings if item.code == "filing.justificante_unverified")
-    assert warning.affected_modelos == ("303",)
-    assert warning.fix_command == "aeat app live filed pull --modelo 303 --year 2025 --period 1T"
-
-
-def test_calendar_uses_generic_justificante_fix_when_multiple_periods_need_pull() -> None:
-    """A single warning that spans multiple periods must not pretend one pull is enough."""
-    event = calendar_events_from_expedientes_snapshots(
-        (
-            PersistedExpedientesSnapshot(
-                snapshot_id="f" * 64,
-                bucket_id="bucket-1",
-                captured_at=datetime(2025, 7, 16, 10, 0, tzinfo=UTC),
-                source_url=_SOURCE_URL,
-                declarations=(
-                    Declaracion(
-                        modelo="303",
-                        ejercicio=2025,
-                        period=_PERIOD_2025_1T,
-                        expediente_id="12345678901234567890",
-                        estado="ALTA",
-                        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
-                    ),
-                    Declaracion(
-                        modelo="303",
-                        ejercicio=2025,
-                        period=Period.from_year_and_code(2025, "2T"),
-                        expediente_id="12345678901234567891",
-                        estado="ALTA",
-                        presented_at=datetime(2025, 7, 15, 9, 30, tzinfo=UTC),
-                    ),
-                ),
-                persisted_at=datetime(2025, 7, 16, 10, 5, tzinfo=UTC),
-            ),
-        ),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 7, 31)),
-    )
-    evidence = calendar_filing_evidence_from_sources(observed_events=event)
-
-    calendar = build_overview_calendar(
-        _profile(),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 7, 31)),
-        today=date(2025, 4, 10),
-        events=event,
-        filing_evidence=evidence,
-    )
-
-    warning = next(item for item in calendar.warnings if item.code == "filing.justificante_unverified")
-    assert warning.affected_modelos == ("303",)
-    assert warning.fix_command == "aeat app live filed pull --modelo MODELO --year YEAR --period PERIOD"
-
-
-def test_calendar_clears_justificante_warning_when_filed_history_verifies_receipt() -> None:
-    csv = "CSVFILED3031T2025"
-    event = calendar_events_from_expedientes_snapshots(
-        (
-            PersistedExpedientesSnapshot(
-                snapshot_id="f" * 64,
-                bucket_id="bucket-1",
-                captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
-                source_url=_SOURCE_URL,
-                declarations=(
-                    Declaracion(
-                        modelo="303",
-                        ejercicio=2025,
-                        period=_PERIOD_2025_1T,
-                        expediente_id="12345678901234567890",
-                        estado="ALTA",
-                        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
-                    ),
-                ),
-                persisted_at=datetime(2025, 4, 16, 10, 5, tzinfo=UTC),
-            ),
-        ),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-    )
-    evidence = calendar_filing_evidence_from_sources(
-        observed_events=event,
-        filed_declaration_observations=(_filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),),
-        verified_filed_declaration_artefact_refs=(_FILED_JUSTIFICANTE_STORAGE_REF,),
-        verified_filed_declaration_artefact_csvs={_FILED_JUSTIFICANTE_STORAGE_REF: csv},
-    )
-
-    calendar = build_overview_calendar(
-        _profile(),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-        today=date(2025, 4, 10),
-        events=event,
-        filing_evidence=evidence,
-    )
-
-    assert "filing.justificante_unverified" not in {item.code for item in calendar.warnings}
-
-
-def test_calendar_event_carries_verified_justificante_from_filed_observation() -> None:
-    csv = "CSVFILED3031T2025"
-    event = calendar_events_from_expedientes_snapshots(
-        (
-            PersistedExpedientesSnapshot(
-                snapshot_id="1" * 64,
-                bucket_id="bucket-1",
-                captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
-                source_url=_SOURCE_URL,
-                declarations=(
-                    Declaracion(
-                        modelo="303",
-                        ejercicio=2025,
-                        period=_PERIOD_2025_1T,
-                        expediente_id="12345678901234567890",
-                        estado="ALTA",
-                        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
-                    ),
-                ),
-                persisted_at=datetime(2025, 4, 16, 10, 5, tzinfo=UTC),
-            ),
-        ),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-    )
-    evidence = calendar_filing_evidence_from_sources(
-        filed_declaration_observations=(_filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),),
-        verified_filed_declaration_artefact_refs=(_FILED_JUSTIFICANTE_STORAGE_REF,),
-        verified_filed_declaration_artefact_csvs={_FILED_JUSTIFICANTE_STORAGE_REF: csv},
-    )
-
-    calendar = build_overview_calendar(
-        _profile(),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-        today=date(2025, 4, 10),
-        events=event,
-        filing_evidence=evidence,
-    )
-
-    assert len(calendar.events) == 1
-    assert calendar.events[0].aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
-    assert calendar.events[0].justificante_verified is True
-    assert calendar.events[0].verified_justificante_csv == csv
-
-
-def test_calendar_event_justificante_verification_is_expediente_specific() -> None:
-    csv = "CSVFILED3031T2025"
-    event = calendar_events_from_expedientes_snapshots(
-        (
-            PersistedExpedientesSnapshot(
-                snapshot_id="2" * 64,
-                bucket_id="bucket-1",
-                captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
-                source_url=_SOURCE_URL,
-                declarations=(
-                    Declaracion(
-                        modelo="303",
-                        ejercicio=2025,
-                        period=_PERIOD_2025_1T,
-                        expediente_id="12345678901234567890",
-                        estado="ALTA",
-                        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
-                    ),
-                    Declaracion(
-                        modelo="303",
-                        ejercicio=2025,
-                        period=_PERIOD_2025_1T,
-                        expediente_id="12345678901234567891",
-                        estado="ALTA",
-                        presented_at=datetime(2025, 4, 16, 9, 30, tzinfo=UTC),
-                    ),
-                ),
-                persisted_at=datetime(2025, 4, 16, 10, 5, tzinfo=UTC),
-            ),
-        ),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-    )
-    evidence = calendar_filing_evidence_from_sources(
-        filed_declaration_observations=(_filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),),
-        verified_filed_declaration_artefact_refs=(_FILED_JUSTIFICANTE_STORAGE_REF,),
-        verified_filed_declaration_artefact_csvs={_FILED_JUSTIFICANTE_STORAGE_REF: csv},
-    )
-
-    calendar = build_overview_calendar(
-        _profile(),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-        today=date(2025, 4, 10),
-        events=event,
-        filing_evidence=evidence,
-    )
-
-    by_ref = {observed.reference_id: observed for observed in calendar.events}
-    assert by_ref["12345678901234567890"].aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
-    assert by_ref["12345678901234567890"].justificante_verified is True
-    assert by_ref["12345678901234567890"].verified_justificante_csv == csv
-    assert by_ref["12345678901234567891"].aeat_submission_state is OverviewAeatSubmissionState.SUBMITTED_OBSERVED
-    assert by_ref["12345678901234567891"].justificante_verified is False
+        assert evidence == (), case_id
 
 
 # ---------------------------------------------------------------------

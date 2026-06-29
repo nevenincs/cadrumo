@@ -64,6 +64,7 @@ def test_committed_modelo_130_registry_snapshot_is_calculable(
         "12",
         "13",
         "14",
+        "15",
         "17",
         "19",
         "saldo-negativo-fin-periodo",
@@ -175,12 +176,12 @@ def test_committed_modelo_123_registry_snapshot_uses_2019_2023_shape(
         snapshot,
         inputs=_inputs(
             {
-                "01-legacy": Decimal("2"),
-                "02-legacy": Decimal("1201.00"),
-                "03-legacy": Decimal("228.19"),
-                "04-legacy": Decimal("0"),
-                "05-legacy": Decimal("7.50"),
-                "07-legacy": Decimal("12.25"),
+                "01": Decimal("2"),
+                "02": Decimal("1201.00"),
+                "03": Decimal("228.19"),
+                "04": Decimal("0"),
+                "05": Decimal("7.50"),
+                "07": Decimal("12.25"),
             },
         ),
         date_context={"filing_period": date(2023, 12, 31)},
@@ -188,16 +189,16 @@ def test_committed_modelo_123_registry_snapshot_uses_2019_2023_shape(
 
     assert snapshot.revision.id == "2019-2023"
     assert tuple(casilla.id for casilla in snapshot.revision.casillas) == (
-        "01-legacy",
-        "02-legacy",
-        "03-legacy",
-        "04-legacy",
-        "05-legacy",
-        "06-legacy",
-        "07-legacy",
-        "08-legacy",
+        "01",
+        "02",
+        "03",
+        "04",
+        "05",
+        "06",
+        "07",
+        "08",
     )
-    assert {entry.target_casilla_id for entry in result.entries} == {"06-legacy", "08-legacy"}
+    assert {entry.target_casilla_id for entry in result.entries} == {"06", "08"}
 
 
 @pytest.mark.parametrize(

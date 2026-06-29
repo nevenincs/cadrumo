@@ -134,18 +134,10 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
          the mutated bytes, and writes them back.
       3. Loads the draft via the repository.
 
-    Two outcomes are acceptable proofs that the boundary is honest:
-
-      * The load side raises a typed ``ValidationError``
-        (strict-mode + extra='forbid' refuses the mutated shape).
-      * The load side returns a ModeloDraft whose ``snapshot_ref`` is
-        ``None`` instead of the original ``RegistrySnapshotRef`` — a
-        strict-equality check against the original then fails.
-
-    If neither outcome holds (i.e. the load somehow returns the
-    original equal-record despite the JSON mutation), every roundtrip
-    test in the suite is tautological and the entire pattern needs
-    re-auditing. Without this test, that conclusion could not be drawn.
+    The load side must raise a typed ``ValidationError`` because
+    ``snapshot_ref`` is a required current field. If the mutated record
+    loads, every roundtrip test in the suite is suspect and must be
+    re-audited.
     """
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
@@ -178,30 +170,9 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
                 )
 
             # Now reload through the repository. With ``snapshot_ref``
-            # absent, one of two things must happen:
-            #   (a) the ModeloDraft model validation raises (strict mode);
-            #   (b) the load succeeds but the loaded model has
-            #       ``snapshot_ref=None`` (the field default), which makes
-            #       it strictly unequal to the original.
-            regression_caught = False
-            try:
-                mutated = ModeloDraftRepository(bucket_id=_BUCKET_ID).load(original.draft_id)
-            except ValidationError:
-                regression_caught = True
-            else:
-                assert mutated is not None
-                # Strict equality against the original now fails: load
-                # returned a draft missing the snapshot_ref the original
-                # carried. The test fixture pattern (strict-eq witness)
-                # catches the drop.
-                assert mutated != original
-                assert mutated.snapshot_ref is None
-                regression_caught = True
-
-            assert regression_caught, (
-                "boundary did not detect a deliberate field drop — every "
-                "roundtrip test in the suite is suspect and must be re-audited"
-            )
+            # absent, strict model validation must refuse the payload.
+            with pytest.raises(ValidationError):
+                ModeloDraftRepository(bucket_id=_BUCKET_ID).load(original.draft_id)
         finally:
             profile.repository._engine.dispose()
 

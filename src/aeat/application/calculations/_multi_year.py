@@ -1,31 +1,22 @@
-"""Multi-year prior-filing resolver.
+"""Enrollment evidence and the previous-filing source-mesh adapter.
 
-Annual modelos and multi-year regimes need access to prior filings'
-casilla outputs. The resolver selects available observations through a
-:class:`RegistrySnapshot` that fixes the revision the caller is targeting.
+The enrollment surface records the real renta years exercised by continuity
+tests through :class:`EnrollmentRecorder`, emits :class:`EnrollmentEvidence`,
+and checks those observations against the
+:class:`~aeat.core.access_gate.ModeloAuthorizationEntry` claimed by the bundled
+authorization manifest.
 
-- Modelo 200 (IS) consults modelo 202 1P/2P/3P pago fraccionado
-  filings of the SAME year and prior years' base imponible negativa
-  carryforwards (LIS arts. 25-26, unlimited carryforward subject to
-  acquisition caps).
-- Modelo 303 (IVA) prorrata deducción provisional (LIVA art. 105) is
-  the mean of the four prior years' definitive prorrata.
-- Modelo 303 regularización inversiones (LIVA art. 93) applies a
-  five-year (ten-year for inmuebles) straight-line schedule against
-  the prior-year deduction history.
-- Modelo 180 / 190 / 193 / 390 sum the same year's quarterly source
-  modelo for an annual roll-up.
+The calculation surface is :class:`PreviousFilingSourceResolver`, the source
+mesh adapter for :attr:`~aeat.core.BindingSourceKind.PREVIOUS_FILING`. It
+selects the caller's :class:`RegistrySnapshot`, delegates local observation
+reading to :func:`~._binding_prefill.resolve_bindings_from_local_store`, and
+returns a :class:`~aeat.application.aggregation.CalculationSourceResolution`
+for the aggregation mesh.
 
-This resolver is the application-layer consumer that the engine /
-relation_resolver / binding pre-resolution call into. It reads
-observations from the local `CalculationObservationRepository` and
-returns them as the `RegistryModeloObservation` records the runtime
-expects.
-
-The resolver does NOT silently invent missing prior years.  When a
-caller requests `years_back=4` and only 2 are persisted, the
-returned tuple is shorter; callers decide whether to refuse, prompt
-the operator, fall back to AEAT live state, or zero-fill.
+The direct value-resolution contract lives in
+:mod:`aeat.application.calculations._binding_prefill`; this module records
+enrollment proof and adapts its :class:`~._binding_prefill.BindingPrefillReport`
+into source-mesh output.
 """
 
 from __future__ import annotations
@@ -82,10 +73,12 @@ class EnrollmentEvidenceError(CoreValidationError):
     count (a real calculation emitted casillas); non-calculation-mode
     recordings require both a non-empty context label AND a strictly-positive
     persisted-observation count (at least one real
-    :class:`RegistryModeloObservation` was saved to the real
-    ``CalculationObservationRepository`` for that year). A recording that
-    supplies a label alone — without a persisted observation count — is
-    label-only and therefore fakeable; the recorder refuses it.
+    :class:`~aeat.domain.calculations.registry.RegistryModeloObservation` was
+    saved to the real
+    :class:`~._observations_repository.CalculationObservationRepository` for
+    that year). A recording that supplies a label alone — without a persisted
+    observation count — is label-only and therefore fakeable; the recorder
+    refuses it.
     """
 
 
@@ -106,10 +99,11 @@ class EnrollmentYearObservation(BaseModel):
             context the test constructed (e.g. a fidelity-comparison label).
             Empty for calculation mode.
         persisted_observation_count: For non-calculation mode, the number of
-            :class:`RegistryModeloObservation` records the test actually persisted
-            to the real ``CalculationObservationRepository`` for this year — must
-            be strictly positive, the evidence a real repository interaction
-            occurred. Zero for calculation mode. Mirrors the role of
+            :class:`~aeat.domain.calculations.registry.RegistryModeloObservation`
+            records the test actually persisted to the real
+            :class:`~._observations_repository.CalculationObservationRepository`
+            for this year — must be strictly positive, the evidence a real
+            repository interaction occurred. Zero for calculation mode. Mirrors the role of
             ``produced_value_count`` in calculation mode: a context-mode year
             claimed with zero persisted observations is label-only and therefore
             fakeable; the recorder refuses it.
@@ -142,7 +136,7 @@ class EnrollmentEvidence(BaseModel):
     renta years`` invariant is enforced here so an enrollment that did not
     actually span two distinct years cannot construct — the contract is
     unconstructable to violate, mirroring
-    :class:`aeat.core.access_gate.ModeloAuthorizationEntry`.
+    :class:`~aeat.core.access_gate.ModeloAuthorizationEntry`.
     """
 
     model_config = _STRICT_FROZEN
@@ -241,12 +235,13 @@ class EnrollmentRecorder:
         for the year and names the context it constructed. To be un-fakeable the
         call must supply both a non-blank ``context_label`` AND a strictly
         positive ``persisted_observation_count`` — the number of
-        :class:`RegistryModeloObservation` records actually saved to the real
-        ``CalculationObservationRepository`` for this year. A label alone is not
-        sufficient evidence: any string can be passed without touching the real
-        adapters. The observation count proves a real repository interaction
-        happened; it mirrors the role of ``produced_value_count`` in
-        :meth:`record_calculation_year`.
+        :class:`~aeat.domain.calculations.registry.RegistryModeloObservation`
+        records actually saved to the real
+        :class:`~._observations_repository.CalculationObservationRepository` for
+        this year. A label alone is not sufficient evidence: any string can be
+        passed without touching the real adapters. The observation count proves
+        a real repository interaction happened; it mirrors the role of
+        ``produced_value_count`` in :meth:`record_calculation_year`.
 
         Args:
             filing_year: The renta year the test exercised.
@@ -255,9 +250,9 @@ class EnrollmentRecorder:
             persisted_observation_count: The number of
                 :class:`~aeat.domain.calculations.registry.RegistryModeloObservation`
                 records the test saved to the real
-                ``CalculationObservationRepository`` for this year. MUST be
-                strictly positive — it is the evidence a real adapter interaction
-                occurred.
+                :class:`~._observations_repository.CalculationObservationRepository`
+                for this year. MUST be strictly positive — it is the evidence a
+                real adapter interaction occurred.
 
         Raises:
             EnrollmentEvidenceError: When ``context_label`` is blank or when
@@ -323,9 +318,10 @@ def assert_enrollment_matches_manifest(
     The enrolling end-to-end test calls this after recording its years. It is
     the load-bearing cross-check that converts the manifest from an honour
     claim into a verified one: the recorded distinct-year set MUST equal the
-    manifest entry's declared ``renta_years``. A mismatch (the test exercised
-    different years than the manifest claims) raises, turning the enrolling
-    test RED.
+    manifest entry's declared ``renta_years`` on
+    :class:`~aeat.core.access_gate.ModeloAuthorizationEntry`. A mismatch (the
+    test exercised different years than the manifest claims) raises, turning
+    the enrolling test RED.
 
     Args:
         evidence: The verified evidence from :meth:`EnrollmentRecorder.evidence`.
@@ -362,14 +358,18 @@ def assert_enrollment_matches_manifest(
 class PreviousFilingSourceResolver:
     """Source mesh resolver for ``source = "previous_filing"`` calculation bindings.
 
-    Registered under ``resolver_id = "previous_filing"`` in the source mesh.
+    Registered under ``resolver_id = "previous_filing"`` in the source mesh and
+    claiming :attr:`~aeat.core.BindingSourceKind.PREVIOUS_FILING`.
     When the calculation engine encounters a binding whose source is
     ``"previous_filing"``, this resolver reads the relevant prior-year
-    :class:`RegistryModeloObservation` records from the local
-    :class:`CalculationObservationRepository` and maps them to the binding
-    values the engine expects. Storage-degradation errors
-    (classification, decryption, version) are caught and returned as a
-    :func:`storage_degradation_resolution` rather than propagated.
+    :class:`~aeat.domain.calculations.registry.RegistryModeloObservation`
+    records from the local :class:`~._observations_repository.CalculationObservationRepository`
+    through :func:`~._binding_prefill.resolve_bindings_from_local_store`, then
+    maps them into the :class:`~aeat.application.aggregation.CalculationSourceResolution`
+    binding channel. Storage-degradation errors (classification, decryption,
+    version) are caught and returned as a
+    :func:`~aeat.application.aggregation.storage_degradation_resolution` rather
+    than propagated.
     """
 
     resolver_id = "previous_filing"

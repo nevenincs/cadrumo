@@ -844,39 +844,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.normatives._errors.NormativeError",
-        ErrorCode(
-            code="ERROR_NORMATIVES_NORMATIVE",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_normatives_normative",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.domain.normatives._errors.NormativeNotFoundError",
-        ErrorCode(
-            code="ERROR_NORMATIVES_NORMATIVE_NOT_FOUND",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_normatives_normative_not_found",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.domain.normatives._errors.NormativeParseError",
-        ErrorCode(
-            code="FAIL_NORMATIVES_NORMATIVE_PARSE",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_normatives_normative_parse",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.domain.portals._errors.PortalIntegrityError",
         ErrorCode(
             code="INTEGRITY_PORTALS_PORTAL_INTEGRITY",

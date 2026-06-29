@@ -64,7 +64,7 @@ def _load_parameters() -> LirpfArt85ImputacionParameters:
 
     Routes through ``aeat.domain.calculations.registry.load_registry_tree``
     so parameters land in the validated :class:`RegistryCatalogues.parameters`
-    surface (single config-resolution path). The legacy direct
+    surface (single config-resolution path). The retired direct
     ``tomllib.load`` of ``registry/aeat/legal/irpf.toml`` is replaced —
     bypassing the loader was the same architectural drift pattern as
     direct ``os.environ`` reads.

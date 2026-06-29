@@ -201,7 +201,7 @@ def _convenio_row(
     legal_refs: tuple[str, ...] | None = None,
     notes: str | None = None,
 ) -> ConvenioRateRow:
-    resolved_legal_refs = (legal_ref_anchor,) if legal_refs is None and rate != "NOT_YET_AUTHORED" else legal_refs or ()
+    resolved_legal_refs = (legal_ref_anchor,) if legal_refs is None else legal_refs
     return ConvenioRateRow(
         country_code=country_code,
         tipo_renta=tipo_renta,

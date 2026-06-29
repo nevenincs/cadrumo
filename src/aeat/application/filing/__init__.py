@@ -13,6 +13,15 @@ Major entry points:
   :func:`refresh_review_status` manage local review state and approval basis.
 * :func:`export_draft` writes a local fichero-BOE artefact, and
   :func:`verify_export` re-reads that file through the registry export parser.
+* :func:`import_filing_from_justificante` reconstructs a draft-level local
+  receipt baseline from a justificante PDF without treating the receipt as a
+  casilla-value authority.
+* :func:`build_complementaria`, :func:`list_amendments`, and
+  :func:`load_amendment` build and read governed
+  :class:`aeat.domain.filing.ModeloComplementaria` and
+  :class:`aeat.domain.filing.ModeloSustitutiva` amendment records.
+* :class:`ModeloHistoryRepository` persists encrypted lightweight
+  :class:`ModeloHistory` summaries for local filing-history views.
 * :func:`build_runtime_schema_provider` supplies the runtime registry view used
   by draft construction, review, export, and verification.
 
@@ -20,10 +29,23 @@ The facade deliberately separates local filing state from live submission.
 Remote AEAT submission is not exposed here; attempted live writes are refused
 by :class:`aeat.core.access_gate.LiveSubmitForbiddenError`.
 
+Work-unit filing records for calculation revisions live in
+:mod:`aeat.application.modelo` and :mod:`aeat.domain.modelos`. This package owns
+draft-level construction, review, export, verification, justificante import,
+local amendment construction, and lightweight local history; it does not create
+:class:`aeat.domain.modelos.ModeloRecord` entries or stamp
+:class:`aeat.domain.modelos.ExternalEvidence`.
+
 See Also:
     :mod:`aeat.application.modelo`
         Operator-facing modelo facade that carries calculation revisions into
         this filing surface.
+    :func:`aeat.application.modelo._filing_actions.file_modelo_revision`
+        Work-unit action that records a verified calculation revision as a
+        current local :class:`aeat.domain.modelos.ModeloRecord`.
+    :func:`aeat.application.modelo._external_import_actions.import_external_filing_evidence`
+        External-evidence import path that creates an evidenced
+        :class:`aeat.domain.modelos.ModeloRecord` baseline for amendments.
     :mod:`aeat.domain.filing`
         Canonical draft records, values, provenance, validation findings, and
         review helpers.
