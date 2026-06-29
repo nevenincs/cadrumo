@@ -307,6 +307,12 @@ class ModeloApplicabilityRule(BaseModel):
                     legal_refs=_ATTRIBUTION_PASS_THROUGH_LEGAL_REFS,
                 )
             return self._not_applicable()
+        if (
+            self.applicable_fiscal_residencies
+            and profile.fiscal_residency is not None
+            and profile.fiscal_residency not in self.applicable_fiscal_residencies
+        ):
+            return self._not_applicable()
         # The income-category and estimation-regime axes are
         # natural-person facts: a legal entity carries neither (income
         # categories and the IRPF estimation regime only describe a
@@ -315,12 +321,6 @@ class ModeloApplicabilityRule(BaseModel):
         # not re-gated on those axes — its applicability is settled by
         # the entity type.
         if profile.entity_type is EntityType.NATURAL_PERSON:
-            if (
-                self.applicable_fiscal_residencies
-                and profile.fiscal_residency is not None
-                and profile.fiscal_residency not in self.applicable_fiscal_residencies
-            ):
-                return self._not_applicable()
             # A natural-person modelo that gates on income category needs
             # at least one declared category to match.
             if self.required_income_categories:
@@ -959,6 +959,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
         modelo=Modelo.M200,
         applicable_entity_types=_LEGAL_ENTITY,
         required_income_categories=frozenset(),
+        applicable_fiscal_residencies=frozenset({FiscalResidency.RESIDENT_IRPF}),
         applicable_reason=(
             "Modelo 200 (Impuesto sobre Sociedades): una entidad jurídica "
             "con personalidad jurídica es contribuyente del IS y presenta "
@@ -966,17 +967,26 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
         ),
         not_applicable_reason=(
             "Modelo 200 no aplica: la autoliquidación del Impuesto sobre "
-            "Sociedades corresponde únicamente a las entidades jurídicas "
-            "con personalidad jurídica contribuyentes del IS. El tipo de "
-            "contribuyente declarado no es una entidad de esta clase."
+            "Sociedades local corresponde a entidades jurídicas "
+            "contribuyentes del IS en la ruta residente. Un perfil "
+            "NON_RESIDENT_IRNR sin eje modelado de establecimiento permanente "
+            "en España no puede tratarse como listo para Modelo 200; use la "
+            "ruta IRNR/Modelo 210 por AEAT Sede cuando actúe sin "
+            "establecimiento permanente."
         ),
         # Modelo 200 is the IS cuota self-assessment: an attribution
         # entity asked about it gets the pass-through verdict — it runs
         # no IS cuota of its own.
         cuota_bearing=True,
         # LIS art. 124 — obligación de presentar la declaración del
-        # Impuesto sobre Sociedades, que el Modelo 200 liquida.
-        legal_refs=("ley-27-2014:art-124",),
+        # Impuesto sobre Sociedades, que el Modelo 200 liquida. TRLIRNR
+        # art. 2 / 24 ground the non-resident/no-permanent-establishment
+        # exclusion until a Spanish-PE profile axis is modelled.
+        legal_refs=(
+            "ley-27-2014:art-124",
+            "trlirnr-rdleg-5-2004:art-2",
+            "trlirnr-rdleg-5-2004:art-24",
+        ),
     ),
     # Modelo 202 — pago fraccionado del Impuesto sobre Sociedades. Filed by
     # IS contribuyentes in April / October / December. A natural person
@@ -985,6 +995,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
         modelo=Modelo.M202,
         applicable_entity_types=_LEGAL_ENTITY,
         required_income_categories=frozenset(),
+        applicable_fiscal_residencies=frozenset({FiscalResidency.RESIDENT_IRPF}),
         applicable_reason=(
             "Modelo 202 (pago fraccionado del IS): una entidad jurídica "
             "contribuyente del Impuesto sobre Sociedades presenta los "
@@ -992,7 +1003,10 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
         ),
         not_applicable_reason=(
             "Modelo 202 no aplica: el pago fraccionado del Impuesto sobre "
-            "Sociedades solo corresponde a las entidades jurídicas."
+            "Sociedades local solo corresponde a entidades jurídicas en la "
+            "ruta residente IS. Un perfil NON_RESIDENT_IRNR sin eje modelado "
+            "de establecimiento permanente en España no puede tratarse como "
+            "listo para pagos fraccionados del IS."
         ),
         # Modelo 202 is an IS pago-fraccionado cuota self-assessment:
         # an attribution entity asked about it gets the pass-through
@@ -1001,7 +1015,10 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
         # LIS art. 40 — pago fraccionado del Impuesto sobre Sociedades,
         # las modalidades y el calendario de abril, octubre y diciembre
         # que liquida el Modelo 202.
-        legal_refs=("ley-27-2014:art-40",),
+        legal_refs=(
+            "ley-27-2014:art-40",
+            "trlirnr-rdleg-5-2004:art-2",
+        ),
     ),
     # Modelo 184 — declaración informativa anual de Entidades en
     # régimen de atribución de rentas. This is the attribution entity's

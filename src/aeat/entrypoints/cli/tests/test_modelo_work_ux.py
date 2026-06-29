@@ -107,6 +107,24 @@ def _create_gb_non_resident_profile() -> None:
     assert result.exit_code == 0, result.output
 
 
+def _create_de_nonresident_legal_entity_profile() -> None:
+    result = _invoke(
+        [
+            "config", "profile", "create", "operator",
+            "--quiet", "--accept-defaults",
+            "--entity-type", "legal_entity",
+            "--legal-entity-form", "sl",
+            "--tax-id", "B66012345",
+            "--legal-name", "NordHaus GmbH",
+            "--activity", "Spanish-source services",
+            "--fiscal-residency", "non_resident_irnr",
+            "--country-of-fiscal-residence", "DE",
+            "--iva-regime", "GENERAL",
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+
+
 def _attempt_incomplete_profile_create():
     return _invoke(
         [
@@ -248,6 +266,69 @@ def test_modelo_readiness_reports_pre_activity_m303_before_work_create() -> None
     listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
     assert _payload(listed.output)["work_unit_count"] == 0
+
+def test_nonresident_legal_entity_m200_readiness_and_create_refuse_wrong_path() -> None:
+    _create_de_nonresident_legal_entity_profile()
+
+    readiness = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "readiness",
+            "--modelo", "200",
+            "--revision-id", "2024-y-siguientes",
+            "--year", "2026",
+            "--period", "0A",
+        ],
+    )  # fmt: skip
+
+    assert readiness.exit_code == 0, readiness.output
+    readiness_payload = _payload(readiness.output)
+    assert readiness_payload["ready"] is False
+    assert readiness_payload["profile_ready"] is False
+    assert readiness_payload["profile_refusal"]
+    assert "NON_RESIDENT_IRNR" in readiness_payload["profile_refusal"]
+    assert "establecimiento permanente" in readiness_payload["profile_refusal"]
+
+    create = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "200",
+            "--year", "2026",
+            "--period", "0A",
+            "--revision", "2024-y-siguientes",
+        ],
+    )  # fmt: skip
+
+    assert create.exit_code != 0, create.output
+    create_payload = json.loads(create.output)
+    assert create_payload["status"] == "error"
+    assert create_payload["error"]["code"] == "REFUSED_CLI_BOUNDARY"
+    assert "NON_RESIDENT_IRNR" in create_payload["error"]["message"]
+    assert "establecimiento permanente" in create_payload["error"]["message"]
+
+    bypass = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "200",
+            "--year", "2026",
+            "--period", "0A",
+            "--revision", "2024-y-siguientes",
+            "--allow-not-applicable",
+        ],
+    )  # fmt: skip
+
+    assert bypass.exit_code != 0, bypass.output
+    bypass_payload = json.loads(bypass.output)
+    assert bypass_payload["status"] == "error"
+    assert bypass_payload["error"]["code"] == "REFUSED_MODELO_PROFILE_READINESS"
+    assert "NON_RESIDENT_IRNR" in bypass_payload["error"]["message"]
+
+    listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    assert listed.exit_code == 0, listed.output
+    assert _payload(listed.output)["work_unit_count"] == 0
+
 
 def test_work_create_refuses_pre_activity_m130_and_creates_no_unit() -> None:
     _create_profile(activity_start_date="2026-07-15")
