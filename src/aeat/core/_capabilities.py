@@ -13,8 +13,14 @@ code routes on members, and the profile schema / resolver / doctor share one
 authority for the capability identifiers.
 
 The :class:`ServiceCapability` members are consumed by
-:func:`aeat.application.user_profile.resolve_capability` and by the setup
-wizard's capability questions.
+:func:`~aeat.application.user_profile.resolve_capability`,
+:func:`~aeat.application.user_profile.resolve_active_capability`, and by the
+setup wizard's capability questions. The product doctor renders those same
+members beside :class:`~aeat.application.provisioning.DependencyStatus` rows
+from :func:`~aeat.application.provisioning.probe_ollama_vision`,
+:func:`~aeat.application.provisioning.probe_subprocess_providers`, and
+:func:`~aeat.application.provisioning.probe_optional_extras`, keeping operator
+intent separate from dependency availability.
 """
 
 from __future__ import annotations
@@ -27,7 +33,11 @@ class ServiceCapability(StrEnum):
 
     Each value is the dotted profile-schema field leaf under the ``capabilities``
     section (``capabilities.<value>``) so the enum, the schema fact path, and the
-    resolver agree on one identifier.
+    resolver agree on one identifier. Optional package availability is modeled
+    separately through :class:`~aeat.core.OptionalExtra` and
+    :func:`~aeat.core.require_optional_extra`; a capability records whether the
+    profile permits the service, not whether its import/runtime dependency is
+    installed.
 
     Members:
         CLOUD_EVIDENCE_UPLOAD: Whether this profile permits sending sensitive
@@ -47,7 +57,7 @@ class ServiceCapability(StrEnum):
 
     @property
     def schema_path(self) -> str:
-        """Return the dotted profile-schema fact path for this capability."""
+        """Return the dotted profile-schema fact path for this :class:`ServiceCapability`."""
         return f"capabilities.{self.value}"
 
     @property
@@ -57,6 +67,7 @@ class ServiceCapability(StrEnum):
         Cloud evidence upload defaults OFF (the regulated, sensitive path); the
         on-host vision and Google export capabilities default ON because they are
         non-sensitive or local by construction. The resolver still ANDs the global
-        safety floor on top of this default.
+        safety floor on top of this default, yielding a
+        :class:`~aeat.application.user_profile.CapabilityDecision`.
         """
         return self is not ServiceCapability.CLOUD_EVIDENCE_UPLOAD
