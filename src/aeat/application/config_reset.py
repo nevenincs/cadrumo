@@ -2,7 +2,8 @@
 
 Removes one or more pieces of operator-local state behind an explicit
 ``--yes`` confirmation gate and the CLI requires an explicit ``--scope``.
-Four :class:`ConfigResetScope` values are supported:
+Four :class:`ConfigResetScope` values are supported and returned through the
+typed :class:`ConfigResetReport`:
 
 - ``PROFILE``: clears every operator profile pointer and deletes each
   persisted profile bucket.
@@ -12,8 +13,7 @@ Four :class:`ConfigResetScope` values are supported:
   owned by the ledger backend so finalized modelo protections can run.
 - ``ALL``: combines the three scopes above.
 
-The service returns a :class:`ConfigResetReport` and runs through the
-normal runtime storage routes.
+The service runs through the normal runtime storage routes.
 :class:`~aeat.application.workflow.WorkflowStateRepository` loads the typed
 :class:`~aeat.application.workflow.WorkflowState`, profile removal goes
 through :class:`~aeat.application.user_profile.UserProfileLifecycleRepository`
@@ -31,10 +31,12 @@ raises :class:`ConfigResetUnconfirmedError` with a registered translated
 message key.
 
 See Also:
-    :func:`aeat.application.workflow._persistence.reset_workflow_state`
+    :func:`~aeat.application.workflow._persistence.reset_workflow_state`
         Narrow ``aeat config repair reset-progress`` route that deletes the
         saved workflow-state envelope after producing a
         :class:`~aeat.application.workflow.WorkflowStateResetFingerprint`.
+    :class:`~aeat.application.diagnostics.SecureObjectIntegrityReport`
+        DATA-scope quarantine summary returned by the diagnostics pipeline.
     :mod:`aeat.application.repair_integrity`
         Policy registry for repair surfaces, including the metadata-only
         workflow-state reset plan.
@@ -57,7 +59,8 @@ class ConfigResetScope(StrEnum):
     """Closed catalogue of operator-driven reset scopes.
 
     The enum is the shared application/CLI contract: CLI tokens are parsed
-    into these values before :func:`reset_config` runs, and
+    by :func:`parse_config_reset_scope` from
+    :data:`CONFIG_RESET_SCOPE_CLI_VALUES` before :func:`reset_config` runs, and
     :class:`ConfigResetReport` echoes the applied scope.
     """
 
@@ -72,7 +75,11 @@ CONFIG_RESET_SCOPE_CLI_VALUES: tuple[str, ...] = tuple(scope.value.lower() for s
 
 
 def parse_config_reset_scope(raw: str) -> ConfigResetScope:
-    """Parse a CLI reset-scope token into the :class:`ConfigResetScope` enum member."""
+    """Parse a CLI reset-scope token into the :class:`ConfigResetScope` member.
+
+    The CLI renders :data:`CONFIG_RESET_SCOPE_CLI_VALUES` as the accepted token
+    set, then delegates normalization here before calling :func:`reset_config`.
+    """
     return ConfigResetScope(raw.strip().upper())
 
 
@@ -81,7 +88,8 @@ class ConfigResetUnconfirmedError(AeatError):
 
     The error carries ``errors.refused.refused_config_reset_unconfirmed`` and
     the refused :class:`ConfigResetScope` value in structured context so the
-    CLI/error envelope renders through the registered refusal catalogue.
+    CLI/error envelope renders through the registered
+    :class:`~aeat.core.errors.ErrorEnvelope` refusal catalogue.
     """
 
 
@@ -96,7 +104,8 @@ class ConfigResetReport(BaseModel):
         removed_auth_session: True when the auth session was reset.
         quarantined_namespace_count: Number of secure-object namespaces
             whose unreadable rows were archived to the quarantine table
-            during the reset.
+            during the DATA reset via
+            :class:`~aeat.application.diagnostics.SecureObjectIntegrityReport`.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -120,6 +129,10 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
     :class:`~aeat.application.workflow.WorkflowState`. DATA resets call
     :func:`~aeat.application.diagnostics.quarantine_unreadable_secure_objects`
     for unreadable secure-object rows only.
+    This broad reset surface is separate from
+    :func:`~aeat.application.workflow._persistence.reset_workflow_state`, which
+    only clears the workflow-state envelope for
+    ``aeat config repair reset-progress``.
 
     Args:
         scope: The :class:`ConfigResetScope` to apply.
