@@ -49,6 +49,9 @@ from ._iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
 from ._ledger_evidence_gate import raise_if_deductible_vat_evidence_missing
+from ._required_binding_gate import (
+    require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
+)
 from ._result_disposition_resolution import revision_is_refund_disposition
 from ._revision_persistence import persist_filed_revision
 from ._verification_actions import (
@@ -191,6 +194,11 @@ def file_modelo_revision(
         suggestion="aeat app ledger attach <transaction-id> --attachment-id <attachment-id>",
     )
     require_profile_ready_for_work_unit(work_unit)
+    _require_persisted_required_bindings_resolved(
+        work_unit=work_unit,
+        revision=target,
+        action="file",
+    )
     iva_compensation_decision = _require_iva_compensation_revision_match(
         work_unit,
         target,

@@ -84,6 +84,9 @@ from ._action_errors import (
 )
 from ._iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from ._ledger_evidence_gate import raise_if_deductible_vat_evidence_missing
+from ._required_binding_gate import (
+    require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
+)
 from ._result_disposition_resolution import resolve_modelo_result_disposition
 from ._revision_persistence import emit_bucket_event as _emit_bucket_event
 from ._revision_replay_inputs import revision_filing_replay_inputs
@@ -745,6 +748,11 @@ def export_modelo_revision(
     from ._profile_readiness_gate import require_profile_ready_for_work_unit
 
     require_profile_ready_for_work_unit(work_unit)
+    _require_persisted_required_bindings_resolved(
+        work_unit=work_unit,
+        revision=revision,
+        action="export",
+    )
     export_period = _resolve_work_unit_period(work_unit)
     schema_provider = build_runtime_schema_provider(
         filing_year=export_period.filing_year,

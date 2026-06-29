@@ -82,6 +82,9 @@ from ._calculation_helpers import (
     resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit,
 )
 from ._calculation_resolution import (
+    ResolvedCalculationChannels,
+)
+from ._calculation_resolution import (
     build_calculation_replay_payloads as _build_calculation_replay_payloads,
 )
 from ._calculation_resolution import (
@@ -96,6 +99,12 @@ from ._m349_ledger_guard import (
 from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
 from ._registry_resources import authority_via_resources as _authority_via_resources
 from ._registry_resources import registry_root as _registry_root
+from ._required_binding_gate import (
+    require_modelo_required_bindings_resolved as _require_modelo_required_bindings_resolved,
+)
+from ._required_binding_gate import (
+    resolved_required_profile_binding_values as _resolved_required_profile_binding_values,
+)
 from ._revision_persistence import persist_calculation_revision
 
 if TYPE_CHECKING:
@@ -267,6 +276,39 @@ _M349_NUMERO_RECTIFICACIONES_BINDING: BindingId = "iva-349-declarante-numero-rec
 _M349_IMPORTE_RECTIFICACIONES_BINDING: BindingId = "iva-349-declarante-importe-rectificaciones"
 
 
+def _add_required_profile_bindings(
+    *,
+    work_unit: WorkUnit,
+    revision: ModeloRevision,
+    channels: ResolvedCalculationChannels,
+) -> None:
+    required_profile_bindings = _resolved_required_profile_binding_values(
+        work_unit=work_unit,
+        registry_revision=revision,
+    )
+    for binding_id, value in required_profile_bindings.items():
+        channels.bindings.setdefault(binding_id, value)
+
+
+def _resolved_binding_ids_for_required_binding_gate(
+    *,
+    revision: ModeloRevision,
+    channels: ResolvedCalculationChannels,
+    caller_binding_ids: Mapping[BindingId, Decimal],
+    unresolved_relation_ids: tuple[RelationId, ...],
+    unresolved_binding_ids: tuple[BindingId, ...],
+) -> tuple[BindingId, ...]:
+    resolved = set(channels.bindings) | set(channels.enum_bindings) | set(channels.date_bindings)
+    caller_ids = set(caller_binding_ids)
+    unresolved_relation_targets = {
+        relation.target_binding
+        for relation in revision.relations
+        if relation.id in unresolved_relation_ids and relation.target_binding not in caller_ids
+    }
+    unresolved_bindings = set(unresolved_binding_ids).difference(caller_ids)
+    return tuple(sorted(resolved.difference(unresolved_relation_targets).difference(unresolved_bindings)))
+
+
 def calculate_modelo_revision(
     work_unit_id: str,
     *,
@@ -383,6 +425,24 @@ def calculate_modelo_revision(
         borrador_snapshot_id=borrador_snapshot_id,
         borrador_snapshot_repository=borrador_snapshot_repository,
     )
+    _add_required_profile_bindings(
+        work_unit=work_unit,
+        revision=snapshot.revision,
+        channels=channels,
+    )
+    _require_modelo_required_bindings_resolved(
+        work_unit=work_unit,
+        registry_revision=snapshot.revision,
+        resolved_binding_ids=_resolved_binding_ids_for_required_binding_gate(
+            revision=snapshot.revision,
+            channels=channels,
+            caller_binding_ids=caller_binding_values,
+            unresolved_relation_ids=unresolved_relation_ids,
+            unresolved_binding_ids=unresolved_binding_ids,
+        ),
+        action="calculate or save a draft",
+    )
+
     resolved_relations = dict(relation_values or {})
     resolved_inputs = _resolve_calculation_inputs(
         revision=snapshot.revision,

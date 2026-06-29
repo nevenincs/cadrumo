@@ -127,6 +127,9 @@ from ._m210_rate import resolve_m210_rate as _resolve_m210_rate
 from ._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
 from ._registry_helpers import assert_revision_content_integrity as _assert_revision_content_integrity
 from ._registry_resources import authority_via_resources as _authority_via_resources
+from ._required_binding_gate import (
+    require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
+)
 from ._revision_persistence import emit_bucket_event as _emit_bucket_event
 from ._workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
 from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
@@ -1538,6 +1541,11 @@ def verify_modelo_revision(
 
     require_profile_ready_for_work_unit(work_unit)
 
+    _require_persisted_required_bindings_resolved(
+        work_unit=work_unit,
+        revision=target,
+        action="verify",
+    )
     findings, resolved_casilla_ids, missing_required_casilla_ids = _collect_revision_verification_findings(
         work_unit=work_unit,
         target=target,
