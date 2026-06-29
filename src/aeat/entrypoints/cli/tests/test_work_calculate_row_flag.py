@@ -207,6 +207,17 @@ class TestParseRowSpecM349:
         assert result.razon_social == "EntidadFR"
         assert result.clave_operacion == "S"
 
+    def test_parse_operador_with_quoted_razon_social_spaces(self) -> None:
+        """M349 legal names with spaces parse when quoted inside the --row value."""
+        result = _parse_row_spec(
+            'operador codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" '
+            "clave_operacion=E importe=1500.00",
+        )
+
+        assert isinstance(result, Modelo349OperadorRow)
+        assert result.razon_social == "DE Auto GmbH"
+        assert result.importe == Decimal("1500.00")
+
     def test_parse_operador_type_case_insensitive(self) -> None:
         """TYPE token is lowercased before dispatch."""
         result = _parse_row_spec(
@@ -543,12 +554,12 @@ class TestRevisionViewSurfacesDetailRows:
                 "1T",
                 "--row",
                 (
-                    "operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=EntidadDE "
+                    'operador codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" '
                     "clave_operacion=E importe=1500.00"
                 ),
                 "--row",
                 (
-                    "operador codigo_pais=FR nif_comunitario=FR12345678901 razon_social=EntidadFR "
+                    'operador codigo_pais=FR nif_comunitario=FR12345678901 razon_social="Equipement Garage SARL" '
                     "clave_operacion=E importe=900.00"
                 ),
             ],
@@ -556,6 +567,8 @@ class TestRevisionViewSurfacesDetailRows:
         assert calc.returncode == 0, f"calculate failed: {calc.stdout}\n{calc.stderr}"
         assert "casilla\tdecl.numero-operadores\t2" in calc.stdout, calc.stdout
         assert "casilla\tdecl.importe-operaciones\t2400.00" in calc.stdout, calc.stdout
+        assert "razon_social=DE Auto GmbH" in calc.stdout, calc.stdout
+        assert "razon_social=Equipement Garage SARL" in calc.stdout, calc.stdout
         assert len([line for line in calc.stdout.splitlines() if line.startswith("detail_row\t")]) == 2, calc.stdout
 
         verified = self._run_cli(
@@ -603,7 +616,9 @@ class TestRevisionViewSurfacesDetailRows:
         }
 
         assert operator_records["DE"][77:92].rstrip() == "123456789"
+        assert operator_records["DE"][92:132].rstrip() == "DE Auto GmbH"
         assert operator_records["FR"][77:92].rstrip() == "12345678901"
+        assert operator_records["FR"][92:132].rstrip() == "Equipement Garage SARL"
         assert "DEDE123456789" not in text
         assert "FRFR12345678901" not in text
 

@@ -9,6 +9,7 @@ to application services by the caller.
 from __future__ import annotations
 
 import re
+import shlex
 from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
 from typing import Annotated
@@ -258,7 +259,17 @@ def parse_casilla_override(spec: str) -> tuple[CasillaId, str]:
 
 def parse_row_spec(spec: str) -> ModeloDetailRow:
     """Parse a ``--row TYPE FIELD=value ...`` spec into a typed row model."""
-    parts = spec.split()
+    try:
+        parts = shlex.split(spec)
+    except ValueError as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.row_validation_error",
+                default=f"--row 'spec' failed validation: {exc}",
+                row_type="spec",
+                error=str(exc),
+            ),
+        ) from exc
     if not parts:
         raise typer.BadParameter(
             tr(
