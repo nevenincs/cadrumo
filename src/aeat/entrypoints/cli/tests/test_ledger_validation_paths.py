@@ -271,6 +271,54 @@ def test_ledger_classify_persists_professional_income_net_of_irpf_withholding(
     assert transaction["irpf_category"] == "actividad_economica"
 
 
+def test_ledger_classify_refuses_activity_income_when_base_cash_would_be_iva_sized_withholding(
+    tmp_path: Path,
+) -> None:
+    """A base-only professional cash receipt must not persist as IVA-sized retencion."""
+    added = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2025-07-15",
+            "--amount",
+            "2000.00",
+            "--direction",
+            "INCOMING",
+            "--description",
+            "Factura profesional introducida por base",
+        ],
+    )
+    assert added.exit_code == 0, added.output
+    transaction_id = json.loads(added.output)["result"]["transaction_id"]
+
+    classified = _invoke(
+        [
+            "app",
+            "ledger",
+            "classify",
+            transaction_id,
+            "--classification",
+            "BUSINESS",
+            "--taxable-base",
+            "2000.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "420.00",
+            "--irpf-category",
+            "actividad_economica",
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en", "COLUMNS": "120"},
+    )
+
+    assert classified.exit_code != 0
+    assert "inferred IRPF withholding exceeds" in classified.output
+
+
 def test_ledger_classify_persists_rent_paid_net_of_withholding(
     tmp_path: Path,
 ) -> None:

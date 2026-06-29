@@ -40,6 +40,7 @@ from ...domain.transactions import (
     TransactionCatalogueRepository,
     TransactionDirection,
     TransactionIdPrefixError,
+    TransactionValidationError,
     is_classified,
 )
 from ._common import (
@@ -80,6 +81,7 @@ from ._ledger_read_cli import register_read_commands
 from ._ledger_rules_cli import register_rule_commands, rule_app
 from ._ledger_support import (
     _invoice_link_error_bad_parameter,
+    _ledger_transaction_validation_bad,
     _ledger_validation_bad,
     _parse_amount_magnitude,
     _parse_decimal,
@@ -314,6 +316,8 @@ def ledger_add(
         )
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
+    except TransactionValidationError as exc:
+        raise _ledger_transaction_validation_bad(exc) from exc
     # The gross-invariant (`taxable_base + iva_amount == amount`) and other
     # `Transaction.model_validate` rules fire inside `create_manual_transaction`,
     # raising a pydantic `ValidationError` whose default rendering dumps the full
@@ -630,6 +634,8 @@ def ledger_classify(
         )
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
+    except TransactionValidationError as exc:
+        raise _ledger_transaction_validation_bad(exc) from exc
     from ._ledger_payloads import LedgerClassifySingleResult
 
     transaction_payload = ledger_transaction_payload(result.transaction)

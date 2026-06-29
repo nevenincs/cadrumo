@@ -45,6 +45,10 @@ from ._ids import TransactionId
 from ._raw_transaction import RawTransaction
 
 _IRPF_CATEGORY_TRABAJO = "trabajo"
+_IRPF_CATEGORY_ACTIVIDAD_ECONOMICA = "actividad_economica"
+# LIRPF art. 101.5 / RIRPF art. 95: supported professional activity
+# withholding rates are 15% or lower reduced rates, not the 21% IVA delta.
+_MAX_SUPPORTED_ACTIVITY_WITHHOLDING_RATE = Decimal("0.15")
 _RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING = frozenset(
     {
         "arrendamiento_local",
@@ -57,6 +61,11 @@ _RENT_IRPF_CATEGORIES_PAID_NET_OF_WITHHOLDING = _RENT_CATEGORIES_PAID_NET_OF_WIT
 def _has_non_work_irpf_category(value: str | None) -> bool:
     """Return whether a row carries an explicit non-salary withholding axis."""
     return value not in {None, "", _IRPF_CATEGORY_TRABAJO}
+
+
+def _has_activity_irpf_category(value: str | None) -> bool:
+    """Return whether a row carries the actividad-economica withholding axis."""
+    return value == _IRPF_CATEGORY_ACTIVIDAD_ECONOMICA
 
 
 def _has_rent_irpf_category(value: str | None) -> bool:
@@ -1061,6 +1070,16 @@ class Transaction(BaseModel):
             and _has_non_work_irpf_category(self.irpf_category)
             and reconstituted > expected
         ):
+            inferred_withholding = round_to_cents(reconstituted - expected)
+            if _has_activity_irpf_category(self.irpf_category):
+                maximum_supported_withholding = round_to_cents(
+                    self.taxable_base * _MAX_SUPPORTED_ACTIVITY_WITHHOLDING_RATE,
+                )
+                if inferred_withholding > maximum_supported_withholding:
+                    raise TransactionValidationError(
+                        "inferred IRPF withholding exceeds supported activity rate; "
+                        "cash amount may be invoice base without IVA",
+                    )
             return self
         if (
             self.direction == TransactionDirection.OUTGOING
