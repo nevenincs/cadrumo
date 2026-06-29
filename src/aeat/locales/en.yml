@@ -726,6 +726,10 @@ application:
         which cannot be mapped to a registry filing period.
       export_revision_state_refused: Calculation revision %{calculation_revision_id}
         is not verified-complete or filed and cannot be exported.
+      export_unsupported: Modelo %{modelo} cannot be exported to fichero-BOE because
+        the registry snapshot has no complete export_layouts definition. Calculation,
+        verification, and local filing records may still exist, but this command cannot
+        produce an AEAT upload file for this modelo.
       external_filing_evidence_reference_blank: External-filing import requires a
         non-empty evidence_reference_id.
       external_filing_no_casilla_values: External-filing import requires at least

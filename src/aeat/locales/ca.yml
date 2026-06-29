@@ -794,6 +794,10 @@ application:
         %{period}, que no es pot assignar a un periode de registre.
       export_revision_state_refused: La revisio de calcul %{calculation_revision_id}
         no esta verificada-completa ni presentada i no es pot exportar.
+      export_unsupported: El model %{modelo} no es pot exportar a fichero-BOE
+        perque l'snapshot del registre no te una definicio completa d'export_layouts.
+        El calcul, la verificacio i els registres locals de presentacio poden existir,
+        pero aquesta ordre no pot produir un fitxer per pujar a l'AEAT per a aquest model.
       external_filing_evidence_reference_blank: La importació de declaració externa
         requereix un evidence_reference_id no buit.
       external_filing_no_casilla_values: La importació de declaració externa requereix

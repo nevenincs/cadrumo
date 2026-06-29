@@ -75,6 +75,7 @@ from ..filing import (
     export_draft,
     filing_profile_from_taxpayer,
 )
+from ..filing.runtime import RegistrySchemaAccessor
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -152,6 +153,10 @@ class ModeloExportNoActiveBucketError(ModeloError):
 
 class ModeloExportEvidenceMissingError(ModeloExportError):
     """Raised when a ledger-derived revision lacks exportable evidence."""
+
+
+class ModeloExportUnsupportedError(ModeloExportError):
+    """Raised when a modelo revision has no renderable local fichero-BOE export layout."""
 
 
 class ModeloExportOutputPathError(ModeloExportError):
@@ -603,6 +608,22 @@ def _resolve_work_unit_period(work_unit: WorkUnit) -> Period:
     return work_unit.period
 
 
+def _raise_if_export_layout_unsupported(*, work_unit: WorkUnit, schema_provider: RegistrySchemaAccessor) -> None:
+    """Refuse a modelo whose registry snapshot cannot render fichero-BOE bytes."""
+    modelo = str(work_unit.modelo)
+    subview = schema_provider.get_subview(modelo)
+    if subview.export_layout_ids:
+        return
+    raise ModeloExportUnsupportedError(
+        translated_message="application.modelo.errors.export_unsupported",
+        context={
+            "modelo": modelo,
+            "reason": "registry snapshot has no complete export_layouts definition",
+        },
+        suggestion=f"aeat app modelo describe {modelo}",
+    )
+
+
 def _approve_export_draft(
     *,
     work_unit: WorkUnit,
@@ -610,6 +631,8 @@ def _approve_export_draft(
     workflow_profile: TaxpayerProfile,
     actor: str,
     approved_at: datetime,
+    period: Period,
+    schema_provider: RegistrySchemaAccessor,
 ) -> tuple[Period, ModeloDraft]:
     """Build and approve the export draft for one :class:`CalculationRevision`.
 
@@ -619,12 +642,6 @@ def _approve_export_draft(
     workflow gate. Returns the resolved :class:`~aeat.core.Period` and approved
     :class:`ModeloDraft`.
     """
-    period = _resolve_work_unit_period(work_unit)
-    schema_provider = build_runtime_schema_provider(
-        filing_year=period.filing_year,
-        period=period,
-        modelos=(work_unit.modelo,),
-    )
     inputs: filing_domain.ModeloInputs = revision_filing_replay_inputs(
         revision=revision,
         work_unit=work_unit,
@@ -721,6 +738,13 @@ def export_modelo_revision(
     from ._profile_readiness_gate import require_profile_ready_for_work_unit
 
     require_profile_ready_for_work_unit(work_unit)
+    export_period = _resolve_work_unit_period(work_unit)
+    schema_provider = build_runtime_schema_provider(
+        filing_year=export_period.filing_year,
+        period=export_period,
+        modelos=(work_unit.modelo,),
+    )
+    _raise_if_export_layout_unsupported(work_unit=work_unit, schema_provider=schema_provider)
     iva_wallet_decision = require_persisted_iva_compensation_decision_matches_revision(
         work_unit,
         revision,
@@ -753,6 +777,8 @@ def export_modelo_revision(
         workflow_profile=workflow_profile,
         actor=command.actor,
         approved_at=now,
+        period=export_period,
+        schema_provider=schema_provider,
     )
 
     # Atomic-rename: write the fichero-BOE artefact to a sibling .tmp
@@ -877,6 +903,7 @@ __all__ = [
     "ModeloExportNoActiveBucketError",
     "ModeloExportOutputPathError",
     "ModeloExportResult",
+    "ModeloExportUnsupportedError",
     "ModeloIvaWalletDecisionProvenance",
     "_raise_if_ledger_export_evidence_missing",
     "compose_export_headers",

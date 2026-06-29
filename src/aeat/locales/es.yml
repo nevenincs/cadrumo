@@ -803,6 +803,10 @@ application:
         %{period}, que no se puede asignar a un periodo de registro.
       export_revision_state_refused: La revision de calculo %{calculation_revision_id}
         no esta verificada-completa ni presentada y no se puede exportar.
+      export_unsupported: El modelo %{modelo} no se puede exportar a fichero-BOE
+        porque el snapshot del registro no tiene una definicion completa de export_layouts.
+        El calculo, la verificacion y los registros locales de presentacion pueden existir,
+        pero este comando no puede producir un archivo para subir a la AEAT para este modelo.
       external_filing_evidence_reference_blank: La importación de declaración externa
         requiere un evidence_reference_id no vacío.
       external_filing_no_casilla_values: La importación de declaración externa requiere

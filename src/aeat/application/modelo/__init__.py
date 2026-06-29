@@ -129,6 +129,7 @@ from ._export import (
     ModeloExportNoActiveBucketError,
     ModeloExportOutputPathError,
     ModeloExportResult,
+    ModeloExportUnsupportedError,
     export_modelo_revision,
 )
 from ._external_import_actions import import_external_filing_evidence
@@ -391,6 +392,7 @@ __all__ = [
     "ModeloExportNoActiveBucketError",
     "ModeloExportOutputPathError",
     "ModeloExportResult",
+    "ModeloExportUnsupportedError",
     "ModeloIvaWalletCorrectionNoRecordError",
     "ModeloIvaWalletCorrectionSealedError",
     "ModeloIvaWalletOverrideFreshWalletError",
