@@ -7,7 +7,7 @@
 [[revisions.2025-y-siguientes.relations]]
 id = "modelo-202-2025-y-siguientes-rel-cuota-base-1p"
 kind = "cross_model_output"
-dependency_role = "factual_evidence"
+dependency_role = "direct_calculation"
 source_modelo = "200"
 source_revision_selector = { filing_year_delta = -2 }
 source_casilla_id = "DP200014B:00592"

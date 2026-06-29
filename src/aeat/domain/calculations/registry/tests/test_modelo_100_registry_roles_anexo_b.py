@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .test_modelo_100_registry import (
+from ._modelo_100_registry_support import (
     _ANEXO_B_AAV_AMOUNT_ROWS,
     _ANEXO_B_AAV_SECTION,
     _ANEXO_B_ACCOUNT_ROWS,

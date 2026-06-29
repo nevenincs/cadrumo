@@ -188,6 +188,10 @@ def test_modelo_100_2023_simplified_expenses_use_temporary_da56_rate() -> None:
         binding_values={
             "renta-2023-modelo-100-estimacion-directa-es-normal": Decimal("0"),
         },
+        relation_values={
+            "renta-2023-rel-130-pagos-fraccionados": Decimal("0"),
+            "renta-2023-rel-131-pagos-fraccionados": Decimal("0"),
+        },
         enum_binding_values={"renta-2023-profile-tax-residence-ccaa": "madrid"},
         date_context={"filing_period": date(2023, 12, 31)},
         expected_outputs=(

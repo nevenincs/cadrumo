@@ -6,6 +6,12 @@ It returns :class:`RenderedCommandOutput`, chooses an :class:`OutputFormat`,
 and applies :func:`aeat.core.redaction.redact_for_cli_output` or
 :func:`aeat.core.redaction.redact_structured_for_cli_output` before text
 reaches stdout.
+
+Envelope-aware commands bypass this bare renderer in JSON mode through
+:func:`aeat.core.json_contract.emit_json_success`, but both paths consult
+:func:`reveal_cli_identifiers_opt_in` so profile and bucket identifier redaction
+cannot drift between direct payload rendering and the
+:class:`~aeat.core.json_contract.SchemaEnvelope` path.
 """
 
 from __future__ import annotations
@@ -29,7 +35,7 @@ class OutputRenderingError(AeatError):
 
 
 class OutputFormatRefusedError(AeatError):
-    """Raised when a command requests an unsupported output format."""
+    """Raised when a command requests an unsupported :class:`OutputFormat`."""
 
 
 class OutputFormat(StrEnum):
@@ -40,7 +46,7 @@ class OutputFormat(StrEnum):
 
 
 class RenderedCommandOutput(BaseModel):
-    """Rendered output document returned to CLI transports."""
+    """Rendered, already-redacted output document returned to CLI transports."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -56,9 +62,18 @@ def render_command_output(
 ) -> RenderedCommandOutput:
     """Render a payload or line iterator according to the root output format.
 
+    JSON output normalises ``payload`` through :func:`jsonable_output_payload`
+    and applies structured CLI redaction before serialization. Text output
+    ignores ``payload`` and joins the supplied ``lines`` after applying
+    line-oriented CLI redaction.
+
     Returns:
         A :class:`RenderedCommandOutput` containing the format and the
         rendered, redacted text body.
+
+    Raises:
+        OutputFormatRefusedError: If ``format_name`` is not one of the accepted
+            :class:`OutputFormat` values.
     """
     try:
         output_format = OutputFormat(format_name.strip().lower() or OutputFormat.TEXT.value)
@@ -125,7 +140,7 @@ def jsonable_output_payload(payload: object) -> object:
     rather than ``ModelClass.model_validate(json.loads(raw))``: pydantic
     coerces list -> tuple when it owns the JSON parse, but not when
     handed a pre-parsed dict. The roundtrip tests in
-    ``aeat.core.test_json_envelope_roundtrip`` pin the correct usage.
+    :mod:`aeat.core.tests.test_json_envelope_roundtrip` pin the correct usage.
     """
     if isinstance(payload, BaseModel):
         return jsonable_output_payload(payload.model_dump(mode="python"))

@@ -39,9 +39,31 @@ _PATRIMONIO_REDUCCION_LIMITE_80_CASILLA: CasillaId = validated_casilla_id(
     "patrimonio.reduccion-limite-80",
     surface="_PATRIMONIO_REDUCCION_LIMITE_80_CASILLA",
 )
+_PATRIMONIO_LIMITE_CONJUNTO_CASILLA: CasillaId = validated_casilla_id(
+    "patrimonio.limite-conjunto",
+    surface="_PATRIMONIO_LIMITE_CONJUNTO_CASILLA",
+)
+_PATRIMONIO_TOTAL_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id(
+    "patrimonio.total-cuota-integra",
+    surface="_PATRIMONIO_TOTAL_CUOTA_INTEGRA_CASILLA",
+)
+_PATRIMONIO_CUOTA_MINORADA_CASILLA: CasillaId = validated_casilla_id(
+    "patrimonio.cuota-minorada",
+    surface="_PATRIMONIO_CUOTA_MINORADA_CASILLA",
+)
 _PATRIMONIO_CUOTA_A_INGRESAR_CASILLA: CasillaId = validated_casilla_id(
     "patrimonio.cuota-a-ingresar",
     surface="_PATRIMONIO_CUOTA_A_INGRESAR_CASILLA",
+)
+_PATRIMONIO_ART31_UNGROUNDED_TAIL = (
+    _PATRIMONIO_LIMITE_CONJUNTO_CASILLA,
+    _PATRIMONIO_TOTAL_CUOTA_INTEGRA_CASILLA,
+    _PATRIMONIO_CUOTA_MINORADA_CASILLA,
+    _PATRIMONIO_CUOTA_A_INGRESAR_CASILLA,
+)
+_PATRIMONIO_COMPUTED_SAFE_TARGETS = (
+    _PATRIMONIO_CUOTA_INTEGRA_CASILLA,
+    _PATRIMONIO_REDUCCION_LIMITE_80_CASILLA,
 )
 _PATRIMONIO_LEGAL_REFS = (
     "ley-19-1991:art-4-9",
@@ -132,7 +154,7 @@ def test_modelo_714_revision_2021_cuota_integra_computed_via_grounded_escala() -
     The downstream chain (base imponible, base liquidable, and the post-cuota
     casillas) stays a manual foundation pending its own official formula
     evidence; only the escala step — grounded verbatim in the bundled
-    authoritative corpus — is computed. No fake/placeholder formula is declared.
+    authoritative corpus — is computed. No ungrounded placeholder formula is declared.
     """
     modelo, _ = _load_modelo_714()
     revision = modelo.revisions["2021-y-siguientes"]
@@ -153,6 +175,20 @@ def test_modelo_714_revision_2021_cuota_integra_computed_via_grounded_escala() -
         _PATRIMONIO_CUOTA_A_INGRESAR_CASILLA,
     ):
         assert casillas[casilla_id].input_kind is InputKind.MANUAL
+
+
+def test_modelo_714_art31_tail_has_no_partial_m100_formula_or_relation() -> None:
+    modelo, _ = _load_modelo_714()
+    revision = modelo.revisions["2021-y-siguientes"]
+    casillas = {casilla.id: casilla for casilla in revision.casillas}
+
+    assert {formula.target_casilla_id for formula in revision.formulas} == set(_PATRIMONIO_COMPUTED_SAFE_TARGETS)
+    assert not revision.relations
+    for casilla_id in _PATRIMONIO_ART31_UNGROUNDED_TAIL:
+        casilla = casillas[casilla_id]
+        assert casilla.input_kind is InputKind.MANUAL
+        assert casilla.formula is None
+        assert casilla.binding is None
 
 
 def test_modelo_714_snapshot_builds_for_2021_event_period() -> None:

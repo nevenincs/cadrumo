@@ -1,7 +1,12 @@
 """Typed ``--json`` payload schemas for modelo command envelopes.
 
-Each payload here is a :class:`OutputSchema` subclass registered for its
-command envelope.
+Each command result is a strict :class:`OutputSchema` subclass registered by
+:func:`register_schema` for a stable command path and wrapped at emit time in
+:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope`.  This file is the
+CLI-side projection boundary: application and domain results stay authoritative
+while these classes expose JSON-safe :class:`WorkUnitId`,
+:class:`CalculationRevisionId`, :class:`CasillaId`, :class:`LegalRefId`, and
+:class:`SourceRefId` fields to operators.
 """
 
 from __future__ import annotations
@@ -935,7 +940,11 @@ class ModeloExportPayload(OutputSchema):
 
 
 class DeltaRowPayload(OutputSchema):
-    """One casilla comparison row in the compare output."""
+    """One grounded :class:`CasillaId` comparison row in ``modelo.compare``.
+
+    Preserves formula, legal-reference, and source-reference identifiers so the
+    :class:`ModeloCompareResult` envelope does not lose registry provenance.
+    """
 
     casilla_id: CasillaId
     label: str
@@ -950,7 +959,7 @@ class DeltaRowPayload(OutputSchema):
 
 
 class CompareSectionPayload(OutputSchema):
-    """One section grouping in the compare output."""
+    """Named section grouping for :class:`DeltaRowPayload` rows."""
 
     section: str
     rows: list[DeltaRowPayload]
@@ -958,7 +967,11 @@ class CompareSectionPayload(OutputSchema):
 
 @register_schema("modelo.compare")
 class ModeloCompareResult(OutputSchema):
-    """Year-over-year modelo comparison result."""
+    """Envelope result for ``modelo.compare``.
+
+    Rows are carried both sectioned and flattened so table rendering and JSON
+    consumers share the same :class:`DeltaRowPayload` provenance fields.
+    """
 
     operation: str = "modelo.compare"
     modelo: str
@@ -997,7 +1010,12 @@ class ModeloHistoryResult(OutputSchema):
 
 
 class CasillaObservationPayload(OutputSchema):
-    """One typed casilla observation in the project result."""
+    """One typed :class:`CasillaId` observation for projection-style results.
+
+    Used by :class:`ModeloProjectResult` and
+    :class:`WorkPreviewMaritimeExemptionResult`; ``legal_refs`` and
+    ``source_refs`` stay required to preserve calculation grounding in CLI JSON.
+    """
 
     casilla_id: CasillaId
     value: str
@@ -1007,7 +1025,11 @@ class CasillaObservationPayload(OutputSchema):
 
 
 class M130AccumulatedPayload(OutputSchema):
-    """Accumulated M130 aggregation inputs for the project result."""
+    """M130 summary inputs that feed :class:`ModeloProjectResult`.
+
+    These stringified Decimal fields are operator-facing totals; the grounded
+    per-casilla path is :class:`CasillaObservationPayload`.
+    """
 
     ingresos: str
     gastos: str
@@ -1016,7 +1038,11 @@ class M130AccumulatedPayload(OutputSchema):
 
 
 class M100ProjectionPayload(OutputSchema):
-    """Projected M100 output casillas in the project result."""
+    """Projected M100 summary values in :class:`ModeloProjectResult`.
+
+    This flat view gives stable top-line JSON keys; formula provenance lives in
+    ``ModeloProjectResult.casilla_observations``.
+    """
 
     base_liquidable_general_0505: str
     pagos_fraccionados_0604: str
@@ -1029,7 +1055,12 @@ class M100ProjectionPayload(OutputSchema):
 
 @register_schema("modelo.project")
 class ModeloProjectResult(OutputSchema):
-    """Year-end M100 projection from M130 quarterly filings."""
+    """Envelope result for ``modelo.project``.
+
+    Combines :class:`M130AccumulatedPayload` source totals, the flat
+    :class:`M100ProjectionPayload` summary, and the required
+    :class:`CasillaObservationPayload` provenance list.
+    """
 
     operation: str = "modelo.project"
     year: int
@@ -1170,7 +1201,12 @@ class ModeloAggregateResult(OutputSchema):
 
 @register_schema("modelo.work.preview_maritime_exemption")
 class WorkPreviewMaritimeExemptionResult(OutputSchema):
-    """Maritime worker IRPF exemption preview result."""
+    """Envelope result for ``modelo.work.preview_maritime_exemption``.
+
+    ``casilla_values`` is a convenience mapping keyed by :class:`CasillaId`;
+    ``observations`` reuses :class:`CasillaObservationPayload` for grounded
+    legal-reference and source-reference identifiers.
+    """
 
     operation: str = "modelo.work.preview_maritime_exemption"
     worker_class: str | None = None

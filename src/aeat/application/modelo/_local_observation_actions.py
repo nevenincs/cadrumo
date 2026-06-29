@@ -87,6 +87,10 @@ def record_operator_local_observation[CasillaKey](
     snapshot revision id as its stamp. Calculation prefill can then resolve the
     :class:`CasillaObservation` values, while cross-period clean-state
     verification still treats it as non-official local evidence.
+
+    Returns:
+        A :class:`ModeloLocalObservationResult` describing the persisted local
+        observation stamp.
     """
     snapshot = _load_snapshot(modelo=modelo, filing_year=filing_year, period=period)
     canonical_values = _canonical_casilla_values(snapshot=snapshot, casilla_values=casilla_values)

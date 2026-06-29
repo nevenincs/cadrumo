@@ -1,7 +1,7 @@
 [[revisions."2024".relations]]
 id = "renta-2024-rel-123-retenciones-trimestrales"
 kind = "cross_model_output"
-dependency_role = "factual_evidence"
+dependency_role = "direct_calculation"
 source_modelo = "123"
 source_revision_selector = { year = 2024 }
 source_casilla_id = "09"

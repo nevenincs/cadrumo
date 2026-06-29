@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .. import calculation_closure_legal_refs
-from .test_modelo_100_registry import (
+from ._modelo_100_registry_support import (
     _ANDALUCIA_EJERCICIO_FISICO_ROLE,
     _ANEXO_C_BASE_NEGATIVE_GENERAL_BINDING_ID,
     _ANEXO_C_BASE_NEGATIVE_GENERAL_CONSTRUCT_ID,

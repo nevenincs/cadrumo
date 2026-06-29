@@ -1,4 +1,16 @@
-"""Typer registrations for modelo projection and comparison commands."""
+"""Typer registrations for modelo projection and comparison commands.
+
+The ``modelo.project`` adapter calls :func:`project_modelo_100_from_m130`
+and serializes the service result as :class:`ModeloProjectResult`.  Its
+:class:`CasillaObservationPayload` list is the provenance-carrying channel for
+formula-computed :class:`CasillaId` values, while
+:class:`M130AccumulatedPayload` and :class:`M100ProjectionPayload` expose the
+operator-facing summary values.
+
+The ``modelo.compare`` adapter calls :func:`compare_modelo_years`, converts
+:class:`ModeloCompareDeltaRow` rows into :class:`DeltaRowPayload`, and emits the
+typed envelope through :func:`_emit_envelope`.
+"""
 
 from __future__ import annotations
 
@@ -48,7 +60,12 @@ def register_projection_commands(
     bad_parameter_from_error: BadParameterRenderer,
     bad_parameter_from_localized_context: BadParameterRenderer,
 ) -> None:
-    """Register projection commands against the root modelo Typer app."""
+    """Register projection commands against the root modelo Typer app.
+
+    Parsing and error rendering are injected by the parent modelo CLI.  This
+    module owns the conversion from application service results into
+    :class:`ModeloProjectResult` and :class:`ModeloCompareResult` envelopes.
+    """
     _register_modelo_project_command(
         app,
         require_active_profile=require_active_profile,
@@ -136,7 +153,13 @@ def _register_modelo_project_command(
             ),
         ] = None,
     ) -> None:
-        """Project a year-end Modelo 100 from the active profile's M130 quarterly filings."""
+        """Emit :class:`ModeloProjectResult` from active-profile M130 filings.
+
+        The application service returns typed projection observations; this CLI
+        command maps each one to :class:`CasillaObservationPayload` so
+        ``formula_id``, ``legal_refs``, and ``source_refs`` remain attached
+        before :func:`_emit_envelope` renders JSON or table output.
+        """
         require_active_profile()
         casilla_pairs = dict(parse_casilla_override(spec) for spec in (casilla or ()))
         binding_pairs = dict(parse_binding_override(spec) for spec in (binding or ()))
@@ -258,7 +281,12 @@ def _register_modelo_compare_command(
             ),
         ] = Modelo.M100.value,
     ) -> None:
-        """Compare two filing-year revisions for the same modelo casilla-by-casilla."""
+        """Emit :class:`ModeloCompareResult` with grounded delta rows.
+
+        Each service row arrives as :class:`ModeloCompareDeltaRow`; the CLI
+        schema preserves ``formula_id``, ``legal_refs``, and ``source_refs`` for
+        every compared :class:`CasillaId`.
+        """
         require_active_profile()
         try:
             service_result = compare_modelo_years(modelo=modelo, years=list(year or ()))
@@ -311,6 +339,11 @@ def _register_modelo_compare_command(
 
 
 def _delta_row_payload(row: ModeloCompareDeltaRow) -> DeltaRowPayload:
+    """Convert one :class:`ModeloCompareDeltaRow` into :class:`DeltaRowPayload`.
+
+    The adapter preserves :class:`CasillaId` identity and registry provenance so
+    the :class:`ModeloCompareResult` envelope mirrors :func:`compare_modelo_years`.
+    """
     return DeltaRowPayload(
         casilla_id=row.casilla_id,
         label=row.label,

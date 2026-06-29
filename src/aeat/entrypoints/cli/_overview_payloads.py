@@ -9,6 +9,14 @@ at their emit sites. All sequence fields use ``list`` rather than ``tuple``
 because ``model_dump(mode='json')`` serialises pydantic tuples as JSON arrays,
 and the strict ``OutputSchema`` base does not coerce lists to tuples on
 re-validation.
+
+The nested calendar payloads mirror the JSON form of
+:class:`~aeat.application.overview.OverviewCalendar`,
+:class:`~aeat.application.overview.OverviewCalendarEntry`,
+:class:`~aeat.application.overview.OverviewCalendarEvent`, and
+:class:`~aeat.application.overview.OverviewCalendarFilingEvidence`.  Registered
+result schemas then wrap those fragments for the
+:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` surface.
 """
 
 from __future__ import annotations
@@ -21,7 +29,7 @@ from ._schemas import OutputSchema, register_schema
 
 
 class OverviewDraftPayload(OutputSchema):
-    """One draft row nested in a period-scoped status result."""
+    """One draft row nested in a period-scoped :class:`OverviewStatusResult`."""
 
     draft_id: str
     modelo: str
@@ -29,7 +37,12 @@ class OverviewDraftPayload(OutputSchema):
 
 
 class OverviewCalendarEntryPayload(OutputSchema):
-    """One calendar entry nested in a calendar result."""
+    """One :class:`~aeat.application.overview.OverviewCalendarEntry` row.
+
+    The nested :class:`OverviewCalendarFilingEvidencePayload` keeps filing
+    evidence beside the legal deadline row rather than flattening it into the
+    command result.
+    """
 
     modelo: str
     period: str
@@ -49,7 +62,13 @@ class OverviewCalendarEntryPayload(OutputSchema):
 
 
 class OverviewCalendarFilingEvidencePayload(OutputSchema):
-    """Filing evidence nested in a calendar entry."""
+    """Filing evidence nested in an :class:`OverviewCalendarEntryPayload`.
+
+    Mirrors
+    :class:`~aeat.application.overview.OverviewCalendarFilingEvidence` and keeps
+    local filing state, observed AEAT submission state, and justificante
+    verification as separate JSON fields.
+    """
 
     modelo: str | None = None
     filing_year: int | None = None
@@ -71,7 +90,7 @@ class OverviewCalendarFilingEvidencePayload(OutputSchema):
 
 
 class OverviewCalendarEventPayload(OutputSchema):
-    """One observed local event nested in a calendar result."""
+    """One :class:`~aeat.application.overview.OverviewCalendarEvent` row."""
 
     event_type: str
     event_date: str
@@ -91,7 +110,7 @@ class OverviewCalendarEventPayload(OutputSchema):
 
 
 class OverviewCalendarWarningPayload(OutputSchema):
-    """One calendar warning nested in a calendar result."""
+    """One :class:`~aeat.application.overview.CalendarWarning` row."""
 
     code: str
     message: str
@@ -100,14 +119,14 @@ class OverviewCalendarWarningPayload(OutputSchema):
 
 
 class OverviewCalendarRangePayload(OutputSchema):
-    """Calendar range nested in a calendar result."""
+    """JSON form of :class:`~aeat.application.overview.OverviewCalendarRange`."""
 
     from_date: str
     to_date: str
 
 
 class OverviewCalendarCompletenessPayload(OutputSchema):
-    """Completeness summary nested in a calendar result."""
+    """JSON form of :class:`~aeat.application.overview.CalendarCompleteness`."""
 
     explicitly_set_keys: list[str] = []
     defaulted_keys: list[str] = []
@@ -116,7 +135,7 @@ class OverviewCalendarCompletenessPayload(OutputSchema):
 
 
 class OverviewSuppressedCalendarEntryPayload(OutputSchema):
-    """Suppressed calendar row nested in a calendar result."""
+    """JSON form of :class:`~aeat.application.overview.SuppressedCalendarEntry`."""
 
     modelo: str
     period: str
@@ -125,7 +144,7 @@ class OverviewSuppressedCalendarEntryPayload(OutputSchema):
 
 
 class OverviewCalendarPayload(OutputSchema):
-    """Typed application calendar payload nested in CLI results."""
+    """Typed :class:`~aeat.application.overview.OverviewCalendar` JSON fragment."""
 
     range: OverviewCalendarRangePayload
     entries: list[OverviewCalendarEntryPayload] = []
@@ -139,7 +158,7 @@ class OverviewCalendarPayload(OutputSchema):
 
 
 class OverviewCalendarProfilePayload(OutputSchema):
-    """One profile block in all-profiles calendar mode."""
+    """One profile block in ``overview calendar --all-profiles`` mode."""
 
     profile_id: str
     label: str
@@ -153,7 +172,12 @@ class OverviewCalendarProfilePayload(OutputSchema):
 
 @register_schema("overview.status")
 class OverviewStatusResult(OutputSchema):
-    """JSON envelope for ``aeat app overview status``."""
+    """JSON envelope result for ``aeat app overview status``.
+
+    The full-status branch accepts the JSON form of
+    :class:`~aeat.application.overview.OverviewStatusReport`; the period branch
+    uses :class:`OverviewDraftPayload` rows for the scoped draft list.
+    """
 
     # Period-scoped branch fields
     period: str | None = None
@@ -200,7 +224,12 @@ class OverviewCalendarResult(OutputSchema):
 
 @register_schema("overview.agenda")
 class OverviewAgendaResult(OutputSchema):
-    """JSON envelope for ``aeat app overview agenda``."""
+    """JSON envelope result for ``aeat app overview agenda``.
+
+    Accepts the JSON form of
+    :class:`~aeat.application.overview._agenda.OverviewAgenda` so the
+    application read model remains the payload authority.
+    """
 
     as_of: str | None = None
     horizon_days: int | None = None
@@ -212,7 +241,12 @@ class OverviewAgendaResult(OutputSchema):
 
 @register_schema("overview.backlog")
 class OverviewBacklogResult(OutputSchema):
-    """JSON envelope for ``aeat app overview backlog``."""
+    """JSON envelope result for ``aeat app overview backlog``.
+
+    Accepts the JSON form of
+    :class:`~aeat.application.overview._backlog.OverviewBacklog` while the CLI
+    controls only envelope registration and rendering.
+    """
 
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
@@ -222,7 +256,12 @@ class OverviewBacklogResult(OutputSchema):
 
 @register_schema("overview.explain")
 class OverviewExplainResult(OutputSchema):
-    """JSON envelope for ``aeat app overview explain``."""
+    """JSON envelope result for ``aeat app overview explain``.
+
+    Accepts the JSON form of
+    :class:`~aeat.application.overview._explain.OverviewExplain`, including the
+    applicability verdict, legal references, and profile facts.
+    """
 
     modelo: str | None = None
     year: int | None = None

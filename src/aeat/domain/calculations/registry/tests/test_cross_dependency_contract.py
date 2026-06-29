@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from functools import lru_cache
 from typing import Protocol
 
@@ -61,6 +61,33 @@ def _algorithm_relation_refs(revision: ModeloRevision) -> set[str]:
         for value in binding.inputs.values()
         if str(value) in relation_ids
     }
+
+
+def _walk_expression(expression: object) -> Iterator[object]:
+    yield expression
+    for arg in getattr(expression, "args", ()) or ():
+        yield from _walk_expression(arg)
+
+
+def _formula_binding_refs(revision: ModeloRevision) -> set[str]:
+    refs: set[str] = set()
+    for formula in revision.formulas:
+        for node in _walk_expression(formula.expression):
+            binding_ref = getattr(node, "binding", None)
+            if binding_ref:
+                refs.add(str(binding_ref))
+    return refs
+
+
+def _consumed_relation_refs(revision: ModeloRevision) -> set[str]:
+    consumed = _formula_relation_refs(revision) | _algorithm_relation_refs(revision)
+    casilla_bindings = {casilla.binding for casilla in revision.casillas if casilla.binding is not None}
+    formula_bindings = _formula_binding_refs(revision)
+    consumed_bindings = casilla_bindings | formula_bindings
+    for relation in revision.relations:
+        if relation.target_binding in consumed_bindings:
+            consumed.add(relation.id)
+    return consumed
 
 
 def test_cross_dependency_roles_match_supported_modelo_hierarchy() -> None:
@@ -175,7 +202,7 @@ def test_formula_bearing_revisions_consume_calculation_relations() -> None:
         for revision in modelo.revisions.values():
             if not revision.formulas and not revision.algorithm_bindings:
                 continue
-            consumed = _formula_relation_refs(revision) | _algorithm_relation_refs(revision)
+            consumed = _consumed_relation_refs(revision)
             required = {
                 relation.id
                 for relation in revision.relations

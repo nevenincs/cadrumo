@@ -42,12 +42,14 @@ def test_modelo_309_revision_uses_ad_hoc_period_selector() -> None:
     revision = modelo.revisions["2004-y-siguientes"]
     assert revision.period_selector.year_from == 2004
     assert revision.period_selector.periods == ("AD-HOC",)
+    assert revision.orden_aplicabilidad == ("orden-hac-3625-2003:apartado-1",)
 
 
 def test_modelo_309_snapshot_builds_for_ad_hoc_period() -> None:
     modelo, catalogues = _load_modelo_309()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="AD-HOC")
     assert snapshot.revision.id == "2004-y-siguientes"
+    assert snapshot.revision.orden_aplicabilidad == ("orden-hac-3625-2003:apartado-1",)
     assert "orden-hac-3625-2003:apartado-1" in snapshot.legal
     assert "orden-hac-3625-2003:apartado-3" in snapshot.legal
 

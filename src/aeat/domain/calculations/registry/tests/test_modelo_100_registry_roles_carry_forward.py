@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .test_modelo_100_registry import (
+from ._modelo_100_registry_support import (
     _ANEXO_B_INST_AUTO_IMPORTE_PENDIENTE_ANTERIOR_ROLE,
     _ANEXO_B_INST_AUTO_SECTION,
     _AUTONOMIC_DEDUCTION_ART_77_REF,

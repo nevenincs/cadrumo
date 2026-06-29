@@ -137,7 +137,7 @@ class _BindingRowSetProjection(BaseModel):
     record: str | None = Field(default=None, min_length=1, max_length=64)
 
     def row_set_selector(self, *, binding_id: str) -> BindingRowSetSelector | None:
-        """Return the typed row-set selector, or ``None`` for non-row selectors."""
+        """Return the typed :class:`BindingRowSetSelector`, or ``None`` for non-row selectors."""
         has_row_set_key = self.row_field is not None or self.grouping is not None
         if self.fact is None:
             if self.grouping is not None:
@@ -196,6 +196,10 @@ def binding_row_set_selector(binding: DataBindingDefinition) -> BindingRowSetSel
     Row-set consumers only need the common ``fact = "row_field"`` projection
     that names the detail grouping and the emitted row field, so callers parse
     that projection once instead of probing the raw selector map.
+
+    Returns:
+        The parsed :class:`BindingRowSetSelector`, or ``None`` when the binding
+        selector does not declare a row-set projection.
     """
     try:
         projection = _BindingRowSetProjection.model_validate(selector_as_dict(binding))

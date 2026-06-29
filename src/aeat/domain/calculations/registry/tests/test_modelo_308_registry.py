@@ -44,6 +44,7 @@ def test_modelo_308_revision_starts_at_2009() -> None:
     assert revision.valid_from == date(2009, 1, 1)
     assert revision.period_selector.year_from == 2009
     assert revision.period_selector.periods == ("AD-HOC",)
+    assert revision.orden_aplicabilidad == ("orden-eha-3786-2008:art-2",)
 
 
 def test_modelo_308_snapshot_builds_for_recent_filing_years() -> None:
@@ -64,6 +65,7 @@ def test_modelo_308_snapshot_carries_legal_authority() -> None:
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="AD-HOC")
     assert "orden-eha-3786-2008:art-2" in snapshot.legal
     assert "orden-eha-3786-2008:art-11" in snapshot.legal
+    assert snapshot.revision.orden_aplicabilidad == ("orden-eha-3786-2008:art-2",)
     assert snapshot.legal["orden-eha-3786-2008:art-11"].article == "11"
     assert "aeat-dr-308-2019" in snapshot.sources
     assert "aeat-modelo-308-procedure" in snapshot.sources
