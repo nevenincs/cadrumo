@@ -5073,13 +5073,13 @@ wizard:
       legal-name:
         help: Jogi személy cégneve az exportfejlécekhez
       ley-49-2002-option-date:
-        help: wizard.setup.flags.ley-49-2002-option-date.help
+        help: 'Rogziti a 036-os nyomtatvany 653-as mezojenek datumat a Ley 49/2002 II. cime szerinti valasztashoz.'
       ley-49-2002-option-declared:
-        help: wizard.setup.flags.ley-49-2002-option-declared.help
+        help: 'Rogziti, hogy a 036-os nyomtatvany 651-es mezoje bejelenti-e a Ley 49/2002 II. cime szerinti valasztast.'
       ley-49-2002-renunciation-date:
-        help: wizard.setup.flags.ley-49-2002-renunciation-date.help
+        help: 'Rogziti a 036-os nyomtatvany 654-es mezojenek datumat a Ley 49/2002 II. cime szerinti lemondashoz.'
       ley-49-2002-renunciation-declared:
-        help: wizard.setup.flags.ley-49-2002-renunciation-declared.help
+        help: 'Rogziti, hogy a 036-os nyomtatvany 652-es mezoje bejelenti-e a Ley 49/2002 II. cime szerinti rendszerrol valo lemondast.'
       llm-vision:
         help: Helyi LLM-látás engedélyezése a számlák beolvasásához.
       monedas-virtuales-extranjero-above-threshold:
@@ -5472,17 +5472,17 @@ wizard:
             label: Kereskedelmi célú polgári társaság
         prompt: Jogi forma
       ley-49-2002-option-date:
-        help: wizard.setup.taxpayer-type.ley-49-2002-option-date.help
-        prompt: wizard.setup.taxpayer-type.ley-49-2002-option-date.prompt
+        help: 'A 036-os nyomtatvany 653-as mezojehez tartozo ISO datumot hasznald.'
+        prompt: 'A Ley 49/2002 szerinti kulonleges rendszer valasztasanak bejelentett datuma'
       ley-49-2002-option-declared:
-        help: wizard.setup.taxpayer-type.ley-49-2002-option-declared.help
-        prompt: wizard.setup.taxpayer-type.ley-49-2002-option-declared.prompt
+        help: 'A 036-os nyomtatvany 651-es mezojeben szereplo bejelentesi tenyt hasznald; a jogi alkalmazas tovabbra is a torvenyi feltetelektol es a lemondas hianyatol fugg.'
+        prompt: 'A szervezet a 036-os nyomtatvanyon bejelentette a Ley 49/2002 II. cime szerinti kulonleges adozasi rendszer valasztasat?'
       ley-49-2002-renunciation-date:
-        help: wizard.setup.taxpayer-type.ley-49-2002-renunciation-date.help
-        prompt: wizard.setup.taxpayer-type.ley-49-2002-renunciation-date.prompt
+        help: 'A 036-os nyomtatvany 654-es mezojehez tartozo ISO datumot hasznald.'
+        prompt: 'A Ley 49/2002 szerinti kulonleges rendszerrol valo lemondas bejelentett datuma'
       ley-49-2002-renunciation-declared:
-        help: wizard.setup.taxpayer-type.ley-49-2002-renunciation-declared.help
-        prompt: wizard.setup.taxpayer-type.ley-49-2002-renunciation-declared.prompt
+        help: 'A 036-os nyomtatvany 652-es mezojeben szereplo bejelentesi tenyt hasznald.'
+        prompt: 'A szervezet a 036-os nyomtatvanyon bejelentette a Ley 49/2002 II. cime szerinti kulonleges adozasi rendszerrol valo lemondast?'
       new-entity-first-two-profit-periods:
         help: Csak jogi személyekre vonatkozik. Ha be van jelölve, az entitás 15%-os
           kedvezményes adókulcs szerint adózik az adott két időszakban.

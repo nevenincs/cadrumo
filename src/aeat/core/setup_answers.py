@@ -37,6 +37,27 @@ from .logging import get_logger
 _log = get_logger(__name__)
 
 
+def _parse_optional_bool_token(value: object, *, field_name: str) -> object:
+    """Parse a three-state optional wizard boolean token.
+
+    Blank means undeclared and must survive as ``""`` so profile persistence
+    drops the fact instead of writing a declared false value.
+    """
+    if value == "" or value is None:
+        return ""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        token = value.strip().lower()
+        if token == "":
+            return ""
+        if token in {"true", "1", "yes", "y", "si", "sí"}:
+            return True
+        if token in {"false", "0", "no", "n"}:
+            return False
+    raise ValueError(f"{field_name} must be a boolean, blank, or a recognised canonical token")
+
+
 # ---------------------------------------------------------------------------
 # project_answers registration slot
 # ---------------------------------------------------------------------------
@@ -236,6 +257,14 @@ class SetupAnswers(BaseModel):
     """Optional INCN as a canonical decimal string."""
     new_entity_first_two_profit_periods: Any = ""
     """Optional three-state bool for LIS Art. 29 new-entity rate."""
+    ley_49_2002_option_declared: Any = ""
+    """Optional three-state bool for the Ley 49/2002 Title II option."""
+    ley_49_2002_option_date: str = ""
+    """ISO-8601 date declared for the Ley 49/2002 Title II option."""
+    ley_49_2002_renunciation_declared: Any = ""
+    """Optional three-state bool for Ley 49/2002 Title II renunciation."""
+    ley_49_2002_renunciation_date: str = ""
+    """ISO-8601 date declared for the Ley 49/2002 Title II renunciation."""
     irpf_income_categories: str = ""
     """Comma-separated set of IrpfIncomeCategory tokens."""
 
@@ -578,21 +607,25 @@ class SetupAnswers(BaseModel):
         cls,
         value: object,
     ) -> Any:
-        if value == "" or value is None:
-            return ""
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, str):
-            token = value.strip().lower()
-            if token == "":
-                return ""
-            if token in {"true", "1", "yes", "y", "si", "sí"}:
-                return True
-            if token in {"false", "0", "no", "n"}:
-                return False
-        raise ValueError(
-            "new_entity_first_two_profit_periods must be a boolean, blank, or a recognised canonical token",
+        return _parse_optional_bool_token(
+            value,
+            field_name="new_entity_first_two_profit_periods",
         )
+
+    @field_validator(
+        "ley_49_2002_option_declared",
+        "ley_49_2002_renunciation_declared",
+        mode="before",
+    )
+    @classmethod
+    # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR: Pydantic
+    # field_validator(mode='before') requires -> Any; actual return is a
+    # bool or the blank undeclared sentinel.
+    def _parse_ley_49_2002_optional_bool(  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR
+        cls,
+        value: object,
+    ) -> Any:
+        return _parse_optional_bool_token(value, field_name="ley_49_2002_optional_bool")
 
     @field_validator("activity_start_date")
     @classmethod
@@ -605,6 +638,19 @@ class SetupAnswers(BaseModel):
             date.fromisoformat(value)
         except ValueError as exc:
             raise ValueError(f"activity_start_date must be an ISO-8601 date (YYYY-MM-DD), got {value!r}") from exc
+        return value
+
+    @field_validator("ley_49_2002_option_date", "ley_49_2002_renunciation_date")
+    @classmethod
+    def _validate_ley_49_2002_dates(cls, value: str) -> str:
+        from datetime import date
+
+        if value == "":
+            return value
+        try:
+            date.fromisoformat(value)
+        except ValueError as exc:
+            raise ValueError(f"Ley 49/2002 dates must be ISO-8601 (YYYY-MM-DD), got {value!r}") from exc
         return value
 
     @field_validator("irpf_special_regime_start_date")

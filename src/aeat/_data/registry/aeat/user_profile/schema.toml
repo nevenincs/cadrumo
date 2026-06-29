@@ -321,6 +321,46 @@ model_selectors = ["taxpayer.new_entity_first_two_profit_periods"]
 legal_refs = ["ley-27-2014:art-29"]
 
 [[sections.fields]]
+key = "ley_49_2002_special_regime_option_declared"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Whether Modelo 036 casilla 651 declares exercise of the Title II Ley 49/2002 special fiscal regime option. Captures the declaration fact; art. 14 still conditions application on requirements and no renunciation."
+model_selectors = ["taxpayer.ley_49_2002_special_regime_option_declared"]
+legal_refs = ["ley-49-2002:art-14"]
+
+[[sections.fields]]
+key = "ley_49_2002_special_regime_option_date"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Date declared in Modelo 036 casilla 653 for exercising the Title II Ley 49/2002 special-regime option."
+model_selectors = ["taxpayer.ley_49_2002_special_regime_option_date"]
+legal_refs = ["ley-49-2002:art-14"]
+
+[[sections.fields]]
+key = "ley_49_2002_special_regime_renunciation_declared"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Whether Modelo 036 casilla 652 declares renunciation of a previously exercised Title II Ley 49/2002 special-regime option."
+model_selectors = ["taxpayer.ley_49_2002_special_regime_renunciation_declared"]
+legal_refs = ["ley-49-2002:art-14"]
+
+[[sections.fields]]
+key = "ley_49_2002_special_regime_renunciation_date"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Date declared in Modelo 036 casilla 654 for the renunciation of the Title II Ley 49/2002 special-regime option."
+model_selectors = ["taxpayer.ley_49_2002_special_regime_renunciation_date"]
+legal_refs = ["ley-49-2002:art-14"]
+
+[[sections.fields]]
 key = "tributacion_estado_porcentaje"
 type = "decimal"
 required = false

@@ -4901,13 +4901,13 @@ wizard:
       legal-name:
         help: Legal or company name for legal-entity export headers
       ley-49-2002-option-date:
-        help: wizard.setup.flags.ley-49-2002-option-date.help
+        help: 'Record the Modelo 036 casilla 653 date for the Ley 49/2002 Title II option.'
       ley-49-2002-option-declared:
-        help: wizard.setup.flags.ley-49-2002-option-declared.help
+        help: 'Record whether Modelo 036 casilla 651 declares the Ley 49/2002 Title II option.'
       ley-49-2002-renunciation-date:
-        help: wizard.setup.flags.ley-49-2002-renunciation-date.help
+        help: 'Record the Modelo 036 casilla 654 date for the Ley 49/2002 Title II renunciation.'
       ley-49-2002-renunciation-declared:
-        help: wizard.setup.flags.ley-49-2002-renunciation-declared.help
+        help: 'Record whether Modelo 036 casilla 652 declares renunciation of the Ley 49/2002 Title II regime.'
       llm-vision:
         help: Enable on-host LLM vision for reading invoices.
       monedas-virtuales-extranjero-above-threshold:
@@ -5298,8 +5298,8 @@ wizard:
         help: 'Use the declaration fact from Modelo 036 casilla 651; legal application still depends on the statutory requirements and no renunciation.'
         prompt: 'Has the entity filed the Modelo 036 option for the Title II Ley 49/2002 special fiscal regime?'
       ley-49-2002-renunciation-date:
-        help: wizard.setup.taxpayer-type.ley-49-2002-renunciation-date.help
-        prompt: wizard.setup.taxpayer-type.ley-49-2002-renunciation-date.prompt
+        help: 'Use the ISO date corresponding to Modelo 036 casilla 654.'
+        prompt: 'Date declared for the Ley 49/2002 special-regime renunciation'
       ley-49-2002-renunciation-declared:
         help: 'Use the declaration fact from Modelo 036 casilla 652.'
         prompt: 'Has the entity filed a Modelo 036 renunciation of the Title II Ley 49/2002 special fiscal regime?'
