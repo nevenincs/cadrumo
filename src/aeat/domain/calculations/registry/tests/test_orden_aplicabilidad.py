@@ -306,6 +306,11 @@ def _committed_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCa
     ("modelo_id", "revision_id"),
     [
         ("036", "2025-02-03-y-siguientes"),
+        ("100", "2020"),
+        ("100", "2021"),
+        ("100", "2022"),
+        ("100", "2023"),
+        ("100", "2024"),
         ("100", "2025"),
         ("111", "2019-y-siguientes"),
         ("115", "2019-y-siguientes"),
