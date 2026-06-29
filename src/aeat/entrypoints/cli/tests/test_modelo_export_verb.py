@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
@@ -115,6 +116,52 @@ def _seed_work_unit_with_draft_revision() -> tuple[str, str]:
     return work_unit_id, calculation_revision_id
 
 
+def _seed_verified_revision_without_inputs(*, modelo: str, filing_year: int, period: str) -> tuple[str, str]:
+    state = workflow_state_repository().load()
+    bucket_id = state.active_profile_bucket_id()
+    assert bucket_id is not None
+    revision_id = _active_registry_revision_id(modelo=modelo, filing_year=filing_year, period=period)
+    filing_period = Period.from_year_and_code(filing_year, period)
+    work_unit_id = derive_work_unit_id(
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=filing_period,
+        revision_id=revision_id,
+    )
+    now = datetime.now(UTC)
+    work_unit = WorkUnit(
+        work_unit_id=work_unit_id,
+        bucket_id=bucket_id,
+        modelo=ModeloCode(modelo),
+        filing_year=filing_year,
+        period=filing_period,
+        revision_id=revision_id,
+        name=f"{modelo}-{filing_year}-{period}",
+        created_at=now,
+        updated_at=now,
+    )
+    WorkUnitCatalogueRepository().save(upsert_work_unit(WorkUnitCatalogueRepository().load(), work_unit))
+    calculation_revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values={},
+    )
+    revision = CalculationRevision(
+        calculation_revision_id=calculation_revision_id,
+        work_unit_id=work_unit_id,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        created_at=now,
+        updated_at=now,
+        verified_at=now,
+        verified_by="operator",
+    )
+    cr_repo = CalculationRevisionCatalogueRepository()
+    cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
+    return work_unit_id, calculation_revision_id
+
+
 _M111_CASILLA_03: CasillaId = validated_casilla_id("03", surface="modelo 111 export test casilla")
 _M111_CASILLA_06: CasillaId = validated_casilla_id("06", surface="modelo 111 export test casilla")
 _M111_CASILLA_09: CasillaId = validated_casilla_id("09", surface="modelo 111 export test casilla")
@@ -147,6 +194,7 @@ def _set_export_profile_name() -> None:
             (
                 UserProfileFact(path="identity.name", value="Ana"),
                 UserProfileFact(path="identity.surnames", value="Export Test"),
+                UserProfileFact(path="activities.description", value="Consulting"),
             ),
         ),
     )
@@ -156,7 +204,10 @@ def _clear_export_profile_surnames() -> None:
     workflow_state_repository().update(
         lambda state: set_active_fields(
             state,
-            (UserProfileFact(path="identity.surnames", value=None),),
+            (
+                UserProfileFact(path="identity.surnames", value=None),
+                UserProfileFact(path="activities.description", value="Consulting"),
+            ),
         ),
     )
 
@@ -445,6 +496,38 @@ def test_export_modelo_111_refuses_when_profile_name_missing(
     assert result.exit_code != 0, result.output
     assert "surnames" in result.output.lower(), result.output
     assert not out.exists()
+
+
+def test_export_modelo_390_refuses_missing_boe_layout_as_unsupported(tmp_path: Path) -> None:
+    """Modelo 390 calculations may exist, but export refuses without an authored layout."""
+
+    _set_export_profile_name()
+    work_unit_id, _ = _seed_verified_revision_without_inputs(modelo="390", filing_year=2025, period="0A")
+    out = tmp_path / "modelo-390.txt"
+
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "export",
+            work_unit_id,
+            "--output",
+            str(out),
+        ],
+    )
+
+    assert result.exit_code == 2, result.output
+    payload = json.loads(result.output)
+    assert payload["status"] == "error"
+    assert payload["error"]["code"] == "REFUSED_MODELO_EXPORT_UNSUPPORTED"
+    assert payload["error"]["category"] == "REFUSED"
+    assert payload["error"]["context"]["modelo"] == "390"
+    assert "export_layouts" in payload["error"]["message"]
+    assert payload["error"]["suggestion"] == "aeat app modelo describe 390"
+    assert not out.exists()
+    assert "Traceback" not in result.output
 
 
 def test_export_requires_output_flag() -> None:
