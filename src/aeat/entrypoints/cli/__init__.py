@@ -378,7 +378,9 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
 
     verb_path = _full_invocation_verb_path() or _verb_path_from_context(ctx)
     exempt = is_bootstrap_exempt(verb_path)
-    argv_tokens = tuple(str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
+    argv_tokens = _full_invocation_tokens() or tuple(
+        str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ())
+    )
     write_policy = inspect_storage_write_policy(verb_path, bootstrap_exempt=exempt, argv_tokens=argv_tokens)
     if not write_policy.allowed:
         raise CliRefusedBoundaryError(write_policy.render_refusal_message())
@@ -549,14 +551,9 @@ def _full_invocation_verb_path() -> str | None:
     so ``"config profile create alice"`` matches the exempt entry
     ``"config profile create"``.
     """
-    import sys
-    from pathlib import Path
-
-    executable = Path(sys.argv[0]).name.lower()
-    if executable not in {"aeat", "aeat.exe", "__main__.py"}:
+    tokens = list(_full_invocation_tokens())
+    if not tokens:
         return None
-
-    tokens = sys.argv[1:]
     verb_tokens: list[str] = []
     skip_next = False
     for token in tokens:
@@ -571,6 +568,17 @@ def _full_invocation_verb_path() -> str | None:
     if not verb_tokens:
         return None
     return " ".join(verb_tokens)
+
+
+def _full_invocation_tokens() -> tuple[str, ...]:
+    """Return raw operator argv tokens for real ``aeat`` entrypoint runs."""
+    import sys
+    from pathlib import Path
+
+    executable = Path(sys.argv[0]).name.lower()
+    if executable not in {"aeat", "aeat.exe", "__main__.py"}:
+        return ()
+    return tuple(sys.argv[1:])
 
 
 def _import_failure_surface(name: str, error: ModuleNotFoundError) -> typer.Typer:
