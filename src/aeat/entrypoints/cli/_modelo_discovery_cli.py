@@ -160,7 +160,7 @@ def _register_list_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             tax_domain=row.tax_domain,
             revision_count=row.revision_count,
             local_work_supported=local_work_supported,
-            local_work_status="supported" if local_work_supported else "unsupported-local-work",
+            local_work_status="supported-model-level" if local_work_supported else "unsupported-local-work",
             local_work_guidance=None if locale_key is None else tr(locale_key, modelo=row.code),
         )
 
