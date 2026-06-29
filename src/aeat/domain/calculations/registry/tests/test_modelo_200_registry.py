@@ -20,6 +20,7 @@ from .. import (
     validated_casilla_id,
 )
 from .._errors import RegistryValidationError
+from .._legal import verify_legal_catalogue
 from .._runtime_graph import expression_casilla_refs
 from .._schema import InputKind
 
@@ -75,6 +76,7 @@ _M200_BASE_NIVELACION_CASILLA: CasillaId = validated_casilla_id(
     surface="_M200_BASE_NIVELACION_CASILLA",
 )
 _M200_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id("DP200014:00562", surface="_M200_CUOTA_INTEGRA_CASILLA")
+_M200_FORM_ORDER_REF = "orden-hac-657-2025:modelo-200"
 
 
 def _base_inputs(
@@ -150,6 +152,23 @@ def test_modelo_200_calendar_year_2024_deadline_matches_boe_order() -> None:
     assert window.opens_on == date(2025, 7, 1)
     assert window.closes_on == date(2025, 7, 25)
     assert window.payment_cutoff_on == date(2025, 7, 22)
+
+
+def test_modelo_200_form_order_is_boe_corpus_backed() -> None:
+    modelo, catalogues = _load_modelo_200()
+    revision = modelo.revisions["2024-y-siguientes"]
+    legal = {_M200_FORM_ORDER_REF: catalogues.legal[_M200_FORM_ORDER_REF]}
+
+    verify_legal_catalogue(legal, source_root=bundled_path())
+
+    assert _M200_FORM_ORDER_REF in modelo.legal_refs
+    assert _M200_FORM_ORDER_REF in revision.legal_refs
+    assert revision.orden_aplicabilidad == (_M200_FORM_ORDER_REF,)
+    reference = legal[_M200_FORM_ORDER_REF]
+    assert reference.document_id == "BOE-A-2025-12818"
+    assert reference.kind == "orden"
+    assert reference.article == "modelo 200"
+    assert "aprobado en el artículo 1 de la presente orden" in reference.required_text
 
 
 def test_modelo_200_schedule_is_annual_for_calendar_year_entities() -> None:
