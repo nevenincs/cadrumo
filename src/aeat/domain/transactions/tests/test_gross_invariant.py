@@ -107,6 +107,27 @@ def test_professional_income_net_of_irpf_withholding_validates() -> None:
     assert tx.taxable_base + tx.iva_amount > tx.raw.amount
 
 
+def test_activity_income_base_cash_is_not_inferred_as_iva_sized_withholding() -> None:
+    """A base-only cash receipt plus IVA must not become a fake M130 retention.
+
+    Persona repro: a professional enters a 2000.00 invoice base as the bank
+    movement amount and also records 420.00 IVA. That 420.00 delta is IVA-sized
+    and must not be accepted as IRPF withholding for casilla 06.
+    """
+    with pytest.raises(ValidationError, match="inferred IRPF withholding exceeds"):
+        Transaction.model_validate(
+            {
+                "raw": _raw(amount=Decimal("2000.00")),
+                "direction": TransactionDirection.INCOMING,
+                "business_classification": BusinessClassification.BUSINESS,
+                "taxable_base": Decimal("2000.00"),
+                "iva_rate": Decimal("0.21"),
+                "iva_amount": Decimal("420.00"),
+                "irpf_category": "actividad_economica",
+            },
+        )
+
+
 def test_rent_expense_paid_net_of_withholding_validates() -> None:
     """Rent paid net of withholding keeps the supplier invoice base/IVA.
 
