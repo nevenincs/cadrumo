@@ -18,11 +18,11 @@ from ...application.modelo import (
     registry_bindings_for_scope,
     registry_bindings_for_year,
     registry_casillas,
-    registry_casillas_for_scope,
+    registry_casillas_for_registry_scope,
     registry_describe_modelo,
-    registry_describe_modelo_for_scope,
+    registry_describe_modelo_for_registry_scope,
     registry_formulas,
-    registry_formulas_for_scope,
+    registry_formulas_for_registry_scope,
     registry_list_modelos,
     registry_modelo_codes,
 )
@@ -57,6 +57,12 @@ class _DiscoveryDeps:
     bare_period_error: Callable[..., str]
     parse_binding_override: Callable[[str], tuple[str, str]]
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
+
+
+@dataclass(frozen=True, slots=True)
+class _RegistryDiscoveryScope:
+    filing_year: int
+    period: str
 
 
 def register_discovery_commands(
@@ -132,24 +138,15 @@ def _require_period_with_year(*, year: int | None, period: str | None) -> None:
 
 
 def _resolve_discovery_year_period(
-    deps: _DiscoveryDeps,
     *,
-    modelo: str,
     year: int | None,
     period: str | None,
-) -> Period | None:
+) -> _RegistryDiscoveryScope | None:
     _require_period_with_year(year=year, period=period)
     if year is None:
         return None
     assert period is not None
-    try:
-        typed_period = deps.resolve_year_period(year, period, modelo=modelo)
-    except typer.BadParameter:
-        raise
-    except Exception as exc:
-        fallback = f"period must be a bare registry token; got {period!r}"
-        raise typer.BadParameter(deps.bare_period_error(modelo, period, fallback=fallback)) from exc
-    return typed_period
+    return _RegistryDiscoveryScope(filing_year=year, period=period)
 
 
 def _register_list_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
@@ -205,11 +202,12 @@ def _register_describe_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
         as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.describe.as_of_help"))] = None,
     ) -> None:
         try:
-            resolved_scope = _resolve_discovery_year_period(deps, modelo=modelo, year=year, period=period)
+            resolved_scope = _resolve_discovery_year_period(year=year, period=period)
             if resolved_scope is not None:
-                report = registry_describe_modelo_for_scope(
+                report = registry_describe_modelo_for_registry_scope(
                     modelo,
-                    period=resolved_scope,
+                    filing_year=resolved_scope.filing_year,
+                    period=resolved_scope.period,
                     as_of=_as_of(as_of),
                 )
             else:
@@ -293,11 +291,12 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
         ] = False,
     ) -> None:
         def _query():
-            resolved_scope = _resolve_discovery_year_period(deps, modelo=modelo, year=year, period=period)
+            resolved_scope = _resolve_discovery_year_period(year=year, period=period)
             if resolved_scope is not None:
-                return registry_casillas_for_scope(
+                return registry_casillas_for_registry_scope(
                     modelo,
-                    period=resolved_scope,
+                    filing_year=resolved_scope.filing_year,
+                    period=resolved_scope.period,
                     as_of=_as_of(as_of),
                     input_kind=input_kind,
                     required=True if required else None,
@@ -740,11 +739,12 @@ def _register_formulas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
         ] = False,
     ) -> None:
         def _query():
-            resolved_scope = _resolve_discovery_year_period(deps, modelo=modelo, year=year, period=period)
+            resolved_scope = _resolve_discovery_year_period(year=year, period=period)
             if resolved_scope is not None:
-                return registry_formulas_for_scope(
+                return registry_formulas_for_registry_scope(
                     modelo,
-                    period=resolved_scope,
+                    filing_year=resolved_scope.filing_year,
+                    period=resolved_scope.period,
                     as_of=_as_of(as_of),
                 )
             return registry_formulas(modelo, period=period, as_of=_as_of(as_of))
