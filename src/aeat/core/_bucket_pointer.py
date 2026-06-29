@@ -3,15 +3,17 @@
 The pointer file lives at ``<aeat-root>/active-profile`` and carries the
 canonical default for the active-profile precedence chain
 (flag > env > pointer). This record is the typed wrapper around the
-pointer file's plaintext content: :class:`BucketPointer`. The storage-layer term ``bucket`` is
-preserved on the record's `bucket_id` field because the bucket is the
-encrypted storage slice the operator profile sits on; the file's
-operator-visible name is `active-profile` to match the verb noun.
+pointer file's plaintext content: :class:`BucketPointer`. The storage-layer
+term ``bucket`` is preserved on the record's ``bucket_id`` field because the
+bucket is the encrypted storage slice the operator profile sits on; the file's
+operator-visible name is ``active-profile`` to match the verb noun.
 
 The on-disk representation is single-document TOML keyed by
 ``bucket_id`` and ``schema_version``. An atomic write-then-rename
 helper, :func:`write_pointer`, materialises the pointer; the
-:func:`resolve_active_bucket_id` resolver consumes it at startup.
+:func:`resolve_active_bucket_id` resolver consumes it at startup. The companion
+:mod:`aeat.core._bucket_pointer_io` module owns the file boundary, while this
+module owns strict validation and deterministic serialisation only.
 """
 
 from __future__ import annotations
@@ -24,7 +26,13 @@ from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 class BucketPointer(BaseModel):
-    """Plaintext pointer to the active bucket id."""
+    """Plaintext pointer to the active bucket id.
+
+    The value object carries only ``bucket_id`` and ``schema_version``. It does
+    not read settings, open storage, inspect manifests, or resolve precedence;
+    those operations belong to :func:`read_pointer`, :func:`write_pointer`, and
+    :func:`resolve_active_bucket_id`.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -36,7 +44,8 @@ class BucketPointer(BaseModel):
 
         Emits a deterministic two-line document keyed by ``bucket_id`` and
         ``schema_version``. The output ends with a trailing newline so the
-        atomic write-then-rename helper produces a POSIX-clean file.
+        atomic write-then-rename helper produces a POSIX-clean file. The inverse
+        parser is :meth:`from_toml`.
         """
         # Hand-formatted to keep the dependency footprint minimal and the
         # output deterministic; the format is fixed at two scalar keys.
@@ -46,6 +55,10 @@ class BucketPointer(BaseModel):
     @classmethod
     def from_toml(cls, text: str) -> BucketPointer:
         """Parse the single-document TOML representation back into a record.
+
+        The parser accepts the exact schema emitted by :meth:`to_toml` and then
+        delegates to pydantic validation, so unknown keys, blank bucket ids, and
+        invalid schema versions fail before pointer IO can accept the file.
 
         Args:
             text: Raw TOML string to parse, expected to carry
