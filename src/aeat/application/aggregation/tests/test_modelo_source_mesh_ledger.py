@@ -51,6 +51,7 @@ from ....domain.transactions import (
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
+    AggregationValidationError,
     CalculationSourceContext,
     IvaLedgerAggregationIssueReason,
     LedgerIvaAggregationSourceResolver,
@@ -182,6 +183,44 @@ def _invoice(tx_id: str, *, bucket_id: str = "bucket-a") -> Invoice:
     )
 
 
+def _domestic_iva_invoice(
+    invoice_number: str,
+    *,
+    kind: CatalogueInvoiceKind,
+    issued_at: date,
+    taxable_base: Decimal,
+    iva_amount: Decimal,
+    bucket_id: str = "bucket-a",
+    linked_transaction_ids: tuple[str, ...] = (),
+) -> Invoice:
+    line = InvoiceLine(
+        description="Operacion interior con IVA",
+        quantity=Decimal("1"),
+        unit_price=taxable_base,
+        subtotal=taxable_base,
+        iva_rate=IvaRate.RATE_21,
+        iva_amount=iva_amount,
+    )
+    return Invoice.model_validate(
+        {
+            "bucket_id": bucket_id,
+            "kind": kind,
+            "invoice_number": invoice_number,
+            "issued_at": issued_at,
+            "counterparty_name": "Cliente ES" if kind is CatalogueInvoiceKind.ISSUED else "Proveedor ES",
+            "counterparty_tax_id": "B12345674",
+            "counterparty_country": "ES",
+            "base_total": taxable_base,
+            "iva_total": iva_amount,
+            "grand_total": taxable_base + iva_amount,
+            "currency": "EUR",
+            "lines": (line,),
+            "payment_status": PaymentStatus.PAID,
+            "linked_transaction_ids": linked_transaction_ids,
+        },
+    )
+
+
 def test_iva_source_mesh_resolver_resolves_general_sale_and_purchase(secure_objects: SecureObjectRepository) -> None:
     revision = _revision("303", "2009-y-siguientes")
     tx_repo = TransactionCatalogueRepository(
@@ -224,6 +263,86 @@ def test_iva_source_mesh_resolver_resolves_general_sale_and_purchase(secure_obje
         f"transaction:{incoming.transaction_id}",
         f"transaction:{outgoing.transaction_id}",
     }
+
+
+def test_iva_source_mesh_resolver_refuses_m303_invoice_domestic_iva_without_transaction_ledger(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    revision = _revision("303", "2023-y-siguientes")
+    tx_repo = TransactionCatalogueRepository(bucket_id="bucket-a", objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id="bucket-a", objects=secure_objects)
+    invoice = _domestic_iva_invoice(
+        "LAURA-1T-SALE",
+        kind=CatalogueInvoiceKind.ISSUED,
+        issued_at=date(2025, 2, 10),
+        taxable_base=Decimal("10000.00"),
+        iva_amount=Decimal("2100.00"),
+    )
+    invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
+
+    with pytest.raises(AggregationValidationError) as exc_info:
+        LedgerIvaAggregationSourceResolver(
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id="bucket-a",
+                modelo="303",
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "1T"),
+                revision=revision,
+            ),
+        )
+
+    assert exc_info.value.context["reason"] == "invoice_domestic_iva_not_in_transaction_ledger"
+    assert exc_info.value.context["period"] == "1T"
+    assert exc_info.value.context["invoice_count"] == "1"
+    assert exc_info.value.context["invoice_domestic_iva_excess_by_binding"] == {
+        "modelo-303-iva-repercutido-general-cuota": "2100.00",
+    }
+
+
+def test_iva_source_mesh_resolver_accepts_m303_invoice_domestic_iva_when_transaction_ledger_matches(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    revision = _revision("303", "2023-y-siguientes")
+    tx_repo = TransactionCatalogueRepository(bucket_id="bucket-a", objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id="bucket-a", objects=secure_objects)
+    transaction = _iva_transaction(
+        "laura-1t-sale",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("12100.00"),
+        taxable_base=Decimal("10000.00"),
+        iva_amount=Decimal("2100.00"),
+        booked_date=date(2025, 2, 10),
+    )
+    invoice = _domestic_iva_invoice(
+        "LAURA-1T-SALE",
+        kind=CatalogueInvoiceKind.ISSUED,
+        issued_at=date(2025, 2, 10),
+        taxable_base=Decimal("10000.00"),
+        iva_amount=Decimal("2100.00"),
+        linked_transaction_ids=(transaction.transaction_id,),
+    )
+    tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
+    invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
+
+    resolution = LedgerIvaAggregationSourceResolver(
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id="bucket-a",
+            modelo="303",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "1T"),
+            revision=revision,
+        ),
+    )
+
+    assert resolution.binding_values["modelo-303-iva-repercutido-general-cuota"] == Decimal("2100.00")
+    assert resolution.source_transaction_ids == (transaction.transaction_id,)
+    assert resolution.diagnostics == ()
 
 
 def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_37_net_zero(

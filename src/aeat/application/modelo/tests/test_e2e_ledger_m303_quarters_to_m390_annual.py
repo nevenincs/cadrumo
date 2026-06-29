@@ -53,6 +53,7 @@ from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.invoices import InvoiceCatalogueRepository
+from ....domain.iva import EUMemberState, IvaCategory
 from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._calculation_revision import CalculationRevision
@@ -89,7 +90,7 @@ _FILE_AT = datetime(2025, 4, 10, 12, 0, tzinfo=UTC)
 _M303_REVISION = "2023-y-siguientes"
 _QUARTER_ORDER = ("1T", "2T", "3T", "4T")
 _IVA_RATE = Decimal("0.21")
-type StoredIvaAxis = Literal["devengada", "deducible"]
+type StoredIvaAxis = Literal["devengada", "deducible", "casilla_59", "resultado"]
 type StoredIvaByPeriod = dict[str, dict[StoredIvaAxis, Decimal]]
 type ComputedM303CasillasByPeriod = dict[str, dict[CasillaId, Decimal]]
 
@@ -104,22 +105,60 @@ def _casilla_id(value: object) -> CasillaId:
 _DEVENGADA_TOTAL: CasillaId = _casilla_id("iva.cuota-devengada-total")
 _DEDUCIBLE_TOTAL: CasillaId = _casilla_id("iva.cuota-deducible-total")
 _RESULTADO: CasillaId = _casilla_id("iva.resultado-regimen-general")
+_CASILLA_59: CasillaId = _casilla_id("59")
 
 # M390 annual reconciliation casillas (folded from the four M303 quarters).
 _M390_DEVENGADA: CasillaId = _casilla_id("iva.anual.reconciliacion.devengada-303")
 _M390_DEDUCIBLE: CasillaId = _casilla_id("iva.anual.reconciliacion.deducible-303")
 _M390_RESULTADO: CasillaId = _casilla_id("iva.anual.reconciliacion.resultado-303")
 
-# One coherent year of IVA-bearing operations, one issued (INCOMING → IVA
-# repercutido / devengada) and one received (OUTGOING → IVA soportado /
-# deducible) invoice per quarter. DISTINCT per-quarter taxable bases (all clean
-# 21% multiples) make the annual fold unmistakable.
-_QUARTER_BASES: dict[str, tuple[Decimal, Decimal]] = {
-    # period: (issued taxable_base, received taxable_base)
-    "1T": (Decimal("1000.00"), Decimal("400.00")),  # devengada 210.00, deducible 84.00
-    "2T": (Decimal("1200.00"), Decimal("500.00")),  # devengada 252.00, deducible 105.00
-    "3T": (Decimal("800.00"), Decimal("300.00")),  # devengada 168.00, deducible 63.00
-    "4T": (Decimal("1500.00"), Decimal("600.00")),  # devengada 315.00, deducible 126.00
+# Laura / Taller Sol annual IVA scenario. Domestic 21% issued and received
+# invoice rows drive the normal M303 cuota totals. Q2 additionally carries an
+# exempt intra-Community supply base into casilla 59, and Q3 carries a domestic
+# reverse-charge operation that books the same self-assessed cuota on both
+# devengada and deducible axes.
+_LAURA_QUARTER_FACTS: dict[str, dict[str, Decimal]] = {
+    "1T": {
+        "issued_base": Decimal("10000.00"),
+        "issued_iva": Decimal("2100.00"),
+        "received_base": Decimal("3000.00"),
+        "received_iva": Decimal("630.00"),
+        "eu_supply_base": Decimal("0.00"),
+        "reverse_charge_base": Decimal("0.00"),
+        "reverse_charge_iva": Decimal("0.00"),
+    },
+    "2T": {
+        "issued_base": Decimal("12000.00"),
+        "issued_iva": Decimal("2520.00"),
+        "received_base": Decimal("2500.00"),
+        "received_iva": Decimal("525.00"),
+        "eu_supply_base": Decimal("1500.00"),
+        "reverse_charge_base": Decimal("0.00"),
+        "reverse_charge_iva": Decimal("0.00"),
+    },
+    "3T": {
+        "issued_base": Decimal("9000.00"),
+        "issued_iva": Decimal("1890.00"),
+        "received_base": Decimal("2200.00"),
+        "received_iva": Decimal("462.00"),
+        "eu_supply_base": Decimal("0.00"),
+        "reverse_charge_base": Decimal("800.00"),
+        "reverse_charge_iva": Decimal("168.00"),
+    },
+    "4T": {
+        "issued_base": Decimal("15000.00"),
+        "issued_iva": Decimal("3150.00"),
+        "received_base": Decimal("1800.00"),
+        "received_iva": Decimal("378.00"),
+        "eu_supply_base": Decimal("0.00"),
+        "reverse_charge_base": Decimal("0.00"),
+        "reverse_charge_iva": Decimal("0.00"),
+    },
+}
+_LAURA_ANNUAL_EXPECTED = {
+    "devengada": Decimal("9828.00"),
+    "deducible": Decimal("2163.00"),
+    "resultado": Decimal("7665.00"),
 }
 _QUARTER_MONTH: dict[str, int] = {"1T": 2, "2T": 5, "3T": 8, "4T": 11}
 
@@ -136,40 +175,47 @@ def _iva_transaction(
     *,
     direction: TransactionDirection,
     taxable_base: Decimal,
+    iva_amount: Decimal,
     period: str,
+    iva_rate: Decimal = _IVA_RATE,
+    amount: Decimal | None = None,
+    iva_category: IvaCategory | None = None,
+    counterparty_eu_member_state: EUMemberState | None = None,
 ) -> Transaction:
     booked = date(_YEAR, _QUARTER_MONTH[period], 10)
-    iva_amount = (taxable_base * _IVA_RATE).quantize(Decimal("0.01"))
-    return Transaction.model_validate(
-        {
-            "raw": RawTransaction(
-                transaction_id=provider_id,
-                booked_date=booked,
-                value_date=booked,
-                amount=(taxable_base + iva_amount),
-                currency="EUR",
-                counterparty="Cliente o proveedor",
-                description=f"factura IVA {provider_id}",
-                provenance=RawProvenance(
-                    source_path=Path(__file__),
-                    source_sha256="c" * 64,
-                    source_row_index=1,
-                    source_format=SourceFormat.MANUAL,
-                    ingested_at=_T0,
-                    provider_name="manual-ledger",
-                ),
-                raw_fields={"source_kind": "ledger_transaction"},
+    payload: dict[str, object] = {
+        "raw": RawTransaction(
+            transaction_id=provider_id,
+            booked_date=booked,
+            value_date=booked,
+            amount=amount if amount is not None else taxable_base + iva_amount,
+            currency="EUR",
+            counterparty="Cliente o proveedor",
+            description=f"factura IVA {provider_id}",
+            provenance=RawProvenance(
+                source_path=Path(__file__),
+                source_sha256="c" * 64,
+                source_row_index=1,
+                source_format=SourceFormat.MANUAL,
+                ingested_at=_T0,
+                provider_name="manual-ledger",
             ),
-            "direction": direction,
-            "business_classification": BusinessClassification.BUSINESS,
-            "category_id": "test_iva_operation",
-            "taxable_base": taxable_base,
-            "iva_rate": _IVA_RATE,
-            "iva_amount": iva_amount,
-            "classified_at": _T0,
-            "classified_by": "manual",
-        },
-    )
+            raw_fields={"source_kind": "ledger_transaction"},
+        ),
+        "direction": direction,
+        "business_classification": BusinessClassification.BUSINESS,
+        "category_id": "test_iva_operation",
+        "taxable_base": taxable_base,
+        "iva_rate": iva_rate,
+        "iva_amount": iva_amount,
+        "classified_at": _T0,
+        "classified_by": "manual",
+    }
+    if iva_category is not None:
+        payload["iva_category"] = iva_category
+    if counterparty_eu_member_state is not None:
+        payload["counterparty_eu_member_state"] = counterparty_eu_member_state
+    return Transaction.model_validate(payload)
 
 
 def _persist_year_of_invoices(secure_objects: SecureObjectRepository) -> StoredIvaByPeriod:
@@ -188,20 +234,57 @@ def _persist_year_of_invoices(secure_objects: SecureObjectRepository) -> StoredI
     """
     transactions: list[Transaction] = []
     stored: StoredIvaByPeriod = {}
-    for period, (issued_base, received_base) in _QUARTER_BASES.items():
+    for period, facts in _LAURA_QUARTER_FACTS.items():
         issued = _iva_transaction(
-            f"sale-{period}", direction=TransactionDirection.INCOMING, taxable_base=issued_base, period=period
+            f"sale-{period}",
+            direction=TransactionDirection.INCOMING,
+            taxable_base=facts["issued_base"],
+            iva_amount=facts["issued_iva"],
+            period=period,
         )
         received = _iva_transaction(
             f"purchase-{period}",
             direction=TransactionDirection.OUTGOING,
-            taxable_base=received_base,
+            taxable_base=facts["received_base"],
+            iva_amount=facts["received_iva"],
             period=period,
         )
         transactions.extend((issued, received))
-        assert issued.iva_amount is not None
-        assert received.iva_amount is not None
-        stored[period] = {"devengada": issued.iva_amount, "deducible": received.iva_amount}
+        devengada = facts["issued_iva"]
+        deducible = facts["received_iva"]
+        if facts["eu_supply_base"] > Decimal("0"):
+            transactions.append(
+                _iva_transaction(
+                    f"eu-supply-{period}",
+                    direction=TransactionDirection.INCOMING,
+                    taxable_base=facts["eu_supply_base"],
+                    iva_amount=Decimal("0.00"),
+                    iva_rate=Decimal("0.00"),
+                    period=period,
+                    iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+                    counterparty_eu_member_state=EUMemberState.DE,
+                ),
+            )
+        if facts["reverse_charge_base"] > Decimal("0"):
+            transactions.append(
+                _iva_transaction(
+                    f"reverse-charge-{period}",
+                    direction=TransactionDirection.OUTGOING,
+                    taxable_base=facts["reverse_charge_base"],
+                    iva_amount=facts["reverse_charge_iva"],
+                    amount=facts["reverse_charge_base"],
+                    period=period,
+                    iva_category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
+                ),
+            )
+            devengada += facts["reverse_charge_iva"]
+            deducible += facts["reverse_charge_iva"]
+        stored[period] = {
+            "devengada": devengada,
+            "deducible": deducible,
+            "casilla_59": facts["eu_supply_base"],
+            "resultado": devengada - deducible,
+        }
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions(tuple(transactions)))
     return stored
@@ -228,12 +311,24 @@ def _wallet_decision(*, period: str) -> IvaCompensationReconciliationDecision:
 
 
 def _store_profile(secure_objects: SecureObjectRepository) -> None:
-    """Seed the taxpayer profile the M303 IVA-wallet gate reads (tax_id)."""
+    """Seed the ready taxpayer profile the M303 gates read."""
     UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name="Test runtime profile",
-            facts=(UserProfileFact(path="identity.tax_id", value=_TAX_ID),),
+            display_name="Laura - Taller Sol",
+            facts=(
+                UserProfileFact(path="identity.tax_id", value=_TAX_ID),
+                UserProfileFact(path="identity.name", value="Laura"),
+                UserProfileFact(path="identity.surnames", value="Taller Sol"),
+                UserProfileFact(path="activities.description", value="taller"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+            ),
             created_at=_T0,
             updated_at=_T0,
         ),
@@ -334,17 +429,24 @@ def test_ledger_drives_m303_quarters_and_folds_into_m390_annual(
             f"{period}: cuota-deducible-total must equal the stored received IVA {stored[period]['deducible']}; "
             f"got {revision.casilla_values.get(_DEDUCIBLE_TOTAL)}"
         )
+        assert Decimal(revision.casilla_values[_CASILLA_59]) == stored[period]["casilla_59"], (
+            f"{period}: casilla 59 must equal the stored EU supply base {stored[period]['casilla_59']}; "
+            f"got {revision.casilla_values.get(_CASILLA_59)}"
+        )
+        assert Decimal(revision.casilla_values[_RESULTADO]) == stored[period]["resultado"], (
+            f"{period}: resultado-regimen-general must match Laura's expected quarterly result "
+            f"{stored[period]['resultado']}; got {revision.casilla_values.get(_RESULTADO)}"
+        )
         computed[period] = {
             _DEVENGADA_TOTAL: Decimal(revision.casilla_values[_DEVENGADA_TOTAL]),
             _DEDUCIBLE_TOTAL: Decimal(revision.casilla_values[_DEDUCIBLE_TOTAL]),
             _RESULTADO: Decimal(revision.casilla_values[_RESULTADO]),
         }
 
-    # The four computed totals are distinct on every folded axis → a coincidental
-    # or off-by-one-quarter fold cannot satisfy the annual assertions below.
-    for axis in (_DEVENGADA_TOTAL, _DEDUCIBLE_TOTAL, _RESULTADO):
-        values = [computed[p][axis] for p in _QUARTER_ORDER]
-        assert len(set(values)) == 4, f"quarterly {axis} must be distinct: {values}"
+    # Laura's quarterly resultado values are distinct, so a stale or shifted
+    # quarterly dependency cannot satisfy the annual result assertion below.
+    result_values = [computed[p][_RESULTADO] for p in _QUARTER_ORDER]
+    assert len(set(result_values)) == 4, f"quarterly resultado values must be distinct: {result_values}"
 
     annual = _calculate_m390_annual(secure_objects)
     casillas = annual.casilla_values
@@ -360,3 +462,6 @@ def test_ledger_drives_m303_quarters_and_folds_into_m390_annual(
         assert Decimal(casillas[m390_casilla]) == expected, (
             f"M390 {m390_casilla} must fold sum(1T-4T {m303_output})={expected}; got {casillas.get(m390_casilla)}"
         )
+    assert Decimal(casillas[_M390_DEVENGADA]) == _LAURA_ANNUAL_EXPECTED["devengada"]
+    assert Decimal(casillas[_M390_DEDUCIBLE]) == _LAURA_ANNUAL_EXPECTED["deducible"]
+    assert Decimal(casillas[_M390_RESULTADO]) == _LAURA_ANNUAL_EXPECTED["resultado"]

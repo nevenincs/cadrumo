@@ -31,9 +31,11 @@ Value-parity assertion (non-tautological):
   formula.  A change in the relation's ``aggregation``, ``source_periods``, or
   ``source_casilla_id`` would cause the test to fail.
 
-M390 declares no ``profile``-sourced bindings, so no :class:`UserProfileRecord`
-needs to be seeded.  The five ``ledger_iva_aggregation`` bindings resolve from an
-empty IVA transaction ledger → zero for all ledger-derived casillas.
+The calculation itself still takes its relation values from filed M303
+observations, but the current work-unit readiness gate requires a ready profile
+before creating the M390 work unit. The five ``ledger_iva_aggregation`` bindings
+resolve from an empty IVA transaction ledger → zero for all ledger-derived
+casillas.
 
 M353←M322 ``per_grupo_member`` exemption note:
 The M353←M322 ``per_grupo_member`` cross-filer fan-in is EXEMPT from the
@@ -47,7 +49,7 @@ is stabilised.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -65,9 +67,11 @@ from ....domain.invoices import InvoiceCatalogueRepository
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations._observations_repository import CalculationObservationRepository
+from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
@@ -80,6 +84,7 @@ _BUCKET_ID = "bucket-m390-303-fold"
 _T0 = datetime(2026, 1, 20, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 20, 11, 0, tzinfo=UTC)
 _YEAR = 2025
+_TAX_ID = "12345678Z"
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -184,6 +189,30 @@ def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:
         )
 
 
+def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+        UserProfileRecord(
+            profile_id=_BUCKET_ID,
+            display_name="M390 fold test",
+            facts=(
+                UserProfileFact(path="identity.tax_id", value=_TAX_ID),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="activity"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+            ),
+            created_at=_T0,
+            updated_at=_T0,
+        ),
+    )
+
+
 def _calculate_m390_annual(secure_objects: SecureObjectRepository):
     """Run the live M390/2025/0A calculate over the seeded bucket.
 
@@ -191,7 +220,8 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository):
     enrolled :class:`RelationPrefillSourceResolver` folds them from the seeded
     M303 observation store.  The five ``ledger_iva_aggregation`` bindings also
     go unset (empty IVA transaction ledger → zero for all ledger casillas).
-    M390 declares no ``profile``-sourced bindings so no profile record is needed.
+    A ready profile is pre-seeded for the work-unit readiness gate; relation
+    assertions still come solely from the seeded M303 observation store.
     """
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
@@ -235,6 +265,7 @@ def test_m390_folds_five_m303_relations_on_live_calculate(secure_objects: Secure
     The asserted values derive from the seeded observations via the declared aggregation ops,
     never from the registry formula (non-tautological).
     """
+    _store_ready_profile(secure_objects)
     obs_repo = CalculationObservationRepository()
     _seed_m303_quarters(obs_repo=obs_repo)
 
