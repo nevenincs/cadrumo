@@ -222,7 +222,8 @@ def _delegates_to_leaf_refusal(
     argv_tokens: Sequence[str] | None,
     settings: Settings | None,
 ) -> bool:
-    if verb_path != "app modelo work create":
+    normalised = verb_path.strip()
+    if normalised != "app modelo work create" and not normalised.startswith("app modelo work create "):
         return False
     modelo = _option_value(argv_tokens or (), "--modelo")
     if modelo is None:

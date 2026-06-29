@@ -105,6 +105,36 @@ def test_stub_only_work_create_delegates_to_leaf_refusal_before_root_route_guard
     assert supported.code is StorageWritePolicyCode.REFUSED_ROOT_FALLBACK
 
 
+def test_stub_only_work_create_delegates_when_real_argv_reconstruction_appends_values(tmp_path: Path) -> None:
+    settings = Settings(aeat_local_storage_root=tmp_path, aeat_output_language=OutputLanguage.EN)
+
+    decision = inspect_storage_write_policy(
+        "app modelo work create 210 2025 evento 2025",
+        bootstrap_exempt=False,
+        settings=settings,
+        argv_tokens=(
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "210",
+            "--year",
+            "2025",
+            "--period",
+            "evento",
+            "--revision",
+            "2025",
+        ),
+    )
+
+    assert decision.allowed is True
+    assert decision.code is StorageWritePolicyCode.LEAF_REFUSAL_DELEGATED
+    assert decision.profile_bound_write is True
+
+
 def test_m210_live_engine_work_create_stays_under_root_write_guard(tmp_path: Path) -> None:
     decision = inspect_storage_write_policy(
         "app modelo work create",

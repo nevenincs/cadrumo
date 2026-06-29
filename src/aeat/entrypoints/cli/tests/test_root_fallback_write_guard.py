@@ -220,6 +220,39 @@ def test_config_switch_remains_recovery_path_on_root_fallback_database(tmp_path:
     assert "No active profile" not in output
 
 
+def test_stub_only_modelo_work_create_reaches_leaf_refusal_on_root_fallback_database(tmp_path: Path) -> None:
+    """Stub-only modelos refuse with their legal route before the root profile guard."""
+
+    result = _run_aeat(
+        tmp_path,
+        (
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "210",
+            "--year",
+            "2025",
+            "--period",
+            "evento",
+            "--revision",
+            "2025",
+        ),
+    )
+
+    assert result.returncode == 2, _combined_output(result)
+    output = _combined_output(result)
+    assert "REFUSED_CLI_BOUNDARY" in output
+    assert "Modelo 210" in output
+    assert "G320" in output
+    assert "No active profile" not in output
+    assert "perfil activo" not in output
+    assert not (tmp_path / "aeat.db").exists()
+
+
 @pytest.mark.parametrize("verb_path", _GUARDED_PREDICATE_PATHS)
 def test_root_fallback_guard_predicate_covers_profile_bound_mutations(verb_path: str) -> None:
     """The central guard covers known mutation surfaces discovered during contract review."""
