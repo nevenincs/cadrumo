@@ -1,22 +1,21 @@
-"""Evidence-presence advisory for economically significant ledger rows.
+"""Evidence-presence diagnostics for IVA-bearing ledger rows.
 
-The advisory pairs a transaction's *economic role* with its *evidence
-presence*: a positive-amount business expense with a deductible IVA category
-but no purchase invoice, or a cuota-bearing income with no issued invoice,
-files silently with no operator alert unless a non-blocking advisory surfaces
-it. This is the ledger-evidence counterpart of the calculate-path
+The diagnostics pair a transaction's IVA settlement side with its evidence
+presence: a positive deductible input-IVA row must carry supplier evidence,
+while a positive output-IVA row without a linked document remains visible to the
+operator. This is the ledger-evidence counterpart of the calculate-path
 unconsumed-declarable-IVA advisory and follows the
-``no-silent-under-declaration`` discipline: never block a legitimately
-evidence-free filing, but never let a missing-evidence row pass in silence.
+``no-silent-under-declaration`` discipline: never let a missing-evidence row
+pass in silence, and let the filing-grade verification layer decide which
+legally grounded side blocks.
 
 The trigger set is deliberately narrow. An advisory fires only on an
-``ACTIVE`` row with a strictly-positive gross amount whose IVA category is
-legally expected to bear a deductible/devengada cuota (everything outside
-:data:`aeat.domain.iva.CUOTA_LESS_M303_IVA_CATEGORIES` and the non-declarable
-sentinels) and that carries no linked evidence. Non-business / personal rows,
-exempt / zero-rated / not-subject categories, zero-amount rows, and non-ACTIVE
-lifecycle states are excluded and never fire — a noisy advisory trains
-operators to ignore it.
+``ACTIVE`` business/mixed row with a strictly-positive IVA quota and no linked
+evidence. Explicit exempt / zero-rated / not-subject IVA categories and
+non-declarable sentinels are excluded because they do not route an M303 quota.
+Rows with no explicit ``iva_category`` but with a positive ``iva_amount`` remain
+in scope: the IVA aggregation layer derives their domestic category from the
+stored rate and bank direction before feeding M303.
 """
 
 from __future__ import annotations
@@ -24,7 +23,15 @@ from __future__ import annotations
 from collections.abc import Iterable
 from decimal import Decimal
 
-from ...domain.iva import CUOTA_LESS_M303_IVA_CATEGORIES, IvaCategory
+from ...domain.iva import (
+    CUOTA_LESS_M303_IVA_CATEGORIES,
+    InvoiceKind,
+    IvaCategory,
+    IvaFlowDirection,
+    derive_flow_for_classification,
+    is_deducible_flow,
+    is_devengada_flow,
+)
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -55,22 +62,24 @@ _EVIDENCE_EXPECTING_BUSINESS_STATES: frozenset[BusinessClassification] = frozens
     },
 )
 
-#: Diagnostic ``source_kind`` for the missing-evidence advisory. Kept distinct
-#: from C4's ``invoice`` and from C2's ``purchase_invoice_evidence`` source kind
-#: so the advisory channel is greppable and never confused with a routed value.
+#: Legacy diagnostic ``source_kind`` retained for callers that only need the
+#: generic reason. New diagnostics use the settlement-side-specific source
+#: kinds below.
 MISSING_TRANSACTION_EVIDENCE_SOURCE_KIND = "transaction_evidence"
 
+#: Diagnostic ``source_kind`` for missing supplier evidence on positive
+#: deductible input IVA. Verification treats this as filing-grade blocking.
+MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND = "deductible_vat_evidence"
 
-def _gross_amount(transaction: Transaction) -> Decimal:
-    """Return the non-negative gross magnitude for evidence-significance tests.
+#: Diagnostic ``source_kind`` for missing linked evidence on positive output IVA.
+#: The current transaction model cannot yet distinguish all valid issued-invoice
+#: evidence paths, so verification keeps this visible but non-blocking.
+MISSING_OUTPUT_VAT_EVIDENCE_SOURCE_KIND = "output_vat_evidence"
 
-    Amounts are stored as non-negative magnitudes (flow lives on
-    :attr:`Transaction.direction`); the EUR projection is preferred when the
-    row was converted at import so the threshold test is currency-stable.
-    """
-    if transaction.value_in_eur is not None:
-        return transaction.value_in_eur
-    return abs(transaction.raw.amount)
+
+def _positive_iva_quota(transaction: Transaction) -> bool:
+    """Return whether the row contributes a strictly positive IVA quota."""
+    return transaction.iva_amount is not None and transaction.iva_amount > Decimal("0")
 
 
 def _row_has_linked_evidence(transaction: Transaction) -> bool:
@@ -80,18 +89,74 @@ def _row_has_linked_evidence(transaction: Transaction) -> bool:
 
 def _is_cuota_bearing_iva_category(category: IvaCategory | None) -> bool:
     """Return whether ``category`` is legally expected to bear a routed cuota."""
-    return category is not None and category not in _EVIDENCE_EXEMPT_IVA_CATEGORIES
+    return category is None or category not in _EVIDENCE_EXEMPT_IVA_CATEGORIES
 
 
-def _missing_evidence_diagnostic(transaction: Transaction, *, role: str) -> CalculationSourceDiagnostic:
-    """Build the non-blocking missing-evidence advisory for one row."""
+def _invoice_kind_for(direction: TransactionDirection) -> InvoiceKind | None:
+    """Map bank direction onto the invoice issuance axis used by IVA flow."""
+    if direction is TransactionDirection.INCOMING:
+        return InvoiceKind.ISSUED
+    if direction is TransactionDirection.OUTGOING:
+        return InvoiceKind.RECEIVED
+    return None
+
+
+def _flow_for_transaction(transaction: Transaction) -> IvaFlowDirection | None:
+    """Return the IVA settlement flow for an evidence-significance test."""
+    invoice_kind = _invoice_kind_for(transaction.direction)
+    if invoice_kind is None:
+        return None
+    if transaction.iva_category is None:
+        return IvaFlowDirection.REPERCUTIDO if invoice_kind is InvoiceKind.ISSUED else IvaFlowDirection.SOPORTADO
+    if not _is_cuota_bearing_iva_category(transaction.iva_category):
+        return None
+    return derive_flow_for_classification(
+        category=transaction.iva_category,
+        invoice_direction=invoice_kind,
+    )
+
+
+def _transaction_missing_evidence_flow(transaction: Transaction) -> IvaFlowDirection | None:
+    """Return the IVA flow requiring evidence, or ``None`` when out of scope."""
+    if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+        return None
+    if transaction.business_classification not in _EVIDENCE_EXPECTING_BUSINESS_STATES:
+        return None
+    if not _positive_iva_quota(transaction):
+        return None
+    if _row_has_linked_evidence(transaction):
+        return None
+    if not _is_cuota_bearing_iva_category(transaction.iva_category):
+        return None
+    return _flow_for_transaction(transaction)
+
+
+def transaction_missing_deductible_vat_evidence(transaction: Transaction) -> bool:
+    """Return whether ``transaction`` claims deductible IVA without evidence."""
+    flow = _transaction_missing_evidence_flow(transaction)
+    return flow is not None and is_deducible_flow(flow)
+
+
+def transaction_missing_output_vat_evidence(transaction: Transaction) -> bool:
+    """Return whether ``transaction`` declares output IVA without linked evidence."""
+    flow = _transaction_missing_evidence_flow(transaction)
+    return flow is not None and is_devengada_flow(flow) and not is_deducible_flow(flow)
+
+
+def _missing_evidence_diagnostic(
+    transaction: Transaction,
+    *,
+    role: str,
+    source_kind: str,
+) -> CalculationSourceDiagnostic:
+    """Build the missing-evidence diagnostic for one IVA-bearing row."""
     return CalculationSourceDiagnostic(
         reason="missing_transaction_evidence",
-        source_kind=MISSING_TRANSACTION_EVIDENCE_SOURCE_KIND,
+        source_kind=source_kind,
         binding_id=transaction.transaction_id,
         message=(
             f"{role} transaction {transaction.transaction_id!r} declares a positive "
-            f"cuota-bearing amount but carries no linked evidence (no purchase invoice "
+            f"IVA quota but carries no linked evidence (no purchase invoice "
             f"and no attachment); attach the supporting document before filing."
         ),
     )
@@ -100,22 +165,24 @@ def _missing_evidence_diagnostic(transaction: Transaction, *, role: str) -> Calc
 def missing_evidence_advisory_observations(
     transactions: Iterable[Transaction],
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Return missing-evidence advisories for economically significant rows.
+    """Return missing-evidence diagnostics for positive IVA rows.
 
     A :class:`CalculationSourceDiagnostic` (reason
-    ``missing_transaction_evidence``) is emitted for each ``ACTIVE`` row with a
-    strictly-positive gross amount and no linked evidence that is either:
+    ``missing_transaction_evidence``) is emitted for each ``ACTIVE``
+    business/mixed row with a strictly-positive IVA quota and no linked
+    evidence that is either:
 
-    - an ``OUTGOING`` ``BUSINESS`` / ``MIXED`` expense whose IVA category bears
-      a deductible cuota (a purchase invoice is expected), or
-    - an ``INCOMING`` row whose IVA category is legally expected to bear a
+    - a deductible input-IVA row (a supplier purchase invoice/evidence is
+      required for filing-grade verification), or
+    - an output-IVA row whose IVA category is legally expected to bear a
       devengada cuota — i.e. not in
       :data:`aeat.domain.iva.CUOTA_LESS_M303_IVA_CATEGORIES` nor a
-      non-declarable sentinel (the issued invoice is expected).
+      non-declarable sentinel (the issued-invoice evidence gap remains visible).
 
     Rows that legitimately bear no evidence requirement — non-business /
-    personal, exempt / zero-rated / not-subject / sentinel IVA categories,
-    zero-amount, and non-ACTIVE lifecycle states — are excluded and never fire.
+    personal, exempt / zero-rated / not-subject / sentinel IVA categories, no
+    positive IVA quota, and non-ACTIVE lifecycle states — are excluded and never
+    fire.
 
     Args:
         transactions: The revision's source transactions to inspect.
@@ -125,24 +192,33 @@ def missing_evidence_advisory_observations(
     """
     diagnostics: list[CalculationSourceDiagnostic] = []
     for transaction in transactions:
-        if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+        flow = _transaction_missing_evidence_flow(transaction)
+        if flow is None:
             continue
-        if _gross_amount(transaction) <= Decimal("0"):
-            continue
-        if _row_has_linked_evidence(transaction):
-            continue
-        if not _is_cuota_bearing_iva_category(transaction.iva_category):
-            continue
-        if transaction.direction is TransactionDirection.OUTGOING:
-            if transaction.business_classification not in _EVIDENCE_EXPECTING_BUSINESS_STATES:
-                continue
-            diagnostics.append(_missing_evidence_diagnostic(transaction, role="OUTGOING business expense"))
-        elif transaction.direction is TransactionDirection.INCOMING:
-            diagnostics.append(_missing_evidence_diagnostic(transaction, role="INCOMING cuota-bearing income"))
+        if is_deducible_flow(flow):
+            diagnostics.append(
+                _missing_evidence_diagnostic(
+                    transaction,
+                    role="deductible VAT",
+                    source_kind=MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND,
+                ),
+            )
+        elif is_devengada_flow(flow):
+            diagnostics.append(
+                _missing_evidence_diagnostic(
+                    transaction,
+                    role="output VAT",
+                    source_kind=MISSING_OUTPUT_VAT_EVIDENCE_SOURCE_KIND,
+                ),
+            )
     return tuple(diagnostics)
 
 
 __all__ = [
+    "MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND",
+    "MISSING_OUTPUT_VAT_EVIDENCE_SOURCE_KIND",
     "MISSING_TRANSACTION_EVIDENCE_SOURCE_KIND",
     "missing_evidence_advisory_observations",
+    "transaction_missing_deductible_vat_evidence",
+    "transaction_missing_output_vat_evidence",
 ]

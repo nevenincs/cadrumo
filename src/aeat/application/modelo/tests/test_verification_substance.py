@@ -31,7 +31,14 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+from ....domain.modelos._calculation_repository import (
+    CalculationRevisionCatalogueRepository,
+    upsert_calculation_revision,
+)
+from ....domain.modelos._calculation_revision import (
+    CalculationRevision,
+    derive_calculation_revision_id,
+)
 from ....domain.modelos._errors import ModeloError, ModeloValidationError
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.modelos._verification_report import (
@@ -461,7 +468,7 @@ def test_evaluate_verification_predicates_passing_predicate_no_finding() -> None
 
 
 # ---------------------------------------------------------------------------
-# Art. 110.3.b RIRPF advisory predicate unit tests
+# Art. 109 RIRPF advisory predicate unit tests
 # ---------------------------------------------------------------------------
 
 _ADVISORY_RATIO_GE = 'advisory_when_ratio_ge(["06", "01", "0.70"])'
@@ -508,7 +515,7 @@ def test_advisory_implies_nonzero_cases(values: dict[CasillaId, Decimal], expect
 
 
 def test_advisory_predicate_emits_warning_advisory_finding_when_condition_met() -> None:
-    """Art. 110.3.b ADVISORY predicate produces a WARNING-severity ADVISORY finding when ratio >= 70%.
+    """Art. 109 ADVISORY predicate produces a WARNING-severity ADVISORY finding when ratio >= 70%.
 
     The predicate is constructed with finding_kind='ADVISORY' (the new value added
     in this task). When the ratio condition holds, evaluate_verification_predicates
@@ -517,8 +524,8 @@ def test_advisory_predicate_emits_warning_advisory_finding_when_condition_met() 
     VERIFICADO_COMPLETO if all other gates pass.
     """
     predicate = VerificationPredicateDefinition(
-        predicate_id="modelo-130-art110-3b-exencion-alta-retencion",
-        legal_refs=("rd-439-2007:art-110-3-b",),
+        predicate_id="modelo-130-art109-exencion-alta-retencion",
+        legal_refs=("rd-439-2007:art-109",),
         expression='advisory_when_ratio_ge(["06", "01", "0.70"])',
         finding_kind="ADVISORY",
     )
@@ -535,14 +542,14 @@ def test_advisory_predicate_emits_warning_advisory_finding_when_condition_met() 
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
     assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING
-    assert "rd-439-2007:art-110-3-b" in findings[0].legal_refs
+    assert "rd-439-2007:art-109" in findings[0].legal_refs
 
 
 def test_advisory_predicate_emits_no_finding_when_condition_not_met() -> None:
     """ADVISORY predicate produces no finding when ratio < 70%."""
     predicate = VerificationPredicateDefinition(
-        predicate_id="modelo-130-art110-3b-exencion-alta-retencion",
-        legal_refs=("rd-439-2007:art-110-3-b",),
+        predicate_id="modelo-130-art109-exencion-alta-retencion",
+        legal_refs=("rd-439-2007:art-109",),
         expression='advisory_when_ratio_ge(["06", "01", "0.70"])',
         finding_kind="ADVISORY",
     )
@@ -727,20 +734,6 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
 
 
 def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c14(repos: _Repos) -> None:
-    """End-to-end integration test for the M130 C15 <= C14 cap predicate.
-
-    Drives the full registry-load → snapshot → calculate_modelo_revision →
-    verify_modelo_revision pipeline with a scenario where the prior-quarter
-    saldo seed (supplied via binding_values for casilla 15) exceeds C14
-    (computed from operator-supplied inputs). The verification report MUST
-    surface a BLOCKING_RULE finding citing the
-    modelo-130-c15-cap-by-c14 predicate.
-
-    The earlier contract test exercised the predicate evaluator with literal
-    casilla values; this test exercises the FULL production pipeline —
-    a registry-load typo / binding-aggregation regression / predicate-
-    declaration drift would all surface here.
-    """
     wu_repo, cr_repo, vr_repo, bv_repo = repos
 
     work_unit = create_work_unit(
@@ -784,9 +777,46 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
+    invalid_c15 = revision.casilla_values[_CASILLA_14] + Decimal("1.00")
+    invalid_values = dict(revision.casilla_values)
+    invalid_values[_CASILLA_15] = invalid_c15
+    invalid_observations = tuple(
+        observation.model_copy(update={"value": invalid_c15})
+        if observation.casilla_id == _CASILLA_15
+        else observation
+        for observation in revision.observations
+    )
+    invalid_revision_id = derive_calculation_revision_id(
+        work_unit_id=revision.work_unit_id,
+        input_values_by_casilla_id=revision.input_values_by_casilla_id,
+        binding_overrides=revision.binding_overrides,
+        relation_overrides=revision.relation_overrides,
+        casilla_values=invalid_values,
+        source_transaction_ids=revision.source_transaction_ids,
+        borrador_snapshot_id=revision.borrador_snapshot_id,
+        bindings_sourced_from_borrador=revision.bindings_sourced_from_borrador,
+        detail_rows=revision.detail_rows,
+    )
+    invalid_revision = CalculationRevision(
+        calculation_revision_id=invalid_revision_id,
+        work_unit_id=revision.work_unit_id,
+        state=revision.state,
+        input_values_by_casilla_id=revision.input_values_by_casilla_id,
+        binding_overrides=revision.binding_overrides,
+        relation_overrides=revision.relation_overrides,
+        source_transaction_ids=revision.source_transaction_ids,
+        borrador_snapshot_id=revision.borrador_snapshot_id,
+        bindings_sourced_from_borrador=revision.bindings_sourced_from_borrador,
+        casilla_values=invalid_values,
+        observations=invalid_observations,
+        detail_rows=revision.detail_rows,
+        created_at=revision.created_at,
+        updated_at=revision.updated_at,
+    )
+    cr_repo.save(upsert_calculation_revision(cr_repo.load(), invalid_revision))
 
     report = verify_modelo_revision(
-        revision.calculation_revision_id,
+        invalid_revision.calculation_revision_id,
         actor="operator-test",
         workflow_profile=_workflow_profile(),
         work_unit_repository=wu_repo,
@@ -796,9 +826,6 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
         clock=_T2,
     )
 
-    # The cap predicate fires when C14 > 0 AND C15 > C14. The carry-
-    # forward seed (99999) exceeds any plausible C14 computed from
-    # the small inputs above; the predicate MUST emit a BLOCKING_RULE.
     blocking_findings = [f for f in report.findings if f.kind is ModeloVerificationFindingKind.BLOCKING_RULE]
     cap_findings = [f for f in blocking_findings if "modelo-130-c15-cap-by-c14" in f.message]
     assert cap_findings, (

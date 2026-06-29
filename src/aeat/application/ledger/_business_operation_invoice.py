@@ -118,6 +118,7 @@ _EU_IVA_PATTERNS: dict[str, re.Pattern[str]] = {
     "SE": re.compile(r"^SE\d{12}$"),
     "SI": re.compile(r"^SI\d{8}$"),
     "SK": re.compile(r"^SK\d{10}$"),
+    "XI": re.compile(r"^XI[0-9A-Z]{5}$|^XI[0-9A-Z]{9}$|^XI[0-9A-Z]{12}$"),
 }
 
 

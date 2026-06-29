@@ -10,10 +10,17 @@ from collections.abc import Mapping
 
 from ....core.aggregation import BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
+from ._binding_selector_utils import (
+    BindingExportSelector,
+    BindingFixedExportSelector,
+    binding_export_selector,
+)
+from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId
 from ._schema import (
     CasillaDefinition,
     CasillaFieldKind,
+    DataBindingDefinition,
     ExportFieldDefinition,
     ExportRecordDefinition,
     LegalReference,
@@ -108,22 +115,27 @@ def _validate_export_record_binding_link(
     record: ExportRecordDefinition,
 ) -> None:
     """Verify a binding-derived export record resolves to bindings with selector closure."""
-    matching_bindings = [
-        binding for binding in revision.bindings if binding.selector.get("record") == record.binding_record
-    ]
+    matching_bindings: list[tuple[DataBindingDefinition, BindingExportSelector]] = []
+    for binding in revision.bindings:
+        try:
+            selector = binding_export_selector(binding)
+        except RegistryValidationError as exc:
+            failures.append(f"{prefix}: {exc}")
+            continue
+        if selector is not None and selector.record == record.binding_record:
+            matching_bindings.append((binding, selector))
     if not matching_bindings:
         failures.append(
             f"{prefix}: export record {record.id!r} derives fields from unknown binding record "
             f"{record.binding_record!r}",
         )
-    for binding in matching_bindings:
+    for binding, selector in matching_bindings:
         if binding_aggregation_op(binding) == BindingAggregationOp.ROWS:
             continue
-        missing_selector_keys = sorted(key for key in ("offset", "length", "data_type") if key not in binding.selector)
-        if missing_selector_keys:
+        if not isinstance(selector, BindingFixedExportSelector):
             failures.append(
-                f"{prefix}: export record {record.id!r} binding {binding.id!r} lacks selector keys "
-                f"{missing_selector_keys!r}",
+                f"{prefix}: export record {record.id!r} binding {binding.id!r} must declare "
+                "a fixed export selector (offset, length, data_type)",
             )
 
 
@@ -148,6 +160,7 @@ def _validate_export_field(
         field.casilla_id is not None
         and field.casilla_id in casilla_by_id
         and field.id not in casilla_by_id[field.casilla_id].export_refs
+        and not _is_binding_record_template_field(record, field)
     ):
         failures.append(f"{prefix}: export field {field.id!r} is not declared by casilla {field.casilla_id!r}")
     if field.binding is not None and field.binding not in bindings:
@@ -159,3 +172,11 @@ def _validate_export_field(
                 f"{prefix}: export field {field.id!r} literal length {literal_length} exceeds "
                 f"declared length {field.length}",
             )
+
+
+def _is_binding_record_template_field(record: ExportRecordDefinition, field: ExportFieldDefinition) -> bool:
+    return (
+        record.binding_record is not None
+        and field.kind == CasillaFieldKind.CASILLA
+        and field.casilla_id in set(record.row_field_casilla_ids.values())
+    )

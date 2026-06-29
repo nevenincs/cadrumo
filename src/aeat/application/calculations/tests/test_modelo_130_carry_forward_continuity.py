@@ -46,12 +46,25 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
     validated_casilla_id,
 )
+from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._calculation_revision import CalculationRevision
+from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos._verification_report import ModeloVerificationFindingKind
+from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ...modelo import calculate_modelo_revision, create_work_unit
+from ...modelo import (
+    ExternalEvidenceKind,
+    calculate_modelo_revision,
+    create_work_unit,
+    import_external_filing_evidence,
+    verify_modelo_revision,
+)
+from ...modelo.tests.justificante_metadata import persist_justificante_metadata
+from ...user_profile import UserProfileLifecycleRepository
 from .._binding_prefill import resolve_bindings_from_local_store
 from .._observations_repository import CalculationObservationRepository
 
@@ -62,6 +75,8 @@ _Repos = tuple[
     CalculationRevisionCatalogueRepository,
     BucketEventHistoryRepository,
     CalculationObservationRepository,
+    VerificationReportCatalogueRepository,
+    ModeloRecordCatalogueRepository,
 ]
 
 _CLOCK = datetime(2026, 7, 15, 9, 0, 0, tzinfo=UTC)
@@ -85,6 +100,7 @@ _M130_RETENCIONES_CASILLA: CasillaId = _casilla_id("06")
 _M130_PAGO_FRACCIONADO_CASILLA: CasillaId = _casilla_id("07")
 _M130_AGRARIAN_VOLUME_CASILLA: CasillaId = _casilla_id("08")
 _M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = _casilla_id("10")
+_M130_DIFERENCIA_PREVIA_CASILLA: CasillaId = _casilla_id("14")
 _M130_CARRY_FORWARD_CASILLA: CasillaId = _casilla_id("15")
 _M130_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
 _M130_DIFERENCIA_CASILLA: CasillaId = _casilla_id("17")
@@ -118,18 +134,56 @@ _Q1_BINDINGS: dict[BindingId, Decimal] = {
 }
 _EXPECTED_Q1_SALDO = Decimal("100.00")
 
+_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
+    UserProfileFact(path="identity.tax_id", value="00000000T"),
+    UserProfileFact(path="identity.name", value="Sofia"),
+    UserProfileFact(path="identity.surnames", value="Operator"),
+    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+)
+
 
 @pytest.fixture
 def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over an isolated profile — no mocks."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
         objects = profile.repository
+        _seed_ready_profile(UserProfileLifecycleRepository(bucket_id="default", objects=objects), bucket_id="default")
         yield (
             WorkUnitCatalogueRepository(objects=objects),
             CalculationRevisionCatalogueRepository(objects=objects),
             BucketEventHistoryRepository(objects=objects),
             CalculationObservationRepository(objects=objects),
+            VerificationReportCatalogueRepository(objects=objects),
+            ModeloRecordCatalogueRepository(objects=objects),
         )
+
+
+def _seed_ready_profile(repository: UserProfileLifecycleRepository, *, bucket_id: str) -> None:
+    repository.save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name="Sofia Operator",
+            facts=_READY_PROFILE_FACTS,
+            created_at=_CLOCK,
+            updated_at=_CLOCK,
+        ),
+    )
+
+
+def _workflow_profile() -> TaxpayerProfile:
+    return TaxpayerProfile(
+        tax_id="X1234567L",
+        iva_regime=IVARegime.GENERAL,
+        has_employees=False,
+        pays_rent_with_retencion=False,
+        does_intracomunitario=False,
+        bienes_extranjero_above_threshold=False,
+    )
 
 
 def _calculate_quarter(
@@ -139,7 +193,7 @@ def _calculate_quarter(
     casilla_inputs: Mapping[CasillaId, Decimal],
     binding_values: Mapping[BindingId, Decimal],
 ) -> CalculationRevision:
-    wu_repo, cr_repo, bv_repo, _obs_repo = repos
+    wu_repo, cr_repo, bv_repo, _obs_repo, _vr_repo, _filing_repo = repos
     work_unit = create_work_unit(
         bucket_id="default",
         modelo="130",
@@ -171,7 +225,62 @@ def _observation_from_revision(revision: CalculationRevision, *, period: str) ->
     )
 
 
-def _seed_prior_year_m100(obs_repo: CalculationObservationRepository) -> None:
+def _import_official_filing_evidence(
+    repos: _Repos,
+    *,
+    modelo: str,
+    filing_year: int,
+    period: str,
+    casilla_values: Mapping[CasillaId, Decimal],
+) -> tuple[str, dict[str, str]]:
+    wu_repo, cr_repo, bv_repo, _obs_repo, _vr_repo, filing_repo = repos
+    source_snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+    source_work_unit = create_work_unit(
+        bucket_id="default",
+        modelo=modelo,
+        filing_year=filing_year,
+        period=Period.from_year_and_code(filing_year, period),
+        revision_id=source_snapshot.revision.id,
+        repository=wu_repo,
+        clock=_CLOCK,
+    )
+    evidence_reference_id = f"JUST-{modelo}-{filing_year}-{period}"
+    persist_justificante_metadata(
+        evidence_reference_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        captured_at=_CLOCK,
+    )
+    import_external_filing_evidence(
+        work_unit_id=source_work_unit.work_unit_id,
+        casilla_values=casilla_values,
+        evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+        evidence_reference_id=evidence_reference_id,
+        actor="aeat-import-test",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=filing_repo,
+        bucket_event_repository=bv_repo,
+        expected_tax_id="X1234567L",
+        clock=_CLOCK,
+    )
+    return source_snapshot.revision.id, {
+        "aeat_register_status": "ALTA",
+        "aeat_expediente_id": f"EXP-{modelo}-{filing_year}-{period}",
+        "aeat_justificante_csv": evidence_reference_id,
+        "authenticated_identity": "X1234567L",
+    }
+
+
+def _seed_prior_year_m100(
+    obs_repo: CalculationObservationRepository,
+    *,
+    net_income: Decimal = _PRIOR_YEAR_NET_INCOME,
+    source_kind: str = "app_filing",
+    stamped_revision_id: str | None = None,
+    source_metadata: Mapping[str, str] | None = None,
+) -> None:
     """Record the prior-year annual Renta (M100 2025) net-income observation.
 
     M130's casilla-13 minoración reads ``irpf.previous_year_economic_activity_net_income``
@@ -189,14 +298,16 @@ def _seed_prior_year_m100(obs_repo: CalculationObservationRepository) -> None:
             filing_year=2025,
             period="0A",
             casilla_values={
-                _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
+                _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: net_income,
                 _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
                 _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
                 _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
             },
         ),
-        source_kind="app_filing",
+        source_kind=source_kind,
         captured_at=_CLOCK,
+        stamped_revision_id=stamped_revision_id,
+        source_metadata=source_metadata,
     )
 
 
@@ -221,7 +332,7 @@ def test_q2_casilla_15_auto_resolves_from_prior_quarter_filing(repos: _Repos) ->
     Q2's casilla-15 binding with Q1's ``saldo-negativo-fin-periodo`` —
     the operator does not re-key the prior-quarter loss by hand.
     """
-    _wu_repo, _cr_repo, _bv_repo, obs_repo = repos
+    _wu_repo, _cr_repo, _bv_repo, obs_repo, _vr_repo, _filing_repo = repos
     q1 = _calculate_quarter(repos, period="1T", casilla_inputs=_Q1_INPUTS, binding_values=_Q1_BINDINGS)
     obs_repo.save_observation(
         _observation_from_revision(q1, period="1T"),
@@ -248,7 +359,7 @@ def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos) -> None:
     exactly as the AEAT instruction prescribes ("importe sin signo de los
     resultados negativos de trimestres anteriores").
     """
-    _wu_repo, _cr_repo, _bv_repo, obs_repo = repos
+    _wu_repo, _cr_repo, _bv_repo, obs_repo, _vr_repo, _filing_repo = repos
     q1 = _calculate_quarter(repos, period="1T", casilla_inputs=_Q1_INPUTS, binding_values=_Q1_BINDINGS)
     obs_repo.save_observation(
         _observation_from_revision(q1, period="1T"),
@@ -281,6 +392,105 @@ def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos) -> None:
     assert Decimal(q2.casilla_values[_M130_CARRY_FORWARD_CASILLA]) == _EXPECTED_Q1_SALDO
 
 
+def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(repos: _Repos) -> None:
+    wu_repo, cr_repo, bv_repo, obs_repo, vr_repo, filing_repo = repos
+    q1 = _calculate_quarter(
+        repos,
+        period="1T",
+        casilla_inputs={
+            _M130_INGRESOS_CASILLA: Decimal("1000"),
+            _M130_GASTOS_CASILLA: Decimal("0"),
+            _M130_PREVIOUS_PAYMENTS_CASILLA: Decimal("0"),
+            _M130_RETENCIONES_CASILLA: Decimal("162"),
+            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+            _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
+        },
+        binding_values={
+            _PREV_YEAR_BINDING: _PRIOR_YEAR_NET_INCOME,
+            _CARRY_FORWARD_BINDING: Decimal("0"),
+        },
+    )
+    assert q1.casilla_values[_M130_SALDO_NEGATIVO_CASILLA] == Decimal("62.00")
+    q1_revision_stamp, q1_source_metadata = _import_official_filing_evidence(
+        repos,
+        modelo="130",
+        filing_year=2026,
+        period="1T",
+        casilla_values=q1.casilla_values,
+    )
+    obs_repo.save_observation(
+        _observation_from_revision(q1, period="1T"),
+        source_kind="aeat_sede_justificante",
+        captured_at=_CLOCK,
+        stamped_revision_id=q1_revision_stamp,
+        source_metadata=q1_source_metadata,
+    )
+    m100_values = {
+        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: Decimal("20000"),
+        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+    }
+    m100_revision_stamp, m100_source_metadata = _import_official_filing_evidence(
+        repos,
+        modelo="100",
+        filing_year=2025,
+        period="0A",
+        casilla_values=m100_values,
+    )
+    _seed_prior_year_m100(
+        obs_repo,
+        net_income=Decimal("20000"),
+        source_kind="aeat_sede_justificante",
+        stamped_revision_id=m100_revision_stamp,
+        source_metadata=m100_source_metadata,
+    )
+
+    q2_snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="2T")
+    resolved = resolve_bindings_from_local_store(q2_snapshot, repository=obs_repo).binding_values
+    assert resolved.get(_CARRY_FORWARD_BINDING) == Decimal("62.00")
+    assert resolved.get(_PREV_YEAR_BINDING) == Decimal("20000")
+
+    q2 = _calculate_quarter(
+        repos,
+        period="2T",
+        casilla_inputs={
+            _M130_INGRESOS_CASILLA: Decimal("377"),
+            _M130_GASTOS_CASILLA: Decimal("0"),
+            _M130_RETENCIONES_CASILLA: Decimal("0"),
+            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+            _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
+        },
+        binding_values=dict(resolved),
+    )
+
+    assert q2.casilla_values[_M130_DIFERENCIA_PREVIA_CASILLA] == Decimal("37.40")
+    assert q2.casilla_values[_M130_CARRY_FORWARD_CASILLA] == Decimal("37.40")
+    assert q2.casilla_values[_M130_DIFERENCIA_CASILLA] == Decimal("0.00")
+
+    report = verify_modelo_revision(
+        q2.calculation_revision_id,
+        actor="operator-test",
+        workflow_profile=_workflow_profile(),
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=filing_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
+        calculation_observation_repository=obs_repo,
+        clock=_CLOCK,
+    )
+    blocking = [finding for finding in report.findings if finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE]
+    assert blocking == []
+    assert report.granted_verificado_completo is True, [
+        (finding.kind, finding.casilla_id, finding.message) for finding in report.findings
+    ]
+
+
 # Shared parity-fixture inputs (named so the expected casilla-05 identity is
 # derived from the same constants the fixture seeds, never a hand-summed literal).
 _PRIOR_07_1T = Decimal("500")
@@ -309,7 +519,7 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
       casilla-05 (op=sum, expanding span {1T, 2T}) = Σ max(0, 07) − Σ 16,
                 computed in-test from the seeded fixture inputs (not a hand-summed literal).
     """
-    _wu_repo, _cr_repo, _bv_repo, obs_repo = repos
+    _wu_repo, _cr_repo, _bv_repo, obs_repo, _vr_repo, _filing_repo = repos
     _seed_prior_year_m100(obs_repo)
 
     obs_repo.save_observation(

@@ -606,12 +606,17 @@ class LedgerStatusReport(BaseModel):
     model_config = _STRICT_FROZEN
 
     bucket_id: BucketId
-    # Money roll-up over active business/mixed rows (period-scoped when --period
-    # is given): the readiness/year-end money picture (gross EUR, not a registry
-    # calculation). Default "0.00" for legacy reports.
+    # Legacy aliases retained for JSON compatibility. They carry the same
+    # business/mixed-only gross EUR values as the explicit business_* fields.
     income_total: str = "0.00"
     expense_total: str = "0.00"
     net_total: str = "0.00"
+    # Money roll-up over active business/mixed rows (period-scoped when --period
+    # is given): the readiness/year-end money picture (gross EUR, not a registry
+    # calculation).
+    business_income_total: str = "0.00"
+    business_expense_total: str = "0.00"
+    business_net_total: str = "0.00"
     total_count: int = Field(ge=0)
     active_count: int = Field(ge=0)
     archived_count: int = Field(ge=0)
@@ -713,8 +718,9 @@ class BulkClassifyRow(BaseModel):
     """One row from a ``ledger classify --from-csv`` CSV input file.
 
     Required columns: ``transaction_id``, ``classification``.
-    Optional columns: ``category_id``, ``business_pct``, ``taxable_base``,
-    ``iva_rate``, ``iva_amount``, ``iva_category``, ``irpf_category``.
+    Optional columns: ``category_id``, ``business_pct``, ``usage_ratio_id``,
+    ``taxable_base``, ``iva_rate``, ``iva_amount``, ``iva_category``,
+    ``irpf_category``.
     Unknown column names are rejected pre-persistence to protect against
     silent field mis-mapping. The IVA facts (``taxable_base``, ``iva_rate``,
     ``iva_amount``) are typed ``Decimal`` exactly as the single-classify path
@@ -728,6 +734,7 @@ class BulkClassifyRow(BaseModel):
     classification: BusinessClassification
     category_id: str | None = None
     business_pct: Decimal | None = None
+    usage_ratio_id: str | None = None
     taxable_base: Decimal | None = None
     iva_rate: Decimal | None = None
     iva_amount: Decimal | None = None
@@ -768,6 +775,7 @@ BULK_CLASSIFY_ALLOWED_COLUMNS: frozenset[str] = frozenset(
         "classification",
         "category_id",
         "business_pct",
+        "usage_ratio_id",
         "taxable_base",
         "iva_rate",
         "iva_amount",
@@ -823,6 +831,8 @@ class LedgerExportRow(BaseModel):
     taxable_base: str = ""
     iva_rate: str = ""
     iva_amount: str = ""
+    iva_category: str = ""
+    counterparty_eu_member_state: str = ""
     irpf_category: str = ""
     usage_ratio_id: str = ""
     prorrata_reference: str = ""

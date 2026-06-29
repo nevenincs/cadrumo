@@ -261,12 +261,34 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._filing_actions.ModeloFilingEvidenceMissingError",
+        ErrorCode(
+            code="REFUSED_MODELO_FILING_EVIDENCE_MISSING",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_modelos",
+            default_suggestion="aeat app ledger attach <transaction-id> --attachment-id <attachment-id>",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._export.ModeloExportNoActiveBucketError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_NO_ACTIVE_BUCKET",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.modelo_export_no_active_bucket",
             default_suggestion="aeat config profile create NAME",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._export.ModeloExportUnsupportedError",
+        ErrorCode(
+            code="REFUSED_MODELO_EXPORT_UNSUPPORTED",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.export_unsupported",
+            default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),
@@ -547,6 +569,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.calculations._multi_year.EnrollmentEvidenceError",
+        ErrorCode(
+            code="ERROR_CALCULATIONS_ENROLLMENT_EVIDENCE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.user_profile._bundle.UnsupportedBundleSchemaVersionError",
         ErrorCode(
             code="REFUSED_USER_PROFILE_BUNDLE_SCHEMA_VERSION",
@@ -597,6 +630,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="application.modelo.errors.profile_readiness_missing",
             default_suggestion="aeat config profile edit PROFILE",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._action_errors.ModeloRequiredBindingsMissingError",
+        ErrorCode(
+            code="REFUSED_MODELO_REQUIRED_BINDINGS_MISSING",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_modelo_aggregation_binding",
+            default_suggestion="aeat app modelo bindings list",
             retryable=False,
             runbook_id=None,
         ),

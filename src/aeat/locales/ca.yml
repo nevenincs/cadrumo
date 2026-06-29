@@ -555,6 +555,7 @@ application:
       import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
       import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
       unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
+      import_missing_filing_baseline: 'El perfil de l''arxiu de bucket no te camps d''identitat per presentar: %{missing_flags}. Repara el perfil d''origen i torna''l a exportar.'
   calculations:
     iva_compensation:
       errors:
@@ -793,6 +794,10 @@ application:
         %{period}, que no es pot assignar a un periode de registre.
       export_revision_state_refused: La revisio de calcul %{calculation_revision_id}
         no esta verificada-completa ni presentada i no es pot exportar.
+      export_unsupported: El model %{modelo} no es pot exportar a fichero-BOE
+        perque l'snapshot del registre no te una definicio completa d'export_layouts.
+        El calcul, la verificacio i els registres locals de presentacio poden existir,
+        pero aquesta ordre no pot produir un fitxer per pujar a l'AEAT per a aquest model.
       external_filing_evidence_reference_blank: La importació de declaració externa
         requereix un evidence_reference_id no buit.
       external_filing_no_casilla_values: La importació de declaració externa requereix
@@ -906,8 +911,11 @@ application:
           esta evidenciat localment (app_filing), no per l''AEAT; presenteu cada periode
           a l''AEAT de manera externa.'
         next_action: Exporteu i presenteu cada periode a l'AEAT de manera externa,
-          despres importeu el justificant/CSV/evidencia en viu oficial per actualitzar
-          la cadena local quan estigui disponible.
+          despres actualitzeu la cadena local amb evidencia oficial; useu `aeat
+          app live justificante pull` quan hi hagi acces en viu, o `aeat app modelo
+          filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf
+          --evidence-id CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file
+          WORK_UNIT_ID --file PATH` per a evidencia que ja tingueu.
       dt12a_reduccion_next_action: Proporcioneu --rescate-plan-pensiones-capital IMPORT
         --rescate-plan-pensiones-aportaciones-pre-2007 IMPORT --rescate-plan-pensiones-aportaciones-totales
         IMPORT per injectar automàticament la reducció DT 12a a la casella corresponent
@@ -2040,13 +2048,7 @@ cli:
         row_empty_key: Clau de camp buida a --row {token}; cada camp ha de tenir el
           format CLAU=VALOR.
         row_empty_spec: --row no pot estar buit; s'esperava TIPUS CAMP=valor [...]
-        row_help: 'Fila de detall tipada per a models informatius amb registres repetibles.
-          Format: TIPUS CAMP=valor [CAMP=valor ...]. TIPUS és ''miembro'' (soci/partícip
-          M184), ''vinculada'' (operació vinculada M232), ''operador'' (operador intracomunitari
-          M349) o ''contraparte'' (declarada M347). Repetir per afegir més files.
-          Exemple M184: --row ''miembro nif=12345678A porcentaje=40 importe=10000''.
-          Exemple M349: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
-          clave_operacion=E importe=50000''.'
+        row_help: 'Fila de detall tipada per a models informatius amb registres repetibles. Format: TIPUS CAMP=valor [CAMP=valor ...]. TIPUS és ''miembro'' (soci/partícip M184), ''vinculada'' (operació vinculada M232), ''operador'' (operador intracomunitari M349) o ''contraparte'' (declarada M347). Repetir per afegir més files. Poseu entre cometes l''argument complet de --row; manteniu entre cometes els noms legals amb espais. Exemple M184: --row ''miembro nif=12345678A porcentaje=40 importe=10000''. Exemple M349: --row ''operador codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" clave_operacion=E importe=50000''.'
         row_kv_format_error: El camp --row {token} ha de tenir el format CLAU=VALOR.
         row_m349_invalid_nif: '--row operador: nif_comunitario {nif} no coincideix
           amb el format NIF-IVA esperat per al país {pais} (Directiva 2006/112/CE
@@ -2667,7 +2669,8 @@ cli:
       amount_help: Import de la transacció en la moneda de la transacció (decimal,
         p. ex. 1200.50).
       attachment_help: Id d'adjunt segur addicional; es pot repetir
-      business_pct_help: Proporció d'ús professional de 0 a 1
+      business_pct_help: Proporció d'ús professional de 0 a 1; només per a files MIXED.
+        Omet-la en files totalment BUSINESS.
       category_help: Id de categoria de despesa deduïble (només moviments de despesa;
         els ingressos no necessiten categoria)
       classification_help: Classificació professional (BUSINESS, PERSONAL o MIXED)
@@ -2702,18 +2705,25 @@ cli:
         automàticament i no es pot establir a mà. Tria''n una: BUSINESS, PERSONAL,
         MIXED, o omet --classification per deixar la fila sense classificar.'
       taxable_base_help: Import de base imposable
-      usage_ratio_help: Id de proporció d'ús professional proporcional
+      usage_ratio_help: Id de proporció d'ús ja configurat per a ús professional
+        proporcional. Usa un id de categoria mostrat per 'aeat app ledger ratios list'
+        o 'aeat app ledger ratios eligible'; crea'l amb 'aeat app ledger ratios set
+        <category-id> <ratio>'. No és text lliure.
       value_date_help: Data valor de la transacció (AAAA-MM-DD)
     allocate:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
-      business_pct_help: Proporció d'ús professional de 0 a 1
+      business_pct_help: Proporció d'ús professional de 0 a 1 per a files MIXED/proporcionals;
+        no facis servir ledger allocate per a una fila totalment BUSINESS.
       category_help: Id de categoria de despesa deduïble (només moviments de despesa;
         els ingressos no necessiten categoria)
       help: Registrar proporcionalitat professional/personal per a un moviment del
         llibre
       id_help: Id del moviment del llibre a assignar
       prorrata_reference_help: Referència de prorrata d'IVA per a fluxos d'IVA
-      usage_ratio_help: Id de proporció d'ús per a ús professional proporcional
+      usage_ratio_help: Id de proporció d'ús ja configurat per a ús professional
+        proporcional. Usa un id de categoria mostrat per 'aeat app ledger ratios list'
+        o 'aeat app ledger ratios eligible'; crea'l amb 'aeat app ledger ratios set
+        <category-id> <ratio>'. No és text lliure.
     app_help: Gestió de llibres comptables i registres d'IVA
     archive:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
@@ -2745,6 +2755,10 @@ cli:
       help: Examina els moviments del llibre del perfil adreçat (per defecte el perfil
         actiu) i informa de files amb anomalies agregades a través de cada període
         que els moviments toquin. Local; mai contacta amb AEAT.
+      period_help: 'Període de declaració opcional com a testimoni AEAT: 1T-4T (trimestres),
+        0A (anual), 01-12 (mesos). Combineu-lo amb --year per coincidir amb ledger
+        status.'
+      year_help: Any de declaració per a --period (p. ex. 2024).
     classify:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       apply_help: 'Persisteix el suggeriment de l''LLM amb procedencia llm: en lloc
@@ -2760,7 +2774,8 @@ cli:
       bulk_all_failed: 'classificació massiva fallida: totes les files han fallat;
         no s''ha actualitzat cap moviment del llibre'
       business_pct_help: Percentatge d'ús professional de 0 a 1; obligatori amb --classification
-        MIXED i rebutjat per a qualsevol altra classificació
+        MIXED, rebutjat per a qualsevol altra classificació i omès en files totalment
+        BUSINESS
       business_pct_requires_mixed: Rebutjat. --business-pct només s'aplica a una classificació
         MIXED. Una fila BUSINESS o PERSONAL és totalment professional o totalment
         privada; treu --business-pct o passa --classification MIXED.
@@ -2768,16 +2783,16 @@ cli:
         els ingressos no necessiten categoria)
       classification_help: Estat de classificació professional del moviment
       classification_required: --classification és obligatori quan no s'usa --from-csv.
-      counterparty_eu_member_state_help: Estat membre de la UE de la contrapart (ISO
-        3166-1 alfa-2 minúscules, p. ex. de); obligatori amb --iva-category intra_community_supply,
-        prohibit amb export_third_country_zero_rated
+      counterparty_eu_member_state_help: Estat membre de la UE o prefix IVA d'Irlanda
+        del Nord de la contrapart (ISO 3166-1 alfa-2 minúscules, p. ex. de o xi);
+        obligatori amb --iva-category intra_community_supply, prohibit amb export_third_country_zero_rated
       evidence_acknowledged_help: Confirma que llegir l'evidencia amb un proveidor
         al nuvol la puja fora del teu equip (ho exigeix la verificacio de consentiment).
       from_csv_exclusive: --from-csv no pot combinar-se amb un id de transacció ni
         --classification.
       from_csv_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
-        category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category,
-        irpf_category].
+        category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
+        iva_category, irpf_category].
       from_csv_not_found: 'Fitxer CSV no trobat: %{path}'
       help: Classificar un moviment del llibre al perfil actiu
       id_help: Id del moviment del llibre a classificar
@@ -2987,7 +3002,9 @@ cli:
         invoice_not_found: Aquest id no existeix al catàleg de factures de reconciliació,
           que s'omple amb els fluxos d'importació i reconciliació de factures. Els
           id generats per 'aeat app ledger invoice add' són registres de factura de
-          l'operador i no es poden vincular aquí. Per adjuntar evidència de factura
+          l'operador i no es poden vincular aquí. Per crear manualment una factura
+          de catàleg vinculable, executa 'aeat app ledger invoice catalogue create'
+          i passa aquest invoice_id a --invoice-id. Per adjuntar evidència de factura
           de compra, executa 'aeat app ledger link <tx> --evidence-id <id>' (o 'aeat
           app ledger attach') amb un id d''aeat app ledger evidence add'.
         missing_target: Indica almenys un de --invoice-id o --evidence-id.
@@ -2998,8 +3015,9 @@ cli:
         Local; mai contacta amb AEAT.
       id_help: Id de transaccio del llibre (SHA-256 o prefix inequivoc).
       invoice_id_help: Id del catàleg de factures enriquit, procedent d'una factura
-        importada o reconciliada, vinculat bidireccionalment amb el moviment. NO és
-        un id d''aeat app ledger invoice add'.
+        importada, reconciliada o creada amb 'aeat app ledger invoice catalogue create',
+        vinculat bidireccionalment amb el moviment. NO és un id d''aeat app ledger
+        invoice add'.
     list:
       by_group_help: Agrupa el llistat per etiqueta de grup.
       column_header: "id\tid_complet\tdata\timport\tdescripció\testat_revisió"
@@ -3226,6 +3244,10 @@ cli:
         heading: Configuracio i diagnostic del contribuent.
         paragraph_durable_state: L'estat durador (perfil, autenticacio, llibre) persisteix
           entre sessions.
+        paragraph_storage_isolation: Per a una execucio aillada des de zero, definiu
+          AEAT_LOCAL_STORAGE_ROOT, AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR
+          i AEAT_SECRET_PASSPHRASE; els logs queden per defecte sota aquest directori
+          d'emmagatzematge.
         profile_censo: Mostrar l'estat del cens del perfil actiu.
         profile_delete: Eliminar un perfil de contribuent.
         profile_duplicate: Duplicar un perfil de contribuent existent.
@@ -3268,6 +3290,10 @@ cli:
         modelo_bindings_list: Llistar les vinculacions del model fiscal actiu.
         modelo_list: Llistar els models fiscals disponibles.
         modelo_work: 'Treballar amb un model fiscal: introduir dades, calcular i exportar.'
+        paragraph_storage_isolation: Per a una execucio aillada des de zero, definiu
+          AEAT_LOCAL_STORAGE_ROOT, AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR
+          i AEAT_SECRET_PASSPHRASE; els logs queden per defecte sota aquest directori
+          d'emmagatzematge.
         paragraph_two_roots: 'Dues superficies principals: ''app'' per a operacions
           de declaracio i ''config'' per a configuracio i diagnostic.'
         paragraph_type_help: Escriviu 'aeat <ordre> --help' per obtenir ajuda detallada.
@@ -4666,6 +4692,7 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
+    modelo_349_country_prefix_context: 'El model 349 rebutja el prefix de pais {country_code} per a la clau d''operacio {clave_operacion} en {filing_year}/{period}: {reason}. Fonament: instruccions AEAT Brexit IVA NIF-IVA / model 349.'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'
@@ -5034,6 +5061,8 @@ wizard:
         help: Codi postal del domicili fiscal
       bienes-extranjero-above-threshold:
         help: Béns a l'estranger superen el llindar legal
+      monedas-virtuales-extranjero-above-threshold:
+        help: Monedes virtuals a l'estranger superen el llindar del Modelo 721
       cloud-evidence-upload:
         help: Permetre pujar evidència sensible a proveïdors LLM al núvol (desactivat
           per defecte).
@@ -5220,6 +5249,8 @@ wizard:
     obligations:
       bienes-extranjero-above-threshold:
         prompt: Béns a l'estranger superen el llindar legal
+      monedas-virtuales-extranjero-above-threshold:
+        prompt: Monedes virtuals a l'estranger superen el llindar del Modelo 721
       does-intracomunitario:
         prompt: Realitza operacions intracomunitàries
       has-employees:

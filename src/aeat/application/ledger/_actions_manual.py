@@ -394,6 +394,9 @@ def summarize_manual_transactions(
         income_total=_display_decimal(income_total),
         expense_total=_display_decimal(expense_total),
         net_total=_display_decimal(income_total - expense_total),
+        business_income_total=_display_decimal(income_total),
+        business_expense_total=_display_decimal(expense_total),
+        business_net_total=_display_decimal(income_total - expense_total),
         total_count=len(transactions),
         active_count=sum(1 for item in transactions if item.lifecycle_state is TransactionLifecycleState.ACTIVE),
         archived_count=sum(1 for item in transactions if item.lifecycle_state is TransactionLifecycleState.ARCHIVED),
@@ -721,6 +724,9 @@ def _command_from_patch(
         notes=notes,
         iva_category=iva_category,
         counterparty_eu_member_state=counterparty_eu_member_state,
+        source_jurisdiction=(
+            patch.source_jurisdiction if "source_jurisdiction" in patch_fields else current.source_jurisdiction
+        ),
         group_label=group_label,
         actor=actor,
         source_command=source_command,

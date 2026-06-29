@@ -201,6 +201,7 @@ def apply_iva_compensation_decision_binding(
             f"{decision.divergence}: {decision.reason}",
             translated_message="application.modelo.errors.iva_wallet_blocked",
             context={"divergence": str(decision.divergence), "reason": str(decision.reason)},
+            suggestion=iva_wallet_override_suggestion(decision),
         )
     if decision.selected_amount is None:
         raise ModeloIvaWalletReconciliationBlocked(
@@ -547,6 +548,7 @@ def require_persisted_iva_compensation_decision_matches_revision(
             iva_wallet_blocked_message(decision),
             translated_message="application.modelo.errors.iva_wallet_blocked",
             context={"divergence": str(decision.divergence), "reason": str(decision.reason)},
+            suggestion=iva_wallet_override_suggestion(decision),
         )
     if decision.target_period != work_unit.period:
         raise ModeloIvaWalletReconciliationBlocked(
@@ -612,6 +614,19 @@ def iva_wallet_blocked_message(decision: _IvaWalletBlockedDecision) -> str:
     return tr("application.modelo.errors.iva_wallet_blocked", divergence=divergence, reason=reason)
 
 
+def iva_wallet_override_suggestion(decision: object) -> str:
+    """Return the explicit taxpayer-override command for a blocked wallet decision."""
+    target_period = getattr(decision, "target_period", None)
+    filing_year = getattr(decision, "target_year", "YEAR")
+    period = getattr(target_period, "registry_token", "PERIOD")
+    amount = "0" if _decision_is_missing_local_authority(decision) else "AMOUNT"
+    return (
+        "aeat app modelo iva-wallet override "
+        f"--filing-year {filing_year} --period {period} --amount {amount} "
+        '--reason "external evidence reviewed" --evidence-locator "SOURCE" --confirm'
+    )
+
+
 def taxpayer_nif_for_bucket(bucket_id: str) -> str | None:
     """Return the profile tax id for a bucket, or ``None`` when absent."""
     values = _profile_path_values_for_bucket(bucket_id)
@@ -629,6 +644,7 @@ __all__ = [
     "apply_iva_compensation_decision_binding",
     "caller_supplied_prior_compensation_value",
     "iva_wallet_blocked_message",
+    "iva_wallet_override_suggestion",
     "lazily_reconcile_local_iva_compensation_for_work_unit",
     "load_persisted_iva_compensation_decision_for_work_unit",
     "require_persisted_iva_compensation_decision_for_work_unit",

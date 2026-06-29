@@ -40,6 +40,7 @@ from ...domain.transactions import (
     TransactionCatalogueRepository,
     TransactionDirection,
     TransactionIdPrefixError,
+    TransactionValidationError,
     is_classified,
 )
 from ._common import (
@@ -80,6 +81,7 @@ from ._ledger_read_cli import register_read_commands
 from ._ledger_rules_cli import register_rule_commands, rule_app
 from ._ledger_support import (
     _invoice_link_error_bad_parameter,
+    _ledger_transaction_validation_bad,
     _ledger_validation_bad,
     _parse_amount_magnitude,
     _parse_decimal,
@@ -205,6 +207,16 @@ def ledger_add(
     taxable_base: str | None = typer.Option(None, "--taxable-base", help=tr("cli.ledger.add.taxable_base_help")),
     iva_rate: str | None = typer.Option(None, "--iva-rate", help=tr("cli.ledger.add.iva_rate_help")),
     iva_amount: str | None = typer.Option(None, "--iva-amount", help=tr("cli.ledger.add.iva_amount_help")),
+    iva_category: IvaCategory | None = typer.Option(
+        None,
+        "--iva-category",
+        help=tr("cli.ledger.classify.iva_category_help"),
+    ),
+    counterparty_eu_member_state: EUMemberState | None = typer.Option(
+        None,
+        "--counterparty-eu-member-state",
+        help=tr("cli.ledger.classify.counterparty_eu_member_state_help"),
+    ),
     recargo_amount: str | None = typer.Option(None, "--recargo-amount", help=tr("cli.ledger.add.recargo_amount_help")),
     irpf_category: str | None = typer.Option(None, "--irpf-category", help=tr("cli.ledger.add.irpf_category_help")),
     usage_ratio_id: str | None = typer.Option(None, "--usage-ratio-id", help=tr("cli.ledger.add.usage_ratio_help")),
@@ -288,6 +300,8 @@ def ledger_add(
             taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
             iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
             iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
+            iva_category=iva_category,
+            counterparty_eu_member_state=counterparty_eu_member_state,
             recargo_amount=_parse_decimal(recargo_amount, label="recargo-amount"),
             irpf_category=irpf_category,
             usage_ratio_id=usage_ratio_id,
@@ -302,6 +316,8 @@ def ledger_add(
         )
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
+    except TransactionValidationError as exc:
+        raise _ledger_transaction_validation_bad(exc) from exc
     # The gross-invariant (`taxable_base + iva_amount == amount`) and other
     # `Transaction.model_validate` rules fire inside `create_manual_transaction`,
     # raising a pydantic `ValidationError` whose default rendering dumps the full
@@ -618,6 +634,8 @@ def ledger_classify(
         )
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
+    except TransactionValidationError as exc:
+        raise _ledger_transaction_validation_bad(exc) from exc
     from ._ledger_payloads import LedgerClassifySingleResult
 
     transaction_payload = ledger_transaction_payload(result.transaction)

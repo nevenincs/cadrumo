@@ -33,9 +33,12 @@ _IVA_BODY_RE = re.compile(r"^[a-zA-Z0-9]{4,20}$")
 _ISO_2_RE = re.compile(r"^[A-Z]{2}$")
 
 
-EU_MEMBER_STATE_CODES: frozenset[str] = frozenset(member.value.upper() for member in EUMemberState)
+EU_MEMBER_STATE_CODES: frozenset[str] = frozenset(
+    member.value.upper() for member in EUMemberState if member is not EUMemberState.XI
+)
 """Closed set of ISO-3166 alpha-2 codes (uppercase) for the 27 EU
-Member States, sourced directly from :class:`aeat.domain.iva.EUMemberState`."""
+Member States, sourced from :class:`aeat.domain.iva.EUMemberState` while
+excluding the Northern Ireland IVA prefix ``XI``."""
 
 
 def validate_country_code(value: str) -> str:

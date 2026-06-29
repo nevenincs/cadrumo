@@ -272,6 +272,7 @@ def evaluate_renta_deductibility(
             f"profile category {profile.category.value!r} does not match fact category {fact.category.value!r}",
         )
     rule = profile.proportionality
+    deductible_basis = _deductible_basis_amount(fact)
     deductible_abs: Decimal
     applied_ratio: Decimal | None
     cap_applied: Decimal | None = None
@@ -279,12 +280,12 @@ def evaluate_renta_deductibility(
     reason = "deductible"
 
     if rule.kind is ProportionalityKind.FULL_DEDUCTIBLE:
-        deductible_abs = fact.gross_amount
+        deductible_abs = deductible_basis
         applied_ratio = Decimal("1")
     elif rule.kind is ProportionalityKind.FIXED_PERCENTAGE:
         assert rule.fixed_pct is not None
         applied_ratio = rule.fixed_pct
-        deductible_abs = fact.gross_amount * applied_ratio
+        deductible_abs = deductible_basis * applied_ratio
     elif rule.kind in {ProportionalityKind.USAGE_RATIO_HOME_AREA, ProportionalityKind.USAGE_RATIO_PERSONAL}:
         ratio = context.usage_ratios.get(fact.category, rule.default_ratio)
         if ratio is None:
@@ -294,7 +295,7 @@ def evaluate_renta_deductibility(
             deductible_abs = Decimal("0")
         else:
             applied_ratio = ratio
-            deductible_abs = fact.gross_amount * ratio
+            deductible_abs = deductible_basis * ratio
     elif rule.kind is ProportionalityKind.STATUTORY_CAP:
         cap_applied = _resolve_statutory_cap(rule=rule, context=context)
         if cap_applied is None:
@@ -303,8 +304,8 @@ def evaluate_renta_deductibility(
             applied_ratio = None
             deductible_abs = Decimal("0")
         else:
-            deductible_abs = min(fact.gross_amount, cap_applied)
-            applied_ratio = deductible_abs / fact.gross_amount
+            deductible_abs = min(deductible_basis, cap_applied)
+            applied_ratio = Decimal("0") if deductible_basis == Decimal("0") else deductible_abs / deductible_basis
     elif rule.kind is ProportionalityKind.NON_DEDUCTIBLE:
         status = RentaDeductibilityStatus.INELIGIBLE
         reason = "non deductible category"
@@ -340,6 +341,10 @@ def evaluate_renta_deductibility(
         statutory_cap_applied=cap_applied,
         legal_references=rule.citations,
     )
+
+
+def _deductible_basis_amount(fact: RentaDeductibleExpenseFact) -> Decimal:
+    return fact.taxable_base if fact.taxable_base is not None else fact.gross_amount
 
 
 def build_renta_deductible_expense_observation(

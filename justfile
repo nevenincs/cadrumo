@@ -120,7 +120,7 @@ env-doctor: env-playwright
     uv run --no-sync vulture --version
     uv run --no-sync radon --version
     uv run --no-sync complexipy --help
-    uvx --from semgrep semgrep --version
+    uvx --from semgrep==1.168.0 semgrep --version
     npx --yes jscpd@4.2.0 --version
     just env-pip-check
     -just check-rag
@@ -173,26 +173,85 @@ check-relative-imports:
 check-dependencies:
     @uv run --no-sync python -m dev.quality.quiet deptry src/aeat --known-first-party aeat --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"
 
+# Cheap dependency-surface preflight: verify pyproject, optional-extra registry,
+# and frozen core/all-extras/all-groups exports before any artifact work.
+packaging-smoke-dependencies:
+    @uv run --no-sync python -m dev.packaging.dependency_surface
+
+# Verify the lightweight packaging preflight command contracts.
+packaging-smoke-preflight-tests:
+    @uv run --no-sync pytest dev/packaging/tests -q
+
+# Cheap source-data preflight: fail before wheel, venv, or Docker work if a
+# git-tracked shipped data file has been deleted from the worktree.
+packaging-smoke-source:
+    @uv run --no-sync python -m dev.packaging.source_preflight
+
+# Build the wheel, validate prod/optional/dev dependency surfaces, install into
+# a fresh venv, and run installed CLI/resource smoke checks.
+packaging-smoke-core: packaging-smoke-source
+    @uv run --no-sync python -m dev.packaging.smoke_core
+
+# Build the wheel, create a stdlib venv, install with plain pip, and run the
+# same installed core CLI/resource/attachment/LLM smoke checks.
+packaging-smoke-pip-core: packaging-smoke-source
+    @uv run --no-sync python -m dev.packaging.smoke_pip_core
+
+# Build the source distribution, inspect bundled data, install it with plain
+# pip in a stdlib venv, and run the same installed core smoke checks.
+packaging-smoke-sdist-core: packaging-smoke-source
+    @uv run --no-sync python -m dev.packaging.smoke_sdist_core
+
+# Build the wheel, install aeat[all] with plain pip in a stdlib venv, and
+# verify every capability-gated optional Python package imports.
+packaging-smoke-extras: packaging-smoke-source
+    @uv run --no-sync python -m dev.packaging.smoke_extras
+
+# Create a fresh uv project environment from the frozen lock with all extras
+# and all dependency groups, then verify developer tools and imports start.
+packaging-smoke-dev: packaging-smoke-source
+    @uv run --no-sync python -m dev.packaging.smoke_dev
+
+# Build the wheel, install it with the browser extra, provision Chromium in an
+# isolated Playwright cache, and run the no-secret browser health check.
+packaging-smoke-browser: packaging-smoke-source
+    @uv run --no-sync python -m dev.packaging.smoke_browser
+
+# Linux/container browser smoke: also install host browser dependencies.
+packaging-smoke-browser-linux: packaging-smoke-source
+    @uv run --no-sync python -m dev.packaging.smoke_browser --with-deps
+
+# Linux host release-artifact smoke gates.
+packaging-smoke-linux: packaging-smoke-dependencies packaging-smoke-preflight-tests packaging-smoke-core packaging-smoke-pip-core packaging-smoke-sdist-core packaging-smoke-extras packaging-smoke-browser-linux
+
+# Build the wheel, mount only the wheel/probe into python:3.13-slim, and run
+# the installed core CLI/resource smoke with pip inside Linux.
+packaging-smoke-docker-core: packaging-smoke-source
+    @uv run --no-sync python -m dev.packaging.smoke_docker
+
+# Build the wheel, install aeat[browser] in python:3.13-slim, provision
+# Chromium with Linux system dependencies, and run browser health.
+packaging-smoke-docker-browser: packaging-smoke-source
+    @uv run --no-sync python -m dev.packaging.smoke_docker --browser
+
+# Fresh Linux image release-artifact smoke gates.
+packaging-smoke-docker: packaging-smoke-dependencies packaging-smoke-preflight-tests packaging-smoke-docker-core packaging-smoke-docker-browser
+
+# Local release-artifact smoke gates that do not need host package-manager access.
+packaging-smoke: packaging-smoke-dependencies packaging-smoke-preflight-tests packaging-smoke-core packaging-smoke-pip-core packaging-smoke-sdist-core packaging-smoke-extras packaging-smoke-browser
+
 # Verify codebase security posture using semgrep scans.
 [unix]
 check-security:
     #!/usr/bin/env bash
     set -euo pipefail
-    if command -v semgrep >/dev/null 2>&1; then
-        semgrep scan --quiet --config auto src/aeat
-    else
-        uvx --from semgrep semgrep scan --quiet --config auto src/aeat
-    fi
+    uvx --from semgrep==1.168.0 semgrep scan --quiet --config auto src/aeat
 
 [windows]
 check-security:
     #!pwsh
     $ErrorActionPreference = 'Stop'
-    if (Get-Command semgrep -ErrorAction SilentlyContinue) {
-        semgrep scan --quiet --config auto src/aeat
-    } else {
-        uvx --from semgrep semgrep scan --quiet --config auto src/aeat
-    }
+    uvx --from semgrep==1.168.0 semgrep scan --quiet --config auto src/aeat
 
 # Check if the RAG service daemon is running.
 check-rag:

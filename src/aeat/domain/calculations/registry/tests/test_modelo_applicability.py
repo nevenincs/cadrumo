@@ -142,6 +142,57 @@ def test_non_resident_irnr_natural_person_does_not_owe_modelo_130() -> None:
     assert "trlirnr-rdleg-5-2004:art-2" in result.legal_refs
 
 
+def test_non_resident_irnr_natural_person_does_not_owe_modelo_100() -> None:
+    """Declared IRNR non-residency positively excludes the resident-IRPF M100."""
+
+    non_resident_autonomo = TaxpayerProfile(
+        tax_id="X1234567L",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
+        iva_regime=IVARegime.GENERAL,
+        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        country_of_fiscal_residence="FR",
+    )
+
+    result = derive_modelo_applicability(non_resident_autonomo, "100")
+
+    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert result.applicable is False
+    assert "NON_RESIDENT_IRNR" in result.reason
+    assert "trlirnr-rdleg-5-2004:art-2" in result.legal_refs
+
+
+def test_non_resident_irnr_legal_entity_without_pe_does_not_owe_modelo_200() -> None:
+    """Declared IRNR non-residency must not be treated as resident-company M200."""
+
+    resident_company = TaxpayerProfile(
+        tax_id="B66012345",
+        entity_type=EntityType.LEGAL_ENTITY,
+        legal_entity_form=LegalEntityForm.SL,
+        iva_regime=IVARegime.GENERAL,
+    )
+    non_resident_company = TaxpayerProfile(
+        tax_id="B66012345",
+        entity_type=EntityType.LEGAL_ENTITY,
+        legal_entity_form=LegalEntityForm.SL,
+        iva_regime=IVARegime.GENERAL,
+        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        country_of_fiscal_residence="DE",
+    )
+
+    assert derive_modelo_applicability(resident_company, "200").verdict is ApplicabilityVerdict.APPLICABLE
+
+    result = derive_modelo_applicability(non_resident_company, "200")
+
+    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert result.applicable is False
+    assert "NON_RESIDENT_IRNR" in result.reason
+    assert "establecimiento permanente" in result.reason
+    assert "trlirnr-rdleg-5-2004:art-2" in result.legal_refs
+    assert "trlirnr-rdleg-5-2004:art-24" in result.legal_refs
+
+
 def test_objective_estimation_boolean_without_declared_regime_routes_to_m131() -> None:
     """An autónomo who flags módulos but leaves the regime undeclared owes M131, not M130.
 
@@ -230,6 +281,37 @@ def test_general_regime_profile_with_bienes_declared_modelo_720_applicable() -> 
     )
     result = derive_modelo_applicability(general_profile, "720")
     assert result.verdict is ApplicabilityVerdict.APPLICABLE
+
+
+def test_modelo_721_uses_crypto_abroad_threshold_not_modelo_720_bienes_fact() -> None:
+    """M721 cannot inherit M720's bienes-en-el-extranjero threshold fact.
+
+    The two obligations have separate subject matter. A taxpayer can
+    have no Modelo 720 bienes/derechos above threshold while still
+    holding Modelo 721 virtual currencies abroad above threshold.
+    """
+
+    base_profile = TaxpayerProfile(
+        tax_id="X1234567L",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
+        iva_regime=IVARegime.GENERAL,
+        bienes_extranjero_above_threshold=False,
+        monedas_virtuales_extranjero_above_threshold=False,
+    )
+
+    assert derive_modelo_applicability(base_profile, "720").verdict is ApplicabilityVerdict.INCOMPLETE
+    base_721 = derive_modelo_applicability(base_profile, "721")
+    assert base_721.verdict is ApplicabilityVerdict.INCOMPLETE
+    assert "monedas virtuales" in base_721.reason
+    assert "alquileres sujetos a retención" not in base_721.reason
+    assert "ley-58-2003:da-18" in base_721.legal_refs
+    assert "orden-hfp-886-2023:art-2" in base_721.legal_refs
+
+    crypto_profile = base_profile.model_copy(update={"monedas_virtuales_extranjero_above_threshold": True})
+
+    assert derive_modelo_applicability(crypto_profile, "720").verdict is ApplicabilityVerdict.INCOMPLETE
+    assert derive_modelo_applicability(crypto_profile, "721").verdict is ApplicabilityVerdict.APPLICABLE
 
 
 def test_impatriado_exemption_does_not_affect_other_modelos() -> None:

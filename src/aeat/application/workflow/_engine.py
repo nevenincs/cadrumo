@@ -497,6 +497,37 @@ class WorkflowEngine:
                 summary=no_summary,
             )
 
+        if obligation.opens_on > today:
+            future_summary = _summary_text(
+                f"Filing obligation for modelo={obligation.modelo} "
+                f"period={obligation.period} opens on {obligation.opens_on.isoformat()}; "
+                "the AEAT filing-obligation window is not open yet. Filing-to-fichero does "
+                "not require this step: export the verified-complete revision with "
+                "'aeat app modelo export' — that is the local finish line. 'work file' "
+                "is the optional internal mark-as-filed step for when the obligation window is open.",
+            )
+            steps.append(
+                WorkflowStep(
+                    stage=WorkflowStage.COMPUTING_DEADLINES,
+                    started_at=started,
+                    ended_at=_utcnow(),
+                    success=False,
+                    summary=future_summary,
+                    details={
+                        "modelo": obligation.modelo,
+                        "period": str(obligation.period),
+                        "opens_on": obligation.opens_on.isoformat(),
+                        "closes_on": obligation.closes_on.isoformat(),
+                        "filing_window": FilingWindowState.FUTURE,
+                        "deadline_role": DeadlineRole.BINDING,
+                    },
+                ),
+            )
+            raise WorkflowAbortSignalError(
+                reason=WorkflowAbortReason.NO_PENDING_OBLIGATION,
+                summary=future_summary,
+            )
+
         if obligation.closes_on < today:
             if target_modelo is not None and target_period is not None:
                 # A targeted but closed-window obligation that genuinely
@@ -560,6 +591,7 @@ class WorkflowEngine:
                 details={
                     "modelo": obligation.modelo,
                     "period": str(obligation.period),
+                    "opens_on": obligation.opens_on.isoformat(),
                     "closes_on": obligation.closes_on.isoformat(),
                 },
             ),
@@ -593,7 +625,12 @@ class WorkflowEngine:
         filing path.
         """
         if obligation is not None:
-            window_state = "open" if obligation.closes_on >= today else "closed"
+            if obligation.opens_on > today:
+                window_state = FilingWindowState.FUTURE
+            elif obligation.closes_on >= today:
+                window_state = FilingWindowState.OPEN
+            else:
+                window_state = FilingWindowState.CLOSED
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.COMPUTING_DEADLINES,

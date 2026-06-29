@@ -113,6 +113,7 @@ _DEADLINE_RELEVANT_FIELDS: tuple[str, ...] = (
     "does_intracomunitario",
     "third_party_transactions_above_347_threshold",
     "bienes_extranjero_above_threshold",
+    "monedas_virtuales_extranjero_above_threshold",
 )
 
 

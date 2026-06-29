@@ -36,6 +36,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind
+from ...core.errors import CoreValidationError
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -74,7 +75,7 @@ _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVer
 # ---------------------------------------------------------------------------
 
 
-class EnrollmentEvidenceError(ValueError):
+class EnrollmentEvidenceError(CoreValidationError):
     """Raised when an enrollment recording is missing its un-fakeable evidence.
 
     Calculation-mode recordings require a strictly-positive produced-value

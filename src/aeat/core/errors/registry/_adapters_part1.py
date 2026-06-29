@@ -162,6 +162,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.adapters.outbound.aeat._playwright.PlaywrightError",
+        ErrorCode(
+            code="FAIL_PLAYWRIGHT_FALLBACK_ERROR",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_browser_session_browser",
+            default_suggestion="pip install aeat[browser]",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.outbound.aeat._playwright.PlaywrightTimeoutError",
+        ErrorCode(
+            code="FAIL_PLAYWRIGHT_FALLBACK_TIMEOUT",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_browser_session_browser",
+            default_suggestion="pip install aeat[browser]",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.adapters.outbound.aeat.browser._errors.BrowserEvasionError",
         ErrorCode(
             code="FAIL_BROWSER_EVASION",

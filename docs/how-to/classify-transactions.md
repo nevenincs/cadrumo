@@ -99,9 +99,10 @@ from it. The reference is a saved category ratio applied through
 make the row ready; preflight still reports `missing_proportionality_reference`
 until the row carries `--usage-ratio-id`.
 
-`--usage-ratio-id` lives on the `allocate` verb (and on `add`), not on
-`classify`. Its value is the spending-category id, and the same category must
-already have a saved ratio. Record a mixed-use share in three steps.
+For one-row commands, `--usage-ratio-id` lives on the `allocate` verb (and on
+`add`), not on `classify`. Its value is the spending-category id, and the same
+category must already have a saved ratio. Record a mixed-use share in three
+steps.
 
 Check which categories accept a ratio:
 
@@ -147,7 +148,9 @@ ratio.
 ## Classify many rows from CSV
 
 For bulk review, `classify --from-csv` reads a CSV with columns
-`transaction_id`, `classification`, and optionally `category_id`:
+`transaction_id`, `classification`, and optional classification facts such as
+`category_id`, `business_pct`, `usage_ratio_id`, taxable-base and IVA columns,
+`iva_category`, and `irpf_category`:
 
 ```bash
 aeat app ledger classify --from-csv ./classifications.csv
@@ -174,9 +177,10 @@ Recommended workflow:
 3. Prepare a narrow CSV containing only the rows you mean to change:
 
    ```text
-   transaction_id,classification,category_id
-   <business-expense-id>,BUSINESS,<category-id>
-   <private-row-id>,PERSONAL,
+   transaction_id,classification,category_id,business_pct,usage_ratio_id
+   <business-expense-id>,BUSINESS,<category-id>,,
+   <mixed-expense-id>,MIXED,<category-id>,0.5,<category-id>
+   <private-row-id>,PERSONAL,,,
    ```
 
 4. Apply and review:
@@ -247,4 +251,3 @@ with `ledger view` before calculating.
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [Review calculations with Google Sheets](review-with-google-sheets.md)
 - [CLI reference](../cli/index.rst)
-

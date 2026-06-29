@@ -10,11 +10,13 @@ from ...application.state_projection import (
     ModeloReadinessRequest,
     build_operator_state_projection,
 )
-from ...core import Period
+from ...core import Period, PeriodError
 from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.user_profile import ProfileNotFoundError
 from ._common import _emit_envelope
 from ._errors import CliRefusedBoundaryError
+from ._modelo_cli_support import unsupported_local_work_period_refusal
 from ._modelo_payloads import (
     LedgerIssuePayload,
     ModeloReadinessMissingBindingPayload,
@@ -72,7 +74,7 @@ def register_readiness_commands(app: typer.Typer) -> None:
             modelo=modelo,
             revision_id=revision_id,
             filing_year=filing_year,
-            period=(Period.from_year_and_code(filing_year, period) if period else None),
+            period=_resolve_readiness_period(modelo=modelo, filing_year=filing_year, period=period),
         )
         report = _readiness_report(request)
         readiness_result = _readiness_result(
@@ -92,7 +94,19 @@ def register_readiness_commands(app: typer.Typer) -> None:
                 filing_year=filing_year,
                 period=period,
             ),
+            notices=_readiness_notices(report),
         )
+
+
+def _resolve_readiness_period(*, modelo: str, filing_year: int, period: str | None) -> Period | None:
+    if period is None:
+        return None
+    try:
+        return Period.from_year_and_code(filing_year, period)
+    except PeriodError as exc:
+        if refusal := unsupported_local_work_period_refusal(modelo=modelo, token=period):
+            raise refusal from exc
+        raise
 
 
 def _readiness_report(request: ModeloReadinessRequest):
@@ -127,6 +141,7 @@ def _readiness_result(
         period=report.period,
         ready=report.ready,
         profile_ready=report.profile_ready,
+        profile_refusal=report.profile_refusal,
         registry_ready=report.registry_ready,
         registry_refusal=report.registry_refusal,
         binding_ready=report.binding_ready,
@@ -178,25 +193,68 @@ def _readiness_lines(
         "readiness_scope\tprofile_and_source_preflight_not_manual_casilla_completeness",
         f"ready\t{report.ready}",
         f"profile_ready\t{report.profile_ready}",
+        f"profile_refusal\t{report.profile_refusal}",
         f"registry_ready\t{report.registry_ready}",
         f"registry_refusal\t{report.registry_refusal}",
         f"binding_ready\t{report.binding_ready}",
+        f"source_binding_ready\t{report.binding_ready}",
         f"missing\t{len(report.missing)}",
         f"missing_bindings\t{len(report.missing_bindings)}",
-        f"ledger_preflight_required\t{report.ledger_preflight_required}",
-        f"ledger_ready\t{report.ledger_ready if report.ledger_ready is not None else ''}",
-        f"ledger_period\t{report.ledger_period or ''}",
-        f"ledger_checked\t{report.ledger_checked_transaction_count}",
-        f"ledger_issues\t{len(report.ledger_issues)}",
-        "finish_line\texport verified-complete revision via 'aeat app modelo export' (local finish line)",
     ]
+    if report.missing_bindings:
+        command_period = period or report.period.registry_token
+        lines.append(
+            "missing_bindings_command\t"
+            f"aeat app modelo bindings list --modelo {modelo} --year {filing_year} "
+            f"--period {command_period} --missing",
+        )
+    lines.extend(
+        [
+            f"ledger_preflight_required\t{report.ledger_preflight_required}",
+            f"ledger_ready\t{report.ledger_ready if report.ledger_ready is not None else ''}",
+            "ledger_ready_scope\ttransaction_preflight_only",
+            f"ledger_period\t{report.ledger_period or ''}",
+            f"ledger_checked\t{report.ledger_checked_transaction_count}",
+            f"ledger_issues\t{len(report.ledger_issues)}",
+            "finish_line\texport verified-complete revision via 'aeat app modelo export' (local finish line)",
+        ],
+    )
     for requirement in report.missing:
         lines.append(f"{requirement.section_key}.{requirement.field_key}\t{requirement.selector}")
     for binding in report.missing_bindings:
         lines.append(f"missing_binding\t{binding.binding_id}\t{binding.source}\t{binding.input_channel}")
     for issue in report.ledger_issues:
         lines.append(f"ledger_issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
+    if _ledger_ready_but_bindings_missing(report):
+        lines.append(
+            "readiness_note\tledger_ready only means the period ledger rows passed transaction preflight; "
+            "missing_bindings/source_binding_ready still decide source completeness.",
+        )
     return lines
+
+
+def _readiness_notices(report) -> tuple[Notice, ...]:
+    if not _ledger_ready_but_bindings_missing(report):
+        return ()
+    return (
+        Notice(
+            severity=NoticeSeverity.INFO,
+            code="modelo.readiness.ledger_preflight_scope",
+            message=(
+                "ledger_ready only means the period ledger rows passed transaction preflight; "
+                "missing_bindings/source_binding_ready still decide source completeness."
+            ),
+            context={
+                "ledger_ready": "true",
+                "binding_ready": "false",
+                "missing_bindings": str(len(report.missing_bindings)),
+            },
+        ),
+    )
+
+
+def _ledger_ready_but_bindings_missing(report) -> bool:
+    return report.ledger_ready is True and not report.binding_ready and bool(report.missing_bindings)
 
 
 __all__ = ["register_readiness_commands"]

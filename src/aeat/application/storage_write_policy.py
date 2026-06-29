@@ -8,12 +8,13 @@ combines the matched :class:`StorageWritePolicyCode` with the
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from enum import StrEnum
 
 from pydantic import BaseModel
 
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core import read_pointer
+from ..core import Modelo, read_pointer
 from ..core.config import (
     Settings,
     StorageRouteClassification,
@@ -23,6 +24,7 @@ from ..core.config import (
     settings_for_active_profile_bucket,
 )
 from ..core.i18n import tr
+from ..core.storage_route_guidance import EXPLICIT_DATABASE_URL_PROFILE_RECOVERY
 
 
 class StorageWritePolicyCode(StrEnum):
@@ -30,6 +32,7 @@ class StorageWritePolicyCode(StrEnum):
 
     ALLOWED_ACTIVE_BUCKET = "allowed_active_bucket"
     BOOTSTRAP_EXEMPT = "bootstrap_exempt"
+    LEAF_REFUSAL_DELEGATED = "leaf_refusal_delegated"
     NON_PROFILE_BOUND_VERB = "non_profile_bound_verb"
     NO_VERB_PATH = "no_verb_path"
     REFUSED_ROOT_FALLBACK = "refused_root_fallback"
@@ -48,6 +51,7 @@ class StorageWritePolicyDecision(BaseModel):
     route_kind: StorageRouteKind | None = None
     message_key: str = ""
     detail_message_key: str = ""
+    recovery_hint: str = ""
 
     def render_refusal_message(self, *, locale: str | None = None) -> str:
         """Render the translated user-facing refusal message."""
@@ -56,6 +60,12 @@ class StorageWritePolicyDecision(BaseModel):
         if self.detail_message_key:
             return tr(self.message_key, details=tr(self.detail_message_key, locale=locale), locale=locale)
         return tr(self.message_key, locale=locale)
+
+    def refusal_context(self) -> dict[str, str] | None:
+        """Return structured context for the CLI error boundary."""
+        if not self.recovery_hint:
+            return None
+        return {"recovery": self.recovery_hint}
 
 
 PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
@@ -132,6 +142,7 @@ def inspect_storage_write_policy(
     *,
     bootstrap_exempt: bool,
     settings: Settings | None = None,
+    argv_tokens: Sequence[str] | None = None,
 ) -> StorageWritePolicyDecision:
     """Return whether ``verb_path`` may perform profile-bound writes.
 
@@ -159,6 +170,13 @@ def inspect_storage_write_policy(
             profile_bound_write=False,
             bootstrap_exempt=False,
         )
+    if _delegates_to_leaf_refusal(verb_path, argv_tokens, settings):
+        return StorageWritePolicyDecision(
+            allowed=True,
+            code=StorageWritePolicyCode.LEAF_REFUSAL_DELEGATED,
+            profile_bound_write=True,
+            bootstrap_exempt=False,
+        )
 
     route = _classify_effective_write_route(settings)
     if route.kind is StorageRouteKind.ROOT_FALLBACK_DATABASE:
@@ -179,6 +197,7 @@ def inspect_storage_write_policy(
             route_kind=route.kind,
             message_key="errors.storage.runtime.not_ready",
             detail_message_key="errors.storage.runtime.route_not_active_bucket",
+            recovery_hint=EXPLICIT_DATABASE_URL_PROFILE_RECOVERY,
         )
     return StorageWritePolicyDecision(
         allowed=True,
@@ -205,6 +224,38 @@ def _classify_effective_write_route(settings: Settings | None) -> StorageRouteCl
         if pointer is not None:
             return classify_storage_route(settings_for_active_profile_bucket(pointer.bucket_id, resolved))
     return route
+
+
+def _delegates_to_leaf_refusal(
+    verb_path: str,
+    argv_tokens: Sequence[str] | None,
+    settings: Settings | None,
+) -> bool:
+    normalised = verb_path.strip()
+    if normalised != "app modelo work create" and not normalised.startswith("app modelo work create "):
+        return False
+    modelo = _option_value(argv_tokens or (), "--modelo")
+    if modelo is None:
+        return False
+    from .modelo._work_create_policy import STUB_ONLY_MODELOS
+
+    modelo_code = modelo.strip()
+    if modelo_code not in STUB_ONLY_MODELOS:
+        return False
+    resolved = settings or load_settings()
+    return modelo_code != Modelo.M210 or not resolved.aeat_m210_engine_live
+
+
+def _option_value(argv_tokens: Sequence[str], option: str) -> str | None:
+    prefix = f"{option}="
+    for index, token in enumerate(argv_tokens):
+        if token.startswith(prefix):
+            value = token[len(prefix) :].strip()
+            return value or None
+        if token == option and index + 1 < len(argv_tokens):
+            value = argv_tokens[index + 1].strip()
+            return value or None
+    return None
 
 
 __all__ = [

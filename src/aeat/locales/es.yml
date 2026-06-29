@@ -561,6 +561,7 @@ application:
       import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
       import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
       unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
+      import_missing_filing_baseline: 'El perfil del archivo de bucket no tiene campos de identidad para presentar: %{missing_flags}. Repara el perfil de origen y vuelve a exportarlo.'
   calculations:
     iva_compensation:
       errors:
@@ -802,6 +803,10 @@ application:
         %{period}, que no se puede asignar a un periodo de registro.
       export_revision_state_refused: La revision de calculo %{calculation_revision_id}
         no esta verificada-completa ni presentada y no se puede exportar.
+      export_unsupported: El modelo %{modelo} no se puede exportar a fichero-BOE
+        porque el snapshot del registro no tiene una definicion completa de export_layouts.
+        El calculo, la verificacion y los registros locales de presentacion pueden existir,
+        pero este comando no puede producir un archivo para subir a la AEAT para este modelo.
       external_filing_evidence_reference_blank: La importación de declaración externa
         requiere un evidence_reference_id no vacío.
       external_filing_no_casilla_values: La importación de declaración externa requiere
@@ -918,8 +923,11 @@ application:
           esta evidenciado localmente (app_filing), no por la AEAT; presente cada
           periodo ante la AEAT de forma externa.'
         next_action: Exporte y presente cada periodo ante la AEAT de forma externa,
-          despues importe el justificante/CSV/evidencia en vivo oficial para actualizar
-          la cadena local cuando este disponible.
+          despues actualice la cadena local con evidencia oficial; use `aeat app
+          live justificante pull` cuando haya acceso en vivo, o `aeat app modelo
+          filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf
+          --evidence-id CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file
+          WORK_UNIT_ID --file PATH` para evidencia que ya tenga.
       dt12a_reduccion_next_action: Proporcione --rescate-plan-pensiones-capital IMPORTE
         --rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE --rescate-plan-pensiones-aportaciones-totales
         IMPORTE al calcular para inyectar automáticamente la reducción DT 12ª en la
@@ -2074,13 +2082,7 @@ cli:
         row_empty_key: Clave de campo --row vacía en {token}; cada campo debe tener
           el formato CLAVE=VALOR.
         row_empty_spec: --row no puede estar vacío; se esperaba TIPO CAMPO=valor [...]
-        row_help: 'Fila de detalle tipada para modelos informativos con registros
-          repetibles. Formato: TIPO CAMPO=valor [CAMPO=valor ...]. TIPO es ''miembro''
-          (socio/partícipe M184), ''vinculada'' (operación vinculada M232), ''operador''
-          (operador intracomunitario M349) o ''contraparte'' (declarada M347). Repetir
-          para añadir más filas. Ejemplo M184: --row ''miembro nif=12345678A porcentaje=40
-          importe=10000''. Ejemplo M349: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
-          clave_operacion=E importe=50000''.'
+        row_help: 'Fila de detalle tipada para modelos informativos con registros repetibles. Formato: TIPO CAMPO=valor [CAMPO=valor ...]. TIPO es ''miembro'' (socio/partícipe M184), ''vinculada'' (operación vinculada M232), ''operador'' (operador intracomunitario M349) o ''contraparte'' (declarada M347). Repetir para añadir más filas. Entrecomilla el argumento completo de --row; deja entre comillas los nombres legales con espacios. Ejemplo M184: --row ''miembro nif=12345678A porcentaje=40 importe=10000''. Ejemplo M349: --row ''operador codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" clave_operacion=E importe=50000''.'
         row_kv_format_error: El campo --row {token} debe tener el formato CLAVE=VALOR.
         row_m349_invalid_nif: '--row operador: nif_comunitario {nif} no coincide con
           el formato NIF-IVA esperado para el país {pais} (Directiva 2006/112/CE Anexo
@@ -2705,7 +2707,8 @@ cli:
       amount_help: Importe de la transacción en la moneda de la transacción (decimal,
         p. ej. 1200.50).
       attachment_help: Id de adjunto seguro adicional; se puede repetir
-      business_pct_help: Proporción de uso profesional de 0 a 1
+      business_pct_help: Proporción de uso profesional de 0 a 1; solo para filas
+        MIXED. Omitir en filas totalmente BUSINESS.
       category_help: Id de categoría de gasto deducible (solo movimientos de gasto;
         los ingresos no necesitan categoría)
       classification_help: Clasificación profesional (BUSINESS, PERSONAL o MIXED)
@@ -2742,18 +2745,25 @@ cli:
         y no puede establecerse a mano. Elige una de: BUSINESS, PERSONAL, MIXED, u
         omite --classification para dejar la fila sin clasificar.'
       taxable_base_help: Importe de base imponible
-      usage_ratio_help: Id de proporción de uso profesional proporcional
+      usage_ratio_help: Id de proporción de uso ya configurado para uso profesional
+        proporcional. Usa un id de categoría mostrado por 'aeat app ledger ratios
+        list' o 'aeat app ledger ratios eligible'; créalo con 'aeat app ledger ratios
+        set <category-id> <ratio>'. No es texto libre.
       value_date_help: Fecha valor de la transacción (AAAA-MM-DD)
     allocate:
       actor_help: Nombre del operador registrado en el evento del bucket
-      business_pct_help: Proporción de uso profesional de 0 a 1
+      business_pct_help: Proporción de uso profesional de 0 a 1 para filas MIXED/proporcionales;
+        no uses ledger allocate para una fila totalmente BUSINESS.
       category_help: Id de categoría de gasto deducible (solo movimientos de gasto;
         los ingresos no necesitan categoría)
       help: Registrar proporcionalidad profesional/personal para un movimiento del
         libro
       id_help: Id del movimiento del libro a asignar
       prorrata_reference_help: Referencia de prorrata de IVA para flujos de IVA
-      usage_ratio_help: Id de proporción de uso para uso profesional proporcional
+      usage_ratio_help: Id de proporción de uso ya configurado para uso profesional
+        proporcional. Usa un id de categoría mostrado por 'aeat app ledger ratios
+        list' o 'aeat app ledger ratios eligible'; créalo con 'aeat app ledger ratios
+        set <category-id> <ratio>'. No es texto libre.
     app_help: Gestión de libros contables y registros de IVA
     archive:
       actor_help: Nombre del operador registrado en el evento del bucket
@@ -2785,6 +2795,10 @@ cli:
       help: Examina los movimientos del libro del perfil direccionado (por defecto
         el perfil activo) e informa de filas con anomalías agregadas a través de cada
         período que los movimientos toquen. Local; nunca contacta con AEAT.
+      period_help: 'Periodo de declaración opcional como token AEAT: 1T-4T (trimestres),
+        0A (anual), 01-12 (meses). Combínalo con --year para coincidir con ledger
+        status.'
+      year_help: Año de declaración para --period (p. ej. 2024).
     classify:
       actor_help: Nombre del operador registrado en el evento del bucket
       apply_help: 'Persiste la sugerencia del LLM con procedencia llm: en lugar de
@@ -2800,7 +2814,8 @@ cli:
       bulk_all_failed: 'clasificación masiva fallida: todas las filas fallaron; no
         se actualizó ningún movimiento del libro'
       business_pct_help: Porcentaje de uso profesional de 0 a 1; obligatorio con --classification
-        MIXED y rechazado para cualquier otra clasificación
+        MIXED, rechazado para cualquier otra clasificación y omitido en filas totalmente
+        BUSINESS
       business_pct_requires_mixed: Rechazado. --business-pct solo se aplica a una
         clasificación MIXED. Una fila BUSINESS o PERSONAL es totalmente profesional
         o totalmente privada; quita --business-pct o pasa --classification MIXED.
@@ -2808,16 +2823,17 @@ cli:
         los ingresos no necesitan categoría)
       classification_help: Estado de clasificación profesional del movimiento
       classification_required: --classification es obligatorio cuando no se usa --from-csv.
-      counterparty_eu_member_state_help: Estado miembro de la UE de la contraparte
-        (ISO 3166-1 alfa-2 minúsculas, p. ej. de); obligatorio con --iva-category
-        intra_community_supply, prohibido con export_third_country_zero_rated
+      counterparty_eu_member_state_help: Estado miembro de la UE o prefijo IVA
+        de Irlanda del Norte de la contraparte (ISO 3166-1 alfa-2 minúsculas, p.
+        ej. de o xi); obligatorio con --iva-category intra_community_supply,
+        prohibido con export_third_country_zero_rated
       evidence_acknowledged_help: Confirma que leer la evidencia con un proveedor
         en la nube la sube fuera de tu equipo (lo exige la verificacion de consentimiento).
       from_csv_exclusive: --from-csv no puede combinarse con un id de transacción
         ni --classification.
       from_csv_help: Ruta a un archivo CSV con columnas transaction_id, classification[,
-        category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category,
-        irpf_category].
+        category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
+        iva_category, irpf_category].
       from_csv_not_found: 'Archivo CSV no encontrado: %{path}'
       help: Clasificar un movimiento del libro en el perfil activo
       id_help: Id del movimiento del libro a clasificar
@@ -3026,7 +3042,9 @@ cli:
         invoice_not_found: Este id no existe en el catálogo de facturas de reconciliación,
           que se rellena con los flujos de importación y reconciliación de facturas.
           Los id generados por 'aeat app ledger invoice add' son registros de factura
-          del operador y no se pueden vincular aquí. Para adjuntar evidencia de factura
+          del operador y no se pueden vincular aquí. Para crear una factura de catálogo
+          vinculable manualmente, ejecuta 'aeat app ledger invoice catalogue create'
+          y pasa ese invoice_id a --invoice-id. Para adjuntar evidencia de factura
           de compra, ejecuta 'aeat app ledger link <tx> --evidence-id <id>' (o 'aeat
           app ledger attach') con un id de 'aeat app ledger evidence add'.
         missing_target: Indica al menos uno de --invoice-id o --evidence-id.
@@ -3037,8 +3055,9 @@ cli:
         entre buckets. Local; nunca contacta con AEAT.
       id_help: Id de transaccion del libro (SHA-256 o prefijo inequivoco).
       invoice_id_help: Id del catálogo de facturas enriquecido, procedente de una
-        factura importada o reconciliada, vinculado bidireccionalmente con el movimiento.
-        NO es un id de 'aeat app ledger invoice add'.
+        factura importada, reconciliada o creada con 'aeat app ledger invoice catalogue
+        create', vinculado bidireccionalmente con el movimiento. NO es un id de 'aeat
+        app ledger invoice add'.
     list:
       by_group_help: Agrupar el listado por etiqueta de grupo.
       column_header: "id\tid_completo\tfecha\timporte\tdescripción\testado_revisión"
@@ -3265,6 +3284,10 @@ cli:
         heading: Configuracion y diagnostico del contribuyente.
         paragraph_durable_state: El estado duradero (perfil, autenticacion, libro)
           persiste entre sesiones.
+        paragraph_storage_isolation: Para una ejecucion aislada desde cero, defina
+          AEAT_LOCAL_STORAGE_ROOT, AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR
+          y AEAT_SECRET_PASSPHRASE; los logs quedan por defecto bajo ese directorio
+          de almacenamiento.
         profile_censo: Mostrar el estado del censo del perfil activo.
         profile_delete: Eliminar un perfil de contribuyente.
         profile_duplicate: Duplicar un perfil de contribuyente existente.
@@ -3308,6 +3331,10 @@ cli:
         modelo_list: Listar los modelos fiscales disponibles.
         modelo_work: 'Trabajar con un modelo fiscal: introducir datos, calcular y
           exportar.'
+        paragraph_storage_isolation: Para una ejecucion aislada desde cero, defina
+          AEAT_LOCAL_STORAGE_ROOT, AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR
+          y AEAT_SECRET_PASSPHRASE; los logs quedan por defecto bajo ese directorio
+          de almacenamiento.
         paragraph_two_roots: 'Dos superficies principales: ''app'' para operaciones
           de declaracion y ''config'' para configuracion y diagnostico.'
         paragraph_type_help: Escriba 'aeat <comando> --help' para obtener ayuda detallada.
@@ -4715,6 +4742,7 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
+    modelo_349_country_prefix_context: 'El Modelo 349 rechaza el prefijo de pais {country_code} para la clave de operacion {clave_operacion} en {filing_year}/{period}: {reason}. Fundamento: instrucciones AEAT Brexit IVA NIF-IVA / Modelo 349.'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'
@@ -5083,6 +5111,8 @@ wizard:
         help: Código postal del domicilio fiscal
       bienes-extranjero-above-threshold:
         help: Bienes en el extranjero superan el umbral legal
+      monedas-virtuales-extranjero-above-threshold:
+        help: Monedas virtuales en el extranjero superan el umbral del Modelo 721
       cloud-evidence-upload:
         help: Permitir subir evidencia sensible a proveedores LLM en la nube (desactivado
           por defecto).
@@ -5274,6 +5304,8 @@ wizard:
     obligations:
       bienes-extranjero-above-threshold:
         prompt: Bienes en el extranjero superan el umbral legal
+      monedas-virtuales-extranjero-above-threshold:
+        prompt: Monedas virtuales en el extranjero superan el umbral del Modelo 721
       does-intracomunitario:
         prompt: Realiza operaciones intracomunitarias
       has-employees:

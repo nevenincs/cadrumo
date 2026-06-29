@@ -560,6 +560,8 @@ class ProjectionModeloReadiness(BaseModel):
     """Readiness for one modelo target across profile and ledger facts.
 
     Attributes:
+        profile_refusal: Operator-facing refusal when profile facts are
+            present but disqualify the target period.
         period: Typed :class:`~aeat.core.Period` the readiness check was
             scoped to.
         ledger_period: The :class:`~aeat.core.Period` the ledger preflight
@@ -575,6 +577,7 @@ class ProjectionModeloReadiness(BaseModel):
     period: Period
     missing: tuple[ProfilePreflightRequirement, ...] = ()
     profile_ready: bool
+    profile_refusal: str = ""
     registry_ready: bool = True
     registry_refusal: str = ""
     binding_ready: bool = True
@@ -611,6 +614,7 @@ def _build_modelo_readiness(
     if not requests or active_profile_id is None:
         return ()
 
+    from .modelo._profile_readiness_gate import modelo_applicability_refusal, pre_activity_period_refusal
     from .user_profile._orchestration import build_lifecycle_service
     from .user_profile._preflight import ProfilePreflightService
     from .workflow import read_profile_bucket_by_id
@@ -632,15 +636,24 @@ def _build_modelo_readiness(
             period=readiness_period,
             revision=revision,
         )
-        missing_bindings = (
-            _missing_calculation_bindings_for_readiness(
-                registry_resolution.snapshot,
-                bucket_id=pointer.bucket_id,
-                profile_record=record,
-            )
-            if registry_resolution.snapshot is not None
-            else ()
+        profile_refusal = ""
+        applicability_refusal = modelo_applicability_refusal(
+            record=record,
+            bucket_id=pointer.bucket_id,
+            modelo=request.modelo,
         )
+        if applicability_refusal is not None:
+            profile_refusal = applicability_refusal[0]
+        pre_activity_refusal = pre_activity_period_refusal(
+            record=record,
+            bucket_id=pointer.bucket_id,
+            modelo=request.modelo,
+            filing_year=request.filing_year,
+            period=readiness_period,
+        )
+        if not profile_refusal and pre_activity_refusal is not None:
+            profile_refusal = pre_activity_refusal[0]
+        profile_ready = profile_report.ready and not profile_refusal
         ledger_report = None
         if registry_resolution.snapshot is not None and _snapshot_requires_ledger_preflight(
             registry_resolution.snapshot
@@ -649,6 +662,16 @@ def _build_modelo_readiness(
                 bucket_id=pointer.bucket_id,
                 period=readiness_period,
             )
+        missing_bindings = (
+            _missing_calculation_bindings_for_readiness(
+                registry_resolution.snapshot,
+                bucket_id=pointer.bucket_id,
+                profile_record=record,
+                ledger_sources_ready=ledger_report is not None and ledger_report.ready,
+            )
+            if registry_resolution.snapshot is not None
+            else ()
+        )
         reports.append(
             ProjectionModeloReadiness(
                 profile_id=profile_report.profile_id,
@@ -657,7 +680,8 @@ def _build_modelo_readiness(
                 filing_year=profile_report.filing_year,
                 period=profile_report.period,
                 missing=profile_report.missing,
-                profile_ready=profile_report.ready,
+                profile_ready=profile_ready,
+                profile_refusal=profile_refusal,
                 registry_ready=registry_resolution.ready,
                 registry_refusal=registry_resolution.refusal,
                 binding_ready=not missing_bindings,
@@ -671,7 +695,7 @@ def _build_modelo_readiness(
                 ledger_issues=tuple(ledger_report.issues) if ledger_report is not None else (),
                 ready=(
                     registry_resolution.ready
-                    and profile_report.ready
+                    and profile_ready
                     and not missing_bindings
                     and (ledger_report is None or ledger_report.ready)
                 ),
@@ -775,26 +799,26 @@ def _missing_calculation_bindings_for_readiness(
     *,
     bucket_id: str,
     profile_record: object,
+    ledger_sources_ready: bool,
 ) -> tuple[ProjectionModeloBindingRequirement, ...]:
-    """Return formula-consumed profile/manual bindings not available to calculation readiness."""
+    """Return non-constant registry bindings not available to calculation readiness.
+
+    Ledger aggregation bindings are available only through the ledger preflight
+    path. Once that preflight passes, the calculation mesh can resolve them from
+    the bucket ledger and readiness must not report them as missing operator
+    inputs.
+    """
     from ..domain.calculations.registry import (
         enum_consumed_binding_ids,
-        expression_binding_refs,
         revision_date_binding_ids,
     )
     from .modelo import ProfileBindingResolutionError, resolve_profile_sourced_bindings
 
     revision = snapshot.revision
-    decimal_consumed: set[str] = set()
-    for formula in revision.formulas:
-        decimal_consumed.update(str(binding_id) for binding_id in expression_binding_refs(formula.expression))
     enum_consumed = {str(binding_id) for binding_id in enum_consumed_binding_ids(revision)}
     date_consumed = {str(binding_id) for binding_id in revision_date_binding_ids(revision)}
-    consumed = decimal_consumed | enum_consumed | date_consumed
-    if not consumed:
+    if not revision.bindings:
         return ()
-
-    bindings_by_id = {str(binding.id): binding for binding in revision.bindings if str(binding.id) in consumed}
     try:
         profile_resolution = resolve_profile_sourced_bindings(
             snapshot,
@@ -816,13 +840,14 @@ def _missing_calculation_bindings_for_readiness(
         }
 
     missing: list[ProjectionModeloBindingRequirement] = []
-    for binding_id in sorted(consumed):
-        binding = bindings_by_id.get(binding_id)
-        source = _binding_source_value(binding.source) if binding is not None else "registry_missing"
-        if source == "profile":
-            if binding_id in profile_resolved:
-                continue
-        elif source != "manual_input":
+    for binding in sorted(revision.bindings, key=lambda item: str(item.id)):
+        binding_id = str(binding.id)
+        source = _binding_source_value(binding.source)
+        if source == "constant_value":
+            continue
+        if binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES and ledger_sources_ready:
+            continue
+        if source == "profile" and binding_id in profile_resolved:
             continue
         missing.append(
             ProjectionModeloBindingRequirement(

@@ -42,12 +42,14 @@ def _console_env(tmp_path: Path) -> dict[str, str]:
         {
             setting_env("aeat_secret_store_backend"): SecretStoreBackend.FILE.value,
             setting_env("aeat_secret_passphrase"): (base_settings.aeat_dev_test_database_password.get_secret_value()),
+            setting_env("aeat_secret_store_dir"): str(tmp_path / "storage" / "secrets"),
             setting_env("aeat_local_storage_root"): str(tmp_path / "storage"),
             setting_env("aeat_token_dir"): str(tmp_path / "tokens"),
             setting_env("aeat_runs_dir"): str(tmp_path / "runs"),
             setting_env("aeat_financial_txs_dir"): str(tmp_path / "txs"),
             setting_env("aeat_invoices_dir"): str(tmp_path / "invoices"),
             setting_env("aeat_drafts_dir"): str(tmp_path / "drafts"),
+            setting_env("aeat_output_language"): "en",
         },
     )
     return env
@@ -75,6 +77,9 @@ def test_root_help_uses_curated_two_root_shape() -> None:
     assert retired_init not in result.output
     assert "aeat app overview status" in result.output
     assert "aeat app live filed list" in result.output
+    assert "AEAT_LOCAL_STORAGE_ROOT" in result.output
+    assert "AEAT_SECRET_STORE_DIR" in result.output
+    assert "AEAT_SECRET_PASSPHRASE" in result.output
     assert "aeat config bucket" not in result.output
 
 
@@ -86,6 +91,8 @@ def test_config_and_app_help_use_curated_subtree_shape() -> None:
     assert config.exit_code == 0, config.output
     assert "aeat config - profile, auth, diagnostics" in config.output
     assert "aeat config profile create NAME" in config.output
+    assert "AEAT_LOCAL_STORAGE_ROOT" in config.output
+    assert "AEAT_SECRET_STORE_BACKEND=file" in config.output
     assert "aeat config profile show [NAME]" in config.output
     assert ("aeat config profile " + "view [NAME]") not in config.output
     assert retired_init not in config.output
@@ -139,6 +146,83 @@ def test_installed_console_base_command_starts_clean_workspace(tmp_path: Path) -
     assert "ImportError" not in combined_output
     assert "integrity-warning" not in combined_output
     assert "unreadable_rows" not in combined_output
+
+
+def test_installed_console_profile_create_honors_isolated_storage_env(tmp_path: Path) -> None:
+    aeat_exe = shutil.which("aeat")
+    assert aeat_exe is not None
+    env = _console_env(tmp_path)
+
+    create = subprocess.run(
+        [
+            aeat_exe,
+            "config",
+            "profile",
+            "create",
+            "operator",
+            "--quiet",
+            "--accept-defaults",
+            "--entity-type",
+            "natural_person",
+            "--tax-id",
+            "12345678Z",
+            "--name",
+            "Operator",
+            "--surnames",
+            "Storage",
+            "--irpf-income-categories",
+            "actividad_economica",
+            "--activity",
+            "Design consulting",
+            "--address-postcode",
+            "28015",
+            "--activity-start-date",
+            "2025-01-01",
+            "--tax-residence-ccaa",
+            "madrid",
+            "--iva-regime",
+            "general",
+            "--irpf-estimation-regime",
+            "directa_simplificada",
+        ],
+        cwd=Path.cwd(),
+        env=env,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=60,
+        check=False,
+    )
+    combined_create = f"{create.stdout}\n{create.stderr}"
+    assert create.returncode == 0, combined_create
+
+    logs = subprocess.run(
+        [aeat_exe, "config", "repair", "logs"],
+        cwd=Path.cwd(),
+        env=env,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=60,
+        check=False,
+    )
+    combined_logs = f"{logs.stdout}\n{logs.stderr}"
+    assert logs.returncode == 0, combined_logs
+    assert str(tmp_path / "storage" / "logs") in combined_logs
+
+    listed = subprocess.run(
+        [aeat_exe, "config", "profile", "list"],
+        cwd=Path.cwd(),
+        env=env,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=60,
+        check=False,
+    )
+    combined_list = f"{listed.stdout}\n{listed.stderr}"
+    assert listed.returncode == 0, combined_list
+    assert "operator" in listed.stdout
 
 
 def test_installed_console_profile_create_fails_fast_without_prompt_host(tmp_path: Path) -> None:

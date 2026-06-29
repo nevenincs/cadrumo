@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     import click
 from typer._types import TyperChoice as _TyperChoice
 
+from ._stdio import _ensure_help_render_width as _ensure_help_render_width
 from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
 
 # Force UTF-8 on stdout / stderr before any echo, log, or Rich console
@@ -372,13 +373,20 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     from ...application.storage_write_policy import inspect_storage_write_policy
     from ...core import resolve_active_bucket_id
     from ._bootstrap_exempt import is_bootstrap_exempt
+    from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
     from ._errors import CliRefusedBoundaryError
 
     verb_path = _full_invocation_verb_path() or _verb_path_from_context(ctx)
     exempt = is_bootstrap_exempt(verb_path)
-    write_policy = inspect_storage_write_policy(verb_path, bootstrap_exempt=exempt)
+    argv_tokens = _full_invocation_tokens() or tuple(
+        str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ())
+    )
+    write_policy = inspect_storage_write_policy(verb_path, bootstrap_exempt=exempt, argv_tokens=argv_tokens)
     if not write_policy.allowed:
-        raise CliRefusedBoundaryError(write_policy.render_refusal_message())
+        raise CliRefusedBoundaryError(
+            write_policy.render_refusal_message(),
+            context=write_policy.refusal_context(),
+        )
     active_bucket_id = resolve_active_bucket_id()
     if active_bucket_id is None:
         # No active profile: each non-exempt verb refuses for itself
@@ -483,7 +491,10 @@ def _is_introspection_only_invocation(ctx: typer.Context) -> bool:
         if subcommand is None:
             return True
         command = subcommand
-    return False
+    # A bare subgroup invocation (for example `aeat config profile`) can
+    # only render that group's help/callback surface. Treat it like help so
+    # discovery never asks for the encrypted profile passphrase first.
+    return hasattr(command, "list_commands")
 
 
 def _verb_path_from_context(ctx: typer.Context) -> str | None:
@@ -546,14 +557,9 @@ def _full_invocation_verb_path() -> str | None:
     so ``"config profile create alice"`` matches the exempt entry
     ``"config profile create"``.
     """
-    import sys
-    from pathlib import Path
-
-    executable = Path(sys.argv[0]).name.lower()
-    if executable not in {"aeat", "aeat.exe", "__main__.py"}:
+    tokens = list(_full_invocation_tokens())
+    if not tokens:
         return None
-
-    tokens = sys.argv[1:]
     verb_tokens: list[str] = []
     skip_next = False
     for token in tokens:
@@ -568,6 +574,17 @@ def _full_invocation_verb_path() -> str | None:
     if not verb_tokens:
         return None
     return " ".join(verb_tokens)
+
+
+def _full_invocation_tokens() -> tuple[str, ...]:
+    """Return raw operator argv tokens for real ``aeat`` entrypoint runs."""
+    import sys
+    from pathlib import Path
+
+    executable = Path(sys.argv[0]).name.lower()
+    if executable not in {"aeat", "aeat.exe", "__main__.py"}:
+        return ()
+    return tuple(sys.argv[1:])
 
 
 def _import_failure_surface(name: str, error: ModuleNotFoundError) -> typer.Typer:
@@ -713,7 +730,8 @@ def main() -> None:
     import sys
 
     _apply_language_argv_to_environment(sys.argv[1:])
-    app(prog_name="aeat")
+    with _ensure_help_render_width():
+        app(prog_name="aeat")
 
 
 __all__ = ["AppRootResult", "RootStatusResult", "app", "main"]

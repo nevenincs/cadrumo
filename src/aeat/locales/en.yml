@@ -504,6 +504,7 @@ application:
       import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
       import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
       unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
+      import_missing_filing_baseline: 'The bucket archive profile is missing filing identity fields: %{missing_flags}. Repair the source profile and export it again.'
   calculations:
     iva_compensation:
       errors:
@@ -725,6 +726,10 @@ application:
         which cannot be mapped to a registry filing period.
       export_revision_state_refused: Calculation revision %{calculation_revision_id}
         is not verified-complete or filed and cannot be exported.
+      export_unsupported: Modelo %{modelo} cannot be exported to fichero-BOE because
+        the registry snapshot has no complete export_layouts definition. Calculation,
+        verification, and local filing records may still exist, but this command cannot
+        produce an AEAT upload file for this modelo.
       external_filing_evidence_reference_blank: External-filing import requires a
         non-empty evidence_reference_id.
       external_filing_no_casilla_values: External-filing import requires at least
@@ -835,9 +840,13 @@ application:
           origin=%{origin}. The within-year chain is admitted for local export, but
           the carried value is locally evidenced (app_filing), not AEAT-evidenced;
           file every period with AEAT externally.'
-        next_action: Export and file each period with AEAT externally, then import
-          the official justificante/CSV/live evidence to upgrade the local chain when
-          available.
+        next_action: >-
+          Export and file each period with AEAT externally, then upgrade
+          the local chain with official evidence; use `aeat app live justificante
+          pull` when live access is available, or `aeat app modelo filing-record
+          import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id
+          CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID
+          --file PATH` for evidence you already hold.
       dt12a_reduccion_next_action: Supply --rescate-plan-pensiones-capital IMPORTE
         --rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE --rescate-plan-pensiones-aportaciones-totales
         IMPORTE to aeat app modelo work calculate to auto-inject the DT 12a reduccion
@@ -1933,13 +1942,7 @@ cli:
         row_empty_key: Empty field key in --row {token}; each field must be in KEY=VALUE
           format.
         row_empty_spec: --row spec cannot be empty; expected TYPE FIELD=value [...]
-        row_help: 'Typed detail row for multi-record informational modelos. Format:
-          TYPE FIELD=value [FIELD=value ...]. TYPE is ''miembro'' (M184 attribution
-          member), ''vinculada'' (M232 related-party operation), ''operador'' (M349
-          intracom operator), or ''contraparte'' (M347 declared counterparty). Repeat
-          to add multiple rows. M184 example: --row ''miembro nif=12345678A porcentaje=40
-          importe=10000''. M349 example: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
-          clave_operacion=E importe=50000''.'
+        row_help: 'Typed detail row for multi-record informational modelos. Format: TYPE FIELD=value [FIELD=value ...]. TYPE is ''miembro'' (M184 attribution member), ''vinculada'' (M232 related-party operation), ''operador'' (M349 intracom operator), or ''contraparte'' (M347 declared counterparty). Repeat to add multiple rows. Quote the whole row argument; quote spaced legal names inside it. M184 example: --row ''miembro nif=12345678A porcentaje=40 importe=10000''. M349 example: --row ''operador codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" clave_operacion=E importe=50000''.'
         row_kv_format_error: --row field {token} must be in KEY=VALUE format.
         row_m349_invalid_nif: '--row operador: nif_comunitario {nif} does not match
           the expected NIF-IVA format for country {pais} (Council Directive 2006/112/EC
@@ -2519,8 +2522,8 @@ cli:
       actor_help: Operator name recorded on the bucket event
       amount_help: Transaction amount in the transaction currency (decimal, e.g. 1200.50).
       attachment_help: Supplementary attachment id (repeatable)
-      business_pct_help: Business-use share from 0 to 1 (only when classification
-        is MIXED)
+      business_pct_help: Business-use share from 0 to 1; only for MIXED rows. Omit
+        for fully BUSINESS rows.
       category_help: Deductible-expense category id (expense transactions only; income
         needs no category)
       classification_help: Business classification (BUSINESS / PERSONAL / MIXED /
@@ -2556,17 +2559,24 @@ cli:
         by the application and cannot be assigned by hand. Choose one of: BUSINESS,
         PERSONAL, MIXED, or omit --classification to leave the row unclassified.'
       taxable_base_help: IVA-exclusive base amount
-      usage_ratio_help: Usage-ratio id for proportional business use
+      usage_ratio_help: Existing configured usage-ratio id for proportional business
+        use. Use a category id shown by 'aeat app ledger ratios list' or 'aeat app
+        ledger ratios eligible'; create one with 'aeat app ledger ratios set <category-id>
+        <ratio>'. Not arbitrary prose.
       value_date_help: Value date (YYYY-MM-DD)
     allocate:
       actor_help: Operator name recorded on the bucket event
-      business_pct_help: Business-use share from 0 to 1
+      business_pct_help: Business-use share from 0 to 1 for MIXED/proportional rows;
+        do not use ledger allocate for a fully BUSINESS row.
       category_help: Deductible-expense category id (expense transactions only; income
         needs no category)
       help: Record business/private proportionality for a ledger transaction
       id_help: Ledger transaction id to allocate
       prorrata_reference_help: IVA prorrata reference for IVA workflows
-      usage_ratio_help: Usage-ratio id for proportional business use
+      usage_ratio_help: Existing configured usage-ratio id for proportional business
+        use. Use a category id shown by 'aeat app ledger ratios list' or 'aeat app
+        ledger ratios eligible'; create one with 'aeat app ledger ratios set <category-id>
+        <ratio>'. Not arbitrary prose.
     app_help: Management of accounting ledgers and IVA records
     archive:
       actor_help: Operator name recorded on the bucket event
@@ -2597,6 +2607,9 @@ cli:
       help: Probe ledger transactions in the addressed profile (defaults to the active
         profile) and report anomaly rows aggregated across every period a transaction
         touches. Local-only; never contacts AEAT.
+      period_help: 'Optional filing period as an AEAT token: 1T-4T (quarters), 0A
+        (annual), 01-12 (months). Combine with --year to match ledger status.'
+      year_help: Filing year for --period (e.g. 2024).
     classify:
       actor_help: Operator name recorded on the bucket event
       apply_help: 'Persist the LLM suggestion with llm: provenance instead of only
@@ -2613,7 +2626,8 @@ cli:
       bulk_all_failed: 'bulk classify failed: every row failed; no ledger rows were
         updated'
       business_pct_help: Business-use share from 0 to 1; required with --classification
-        MIXED and rejected for any other classification
+        MIXED, rejected for any other classification, and omitted for fully BUSINESS
+        rows
       business_pct_requires_mixed: Refused. --business-pct only applies to a MIXED
         classification. A BUSINESS or PERSONAL row is wholly business or wholly private;
         drop --business-pct, or pass --classification MIXED.
@@ -2622,15 +2636,15 @@ cli:
       classification_help: Business classification state for the transaction
       classification_required: --classification is required when --from-csv is not
         provided.
-      counterparty_eu_member_state_help: EU member state of the counterparty (ISO
-        3166-1 alpha-2 lowercase, e.g. de); required with --iva-category intra_community_supply,
-        prohibited with export_third_country_zero_rated
+      counterparty_eu_member_state_help: EU member state or Northern Ireland IVA
+        prefix of the counterparty (ISO 3166-1 alpha-2 lowercase, e.g. de or xi);
+        required with --iva-category intra_community_supply, prohibited with export_third_country_zero_rated
       evidence_acknowledged_help: Acknowledge that reading evidence with a cloud provider
         uploads it off your machine (required by the consent gate).
       from_csv_exclusive: --from-csv cannot be combined with a transaction id or --classification.
       from_csv_help: Path to a CSV file with columns transaction_id, classification[,
-        category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category,
-        irpf_category].
+        category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
+        iva_category, irpf_category].
       from_csv_not_found: 'CSV file not found: %{path}'
       help: Classify one ledger transaction in the active profile
       id_help: Ledger transaction id to classify
@@ -2830,9 +2844,11 @@ cli:
         invoice_not_found: This id was not found in the reconciliation invoice catalogue,
           which is populated by the invoice import and reconciliation flows. Ids minted
           by 'aeat app ledger invoice add' are operator invoice records and cannot
-          be linked here. To attach purchase-invoice evidence, run 'aeat app ledger
-          link <tx> --evidence-id <id>' (or 'aeat app ledger attach') with an id from
-          'aeat app ledger evidence add'.
+          be linked here. To create a linkable catalogue invoice manually, run 'aeat
+          app ledger invoice catalogue create' and pass that invoice_id to --invoice-id.
+          To attach purchase-invoice evidence, run 'aeat app ledger link <tx> --evidence-id
+          <id>' (or 'aeat app ledger attach') with an id from 'aeat app ledger evidence
+          add'.
         missing_target: Supply at least one of --invoice-id or --evidence-id.
       evidence_id_help: Purchase-invoice evidence id minted by 'aeat app ledger evidence
         add', attached to the transaction.
@@ -2841,8 +2857,8 @@ cli:
         never contacts AEAT.
       id_help: Ledger transaction id (SHA-256 or unambiguous prefix).
       invoice_id_help: Rich invoice-catalogue id from an imported or reconciled invoice,
-        bound bidirectionally to the transaction. This is NOT an 'aeat app ledger
-        invoice add' id.
+        or from 'aeat app ledger invoice catalogue create', bound bidirectionally
+        to the transaction. This is NOT an 'aeat app ledger invoice add' id.
     list:
       by_group_help: Section the listing by group label.
       column_header: "id\tfull_id\tdate\tamount\tdescription\treview_status"
@@ -3066,6 +3082,9 @@ cli:
         footer: Run aeat --help for the full overview.
         heading: aeat config - profile, auth, diagnostics
         paragraph_durable_state: Config commands manage local durable state.
+        paragraph_storage_isolation: For an isolated blank state, set AEAT_LOCAL_STORAGE_ROOT,
+          AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR, and AEAT_SECRET_PASSPHRASE;
+          logs default under that storage root.
         profile_censo: Sync AEAT censo facts for the active profile.
         profile_delete: Delete a profile after explicit confirmation.
         profile_duplicate: Copy a profile to a new id.
@@ -3105,6 +3124,9 @@ cli:
         modelo_bindings_list: List registry binding coverage.
         modelo_list: List supported modelos.
         modelo_work: Create and operate modelo work units.
+        paragraph_storage_isolation: For an isolated blank state, set AEAT_LOCAL_STORAGE_ROOT,
+          AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR, and AEAT_SECRET_PASSPHRASE;
+          logs default under that storage root.
         paragraph_two_roots: 'The CLI has exactly two roots: config and app.'
         paragraph_type_help: Use config for local state and app for tax work.
         section_daily_ledger: Daily ledger work
@@ -4417,6 +4439,7 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
+    modelo_349_country_prefix_context: 'Modelo 349 rejects country prefix {country_code} for operation key {clave_operacion} in {filing_year}/{period}: {reason}. Authority: AEAT Brexit IVA NIF-IVA / Modelo 349 instructions.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'
@@ -4777,6 +4800,8 @@ wizard:
         help: Tax address postcode
       bienes-extranjero-above-threshold:
         help: Foreign-held assets above legal threshold
+      monedas-virtuales-extranjero-above-threshold:
+        help: Virtual currencies held abroad above Modelo 721 threshold
       cloud-evidence-upload:
         help: Allow uploading sensitive evidence to cloud LLM providers (off by default).
       country-of-fiscal-residence:
@@ -4957,6 +4982,8 @@ wizard:
     obligations:
       bienes-extranjero-above-threshold:
         prompt: Foreign-held assets above legal threshold
+      monedas-virtuales-extranjero-above-threshold:
+        prompt: Virtual currencies held abroad above Modelo 721 threshold
       does-intracomunitario:
         prompt: Conducts intracomunitario operations
       has-employees:

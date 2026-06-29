@@ -209,6 +209,184 @@ def test_ledger_add_gross_mismatch_surfaces_clean_refusal_not_pydantic_repr(
     assert "mappingproxy(" not in combined, combined
 
 
+def test_ledger_classify_persists_professional_income_net_of_irpf_withholding(
+    tmp_path: Path,
+) -> None:
+    """A net bank receipt can still carry the invoice base and IVA facts.
+
+    Persona repro: professional invoice 2000 + 420 IVA, 300 IRPF withheld,
+    bank receipt 2120. The operator first records the bank movement and then
+    classifies it with the invoice substrate. The production CLI path must
+    persist those facts so Modelo 303 and Renta aggregation can read them.
+    """
+    added = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2025-07-15",
+            "--amount",
+            "2120.00",
+            "--direction",
+            "INCOMING",
+            "--description",
+            "Factura profesional neta de retencion",
+        ],
+    )
+    assert added.exit_code == 0, added.output
+    transaction_id = json.loads(added.output)["result"]["transaction_id"]
+
+    classified = _invoke(
+        [
+            "app",
+            "ledger",
+            "classify",
+            transaction_id,
+            "--classification",
+            "BUSINESS",
+            "--taxable-base",
+            "2000.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "420.00",
+            "--irpf-category",
+            "actividad_economica",
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+    assert classified.exit_code == 0, classified.output
+
+    viewed = _invoke(["--format", "json", "app", "ledger", "view", transaction_id])
+    assert viewed.exit_code == 0, viewed.output
+    transaction = json.loads(viewed.output)["result"]["transaction"]
+
+    assert transaction["amount"] == "2120"
+    assert transaction["taxable_base"] == "2000"
+    assert transaction["iva_amount"] == "420"
+    assert transaction["iva_rate"] == "0.21"
+    assert transaction["irpf_category"] == "actividad_economica"
+
+
+def test_ledger_classify_refuses_activity_income_when_base_cash_would_be_iva_sized_withholding(
+    tmp_path: Path,
+) -> None:
+    """A base-only professional cash receipt must not persist as IVA-sized retencion."""
+    added = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2025-07-15",
+            "--amount",
+            "2000.00",
+            "--direction",
+            "INCOMING",
+            "--description",
+            "Factura profesional introducida por base",
+        ],
+    )
+    assert added.exit_code == 0, added.output
+    transaction_id = json.loads(added.output)["result"]["transaction_id"]
+
+    classified = _invoke(
+        [
+            "app",
+            "ledger",
+            "classify",
+            transaction_id,
+            "--classification",
+            "BUSINESS",
+            "--taxable-base",
+            "2000.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "420.00",
+            "--irpf-category",
+            "actividad_economica",
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en", "COLUMNS": "120"},
+    )
+
+    assert classified.exit_code != 0
+    assert "inferred IRPF withholding exceeds" in classified.output
+
+
+def test_ledger_classify_persists_rent_paid_net_of_withholding(
+    tmp_path: Path,
+) -> None:
+    """A rent bank payment net of withholding can keep full invoice IVA facts.
+
+    Persona repro: commercial rent 1000 + 210 IVA - 190 withholding = 1020 paid.
+    The CLI path must persist the full rent invoice substrate so Modelo 303 can
+    aggregate the 210 IVA soportado instead of rejecting the row at classify time.
+    """
+    added = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2025-04-05",
+            "--amount",
+            "1020.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "Alquiler local neto de retencion",
+        ],
+    )
+    assert added.exit_code == 0, added.output
+    transaction_id = json.loads(added.output)["result"]["transaction_id"]
+
+    classified = _invoke(
+        [
+            "app",
+            "ledger",
+            "classify",
+            transaction_id,
+            "--classification",
+            "BUSINESS",
+            "--category-id",
+            "arrendamiento_local",
+            "--taxable-base",
+            "1000.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "210.00",
+            "--iva-category",
+            "domestic_general_21",
+            "--irpf-category",
+            "arrendamiento_local",
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+    assert classified.exit_code == 0, classified.output
+
+    viewed = _invoke(["--format", "json", "app", "ledger", "view", transaction_id])
+    assert viewed.exit_code == 0, viewed.output
+    transaction = json.loads(viewed.output)["result"]["transaction"]
+
+    assert transaction["amount"] == "1020"
+    assert transaction["direction"] == "OUTGOING"
+    assert transaction["category_id"] == "arrendamiento_local"
+    assert transaction["taxable_base"] == "1000"
+    assert transaction["iva_amount"] == "210"
+    assert transaction["iva_rate"] == "0.21"
+    assert transaction["iva_category"] == "domestic_general_21"
+    assert transaction["irpf_category"] == "arrendamiento_local"
+
+
 def test_ledger_add_accepts_nonnegative_amount_with_direction(tmp_path: Path) -> None:
     """``ledger add --amount=49.99 --direction OUTGOING`` is accepted."""
     result = _invoke(
@@ -623,6 +801,43 @@ def _add_eligible_mixed_expense() -> str:
     return json.loads(result.output)["result"]["transaction_id"]
 
 
+def test_usage_ratio_help_points_to_configured_ratio_commands(tmp_path: Path) -> None:
+    """`--usage-ratio-id` help names the configured-ratio discovery path."""
+
+    for args in (
+        ["app", "ledger", "add", "--help"],
+        ["app", "ledger", "allocate", "--help"],
+    ):
+        result = _invoke(args, env={"AEAT_OUTPUT_LANGUAGE": "en", "COLUMNS": "260"})
+
+        assert result.exit_code == 0, result.output
+        flat = _flatten_box(result.output or "")
+        assert "--usage-ratio-id" in flat, result.output
+        assert "aeat app ledger ratios list" in flat, result.output
+        assert "aeat app ledger ratios eligible" in flat, result.output
+        assert "aeat app ledger ratios set" in flat, result.output
+        assert "category-id" in flat, result.output
+        assert "Not arbitrary prose" in flat, result.output
+
+
+def test_business_pct_help_is_mixed_only_across_public_verbs(tmp_path: Path) -> None:
+    """`--business-pct` help tells operators to omit it for fully BUSINESS rows."""
+
+    for args in (
+        ["app", "ledger", "add", "--help"],
+        ["app", "ledger", "classify", "--help"],
+        ["app", "ledger", "allocate", "--help"],
+    ):
+        result = _invoke(args, env={"AEAT_OUTPUT_LANGUAGE": "en", "COLUMNS": "260"})
+
+        assert result.exit_code == 0, result.output
+        flat = _flatten_box(result.output or "")
+        assert "--business-pct" in flat, result.output
+        assert "MIXED" in flat, result.output
+        assert "BUSINESS" in flat, result.output
+        assert "fully BUSINESS" in flat, result.output
+
+
 def test_mixed_row_with_business_pct_alone_is_not_preflight_ready(tmp_path: Path) -> None:
     """A MIXED row classified with ``--business-pct`` alone fails preflight.
 
@@ -656,6 +871,10 @@ def test_mixed_row_with_business_pct_alone_is_not_preflight_ready(tmp_path: Path
     assert preflight.exit_code == 0, preflight.output
     assert "ready\tfalse" in preflight.output, preflight.output
     assert "missing_proportionality_reference" in preflight.output, preflight.output
+    assert "aeat app ledger ratios list" in preflight.output, preflight.output
+    assert "aeat app ledger ratios eligible" in preflight.output, preflight.output
+    assert "aeat app ledger ratios set" in preflight.output, preflight.output
+    assert "--usage-ratio-id <category-id>" in preflight.output, preflight.output
 
 
 def test_documented_mixed_use_flow_reaches_preflight_ready(tmp_path: Path) -> None:

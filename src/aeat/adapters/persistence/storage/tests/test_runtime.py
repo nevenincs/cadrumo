@@ -10,7 +10,7 @@ import pytest
 
 from .....core import BucketPointer, write_pointer
 from .....core.config import Settings, StorageRouteKind, override_settings
-from .....core.errors import resolve_error_message
+from .....core.errors import AeatError, resolve_error_message
 from .....core.external_constants import OutputLanguage
 from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
 from ..errors import StorageValidationError
@@ -215,6 +215,15 @@ def test_named_bucket_runtime_refuses_live_explicit_database_url(tmp_path: Path)
     assert runtime.readiness.ready is False
     assert runtime.route_kind is StorageRouteKind.EXPLICIT_DATABASE_URL
     assert _issue_codes(runtime) == (StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET,)
+    issue = runtime.readiness.issues[0]
+    assert "AEAT_DATABASE_URL" in issue.message
+    assert "AEAT_LOCAL_STORAGE_ROOT" in issue.recovery_hint
+    with pytest.raises(StorageValidationError) as raised:
+        runtime.require_ready()
+    assert isinstance(raised.value, AeatError)
+    assert raised.value.context is not None
+    assert "AEAT_DATABASE_URL" in str(raised.value.context["recovery"])
+    assert "AEAT_LOCAL_STORAGE_ROOT" in str(raised.value.context["recovery"])
 
 
 def test_named_bucket_runtime_rejects_blank_bucket_with_localized_validation(tmp_path: Path) -> None:

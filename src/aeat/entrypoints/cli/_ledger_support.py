@@ -20,7 +20,11 @@ from ...core.i18n import tr
 from ...domain.categories import SpendingCategory
 from ...domain.contribuyente._renta_codes import FiscalResidency
 from ...domain.deadlines._models import IrpfSpecialRegime
-from ...domain.transactions import TransactionCatalogueRepository, TransactionIdPrefixError
+from ...domain.transactions import (
+    TransactionCatalogueRepository,
+    TransactionIdPrefixError,
+    TransactionValidationError,
+)
 from ._common import _bad, parse_decimal_amount, parse_optional_decimal_amount
 
 
@@ -244,6 +248,16 @@ def _ledger_validation_bad(error: ValidationError) -> typer.BadParameter:
         tr(
             "cli.ledger.errors.command_input_invalid",
             details=details or tr("cli.ledger.errors.command_input_invalid_fallback"),
+        ),
+    )
+
+
+def _ledger_transaction_validation_bad(error: TransactionValidationError) -> typer.BadParameter:
+    """Convert a typed transaction validation error into a specific refusal."""
+    return _bad(
+        tr(
+            "cli.ledger.errors.command_input_invalid",
+            details=str(error) or tr("cli.ledger.errors.command_input_invalid_fallback"),
         ),
     )
 

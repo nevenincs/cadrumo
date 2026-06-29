@@ -329,12 +329,8 @@ def _classify_renta_transaction(
     # their value_in_eur is None and effective_eur_amount falls back to
     # raw.amount.
     eur_amount = effective_eur_amount(transaction)
-    business_amount = _business_amount(
-        eur_amount,
-        transaction.business_classification,
-        transaction.business_pct,
-    )
-    if business_amount is None:
+    proportion = business_proportion(transaction.business_classification, transaction.business_pct)
+    if proportion is None:
         reason = (
             RentaLedgerAggregationIssueReason.PERSONAL_TRANSACTION
             if transaction.business_classification is BusinessClassification.PERSONAL
@@ -349,6 +345,7 @@ def _classify_renta_transaction(
                 f"business classification {transaction.business_classification.value!r} cannot feed Renta expenses"
             ),
         )
+    business_amount = _business_fact_amount(eur_amount, proportion)
     if category_id is None:
         return RentaLedgerAggregationIssue(
             transaction_id=transaction_id,
@@ -394,6 +391,8 @@ def _classify_renta_transaction(
     )
     if isinstance(evidence_payload, RentaLedgerAggregationIssue):
         return evidence_payload
+    taxable_base = _business_fact_amount(_taxable_base_for(transaction, evidence_payload), proportion)
+    iva_amount = _business_fact_amount(_iva_amount_for(transaction, evidence_payload), proportion)
     try:
         fact = RentaDeductibleExpenseFact(
             transaction_id=transaction_id,
@@ -403,8 +402,8 @@ def _classify_renta_transaction(
             invoice_issue_date=evidence_payload.invoice_issue_date,
             posting_date=transaction.raw.booked_date,
             gross_amount=business_amount,
-            taxable_base=_taxable_base_for(transaction, evidence_payload),
-            iva_amount=_iva_amount_for(transaction, evidence_payload),
+            taxable_base=taxable_base,
+            iva_amount=iva_amount,
             direction=direction,
             category=category,
             activity_key=activity_key,
@@ -471,16 +470,11 @@ def _renta_direction_for(
     return None
 
 
-def _business_amount(
-    amount: Decimal,
-    classification: BusinessClassification,
-    business_pct: Decimal | None,
-) -> Decimal | None:
+def _business_fact_amount(amount: Decimal | None, proportion: Decimal) -> Decimal | None:
+    if amount is None:
+        return None
     if amount < Decimal("0"):
         raise ValueError("ledger amount must be a non-negative magnitude")
-    proportion = business_proportion(classification, business_pct)
-    if proportion is None:
-        return None
     return amount * proportion
 
 

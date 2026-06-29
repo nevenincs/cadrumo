@@ -425,6 +425,9 @@ class TaxpayerProfile(BaseModel):
             threshold during the prior year.
         bienes_extranjero_above_threshold: Whether the taxpayer holds
             bienes en el extranjero above the legal threshold.
+        monedas_virtuales_extranjero_above_threshold: Whether the
+            taxpayer holds virtual currencies abroad above the Modelo
+            721 threshold.
         iva: IVA-specific filing facts that can change filing cadence.
         cross_period_group_member_rosters: Expected group-member rosters
             keyed by upstream modelo, filing year, and period. These
@@ -475,6 +478,7 @@ class TaxpayerProfile(BaseModel):
     does_intracomunitario: bool = False
     third_party_transactions_above_347_threshold: bool = False
     bienes_extranjero_above_threshold: bool = False
+    monedas_virtuales_extranjero_above_threshold: bool = False
     iva: ModeloIVAProfile = Field(default_factory=ModeloIVAProfile)
     cross_period_group_member_rosters: tuple[CrossPeriodGroupMemberRoster, ...] = Field(default_factory=tuple)
     enrollment: ModeloEnrollment = Field(default_factory=ModeloEnrollment)

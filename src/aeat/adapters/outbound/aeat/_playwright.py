@@ -27,6 +27,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from ....core.errors import CoreError
+
 try:
     from playwright.async_api import Error as PlaywrightError
     from playwright.async_api import TimeoutError as PlaywrightTimeoutError
@@ -34,7 +36,7 @@ except ImportError:  # the optional `browser` extra is not installed
 
     # TYPE-IGNORE-RATIONALE-OPTIONAL-BROWSER-EXTRA: fallback redefinition of the playwright
     # async_api name when the optional `browser` extra is absent (the real symbol is the import above).
-    class PlaywrightError(Exception):  # type: ignore[no-redef]
+    class PlaywrightError(CoreError):  # type: ignore[no-redef]
         """Fallback for ``playwright.async_api.Error`` when the browser extra is absent.
 
         The fallback exists only so modules such as

@@ -9,6 +9,7 @@ to application services by the caller.
 from __future__ import annotations
 
 import re
+import shlex
 from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
 from typing import Annotated
@@ -21,6 +22,7 @@ from ...application.modelo import (
     Modelo184MemberRow,
     Modelo232VinculadaRow,
     Modelo347ContraparteRow,
+    Modelo349CountryPrefixContextError,
     Modelo349OperadorRow,
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
@@ -32,14 +34,18 @@ from ...application.modelo import (
     WorkCalculateInputBundle,
     WorkUnitNotFoundError,
     build_work_calculate_input_bundle,
+    declared_modelo_period_tokens,
     get_work_unit,
+    modelo_work_create_refusal_locale_key,
+    validate_m349_country_prefix_context,
     validate_m349_nif_format,
 )
-from ...core.errors import resolve_error_message
+from ...core.errors import AeatError, build_error_envelope, resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry import BindingId, CasillaId, RelationId, validated_casilla_id
+from ._errors import CliRefusedBoundaryError
 from ._modelo_rendering import short_id
 
 _log = get_logger(__name__)
@@ -152,6 +158,47 @@ def parse_binding_override(spec: str) -> tuple[BindingId, str]:
     return _BINDING_ID_ADAPTER.validate_python(key), value
 
 
+def unsupported_local_work_period_refusal(
+    *,
+    modelo: str | None,
+    token: str | None,
+) -> CliRefusedBoundaryError | None:
+    """Return the central unsupported-work refusal for declared non-Period tokens.
+
+    Some registry-visible modelos declare event tokens such as ``evento`` that
+    are valid registry metadata but cannot become a local typed
+    :class:`aeat.core.Period`. Commands that require a local filing period must
+    not report those tokens as both valid and invalid. If the modelo is
+    centrally marked unsupported for local work, reuse that refusal.
+    """
+    if modelo is None or token is None:
+        return None
+    modelo_code = modelo.strip()
+    period_token = token.strip()
+    if not modelo_code or not period_token:
+        return None
+
+    locale_key = modelo_work_create_refusal_locale_key(modelo_code)
+    if locale_key is None:
+        return None
+
+    try:
+        declared = declared_modelo_period_tokens(modelo_code)
+    except AeatError:
+        return None
+    except Exception:
+        _log.debug(
+            "unsupported_local_work_period_refusal: unexpected period lookup failure for modelo=%r",
+            modelo_code,
+            exc_info=True,
+        )
+        return None
+
+    if not any(period_token.casefold() == declared_token.casefold() for declared_token in declared):
+        return None
+    return CliRefusedBoundaryError(translated_message=locale_key, context={"modelo": modelo_code})
+
+
 def validate_relation_key(key: str, spec: str) -> None:
     """Validate a ``--relation`` key against :data:`RelationId` constraints."""
     try:
@@ -212,7 +259,17 @@ def parse_casilla_override(spec: str) -> tuple[CasillaId, str]:
 
 def parse_row_spec(spec: str) -> ModeloDetailRow:
     """Parse a ``--row TYPE FIELD=value ...`` spec into a typed row model."""
-    parts = spec.split()
+    try:
+        parts = shlex.split(spec)
+    except ValueError as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.row_validation_error",
+                default=f"--row 'spec' failed validation: {exc}",
+                row_type="spec",
+                error=str(exc),
+            ),
+        ) from exc
     if not parts:
         raise typer.BadParameter(
             tr(
@@ -368,6 +425,7 @@ def work_calculate_input_bundle_from_cli(
         parse_meses_trabajo_hijo_spec(spec) for spec in (meses_trabajo_con_hijo_menor_3 or ())
     )
     try:
+        _validate_m349_detail_rows_for_work_unit(work_unit_id, detail_rows)
         return build_work_calculate_input_bundle(
             work_unit_id=work_unit_id,
             casilla_overrides=casilla_pairs,
@@ -421,9 +479,32 @@ def work_calculate_input_bundle_from_cli(
         raise typer.BadParameter(str(exc)) from exc
 
 
+def _validate_m349_detail_rows_for_work_unit(work_unit_id: str, rows: tuple[ModeloDetailRow, ...]) -> None:
+    operador_rows = tuple(row for row in rows if isinstance(row, Modelo349OperadorRow))
+    if not operador_rows:
+        return
+    unit = get_work_unit(work_unit_id)
+    if str(unit.modelo) != "349":
+        return
+    for row in operador_rows:
+        try:
+            validate_m349_country_prefix_context(
+                country_code=row.codigo_pais,
+                clave_operacion=row.clave_operacion,
+                filing_year=unit.filing_year,
+                period=unit.period.registry_token,
+            )
+        except Modelo349CountryPrefixContextError as exc:
+            raise bad_parameter_from_error(exc) from exc
+
+
 def bad_parameter_from_error(exc: BaseException) -> typer.BadParameter:
     """Render registered domain errors before crossing the Typer boundary."""
-    return typer.BadParameter(resolve_error_message(exc))
+    message = resolve_error_message(exc)
+    suggestion = build_error_envelope(exc).suggestion
+    if suggestion:
+        message = f"{message}\nRun `{suggestion}`"
+    return typer.BadParameter(message)
 
 
 def bad_parameter_from_localized_context(exc: BaseException) -> typer.BadParameter:

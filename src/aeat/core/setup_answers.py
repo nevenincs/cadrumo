@@ -294,6 +294,7 @@ class SetupAnswers(BaseModel):
     does_intracomunitario: bool = False
     third_party_transactions_above_347_threshold: bool = False
     bienes_extranjero_above_threshold: bool = False
+    monedas_virtuales_extranjero_above_threshold: bool = False
 
     # ── residence ────────────────────────────────────────────────────────
     tax_residence_ccaa: Any = None

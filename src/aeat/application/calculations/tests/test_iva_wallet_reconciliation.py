@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 from pydantic import AnyHttpUrl
@@ -16,6 +17,7 @@ from ....adapters.outbound.aeat.sede import (
 from ....core import Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.resources import resources
+from ....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
 from ....domain.iva_compensation._errors import (
     IvaCompensationReconciliationInputError,
     IvaWalletReconciliationError,
@@ -25,11 +27,15 @@ from ....domain.iva_compensation._reconciliation import (
     IvaCompensationOverride,
     IvaCompensationWalletObservationProtocol,
 )
+from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
+from .._iva_compensation_history import IvaCompensationHistoryRepository
 from .._iva_wallet_reconciliation import (
     IvaWalletDecisionSourceResolver,
     reconcile_iva_compensation_wallet,
+    reconcile_modelo_303_iva_compensation,
 )
+from .._observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -218,6 +224,82 @@ def test_missing_wallet_with_aeat_filed_history_is_explicit_filed_history_only_a
         "filed_history_observation",
     }
     assert filed_history_source in decision.authority_sources
+
+
+def test_missing_wallet_with_zero_aeat_filed_history_is_non_blocking_zero_authority() -> None:
+    filed_history_source = IvaCompensationAuthoritySource(
+        source_kind="filed_history_observation",
+        amount=Decimal("0"),
+        source_locator="303:2026:2T",
+        captured_at=_NOW,
+        source_modelo="303",
+        source_filing_year=2026,
+        source_periods=(Period.from_year_and_code(2026, "2T"),),
+    )
+
+    decision = reconcile_iva_compensation_wallet(
+        taxpayer_nif=_TAXPAYER_REF,
+        target_year=2026,
+        target_period=Period.from_year_and_code(2026, "3T"),
+        wallet=None,
+        local_recurrence_amount=Decimal("0"),
+        local_recurrence_source=filed_history_source,
+        decided_at=_NOW,
+    )
+
+    assert decision.selected_authority == "filed_history"
+    assert decision.selected_amount == Decimal("0")
+    assert decision.divergence == "filed_history_zero"
+    assert decision.blocked is False
+    assert {source.source_kind for source in decision.authority_sources} == {
+        "local_recurrence",
+        "filed_history_observation",
+    }
+    assert filed_history_source in decision.authority_sources
+
+
+def test_modelo_303_reconciliation_auto_zeroes_from_positive_prior_local_filing(
+    tmp_path: Path,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        IvaCompensationHistoryRepository().save_period(
+            IvaCompensationPeriodState(
+                taxpayer_nif=_TAXPAYER_REF,
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "2T"),
+                expediente_id="30320262T0000000000",
+                status="app_filing",
+                presented_at=datetime(2026, 7, 15, 10, 0, tzinfo=UTC),
+                prior_pending_amount=Decimal("0"),
+                applied_amount=Decimal("0"),
+                pending_for_later_amount=Decimal("0"),
+                period_result_amount=Decimal("399"),
+                final_result_amount=Decimal("399"),
+                generated_amount=Decimal("0"),
+                available_end_amount=Decimal("0"),
+                source_observation_key="303:2026:2T:positive-local-filing",
+            ),
+        )
+        snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="3T")
+
+        report = reconcile_modelo_303_iva_compensation(
+            snapshot,
+            taxpayer_nif=_TAXPAYER_REF,
+            wallet=None,
+            repository=CalculationObservationRepository(),
+            decided_at=_NOW,
+        )
+
+    assert report.decision.selected_authority == "filed_history"
+    assert report.decision.selected_amount == Decimal("0")
+    assert report.decision.local_recurrence_amount == Decimal("0")
+    assert report.decision.divergence == "filed_history_zero"
+    assert report.decision.blocked is False
+    assert report.prefill_report.binding_values["modelo-303-compensacion-pendiente-anteriores"] == Decimal("0")
+    assert {source.source_kind for source in report.decision.authority_sources} == {
+        "local_recurrence",
+        "filed_history_observation",
+    }
 
 
 def test_stale_wallet_records_local_recurrence_but_blocks_automatic_output() -> None:

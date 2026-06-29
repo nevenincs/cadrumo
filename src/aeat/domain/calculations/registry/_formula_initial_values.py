@@ -103,6 +103,22 @@ def initial_values(
     )
 
 
+def binding_values_with_absent_by_design_defaults(
+    revision: ModeloRevision,
+    binding_values: Mapping[BindingId, Decimal],
+    *,
+    target_period: str,
+) -> dict[BindingId, Decimal]:
+    """Add structural zeroes for a :class:`ModeloRevision`'s absent-by-design bindings."""
+    resolved = dict(binding_values)
+    for binding in revision.bindings:
+        if binding.id in resolved:
+            continue
+        if _binding_is_absent_by_design(binding, target_period=target_period):
+            resolved[binding.id] = _ZERO
+    return resolved
+
+
 def _reject_unknown_inputs(
     inputs: Mapping[CasillaId, Decimal],
     casillas: Mapping[CasillaId, CasillaDefinition],

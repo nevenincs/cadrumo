@@ -199,9 +199,16 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
                 default="Bucket id to probe (defaults to the active profile).",
             ),
         ),
+        period: str | None = typer.Option(None, "--period", help=tr("cli.ledger.check.period_help")),
+        year: int | None = typer.Option(
+            None,
+            "--year",
+            help=tr("cli.ledger.check.year_help", default="Filing year for --period (e.g. 2024)."),
+        ),
     ) -> None:
         """Surface ledger anomalies for the addressed bucket without mutating state."""
         from ...application.ledger import LedgerPreflightIssue, preflight_transaction_catalogue
+        from ._ledger_payloads import LedgerCheckResult
 
         if bucket_id_option is not None:
             transaction_repository = TransactionCatalogueRepository(bucket_id=bucket_id_option)
@@ -209,6 +216,38 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
             transaction_repository = _tx_repo(_state())
         bucket_id = transaction_repository.bucket_id
         catalogue = transaction_repository.load()
+        canonical_period = _optional_canonical_period(period, year=year)
+        if canonical_period is not None:
+            report = preflight_transaction_catalogue(
+                bucket_id=bucket_id,
+                period=canonical_period,
+                transactions=catalogue,
+            )
+            period_label = f"{canonical_period.registry_token} {canonical_period.year}"
+            payload = {
+                "bucket_id": bucket_id,
+                "periods": [period_label],
+                "checked_transaction_count": report.checked_transaction_count,
+                "issues": [issue.model_dump(mode="json") for issue in report.issues],
+                "ready": report.ready,
+            }
+            lines = [
+                f"bucket\t{bucket_id}",
+                f"periods\t{period_label}",
+                f"checked\t{report.checked_transaction_count}",
+                f"issues\t{len(report.issues)}",
+                f"ready\t{str(report.ready).lower()}",
+            ]
+            for issue in report.issues:
+                lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
+            _emit_envelope(
+                ctx,
+                command="ledger.check",
+                result=LedgerCheckResult.model_validate(payload),
+                lines=lines,
+            )
+            return
+
         years = sorted(
             {
                 (tx.raw.value_date or tx.raw.booked_date).year
@@ -216,7 +255,6 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
                 if (tx.raw.value_date or tx.raw.booked_date) is not None
             },
         )
-        from ._ledger_payloads import LedgerCheckResult
 
         if not years:
             payload = {
@@ -328,6 +366,28 @@ def _register_ledger_preflight_command(app: typer.Typer) -> None:
             f"issues\t{len(report.issues)}",
             f"ready\t{str(report.ready).lower()}",
         ]
+        notices: list[Notice] = []
+        if report.checked_transaction_count == 0 and not report.issues:
+            message = tr(
+                "cli.ledger.preflight.empty_ledger_advisory",
+                default=(
+                    "No active ledger transactions were checked for this period. If activity occurred, add or "
+                    "import ledger rows before calculating; if there was genuinely no activity, the empty ledger "
+                    "can support a zero-activity local filing."
+                ),
+            )
+            suggestion = "aeat app ledger add --help; aeat app ledger import --help"
+            notices.append(
+                Notice(
+                    severity=NoticeSeverity.WARNING,
+                    code="ledger.preflight.empty_period",
+                    message=message,
+                    suggestion=suggestion,
+                    context={"period": canonical.registry_token, "year": str(canonical.year)},
+                ),
+            )
+            lines.append(f"advisory\tempty_ledger\t{message}")
+            lines.append(f"next\t{suggestion}")
         for issue in report.issues:
             lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
         from ._ledger_payloads import LedgerPreflightResult
@@ -337,6 +397,7 @@ def _register_ledger_preflight_command(app: typer.Typer) -> None:
             command="ledger.preflight",
             result=LedgerPreflightResult.model_validate(payload),
             lines=lines,
+            notices=notices,
         )
 
 
@@ -557,6 +618,8 @@ def _register_ledger_view_command(app: typer.Typer, *, resolve_transaction_id: R
             f"\t{_field(transaction_payload.business_classification)}",
             f"{tr('cli.ledger.labels.business_pct', default='Business %')}\t{_field(transaction_payload.business_pct)}",
             f"{tr('cli.ledger.labels.category_id', default='Category')}\t{_field(transaction_payload.category_id)}",
+            f"{tr('cli.ledger.labels.usage_ratio_id', default='Usage ratio id')}"
+            f"\t{_field(transaction_payload.usage_ratio_id)}",
             f"{tr('cli.ledger.labels.taxable_base', default='Taxable base')}"
             f"\t{_field(transaction_payload.taxable_base)}",
             f"{tr('cli.ledger.labels.iva_rate', default='IVA rate')}\t{_field(transaction_payload.iva_rate)}",
@@ -613,9 +676,9 @@ def _register_ledger_status_command(app: typer.Typer) -> None:
         transactions = transaction_repository.load()
         lines = [
             f"{tr('cli.ledger.labels.bucket')}\t{report.bucket_id}",
-            f"income_total\t{report.income_total}",
-            f"expense_total\t{report.expense_total}",
-            f"net_total\t{report.net_total}",
+            f"business_income_total\t{report.business_income_total}",
+            f"business_expense_total\t{report.business_expense_total}",
+            f"business_net_total\t{report.business_net_total}",
             f"{tr('cli.ledger.labels.rows')}\t{report.total_count}",
             f"{tr('cli.ledger.labels.active')}\t{report.active_count}",
             f"{tr('cli.ledger.labels.archived')}\t{report.archived_count}",

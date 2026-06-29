@@ -241,9 +241,11 @@ class CsvProvider(FinancialProvider):
                 detected_dialect=describe_dialect(dialect),
             )
         warnings: list[str] = []
-        if not _find_column(_header_lookup(rows[header_index]), layout.columns.currency):
+        lookup = _header_lookup(rows[header_index])
+        if not _find_column(lookup, layout.columns.currency):
             warnings.append(
-                f"{layout.bank_name} CSV has no currency column; falling back to {default_currency()}",
+                f"{_currency_warning_subject(layout, lookup)} has no currency column; "
+                f"falling back to {default_currency()}",
             )
         return ProviderValidation(
             is_valid=True,
@@ -409,6 +411,37 @@ def _find_column(lookup: Mapping[str, str], aliases: tuple[str, ...]) -> str | N
         if header is not None:
             return header
     return None
+
+
+_GENERIC_CSV_WARNING_ALIASES = frozenset({"date", "description", "amount", "direction"})
+
+
+def _currency_warning_subject(layout: CsvBankLayout, lookup: Mapping[str, str]) -> str:
+    """Return the provider label for a missing-currency warning.
+
+    A generic CSV with headers like ``Date,Description,Amount`` scores against
+    the N26 layout because those are valid N26 aliases, but it does not carry
+    any bank-specific signal. Keep that warning provider-neutral while preserving
+    provider-specific wording for real N26 and other bank exports.
+    """
+    matched_aliases: set[str] = set()
+    alias_groups = (
+        layout.columns.booked_date,
+        layout.columns.value_date,
+        layout.columns.amount,
+        layout.columns.direction,
+        layout.columns.description,
+        layout.columns.counterparty,
+        layout.columns.external_id,
+    )
+    for aliases in alias_groups:
+        for alias in aliases:
+            normalized = normalize_header(alias)
+            if normalized in lookup:
+                matched_aliases.add(normalized)
+    if matched_aliases and matched_aliases <= _GENERIC_CSV_WARNING_ALIASES:
+        return "CSV"
+    return f"{layout.bank_name} CSV"
 
 
 def _row_to_mapping(headers: list[str], row: list[str]) -> dict[str, str]:

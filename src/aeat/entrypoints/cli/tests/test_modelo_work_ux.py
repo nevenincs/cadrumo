@@ -88,15 +88,38 @@ def _create_profile(*, activity_start_date: str | None = None) -> None:
     assert result.exit_code == 0, result.output
 
 
-def _set_gb_non_resident_axes() -> None:
+def _create_gb_non_resident_profile() -> None:
     result = _invoke(
         [
-            "config", "profile", "edit", "operator",
-            "--quiet",
+            "config", "profile", "create", "operator",
+            "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
+            "--tax-id", "12345678Z",
+            "--name", "Operator",
+            "--surnames", "Readiness",
+            "--activity", "Spanish-source rent",
             "--fiscal-residency", "non_resident_irnr",
             "--country-of-fiscal-residence", "GB",
             "--representante-fiscal-nif", "12345678Z",
             "--representante-fiscal-nombre", "Test Representative",
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+
+
+def _create_de_nonresident_legal_entity_profile() -> None:
+    result = _invoke(
+        [
+            "config", "profile", "create", "operator",
+            "--quiet", "--accept-defaults",
+            "--entity-type", "legal_entity",
+            "--legal-entity-form", "sl",
+            "--tax-id", "B66012345",
+            "--legal-name", "NordHaus GmbH",
+            "--activity", "Spanish-source services",
+            "--fiscal-residency", "non_resident_irnr",
+            "--country-of-fiscal-residence", "DE",
+            "--iva-regime", "GENERAL",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
@@ -147,6 +170,51 @@ def test_profile_create_refuses_incomplete_profile_before_modelo_work() -> None:
     assert "Traceback" not in result.output
 
 
+def test_work_create_refuses_status_blocked_profile_missing_activity() -> None:
+    create = _invoke(
+        [
+            "--format", "json",
+            "config", "profile", "create", _PROFILE_ID,
+            "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
+            "--irpf-income-categories", "actividad_economica",
+            "--tax-id", "12345678Z",
+            "--name", "Operator",
+            "--surnames", "Readiness",
+        ],
+    )  # fmt: skip
+    assert create.exit_code == 0, create.output
+
+    status = _invoke(["--format", "json", "config", "profile", "status"])
+    assert status.exit_code == 0, status.output
+    status_payload = _payload(status.output)
+    assert status_payload["configured"] is False
+    assert status_payload["activity_present"] is False
+
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", Modelo.M130.value,
+            "--year", "2025",
+            "--period", "1T",
+            "--revision", "2019-y-siguientes",
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code != 0
+    payload = json.loads(result.output)
+    assert payload["status"] == "error"
+    assert payload["error"]["code"] == "REFUSED_MODELO_PROFILE_READINESS"
+    assert "activities.description" in payload["error"]["message"]
+    assert "work_unit_id" not in result.output
+    assert "Traceback" not in result.output
+
+    listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    assert listed.exit_code == 0, listed.output
+    assert _payload(listed.output)["work_unit_count"] == 0
+
+
 def test_work_create_refuses_pre_activity_m303_and_creates_no_unit() -> None:
     _create_profile(activity_start_date="2026-05-01")
 
@@ -169,6 +237,93 @@ def test_work_create_refuses_pre_activity_m303_and_creates_no_unit() -> None:
     assert "2026-05-01" in message
     assert "2026-03-31" in message
     assert "Traceback" not in result.output
+
+    listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    assert listed.exit_code == 0, listed.output
+    assert _payload(listed.output)["work_unit_count"] == 0
+
+
+def test_modelo_readiness_reports_pre_activity_m303_before_work_create() -> None:
+    _create_profile(activity_start_date="2026-05-01")
+
+    result = _invoke(
+        [
+            "app", "modelo", "readiness",
+            "--modelo", "303",
+            "--revision-id", "2023-y-siguientes",
+            "--year", "2026",
+            "--period", "1T",
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code == 0, result.output
+    assert "ready\tFalse" in result.output
+    assert "profile_ready\tFalse" in result.output
+    assert "profile_refusal\tModelo 303 2026 1T is before the profile activity-start date 2026-05-01" in result.output
+    assert "filing period ends on 2026-03-31" in result.output
+    assert "pre-activity period" in result.output
+
+    listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    assert listed.exit_code == 0, listed.output
+    assert _payload(listed.output)["work_unit_count"] == 0
+
+def test_nonresident_legal_entity_m200_readiness_and_create_refuse_wrong_path() -> None:
+    _create_de_nonresident_legal_entity_profile()
+
+    readiness = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "readiness",
+            "--modelo", "200",
+            "--revision-id", "2024-y-siguientes",
+            "--year", "2026",
+            "--period", "0A",
+        ],
+    )  # fmt: skip
+
+    assert readiness.exit_code == 0, readiness.output
+    readiness_payload = _payload(readiness.output)
+    assert readiness_payload["ready"] is False
+    assert readiness_payload["profile_ready"] is False
+    assert readiness_payload["profile_refusal"]
+    assert "NON_RESIDENT_IRNR" in readiness_payload["profile_refusal"]
+    assert "establecimiento permanente" in readiness_payload["profile_refusal"]
+
+    create = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "200",
+            "--year", "2026",
+            "--period", "0A",
+            "--revision", "2024-y-siguientes",
+        ],
+    )  # fmt: skip
+
+    assert create.exit_code != 0, create.output
+    create_payload = json.loads(create.output)
+    assert create_payload["status"] == "error"
+    assert create_payload["error"]["code"] == "REFUSED_CLI_BOUNDARY"
+    assert "NON_RESIDENT_IRNR" in create_payload["error"]["message"]
+    assert "establecimiento permanente" in create_payload["error"]["message"]
+
+    bypass = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "200",
+            "--year", "2026",
+            "--period", "0A",
+            "--revision", "2024-y-siguientes",
+            "--allow-not-applicable",
+        ],
+    )  # fmt: skip
+
+    assert bypass.exit_code != 0, bypass.output
+    bypass_payload = json.loads(bypass.output)
+    assert bypass_payload["status"] == "error"
+    assert bypass_payload["error"]["code"] == "REFUSED_MODELO_PROFILE_READINESS"
+    assert "NON_RESIDENT_IRNR" in bypass_payload["error"]["message"]
 
     listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
@@ -323,6 +478,66 @@ def test_work_list_surfaces_revision_pointer_fields(_isolated_cli_backend: Path)
     assert unit["current_calculation_revision_id"] == revision_id
     assert unit["short_current_calculation_revision_id"] == revision_id[-12:]
     assert unit["filed_calculation_revision_id"] is None
+
+
+def test_work_status_and_list_show_presentado_after_file(_isolated_cli_backend: Path) -> None:
+    _create_profile(activity_start_date="2025-10-01")
+    created = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "130", "--year", "2025", "--period", "4T",
+            "--revision", "2019-y-siguientes",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+    work_unit_id = _payload(created.output)["work_unit_id"]
+
+    calculated = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", work_unit_id,
+            "--casilla", "05=0.00",
+            "--casilla", "06=0.00",
+            "--binding", "irpf.previous_year_economic_activity_net_income=13000",
+            "--binding", "modelo-130-resultados-negativos-anteriores=0",
+        ],
+    )  # fmt: skip
+    assert calculated.exit_code == 0, calculated.output
+
+    verified = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "verify",
+            "--modelo", "130", "--year", "2025", "--period", "4T",
+        ],
+    )  # fmt: skip
+    assert verified.exit_code == 0, verified.output
+    assert _payload(verified.output)["granted_verificado_completo"] is True
+
+    filed = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "file",
+            "--modelo", "130", "--year", "2025", "--period", "4T",
+        ],
+    )  # fmt: skip
+    assert filed.exit_code == 0, filed.output
+    filed_revision_id = _payload(filed.output)["calculation_revision_id"]
+
+    status = _invoke(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
+    assert status.exit_code == 0, status.output
+    status_payload = _payload(status.output)
+    assert status_payload["state"] == "presentado"
+    assert status_payload["filed_calculation_revision_id"] == filed_revision_id
+
+    listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    assert listed.exit_code == 0, listed.output
+    list_payload = _payload(listed.output)
+    matching = [unit for unit in list_payload["work_units"] if unit["work_unit_id"] == work_unit_id]
+    assert len(matching) == 1
+    assert matching[0]["state"] == "presentado"
+    assert matching[0]["filed_calculation_revision_id"] == filed_revision_id
 
 
 def test_work_revisions_resolves_a_visible_filing_target(_isolated_cli_backend: Path) -> None:
@@ -516,8 +731,10 @@ def test_work_dependencies_honours_activity_start_date_pre_activity_scoping(
         [
             "config", "profile", "create", "operator",
             "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
             "--tax-id", "12345678Z",
             "--name", "Operator",
+            "--surnames", "Readiness",
             "--activity", "design",
             "--activity-start-date", "2025-01-01",
         ],
@@ -739,8 +956,7 @@ def test_overview_next_step_does_not_suggest_m210_work_create_for_non_resident(
 ) -> None:
     """A non-resident M210 profile gets discovery/Sede guidance, not work-create."""
 
-    _create_profile()
-    _set_gb_non_resident_axes()
+    _create_gb_non_resident_profile()
     added = _invoke(
         [
             "app", "ledger", "add",
@@ -773,7 +989,21 @@ def test_work_create_rejects_revision_that_does_not_cover_filing_year(
     DANA rules do not apply to a 2024 filing.
     """
 
-    _create_profile()
+    created = _invoke(
+        [
+            "config", "profile", "create", "operator",
+            "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
+            "--irpf-income-categories", "actividad_economica",
+            "--uses-objective-estimation-irpf",
+            "--irpf-estimation-regime", "objetiva",
+            "--tax-id", "12345678Z",
+            "--name", "Operator",
+            "--surnames", "Readiness",
+            "--activity", "objective-estimation activity",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
     result = _invoke(
         [
             "app", "modelo", "work", "create",

@@ -22,6 +22,16 @@ from ...core.resources import bundled_path
 from ._errors import IvaCatalogueError, IvaRateOverlapError, IvaValidationError
 from ._schema import EUMemberState, IvaRateKind, IvaRateRecord
 
+_RATE_REGISTRY_MEMBER_STATES: frozenset[EUMemberState] = frozenset(
+    member_state for member_state in EUMemberState if member_state is not EUMemberState.XI
+)
+"""Jurisdictions that must carry rate rows.
+
+``XI`` is a Northern Ireland IVA prefix for goods, not a state with its own IVA
+rate table, so it is intentionally excluded from the rate-registry completeness
+gate.
+"""
+
 
 def load_iva_rate_table(path: Path | None = None) -> Mapping[EUMemberState, tuple[IvaRateRecord, ...]]:
     """Load IVA rates from the committed registry file.
@@ -65,7 +75,7 @@ def _load_iva_rate_table_cached(
             raise IvaCatalogueError(f"{target}: invalid rates[{index}]: {exc}") from exc
         by_member_state.setdefault(rate.member_state, []).append(rate)
 
-    missing = sorted(member_state.value for member_state in set(EUMemberState) - set(by_member_state))
+    missing = sorted(member_state.value for member_state in _RATE_REGISTRY_MEMBER_STATES - set(by_member_state))
     if missing:
         raise IvaCatalogueError(f"{target}: IVA rate registry missing member states: {missing}")
 

@@ -11,6 +11,7 @@ from .....core.resources import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .. import (
     CasillaId,
+    InputKind,
     ModeloDefinition,
     RegistryCatalogues,
     RegistryValidationError,
@@ -73,6 +74,17 @@ _REQUIRED_SURFACES = {
     "verification",
     "workflow",
 }
+_M130_EXTRACTION_PROFILE_TARGET_LEGAL_REFS = frozenset(
+    {
+        "ley-35-2006:art-27",
+        "ley-35-2006:art-28",
+        "ley-35-2006:art-30",
+        "ley-35-2006:art-99",
+        "orden-eha-672-2007:art-1",
+        "rd-439-2007:art-110",
+        "rd-439-2007:art-95",
+    }
+)
 
 
 def _load_modelo(modelo_id: str):
@@ -95,6 +107,23 @@ def _snapshot_130(modelo_130_registry: _ModeloFixture, *, period: str = "1T", fi
         filing_year=filing_year,
         period=period,
     )
+
+
+def test_modelo_130_extraction_profile_legal_refs_match_target_casillas(
+    modelo_130_registry: _ModeloFixture,
+) -> None:
+    modelo, _catalogues = modelo_130_registry
+    revision = modelo.revisions["2019-y-siguientes"]
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+    profile = next(item for item in revision.extraction_profiles if item.id == "modelo-130-declaracion-pdf")
+    target_refs = frozenset(
+        legal_ref
+        for target in profile.target_casillas
+        for legal_ref in casillas_by_id[target.casilla_id].legal_refs
+    )
+
+    assert target_refs == _M130_EXTRACTION_PROFILE_TARGET_LEGAL_REFS
+    assert set(profile.legal_refs) == _M130_EXTRACTION_PROFILE_TARGET_LEGAL_REFS
 
 
 def test_modelo_130_casilla_15_grounding_uses_aeat_instruction_citation(
@@ -129,6 +158,9 @@ def test_modelo_130_casilla_15_grounding_uses_aeat_instruction_citation(
     }
     assert carry_binding.source_refs == ("aeat-modelo-130-instructions",)
     assert carry_binding.source_citations
+    assert carry_casilla.input_kind is InputKind.COMPUTED
+    assert carry_casilla.formula == "modelo-130-resultados-negativos-anteriores-cap"
+    assert carry_casilla.binding is None
     assert carry_casilla.constraints.source_refs == ("aeat-modelo-130-instructions",)
     assert instruction_source.evidence_tier == "official_source_guidance"
     assert instruction_source.kind == "instructions"
@@ -141,6 +173,23 @@ def test_modelo_130_casilla_15_grounding_uses_aeat_instruction_citation(
     instruction_text = normalise_corpus_text((bundled_path() / instruction_source.corpus_path).read_text("utf-8"))
     for required_text in citation.required_text:
         assert normalise_corpus_text(required_text) in instruction_text
+
+
+def test_modelo_130_high_retention_exemption_cites_art_109_not_retired_art_110_3b(
+    modelo_130_registry: _ModeloFixture,
+) -> None:
+    modelo, _catalogues = modelo_130_registry
+    revision = modelo.revisions["2019-y-siguientes"]
+    formula = next(item for item in revision.formulas if item.id == "modelo-130-diferencia")
+    predicate = next(
+        item
+        for item in revision.verification_predicates
+        if item.predicate_id == "modelo-130-art109-exencion-alta-retencion"
+    )
+
+    assert "rd-439-2007:art-109" in formula.legal_refs
+    assert "rd-439-2007:art-110-3-b" not in formula.legal_refs
+    assert predicate.legal_refs == ("rd-439-2007:art-109",)
 
 
 def test_modelo_130_validated_snapshot_owns_workflow_surfaces(modelo_130_registry: _ModeloFixture) -> None:
@@ -173,27 +222,9 @@ def test_modelo_130_requires_external_previous_year_income_binding_for_minoracio
         )
 
 
-def test_modelo_130_first_period_carry_forward_is_absent_by_design(modelo_130_registry: _ModeloFixture) -> None:
-    """At 1T the prior-quarter carry-forward selector has no anchor.
-
-    The Modelo 130 `modelo-130-resultados-negativos-anteriores`
-    binding declares `source_period_offset_from_target = -1` and
-    `max_year_delta = 0` to model AEAT's same-ejercicio instruction
-    rule under the RD 439/2007 art. 110 pago-fraccionado framework:
-    1T pulls from a hypothetical "0T" which
-    does not exist within the same ejercicio, so the binding
-    produces no anchor and casilla 15 materialises Decimal(0)
-    through the absent-by-design constructor path. The
-    `CasillaObservation` for C15 must carry
-    `absent_by_design = True` so downstream audit surfaces can
-    distinguish this structural zero from a value-bearing
-    observation.
-
-    Real-behaviour test: no mocks, no fakes. The 1T snapshot is
-    built from the committed registry; the calculator runs
-    end-to-end with no previous-filing observations supplied.
-    """
-
+def test_modelo_130_first_period_carry_forward_defaults_to_zero_for_capped_formula(
+    modelo_130_registry: _ModeloFixture,
+) -> None:
     result = calculate_registry_snapshot(
         _snapshot_130(modelo_130_registry),
         inputs={
@@ -213,7 +244,9 @@ def test_modelo_130_first_period_carry_forward_is_absent_by_design(modelo_130_re
 
     casilla_15 = next(obs for obs in result.observations if obs.casilla_id == _M130_CARRY_FORWARD_CASILLA)
     assert casilla_15.value == Decimal("0")
-    assert casilla_15.absent_by_design is True
+    assert casilla_15.formula_id == "modelo-130-resultados-negativos-anteriores-cap"
+    assert "modelo-130-resultados-negativos-anteriores" in casilla_15.operand_refs
+    assert casilla_15.absent_by_design is False
 
     # Casilla 05 (pagos fraccionados anteriores) is now a bound carry; at 1T the
     # expanding span has no prior same-ejercicio quarter, so it resolves to a
@@ -223,29 +256,12 @@ def test_modelo_130_first_period_carry_forward_is_absent_by_design(modelo_130_re
     assert casilla_05.absent_by_design is True
 
 
-def test_modelo_130_previous_filing_bound_casilla_input_without_binding_value_is_rejected(
+def test_modelo_130_capped_carry_forward_casilla_input_is_rejected(
     modelo_130_registry: _ModeloFixture,
 ) -> None:
-    """Strict-rejection recovered via consistency hardening.
-
-    The original design mandated `RegistryValidationError` when any
-    bound-casilla input was supplied. The P03 narrowing accepted
-    the production `resolve_bound_inputs_by_casilla_id` projection
-    pattern (inputs mirrors binding_values for runtime ergonomics).
-    The narrowing left a hole: a test fixture could lie by passing
-    a previous_filing bound casilla via inputs ONLY, with no
-    binding_values entry. The silent-zero hazard re-emerges in
-    disguise.
-
-    The consistency hardening closes the hole: previous_filing bound
-    casillas in inputs MUST be accompanied by the matching
-    binding_values[binding_id] entry. This test pins the strict-
-    rejection contract for the smuggle-via-inputs-only pattern.
-    """
-
     with pytest.raises(
         RegistryValidationError,
-        match="previous-filing bound registry casillas cannot be supplied via inputs",
+        match="computed registry casillas cannot be supplied as inputs",
     ):
         calculate_registry_snapshot(
             _snapshot_130(modelo_130_registry),
@@ -373,16 +389,6 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
 
 
 def test_modelo_130_previous_filing_bound_inputs_must_match_binding_values(modelo_130_registry: _ModeloFixture) -> None:
-    """Inputs and binding_values must agree on bound carry-forward values.
-
-    The consistency hardening introduced the smuggle-rejection (input present, binding
-    value absent). This test pins the consistency-check that
-    adds: when BOTH maps declare the same bound casilla but with
-    DIFFERENT values, the runtime must reject the inconsistency
-    rather than silently pick the binding_values entry. The source-
-    of-truth contract is preserved while the divergence is surfaced.
-    """
-
     with pytest.raises(
         RegistryValidationError,
         match="previous-filing bound casilla projection is inconsistent",
@@ -395,16 +401,72 @@ def test_modelo_130_previous_filing_bound_inputs_must_match_binding_values(model
                 _M130_RETENCIONES_CASILLA: Decimal("100"),
                 _M130_AGRARIAN_VOLUME_CASILLA: Decimal("2000"),
                 _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("10"),
-                _M130_CARRY_FORWARD_CASILLA: Decimal("500"),  # claims 500
+                _M130_PAGOS_PREVIOS_CASILLA: Decimal("500"),  # claims 500
                 _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
                 _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
             },
             date_context={"filing_period": date(2026, 7, 20)},
             binding_values={
                 "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
-                "modelo-130-resultados-negativos-anteriores": Decimal("300"),  # claims 300 — diverges
+                "modelo-130-pagos-fraccionados-anteriores": Decimal("300"),  # claims 300 — diverges
+                "modelo-130-resultados-negativos-anteriores": Decimal("0"),
             },
         )
+
+
+def test_modelo_130_carry_forward_caps_prior_negative_seed_at_positive_c14(
+    modelo_130_registry: _ModeloFixture,
+) -> None:
+    snapshot_2t = _snapshot_130(modelo_130_registry, period="2T")
+    first_period_observation = registry_grounded_modelo_observation(
+        modelo="130",
+        filing_year=2026,
+        period="1T",
+        casilla_values={
+            _M130_PAGO_FRACCIONADO_CASILLA: Decimal("38.00"),
+            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+            _M130_SALDO_NEGATIVO_CASILLA: Decimal("62.00"),
+        },
+    )
+    prior_year_income_observation = registry_grounded_modelo_observation(
+        modelo="100",
+        filing_year=2025,
+        period="0A",
+        casilla_values={
+            _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: Decimal("20000.00"),
+            _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+            _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+            _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+        },
+    )
+    resolved_bindings = resolve_previous_filing_binding_values(
+        snapshot_2t.revision,
+        (first_period_observation, prior_year_income_observation),
+        filing_year=2026,
+        period="2T",
+    )
+
+    assert resolved_bindings["modelo-130-resultados-negativos-anteriores"] == Decimal("62.00")
+    assert resolved_bindings["modelo-130-pagos-fraccionados-anteriores"] == Decimal("38.00")
+
+    result = calculate_registry_snapshot(
+        snapshot_2t,
+        inputs={
+            _M130_INGRESOS_CASILLA: Decimal("377"),
+            _M130_GASTOS_CASILLA: Decimal("0"),
+            _M130_RETENCIONES_CASILLA: Decimal("0"),
+            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+            _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
+        },
+        date_context={"filing_period": date(2026, 7, 20)},
+        binding_values=resolved_bindings,
+    )
+
+    assert result.values[_M130_DIFERENCIA_PREVIA_CASILLA] == Decimal("37.40")
+    assert result.values[_M130_CARRY_FORWARD_CASILLA] == Decimal("37.40")
+    assert result.values[_M130_DIFERENCIA_CASILLA] == Decimal("0.00")
 
 
 def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
@@ -510,21 +572,21 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
 
 
 # ---------------------------------------------------------------------------
-# Art. 110.3.b RIRPF: high-retention exemption formula (casilla 17)
+# Art. 109 RIRPF: high-retention exemption formula (casilla 17)
 # ---------------------------------------------------------------------------
 
 
-def test_modelo_130_art110_3b_casilla_17_is_zero_when_retention_ratio_meets_threshold(
+def test_modelo_130_art109_casilla_17_is_zero_when_retention_ratio_meets_threshold(
     modelo_130_registry: _ModeloFixture,
 ) -> None:
-    """Art. 110.3.b RIRPF: casilla 17 = 0 when retenciones/rendimientos >= 70%.
+    """Art. 109 RIRPF: casilla 17 = 0 when retenciones/rendimientos >= 70%.
 
     Oracle values: rendimientos íntegros (c01) = 15000, retenciones (c06) = 10500.
-    Ratio = 10500 / 15000 = 0.70 — exactly at the Art. 110.3.b threshold.
+    Ratio = 10500 / 15000 = 0.70 — exactly at the Art. 109 threshold.
     The formula for casilla 17 (modelo-130-diferencia) must produce Decimal(0)
     because the autónomo is exempt from the quarterly payment.
 
-    Expected value derivation: Art. 110.3.b RD 439/2007 mandates zero payment
+    Expected value derivation: Art. 109 RD 439/2007 mandates zero payment
     when the accumulated retention ratio >= 70% of gross income. This is not
     derived from the formula under test; it is derived from the regulatory rule.
     """
@@ -548,11 +610,11 @@ def test_modelo_130_art110_3b_casilla_17_is_zero_when_retention_ratio_meets_thre
 
     casilla_17 = next(obs for obs in result.observations if obs.casilla_id == _M130_DIFERENCIA_CASILLA)
     assert casilla_17.value == Decimal("0"), (
-        f"Art. 110.3.b: casilla 17 must be zero when retention ratio >= 70%; got {casilla_17.value}"
+        f"Art. 109: casilla 17 must be zero when retention ratio >= 70%; got {casilla_17.value}"
     )
 
 
-def test_modelo_130_art110_3b_casilla_17_computes_normally_when_retention_ratio_below_threshold(
+def test_modelo_130_art109_casilla_17_computes_normally_when_retention_ratio_below_threshold(
     modelo_130_registry: _ModeloFixture,
 ) -> None:
     """Anti-tautology: casilla 17 equals the standard subtraction when retenciones/rendimientos < 70%.
@@ -567,7 +629,7 @@ def test_modelo_130_art110_3b_casilla_17_computes_normally_when_retention_ratio_
     accidental triggering of the exemption branch. A regression that applied
     the exemption at 2% retention would produce c17=0, failing the assertion.
 
-    Expected value derivation: standard M130 formula chain — not the Art. 110.3.b
+    Expected value derivation: standard M130 formula chain — not the Art. 109
     exemption rule under test. This is the anti-tautology proof that the formula
     branch condition is real and the exemption only fires at >= 70%.
     """

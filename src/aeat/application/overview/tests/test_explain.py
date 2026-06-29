@@ -162,6 +162,24 @@ def test_explain_applicable_flag_matches_derived_verdict() -> None:
     assert result.verdict is derived.verdict
 
 
+def test_explain_721_depends_on_crypto_abroad_threshold_fact() -> None:
+    profile = TaxpayerProfile(
+        tax_id="X1234567L",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
+        iva_regime=IVARegime.GENERAL,
+        bienes_extranjero_above_threshold=False,
+        monedas_virtuales_extranjero_above_threshold=True,
+    )
+
+    result = build_overview_explain(profile, modelo="721", year=2024)
+
+    assert result.verdict is ApplicabilityVerdict.APPLICABLE
+    assert result.applicable is True
+    assert result.profile_facts["bienes_extranjero_above_threshold"] is False
+    assert result.profile_facts["monedas_virtuales_extranjero_above_threshold"] is True
+
+
 def test_scheduling_rationale_propagates_genuine_registry_fault() -> None:
     """The public explain builder lets a genuine registry-integrity fault
     propagate after its catch was narrowed to ``NoDeadlineWindowsError``.

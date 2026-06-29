@@ -103,6 +103,32 @@ def test_csv_provider_rejects_unknown_headers(tmp_path: Path) -> None:
     assert "headers" in validation.warnings[0].lower()
 
 
+def test_generic_csv_missing_currency_warning_is_provider_neutral(tmp_path: Path) -> None:
+    """A generic CSV selected via the CSV provider must not be labelled as N26."""
+    source = tmp_path / "generic.csv"
+    source.write_text("Date,Description,Amount\n2026-04-15,Invoice 1,121.00\n", encoding="utf-8")
+
+    validation = CsvProvider().validate_source(source)
+
+    assert validation.is_valid, validation.warnings
+    assert validation.warnings == ("CSV has no currency column; falling back to EUR",)
+
+
+def test_n26_csv_missing_currency_warning_keeps_provider_label(tmp_path: Path) -> None:
+    """N26-specific headers still receive the N26 warning copy."""
+    source = tmp_path / "n26.csv"
+    source.write_text(
+        "Date,Payee,Payment reference,Amount (EUR),Transaction ID\n"
+        "2026-04-15,Client SL,Invoice 1,121.00,n26-001\n",
+        encoding="utf-8",
+    )
+
+    validation = CsvProvider().validate_source(source)
+
+    assert validation.is_valid, validation.warnings
+    assert validation.warnings == ("N26 CSV has no currency column; falling back to EUR",)
+
+
 def test_csv_provider_ignores_invalid_configured_encoding_name() -> None:
     """An invalid preferred encoding should not break the fallback decode order."""
     with override_settings(financial_default_csv_encoding="definitely-not-a-codec"):

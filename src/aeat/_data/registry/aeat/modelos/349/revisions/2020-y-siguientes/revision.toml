@@ -7,9 +7,11 @@ legal_refs = [
     "orden-eha-769-2010:art-1",
     "orden-hac-174-2020:art-1",
     "ley-58-2003:art-93",
+    "rd-1624-1992:art-81",
 ]
 source_refs = [
     "aeat-dr-349-2020-current",
+    "aeat-modelo-349-instructions",
     "aeat-modelo-349-procedure",
 ]
 

@@ -49,7 +49,17 @@ def create_work_unit(
     """Create or load a :class:`WorkUnit` for the filing target key."""
     reject_unknown_revision(modelo=modelo, revision_id=revision_id)
     if period.filing_year != filing_year:
-        raise ValueError(f"filing_year {filing_year!r} does not match period year {period.filing_year!r}")
+        raise WorkUnitMutationRefusedError(
+            f"filing_year {filing_year!r} does not match period year {period.filing_year!r}",
+            context={
+                "modelo": modelo,
+                "filing_year": filing_year,
+                "period_year": period.filing_year,
+                "period": period.registry_token,
+                "revision_id": revision_id,
+            },
+            suggestion="pass a Period whose filing year matches the filing_year argument",
+        )
     reject_unknown_period_for_revision(modelo=modelo, revision_id=revision_id, period=period)
     from ._profile_readiness_gate import require_profile_ready_for_modelo_work
 

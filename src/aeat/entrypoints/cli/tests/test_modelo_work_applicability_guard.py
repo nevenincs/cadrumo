@@ -170,6 +170,27 @@ def test_work_create_refuses_modelo_130_for_non_resident_irnr(
     assert "--allow-not-applicable" in result.output
 
 
+def test_work_create_refuses_modelo_100_for_non_resident_irnr(
+    _isolated_cli_backend: Path,
+) -> None:
+    """A declared IRNR non-resident is refused the resident-IRPF M100 work unit."""
+
+    _create_non_resident_irnr_natural_person()
+    result = invoke_cached_cli(
+        [
+            "app", "modelo", "work", "create",
+            "--modelo", "100", "--year", "2025", "--period", "0A",
+            "--revision", "2023-y-siguientes",
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    assert "100" in result.output
+    assert "NON_RESIDENT_IRNR" in result.output
+    assert "--allow-not-applicable" in result.output
+
+
 def test_work_create_allow_not_applicable_bypasses_the_guard(
     _isolated_cli_backend: Path,
 ) -> None:

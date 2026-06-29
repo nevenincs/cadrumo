@@ -72,7 +72,7 @@ from ...domain.modelos._protocols import (
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnitCatalogueRepositoryProtocol,
 )
-from ...domain.modelos._repository import WorkUnitCatalogueRepository
+from ...domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ...domain.modelos._verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -91,6 +91,7 @@ from ..aggregation import (
     CalculationSourceDiagnostic,
     missing_evidence_advisory_observations,
 )
+from ..aggregation._evidence_advisory import MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND
 from ..aggregation._ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
@@ -126,6 +127,9 @@ from ._m210_rate import resolve_m210_rate as _resolve_m210_rate
 from ._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
 from ._registry_helpers import assert_revision_content_integrity as _assert_revision_content_integrity
 from ._registry_resources import authority_via_resources as _authority_via_resources
+from ._required_binding_gate import (
+    require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
+)
 from ._revision_persistence import emit_bucket_event as _emit_bucket_event
 from ._workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
 from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
@@ -1242,6 +1246,16 @@ def _cross_period_clean_state_next_action(
         f"--year {requirement.filing_year} "
         f"--period {requirement_period}"
     )
+    source_justificante_capture = (
+        "aeat app live justificante pull "
+        f"--modelo {requirement.source_modelo} "
+        f"--year {requirement.filing_year} "
+        f"--period {requirement_period}"
+    )
+    import_official_record = (
+        "aeat app modelo filing-record import WORK_UNIT_ID "
+        "--evidence-kind aeat_justificante_pdf --evidence-id CSV --set CASILLA=VALUE"
+    )
     if CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE in blockers:
         # ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2: the prior
         # filing's stamped revision is no longer the law-determined revision for its
@@ -1289,9 +1303,9 @@ def _cross_period_clean_state_next_action(
         CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE,
     }:
         return (
-            f"Capture or import AEAT justificante evidence for {source_hint}. "
-            f"Run `{target_capture}` or `aeat app modelo reconcile file WORK_UNIT_ID --file PATH`, "
-            "then rerun verification."
+            f"Capture/import AEAT evidence for {source_hint}. Run `{target_capture}`, "
+            f"`{source_justificante_capture}`, `{import_official_record}`, or "
+            "`aeat app modelo reconcile file WORK_UNIT_ID --file PATH`; rerun verification."
         )
     if blockers & {
         CrossPeriodCleanStateBlocker.MISSING_CALCULATION_REVISION,
@@ -1402,11 +1416,10 @@ def _iva_wallet_decision_covers_cross_period_dependency(
     return False
 
 
-#: Legal grounding for the missing-evidence advisory. Deducting input IVA
-#: requires the original factura (LIVA art. 97, RD 1619/2012 art. 2); a
-#: business income/expense must be documentally justified (LIRPF art. 28.1 via
-#: LGT art. 106.4). The advisory is non-blocking, so the citation is a pointer,
-#: not a gate.
+#: Legal grounding for missing IVA evidence. Deducting input IVA requires the
+#: original factura (LIVA art. 97, RD 1619/2012 art. 2). Output-IVA evidence
+#: gaps stay advisory until the transaction model can distinguish every valid
+#: issued-invoice support path without over-blocking.
 _MISSING_EVIDENCE_LEGAL_REFS: tuple[str, ...] = (
     "ley-37-1992:art-97",
     "rd-1619-2012:art-2",
@@ -1419,14 +1432,15 @@ def _missing_evidence_advisory_findings(
     work_unit: WorkUnit,
     transaction_repository: TransactionCatalogueRepository | None,
 ) -> list[ModeloVerificationFinding]:
-    """Build non-blocking ADVISORY findings for evidence-less significant rows.
+    """Build verification findings for evidence-less positive IVA rows.
 
     Loads the revision's source transactions and projects each
     :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
-    (reason ``missing_transaction_evidence``) into an ADVISORY
-    :class:`ModeloVerificationFinding`. A revision with no contributing
+    (reason ``missing_transaction_evidence``) into a
+    :class:`ModeloVerificationFinding`. Deductible input-IVA gaps are blocking;
+    output-IVA gaps remain advisory. A revision with no contributing
     transactions, or whose significant rows all carry evidence, yields no
-    findings (``no-silent-under-declaration``: visible but non-blocking).
+    findings.
     """
     if not target.source_transaction_ids:
         return []
@@ -1438,20 +1452,32 @@ def _missing_evidence_advisory_findings(
         if (transaction := catalogue.get(transaction_id)) is not None
     ]
     diagnostics: tuple[CalculationSourceDiagnostic, ...] = missing_evidence_advisory_observations(transactions)
-    return [
-        ModeloVerificationFinding(
-            kind=ModeloVerificationFindingKind.ADVISORY,
-            severity=ModeloVerificationFindingSeverity.WARNING,
-            message=diagnostic.message,
-            next_action=(
-                "Attach the supporting invoice with "
-                f"`aeat app ledger attach {diagnostic.binding_id} --attachment-id ATTACHMENT_ID` "
-                "(or --purchase-invoice-evidence-id), then rerun verification."
+    findings: list[ModeloVerificationFinding] = []
+    for diagnostic in diagnostics:
+        is_deductible_gap = diagnostic.source_kind == MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND
+        findings.append(
+            ModeloVerificationFinding(
+                kind=(
+                    ModeloVerificationFindingKind.BLOCKING_RULE
+                    if is_deductible_gap
+                    else ModeloVerificationFindingKind.ADVISORY
+                ),
+                severity=(
+                    ModeloVerificationFindingSeverity.BLOCKING
+                    if is_deductible_gap
+                    else ModeloVerificationFindingSeverity.WARNING
+                ),
+                message=diagnostic.message,
+                next_action=(
+                    f"Attach supplier evidence to ledger row {diagnostic.binding_id}, then rerun verification."
+                    if is_deductible_gap
+                    else f"Attach supporting evidence to ledger row {diagnostic.binding_id}, then rerun verification."
+                ),
+                legal_refs=_MISSING_EVIDENCE_LEGAL_REFS,
+                source_refs=(diagnostic.source_kind,),
             ),
-            legal_refs=_MISSING_EVIDENCE_LEGAL_REFS,
         )
-        for diagnostic in diagnostics
-    ]
+    return findings
 
 
 def verify_modelo_revision(
@@ -1515,6 +1541,11 @@ def verify_modelo_revision(
 
     require_profile_ready_for_work_unit(work_unit)
 
+    _require_persisted_required_bindings_resolved(
+        work_unit=work_unit,
+        revision=target,
+        action="verify",
+    )
     findings, resolved_casilla_ids, missing_required_casilla_ids = _collect_revision_verification_findings(
         work_unit=work_unit,
         target=target,
@@ -1622,6 +1653,12 @@ def verify_modelo_revision(
             calculation_repository=cr_repo,
             participation_index_repository=participation_index_repository,
         )
+        _repair_verified_revision_current_pointer(
+            work_unit=work_unit,
+            calculation_revision_id=calculation_revision_id,
+            verified_at=now,
+            work_unit_repository=wu_repo,
+        )
 
     _emit_verification_bucket_event(
         repository=bv_repo,
@@ -1638,6 +1675,34 @@ def verify_modelo_revision(
     )
 
     return report
+
+
+def _repair_verified_revision_current_pointer(
+    *,
+    work_unit: WorkUnit,
+    calculation_revision_id: str,
+    verified_at: datetime,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+) -> None:
+    work_units = work_unit_repository.load()
+    latest = work_units.get(work_unit.work_unit_id)
+    if latest is None:
+        raise WorkUnitNotFoundError(f"work unit {work_unit.work_unit_id!r} disappeared during verification")
+    if latest.current_calculation_revision_id == calculation_revision_id:
+        return
+    if latest.current_calculation_revision_id is not None:
+        return
+    work_unit_repository.save(
+        upsert_work_unit(
+            work_units,
+            latest.model_copy(
+                update={
+                    "current_calculation_revision_id": calculation_revision_id,
+                    "updated_at": verified_at,
+                },
+            ),
+        ),
+    )
 
 
 def _build_participation_writes(

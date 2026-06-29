@@ -32,7 +32,7 @@ import pytest
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_FAKE_ACTIVE_PROFILE = "0123456789abcdef0123456789abcdef"
+_PLACEHOLDER_ACTIVE_PROFILE = "0123456789abcdef0123456789abcdef"
 
 
 def _passphraseless_env(tmp_path: Path) -> dict[str, str]:
@@ -43,7 +43,7 @@ def _passphraseless_env(tmp_path: Path) -> dict[str, str]:
             "AEAT_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
             "AEAT_TOKEN_DIR": str(tmp_path / "tokens"),
             "AEAT_RUNS_DIR": str(tmp_path / "runs"),
-            "AEAT_ACTIVE_PROFILE": _FAKE_ACTIVE_PROFILE,
+            "AEAT_ACTIVE_PROFILE": _PLACEHOLDER_ACTIVE_PROFILE,
         },
     )
     return env
@@ -93,6 +93,16 @@ def test_unknown_command_renders_usage_error_without_passphrase(tmp_path: Path) 
     combined = f"{result.stdout}\n{result.stderr}"
     assert result.returncode == 2, combined
     assert "nosuchcmd" in combined
+    assert "AEAT_SECRET_PASSPHRASE" not in combined
+
+
+def test_bare_config_profile_renders_subgroup_help_without_passphrase(tmp_path: Path) -> None:
+    """Bare `config profile` is discovery, not a profile-data read."""
+    result = _run(["config", "profile"], tmp_path)
+    combined = f"{result.stdout}\n{result.stderr}"
+    assert result.returncode == 2, combined
+    assert "create" in result.stdout
+    assert "show" in result.stdout
     assert "AEAT_SECRET_PASSPHRASE" not in combined
 
 

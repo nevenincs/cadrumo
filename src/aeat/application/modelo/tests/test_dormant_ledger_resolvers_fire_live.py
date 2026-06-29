@@ -99,6 +99,7 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import (
@@ -108,6 +109,7 @@ from ...aggregation import (
     aggregate_oss_ioss_bindings,
 )
 from ...calculations._observations_repository import CalculationObservationRepository
+from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -119,6 +121,32 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
+
+_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
+    UserProfileFact(path="identity.tax_id", value="12345678Z"),
+    UserProfileFact(path="identity.name", value="Ready"),
+    UserProfileFact(path="identity.surnames", value="Operator"),
+    UserProfileFact(path="activities.description", value="design services"),
+    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+    UserProfileFact(path="censo.activity_start_date", value=date(2000, 1, 1)),
+)
+
+
+def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
+    UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name="Ready operator",
+            facts=_READY_PROFILE_FACTS,
+            created_at=_T0,
+            updated_at=_T0,
+        ),
+    )
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -142,6 +170,7 @@ _M130_REVISION = "2019-y-siguientes"
 _M130_YEAR = 2026
 _M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
 _M130_INGRESOS_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
+_M130_RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
 _M130_PREVIOUS_PAYMENTS_CASILLA: CasillaId = _casilla_id("05")
 _M130_RETENCIONES_CASILLA: CasillaId = _casilla_id("06")
 _M130_AGRARIAN_VOLUME_CASILLA: CasillaId = _casilla_id("08")
@@ -192,10 +221,20 @@ _M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
 @pytest.fixture
 def m130_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M130_BUCKET) as profile:
+        _seed_ready_profile(profile.repository, bucket_id=_M130_BUCKET)
         yield profile.repository
 
 
-def _income_transaction(provider_id: str, *, value_date: date, amount: Decimal) -> Transaction:
+def _income_transaction(
+    provider_id: str,
+    *,
+    value_date: date,
+    amount: Decimal,
+    taxable_base: Decimal | None = None,
+    iva_rate: Decimal | None = None,
+    iva_amount: Decimal | None = None,
+    irpf_category: str | None = None,
+) -> Transaction:
     """Build one ACTIVE, INCOMING, BUSINESS, EUR actividad-económica receipt."""
     return Transaction.model_validate(
         {
@@ -222,9 +261,10 @@ def _income_transaction(provider_id: str, *, value_date: date, amount: Decimal) 
             "business_pct": None,
             "purchase_invoice_evidence_id": None,
             "category_id": None,
-            "taxable_base": None,
-            "iva_rate": None,
-            "iva_amount": None,
+            "taxable_base": taxable_base,
+            "iva_rate": iva_rate,
+            "iva_amount": iva_amount,
+            "irpf_category": irpf_category,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
@@ -321,6 +361,83 @@ def test_m130_casilla_01_folds_seeded_ledger_income_on_live_calculate(
     assert set(result.revision.source_transaction_ids) >= {tx.transaction_id for tx in transactions}
 
 
+def test_m130_casilla_06_prefills_from_net_paid_professional_invoice_on_live_calculate(
+    m130_objects: SecureObjectRepository,
+) -> None:
+    """E2E: net-paid professional invoice fills M130 casilla 06 without caller input."""
+    wu_repo = WorkUnitCatalogueRepository(objects=m130_objects)
+    cr_repo = CalculationRevisionCatalogueRepository(objects=m130_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=_M130_BUCKET, objects=m130_objects)
+    invoice_repo = InvoiceCatalogueRepository(objects=m130_objects)
+
+    tx = _income_transaction(
+        "m130-net-paid",
+        value_date=date(2026, 3, 15),
+        amount=Decimal("2120.00"),
+        taxable_base=Decimal("2000.00"),
+        iva_rate=Decimal("0.21"),
+        iva_amount=Decimal("420.00"),
+        irpf_category="actividad_economica",
+    )
+    tx_repo.save(TransactionCatalogue.from_transactions((tx,)))
+
+    obs_repo = CalculationObservationRepository(objects=m130_objects)
+    obs_repo.save_observation(
+        RegistryModeloObservation(
+            modelo="100",
+            filing_year=_M130_PRIOR_YEAR,
+            period="0A",
+            observations=registry_grounded_observations(
+                modelo="100",
+                filing_year=_M130_PRIOR_YEAR,
+                period="0A",
+                casilla_values={
+                    _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
+                    _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                },
+            ),
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
+    )
+
+    revision = _revision("130", _M130_REVISION)
+    assert any(
+        str(b.source) == "ledger_renta_income_aggregation" and b.id == _M130_RETENCIONES_BINDING
+        for b in revision.bindings
+    )
+
+    work_unit = create_work_unit(
+        bucket_id=_M130_BUCKET,
+        modelo="130",
+        filing_year=_M130_YEAR,
+        period=Period.from_year_and_code(_M130_YEAR, "1T"),
+        revision_id=_M130_REVISION,
+        repository=wu_repo,
+        clock=_T0,
+    )
+    manual_inputs_without_c06 = {
+        casilla_id: value
+        for casilla_id, value in _M130_MANUAL_INPUTS.items()
+        if casilla_id != _M130_RETENCIONES_CASILLA
+    }
+    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        work_unit.work_unit_id,
+        casilla_inputs=manual_inputs_without_c06,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+        clock=_T1,
+    )
+
+    assert Decimal(result.revision.casilla_values[_M130_INGRESOS_CASILLA]) == Decimal("2000.00")
+    assert Decimal(result.revision.casilla_values[_M130_RETENCIONES_CASILLA]) == Decimal("300.00")
+    assert set(result.revision.source_transaction_ids) >= {tx.transaction_id}
+
+
 # ---------------------------------------------------------------------------
 # Chain 3 — M349 invoices (collectible_invoice): PROVEN LIVE
 # ---------------------------------------------------------------------------
@@ -349,6 +466,7 @@ _M349_EXPECTED_OPERADORES = Decimal("3")
 @pytest.fixture
 def m349_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M349_BUCKET) as profile:
+        _seed_ready_profile(profile.repository, bucket_id=_M349_BUCKET)
         yield profile.repository
 
 
@@ -527,6 +645,7 @@ _M369_DE_GOODS_BINDING_CASILLA: CasillaId = _casilla_id("iva.union.de.goods-dist
 @pytest.fixture
 def m369_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M369_BUCKET) as profile:
+        _seed_ready_profile(profile.repository, bucket_id=_M369_BUCKET)
         yield profile.repository
 
 

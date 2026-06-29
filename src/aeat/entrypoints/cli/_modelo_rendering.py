@@ -5,6 +5,7 @@ from __future__ import annotations
 from ...application.modelo import ModeloWorkPlazoSummary, calculation_result_summary, modelo_work_plazo_summary
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...domain.modelos import CalculationRevisionState
 from ._modelo_payloads import (
     CalculationRevisionPayload,
     ExternalEvidencePayload,
@@ -19,6 +20,7 @@ from ._modelo_payloads import (
 )
 
 _EXTEMPORANEOUS_RECARGO_LEGAL_REF = "ley-58-2003:art-27.2"
+_M349_ROW_FIELD_TEMPLATE_PREFIXES = ("op.", "rect.")
 
 
 def advisory_notice(
@@ -53,6 +55,43 @@ def short_id(value: str | None) -> str | None:
     return value[-12:] if value else None
 
 
+def _has_m349_detail_rows(rev) -> bool:
+    return any(getattr(row, "row_type", None) == "operador" for row in rev.detail_rows)
+
+
+def _is_m349_row_field_template_casilla(casilla_id: str) -> bool:
+    return casilla_id.startswith(_M349_ROW_FIELD_TEMPLATE_PREFIXES)
+
+
+def _visible_calculation_casilla_values(rev):
+    if not _has_m349_detail_rows(rev):
+        return rev.casilla_values
+    return {
+        casilla_id: value
+        for casilla_id, value in rev.casilla_values.items()
+        if not _is_m349_row_field_template_casilla(str(casilla_id))
+    }
+
+
+def _visible_calculation_observations(rev):
+    if not _has_m349_detail_rows(rev):
+        return rev.observations
+    return tuple(
+        observation
+        for observation in rev.observations
+        if not _is_m349_row_field_template_casilla(str(observation.casilla_id))
+    )
+
+
+def _effective_work_unit_state(unit) -> str:
+    state = unit.state.value
+    if state == "descartado":
+        return state
+    if unit.filed_calculation_revision_id is not None:
+        return CalculationRevisionState.PRESENTADO.value
+    return state
+
+
 def work_unit_payload(unit) -> WorkUnitPayload:
     return WorkUnitPayload(
         work_unit_id=unit.work_unit_id,
@@ -63,7 +102,7 @@ def work_unit_payload(unit) -> WorkUnitPayload:
         period=unit.period,
         revision_id=unit.revision_id,
         name=unit.name,
-        state=unit.state.value,
+        state=_effective_work_unit_state(unit),
         current_calculation_revision_id=unit.current_calculation_revision_id,
         short_current_calculation_revision_id=short_id(unit.current_calculation_revision_id),
         filed_calculation_revision_id=unit.filed_calculation_revision_id,
@@ -88,7 +127,7 @@ def work_unit_lines(unit) -> list[str]:
         f"period\t{unit.period.registry_token}",
         f"revision_id\t{unit.revision_id}",
         f"name\t{unit.name}",
-        f"state\t{unit.state.value}",
+        f"state\t{_effective_work_unit_state(unit)}",
         f"current_calculation_revision_id\t{unit.current_calculation_revision_id or ''}",
         f"short_current_calculation_revision_id\t{short_id(unit.current_calculation_revision_id) or ''}",
         f"filed_calculation_revision_id\t{unit.filed_calculation_revision_id or ''}",
@@ -127,7 +166,7 @@ def work_unit_list_lines(units, *, bucket_id: str | None, include_discarded: boo
                 str(unit.filing_year),
                 unit.period.registry_token,
                 unit.revision_id,
-                unit.state.value,
+                _effective_work_unit_state(unit),
                 short_id(unit.current_calculation_revision_id) or "",
                 short_id(unit.filed_calculation_revision_id) or "",
                 unit.name,
@@ -271,13 +310,13 @@ def calculation_revision_payload(rev) -> CalculationRevisionPayload:
             legal_refs=tuple(obs.legal_refs),
             source_refs=tuple(obs.source_refs),
         )
-        for obs in rev.observations
+        for obs in _visible_calculation_observations(rev)
     )
     return CalculationRevisionPayload(
         calculation_revision_id=rev.calculation_revision_id,
         work_unit_id=rev.work_unit_id,
         state=rev.state.value,
-        casilla_values={k: str(v) for k, v in rev.casilla_values.items()},
+        casilla_values={k: str(v) for k, v in _visible_calculation_casilla_values(rev).items()},
         observations=observations,
         result_summary=result_summary_payload(rev),
         binding_overrides={key: str(value) for key, value in rev.binding_overrides.items()},
@@ -346,7 +385,7 @@ def calculation_revision_lines(rev) -> list[str]:
     summary_lines = result_summary_lines(rev)
     if summary_lines:
         lines.extend(summary_lines)
-    for casilla, value in sorted(rev.casilla_values.items()):
+    for casilla, value in sorted(_visible_calculation_casilla_values(rev).items()):
         lines.append(f"casilla\t{casilla}\t{value}")
     for index, detail_row in enumerate(rev.detail_rows, start=1):
         fields = detail_row.model_dump(mode="json", exclude={"row_type"})

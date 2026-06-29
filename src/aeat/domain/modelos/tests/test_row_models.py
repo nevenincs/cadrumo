@@ -11,27 +11,58 @@ oracle-grounded against the AEAT form field constraints documented in:
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from decimal import Decimal
 from typing import TypedDict
 
 import pytest
 from pydantic import ValidationError
 
+from ....core.errors import AeatError, get_registered_error_code, resolve_error_message
 from ...calculations.registry import CasillaId
 from .._row_models import (
     M347_THRESHOLD_EUR,
     Modelo184MemberRow,
     Modelo232VinculadaRow,
     Modelo347ContraparteRow,
+    Modelo349CountryPrefixContextError,
     Modelo349OperadorRow,
     m349_nif_number_for_export,
+    validate_m349_country_prefix_context,
     validate_m349_nif_format,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+type RowModelCall = Callable[[], object]
+
+
 type RevisionInputSnapshot = dict[str, str]
+
+
+@dataclass(frozen=True)
+class _ValidationErrorCase:
+    case_id: str
+    build: RowModelCall
+    match: str | None = None
+
+
+@dataclass(frozen=True)
+class _BooleanCase:
+    case_id: str
+    nif: str
+    pais: str
+    expected: bool
+
+
+@dataclass(frozen=True)
+class _CountryContextCase:
+    case_id: str
+    call: Callable[[], None]
+    match: str | None = None
+    must_contain: str | None = None
 
 
 class _BaseRevisionIdKwargs(TypedDict):
@@ -41,6 +72,188 @@ class _BaseRevisionIdKwargs(TypedDict):
     input_values_by_casilla_id: RevisionInputSnapshot
     binding_overrides: dict[str, str]
     casilla_values: dict[CasillaId, Decimal]
+
+
+def _assert_validation_error(case: _ValidationErrorCase) -> None:
+    if case.match is None:
+        with pytest.raises(ValidationError):
+            case.build()
+        return
+    with pytest.raises(ValidationError, match=case.match):
+        case.build()
+
+
+_M184_INVALID_CASES = (
+    _ValidationErrorCase(
+        "porcentaje-above-100",
+        lambda: Modelo184MemberRow(nif="33333333C", porcentaje=Decimal("101"), importe=Decimal("0")),
+        "100",
+    ),
+    _ValidationErrorCase(
+        "porcentaje-negative",
+        lambda: Modelo184MemberRow(nif="33333333C", porcentaje=Decimal("-1"), importe=Decimal("0")),
+    ),
+    _ValidationErrorCase(
+        "pais-lowercase",
+        lambda: Modelo184MemberRow(nif="44444444D", pais="de", porcentaje=Decimal("50"), importe=Decimal("0")),
+    ),
+    _ValidationErrorCase(
+        "blank-nif",
+        lambda: Modelo184MemberRow(nif="   ", porcentaje=Decimal("50"), importe=Decimal("0")),
+    ),
+)
+
+_M232_INVALID_CASES = (
+    _ValidationErrorCase(
+        "pais-lowercase",
+        lambda: Modelo232VinculadaRow(nif="A12345678", pais="de", importe=Decimal("1")),
+    ),
+    _ValidationErrorCase(
+        "blank-nif",
+        lambda: Modelo232VinculadaRow(nif="   ", importe=Decimal("1")),
+    ),
+)
+
+_M349_INVALID_ROW_CASES = (
+    _ValidationErrorCase(
+        "missing-razon-social",
+        lambda: Modelo349OperadorRow.model_validate(
+            {
+                "codigo_pais": "DE",
+                "nif_comunitario": "DE123456789",
+                "clave_operacion": "E",
+                "importe": Decimal("1"),
+            },
+        ),
+        "razon_social",
+    ),
+    _ValidationErrorCase(
+        "blank-razon-social",
+        lambda: Modelo349OperadorRow(
+            codigo_pais="DE",
+            nif_comunitario="DE123456789",
+            razon_social="   ",
+            clave_operacion="E",
+            importe=Decimal("1"),
+        ),
+        "razon_social",
+    ),
+    _ValidationErrorCase(
+        "negative-importe",
+        lambda: Modelo349OperadorRow(
+            codigo_pais="DE",
+            nif_comunitario="DE123456789",
+            razon_social="Entidad DE",
+            clave_operacion="E",
+            importe=Decimal("-1"),
+        ),
+        "non-negative",
+    ),
+    _ValidationErrorCase(
+        "lowercase-country",
+        lambda: Modelo349OperadorRow(
+            codigo_pais="de",
+            nif_comunitario="DE123456789",
+            razon_social="Entidad DE",
+            clave_operacion="E",
+            importe=Decimal("1"),
+        ),
+    ),
+    _ValidationErrorCase(
+        "invalid-clave",
+        lambda: Modelo349OperadorRow.model_validate(
+            {
+                "codigo_pais": "DE",
+                "nif_comunitario": "DE123456789",
+                "razon_social": "Entidad DE",
+                "clave_operacion": "Z",
+                "importe": Decimal("1"),
+            },
+        ),
+    ),
+)
+
+_M349_NIF_FORMAT_CASES = (
+    _BooleanCase("valid-de", "DE123456789", "DE", True),
+    _BooleanCase("de-too-short", "DE12345678", "DE", False),
+    _BooleanCase("valid-fr", "FR12345678901", "FR", True),
+    _BooleanCase("valid-it", "IT12345678901", "IT", True),
+    _BooleanCase("valid-nl", "NL123456789B01", "NL", True),
+    _BooleanCase("valid-el", "EL123456789", "EL", True),
+    _BooleanCase("valid-xi", "XI123456789", "XI", True),
+    _BooleanCase("unknown-country", "XX12345", "XX", False),
+    _BooleanCase("unknown-country-badvat", "BADVAT", "ZZ", False),
+    _BooleanCase("supported-country-too-short", "EL1", "EL", False),
+    _BooleanCase("de-rejects-fr-shape", "FR12345678901", "DE", False),
+)
+
+_M349_CONTEXT_ALLOWED_CASES = (
+    _CountryContextCase(
+        "xi-goods-2025",
+        lambda: validate_m349_country_prefix_context(
+            country_code="XI",
+            clave_operacion="E",
+            filing_year=2025,
+            period="4T",
+        ),
+    ),
+    _CountryContextCase(
+        "gb-first-2021-transition-goods",
+        lambda: validate_m349_country_prefix_context(
+            country_code="GB",
+            clave_operacion="E",
+            filing_year=2021,
+            period="1T",
+        ),
+    ),
+    _CountryContextCase(
+        "gb-pre-2021-rectification",
+        lambda: validate_m349_country_prefix_context(
+            country_code="GB",
+            clave_operacion="S",
+            filing_year=2025,
+            period="4T",
+            is_rectification=True,
+            rectified_year=2020,
+            rectified_period="4T",
+        ),
+    ),
+)
+
+_M349_CONTEXT_REJECTED_CASES = (
+    _CountryContextCase(
+        "xi-services",
+        lambda: validate_m349_country_prefix_context(
+            country_code="XI",
+            clave_operacion="S",
+            filing_year=2025,
+            period="4T",
+        ),
+        "service keys",
+    ),
+    _CountryContextCase(
+        "gb-ordinary-2025",
+        lambda: validate_m349_country_prefix_context(
+            country_code="GB",
+            clave_operacion="E",
+            filing_year=2025,
+            period="4T",
+        ),
+        "post-transition",
+        "AEAT Brexit IVA NIF-IVA",
+    ),
+)
+
+_M347_INVALID_CASES = (
+    _ValidationErrorCase(
+        "invalid-pais-codigo",
+        lambda: Modelo347ContraparteRow(nif="12345678A", pais_codigo="ESP"),
+    ),
+    _ValidationErrorCase(
+        "blank-nif",
+        lambda: Modelo347ContraparteRow(nif="   "),
+    ),
+)
 
 
 # ---------------------------------------------------------------------------
@@ -90,25 +303,10 @@ class TestModelo184MemberRow:
         row = Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("100"), importe=Decimal("50000"))
         assert row.porcentaje == Decimal("100")
 
-    def test_porcentaje_above_100_rejected(self) -> None:
-        """porcentaje > 100 is rejected per M184 business rule."""
-        with pytest.raises(ValidationError, match="100"):
-            Modelo184MemberRow(nif="33333333C", porcentaje=Decimal("101"), importe=Decimal("0"))
-
-    def test_porcentaje_negative_rejected(self) -> None:
-        """Negative porcentaje is rejected."""
-        with pytest.raises(ValidationError):
-            Modelo184MemberRow(nif="33333333C", porcentaje=Decimal("-1"), importe=Decimal("0"))
-
-    def test_pais_must_be_uppercase_alpha(self) -> None:
-        """pais must be uppercase two-letter ISO country code."""
-        with pytest.raises(ValidationError):
-            Modelo184MemberRow(nif="44444444D", pais="de", porcentaje=Decimal("50"), importe=Decimal("0"))
-
-    def test_nif_blank_rejected(self) -> None:
-        """Blank NIF is rejected."""
-        with pytest.raises(ValidationError):
-            Modelo184MemberRow(nif="   ", porcentaje=Decimal("50"), importe=Decimal("0"))
+    @pytest.mark.parametrize("case", _M184_INVALID_CASES, ids=lambda case: case.case_id)
+    def test_invalid_member_rows_rejected(self, case: _ValidationErrorCase) -> None:
+        """Invalid M184 member-row inputs are rejected by the real model."""
+        _assert_validation_error(case)
 
     def test_three_members_round_trip(self) -> None:
         """3-member scenario matching Núria round-17 fixture (40/35/25 split)."""
@@ -183,15 +381,10 @@ class TestModelo232VinculadaRow:
         row = Modelo232VinculadaRow(nif="A12345678", metodo="cup", importe=Decimal("1"))
         assert row.metodo == "CUP"
 
-    def test_pais_must_be_uppercase_alpha(self) -> None:
-        """pais must be uppercase two-letter ISO country code."""
-        with pytest.raises(ValidationError):
-            Modelo232VinculadaRow(nif="A12345678", pais="de", importe=Decimal("1"))
-
-    def test_nif_blank_rejected(self) -> None:
-        """Blank NIF is rejected."""
-        with pytest.raises(ValidationError):
-            Modelo232VinculadaRow(nif="   ", importe=Decimal("1"))
+    @pytest.mark.parametrize("case", _M232_INVALID_CASES, ids=lambda case: case.case_id)
+    def test_invalid_vinculada_rows_rejected(self, case: _ValidationErrorCase) -> None:
+        """Invalid M232 vinculada-row inputs are rejected by the real model."""
+        _assert_validation_error(case)
 
     def test_two_related_party_rows_distinguish_by_importe(self) -> None:
         """Two related-party rows with different importes are distinct.
@@ -352,68 +545,34 @@ class TestModelo349OperadorRow:
         row = Modelo349OperadorRow(
             codigo_pais="FR",
             nif_comunitario="fr12345678901",
+            razon_social="France SARL",
             clave_operacion="S",
             importe=Decimal("1"),
         )
         assert row.nif_comunitario == "FR12345678901"
-
-    def test_razon_social_defaults_empty(self) -> None:
-        """razon_social defaults to empty string."""
-        row = Modelo349OperadorRow(
-            codigo_pais="IT",
-            nif_comunitario="IT12345678901",
-            clave_operacion="M",
-            importe=Decimal("1000"),
-        )
-        assert row.razon_social == ""
 
     def test_importe_zero_is_valid(self) -> None:
         """importe=0 is valid per Orden HAC/174/2020 (zero-value ops can appear)."""
         row = Modelo349OperadorRow(
             codigo_pais="PT",
             nif_comunitario="PT123456789",
+            razon_social="Portugal LDA",
             clave_operacion="T",
             importe=Decimal("0"),
         )
         assert row.importe == Decimal("0")
 
-    def test_importe_negative_rejected(self) -> None:
-        """Negative importe is rejected per Orden HAC/174/2020 non_negative constraint."""
-        with pytest.raises(ValidationError, match="non-negative"):
-            Modelo349OperadorRow(
-                codigo_pais="DE",
-                nif_comunitario="DE123456789",
-                clave_operacion="E",
-                importe=Decimal("-1"),
-            )
-
-    def test_codigo_pais_must_be_uppercase_alpha(self) -> None:
-        """codigo_pais must be uppercase two-letter ISO code."""
-        with pytest.raises(ValidationError):
-            Modelo349OperadorRow(
-                codigo_pais="de",
-                nif_comunitario="DE123456789",
-                clave_operacion="E",
-                importe=Decimal("1"),
-            )
-
-    def test_invalid_clave_operacion_rejected(self) -> None:
-        """Clave not in the Orden HAC/174/2020 catalogue is rejected."""
-        with pytest.raises(ValidationError):
-            Modelo349OperadorRow.model_validate(
-                {
-                    "codigo_pais": "DE",
-                    "nif_comunitario": "DE123456789",
-                    "clave_operacion": "Z",
-                    "importe": Decimal("1"),
-                },
-            )
+    @pytest.mark.parametrize("case", _M349_INVALID_ROW_CASES, ids=lambda case: case.case_id)
+    def test_invalid_operador_rows_rejected(self, case: _ValidationErrorCase) -> None:
+        """Invalid M349 operador-row inputs are rejected by the real model."""
+        _assert_validation_error(case)
 
     def test_frozen_model_immutable(self) -> None:
         """Modelo349OperadorRow is frozen."""
         row = Modelo349OperadorRow(
             codigo_pais="DE",
             nif_comunitario="DE123456789",
+            razon_social="Deutschland GmbH",
             clave_operacion="E",
             importe=Decimal("1"),
         )
@@ -429,12 +588,14 @@ class TestModelo349OperadorRow:
         row1 = Modelo349OperadorRow(
             codigo_pais="DE",
             nif_comunitario="DE123456789",
+            razon_social="Deutschland GmbH",
             clave_operacion="E",
             importe=Decimal("50000"),
         )
         row2 = Modelo349OperadorRow(
             codigo_pais="FR",
             nif_comunitario="FR12345678901",
+            razon_social="France SARL",
             clave_operacion="S",
             importe=Decimal("30000"),
         )
@@ -442,6 +603,7 @@ class TestModelo349OperadorRow:
         row1_modified = Modelo349OperadorRow(
             codigo_pais="DE",
             nif_comunitario="DE123456789",
+            razon_social="Deutschland GmbH",
             clave_operacion="E",
             importe=Decimal("75000"),
         )
@@ -456,49 +618,34 @@ class TestModelo349OperadorRow:
 
 
 class TestValidateM349NifFormat:
-    def test_valid_german_nif(self) -> None:
-        """DE + 9 digits matches the German NIF-IVA pattern."""
-        assert validate_m349_nif_format("DE123456789", "DE") is True
+    @pytest.mark.parametrize("case", _M349_NIF_FORMAT_CASES, ids=lambda case: case.case_id)
+    def test_country_specific_nif_formats(self, case: _BooleanCase) -> None:
+        """M349 NIF-IVA validation follows country-specific AEAT patterns."""
+        assert validate_m349_nif_format(case.nif, case.pais) is case.expected
 
-    def test_invalid_german_nif_too_short(self) -> None:
-        """DE + 8 digits does not match (must be exactly 9)."""
-        assert validate_m349_nif_format("DE12345678", "DE") is False
 
-    def test_valid_french_nif(self) -> None:
-        """FR + 2 alphanum + 9 digits is valid."""
-        assert validate_m349_nif_format("FR12345678901", "FR") is True
+class TestValidateM349CountryPrefixContext:
+    @pytest.mark.parametrize("case", _M349_CONTEXT_ALLOWED_CASES, ids=lambda case: case.case_id)
+    def test_allowed_country_prefix_contexts(self, case: _CountryContextCase) -> None:
+        """AEAT-authorised M349 GB/XI transition contexts pass."""
+        case.call()
 
-    def test_valid_italian_nif(self) -> None:
-        """IT + 11 digits is valid."""
-        assert validate_m349_nif_format("IT12345678901", "IT") is True
-
-    def test_valid_dutch_nif(self) -> None:
-        """NL + 9 digits + B + 2 digits matches Dutch pattern."""
-        assert validate_m349_nif_format("NL123456789B01", "NL") is True
-
-    def test_official_greece_country_code_is_supported(self) -> None:
-        """EL + 9 digits matches the AEAT Modelo 349 instruction table."""
-        assert validate_m349_nif_format("EL123456789", "EL") is True
-
-    def test_unknown_country_rejected(self) -> None:
-        """Country prefixes absent from the M349 instructions fail closed."""
-        assert validate_m349_nif_format("XX12345", "XX") is False
-
-    def test_unknown_country_badvat_rejected(self) -> None:
-        """Persona repro: an unsupported country cannot pass via generic NIF shape."""
-        assert validate_m349_nif_format("BADVAT", "ZZ") is False
-
-    def test_supported_country_too_short_rejected(self) -> None:
-        """Known country patterns still reject malformed NIFs."""
-        assert validate_m349_nif_format("EL1", "EL") is False
-
-    def test_antitautology_de_pattern_rejects_fr_shaped_nif(self) -> None:
-        """Anti-tautology: a FR-format NIF does not pass the DE validator.
-
-        DE requires exactly 9 digits after the prefix. FR has 2 alphanum + 9 digits.
-        The DE pattern would reject a 13-character FR NIF.
-        """
-        assert validate_m349_nif_format("FR12345678901", "DE") is False
+    @pytest.mark.parametrize("case", _M349_CONTEXT_REJECTED_CASES, ids=lambda case: case.case_id)
+    def test_rejected_country_prefix_contexts(self, case: _CountryContextCase) -> None:
+        """Invalid M349 GB/XI transition contexts fail with the domain error."""
+        assert case.match is not None
+        with pytest.raises(Modelo349CountryPrefixContextError) as exc:
+            case.call()
+        assert isinstance(exc.value, AeatError)
+        assert isinstance(exc.value, ValueError)
+        code = get_registered_error_code(exc.value)
+        assert code.code == "REFUSED_MODELO_349_COUNTRY_PREFIX_CONTEXT"
+        message = resolve_error_message(exc.value)
+        assert "Modelo 349" in message
+        assert "AEAT Brexit IVA NIF-IVA" in message
+        assert case.match in message
+        if case.must_contain is not None:
+            assert case.must_contain in message
 
 
 class TestM349NifNumberForExport:
@@ -575,15 +722,10 @@ class TestModelo347ContraparteRow:
         row = Modelo347ContraparteRow(nif="12345678A", pais_codigo="de")
         assert row.pais_codigo == "DE"
 
-    def test_invalid_pais_codigo_rejected(self) -> None:
-        """Three-letter pais_codigo is rejected."""
-        with pytest.raises(ValidationError):
-            Modelo347ContraparteRow(nif="12345678A", pais_codigo="ESP")
-
-    def test_nif_blank_rejected(self) -> None:
-        """Blank NIF is rejected."""
-        with pytest.raises(ValidationError):
-            Modelo347ContraparteRow(nif="   ")
+    @pytest.mark.parametrize("case", _M347_INVALID_CASES, ids=lambda case: case.case_id)
+    def test_invalid_contraparte_rows_rejected(self, case: _ValidationErrorCase) -> None:
+        """Invalid M347 contraparte-row inputs are rejected by the real model."""
+        _assert_validation_error(case)
 
     def test_frozen_model_immutable(self) -> None:
         """Modelo347ContraparteRow is frozen."""
@@ -642,6 +784,7 @@ class TestRevisionIdAcrossAllFourRowTypes:
         return Modelo349OperadorRow(
             codigo_pais="DE",
             nif_comunitario="DE123456789",
+            razon_social="Deutschland GmbH",
             clave_operacion="E",
             importe=Decimal("3000"),
         )
@@ -720,6 +863,7 @@ class TestRevisionIdAcrossAllFourRowTypes:
                 Modelo349OperadorRow(
                     codigo_pais="DE",
                     nif_comunitario="DE123456789",
+                    razon_social="Deutschland GmbH",
                     clave_operacion="E",
                     importe=Decimal("1000"),
                 ),
@@ -731,6 +875,7 @@ class TestRevisionIdAcrossAllFourRowTypes:
                 Modelo349OperadorRow(
                     codigo_pais="FR",
                     nif_comunitario="FR12345678901",
+                    razon_social="France SARL",
                     clave_operacion="E",
                     importe=Decimal("1000"),
                 ),

@@ -143,11 +143,12 @@ class IvaExemptionArticle(StrEnum):
 
 
 class EUMemberState(StrEnum):
-    """Current 27 EU member states, ISO 3166-1 alpha-2 (lowercase).
+    """Current EU IVA country prefixes accepted at IVA-facing boundaries.
 
-    Alphabetically ordered by ISO code. The list reflects the composition of
-    the European Union after Brexit and after Croatia's accession; Schengen
-    membership is irrelevant to this taxonomy.
+    The canonical 27 EU member states use ISO 3166-1 alpha-2 codes. ``XI`` is
+    the post-Brexit Northern Ireland VAT prefix accepted for goods movements in
+    Modelo 349 / intra-community IVA contexts; predicates that need strict
+    member-state membership must exclude it explicitly.
     """
 
     AT = "at"
@@ -177,6 +178,7 @@ class EUMemberState(StrEnum):
     SE = "se"
     SI = "si"
     SK = "sk"
+    XI = "xi"
 
 
 class IvaRateKind(StrEnum):

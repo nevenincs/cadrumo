@@ -489,6 +489,9 @@ class TestEuVatIdValidator:
         # Greece uses EL in IVA-IDs (not GR)
         assert validate_eu_iva_id("EL123456789") == "EL123456789"
 
+    def test_xi_northern_ireland_goods_prefix_accepted(self) -> None:
+        assert validate_eu_iva_id("XI123456789") == "XI123456789"
+
     def test_non_eu_prefix_rejected(self) -> None:
         with pytest.raises(BusinessOperationInvoiceInputError, match="GB"):
             validate_eu_iva_id("GB123456789")

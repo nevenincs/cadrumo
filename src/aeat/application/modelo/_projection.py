@@ -484,6 +484,15 @@ def project_modelo_100_from_m130(
             surface="project modelo 100 generated binding id",
         ): ccaa,
     }
+    declared_binding_ids = {binding.id for binding in m100_snapshot.revision.bindings}
+    verb_baseline_bindings = {
+        binding_id: value for binding_id, value in verb_baseline_bindings.items() if binding_id in declared_binding_ids
+    }
+    verb_baseline_enum_bindings = {
+        binding_id: value
+        for binding_id, value in verb_baseline_enum_bindings.items()
+        if binding_id in declared_binding_ids
+    }
 
     from ...core import resolve_active_bucket_id
 

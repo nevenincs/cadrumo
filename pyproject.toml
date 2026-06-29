@@ -67,6 +67,7 @@ dependencies = [
   "python-dotenv>=1.2.2,<2",
   # CLI localization backend.
   "python-i18n>=0.3.9,<1",
+  "PyYAML>=6.0.3,<7",
   # Typer imports Rich at runtime for help/error rendering. Keep the direct
   # pin version-bounded here; application code should not import Rich directly.
   "rich>=14.2.0,<16",
@@ -260,7 +261,9 @@ dev = [
   "types-pywin32>=311.0.0.20260508",
   "google-api-python-client-stubs>=1.36",
   "pyright>=1.1.409",
-  "semgrep>=1.85.0",
+  # Semgrep is invoked through `uvx --from semgrep==1.168.0 semgrep` instead of the
+  # persistent dev group: the Windows Python package install does not expose a
+  # working console command, while uvx resolves the supported standalone tool.
   "radon>=6.0.1",
   "complexipy>=3.3.0",
   "vulture>=2.16",
@@ -357,6 +360,9 @@ convention = "google"
 "dev/audit/semantic.py" = ["S603"]
 "dev/docs/build.py" = ["S603"]
 "dev/docs/serve.py" = ["S603"]
+"dev/packaging/smoke_browser.py" = ["S603"]
+"dev/packaging/smoke_core.py" = ["S603"]
+"dev/packaging/smoke_docker.py" = ["S603"]
 "dev/quality/quiet.py" = ["S603"]
 "dev/quality/suite.py" = ["S603", "S607"]
 "dev/quality/types.py" = ["S603", "S607"]
@@ -769,9 +775,9 @@ ignore_decorators = [
 # `formulas` is owned by the workbook parity oracle even though production
 # imports do not reference it directly yet. `rich` is the direct version pin for
 # Typer's console rendering. `pydantic_core` is re-exported by pydantic
-# (legitimate transitive use), `click` ships under typer (typer's CLI surface is
-# built on click), and `yaml` ships as `PyYAML`. The remaining diagnostics flag
-# genuine drift and stay active.
+# (legitimate transitive use), and `click` ships under typer (typer's CLI
+# surface is built on click). The remaining diagnostics flag genuine drift and
+# stay active.
 [tool.deptry.package_module_name_map]
 "PyYAML" = ["yaml"]
 "pyyaml" = ["yaml"]
@@ -779,5 +785,5 @@ ignore_decorators = [
 # `aeat`: the `all` convenience extra self-references the capability extras
 # (`aeat[google]` etc.); deptry reads the self-reference as an unused dependency.
 DEP002 = ["aeat", "formulas", "python-dotenv", "rich", "tzdata"]
-DEP003 = ["click", "pydantic_core", "yaml"]
+DEP003 = ["click", "pydantic_core"]
 DEP004 = ["pytest", "reportlab"]

@@ -184,6 +184,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.calculations.registry._formula_runtime._UnresolvedFormulaDependencyError",
+        ErrorCode(
+            code="ERROR_CALCULATIONS_REGISTRY_UNRESOLVED_FORMULA_DEPENDENCY",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry_snapshot",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.calculations.registry._errors.NoRevisionForPeriodError",
         ErrorCode(
             code="ERROR_CALCULATIONS_REGISTRY_NO_REVISION_FOR_PERIOD",
@@ -588,6 +599,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_modelo_external_filing_import",
             default_suggestion="aeat app live filed pull",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._action_errors.ModeloLocalObservationError",
+        ErrorCode(
+            code="REFUSED_MODELO_LOCAL_OBSERVATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_modelos",
+            default_suggestion="aeat app modelo filing-record observe-local --help",
             retryable=False,
             runbook_id=None,
         ),

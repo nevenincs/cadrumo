@@ -91,6 +91,10 @@ class AmendmentOverrideCasillaError(ModeloError):
     """Raised when an amendment override targets an undeclared casilla id."""
 
 
+class ModeloLocalObservationError(ModeloError):
+    """Raised when an operator-supplied local observation cannot be persisted."""
+
+
 class AmendmentVerificationRefusedError(ModeloError):
     """Raised when the corrected casilla map fails verification."""
 
@@ -101,6 +105,10 @@ class CalculationRegistryUnavailableError(ModeloError):
 
 class ModeloAggregationBindingError(ModeloError):
     """Raised when bucket-derived aggregation bindings conflict with caller input."""
+
+
+class ModeloRequiredBindingsMissingError(ModeloError):
+    """Raised when Modelo 202 lifecycle work lacks required calculation bindings."""
 
 
 class ModeloProfileReadinessError(ModeloError):
@@ -170,10 +178,12 @@ __all__ = [
     "ModeloAggregationBindingError",
     "ModeloApplicabilityFilterError",
     "ModeloCrossPeriodCleanStateError",
+    "ModeloLocalObservationError",
     "ModeloProfileReadinessError",
     "ModeloRecordNotFoundError",
     "ModeloRefundAccountMissingError",
     "ModeloRefundElectionNotEligibleError",
+    "ModeloRequiredBindingsMissingError",
     "ModeloWorkflowGateError",
     "StoredCalculationDriftError",
     "VerificationReportNotFoundError",

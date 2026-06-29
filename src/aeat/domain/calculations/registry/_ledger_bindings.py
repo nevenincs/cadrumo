@@ -694,13 +694,17 @@ class _RentaLedgerIncomeSelector(BaseModel):
     - ``"taxable_base_sum"`` sums ``RentaIncomeObservation.taxable_base_amount``
       (the IVA-exclusive base imponible).  Observations whose
       ``taxable_base_amount`` is ``None`` contribute zero to this sum.
+    - ``"withheld_amount_sum"`` sums the IRPF amount withheld at source from
+      net-paid professional receipts.
     """
 
     model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
 
     modelo: Literal[Modelo.M130, Modelo.M100] = Modelo.M130
     target_casilla_id: CasillaId
-    fact: Literal["ingresos_integros_sum", "gross_income_sum", "taxable_base_sum"] = "gross_income_sum"
+    fact: Literal["ingresos_integros_sum", "gross_income_sum", "taxable_base_sum", "withheld_amount_sum"] = (
+        "gross_income_sum"
+    )
 
 
 # Per-modelo income casillas this aggregation may feed. M130 (pago fraccionado)
@@ -725,7 +729,7 @@ def _renta_ledger_income_selector(binding: DataBindingDefinition) -> _RentaLedge
 
 
 _RENTA_130_INCOME_SUPPORTED_FACTS: frozenset[str] = frozenset(
-    {"ingresos_integros_sum", "gross_income_sum", "taxable_base_sum"},
+    {"ingresos_integros_sum", "gross_income_sum", "taxable_base_sum", "withheld_amount_sum"},
 )
 
 
@@ -771,6 +775,9 @@ class RentaIncomeObservationProtocol(Protocol):
     @property
     def taxable_base_amount(self) -> Decimal | None: ...
 
+    @property
+    def withheld_amount(self) -> Decimal: ...
+
 
 def resolve_ledger_renta_income_aggregation_binding_values(
     revision: ModeloRevision,
@@ -783,7 +790,7 @@ def resolve_ledger_renta_income_aggregation_binding_values(
     when declared, else ``observation.gross_amount`` (per-observation
     fallback); ``"gross_income_sum"`` → ``observation.gross_amount``;
     ``"taxable_base_sum"`` → ``observation.taxable_base_amount`` (zero when
-    ``None``).
+    ``None``); ``"withheld_amount_sum"`` → ``observation.withheld_amount``.
 
     Args:
         revision: The :class:`ModeloRevision` whose bindings are resolved.
@@ -813,6 +820,8 @@ def resolve_ledger_renta_income_aggregation_binding_values(
                 (observation.taxable_base_amount or Decimal("0") for observation in matched),
                 Decimal("0"),
             )
+        elif selector.fact == "withheld_amount_sum":
+            resolved[binding.id] = sum((observation.withheld_amount for observation in matched), Decimal("0"))
         else:
             resolved[binding.id] = sum((observation.gross_amount for observation in matched), Decimal("0"))
     return resolved

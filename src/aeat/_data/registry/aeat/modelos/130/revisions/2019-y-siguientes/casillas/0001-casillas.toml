@@ -226,8 +226,8 @@ section = ["resultados_negativos_trimestres_anteriores"]
 data_type = "money"
 semantic_role = "irpf_pf_resultados_negativos_anteriores"
 required = false
-input_kind = "bound"
-binding = "modelo-130-resultados-negativos-anteriores"
+input_kind = "computed"
+formula = "modelo-130-resultados-negativos-anteriores-cap"
 constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-130-instructions"] }
 export_refs = ["modelo-130-casilla-15"]
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]

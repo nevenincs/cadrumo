@@ -44,6 +44,34 @@ from ._errors import TransactionValidationError
 from ._ids import TransactionId
 from ._raw_transaction import RawTransaction
 
+_IRPF_CATEGORY_TRABAJO = "trabajo"
+_IRPF_CATEGORY_ACTIVIDAD_ECONOMICA = "actividad_economica"
+# LIRPF art. 101.5 / RIRPF art. 95: supported professional activity
+# withholding rates are 15% or lower reduced rates, not the 21% IVA delta.
+_MAX_SUPPORTED_ACTIVITY_WITHHOLDING_RATE = Decimal("0.15")
+_RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING = frozenset(
+    {
+        "arrendamiento_local",
+        "arrendamiento_vivienda_afecto",
+    },
+)
+_RENT_IRPF_CATEGORIES_PAID_NET_OF_WITHHOLDING = _RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING
+
+
+def _has_non_work_irpf_category(value: str | None) -> bool:
+    """Return whether a row carries an explicit non-salary withholding axis."""
+    return value not in {None, "", _IRPF_CATEGORY_TRABAJO}
+
+
+def _has_activity_irpf_category(value: str | None) -> bool:
+    """Return whether a row carries the actividad-economica withholding axis."""
+    return value == _IRPF_CATEGORY_ACTIVIDAD_ECONOMICA
+
+
+def _has_rent_irpf_category(value: str | None) -> bool:
+    """Return whether a row carries an explicit rental withholding axis."""
+    return value in _RENT_IRPF_CATEGORIES_PAID_NET_OF_WITHHOLDING
+
 
 def derive_transaction_id(raw: RawTransaction) -> str:
     """Return the stable transaction hash for one raw transaction.
@@ -999,6 +1027,19 @@ class Transaction(BaseModel):
         the paid cash gross matches the taxable base; the IVA amount is
         self-assessed but not paid in the transaction itself.
 
+        For professional income paid net of IRPF withholding, the bank receipt
+        can be lower than the invoice gross while the declared base and IVA
+        still need to preserve the invoice substrate. That relaxation is
+        accepted only for INCOMING rows with an explicit non-work
+        ``irpf_category`` and only when ``taxable_base + iva_amount`` is above
+        the cash receipt; under-declared invoice gross remains refused.
+
+        For rent expenses paid net of withholding, the same substrate
+        preservation is accepted only for OUTGOING rows in the scoped rent
+        categories with an explicit non-work ``irpf_category``. The supplier
+        invoice base and IVA still reconstitute the invoice gross, while the
+        bank movement reflects cash after withholding.
+
         The check fires **only when both** :attr:`taxable_base` and
         :attr:`iva_amount` are present. A row with either field unset (the
         common case — most transactions never carry the tax substrate)
@@ -1022,10 +1063,50 @@ class Transaction(BaseModel):
             return self
         expected = round_to_cents(abs(self.raw.amount))
         reconstituted = round_to_cents(self.taxable_base + self.iva_amount)
+        if reconstituted == expected:
+            return self
+        if (
+            self.direction == TransactionDirection.INCOMING
+            and _has_non_work_irpf_category(self.irpf_category)
+            and reconstituted > expected
+        ):
+            inferred_withholding = round_to_cents(reconstituted - expected)
+            if _has_activity_irpf_category(self.irpf_category):
+                maximum_supported_withholding = round_to_cents(
+                    self.taxable_base * _MAX_SUPPORTED_ACTIVITY_WITHHOLDING_RATE,
+                )
+                if inferred_withholding > maximum_supported_withholding:
+                    raise TransactionValidationError(
+                        "inferred IRPF withholding exceeds supported activity rate; "
+                        "cash amount may be invoice base without IVA",
+                    )
+            return self
+        if (
+            self.direction == TransactionDirection.OUTGOING
+            and self.category_id in _RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING
+            and _has_rent_irpf_category(self.irpf_category)
+            and reconstituted > expected
+        ):
+            return self
+        detail = ""
+        if reconstituted > expected and self.direction == TransactionDirection.INCOMING:
+            detail = (
+                " If this is an income receipt paid net of IRPF withholding, "
+                "set irpf_category so the invoice base and IVA can be kept."
+            )
+        if (
+            reconstituted > expected
+            and self.direction == TransactionDirection.OUTGOING
+            and self.category_id in _RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING
+        ):
+            detail = (
+                " If this is rent paid net of withholding, set irpf_category "
+                "to the rental withholding category so the invoice base and IVA can be kept."
+            )
         if reconstituted != expected:
             raise TransactionValidationError(
                 "taxable_base + iva_amount must equal the gross to the cent: "
-                f"{self.taxable_base} + {self.iva_amount} = {reconstituted} != {expected}",
+                f"{self.taxable_base} + {self.iva_amount} = {reconstituted} != {expected}.{detail}",
             )
         return self
 

@@ -35,6 +35,13 @@ target_casillas = [
 confidence = "strict"
 min_coverage = "0"
 failure_semantics = "fail_hard"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-99",
+    "orden-eha-672-2007:art-1",
+    "rd-439-2007:art-110",
+    "rd-439-2007:art-95",
+]
 source_refs = ["aeat-dr-130-2019-v12"]
-

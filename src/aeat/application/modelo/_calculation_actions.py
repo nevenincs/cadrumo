@@ -26,11 +26,13 @@ from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import (
     BindingId,
     CasillaId,
+    CasillaObservation,
     InputKind,
     ModeloRevision,
     RelationId,
     calculate_registry_snapshot,
     casillas_by_id,
+    relation_source_requirements,
 )
 from ...domain.deadlines import IVARegime
 from ...domain.invoices import InvoiceCatalogueRepository
@@ -46,8 +48,13 @@ from ...domain.modelos._protocols import (
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.modelos._row_models import Modelo349OperadorRow, ModeloDetailRow
 from ...domain.modelos._work_unit import WorkUnit, WorkUnitState
-from ...domain.period import period_end_date
-from ...domain.transactions import TransactionCatalogueRepository
+from ...domain.period import period_end_date, period_start_date
+from ...domain.transactions import (
+    BusinessClassification,
+    TransactionCatalogueRepository,
+    TransactionDirection,
+    TransactionLifecycleState,
+)
 from ..aggregation._source_mesh import DEFERRED_SOURCE_KINDS as _DEFERRED_SOURCE_KINDS
 from ..aggregation._source_mesh import (
     BindingSourceDisposition as _BindingSourceDisposition,
@@ -82,6 +89,9 @@ from ._calculation_helpers import (
     resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit,
 )
 from ._calculation_resolution import (
+    ResolvedCalculationChannels,
+)
+from ._calculation_resolution import (
     build_calculation_replay_payloads as _build_calculation_replay_payloads,
 )
 from ._calculation_resolution import (
@@ -90,9 +100,18 @@ from ._calculation_resolution import (
 from ._calculation_resolution import (
     resolve_calculation_inputs as _resolve_calculation_inputs,
 )
+from ._m349_ledger_guard import (
+    raise_if_m349_intracom_ledger_rows_need_operator_rows as _raise_if_m349_intracom_ledger_rows_need_operator_rows,
+)
 from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
 from ._registry_resources import authority_via_resources as _authority_via_resources
 from ._registry_resources import registry_root as _registry_root
+from ._required_binding_gate import (
+    require_modelo_required_bindings_resolved as _require_modelo_required_bindings_resolved,
+)
+from ._required_binding_gate import (
+    resolved_required_profile_binding_values as _resolved_required_profile_binding_values,
+)
 from ._revision_persistence import persist_calculation_revision
 
 if TYPE_CHECKING:
@@ -262,6 +281,169 @@ _M349_NUMERO_OPERADORES_BINDING: BindingId = "iva-349-declarante-numero-operador
 _M349_IMPORTE_OPERACIONES_BINDING: BindingId = "iva-349-declarante-importe-operaciones"
 _M349_NUMERO_RECTIFICACIONES_BINDING: BindingId = "iva-349-declarante-numero-rectificaciones"
 _M349_IMPORTE_RECTIFICACIONES_BINDING: BindingId = "iva-349-declarante-importe-rectificaciones"
+_ZERO = Decimal("0")
+_M390_ANNUAL_PERIOD_CODE = "0A"
+_M390_303_RECONCILIATION_ANNUAL_CASILLA_BY_SOURCE: Mapping[CasillaId, CasillaId] = {
+    "iva.cuota-devengada-total": "iva.anual.cuota-devengada-total",
+    "iva.cuota-deducible-total": "iva.anual.cuota-deducible-total",
+    "iva.resultado-regimen-general": "iva.anual.resultado-regimen-general",
+}
+
+
+def _m349_row_field_template_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
+    return frozenset(
+        casilla_id
+        for export_layout in revision.export_layouts
+        for record in export_layout.records
+        for casilla_id in record.row_field_casilla_ids.values()
+    )
+
+
+def _calculated_decimal(value: object | None) -> Decimal:
+    if value is None:
+        return _ZERO
+    if isinstance(value, Decimal):
+        return value
+    return Decimal(str(value))
+
+
+def _m390_303_reconciliation_targets(
+    snapshot: RegistrySnapshot,
+) -> tuple[tuple[RelationId, BindingId, CasillaId, CasillaId, CasillaId], ...]:
+    """Return M390 reconciliation relation targets keyed by their M303 source output."""
+    target_casillas_by_binding = {
+        casilla.binding: casilla.id for casilla in snapshot.revision.casillas if casilla.binding is not None
+    }
+    targets: list[tuple[RelationId, BindingId, CasillaId, CasillaId, CasillaId]] = []
+    for relation in snapshot.revision.relations:
+        if relation.source_modelo != Modelo.M303.value:
+            continue
+        annual_casilla = _M390_303_RECONCILIATION_ANNUAL_CASILLA_BY_SOURCE.get(relation.source_casilla_id)
+        if annual_casilla is None:
+            continue
+        target_casilla = target_casillas_by_binding.get(relation.target_binding)
+        if target_casilla is None:
+            continue
+        targets.append(
+            (
+                relation.id,
+                relation.target_binding,
+                target_casilla,
+                relation.source_casilla_id,
+                annual_casilla,
+            ),
+        )
+    return tuple(targets)
+
+
+def _m390_303_required_periods(snapshot: RegistrySnapshot, relation_ids: frozenset[RelationId]) -> tuple[str, ...]:
+    periods: set[str] = set()
+    for requirement in relation_source_requirements(
+        snapshot.revision,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+    ):
+        if relation_ids.intersection(requirement.relation_ids):
+            periods.update(requirement.periods)
+    return tuple(sorted(periods))
+
+
+def _raise_if_m390_303_reconciliation_would_save_silent_zero(
+    *,
+    work_unit: WorkUnit,
+    snapshot: RegistrySnapshot,
+    casilla_values: Mapping[CasillaId, Decimal],
+    resolved_binding_values: Mapping[BindingId, Decimal],
+) -> None:
+    """Refuse an M390 draft that would save zero 303 reconciliation slots from missing fold-in evidence."""
+    if str(work_unit.modelo) != Modelo.M390.value or work_unit.period.registry_token != _M390_ANNUAL_PERIOD_CODE:
+        return
+
+    missing: list[tuple[RelationId, BindingId, CasillaId, CasillaId]] = []
+    for relation_id, binding_id, target_casilla, _source_casilla, annual_casilla in _m390_303_reconciliation_targets(
+        snapshot,
+    ):
+        if binding_id in resolved_binding_values:
+            continue
+        if _calculated_decimal(casilla_values.get(annual_casilla)) == _ZERO:
+            continue
+        missing.append((relation_id, binding_id, target_casilla, annual_casilla))
+
+    if not missing:
+        return
+
+    missing_relation_ids = frozenset(relation_id for relation_id, _binding_id, _target, _annual in missing)
+    raise ModeloCrossPeriodCleanStateError(
+        (
+            "Modelo 390 calculation refused: nonzero annual IVA totals are present, "
+            "but the Modelo 303 reconciliation bindings did not resolve from clean "
+            "current quarterly filing observations."
+        ),
+        translated_message="application.modelo.errors.cross_period_clean_state_incomplete",
+        context={
+            "modelo": str(work_unit.modelo),
+            "filing_year": str(work_unit.filing_year),
+            "period": work_unit.period.registry_token,
+            "finding_count": len(missing),
+            "reason": "missing_clean_cross_period_303_filings_or_observations",
+            "missing_303_periods": _m390_303_required_periods(snapshot, missing_relation_ids),
+            "missing_303_reconciliation_bindings": tuple(binding_id for _rel, binding_id, _target, _annual in missing),
+            "zero_reconciliation_casillas_at_risk": tuple(target for _rel, _binding, target, _annual in missing),
+            "nonzero_annual_casillas": tuple(annual for _rel, _binding, _target, annual in missing),
+        },
+        suggestion="aeat app live filed pull-sources --modelo 303",
+    )
+
+
+def _suppress_m349_row_field_template_outputs(
+    *,
+    work_unit: WorkUnit,
+    revision: ModeloRevision,
+    casilla_values: dict[CasillaId, Decimal],
+    observations: tuple[CasillaObservation, ...],
+) -> tuple[dict[CasillaId, Decimal], tuple[CasillaObservation, ...]]:
+    if str(work_unit.modelo) != Modelo.M349.value:
+        return casilla_values, observations
+    row_field_casilla_ids = _m349_row_field_template_casilla_ids(revision)
+    if not row_field_casilla_ids:
+        return casilla_values, observations
+    return (
+        {casilla_id: value for casilla_id, value in casilla_values.items() if casilla_id not in row_field_casilla_ids},
+        tuple(observation for observation in observations if observation.casilla_id not in row_field_casilla_ids),
+    )
+
+
+def _add_required_profile_bindings(
+    *,
+    work_unit: WorkUnit,
+    revision: ModeloRevision,
+    channels: ResolvedCalculationChannels,
+) -> None:
+    required_profile_bindings = _resolved_required_profile_binding_values(
+        work_unit=work_unit,
+        registry_revision=revision,
+    )
+    for binding_id, value in required_profile_bindings.items():
+        channels.bindings.setdefault(binding_id, value)
+
+
+def _resolved_binding_ids_for_required_binding_gate(
+    *,
+    revision: ModeloRevision,
+    channels: ResolvedCalculationChannels,
+    caller_binding_ids: Mapping[BindingId, Decimal],
+    unresolved_relation_ids: tuple[RelationId, ...],
+    unresolved_binding_ids: tuple[BindingId, ...],
+) -> tuple[BindingId, ...]:
+    resolved = set(channels.bindings) | set(channels.enum_bindings) | set(channels.date_bindings)
+    caller_ids = set(caller_binding_ids)
+    unresolved_relation_targets = {
+        relation.target_binding
+        for relation in revision.relations
+        if relation.id in unresolved_relation_ids and relation.target_binding not in caller_ids
+    }
+    unresolved_bindings = set(unresolved_binding_ids).difference(caller_ids)
+    return tuple(sorted(resolved.difference(unresolved_relation_targets).difference(unresolved_bindings)))
 
 
 def calculate_modelo_revision(
@@ -339,6 +521,12 @@ def calculate_modelo_revision(
         revision=snapshot.revision,
         transaction_repository=ledger_preflight_transaction_repository,
     )
+    _raise_if_m200_ledger_requires_accounting_result_input(
+        work_unit=work_unit,
+        casilla_inputs=casilla_inputs,
+        backend_casilla_inputs=backend_casilla_inputs,
+        transaction_repository=ledger_preflight_transaction_repository,
+    )
     iva_compensation_decision = resolve_iva_compensation_decision_for_calculation(
         work_unit,
         snapshot=snapshot,
@@ -380,6 +568,24 @@ def calculate_modelo_revision(
         borrador_snapshot_id=borrador_snapshot_id,
         borrador_snapshot_repository=borrador_snapshot_repository,
     )
+    _add_required_profile_bindings(
+        work_unit=work_unit,
+        revision=snapshot.revision,
+        channels=channels,
+    )
+    _require_modelo_required_bindings_resolved(
+        work_unit=work_unit,
+        registry_revision=snapshot.revision,
+        resolved_binding_ids=_resolved_binding_ids_for_required_binding_gate(
+            revision=snapshot.revision,
+            channels=channels,
+            caller_binding_ids=caller_binding_values,
+            unresolved_relation_ids=unresolved_relation_ids,
+            unresolved_binding_ids=unresolved_binding_ids,
+        ),
+        action="calculate or save a draft",
+    )
+
     resolved_relations = dict(relation_values or {})
     resolved_inputs = _resolve_calculation_inputs(
         revision=snapshot.revision,
@@ -410,7 +616,19 @@ def calculate_modelo_revision(
         resolved_relations=resolved_relations,
     )
     casilla_values = dict(engine_result.values)
+    _raise_if_m390_303_reconciliation_would_save_silent_zero(
+        work_unit=work_unit,
+        snapshot=snapshot,
+        casilla_values=casilla_values,
+        resolved_binding_values=channels.bindings,
+    )
     typed_observations = _build_typed_observations(engine_result=engine_result, snapshot=snapshot)
+    casilla_values, typed_observations = _suppress_m349_row_field_template_outputs(
+        work_unit=work_unit,
+        revision=snapshot.revision,
+        casilla_values=casilla_values,
+        observations=typed_observations,
+    )
 
     now = clock or _utc_now()
     return persist_calculation_revision(
@@ -469,6 +687,19 @@ _LEDGER_PREFLIGHT_BINDING_SOURCES = frozenset(
 # clients supply régimen-simplificado casillas (47-58) directly as manual
 # inputs rather than deriving them from the transaction ledger.
 _IVA_LEDGER_EXEMPT_REGIMES = frozenset({IVARegime.SIMPLIFICADO})
+_M200_ACCOUNTING_RESULT_CASILLA: CasillaId = "00501"
+_M200_ACCOUNTING_LEDGER_CLASSIFICATIONS = frozenset(
+    {
+        BusinessClassification.BUSINESS,
+        BusinessClassification.MIXED,
+    },
+)
+_M200_ACCOUNTING_LEDGER_DIRECTIONS = frozenset(
+    {
+        TransactionDirection.INCOMING,
+        TransactionDirection.OUTGOING,
+    },
+)
 
 
 def _raise_if_ledger_preflight_blocks_calculation(
@@ -499,10 +730,79 @@ def _raise_if_ledger_preflight_blocks_calculation(
         context={
             "transaction_id": first_issue.transaction_id,
             "reason": first_issue.reason.value,
+            "detail": first_issue.detail,
             "period": str(report.period),
         },
         suggestion=f"aeat app ledger preflight --period {report.period.registry_token} --year {report.period.year}",
     )
+
+
+def _raise_if_m200_ledger_requires_accounting_result_input(
+    *,
+    work_unit: WorkUnit,
+    casilla_inputs: Mapping[CasillaId, Decimal],
+    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
+    transaction_repository: TransactionCatalogueRepository | None,
+) -> None:
+    if str(work_unit.modelo) != Modelo.M200.value:
+        return
+    if _M200_ACCOUNTING_RESULT_CASILLA in casilla_inputs or (
+        backend_casilla_inputs is not None and _M200_ACCOUNTING_RESULT_CASILLA in backend_casilla_inputs
+    ):
+        return
+    ledger_transaction_count = _m200_accounting_ledger_transaction_count(
+        work_unit=work_unit,
+        transaction_repository=transaction_repository,
+    )
+    if ledger_transaction_count == 0:
+        return
+    period_label = f"{work_unit.filing_year}/{work_unit.period.registry_token}"
+    raise ModeloAggregationBindingError(
+        (
+            "Modelo 200 does not derive accounting profit from ledger transactions yet; "
+            f"the bucket has {ledger_transaction_count} business ledger row(s) in {period_label}. "
+            "Supply casilla 00501 from the company's accounting result before calculating."
+        ),
+        context={
+            "modelo": str(work_unit.modelo),
+            "filing_year": work_unit.filing_year,
+            "period": work_unit.period.registry_token,
+            "ledger_transaction_count": ledger_transaction_count,
+            "required_casilla_id": _M200_ACCOUNTING_RESULT_CASILLA,
+        },
+        suggestion=(
+            f"aeat app modelo work calculate {work_unit.work_unit_id} "
+            f"--casilla {_M200_ACCOUNTING_RESULT_CASILLA}=<resultado-contable>"
+        ),
+    )
+
+
+def _m200_accounting_ledger_transaction_count(
+    *,
+    work_unit: WorkUnit,
+    transaction_repository: TransactionCatalogueRepository | None,
+) -> int:
+    repository = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
+    period_start = period_start_date(
+        filing_year=work_unit.filing_year,
+        registry_period=work_unit.period.registry_token,
+    )
+    period_end = period_end_date(
+        filing_year=work_unit.filing_year,
+        registry_period=work_unit.period.registry_token,
+    )
+    count = 0
+    for transaction in repository.load():
+        if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+            continue
+        if transaction.direction not in _M200_ACCOUNTING_LEDGER_DIRECTIONS:
+            continue
+        if transaction.business_classification not in _M200_ACCOUNTING_LEDGER_CLASSIFICATIONS:
+            continue
+        effective_date = transaction.raw.value_date or transaction.raw.booked_date
+        if period_start <= effective_date <= period_end:
+            count += 1
+    return count
 
 
 def calculate_modelo_revision_from_bucket_aggregation(
@@ -904,6 +1204,12 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         caller_binding_values=binding_values or {},
         caller_casilla_inputs=casilla_inputs or {},
     )
+    all_detail_rows = (*source_resolution.detail_rows, *detail_rows)
+    _raise_if_m349_intracom_ledger_rows_need_operator_rows(
+        work_unit=work_unit,
+        transaction_repository=transaction_repository,
+        detail_rows=all_detail_rows,
+    )
     detail_row_binding_values = _detail_row_binding_values_for_calculation(
         work_unit=work_unit,
         detail_rows=detail_rows,
@@ -912,13 +1218,17 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         source_resolution.binding_values,
         detail_row_binding_values,
     )
-    backend_inputs = _merge_bucket_bound_inputs(
-        revision=snapshot.revision,
-        casilla_inputs=casilla_inputs or {},
-        bound_inputs=resolve_available_bound_inputs_by_casilla_id(
+    backend_source_inputs = {
+        **dict(source_resolution.bound_inputs_by_casilla_id),
+        **resolve_available_bound_inputs_by_casilla_id(
             snapshot.revision,
             backend_binding_values,
         ),
+    }
+    backend_inputs = _merge_bucket_bound_inputs(
+        revision=snapshot.revision,
+        casilla_inputs=casilla_inputs or {},
+        bound_inputs=backend_source_inputs,
     )
     # Feed the relation-resolver's resolved relation_values onto the engine's
     # first-class relation channel so computed casillas that reference
@@ -974,7 +1284,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         calculation_repository=calculation_repository,
         bucket_event_repository=bucket_event_repository,
         borrador_snapshot_repository=borrador_snapshot_repository,
-        detail_rows=detail_rows,
+        detail_rows=all_detail_rows,
         clock=clock,
     )
     advisory_diagnostics = collect_bucket_aggregation_advisory_diagnostics(

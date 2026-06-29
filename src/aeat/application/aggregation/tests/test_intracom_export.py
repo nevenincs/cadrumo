@@ -82,6 +82,7 @@ def _period(year: int, code: str) -> Period:
 _PERIOD = _period(2026, "2T")
 _DE = EUMemberState.DE
 _ES = EUMemberState.ES
+_XI = EUMemberState.XI
 
 
 def _raw(provider_id: str, *, amount: Decimal, direction: TransactionDirection) -> RawTransaction:
@@ -148,6 +149,24 @@ def test_intracom_goods_supply_populates_casilla_59() -> None:
     obs = aggregation.observations[0]
     assert obs.category is IvaCategory.INTRA_COMMUNITY_SUPPLY
     assert _casilla_base(aggregation, "59") == Decimal("5000.00")
+    assert _casilla_base(aggregation, "60") == Decimal("0")
+
+
+def test_northern_ireland_xi_goods_supply_populates_casilla_59() -> None:
+    """Post-Brexit XI goods stay on the intra-community supply base path."""
+    tx = _inbound_tx(
+        "goods-xi-01",
+        amount=Decimal("3000.00"),
+        taxable_base=Decimal("3000.00"),
+        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        counterparty_eu_member_state=_XI,
+    )
+    catalogue = TransactionCatalogue.from_transactions([tx])
+    aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
+
+    assert len(aggregation.issues) == 0, f"unexpected issues: {aggregation.issues}"
+    assert len(aggregation.observations) == 1
+    assert _casilla_base(aggregation, "59") == Decimal("3000.00")
     assert _casilla_base(aggregation, "60") == Decimal("0")
 
 

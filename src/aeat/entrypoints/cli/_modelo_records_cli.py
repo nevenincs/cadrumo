@@ -11,6 +11,7 @@ import typer
 from ...application.modelo import (
     ExternalEvidenceKind,
     ExternalModeloImportError,
+    ModeloLocalObservationError,
     ModeloRecordNotFoundError,
     VerificationReportNotFoundError,
     WorkUnitMutationRefusedError,
@@ -20,7 +21,9 @@ from ...application.modelo import (
     import_external_filing_evidence,
     list_filing_records,
     list_verification_reports,
+    record_operator_local_observation,
 )
+from ...core import Period, PeriodError
 from ...core.i18n import tr
 from ...domain.calculations.registry import CasillaId
 from ...domain.modelos import ModeloCode
@@ -28,12 +31,14 @@ from ...domain.modelos._errors import ModeloValidationError
 from ._common import _emit_envelope, _profile_to_taxpayer
 from ._modelo_payloads import (
     FilingRecordImportResult,
+    FilingRecordLocalObservationResult,
     ModeloRecordListResult,
     ModeloRecordShowResult,
     VerificationReportListResult,
     VerificationReportShowResult,
 )
 from ._modelo_rendering import (
+    advisory_notice,
     filing_record_lines,
     filing_record_payload,
     verification_report_lines,
@@ -95,9 +100,20 @@ def _bad_from_error(exc: Exception) -> typer.BadParameter:
 def _modelo_filter(raw: str | None) -> ModeloCode | None:
     if raw is None:
         return None
+    return _modelo_code(raw)
+
+
+def _modelo_code(raw: str) -> ModeloCode:
     try:
         return ModeloCode(raw)
     except ModeloValidationError as exc:
+        raise _bad_from_error(exc) from exc
+
+
+def _filing_period(year: int, token: str) -> Period:
+    try:
+        return Period.from_year_and_code(year, token)
+    except PeriodError as exc:
         raise _bad_from_error(exc) from exc
 
 
@@ -278,6 +294,115 @@ def filing_record_import(
     ]
     lines.append("filing_disambiguation\t(imported AEAT-attested baseline)")
     _emit_envelope(ctx, command="modelo.filing_record.import", result=result, lines=lines)
+
+
+@filing_record_app.command(
+    "observe-local",
+    help="Record an operator-supplied local observation for calculation prefill.",
+)
+def filing_record_observe_local(
+    ctx: typer.Context,
+    modelo: Annotated[
+        str,
+        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
+    ],
+    year: Annotated[
+        int,
+        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
+    ],
+    period: Annotated[
+        str,
+        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
+    ],
+    actor: Annotated[
+        str | None,
+        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
+    ] = None,
+    set_overrides: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--set",
+            help="Canonical casilla.id and Decimal value to record, e.g. --set 1391=0.",
+        ),
+    ] = None,
+) -> None:
+    """Persist local, non-official prior filing observations for calculations."""
+    modelo_code = _modelo_code(modelo)
+    filing_period = _filing_period(year, period)
+    casilla_values: dict[CasillaId, Decimal] = {}
+    for spec in set_overrides or ():
+        key, value = _casilla_value(spec)
+        casilla_values[key] = value
+    if not casilla_values:
+        raise typer.BadParameter("observe-local requires at least one --set CASILLA=DECIMAL value")
+
+    try:
+        local_observation = record_operator_local_observation(
+            modelo=str(modelo_code),
+            filing_year=year,
+            period=filing_period,
+            casilla_values=casilla_values,
+            actor=actor or _actor(),
+        )
+    except ModeloLocalObservationError as exc:
+        raise _bad_from_error(exc) from exc
+
+    result = FilingRecordLocalObservationResult(
+        modelo=local_observation.modelo,
+        filing_year=local_observation.filing_year,
+        period=local_observation.period,
+        revision_id=local_observation.revision_id,
+        observation_key=local_observation.observation_key,
+        source_kind=local_observation.source_kind,
+        casilla_values={
+            casilla_id: str(value) for casilla_id, value in sorted(local_observation.casilla_values.items())
+        },
+        casilla_count=len(local_observation.casilla_values),
+        captured_at=local_observation.captured_at.isoformat(),
+        captured_by=local_observation.captured_by,
+        official_evidence=local_observation.official_evidence,
+        filing_record_created=local_observation.filing_record_created,
+        aeat_accepted=local_observation.aeat_accepted,
+    )
+    notice_message = (
+        "Operator-supplied local observation recorded for calculation prefill only; "
+        "it is not AEAT evidence and no filing record was created."
+    )
+    notice = advisory_notice(
+        "modelo.filing_record.observe_local.non_official",
+        notice_message,
+        context={
+            "source_kind": local_observation.source_kind,
+            "official_evidence": "false",
+            "filing_record_created": "false",
+        },
+    )
+    lines = [
+        "operation\tmodelo.filing_record.observe_local",
+        f"modelo\t{local_observation.modelo}",
+        f"filing_year\t{local_observation.filing_year}",
+        f"period\t{local_observation.period.registry_token}",
+        f"revision_id\t{local_observation.revision_id}",
+        f"observation_key\t{local_observation.observation_key}",
+        f"source_kind\t{local_observation.source_kind}",
+        "official_evidence\tFalse",
+        "filing_record_created\tFalse",
+        "aeat_accepted\tFalse",
+        f"captured_at\t{local_observation.captured_at.isoformat()}",
+        f"captured_by\t{local_observation.captured_by}",
+        "casilla_id\tvalue",
+    ]
+    lines.extend(
+        f"{casilla_id}\t{value}" for casilla_id, value in sorted(local_observation.casilla_values.items())
+    )
+    lines.append(f"WARNING\t{notice_message}")
+    _emit_envelope(
+        ctx,
+        command="modelo.filing_record.observe_local",
+        result=result,
+        lines=lines,
+        notices=[notice],
+    )
 
 
 @verification_report_app.command("list", help=tr("cli.app.modelo.verification_report.list_help"))

@@ -12,12 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from ...core import (
-    MissingOptionalExtraError,
-    OptionalExtra,
-    require_optional_extra,
-)
+from ...core import MissingOptionalExtraError, OptionalExtra, require_optional_extra
 from ...core.config import override_settings
+from ...core.errors import AeatError, CoreError
 from ..provisioning import (
     OPTIONAL_EXTRAS,
     DependencyStatus,
@@ -114,12 +111,35 @@ def test_require_optional_extra_present_is_a_noop() -> None:
 
 
 def test_require_optional_extra_absent_raises_instructive_import_error() -> None:
-    """A missing extra raises a typed ImportError naming the install command, not a deep ModuleNotFoundError."""
+    """A missing extra raises one typed AEAT error that remains import-compatible."""
     extra = OptionalExtra(extra="ghost", import_name="aeat_definitely_not_installed_xyz", feature="a ghost feature")
     with pytest.raises(MissingOptionalExtraError) as raised:
         require_optional_extra(extra)
     assert raised.value.extra is extra
     assert raised.value.install_hint == "pip install aeat[ghost]"
     assert "pip install aeat[ghost]" in str(raised.value)
-    # MissingOptionalExtraError IS an ImportError so existing import-failure handlers still catch it.
+    assert raised.value.suggestion == "pip install aeat[ghost]"
+    assert raised.value.context == {
+        "extra": "ghost",
+        "import_name": "aeat_definitely_not_installed_xyz",
+        "feature": "a ghost feature",
+    }
+    assert raised.value.name == "aeat_definitely_not_installed_xyz"
+    assert raised.value.path is None
+    assert isinstance(raised.value, AeatError)
+    assert isinstance(raised.value, CoreError)
     assert isinstance(raised.value, ImportError)
+
+
+def test_require_optional_extra_absent_is_caught_by_aeat_error_boundary() -> None:
+    """The central CLI error boundary can catch missing optional extras."""
+    extra = OptionalExtra(extra="ghost", import_name="aeat_definitely_not_installed_xyz", feature="a ghost feature")
+
+    caught: AeatError | None = None
+    try:
+        require_optional_extra(extra)
+    except AeatError as exc:
+        caught = exc
+
+    assert isinstance(caught, MissingOptionalExtraError)
+    assert isinstance(caught, ImportError)
