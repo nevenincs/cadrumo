@@ -21,6 +21,8 @@ from ._file_flow_support import (
     M111_PRIZE_WITHHELD_CASILLA,
     M111_PROFESSIONAL_WITHHELD_CASILLA,
     M111_TOTAL_WITHHELD_CASILLA,
+    M130_CARRY_FORWARD_CASILLA,
+    M130_INCOME_CASILLA,
     M180_PERCEPTOR_BASE_CASILLA,
     T0,
     T1,
@@ -49,6 +51,7 @@ from ._file_flow_support import (
     create_work_unit,
     get_calculation_revision,
     get_verification_report,
+    get_work_unit,
     list_verification_reports,
     mark_revision_verificado_completo,
     registry_required_manual_casillas,
@@ -56,6 +59,7 @@ from ._file_flow_support import (
     seed_clean_cross_period_sources,
     seed_modelo_180_work_unit,
     seed_work_unit,
+    upsert_work_unit,
     verify_modelo_revision,
     verify_revision,
     workflow_gate,
@@ -219,6 +223,92 @@ def test_verify_grants_for_a_closed_past_period_real_registry(repos: Repos) -> N
         calculation_repository=cr_repo,
     )
     assert refreshed.state is CalculationRevisionState.VERIFICADO_COMPLETO
+
+
+def test_verify_repairs_missing_current_revision_pointer(repos: Repos) -> None:
+    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+    work_unit = seed_work_unit(wu_repo)
+    baseline_inputs = dict(DEFAULT_130_BASELINE_INPUTS)
+    baseline_inputs.pop(M130_CARRY_FORWARD_CASILLA, None)
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs=baseline_inputs,
+        binding_values=DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=T1,
+    )
+    calculated_work_unit = get_work_unit(work_unit.work_unit_id, repository=wu_repo)
+    assert calculated_work_unit.current_calculation_revision_id == revision.calculation_revision_id
+    wu_repo.save(
+        upsert_work_unit(
+            wu_repo.load(),
+            calculated_work_unit.model_copy(update={"current_calculation_revision_id": None}),
+        ),
+    )
+
+    report = verify_revision(
+        revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
+        clock=T2,
+    )
+
+    assert report.granted_verificado_completo is True
+    repaired = get_work_unit(work_unit.work_unit_id, repository=wu_repo)
+    assert repaired.current_calculation_revision_id == revision.calculation_revision_id
+
+
+def test_verify_does_not_overwrite_different_current_revision(repos: Repos) -> None:
+    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+    work_unit = seed_work_unit(wu_repo)
+    baseline_inputs = dict(DEFAULT_130_BASELINE_INPUTS)
+    baseline_inputs.pop(M130_CARRY_FORWARD_CASILLA, None)
+    first = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs=baseline_inputs,
+        binding_values=DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=T1,
+    )
+    second_inputs = dict(baseline_inputs)
+    second_inputs[M130_INCOME_CASILLA] = second_inputs[M130_INCOME_CASILLA] + Decimal("1")
+    second = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs=second_inputs,
+        binding_values=DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=T2,
+    )
+    assert first.calculation_revision_id != second.calculation_revision_id
+    current_work_unit = get_work_unit(work_unit.work_unit_id, repository=wu_repo)
+    assert current_work_unit.current_calculation_revision_id == second.calculation_revision_id
+
+    report = verify_revision(
+        first.calculation_revision_id,
+        revision=first,
+        work_unit=work_unit,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
+        clock=T3,
+    )
+
+    assert report.granted_verificado_completo is True
+    preserved = get_work_unit(work_unit.work_unit_id, repository=wu_repo)
+    assert preserved.current_calculation_revision_id == second.calculation_revision_id
 
 
 def test_verify_records_deadline_state_as_informational_not_abort(repos: Repos) -> None:

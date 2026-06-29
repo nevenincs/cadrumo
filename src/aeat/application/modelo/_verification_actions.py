@@ -72,7 +72,7 @@ from ...domain.modelos._protocols import (
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnitCatalogueRepositoryProtocol,
 )
-from ...domain.modelos._repository import WorkUnitCatalogueRepository
+from ...domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ...domain.modelos._verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -1632,6 +1632,12 @@ def verify_modelo_revision(
             calculation_repository=cr_repo,
             participation_index_repository=participation_index_repository,
         )
+        _repair_verified_revision_current_pointer(
+            work_unit=work_unit,
+            calculation_revision_id=calculation_revision_id,
+            verified_at=now,
+            work_unit_repository=wu_repo,
+        )
 
     _emit_verification_bucket_event(
         repository=bv_repo,
@@ -1648,6 +1654,34 @@ def verify_modelo_revision(
     )
 
     return report
+
+
+def _repair_verified_revision_current_pointer(
+    *,
+    work_unit: WorkUnit,
+    calculation_revision_id: str,
+    verified_at: datetime,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+) -> None:
+    work_units = work_unit_repository.load()
+    latest = work_units.get(work_unit.work_unit_id)
+    if latest is None:
+        raise WorkUnitNotFoundError(f"work unit {work_unit.work_unit_id!r} disappeared during verification")
+    if latest.current_calculation_revision_id == calculation_revision_id:
+        return
+    if latest.current_calculation_revision_id is not None:
+        return
+    work_unit_repository.save(
+        upsert_work_unit(
+            work_units,
+            latest.model_copy(
+                update={
+                    "current_calculation_revision_id": calculation_revision_id,
+                    "updated_at": verified_at,
+                },
+            ),
+        ),
+    )
 
 
 def _build_participation_writes(
