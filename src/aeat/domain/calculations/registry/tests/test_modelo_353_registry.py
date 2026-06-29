@@ -42,6 +42,7 @@ def test_modelo_353_revision_is_monthly_from_2008() -> None:
     revision = modelo.revisions["2008-y-siguientes"]
     assert revision.valid_from == date(2008, 1, 1)
     assert len(revision.period_selector.periods) == 12
+    assert revision.orden_aplicabilidad == ("orden-eha-3434-2007:art-2",)
 
 
 def test_modelo_353_january_deadline_uses_official_calendar_shift() -> None:
@@ -73,6 +74,7 @@ def test_modelo_353_snapshot_builds_per_month() -> None:
     modelo, catalogues = _load_modelo_353()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="06")
     assert snapshot.revision.id == "2008-y-siguientes"
+    assert snapshot.revision.orden_aplicabilidad == ("orden-eha-3434-2007:art-2",)
     assert "orden-eha-3434-2007:art-2" in snapshot.legal
 
 
