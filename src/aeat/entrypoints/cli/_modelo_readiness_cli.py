@@ -10,12 +10,13 @@ from ...application.state_projection import (
     ModeloReadinessRequest,
     build_operator_state_projection,
 )
-from ...core import Period
+from ...core import Period, PeriodError
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.user_profile import ProfileNotFoundError
 from ._common import _emit_envelope
 from ._errors import CliRefusedBoundaryError
+from ._modelo_cli_support import unsupported_local_work_period_refusal
 from ._modelo_payloads import (
     LedgerIssuePayload,
     ModeloReadinessMissingBindingPayload,
@@ -73,7 +74,7 @@ def register_readiness_commands(app: typer.Typer) -> None:
             modelo=modelo,
             revision_id=revision_id,
             filing_year=filing_year,
-            period=(Period.from_year_and_code(filing_year, period) if period else None),
+            period=_resolve_readiness_period(modelo=modelo, filing_year=filing_year, period=period),
         )
         report = _readiness_report(request)
         readiness_result = _readiness_result(
@@ -95,6 +96,17 @@ def register_readiness_commands(app: typer.Typer) -> None:
             ),
             notices=_readiness_notices(report),
         )
+
+
+def _resolve_readiness_period(*, modelo: str, filing_year: int, period: str | None) -> Period | None:
+    if period is None:
+        return None
+    try:
+        return Period.from_year_and_code(filing_year, period)
+    except PeriodError as exc:
+        if refusal := unsupported_local_work_period_refusal(modelo=modelo, token=period):
+            raise refusal from exc
+        raise
 
 
 def _readiness_report(request: ModeloReadinessRequest):

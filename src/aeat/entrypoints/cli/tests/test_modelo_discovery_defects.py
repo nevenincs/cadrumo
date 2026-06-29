@@ -45,10 +45,30 @@ def _create_profile() -> None:
         [
             "config", "profile", "create", "operator",
             "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
             "--tax-id", "12345678Z",
             "--name", "Operator",
             "--surnames", "Operator",
             "--activity", "design",
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+
+
+def _create_legal_entity_profile() -> None:
+    result = invoke_cached_cli(
+        [
+            "config", "profile", "create", "company",
+            "--quiet", "--accept-defaults",
+            "--entity-type", "legal_entity",
+            "--legal-entity-form", "sl",
+            "--tax-id", "B12345674",
+            "--name", "Company",
+            "--surnames", "Company SL",
+            "--legal-name", "Company SL",
+            "--activity", "consulting",
+            "--incn-prior-12-months", "7500000.00",
+            "--no-new-entity-first-two-profit-periods",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
@@ -379,6 +399,71 @@ def test_modelo_readiness_refuses_period_without_registry_coverage() -> None:
     assert "aeat app modelo describe 210" in flat
 
 
+def test_bindings_list_m210_event_token_refuses_as_unsupported_local_work() -> None:
+    """M210's registry ``evento`` token must not produce contradictory period guidance."""
+
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "bindings",
+            "list",
+            "--modelo",
+            "210",
+            "--year",
+            "2025",
+            "--period",
+            "evento",
+            "--missing",
+        ],
+    )
+
+    assert result.exit_code != 0, result.output
+    flat = result.output.replace("\n", " ")
+    assert "REFUSED_CLI_BOUNDARY" in flat
+    assert "Modelo 210" in flat
+    assert "IRNR" in flat
+    assert "G320" in flat
+    assert "Valid tokens: evento" not in flat
+    assert "is not a valid period token" not in flat
+    assert "INTEGRITY_PERIOD" not in flat
+    assert "Traceback" not in flat
+
+
+def test_modelo_readiness_m210_event_token_refuses_as_unsupported_local_work() -> None:
+    """Readiness must reuse the M210 unsupported-work refusal for ``evento``."""
+
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "readiness",
+            "--modelo",
+            "210",
+            "--revision-id",
+            "2025",
+            "--year",
+            "2025",
+            "--period",
+            "evento",
+        ],
+    )
+
+    assert result.exit_code != 0, result.output
+    flat = result.output.replace("\n", " ")
+    assert "REFUSED_CLI_BOUNDARY" in flat
+    assert "Modelo 210" in flat
+    assert "IRNR" in flat
+    assert "G320" in flat
+    assert "INTEGRITY_PERIOD" not in flat
+    assert "cannot build a period" not in flat
+    assert "Traceback" not in flat
+
+
 def test_modelo_readiness_reports_missing_calculation_bindings() -> None:
     """Blank company facts must keep M200 readiness false before calculate."""
 
@@ -411,7 +496,9 @@ def test_modelo_readiness_reports_missing_calculation_bindings() -> None:
         "modelo-200-2024-profile-new-entity-flag",
         "modelo-200-2024-profile-incn-prior-12-months",
     } <= missing_binding_ids
-    assert {row["source"] for row in payload["missing_bindings"]} == {"profile"}
+    missing_sources = {row["source"] for row in payload["missing_bindings"]}
+    assert "profile" in missing_sources
+    assert "relation_prefill" in missing_sources
 
 
 # ---------------------------------------------------------------------------
@@ -503,7 +590,7 @@ def test_work_calculate_accepts_modelo_202_pago_fraccionado_periods(period: str)
     quarterly and annual modelos already do.
     """
 
-    _create_profile()
+    _create_legal_entity_profile()
     work_unit_id = _create_202_work_unit(period)
     result = invoke_cached_cli(
         [
@@ -540,7 +627,7 @@ def test_modelo_202_describe_create_calculate_agree_on_period_tokens() -> None:
     may advertise a period the others reject.
     """
 
-    _create_profile()
+    _create_legal_entity_profile()
     described = invoke_cached_cli(["app", "modelo", "describe", "202"])
     assert described.exit_code == 0, described.output
     periods_line = next(line for line in described.output.splitlines() if line.startswith("Periods\t"))

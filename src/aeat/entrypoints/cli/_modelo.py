@@ -86,6 +86,9 @@ from ._modelo_cli_support import (
     selector_bad_parameter as _selector_bad_parameter,
 )
 from ._modelo_cli_support import (
+    unsupported_local_work_period_refusal as _unsupported_local_work_period_refusal,
+)
+from ._modelo_cli_support import (
     validate_calculation_revision_id as _validate_calculation_revision_id,
 )
 from ._modelo_cli_support import (
@@ -318,6 +321,8 @@ def _resolve_year_period(year: int, period: str, *, modelo: str | None = None) -
     try:
         return Period.from_year_and_code(year, period.strip())
     except PeriodError as exc:
+        if refusal := _unsupported_local_work_period_refusal(modelo=modelo, token=period):
+            raise refusal from exc
         raise typer.BadParameter(_period_token_error(year, period, modelo, fallback=str(exc))) from exc
 
 
