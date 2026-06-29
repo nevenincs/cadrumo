@@ -1,3 +1,13 @@
+"""Text rendering and notice projection for ``overview status``.
+
+This module consumes an application-built :class:`OverviewStatusReport` and
+turns it into localized text lines plus :class:`Notice` objects for the
+:class:`~aeat.core.json_contract.SchemaEnvelope` notice channel.  It is
+presentation-only: active-profile discovery, storage reads, and status assembly
+stay upstream in :mod:`aeat.application.overview` and
+:mod:`aeat.entrypoints.cli._overview`.
+"""
+
 from __future__ import annotations
 
 from ...application.overview import OverviewStatusReport
@@ -23,7 +33,12 @@ def overview_next_step_notices(report: OverviewStatusReport) -> list[Notice]:
 
 
 def render_cli_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...]:
-    """Render overview status as operator-facing CLI text."""
+    """Render :class:`OverviewStatusReport` as operator-facing CLI text.
+
+    The renderer preserves the same next-step decisions used by
+    :func:`overview_next_step_notices`, so text and JSON-envelope notice output
+    stay aligned.
+    """
     lines: list[str] = [
         tr("cli.overview.status.title"),
         "",
@@ -48,7 +63,8 @@ def _next_step_lines(report: OverviewStatusReport) -> tuple[str, ...]:
     "import a bank statement" — that step is done. The guidance walks
     the operator forward: import when the ledger is empty, classify /
     work-modelo when transactions exist, continue the modelo flow when
-    work units are already in progress.
+    work units are already in progress. Unsupported :class:`Modelo` work-unit
+    creation is diverted to discovery guidance instead of a dead command.
     """
     if report.work_units > 0:
         return (
@@ -185,7 +201,7 @@ def _storage_lines(report: OverviewStatusReport) -> tuple[str, ...]:
 
 
 def _filing_obligation_lines(report: OverviewStatusReport) -> tuple[str, ...]:
-    """Return advisory lines for filing obligations derived from the profile."""
+    """Return localized filing-obligation advisory lines from the report."""
     if not report.filing_obligation_advisories:
         return ()
     lines: list[str] = [""]
