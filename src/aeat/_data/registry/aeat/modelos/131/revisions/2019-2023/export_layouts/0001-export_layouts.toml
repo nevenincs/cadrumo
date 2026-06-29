@@ -1,6 +1,6 @@
 [[revisions."2019-2023".export_layouts]]
 id = "modelo-131-2019-2023-fichero-boe"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".export_layouts.records]]
 id = "modelo-131-2019-2023-page-01"

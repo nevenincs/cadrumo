@@ -377,6 +377,28 @@ required_text = [
     "Sociedades cooperativas fiscalmente protegidas",
 ]
 
+[legal."ley-49-2002:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-49-2002-art-10.html#a10"
+document_id = "BOE-A-2002-25039"
+article = "10"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-25039#a10"
+published_at = 2002-12-24
+effective_from = 2002-12-25
+consolidated_as_of = 2023-12-20
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "codex (verified against live BOE-A-2002-25039 art. 10 and bundled corpus excerpt)"
+notes = "Ley 49/2002 art 10: regime-specific Impuesto sobre Sociedades rate for positive taxable base from non-exempt economic activities of entities without profit motive under Title II; supports the Modelo 200 10 percent special-regime branch alongside LIS art 29.3."
+required_text = [
+    "Artículo 10. Tipo de gravamen.",
+    "La base imponible positiva",
+    "explotaciones económicas no exentas",
+    "tipo del 10 por 100",
+]
+
 # LIS disposición transitoria cuadragésima cuarta, added by Ley 7/2024
 # (disposición final octava). Binding source for the micro-empresa
 # (INCN < 1M EUR) two-tranche transitional rate schedule applied to the

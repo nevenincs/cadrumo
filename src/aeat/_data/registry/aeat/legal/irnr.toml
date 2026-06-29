@@ -20,7 +20,7 @@
 [legal."trlirnr-rdleg-5-2004:art-2"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "real_decreto"
+kind = "real_decreto_legislativo"
 corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a2"
 document_id = "BOE-A-2004-4527"
 article = "2"
@@ -36,7 +36,7 @@ required_text = ["Este impuesto se aplicara en todo el territorio espanol", "reg
 [legal."trlirnr-rdleg-5-2004:art-10"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "real_decreto"
+kind = "real_decreto_legislativo"
 corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a10"
 document_id = "BOE-A-2004-4527"
 article = "10"
@@ -52,7 +52,7 @@ required_text = ["no sean residentes en otro Estado miembro de la Union Europea"
 [legal."trlirnr-rdleg-5-2004:art-13.1.h"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "real_decreto"
+kind = "real_decreto_legislativo"
 corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a13-1-h"
 document_id = "BOE-A-2004-4527"
 article = "13.1.h"
@@ -68,7 +68,7 @@ required_text = ["rentas imputadas a los contribuyentes personas fisicas", "bien
 [legal."trlirnr-rdleg-5-2004:art-24"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "real_decreto"
+kind = "real_decreto_legislativo"
 corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a24"
 document_id = "BOE-A-2004-4527"
 article = "24"
@@ -84,7 +84,7 @@ required_text = ["importe integro", "sin que sean de aplicacion los porcentajes 
 [legal."trlirnr-rdleg-5-2004:art-25.1.a"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "real_decreto"
+kind = "real_decreto_legislativo"
 corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a25-1-a"
 document_id = "BOE-A-2004-4527"
 article = "25.1.a"
@@ -100,7 +100,7 @@ required_text = ["Con caracter general, el 24 por ciento", "el tipo de gravamen 
 [legal."trlirnr-rdleg-5-2004:art-25.1.b"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "real_decreto"
+kind = "real_decreto_legislativo"
 corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a25-1-b"
 document_id = "BOE-A-2004-4527"
 article = "25.1.b"
@@ -116,7 +116,7 @@ required_text = ["pensiones y demas prestaciones similares", "Importe anual pens
 [legal."trlirnr-rdleg-5-2004:art-25.1.f"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "real_decreto"
+kind = "real_decreto_legislativo"
 corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a25-1-f"
 document_id = "BOE-A-2004-4527"
 article = "25.1.f"
@@ -211,5 +211,32 @@ bytes = 141318
 retrieved_at = 2026-05-27
 published_at = 2024-01-31
 applies_from = 2024-02-01
+applies_to = 2026-12-31
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-1772"
+review_status = "reviewed"
+
+[sources."boe-modelo-210-2026-deadline-update"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-623-2026.html"
+sha256 = "6377e90dadde044d6872ad025171391275f18b88be67bd47f7ad64437725c56c"
+bytes = 64700
+retrieved_at = 2026-06-28
+published_at = 2026-06-23
+applies_from = 2026-01-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-13573"
+review_status = "reviewed"
+
+[sources."boe-modelo-210-2026-form-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-623-2026.html"
+sha256 = "6377e90dadde044d6872ad025171391275f18b88be67bd47f7ad64437725c56c"
+bytes = 64700
+retrieved_at = 2026-06-28
+published_at = 2026-06-23
+applies_from = 2027-01-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-13573"
 review_status = "reviewed"

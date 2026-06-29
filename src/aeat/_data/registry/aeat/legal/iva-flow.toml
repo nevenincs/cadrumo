@@ -408,6 +408,27 @@ required_text = [
     "presentación por vía electrónica de una solicitud",
 ]
 
+[legal."ley-37-1992:art-121"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a121"
+document_id = "BOE-A-1992-28740"
+article = "121"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a121"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "codex"
+notes = "LIVA art 121: determinacion del volumen de operaciones. Defines the operation-volume calculation used by regulated thresholds, including the RIVA art 71 large-company monthly liquidation threshold."
+required_text = [
+    "Determinación del volumen de operaciones",
+    "se entenderá por volumen de operaciones",
+    "año natural anterior",
+    "entregas de bienes y prestaciones de servicios",
+]
+
 [legal."rd-1624-1992:art-71"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -426,6 +447,9 @@ required_text = [
     "Liquidación del Impuesto. Normas generales",
     "los sujetos pasivos deberán realizar por sí mismos la determinación de la deuda tributaria",
     "El período de liquidación coincidirá con el trimestre natural",
+    "dicho período de liquidación coincidirá con el mes natural",
+    "calculado conforme a lo dispuesto en el artículo 121",
+    "6.010.121,04 euros",
 ]
 
 [legal."rd-1624-1992:art-79"]
@@ -466,6 +490,28 @@ required_text = [
     "Contenido de la declaración recapitulativa",
     "Los datos de identificación de los proveedores y adquirentes",
     "deberán rectificarse cuando se haya incurrido en errores",
+]
+
+[legal."rd-1624-1992:art-81"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1624-1992-art-81.html#a81"
+document_id = "BOE-A-1992-28925"
+article = "81"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28925#a81"
+published_at = 1992-12-31
+effective_from = 2020-03-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex"
+notes = "Reglamento del IVA art 81: place, form, filing periods, and deadlines for the declaracion recapitulativa. Grounds Modelo 349 monthly cadence and the 50,000 EUR quarterly-threshold exception across the reference quarter and four prior natural quarters."
+required_text = [
+    "Lugar, forma y plazos de presentacion de la declaracion recapitulativa",
+    "por cada mes natural durante los veinte primeros dias naturales",
+    "en cada uno de los cuatro trimestres naturales anteriores",
+    "50.000 euros",
+    "durante los veinte primeros dias naturales del mes inmediato siguiente al correspondiente periodo trimestral",
 ]
 
 [legal."rd-1624-1992:art-29"]

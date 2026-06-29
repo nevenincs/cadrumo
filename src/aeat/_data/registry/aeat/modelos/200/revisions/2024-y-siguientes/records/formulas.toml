@@ -8,12 +8,10 @@
 # non-zero base previa even with zero correcciones, so the verify gate can no
 # longer grant verified_complete with finding_count = 0 on positive activity.
 #
-# Grounded against AEAT Manual práctico de Sociedades 2024 Cap. 5 (Liquidación
-# I → III) and the diseño de registro 2024 (DP200012 pos 81, DP200013 pos
-# 1560/1577, DP200014 pos 13). The LIS Art. 10 (base = renta del período) and
-# Art. 11 (imputación temporal) definitional refs are not yet in the in-repo
-# legal corpus — tracked for BOE ingest — so this formula cites the grounded
-# determination-chain refs available today.
+# Grounded against LIS Art. 10 (base = renta del período, corrected from the
+# accounting result), LIS Art. 11 (devengo / imputación temporal), AEAT Manual
+# práctico de Sociedades 2024 Cap. 5 (Liquidación I → III), and the diseño de
+# registro 2024 (DP200012 pos 81, DP200013 pos 1560/1577, DP200014 pos 13).
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-200-base-imponible-previa"
 target_casilla_id = "DP200014:00550"
@@ -25,7 +23,7 @@ expression = { op = "subtract", args = [
     { casilla_id = "DP200013:00418" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-27-2014:art-15", "ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-105"]
+legal_refs = ["ley-27-2014:art-10", "ley-27-2014:art-11", "ley-27-2014:art-15", "ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024-y-siguientes".formulas.source_citations]]
@@ -184,7 +182,7 @@ expression = { op = "if_then_else", args = [
         ] },
     ] },
 ] }
-legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-101", "ley-27-2014:dt-44", "ley-31-2022:art-39"]
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-101", "ley-27-2014:dt-44", "ley-31-2022:art-39", "ley-49-2002:art-10"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024-y-siguientes".formulas.source_citations]]
@@ -302,7 +300,7 @@ expression = { op = "if_then_else", args = [
     ] },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-29", "ley-27-2014:art-101", "ley-27-2014:dt-44"]
+legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-29", "ley-27-2014:art-101", "ley-27-2014:dt-44", "ley-49-2002:art-10"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024-y-siguientes".formulas.source_citations]]

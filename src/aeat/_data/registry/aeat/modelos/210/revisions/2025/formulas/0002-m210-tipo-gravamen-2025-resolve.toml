@@ -10,7 +10,7 @@
 #
 # Returns the resolved Decimal rate, or one of the M210 rate-
 # sentinel constants when a deterministic rate cannot be produced
-# (deferred baseline, missing Convenio row, NOT_YET_AUTHORED).
+# (deferred baseline or missing Convenio row).
 # For `tipo_renta="pension"` the returned Decimal is the effective
 # rate for the progressive Art 25.1.b tariff, so the downstream
 # `base_imponible * tipo_gravamen` formula lands on the statutory quota.
