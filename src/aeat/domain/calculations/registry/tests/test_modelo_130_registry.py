@@ -392,7 +392,7 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
 def test_modelo_130_previous_filing_bound_inputs_must_match_binding_values(modelo_130_registry: _ModeloFixture) -> None:
     with pytest.raises(
         RegistryValidationError,
-        match="previous-filing bound casilla projection is inconsistent",
+        match="observation-backed bound casilla projection is inconsistent",
     ):
         calculate_registry_snapshot(
             _snapshot_130(modelo_130_registry, period="2T"),
