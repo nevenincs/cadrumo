@@ -9,6 +9,10 @@ single source of that behaviour.
 :func:`read_toml` and :func:`freeze_toml` are used by the registry
 loader in :mod:`aeat.domain.calculations.registry._loader` and the
 user-profile schema loader in :mod:`aeat.domain.user_profile._loader`.
+:func:`parse_toml_text` gives the same decode-error wrapping to callers that
+already hold a TOML payload in memory, such as the secure bucket manifest
+reader. :func:`to_str_keyed_dict` is the narrow bridge from loosely typed
+``tomllib`` mappings into strict schema models that require string keys.
 """
 
 from __future__ import annotations
@@ -96,7 +100,13 @@ def to_str_keyed_dict(raw: Mapping[object, object], *, error_factory: Callable[[
 
 
 def freeze_toml_value(value: object) -> object:
-    """Recursively freeze one parsed TOML value, turning lists into tuples."""
+    """Recursively freeze one parsed TOML value, turning lists into tuples.
+
+    ``tomllib`` returns mutable Python lists for TOML arrays. Registry and
+    profile-schema models use strict frozen contracts, so loader boundaries call
+    this helper before validating nested payloads. Mappings stay mappings with
+    their values frozen recursively; scalar TOML values are returned unchanged.
+    """
     if isinstance(value, list):
         return tuple(freeze_toml_value(item) for item in value)
     if isinstance(value, dict):
@@ -105,5 +115,10 @@ def freeze_toml_value(value: object) -> object:
 
 
 def freeze_toml(data: dict[str, object]) -> dict[str, object]:
-    """Recursively freeze a parsed TOML mapping (lists become tuples)."""
+    """Recursively freeze a parsed TOML mapping (lists become tuples).
+
+    This is the mapping-level companion to :func:`freeze_toml_value`, used after
+    :func:`read_toml` when a committed TOML document is about to be validated as
+    a frozen registry, category, IVA, or user-profile schema object.
+    """
     return {key: freeze_toml_value(value) for key, value in data.items()}
