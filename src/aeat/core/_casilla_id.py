@@ -2,9 +2,18 @@
 
 The :data:`CasillaId` alias is the shared key for registry casillas,
 CLI ``--casilla`` inputs, parser observations, and calculation payloads.
+It is re-exported by :mod:`aeat.domain.calculations.registry` and anchors
+:class:`~aeat.domain.calculations.registry.CasillaDefinition`,
+:class:`~aeat.domain.calculations.registry.CalculationCompletenessCasilla`,
+and filing snapshot facts such as
+:class:`~aeat.domain.modelos._ledger_filing_snapshot.ManualFactBasisEntry`.
+
 Use :func:`validated_casilla_id` or :func:`validated_casilla_id_map`
-at boundaries so display numbers and labels do not masquerade as
-canonical registry identifiers.
+at boundaries so display numbers, labels, and export metadata do not
+masquerade as canonical registry identifiers. Registry membership helpers
+such as :func:`~aeat.domain.calculations.registry.casillas_by_id` and
+:func:`~aeat.domain.calculations.registry.declared_casilla_ids` then compare
+only declared ``casilla.id`` values.
 """
 
 from __future__ import annotations
@@ -22,7 +31,7 @@ _CASILLA_ID_ADAPTER: TypeAdapter[CasillaId] = TypeAdapter(CasillaId)
 
 
 def validated_casilla_id(value: object, *, surface: str = "casilla.id") -> CasillaId:
-    """Return ``value`` as a canonical :class:`CasillaId`, failing at the declaring surface."""
+    """Return ``value`` as a canonical :data:`CasillaId`, failing at the declaring surface."""
     if not isinstance(value, str):
         raise ValueError(f"{surface} {value!r} is not a canonical casilla.id")
     try:
@@ -36,7 +45,12 @@ def validated_casilla_id_map[T](
     *,
     surface: str = "casilla.id map",
 ) -> dict[CasillaId, T]:
-    """Return ``values`` keyed by validated :class:`CasillaId` declarations."""
+    """Return ``values`` keyed by validated :data:`CasillaId` declarations.
+
+    Mapping validators feed registry and filing surfaces that accept
+    ``dict[CasillaId, T]`` inputs, including calculation-revision snapshots and
+    registry filing test helpers.
+    """
     return {
         validated_casilla_id(key, surface=f"{surface} key"): value
         for key, value in values.items()
