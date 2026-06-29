@@ -517,7 +517,14 @@ def config_profile_preflight(
         ],
     )
     lines = [
-        f"readiness\t{'ready' if report.ready else 'missing'}\tmissing={len(report.missing)}",
+        f"profile_readiness\t{'ready' if report.ready else 'missing'}\tmissing={len(report.missing)}",
+        "readiness_scope\tprofile_fields_only",
+        (
+            "full_modelo_readiness_command\t"
+            f"aeat app modelo readiness --modelo {report.modelo} "
+            f"--revision-id {report.revision_id} --year {report.filing_year} "
+            f"--period {report.period.registry_token}"
+        ),
         f"profile_id\t{report.profile_id}",
         f"modelo\t{report.modelo}",
         f"revision_id\t{report.revision_id}",
