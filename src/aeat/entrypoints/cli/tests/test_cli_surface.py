@@ -14,106 +14,30 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
-from dataclasses import dataclass
-from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, cast
 
 import pytest
 
-from ....application import wizard as _wizard  # noqa: F401 -- side effect: registers PROFILE_KEYS
 from ....core.config import override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ._cli_surface_support import (
+    _active_bucket_id,
+    _invoke,
+    _json,
+    create_cli_surface_profile,
+    isolated_cli_surface_backend,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        override_settings(
-            aeat_auth_provider=None,
-            aeat_certificate_path=None,
-            aeat_certificate_password_secret=None,
-            aeat_clave_movil_dni_nie=None,
-            aeat_clave_movil_dni_fecha=None,
-            aeat_clave_movil_nie_soporte=None,
-        ),
-    ):
+    with isolated_cli_surface_backend(tmp_path):
         yield
-
-
-def _json(result) -> dict[str, Any]:
-    """Parse a CLI JSON result, unwrapping the emit-envelope when present.
-
-    ``_emit_envelope`` (the schema-envelope and ledger.import migrations)
-    wraps typed CLI payloads in ``{"schema_version", "command", "result",
-    "warnings"}``. Tests that assert against the typed payload should
-    read the inner ``result`` directly; legacy ``_emit`` callers emit a
-    bare payload, which this helper passes through unchanged. Pattern
-    mirrors the equivalent ``_json`` in test_cli_workflow_verification.py
-    (commit e707fe8a8, #83).
-    """
-    payload = json.loads(result.output)
-    if isinstance(payload, dict) and "result" in payload and "schema_version" in payload:
-        inner = payload["result"]
-        if isinstance(inner, dict):
-            return inner
-    return payload
-
-
-def _invoke(args: list[str]):
-    return invoke_cached_cli(args)
-
-
-def _active_bucket_id() -> str:
-    """Resolve the active profile's bucket id — a generated ``profile_id`` UUID.
-
-    Profile identity is the decoupled ``profile_id`` UUID, not the
-    operator-facing label passed to ``profile create``. Ledger and
-    evidence records key on this UUID, so seeds and assertions must
-    resolve it at runtime rather than assume the human label.
-
-    Reads the real UUID via the application-layer resolver rather than
-    the CLI ``profile status`` surface, because centralized CLI
-    redaction (``redact_structured_for_cli_output``) rewrites the
-    ``profile_id`` field to ``<profile-id>`` and the ``bucket_id``
-    field to ``<bucket-id>``. Test-side seeders (``_seed_purchase_invoice_evidence``)
-    require the un-redacted UUID to persist matching bucket records.
-    """
-    from ....core import resolve_active_bucket_id
-
-    bucket_id = resolve_active_bucket_id()
-    assert bucket_id is not None, "no active profile bucket resolved"
-    return bucket_id
-
-
-def _create_manual_ledger_row(description: str, *, amount: str = "25.00", key: str) -> dict[str, object]:
-    result = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "add",
-            "--date",
-            "2026-05-03",
-            "--amount",
-            amount,
-            "--direction",
-            "OUTGOING",
-            "--description",
-            description,
-            "--idempotency-key",
-            key,
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    return _json(result)
 
 
 # ---------------------------------------------------------------------
@@ -165,6 +89,7 @@ def test_app_overview_status_bare_renders_counts() -> None:
 
 
 def test_app_ledger_import_dry_run_does_not_persist(tmp_path: Path) -> None:
+    create_cli_surface_profile()
     statement = tmp_path / "n26.csv"
     statement.write_text(
         "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
@@ -399,26 +324,7 @@ def test_app_ledger_create_manual_transaction_persists_in_active_bucket() -> Non
     reads as a linear narrative of the workflow with the
     transaction-id and intermediate payloads threaded through.
     """
-    init = _invoke(
-        [
-            "config",
-            "profile",
-            "create",
-            "operator",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "Operator",
-            "--surnames",
-            "Example",
-            "--activity",
-            "Test",
-        ],
-    )
-    assert init.exit_code == 0, init.output
+    create_cli_surface_profile()
     bucket_id = _active_bucket_id()
 
     created = _ledger_add_manual_transaction(bucket_id)
@@ -455,10 +361,7 @@ def test_app_ledger_list_reveal_identifiers_opt_in_surfaces_real_bucket_id() -> 
     profile/bucket identifier surfaces while the paste-safe placeholder stays
     the default.
     """
-    init = _invoke(
-        ["config", "profile", "create", "operator", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"],
-    )
-    assert init.exit_code == 0, init.output
+    create_cli_surface_profile()
     bucket_id = _active_bucket_id()
     _ledger_add_manual_transaction(bucket_id)
 
@@ -483,10 +386,7 @@ def test_config_profile_show_reveal_identifiers_opt_in_surfaces_real_profile_id(
     ``AEAT_CLI_REVEAL_IDENTIFIERS`` opt-out un-redacts the opaque profile UUID so
     a multi-client gestor's automation can key on the addressed profile.
     """
-    init = _invoke(
-        ["config", "profile", "create", "operator", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"],
-    )
-    assert init.exit_code == 0, init.output
+    create_cli_surface_profile()
     profile_id = _active_bucket_id()
 
     default_shown = _run_ledger_cli_json(["config", "profile", "show"])
@@ -510,26 +410,7 @@ def test_app_modelo_filing_record_list_text_header_is_well_formed() -> None:
     header carries field names, never identifier values. The header row must pass
     through verbatim so automation can parse the columns.
     """
-    init = _invoke(
-        [
-            "config",
-            "profile",
-            "create",
-            "operator",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "Operator",
-            "--surnames",
-            "Example",
-            "--activity",
-            "Test",
-        ],
-    )
-    assert init.exit_code == 0, init.output
+    create_cli_surface_profile()
 
     listed = _invoke(["app", "modelo", "filing-record", "list"])
     assert listed.exit_code == 0, listed.output
@@ -543,26 +424,7 @@ def test_app_modelo_filing_record_list_text_header_is_well_formed() -> None:
 
 
 def test_app_modelo_filing_record_list_accepts_modelo_filter() -> None:
-    init = _invoke(
-        [
-            "config",
-            "profile",
-            "create",
-            "operator",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "Operator",
-            "--surnames",
-            "Example",
-            "--activity",
-            "Test",
-        ],
-    )
-    assert init.exit_code == 0, init.output
+    create_cli_surface_profile()
 
     text_result = _invoke(["app", "modelo", "filing-record", "list", "--modelo", "303"])
     assert text_result.exit_code == 0, text_result.output
@@ -575,299 +437,8 @@ def test_app_modelo_filing_record_list_accepts_modelo_filter() -> None:
     assert payload["record_count"] == 0
 
 
-def _json_object(value: object) -> dict[str, object]:
-    """Narrow a JSON value to a string-keyed object for typed subscripting."""
-
-    assert isinstance(value, dict), f"expected a JSON object, got {type(value).__name__}"
-    return {str(key): item for key, item in value.items()}
-
-
-@dataclass(frozen=True, slots=True)
-class _LedgerLifecycleOutcome:
-    """Bundle returned by _drive_ledger_lifecycle_round_trip.
-
-    Captures every CLI payload + side-effect path that the focused
-    tests inspect: the attach result, the archive / stash state
-    transitions, the remove dry-run + final delete, the export
-    payload + path, and the reset payload.
-    """
-
-    bucket_id: str
-    purchase_invoice_evidence_id: str
-    attached_payload: dict[str, object]
-    archived_payload: dict[str, object]
-    stashed_payload: dict[str, object]
-    dry_remove_payload: dict[str, object]
-    refused_remove_exit_code: int
-    removed_payload: dict[str, object]
-    export_payload: dict[str, object]
-    export_path: Path
-    dry_reset_payload: dict[str, object]
-    refused_reset_exit_code: int
-    reset_payload: dict[str, object]
-
-
-def _drive_ledger_lifecycle_round_trip(tmp_path: Path) -> _LedgerLifecycleOutcome:
-    """Drive the lifecycle round-trip: attach -> archive -> stash -> remove -> export -> reset.
-
-    Three rows are created so the export and reset surfaces see a
-    non-trivial inventory (one attached + one archived + one
-    stashed; the remove and reset paths exercise the final two
-    inactive rows).
-    """
-    init = _invoke(
-        ["config", "profile", "create", "operator", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"],
-    )
-    assert init.exit_code == 0, init.output
-    bucket_id = _active_bucket_id()
-
-    purchase_evidence_id = _seed_purchase_invoice_evidence(bucket_id)
-
-    attached = _ledger_lifecycle_attach(purchase_invoice_evidence_id=purchase_evidence_id)
-    archived = _ledger_lifecycle_lifecycle_transition("archive", reason="wrong account", key="cli-archive-row")
-    stashed = _ledger_lifecycle_lifecycle_transition("stash", reason="needs review", key="cli-stash-row")
-
-    remove_outcome = _ledger_lifecycle_remove()
-    export_outcome = _ledger_lifecycle_export(tmp_path)
-    reset_outcome = _ledger_lifecycle_reset()
-
-    return _LedgerLifecycleOutcome(
-        bucket_id=bucket_id,
-        purchase_invoice_evidence_id=purchase_evidence_id,
-        attached_payload=attached,
-        archived_payload=archived,
-        stashed_payload=stashed,
-        dry_remove_payload=remove_outcome[0],
-        refused_remove_exit_code=remove_outcome[1],
-        removed_payload=remove_outcome[2],
-        export_payload=export_outcome[0],
-        export_path=export_outcome[1],
-        dry_reset_payload=reset_outcome[0],
-        refused_reset_exit_code=reset_outcome[1],
-        reset_payload=reset_outcome[2],
-    )
-
-
-def _seed_purchase_invoice_evidence(bucket_id: str) -> str:
-    """Persist one RECEIVED purchase invoice and return its id."""
-    from ....adapters.persistence.storage import (
-        activate_master_key_provider,
-        get_master_key_provider,
-    )
-    from ....domain.invoices import (
-        Invoice,
-        InvoiceCatalogue,
-        InvoiceCatalogueRepository,
-        InvoiceLine,
-        IvaRate,
-        PaymentStatus,
-    )
-    from ....domain.iva import InvoiceKind
-
-    purchase_line = InvoiceLine(
-        description="Material oficina",
-        quantity=Decimal("1"),
-        unit_price=Decimal("100.00"),
-        subtotal=Decimal("100.00"),
-        iva_rate=IvaRate.RATE_21,
-        iva_amount=Decimal("21.00"),
-    )
-    purchase_evidence = Invoice.model_validate(
-        {
-            "kind": InvoiceKind.RECEIVED,
-            "bucket_id": bucket_id,
-            "invoice_number": "P-2026-CLI-001",
-            "issued_at": date(2026, 5, 3),
-            "counterparty_name": "Proveedor SL",
-            "counterparty_tax_id": "B12345674",
-            "counterparty_country": "ES",
-            "base_total": Decimal("100.00"),
-            "iva_total": Decimal("21.00"),
-            "grand_total": Decimal("121.00"),
-            "currency": "EUR",
-            "lines": (purchase_line,),
-            "payment_status": PaymentStatus.PAID,
-        },
-    )
-    with activate_master_key_provider(get_master_key_provider()):
-        InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
-    return purchase_evidence.invoice_id
-
-
-def _ledger_lifecycle_attach(*, purchase_invoice_evidence_id: str) -> dict[str, object]:
-    """Create a manual ledger row and attach the purchase-invoice evidence reference."""
-    row = _create_manual_ledger_row("attach evidence row", amount="121.00", key="cli-attach-row")
-    attached = _invoke(
-        [
-            "--format", "json",
-            "app", "ledger", "attach",
-            str(row["transaction_id"]),
-            "--purchase-invoice-evidence-id", purchase_invoice_evidence_id,
-        ],
-    )  # fmt: skip
-    assert attached.exit_code == 0, attached.output
-    return _json(attached)
-
-
-def _ledger_lifecycle_lifecycle_transition(verb: str, *, reason: str, key: str) -> dict[str, object]:
-    """Drive one ``app ledger <verb> <id> --reason ... --yes`` lifecycle transition."""
-    row = _create_manual_ledger_row(f"{verb} row", key=key)
-    result = _invoke(
-        [
-            "--format", "json",
-            "app", "ledger", verb,
-            str(row["transaction_id"]),
-            "--reason", reason,
-            "--yes",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
-    return _json(result)
-
-
-def _ledger_lifecycle_remove() -> tuple[dict[str, object], int, dict[str, object]]:
-    """Drive the three-step remove flow: --dry-run, refused (no --yes), confirmed --yes."""
-    remove_row = _create_manual_ledger_row("remove row", key="cli-remove-row")
-    dry = _invoke(
-        ["--format", "json", "app", "ledger", "remove", str(remove_row["transaction_id"]), "--dry-run"],
-    )
-    assert dry.exit_code == 0, dry.output
-    refused = _invoke(["--format", "json", "app", "ledger", "remove", str(remove_row["transaction_id"])])
-    confirmed = _invoke(
-        ["--format", "json", "app", "ledger", "remove", str(remove_row["transaction_id"]), "--yes"],
-    )
-    assert confirmed.exit_code == 0, confirmed.output
-    return _json(dry), refused.exit_code, _json(confirmed)
-
-
-def _ledger_lifecycle_export(tmp_path: Path) -> tuple[dict[str, object], Path]:
-    """Drive the ledger export to a JSONL file under ``tmp_path``."""
-    export_path = tmp_path / "ledger-export.jsonl"
-    exported = _invoke(
-        [
-            "--format", "json",
-            "app", "ledger", "export",
-            "--output", str(export_path),
-            "--export-format", "jsonl",
-            "--include-inactive",
-        ],
-    )  # fmt: skip
-    assert exported.exit_code == 0, exported.output
-    return _json(exported), export_path
-
-
-def _ledger_lifecycle_reset() -> tuple[dict[str, object], int, dict[str, object]]:
-    """Drive the three-step reset flow: --dry-run, refused (no --yes), confirmed --yes."""
-    dry = _invoke(["--format", "json", "app", "ledger", "reset", "--dry-run"])
-    assert dry.exit_code == 0, dry.output
-    refused = _invoke(["--format", "json", "app", "ledger", "reset", "--reason", "test cleanup"])
-    confirmed = _invoke(["--format", "json", "app", "ledger", "reset", "--reason", "test cleanup", "--yes"])
-    assert confirmed.exit_code == 0, confirmed.output
-    return _json(dry), refused.exit_code, _json(confirmed)
-
-
-def test_app_ledger_lifecycle_attach_records_purchase_invoice_evidence(
-    tmp_path: Path,
-) -> None:
-    outcome = _drive_ledger_lifecycle_round_trip(tmp_path)
-    transaction = _json_object(outcome.attached_payload["transaction"])
-    assert transaction["purchase_invoice_evidence_id"] == outcome.purchase_invoice_evidence_id
-    assert outcome.attached_payload["bucket_event_ids"]
-
-
-_LIFECYCLE_TRANSITION_EXPECTATIONS = (
-    ("archived_payload", "ARCHIVED"),
-    ("stashed_payload", "STASHED"),
-)
-
-
-@pytest.mark.parametrize(("attribute", "expected_state"), _LIFECYCLE_TRANSITION_EXPECTATIONS)
-def test_app_ledger_lifecycle_transition_advances_lifecycle_state(
-    tmp_path: Path,
-    attribute: str,
-    expected_state: str,
-) -> None:
-    outcome = _drive_ledger_lifecycle_round_trip(tmp_path)
-    payload = getattr(outcome, attribute)
-    assert payload["transaction"]["lifecycle_state"] == expected_state
-
-
-def test_app_ledger_lifecycle_remove_dry_run_marks_payload(
-    tmp_path: Path,
-) -> None:
-    outcome = _drive_ledger_lifecycle_round_trip(tmp_path)
-    assert outcome.dry_remove_payload["dry_run"] is True
-
-
-def test_app_ledger_lifecycle_remove_requires_yes_flag(
-    tmp_path: Path,
-) -> None:
-    outcome = _drive_ledger_lifecycle_round_trip(tmp_path)
-    assert outcome.refused_remove_exit_code != 0
-
-
-def test_app_ledger_lifecycle_remove_with_yes_deletes_row(
-    tmp_path: Path,
-) -> None:
-    outcome = _drive_ledger_lifecycle_round_trip(tmp_path)
-    assert outcome.removed_payload["removed"] is True
-
-
-def test_app_ledger_lifecycle_export_targets_active_profile_bucket(
-    tmp_path: Path,
-) -> None:
-    outcome = _drive_ledger_lifecycle_round_trip(tmp_path)
-    assert outcome.bucket_id not in json.dumps(outcome.export_payload, sort_keys=True)
-    assert outcome.export_payload["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
-
-
-def test_app_ledger_lifecycle_export_records_three_rows(
-    tmp_path: Path,
-) -> None:
-    outcome = _drive_ledger_lifecycle_round_trip(tmp_path)
-    assert outcome.export_payload["row_count"] == 3
-    assert outcome.export_path.read_text(encoding="utf-8").count("\n") == 3
-
-
-def test_app_ledger_lifecycle_reset_dry_run_marks_payload(
-    tmp_path: Path,
-) -> None:
-    outcome = _drive_ledger_lifecycle_round_trip(tmp_path)
-    assert outcome.dry_reset_payload["dry_run"] is True
-
-
-def test_app_ledger_lifecycle_reset_requires_yes_flag(
-    tmp_path: Path,
-) -> None:
-    outcome = _drive_ledger_lifecycle_round_trip(tmp_path)
-    assert outcome.refused_reset_exit_code != 0
-
-
-def test_app_ledger_lifecycle_reset_with_yes_clears_three_rows(
-    tmp_path: Path,
-) -> None:
-    outcome = _drive_ledger_lifecycle_round_trip(tmp_path)
-    assert outcome.reset_payload["reset"] is True
-    removed_transaction_ids = outcome.reset_payload["removed_transaction_ids"]
-    assert isinstance(removed_transaction_ids, list)
-    assert len(removed_transaction_ids) == 3
-
-
 def test_app_ledger_import_reimport_review_round_trips_state(tmp_path: Path) -> None:
-    init = _invoke(
-        [
-            "config",
-            "profile",
-            "create",
-            "operator",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--activity",
-            "Test",
-        ],
-    )
-    assert init.exit_code == 0
+    create_cli_surface_profile()
     statement = tmp_path / "n26.csv"
     statement.write_text(
         "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
