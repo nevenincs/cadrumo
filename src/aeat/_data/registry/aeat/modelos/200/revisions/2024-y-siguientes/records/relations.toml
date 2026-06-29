@@ -42,7 +42,7 @@ source_refs = ["aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".relations]]
 id = "modelo-200-2024-rel-self-bin-pendiente-anterior"
 kind = "cross_model_output"
-dependency_role = "factual_evidence"
+dependency_role = "direct_calculation"
 source_modelo = "200"
 source_revision_selector = { filing_year_delta = -1 }
 source_casilla_id = "00671"
@@ -64,7 +64,7 @@ source_refs = ["aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".relations]]
 id = "modelo-200-2024-rel-self-dotaciones-deterioro-no-cumplido-anterior"
 kind = "cross_model_output"
-dependency_role = "factual_evidence"
+dependency_role = "direct_calculation"
 source_modelo = "200"
 source_revision_selector = { filing_year_delta = -1 }
 source_casilla_id = "01498"
@@ -79,7 +79,7 @@ source_refs = ["aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".relations]]
 id = "modelo-200-2024-rel-self-dotaciones-deterioro-cumplido-anterior"
 kind = "cross_model_output"
-dependency_role = "factual_evidence"
+dependency_role = "direct_calculation"
 source_modelo = "200"
 source_revision_selector = { filing_year_delta = -1 }
 source_casilla_id = "01499"
