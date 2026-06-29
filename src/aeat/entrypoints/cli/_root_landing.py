@@ -1,9 +1,17 @@
-"""CLI root landing renderer: formats the bare ``aeat`` invocation screen.
+"""CLI root landing renderer for the bare ``aeat`` invocation.
 
-Provides :func:`render_cli_root_landing_lines`, which converts a
-:class:`~aeat.application.operator_surface.RootLandingReport` into an
-ordered tuple of i18n-translated strings ready for the CLI output layer.
-The helper functions in this module are all private; only
+Provides :func:`render_cli_root_landing_lines`, which converts the
+:class:`~aeat.application.operator_surface.RootLandingReport` built by
+:func:`~aeat.application.operator_surface.build_root_landing_report` into an
+ordered tuple of i18n-translated strings ready for
+:func:`aeat.entrypoints.cli._common._emit_envelope`.  The matching JSON payload
+is :class:`~aeat.entrypoints.cli._root_payloads.RootStatusResult`; this module
+owns only the text-mode lines for the same ``root.status`` surface.
+
+The renderer is presentation-only: active-profile discovery, bucket-session
+checks, and overview fallback selection live upstream in
+:mod:`aeat.entrypoints.cli` and :mod:`aeat.application.operator_surface`.  The
+helper functions in this module are private; only
 ``render_cli_root_landing_lines`` is part of the public surface.
 """
 
@@ -16,7 +24,13 @@ from ...core.i18n import tr
 
 
 def render_cli_root_landing_lines(landing: RootLandingReport) -> tuple[str, ...]:
-    """Render the bare ``aeat`` invocation as a CLI landing screen."""
+    """Render ``landing`` as the text half of the ``root.status`` envelope.
+
+    The caller supplies an already-projected :class:`RootLandingReport`; this
+    function only selects locale keys and interpolates the projected profile
+    label.  It does not inspect storage, resolve profiles, or decide whether
+    the bare root should render the landing card or the overview status report.
+    """
     lines: list[str] = [
         tr("cli.root.landing.headline"),
         tr("cli.root.landing.tagline"),
@@ -30,12 +44,14 @@ def render_cli_root_landing_lines(landing: RootLandingReport) -> tuple[str, ...]
 
 
 def _welcome_line(landing: RootLandingReport) -> str:
+    """Return the localized welcome line for the projected profile state."""
     if landing.active_profile is None:
         return tr("cli.root.landing.welcome_no_profile")
     return tr("cli.root.landing.welcome_profile", profile=landing.active_profile)
 
 
 def _quick_start_lines(*, has_profile: bool) -> list[str]:
+    """Return localized quick-start lines keyed by projected profile presence."""
     setup_line = (
         tr("cli.root.landing.quick_start_setup_done")
         if has_profile
@@ -52,6 +68,7 @@ def _quick_start_lines(*, has_profile: bool) -> list[str]:
 
 
 def _section_lines() -> Iterable[str]:
+    """Yield localized command-family rows for the root landing surface."""
     yield tr("cli.root.landing.sections_heading")
     yield tr("cli.root.landing.section_config")
     yield tr("cli.root.landing.section_overview")
