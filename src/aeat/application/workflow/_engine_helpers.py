@@ -22,6 +22,7 @@ class FilingWindowState(StrEnum):
     """State of the filing window for a given (modelo, period) at workflow time."""
 
     ABSENT = "absent"
+    FUTURE = "future"
     OPEN = "open"
     CLOSED = "closed"
 

@@ -285,6 +285,57 @@ def test_file_still_refuses_a_closed_past_period_no_pending_obligation(repos: Re
     assert "filing-obligation window is not open" in gate_error.value.result.summary
 
 
+def test_file_refuses_future_period_before_filing_window_opens(repos: Repos) -> None:
+    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
+    work_unit = seed_work_unit(wu_repo, filing_year=2026, period="3T")
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+        binding_values={
+            **DEFAULT_130_BINDING_VALUES,
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+        },
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=T1,
+    )
+    verify_revision(
+        revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
+        clock=T2,
+    )
+
+    with pytest.raises(ModeloWorkflowGateError) as gate_error:
+        file_revision(
+            revision.calculation_revision_id,
+            revision=revision,
+            work_unit=work_unit,
+            actor="operator-A",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=T3,
+        )
+
+    assert gate_error.value.result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION
+    assert "opens on" in gate_error.value.result.summary
+    assert "aeat app modelo export" in gate_error.value.result.summary
+    refreshed = get_calculation_revision(
+        revision.calculation_revision_id,
+        calculation_repository=cr_repo,
+    )
+    assert refreshed.state is CalculationRevisionState.VERIFICADO_COMPLETO
+    assert target_filing_records(list_filing_records(filing_repository=fr_repo), work_unit) == ()
+
+
 def test_file_records_overdue_modelo_130_2025_as_late_local_filing(repos: Repos) -> None:
     """A real but closed M130/2025 obligation can still seed the local carry chain."""
 
