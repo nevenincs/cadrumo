@@ -792,10 +792,9 @@ application:
       export_revision_state_refused: La revisio de calcul %{calculation_revision_id}
         no esta verificada-completa ni presentada i no es pot exportar.
       export_unsupported: El model %{modelo} no es pot exportar a fichero-BOE perque
-        l'snapshot del registre no te una definicio completa d'export_layouts. El
-        calcul, la verificacio i els registres locals de presentacio poden existir,
-        pero aquesta ordre no pot produir un fitxer per pujar a l'AEAT per a aquest
-        model.
+        %{reason}. El calcul, la verificacio i els registres locals de presentacio
+        poden existir, pero aquesta ordre no pot produir un fitxer per pujar a
+        l'AEAT per a aquest model ni certifica la correccio BOE/export.
       external_filing_evidence_reference_blank: La importació de declaració externa
         requereix un evidence_reference_id no buit.
       external_filing_no_casilla_values: La importació de declaració externa requereix
@@ -4852,6 +4851,8 @@ profile:
     description: Profile configuration keys and their descriptions
     tax:
       id: Tax identifier (NIF/NIE/CIF)
+  validation:
+    required_field_missing: Falta un camp obligatori del perfil.
 review:
   adapters:
     errors:

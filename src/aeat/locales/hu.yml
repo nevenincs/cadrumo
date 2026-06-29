@@ -736,9 +736,9 @@ application:
       export_revision_state_refused: A(z) %{calculation_revision_id} számítási revízió
         nincs ellenőrzött-teljes vagy beadott állapotban, ezért nem exportálható.
       export_unsupported: A(z) %{modelo} modelo nem exportalhato fichero-BOE fajlba,
-        mert a registry snapshot nem tartalmaz teljes export_layouts definiciot. A
-        szamitas, az ellenorzes es a helyi bevallasi rekordok letezhetnek, de ez a
-        parancs ehhez a modelohoz nem tud AEAT feltoltesi fajlt kesziteni.
+        mert %{reason}. A szamitas, az ellenorzes es a helyi bevallasi rekordok
+        letezhetnek, de ez a parancs ehhez a modelohoz nem tud AEAT feltoltesi
+        fajlt kesziteni, es nem igazolja a BOE/export helyesseget.
       external_filing_evidence_reference_blank: A külső bevallás importálásához nem
         üres evidence_reference_id szükséges.
       external_filing_no_casilla_values: A külső bevallás importálásához legalább
@@ -4737,6 +4737,8 @@ profile:
     description: Profilkonfigurációs kulcsok és leírásaik
     tax:
       id: Adóazonosító (NIF/CIF/DNI/NIE)
+  validation:
+    required_field_missing: Hiányzik egy kötelező profilmező.
 review:
   adapters:
     errors:

@@ -68,6 +68,7 @@ from .._export import (
     ModeloExportNoActiveBucketError,
     ModeloExportOutputPathError,
     ModeloExportResult,
+    ModeloExportUnsupportedError,
     ModeloIvaWalletDecisionProvenance,
     export_modelo_revision,
     iva_wallet_decision_export_provenance,
@@ -446,6 +447,46 @@ def test_export_refuses_borrador_revision(
         "calculation_revision_id": calc_rev_id,
         "state": CalculationRevisionState.BORRADOR.value,
     }
+
+
+def test_export_refuses_modelo_100_xml_dictionary_layout_before_writing(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    """M100's XML dictionary is registry parse/read data, not a local BOE renderer."""
+
+    bucket_id = _seed_profile()
+    _, calc_rev_id = _seed_revision(
+        bucket_id=bucket_id,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        modelo="100",
+        filing_year=2025,
+        period="0A",
+    )
+    out = tmp_path / "modelo-100.xml"
+
+    with pytest.raises(ModeloExportUnsupportedError) as exc_info:
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=calc_rev_id,
+                output_path=out,
+                actor="operator",
+            ),
+            workflow_profile=_profile(),
+        )
+
+    assert exc_info.value.translated_message == "application.modelo.errors.export_unsupported"
+    assert exc_info.value.context == {
+        "modelo": "100",
+        "reason": (
+            "export layout 'modelo-100-2025-xml-dictionary' uses unsupported format 'xml_dictionary'; "
+            "the local fichero-BOE exporter currently renders fixed_width layouts only"
+        ),
+        "layout_id": "modelo-100-2025-xml-dictionary",
+        "layout_format": "xml_dictionary",
+    }
+    assert not out.exists()
+    assert not out.with_name(out.name + ".tmp").exists()
 
 
 def test_export_refuses_cross_bucket_revision(

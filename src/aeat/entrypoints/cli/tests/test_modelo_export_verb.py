@@ -530,6 +530,40 @@ def test_export_modelo_390_refuses_missing_boe_layout_as_unsupported(tmp_path: P
     assert "Traceback" not in result.output
 
 
+def test_export_modelo_100_refuses_xml_dictionary_layout_as_unsupported(tmp_path: Path) -> None:
+    """Modelo 100 has an XML dictionary for reads, but no local BOE export renderer."""
+
+    work_unit_id, _ = _seed_verified_revision_without_inputs(modelo="100", filing_year=2025, period="0A")
+    out = tmp_path / "modelo-100.xml"
+
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "export",
+            work_unit_id,
+            "--output",
+            str(out),
+        ],
+    )
+
+    assert result.exit_code == 2, result.output
+    payload = json.loads(result.output)
+    assert payload["status"] == "error"
+    assert payload["error"]["code"] == "REFUSED_MODELO_EXPORT_UNSUPPORTED"
+    assert payload["error"]["category"] == "REFUSED"
+    assert payload["error"]["context"]["modelo"] == "100"
+    assert payload["error"]["context"]["layout_id"] == "modelo-100-2025-xml-dictionary"
+    assert payload["error"]["context"]["layout_format"] == "xml_dictionary"
+    assert "fixed_width" in payload["error"]["context"]["reason"]
+    assert "xml_dictionary" in payload["error"]["message"]
+    assert payload["error"]["suggestion"] == "aeat app modelo describe 100"
+    assert not out.exists()
+    assert "Traceback" not in result.output
+
+
 def test_export_requires_output_flag() -> None:
     """``--output`` is required; missing it surfaces as Typer usage error."""
 

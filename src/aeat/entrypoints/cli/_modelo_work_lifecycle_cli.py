@@ -23,6 +23,7 @@ from ...application.modelo import (
     modelo_work_create_applicability_refusal,
     modelo_work_create_refusal_locale_key,
     rename_work_unit,
+    require_existing_profile_baseline_ready_for_modelo_work,
     require_profile_ready_for_modelo_work,
     resolve_registry_revision_for_work_target,
 )
@@ -218,6 +219,12 @@ def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -
         _guard_modelo_applicability(modelo, allow_not_applicable=allow_not_applicable)
         resolved_bucket = bucket_id if bucket_id is not None else _active_bucket_id()
         resolved_actor = actor or deps.resolve_default_actor()
+        require_existing_profile_baseline_ready_for_modelo_work(
+            bucket_id=resolved_bucket,
+            modelo=modelo,
+            filing_year=resolved_year,
+            period=resolved_period,
+        )
         resolved_revision_id = resolve_registry_revision_for_work_target(
             modelo=modelo,
             filing_year=resolved_year,
