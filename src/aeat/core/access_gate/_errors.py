@@ -82,11 +82,11 @@ class AeatLiveReadNotEnabledError(AeatError):
 class AuthorizationManifestError(AeatError):
     """Raised when the multi-year-renta authorization manifest is malformed.
 
-    Emitted by the authorization-manifest loader when
-    ``authorization.toml`` exists but cannot be parsed or declares an
-    entry that violates the manifest invariants (a single-year enrollment
-    claim, a duplicate modelo, an unknown field). An *absent* manifest is
-    not an error: default-deny-by-absence yields an empty manifest that
+    Emitted by the authorization-manifest loader when an
+    ``authorization.d/<modelo>.toml`` fragment cannot be parsed or declares
+    an entry that violates the manifest invariants (a single-year enrollment
+    claim, a duplicate modelo, an unknown field). An absent fragment directory
+    is not an error: default-deny-by-absence yields an empty manifest that
     authorizes zero modelos.
     """
 
