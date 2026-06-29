@@ -344,6 +344,38 @@ def test_modelo_303_readiness_reports_pre_activity_period_refusal() -> None:
     assert projection.workspace.work_units == 0
 
 
+def test_modelo_349_readiness_uses_applicability_for_attribution_entity() -> None:
+    bucket_id = _register_active_profile(
+        overrides={
+            "identity.tax_id": "E12345674",
+            "taxpayer_type.entity_type": "attribution_entity",
+            "taxpayer_type.irpf_income_categories": "",
+            "irpf.estimation_regime": "",
+            "iva.does_intracomunitario": "true",
+        },
+    )
+
+    projection = build_operator_state_projection(
+        modelo_readiness_requests=(
+            ModeloReadinessRequest(
+                modelo="349",
+                revision_id="2020-y-siguientes",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+            ),
+        ),
+    )
+
+    readiness = projection.modelo_readiness[0]
+    assert readiness.profile_id == bucket_id
+    assert readiness.registry_ready is True
+    assert readiness.profile_ready is False
+    assert readiness.ready is False
+    assert "Modelo 349 is not applicable to the active profile" in readiness.profile_refusal
+    assert "Modelo 349 no aplica" in readiness.profile_refusal
+    assert projection.workspace.work_units == 0
+
+
 def test_modelo_303_readiness_does_not_report_ledger_bindings_missing_after_clean_preflight() -> None:
     bucket_id = _register_active_profile()
     create_manual_transaction(

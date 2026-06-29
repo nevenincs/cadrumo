@@ -224,6 +224,7 @@ def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -
             modelo=modelo,
             filing_year=resolved_year,
             period=resolved_period,
+            enforce_applicability=not allow_not_applicable,
         )
         resolved_revision_id = resolve_registry_revision_for_work_target(
             modelo=modelo,
@@ -237,6 +238,7 @@ def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -
             revision_id=resolved_revision_id,
             filing_year=resolved_year,
             period=resolved_period,
+            enforce_applicability=not allow_not_applicable,
         )
 
         try:
@@ -249,6 +251,7 @@ def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -
                 name=name,
                 actor=resolved_actor,
                 causante_ccaa=causante_ccaa,
+                enforce_applicability=not allow_not_applicable,
             )
         except (ModeloWorkRegistryYearMismatchError, RegistrySnapshotError) as exc:
             raise typer.BadParameter(str(exc)) from exc
