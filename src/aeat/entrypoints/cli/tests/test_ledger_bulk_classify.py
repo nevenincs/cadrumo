@@ -664,6 +664,34 @@ def test_classify_from_csv_rejects_malformed_iva_fact(tmp_path: Path) -> None:
     assert by_id[tx2]["taxable_base"] == "165.29"
 
 
+def test_classify_from_csv_surplus_cells_are_row_failure(tmp_path: Path) -> None:
+    """A row with more cells than headers fails that row without aborting the batch."""
+    tx1, tx2 = _import_two_transactions(tmp_path)
+    csv_file = tmp_path / "surplus_cells.csv"
+    csv_file.write_text(
+        "transaction_id,classification\n"
+        f"{tx1},BUSINESS,unexpected-extra-cell\n"
+        f"{tx2},BUSINESS\n",
+        encoding="utf-8",
+    )
+
+    result = invoke_cached_cli(
+        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "AttributeError" not in result.output
+    assert "strip" not in result.output
+    payload = json.loads(result.output)["result"]
+    assert payload["applied"] == 1, payload
+    assert len(payload["failures"]) == 1, payload
+    assert payload["failures"][0]["transaction_id"] == tx1, payload
+    assert "more cells than header columns" in payload["failures"][0]["reason"], payload
+    by_id = {row["transaction_id"]: row for row in _list_transactions()}
+    assert by_id[tx1]["business_classification"] == "NOT_YET_PROCESSED"
+    assert by_id[tx2]["business_classification"] == "BUSINESS"
+
+
 def test_classify_from_csv_accepts_business_pct_for_mixed(tmp_path: Path) -> None:
     """MIXED rows classify in bulk via --from-csv with a business_pct column."""
     tx1, _tx2 = _import_two_transactions(tmp_path)

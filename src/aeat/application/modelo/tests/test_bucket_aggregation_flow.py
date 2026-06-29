@@ -11,6 +11,7 @@ import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
+from ....core.errors import resolve_error_message
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
@@ -341,6 +342,9 @@ def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_p
             clock=_T1,
         )
     assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
+    rendered = resolve_error_message(exc_info.value)
+    assert "%{detail}" not in rendered
+    assert "deductible-expense ledger transaction has no category_id" in rendered
 
     assert len(cr_repo.load()) == 0
 

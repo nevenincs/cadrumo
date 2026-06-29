@@ -499,6 +499,7 @@ def _raise_if_ledger_preflight_blocks_calculation(
         context={
             "transaction_id": first_issue.transaction_id,
             "reason": first_issue.reason.value,
+            "detail": first_issue.detail,
             "period": str(report.period),
         },
         suggestion=f"aeat app ledger preflight --period {report.period.registry_token} --year {report.period.year}",
