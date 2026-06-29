@@ -112,9 +112,9 @@ def _snapshot_with_mutated_convenio_row(
 
 @pytest.fixture(scope="module")
 def m210_snapshot() -> RegistrySnapshot:
-    """Authority-resolved M210 / 2025 / evento snapshot."""
+    """Authority-resolved M210 / 2025 / EVENT-1 snapshot."""
 
-    return resources().modelos.authority.snapshot("210", filing_year=2025, period="evento")
+    return resources().modelos.authority.snapshot("210", filing_year=2025, period="EVENT-1")
 
 
 def test_committed_convenio_rows_resolve_corrected_legal_anchors(

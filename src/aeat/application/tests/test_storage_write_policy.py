@@ -113,7 +113,7 @@ def test_stub_only_work_create_delegates_when_real_argv_reconstruction_appends_v
     settings = Settings(aeat_local_storage_root=tmp_path, aeat_output_language=OutputLanguage.EN)
 
     decision = inspect_storage_write_policy(
-        "app modelo work create 210 2025 evento 2025",
+        "app modelo work create 210 2025 EVENT-1 2025",
         bootstrap_exempt=False,
         settings=settings,
         argv_tokens=(
@@ -128,7 +128,7 @@ def test_stub_only_work_create_delegates_when_real_argv_reconstruction_appends_v
             "--year",
             "2025",
             "--period",
-            "evento",
+            "EVENT-1",
             "--revision",
             "2025",
         ),
