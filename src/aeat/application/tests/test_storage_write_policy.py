@@ -50,6 +50,10 @@ def test_profile_bound_write_refuses_explicit_database_route(tmp_path: Path) -> 
     rendered = decision.render_refusal_message(locale="en")
     assert "Storage runtime is not ready" in rendered
     assert "database route is not attached to an active profile bucket" in rendered
+    context = decision.refusal_context()
+    assert context is not None
+    assert "AEAT_DATABASE_URL" in context["recovery"]
+    assert "AEAT_LOCAL_STORAGE_ROOT" in context["recovery"]
 
 
 def test_profile_bound_write_allows_active_bucket_route(tmp_path: Path) -> None:

@@ -24,6 +24,7 @@ from ..core.config import (
     settings_for_active_profile_bucket,
 )
 from ..core.i18n import tr
+from ..core.storage_route_guidance import EXPLICIT_DATABASE_URL_PROFILE_RECOVERY
 
 
 class StorageWritePolicyCode(StrEnum):
@@ -50,6 +51,7 @@ class StorageWritePolicyDecision(BaseModel):
     route_kind: StorageRouteKind | None = None
     message_key: str = ""
     detail_message_key: str = ""
+    recovery_hint: str = ""
 
     def render_refusal_message(self, *, locale: str | None = None) -> str:
         """Render the translated user-facing refusal message."""
@@ -58,6 +60,12 @@ class StorageWritePolicyDecision(BaseModel):
         if self.detail_message_key:
             return tr(self.message_key, details=tr(self.detail_message_key, locale=locale), locale=locale)
         return tr(self.message_key, locale=locale)
+
+    def refusal_context(self) -> dict[str, str] | None:
+        """Return structured context for the CLI error boundary."""
+        if not self.recovery_hint:
+            return None
+        return {"recovery": self.recovery_hint}
 
 
 PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
@@ -189,6 +197,7 @@ def inspect_storage_write_policy(
             route_kind=route.kind,
             message_key="errors.storage.runtime.not_ready",
             detail_message_key="errors.storage.runtime.route_not_active_bucket",
+            recovery_hint=EXPLICIT_DATABASE_URL_PROFILE_RECOVERY,
         )
     return StorageWritePolicyDecision(
         allowed=True,

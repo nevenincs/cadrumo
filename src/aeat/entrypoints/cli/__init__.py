@@ -383,7 +383,10 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     )
     write_policy = inspect_storage_write_policy(verb_path, bootstrap_exempt=exempt, argv_tokens=argv_tokens)
     if not write_policy.allowed:
-        raise CliRefusedBoundaryError(write_policy.render_refusal_message())
+        raise CliRefusedBoundaryError(
+            write_policy.render_refusal_message(),
+            context=write_policy.refusal_context(),
+        )
     active_bucket_id = resolve_active_bucket_id()
     if active_bucket_id is None:
         # No active profile: each non-exempt verb refuses for itself
