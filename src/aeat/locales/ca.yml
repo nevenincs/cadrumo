@@ -5170,13 +5170,13 @@ wizard:
       legal-name:
         help: Raó social de la persona jurídica per a capçaleres d'exportació
       ley-49-2002-option-date:
-        help: wizard.setup.flags.ley-49-2002-option-date.help
+        help: 'Registra la data de la casella 653 del model 036 per a l opcio del titol II de la Llei 49/2002.'
       ley-49-2002-option-declared:
-        help: wizard.setup.flags.ley-49-2002-option-declared.help
+        help: 'Registra si la casella 651 del model 036 declara l opcio pel titol II de la Llei 49/2002.'
       ley-49-2002-renunciation-date:
-        help: wizard.setup.flags.ley-49-2002-renunciation-date.help
+        help: 'Registra la data de la casella 654 del model 036 per a la renuncia al titol II de la Llei 49/2002.'
       ley-49-2002-renunciation-declared:
-        help: wizard.setup.flags.ley-49-2002-renunciation-declared.help
+        help: 'Registra si la casella 652 del model 036 declara la renuncia al regim del titol II de la Llei 49/2002.'
       llm-vision:
         help: Activar la visió LLM local per llegir factures.
       monedas-virtuales-extranjero-above-threshold:
@@ -5565,17 +5565,17 @@ wizard:
             label: Societat civil amb objecte mercantil
         prompt: Forma jurídica
       ley-49-2002-option-date:
-        help: wizard.setup.taxpayer-type.ley-49-2002-option-date.help
-        prompt: wizard.setup.taxpayer-type.ley-49-2002-option-date.prompt
+        help: 'Usa la data ISO corresponent a la casella 653 del model 036.'
+        prompt: 'Data declarada de l opcio pel regim especial de la Llei 49/2002'
       ley-49-2002-option-declared:
-        help: wizard.setup.taxpayer-type.ley-49-2002-option-declared.help
-        prompt: wizard.setup.taxpayer-type.ley-49-2002-option-declared.prompt
+        help: 'Usa el fet declarat a la casella 651 del model 036; l aplicacio legal continua condicionada als requisits legals i al fet que no hi hagi renuncia.'
+        prompt: 'L entitat ha presentat al model 036 l opcio pel regim fiscal especial del titol II de la Llei 49/2002?'
       ley-49-2002-renunciation-date:
-        help: wizard.setup.taxpayer-type.ley-49-2002-renunciation-date.help
-        prompt: wizard.setup.taxpayer-type.ley-49-2002-renunciation-date.prompt
+        help: 'Usa la data ISO corresponent a la casella 654 del model 036.'
+        prompt: 'Data declarada de la renuncia al regim especial de la Llei 49/2002'
       ley-49-2002-renunciation-declared:
-        help: wizard.setup.taxpayer-type.ley-49-2002-renunciation-declared.help
-        prompt: wizard.setup.taxpayer-type.ley-49-2002-renunciation-declared.prompt
+        help: 'Usa el fet declarat a la casella 652 del model 036.'
+        prompt: 'L entitat ha presentat al model 036 la renuncia al regim fiscal especial del titol II de la Llei 49/2002?'
       new-entity-first-two-profit-periods:
         help: S'aplica només a persones jurídiques. Si ho marques, l'entitat tributa
           al tipus reduït del 15 per cent durant aquests dos períodes.

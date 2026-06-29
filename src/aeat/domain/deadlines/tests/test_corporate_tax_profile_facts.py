@@ -11,6 +11,8 @@ corporate-tax-runtime plan introduces:
   the LIS Art. 29 first-two-profit-making-periods state of a newly-
   created legal entity. Three-state at the typed boundary so the
   absent-vs-false distinction survives the projection.
+* ``ley_49_2002_special_regime_*`` — option and renunciation facts
+  declared through Modelo 036 for the Ley 49/2002 Title II regime.
 
 The tests drive the real :func:`taxpayer_profile_from_mapping`
 projection — no mocks — and assert the strict pydantic model accepts
@@ -19,6 +21,7 @@ and round-trips the values verbatim.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -90,6 +93,34 @@ def test_taxpayer_profile_carries_new_entity_as_none_when_undeclared() -> None:
     assert profile.new_entity_first_two_profit_periods is None
 
 
+def test_taxpayer_profile_carries_ley_49_2002_option_and_renunciation_facts() -> None:
+    """Modelo 036 Ley 49/2002 option facts project to typed booleans and dates."""
+
+    values = _minimal_profile_mapping() | {
+        "taxpayer_type.ley_49_2002_special_regime_option_declared": "true",
+        "taxpayer_type.ley_49_2002_special_regime_option_date": "2024-02-03",
+        "taxpayer_type.ley_49_2002_special_regime_renunciation_declared": "false",
+        "taxpayer_type.ley_49_2002_special_regime_renunciation_date": "2026-05-11",
+    }
+    profile = taxpayer_profile_from_mapping(values, tax_id_default="B66012345")
+
+    assert profile.ley_49_2002_special_regime_option_declared is True
+    assert profile.ley_49_2002_special_regime_option_date == date(2024, 2, 3)
+    assert profile.ley_49_2002_special_regime_renunciation_declared is False
+    assert profile.ley_49_2002_special_regime_renunciation_date == date(2026, 5, 11)
+
+
+def test_taxpayer_profile_carries_ley_49_2002_facts_as_none_when_undeclared() -> None:
+    """Undeclared Ley 49/2002 option facts stay absent at the typed boundary."""
+
+    profile = taxpayer_profile_from_mapping(_minimal_profile_mapping(), tax_id_default="B66012345")
+
+    assert profile.ley_49_2002_special_regime_option_declared is None
+    assert profile.ley_49_2002_special_regime_option_date is None
+    assert profile.ley_49_2002_special_regime_renunciation_declared is None
+    assert profile.ley_49_2002_special_regime_renunciation_date is None
+
+
 def test_taxpayer_profile_model_validates_incn_decimal_field() -> None:
     """Strict pydantic accepts a ``Decimal`` for ``incn_prior_12_months``
     and rejects a non-decimal scalar via the field's typed boundary."""
@@ -113,3 +144,21 @@ def test_taxpayer_profile_model_accepts_three_state_new_entity_field() -> None:
             new_entity_first_two_profit_periods=declared,
         )
         assert profile.new_entity_first_two_profit_periods is declared
+
+
+def test_taxpayer_profile_model_accepts_ley_49_2002_option_fields() -> None:
+    """Strict pydantic accepts the Ley 49/2002 booleans and dates."""
+
+    profile = TaxpayerProfile(
+        tax_id="B66012345",
+        iva_regime=IVARegime.GENERAL,
+        ley_49_2002_special_regime_option_declared=True,
+        ley_49_2002_special_regime_option_date=date(2024, 2, 3),
+        ley_49_2002_special_regime_renunciation_declared=False,
+        ley_49_2002_special_regime_renunciation_date=date(2026, 5, 11),
+    )
+
+    assert profile.ley_49_2002_special_regime_option_declared is True
+    assert profile.ley_49_2002_special_regime_option_date == date(2024, 2, 3)
+    assert profile.ley_49_2002_special_regime_renunciation_declared is False
+    assert profile.ley_49_2002_special_regime_renunciation_date == date(2026, 5, 11)

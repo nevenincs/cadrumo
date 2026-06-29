@@ -5220,13 +5220,13 @@ wizard:
       legal-name:
         help: Razón social de la persona jurídica para cabeceras de exportación
       ley-49-2002-option-date:
-        help: wizard.setup.flags.ley-49-2002-option-date.help
+        help: 'Registra la fecha de la casilla 653 del modelo 036 para la opcion del titulo II de la Ley 49/2002.'
       ley-49-2002-option-declared:
-        help: wizard.setup.flags.ley-49-2002-option-declared.help
+        help: 'Registra si la casilla 651 del modelo 036 declara la opcion por el titulo II de la Ley 49/2002.'
       ley-49-2002-renunciation-date:
-        help: wizard.setup.flags.ley-49-2002-renunciation-date.help
+        help: 'Registra la fecha de la casilla 654 del modelo 036 para la renuncia al titulo II de la Ley 49/2002.'
       ley-49-2002-renunciation-declared:
-        help: wizard.setup.flags.ley-49-2002-renunciation-declared.help
+        help: 'Registra si la casilla 652 del modelo 036 declara la renuncia al regimen del titulo II de la Ley 49/2002.'
       llm-vision:
         help: Activar la visión LLM local para leer facturas.
       monedas-virtuales-extranjero-above-threshold:
@@ -5622,17 +5622,17 @@ wizard:
             label: Sociedad civil con objeto mercantil
         prompt: Forma jurídica
       ley-49-2002-option-date:
-        help: wizard.setup.taxpayer-type.ley-49-2002-option-date.help
-        prompt: wizard.setup.taxpayer-type.ley-49-2002-option-date.prompt
+        help: 'Usa la fecha ISO correspondiente a la casilla 653 del modelo 036.'
+        prompt: 'Fecha declarada de la opcion por el regimen especial de la Ley 49/2002'
       ley-49-2002-option-declared:
-        help: wizard.setup.taxpayer-type.ley-49-2002-option-declared.help
-        prompt: wizard.setup.taxpayer-type.ley-49-2002-option-declared.prompt
+        help: 'Usa el hecho declarado en la casilla 651 del modelo 036; la aplicacion legal sigue condicionada a los requisitos legales y a que no exista renuncia.'
+        prompt: 'La entidad ha presentado en el modelo 036 la opcion por el regimen fiscal especial del titulo II de la Ley 49/2002?'
       ley-49-2002-renunciation-date:
-        help: wizard.setup.taxpayer-type.ley-49-2002-renunciation-date.help
-        prompt: wizard.setup.taxpayer-type.ley-49-2002-renunciation-date.prompt
+        help: 'Usa la fecha ISO correspondiente a la casilla 654 del modelo 036.'
+        prompt: 'Fecha declarada de la renuncia al regimen especial de la Ley 49/2002'
       ley-49-2002-renunciation-declared:
-        help: wizard.setup.taxpayer-type.ley-49-2002-renunciation-declared.help
-        prompt: wizard.setup.taxpayer-type.ley-49-2002-renunciation-declared.prompt
+        help: 'Usa el hecho declarado en la casilla 652 del modelo 036.'
+        prompt: 'La entidad ha presentado en el modelo 036 la renuncia al regimen fiscal especial del titulo II de la Ley 49/2002?'
       new-entity-first-two-profit-periods:
         help: Aplica solo a personas jurídicas. Si lo marca, la entidad tributa al
           tipo reducido del 15 por ciento durante esos dos periodos.

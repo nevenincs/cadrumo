@@ -416,6 +416,22 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         "--new-entity-first-two-profit-periods/--no-new-entity-first-two-profit-periods",
         help=tr("wizard.setup.flags.new-entity-first-two-profit-periods.help"),
     ),
+    "ley-49-2002-option-declared": typer.Option(
+        "--ley-49-2002-option-declared/--no-ley-49-2002-option-declared",
+        help=tr("wizard.setup.flags.ley-49-2002-option-declared.help"),
+    ),
+    "ley-49-2002-option-date": typer.Option(
+        "--ley-49-2002-option-date",
+        help=tr("wizard.setup.flags.ley-49-2002-option-date.help"),
+    ),
+    "ley-49-2002-renunciation-declared": typer.Option(
+        "--ley-49-2002-renunciation-declared/--no-ley-49-2002-renunciation-declared",
+        help=tr("wizard.setup.flags.ley-49-2002-renunciation-declared.help"),
+    ),
+    "ley-49-2002-renunciation-date": typer.Option(
+        "--ley-49-2002-renunciation-date",
+        help=tr("wizard.setup.flags.ley-49-2002-renunciation-date.help"),
+    ),
     "irpf-estimation-regime": typer.Option(
         "--irpf-estimation-regime",
         click_type=_choice(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
