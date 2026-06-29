@@ -2,7 +2,17 @@
 
 Loads the active :class:`UserProfileRecord`, builds a
 :class:`ProfilePreflightReport`, and raises :class:`ModeloProfileReadinessError`
-before filing-grade work proceeds when required profile facts are missing.
+before filing-grade work proceeds when required profile facts are missing. The
+same gate also refuses Modelo 130 and Modelo 303 target periods whose date span
+ends before the profile's ``censo.activity_start_date``; those pre-activity
+periods have no filing obligation and must not produce stale work, calculation,
+verification, filing, or export state.
+
+See Also:
+    :func:`require_profile_ready_for_work_unit`:
+        Replays the same readiness checks for an existing :class:`WorkUnit`.
+    :class:`ProfilePreflightReport`:
+        User-profile preflight result consumed by this application gate.
 """
 
 from __future__ import annotations
@@ -14,12 +24,18 @@ from ...core.resources import resources
 from ...domain.calculations.registry import RegistrySnapshotError
 from ...domain.modelos._work_unit import WorkUnit
 from ...domain.user_profile import ProfileNotFoundError, UserProfileRecord
-from ..user_profile import ProfilePreflightReport, UserProfileLifecycleRepository
+from ..user_profile import (
+    ProfilePreflightReport,
+    ProfileValidationService,
+    UserProfileLifecycleRepository,
+    record_to_path_values,
+)
 from ..user_profile._preflight import ProfilePreflightService
 from ._action_errors import ModeloProfileReadinessError
 
 _PROFILE_ACTIVITY_START_PATH = "censo.activity_start_date"
 _PRE_ACTIVITY_LIFECYCLE_MODELOS = frozenset({Modelo.M130.value, Modelo.M303.value})
+_FILING_BASELINE_PROFILE_PATHS = ("identity.tax_id", "activities.description")
 
 
 def _report_for_target(
@@ -99,6 +115,37 @@ def _require_not_pre_activity_period(
     )
 
 
+def _require_profile_filing_ready(
+    *,
+    record: UserProfileRecord,
+    bucket_id: str,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+) -> None:
+    values = record_to_path_values(record)
+    missing: list[str] = [path for path in _FILING_BASELINE_PROFILE_PATHS if not values.get(path, "").strip()]
+    validation = ProfileValidationService(schema=resources().user_profile_schema.singleton).validate_record(record)
+    for issue in validation.issues:
+        if issue.severity.value != "error":
+            continue
+        path = issue.path or issue.code
+        if path not in missing:
+            missing.append(path)
+    if not missing:
+        return
+    raise ModeloProfileReadinessError(
+        translated_message="application.modelo.errors.profile_readiness_missing",
+        context={
+            "modelo": modelo,
+            "filing_year": filing_year,
+            "period": period.registry_token,
+            "missing": ", ".join(missing),
+        },
+        suggestion=f"aeat config profile edit {bucket_id}",
+    )
+
+
 def require_profile_ready_for_modelo_work(
     *,
     bucket_id: str,
@@ -107,7 +154,13 @@ def require_profile_ready_for_modelo_work(
     filing_year: int,
     period: Period,
 ) -> None:
-    """Refuse filing-grade modelo work when active profile facts are incomplete."""
+    """Refuse filing-grade modelo work when the active profile is not eligible.
+
+    Loads the bucket's :class:`UserProfileRecord`, evaluates modelo-specific
+    profile requirements through :class:`ProfilePreflightReport`, and then
+    applies the pre-activity period check for lifecycle modelos whose obligation
+    starts at ``censo.activity_start_date``.
+    """
     try:
         record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
     except ProfileNotFoundError as exc:
@@ -116,6 +169,13 @@ def require_profile_ready_for_modelo_work(
             context={"bucket_id": bucket_id},
             suggestion="aeat config profile create NAME",
         ) from exc
+    _require_profile_filing_ready(
+        record=record,
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+    )
     report = _report_for_target(
         record=record,
         modelo=modelo,
@@ -145,7 +205,12 @@ def require_profile_ready_for_modelo_work(
 
 
 def require_profile_ready_for_work_unit(work_unit: WorkUnit) -> None:
-    """Run the profile readiness gate for an existing work unit."""
+    """Run the profile readiness gate for an existing :class:`WorkUnit`.
+
+    Calculation, verification, filing, and export services call this wrapper so
+    a previously created work unit is rechecked against the current
+    :class:`UserProfileRecord` before any filing-grade mutation proceeds.
+    """
     require_profile_ready_for_modelo_work(
         bucket_id=work_unit.bucket_id,
         modelo=str(work_unit.modelo),

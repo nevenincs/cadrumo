@@ -147,6 +147,51 @@ def test_profile_create_refuses_incomplete_profile_before_modelo_work() -> None:
     assert "Traceback" not in result.output
 
 
+def test_work_create_refuses_status_blocked_profile_missing_activity() -> None:
+    create = _invoke(
+        [
+            "--format", "json",
+            "config", "profile", "create", _PROFILE_ID,
+            "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
+            "--irpf-income-categories", "actividad_economica",
+            "--tax-id", "12345678Z",
+            "--name", "Operator",
+            "--surnames", "Readiness",
+        ],
+    )  # fmt: skip
+    assert create.exit_code == 0, create.output
+
+    status = _invoke(["--format", "json", "config", "profile", "status"])
+    assert status.exit_code == 0, status.output
+    status_payload = _payload(status.output)
+    assert status_payload["configured"] is False
+    assert status_payload["activity_present"] is False
+
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", Modelo.M130.value,
+            "--year", "2025",
+            "--period", "1T",
+            "--revision", "2019-y-siguientes",
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code != 0
+    payload = json.loads(result.output)
+    assert payload["status"] == "error"
+    assert payload["error"]["code"] == "REFUSED_MODELO_PROFILE_READINESS"
+    assert "activities.description" in payload["error"]["message"]
+    assert "work_unit_id" not in result.output
+    assert "Traceback" not in result.output
+
+    listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    assert listed.exit_code == 0, listed.output
+    assert _payload(listed.output)["work_unit_count"] == 0
+
+
 def test_work_create_refuses_pre_activity_m303_and_creates_no_unit() -> None:
     _create_profile(activity_start_date="2026-05-01")
 

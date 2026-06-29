@@ -53,6 +53,27 @@ def _store_incomplete_profile(bucket_id: str) -> None:
     )
 
 
+def _store_profile_without_activity(bucket_id: str) -> None:
+    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name="No activity profile",
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Ready"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="censo.activity_start_date", value=date(2025, 1, 1)),
+            ),
+            created_at=_NOW,
+            updated_at=_NOW,
+        ),
+    )
+
+
 def _store_ready_profile(bucket_id: str, *, activity_start_date: date) -> None:
     UserProfileLifecycleRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
@@ -140,6 +161,31 @@ def test_create_work_unit_service_refuses_incomplete_profile(tmp_path: Path) -> 
                 revision_id=_M303_REVISION,
                 clock=_NOW,
             )
+
+
+def test_create_work_unit_service_refuses_profile_missing_activity(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator") as profile:
+        _store_profile_without_activity("operator")
+        repository = WorkUnitCatalogueRepository(objects=profile.repository)
+
+        with pytest.raises(ModeloProfileReadinessError) as excinfo:
+            create_work_unit(
+                bucket_id="operator",
+                modelo=Modelo.M130.value,
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "1T"),
+                revision_id=_M130_REVISION,
+                repository=repository,
+                clock=_NOW,
+            )
+
+        assert excinfo.value.context == {
+            "modelo": Modelo.M130.value,
+            "filing_year": 2025,
+            "period": "1T",
+            "missing": "activities.description",
+        }
+        assert len(repository.load()) == 0
 
 
 def test_mark_verified_service_refuses_existing_work_unit_with_incomplete_profile(tmp_path: Path) -> None:
