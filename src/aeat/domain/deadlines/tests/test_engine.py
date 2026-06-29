@@ -212,6 +212,34 @@ class TestCompute:
         assert q1.payment_cutoff_on == date(2026, 4, 15)
         assert "rd-439-2007:art-110" in q1.boe_references
 
+    def test_modelo_130_2025_windows_cover_same_year_carry_chain(self) -> None:
+        """M130 2025 deadlines are present so local filing can seed later quarters.
+
+        External authority: AEAT Calendario del contribuyente 2025 lists
+        Modelos 130/131 quarterly presentation windows as April 1-21,
+        July 1-21, and October 1-20, with direct debit cutoffs April 15,
+        July 16, and October 15. The 2026 calendar lists the 2025 fourth
+        quarter window as January 1-30, with direct debit through January 27.
+        """
+        schedule = _engine().compute(_profile(), 2025, today=date(2026, 6, 29))
+        rows = {
+            obligation.period.registry_token: (
+                obligation.opens_on,
+                obligation.closes_on,
+                obligation.payment_cutoff_on,
+                obligation.status,
+            )
+            for obligation in schedule.obligations
+            if obligation.modelo == "130"
+        }
+
+        assert rows == {
+            "1T": (date(2025, 4, 1), date(2025, 4, 21), date(2025, 4, 15), ObligationStatus.OVERDUE),
+            "2T": (date(2025, 7, 1), date(2025, 7, 21), date(2025, 7, 16), ObligationStatus.OVERDUE),
+            "3T": (date(2025, 10, 1), date(2025, 10, 20), date(2025, 10, 15), ObligationStatus.OVERDUE),
+            "4T": (date(2026, 1, 1), date(2026, 1, 30), date(2026, 1, 27), ObligationStatus.OVERDUE),
+        }
+
     def test_obligations_sorted_by_close_date(self) -> None:
         schedule = _engine().compute(_profile(), 2026, today=date(2026, 1, 1))
         closes = [o.closes_on for o in schedule.obligations]

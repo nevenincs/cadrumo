@@ -55,8 +55,14 @@ _MODELO_130_DIR = _REGISTRY_ROOT / "modelos" / "130"
 
 
 @cache
-def _committed_modelo(modelo_id: str) -> tuple[ModeloDefinition, RegistryCatalogues]:
+def _committed_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
+    return tuple(modelos), catalogues
+
+
+@cache
+def _committed_modelo(modelo_id: str) -> tuple[ModeloDefinition, RegistryCatalogues]:
+    modelos, catalogues = _committed_registry_tree()
     return next(modelo for modelo in modelos if modelo.id == modelo_id), catalogues
 
 
@@ -153,6 +159,10 @@ _SNAPSHOT_HEADER_EXPECTATIONS = (
 _EXPECTED_LIVE_CROSS_REFERENCES = frozenset({"modelo-130-static-official", "modelo-130-filed-declarations-read"})
 
 _EXPECTED_DEADLINE_WINDOWS = (
+    "modelo-130-2025-1t",
+    "modelo-130-2025-2t",
+    "modelo-130-2025-3t",
+    "modelo-130-2025-4t",
     "modelo-130-2026-1t",
     "modelo-130-2026-2t",
     "modelo-130-2026-3t",
