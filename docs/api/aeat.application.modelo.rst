@@ -14,7 +14,6 @@ Submodules
    :maxdepth: 4
 
    aeat.application.modelo._action_errors
-   aeat.application.modelo._actions
    aeat.application.modelo._amendment_actions
    aeat.application.modelo._art20_advisory
    aeat.application.modelo._binding_readiness

@@ -21,6 +21,7 @@ Submodules
    aeat.application.user_profile._commands
    aeat.application.user_profile._completeness
    aeat.application.user_profile._custody
+   aeat.application.user_profile._filing_baseline
    aeat.application.user_profile._integrity
    aeat.application.user_profile._keys_validation
    aeat.application.user_profile._language_resolver
