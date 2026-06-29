@@ -238,6 +238,11 @@ class BindingSourceKind(StrEnum):
     # total_perceptors) — replacing the wrong sum-of-quarterly-M115-counts relation
     # (RET-1, ADR 2026-06-24-retenciones-perceptor-count-adr).
     RETENCIONES_AGGREGATION = "retenciones_aggregation"
+    # Modelo 390 year-end IVA compensation carry partition: reads filed Modelo
+    # 303 compensation states and materialises AEAT boxes 97 / 662 together from
+    # the FIFO carry projection. This is a registry-declared source because the
+    # two annual boxes are not independent relation copy/sum folds.
+    IVA_COMPENSATION_ANNUAL_PARTITION = "iva_compensation_annual_partition"
     # Mesh-only sourcing decisions with NO registry binding declaration. Both are
     # resolved by a pre-mesh gate, not a registry `DataBindingDefinition.source`:
     # `borrador` materialises the Modelo 100 borrador prefill

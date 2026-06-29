@@ -227,12 +227,11 @@ def test_stamped_revision_id_anti_tautology_drop_surfaces_as_inequality(tmp_path
 # ``iva.compensacion-disponible-fin-periodo`` from M303/2025/1T
 # (source_period_offset_from_target = -1).
 #
-# NOTE: Modelo 390's five M303-sourced bindings (cuota-devengada-total,
-# cuota-deducible-total, resultado-regimen-general, compensacion-ultimo-periodo,
-# compensacion-generada-ejercicio-no-97) migrated from ``previous_filing`` to
-# ``relation_prefill`` via the relation path.  resolve_bindings_from_local_store
-# for M390/0A now returns an empty BindingPrefillReport; it can no longer be used
-# as the R2 gate subject.  These three tests were repurposed to the M303 self-carry
+# NOTE: Modelo 390's ordinary M303 annual-total bindings migrated from
+# ``previous_filing`` to ``relation_prefill``; its compensation boxes are now
+# resolved by ``iva_compensation_annual_partition``. resolve_bindings_from_local_store
+# for M390/0A returns an empty BindingPrefillReport; it can no longer be used as
+# the R2 gate subject. These three tests were repurposed to the M303 self-carry
 # (quarterly compensacion carry) instead, which retains a direct-selector
 # ``previous_filing`` binding.
 #

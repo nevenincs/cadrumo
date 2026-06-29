@@ -532,7 +532,11 @@ def _resolve_bucket_source_mesh(
         collect_unhandled_source_diagnostics,
         merge_source_resolutions,
     )
-    from ..calculations import PreviousFilingSourceResolver, RelationPrefillSourceResolver
+    from ..calculations import (
+        IvaCompensationAnnualPartitionSourceResolver,
+        PreviousFilingSourceResolver,
+        RelationPrefillSourceResolver,
+    )
     from ..invoices import InvoiceCatalogueSourceResolver
 
     context = CalculationSourceContext(
@@ -605,6 +609,10 @@ def _resolve_bucket_source_mesh(
             # credits, M180/M190/M193 reconciliations, M200/M202 carries) live on
             # the operator calculate path.
             RelationPrefillSourceResolver(registry_snapshot=snapshot).resolve(context),
+            # Modelo 390 annual compensation carry boxes 97 / 662 are one FIFO
+            # partition over filed Modelo 303 compensation states, not two
+            # independent relation copy/sum folds.
+            IvaCompensationAnnualPartitionSourceResolver(registry_snapshot=snapshot).resolve(context),
         ),
     )
     source_resolution = _source_resolution_excluding_iva_compensation(snapshot.revision, source_resolution)
@@ -788,13 +796,13 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     )
     # Precedence ladder step 4 (ADR ruling D2, extended): re-run the guard against
     # the merged owned-sources, but EXCLUDE the caller-overridable CARRY sources
-    # (previous_filing + relation_prefill). A caller --binding override of an
-    # automatically-CARRIED prior value (a previous-filing carry or a relation
-    # fold-in) is legitimate and must reach the engine, where the casilla-lift
-    # no-ops on the already-resolved binding and the engine's consistency check
-    # adjudicates any divergence. Every other dynamically-discovered mesh source
-    # (the ledger aggregations) stays guarded so the persisted revision reflects
-    # the sources it claims to aggregate.
+    # (previous_filing, relation_prefill, iva_compensation_annual_partition). A
+    # caller --binding override of an automatically-carried prior value is
+    # legitimate and must reach the engine, where the casilla-lift no-ops on the
+    # already-resolved binding and the engine's consistency check adjudicates any
+    # divergence. Every other dynamically-discovered mesh source (the ledger
+    # aggregations) stays guarded so the persisted revision reflects the sources
+    # it claims to aggregate.
     _reject_caller_overrides_of_source_bindings(
         revision=snapshot.revision,
         owned_sources=frozenset(source_resolution.owned_sources) - CALLER_OVERRIDABLE_CARRY_SOURCES,

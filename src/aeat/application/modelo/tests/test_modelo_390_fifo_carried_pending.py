@@ -1,20 +1,21 @@
 """M390 year-end carry boxes 97/662 as a FIFO partition - the DISCRIMINATING case.
 
 Companion to ``test_modelo_390_303_fold_in_live.py``. That module proves the
-five M390<-M303 relations fold on the live calculate path, but its fixture seeds
-independent per-period ``iva.compensacion-generada-periodo`` with NO carried
-pending chain (each period's disponible equals its own generated credit). In
+ordinary M390<-M303 relations and the annual compensation partition source run on
+the live calculate path, but its fixture seeds independent per-period
+``iva.compensacion-generada-periodo`` with NO carried pending chain (each
+period's disponible equals its own generated credit). In
 that degenerate case the FIFO partition and the naive per-period split COINCIDE
 (box 97 = copy(4T generated), box 662 = sum(1T-3T generated)), so the existing
-test cannot tell whether the box-97/662 values came from the correct FIFO
-override (#7/#12, IVA-1/IVA-2) or from the un-fixed naive relation sums.
+test cannot tell whether the box-97/662 values came from the declared FIFO
+annual-partition source (#7/#12, IVA-1/IVA-2) or from the un-fixed naive relation sums.
 
 This module closes that coverage hole with a REAL carried-pending chain driven
 through the full operator calculate action
 (:func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`),
 choosing inputs where the FIFO partition DIVERGES from the naive split, so the
-test FAILS if the FIFO override is ever removed and the naive relation sums leak
-through.
+test FAILS if the annual-partition source is ever removed and the naive relation
+sums leak through.
 
 Scenario (the AEAT "always-carry" case - every period's credit carries forward
 into the last period's autoliquidacion, nothing consumed):
@@ -98,7 +99,7 @@ def _casilla_id(value: object) -> CasillaId:
         raise AssertionError(f"M390 FIFO fixture casilla key {value!r} is not a CasillaId") from exc
 
 
-# M303 compensacion casillas the FIFO override reads to build each period's state.
+# M303 compensacion casillas the annual partition source reads to build each period's state.
 _GENERADA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
 _APLICADA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
 _DISPONIBLE: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
@@ -245,7 +246,7 @@ def test_m390_carry_boxes_are_the_fifo_partition_not_the_naive_split(
 
     # Belt-and-braces: the result must NOT be the naive split (the un-fixed behaviour).
     assert (box_97, box_662) != (_NAIVE_BOX_97, _NAIVE_BOX_662), (
-        "M390 carry boxes collapsed to the naive per-period split - the FIFO override is not firing"
+        "M390 carry boxes collapsed to the naive per-period split - the annual partition source is not firing"
     )
     # The AEAT partition identity is preserved through the full calculate.
     assert box_97 + box_662 == _YEAR_PENDING, (
