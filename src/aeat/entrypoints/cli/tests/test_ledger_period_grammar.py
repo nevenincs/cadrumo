@@ -251,7 +251,7 @@ def test_status_accepts_aeat_token_with_year(_isolated_backend: None) -> None:
     result = invoke_cached_cli(["app", "ledger", "status", "--period", "1T", "--year", "2026"])
 
     assert result.exit_code == 0, result.output
-    for marker in ("expense_total\t242", "net_total\t-242", "1T 2026"):
+    for marker in ("business_expense_total\t242", "business_net_total\t-242", "1T 2026"):
         assert marker in result.output, result.output
     assert "2026Q1" not in result.output
 

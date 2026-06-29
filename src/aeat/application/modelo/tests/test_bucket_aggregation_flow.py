@@ -166,7 +166,19 @@ def _store_profile(objects: SecureObjectRepository) -> None:
         UserProfileRecord(
             profile_id="bucket-a",
             display_name="Test runtime profile",
-            facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Ready"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="design"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="censo.activity_start_date", value=date(2025, 1, 1)),
+            ),
             created_at=_T0,
             updated_at=_T0,
         ),
@@ -306,6 +318,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transacti
 def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_preflight_blocks(
     secure_objects: SecureObjectRepository,
 ) -> None:
+    _store_profile(secure_objects)
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo)
     incomplete = _transaction(
@@ -499,6 +512,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
 def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_binding_input(
     secure_objects: SecureObjectRepository,
 ) -> None:
+    _store_profile(secure_objects)
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo)
     tx_repo.save(
@@ -537,6 +551,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_b
 def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_ledger_binding_injection(
     secure_objects: SecureObjectRepository,
 ) -> None:
+    _store_profile(secure_objects)
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo)
 
@@ -562,6 +577,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_
 def test_calculate_modelo_revision_from_bucket_aggregation_rejects_ledger_bound_casilla_injection(
     secure_objects: SecureObjectRepository,
 ) -> None:
+    _store_profile(secure_objects)
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo)
 
