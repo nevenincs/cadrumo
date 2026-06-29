@@ -426,6 +426,7 @@ _MISSING_INPUT_TRANSLATED_MESSAGES: frozenset[str] = frozenset(
     {
         "errors.calc.binding_value_missing",
         "errors.calc.bound_casilla_binding_value_missing",
+        "errors.calc.date_binding_value_missing",
         "errors.calc.enum_binding_value_missing",
         "errors.calc.relation_value_missing",
     },
@@ -571,6 +572,21 @@ def _missing_binding_guidance(error: RegistryValidationError, work_unit_id: str)
             base=base,
             error=error,
             discover_command=discover_command,
+        )
+    if error.translated_message == "errors.calc.date_binding_value_missing":
+        binding_id = (error.context or {}).get("binding_id")
+        if not isinstance(binding_id, str):
+            binding_id = "the missing date binding"
+        return tr(
+            "cli.app.modelo.work.missing_date_binding_guidance",
+            default=(
+                "{base} Set {binding_id} on the active profile, then rerun calculate. "
+                "Date-valued profile facts cannot be supplied with --binding. "
+                "Run `{discover}` to list every binding the calculation still needs."
+            ),
+            base=base,
+            binding_id=binding_id,
+            discover=discover_command,
         )
     if _ledger_sourced_missing_binding(error, unit):
         return tr(
