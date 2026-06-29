@@ -61,6 +61,7 @@ def create_work_unit(
     repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     clock: datetime | None = None,
+    enforce_applicability: bool = True,
 ) -> WorkUnit:
     """Create or load the :class:`WorkUnit` for an exact filing target key.
 
@@ -95,6 +96,7 @@ def create_work_unit(
         modelo=modelo,
         filing_year=filing_year,
         period=period,
+        enforce_applicability=enforce_applicability,
     )
     reject_unknown_revision(modelo=modelo, revision_id=revision_id)
     reject_unknown_period_for_revision(modelo=modelo, revision_id=revision_id, period=period)
@@ -105,6 +107,7 @@ def create_work_unit(
         revision_id=revision_id,
         filing_year=filing_year,
         period=period,
+        enforce_applicability=enforce_applicability,
     )
     repo = repository or WorkUnitCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()

@@ -33,15 +33,6 @@ from ...domain.calculations.registry import (
     RegistrySnapshotError,
     derive_modelo_applicability,
 )
-from ...domain.deadlines import (
-    EntityType,
-    FiscalResidency,
-    IrpfEstimationRegime,
-    IrpfIncomeCategory,
-    IVARegime,
-    LegalEntityForm,
-    TaxpayerProfile,
-)
 from ...domain.modelos._work_unit import WorkUnit
 from ...domain.user_profile import ProfileNotFoundError, UserProfileRecord
 from ..user_profile import (
@@ -50,6 +41,7 @@ from ..user_profile import (
     ProfileValidationIssue,
     ProfileValidationService,
     UserProfileLifecycleRepository,
+    projection_for_taxpayer,
     record_to_path_values,
 )
 from ..user_profile._preflight import ProfilePreflightService
@@ -57,7 +49,6 @@ from ._action_errors import ModeloProfileReadinessError
 
 _PROFILE_ACTIVITY_START_PATH = "censo.activity_start_date"
 _PRE_ACTIVITY_LIFECYCLE_MODELOS = frozenset({Modelo.M130.value, Modelo.M303.value})
-_LOCAL_WORK_APPLICABILITY_MODELOS = frozenset({Modelo.M200.value, Modelo.M202.value})
 _FILING_BASELINE_PROFILE_PATHS = ("identity.tax_id", "activities.description")
 _BLOCKING_APPLICABILITY_VERDICTS = frozenset(
     {
@@ -283,33 +274,6 @@ def _require_modelo_applicable_for_local_work(
     )
 
 
-def _local_work_taxpayer_profile(record: UserProfileRecord) -> TaxpayerProfile:
-    """Project a :class:`UserProfileRecord` into the :class:`TaxpayerProfile` applicability model."""
-    values = record_to_path_values(record)
-    entity_type = values.get("taxpayer_type.entity_type")
-    legal_entity_form = values.get("taxpayer_type.legal_entity_form")
-    income_categories = tuple(
-        token.strip()
-        for token in values.get("taxpayer_type.irpf_income_categories", "").split(",")
-        if token.strip()
-    )
-    estimation_regime = values.get("irpf.estimation_regime")
-    fiscal_residency = values.get("taxpayer_type.fiscal_residency")
-    iva_regime = values.get("iva.regime", IVARegime.GENERAL.value).strip().upper().replace("-", "_")
-    return TaxpayerProfile(
-        tax_id=values.get("identity.tax_id", "00000000T"),
-        entity_type=EntityType(entity_type) if entity_type else None,
-        legal_entity_form=LegalEntityForm(legal_entity_form) if legal_entity_form else None,
-        irpf_income_categories=frozenset(IrpfIncomeCategory(token) for token in income_categories),
-        irpf_estimation_regime=IrpfEstimationRegime(estimation_regime) if estimation_regime else None,
-        iva_regime=IVARegime(iva_regime),
-        fiscal_residency=FiscalResidency(fiscal_residency) if fiscal_residency else None,
-        country_of_fiscal_residence=values.get("taxpayer_type.country_of_fiscal_residence") or None,
-        representante_fiscal_nif=values.get("taxpayer_type.representante_fiscal_nif") or None,
-        representante_fiscal_nombre=values.get("taxpayer_type.representante_fiscal_nombre") or None,
-    )
-
-
 def modelo_applicability_refusal(
     *,
     record: UserProfileRecord,
@@ -326,9 +290,7 @@ def modelo_applicability_refusal(
         modelo: Modelo code being checked.
     """
     modelo_code = modelo.strip()
-    if modelo_code not in _LOCAL_WORK_APPLICABILITY_MODELOS:
-        return None
-    profile = _local_work_taxpayer_profile(record)
+    profile = projection_for_taxpayer(record, tax_id_default="00000000T")
     applicability = derive_modelo_applicability(profile, modelo_code)
     if applicability.verdict not in _BLOCKING_APPLICABILITY_VERDICTS:
         return None
@@ -422,6 +384,7 @@ def require_profile_ready_for_modelo_work(
     revision_id: str,
     filing_year: int,
     period: Period,
+    enforce_applicability: bool = True,
 ) -> None:
     """Refuse filing-grade modelo work when the active profile is not eligible.
 
@@ -445,11 +408,12 @@ def require_profile_ready_for_modelo_work(
         filing_year=filing_year,
         period=period,
     )
-    _require_modelo_applicable_for_local_work(
-        record=record,
-        bucket_id=bucket_id,
-        modelo=modelo,
-    )
+    if enforce_applicability:
+        _require_modelo_applicable_for_local_work(
+            record=record,
+            bucket_id=bucket_id,
+            modelo=modelo,
+        )
     report = modelo_work_profile_preflight_report(
         record=record,
         modelo=modelo,
@@ -484,6 +448,7 @@ def require_existing_profile_baseline_ready_for_modelo_work(
     modelo: str,
     filing_year: int,
     period: Period,
+    enforce_applicability: bool = True,
 ) -> None:
     """Refuse an existing active profile before registry work when it is plainly incomplete."""
     try:
@@ -497,11 +462,12 @@ def require_existing_profile_baseline_ready_for_modelo_work(
         filing_year=filing_year,
         period=period,
     )
-    _require_modelo_applicable_for_local_work(
-        record=record,
-        bucket_id=bucket_id,
-        modelo=modelo,
-    )
+    if enforce_applicability:
+        _require_modelo_applicable_for_local_work(
+            record=record,
+            bucket_id=bucket_id,
+            modelo=modelo,
+        )
     _require_not_pre_activity_period(
         record=record,
         bucket_id=bucket_id,
@@ -511,7 +477,7 @@ def require_existing_profile_baseline_ready_for_modelo_work(
     )
 
 
-def require_profile_ready_for_work_unit(work_unit: WorkUnit) -> None:
+def require_profile_ready_for_work_unit(work_unit: WorkUnit, *, enforce_applicability: bool = True) -> None:
     """Run the profile readiness gate for an existing :class:`WorkUnit`.
 
     Calculation, verification, filing, and export services call this wrapper so
@@ -524,6 +490,7 @@ def require_profile_ready_for_work_unit(work_unit: WorkUnit) -> None:
         revision_id=work_unit.revision_id,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
+        enforce_applicability=enforce_applicability,
     )
 
 
