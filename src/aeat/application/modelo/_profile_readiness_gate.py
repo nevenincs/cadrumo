@@ -4,6 +4,9 @@ Loads the active :class:`UserProfileRecord`, builds a
 :class:`ProfilePreflightReport`, projects local-work applicability through
 :class:`TaxpayerProfile`, and raises :class:`ModeloProfileReadinessError`
 before filing-grade work proceeds when required profile facts are missing. The
+revision-specific preflight branch may receive a
+:class:`ModeloRevision` that has already been resolved by an operator-facing
+readiness surface. The
 same gate also refuses Modelo 130 and Modelo 303 target periods whose date span
 ends before the profile's ``censo.activity_start_date``; those pre-activity
 periods have no filing obligation and must not produce stale work, calculation,
@@ -21,9 +24,15 @@ from __future__ import annotations
 from datetime import date
 
 from ...core import Modelo, Period
+from ...core.errors import BaseSeverity
 from ...core.parsing import parse_iso8601_date
 from ...core.resources import resources
-from ...domain.calculations.registry import ApplicabilityVerdict, RegistrySnapshotError, derive_modelo_applicability
+from ...domain.calculations.registry import (
+    ApplicabilityVerdict,
+    ModeloRevision,
+    RegistrySnapshotError,
+    derive_modelo_applicability,
+)
 from ...domain.deadlines import (
     EntityType,
     FiscalResidency,
@@ -37,6 +46,8 @@ from ...domain.modelos._work_unit import WorkUnit
 from ...domain.user_profile import ProfileNotFoundError, UserProfileRecord
 from ..user_profile import (
     ProfilePreflightReport,
+    ProfilePreflightRequirement,
+    ProfileValidationIssue,
     ProfileValidationService,
     UserProfileLifecycleRepository,
     record_to_path_values,
@@ -54,6 +65,139 @@ _BLOCKING_APPLICABILITY_VERDICTS = frozenset(
         ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH,
     },
 )
+
+
+def _split_profile_path(path: str) -> tuple[str, str]:
+    section_key, _, field_key = path.partition(".")
+    if not field_key:
+        return "profile", section_key
+    return section_key, field_key
+
+
+def _requirement_for_profile_path(path: str, *, selector: str | None = None) -> ProfilePreflightRequirement:
+    section_key, field_key = _split_profile_path(path)
+    return ProfilePreflightRequirement(
+        selector=selector or path,
+        section_key=section_key,
+        field_key=field_key,
+    )
+
+
+def _dedupe_requirements(
+    requirements: tuple[ProfilePreflightRequirement, ...] | list[ProfilePreflightRequirement],
+) -> tuple[ProfilePreflightRequirement, ...]:
+    seen: set[tuple[str, str]] = set()
+    deduped: list[ProfilePreflightRequirement] = []
+    for requirement in requirements:
+        key = (requirement.section_key, requirement.field_key)
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(requirement)
+    return tuple(deduped)
+
+
+def modelo_work_profile_baseline_missing_paths(record: UserProfileRecord) -> tuple[str, ...]:
+    """Return profile facts required before any filing-grade modelo work starts.
+
+    Args:
+        record: Active :class:`UserProfileRecord` projected into schema-path
+            values.
+    """
+    values = record_to_path_values(record)
+    return tuple(path for path in _FILING_BASELINE_PROFILE_PATHS if not values.get(path, "").strip())
+
+
+def modelo_work_profile_baseline_validation_issues(record: UserProfileRecord) -> tuple[ProfileValidationIssue, ...]:
+    """Return validate-surface issues for the central modelo work profile baseline.
+
+    Args:
+        record: Active :class:`UserProfileRecord` checked against the
+            filing-grade baseline.
+
+    Returns:
+        Tuple of :class:`ProfileValidationIssue` instances for missing
+        filing-grade baseline facts.
+    """
+    return tuple(
+        ProfileValidationIssue(
+            severity=BaseSeverity.ERROR,
+            code="modelo_work_profile_baseline_missing",
+            path=path,
+            message=f"modelo work profile baseline field {path} is missing",
+        )
+        for path in modelo_work_profile_baseline_missing_paths(record)
+    )
+
+
+def _validation_missing_requirements(record: UserProfileRecord) -> tuple[ProfilePreflightRequirement, ...]:
+    validation = ProfileValidationService(schema=resources().user_profile_schema.singleton).validate_record(record)
+    requirements: list[ProfilePreflightRequirement] = []
+    for issue in validation.issues:
+        if issue.severity.value != "error":
+            continue
+        path = issue.path or issue.code
+        requirements.append(
+            _requirement_for_profile_path(
+                path,
+                selector=issue.path or f"profile.validation.{issue.code}",
+            ),
+        )
+    return tuple(requirements)
+
+
+def modelo_work_profile_preflight_report(
+    *,
+    record: UserProfileRecord,
+    modelo: str,
+    revision_id: str,
+    filing_year: int,
+    period: Period,
+    revision: ModeloRevision | None = None,
+    resolve_revision_when_missing: bool = True,
+) -> ProfilePreflightReport:
+    """Return the profile-field report enforced by the modelo work creation gate.
+
+    This combines the filing-grade baseline that every modelo work unit needs
+    with the modelo/revision-specific profile selectors. Public readiness
+    surfaces consume this function so they cannot claim profile readiness before
+    ``create_work_unit`` would reject the same active profile.
+
+    Args:
+        record: Active :class:`UserProfileRecord`.
+        modelo: Modelo code being checked.
+        revision_id: Registry revision identifier for the target modelo work.
+        filing_year: Filing year for the target period.
+        period: Target :class:`Period` used for registry revision resolution
+            and profile selector evaluation.
+        revision: Optional :class:`ModeloRevision` supplied when the caller has
+            already resolved the target revision.
+        resolve_revision_when_missing: Whether to resolve the registry
+            revision when ``revision`` is not supplied.
+
+    Returns:
+        :class:`ProfilePreflightReport` combining baseline, validation, and
+        modelo/revision-specific missing requirements.
+    """
+    if revision is None and resolve_revision_when_missing:
+        report = _report_for_target(
+            record=record,
+            modelo=modelo,
+            revision_id=revision_id,
+            filing_year=filing_year,
+            period=period,
+        )
+    else:
+        report = ProfilePreflightService(schema=resources().user_profile_schema.singleton).report(
+            record=record,
+            modelo=modelo,
+            revision_id=revision_id,
+            period=period,
+            revision=revision,
+        )
+    baseline = tuple(_requirement_for_profile_path(path) for path in modelo_work_profile_baseline_missing_paths(record))
+    missing = _dedupe_requirements((*baseline, *_validation_missing_requirements(record), *report.missing))
+    return report.model_copy(update={"missing": missing, "ready": not missing})
 
 
 def _report_for_target(
@@ -252,13 +396,9 @@ def _require_profile_filing_ready(
     filing_year: int,
     period: Period,
 ) -> None:
-    values = record_to_path_values(record)
-    missing: list[str] = [path for path in _FILING_BASELINE_PROFILE_PATHS if not values.get(path, "").strip()]
-    validation = ProfileValidationService(schema=resources().user_profile_schema.singleton).validate_record(record)
-    for issue in validation.issues:
-        if issue.severity.value != "error":
-            continue
-        path = issue.path or issue.code
+    missing: list[str] = list(modelo_work_profile_baseline_missing_paths(record))
+    for requirement in _validation_missing_requirements(record):
+        path = f"{requirement.section_key}.{requirement.field_key}"
         if path not in missing:
             missing.append(path)
     if not missing:
@@ -310,7 +450,7 @@ def require_profile_ready_for_modelo_work(
         bucket_id=bucket_id,
         modelo=modelo,
     )
-    report = _report_for_target(
+    report = modelo_work_profile_preflight_report(
         record=record,
         modelo=modelo,
         revision_id=revision_id,
@@ -338,6 +478,39 @@ def require_profile_ready_for_modelo_work(
     )
 
 
+def require_existing_profile_baseline_ready_for_modelo_work(
+    *,
+    bucket_id: str,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+) -> None:
+    """Refuse an existing active profile before registry work when it is plainly incomplete."""
+    try:
+        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+    except ProfileNotFoundError:
+        return
+    _require_profile_filing_ready(
+        record=record,
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+    )
+    _require_modelo_applicable_for_local_work(
+        record=record,
+        bucket_id=bucket_id,
+        modelo=modelo,
+    )
+    _require_not_pre_activity_period(
+        record=record,
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+    )
+
+
 def require_profile_ready_for_work_unit(work_unit: WorkUnit) -> None:
     """Run the profile readiness gate for an existing :class:`WorkUnit`.
 
@@ -356,7 +529,11 @@ def require_profile_ready_for_work_unit(work_unit: WorkUnit) -> None:
 
 __all__ = [
     "modelo_applicability_refusal",
+    "modelo_work_profile_baseline_missing_paths",
+    "modelo_work_profile_baseline_validation_issues",
+    "modelo_work_profile_preflight_report",
     "pre_activity_period_refusal",
+    "require_existing_profile_baseline_ready_for_modelo_work",
     "require_profile_ready_for_modelo_work",
     "require_profile_ready_for_work_unit",
 ]
