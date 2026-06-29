@@ -13,7 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   aeat.application.ledger._actions
    aeat.application.ledger._actions_classification
    aeat.application.ledger._actions_common
    aeat.application.ledger._actions_export

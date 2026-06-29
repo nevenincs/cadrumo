@@ -169,7 +169,7 @@ landlord, a salaried-only taxpayer, or a pensioner with no activity should not
 select it.
 
 For an activity, record how IRPF estimates its yield. Direct estimation is the
-default and files Modelo 130. Add `--uses-objective-estimation-irpf` for the
+default and files Modelo 130. Use `--irpf-estimation-regime objetiva` for the
 objective-estimation (módulos) regime, which files Modelo 131 instead.
 
 ### Identity
