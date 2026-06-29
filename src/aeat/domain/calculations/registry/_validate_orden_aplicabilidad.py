@@ -109,5 +109,17 @@ def orden_aplicabilidad_hard_failures(
     revision: ModeloRevision,
     legal_catalogue: Mapping[str, LegalReference],
 ) -> list[str]:
-    """Return load-blocking failures of the ``orden_aplicabilidad`` gate."""
+    """Return load-blocking failures of the ``orden_aplicabilidad`` gate.
+
+    Args:
+        scope: Diagnostic scope string prefixed to each message.
+        modelo_id: The modelo identifier.
+        revision: The :class:`ModeloRevision` to validate.
+        legal_catalogue: The loaded
+            :class:`~aeat.domain.calculations.registry.LegalReference`
+            catalogue mapping.
+
+    Returns:
+        A list of load-blocking failures.
+    """
     return validate_orden_aplicabilidad(scope, modelo_id, revision, legal_catalogue)
