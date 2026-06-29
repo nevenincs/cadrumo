@@ -363,7 +363,11 @@ class ModeloApplicabilityRule(BaseModel):
         # no tri-state, so an absent fact yields INCOMPLETE rather than a
         # NOT_APPLICABLE the engine cannot positively justify.
         if self.required_payer_fact is not None and not payer_fact_holds(profile, self.required_payer_fact):
-            return _undetermined_applicability(self.modelo, legal_refs=self.legal_refs)
+            return _undetermined_applicability(
+                self.modelo,
+                payer_fact=self.required_payer_fact,
+                legal_refs=self.legal_refs,
+            )
         return ModeloApplicability(
             modelo=self.modelo,
             verdict=ApplicabilityVerdict.APPLICABLE,
@@ -452,11 +456,20 @@ their taxpayer type.
 _INCOMPLETE_UNDETERMINED_REASON = (
     "No se puede determinar la aplicabilidad de este modelo desde el modelo "
     "de contribuyente declarado: depende de un hecho que el perfil no "
-    "expresa con certeza (si paga retribuciones o alquileres sujetos a "
-    "retención, o si realiza operaciones intracomunitarias o con terceros). "
-    "El modelo solo se afirma aplicable cuando ese hecho se declara "
-    "positivamente; en otro caso no se conjetura una obligación."
+    "expresa con certeza. El modelo solo se afirma aplicable cuando ese "
+    "hecho se declara positivamente; en otro caso no se conjetura una "
+    "obligación."
 )
+_PAYER_FACT_INCOMPLETE_LABELS: dict[PayerFact, str] = {
+    PayerFact.PAYS_WITHHELD_INCOME: "paga retribuciones sujetas a retención",
+    PayerFact.PAYS_RENT_WITH_RETENCION: "paga alquileres sujetos a retención",
+    PayerFact.TRADES_INTRACOMMUNITY: "realiza operaciones intracomunitarias",
+    PayerFact.EXCEEDS_THIRD_PARTY_THRESHOLD: "supera el umbral anual de operaciones con terceras personas",
+    PayerFact.BIENES_EXTRANJERO_ABOVE_THRESHOLD: "posee bienes o derechos en el extranjero por encima del umbral",
+    PayerFact.MONEDAS_VIRTUALES_EXTRANJERO_ABOVE_THRESHOLD: (
+        "posee monedas virtuales situadas en el extranjero por encima del umbral"
+    ),
+}
 """``INCOMPLETE`` rationale for a *payer fact the profile cannot decide*.
 
 Used by :func:`_undetermined_applicability` when a modelo gates on a
@@ -539,6 +552,7 @@ def _incomplete_applicability(
 def _undetermined_applicability(
     modelo: str,
     *,
+    payer_fact: PayerFact,
     legal_refs: tuple[str, ...],
 ) -> ModeloApplicability:
     """Return the ``INCOMPLETE`` applicability for an *undecidable* fact.
@@ -554,6 +568,8 @@ def _undetermined_applicability(
 
     Args:
         modelo: The AEAT modelo identifier the verdict decides.
+        payer_fact: The specific profile fact required to positively
+            establish applicability.
         legal_refs: The concrete rule legal refs that ground the
             undecidable payer-fact question.
 
@@ -564,7 +580,10 @@ def _undetermined_applicability(
     return ModeloApplicability(
         modelo=modelo,
         verdict=ApplicabilityVerdict.INCOMPLETE,
-        reason=_INCOMPLETE_UNDETERMINED_REASON,
+        reason=(
+            f"{_INCOMPLETE_UNDETERMINED_REASON} "
+            f"Hecho requerido para este modelo: {_PAYER_FACT_INCOMPLETE_LABELS[payer_fact]}."
+        ),
         legal_refs=legal_refs,
     )
 
