@@ -110,6 +110,7 @@ _LIVE_ENV_NAME = "AEAT_LIVE_TESTS_ENABLED"
 _LIVE_TEST_OPT_IN_TOKENS = ("AEAT_LIVE_TESTS_ENABLED", "aeat_live_tests_enabled")
 _LIVE_TEST_OPT_IN_AUTHORITY_FILES = frozenset(
     {
+        Path("src/aeat/core/_config_live_tests.py"),
         Path("src/aeat/core/config.py"),
         Path("src/aeat/core/access_gate/__init__.py"),
         Path("src/aeat/core/access_gate/_errors.py"),
