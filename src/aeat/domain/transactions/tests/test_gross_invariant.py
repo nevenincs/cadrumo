@@ -107,6 +107,85 @@ def test_professional_income_net_of_irpf_withholding_validates() -> None:
     assert tx.taxable_base + tx.iva_amount > tx.raw.amount
 
 
+def test_rent_expense_paid_net_of_withholding_validates() -> None:
+    """Rent paid net of withholding keeps the supplier invoice base/IVA.
+
+    Persona repro: local rent invoice 1000.00 + 210.00 IVA with 190.00
+    withholding is paid as a 1020.00 bank movement. Modelo 303 still needs
+    the full 210.00 IVA soportado substrate, so the ledger must not force the
+    bank cash amount to equal base + IVA for this scoped rent withholding case.
+    """
+    tx = Transaction.model_validate(
+        {
+            "raw": _raw(amount=Decimal("1020.00")),
+            "direction": TransactionDirection.OUTGOING,
+            "business_classification": BusinessClassification.BUSINESS,
+            "category_id": "arrendamiento_local",
+            "taxable_base": Decimal("1000.00"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("210.00"),
+            "irpf_category": "arrendamiento_local",
+        },
+    )
+
+    assert tx.raw.amount == Decimal("1020.00")
+    assert tx.category_id == "arrendamiento_local"
+    assert tx.taxable_base is not None
+    assert tx.iva_amount is not None
+    assert tx.taxable_base + tx.iva_amount == Decimal("1210.00")
+    assert tx.taxable_base + tx.iva_amount > tx.raw.amount
+
+
+def test_rent_expense_paid_net_requires_irpf_category() -> None:
+    """Rent expense net-cash relaxation requires an explicit withholding axis."""
+    with pytest.raises(ValidationError, match="set irpf_category"):
+        Transaction.model_validate(
+            {
+                "raw": _raw(amount=Decimal("1020.00")),
+                "direction": TransactionDirection.OUTGOING,
+                "business_classification": BusinessClassification.BUSINESS,
+                "category_id": "arrendamiento_local",
+                "taxable_base": Decimal("1000.00"),
+                "iva_rate": Decimal("0.21"),
+                "iva_amount": Decimal("210.00"),
+            },
+        )
+
+
+def test_rent_expense_paid_net_requires_rental_irpf_category() -> None:
+    """An unrelated non-work IRPF tag must not relax outgoing rent gross drift."""
+    with pytest.raises(ValidationError, match="rental withholding category"):
+        Transaction.model_validate(
+            {
+                "raw": _raw(amount=Decimal("1020.00")),
+                "direction": TransactionDirection.OUTGOING,
+                "business_classification": BusinessClassification.BUSINESS,
+                "category_id": "arrendamiento_local",
+                "taxable_base": Decimal("1000.00"),
+                "iva_rate": Decimal("0.21"),
+                "iva_amount": Decimal("210.00"),
+                "irpf_category": "actividad_economica",
+            },
+        )
+
+
+def test_outgoing_irpf_category_does_not_relax_non_rent_expense_gross() -> None:
+    """IRPF tags alone must not unlock arbitrary outgoing invoice-gross drift."""
+    with pytest.raises(ValidationError, match="must equal the gross to the cent"):
+        Transaction.model_validate(
+            {
+                "raw": _raw(amount=Decimal("1020.00")),
+                "direction": TransactionDirection.OUTGOING,
+                "business_classification": BusinessClassification.BUSINESS,
+                "category_id": "material_oficina",
+                "taxable_base": Decimal("1000.00"),
+                "iva_rate": Decimal("0.21"),
+                "iva_amount": Decimal("210.00"),
+                "irpf_category": "arrendamiento_local",
+            },
+        )
+
+
 def test_invoice_gross_above_cash_without_irpf_category_is_rejected() -> None:
     """The net-cash relaxation requires an explicit IRPF category."""
     with pytest.raises(ValidationError, match="set irpf_category"):

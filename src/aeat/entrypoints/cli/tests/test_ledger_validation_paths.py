@@ -271,6 +271,74 @@ def test_ledger_classify_persists_professional_income_net_of_irpf_withholding(
     assert transaction["irpf_category"] == "actividad_economica"
 
 
+def test_ledger_classify_persists_rent_paid_net_of_withholding(
+    tmp_path: Path,
+) -> None:
+    """A rent bank payment net of withholding can keep full invoice IVA facts.
+
+    Persona repro: commercial rent 1000 + 210 IVA - 190 withholding = 1020 paid.
+    The CLI path must persist the full rent invoice substrate so Modelo 303 can
+    aggregate the 210 IVA soportado instead of rejecting the row at classify time.
+    """
+    added = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2025-04-05",
+            "--amount",
+            "1020.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "Alquiler local neto de retencion",
+        ],
+    )
+    assert added.exit_code == 0, added.output
+    transaction_id = json.loads(added.output)["result"]["transaction_id"]
+
+    classified = _invoke(
+        [
+            "app",
+            "ledger",
+            "classify",
+            transaction_id,
+            "--classification",
+            "BUSINESS",
+            "--category-id",
+            "arrendamiento_local",
+            "--taxable-base",
+            "1000.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "210.00",
+            "--iva-category",
+            "domestic_general_21",
+            "--irpf-category",
+            "arrendamiento_local",
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+    assert classified.exit_code == 0, classified.output
+
+    viewed = _invoke(["--format", "json", "app", "ledger", "view", transaction_id])
+    assert viewed.exit_code == 0, viewed.output
+    transaction = json.loads(viewed.output)["result"]["transaction"]
+
+    assert transaction["amount"] == "1020"
+    assert transaction["direction"] == "OUTGOING"
+    assert transaction["category_id"] == "arrendamiento_local"
+    assert transaction["taxable_base"] == "1000"
+    assert transaction["iva_amount"] == "210"
+    assert transaction["iva_rate"] == "0.21"
+    assert transaction["iva_category"] == "domestic_general_21"
+    assert transaction["irpf_category"] == "arrendamiento_local"
+
+
 def test_ledger_add_accepts_nonnegative_amount_with_direction(tmp_path: Path) -> None:
     """``ledger add --amount=49.99 --direction OUTGOING`` is accepted."""
     result = _invoke(
