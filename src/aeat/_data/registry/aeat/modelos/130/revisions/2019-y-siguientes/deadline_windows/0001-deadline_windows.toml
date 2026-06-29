@@ -1,7 +1,7 @@
 [[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2025-1t"
 filing_year = 2025
-period = "2025Q1"
+period = "2025 1T"
 period_kind = "quarterly"
 opens_on = 2025-04-01
 closes_on = 2025-04-21
@@ -20,7 +20,7 @@ source_refs = ["aeat-dr-130-2019-v12"]
 [[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2025-2t"
 filing_year = 2025
-period = "2025Q2"
+period = "2025 2T"
 period_kind = "quarterly"
 opens_on = 2025-07-01
 closes_on = 2025-07-21
@@ -39,7 +39,7 @@ source_refs = ["aeat-dr-130-2019-v12"]
 [[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2025-3t"
 filing_year = 2025
-period = "2025Q3"
+period = "2025 3T"
 period_kind = "quarterly"
 opens_on = 2025-10-01
 closes_on = 2025-10-20
@@ -58,7 +58,7 @@ source_refs = ["aeat-dr-130-2019-v12"]
 [[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2025-4t"
 filing_year = 2025
-period = "2025Q4"
+period = "2025 4T"
 period_kind = "quarterly"
 opens_on = 2026-01-01
 closes_on = 2026-01-30
@@ -77,7 +77,7 @@ source_refs = ["aeat-dr-130-2019-v12"]
 [[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2026-1t"
 filing_year = 2026
-period = "2026Q1"
+period = "2026 1T"
 period_kind = "quarterly"
 opens_on = 2026-04-01
 closes_on = 2026-04-20
@@ -96,7 +96,7 @@ source_refs = ["aeat-dr-130-2019-v12"]
 [[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2026-2t"
 filing_year = 2026
-period = "2026Q2"
+period = "2026 2T"
 period_kind = "quarterly"
 opens_on = 2026-07-01
 closes_on = 2026-07-20
@@ -115,7 +115,7 @@ source_refs = ["aeat-dr-130-2019-v12"]
 [[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2026-3t"
 filing_year = 2026
-period = "2026Q3"
+period = "2026 3T"
 period_kind = "quarterly"
 opens_on = 2026-10-01
 closes_on = 2026-10-20
@@ -134,7 +134,7 @@ source_refs = ["aeat-dr-130-2019-v12"]
 [[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2026-4t"
 filing_year = 2026
-period = "2026Q4"
+period = "2026 4T"
 period_kind = "quarterly"
 opens_on = 2027-01-01
 closes_on = 2027-01-30

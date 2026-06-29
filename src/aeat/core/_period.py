@@ -63,10 +63,6 @@ _AD_HOC_PERIOD = "AD-HOC"
 _EXT_PERIOD_RE = re.compile(r"^EXT-[1-4]T$")
 _EVENT_PERIOD_RE = re.compile(r"^EVENT-\d+$")
 _DISPLAY_PERIOD_RE = re.compile(r"^(?P<year>\d{4})\s+(?P<code>[A-Z0-9]+(?:-[A-Z0-9]+)*)$", re.I)
-_REGISTRY_AUTHORING_QUARTER_PERIOD_RE = re.compile(r"^(?P<year>\d{4})Q(?P<quarter>[1-4])$", re.I)
-_REGISTRY_AUTHORING_DASHED_PERIOD_RE = re.compile(r"^(?P<year>\d{4})-(?P<code>[A-Z0-9]+(?:-[A-Z0-9]+)*)$", re.I)
-_REGISTRY_AUTHORING_BARE_YEAR_RE = re.compile(r"^(?P<year>\d{4})$")
-
 
 def _validate_period_against_registry(value: str) -> str:
     """Validate and normalize a period code against the union of accepted forms.
@@ -165,12 +161,11 @@ class Period(BaseModel):
     never a combined calendar string (``2026Q1`` / ``2026-03`` / ``2026``). The
     combined form exists only as the human-readable :meth:`__str__` projection;
     it is an output, never a parseable input. Inbound construction is always from
-    a ``(year, code)`` pair via :meth:`from_year_and_code`, so the conversion
-    layer the period-grammar standardisation deleted cannot grow back.
+    a ``(year, code)`` pair via :meth:`from_year_and_code`.
 
     The model is frozen and hashes by ``(filing_year, code)``, so a ``Period`` is
-    a drop-in dict key, set member, and equality target wherever a ``(year,
-    token)`` tuple or a combined string was used before.
+    a drop-in dict key, set member, and equality target wherever a typed period
+    is required.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -204,9 +199,8 @@ class Period(BaseModel):
         """Parse the canonical display string emitted by :meth:`__str__` into a :class:`Period`.
 
         Only the separated ``"YYYY <registry-code>"`` display form is accepted.
-        Combined calendar strings such as ``"2026Q1"`` or ``"2026-1T"`` remain
-        refused here; transitional registry-authoring TOML strings must use
-        :meth:`from_registry_authoring_string` so that compatibility is explicit.
+        Combined calendar strings such as ``"2026Q1"`` or ``"2026-1T"`` are
+        refused.
         """
         if not isinstance(value, str):
             raise PeriodError(f"period string must be str, got {type(value).__name__}")
@@ -214,34 +208,6 @@ class Period(BaseModel):
         if match is None:
             raise PeriodError(f"invalid period display string {value!r}: expected 'YYYY <period-code>'")
         return cls.from_year_and_code(int(match.group("year")), match.group("code"))
-
-    @classmethod
-    def from_registry_authoring_string(cls, value: str) -> Period:
-        """Parse transitional registry-authoring deadline strings into a :class:`Period`.
-
-        The registry deadline-window TOML still carries historical authoring
-        forms (``"2026Q1"``, ``"2026-1T"``, ``"2026-03"``, ``"2026-0A"``,
-        ``"2026-EXT-1T"``, bare ``"2026"``). This method centralises that
-        compatibility grammar in ``core.Period`` so schema loaders hydrate a
-        typed period without owning a parallel parser. It is not an operator
-        grammar; normal runtime construction remains :meth:`from_year_and_code`.
-        """
-        if not isinstance(value, str):
-            raise PeriodError(f"registry authoring period must be str, got {type(value).__name__}")
-
-        token = value.strip().upper()
-        if match := _DISPLAY_PERIOD_RE.fullmatch(token):
-            return cls.from_year_and_code(int(match.group("year")), match.group("code"))
-        if match := _REGISTRY_AUTHORING_QUARTER_PERIOD_RE.fullmatch(token):
-            return cls.from_year_and_code(int(match.group("year")), f"{match.group('quarter')}T")
-        if match := _REGISTRY_AUTHORING_DASHED_PERIOD_RE.fullmatch(token):
-            return cls.from_year_and_code(int(match.group("year")), match.group("code"))
-        if match := _REGISTRY_AUTHORING_BARE_YEAR_RE.fullmatch(token):
-            return cls.from_year_and_code(int(match.group("year")), "0A")
-        raise PeriodError(
-            f"invalid registry authoring period {value!r}: "
-            "expected 'YYYY <period-code>', YYYYQn, YYYY-<period-code>, or YYYY",
-        )
 
     @property
     def year(self) -> int:

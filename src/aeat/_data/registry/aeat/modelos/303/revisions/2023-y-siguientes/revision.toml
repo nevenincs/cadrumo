@@ -767,7 +767,7 @@ source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 [[revisions.2023-y-siguientes.deadline_windows]]
 id = "modelo-303-2025-1t"
 filing_year = 2025
-period = "2025-1T"
+period = "2025 1T"
 period_kind = "quarterly"
 opens_on = 2025-04-01
 closes_on = 2025-04-21
@@ -777,7 +777,7 @@ source_refs = ["boe-modelo-303-2008-form"]
 [[revisions.2023-y-siguientes.deadline_windows]]
 id = "modelo-303-2025-2t"
 filing_year = 2025
-period = "2025-2T"
+period = "2025 2T"
 period_kind = "quarterly"
 opens_on = 2025-07-01
 closes_on = 2025-07-21
@@ -787,7 +787,7 @@ source_refs = ["boe-modelo-303-2008-form"]
 [[revisions.2023-y-siguientes.deadline_windows]]
 id = "modelo-303-2025-3t"
 filing_year = 2025
-period = "2025-3T"
+period = "2025 3T"
 period_kind = "quarterly"
 opens_on = 2025-10-01
 closes_on = 2025-10-20
@@ -797,7 +797,7 @@ source_refs = ["boe-modelo-303-2008-form"]
 [[revisions.2023-y-siguientes.deadline_windows]]
 id = "modelo-303-2025-4t"
 filing_year = 2025
-period = "2025-4T"
+period = "2025 4T"
 period_kind = "quarterly"
 opens_on = 2026-01-01
 closes_on = 2026-01-30
@@ -807,7 +807,7 @@ source_refs = ["boe-modelo-303-2008-form"]
 [[revisions.2023-y-siguientes.deadline_windows]]
 id = "modelo-303-2026-1t"
 filing_year = 2026
-period = "2026-1T"
+period = "2026 1T"
 period_kind = "quarterly"
 opens_on = 2026-04-01
 closes_on = 2026-04-20
@@ -817,7 +817,7 @@ source_refs = ["boe-modelo-303-2008-form"]
 [[revisions.2023-y-siguientes.deadline_windows]]
 id = "modelo-303-2026-2t"
 filing_year = 2026
-period = "2026-2T"
+period = "2026 2T"
 period_kind = "quarterly"
 opens_on = 2026-07-01
 closes_on = 2026-07-20
@@ -827,7 +827,7 @@ source_refs = ["boe-modelo-303-2008-form"]
 [[revisions.2023-y-siguientes.deadline_windows]]
 id = "modelo-303-2026-3t"
 filing_year = 2026
-period = "2026-3T"
+period = "2026 3T"
 period_kind = "quarterly"
 opens_on = 2026-10-01
 closes_on = 2026-10-20
@@ -837,7 +837,7 @@ source_refs = ["boe-modelo-303-2008-form"]
 [[revisions.2023-y-siguientes.deadline_windows]]
 id = "modelo-303-2026-4t"
 filing_year = 2026
-period = "2026-4T"
+period = "2026 4T"
 period_kind = "quarterly"
 opens_on = 2027-01-01
 closes_on = 2027-01-30
@@ -853,7 +853,7 @@ source_refs = ["boe-modelo-303-2008-form"]
 [[revisions.2023-y-siguientes.deadline_windows]]
 id = "modelo-303-2025-01-mensual"
 filing_year = 2025
-period = "2025-01"
+period = "2025 01"
 period_kind = "monthly"
 opens_on = 2025-02-01
 closes_on = 2025-02-28
@@ -863,7 +863,7 @@ source_refs = ["boe-modelo-303-2008-form"]
 [[revisions.2023-y-siguientes.deadline_windows]]
 id = "modelo-303-2025-06-mensual"
 filing_year = 2025
-period = "2025-06"
+period = "2025 06"
 period_kind = "monthly"
 opens_on = 2025-07-01
 closes_on = 2025-07-30
@@ -873,7 +873,7 @@ source_refs = ["boe-modelo-303-2008-form"]
 [[revisions.2023-y-siguientes.deadline_windows]]
 id = "modelo-303-2025-12-mensual"
 filing_year = 2025
-period = "2025-12"
+period = "2025 12"
 period_kind = "monthly"
 opens_on = 2026-01-01
 closes_on = 2026-01-30
@@ -883,7 +883,7 @@ source_refs = ["boe-modelo-303-2008-form"]
 [[revisions.2023-y-siguientes.deadline_windows]]
 id = "modelo-303-2026-01-mensual"
 filing_year = 2026
-period = "2026-01"
+period = "2026 01"
 period_kind = "monthly"
 opens_on = 2026-02-01
 closes_on = 2026-03-02

@@ -79,19 +79,21 @@ def _text(pattern: str) -> Pattern[str]:
 
 ALLOWLIST: tuple[AllowlistRule, ...] = (
     AllowlistRule(
-        path=_path(r"^src/aeat/_data/registry/aeat/modelos/"),
-        reason="registry modelo TOML remains a free-form authoring input hydrated at the loader boundary",
-    ),
-    AllowlistRule(
         path=_path(r"^src/aeat/tests/fixtures/"),
         reason="external HTML/PDF corpus and fixture generation material preserves official/source labels",
+    ),
+    AllowlistRule(
+        path=_path(r"^src/aeat/_data/registry/aeat/modelos/"),
+        reason="registry parser declarations may mention external fixture filenames in comments",
+        pattern_names=frozenset({"year-qualified quarterly token", "calendar quarter token"}),
+        text=_text(r"(?:fixtures|justificantes|\.pdf)"),
     ),
     AllowlistRule(
         path=_path(
             r"^src/aeat/adapters/inbound/declaracion/tests/(?:"
             r"_parser_boundary_support|_verification_chain_support|"
             r"test_m303_primitive_anti_tautology|test_parser_boundary_part1|"
-            r"test_parser_boundary_part2|test_parser_boundary_part3|"
+            r"test_parser_boundary_part2|test_parser_boundary_part3|test_parser_boundary_synthetic_models|"
             r"test_parser_synthetic_fixtures|test_verification_chain_part1|"
             r"test_verification_chain_part2|test_verification_chain_part3"
             r")\.py$"
@@ -149,10 +151,8 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="privacy-redaction tests preserve sensitive old-shape strings to prove they are redacted",
     ),
     AllowlistRule(
-        path=_path(
-            r"^src/aeat/domain/calculations/registry/(?:_schema\.py|tests/test_(?:registry_schema_part2|queries)\.py)$"
-        ),
-        reason="registry loader boundary docs/tests cover legacy free-form authored period inputs",
+        path=_path(r"^src/aeat/domain/calculations/registry/tests/test_(?:registry_schema_part2|queries)\.py$"),
+        reason="registry schema/query tests use old combined strings as invalid input",
     ),
     AllowlistRule(
         path=_path(r"^src/aeat/domain/calculations/registry/_queries\.py$"),
@@ -232,8 +232,30 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="workflow and ledger support tests preserve external work-unit/export path labels",
     ),
     AllowlistRule(
+        path=_path(r"^src/aeat/application/calculations/tests/test_carry_gate_parity\.py$"),
+        reason="calculation carry-gate tests preserve opaque AEAT expediente source labels",
+    ),
+    AllowlistRule(
+        path=_path(r"^src/aeat/application/filing/tests/_export_support\.py$"),
+        reason="filing export support tests preserve external export path labels",
+    ),
+    AllowlistRule(
+        path=_path(
+            r"^src/aeat/application/live/tests/_(?:filed_capture_history|justificante_reconcile)_support\.py$"
+        ),
+        reason="live capture support tests preserve external justificante fixture and work-unit labels",
+    ),
+    AllowlistRule(
+        path=_path(r"^src/aeat/application/modelo/tests/_export_modelo_303_support\.py$"),
+        reason="modelo export support tests preserve external justificante and expediente labels",
+    ),
+    AllowlistRule(
         path=_path(r"^src/aeat/application/overview/(?:_calendar|tests/test_calendar[a-z_]*)\.py$"),
         reason="overview calendar code/tests preserve pre-existing display-doc and justificante CSV labels",
+    ),
+    AllowlistRule(
+        path=_path(r"^src/aeat/application/overview/tests/calendar_test_support\.py$"),
+        reason="overview calendar support tests preserve external justificante CSV labels",
     ),
     AllowlistRule(
         path=_path(r"^src/aeat/application/verification/_verify\.py$"),
@@ -258,6 +280,12 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
             r"^src/aeat/entrypoints/cli/tests/test_(?:cli_surface|ledger_corpus_journeys|ledger_persona_yearend_m100|modelo_reconcile_verb|overview_calendar_verb)\.py$"
         ),
         reason="CLI journey tests preserve existing filter-output and external work/evidence labels",
+    ),
+    AllowlistRule(
+        path=_path(
+            r"^src/aeat/entrypoints/cli/tests/test_(?:modelo_projection|overview_calendar_local_evidence)\.py$"
+        ),
+        reason="CLI tests preserve external projection, justificante, and evidence labels",
     ),
     AllowlistRule(
         path=_path(r"^src/aeat/tests/test_(?:ledger_corpus_fidelity|ledger_modelo_staleness)\.py$"),
@@ -294,9 +322,8 @@ def test_repo_has_no_unallowlisted_combined_period_strings() -> None:
         relative_path = path.relative_to(REPOSITORY_ROOT).as_posix()
         for line_number, line in enumerate(path.read_text(encoding="utf-8", errors="replace").splitlines(), start=1):
             for pattern_name, pattern in COMBINED_PERIOD_PATTERNS:
-                for match in pattern.finditer(line):
-                    text = match.group(0)
-                    if _is_allowlisted(relative_path, pattern_name, text):
+                for _match in pattern.finditer(line):
+                    if _is_allowlisted(relative_path, pattern_name, line):
                         continue
                     findings.append(
                         Finding(
