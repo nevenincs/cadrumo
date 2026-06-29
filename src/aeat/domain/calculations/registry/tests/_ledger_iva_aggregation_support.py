@@ -6,6 +6,7 @@ from datetime import date
 from decimal import Decimal
 from functools import lru_cache
 
+from .....application.calculations import resolve_iva_compensation_annual_partition_binding_values
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
@@ -167,7 +168,12 @@ def _calculate_390_from_observations_and_303_filings(
         period="0A",
     )
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
-    binding_values = {**ledger_binding_values, **relation_binding_values}
+    annual_partition_values = resolve_iva_compensation_annual_partition_binding_values(
+        snapshot.revision,
+        m303_observations,
+        filing_year=filing_year,
+    )
+    binding_values = {**ledger_binding_values, **relation_binding_values, **annual_partition_values}
     inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
         snapshot,
