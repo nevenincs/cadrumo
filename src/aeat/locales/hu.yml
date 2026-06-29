@@ -1992,13 +1992,7 @@ cli:
         row_empty_key: Üres mezőkulcs a --row {token} mezőben; minden mezőnek KULCS=ÉRTÉK
           formátumúnak kell lennie.
         row_empty_spec: --row nem lehet üres; a várt formátum TÍPUS MEZŐ=érték [...]
-        row_help: 'Gépelt részletsor ismétlődő rekordokat tartalmazó tájékoztató modelokhoz.
-          Formátum: TÍPUS MEZŐ=érték [MEZŐ=érték ...]. A TÍPUS ''miembro'' (M184 tagsor),
-          ''vinculada'' (M232 kapcsolt fél), ''operador'' (M349 közösségi operátor)
-          vagy ''contraparte'' (M347 bejelentett ellenoldal). Több sor megadásához
-          ismételje. M184 példa: --row ''miembro nif=12345678A porcentaje=40 importe=10000''.
-          M349 példa: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
-          clave_operacion=E importe=50000''.'
+        row_help: 'Gépelt részletsor ismétlődő rekordokat tartalmazó tájékoztató modelokhoz. Formátum: TÍPUS MEZŐ=érték [MEZŐ=érték ...]. A TÍPUS ''miembro'' (M184 tagsor), ''vinculada'' (M232 kapcsolt fél), ''operador'' (M349 közösségi operátor) vagy ''contraparte'' (M347 bejelentett ellenoldal). Több sor megadásához ismételje. Tegye idézőjelbe a teljes --row argumentumot; a szóközös jogi neveket azon belül is idézze. M184 példa: --row ''miembro nif=12345678A porcentaje=40 importe=10000''. M349 példa: --row ''operador codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" clave_operacion=E importe=50000''.'
         row_kv_format_error: A --row {token} mezőnek KULCS=ÉRTÉK formátumúnak kell
           lennie.
         row_m349_invalid_nif: '--row operador: a nif_comunitario {nif} nem felel meg
