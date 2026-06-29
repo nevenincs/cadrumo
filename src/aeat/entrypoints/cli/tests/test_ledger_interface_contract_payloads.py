@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....application.ledger import ExportSerializationFormat, LedgerExportResult, LedgerExportRow
 from .._ledger_llm_payloads import (
     LedgerClassifyLlmRejectResult,
     LedgerClassifyLlmSaturateResult,
@@ -330,6 +331,43 @@ def test_export_and_preflight_payloads_use_typed_nested_rows() -> None:
     assert isinstance(preflight.period, LedgerPeriodPayload)
     assert isinstance(preflight.issues[0], LedgerPreflightIssuePayload)
     assert LedgerPreflightResult.model_validate(preflight.model_dump(mode="json")) == preflight
+
+
+def test_export_payload_accepts_application_intracommunity_rows() -> None:
+    """CLI export envelope accepts every field emitted by the application export row."""
+    app_result = LedgerExportResult(
+        bucket_id="default",
+        export_id="e" * 64,
+        export_format=ExportSerializationFormat.JSONL,
+        media_type="application/x-ndjson",
+        filename_extension=".jsonl",
+        row_count=1,
+        byte_size=256,
+        sha256="f" * 64,
+        fieldnames=("transaction_id", "iva_category", "counterparty_eu_member_state"),
+        rows=(
+            LedgerExportRow(
+                bucket_id="default",
+                transaction_id="a" * 64,
+                lifecycle_state="ACTIVE",
+                booked_date="2026-04-05",
+                effective_date="2026-04-05",
+                amount="2000.00",
+                currency="EUR",
+                direction="INCOMING",
+                description="EU B2B supply",
+                business_classification="BUSINESS",
+                iva_category="intra_community_supply",
+                counterparty_eu_member_state="de",
+            ),
+        ),
+        payload=b'{"transaction_id":"%s"}\n' % (b"a" * 64),
+    )
+
+    export = LedgerExportPayload.from_result(app_result, output_path="ledger.jsonl")
+
+    assert export.rows[0].iva_category == "intra_community_supply"
+    assert export.rows[0].counterparty_eu_member_state == "de"
 
 
 def test_ratios_payloads_use_typed_rows_and_findings() -> None:
