@@ -366,6 +366,28 @@ def _register_ledger_preflight_command(app: typer.Typer) -> None:
             f"issues\t{len(report.issues)}",
             f"ready\t{str(report.ready).lower()}",
         ]
+        notices: list[Notice] = []
+        if report.checked_transaction_count == 0 and not report.issues:
+            message = tr(
+                "cli.ledger.preflight.empty_ledger_advisory",
+                default=(
+                    "No active ledger transactions were checked for this period. If activity occurred, add or "
+                    "import ledger rows before calculating; if there was genuinely no activity, the empty ledger "
+                    "can support a zero-activity local filing."
+                ),
+            )
+            suggestion = "aeat app ledger add --help; aeat app ledger import --help"
+            notices.append(
+                Notice(
+                    severity=NoticeSeverity.WARNING,
+                    code="ledger.preflight.empty_period",
+                    message=message,
+                    suggestion=suggestion,
+                    context={"period": canonical.registry_token, "year": str(canonical.year)},
+                ),
+            )
+            lines.append(f"advisory\tempty_ledger\t{message}")
+            lines.append(f"next\t{suggestion}")
         for issue in report.issues:
             lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
         from ._ledger_payloads import LedgerPreflightResult
@@ -375,6 +397,7 @@ def _register_ledger_preflight_command(app: typer.Typer) -> None:
             command="ledger.preflight",
             result=LedgerPreflightResult.model_validate(payload),
             lines=lines,
+            notices=notices,
         )
 
 
@@ -653,9 +676,9 @@ def _register_ledger_status_command(app: typer.Typer) -> None:
         transactions = transaction_repository.load()
         lines = [
             f"{tr('cli.ledger.labels.bucket')}\t{report.bucket_id}",
-            f"income_total\t{report.income_total}",
-            f"expense_total\t{report.expense_total}",
-            f"net_total\t{report.net_total}",
+            f"business_income_total\t{report.business_income_total}",
+            f"business_expense_total\t{report.business_expense_total}",
+            f"business_net_total\t{report.business_net_total}",
             f"{tr('cli.ledger.labels.rows')}\t{report.total_count}",
             f"{tr('cli.ledger.labels.active')}\t{report.active_count}",
             f"{tr('cli.ledger.labels.archived')}\t{report.archived_count}",
