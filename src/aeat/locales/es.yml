@@ -2713,7 +2713,8 @@ cli:
       amount_help: Importe de la transacción en la moneda de la transacción (decimal,
         p. ej. 1200.50).
       attachment_help: Id de adjunto seguro adicional; se puede repetir
-      business_pct_help: Proporción de uso profesional de 0 a 1
+      business_pct_help: Proporción de uso profesional de 0 a 1; solo para filas
+        MIXED. Omitir en filas totalmente BUSINESS.
       category_help: Id de categoría de gasto deducible (solo movimientos de gasto;
         los ingresos no necesitan categoría)
       classification_help: Clasificación profesional (BUSINESS, PERSONAL o MIXED)
@@ -2750,18 +2751,25 @@ cli:
         y no puede establecerse a mano. Elige una de: BUSINESS, PERSONAL, MIXED, u
         omite --classification para dejar la fila sin clasificar.'
       taxable_base_help: Importe de base imponible
-      usage_ratio_help: Id de proporción de uso profesional proporcional
+      usage_ratio_help: Id de proporción de uso ya configurado para uso profesional
+        proporcional. Usa un id de categoría mostrado por 'aeat app ledger ratios
+        list' o 'aeat app ledger ratios eligible'; créalo con 'aeat app ledger ratios
+        set <category-id> <ratio>'. No es texto libre.
       value_date_help: Fecha valor de la transacción (AAAA-MM-DD)
     allocate:
       actor_help: Nombre del operador registrado en el evento del bucket
-      business_pct_help: Proporción de uso profesional de 0 a 1
+      business_pct_help: Proporción de uso profesional de 0 a 1 para filas MIXED/proporcionales;
+        no uses ledger allocate para una fila totalmente BUSINESS.
       category_help: Id de categoría de gasto deducible (solo movimientos de gasto;
         los ingresos no necesitan categoría)
       help: Registrar proporcionalidad profesional/personal para un movimiento del
         libro
       id_help: Id del movimiento del libro a asignar
       prorrata_reference_help: Referencia de prorrata de IVA para flujos de IVA
-      usage_ratio_help: Id de proporción de uso para uso profesional proporcional
+      usage_ratio_help: Id de proporción de uso ya configurado para uso profesional
+        proporcional. Usa un id de categoría mostrado por 'aeat app ledger ratios
+        list' o 'aeat app ledger ratios eligible'; créalo con 'aeat app ledger ratios
+        set <category-id> <ratio>'. No es texto libre.
     app_help: Gestión de libros contables y registros de IVA
     archive:
       actor_help: Nombre del operador registrado en el evento del bucket
@@ -2793,6 +2801,10 @@ cli:
       help: Examina los movimientos del libro del perfil direccionado (por defecto
         el perfil activo) e informa de filas con anomalías agregadas a través de cada
         período que los movimientos toquen. Local; nunca contacta con AEAT.
+      period_help: 'Periodo de declaración opcional como token AEAT: 1T-4T (trimestres),
+        0A (anual), 01-12 (meses). Combínalo con --year para coincidir con ledger
+        status.'
+      year_help: Año de declaración para --period (p. ej. 2024).
     classify:
       actor_help: Nombre del operador registrado en el evento del bucket
       apply_help: 'Persiste la sugerencia del LLM con procedencia llm: en lugar de
@@ -2808,7 +2820,8 @@ cli:
       bulk_all_failed: 'clasificación masiva fallida: todas las filas fallaron; no
         se actualizó ningún movimiento del libro'
       business_pct_help: Porcentaje de uso profesional de 0 a 1; obligatorio con --classification
-        MIXED y rechazado para cualquier otra clasificación
+        MIXED, rechazado para cualquier otra clasificación y omitido en filas totalmente
+        BUSINESS
       business_pct_requires_mixed: Rechazado. --business-pct solo se aplica a una
         clasificación MIXED. Una fila BUSINESS o PERSONAL es totalmente profesional
         o totalmente privada; quita --business-pct o pasa --classification MIXED.

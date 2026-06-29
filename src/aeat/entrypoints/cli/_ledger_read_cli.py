@@ -199,9 +199,16 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
                 default="Bucket id to probe (defaults to the active profile).",
             ),
         ),
+        period: str | None = typer.Option(None, "--period", help=tr("cli.ledger.check.period_help")),
+        year: int | None = typer.Option(
+            None,
+            "--year",
+            help=tr("cli.ledger.check.year_help", default="Filing year for --period (e.g. 2024)."),
+        ),
     ) -> None:
         """Surface ledger anomalies for the addressed bucket without mutating state."""
         from ...application.ledger import LedgerPreflightIssue, preflight_transaction_catalogue
+        from ._ledger_payloads import LedgerCheckResult
 
         if bucket_id_option is not None:
             transaction_repository = TransactionCatalogueRepository(bucket_id=bucket_id_option)
@@ -209,6 +216,38 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
             transaction_repository = _tx_repo(_state())
         bucket_id = transaction_repository.bucket_id
         catalogue = transaction_repository.load()
+        canonical_period = _optional_canonical_period(period, year=year)
+        if canonical_period is not None:
+            report = preflight_transaction_catalogue(
+                bucket_id=bucket_id,
+                period=canonical_period,
+                transactions=catalogue,
+            )
+            period_label = f"{canonical_period.registry_token} {canonical_period.year}"
+            payload = {
+                "bucket_id": bucket_id,
+                "periods": [period_label],
+                "checked_transaction_count": report.checked_transaction_count,
+                "issues": [issue.model_dump(mode="json") for issue in report.issues],
+                "ready": report.ready,
+            }
+            lines = [
+                f"bucket\t{bucket_id}",
+                f"periods\t{period_label}",
+                f"checked\t{report.checked_transaction_count}",
+                f"issues\t{len(report.issues)}",
+                f"ready\t{str(report.ready).lower()}",
+            ]
+            for issue in report.issues:
+                lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
+            _emit_envelope(
+                ctx,
+                command="ledger.check",
+                result=LedgerCheckResult.model_validate(payload),
+                lines=lines,
+            )
+            return
+
         years = sorted(
             {
                 (tx.raw.value_date or tx.raw.booked_date).year
@@ -216,7 +255,6 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
                 if (tx.raw.value_date or tx.raw.booked_date) is not None
             },
         )
-        from ._ledger_payloads import LedgerCheckResult
 
         if not years:
             payload = {

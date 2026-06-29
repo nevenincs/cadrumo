@@ -267,7 +267,12 @@ def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIs
             LedgerPreflightIssue(
                 **common,
                 reason=LedgerPreflightIssueReason.MISSING_PROPORTIONALITY_REFERENCE,
-                detail="mixed ledger transaction has no usage_ratio_id proportionality reference",
+                detail=(
+                    "mixed ledger transaction has no usage_ratio_id; use an existing configured "
+                    "eligible category id from 'aeat app ledger ratios list' or 'aeat app ledger "
+                    "ratios eligible', create one with 'aeat app ledger ratios set <category-id> "
+                    "<ratio>', then allocate with --usage-ratio-id <category-id>"
+                ),
             ),
         )
     # Trabajo (nómina) incoming rows are IVA-exempt by definition: an

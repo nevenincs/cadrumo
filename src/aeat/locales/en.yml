@@ -2528,8 +2528,8 @@ cli:
       actor_help: Operator name recorded on the bucket event
       amount_help: Transaction amount in the transaction currency (decimal, e.g. 1200.50).
       attachment_help: Supplementary attachment id (repeatable)
-      business_pct_help: Business-use share from 0 to 1 (only when classification
-        is MIXED)
+      business_pct_help: Business-use share from 0 to 1; only for MIXED rows. Omit
+        for fully BUSINESS rows.
       category_help: Deductible-expense category id (expense transactions only; income
         needs no category)
       classification_help: Business classification (BUSINESS / PERSONAL / MIXED /
@@ -2565,17 +2565,24 @@ cli:
         by the application and cannot be assigned by hand. Choose one of: BUSINESS,
         PERSONAL, MIXED, or omit --classification to leave the row unclassified.'
       taxable_base_help: IVA-exclusive base amount
-      usage_ratio_help: Usage-ratio id for proportional business use
+      usage_ratio_help: Existing configured usage-ratio id for proportional business
+        use. Use a category id shown by 'aeat app ledger ratios list' or 'aeat app
+        ledger ratios eligible'; create one with 'aeat app ledger ratios set <category-id>
+        <ratio>'. Not arbitrary prose.
       value_date_help: Value date (YYYY-MM-DD)
     allocate:
       actor_help: Operator name recorded on the bucket event
-      business_pct_help: Business-use share from 0 to 1
+      business_pct_help: Business-use share from 0 to 1 for MIXED/proportional rows;
+        do not use ledger allocate for a fully BUSINESS row.
       category_help: Deductible-expense category id (expense transactions only; income
         needs no category)
       help: Record business/private proportionality for a ledger transaction
       id_help: Ledger transaction id to allocate
       prorrata_reference_help: IVA prorrata reference for IVA workflows
-      usage_ratio_help: Usage-ratio id for proportional business use
+      usage_ratio_help: Existing configured usage-ratio id for proportional business
+        use. Use a category id shown by 'aeat app ledger ratios list' or 'aeat app
+        ledger ratios eligible'; create one with 'aeat app ledger ratios set <category-id>
+        <ratio>'. Not arbitrary prose.
     app_help: Management of accounting ledgers and IVA records
     archive:
       actor_help: Operator name recorded on the bucket event
@@ -2606,6 +2613,9 @@ cli:
       help: Probe ledger transactions in the addressed profile (defaults to the active
         profile) and report anomaly rows aggregated across every period a transaction
         touches. Local-only; never contacts AEAT.
+      period_help: 'Optional filing period as an AEAT token: 1T-4T (quarters), 0A
+        (annual), 01-12 (months). Combine with --year to match ledger status.'
+      year_help: Filing year for --period (e.g. 2024).
     classify:
       actor_help: Operator name recorded on the bucket event
       apply_help: 'Persist the LLM suggestion with llm: provenance instead of only
@@ -2622,7 +2632,8 @@ cli:
       bulk_all_failed: 'bulk classify failed: every row failed; no ledger rows were
         updated'
       business_pct_help: Business-use share from 0 to 1; required with --classification
-        MIXED and rejected for any other classification
+        MIXED, rejected for any other classification, and omitted for fully BUSINESS
+        rows
       business_pct_requires_mixed: Refused. --business-pct only applies to a MIXED
         classification. A BUSINESS or PERSONAL row is wholly business or wholly private;
         drop --business-pct, or pass --classification MIXED.
