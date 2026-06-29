@@ -7,7 +7,9 @@ label = "Ejercicio 2025 y siguientes"
 # genuine statutory rate change takes effect. Phase-1 engine covers 2025+.
 valid_from = 2025-01-01
 period_selector = { year_from = 2025, periods = ["evento"] }
+orden_aplicabilidad = ["orden-eha-3316-2010:art-1"]
 legal_refs = [
+    "orden-eha-3316-2010:art-1",
     "trlirnr-rdleg-5-2004:art-13.1.h",
     "trlirnr-rdleg-5-2004:art-24",
     "trlirnr-rdleg-5-2004:art-25.1.a",
@@ -15,6 +17,7 @@ legal_refs = [
     "ley-35-2006:art-85",
 ]
 source_refs = [
+    "boe-modelo-210-base-order",
     "aeat-modelo-210-procedure",
     "aeat-irnr-renta-imputada-inmueble-urbano",
     "boe-modelo-210-2024-form-layout",
