@@ -83,6 +83,7 @@ from ._action_errors import (
     ExternalModeloImportError,
     ModeloAggregationBindingError,
     ModeloCrossPeriodCleanStateError,
+    ModeloLocalObservationError,
     ModeloProfileReadinessError,
     ModeloRecordNotFoundError,
     ModeloRefundElectionNotEligibleError,
@@ -166,6 +167,11 @@ from ._iva_wallet_seed import (
     correct_iva_compensation_period_for_bucket,
     record_iva_compensation_override_for_bucket,
     seed_iva_compensation_period_for_bucket,
+)
+from ._local_observation_actions import (
+    OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND,
+    ModeloLocalObservationResult,
+    record_operator_local_observation,
 )
 from ._m036_lifecycle import (
     M036DeclarationCommand,
@@ -344,6 +350,7 @@ from ._workflow_gate import workflow_period_for_work_unit
 __all__ = [
     "APP_FILING_SOURCE_KIND",
     "STUB_MODELO_LOCALE_KEYS",
+    "OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND",
     "STUB_ONLY_MODELOS",
     "AmendmentEvidenceMissingError",
     "AmendmentOverrideCasillaError",
@@ -408,6 +415,8 @@ __all__ = [
     "ModeloIvaWalletSeedNoTaxpayerError",
     "ModeloMaritimeExemptionPreview",
     "ModeloProfileReadinessError",
+    "ModeloLocalObservationError",
+    "ModeloLocalObservationResult",
     "ModeloProjectInvalidDecimalOverrideError",
     "ModeloProjectM100Projection",
     "ModeloProjectM130Accumulated",
@@ -531,6 +540,7 @@ __all__ = [
     "record_m036_declaration",
     "registry_bindings",
     "registry_bindings_for_scope",
+    "record_operator_local_observation",
     "registry_bindings_for_year",
     "registry_casillas",
     "registry_casillas_for_registry_scope",

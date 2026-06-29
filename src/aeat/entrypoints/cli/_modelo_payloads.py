@@ -786,6 +786,26 @@ class FilingRecordImportResult(OutputSchema):
     live_submission: bool = False
 
 
+@register_schema("modelo.filing_record.observe_local")
+class FilingRecordLocalObservationResult(OutputSchema):
+    """Local operator-supplied observation recorded for calculation prefill."""
+
+    operation: str = "modelo.filing_record.observe_local"
+    modelo: str
+    filing_year: int
+    period: Period
+    revision_id: RevisionId
+    observation_key: str
+    source_kind: str
+    casilla_values: dict[CasillaId, str]
+    casilla_count: int
+    captured_at: str
+    captured_by: str
+    official_evidence: bool
+    filing_record_created: bool
+    aeat_accepted: bool
+
+
 class ModeloRowPayload(OutputSchema):
     """One modelo row in the list modelos output."""
 
@@ -1241,6 +1261,7 @@ __all__ = [
     "EvidenceBundleCheckFindingPayload",
     "EvidenceRecordRefPayload",
     "FilingRecordImportResult",
+    "FilingRecordLocalObservationResult",
     "FindingPayload",
     "FormulaPayload",
     "FormulasResult",
