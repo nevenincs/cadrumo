@@ -54,6 +54,8 @@ def _tx(
     taxable_base: Decimal | None = Decimal("100.00"),
     iva_amount: Decimal | None = Decimal("21.00"),
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
+    category_id: str = "material_oficina",
+    irpf_category: str | None = None,
     purchase_invoice_evidence_id: str | None = None,
     attachment_ids: tuple[str, ...] = (),
 ) -> Transaction:
@@ -83,7 +85,8 @@ def _tx(
             "taxable_base": taxable_base,
             "iva_rate": Decimal("0.21"),
             "iva_amount": iva_amount,
-            "category_id": "material_oficina",
+            "category_id": category_id,
+            "irpf_category": irpf_category,
             "purchase_invoice_evidence_id": purchase_invoice_evidence_id,
             "attachment_ids": attachment_ids,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
@@ -167,6 +170,45 @@ def test_evidence_capture_projects_tax_facts_and_manual_basis() -> None:
     assert row.category_id == "material_oficina"
     assert row.purchase_invoice_evidence_id == "purchase-evidence-1"
     assert row.attachment_ids == ("attachment-1",)
+
+
+def test_evidence_capture_preserves_rent_paid_net_of_withholding_substrate() -> None:
+    """Filing evidence keeps bank cash and invoice IVA substrate distinct.
+
+    Commercial rent paid as 1020.00 after withholding still contributes the
+    supplier invoice substrate 1000.00 + 210.00 IVA. Evidence must preserve both
+    facts rather than reconstituting or normalising one into the other.
+    """
+    tx = _tx(
+        "row-rent-net",
+        amount=Decimal("1020.00"),
+        taxable_base=Decimal("1000.00"),
+        iva_amount=Decimal("210.00"),
+        category_id="arrendamiento_local",
+        irpf_category="arrendamiento_local",
+    )
+    catalogue = _catalogue(tx)
+    snapshot = compute_ledger_filing_snapshot(
+        source_transaction_ids=[tx.transaction_id],
+        catalogue=catalogue,
+        captured_at=_CAPTURED,
+    )
+
+    evidence = compute_ledger_filing_evidence(
+        source_transaction_ids=[tx.transaction_id],
+        catalogue=catalogue,
+        snapshot_fingerprint=snapshot.snapshot_fingerprint,
+        captured_at=_CAPTURED,
+    )
+
+    row = evidence.rows[0]
+    assert row.amount == Decimal("1020.00")
+    assert row.taxable_base == Decimal("1000.00")
+    assert row.iva_amount == Decimal("210.00")
+    assert row.taxable_base + row.iva_amount == Decimal("1210.00")
+    assert row.amount != row.taxable_base + row.iva_amount
+    assert row.category_id == "arrendamiento_local"
+    assert row.irpf_category == "arrendamiento_local"
 
 
 def test_manual_fact_basis_projection_skips_blank_inputs() -> None:
