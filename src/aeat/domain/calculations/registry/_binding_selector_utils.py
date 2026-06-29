@@ -16,7 +16,9 @@ __all__ = [
     "BindingExportSelector",
     "BindingFixedExportSelector",
     "BindingRowExportSelector",
+    "BindingRowSetSelector",
     "binding_export_selector",
+    "binding_row_set_selector",
     "intracommunity_clave_validator",
     "invariant_diagnostics",
     "selector_against_model",
@@ -52,6 +54,17 @@ class BindingRowExportSelector(BaseModel):
 
 
 BindingExportSelector = BindingFixedExportSelector | BindingRowExportSelector
+
+
+class BindingRowSetSelector(BaseModel):
+    """Typed row-set projection carried by a row-producing binding selector."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    fact: Literal["row_field"] = "row_field"
+    row_field: str = Field(min_length=1, max_length=128)
+    grouping: str = Field(min_length=1, max_length=64)
+    record: str | None = Field(default=None, min_length=1, max_length=64)
 
 
 class _BindingExportProjection(BaseModel):
@@ -113,11 +126,49 @@ class _BindingExportProjection(BaseModel):
         )
 
 
+class _BindingRowSetProjection(BaseModel):
+    """Projection model for row-set keys embedded in source-family selectors."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="ignore")
+
+    fact: str | None = Field(default=None, min_length=1, max_length=64)
+    row_field: str | None = Field(default=None, min_length=1, max_length=128)
+    grouping: str | None = Field(default=None, min_length=1, max_length=64)
+    record: str | None = Field(default=None, min_length=1, max_length=64)
+
+    def row_set_selector(self, *, binding_id: str) -> BindingRowSetSelector | None:
+        """Return the typed row-set selector, or ``None`` for non-row selectors."""
+        has_row_set_key = self.row_field is not None or self.grouping is not None
+        if self.fact is None:
+            if self.grouping is not None:
+                raise RegistryValidationError(
+                    f"binding {binding_id!r} row-set selector projection must declare fact 'row_field' "
+                    "with grouping",
+                )
+            return None
+        if self.fact != "row_field":
+            if has_row_set_key:
+                raise RegistryValidationError(
+                    f"binding {binding_id!r} row-set selector projection declares row-set keys "
+                    f"with non-row fact {self.fact!r}",
+                )
+            return None
+        if self.row_field is None:
+            raise RegistryValidationError(
+                f"binding {binding_id!r} row-set selector projection is missing row_field",
+            )
+        if self.grouping is None:
+            raise RegistryValidationError(
+                f"binding {binding_id!r} row-set selector projection is missing grouping",
+            )
+        return BindingRowSetSelector(row_field=self.row_field, grouping=self.grouping, record=self.record)
+
+
 def selector_as_dict(binding: DataBindingDefinition) -> dict[str, object]:
     """Return a plain selector mapping without injected source metadata."""
     selector = binding.selector
     if isinstance(selector, BaseModel):
-        return selector.model_dump(exclude={"source"}, exclude_none=True)
+        return selector.model_dump(exclude={"source"}, exclude_none=True, exclude_unset=True)
     return {key: value for key, value in selector.items() if key != "source"}
 
 
@@ -136,6 +187,23 @@ def binding_export_selector(binding: DataBindingDefinition) -> BindingExportSele
             f"binding {binding.id!r} has malformed export selector projection: {exc}",
         ) from exc
     return projection.export_selector(binding_id=binding.id)
+
+
+def binding_row_set_selector(binding: DataBindingDefinition) -> BindingRowSetSelector | None:
+    """Return the typed row-set projection embedded in ``binding.selector``.
+
+    Source-family selectors remain the authority for fact-specific filters.
+    Row-set consumers only need the common ``fact = "row_field"`` projection
+    that names the detail grouping and the emitted row field, so callers parse
+    that projection once instead of probing the raw selector map.
+    """
+    try:
+        projection = _BindingRowSetProjection.model_validate(selector_as_dict(binding))
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} has malformed row-set selector projection: {exc}",
+        ) from exc
+    return projection.row_set_selector(binding_id=binding.id)
 
 
 def selector_against_model(

@@ -21,7 +21,7 @@ from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import invariant_diagnostics, selector_against_model
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
-from ._ids import BindingId, CasillaId
+from ._ids import BindingId, CasillaId, ModeloId
 from ._observation_fold import fold_sum_or_copy
 from ._period_offset_math import apply_period_offset
 from ._relations import RegistryFoldRequirement
@@ -29,7 +29,7 @@ from ._schema import DataBindingDefinition, ModeloRevision, filing_period_from_s
 
 
 class _RegistryModeloObservationLike(Protocol):
-    modelo: str
+    modelo: ModeloId
     filing_year: int
     period: str
 
@@ -41,7 +41,7 @@ class _RegistryModeloObservationLike(Protocol):
 class PreviousFilingSourceReference:
     """Canonical source reference extracted from a typed previous-filing selector."""
 
-    source_modelo: str
+    source_modelo: ModeloId
     required_periods: tuple[str, ...]
     source_casilla_ids: tuple[CasillaId, ...]
 
@@ -68,8 +68,8 @@ def previous_filing_observation_requirements(
     bindings, and each selector becomes a source modelo/year/period
     requirement.
     """
-    binding_ids_by_key: dict[tuple[str, int, str], set[BindingId]] = {}
-    source_casilla_ids_by_key: dict[tuple[str, int, str], set[CasillaId]] = {}
+    binding_ids_by_key: dict[tuple[ModeloId, int, str], set[BindingId]] = {}
+    source_casilla_ids_by_key: dict[tuple[ModeloId, int, str], set[CasillaId]] = {}
     for binding in revision.bindings:
         if binding.source != "previous_filing":
             continue
@@ -285,7 +285,7 @@ def _zero_values_for_scoped_out_binding(selector: _PreviousModeloSelector) -> li
 class _PreviousModeloSelector(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
-    source_modelo: str = Field(min_length=1, max_length=8)
+    source_modelo: ModeloId
     filing_year_delta: int = 0
     period: str | None = Field(default=None, min_length=1, max_length=8)
     source_periods: tuple[str, ...] = ()

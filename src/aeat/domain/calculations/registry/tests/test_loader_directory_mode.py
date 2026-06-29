@@ -14,155 +14,43 @@ single-file to directory layout can be done without behavioral risk.
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 
 import pytest
 
-from .....core.resources import bundled_path
-from .. import CasillaId, validated_casilla_id
 from .._errors import RegistryLoadError, RegistryValidationError
 from .._loader import (
     discover_modelo_sources,
     load_legal_parameters_only,
     load_modelo_directory,
     load_modelo_file,
-    load_modelo_source,
     load_registry_tree,
+)
+from ._loader_directory_mode_support import (
+    _COMPLETENESS_CASILLA_0001,
+    _COMPLETENESS_CASILLA_0002,
+    _MAX_SINGLE_FILE_MODELO_LINES,
+    _MAX_TOML_FRAGMENT_LINES,
+    _MAX_TOML_ROW_CHARS,
+    _build_directory_layout,
+    _committed_modelo,
+    _committed_modelo_sources,
+    _committed_modelo_sources_by_id,
+    _committed_modelo_toml_paths,
+    _committed_modelos_dir,
+    _committed_non_locale_toml_paths_by_fragment_revision,
+    _committed_non_locale_toml_paths_by_modelo_id,
+    _committed_registry_modelos,
+    _minimal_fragment_revision_layout,
+    _split_single_file_modelo_text,
+    _standard_manifest_text,
+    _standard_revision_preamble_text,
+    _write_locale_fragment,
+    _write_minimal_localized_modelo,
+    _write_standard_manifest,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-_REVISION_HEADER_RE = re.compile(r'^\[\[?revisions\.(?:"([^"]+)"|([A-Za-z0-9_-]+))(?=[.\]])')
-_MAX_SINGLE_FILE_MODELO_LINES = 2_000
-_MAX_TOML_FRAGMENT_LINES = 1_750
-_MAX_TOML_ROW_CHARS = 600
-_TOML_CASILLA_ID_KEY = "casilla_id"
-_COMPLETENESS_CASILLA_0001: CasillaId = validated_casilla_id(
-    "0001",
-    surface="_COMPLETENESS_CASILLA_0001",
-)
-_COMPLETENESS_CASILLA_0002: CasillaId = validated_casilla_id(
-    "0002",
-    surface="_COMPLETENESS_CASILLA_0002",
-)
-_MINIMAL_MANIFEST_TEXT = '[modelo]\nid = "999"\ntitle = "x"\n'
-_MINIMAL_REVISION_TEXT = '[revisions."2025"]\nvalid_from = 2025-01-01\n'
-
-
-def _build_directory_layout(
-    target_dir: Path,
-    *,
-    manifest_text: str,
-    revision_files: dict[str, str],
-) -> None:
-    """Materialise a directory-mode modelo at ``target_dir``."""
-
-    target_dir.mkdir(parents=True, exist_ok=True)
-    (target_dir / "manifest.toml").write_text(manifest_text, encoding="utf-8")
-    revisions_dir = target_dir / "revisions"
-    revisions_dir.mkdir(exist_ok=True)
-    for filename, content in revision_files.items():
-        (revisions_dir / filename).write_text(content, encoding="utf-8")
-
-
-def _minimal_fragment_revision_layout(
-    target_dir: Path,
-    *,
-    revision_text: str = _MINIMAL_REVISION_TEXT,
-    fragment_dirs: tuple[str, ...] = (),
-) -> Path:
-    """Materialise a minimal ``revisions/2025/`` tree and return that revision dir."""
-
-    revision_dir = target_dir / "revisions" / "2025"
-    revision_dir.mkdir(parents=True)
-    (target_dir / "manifest.toml").write_text(_MINIMAL_MANIFEST_TEXT, encoding="utf-8")
-    (revision_dir / "revision.toml").write_text(revision_text, encoding="utf-8")
-    for relative_dir in fragment_dirs:
-        (revision_dir / relative_dir).mkdir(parents=True)
-    return revision_dir
-
-
-def _write_locale_fragment(locales_dir: Path, language: str, filename: str, text: str) -> None:
-    language_dir = locales_dir / language
-    language_dir.mkdir(parents=True, exist_ok=True)
-    (language_dir / filename).write_text(text, encoding="utf-8")
-
-
-def _write_minimal_localized_modelo(target_dir: Path, casilla_ids: tuple[str, ...]) -> Path:
-    revision_dir = target_dir / "revisions" / "2025"
-    revision_dir.mkdir(parents=True)
-    (target_dir / "manifest.toml").write_text(
-        """
-[modelo]
-id = "999"
-title = "Localized loader test"
-official_name = "Localized loader test"
-tax_domain = "iva"
-cadence = "annual"
-jurisdiction = "ES-AEAT"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-    casilla_tables = "\n".join(
-        f"""
-[[revisions."2025".casillas]]
-id = "{casilla_id}"
-number = "{index}"
-label = "Casilla {index}"
-section = ["liquidacion"]
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip()
-        for index, casilla_id in enumerate(casilla_ids, start=1)
-    )
-    (revision_dir / "revision.toml").write_text(
-        f"""
-[revisions."2025"]
-valid_from = 2025-01-01
-period_selector = {{ years = [2025], periods = ["0A"] }}
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-
-{casilla_tables}
-""".lstrip(),
-        encoding="utf-8",
-    )
-    return revision_dir
-
-
-def _split_single_file_modelo_text(text: str) -> tuple[str, str, dict[str, str]]:
-    """Split one modelo TOML into manifest text and revision table text."""
-
-    manifest_lines: list[str] = []
-    revision_lines: list[str] = []
-    revision_lines_by_id: dict[str, list[str]] = {}
-    current_revision_id: str | None = None
-    in_revision = False
-    for line in text.splitlines(keepends=True):
-        stripped = line.strip()
-        match = _REVISION_HEADER_RE.match(stripped)
-        if stripped.startswith("[revisions") or stripped.startswith("[[revisions"):
-            in_revision = True
-            if match is None:
-                raise AssertionError(f"cannot determine revision id from TOML header {stripped!r}")
-            current_revision_id = match.group(1) or match.group(2)
-            assert current_revision_id is not None
-            revision_lines_by_id.setdefault(current_revision_id, [])
-        if in_revision:
-            revision_lines.append(line)
-            if current_revision_id is None:
-                raise AssertionError(f"revision line appeared before a revision header: {line!r}")
-            revision_lines_by_id[current_revision_id].append(line)
-        else:
-            manifest_lines.append(line)
-
-    return (
-        "".join(manifest_lines),
-        "".join(revision_lines),
-        {revision_id: "".join(lines) for revision_id, lines in revision_lines_by_id.items()},
-    )
 
 
 def test_directory_mode_round_trip_matches_every_single_file_modelo(tmp_path: Path) -> None:
@@ -178,13 +66,13 @@ def test_directory_mode_round_trip_matches_every_single_file_modelo(tmp_path: Pa
     blocker for migrating modelos to directory mode.
     """
 
-    modelos_dir = bundled_path("registry", "aeat", "modelos")
+    modelos_dir = _committed_modelos_dir()
     checked: list[str] = []
-    for source in discover_modelo_sources(modelos_dir):
+    for source in _committed_modelo_sources():
         if source.layout != "single_file":
             continue
         checked.append(source.modelo_id)
-        expected = load_modelo_source(source)
+        expected = _committed_modelo(source.modelo_id)
         manifest_text, revision_text, _revision_text_by_id = _split_single_file_modelo_text(
             source.path.read_text(encoding="utf-8"),
         )
@@ -205,13 +93,13 @@ def test_directory_mode_round_trip_matches_every_single_file_modelo(tmp_path: Pa
 def test_fragment_directory_round_trip_matches_every_single_file_modelo(tmp_path: Path) -> None:
     """Every single-file modelo can be represented as revision fragment directories."""
 
-    modelos_dir = bundled_path("registry", "aeat", "modelos")
+    modelos_dir = _committed_modelos_dir()
     checked: list[str] = []
-    for source in discover_modelo_sources(modelos_dir):
+    for source in _committed_modelo_sources():
         if source.layout != "single_file":
             continue
         checked.append(source.modelo_id)
-        expected = load_modelo_source(source)
+        expected = _committed_modelo(source.modelo_id)
         manifest_text, _revision_text, revision_text_by_id = _split_single_file_modelo_text(
             source.path.read_text(encoding="utf-8"),
         )
@@ -295,22 +183,10 @@ def test_directory_mode_loads_plain_revision_file_layout(tmp_path: Path) -> None
 
     single_file = tmp_path / "999.toml"
     single_file.write_text(
-        """
-[modelo]
-id = "999"
-title = "Revision-file test"
-official_name = "Revision-file test"
-tax_domain = "iva"
-cadence = "annual"
-jurisdiction = "ES-AEAT"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-
-[revisions."2025"]
-valid_from = 2025-01-01
-period_selector = { years = [2025], periods = ["0A"] }
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
+        _standard_manifest_text("Revision-file test")
+        + "\n"
+        + _standard_revision_preamble_text()
+        + """
 
 [[revisions."2025".casillas]]
 id = "0001"
@@ -326,27 +202,10 @@ source_refs = ["aeat-manual"]
 
     target = tmp_path / "999"
     (target / "revisions").mkdir(parents=True)
-    (target / "manifest.toml").write_text(
-        """
-[modelo]
-id = "999"
-title = "Revision-file test"
-official_name = "Revision-file test"
-tax_domain = "iva"
-cadence = "annual"
-jurisdiction = "ES-AEAT"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
+    _write_standard_manifest(target, "Revision-file test")
     (target / "revisions" / "2025.toml").write_text(
-        """
-[revisions."2025"]
-valid_from = 2025-01-01
-period_selector = { years = [2025], periods = ["0A"] }
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
+        _standard_revision_preamble_text()
+        + """
 
 [[revisions."2025".casillas]]
 id = "0001"
@@ -368,27 +227,10 @@ def test_directory_mode_rejects_malformed_casilla_id_before_locale_key_authority
 
     target = tmp_path / "malformed_casilla_id"
     (target / "revisions").mkdir(parents=True)
-    (target / "manifest.toml").write_text(
-        """
-[modelo]
-id = "999"
-title = "Malformed casilla id test"
-official_name = "Malformed casilla id test"
-tax_domain = "iva"
-cadence = "annual"
-jurisdiction = "ES-AEAT"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
+    _write_standard_manifest(target, "Malformed casilla id test")
     (target / "revisions" / "2025.toml").write_text(
-        """
-[revisions."2025"]
-valid_from = 2025-01-01
-period_selector = { years = [2025], periods = ["0A"] }
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
+        _standard_revision_preamble_text()
+        + """
 
 [[revisions."2025".casillas]]
 id = "bad key"
@@ -453,24 +295,10 @@ def test_directory_mode_rejects_ambiguous_casilla_identity_during_load(tmp_path:
     target = tmp_path / "999"
     _build_directory_layout(
         target,
-        manifest_text="""
-[modelo]
-id = "999"
-title = "Ambiguous casilla identity test"
-official_name = "Ambiguous casilla identity test"
-tax_domain = "iva"
-cadence = "annual"
-jurisdiction = "ES-AEAT"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
+        manifest_text=_standard_manifest_text("Ambiguous casilla identity test"),
         revision_files={
-            "2025.toml": """
-[revisions."2025"]
-valid_from = 2025-01-01
-period_selector = { years = [2025], periods = ["0A"] }
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
+            "2025.toml": _standard_revision_preamble_text()
+            + """
 
 [[revisions."2025".casillas]]
 id = "01"
@@ -496,664 +324,6 @@ source_refs = ["aeat-manual"]
         load_modelo_directory(target)
 
 
-def test_directory_mode_loads_fragmented_revision_layout(tmp_path: Path) -> None:
-    """A ``revisions/<id>/`` fragment tree compiles to the same object shape."""
-
-    single_file = tmp_path / "999.toml"
-    single_file.write_text(
-        """
-[modelo]
-id = "999"
-title = "Fragment test"
-official_name = "Fragment test"
-tax_domain = "iva"
-cadence = "annual"
-jurisdiction = "ES-AEAT"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-
-[revisions."2025"]
-valid_from = 2025-01-01
-period_selector = { years = [2025], periods = ["0A"] }
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-
-[[revisions."2025".casillas]]
-id = "0001"
-number = "1"
-label = "Base"
-section = ["liquidacion"]
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-
-[[revisions."2025".casilla_continuidad_evolutions]]
-id = "continuidad-base-2025"
-continuidad_id = "base"
-from_revision = "2024"
-to_revision = "2025"
-evolution_kind = "unchanged"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-
-[[revisions."2025".casilla_continuidad_evolutions]]
-id = "continuidad-cuota-2025"
-continuidad_id = "cuota"
-from_revision = "2024"
-to_revision = "2025"
-evolution_kind = "label_evolved"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-
-[[revisions."2025".export_layouts]]
-id = "modelo-999-layout"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-
-[[revisions."2025".export_layouts.records]]
-id = "modelo-999-record"
-record_type = "1"
-order = 0
-encoding = "latin-1"
-line_ending = "crlf"
-required = true
-""".lstrip(),
-        encoding="utf-8",
-    )
-    expected = load_modelo_file(single_file)
-
-    target = tmp_path / "999"
-    (target / "revisions" / "2025" / "casillas").mkdir(parents=True)
-    (target / "revisions" / "2025" / "continuidad").mkdir()
-    (target / "revisions" / "2025" / "export").mkdir()
-    (target / "manifest.toml").write_text(
-        """
-[modelo]
-id = "999"
-title = "Fragment test"
-official_name = "Fragment test"
-tax_domain = "iva"
-cadence = "annual"
-jurisdiction = "ES-AEAT"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-    (target / "revisions" / "2025" / "revision.toml").write_text(
-        """
-[revisions."2025"]
-valid_from = 2025-01-01
-period_selector = { years = [2025], periods = ["0A"] }
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-    (target / "revisions" / "2025" / "casillas" / "liquidacion.toml").write_text(
-        """
-[[revisions."2025".casillas]]
-id = "0001"
-number = "1"
-label = "Base"
-section = ["liquidacion"]
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-    (target / "revisions" / "2025" / "continuidad" / "base.toml").write_text(
-        """
-[[revisions."2025".casilla_continuidad_evolutions]]
-id = "continuidad-base-2025"
-continuidad_id = "base"
-from_revision = "2024"
-to_revision = "2025"
-evolution_kind = "unchanged"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-    (target / "revisions" / "2025" / "continuidad" / "cuota.toml").write_text(
-        """
-[[revisions."2025".casilla_continuidad_evolutions]]
-id = "continuidad-cuota-2025"
-continuidad_id = "cuota"
-from_revision = "2024"
-to_revision = "2025"
-evolution_kind = "label_evolved"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-    (target / "revisions" / "2025" / "export" / "manifest.toml").write_text(
-        """
-[[revisions."2025".export_layouts]]
-id = "modelo-999-layout"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-    (target / "revisions" / "2025" / "export" / "record-001.toml").write_text(
-        """
-[[revisions."2025".export_layouts]]
-id = "modelo-999-layout"
-
-[[revisions."2025".export_layouts.records]]
-id = "modelo-999-record"
-record_type = "1"
-order = 0
-encoding = "latin-1"
-line_ending = "crlf"
-required = true
-""".lstrip(),
-        encoding="utf-8",
-    )
-
-    actual = load_modelo_directory(target)
-    assert actual == expected
-
-
-def test_directory_mode_merges_completeness_manifest_casilla_fragments(tmp_path: Path) -> None:
-    """Large calculation-completeness manifests can split their casilla list."""
-
-    single_file = tmp_path / "999.toml"
-    single_file.write_text(
-        (
-            """
-[modelo]
-id = "999"
-title = "Fragment test"
-official_name = "Fragment test"
-tax_domain = "iva"
-cadence = "annual"
-jurisdiction = "ES-AEAT"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-
-[revisions."2025"]
-valid_from = 2025-01-01
-period_selector = { years = [2025], periods = ["0A"] }
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-
-[revisions."2025".completeness_manifest]
-source_ref = "aeat-manual"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-
-[[revisions."2025".completeness_manifest.casillas]]
-"""
-            + f'{_TOML_CASILLA_ID_KEY} = "{_COMPLETENESS_CASILLA_0001}"\n'
-            + """
-number = "0001"
-
-[[revisions."2025".completeness_manifest.casillas]]
-"""
-            + f'{_TOML_CASILLA_ID_KEY} = "{_COMPLETENESS_CASILLA_0002}"\n'
-            + """
-number = "0002"
-"""
-        ).lstrip(),
-        encoding="utf-8",
-    )
-    expected = load_modelo_file(single_file)
-
-    target = tmp_path / "999"
-    (target / "revisions" / "2025" / "completeness").mkdir(parents=True)
-    (target / "manifest.toml").write_text(
-        """
-[modelo]
-id = "999"
-title = "Fragment test"
-official_name = "Fragment test"
-tax_domain = "iva"
-cadence = "annual"
-jurisdiction = "ES-AEAT"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-    (target / "revisions" / "2025" / "revision.toml").write_text(
-        """
-[revisions."2025"]
-valid_from = 2025-01-01
-period_selector = { years = [2025], periods = ["0A"] }
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-    (target / "revisions" / "2025" / "completeness" / "manifest.toml").write_text(
-        """
-[revisions."2025".completeness_manifest]
-source_ref = "aeat-manual"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-    (target / "revisions" / "2025" / "completeness" / "casillas-0001.toml").write_text(
-        (
-            """
-[[revisions."2025".completeness_manifest.casillas]]
-"""
-            + f'{_TOML_CASILLA_ID_KEY} = "{_COMPLETENESS_CASILLA_0001}"\n'
-            + """
-number = "0001"
-"""
-        ).lstrip(),
-        encoding="utf-8",
-    )
-    (target / "revisions" / "2025" / "completeness" / "casillas-0002.toml").write_text(
-        (
-            """
-[[revisions."2025".completeness_manifest.casillas]]
-"""
-            + f'{_TOML_CASILLA_ID_KEY} = "{_COMPLETENESS_CASILLA_0002}"\n'
-            + """
-number = "0002"
-"""
-        ).lstrip(),
-        encoding="utf-8",
-    )
-
-    actual = load_modelo_directory(target)
-    assert actual == expected
-
-
-def test_directory_mode_merges_export_record_field_fragments_by_record_id(tmp_path: Path) -> None:
-    """Large fixed-width records can be split across multiple field fragments."""
-
-    single_file = tmp_path / "999.toml"
-    single_file.write_text(
-        """
-[modelo]
-id = "999"
-title = "Fragment test"
-official_name = "Fragment test"
-tax_domain = "iva"
-cadence = "annual"
-jurisdiction = "ES-AEAT"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-
-[revisions."2025"]
-valid_from = 2025-01-01
-period_selector = { years = [2025], periods = ["0A"] }
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-
-[[revisions."2025".export_layouts]]
-id = "modelo-999-layout"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-
-[[revisions."2025".export_layouts.records]]
-id = "modelo-999-record"
-record_type = "1"
-order = 0
-encoding = "latin-1"
-line_ending = "crlf"
-required = true
-
-[[revisions."2025".export_layouts.records.fields]]
-id = "modelo-999-field-a"
-offset = 1
-length = 1
-kind = "literal"
-literal = "A"
-data_type = "text"
-required = true
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-
-[[revisions."2025".export_layouts.records.fields]]
-id = "modelo-999-field-b"
-offset = 2
-length = 1
-kind = "literal"
-literal = "B"
-data_type = "text"
-required = true
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-    expected = load_modelo_file(single_file)
-
-    target = tmp_path / "999"
-    (target / "revisions" / "2025" / "export").mkdir(parents=True)
-    (target / "manifest.toml").write_text(
-        """
-[modelo]
-id = "999"
-title = "Fragment test"
-official_name = "Fragment test"
-tax_domain = "iva"
-cadence = "annual"
-jurisdiction = "ES-AEAT"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-    (target / "revisions" / "2025" / "revision.toml").write_text(
-        """
-[revisions."2025"]
-valid_from = 2025-01-01
-period_selector = { years = [2025], periods = ["0A"] }
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-    (target / "revisions" / "2025" / "export" / "record-a.toml").write_text(
-        """
-[[revisions."2025".export_layouts]]
-id = "modelo-999-layout"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-
-[[revisions."2025".export_layouts.records]]
-id = "modelo-999-record"
-record_type = "1"
-order = 0
-encoding = "latin-1"
-line_ending = "crlf"
-required = true
-
-[[revisions."2025".export_layouts.records.fields]]
-id = "modelo-999-field-a"
-offset = 1
-length = 1
-kind = "literal"
-literal = "A"
-data_type = "text"
-required = true
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-    (target / "revisions" / "2025" / "export" / "record-b.toml").write_text(
-        """
-[[revisions."2025".export_layouts]]
-id = "modelo-999-layout"
-
-[[revisions."2025".export_layouts.records]]
-id = "modelo-999-record"
-
-[[revisions."2025".export_layouts.records.fields]]
-id = "modelo-999-field-b"
-offset = 2
-length = 1
-kind = "literal"
-literal = "B"
-data_type = "text"
-required = true
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-
-    actual = load_modelo_directory(target)
-    assert actual == expected
-
-
-def test_directory_mode_merges_construct_member_fragments_by_construct_id(tmp_path: Path) -> None:
-    """Large construct membership lists can be split without redeclaring the construct."""
-
-    single_file = tmp_path / "999.toml"
-    single_file.write_text(
-        """
-[modelo]
-id = "999"
-title = "Fragment test"
-official_name = "Fragment test"
-tax_domain = "iva"
-cadence = "annual"
-jurisdiction = "ES-AEAT"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-
-[revisions."2025"]
-valid_from = 2025-01-01
-period_selector = { years = [2025], periods = ["0A"] }
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-
-[[revisions."2025".constructs]]
-id = "modelo-999-workflow"
-title = "Modelo 999 workflow"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-casilla_ids = ["0001"]
-formulas = ["formula-1"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-    expected = load_modelo_file(single_file)
-
-    target = tmp_path / "999"
-    (target / "revisions" / "2025" / "constructs").mkdir(parents=True)
-    (target / "manifest.toml").write_text(
-        """
-[modelo]
-id = "999"
-title = "Fragment test"
-official_name = "Fragment test"
-tax_domain = "iva"
-cadence = "annual"
-jurisdiction = "ES-AEAT"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-    (target / "revisions" / "2025" / "revision.toml").write_text(
-        """
-[revisions."2025"]
-valid_from = 2025-01-01
-period_selector = { years = [2025], periods = ["0A"] }
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-    (target / "revisions" / "2025" / "constructs" / "casillas.toml").write_text(
-        """
-[[revisions."2025".constructs]]
-id = "modelo-999-workflow"
-title = "Modelo 999 workflow"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-casilla_ids = ["0001"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-    (target / "revisions" / "2025" / "constructs" / "formulas.toml").write_text(
-        """
-[[revisions."2025".constructs]]
-id = "modelo-999-workflow"
-formulas = ["formula-1"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-
-    actual = load_modelo_directory(target)
-    assert actual == expected
-
-
-@pytest.mark.parametrize(
-    ("fragment_dir", "fragment_files", "error_match"),
-    (
-        pytest.param(
-            "export",
-            (
-                (
-                    "record-a.toml",
-                    """
-[[revisions."2025".export_layouts]]
-id = "layout"
-
-[[revisions."2025".export_layouts.records]]
-id = "record"
-record_type = "1"
-""".lstrip(),
-                ),
-                (
-                    "record-b.toml",
-                    """
-[[revisions."2025".export_layouts]]
-id = "layout"
-
-[[revisions."2025".export_layouts.records]]
-id = "record"
-record_type = "2"
-""".lstrip(),
-                ),
-            ),
-            "field 'record_type' conflicts",
-            id="export-record-metadata",
-        ),
-        pytest.param(
-            "constructs",
-            (
-                (
-                    "one.toml",
-                    """
-[[revisions."2025".constructs]]
-id = "workflow"
-title = "One"
-casilla_ids = ["0001"]
-""".lstrip(),
-                ),
-                (
-                    "two.toml",
-                    """
-[[revisions."2025".constructs]]
-id = "workflow"
-title = "Two"
-formulas = ["formula-1"]
-""".lstrip(),
-                ),
-            ),
-            "field 'title' conflicts",
-            id="construct-metadata",
-        ),
-    ),
-)
-def test_directory_mode_rejects_fragment_scalar_conflicts(
-    tmp_path: Path,
-    fragment_dir: str,
-    fragment_files: tuple[tuple[str, str], ...],
-    error_match: str,
-) -> None:
-    """Same-id fragments must not silently override scalar metadata."""
-
-    target = tmp_path / "999"
-    revision_dir = _minimal_fragment_revision_layout(target, fragment_dirs=(fragment_dir,))
-    for filename, fragment_text in fragment_files:
-        (revision_dir / fragment_dir / filename).write_text(fragment_text, encoding="utf-8")
-
-    with pytest.raises(RegistryLoadError, match=error_match):
-        load_modelo_directory(target)
-
-
-def test_directory_mode_rejects_duplicate_export_field_ids_after_record_merge(tmp_path: Path) -> None:
-    """Same-id record fragments must not create ambiguous nested field ids."""
-
-    target = tmp_path / "999"
-    export_dir = _minimal_fragment_revision_layout(target, fragment_dirs=("export",)) / "export"
-    duplicate_field_fragment = """
-[[revisions."2025".export_layouts]]
-id = "modelo-999-layout"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-
-[[revisions."2025".export_layouts.records]]
-id = "modelo-999-record"
-record_type = "1"
-order = 0
-encoding = "latin-1"
-line_ending = "none"
-required = true
-
-[[revisions."2025".export_layouts.records.fields]]
-id = "modelo-999-field"
-offset = 1
-length = 1
-kind = "literal"
-literal = "A"
-data_type = "text"
-required = true
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip()
-    (export_dir / "record-a.toml").write_text(
-        duplicate_field_fragment,
-        encoding="utf-8",
-    )
-    (export_dir / "record-b.toml").write_text(
-        duplicate_field_fragment,
-        encoding="utf-8",
-    )
-
-    with pytest.raises(RegistryLoadError, match="appends duplicate ids"):
-        load_modelo_directory(target)
-
-
-def test_directory_mode_rejects_fragment_revision_id_mismatch(tmp_path: Path) -> None:
-    """Fragments under ``revisions/<id>/`` must declare the same revision id."""
-
-    target = tmp_path / "999"
-    _minimal_fragment_revision_layout(
-        target,
-        revision_text='[revisions."2024"]\nvalid_from = 2024-01-01\n',
-    )
-
-    with pytest.raises(RegistryLoadError, match="expected '2025'"):
-        load_modelo_directory(target)
-
-
-def test_directory_mode_rejects_fragment_scalar_redeclaration(tmp_path: Path) -> None:
-    """A fragmented revision has one owner for each scalar revision field."""
-
-    target = tmp_path / "999"
-    revision_dir = _minimal_fragment_revision_layout(
-        target,
-        revision_text='[revisions."2025"]\nlabel = "one"\n',
-    )
-    (revision_dir / "extra.toml").write_text(
-        '[revisions."2025"]\nlabel = "two"\n',
-        encoding="utf-8",
-    )
-
-    with pytest.raises(RegistryLoadError, match="redeclares scalar field 'label'"):
-        load_modelo_directory(target)
-
-
 def test_directory_mode_rejects_missing_manifest(tmp_path: Path) -> None:
     """Directory-mode requires manifest.toml at the root of the modelo dir."""
 
@@ -1176,14 +346,12 @@ def test_directory_mode_rejects_no_revisions(tmp_path: Path) -> None:
 def test_committed_registry_tree_loads_directory_modelos() -> None:
     """Registry discovery must load every committed directory-form modelo."""
 
-    registry_root = bundled_path("registry", "aeat")
-    modelos_dir = registry_root / "modelos"
-    sources = discover_modelo_sources(modelos_dir)
-    modelos, _catalogues = load_registry_tree(registry_root)
+    sources = _committed_modelo_sources()
+    modelos = _committed_registry_modelos()
     loaded_ids = {modelo.id for modelo in modelos}
 
     assert loaded_ids == {source.modelo_id for source in sources}
-    assert {load_modelo_source(source).id for source in sources} == loaded_ids
+    assert {_committed_modelo(source.modelo_id).id for source in sources} == loaded_ids
     assert any(source.layout == "directory" for source in sources)
     assert all(source.layout == "directory" for source in sources)
 
@@ -1246,12 +414,11 @@ reviewed_by = "registry-test"
 def test_committed_key_modelos_load_through_generic_fragment_sources() -> None:
     """Key committed modelos use the same generic directory-source contract."""
 
-    modelos_dir = bundled_path("registry", "aeat", "modelos")
-    sources = {source.modelo_id: source for source in discover_modelo_sources(modelos_dir)}
+    sources = _committed_modelo_sources_by_id()
 
     for modelo_id in ("036", "100", "200", "303"):
         source = sources[modelo_id]
-        modelo = load_modelo_source(source)
+        modelo = _committed_modelo(modelo_id)
 
         assert source.layout == "directory"
         assert source.path.name == modelo_id
@@ -1321,8 +488,8 @@ source_refs = ["aeat-manual"]
 def test_fragmented_modelos_do_not_keep_stale_single_file_siblings() -> None:
     """A fragmented modelo cannot also keep ``modelos/<id>.toml``."""
 
-    modelos_dir = bundled_path("registry", "aeat", "modelos")
-    sources = discover_modelo_sources(modelos_dir)
+    modelos_dir = _committed_modelos_dir()
+    sources = _committed_modelo_sources()
     offenders = [
         source.modelo_id
         for source in sources
@@ -1335,12 +502,11 @@ def test_fragmented_modelos_do_not_keep_stale_single_file_siblings() -> None:
 def test_multi_revision_modelos_do_not_use_single_file_layout() -> None:
     """Multi-revision modelos must use directory layout, not inline copy-per-revision TOML."""
 
-    modelos_dir = bundled_path("registry", "aeat", "modelos")
     offenders: list[str] = []
-    for source in discover_modelo_sources(modelos_dir):
+    for source in _committed_modelo_sources():
         if source.layout != "single_file":
             continue
-        modelo = load_modelo_source(source)
+        modelo = _committed_modelo(source.modelo_id)
         if len(modelo.revisions) <= 1:
             continue
         offenders.append(f"{source.modelo_id}: {len(modelo.revisions)} revisions in {source.path.name}")
@@ -1351,12 +517,11 @@ def test_multi_revision_modelos_do_not_use_single_file_layout() -> None:
 def test_fragmented_revision_directories_are_schema_owned() -> None:
     """Every committed revision fragment directory has a schema manifest and loads."""
 
-    modelos_dir = bundled_path("registry", "aeat", "modelos")
     checked: list[str] = []
-    for source in discover_modelo_sources(modelos_dir):
+    for source in _committed_modelo_sources():
         if source.layout != "directory":
             continue
-        modelo = load_modelo_source(source)
+        modelo = _committed_modelo(source.modelo_id)
         for revision_source in source.revision_sources:
             if revision_source.layout != "fragment_directory":
                 continue
@@ -1371,29 +536,23 @@ def test_fragmented_revision_directories_are_schema_owned() -> None:
 def test_committed_directory_source_inventory_lists_every_revision_fragment_toml() -> None:
     """Discovery exposes all TOML fragments that participate in a directory revision."""
 
-    modelos_dir = bundled_path("registry", "aeat", "modelos")
     checked: list[str] = []
-    for source in discover_modelo_sources(modelos_dir):
+    paths_by_modelo_id = _committed_non_locale_toml_paths_by_modelo_id()
+    paths_by_fragment_revision = _committed_non_locale_toml_paths_by_fragment_revision()
+    for source in _committed_modelo_sources():
         if source.layout != "directory":
             continue
-        revisions_dir = source.path / "revisions"
-        expected_paths = {p for p in revisions_dir.rglob("*.toml") if not any(part == "locales" for part in p.parts)}
+        expected_paths = set(paths_by_modelo_id.get(source.modelo_id, ()))
         discovered_paths: set[Path] = set()
         for revision_source in source.revision_sources:
             if revision_source.layout == "revision_file":
                 assert revision_source.fragment_paths == (revision_source.path,)
             else:
-                expected_revision_paths = tuple(
-                    sorted(
-                        path.resolve()
-                        for path in revision_source.path.rglob("*.toml")
-                        if not any(part == "locales" for part in path.parts)
-                    ),
-                )
+                expected_revision_paths = paths_by_fragment_revision[(source.modelo_id, revision_source.revision_id)]
                 assert tuple(sorted(revision_source.fragment_paths)) == expected_revision_paths
-            discovered_paths.update(path.resolve() for path in revision_source.fragment_paths)
+            discovered_paths.update(revision_source.fragment_paths)
             checked.append(f"{source.modelo_id}/{revision_source.revision_id}")
-        assert discovered_paths == {path.resolve() for path in expected_paths}
+        assert discovered_paths == expected_paths
 
     assert checked, "at least one committed directory revision must be discovered"
 
@@ -1428,12 +587,12 @@ def test_locale_translation_fragments_reject_duplicate_keys(tmp_path: Path) -> N
 def test_committed_registry_toml_files_stay_reviewable() -> None:
     """Registry TOML files must not regress toward monolithic artifacts."""
 
-    modelos_dir = bundled_path("registry", "aeat", "modelos")
     oversized_single_file_modelos: list[str] = []
     oversized_fragments: list[str] = []
     oversized_rows: list[str] = []
 
-    for path in sorted(modelos_dir.rglob("*.toml")):
+    modelos_dir = _committed_modelos_dir()
+    for path in _committed_modelo_toml_paths():
         relative_path = path.relative_to(modelos_dir).as_posix()
         lines = path.read_text(encoding="utf-8").splitlines()
         if path.parent == modelos_dir and len(lines) > _MAX_SINGLE_FILE_MODELO_LINES:

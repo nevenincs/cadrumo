@@ -240,6 +240,34 @@ class ModeloCasillasReport(BaseModel):
     rows: tuple[ModeloCasillaRow, ...]
 
 
+BindingSelectorQueryValue = str | int | bool | tuple[str, ...]
+
+
+class BindingSelectorQueryEntry(BaseModel):
+    """One normalized binding-selector entry on the public query surface."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    key: str = Field(min_length=1)
+    value: BindingSelectorQueryValue
+
+
+class BindingSelectorQueryProjection(BaseModel):
+    """Typed public projection of a binding selector.
+
+    The stored selector remains source-family specific. Query consumers get a
+    stable, ordered entry list tagged with the binding source instead of an
+    opaque mapping payload, so the public report surface can be schema-checked
+    without pretending this is the full stored selector union.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    source: str
+    keys: tuple[str, ...]
+    entries: tuple[BindingSelectorQueryEntry, ...]
+
+
 class ModeloBindingQueryRow(BaseModel):
     """One row in a binding listing for a resolved modelo revision.
 
@@ -263,8 +291,8 @@ class ModeloBindingQueryRow(BaseModel):
             yet still be a ``decimal`` channel binding (the Modelo 100
             estimación-directa modality binding is compared against a
             numeric literal).
-        selector: Structured selector mapping the binding applies against
-            the financial-data source to aggregate its input.
+        selector: Typed public selector projection carrying the source tag and
+            ordered selector entries the binding applies against that source.
         aggregation: Optional aggregation rule applied after selection, or
             ``None`` when the selector yields a scalar directly.
         legal_refs: Regulatory citations grounding this binding's
@@ -293,7 +321,7 @@ class ModeloBindingQueryRow(BaseModel):
     Modelo 100 estimación-directa modality binding is compared against
     a numeric literal).
     """
-    selector: Mapping[str, object]
+    selector: BindingSelectorQueryProjection
     aggregation: Mapping[str, object] | None
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
@@ -949,7 +977,7 @@ def _binding_rows(revision: ModeloRevision) -> tuple[ModeloBindingQueryRow, ...]
             source=binding.source,
             typed_enum=binding.typed_enum,
             input_channel="enum" if binding.id in enum_consumed else "decimal",
-            selector=_public_mapping(binding.selector),
+            selector=_public_selector(binding.source, binding.selector),
             aggregation={"op": binding.aggregation.op.value} if binding.aggregation is not None else None,
             legal_refs=tuple(binding.legal_refs),
             source_refs=tuple(binding.source_refs),
@@ -969,8 +997,35 @@ def _query_filing_period(filing_year: int | None, period: str | None) -> Period 
     return filing_period_from_scope(filing_year, period)
 
 
+def _public_selector(source: str, selector: object) -> BindingSelectorQueryProjection:
+    if isinstance(selector, BaseModel):
+        selector = selector.model_dump(exclude={"source"}, exclude_none=True, exclude_unset=True)
+    if not isinstance(selector, Mapping):
+        raise RegistryValidationError(
+            f"binding selector projection requires a mapping or model, got {type(selector).__name__}",
+        )
+    entries = tuple(
+        BindingSelectorQueryEntry(key=str(key), value=_public_selector_value(value))
+        for key, value in sorted(selector.items(), key=lambda item: str(item[0]))
+    )
+    return BindingSelectorQueryProjection(
+        source=str(source),
+        keys=tuple(entry.key for entry in entries),
+        entries=entries,
+    )
+
+
 def _public_mapping(value: Mapping[str, object]) -> dict[str, object]:
     return {str(key): _public_value(item) for key, item in value.items()}
+
+
+def _public_selector_value(value: object) -> BindingSelectorQueryValue:
+    public_value = _public_value(value)
+    if isinstance(public_value, str | int | bool):
+        return public_value
+    if isinstance(public_value, tuple) and all(isinstance(item, str) for item in public_value):
+        return cast("tuple[str, ...]", public_value)
+    raise RegistryValidationError(f"unsupported public binding selector value {public_value!r}")
 
 
 def _public_value(value: object) -> object:
@@ -986,6 +1041,8 @@ def _public_value(value: object) -> object:
 
 
 __all__ = [
+    "BindingSelectorQueryEntry",
+    "BindingSelectorQueryProjection",
     "ModeloBindingQueryRow",
     "ModeloBindingsReport",
     "ModeloCasillaRow",

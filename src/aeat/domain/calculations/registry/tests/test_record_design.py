@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from decimal import Decimal
+from collections.abc import Iterable
 from functools import cache
 from pathlib import Path
 
@@ -13,11 +13,13 @@ from reportlab.pdfgen import canvas
 from .....core.resources import bundled_path
 from .. import (
     CasillaFieldKind,
+    RecordDesignSheet,
     build_snapshot,
     calculation_closure_legal_refs,
     load_registry_tree,
     resolve_export_layout,
 )
+from .._binding_selector_utils import BindingFixedExportSelector, binding_export_selector
 from .._record_design import (
     build_diseno_coverage_report,
     calculation_closure_record_design_metadata,
@@ -26,8 +28,8 @@ from .._record_design import (
     extract_record_design,
     extract_record_design_pdf,
     extract_record_design_pdf_bytes,
-    extract_record_design_workbook,
 )
+from .._schema import DataBindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -41,6 +43,17 @@ def _committed_registry_tree():
     return load_registry_tree(bundled_path("registry", "aeat"))
 
 
+@cache
+def _official_record_design_sheets(path: Path) -> tuple[RecordDesignSheet, ...]:
+    return extract_record_design(path)
+
+
+def _official_record_designs(paths: tuple[Path, ...]) -> dict[Path, tuple[RecordDesignSheet, ...]]:
+    # The PDF path is backed by pypdfium2; keep corpus parsing serial to
+    # avoid native-library crashes while still deduplicating repeated reads.
+    return {path: _official_record_design_sheets(path) for path in paths}
+
+
 def _modelo_131_snapshot(*, filing_year: int, period: str = "1T"):
     modelos, catalogues = _committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "131")
@@ -48,7 +61,7 @@ def _modelo_131_snapshot(*, filing_year: int, period: str = "1T"):
 
 
 def test_modelo_131_current_record_design_exposes_dpa_and_did_records() -> None:
-    sheets = {sheet.name: sheet for sheet in extract_record_design_workbook(_MODELO_131_CURRENT)}
+    sheets = {sheet.name: sheet for sheet in _official_record_design_sheets(_MODELO_131_CURRENT)}
 
     assert tuple(sheets) == ("Pág. 0", "Pág. 1", "DPA", "DID")
     assert len(sheets["Pág. 1"].fields) == 71
@@ -70,7 +83,9 @@ def test_modelo_131_current_record_design_exposes_dpa_and_did_records() -> None:
 
 
 def test_modelo_840_record_design_pdf_reuses_record_design_sheet_model() -> None:
-    sheets = {sheet.name: sheet for sheet in extract_record_design_pdf(_record_design_pdf("modelo_840", "orden-hac"))}
+    sheets = {
+        sheet.name: sheet for sheet in _official_record_design_sheets(_record_design_pdf("modelo_840", "orden-hac"))
+    }
 
     page_one = sheets["Pág. 1"]
     assert len(page_one.fields) == 106
@@ -165,7 +180,8 @@ def test_generated_record_design_pdf_rejects_inverted_position_ranges(tmp_path: 
 
 def test_modelo_190_record_design_pdf_extracts_narrative_type_one_and_two_records() -> None:
     sheets = {
-        sheet.name: sheet for sheet in extract_record_design_pdf(_record_design_pdf("modelo_190", "orden-hac-1431"))
+        sheet.name: sheet
+        for sheet in _official_record_design_sheets(_record_design_pdf("modelo_190", "orden-hac-1431"))
     }
 
     declarante = sheets["Tipo 1 - Registro De Declarante"]
@@ -191,7 +207,8 @@ def test_modelo_190_record_design_pdf_extracts_narrative_type_one_and_two_record
 
 def test_modelo_193_record_design_pdf_preserves_split_field_titles_across_lines() -> None:
     sheets = {
-        sheet.name: sheet for sheet in extract_record_design_pdf(_record_design_pdf("modelo_193", "orden-hac-1430"))
+        sheet.name: sheet
+        for sheet in _official_record_design_sheets(_record_design_pdf("modelo_193", "orden-hac-1430"))
     }
     declarante = sheets["Tipo 1 - Registro De Declarante"]
 
@@ -203,7 +220,7 @@ def test_modelo_193_record_design_pdf_preserves_split_field_titles_across_lines(
 
 
 def test_modelo_347_record_design_pdf_keeps_distinct_type_two_layouts() -> None:
-    sheets = extract_record_design_pdf(_record_design_pdf("modelo_347", "orden-hac-1431"))
+    sheets = _official_record_design_sheets(_record_design_pdf("modelo_347", "orden-hac-1431"))
 
     assert [sheet.name for sheet in sheets] == [
         "Tipo 1 - Registro De Declarante",
@@ -219,7 +236,7 @@ def test_modelo_347_record_design_pdf_keeps_distinct_type_two_layouts() -> None:
 
 
 def test_modelo_347_positional_chart_pdf_extracts_reviewable_record_data() -> None:
-    sheets = extract_record_design_pdf(_record_design_pdf("modelo_347", "2008-y-2009"))
+    sheets = _official_record_design_sheets(_record_design_pdf("modelo_347", "2008-y-2009"))
 
     assert [sheet.name for sheet in sheets] == [
         "Tipo 1 - Registro De Declarante",
@@ -263,7 +280,7 @@ def test_generated_non_table_pdf_does_not_activate_visual_chart_fallback(tmp_pat
 def test_record_design_pdf_corpus_is_discovered_and_parseable() -> None:
     pdfs = _record_design_pdf_files()
 
-    parsed = {path.relative_to(_RECORD_DESIGN_ROOT): extract_record_design_pdf(path) for path in pdfs}
+    parsed = {path.relative_to(_RECORD_DESIGN_ROOT): sheets for path, sheets in _official_record_designs(pdfs).items()}
 
     assert pdfs
     assert all(parsed.values())
@@ -278,7 +295,9 @@ def test_registered_record_design_sources_are_discovered_and_parseable() -> None
         if source.kind == "record_design"
     }
 
-    parsed = {source_id: extract_record_design(path) for source_id, path in sorted(sources.items())}
+    source_items = tuple(sorted(sources.items()))
+    parsed_by_path = _official_record_designs(tuple(path for _source_id, path in source_items))
+    parsed = {source_id: parsed_by_path[path] for source_id, path in source_items}
 
     assert sources
     assert all(parsed.values())
@@ -632,7 +651,7 @@ def test_modelo_131_record_design_revision_shapes_are_read_from_official_workboo
     workbook_name: str,
     expected_sheets: tuple[str, ...],
 ) -> None:
-    sheets = extract_record_design_workbook(Path(_MODELO_131_WORKBOOK_ROOT / workbook_name))
+    sheets = _official_record_design_sheets(_MODELO_131_WORKBOOK_ROOT / workbook_name)
 
     assert tuple(sheet.name for sheet in sheets) == expected_sheets
 
@@ -645,9 +664,9 @@ def test_modelo_131_record_design_revision_shapes_are_read_from_official_workboo
     ),
 )
 def test_modelo_131_recent_record_designs_share_coordinates_but_not_source_text(workbook_name: str) -> None:
-    current = {sheet.name: sheet for sheet in extract_record_design_workbook(_MODELO_131_CURRENT)}
+    current = {sheet.name: sheet for sheet in _official_record_design_sheets(_MODELO_131_CURRENT)}
     candidate = {
-        sheet.name: sheet for sheet in extract_record_design_workbook(Path(_MODELO_131_WORKBOOK_ROOT / workbook_name))
+        sheet.name: sheet for sheet in _official_record_design_sheets(_MODELO_131_WORKBOOK_ROOT / workbook_name)
     }
 
     for sheet_name in ("Pág. 1", "DPA", "DID"):
@@ -684,7 +703,7 @@ def test_modelo_131_registry_bindings_cover_official_structured_records(
     source_ref: str,
 ) -> None:
     snapshot = _modelo_131_snapshot(filing_year=filing_year)
-    sheets = {sheet.name: sheet for sheet in extract_record_design_workbook(_MODELO_131_WORKBOOK_ROOT / workbook_name)}
+    sheets = {sheet.name: sheet for sheet in _official_record_design_sheets(_MODELO_131_WORKBOOK_ROOT / workbook_name)}
 
     official_fields = {
         (sheet_name, field.offset, field.length, "integer" if field.type_code == "Num" else "text")
@@ -693,35 +712,37 @@ def test_modelo_131_registry_bindings_cover_official_structured_records(
         if _is_structured_input_field(field.description)
     }
     registry_bindings = [
-        binding for binding in snapshot.revision.bindings if binding.selector.get("record") in {"DPA", "DID"}
+        (binding, selector)
+        for binding, selector in _fixed_export_selectors(snapshot.revision.bindings)
+        if selector.record in {"DPA", "DID"}
     ]
     registry_fields = {
         (
-            str(binding.selector["record"]),
-            _selector_int(binding.selector["offset"]),
-            _selector_int(binding.selector["length"]),
-            str(binding.selector["data_type"]),
+            selector.record,
+            selector.offset,
+            selector.length,
+            selector.data_type,
         )
-        for binding in registry_bindings
+        for _binding, selector in registry_bindings
     }
 
     assert registry_fields == official_fields
-    assert all(source_ref in binding.source_refs for binding in registry_bindings)
-    assert all("rd-439-2007:art-110" in binding.legal_refs for binding in registry_bindings)
+    assert all(source_ref in binding.source_refs for binding, _selector in registry_bindings)
+    assert all("rd-439-2007:art-110" in binding.legal_refs for binding, _selector in registry_bindings)
 
 
 def test_modelo_131_2024_dpa_territorial_reduction_fields_carry_specific_legal_basis() -> None:
     snapshot = _modelo_131_snapshot(filing_year=2024, period="4T")
     sheets = {
         sheet.name: sheet
-        for sheet in extract_record_design_workbook(
+        for sheet in _official_record_design_sheets(
             _MODELO_131_WORKBOOK_ROOT / "06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx",
         )
     }
     bindings = {
-        (_selector_int(binding.selector["offset"]), _selector_int(binding.selector["length"])): binding
-        for binding in snapshot.revision.bindings
-        if binding.selector.get("record") == "DPA"
+        (selector.offset, selector.length): binding
+        for binding, selector in _fixed_export_selectors(snapshot.revision.bindings)
+        if selector.record == "DPA"
     }
 
     for field in sheets["DPA"].fields:
@@ -751,7 +772,7 @@ def test_modelo_131_registry_bindings_cover_official_page_one_structured_fields(
     snapshot = _modelo_131_snapshot(filing_year=filing_year)
     page = next(
         sheet
-        for sheet in extract_record_design_workbook(_MODELO_131_WORKBOOK_ROOT / workbook_name)
+        for sheet in _official_record_design_sheets(_MODELO_131_WORKBOOK_ROOT / workbook_name)
         if sheet.name == "Pág. 1"
     )
 
@@ -766,12 +787,12 @@ def test_modelo_131_registry_bindings_cover_official_page_one_structured_fields(
     }
     registry_fields = {
         (
-            _selector_int(binding.selector["offset"]),
-            _selector_int(binding.selector["length"]),
-            str(binding.selector["data_type"]),
+            selector.offset,
+            selector.length,
+            selector.data_type,
         )
-        for binding in snapshot.revision.bindings
-        if binding.selector.get("record") == "page_1"
+        for _binding, selector in _fixed_export_selectors(snapshot.revision.bindings)
+        if selector.record == "page_1"
     }
 
     assert registry_fields == official_fields
@@ -800,37 +821,39 @@ def test_modelo_131_page_one_la_palma_fields_are_year_scoped(
     snapshot = _modelo_131_snapshot(filing_year=filing_year)
     page = next(
         sheet
-        for sheet in extract_record_design_workbook(_MODELO_131_WORKBOOK_ROOT / workbook_name)
+        for sheet in _official_record_design_sheets(_MODELO_131_WORKBOOK_ROOT / workbook_name)
         if sheet.name == "Pág. 1"
     )
     bindings = {
-        (_selector_int(binding.selector["offset"]), _selector_int(binding.selector["length"])): binding
-        for binding in snapshot.revision.bindings
-        if binding.selector.get("record") == "page_1"
+        (selector.offset, selector.length): (binding, selector)
+        for binding, selector in _fixed_export_selectors(snapshot.revision.bindings)
+        if selector.record == "page_1"
     }
 
     for field in page.fields:
         if "Palma" not in field.description or not _is_page_one_structured_input_field(field.description):
             continue
-        binding = bindings[(field.offset, field.length)]
+        binding, selector = bindings[(field.offset, field.length)]
         if "RENTAS OBTENIDAS" in field.description or "Deducción por rentas obtenidas" in field.description:
-            assert "la-palma" in str(binding.selector["field"])
+            assert selector.field is not None
+            assert "la-palma" in selector.field
         assert palma_legal_ref in binding.legal_refs
 
 
 def test_modelo_131_current_page_one_agrarian_fields_preserve_territorial_meaning() -> None:
     snapshot = _modelo_131_snapshot(filing_year=2026)
-    page = next(sheet for sheet in extract_record_design_workbook(_MODELO_131_CURRENT) if sheet.name == "Pág. 1")
+    page = next(sheet for sheet in _official_record_design_sheets(_MODELO_131_CURRENT) if sheet.name == "Pág. 1")
     descriptions = {(field.offset, field.length): field.description for field in page.fields}
 
-    for binding in snapshot.revision.bindings:
-        if binding.selector.get("record") != "page_1":
+    for _binding, selector in _fixed_export_selectors(snapshot.revision.bindings):
+        if selector.record != "page_1":
             continue
-        offset = _selector_int(binding.selector["offset"])
+        offset = selector.offset
         if offset not in {424, 434, 448, 458}:
             continue
-        description = descriptions[(offset, _selector_int(binding.selector["length"]))]
-        field_name = str(binding.selector["field"])
+        description = descriptions[(offset, selector.length)]
+        assert selector.field is not None
+        field_name = selector.field
         if "RENTAS OBTENIDAS EN CEUTA" in description:
             assert "ceuta-melilla" in field_name
         else:
@@ -847,25 +870,22 @@ def test_modelo_131_export_records_derive_fields_from_reviewed_bindings(filing_y
         if record.binding_record is None:
             continue
         expected = {
-            binding.id: binding
-            for binding in bindings.values()
-            if binding.selector.get("record") == record.binding_record
+            binding.id: selector
+            for binding, selector in _fixed_export_selectors(bindings.values())
+            if selector.record == record.binding_record
         }
         derived = {field.binding: field for field in record.fields if field.kind is CasillaFieldKind.BINDING}
 
         assert expected
         assert set(derived) == set(expected)
         assert all(
-            derived[binding_id].offset == _selector_int(binding.selector["offset"])
-            for binding_id, binding in expected.items()
+            derived[binding_id].offset == selector.offset for binding_id, selector in expected.items()
         )
         assert all(
-            derived[binding_id].length == _selector_int(binding.selector["length"])
-            for binding_id, binding in expected.items()
+            derived[binding_id].length == selector.length for binding_id, selector in expected.items()
         )
         assert all(
-            derived[binding_id].data_type == str(binding.selector["data_type"])
-            for binding_id, binding in expected.items()
+            derived[binding_id].data_type == selector.data_type for binding_id, selector in expected.items()
         )
 
 
@@ -937,10 +957,15 @@ def _page_one_data_type(offset: int, type_code: str) -> str:
     return "decimal"
 
 
-def _selector_int(value: str | int | Decimal | tuple[str, ...]) -> int:
-    if isinstance(value, tuple):
-        raise AssertionError(f"selector value {value!r} is not numeric")
-    return int(value)
+def _fixed_export_selectors(
+    bindings: Iterable[DataBindingDefinition],
+) -> tuple[tuple[DataBindingDefinition, BindingFixedExportSelector], ...]:
+    members: list[tuple[DataBindingDefinition, BindingFixedExportSelector]] = []
+    for binding in bindings:
+        selector = binding_export_selector(binding)
+        if isinstance(selector, BindingFixedExportSelector):
+            members.append((binding, selector))
+    return tuple(members)
 
 
 def _record_design_pdf_files() -> tuple[Path, ...]:

@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
 from decimal import Decimal
 from typing import Annotated
 
-from pydantic import BeforeValidator, Field
+from pydantic import BaseModel, BeforeValidator, Field, SerializeAsAny
 
 from ....core import IBAN_SHAPE_RE, StandardPeriodCode, iban_mod_97
 from ....core.decimal import coerce_decimal
@@ -16,6 +15,7 @@ from ._errors import RegistryValidationError
 
 __all__ = [
     "BicString",
+    "BindingSelector",
     "BindingSelectorMap",
     "BindingSelectorValue",
     "CCAACode",
@@ -385,32 +385,22 @@ WorkbookCellRefStr = Annotated[str, BeforeValidator(_validate_workbook_cell_ref_
 
 
 BindingSelectorValue = str | int | DecimalValue | bool | tuple[str, ...]
-"""Closed union of the value shapes a binding-selector entry can hold.
+"""Closed union of the value shapes a raw binding-selector entry can hold."""
 
-The selector field on :class:`DataBindingDefinition` and related
-selector fields on relation definitions store this union. Per-source
-typed selector models (declared in :mod:`_bindings`) consume the
-raw mapping and re-validate against a strict frozen schema for the
-binding's declared ``source``; the snapshot-time
-``_validate_binding_selector_shapes`` gate runs that check on every
-binding once at snapshot build.
+BindingSelectorMap = dict[str, BindingSelectorValue]
+"""Authoring/input mapping shape for binding selectors before family hydration.
+
+Registry TOML and tests still supply selector payloads as ordinary dictionaries.
+``DataBindingDefinition`` immediately hydrates that mapping through the
+per-source selector model registered in :mod:`_bindings`, so the stored binding
+field is no longer this broad map.
 """
 
-BindingSelectorMap = Mapping[str, BindingSelectorValue]
-"""Mapping shape for an as-stored binding selector.
+BindingSelector = SerializeAsAny[BaseModel]
+"""Stored binding selector payload after source-family hydration.
 
-Named alias rather than an inline ``Mapping[str, ...]`` so consumer
-code can express the type intent and discover the per-source typed
-companion models declared in :mod:`_bindings` via the alias name.
-
-The mapping is the as-stored READ shape, but it is no longer free-form
-at construction: ``DataBindingDefinition._validate_selector_shape``
-(F8) dispatches on the binding's ``source`` through the per-family
-selector models (``_BINDING_SELECTOR_REGISTRY``, surfaced by
-``selector_model_for_source``) and re-validates this mapping against
-the registered schema the moment a binding is built — so a misshapen
-selector for a typed source now fails at model construction, not only
-at snapshot build. The op/fact cross-invariants (which read the
-separate ``aggregation`` field) remain enforced by
-``validate_binding_selector_shape`` at snapshot build.
+The concrete value is one of the frozen per-source pydantic selector models
+registered by ``selector_model_for_source``. ``SerializeAsAny`` preserves the
+concrete model's fields during ``model_dump``/``model_dump_json`` instead of
+serialising through the empty ``BaseModel`` surface.
 """

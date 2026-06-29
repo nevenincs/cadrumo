@@ -2,39 +2,25 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
+from datetime import date
 from pathlib import Path
 
 import pytest
 
-from .....core.config import Settings
 from .....core.paths import PROJECT_ROOT
 from .....core.resources import bundled_path
-from .._citation_blocklist import _KNOWN_BAD_CITATIONS, KnownBadCitation, find_known_bad
 from .._corpus_catalogue import verify_source_catalogue, verify_source_file
 from .._coverage import audit_registry_model_law_coverage
-from .._errors import RegistryValidationError
 from .._legal import verify_legal_catalogue
-from .._loader import load_registry_tree
-from .._schema import LegalReference, RegistryCatalogues, SourceReference
 from .._validate import RegistryValidator
+from ._catalogue_verification_support import _catalogues, _registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_FORMAL_WITHHOLDING_MODELOS = frozenset({"111", "115", "123", "180", "190", "193"})
-_M100_WITHHOLDING_IMPORT_SECTIONS = frozenset({"bindings", "relations", "dependency_classifications"})
-_FORMAL_WITHHOLDING_ARTICLE_REF = "rd-439-2007:art-108"
-_FRACTIONAL_PAYMENT_ARTICLE_REF = "rd-439-2007:art-109"
-
-
-def _catalogues() -> RegistryCatalogues:
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    return catalogues
-
 
 def test_committed_registry_tree_has_coherent_shared_catalogues() -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _registry_tree()
 
     assert len(modelos) >= 5, "committed registry must declare several modelos"
     assert len(catalogues.legal) > 0, "shared legal catalogue must be non-empty"
@@ -46,7 +32,7 @@ def test_committed_registry_tree_has_coherent_shared_catalogues() -> None:
 
 
 def test_committed_registry_tree_has_required_model_law_coverage() -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _registry_tree()
 
     audit = audit_registry_model_law_coverage(modelos, catalogues, source_root=bundled_path())
 
@@ -61,7 +47,7 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
 
 
 def test_committed_aeat_record_design_sources_match_corpus_manifests() -> None:
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = _catalogues()
     checked: list[str] = []
 
     for source in catalogues.sources.values():
@@ -92,7 +78,7 @@ def test_committed_aeat_record_design_sources_match_corpus_manifests() -> None:
 
 
 def test_modelo_100_record_design_sources_match_manifest() -> None:
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = _catalogues()
     manifest_path = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_100", "manifest.json")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     sources_by_path = {source.corpus_path: source for source in catalogues.sources.values()}
@@ -122,7 +108,7 @@ def test_modelo_100_record_design_sources_match_manifest() -> None:
 
 
 def test_renta_manual_sources_match_manifest() -> None:
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = _catalogues()
     sources_by_path = {source.corpus_path: source for source in catalogues.sources.values()}
     manual_roots = (
         bundled_path("corpus", "manuals", "renta", "2025", "part1"),
@@ -151,7 +137,7 @@ def test_renta_manual_sources_match_manifest() -> None:
 
 
 def test_renta_economic_activity_legal_basis_links_to_corpus() -> None:
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = _catalogues()
 
     assert {
         "ley-35-2006:art-27",
@@ -163,443 +149,533 @@ def test_renta_economic_activity_legal_basis_links_to_corpus() -> None:
     verify_legal_catalogue(catalogues.legal, source_root=bundled_path())
 
 
-def test_ley_31_2022_da_70_rib_reference_links_to_bundled_boe_corpus() -> None:
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    reference = catalogues.legal["ley-31-2022:da-70"]
+@pytest.mark.parametrize(
+    ("ref_id", "effective_from", "required_text"),
+    (
+        (
+            "ley-35-2006:art-17",
+            date(2020, 2, 6),
+            (
+                "Rendimientos íntegros del trabajo.",
+                "contraprestaciones o utilidades",
+                "trabajo personal o de la relación laboral o estatutaria",
+                "Las pensiones y haberes pasivos percibidos",
+                "se calificarán como rendimientos de actividades económicas",
+            ),
+        ),
+        (
+            "ley-35-2006:art-18",
+            date(2015, 1, 1),
+            (
+                "Porcentajes de reducción aplicables a determinados rendimientos del trabajo.",
+                "El 30 por ciento de reducción",
+                "período de generación superior a dos años",
+                "300.000 euros anuales",
+            ),
+        ),
+        (
+            "ley-35-2006:art-19",
+            date(2015, 1, 1),
+            (
+                "Rendimiento neto del trabajo.",
+                "disminuir el rendimiento íntegro en el importe de los gastos deducibles",
+                "cotizaciones a la Seguridad Social",
+                "gastos de defensa jurídica",
+                "2.000 euros anuales",
+            ),
+        ),
+        (
+            "ley-35-2006:art-20",
+            date(2024, 1, 1),
+            (
+                "Reducción por obtención de rendimientos del trabajo.",
+                "rendimientos netos del trabajo inferiores a 19.747,5 euros",
+                "no tengan rentas, excluidas las exentas, distintas de las del trabajo superiores a 6.500 euros",
+                "iguales o inferiores a 14.852 euros: 7.302 euros anuales",
+                "multiplicar por 1,75 la diferencia",
+                "multiplicar por 1,14 la diferencia",
+                "el saldo resultante no podrá ser negativo",
+            ),
+        ),
+        (
+            "ley-35-2006:art-22",
+            date(2007, 1, 1),
+            (
+                "Rendimientos íntegros del capital inmobiliario.",
+                "bienes inmuebles rústicos y urbanos",
+                "se deriven del arrendamiento",
+                "importe que por todos los conceptos deba satisfacer",
+            ),
+        ),
+        (
+            "ley-35-2006:art-23",
+            date(2024, 1, 1),
+            (
+                "Gastos deducibles y reducciones.",
+                "gastos necesarios para la obtención de los rendimientos",
+                "el 3 por ciento sobre el mayor",
+                "el coste de adquisición satisfecho o el valor catastral",
+                "En un 90 por ciento",
+                "En un 70 por ciento",
+                "En un 60 por ciento",
+                "En un 50 por ciento",
+            ),
+        ),
+        (
+            "ley-35-2006:art-24",
+            date(2007, 1, 1),
+            (
+                "Rendimiento en caso de parentesco.",
+                "sea el cónyuge o un pariente",
+                "hasta el tercer grado inclusive",
+                "no podrá ser inferior al que resulte de las reglas del artículo 85",
+            ),
+        ),
+        (
+            "ley-35-2006:art-25",
+            date(2015, 1, 1),
+            (
+                "Rendimientos íntegros del capital mobiliario.",
+                "Rendimientos obtenidos por la participación en los fondos propios",
+                "Los dividendos",
+                "Rendimientos obtenidos por la cesión a terceros de capitales propios",
+                "intereses y cualquier otra forma de retribución",
+                "Otros rendimientos del capital mobiliario",
+            ),
+        ),
+        (
+            "ley-35-2006:art-26",
+            date(2015, 1, 1),
+            (
+                "Gastos deducibles y reducciones.",
+                "gastos de administración y depósito de valores negociables",
+                "arrendamiento de bienes muebles, negocios o minas",
+                "se reducirán en un 30 por ciento",
+                "300.000 euros anuales",
+            ),
+        ),
+    ),
+)
+def test_lirpf_work_and_capital_income_foundations_link_to_full_boe_corpus(
+    ref_id: str,
+    effective_from: date,
+    required_text: tuple[str, ...],
+) -> None:
+    catalogues = _catalogues()
+    reference = catalogues.legal[ref_id]
+    article = ref_id.rsplit("-", 1)[-1]
 
-    assert reference.corpus_ref == "corpus/normatives/html/ley-31-2022-da-70.html#da-70"
-    assert reference.permalink.endswith("#da-70")
-    assert reference.required_text == (
-        "Reserva para inversiones en las Illes Balears",
-        "El importe de la reserva pendiente de materialización",
-        "Los contribuyentes del Impuesto sobre la Renta de las Personas Físicas",
-        "tendrán derecho a una deducción en la cuota íntegra",
-    )
+    assert reference.corpus_ref == f"corpus/normatives/html/ley-35-2006.html#a{article}"
+    assert reference.effective_from == effective_from
+    assert reference.required_text == required_text
+    if ref_id == "ley-35-2006:art-20":
+        assert reference.notes is not None
+        assert "effects from 2024-01-01" in reference.notes
     verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
 
 
-def test_rd_439_art_109_legal_basis_links_to_pago_fraccionado_corpus() -> None:
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    reference = catalogues.legal["rd-439-2007:art-109"]
+@pytest.mark.parametrize(
+    ("ref_id", "effective_from", "required_text"),
+    (
+        (
+            "ley-35-2006:art-27",
+            date(2015, 1, 1),
+            (
+                "Rendimientos íntegros de actividades económicas",
+                "ordenación por cuenta propia de medios de producción",
+                "arrendamiento de inmuebles se realiza como actividad económica",
+            ),
+        ),
+        (
+            "ley-35-2006:art-28",
+            date(2007, 1, 1),
+            (
+                "Reglas generales de cálculo del rendimiento neto",
+                "rendimiento neto de las actividades económicas",
+                "según las normas del Impuesto sobre Sociedades",
+                "ganancias o pérdidas patrimoniales derivadas de los elementos patrimoniales afectos",
+            ),
+        ),
+        (
+            "ley-35-2006:art-30",
+            date(2018, 1, 1),
+            (
+                "Normas para la determinación del rendimiento neto en estimación directa",
+                "método de estimación directa",
+                "normal y la simplificada",
+                "gastos de difícil justificación",
+            ),
+        ),
+        (
+            "ley-35-2006:art-31",
+            date(2016, 1, 1),
+            (
+                "Normas para la determinación del rendimiento neto en estimación objetiva",
+                "método de estimación objetiva",
+                "salvo que renuncien a su aplicación",
+                "signos, índices o módulos",
+            ),
+        ),
+        (
+            "ley-35-2006:art-32",
+            date(2023, 1, 1),
+            (
+                "Reducciones.",
+                "rendimientos netos con un período de generación superior a dos años",
+                "el saldo resultante no podrá ser negativo",
+                "inicien el ejercicio de una actividad económica",
+            ),
+        ),
+    ),
+)
+def test_lirpf_economic_activity_chapter_links_to_full_boe_corpus(
+    ref_id: str,
+    effective_from: date,
+    required_text: tuple[str, ...],
+) -> None:
+    catalogues = _catalogues()
+    reference = catalogues.legal[ref_id]
+    article = ref_id.rsplit("-", 1)[-1]
 
-    assert reference.corpus_ref == "corpus/normatives/html/rd-439-2007-art-109.html#a109"
-    assert reference.notes is not None
-    assert "obligados al pago fraccionado" in reference.notes.lower()
-    assert "obligaciones formales del retenedor" not in reference.notes.lower()
+    assert reference.corpus_ref == f"corpus/normatives/html/ley-35-2006.html#a{article}"
+    assert reference.effective_from == effective_from
+    assert reference.required_text == required_text
     verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
 
-    corpus = json.loads(bundled_path("corpus", "normatives", "rd-439-2007.json").read_text(encoding="utf-8"))
-    article_109 = next(article for article in corpus["articulos"] if article["numero"] == "109")
 
-    assert article_109["titulo"]["es"] == "Obligados al pago fraccionado"
-    assert "autoliquidar e ingresar pagos fraccionados" in article_109["summary"]["es"]
-    assert "obligaciones formales" not in article_109["summary"]["es"].lower()
-
-
-def test_formal_withholding_modelos_do_not_cite_fractional_payment_article() -> None:
-    modelos_root = bundled_path("registry", "aeat", "modelos")
-    offenders: list[str] = []
-    missing_formal_article: list[str] = []
-
-    for modelo_id in sorted(_FORMAL_WITHHOLDING_MODELOS):
-        modelo_root = modelos_root / modelo_id
-        assert modelo_root.is_dir(), modelo_id
-        has_formal_article = False
-
-        for path in sorted(modelo_root.rglob("*.toml")):
-            text = path.read_text(encoding="utf-8")
-            if _FRACTIONAL_PAYMENT_ARTICLE_REF in text:
-                offenders.append(path.relative_to(modelos_root).as_posix())
-            if _FORMAL_WITHHOLDING_ARTICLE_REF in text:
-                has_formal_article = True
-
-        if not has_formal_article:
-            missing_formal_article.append(modelo_id)
-
-    assert offenders == []
-    assert missing_formal_article == []
-
-
-def test_modelo_100_withholding_imports_use_formal_withholding_article() -> None:
-    modelo_root = bundled_path("registry", "aeat", "modelos", "100")
-    offenders: list[str] = []
-    missing_formal_article: list[str] = []
-    checked: list[str] = []
-
-    for path in sorted(modelo_root.rglob("*.toml")):
-        if not (set(path.parts) & _M100_WITHHOLDING_IMPORT_SECTIONS):
-            continue
-
-        text = path.read_text(encoding="utf-8")
-        if "retenciones" not in text.lower():
-            continue
-        if not any(f'source_modelo = "{modelo_id}"' in text for modelo_id in _FORMAL_WITHHOLDING_MODELOS):
-            continue
-
-        rel_path = path.relative_to(modelo_root).as_posix()
-        checked.append(rel_path)
-        if _FRACTIONAL_PAYMENT_ARTICLE_REF in text:
-            offenders.append(rel_path)
-        if _FORMAL_WITHHOLDING_ARTICLE_REF not in text:
-            missing_formal_article.append(rel_path)
-
-    assert len(checked) == 72
-    assert offenders == []
-    assert missing_formal_article == []
-
-
-def test_modelo_100_retention_credit_formulas_do_not_cite_fractional_payment_article() -> None:
-    modelo_root = bundled_path("registry", "aeat", "modelos", "100")
-    offenders: list[str] = []
-    checked: list[str] = []
-
-    for path in sorted(modelo_root.rglob("formulas/*.toml")):
-        text = path.read_text(encoding="utf-8")
-        formula_id = next((line for line in text.splitlines() if line.startswith("id = ")), "")
-        if "retenciones" not in formula_id.lower():
-            continue
-
-        rel_path = path.relative_to(modelo_root).as_posix()
-        checked.append(rel_path)
-        if _FRACTIONAL_PAYMENT_ARTICLE_REF in text:
-            offenders.append(rel_path)
-
-    assert "revisions/2025/formulas/0068-renta-2025-retenciones-arrendamientos-urbanos.toml" in checked
-    assert offenders == []
-
-
-def _legal_reference(
-    *,
-    ref_id: str = "rd-439-2007:art-110",
-    kind: str = "real_decreto",
-    article: str = "110",
-    notes: str | None = None,
-) -> LegalReference:
-    reference = next(iter(_catalogues().legal.values()))
-    return reference.model_copy(
-        update={
-            "id": ref_id,
-            "kind": kind,
-            "article": article,
-            "notes": reference.notes if notes is None else notes,
-        },
-    )
-
-
-def _source_reference(path: str, payload: bytes) -> SourceReference:
-    source = next(iter(_catalogues().sources.values()))
-    return source.model_copy(
-        update={
-            "corpus_path": path,
-            "sha256": hashlib.sha256(payload).hexdigest(),
-            "bytes": len(payload),
-        },
-    )
-
-
-def test_verify_source_file_checks_hash_and_size(tmp_path: Path) -> None:
-    payload = b"official"
-    source_path = tmp_path / "corpus" / "source.xlsx"
-    source_path.parent.mkdir(parents=True)
-    source_path.write_bytes(payload)
-
-    reference = _source_reference("corpus/source.xlsx", payload)
-    assert source_path.read_bytes() == payload
-    assert reference.sha256, "reference must carry a hash for verification to be meaningful"
-    result = verify_source_file(tmp_path, reference)
-    assert result is None
-
-
-def test_verify_source_file_rejects_hash_mismatch(tmp_path: Path) -> None:
-    source_path = tmp_path / "corpus" / "source.xlsx"
-    source_path.parent.mkdir(parents=True)
-    source_path.write_bytes(b"changed")
-
-    with pytest.raises(RegistryValidationError, match=r"byte count mismatch|sha256 mismatch"):
-        verify_source_file(tmp_path, _source_reference("corpus/source.xlsx", b"official"))
-
-
-def test_verify_source_file_rejects_path_escape(tmp_path: Path) -> None:
-    source = _source_reference("../outside.xlsx", b"x")
-
-    with pytest.raises(RegistryValidationError, match="escapes repository root"):
-        verify_source_file(tmp_path, source)
-
-
-def test_verify_source_catalogue_checks_every_entry(tmp_path: Path) -> None:
-    payload = b"official"
-    source_path = tmp_path / "corpus" / "source.xlsx"
-    source_path.parent.mkdir(parents=True)
-    source_path.write_bytes(payload)
-
-    catalogue = {"aeat-source": _source_reference("corpus/source.xlsx", payload)}
-    assert len(catalogue) == 1
-    result = verify_source_catalogue(tmp_path, catalogue)
-    assert result is None
-
-
-def test_verify_legal_catalogue_rejects_known_bad_citation_role() -> None:
-    reference = _legal_reference(
-        ref_id="ley-35-2006:art-103",
-        kind="ley",
-        article="103",
-        notes="cuota diferencial",
-    )
-
-    with pytest.raises(RegistryValidationError, match="known-bad citation"):
-        verify_legal_catalogue({reference.id: reference})
-
-
-@pytest.mark.parametrize("blocked", _KNOWN_BAD_CITATIONS)
-def test_verify_legal_catalogue_rejects_every_blocklisted_role(blocked: KnownBadCitation) -> None:
-    reference = _legal_reference(
-        ref_id=f"{blocked.source}:{blocked.article}",
-        kind=blocked.source,
-        article=blocked.article,
-        notes=blocked.role_substring,
-    )
-    text = " ".join(part for part in (reference.section, reference.notes) if part)
-
-    assert find_known_bad(blocked.source, blocked.article, text) == blocked
-    with pytest.raises(RegistryValidationError, match="known-bad citation"):
-        verify_legal_catalogue({reference.id: reference})
-
-
-def test_known_bad_citation_matching_is_diacritic_insensitive() -> None:
-    blocked = find_known_bad("ley", "77", "cuota integra autonomica")
-
-    assert blocked is not None
-    assert blocked.role_substring == "cuota íntegra autonómica"
-
-
-def test_known_bad_citation_matching_allows_different_role_for_same_article() -> None:
-    assert find_known_bad("ley", "77", "cuota líquida autonómica total") is None
-
-
-def test_verify_legal_catalogue_rejects_key_mismatch() -> None:
-    reference = _legal_reference()
-
-    with pytest.raises(RegistryValidationError, match="does not match reference id"):
-        verify_legal_catalogue({"other-id": reference})
-
-
-def test_verify_legal_catalogue_accepts_reviewed_reference() -> None:
-    reference = _legal_reference()
-
-    assert reference.id, "reference must have an id for verification to be meaningful"
-    result = verify_legal_catalogue({reference.id: reference})
-    assert result is None
-
-
-def test_verify_legal_catalogue_checks_required_local_corpus_text(tmp_path: Path) -> None:
-    corpus_path = tmp_path / "corpus" / "normatives" / "rd-439-2007.json"
-    corpus_path.parent.mkdir(parents=True)
-    corpus_path.write_text('{"articulos": [{"numero": "110", "text_es": "other legal text"}]}', encoding="utf-8")
-    reference = _legal_reference().model_copy(
-        update={
-            "corpus_ref": "corpus/normatives/rd-439-2007.json#art-110",
-            "required_text": ("20 por ciento del rendimiento neto",),
-        },
-    )
-
-    with pytest.raises(RegistryValidationError, match="corpus text missing required text"):
-        verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
-
-
-def test_verify_legal_catalogue_accepts_required_local_corpus_text(tmp_path: Path) -> None:
-    corpus_path = tmp_path / "corpus" / "normatives" / "rd-439-2007.json"
-    corpus_path.parent.mkdir(parents=True)
-    corpus_path.write_text(
-        '{"articulos": [{"numero": "110", "text_es": "20 por ciento del rendimiento neto"}]}',
-        encoding="utf-8",
-    )
-    reference = _legal_reference().model_copy(
-        update={
-            "corpus_ref": "corpus/normatives/rd-439-2007.json#art-110",
-            "required_text": ("20 por ciento del rendimiento neto",),
-        },
-    )
-
-    assert reference.required_text, "reference must declare required_text for the verifier to check"
-    assert corpus_path.exists(), "corpus file must be written before verification"
-    result = verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
-    assert result is None
-
-
-def test_verify_legal_catalogue_corpus_strict_false_skips_required_text(tmp_path: Path) -> None:
-    """Production authority (corpus_strict=False) must not abort on a pending required_text annotation.
-
-    This guards the forward contract: adding a required_text to any legal reference
-    must not block bindings list, work calculate, or any other user-facing verb until
-    verify_registry_tree (corpus_strict=True) is run explicitly.
-    """
-    # Corpus file exists but does NOT contain the required phrase.
-    corpus_path = tmp_path / "corpus" / "normatives" / "rd-439-2007.json"
-    corpus_path.parent.mkdir(parents=True)
-    corpus_path.write_text(
-        '{"articulos": [{"numero": "110", "text_es": "other legal text without the phrase"}]}',
-        encoding="utf-8",
-    )
-    reference = _legal_reference().model_copy(
-        update={
-            "corpus_ref": "corpus/normatives/rd-439-2007.json#art-110",
-            "required_text": ("phrase absent from corpus",),
-        },
-    )
-
-    assert reference.required_text, "reference must declare required_text for the check to be meaningful"
-    # Strict mode raises — the pending annotation IS a defect when checked explicitly.
-    with pytest.raises(RegistryValidationError, match="corpus text missing required text"):
-        verify_legal_catalogue({reference.id: reference}, source_root=tmp_path, corpus_strict=True)
-    # Non-strict mode (production authority path) must not raise.
-    result = verify_legal_catalogue({reference.id: reference}, source_root=tmp_path, corpus_strict=False)
-    assert result is None
-
-
-def test_registry_validator_corpus_strict_false_does_not_abort(tmp_path: Path) -> None:
-    """RegistryValidator(catalogue_corpus_strict=False) must not abort on a pending required_text.
-
-    Mirrors the production authority construction in _load_authority so that a
-    new required_text annotation never breaks bindings list / work calculate.
-    """
-    # Build a minimal corpus tree: one file that exists but lacks the required phrase.
-    corpus_path = tmp_path / "corpus" / "normatives" / "rd-439-2007.json"
-    corpus_path.parent.mkdir(parents=True)
-    corpus_path.write_text(
-        '{"articulos": [{"numero": "110", "text_es": "other legal text without the phrase"}]}',
-        encoding="utf-8",
-    )
-    reference = _legal_reference().model_copy(
-        update={
-            "corpus_ref": "corpus/normatives/rd-439-2007.json#art-110",
-            "required_text": ("phrase absent from corpus",),
-        },
-    )
-    # Wrap in minimal catalogues (no sources needed for this check).
-    from .._schema import RegistryCatalogues
-
-    minimal_catalogues = RegistryCatalogues(
-        legal={reference.id: reference},
-        sources={},
-    )
-
-    # Strict validator returns the corpus failure — gated functions raise from this.
-    strict = RegistryValidator(minimal_catalogues, source_root=tmp_path, catalogue_corpus_strict=True)
-    strict_failures = strict._validate_catalogues()
-    assert any("corpus text missing required text" in f for f in strict_failures), strict_failures
-
-    # Non-strict validator (production authority path) returns no failures.
-    non_strict = RegistryValidator(minimal_catalogues, source_root=tmp_path, catalogue_corpus_strict=False)
-    failures = non_strict._validate_catalogues()
-    assert failures == ()
-
-
-def test_verify_source_file_checks_manual_structure(tmp_path: Path) -> None:
-    """verify_source_file must fail if a manual_pdf source reference points to an invalid manual structure."""
-    from datetime import date
-
-    pdf_path = tmp_path / "corpus" / "manuals" / "renta" / "2020" / "part1" / "source.pdf"
-    pdf_path.parent.mkdir(parents=True)
-    payload = b"%PDF-1.4 manual structure sample bytes"
-    pdf_path.write_bytes(payload)
-
-    sha = hashlib.sha256(payload).hexdigest()
-
-    source = SourceReference(
-        id="aeat-renta-2020-manual-parte1",
-        evidence_tier="official_source_guidance",
-        authority="aeat",
-        kind="manual_pdf",
-        corpus_path="corpus/manuals/renta/2020/part1/source.pdf",
-        sha256=sha,
-        bytes=len(payload),
-        retrieved_at=date(2026, 5, 6),
-        source_url=f"{Settings.external_constants().aeat.domains.sede}/Manual.pdf",
-        review_status="reviewed",
-    )
-
-    # Check 1: Should fail because structure/manual.json is missing
-    with pytest.raises(RegistryValidationError, match="manual structure check failed"):
-        verify_source_file(tmp_path, source)
-
-    # Check 2: Write valid manual structure and it should pass
-    structure_dir = tmp_path / "corpus" / "manuals" / "renta" / "2020" / "part1" / "structure"
-    structure_dir.mkdir(parents=True)
-
-    (structure_dir / "manual.json").write_text(
-        json.dumps(
-            {
-                "manual_id": "renta",
-                "year": 2020,
-                "part": "part1",
-                "title": "Manual Renta 2020",
-                "summary": "Resumen",
-                "source_pdf_url": f"{Settings.external_constants().aeat.domains.sede}/Manual.pdf",
-                "source_html_url": None,
-                "fetched_at": "2026-05-06T00:00:00Z",
-                "definition_reviewed_by": "operator",
-                "definition_reviewed_at": "2026-06-08",
-            },
+@pytest.mark.parametrize(
+    ("ref_id", "effective_from", "required_text"),
+    (
+        (
+            "ley-35-2006:art-33",
+            date(2015, 1, 1),
+            (
+                "Concepto.",
+                "Son ganancias y pérdidas patrimoniales",
+                "variaciones en el valor del patrimonio",
+                "alteración en la composición",
+            ),
         ),
-        encoding="utf-8",
-    )
-
-    (structure_dir / "chapters.json").write_text(
-        json.dumps([{"chapter_id": "cap1", "title": "Capitulo 1", "summary": "Resumen", "sections": []}]),
-        encoding="utf-8",
-    )
-
-    verify_source_file(tmp_path, source)
-
-
-def test_verify_legal_reference_checks_manual_section_json(tmp_path: Path) -> None:
-    """verify_legal_reference must fail if a manual legal reference points to an invalid section JSON file."""
-    from datetime import date
-
-    section_path = (
-        tmp_path / "corpus" / "manuals" / "renta" / "2020" / "part1" / "structure" / "sections" / "cap1" / "sec1.json"
-    )
-    section_path.parent.mkdir(parents=True)
-    section_path.write_text("{corrupt json", encoding="utf-8")
-
-    from .._schema import LegalReference
-
-    reference = LegalReference(
-        id="renta-2020-manual:sec1",
-        evidence_tier="legal_authority",
-        authority="aeat",
-        kind="manual",
-        corpus_ref="corpus/manuals/renta/2020/part1/structure/sections/cap1/sec1.json#sec1",
-        document_id="BOE-A-2020-0000",
-        permalink=f"{Settings.external_constants().aeat.domains.sede}/",
-        published_at=date(2020, 3, 31),
-        effective_from=date(2020, 4, 1),
-        review_status="reviewed",
-        reviewed_at=date(2026, 5, 6),
-        reviewed_by="operator",
-        notes="Notes",
-    )
-
-    with pytest.raises(RegistryValidationError, match="manual section JSON validation failed"):
-        verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
-
-    section_path.write_text(
-        json.dumps(
-            {
-                "section_id": "sec1",
-                "chapter_id": "cap1",
-                "title": "Seccion 1",
-                "summary": "Resumen",
-                "prose": [],
-                "rules": [],
-                "references_sections": [],
-                "references_legal_acts": [],
-                "source": {"manual_url": f"{Settings.external_constants().aeat.domains.sede}/", "page": 1},
-                "definition_reviewed_by": "operator",
-                "definition_reviewed_at": "2026-06-08",
-            },
+        (
+            "ley-35-2006:art-34",
+            date(2007, 1, 1),
+            (
+                "Importe de las ganancias o pérdidas patrimoniales. Norma general",
+                "diferencia entre los valores de adquisición y transmisión",
+                "valor de mercado de los elementos patrimoniales",
+                "mejoras en los elementos patrimoniales transmitidos",
+            ),
         ),
-        encoding="utf-8",
-    )
+        (
+            "ley-35-2006:art-37",
+            date(2015, 1, 1),
+            (
+                "Normas específicas de valoración",
+                "acciones admitidas a negociación",
+                "valores no admitidos a negociación",
+                "instituciones de inversión colectiva",
+            ),
+        ),
+    ),
+)
+def test_lirpf_capital_gains_foundation_links_to_full_boe_corpus(
+    ref_id: str,
+    effective_from: date,
+    required_text: tuple[str, ...],
+) -> None:
+    catalogues = _catalogues()
+    reference = catalogues.legal[ref_id]
+    article = ref_id.rsplit("-", 1)[-1]
 
-    verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
+    assert reference.corpus_ref == f"corpus/normatives/html/ley-35-2006.html#a{article}"
+    assert reference.effective_from == effective_from
+    assert reference.required_text == required_text
+    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+
+
+@pytest.mark.parametrize(
+    ("ref_id", "effective_from", "required_text"),
+    (
+        (
+            "ley-35-2006:art-62",
+            date(2007, 1, 1),
+            (
+                "Cuota íntegra estatal.",
+                "La cuota íntegra estatal será la suma",
+                "artículos 63 y 66",
+                "bases liquidables general y del ahorro",
+            ),
+        ),
+        (
+            "ley-35-2006:art-63",
+            date(2021, 1, 1),
+            (
+                "Escala general del Impuesto.",
+                "base liquidable general que exceda del importe del mínimo personal y familiar",
+                "A la base liquidable general se le aplicarán los tipos",
+                "se minorará en el importe derivado de aplicar",
+                "tipo medio de gravamen general estatal",
+            ),
+        ),
+        (
+            "ley-35-2006:art-66",
+            date(2024, 12, 22),
+            (
+                "Tipos de gravamen del ahorro.",
+                "base liquidable del ahorro que exceda",
+                "A la base liquidable del ahorro se le aplicarán los tipos",
+                "se minorará en el importe derivado de aplicar",
+                "contribuyentes que tuviesen su residencia habitual en el extranjero",
+            ),
+        ),
+        (
+            "ley-35-2006:art-67",
+            date(2015, 1, 1),
+            (
+                "Cuota líquida estatal.",
+                "La cuota líquida estatal del Impuesto será el resultado de disminuir la cuota íntegra estatal",
+                "deducción por inversión en empresas de nueva o reciente creación",
+                "50 por ciento del importe total de las deducciones",
+                "no podrá ser negativo",
+            ),
+        ),
+    ),
+)
+def test_lirpf_state_quota_chain_links_to_full_boe_corpus(
+    ref_id: str,
+    effective_from: date,
+    required_text: tuple[str, ...],
+) -> None:
+    catalogues = _catalogues()
+    reference = catalogues.legal[ref_id]
+    article = ref_id.rsplit("-", 1)[-1]
+
+    assert reference.corpus_ref == f"corpus/normatives/html/ley-35-2006.html#a{article}"
+    assert reference.effective_from == effective_from
+    assert reference.required_text == required_text
+    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+
+
+@pytest.mark.parametrize(
+    ("ref_id", "effective_from", "required_text"),
+    (
+        (
+            "ley-35-2006:art-73",
+            date(2007, 1, 1),
+            (
+                "Cuota íntegra autonómica.",
+                "La cuota íntegra autonómica del Impuesto será la suma",
+                "artículos 74 y 76",
+                "base liquidable general y del ahorro",
+            ),
+        ),
+        (
+            "ley-35-2006:art-74",
+            date(2011, 1, 12),
+            (
+                "Escala autonómica del Impuesto.",
+                "base liquidable general que exceda del importe del mínimo personal y familiar",
+                "escala autonómica del Impuesto",
+                "aprobadas por la Comunidad Autónoma",
+                "tipo medio de gravamen general autonómico",
+            ),
+        ),
+        (
+            "ley-35-2006:art-75",
+            date(2025, 4, 3),
+            (
+                "Especialidades aplicables en los supuestos de anualidades por alimentos a favor de los hijos.",
+                "satisfagan las anualidades por alimentos a sus hijos",
+                "aplicarán la escala prevista",
+                "mínimo personal y familiar",
+                "incrementado en 1.980 euros anuales",
+                "sin que pueda resultar negativa",
+            ),
+        ),
+        (
+            "ley-35-2006:art-76",
+            date(2024, 12, 22),
+            (
+                "Tipo de gravamen del ahorro.",
+                "base liquidable del ahorro que exceda",
+                "A la base liquidable del ahorro se le aplicarán los tipos",
+                "se minorará en el importe derivado de aplicar",
+            ),
+        ),
+        (
+            "ley-35-2006:art-77",
+            date(2015, 1, 1),
+            (
+                "Cuota líquida autonómica.",
+                "La cuota líquida autonómica será el resultado de disminuir",
+                "50 por ciento del importe total de las deducciones",
+                "deducciones establecidas por la Comunidad Autónoma",
+                "no podrá ser negativo",
+            ),
+        ),
+    ),
+)
+def test_lirpf_autonomic_quota_chain_links_to_full_boe_corpus(
+    ref_id: str,
+    effective_from: date,
+    required_text: tuple[str, ...],
+) -> None:
+    catalogues = _catalogues()
+    reference = catalogues.legal[ref_id]
+    article = ref_id.rsplit("-", 1)[-1]
+
+    assert reference.corpus_ref == f"corpus/normatives/html/ley-35-2006.html#a{article}"
+    assert reference.effective_from == effective_from
+    assert reference.required_text == required_text
+    if ref_id == "ley-35-2006:art-75":
+        assert reference.notes is not None
+        assert "not the generic autonomic quota article" in reference.notes
+    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+
+
+@pytest.mark.parametrize(
+    ("ref_id", "effective_from", "required_text"),
+    (
+        (
+            "ley-35-2006:art-56",
+            date(2010, 1, 1),
+            (
+                "Mínimo personal y familiar.",
+                "constituye la parte de la base liquidable",
+                "necesidades básicas personales y familiares",
+                "Cuando no exista base liquidable general",
+                "artículos 57, 58, 59 y 60",
+                "gravamen autonómico",
+            ),
+        ),
+        (
+            "ley-35-2006:art-68",
+            date(2023, 1, 1),
+            (
+                "Deducciones.",
+                "Deducción por inversión en empresas de nueva o reciente creación",
+                "50 por ciento de las cantidades satisfechas",
+                "La base máxima de deducción será de 100.000 euros anuales",
+                "Deducciones en actividades económicas",
+                "Deducciones por donativos y otras aportaciones",
+                "Deducción por rentas obtenidas en Ceuta o Melilla",
+                "actuaciones para la protección y difusión del Patrimonio Histórico Español",
+            ),
+        ),
+    ),
+)
+def test_lirpf_minimum_and_broad_deduction_foundations_link_to_full_boe_corpus(
+    ref_id: str,
+    effective_from: date,
+    required_text: tuple[str, ...],
+) -> None:
+    catalogues = _catalogues()
+    reference = catalogues.legal[ref_id]
+    article = ref_id.rsplit("-", 1)[-1]
+
+    assert reference.corpus_ref == f"corpus/normatives/html/ley-35-2006.html#a{article}"
+    assert reference.effective_from == effective_from
+    assert reference.required_text == required_text
+    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+
+
+@pytest.mark.parametrize(
+    ("ref_id", "effective_from", "required_text"),
+    (
+        (
+            "ley-35-2006:art-82",
+            date(2007, 1, 1),
+            (
+                "Tributación conjunta.",
+                "modalidades de unidad familiar",
+                "cónyuges no separados legalmente",
+                "Los hijos menores",
+                "Nadie podrá formar parte de dos unidades familiares",
+                "31 de diciembre de cada año",
+            ),
+        ),
+        (
+            "ley-35-2006:art-83",
+            date(2007, 1, 1),
+            (
+                "Opción por la tributación conjunta.",
+                "podrán optar, en cualquier período impositivo",
+                "no vinculará para períodos sucesivos",
+                "deberá abarcar a la totalidad de los miembros",
+                "Si uno de ellos presenta declaración individual",
+            ),
+        ),
+        (
+            "ley-35-2006:art-84",
+            date(2010, 1, 1),
+            (
+                "Normas aplicables en la tributación conjunta.",
+                "idéntica cuantía en la tributación conjunta",
+                "se reducirá en 3.400 euros anuales",
+                "se reducirá en 2.150 euros anuales",
+                "No se aplicará esta reducción cuando el contribuyente conviva",
+            ),
+        ),
+        (
+            "ley-35-2006:art-86",
+            date(2007, 1, 1),
+            (
+                "Régimen de atribución de rentas.",
+                "se atribuirán a los socios, herederos, comuneros o partícipes",
+                "sección 2.ª",
+            ),
+        ),
+        (
+            "ley-35-2006:art-87",
+            date(2022, 10, 20),
+            (
+                "Entidades en régimen de atribución de rentas.",
+                "artículo 8.3 de esta Ley",
+                "entidades constituidas en el extranjero",
+                "no estarán sujetas al Impuesto sobre Sociedades",
+                "apartado 12 del artículo 15 bis",
+            ),
+        ),
+        (
+            "ley-35-2006:art-88",
+            date(2007, 1, 1),
+            (
+                "Calificación de la renta atribuida.",
+                "tendrán la naturaleza derivada de la actividad o fuente",
+                "para cada uno de ellos",
+            ),
+        ),
+        (
+            "ley-35-2006:art-89",
+            date(2007, 1, 1),
+            (
+                "Cálculo de la renta atribuible y pagos a cuenta.",
+                "Para el cálculo de las rentas a atribuir",
+                "se determinarán con arreglo a las normas de este Impuesto",
+                "no serán aplicables las reducciones previstas en los artículos 23.2, 23.3, 26.2 y 32",
+                "estarán sujetas a retención o ingreso a cuenta",
+                "se atribuirán por partes iguales",
+                "podrán practicar en su declaración las reducciones previstas",
+            ),
+        ),
+    ),
+)
+def test_lirpf_family_joint_and_attribution_foundations_link_to_full_boe_corpus(
+    ref_id: str,
+    effective_from: date,
+    required_text: tuple[str, ...],
+) -> None:
+    catalogues = _catalogues()
+    reference = catalogues.legal[ref_id]
+    article = ref_id.rsplit("-", 1)[-1]
+
+    assert reference.corpus_ref == f"corpus/normatives/html/ley-35-2006.html#a{article}"
+    assert reference.effective_from == effective_from
+    assert reference.required_text == required_text
+    if ref_id == "ley-35-2006:art-84":
+        assert reference.notes is not None
+        assert "in force from 2010-01-01" in reference.notes
+    if ref_id == "ley-35-2006:art-87":
+        assert reference.notes is not None
+        assert "in force from 2022-10-20" in reference.notes
+    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())

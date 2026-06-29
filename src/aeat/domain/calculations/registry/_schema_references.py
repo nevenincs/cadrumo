@@ -88,6 +88,7 @@ class LegalReference(RegistryModel):
     kind: Literal[
         "ley",
         "real_decreto",
+        "real_decreto_legislativo",
         "real_decreto_ley",
         "orden",
         "reglamento",

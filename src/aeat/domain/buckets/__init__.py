@@ -18,6 +18,19 @@ Public surface:
 * :func:`derive_bucket_event_id` — deterministic SHA-256 event id.
 * :func:`append_bucket_event` — pure helper to insert one event
   into a catalogue (idempotent on identical content).
+
+See Also:
+    :class:`BucketEvent`
+        Append-only event record emitted by workflow, modelo, ledger, profile,
+        and bucket-maintenance transitions.
+    :class:`BucketEventHistoryRepository`
+        Encrypted per-bucket repository for the append-only history.
+    :mod:`aeat.application.bucket_maintenance`
+        Application facade that composes profile lifecycle operations and emits
+        bucket-maintenance events through this domain history.
+    :mod:`aeat.application.workflow`
+        Active-profile state and bucket-pointer workflows that provide the
+        current storage slice observed by bucket event consumers.
 """
 
 from __future__ import annotations

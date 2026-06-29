@@ -15,13 +15,15 @@ _REQUIRED_CUOTA_CHAIN_ARTICLES: frozenset[str] = frozenset(
         "ley-35-2006:art-49",  # Integración y compensación de rentas en la base imponible del ahorro
         "ley-35-2006:art-50",  # Base liquidable general y del ahorro
         "ley-35-2006:art-56",  # Mínimo personal y familiar
+        "ley-35-2006:art-62",  # Cuota íntegra estatal
         "ley-35-2006:art-63",  # Escala general del Impuesto
         "ley-35-2006:art-66",  # Tipos de gravamen del ahorro
         "ley-35-2006:art-67",  # Cuota líquida estatal
         "ley-35-2006:art-68",  # Deducciones de la cuota íntegra estatal
-        "ley-35-2006:art-73",  # Base liquidable autonómica sometida a gravamen
+        "ley-35-2006:art-73",  # Cuota íntegra autonómica
         "ley-35-2006:art-74",  # Escala autonómica del Impuesto
-        "ley-35-2006:art-75",  # Cuota íntegra autonómica
+        "ley-35-2006:art-75",  # Especialidades por anualidades por alimentos a hijos
+        "ley-35-2006:art-76",  # Tipo de gravamen del ahorro autonómico
         "ley-35-2006:art-77",  # Cuota líquida autonómica
     },
 )

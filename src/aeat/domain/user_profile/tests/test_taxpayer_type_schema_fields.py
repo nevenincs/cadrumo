@@ -18,12 +18,21 @@ from .. import ProfileSchemaDefinition, load_user_profile_schema
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def schema() -> ProfileSchemaDefinition:
     return load_user_profile_schema()
 
 
-def test_entity_type_enum_carries_the_three_branches(schema: ProfileSchemaDefinition) -> None:
+@pytest.fixture(scope="module")
+def legal_ids() -> frozenset[str]:
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    return frozenset(catalogues.legal)
+
+
+def test_entity_type_enum_carries_the_three_branches(
+    schema: ProfileSchemaDefinition,
+    legal_ids: frozenset[str],
+) -> None:
     field = schema.field("taxpayer_type.entity_type")
     assert field.type.value == "enum"
     assert set(field.enum_values) == {
@@ -38,8 +47,7 @@ def test_entity_type_enum_carries_the_three_branches(schema: ProfileSchemaDefini
         "ley-35-2006:art-87",
     }
     assert set(field.legal_refs) == expected_refs
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    assert expected_refs <= set(catalogues.legal)
+    assert expected_refs <= legal_ids
 
 
 def test_legal_entity_form_enum_covers_recognised_forms(
@@ -61,6 +69,7 @@ def test_legal_entity_form_enum_covers_recognised_forms(
 
 def test_irpf_income_categories_field_is_present_and_grounded(
     schema: ProfileSchemaDefinition,
+    legal_ids: frozenset[str],
 ) -> None:
     field = schema.field("taxpayer_type.irpf_income_categories")
     assert field.type.value == "string"
@@ -73,12 +82,12 @@ def test_irpf_income_categories_field_is_present_and_grounded(
         "ley-35-2006:art-33",
     }
     assert set(field.legal_refs) == expected_refs
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    assert expected_refs <= set(catalogues.legal)
+    assert expected_refs <= legal_ids
 
 
 def test_irpf_estimation_regime_enum_covers_directa_and_objetiva(
     schema: ProfileSchemaDefinition,
+    legal_ids: frozenset[str],
 ) -> None:
     field = schema.field("irpf.estimation_regime")
     assert field.type.value == "enum"
@@ -95,23 +104,33 @@ def test_irpf_estimation_regime_enum_covers_directa_and_objetiva(
         "rd-439-2007:art-31",
     }
     assert set(field.legal_refs) == expected_refs
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    assert expected_refs <= set(catalogues.legal)
+    assert expected_refs <= legal_ids
 
 
 def test_objective_estimation_threshold_refs_resolve_against_catalogue(
     schema: ProfileSchemaDefinition,
+    legal_ids: frozenset[str],
 ) -> None:
-    """Objective-estimation exclusion threshold inputs are grounded in DT 32."""
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    legal_ids = set(catalogues.legal)
-    expected_refs = {"ley-35-2006:dt-32"}
+    """Objective-estimation exclusion threshold inputs are grounded in their legal basis."""
+    expected_refs_by_field = {
+        "irpf.objective_estimation_prior_year_gross_income_eur": {
+            "ley-35-2006:art-31",
+            "ley-35-2006:dt-32",
+        },
+        "irpf.objective_estimation_prior_year_invoice_gross_income_eur": {
+            "ley-35-2006:art-31",
+            "ley-35-2006:dt-32",
+        },
+        "irpf.objective_estimation_prior_year_agri_livestock_forest_gross_eur": {
+            "ley-35-2006:art-31",
+        },
+        "irpf.objective_estimation_prior_year_purchases_eur": {
+            "ley-35-2006:art-31",
+            "ley-35-2006:dt-32",
+        },
+    }
 
-    for field_path in (
-        "irpf.objective_estimation_prior_year_gross_income_eur",
-        "irpf.objective_estimation_prior_year_invoice_gross_income_eur",
-        "irpf.objective_estimation_prior_year_purchases_eur",
-    ):
+    for field_path, expected_refs in expected_refs_by_field.items():
         refs = set(schema.field(field_path).legal_refs)
         assert refs == expected_refs
         assert refs <= legal_ids
@@ -119,10 +138,9 @@ def test_objective_estimation_threshold_refs_resolve_against_catalogue(
 
 def test_selected_irpf_and_irnr_profile_refs_resolve_against_catalogue(
     schema: ProfileSchemaDefinition,
+    legal_ids: frozenset[str],
 ) -> None:
     """Selected taxpayer-profile refs must use canonical legal catalogue ids."""
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    legal_ids = set(catalogues.legal)
     expected = {
         "irpf.pagadores_count": {"ley-35-2006:art-96"},
         "irpf.pagadores_secondary_income": {"ley-35-2006:art-96"},
@@ -146,10 +164,9 @@ def test_selected_irpf_and_irnr_profile_refs_resolve_against_catalogue(
 
 def test_selected_sociedades_profile_refs_resolve_against_catalogue(
     schema: ProfileSchemaDefinition,
+    legal_ids: frozenset[str],
 ) -> None:
     """Selected corporate-profile refs must use canonical legal catalogue ids."""
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    legal_ids = set(catalogues.legal)
     expected = {
         "taxpayer_type.legal_entity_form": {"ley-27-2014:art-29", "ley-44-2015:art-1"},
         "taxpayer_type.incn_prior_12_months": {"ley-27-2014:art-40-3"},
@@ -204,17 +221,17 @@ def test_sii_and_redeme_enrolment_fields_are_present_and_grounded(
 
 def test_iva_profile_selector_legal_refs_resolve_against_catalogue(
     schema: ProfileSchemaDefinition,
+    legal_ids: frozenset[str],
 ) -> None:
     """Selected IVA profile selectors must carry canonical LegalReference ids."""
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    legal_ids = set(catalogues.legal)
     expected = {
         "iva.regime": {
             "ley-37-1992:art-122",
             "ley-37-1992:art-148",
             "ley-37-1992:art-164",
         },
-        "iva.sii_enrolled": {"rd-596-2016"},
+        "censo.large_company": {"ley-37-1992:art-121", "rd-1624-1992:art-71"},
+        "iva.sii_enrolled": {"rd-596-2016", "rd-1624-1992:art-71"},
         "iva.redeme_enrolled": {"rd-1624-1992:art-30"},
         "iva.autoconsumo_promotor_base": {"ley-37-1992:art-9", "ley-37-1992:art-79"},
     }
@@ -225,17 +242,11 @@ def test_iva_profile_selector_legal_refs_resolve_against_catalogue(
         assert refs <= legal_ids
 
 
-def test_uses_objective_estimation_boolean_is_retained(
+def test_objective_estimation_boolean_is_not_retained(
     schema: ProfileSchemaDefinition,
 ) -> None:
-    """The legacy objective-estimation boolean stays alongside the enum.
+    """The profile schema exposes only the structured estimation-regime axis."""
 
-    Registry schedule predicates / model selectors still test
-    ``uses_objective_estimation_irpf``; the taxpayer-type schema adds the
-    structured ``estimation_regime`` enum without removing the boolean
-    the engine has not yet been rewired off.
-    """
-
-    field = schema.field("irpf.uses_objective_estimation")
-    assert field.type.value == "boolean"
-    assert "uses_objective_estimation_irpf" in field.schedule_predicates
+    assert "irpf.uses_objective_estimation" not in schema.field_paths
+    field = schema.field("irpf.estimation_regime")
+    assert "irpf.estimation_regime" in field.schedule_predicates

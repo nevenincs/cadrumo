@@ -21,6 +21,7 @@ from .. import (
     resolve_previous_filing_binding_values,
     validated_casilla_id,
 )
+from .._binding_selector_utils import selector_as_dict
 from .._bindings import RegistryModeloObservation
 from .._text import normalise_corpus_text
 
@@ -150,9 +151,9 @@ def test_modelo_130_casilla_15_grounding_uses_aeat_instruction_citation(
     instruction_source = catalogues.sources["aeat-modelo-130-instructions"]
 
     assert carry_binding.source == "previous_filing"
-    assert carry_binding.selector == {
+    assert selector_as_dict(carry_binding) == {
         "source_modelo": "130",
-        "source_casilla_id": "saldo-negativo-fin-periodo",
+        "source_casilla_id": _M130_SALDO_NEGATIVO_CASILLA,
         "source_period_offset_from_target": -1,
         "max_year_delta": 0,
     }

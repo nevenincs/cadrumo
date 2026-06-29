@@ -1,22 +1,43 @@
-"""Modelo identity codes and informational-declaration row models.
+"""Domain aggregate for modelo work units, revisions, and filing records.
 
-The public surface exposes ``ModeloCode`` (the closed set of AEAT modelo
-identifiers) together with the typed per-row records for the informational
-declarations: ``Modelo184MemberRow``, ``Modelo232VinculadaRow``,
-``Modelo347ContraparteRow``, ``Modelo349OperadorRow``, and ``ModeloDetailRow``
-(plus Modelo 349 NIF and country-prefix validators). The Modelo 347 declarability threshold is a
-regulatory constant owned by ``core.external_constants`` (``M347_THRESHOLD_EUR``),
-consumed directly from there.
+The public surface exposes :class:`ModeloCode`, :class:`WorkUnit`,
+:class:`CalculationRevision`, :class:`ModeloRecord`, and
+:class:`VerificationReport` together with their encrypted catalogues and
+protocols. These records are the domain aggregate carried by
+:mod:`aeat.application.modelo`: a work unit fixes the bucket/modelo/year/period
+target, each calculation attempt creates an immutable calculation revision, a
+verification report records local validation evidence, and a filing record marks
+the current locally filed answer.
 
-This module re-exports :class:`CalculationRevision` and :class:`ModeloRecord`
-alongside their catalogues so application services can address calculation and
-filing persistence through the domain aggregate.
+The package also owns the transaction participation index. A
+:class:`TransactionRevisionParticipationIndex` is a rebuildable read-side cache
+keyed by ledger transaction id; it is co-written with finalized revisions and
+points auditors from one transaction back to the verified or filed modelo
+revisions that consumed it. The calculation and filing catalogues remain the
+source of truth.
 
-The package also hosts, as submodules imported by their consumers directly, the
-domain-layer modelo persistence and identity core: the calculation, filing, and
-verification repositories, calculation revisions, filing records, verification
-reports, and work units.
+Informational-declaration row models also live here:
+:class:`Modelo184MemberRow`, :class:`Modelo232VinculadaRow`,
+:class:`Modelo347ContraparteRow`, :class:`Modelo349OperadorRow`, and
+``ModeloDetailRow``, plus the Modelo 349 NIF and country-prefix validators.
+Regulatory constants such as the Modelo 347 declarability threshold remain in
+:mod:`aeat.core.external_constants`.
 
+See Also:
+    :mod:`aeat.application.modelo`
+        Application facade that creates, calculates, verifies, files, exports,
+        reconciles, and rebuilds this aggregate.
+    :class:`CalculationRevision`
+        Immutable calculation attempt with lifecycle state, source transaction
+        ids, typed casilla observations, and content-addressed identity.
+    :class:`ModeloRecord`
+        Filing event record paired with the filed calculation revision.
+    :class:`TransactionRevisionParticipationIndex`
+        Rebuildable inverse index from ledger transaction ids to finalized
+        calculation revisions and filing records.
+    :mod:`aeat.domain.calculations.registry`
+        Registry snapshots, formulas, bindings, and observation types that
+        produce the calculation payload stored on a revision.
 """
 
 from __future__ import annotations

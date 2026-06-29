@@ -171,19 +171,16 @@ class ModeloDraft(BaseModel):
     modelo: str
     period: Period
     profile_tax_id: str
-    # Typed Spanish NIF/NIE/CIF of the filing subject. Defaults to
-    # ``None`` so historical records that predate the field remain
-    # loadable; new drafts populate this from the validated profile
-    # substrate so the identity is re-checkable at persistence time.
-    subject_tax_id: SubjectTaxId | None = None
+    # Typed Spanish NIF/NIE/CIF of the filing subject. New drafts
+    # populate this from the validated profile substrate so the
+    # identity is re-checkable at persistence time.
+    subject_tax_id: SubjectTaxId
     # Four-axis coordinates identifying the registry snapshot this
     # draft was built against. Replaces the role of the opaque
     # ``schema_version`` string for re-resolution against the live
-    # registry catalogue. Defaults to ``None`` for backward
-    # compatibility with persisted records that predate the field;
-    # newly built drafts populate this from the snapshot used to
-    # produce the casilla values.
-    snapshot_ref: RegistrySnapshotRef | None = None
+    # registry catalogue. Newly built drafts populate this from the
+    # snapshot used to produce the casilla values.
+    snapshot_ref: RegistrySnapshotRef
     status: ModeloDraftStatus
     values: tuple[ModeloValue, ...]
     binding_values: tuple[ModeloBindingValue, ...] = Field(default_factory=tuple)

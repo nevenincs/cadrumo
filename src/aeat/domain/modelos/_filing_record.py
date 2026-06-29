@@ -124,7 +124,7 @@ def derive_filing_record_id(
     operators filing the same revision at the same instant produce
     the same id, which is impossible in practice because the timestamp
     guarantees uniqueness. Member-scoped group filings include the
-    member NIF in the identity; single-filer records omit it so legacy
+    member NIF in the identity; single-filer records omit it so existing
     record ids remain stable.
     """
     payload = {

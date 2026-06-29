@@ -95,6 +95,11 @@ _NON_DERIVABLE_REASONS: dict[IvaCategory, str] = {
         "export to a third country: zero-rated with right to deduct; the "
         "operator confirms the export — no domestic rate is derivable here"
     ),
+    IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED: (
+        "operation assimilated to an export: exempt with right to deduct under "
+        "LIVA art. 22; the operator confirms the qualifying ship, aircraft, "
+        "provisioning, or related service facts — no domestic rate is derivable here"
+    ),
     IvaCategory.IMPORT_THIRD_COUNTRY: (
         "import from a third country: IVA is assessed at customs against the "
         "import base — derivation is left to the operator"

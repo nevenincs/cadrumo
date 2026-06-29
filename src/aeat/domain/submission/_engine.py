@@ -7,6 +7,20 @@ the secure SQL object backend.
 
 AEAT remote writes and write-shaped portal walks are permanently
 forbidden; the engine intentionally exposes no transport method.
+
+See Also:
+    :class:`~aeat.domain.submission.Preflight`
+        Ordered draft, finding, deadline-window, and auth-provider gate runner
+        delegated to by :meth:`SubmissionEngine.preflight`.
+    :class:`~aeat.domain.submission.DeadlineWindowChecker`
+        Injected protocol that answers the filing-window question without
+        coupling this domain package to the deadline engine implementation.
+    :class:`~aeat.application.workflow.SubmissionEngineAdapter`
+        Application workflow wrapper that invokes this read-only preflight
+        surface from the ``RUNNING_PREFLIGHT`` stage.
+    :mod:`aeat.application.modelo._workflow_gate`
+        Modelo work-unit bridge that configures the deadline-window checker for
+        calculation revisions before verification or local mark-as-filed paths.
 """
 
 from __future__ import annotations
@@ -72,9 +86,10 @@ class SubmissionEngine:
             draft: Draft conforming to :class:`ModeloDraftLike`.
             today: Calendar date used to evaluate the AEAT filing window.
             skip_deadline_window: When ``True``, the AEAT filing-window
-                gate is skipped so a calculation can be verified
-                independently of the filing calendar. Filing always
-                runs the window gate.
+                gate is skipped. Workflow callers use this for local
+                verification and local mark-as-filed paths; callers that
+                perform an actual AEAT submission must leave the gate
+                enabled.
         """
         self._preflight.check(draft, today=today, skip_deadline_window=skip_deadline_window)
 

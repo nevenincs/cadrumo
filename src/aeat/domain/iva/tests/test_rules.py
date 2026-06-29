@@ -15,12 +15,12 @@ _CATALOGUE = resolve_catalogue(on=date(2025, 1, 1))
 
 def test_catalogue_covers_every_iva_category() -> None:
     assert set(_CATALOGUE.regulations.keys()) == set(IvaCategory)
-    assert len(_CATALOGUE) == 17
+    assert len(_CATALOGUE) == 18
 
 
-def test_catalogue_has_at_least_32_citations() -> None:
+def test_catalogue_has_at_least_33_citations() -> None:
     total = sum(len(regulation.citations) for regulation in _CATALOGUE)
-    assert total >= 32
+    assert total >= 33
 
 
 def test_every_citation_has_non_empty_quoted_text() -> None:

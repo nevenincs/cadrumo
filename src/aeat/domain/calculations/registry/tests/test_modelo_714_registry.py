@@ -110,8 +110,12 @@ def test_modelo_714_legal_refs_are_boe_corpus_backed() -> None:
     assert "0,2" in legal["ley-19-1991:art-30"].required_text
     assert "3,5" in legal["ley-19-1991:art-30"].required_text
     assert legal["ley-19-1991:art-31"].article == "31"
-    assert "60 por 100" in legal["ley-19-1991:art-31"].required_text
-    assert "80 por 100" in legal["ley-19-1991:art-31"].required_text
+    art31_required_text = legal["ley-19-1991:art-31"].required_text
+    assert "60 por 100" in art31_required_text
+    assert "bases imponibles" in art31_required_text
+    assert "más de un año" in art31_required_text
+    assert "no sean susceptibles de producir los rendimientos" in art31_required_text
+    assert "80 por 100" in art31_required_text
 
 
 def test_modelo_714_revision_2021_declares_constructs() -> None:

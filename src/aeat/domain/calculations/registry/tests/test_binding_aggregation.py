@@ -42,8 +42,9 @@ _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_IN
 # that exercises only the aggregation axis must still supply a selector that
 # satisfies the registered per-family selector model (the casilla-set / op-fact
 # business rules remain a snapshot-build concern, so these minimal selectors
-# only have to clear the selector model itself). A source absent from this map
-# is free-form at the schema level and takes the opaque fallback selector.
+# only have to clear the selector model itself). Every parametrized source must
+# be listed here because registry binding sources now fail closed when no
+# selector model is registered.
 _WELL_SHAPED_SELECTORS: dict[str, dict[str, object]] = {
     "previous_filing": {"source_modelo": "130", "source_casilla_id": _M130_INGRESOS_CASILLA},
     "withholding": {"fact": "retencion_sum", "claves": ("A",)},
@@ -96,7 +97,7 @@ def _binding(*, source: str, op: BindingAggregationOp | None) -> DataBindingDefi
         {
             "id": f"test-binding-aggregation-{source}",
             "source": source,
-            "selector": _WELL_SHAPED_SELECTORS.get(source, {"target_casilla_id": _M130_INGRESOS_CASILLA}),
+            "selector": _WELL_SHAPED_SELECTORS[source],
             "aggregation": None if op is None else BindingAggregation(op=op),
             "legal_refs": (_MINIMAL_LEGAL_REF_ID,),
             "source_refs": (_MINIMAL_SOURCE_REF_ID,),

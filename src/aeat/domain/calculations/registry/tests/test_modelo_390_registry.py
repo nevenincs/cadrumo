@@ -44,6 +44,20 @@ _M390_COMPENSACION_ULTIMO_PERIODO_CASILLA: CasillaId = _casilla_id(
 _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = _casilla_id(
     "iva.anual.compensacion-generada-ejercicio-no-97",
 )
+_M390_EXTRACTION_PROFILE_TARGET_LEGAL_REFS = frozenset(
+    {
+        "ley-37-1992:art-84",
+        "ley-37-1992:art-88",
+        "ley-37-1992:art-92",
+        "ley-37-1992:art-99",
+        "ley-37-1992:art-115",
+        "ley-37-1992:art-116",
+        "orden-eha-3111-2009:art-1",
+        "rd-1624-1992:art-29",
+        "rd-1624-1992:art-30",
+        "rd-1624-1992:art-71",
+    }
+)
 
 
 @lru_cache(maxsize=1)
@@ -101,6 +115,23 @@ def test_modelo_390_snapshot_carries_legal_authority_and_record_design() -> None
     assert snapshot.legal["orden-eha-3111-2009:art-8"].article == "8"
     assert "aeat-dr-390-2025" in snapshot.sources
     assert "aeat-modelo-390-procedure" in snapshot.sources
+
+
+def test_modelo_390_extraction_profile_legal_refs_match_target_casillas() -> None:
+    modelo, _ = _load_modelo_390()
+    revision = modelo.revisions["2010-y-siguientes"]
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+
+    assert revision.extraction_profiles, revision.id
+    profile = next(item for item in revision.extraction_profiles if item.id == "modelo-390-declaracion-pdf")
+    target_refs = frozenset(
+        legal_ref
+        for target in profile.target_casillas
+        for legal_ref in casillas_by_id[target.casilla_id].legal_refs
+    )
+
+    assert target_refs == _M390_EXTRACTION_PROFILE_TARGET_LEGAL_REFS
+    assert set(profile.legal_refs) == _M390_EXTRACTION_PROFILE_TARGET_LEGAL_REFS
 
 
 def test_modelo_390_january_30_deadline_matches_orden_eha_3111_2009_art_8() -> None:

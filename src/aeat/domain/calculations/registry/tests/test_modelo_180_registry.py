@@ -38,12 +38,79 @@ _M115_BASE_CASILLA: CasillaId = _casilla_id("02")
 _M180_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("decl.total-perceptores")
 _M180_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
 _M180_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
+_M180_2023_AMENDMENT_REF = "orden-hfp-1284-2023:art-7"
+_M180_HISTORICAL_PROFILE_TARGET_LEGAL_REFS = frozenset(
+    [
+        "ley-35-2006:art-101",
+        "ley-35-2006:art-99",
+        "ley-58-2003:art-93",
+        "orden-hap-1732-2014:art-2",
+        "rd-439-2007:art-100",
+        "rd-439-2007:art-108",
+    ]
+)
+_M180_2023_PROFILE_TARGET_LEGAL_REFS = _M180_HISTORICAL_PROFILE_TARGET_LEGAL_REFS | frozenset(
+    [_M180_2023_AMENDMENT_REF]
+)
 
 
 def _load_modelo(modelo_id: str):
     modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
     modelo = next(item for item in modelos if item.id == modelo_id)
     return modelo, catalogues
+
+
+def _nested_legal_refs(value: object) -> set[str]:
+    refs: set[str] = set()
+
+    def visit(item: object) -> None:
+        if isinstance(item, dict):
+            for key, child in item.items():
+                if key == "legal_refs":
+                    assert isinstance(child, (list, tuple))
+                    refs.update(str(ref) for ref in child)
+                visit(child)
+        elif isinstance(item, (list, tuple)):
+            for child in item:
+                visit(child)
+
+    visit(value)
+    return refs
+
+
+def test_modelo_180_2023_amendment_is_scoped_to_2023_revision() -> None:
+    modelo, _ = _load_modelo("180")
+    historical_refs = _nested_legal_refs(modelo.revisions["2019-2022"].model_dump(mode="python"))
+    current_refs = _nested_legal_refs(modelo.revisions["2023-y-siguientes"].model_dump(mode="python"))
+
+    assert _M180_2023_AMENDMENT_REF not in historical_refs
+    assert _M180_2023_AMENDMENT_REF in current_refs
+
+
+@pytest.mark.parametrize(
+    ("revision_id", "expected_refs"),
+    [
+        ("2019-2022", _M180_HISTORICAL_PROFILE_TARGET_LEGAL_REFS),
+        ("2023-y-siguientes", _M180_2023_PROFILE_TARGET_LEGAL_REFS),
+    ],
+)
+def test_modelo_180_extraction_profile_legal_refs_match_target_casillas(
+    revision_id: str,
+    expected_refs: frozenset[str],
+) -> None:
+    modelo, _ = _load_modelo("180")
+    revision = modelo.revisions[revision_id]
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+
+    assert revision.extraction_profiles, revision_id
+    for profile in revision.extraction_profiles:
+        target_refs = frozenset(
+            legal_ref
+            for target in profile.target_casillas
+            for legal_ref in casillas_by_id[target.casilla_id].legal_refs
+        )
+        assert target_refs == expected_refs
+        assert set(profile.legal_refs) == expected_refs
 
 
 @pytest.mark.parametrize(("filing_year", "period"), [(2021, "0A"), (2025, "0A")])

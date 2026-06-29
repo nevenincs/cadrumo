@@ -7,6 +7,36 @@ metadata), :class:`ModeloRevision` (one period-scoped revision of a modelo),
 :class:`ValidatedRegistryAuthority` (the production access point that loads,
 validates, and caches registry material), and :class:`CasillaObservation`
 (one typed casilla value carrying full legal and source provenance).
+
+Registry definitions are declarative authority, not application workflow state.
+:class:`ValidatedRegistryAuthority` loads bundled TOML, validates cross-file
+references, and returns snapshots. :func:`calculate_registry_snapshot` evaluates
+the snapshot with already-resolved casilla inputs, binding values, enum binding
+values, relation values, and date context. The application source mesh resolves
+those values before entering this package.
+
+The facade also exposes the typed binding and observation helpers used by mesh
+resolvers: ledger observations, invoice observations, previous-filing carries,
+relation materialisation, detail-row folds, unsupported-observation diagnostics,
+export layout resolution, applicability rules, verification expectations, live
+parity/oracle structures, workbook parity helpers, and registry query reports.
+
+See Also:
+    :class:`ValidatedRegistryAuthority`
+        Production loader, validator, and snapshot cache for bundled registry
+        material.
+    :func:`calculate_registry_snapshot`
+        Formula runtime entry point that emits
+        :class:`CasillaObservation` rows with legal and source provenance.
+    :class:`DataBindingDefinition`
+        Declarative binding contract resolved by application source owners.
+    :mod:`aeat.application.aggregation`
+        Source-mesh contract that supplies
+        :class:`~aeat.application.aggregation.CalculationSourceResolution`
+        envelopes before registry calculation.
+    :mod:`aeat.application.calculations`
+        Prior-filing, relation-prefill, IVA-wallet, and row-set stores that feed
+        registry binding and relation inputs.
 """
 
 # ruff: noqa: I001
@@ -127,6 +157,7 @@ from ._bindings import (
     validate_retenciones_aggregation_binding,
     withholding_binding_requirements,
 )
+from ._binding_selector_utils import BindingRowSetSelector, binding_row_set_selector
 from ._casilla_membership import (
     casilla_noncanonical_reference_targets,
     casilla_noncanonical_reference_tokens,
@@ -182,7 +213,6 @@ from ._filed_state import RegistryFiledStateComparison, compare_calculation_to_f
 from ._formula_runtime import (
     M210_CONVENIO_MISSING_SENTINEL,
     M210_DEFERRED_TIPO_SENTINEL,
-    M210_NOT_YET_AUTHORED_SENTINEL,
     M210_RATE_SENTINELS,
     RegistryCalculationEntry,
     RegistryCalculationResult,
@@ -244,6 +274,8 @@ from ._parity_tapes import (
     save_parity_tape,
 )
 from ._queries import (
+    BindingSelectorQueryEntry,
+    BindingSelectorQueryProjection,
     ModeloBindingQueryRow,
     ModeloBindingsReport,
     ModeloCasillaRow,
@@ -410,7 +442,6 @@ __all__ = [
     "LEDGER_BINDING_SOURCE_KINDS",
     "M210_CONVENIO_MISSING_SENTINEL",
     "M210_DEFERRED_TIPO_SENTINEL",
-    "M210_NOT_YET_AUTHORED_SENTINEL",
     "M210_RATE_SENTINELS",
     "AeatNifIvaCheckerOracle",
     "AeatNifIvaObservation",
@@ -422,6 +453,9 @@ __all__ = [
     "BboxAnchorSpec",
     "BindingAggregationOp",
     "BindingId",
+    "BindingRowSetSelector",
+    "BindingSelectorQueryEntry",
+    "BindingSelectorQueryProjection",
     "BracketEntry",
     "CalculationCompletenessCasilla",
     "CalculationCompletenessManifest",
@@ -600,6 +634,7 @@ __all__ = [
     "audit_registry_model_law_coverage",
     "audit_registry_oracle_bindings",
     "binding_aggregation_op",
+    "binding_row_set_selector",
     "binding_source_casilla_ids",
     "build_censo_modelo_foundation_contract",
     "build_diseno_coverage_report",

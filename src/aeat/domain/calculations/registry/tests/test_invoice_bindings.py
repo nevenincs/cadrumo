@@ -17,6 +17,7 @@ from pydantic import ValidationError
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import resources
+from .._binding_selector_utils import selector_as_dict
 from .._bindings import (
     InvoiceObservation,
     invoice_binding_requirements,
@@ -51,7 +52,7 @@ def _revision(*bindings: DataBindingDefinition) -> ModeloRevision:
 
 
 def _with_selector(binding: DataBindingDefinition, **updates: object) -> DataBindingDefinition:
-    return binding.model_copy(update={"selector": {**binding.selector, **updates}})
+    return binding.model_copy(update={"selector": {**selector_as_dict(binding), **updates}})
 
 
 def _with_aggregation(binding: DataBindingDefinition, op: BindingAggregationOp) -> DataBindingDefinition:

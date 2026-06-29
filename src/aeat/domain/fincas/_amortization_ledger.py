@@ -45,30 +45,19 @@ def _resolve_amortizacion_inmueble_rate(period_year: int) -> Decimal:
     """Read the RIRPF art. 14 amortisation rate from the registry parameter.
 
     Reads ``renta-<period_year>-rental-amortizacion-rate`` from Modelo 100.
-    Falls back to :data:`ART_23_1_F_RATE` (the grounded
-    :data:`~aeat.core.external_constants.AMORTIZACION_INMUEBLE_RATE`) when the
-    registry lookup raises (for example an unregistered ``period_year``),
-    mirroring the rental tier-resolver pattern in
-    :mod:`aeat.domain.fincas._tier_resolver`. The registry parameter is grounded
-    on RD 439/2007 art. 14 (``rd-439-2007:art-14``), which fixes the 3 por ciento
+    A missing registry revision or parameter is a grounding defect and raises
+    :class:`RegistryValidationError`. The registry parameter is grounded on
+    RD 439/2007 art. 14 (``rd-439-2007:art-14``), which fixes the 3 por ciento
     rate, and on Ley 35/2006 art. 23 as the substantive base.
     """
-    from ..calculations.registry import RegistryValidationError, read_parameter
+    from ..calculations.registry import read_parameter
 
-    try:
-        return read_parameter(
-            Modelo.M100.value,
-            str(period_year),
-            f"renta-{period_year}-rental-amortizacion-rate",
-            date_context={"filing_period": date(period_year, 12, 31)},
-        )
-    except RegistryValidationError:
-        _logger.debug(
-            "rental amortizacion rate: registry lookup failed for period_year=%d; "
-            "fallback to AMORTIZACION_INMUEBLE_RATE",
-            period_year,
-        )
-        return ART_23_1_F_RATE
+    return read_parameter(
+        Modelo.M100.value,
+        str(period_year),
+        f"renta-{period_year}-rental-amortizacion-rate",
+        date_context={"filing_period": date(period_year, 12, 31)},
+    )
 
 
 class AmortizationComputation(BaseModel):

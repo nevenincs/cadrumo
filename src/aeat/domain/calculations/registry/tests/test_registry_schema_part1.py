@@ -10,6 +10,7 @@ from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from ..._export_field_kind import CasillaFieldKind
 from .. import CasillaId, RegistrySnapshot, validated_casilla_id
 from .._authority import ValidatedRegistryAuthority
+from .._binding_selector_utils import selector_as_dict
 from .._schema import DataBindingDefinition
 from ._registry_schema_support import (
     _EXPECTED_DEADLINE_WINDOWS,
@@ -551,7 +552,9 @@ def test_validator_rejects_profile_binding_selector_missing_from_user_profile_sc
     modelo, catalogues = _committed_modelo("100")
     revision = modelo.revisions["2025"]
     binding = next(item for item in revision.bindings if item.source == "profile")
-    mutated_binding = binding.model_copy(update={"selector": {**binding.selector, "profile_key": "unknown.profile"}})
+    mutated_binding = binding.model_copy(
+        update={"selector": {**selector_as_dict(binding), "profile_key": "unknown.profile"}},
+    )
     mutated = _with_binding(revision, mutated_binding)
 
     with pytest.raises(

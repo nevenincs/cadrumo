@@ -171,6 +171,51 @@ def test_registry_scenario_reports_trace_contract_mismatches() -> None:
         assert_registry_scenario_matches(report)
 
 
+def test_modelo_100_2023_simplified_expenses_use_temporary_da56_rate() -> None:
+    """The 2023 EDS difficult-justification rate is 7%, not the current 5%.
+
+    A 10,000 EUR positive base sits below the 2,000 EUR statutory cap, so the
+    computed casilla distinguishes DA 56's 2023-only 7% from the surrounding
+    5% rule without re-implementing the formula in the test.
+    """
+    scenario = RegistryCalculationScenario(
+        id="modelo-100-2023-estimacion-directa-simplificada-da56-rate",
+        modelo="100",
+        revision="2023",
+        filing_year=2023,
+        period="0A",
+        inputs=_inputs({"0171": Decimal("10000.00")}),
+        binding_values={
+            "renta-2023-modelo-100-estimacion-directa-es-normal": Decimal("0"),
+        },
+        enum_binding_values={"renta-2023-profile-tax-residence-ccaa": "madrid"},
+        date_context={"filing_period": date(2023, 12, 31)},
+        expected_outputs=(
+            _expected(
+                "0222",
+                value=Decimal("700.00"),
+                operand_refs=_operand_refs(
+                    "0180",
+                    "0218",
+                    "renta-2023-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
+                    "renta-2023-estimacion-directa-simplificada-gastos-dificil-justificacion-cap",
+                ),
+                operand_casilla_refs=_operand_casilla_refs("0180", "0218"),
+                legal_refs=("ley-35-2006:art-30", "ley-35-2006:da-56", "rd-439-2007:art-30"),
+                source_refs=("aeat-renta-2023-manual-parte1", "lirpf-cuota-chain-authority"),
+            ),
+        ),
+    )
+
+    report = run_registry_calculation_scenario(
+        scenario,
+        registry_root=_REGISTRY_ROOT,
+        source_root=bundled_path(),
+    )
+
+    assert_registry_scenario_matches(report)
+
+
 def test_registry_scenario_reports_operand_casilla_ref_mismatches() -> None:
     scenario = _simplified_direct_estimation_cap_scenario().model_copy(
         update={
@@ -343,7 +388,12 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
                     "renta-2025-rel-131-pagos-fraccionados",
                 ),
                 operand_casilla_refs=(),
-                legal_refs=("rd-439-2007:art-109", "rd-439-2007:art-110", "orden-hac-277-2026:art-3"),
+                legal_refs=(
+                    "rd-439-2007:art-109",
+                    "rd-439-2007:art-110",
+                    "orden-hac-277-2026:art-3",
+                    "orden-eha-672-2007:art-3",
+                ),
             ),
             _expected(
                 "0609",

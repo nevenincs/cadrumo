@@ -41,13 +41,13 @@ _M123_RETENCIONES_RESTO_CASILLA: CasillaId = _casilla_id("08")
 _M123_PREVIOUS_RESULT_CASILLA: CasillaId = _casilla_id("10")
 _M123_PREVIOUS_PERIOD_WITHHELD_CASILLA: CasillaId = _casilla_id("11")
 _M123_A_INGRESAR_CASILLA: CasillaId = _casilla_id("13")
-_M123_2019_2023_NPERCEPTORES_CASILLA: CasillaId = _casilla_id("01-legacy")
-_M123_2019_2023_BASE_CASILLA: CasillaId = _casilla_id("02-legacy")
-_M123_2019_2023_RETENCIONES_CASILLA: CasillaId = _casilla_id("03-legacy")
-_M123_2019_2023_REGULARIZACION_CASILLA: CasillaId = _casilla_id("04-legacy")
-_M123_2019_2023_PREVIOUS_RESULT_CASILLA: CasillaId = _casilla_id("05-legacy")
-_M123_2019_2023_RESULTADO_CASILLA: CasillaId = _casilla_id("06-legacy")
-_M123_2019_2023_INGRESO_CASILLA: CasillaId = _casilla_id("07-legacy")
+_M123_2019_2023_NPERCEPTORES_CASILLA: CasillaId = _casilla_id("01")
+_M123_2019_2023_BASE_CASILLA: CasillaId = _casilla_id("02")
+_M123_2019_2023_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
+_M123_2019_2023_REGULARIZACION_CASILLA: CasillaId = _casilla_id("04")
+_M123_2019_2023_PREVIOUS_RESULT_CASILLA: CasillaId = _casilla_id("05")
+_M123_2019_2023_RESULTADO_CASILLA: CasillaId = _casilla_id("06")
+_M123_2019_2023_INGRESO_CASILLA: CasillaId = _casilla_id("07")
 
 
 def _load_modelo(modelo_id: str):
@@ -241,19 +241,19 @@ def test_m123_casilla_06_invariant_to_nperceptores() -> None:
 
 
 # ---------------------------------------------------------------------------
-# 2019-2023 revision: casilla 06-legacy semantic is different
-# ("Suma de retenciones y regularizacion" = [03-legacy] + [05-legacy]).
-# Perceptor count (01-legacy) and base (02-legacy) must NOT contribute.
+# 2019-2023 revision: casilla 06 semantic is different
+# ("Suma de retenciones y regularizacion" = [03] + [05]).
+# Perceptor count (01) and base (02) must NOT contribute.
 # ---------------------------------------------------------------------------
 
 
-def test_m123_legacy_casilla_06_invariant_to_nperceptores_and_base() -> None:
-    """2019-2023 revision: casilla 06-legacy is retenciones+regularizacion, not base.
+def test_m123_2019_2023_casilla_06_invariant_to_nperceptores_and_base() -> None:
+    """2019-2023 revision: casilla 06 is retenciones+regularizacion, not base.
 
     Authority: 2019-2023 form text citation "[03] + [05]".
-    Inputs 01-legacy (nperceptores) and 02-legacy (base retenciones) are
+    Inputs 01 (nperceptores) and 02 (base retenciones) are
     manual pass-through casillas with no formula; they must not affect
-    casilla 06-legacy (Suma de retenciones y regularizacion = [03-legacy] + [05-legacy]).
+    casilla 06 (Suma de retenciones y regularizacion = [03] + [05]).
     """
     modelo, catalogues = _load_modelo("123")
     snapshot = build_snapshot(
@@ -277,7 +277,7 @@ def test_m123_legacy_casilla_06_invariant_to_nperceptores_and_base() -> None:
     )
     casilla_06 = result.values[_M123_2019_2023_RESULTADO_CASILLA]
     assert casilla_06 == Decimal("100.00"), (
-        f"casilla 06-legacy (suma retenciones+regularizacion = [03]+[05]) "
+        f"casilla 06 (suma retenciones+regularizacion = [03]+[05]) "
         f"should be 100.00 (= retenciones + 0), got {casilla_06}; "
-        f"nperceptores (01-legacy=7) and base (02-legacy=42000) must not contribute"
+        f"nperceptores (01=7) and base (02=42000) must not contribute"
     )

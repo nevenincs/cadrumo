@@ -5,29 +5,30 @@ from __future__ import annotations
 import pytest
 
 from .. import CasillaId, validated_casilla_id
-from .._schema import CasillaContinuidadEvolutionDefinition, RegistryCatalogues
+from .._schema import CasillaContinuidadEvolutionDefinition, ModeloDefinition, RegistryCatalogues
 from .._schema_input_kind import InputKind
+from .._validate import RegistryValidator
 from ._referential_integrity_support import (
-    _DUMMY_LEGAL_ID,
-    _DUMMY_SOURCE_ID,
+    REFERENCE_LEGAL_ID,
+    REFERENCE_SOURCE_ID,
     CalculationCompletenessCasilla,
     CasillaDefinition,
     RegistryValidationError,
     ValidationError,
-    _build_snapshot_with_missing_legal,
-    _build_snapshot_with_missing_source,
-    _completeness_manifest,
-    _minimal_casilla,
-    _minimal_catalogues,
-    _minimal_legal_ref,
-    _minimal_modelo,
-    _minimal_revision,
-    _minimal_source_ref,
-    _segmented_casilla,
-    _single_segment_casilla,
-    _snapshot_for_revision,
+    build_snapshot_with_missing_legal,
+    build_snapshot_with_missing_source,
     check_all_id_references,
+    completeness_manifest,
     freeze_toml,
+    minimal_casilla,
+    minimal_catalogues,
+    minimal_legal_ref,
+    minimal_modelo,
+    minimal_revision,
+    minimal_source_ref,
+    segmented_casilla,
+    single_segment_casilla,
+    snapshot_for_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -51,6 +52,14 @@ _EXTRA_LEGAL_ID = "lirpf:art-88"
 _EXTRA_SOURCE_ID = "aeat-extra-source"
 
 
+def _modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:
+    try:
+        RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
+    except RegistryValidationError as exc:
+        return str(exc).splitlines()
+    return []
+
+
 def test_segment_qualified_reference_resolves_across_segments() -> None:
     """A formula naming a casilla by its segment-qualified id resolves cleanly.
 
@@ -60,28 +69,40 @@ def test_segment_qualified_reference_resolves_across_segments() -> None:
     failure.
     """
     from .._schema import FormulaDefinition, FormulaExpression
-    from .._validate import RegistryValidator
 
-    liquidacion = _segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
-    ecpn = _segmented_casilla(_SEGMENTED_ECPN_CASILLA, "00562", "DP200032")
-    target_casilla_def = _segmented_casilla(_SEGMENTED_TARGET_CASILLA, "00999", "DP200014").model_copy(
+    liquidacion = segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    ecpn = segmented_casilla(_SEGMENTED_ECPN_CASILLA, "00562", "DP200032")
+    target_casilla_def = segmented_casilla(_SEGMENTED_TARGET_CASILLA, "00999", "DP200014").model_copy(
         update={"input_kind": InputKind.COMPUTED, "formula": "test.formula"},
     )
     formula = FormulaDefinition(
         id="test.formula",
         target_casilla_id=_SEGMENTED_TARGET_CASILLA,
         expression=FormulaExpression(casilla_id=_SEGMENTED_LIQUIDACION_CASILLA),
-        legal_refs=(_DUMMY_LEGAL_ID,),
-        source_refs=(_DUMMY_SOURCE_ID,),
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(REFERENCE_SOURCE_ID,),
     )
-    revision = _minimal_revision(
+    manifest = completeness_manifest(
+        (
+            CalculationCompletenessCasilla(
+                casilla_id=_SEGMENTED_LIQUIDACION_CASILLA,
+                number="00562",
+                segmento="DP200014",
+            ),
+            CalculationCompletenessCasilla(
+                casilla_id=_SEGMENTED_TARGET_CASILLA,
+                number="00999",
+                segmento="DP200014",
+            ),
+        ),
+    )
+    revision = minimal_revision(
         casillas=(liquidacion, ecpn, target_casilla_def),
         formulas=(formula,),
+    ).model_copy(
+        update={"completeness_manifest": manifest},
     )
-    failures = RegistryValidator(_minimal_catalogues())._validate_revision(
-        _minimal_modelo(revision),
-        revision,
-    )
+    failures = _modelo_validation_failures(minimal_modelo(revision))
     unknown_casilla_failures = [f for f in failures if "unknown casilla" in f]
     assert unknown_casilla_failures == [], (
         f"a segment-qualified casilla reference must resolve; got: {unknown_casilla_failures}"
@@ -90,14 +111,14 @@ def test_segment_qualified_reference_resolves_across_segments() -> None:
 
 def test_casilla_segmento_defaults_unset() -> None:
     """A single-segment casilla leaves segmento unset; the field defaults to None."""
-    casilla = _single_segment_casilla()
+    casilla = single_segment_casilla()
 
     assert casilla.segmento is None
 
 
 def test_casilla_segmento_accepts_aeat_record_segment_code() -> None:
     """A multi-segment casilla carries the AEAT record-segment code in segmento."""
-    casilla = _single_segment_casilla().model_copy(update={"segmento": "DP200014"})
+    casilla = single_segment_casilla().model_copy(update={"segmento": "DP200014"})
 
     assert casilla.segmento == "DP200014"
 
@@ -109,7 +130,7 @@ def test_single_segment_casilla_validates_unchanged_with_segmento_unset() -> Non
     that never declares segmento must validate exactly as before, with
     segmento absent from the serialised payload's meaningful state.
     """
-    casilla = _single_segment_casilla()
+    casilla = single_segment_casilla()
 
     round_tripped = CasillaDefinition.model_validate(casilla.model_dump())
 
@@ -121,7 +142,7 @@ def test_single_segment_casilla_validates_unchanged_with_segmento_unset() -> Non
 def test_casilla_segmento_rejects_empty_string() -> None:
     """An empty segmento is rejected so 'unset' stays distinct from 'empty'."""
     with pytest.raises(ValidationError, match="segmento"):
-        CasillaDefinition.model_validate({**_single_segment_casilla().model_dump(), "segmento": ""})
+        CasillaDefinition.model_validate({**single_segment_casilla().model_dump(), "segmento": ""})
 
 
 def test_segmented_casilla_survives_strict_load_cycle_roundtrip() -> None:
@@ -172,20 +193,43 @@ def test_segmented_casilla_survives_strict_load_cycle_roundtrip() -> None:
     assert round_tripped.semantic_role == "is_liquidacion_iii_cuota_integra"
 
 
-def test_revision_without_manifest_passes_completeness_gate() -> None:
-    """A revision with no completeness_manifest is not failed by the gate.
+def test_revision_without_calculation_closure_passes_without_completeness_manifest() -> None:
+    """A revision with no calculation closure does not need a completeness manifest.
 
-    The completeness gate is rollout-staged: until a modelo's manifest is
-    authored, a casilla-bearing revision must keep validating. A minimal
-    revision that declares one casilla and no manifest must produce zero
-    completeness-gate failures.
+    Informative/no-calculation revisions remain valid without a
+    completeness manifest. The fail-closed rule applies only once a
+    revision has a formula/binding/relation/verification calculation
+    closure.
     """
-    from .._validate import RegistryValidator
+    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),))
+    modelo = minimal_modelo(revision)
+    # A clean return proves no-calculation revisions are not forced to author an empty manifest.
+    RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
 
-    revision = _minimal_revision(casillas=(_minimal_casilla(_NUMERIC_CASILLA_01),))
-    modelo = _minimal_modelo(revision)
-    # A clean return proves the manifest-less revision clears the gate.
-    RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+
+def test_calculation_bearing_revision_without_manifest_fails_closed() -> None:
+    """A revision with a calculation closure must declare a completeness manifest."""
+    from .._schema import FormulaDefinition, FormulaExpression
+
+    input_casilla = minimal_casilla(_NUMERIC_CASILLA_01)
+    computed_casilla = minimal_casilla(_NUMERIC_CASILLA_02).model_copy(
+        update={"input_kind": InputKind.COMPUTED, "formula": "test.formula"},
+    )
+    formula = FormulaDefinition(
+        id="test.formula",
+        target_casilla_id=_NUMERIC_CASILLA_02,
+        expression=FormulaExpression(casilla_id=_NUMERIC_CASILLA_01),
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(REFERENCE_SOURCE_ID,),
+    )
+    revision = minimal_revision(casillas=(input_casilla, computed_casilla), formulas=(formula,))
+    modelo = minimal_modelo(revision)
+
+    with pytest.raises(
+        RegistryValidationError,
+        match="calculation-bearing revision declares no calculation-completeness manifest",
+    ):
+        RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
 
 
 def test_completeness_gate_passes_when_manifest_required_subset_of_declared() -> None:
@@ -195,15 +239,13 @@ def test_completeness_gate_passes_when_manifest_required_subset_of_declared() ->
     revision declares exactly that casilla, so the required set is a
     subset of the declared set and the gate raises nothing.
     """
-    from .._validate import RegistryValidator
-
-    casilla = _minimal_casilla(_NUMERIC_CASILLA_01)
-    manifest = _completeness_manifest(
+    casilla = minimal_casilla(_NUMERIC_CASILLA_01)
+    manifest = completeness_manifest(
         (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
     )
-    revision = _minimal_revision(casillas=(casilla,)).model_copy(update={"completeness_manifest": manifest})
-    modelo = _minimal_modelo(revision)
-    RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+    revision = minimal_revision(casillas=(casilla,)).model_copy(update={"completeness_manifest": manifest})
+    modelo = minimal_modelo(revision)
+    RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
 
 
 def test_completeness_gate_passes_when_revision_declares_extra_accounting_casilla() -> None:
@@ -216,19 +258,17 @@ def test_completeness_gate_passes_when_revision_declares_extra_accounting_casill
     The extra casilla must NOT red the gate — a modelo can clear the gate
     without an exhaustive full-Diseño backfill.
     """
-    from .._validate import RegistryValidator
-
-    manifest = _completeness_manifest(
+    manifest = completeness_manifest(
         (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
     )
-    revision = _minimal_revision(
-        casillas=(_minimal_casilla(_NUMERIC_CASILLA_01), _minimal_casilla(_NUMERIC_CASILLA_02)),
+    revision = minimal_revision(
+        casillas=(minimal_casilla(_NUMERIC_CASILLA_01), minimal_casilla(_NUMERIC_CASILLA_02)),
     ).model_copy(
         update={"completeness_manifest": manifest},
     )
-    modelo = _minimal_modelo(revision)
+    modelo = minimal_modelo(revision)
     # A clean return proves the extra accounting casilla does not fail.
-    RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+    RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
 
 
 def test_completeness_gate_fails_on_missing_required_casilla() -> None:
@@ -238,18 +278,16 @@ def test_completeness_gate_fails_on_missing_required_casilla() -> None:
     but the revision declares only '01'. The completeness gate must
     report the missing required '02' as a hard RegistryValidationError.
     """
-    from .._validate import RegistryValidator
-
-    manifest = _completeness_manifest(
+    manifest = completeness_manifest(
         (
             CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),
             CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_02, number="02"),
         ),
     )
-    revision = _minimal_revision(casillas=(_minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
         update={"completeness_manifest": manifest},
     )
-    modelo = _minimal_modelo(revision)
+    modelo = minimal_modelo(revision)
     with pytest.raises(
         RegistryValidationError,
         match=(
@@ -257,7 +295,7 @@ def test_completeness_gate_fails_on_missing_required_casilla() -> None:
             r"but the revision does not declare it"
         ),
     ):
-        RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+        RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
 
 
 def test_completeness_gate_fails_on_manifest_metadata_mismatch() -> None:
@@ -268,10 +306,8 @@ def test_completeness_gate_fails_on_manifest_metadata_mismatch() -> None:
     that id belongs under DP200032, validation must fail as a metadata
     mismatch instead of treating DP200032:00562 as a second address.
     """
-    from .._validate import RegistryValidator
-
-    declared = _segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
-    manifest = _completeness_manifest(
+    declared = segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    manifest = completeness_manifest(
         (
             CalculationCompletenessCasilla(
                 casilla_id=_SEGMENTED_LIQUIDACION_CASILLA,
@@ -280,9 +316,9 @@ def test_completeness_gate_fails_on_manifest_metadata_mismatch() -> None:
             ),
         ),
     )
-    revision = _minimal_revision(casillas=(declared,)).model_copy(update={"completeness_manifest": manifest})
-    modelo = _minimal_modelo(revision)
-    failures = RegistryValidator(_minimal_catalogues())._validate_revision(modelo, revision)
+    revision = minimal_revision(casillas=(declared,)).model_copy(update={"completeness_manifest": manifest})
+    modelo = minimal_modelo(revision)
+    failures = _modelo_validation_failures(modelo)
     mismatch = [
         f
         for f in failures
@@ -309,8 +345,6 @@ def test_completeness_gate_fails_on_ungrounded_required_casilla() -> None:
     `legal_refs` / `source_refs` provenance, and the gate enforces that
     independently of the schema-level field constraint.
     """
-    from .._validate import RegistryValidator
-
     ungrounded = CasillaDefinition.model_construct(
         id=_NUMERIC_CASILLA_01,
         number="01",
@@ -321,14 +355,14 @@ def test_completeness_gate_fails_on_ungrounded_required_casilla() -> None:
         legal_refs=(),
         source_refs=(),
     )
-    manifest = _completeness_manifest(
+    manifest = completeness_manifest(
         (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
     )
-    revision = _minimal_revision(casillas=(_minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
         update={"completeness_manifest": manifest, "casillas": (ungrounded,)},
     )
-    modelo = _minimal_modelo(revision)
-    failures = RegistryValidator(_minimal_catalogues())._validate_revision(modelo, revision)
+    modelo = minimal_modelo(revision)
+    failures = _modelo_validation_failures(modelo)
     legal = [f for f in failures if "casilla.id '01'" in f and "without legal_refs" in f]
     source = [f for f in failures if "casilla.id '01'" in f and "without source_refs" in f]
     assert legal, f"ungrounded required casilla must be reported without legal_refs; got: {failures}"
@@ -337,9 +371,7 @@ def test_completeness_gate_fails_on_ungrounded_required_casilla() -> None:
 
 def test_completeness_manifest_refs_must_resolve_in_registry_validation() -> None:
     """Manifest-level legal/source refs are load-blocking catalogue references."""
-    from .._validate import RegistryValidator
-
-    manifest = _completeness_manifest(
+    manifest = completeness_manifest(
         (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
     ).model_copy(
         update={
@@ -348,11 +380,11 @@ def test_completeness_manifest_refs_must_resolve_in_registry_validation() -> Non
             "source_refs": (_MISSING_SOURCE_ID,),
         },
     )
-    revision = _minimal_revision(casillas=(_minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
         update={"completeness_manifest": manifest},
     )
 
-    failures = RegistryValidator(_minimal_catalogues())._validate_revision(_minimal_modelo(revision), revision)
+    failures = _modelo_validation_failures(minimal_modelo(revision))
 
     assert any(
         "calculation-completeness manifest references unknown legal id 'lirpf:art-99'" in failure
@@ -366,8 +398,6 @@ def test_completeness_manifest_refs_must_resolve_in_registry_validation() -> Non
 
 def test_casilla_continuidad_evolution_refs_must_resolve_in_registry_validation() -> None:
     """Continuity-evolution legal/source refs are load-blocking catalogue references."""
-    from .._validate import RegistryValidator
-
     evolution = CasillaContinuidadEvolutionDefinition(
         id="test-continuidad-2024-2025",
         continuidad_id="test.continuidad",
@@ -377,11 +407,11 @@ def test_casilla_continuidad_evolution_refs_must_resolve_in_registry_validation(
         legal_refs=(_MISSING_LEGAL_ID,),
         source_refs=(_MISSING_SOURCE_ID,),
     )
-    revision = _minimal_revision(casillas=(_minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
         update={"casilla_continuidad_evolutions": (evolution,)},
     )
 
-    failures = RegistryValidator(_minimal_catalogues())._validate_revision(_minimal_modelo(revision), revision)
+    failures = _modelo_validation_failures(minimal_modelo(revision))
 
     assert any(
         "casilla continuidad evolution 'test-continuidad-2024-2025' references unknown legal id 'lirpf:art-99'"
@@ -397,7 +427,7 @@ def test_casilla_continuidad_evolution_refs_must_resolve_in_registry_validation(
 
 def test_snapshot_carries_manifest_and_continuity_refs() -> None:
     """Slice snapshots retain manifest and continuity-evolution legal/source evidence."""
-    manifest = _completeness_manifest(
+    manifest = completeness_manifest(
         (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
     ).model_copy(
         update={
@@ -415,7 +445,7 @@ def test_snapshot_carries_manifest_and_continuity_refs() -> None:
         legal_refs=(_EXTRA_LEGAL_ID,),
         source_refs=(_EXTRA_SOURCE_ID,),
     )
-    revision = _minimal_revision(casillas=(_minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
         update={
             "completeness_manifest": manifest,
             "casilla_continuidad_evolutions": (evolution,),
@@ -423,16 +453,16 @@ def test_snapshot_carries_manifest_and_continuity_refs() -> None:
     )
     catalogues = RegistryCatalogues(
         legal={
-            _DUMMY_LEGAL_ID: _minimal_legal_ref(),
-            _EXTRA_LEGAL_ID: _minimal_legal_ref().model_copy(update={"id": _EXTRA_LEGAL_ID}),
+            REFERENCE_LEGAL_ID: minimal_legal_ref(),
+            _EXTRA_LEGAL_ID: minimal_legal_ref().model_copy(update={"id": _EXTRA_LEGAL_ID}),
         },
         sources={
-            _DUMMY_SOURCE_ID: _minimal_source_ref(),
-            _EXTRA_SOURCE_ID: _minimal_source_ref().model_copy(update={"id": _EXTRA_SOURCE_ID}),
+            REFERENCE_SOURCE_ID: minimal_source_ref(),
+            _EXTRA_SOURCE_ID: minimal_source_ref().model_copy(update={"id": _EXTRA_SOURCE_ID}),
         },
     )
 
-    snapshot = _snapshot_for_revision(_minimal_modelo(revision), catalogues, revision)
+    snapshot = snapshot_for_revision(minimal_modelo(revision), catalogues, revision)
 
     assert _EXTRA_LEGAL_ID in snapshot.legal
     assert _EXTRA_SOURCE_ID in snapshot.sources
@@ -441,13 +471,13 @@ def test_snapshot_carries_manifest_and_continuity_refs() -> None:
 
 def test_snapshot_integrity_checks_completeness_manifest_refs() -> None:
     """Snapshot integrity rejects manifest refs missing from the slice catalogue."""
-    manifest = _completeness_manifest(
+    manifest = completeness_manifest(
         (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
-    ).model_copy(update={"legal_refs": (_DUMMY_LEGAL_ID, _MISSING_LEGAL_ID)})
-    revision = _minimal_revision(casillas=(_minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+    ).model_copy(update={"legal_refs": (REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID)})
+    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
         update={"completeness_manifest": manifest},
     )
-    snapshot = _build_snapshot_with_missing_legal(revision, _MISSING_LEGAL_ID)
+    snapshot = build_snapshot_with_missing_legal(revision, _MISSING_LEGAL_ID)
 
     with pytest.raises(RegistryValidationError, match=r"calculation_completeness_manifest\.legal_refs"):
         check_all_id_references(snapshot)
@@ -455,13 +485,13 @@ def test_snapshot_integrity_checks_completeness_manifest_refs() -> None:
 
 def test_snapshot_integrity_checks_completeness_manifest_source_ref() -> None:
     """Snapshot integrity rejects a manifest source_ref missing from the slice catalogue."""
-    manifest = _completeness_manifest(
+    manifest = completeness_manifest(
         (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
     ).model_copy(update={"source_ref": _MISSING_SOURCE_ID, "source_refs": (_MISSING_SOURCE_ID,)})
-    revision = _minimal_revision(casillas=(_minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
         update={"completeness_manifest": manifest},
     )
-    snapshot = _build_snapshot_with_missing_source(revision, _MISSING_SOURCE_ID)
+    snapshot = build_snapshot_with_missing_source(revision, _MISSING_SOURCE_ID)
 
     with pytest.raises(RegistryValidationError, match=r"calculation_completeness_manifest\.source_ref"):
         check_all_id_references(snapshot)
@@ -475,13 +505,13 @@ def test_snapshot_integrity_checks_casilla_continuidad_evolution_refs() -> None:
         from_revision="2024",
         to_revision="2025",
         evolution_kind="label_evolved",
-        legal_refs=(_DUMMY_LEGAL_ID, _MISSING_LEGAL_ID),
-        source_refs=(_DUMMY_SOURCE_ID,),
+        legal_refs=(REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID),
+        source_refs=(REFERENCE_SOURCE_ID,),
     )
-    revision = _minimal_revision(casillas=(_minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
         update={"casilla_continuidad_evolutions": (evolution,)},
     )
-    snapshot = _build_snapshot_with_missing_legal(revision, _MISSING_LEGAL_ID)
+    snapshot = build_snapshot_with_missing_legal(revision, _MISSING_LEGAL_ID)
 
     with pytest.raises(RegistryValidationError, match=r"casilla_continuidad_evolution test-continuidad-2024-2025"):
         check_all_id_references(snapshot)
@@ -502,17 +532,17 @@ def test_filing_modelo_with_formula_passes_invariant() -> None:
         id="test.formula",
         target_casilla_id=_NUMERIC_CASILLA_01,
         expression=FormulaExpression(casilla_id=_NUMERIC_CASILLA_01),
-        legal_refs=(_DUMMY_LEGAL_ID,),
-        source_refs=(_DUMMY_SOURCE_ID,),
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(REFERENCE_SOURCE_ID,),
     )
-    computed_casilla = _minimal_casilla(_NUMERIC_CASILLA_01).model_copy(
+    computed_casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(
         update={"input_kind": InputKind.COMPUTED, "formula": "test.formula"},
     )
-    revision = _minimal_revision(
+    revision = minimal_revision(
         casillas=(computed_casilla,),
         formulas=(formula,),
     )
-    filing_modelo = _minimal_modelo(revision)  # default calculation_class == "filing"
+    filing_modelo = minimal_modelo(revision)  # default calculation_class == "filing"
     # The informative invariant must return no failures for a filing modelo.
     failures = validate_informative_class_invariant(filing_modelo)
     assert failures == [], f"filing modelo must not be rejected by informative invariant; got: {failures}"

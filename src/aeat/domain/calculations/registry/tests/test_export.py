@@ -18,14 +18,16 @@ import tomllib
 from typing import Any
 
 import pytest
+from pydantic import ValidationError
 
+from .....core import BindingSourceKind
+from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import bundled_path
 from .._binding_selector_utils import (
     BindingFixedExportSelector,
     BindingRowExportSelector,
     binding_export_selector,
 )
-from .._errors import RegistryValidationError
 from .._export import (
     _export_fields_overlap,
     _justification_for_binding_data_type,
@@ -120,16 +122,18 @@ def _field(
     )
 
 
-def _binding(selector: dict[str, Any]) -> DataBindingDefinition:
-    # ``withholding`` is free-form at the schema level (no entry in
-    # ``_BINDING_SELECTOR_REGISTRY``), so the F8 construction-time selector gate
-    # does not constrain the arbitrary selector mappings these tests feed to the
-    # generic selector-extraction helpers (``selector_int`` / ``data_type``).
+def _binding(
+    selector: dict[str, Any],
+    *,
+    source: BindingSourceKind = BindingSourceKind.MANUAL_INPUT,
+    aggregation: BindingAggregation | None = None,
+) -> DataBindingDefinition:
     return DataBindingDefinition.model_validate(
         {
             "id": "binding-under-test",
-            "source": "withholding",
+            "source": source,
             "selector": selector,
+            "aggregation": aggregation,
             "legal_refs": ("ley-37-1992:art-1",),
             "source_refs": ("aeat-dr-303-2025",),
         },
@@ -219,17 +223,34 @@ def test_binding_export_selector_accepts_fixed_field_shape() -> None:
 
 
 def test_binding_export_selector_accepts_row_field_shape() -> None:
-    binding = _binding({"record": "operador", "row_field": "base_imponible", "fact": "row_field"})
+    binding = _binding(
+        {
+            "record": "perceptor",
+            "row_field": "retencion_practicada",
+            "fact": "row_field",
+            "grouping": "per_perceptor",
+        },
+        source=BindingSourceKind.WITHHOLDING,
+        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
+    )
 
     selector = binding_export_selector(binding)
 
     assert isinstance(selector, BindingRowExportSelector)
-    assert selector.record == "operador"
-    assert selector.row_field == "base_imponible"
+    assert selector.record == "perceptor"
+    assert selector.row_field == "retencion_practicada"
 
 
 def test_binding_export_selector_ignores_non_export_row_fact_without_record() -> None:
-    binding = _binding({"row_field": "base_imponible", "fact": "row_field"})
+    binding = _binding(
+        {
+            "row_field": "retencion_practicada",
+            "fact": "row_field",
+            "grouping": "per_perceptor",
+        },
+        source=BindingSourceKind.WITHHOLDING,
+        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
+    )
 
     assert binding_export_selector(binding) is None
 
@@ -241,39 +262,31 @@ def test_binding_export_selector_ignores_value_data_type_without_record() -> Non
 
 
 def test_binding_export_selector_rejects_partial_fixed_field_shape() -> None:
-    binding = _binding({"record": "DPA", "offset": 42, "data_type": "money"})
-
-    with pytest.raises(RegistryValidationError, match="missing fixed-field keys"):
-        binding_export_selector(binding)
+    with pytest.raises(ValidationError):
+        _binding({"record": "DPA", "offset": 42, "data_type": "money"})
 
 
 def test_binding_export_selector_rejects_ambiguous_fixed_and_row_shape() -> None:
-    binding = _binding(
-        {
-            "record": "DPA",
-            "row_field": "importe",
-            "offset": 42,
-            "length": 10,
-            "data_type": "money",
-        },
-    )
-
-    with pytest.raises(RegistryValidationError, match="cannot declare row_field"):
-        binding_export_selector(binding)
+    with pytest.raises(ValidationError):
+        _binding(
+            {
+                "record": "DPA",
+                "row_field": "importe",
+                "offset": 42,
+                "length": 10,
+                "data_type": "money",
+            },
+        )
 
 
 def test_binding_export_selector_rejects_unknown_data_type() -> None:
-    binding = _binding({"record": "DPA", "offset": 42, "length": 10, "data_type": "weird"})
-
-    with pytest.raises(RegistryValidationError, match="malformed export selector projection"):
-        binding_export_selector(binding)
+    with pytest.raises(ValidationError):
+        _binding({"record": "DPA", "offset": 42, "length": 10, "data_type": "weird"})
 
 
 def test_binding_export_selector_rejects_non_integer_offset() -> None:
-    binding = _binding({"record": "DPA", "offset": ("1", "2"), "length": 10, "data_type": "money"})
-
-    with pytest.raises(RegistryValidationError, match="malformed export selector projection"):
-        binding_export_selector(binding)
+    with pytest.raises(ValidationError):
+        _binding({"record": "DPA", "offset": ("1", "2"), "length": 10, "data_type": "money"})
 
 
 # ---------------------------------------------------------------------------

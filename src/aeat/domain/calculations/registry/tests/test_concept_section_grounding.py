@@ -30,7 +30,7 @@ _CONCEPT_SECTION_GROUNDING: dict[str, tuple[str | tuple[str, ...], tuple[int, ..
     "saldos_neg_gy_p_general_res": ("ley-35-2006:art-48", (2021, 2022, 2023, 2024)),
     "saldos_neg_gy_p_ahorro_res": ("ley-35-2006:art-49", (2021, 2022, 2023, 2024)),
     # deducciones en cuota acogidas al régimen del IS (I+D, cine, etc.) — art. 68.2 LIRPF
-    "deducciones_inversion_empresarial_res": ("ley-35-2006:art-68", (2021, 2022, 2023, 2024)),
+    "deducciones_inversion_empresarial_res": ("ley-35-2006:art-68.2", (2021, 2022, 2023, 2024)),
     # mínimo personal y familiar (resultado) — art. 56 (umbrella de arts. 56-61)
     "minimo_per_fam_res": ("ley-35-2006:art-56", (2021, 2022, 2023, 2024)),
     # rendimientos de capital mobiliario negativos pendientes — integración base ahorro
@@ -50,8 +50,17 @@ _CONCEPT_SECTION_GROUNDING: dict[str, tuple[str | tuple[str, ...], tuple[int, ..
     # binding-aware pass (casilla + construct + binding coherently, resolving V19).
     "base_liq_neg_res": ("ley-35-2006:art-50", (2021, 2022, 2023, 2024)),
     # reducciones de la base imponible (aggregate) — art. 50 (base liquidable = base
-    # imponible − reducciones); the specific reduction articles are the inputs.
+    # imponible - reducciones); specific reduction outputs can bind to their own
+    # article instead via _SECTION_ROLE_GROUNDING_OVERRIDES.
     "red_base_imponible_res": ("ley-35-2006:art-50", (2021, 2022, 2023, 2024)),
+}
+
+_SECTION_ROLE_GROUNDING_OVERRIDES: dict[tuple[str, int, str], tuple[str, ...]] = {
+    (
+        "red_base_imponible_res",
+        2024,
+        "irpf_reduccion_tributacion_conjunta_importe",
+    ): ("ley-35-2006:art-84",),
 }
 
 
@@ -81,9 +90,17 @@ def test_concept_section_grounds_in_its_article_not_actividades(
     assert casillas, f"M100 {year} section {section_tag} must have casillas"
     actividades = [(c.id, sorted(c.legal_refs)) for c in casillas if _ACTIVIDADES_CHAPTER & set(c.legal_refs)]
     assert not actividades, f"M100 {year} {section_tag}: boxes still cite the actividades chapter: {actividades}"
-    expected = set(articles)
-    missing = [(c.id, sorted(c.legal_refs)) for c in casillas if expected.isdisjoint(c.legal_refs)]
-    assert not missing, f"M100 {year} {section_tag}: boxes not grounded in {sorted(expected)}: {missing}"
+    missing = []
+    for casilla in casillas:
+        expected = set(
+            _SECTION_ROLE_GROUNDING_OVERRIDES.get(
+                (section_tag, year, casilla.semantic_role),
+                articles,
+            )
+        )
+        if expected.isdisjoint(casilla.legal_refs):
+            missing.append((casilla.id, sorted(expected), sorted(casilla.legal_refs)))
+    assert not missing, f"M100 {year} {section_tag}: boxes not grounded in their article: {missing}"
 
 
 def _prevision_social_casillas(filing_year: int):
@@ -137,6 +154,10 @@ _AUTONOMIC_COMUNIDADES = (
     "deduccion_autonomica",
     "datos_adicionales_anexo_b",  # Anexo B = autonomic-deductions annex (info blocks)
 )
+_AUTONOMIC_DEDUCTION_FRAMEWORK_REF = "ley-35-2006:art-77"
+_AUTONOMIC_DEDUCTION_REFS_BY_ROLE = {
+    "irpf_deduccion_nueva_empresa_entidad_nif": "ley-35-2006:art-68.1",
+}
 
 
 def _autonomic_deduction_casillas(filing_year: int):
@@ -155,17 +176,28 @@ def _autonomic_deduction_casillas(filing_year: int):
 
 
 @pytest.mark.parametrize("year", [2021, 2022, 2023, 2024])
-def test_autonomic_deductions_ground_in_art77_not_actividades(year: int) -> None:
-    """Autonomic-deduction boxes cite art. 77 (cuota líquida autonómica) and never
-    the actividades chapter."""
+def test_autonomic_deductions_ground_in_own_article_not_actividades(year: int) -> None:
+    """Autonomic-deduction boxes cite their governing deduction article and never
+    the actividades chapter.
+
+    Most Anexo B autonomic-deduction boxes bind to art. 77 (cuota líquida
+    autonómica). New-company entity NIF boxes are still additional Anexo B data, but
+    their governing deduction provision is art. 68.1.
+    """
     casillas = _autonomic_deduction_casillas(year)
     assert casillas, f"M100 {year}: autonomic-deduction sections must have casillas"
     actividades = [(c.id, sorted(c.legal_refs)) for c in casillas if _ACTIVIDADES_CHAPTER & set(c.legal_refs)]
     assert not actividades, (
         f"M100 {year}: autonomic-deduction boxes still cite the actividades chapter: {actividades[:10]}"
     )
-    missing = [(c.id, sorted(c.legal_refs)) for c in casillas if "ley-35-2006:art-77" not in set(c.legal_refs)]
-    assert not missing, f"M100 {year}: autonomic-deduction boxes not grounded in art. 77: {missing[:10]}"
+    missing = []
+    for casilla in casillas:
+        expected_ref = _AUTONOMIC_DEDUCTION_REFS_BY_ROLE.get(
+            casilla.semantic_role, _AUTONOMIC_DEDUCTION_FRAMEWORK_REF
+        )
+        if expected_ref not in set(casilla.legal_refs):
+            missing.append((casilla.id, casilla.semantic_role, expected_ref, sorted(casilla.legal_refs)))
+    assert not missing, f"M100 {year}: autonomic-deduction boxes not grounded in their article: {missing[:10]}"
 
 
 def _casillas_with_section_substr(filing_year: int, needle: str):

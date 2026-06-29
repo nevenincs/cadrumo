@@ -15,7 +15,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_iva_category_has_every_named_member() -> None:
-    """:class:`IvaCategory` must carry exactly the 17 declared members.
+    """:class:`IvaCategory` must carry exactly the 18 declared members.
 
     ``DOMESTIC_REVERSE_CHARGE`` exists to disambiguate
     *inversión del sujeto pasivo* on domestic transactions
@@ -34,6 +34,7 @@ def test_iva_category_has_every_named_member() -> None:
         "INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE",
         "INTRA_COMMUNITY_TRIANGULATION",
         "EXPORT_THIRD_COUNTRY_ZERO_RATED",
+        "EXPORT_ASSIMILATED_ZERO_RATED",
         "IMPORT_THIRD_COUNTRY",
         "RECARGO_EQUIVALENCIA",
         "REGIMEN_SIMPLIFICADO",

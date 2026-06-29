@@ -39,12 +39,7 @@ def _m100_capital_mobiliario_casillas(filing_year: int):
     return [c for c in rev.casillas if "rdto_capital_mobiliario" in tuple(c.section)]
 
 
-# Scoped to the years corrected by this fix. 2025 is excluded here because its
-# casillas 0043/0044/0049 carry a separate 17-article "kitchen-sink" over-grounding
-# (an enrichment-authoring artifact, not this copy-paste defect) that happens to
-# include the actividades chapter — tracked as a distinct follow-up, not regressed by
-# this correction. The own-chapter test below still covers 2025.
-@pytest.mark.parametrize("year", [2021, 2022, 2023, 2024])
+@pytest.mark.parametrize("year", [2020, 2021, 2022, 2023, 2024, 2025])
 def test_capital_mobiliario_never_cites_actividades_chapter(year: int) -> None:
     """No capital-mobiliario casilla may cite an actividades económicas article."""
     offenders = [
