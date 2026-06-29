@@ -16,11 +16,17 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
+from ...adapters.persistence.storage.errors import (
+    ClassificationError,
+    DecryptionError,
+    EnvelopeVersionError,
+    StorageValidationError,
+)
 from ...core import BindingSourceKind, Modelo, Period, PeriodError
 from ...domain.calculations.registry import (
     BindingId,
     CasillaId,
+    IvaLedgerObservation,
     ModeloRevision,
     resolve_ledger_iva_aggregation_binding_values,
     resolve_ledger_renta_expense_aggregation_binding_values,
@@ -33,7 +39,13 @@ from ...domain.calculations.registry import (
     unsupported_ledger_renta_income_observations,
     validated_casilla_id,
 )
-from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoicePersistenceError
+from ...domain.invoices import (
+    Invoice,
+    InvoiceCatalogueRepository,
+    InvoiceCatalogueRepositoryProtocol,
+    InvoicePersistenceError,
+    invoice_line_to_iva_observation,
+)
 from ...domain.renta import RentaDeductibleExpenseObservation
 from ...domain.transactions import TransactionCatalogueRepositoryProtocol, TransactionPersistenceError
 from ._errors import AggregationValidationError, t
@@ -62,6 +74,7 @@ _STORAGE_DEGRADATION_ERRORS = (
     DecryptionError,
     EnvelopeVersionError,
     InvoicePersistenceError,
+    StorageValidationError,
     TransactionPersistenceError,
 )
 _IVA_SOURCE_DIAGNOSTIC_SUPPRESSED_REASONS = frozenset(
@@ -72,6 +85,13 @@ _IVA_SOURCE_DIAGNOSTIC_SUPPRESSED_REASONS = frozenset(
 )
 _M130_RETENCIONES_BINDING_ID: BindingId = "modelo-130-actividad-economica-retenciones-cumulative"
 _M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
+_M303_STANDARD_DOMESTIC_IVA_CUOTA_BINDINGS: tuple[BindingId, ...] = (
+    "modelo-303-iva-repercutido-general-cuota",
+    "modelo-303-iva-repercutido-reducido-cuota",
+    "modelo-303-iva-repercutido-super-reducido-cuota",
+    "modelo-303-iva-soportado-interiores-cuota",
+)
+_M303_INVOICE_EVIDENCE_SAMPLE_LIMIT = 5
 
 
 class LedgerIvaAggregationSourceResolver:
@@ -80,20 +100,27 @@ class LedgerIvaAggregationSourceResolver:
     resolver_id = "ledger_iva_aggregation"
     owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_IVA_AGGREGATION,)
 
-    def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+        invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    ) -> None:
         self._transaction_repository = transaction_repository
+        self._invoice_repository = invoice_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         if not _revision_has_binding_source(context.revision, "ledger_iva_aggregation"):
             return _empty_source_resolution(self.resolver_id, self.owned_sources)
 
+        aggregation_period = aggregation_period_for_modelo(
+            filing_year=context.filing_year,
+            code=context.period.registry_token,
+        )
         try:
             aggregation = aggregate_iva_ledger_observations_from_repositories(
                 bucket_id=context.bucket_id,
-                period=aggregation_period_for_modelo(
-                    filing_year=context.filing_year,
-                    code=context.period.registry_token,
-                ),
+                period=aggregation_period,
                 transaction_repository=self._transaction_repository,
             )
         except _STORAGE_DEGRADATION_ERRORS as exc:
@@ -105,6 +132,16 @@ class LedgerIvaAggregationSourceResolver:
             )
         transaction_ids = {observation.ledger_id for observation in aggregation.observations}
         transaction_ids.update(reference.transaction_id for reference in aggregation.prorrata_references)
+        binding_values = resolve_ledger_iva_aggregation_binding_values(
+            context.revision,
+            aggregation.observations,
+        )
+        _raise_if_m303_invoice_domestic_iva_would_be_silent(
+            context=context,
+            period=aggregation_period,
+            transaction_binding_values=binding_values,
+            invoice_repository=self._invoice_repository,
+        )
         # Reuse the fail-closed candidate-path screen as a NON-blocking advisory on
         # the calculate path: a declarable IVA observation whose category/rate/flow
         # triple no ``ledger_iva_aggregation`` binding selects would otherwise be
@@ -116,10 +153,7 @@ class LedgerIvaAggregationSourceResolver:
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
-            binding_values=resolve_ledger_iva_aggregation_binding_values(
-                context.revision,
-                aggregation.observations,
-            ),
+            binding_values=binding_values,
             source_transaction_ids=tuple(sorted(transaction_ids)),
             diagnostics=tuple(
                 CalculationSourceDiagnostic(
@@ -433,6 +467,110 @@ class LedgerRentaGastoAggregationSourceResolver:
                 for observation in aggregation.observations
             ),
         )
+
+
+def _raise_if_m303_invoice_domestic_iva_would_be_silent(
+    *,
+    context: CalculationSourceContext,
+    period: Period,
+    transaction_binding_values: Mapping[BindingId, Decimal],
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
+) -> None:
+    """Refuse M303 when domestic invoice IVA would be absent from ledger totals.
+
+    Modelo 303's domestic IVA boxes are sourced from ``ledger_iva_aggregation``:
+    the transaction ledger is the filing authority. A bucket can also carry real
+    invoice catalogue evidence, but there is no domestic-IVA invoice binding
+    family for M303. If positive Spanish invoice IVA exists for the same period
+    and its standard domestic cuota would exceed the transaction-ledger cuota
+    that the filing is about to use, calculating a zero/subtotal filing would
+    silently under-declare. Refuse and require the operator to link/classify the
+    transactions that feed the canonical ledger path.
+    """
+    if str(context.modelo) != Modelo.M303.value:
+        return
+    invoice_observations, invoice_ids = _m303_standard_domestic_invoice_iva_observations(
+        context=context,
+        period=period,
+        invoice_repository=invoice_repository,
+    )
+    if not invoice_observations:
+        return
+    invoice_binding_values = resolve_ledger_iva_aggregation_binding_values(context.revision, invoice_observations)
+    missing_binding_values = {
+        binding_id: invoice_value - transaction_value
+        for binding_id in _M303_STANDARD_DOMESTIC_IVA_CUOTA_BINDINGS
+        if (invoice_value := invoice_binding_values.get(binding_id, Decimal("0"))) > (
+            transaction_value := transaction_binding_values.get(binding_id, Decimal("0"))
+        )
+    }
+    if not missing_binding_values:
+        return
+    raise AggregationValidationError(
+        t("errors.error.error_modelo_aggregation_binding"),
+        context={
+            "reason": "invoice_domestic_iva_not_in_transaction_ledger",
+            "modelo": str(context.modelo),
+            "filing_year": str(context.filing_year),
+            "period": context.period.registry_token,
+            "source_kind": "ledger_iva_aggregation",
+            "invoice_domestic_iva_excess_by_binding": {
+                str(binding_id): str(amount) for binding_id, amount in missing_binding_values.items()
+            },
+            "invoice_ids": tuple(sorted(invoice_ids)[:_M303_INVOICE_EVIDENCE_SAMPLE_LIMIT]),
+            "invoice_count": str(len(invoice_ids)),
+        },
+        suggestion=(
+            "Link and classify the domestic IVA invoices into the transaction ledger "
+            "before calculating Modelo 303; invoice-only IVA evidence is not a Modelo 303 filing source."
+        ),
+    )
+
+
+def _m303_standard_domestic_invoice_iva_observations(
+    *,
+    context: CalculationSourceContext,
+    period: Period,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
+) -> tuple[tuple[IvaLedgerObservation, ...], tuple[str, ...]]:
+    try:
+        repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=context.bucket_id)
+        catalogue = repository.load()
+    except _STORAGE_DEGRADATION_ERRORS:
+        return (), ()
+    observations: list[IvaLedgerObservation] = []
+    invoice_ids: set[str] = set()
+    for invoice in catalogue.values():
+        if not _m303_standard_domestic_invoice_in_period(invoice, context=context, period=period):
+            continue
+        for line_index, line in enumerate(invoice.lines):
+            if line.iva_amount <= Decimal("0"):
+                continue
+            observations.append(
+                invoice_line_to_iva_observation(
+                    invoice_id=f"invoice:{invoice.invoice_id}:{line_index}",
+                    issued_at=invoice.issued_at,
+                    invoice_kind=invoice.kind,
+                    iva_rate=line.iva_rate,
+                    base_amount=line.subtotal,
+                    iva_amount=line.iva_amount,
+                ),
+            )
+            invoice_ids.add(invoice.invoice_id)
+    return tuple(observations), tuple(invoice_ids)
+
+
+def _m303_standard_domestic_invoice_in_period(
+    invoice: Invoice,
+    *,
+    context: CalculationSourceContext,
+    period: Period,
+) -> bool:
+    return (
+        invoice.bucket_id == context.bucket_id
+        and period.contains(invoice.issued_at)
+        and invoice.counterparty_country.strip().upper() == "ES"
+    )
 
 
 def aggregation_period_for_modelo(*, filing_year: int, code: str) -> Period:
