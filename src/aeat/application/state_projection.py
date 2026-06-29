@@ -560,6 +560,8 @@ class ProjectionModeloReadiness(BaseModel):
     """Readiness for one modelo target across profile and ledger facts.
 
     Attributes:
+        profile_refusal: Operator-facing refusal when profile facts are
+            present but disqualify the target period.
         period: Typed :class:`~aeat.core.Period` the readiness check was
             scoped to.
         ledger_period: The :class:`~aeat.core.Period` the ledger preflight
@@ -575,6 +577,7 @@ class ProjectionModeloReadiness(BaseModel):
     period: Period
     missing: tuple[ProfilePreflightRequirement, ...] = ()
     profile_ready: bool
+    profile_refusal: str = ""
     registry_ready: bool = True
     registry_refusal: str = ""
     binding_ready: bool = True
@@ -611,6 +614,7 @@ def _build_modelo_readiness(
     if not requests or active_profile_id is None:
         return ()
 
+    from .modelo._profile_readiness_gate import pre_activity_period_refusal
     from .user_profile._orchestration import build_lifecycle_service
     from .user_profile._preflight import ProfilePreflightService
     from .workflow import read_profile_bucket_by_id
@@ -632,6 +636,17 @@ def _build_modelo_readiness(
             period=readiness_period,
             revision=revision,
         )
+        profile_refusal = ""
+        pre_activity_refusal = pre_activity_period_refusal(
+            record=record,
+            bucket_id=pointer.bucket_id,
+            modelo=request.modelo,
+            filing_year=request.filing_year,
+            period=readiness_period,
+        )
+        if pre_activity_refusal is not None:
+            profile_refusal = pre_activity_refusal[0]
+        profile_ready = profile_report.ready and not profile_refusal
         ledger_report = None
         if registry_resolution.snapshot is not None and _snapshot_requires_ledger_preflight(
             registry_resolution.snapshot
@@ -658,7 +673,8 @@ def _build_modelo_readiness(
                 filing_year=profile_report.filing_year,
                 period=profile_report.period,
                 missing=profile_report.missing,
-                profile_ready=profile_report.ready,
+                profile_ready=profile_ready,
+                profile_refusal=profile_refusal,
                 registry_ready=registry_resolution.ready,
                 registry_refusal=registry_resolution.refusal,
                 binding_ready=not missing_bindings,
@@ -672,7 +688,7 @@ def _build_modelo_readiness(
                 ledger_issues=tuple(ledger_report.issues) if ledger_report is not None else (),
                 ready=(
                     registry_resolution.ready
-                    and profile_report.ready
+                    and profile_ready
                     and not missing_bindings
                     and (ledger_report is None or ledger_report.ready)
                 ),
