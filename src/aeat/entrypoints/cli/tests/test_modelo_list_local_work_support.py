@@ -49,5 +49,20 @@ def test_modelo_list_marks_m210_as_visible_but_not_local_work_supported() -> Non
 
     m303 = _modelo_row(payload, "303")
     assert m303["local_work_supported"] is True
-    assert m303["local_work_status"] == "supported"
+    assert m303["local_work_status"] == "supported-model-level"
     assert m303["local_work_guidance"] is None
+
+
+def test_modelo_list_distinguishes_model_level_support_from_revision_scope() -> None:
+    unscoped_result = invoke_cached_cli(["--format", "json", "app", "modelo", "list"])
+    assert unscoped_result.exit_code == 0, unscoped_result.output
+    unscoped = unwrap_schema_envelope(unscoped_result.output)
+    m100 = _modelo_row(unscoped, "100")
+    assert m100["local_work_supported"] is True
+    assert m100["local_work_status"] == "supported-model-level"
+
+    scoped_result = invoke_cached_cli(["--format", "json", "app", "modelo", "list", "--year", "2026"])
+    assert scoped_result.exit_code == 0, scoped_result.output
+    scoped = unwrap_schema_envelope(scoped_result.output)
+    codes = {row["code"] for row in scoped["modelos"]}
+    assert "100" not in codes
