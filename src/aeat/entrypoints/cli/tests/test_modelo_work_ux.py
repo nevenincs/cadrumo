@@ -88,11 +88,16 @@ def _create_profile(*, activity_start_date: str | None = None) -> None:
     assert result.exit_code == 0, result.output
 
 
-def _set_gb_non_resident_axes() -> None:
+def _create_gb_non_resident_profile() -> None:
     result = _invoke(
         [
-            "config", "profile", "edit", "operator",
-            "--quiet",
+            "config", "profile", "create", "operator",
+            "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
+            "--tax-id", "12345678Z",
+            "--name", "Operator",
+            "--surnames", "Readiness",
+            "--activity", "Spanish-source rent",
             "--fiscal-residency", "non_resident_irnr",
             "--country-of-fiscal-residence", "GB",
             "--representante-fiscal-nif", "12345678Z",
@@ -370,6 +375,66 @@ def test_work_list_surfaces_revision_pointer_fields(_isolated_cli_backend: Path)
     assert unit["filed_calculation_revision_id"] is None
 
 
+def test_work_status_and_list_show_presentado_after_file(_isolated_cli_backend: Path) -> None:
+    _create_profile(activity_start_date="2025-10-01")
+    created = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "130", "--year", "2025", "--period", "4T",
+            "--revision", "2019-y-siguientes",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+    work_unit_id = _payload(created.output)["work_unit_id"]
+
+    calculated = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", work_unit_id,
+            "--casilla", "05=0.00",
+            "--casilla", "06=0.00",
+            "--binding", "irpf.previous_year_economic_activity_net_income=13000",
+            "--binding", "modelo-130-resultados-negativos-anteriores=0",
+        ],
+    )  # fmt: skip
+    assert calculated.exit_code == 0, calculated.output
+
+    verified = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "verify",
+            "--modelo", "130", "--year", "2025", "--period", "4T",
+        ],
+    )  # fmt: skip
+    assert verified.exit_code == 0, verified.output
+    assert _payload(verified.output)["granted_verificado_completo"] is True
+
+    filed = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "file",
+            "--modelo", "130", "--year", "2025", "--period", "4T",
+        ],
+    )  # fmt: skip
+    assert filed.exit_code == 0, filed.output
+    filed_revision_id = _payload(filed.output)["calculation_revision_id"]
+
+    status = _invoke(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
+    assert status.exit_code == 0, status.output
+    status_payload = _payload(status.output)
+    assert status_payload["state"] == "presentado"
+    assert status_payload["filed_calculation_revision_id"] == filed_revision_id
+
+    listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    assert listed.exit_code == 0, listed.output
+    list_payload = _payload(listed.output)
+    matching = [unit for unit in list_payload["work_units"] if unit["work_unit_id"] == work_unit_id]
+    assert len(matching) == 1
+    assert matching[0]["state"] == "presentado"
+    assert matching[0]["filed_calculation_revision_id"] == filed_revision_id
+
+
 def test_work_revisions_resolves_a_visible_filing_target(_isolated_cli_backend: Path) -> None:
     """`work revisions` can filter by modelo/year/period instead of raw id."""
 
@@ -561,8 +626,10 @@ def test_work_dependencies_honours_activity_start_date_pre_activity_scoping(
         [
             "config", "profile", "create", "operator",
             "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
             "--tax-id", "12345678Z",
             "--name", "Operator",
+            "--surnames", "Readiness",
             "--activity", "design",
             "--activity-start-date", "2025-01-01",
         ],
@@ -784,8 +851,7 @@ def test_overview_next_step_does_not_suggest_m210_work_create_for_non_resident(
 ) -> None:
     """A non-resident M210 profile gets discovery/Sede guidance, not work-create."""
 
-    _create_profile()
-    _set_gb_non_resident_axes()
+    _create_gb_non_resident_profile()
     added = _invoke(
         [
             "app", "ledger", "add",
@@ -818,7 +884,21 @@ def test_work_create_rejects_revision_that_does_not_cover_filing_year(
     DANA rules do not apply to a 2024 filing.
     """
 
-    _create_profile()
+    created = _invoke(
+        [
+            "config", "profile", "create", "operator",
+            "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
+            "--irpf-income-categories", "actividad_economica",
+            "--uses-objective-estimation-irpf",
+            "--irpf-estimation-regime", "objetiva",
+            "--tax-id", "12345678Z",
+            "--name", "Operator",
+            "--surnames", "Readiness",
+            "--activity", "objective-estimation activity",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
     result = _invoke(
         [
             "app", "modelo", "work", "create",

@@ -5,6 +5,7 @@ from __future__ import annotations
 from ...application.modelo import ModeloWorkPlazoSummary, calculation_result_summary, modelo_work_plazo_summary
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...domain.modelos import CalculationRevisionState
 from ._modelo_payloads import (
     CalculationRevisionPayload,
     ExternalEvidencePayload,
@@ -53,6 +54,15 @@ def short_id(value: str | None) -> str | None:
     return value[-12:] if value else None
 
 
+def _effective_work_unit_state(unit) -> str:
+    state = unit.state.value
+    if state == "descartado":
+        return state
+    if unit.filed_calculation_revision_id is not None:
+        return CalculationRevisionState.PRESENTADO.value
+    return state
+
+
 def work_unit_payload(unit) -> WorkUnitPayload:
     return WorkUnitPayload(
         work_unit_id=unit.work_unit_id,
@@ -63,7 +73,7 @@ def work_unit_payload(unit) -> WorkUnitPayload:
         period=unit.period,
         revision_id=unit.revision_id,
         name=unit.name,
-        state=unit.state.value,
+        state=_effective_work_unit_state(unit),
         current_calculation_revision_id=unit.current_calculation_revision_id,
         short_current_calculation_revision_id=short_id(unit.current_calculation_revision_id),
         filed_calculation_revision_id=unit.filed_calculation_revision_id,
@@ -88,7 +98,7 @@ def work_unit_lines(unit) -> list[str]:
         f"period\t{unit.period.registry_token}",
         f"revision_id\t{unit.revision_id}",
         f"name\t{unit.name}",
-        f"state\t{unit.state.value}",
+        f"state\t{_effective_work_unit_state(unit)}",
         f"current_calculation_revision_id\t{unit.current_calculation_revision_id or ''}",
         f"short_current_calculation_revision_id\t{short_id(unit.current_calculation_revision_id) or ''}",
         f"filed_calculation_revision_id\t{unit.filed_calculation_revision_id or ''}",
@@ -127,7 +137,7 @@ def work_unit_list_lines(units, *, bucket_id: str | None, include_discarded: boo
                 str(unit.filing_year),
                 unit.period.registry_token,
                 unit.revision_id,
-                unit.state.value,
+                _effective_work_unit_state(unit),
                 short_id(unit.current_calculation_revision_id) or "",
                 short_id(unit.filed_calculation_revision_id) or "",
                 unit.name,
