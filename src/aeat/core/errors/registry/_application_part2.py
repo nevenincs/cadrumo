@@ -635,6 +635,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._action_errors.ModeloRequiredBindingsMissingError",
+        ErrorCode(
+            code="REFUSED_MODELO_REQUIRED_BINDINGS_MISSING",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_modelo_aggregation_binding",
+            default_suggestion="aeat app modelo bindings list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application._errors.DiagnosticModelError",
         ErrorCode(
             code="REFUSED_DIAGNOSTIC_MODEL_INVARIANT",

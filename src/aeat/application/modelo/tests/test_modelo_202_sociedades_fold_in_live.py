@@ -104,12 +104,19 @@ from ...calculations._observations_repository import CalculationObservationRepos
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     BucketAggregationCalculationResult,
+    ModeloRequiredBindingsMissingError,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
 )
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _register_wizard_catalogue() -> None:
+    from ...wizard import _catalogue  # noqa: F401  (import for registration side effect)
+
 
 _BUCKET_ID = "bucket-m202-sociedades-fold"
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
@@ -128,6 +135,8 @@ _M202_PAGO_OUTPUT_40_2: CasillaId = validated_casilla_id(
     surface="_M202_PAGO_OUTPUT_40_2",
 )  # modalidad cuota (art. 40.2); folds alongside casilla 34
 _M200_CUOTA_LIQUIDA: CasillaId = validated_casilla_id("DP200014B:00592", surface="_M200_CUOTA_LIQUIDA")
+_M202_CUOTA_BASE_BINDING = "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior"
+_M202_PAGOS_ANTERIORES_BINDING = "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores"
 
 # Bound casillas on the M202/2025 revision under test.
 _CASILLA_BASE: CasillaId = validated_casilla_id(
@@ -204,6 +213,9 @@ def _seed_m200_sociedad_profile() -> None:
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B87654321"),
+            UserProfileFact(path="identity.legal_name", value="M200 Fold Sociedad Limitada"),
+            UserProfileFact(path="activities.description", value="desarrollo de software"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
             UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
             UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
             UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
@@ -299,9 +311,13 @@ def _seed_sociedad_profile() -> None:
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345678"),
+            UserProfileFact(path="identity.legal_name", value="M202 Fold Sociedad Limitada"),
+            UserProfileFact(path="activities.description", value="servicios empresariales"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
             UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
             UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
             UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
+            UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
         ),
         created_at=_T0,
         updated_at=_T0,
@@ -464,32 +480,45 @@ def test_m202_3p_cumulates_prior_1p_and_2p_pagos_on_live_calculate(
     assert result.source_diagnostics == ()
 
 
-def test_m202_2p_no_prior_filing_resolves_zero_on_live_calculate(
+def test_m202_2p_no_prior_filing_refuses_zero_draft_on_live_calculate(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """Pin the CURRENT live behaviour of an M202 2P fold with NO prior filing.
-
-    Unlike the M100 0604 fold (which RAISES ``RegistryValidationError`` on an
-    absent prior filing — finding #26, the directly-referenced cross-model
-    relation has no supplied value), the M202 self-pago carry uses the
-    ``previous_period`` ``prior_pagos_cumulative`` alignment and the M202 <- M200
-    cuota-base carry tolerates an absent prior M200: both resolve present-or-zero
-    rather than raising. With NO prior M202 1P and NO prior M200 in the store,
-    the live 2P calculate succeeds and both folded casillas resolve to zero
-    (a correct first-instalment zero, not a silent under-declaration of a
-    declared prior). This documents the status quo and fails loudly if it
-    drifts. (xfail/skip-free per the testing mandate.)
-    """
-    result = _calculate_m202(secure_objects, period="2P")
-
-    values = result.revision.casilla_values
-    assert Decimal(values[_CASILLA_PAGOS_ANTERIORES]) == Decimal("0"), (
-        f"M202 2P casilla 30 with no prior 1P pago must resolve zero; got {values[_CASILLA_PAGOS_ANTERIORES]}"
+    """A live M202 calculate with missing prior observations must not save zero carries."""
+    _seed_sociedad_profile()
+    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
+    snapshot = resources().modelos.authority.snapshot(_M202, filing_year=_FILING_YEAR, period="2P")
+    work_unit = create_work_unit(
+        bucket_id=_BUCKET_ID,
+        modelo=_M202,
+        filing_year=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, "2P"),
+        revision_id=snapshot.revision.id,
+        repository=wu_repo,
+        clock=_T0,
     )
-    assert Decimal(values[_CASILLA_BASE]) == Decimal("0"), (
-        f"M202 2P casilla 01 with no prior M200 cuota must resolve zero; got {values[_CASILLA_BASE]}"
-    )
-    assert result.source_diagnostics == ()
+
+    with pytest.raises(ModeloRequiredBindingsMissingError) as exc_info:
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            binding_values={},
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+            clock=_T1,
+        )
+
+    assert set(exc_info.value.context["missing_bindings"]) == {
+        _M202_CUOTA_BASE_BINDING,
+        _M202_PAGOS_ANTERIORES_BINDING,
+    }
+    assert cr_repo.load().revisions == {}
+    stored_work_unit = wu_repo.load().get(work_unit.work_unit_id)
+    assert stored_work_unit is not None
+    assert stored_work_unit.current_calculation_revision_id is None
 
 
 # Cuota-a-ingresar leg of the cuota-diferencial subtraction: with no manual M200

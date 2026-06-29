@@ -103,6 +103,10 @@ class ModeloAggregationBindingError(ModeloError):
     """Raised when bucket-derived aggregation bindings conflict with caller input."""
 
 
+class ModeloRequiredBindingsMissingError(ModeloError):
+    """Raised when Modelo 202 lifecycle work lacks required calculation bindings."""
+
+
 class ModeloProfileReadinessError(ModeloError):
     """Raised when filing-grade modelo work starts with missing active-profile facts."""
 
@@ -174,6 +178,7 @@ __all__ = [
     "ModeloRecordNotFoundError",
     "ModeloRefundAccountMissingError",
     "ModeloRefundElectionNotEligibleError",
+    "ModeloRequiredBindingsMissingError",
     "ModeloWorkflowGateError",
     "StoredCalculationDriftError",
     "VerificationReportNotFoundError",
