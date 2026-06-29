@@ -1,14 +1,20 @@
 [[revisions."2021".constructs]]
 id = "renta-2021-dependent-modelos"
-title = "Modelo 100 2021 retenciones and withholding cross-modelo inputs"
+title = "Modelo 100 2021 retenciones, pagos fraccionados and withholding cross-modelo inputs"
 legal_refs = [
     "ley-35-2006:art-99",
     "rd-439-2007:art-108",
     "rd-439-2007:art-109",
     "rd-439-2007:art-110",
     "orden-eha-3435-2007:anexo-ii",
+    "orden-eha-672-2007:art-1",
+    "orden-eha-672-2007:art-3",
 ]
 source_refs = [
+    "aeat-dr-100-2021-dictionary",
+    "aeat-dr-100-2021-input-dictionary",
+    "aeat-dr-100-2021-xsd",
+    "aeat-modelo-100-procedure",
     "aeat-renta-2021-manual-parte1",
     "boe-modelo-100-2021-form",
 ]
@@ -16,8 +22,14 @@ bindings = [
     "renta-2021-modelo-111-retenciones-periodicas",
     "renta-2021-modelo-115-retenciones-periodicas",
     "renta-2021-modelo-123-retenciones-periodicas",
+    "renta-2021-modelo-130-pagos-fraccionados",
+    "renta-2021-modelo-131-pagos-fraccionados",
+]
+casilla_ids = [
+    "0604",
 ]
 formulas = [
+    "renta-2021-pagos-fraccionados-ingresados",
     "renta-2021-total-pagos-a-cuenta",
 ]
 relations = [
@@ -25,9 +37,13 @@ relations = [
     "renta-2021-rel-111-retenciones-mensuales",
     "renta-2021-rel-115-retenciones-trimestrales",
     "renta-2021-rel-123-retenciones-trimestrales",
+    "renta-2021-rel-130-pagos-fraccionados",
+    "renta-2021-rel-131-pagos-fraccionados",
 ]
 dependency_classifications = [
     "renta-2021-dep-111",
     "renta-2021-dep-115",
     "renta-2021-dep-123",
+    "renta-2021-dep-130",
+    "renta-2021-dep-131",
 ]
