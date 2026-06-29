@@ -3,5 +3,21 @@ label = "Modelo 202 ejercicios 2019 a 2022 (DR202v52.xlsx, Orden HAC/941/2018)"
 valid_from = 2019-01-01
 valid_to = 2022-12-31
 period_selector = { year_from = 2019, year_to = 2022, periods = ["1P", "2P", "3P"] }
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
-source_refs = ["aeat-dr-202-2019", "aeat-modelo-202-instructions-2023-2024"]
+legal_refs = [
+    "ley-27-2014:art-40",
+    "ley-27-2014:art-29",
+    "ley-27-2014:art-30",
+    "ley-27-2014:art-105",
+    "orden-hfp-227-2017:art-1",
+    "orden-hac-941-2018:art-primero-5-anexo-i",
+]
+orden_aplicabilidad = [
+    "orden-hfp-227-2017:art-1",
+    "orden-hac-941-2018:art-primero-5-anexo-i",
+]
+source_refs = [
+    "aeat-dr-202-2019",
+    "aeat-modelo-202-instructions-2023-2024",
+    "boe-modelo-202-base-order",
+    "boe-modelo-202-2018-amendment",
+]
