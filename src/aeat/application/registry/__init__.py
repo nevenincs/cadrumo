@@ -333,14 +333,12 @@ def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryT
 
     Returns a :class:`RegistryTreeReport`.
 
-    Runs a full strict audit including ``required_text`` corpus checks on
-    every legal reference — the checks that the production authority skips
-    so that pending corpus annotations never abort user-facing workflows.
+    Runs a full audit including ``required_text`` corpus checks on every
+    legal reference.
     """
     authority = _ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
     authority.validate_registry()
-    # Run the strict corpus-text check that the production authority omits.
-    _verify_legal_catalogue(authority.catalogues.legal, source_root=source_root, corpus_strict=True)
+    _verify_legal_catalogue(authority.catalogues.legal, source_root=source_root)
     modelos = authority.modelos
     catalogues = authority.catalogues
     inventory = _revision_inventory(modelos)

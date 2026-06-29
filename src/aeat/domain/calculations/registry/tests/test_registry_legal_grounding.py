@@ -17,9 +17,5 @@ def test_committed_registry_legal_and_construct_references_validate_through_load
 
     assert modelos, "committed registry load produced no modelos"
 
-    validator = RegistryValidator(
-        catalogues,
-        source_root=bundled_path(),
-        catalogue_corpus_strict=False,
-    )
+    validator = RegistryValidator(catalogues, source_root=bundled_path())
     validator.validate_registry(modelos)
