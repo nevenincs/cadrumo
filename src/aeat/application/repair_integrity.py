@@ -140,6 +140,10 @@ class RepairIntegrityReport(BaseModel):
 class RepairListRow(BaseModel):
     """One metadata row in the secure-object repair inventory.
 
+    Rows are projected from
+    :class:`~aeat.adapters.persistence.storage.sql.secure_objects.SecureObjectDecryptabilityRow`
+    values returned by
+    :meth:`~aeat.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.iter_namespace_decryptability`.
     ``object_key_digest`` is the stored HMAC digest, not the natural object key.
     ``reason`` is populated only for unreadable rows and must remain a diagnostic
     class of failure rather than decrypted payload context.
@@ -303,7 +307,9 @@ def build_repair_list_report(
 
     Returns a :class:`RepairListReport` enumerating matching HMAC digests and
     their decryptability status. The report never exposes natural object keys or
-    payload bytes.
+    payload bytes. Without an injected repository, the list path enters
+    :func:`active_bucket_repair_session` before resolving the active
+    :class:`SecureObjectRepository`.
     """
     if include_all and only_unreadable:
         raise RepairIntegrityError(
@@ -378,7 +384,9 @@ class RepairRemediationDecision(BaseModel):
     Decision records persist preserve / quarantine / rebuild /
     export-required planning outcomes without authorising mutation.
     ``mutation_authorized`` is hard-typed to ``False`` so a decision
-    record can never be mistaken for an execute order.
+    record can never be mistaken for an execute order. The policy catalog keeps
+    these records visible through :class:`RepairPolicyCommandSurface`
+    decision-trail anchors.
 
     The ``decision_id`` is content-bound via
     :func:`repair_remediation_decision_id` to every other field, so
@@ -426,7 +434,7 @@ def repair_remediation_decision_id(
     Content-bound to every payload field including ``decided_at`` so
     two structurally identical re-runs at the same instant produce the
     same id; differing payloads produce different ids. The hash domain
-    matches the model's field set exactly so the load-time
+    matches the :class:`RepairRemediationDecision` field set exactly so the load-time
     re-derivation guard catches any payload mutation that bypassed
     the constructor.
     """
@@ -563,7 +571,12 @@ def _expected_repair_decision_id(decision: RepairRemediationDecision) -> str:
 
 
 class RepairPolicyNamespaceClassification(BaseModel):
-    """Minimal namespace classification attached to a repair-policy surface."""
+    """Minimal namespace classification attached to a repair-policy surface.
+
+    Embedded in :class:`RepairPolicyNamespacePolicy` so command catalog rows can
+    describe non-registered bundle / filing / ledger surfaces and registered
+    secure-object namespace scopes with the same shape.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -576,7 +589,9 @@ class RepairPolicyNamespacePolicy(BaseModel):
     Registered secure-object namespaces copy owner, sensitivity, schema version,
     and scope from :class:`SecureObjectNamespaceDefinition` so repair and
     recovery surfaces stay tied to the namespace registry instead of parallel
-    role markers.
+    role markers. :class:`RepairPolicyCommandSurface` attaches these rows to
+    every CLI surface that can inspect, repair, import, export, or recover
+    namespace-owned data.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -701,7 +716,8 @@ def build_repair_policy_command_surface_catalog() -> tuple[RepairPolicyCommandSu
     recovery, import, export, and bucket-history surfaces. It is used
     as an executable drift gate: adding a new command in those families requires
     a policy row here, and secure-object rows must derive their metadata from the
-    central namespace registry.
+    central namespace registry. Each row also carries decision links for
+    :class:`RepairRemediationDecision` governance.
 
     See Also:
         :data:`~aeat.adapters.persistence.storage.STORAGE_NAMESPACE_REGISTRY`
