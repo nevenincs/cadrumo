@@ -13,9 +13,14 @@ Related: :mod:`~._iva_ledger`, :mod:`~._renta_ledger`, :mod:`~._renta_income_led
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from decimal import Decimal
+
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import BindingSourceKind, Modelo, Period, PeriodError
 from ...domain.calculations.registry import (
+    BindingId,
+    CasillaId,
     ModeloRevision,
     resolve_ledger_iva_aggregation_binding_values,
     resolve_ledger_renta_expense_aggregation_binding_values,
@@ -26,6 +31,7 @@ from ...domain.calculations.registry import (
     unsupported_ledger_renta_expense_observations,
     unsupported_ledger_renta_gasto_observations,
     unsupported_ledger_renta_income_observations,
+    validated_casilla_id,
 )
 from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoicePersistenceError
 from ...domain.renta import RentaDeductibleExpenseObservation
@@ -64,6 +70,8 @@ _IVA_SOURCE_DIAGNOSTIC_SUPPRESSED_REASONS = frozenset(
         IvaLedgerAggregationIssueReason.PERSONAL_TRANSACTION,
     },
 )
+_M130_RETENCIONES_BINDING_ID: BindingId = "modelo-130-actividad-economica-retenciones-cumulative"
+_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
 
 
 class LedgerIvaAggregationSourceResolver:
@@ -282,6 +290,10 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 source_kinds=self.owned_sources,
                 error=exc,
             )
+        binding_values = resolve_ledger_renta_income_aggregation_binding_values(
+            context.revision,
+            aggregation.observations,
+        )
         # Fail-closed advisory parity with the IVA screen: a non-zero declarable
         # income whose target_casilla_id matches no ledger_renta_income_aggregation
         # binding would otherwise be silently dropped (no-silent-under-declaration).
@@ -289,10 +301,8 @@ class LedgerRentaIncomeAggregationSourceResolver:
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
-            binding_values=resolve_ledger_renta_income_aggregation_binding_values(
-                context.revision,
-                aggregation.observations,
-            ),
+            binding_values=binding_values,
+            bound_inputs_by_casilla_id=_m130_retenciones_backend_inputs(context, binding_values),
             source_transaction_ids=tuple(
                 sorted(observation.transaction_id for observation in aggregation.observations),
             ),
@@ -327,6 +337,18 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 for observation in aggregation.observations
             ),
         )
+
+
+def _m130_retenciones_backend_inputs(
+    context: CalculationSourceContext,
+    binding_values: Mapping[BindingId, Decimal],
+) -> dict[CasillaId, Decimal]:
+    if str(context.modelo) != Modelo.M130.value:
+        return {}
+    value = binding_values.get(_M130_RETENCIONES_BINDING_ID)
+    if value is None:
+        return {}
+    return {_M130_RETENCIONES_CASILLA: value}
 
 
 class LedgerRentaGastoAggregationSourceResolver:

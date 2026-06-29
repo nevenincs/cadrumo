@@ -40,6 +40,7 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _INGRESOS_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
+_RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 _M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id(
     "03",
@@ -66,6 +67,7 @@ class _IncomeObservation(BaseModel):
     target_casilla_id: CasillaId
     gross_amount: Decimal
     taxable_base_amount: Decimal | None
+    withheld_amount: Decimal = Decimal("0")
     filing_date: date
 
 
@@ -119,6 +121,42 @@ def test_ingresos_integros_sum_uses_base_when_tagged_and_gross_when_not() -> Non
         "IVA-inclusive gross must not feed casilla 01"
     )
     assert resolved[_INGRESOS_BINDING] != tagged.taxable_base_amount, "untagged receipts must not vanish"
+
+
+def test_committed_m130_retenciones_binding_reads_withheld_amount_fact() -> None:
+    revision = _modelo_130_snapshot().revision
+
+    binding = next(binding for binding in revision.bindings if binding.id == _RETENCIONES_BINDING)
+    assert binding.source == "ledger_renta_income_aggregation"
+    assert dict(binding.selector) == {
+        "modelo": "130",
+        "target_casilla_id": _M130_INGRESOS_CASILLA,
+        "fact": "withheld_amount_sum",
+    }
+    validate_ledger_renta_income_aggregation_binding_definition(binding)
+
+    net_paid = _IncomeObservation(
+        transaction_id="inv-net-paid",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        gross_amount=Decimal("2120.00"),
+        taxable_base_amount=Decimal("2000.00"),
+        withheld_amount=Decimal("300.00"),
+        filing_date=date(2026, 3, 15),
+    )
+    no_withholding = _IncomeObservation(
+        transaction_id="inv-no-withholding",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        gross_amount=Decimal("1210.00"),
+        taxable_base_amount=Decimal("1000.00"),
+        withheld_amount=Decimal("0.00"),
+        filing_date=date(2026, 3, 20),
+    )
+
+    resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, (net_paid, no_withholding))
+
+    assert resolved[_RETENCIONES_BINDING] == Decimal("300.00")
+    assert resolved[_RETENCIONES_BINDING] != net_paid.gross_amount
+    assert resolved[_RETENCIONES_BINDING] != net_paid.taxable_base_amount
 
 
 def test_income_binding_validator_rejects_unknown_fact() -> None:
