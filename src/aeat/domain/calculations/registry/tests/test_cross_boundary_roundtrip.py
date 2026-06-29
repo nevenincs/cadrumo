@@ -65,6 +65,7 @@ class _ModeloDraftCommonKwargs(TypedDict):
     modelo: str
     period: Period
     profile_tax_id: str
+    snapshot_ref: object
     status: ModeloDraftStatus
     values: tuple[ModeloValue, ...]
     binding_values: tuple[ModeloBindingValue, ...]
@@ -254,12 +255,22 @@ def test_filing_draft_full_roundtrip() -> None:
     starts losing fields during the migration, this test will fail.
     """
 
+    from .._schema import RegistrySnapshotRef
+
     now = datetime.now(UTC).replace(microsecond=0)
+    snapshot_ref = RegistrySnapshotRef(
+        modelo="303",
+        revision_id="2025-y-siguientes",
+        modelo_year=2025,
+        period="1T",
+    )
     original = ModeloDraft(
         draft_id="f" * 64,
         modelo="303",
         period=Period.from_year_and_code(2025, "1T"),
         profile_tax_id="12345678Z",
+        subject_tax_id="12345678Z",
+        snapshot_ref=snapshot_ref,
         status=ModeloDraftStatus.BORRADOR,
         values=(
             ModeloValue(
@@ -310,12 +321,21 @@ def test_filing_draft_subject_tax_id_validates_at_boundary() -> None:
 
     import pytest as _pytest
 
+    from .._schema import RegistrySnapshotRef
+
     now = datetime.now(UTC).replace(microsecond=0)
+    snapshot_ref = RegistrySnapshotRef(
+        modelo="303",
+        revision_id="2025-y-siguientes",
+        modelo_year=2025,
+        period="1T",
+    )
     common_kwargs: _ModeloDraftCommonKwargs = {
         "draft_id": "f" * 64,
         "modelo": "303",
         "period": Period.from_year_and_code(2025, "1T"),
         "profile_tax_id": "12345678Z",
+        "snapshot_ref": snapshot_ref,
         "status": ModeloDraftStatus.BORRADOR,
         "values": (),
         "binding_values": (),

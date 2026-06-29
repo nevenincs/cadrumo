@@ -20,6 +20,7 @@ from .. import (
     build_snapshot,
     load_registry_tree,
 )
+from .._binding_selector_utils import selector_as_dict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
@@ -121,6 +122,14 @@ _FORBIDDEN_REMOTE_ACTIONS = frozenset(
         "declaration-submission",
     ],
 )
+_DECLARATION_PROFILE_TARGET_LEGAL_REFS = frozenset(
+    [
+        "ley-27-2014:art-19",
+        "ley-58-2003:art-93",
+        "orden-hfp-816-2017:art-1",
+        "orden-hfp-816-2017:art-3",
+    ]
+)
 
 
 def test_committed_modelo_232_static_cross_reference_forbids_remote_writes() -> None:
@@ -158,6 +167,22 @@ def test_committed_modelo_232_declaration_pdf_extraction_profile_targets_declara
             assert profile.confidence == "strict"
             assert profile.failure_semantics == "fail_hard"
             assert {t.casilla_id for t in profile.target_casillas} <= casilla_ids
+
+
+def test_committed_modelo_232_declaration_pdf_profile_legal_refs_match_target_casillas() -> None:
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+        pdf_profiles = [profile for profile in revision.extraction_profiles if profile.surface == "declaracion_pdf"]
+        assert pdf_profiles, revision.id
+        for profile in pdf_profiles:
+            target_refs = frozenset(
+                legal_ref
+                for target in profile.target_casillas
+                for legal_ref in casillas_by_id[target.casilla_id].legal_refs
+            )
+            assert target_refs == _DECLARATION_PROFILE_TARGET_LEGAL_REFS
+            assert set(profile.legal_refs) == _DECLARATION_PROFILE_TARGET_LEGAL_REFS
 
 
 def test_committed_modelo_232_verification_expectation_is_informative_strict() -> None:
@@ -409,13 +434,13 @@ def _layout_bindings_for(revision: ModeloRevision, record_name: str) -> tuple[Da
     return tuple(
         binding
         for binding in revision.bindings
-        if isinstance(binding.selector.get("record"), str) and binding.selector["record"] == record_name
+        if selector_as_dict(binding).get("record") == record_name
     )
 
 
 def _selector_int(binding: DataBindingDefinition, key: str) -> int:
     """Extract an integer selector value from a binding; asserts the value is numeric."""
-    value = binding.selector[key]
+    value = selector_as_dict(binding)[key]
     assert isinstance(value, (int, str))
     return int(value)
 

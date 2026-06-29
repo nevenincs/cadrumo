@@ -12,7 +12,7 @@ These tests confirm:
   - The registry actually holds the parameter for every supported ejercicio.
   - The resolver consumes the registry value (matches the documented module
     constant ``PRIOR_RENT_REBAJA_THRESHOLD = 0.05``).
-  - The fallback path (registry lookup miss) returns the constant.
+  - Unsupported ejercicios fail closed instead of falling back to module constants.
 """
 
 from __future__ import annotations
@@ -22,13 +22,12 @@ from decimal import Decimal
 
 import pytest
 
-from ...calculations.registry import read_parameter
+from ...calculations.registry import RegistryValidationError, read_parameter
 from .._enums import ReduccionTier
 from .._tier_resolver import (
     DEFAULT_EJERCICIO_AMENDMENT_YEAR,
     JOVEN_TENANT_AGE_MAX,
     JOVEN_TENANT_AGE_MIN,
-    PRIOR_RENT_REBAJA_THRESHOLD,
     REHAB_LOOKBACK_DAYS,
     TierResolution,
     _resolve_ejercicio_amendment_year,
@@ -61,11 +60,9 @@ def test_resolver_threshold_helper_returns_registry_value(year: int) -> None:
     assert value == Decimal("0.05")
 
 
-def test_resolver_threshold_helper_falls_back_to_constant_for_unregistered_year() -> None:
-    """When the registry lookup misses (year out of supported range), fallback to constant."""
-    value = _resolve_prior_rent_rebaja_threshold(1999)
-    assert value == PRIOR_RENT_REBAJA_THRESHOLD
-    assert value == Decimal("0.05")
+def test_resolver_threshold_helper_refuses_unregistered_year() -> None:
+    with pytest.raises(RegistryValidationError, match="has no revision '1999'"):
+        _resolve_prior_rent_rebaja_threshold(1999)
 
 
 @pytest.mark.parametrize("year", _SUPPORTED_YEARS)
@@ -86,9 +83,9 @@ def test_resolver_amendment_year_helper_returns_registry_value(year: int) -> Non
     assert value == DEFAULT_EJERCICIO_AMENDMENT_YEAR
 
 
-def test_resolver_amendment_year_helper_falls_back_for_unregistered_year() -> None:
-    value = _resolve_ejercicio_amendment_year(1999)
-    assert value == DEFAULT_EJERCICIO_AMENDMENT_YEAR
+def test_resolver_amendment_year_helper_refuses_unregistered_year() -> None:
+    with pytest.raises(RegistryValidationError, match="has no revision '1999'"):
+        _resolve_ejercicio_amendment_year(1999)
 
 
 @pytest.mark.parametrize("year", _SUPPORTED_YEARS)
@@ -109,9 +106,9 @@ def test_resolver_rehab_lookback_helper_returns_registry_value(year: int) -> Non
     assert value == REHAB_LOOKBACK_DAYS
 
 
-def test_resolver_rehab_lookback_helper_falls_back_for_unregistered_year() -> None:
-    value = _resolve_rehab_lookback_days(1999)
-    assert value == REHAB_LOOKBACK_DAYS
+def test_resolver_rehab_lookback_helper_refuses_unregistered_year() -> None:
+    with pytest.raises(RegistryValidationError, match="has no revision '1999'"):
+        _resolve_rehab_lookback_days(1999)
 
 
 @pytest.mark.parametrize("year", _SUPPORTED_YEARS)
@@ -140,9 +137,9 @@ def test_resolver_joven_age_range_helper_returns_registry_value(year: int) -> No
     assert age_max == JOVEN_TENANT_AGE_MAX
 
 
-def test_resolver_joven_age_range_helper_falls_back_for_unregistered_year() -> None:
-    age_min, age_max = _resolve_joven_tenant_age_range(1999)
-    assert (age_min, age_max) == (JOVEN_TENANT_AGE_MIN, JOVEN_TENANT_AGE_MAX)
+def test_resolver_joven_age_range_helper_refuses_unregistered_year() -> None:
+    with pytest.raises(RegistryValidationError, match="has no revision '1999'"):
+        _resolve_joven_tenant_age_range(1999)
 
 
 _TIER_RATES = (
@@ -171,8 +168,9 @@ def test_resolver_tier_rate_helper_returns_registry_value(year: int, tier_id: st
     assert _resolve_tier_reduccion_rate(year, tier_id) == expected
 
 
-def test_resolver_tier_rate_helper_falls_back_for_unregistered_year() -> None:
-    assert _resolve_tier_reduccion_rate(1999, "tier-90") == Decimal("0.90")
+def test_resolver_tier_rate_helper_refuses_unregistered_year() -> None:
+    with pytest.raises(RegistryValidationError, match="has no revision '1999'"):
+        _resolve_tier_reduccion_rate(1999, "tier-90")
 
 
 # --- Causality proof: the dispatch sources the tier rate FROM the registry ---

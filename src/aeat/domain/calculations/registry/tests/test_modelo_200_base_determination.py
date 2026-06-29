@@ -55,6 +55,8 @@ _M200_CORRECCIONES_DISMINUCION_CASILLA: CasillaId = validated_casilla_id(
     surface="_M200_CORRECCIONES_DISMINUCION_CASILLA",
 )
 _M200_BASE_PREVIA_CASILLA: CasillaId = validated_casilla_id("DP200014:00550", surface="_M200_BASE_PREVIA_CASILLA")
+_M200_BASE_PREVIA_FORMULA = "modelo-200-base-imponible-previa"
+_M200_BASE_PREVIA_DEFINITIONAL_REFS = {"ley-27-2014:art-10", "ley-27-2014:art-11"}
 _M200_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
     "DP200014:00552",
     surface="_M200_BASE_IMPONIBLE_CASILLA",
@@ -120,6 +122,17 @@ def test_base_chain_casillas_are_computed_not_manual() -> None:
     assert by_id[_M200_CORRECCIONES_AUMENTO_CASILLA].input_kind == InputKind.MANUAL
     assert by_id[_M200_CORRECCIONES_DISMINUCION_CASILLA].input_kind == InputKind.MANUAL
     assert by_id[_M200_BIN_APLICADA_CASILLA].input_kind == InputKind.MANUAL
+
+
+def test_base_previa_grounding_cites_lis_definition_and_accrual_rules() -> None:
+    """The 00550 derivation must cite the current LIS base and accrual articles."""
+    snapshot = _snapshot_2024()
+    formula = next(formula for formula in snapshot.revision.formulas if formula.id == _M200_BASE_PREVIA_FORMULA)
+    casilla = next(casilla for casilla in snapshot.revision.casillas if casilla.id == _M200_BASE_PREVIA_CASILLA)
+
+    assert set(formula.legal_refs) >= _M200_BASE_PREVIA_DEFINITIONAL_REFS
+    assert set(casilla.legal_refs) >= _M200_BASE_PREVIA_DEFINITIONAL_REFS
+    assert set(snapshot.revision.legal_refs) >= _M200_BASE_PREVIA_DEFINITIONAL_REFS
 
 
 def test_positive_resultado_zero_correcciones_yields_nonzero_base() -> None:

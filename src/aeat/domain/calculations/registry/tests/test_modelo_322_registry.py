@@ -59,8 +59,8 @@ def test_modelo_322_snapshot_builds_for_each_month() -> None:
         assert snapshot.revision.id == "2008-y-siguientes"
 
 
-def test_modelo_322_january_period_closes_last_day_of_february() -> None:
-    """Art 8 special case: January period closes on the last day of February."""
+def test_modelo_322_january_period_uses_official_calendar_shift() -> None:
+    """January 2026 closes on 2026-03-02 in the AEAT 2026 calendar."""
     modelo, _ = _load_modelo_322()
     revision = modelo.revisions["2008-y-siguientes"]
     windows = {w.id: w for w in revision.deadline_windows}
@@ -71,7 +71,8 @@ def test_modelo_322_january_period_closes_last_day_of_february() -> None:
 
     jan_2026 = windows["modelo-322-2026-01"]
     assert jan_2026.opens_on == date(2026, 2, 1)
-    assert jan_2026.closes_on == date(2026, 2, 28)
+    assert jan_2026.closes_on == date(2026, 3, 2)
+    assert "aeat-calendario-contribuyente-2026-hasta-2-marzo" in jan_2026.source_refs
 
 
 def test_modelo_322_other_months_close_within_30_days_of_following_month() -> None:

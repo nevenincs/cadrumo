@@ -17,6 +17,19 @@ CLI surfaces enforced by
 re-export (errors, value records, schema records, loader,
 registry-contract) stays eager because each is genuinely lightweight
 and every consumer pays for it unconditionally.
+
+See Also:
+    :class:`~aeat.domain.user_profile.UserProfileRecord`
+        Canonical runtime aggregate carrying profile facts and lifecycle state.
+    :class:`~aeat.domain.user_profile.UserProfilePortableExport`
+        Lazy-resolved cross-bucket bundle payload that includes profile,
+        work-unit, ledger, calculation, and filing history.
+    :func:`~aeat.domain.user_profile.validate_user_profile_registry_contract`
+        Registry-selector coverage check binding schema paths to modelo
+        calculation requirements.
+    :mod:`aeat.application.user_profile`
+        Application facade for lifecycle services, Censo sync, preflight,
+        projections, custody, and portable-bundle serialisation.
 """
 
 from __future__ import annotations

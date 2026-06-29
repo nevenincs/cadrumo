@@ -1,10 +1,32 @@
-"""Domain layer for the ``aeat`` package.
+"""Domain-layer package root for business vocabulary and authorities.
 
-This package hosts the pure domain types and rules — modelos, registry
-definitions, deadlines, attachments, categories, and other business primitives. Modules
-under :mod:`aeat.domain` must remain free of I/O and infrastructure
-dependencies; orchestration and persistence live in
-:mod:`aeat.application` and :mod:`aeat.adapters`.
+The root package is intentionally thin: it re-exports only
+``ModeloIdentifier`` and does not aggregate every domain authority.
+Callers import focused package facades such as :mod:`aeat.domain.modelos`,
+:mod:`aeat.domain.filing`, :mod:`aeat.domain.user_profile`,
+:mod:`aeat.domain.transactions`, and
+:mod:`aeat.domain.calculations.registry` for records, repositories, schemas,
+and validation rules.
+
+Domain packages own business semantics: modelo work units and filing records,
+calculation registry definitions, filing drafts, invoices, transactions,
+deadlines, profile schema records, bucket events, and legal/manual reference
+records. Application services compose these authorities with storage, CLI, and
+adapter concerns; the domain root should stay import-light so importing
+``aeat.domain`` never pulls registry, storage, browser, or workflow subtrees.
+
+See Also:
+    - :mod:`aeat.domain.modelos` for modelo work units, calculation revisions,
+      filing records, verification reports, and related catalogues.
+    - :mod:`aeat.domain.calculations.registry` for validated calculation
+      registry authority and registry snapshot contracts.
+    - :mod:`aeat.domain.filing` for draft, review, export, amendment, and local
+      filing-history records.
+    - :mod:`aeat.domain.user_profile` for user-profile schema and persisted
+      profile value records.
+    - :mod:`aeat.domain.transactions` for ledger transaction records and
+      catalogues.
+
 """
 
 from __future__ import annotations

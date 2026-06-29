@@ -89,6 +89,8 @@ def test_committed_user_profile_schema_exposes_profile_lookup_metadata() -> None
     large_company = schema.field("censo.large_company")
     assert large_company.type is ProfileFieldType.BOOLEAN
     assert "enrollment.large_company" in large_company.schedule_predicates
+    assert set(large_company.legal_refs) == {"ley-37-1992:art-121", "rd-1624-1992:art-71"}
+    assert "6.010.121,04" in large_company.description
 
     autoconsumo_promotor_base = schema.field("iva.autoconsumo_promotor_base")
     assert autoconsumo_promotor_base.type is ProfileFieldType.MONEY

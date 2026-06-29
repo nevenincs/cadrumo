@@ -14,25 +14,31 @@ per no-tautological-calculation-tests.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
+from typing import cast
 
 import pytest
 from pydantic import ValidationError
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from .. import CasillaId, validated_casilla_id
-from .._bindings_previous_filing import (
-    _aggregate_previous_filing_binding,
-    _is_direct_previous_filing_binding,
-    _PreviousModeloSelector,
+from .. import (
+    CasillaId,
+    CasillaObservation,
+    DataBindingDefinition,
+    ModeloRevision,
+    RegistryModeloObservation,
+    previous_filing_observation_requirements,
+    resolve_previous_filing_binding_values,
+    validated_casilla_id,
 )
 from .._errors import RegistryValidationError
-from .._schema import DataBindingDefinition
+from .._schema import BindingSelectorMap, PeriodSelector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_DUMMY_LEGAL_ID = "rd-439-2007:art-110"
-_DUMMY_SOURCE_ID = "aeat-modelo-130-instructions"
+_REFERENCE_LEGAL_ID = "rd-439-2007:art-110"
+_REFERENCE_SOURCE_ID = "aeat-modelo-130-instructions"
 _M130_PAGO_FRACCIONADO_CASILLA: CasillaId = validated_casilla_id(
     "07",
     surface="_M130_PAGO_FRACCIONADO_CASILLA",
@@ -40,31 +46,77 @@ _M130_PAGO_FRACCIONADO_CASILLA: CasillaId = validated_casilla_id(
 _M130_MINORACION_CASILLA: CasillaId = validated_casilla_id("16", surface="_M130_MINORACION_CASILLA")
 
 
-def _span_selector() -> _PreviousModeloSelector:
-    return _PreviousModeloSelector.model_validate(
-        {
-            "source_modelo": "130",
-            "source_casilla_ids": (_M130_PAGO_FRACCIONADO_CASILLA,),
-            "prior_quarter_expanding_span": True,
-            "max_year_delta": 0,
-        },
+def _revision(*, bindings: tuple[DataBindingDefinition, ...]) -> ModeloRevision:
+    return ModeloRevision(
+        id="test-previous-filing-revision",
+        valid_from=date(2025, 1, 1),
+        period_selector=PeriodSelector(years=(2025,), periods=("1T", "2T", "3T", "4T")),
+        legal_refs=(_REFERENCE_LEGAL_ID,),
+        source_refs=(_REFERENCE_SOURCE_ID,),
+        bindings=bindings,
     )
 
 
-def _span_binding(*, source_casilla_ids: tuple[CasillaId, ...]) -> DataBindingDefinition:
-    return DataBindingDefinition(
-        id="modelo-130-test-span-binding",
-        source=BindingSourceKind.PREVIOUS_FILING,
-        selector={
+def _span_binding(
+    *,
+    source_casilla_ids: tuple[CasillaId, ...],
+    selector: dict[str, object] | None = None,
+    aggregation: BindingAggregation | None = None,
+) -> DataBindingDefinition:
+    selector_payload = cast(
+        BindingSelectorMap,
+        selector
+        or {
             "source_modelo": "130",
             "source_casilla_ids": tuple(source_casilla_ids),
             "prior_quarter_expanding_span": True,
             "max_year_delta": 0,
         },
-        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
-        legal_refs=(_DUMMY_LEGAL_ID,),
-        source_refs=(_DUMMY_SOURCE_ID,),
     )
+    return DataBindingDefinition(
+        id="modelo-130-test-span-binding",
+        source=BindingSourceKind.PREVIOUS_FILING,
+        selector=selector_payload,
+        aggregation=aggregation or BindingAggregation(op=BindingAggregationOp.SUM),
+        legal_refs=(_REFERENCE_LEGAL_ID,),
+        source_refs=(_REFERENCE_SOURCE_ID,),
+    )
+
+
+def _source_observation(
+    period: str,
+    *casilla_values: tuple[CasillaId, Decimal],
+    year: int = 2025,
+) -> RegistryModeloObservation:
+    return RegistryModeloObservation(
+        modelo="130",
+        filing_year=year,
+        period=period,
+        observations=tuple(
+            CasillaObservation(
+                casilla_id=casilla_id,
+                value=value,
+                legal_refs=(_REFERENCE_LEGAL_ID,),
+                source_refs=(_REFERENCE_SOURCE_ID,),
+            )
+            for casilla_id, value in casilla_values
+        ),
+    )
+
+
+def _resolve_binding(
+    binding: DataBindingDefinition,
+    observations: tuple[RegistryModeloObservation, ...],
+    *,
+    target_period: str,
+) -> Decimal:
+    resolved = resolve_previous_filing_binding_values(
+        _revision(bindings=(binding,)),
+        observations,
+        filing_year=2025,
+        period=target_period,
+    )
+    return resolved[binding.id]
 
 
 # Independently enumerated expected anchor sets (hand-written per target
@@ -80,13 +132,18 @@ _EXPECTED_SPAN_ANCHORS: dict[str, tuple[tuple[int, str], ...]] = {
 
 @pytest.mark.parametrize("target_period", ["1T", "2T", "3T", "4T"])
 def test_expanding_span_emits_independently_enumerated_anchor_set(target_period: str) -> None:
-    selector = _span_selector()
-    assert selector.required_period_anchors_for_target(target_period) == _EXPECTED_SPAN_ANCHORS[target_period]
+    revision = _revision(bindings=(_span_binding(source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA,)),))
+    requirements = previous_filing_observation_requirements(revision, filing_year=2025, period=target_period)
+    assert (
+        tuple((item.filing_year - 2025, item.periods[0]) for item in requirements)
+        == _EXPECTED_SPAN_ANCHORS[target_period]
+    )
 
 
 def test_expanding_span_first_quarter_is_empty() -> None:
     """1T has no same-ejercicio prior quarter; the span is empty (absent-by-design)."""
-    assert _span_selector().required_period_anchors_for_target("1T") == ()
+    revision = _revision(bindings=(_span_binding(source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA,)),))
+    assert previous_filing_observation_requirements(revision, filing_year=2025, period="1T") == ()
 
 
 def test_expanding_span_classified_direct_previous_filing_binding() -> None:
@@ -97,13 +154,21 @@ def test_expanding_span_classified_direct_previous_filing_binding() -> None:
     must classify direct so it needs no carve-out.
     """
     binding = _span_binding(source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA,))
-    assert _is_direct_previous_filing_binding(binding) is True
+    requirements = previous_filing_observation_requirements(
+        _revision(bindings=(binding,)),
+        filing_year=2025,
+        period="2T",
+    )
+    assert [(item.source_modelo, item.periods, item.source_casilla_ids) for item in requirements] == [
+        ("130", ("1T",), (_M130_PAGO_FRACCIONADO_CASILLA,))
+    ]
 
 
 def test_expanding_span_mutually_exclusive_with_offset() -> None:
     with pytest.raises(ValidationError, match="mutually exclusive"):
-        _PreviousModeloSelector.model_validate(
-            {
+        _span_binding(
+            source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA,),
+            selector={
                 "source_modelo": "130",
                 "source_casilla_ids": (_M130_PAGO_FRACCIONADO_CASILLA,),
                 "prior_quarter_expanding_span": True,
@@ -114,8 +179,9 @@ def test_expanding_span_mutually_exclusive_with_offset() -> None:
 
 def test_expanding_span_mutually_exclusive_with_source_periods() -> None:
     with pytest.raises(ValidationError, match="mutually exclusive"):
-        _PreviousModeloSelector.model_validate(
-            {
+        _span_binding(
+            source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA,),
+            selector={
                 "source_modelo": "130",
                 "source_casilla_ids": (_M130_PAGO_FRACCIONADO_CASILLA,),
                 "prior_quarter_expanding_span": True,
@@ -126,7 +192,11 @@ def test_expanding_span_mutually_exclusive_with_source_periods() -> None:
 
 def test_expanding_span_rejects_non_quarterly_target() -> None:
     with pytest.raises(RegistryValidationError, match="only quarterly codes"):
-        _span_selector().required_period_anchors_for_target("0A")
+        previous_filing_observation_requirements(
+            _revision(bindings=(_span_binding(source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA,)),)),
+            filing_year=2025,
+            period="0A",
+        )
 
 
 def _prior_pagos_binding() -> DataBindingDefinition:
@@ -140,8 +210,8 @@ def _prior_pagos_binding() -> DataBindingDefinition:
             "max_year_delta": 0,
         },
         aggregation=BindingAggregation(op=BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS),
-        legal_refs=(_DUMMY_LEGAL_ID,),
-        source_refs=(_DUMMY_SOURCE_ID,),
+        legal_refs=(_REFERENCE_LEGAL_ID,),
+        source_refs=(_REFERENCE_SOURCE_ID,),
     )
 
 
@@ -163,17 +233,23 @@ def test_prior_pagos_fraccionados_op_computes_positive_07_minus_16() -> None:
         (Decimal("-100"), Decimal("0")),
         (Decimal("250"), Decimal("30")),
     )
-    flat_values = [value for pair in quarters for value in pair]
     expected = sum((max(Decimal("0"), c07) for c07, _c16 in quarters), Decimal("0")) - sum(
         (c16 for _c07, c16 in quarters), Decimal("0")
     )
     raw_07_sum = sum((c07 for c07, _c16 in quarters), Decimal("0"))
     assert expected != raw_07_sum, "fixture must make the identity differ from a raw-07 sum"
 
-    result = _aggregate_previous_filing_binding(
+    result = _resolve_binding(
         binding,
-        flat_values,
-        source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA, _M130_MINORACION_CASILLA),
+        tuple(
+            _source_observation(
+                period,
+                (_M130_PAGO_FRACCIONADO_CASILLA, c07),
+                (_M130_MINORACION_CASILLA, c16),
+            )
+            for period, (c07, c16) in zip(("1T", "2T", "3T"), quarters, strict=True)
+        ),
+        target_period="4T",
     )
     assert result == expected
 
@@ -185,10 +261,16 @@ def test_prior_pagos_fraccionados_op_negative_07_contributes_zero_not_value() ->
     A raw sum would give -500, so a non-zero (negative) result fails loudly.
     """
     binding = _prior_pagos_binding()
-    result = _aggregate_previous_filing_binding(
+    result = _resolve_binding(
         binding,
-        [Decimal("-500"), Decimal("0")],
-        source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA, _M130_MINORACION_CASILLA),
+        (
+            _source_observation(
+                "1T",
+                (_M130_PAGO_FRACCIONADO_CASILLA, Decimal("-500")),
+                (_M130_MINORACION_CASILLA, Decimal("0")),
+            ),
+        ),
+        target_period="2T",
     )
     assert result == Decimal("0")
 
@@ -199,19 +281,33 @@ def test_prior_pagos_fraccionados_op_subtracts_nonzero_minoracion() -> None:
     One prior quarter, 07=+700, 16=120. Identity: 700 − 120 = 580.
     """
     binding = _prior_pagos_binding()
-    result = _aggregate_previous_filing_binding(
+    result = _resolve_binding(
         binding,
-        [Decimal("700"), Decimal("120")],
-        source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA, _M130_MINORACION_CASILLA),
+        (
+            _source_observation(
+                "1T",
+                (_M130_PAGO_FRACCIONADO_CASILLA, Decimal("700")),
+                (_M130_MINORACION_CASILLA, Decimal("120")),
+            ),
+        ),
+        target_period="2T",
     )
     assert result == Decimal("580")
 
 
 def test_prior_pagos_fraccionados_op_requires_two_source_casilla_ids() -> None:
-    binding = _prior_pagos_binding()
     with pytest.raises(RegistryValidationError, match="requires exactly two source casillas"):
-        _aggregate_previous_filing_binding(
-            binding,
-            [Decimal("100")],
+        binding = _span_binding(
             source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA,),
+            aggregation=BindingAggregation(op=BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS),
+        )
+        _resolve_binding(
+            binding,
+            (
+                _source_observation(
+                    "1T",
+                    (_M130_PAGO_FRACCIONADO_CASILLA, Decimal("100")),
+                ),
+            ),
+            target_period="2T",
         )

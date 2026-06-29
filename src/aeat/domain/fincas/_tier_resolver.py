@@ -146,9 +146,9 @@ def _with_registry_rate(template: TierResolution, period_year: int, tier_id: str
     Wires a four-tier dispatch result to the law-determined
     ``renta-<period_year>-rental-reduccion-rate-<tier_id>`` Modelo-100 parameter
     so the registry is the causal authority for the numeric rate. When the
-    registry rate equals the template's documented rate — the registered-year
-    case (every supported year currently matches) and the fallback case — the
-    frozen singleton is returned unchanged, preserving identity and behaviour.
+    registry rate equals the template's documented rate — every supported year
+    currently matches — the frozen singleton is returned unchanged, preserving
+    identity and behaviour.
     Only the genuine four-tier results route through here; the grandfathering
     (pre-amendment / DT-38) and forfeit resolutions are distinct provisions and
     keep their documented constant.
@@ -273,51 +273,35 @@ def _resolve_prior_rent_rebaja_threshold(period_year: int) -> Decimal:
     """Read the LIRPF art. 23.2 a) rebaja threshold from the registry parameter.
 
     Reads ``renta-<period_year>-rental-prior-rent-rebaja-threshold`` from
-    Modelo 100. Falls back to the documented module-level constant when the
-    registry lookup raises (e.g. unregistered year).
+    Modelo 100. A missing registry revision or parameter is a grounding defect
+    and raises :class:`RegistryValidationError`.
     """
-    from ..calculations.registry import RegistryValidationError, read_parameter
+    from ..calculations.registry import read_parameter
 
-    try:
-        return read_parameter(
-            Modelo.M100.value,
-            str(period_year),
-            f"renta-{period_year}-rental-prior-rent-rebaja-threshold",
-            date_context={"filing_period": date(period_year, 12, 31)},
-        )
-    except RegistryValidationError:
-        _logger.debug(
-            "rental rebaja threshold: registry lookup failed for period_year=%d;"
-            " fallback to PRIOR_RENT_REBAJA_THRESHOLD",
-            period_year,
-        )
-        return PRIOR_RENT_REBAJA_THRESHOLD
+    return read_parameter(
+        Modelo.M100.value,
+        str(period_year),
+        f"renta-{period_year}-rental-prior-rent-rebaja-threshold",
+        date_context={"filing_period": date(period_year, 12, 31)},
+    )
 
 
 def _resolve_ejercicio_amendment_year(period_year: int) -> int:
     """Read the Ley 12/2023 amendment year from the registry parameter.
 
     Reads ``renta-<period_year>-rental-ejercicio-amendment-year`` from
-    Modelo 100. Falls back to the documented module-level constant
-    ``DEFAULT_EJERCICIO_AMENDMENT_YEAR`` when the registry lookup raises.
+    Modelo 100. A missing registry revision or parameter is a grounding defect
+    and raises :class:`RegistryValidationError`.
     """
-    from ..calculations.registry import RegistryValidationError, read_parameter
+    from ..calculations.registry import read_parameter
 
-    try:
-        value = read_parameter(
-            Modelo.M100.value,
-            str(period_year),
-            f"renta-{period_year}-rental-ejercicio-amendment-year",
-            date_context={"filing_period": date(period_year, 12, 31)},
-        )
-        return int(value)
-    except RegistryValidationError:
-        _logger.debug(
-            "rental amendment year: registry lookup failed for period_year=%d;"
-            " fallback to DEFAULT_EJERCICIO_AMENDMENT_YEAR",
-            period_year,
-        )
-        return DEFAULT_EJERCICIO_AMENDMENT_YEAR
+    value = read_parameter(
+        Modelo.M100.value,
+        str(period_year),
+        f"renta-{period_year}-rental-ejercicio-amendment-year",
+        date_context={"filing_period": date(period_year, 12, 31)},
+    )
+    return int(value)
 
 
 def _resolve_tier_70(
@@ -417,71 +401,45 @@ def _resolve_tier_reduccion_rate(period_year: int, tier_id: str) -> Decimal:
     """Read a LIRPF art. 23.2 tier reducción rate from the registry parameter.
 
     ``tier_id`` is one of ``"tier-50"``, ``"tier-60"``, ``"tier-70"``,
-    ``"tier-90"``. Falls back to the documented module-level rate when the
-    registry lookup raises (e.g. unregistered period_year).
+    ``"tier-90"``. A missing registry revision or parameter is a grounding
+    defect and raises :class:`RegistryValidationError`.
     """
-    from ..calculations.registry import RegistryValidationError, read_parameter
+    from ..calculations.registry import read_parameter
 
-    try:
-        return read_parameter(
-            Modelo.M100.value,
-            str(period_year),
-            f"renta-{period_year}-rental-reduccion-rate-{tier_id}",
-            date_context={"filing_period": date(period_year, 12, 31)},
-        )
-    except RegistryValidationError:
-        _logger.debug(
-            "rental tier rate %s: registry lookup failed for period_year=%d; fallback to module constant",
-            tier_id,
-            period_year,
-        )
-        return {
-            "tier-50": Decimal("0.50"),
-            "tier-60": Decimal("0.60"),
-            "tier-70": Decimal("0.70"),
-            "tier-90": Decimal("0.90"),
-        }[tier_id]
+    return read_parameter(
+        Modelo.M100.value,
+        str(period_year),
+        f"renta-{period_year}-rental-reduccion-rate-{tier_id}",
+        date_context={"filing_period": date(period_year, 12, 31)},
+    )
 
 
 def _resolve_joven_tenant_age_range(period_year: int) -> tuple[int, int]:
     """Read the joven-tenant age range (min, max) from registry parameters.
 
     Reads ``renta-<period_year>-rental-joven-tenant-age-min`` and
-    ``-max``. Falls back to module constants on miss.
+    ``-max``. A missing registry revision or parameter is a grounding defect
+    and raises :class:`RegistryValidationError`.
     """
-    from ..calculations.registry import RegistryValidationError, read_parameter
+    from ..calculations.registry import read_parameter
 
     ctx = {"filing_period": date(period_year, 12, 31)}
-    try:
-        age_min = int(
-            read_parameter(
-                Modelo.M100.value,
-                str(period_year),
-                f"renta-{period_year}-rental-joven-tenant-age-min",
-                date_context=ctx,
-            ),
-        )
-    except RegistryValidationError:
-        _logger.debug(
-            "rental joven age min: registry lookup failed for period_year=%d; fallback to JOVEN_TENANT_AGE_MIN",
-            period_year,
-        )
-        age_min = JOVEN_TENANT_AGE_MIN
-    try:
-        age_max = int(
-            read_parameter(
-                Modelo.M100.value,
-                str(period_year),
-                f"renta-{period_year}-rental-joven-tenant-age-max",
-                date_context=ctx,
-            ),
-        )
-    except RegistryValidationError:
-        _logger.debug(
-            "rental joven age max: registry lookup failed for period_year=%d; fallback to JOVEN_TENANT_AGE_MAX",
-            period_year,
-        )
-        age_max = JOVEN_TENANT_AGE_MAX
+    age_min = int(
+        read_parameter(
+            Modelo.M100.value,
+            str(period_year),
+            f"renta-{period_year}-rental-joven-tenant-age-min",
+            date_context=ctx,
+        ),
+    )
+    age_max = int(
+        read_parameter(
+            Modelo.M100.value,
+            str(period_year),
+            f"renta-{period_year}-rental-joven-tenant-age-max",
+            date_context=ctx,
+        ),
+    )
     return age_min, age_max
 
 
@@ -489,24 +447,18 @@ def _resolve_rehab_lookback_days(period_year: int) -> int:
     """Read the rehab-lookback window from the registry parameter.
 
     Reads ``renta-<period_year>-rental-rehab-lookback-days`` from
-    Modelo 100. Falls back to ``REHAB_LOOKBACK_DAYS`` constant on miss.
+    Modelo 100. A missing registry revision or parameter is a grounding defect
+    and raises :class:`RegistryValidationError`.
     """
-    from ..calculations.registry import RegistryValidationError, read_parameter
+    from ..calculations.registry import read_parameter
 
-    try:
-        value = read_parameter(
-            Modelo.M100.value,
-            str(period_year),
-            f"renta-{period_year}-rental-rehab-lookback-days",
-            date_context={"filing_period": date(period_year, 12, 31)},
-        )
-        return int(value)
-    except RegistryValidationError:
-        _logger.debug(
-            "rental rehab lookback: registry lookup failed for period_year=%d; fallback to REHAB_LOOKBACK_DAYS",
-            period_year,
-        )
-        return REHAB_LOOKBACK_DAYS
+    value = read_parameter(
+        Modelo.M100.value,
+        str(period_year),
+        f"renta-{period_year}-rental-rehab-lookback-days",
+        date_context={"filing_period": date(period_year, 12, 31)},
+    )
+    return int(value)
 
 
 __all__ = [

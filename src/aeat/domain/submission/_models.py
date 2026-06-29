@@ -3,6 +3,22 @@
 Every type that crosses a public boundary is a strict+frozen
 :class:`pydantic.BaseModel` or a closed :class:`enum.StrEnum`.
 No dataclasses; no bare ``dict[str, Any]``.
+
+The records describe a local or imported filing audit trail. They do not
+authorize a live AEAT write; live-write refusal stays with the core access gate
+and application facades compose these records into draft/import flows.
+
+See Also:
+    :class:`aeat.domain.submission.SubmissionEngine`
+        Runs preflight and reads these records from the repository.
+    :func:`aeat.application.filing.import_filing_from_justificante`
+        Builds a companion :class:`ModeloPresentado` when an offline
+        justificante PDF is imported.
+    :class:`aeat.domain.modelos.ModeloRecord`
+        Work-unit filing record used by the modelo application facade.
+    :mod:`aeat.application.live`
+        Read-only live-capture surface that may attach AEAT evidence to
+        existing local filing records.
 """
 
 from __future__ import annotations
@@ -89,7 +105,8 @@ class ModeloPresentado(BaseModel):
         period: The :class:`~aeat.core.Period` covered, serialised as
             ``{"filing_year": int, "code": str}`` across the persistence
             boundary.
-        profile_tax_id: The autónomo NIF / NIE verbatim.
+        profile_tax_id: The taxpayer identity value carried by the
+            upstream draft or imported receipt.
         status: The overall :class:`SubmissionStatus` for the filing.
         justificante_csv: The AEAT-issued CSV, when present.
         justificante_pdf_path: Local path to the justificante PDF,

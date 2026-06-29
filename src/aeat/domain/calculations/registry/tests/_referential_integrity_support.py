@@ -55,8 +55,8 @@ from .._validate_references import check_all_id_references
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 __all__ = [
-    "DUMMY_LEGAL_ID",
-    "DUMMY_SOURCE_ID",
+    "REFERENCE_LEGAL_ID",
+    "REFERENCE_SOURCE_ID",
     "ExportFieldDefinition",
     "ExportRecordDefinition",
     "ExtractionTargetDefinition",
@@ -92,8 +92,10 @@ def _snapshot_for_revision(
 ) -> RegistrySnapshot:
     """Build a minimal snapshot for a given revision without running integrity checks."""
 
-    filing_year = revision.period_selector.year_from or 2024
-    period = next(iter(revision.period_selector.periods))
+    selector = revision.period_selector
+    filing_year = selector.years[0] if selector.years else selector.year_from
+    assert filing_year is not None
+    period = selector.periods[0]
     return build_validated_snapshot(
         modelo,
         catalogues,
@@ -103,16 +105,16 @@ def _snapshot_for_revision(
     )
 
 
-_DUMMY_LEGAL_ID = "lirpf:art-1"
+_REFERENCE_LEGAL_ID = "lirpf:art-1"
 
-_DUMMY_SOURCE_ID = "aeat-dr-130-2019-v12"
+_REFERENCE_SOURCE_ID = "aeat-dr-130-2019-v12"
 _DEFAULT_MINIMAL_CASILLA_ID: CasillaId = validated_casilla_id("01", surface="_DEFAULT_MINIMAL_CASILLA_ID")
 _SINGLE_SEGMENT_CASILLA_ID: CasillaId = validated_casilla_id("00592", surface="_SINGLE_SEGMENT_CASILLA_ID")
 
 
 def _minimal_legal_ref() -> LegalReference:
     return LegalReference(
-        id=_DUMMY_LEGAL_ID,
+        id=_REFERENCE_LEGAL_ID,
         evidence_tier="legal_authority",
         authority="boe",
         kind="ley",
@@ -126,7 +128,7 @@ def _minimal_legal_ref() -> LegalReference:
 
 def _minimal_source_ref() -> SourceReference:
     return SourceReference(
-        id=_DUMMY_SOURCE_ID,
+        id=_REFERENCE_SOURCE_ID,
         evidence_tier="official_source_guidance",
         authority="aeat",
         kind="instructions",
@@ -141,8 +143,8 @@ def _minimal_source_ref() -> SourceReference:
 
 def _minimal_catalogues() -> RegistryCatalogues:
     return RegistryCatalogues(
-        legal={_DUMMY_LEGAL_ID: _minimal_legal_ref()},
-        sources={_DUMMY_SOURCE_ID: _minimal_source_ref()},
+        legal={_REFERENCE_LEGAL_ID: _minimal_legal_ref()},
+        sources={_REFERENCE_SOURCE_ID: _minimal_source_ref()},
     )
 
 
@@ -153,12 +155,12 @@ def _minimal_casilla(casilla_id: CasillaId = _DEFAULT_MINIMAL_CASILLA_ID) -> Cas
         label=f"Casilla {casilla_id}",
         section=("test",),
         input_kind=InputKind.MANUAL,
-        legal_refs=(_DUMMY_LEGAL_ID,),
-        source_refs=(_DUMMY_SOURCE_ID,),
+        legal_refs=(_REFERENCE_LEGAL_ID,),
+        source_refs=(_REFERENCE_SOURCE_ID,),
     )
 
 
-def _minimal_workbook_ref(source_ref: str = _DUMMY_SOURCE_ID) -> WorkbookParityReference:
+def _minimal_workbook_ref(source_ref: str = _REFERENCE_SOURCE_ID) -> WorkbookParityReference:
     from .._schema import WorkbookParityReference
 
     return WorkbookParityReference(
@@ -168,7 +170,7 @@ def _minimal_workbook_ref(source_ref: str = _DUMMY_SOURCE_ID) -> WorkbookParityR
         formula_coverage="static_layout",
         runner_required=False,
         tolerance=Decimal("0"),
-        legal_refs=(_DUMMY_LEGAL_ID,),
+        legal_refs=(_REFERENCE_LEGAL_ID,),
         source_refs=(source_ref,),
     )
 
@@ -195,8 +197,8 @@ def _minimal_application_link(
         surface=surface,
         consumer="test",
         requires_snapshot=True,
-        legal_refs=(_DUMMY_LEGAL_ID,),
-        source_refs=(_DUMMY_SOURCE_ID,),
+        legal_refs=(_REFERENCE_LEGAL_ID,),
+        source_refs=(_REFERENCE_SOURCE_ID,),
     )
 
 
@@ -227,8 +229,8 @@ def _minimal_revision(
         id="test-revision",
         valid_from=date(2024, 1, 1),
         period_selector=PeriodSelector(year_from=2024, periods=("0A",)),
-        legal_refs=(_DUMMY_LEGAL_ID,),
-        source_refs=(_DUMMY_SOURCE_ID,),
+        legal_refs=(_REFERENCE_LEGAL_ID,),
+        source_refs=(_REFERENCE_SOURCE_ID,),
         casillas=casillas,
         workbook_parity_refs=(workbook_ref,),
         application_links=app_links,
@@ -256,8 +258,8 @@ def _minimal_modelo(revision: ModeloRevision) -> ModeloDefinition:
         cadence="annual",
         jurisdiction="ES-AEAT",
         output_sensitivity=SensitivityClass.FINANCIAL,
-        legal_refs=(_DUMMY_LEGAL_ID,),
-        source_refs=(_DUMMY_SOURCE_ID,),
+        legal_refs=(_REFERENCE_LEGAL_ID,),
+        source_refs=(_REFERENCE_SOURCE_ID,),
         revisions={"test-revision": revision},
     )
 
@@ -278,8 +280,8 @@ def _build_snapshot_with_missing_legal(revision: ModeloRevision, missing_legal_i
     # First build a snapshot where the bad ID is in the catalogue so construction succeeds.
     extra_legal = _minimal_legal_ref().model_copy(update={"id": missing_legal_id})
     augmented_catalogues = RegistryCatalogues(
-        legal={_DUMMY_LEGAL_ID: _minimal_legal_ref(), missing_legal_id: extra_legal},
-        sources={_DUMMY_SOURCE_ID: _minimal_source_ref()},
+        legal={_REFERENCE_LEGAL_ID: _minimal_legal_ref(), missing_legal_id: extra_legal},
+        sources={_REFERENCE_SOURCE_ID: _minimal_source_ref()},
     )
     modelo = _minimal_modelo(revision)
     snapshot = _snapshot_for_revision(modelo, augmented_catalogues, revision)
@@ -292,8 +294,8 @@ def _build_snapshot_with_missing_source(revision: ModeloRevision, missing_source
     """Build a snapshot whose `sources` map omits a ref that the revision content references."""
     extra_source = _minimal_source_ref().model_copy(update={"id": missing_source_id})
     augmented_catalogues = RegistryCatalogues(
-        legal={_DUMMY_LEGAL_ID: _minimal_legal_ref()},
-        sources={_DUMMY_SOURCE_ID: _minimal_source_ref(), missing_source_id: extra_source},
+        legal={_REFERENCE_LEGAL_ID: _minimal_legal_ref()},
+        sources={_REFERENCE_SOURCE_ID: _minimal_source_ref(), missing_source_id: extra_source},
     )
     modelo = _minimal_modelo(revision)
     snapshot = _snapshot_for_revision(modelo, augmented_catalogues, revision)
@@ -314,8 +316,8 @@ def _segmented_casilla(
         label=f"Casilla {casilla_id}",
         section=("test",),
         input_kind=InputKind.MANUAL,
-        legal_refs=(_DUMMY_LEGAL_ID,),
-        source_refs=(_DUMMY_SOURCE_ID,),
+        legal_refs=(_REFERENCE_LEGAL_ID,),
+        source_refs=(_REFERENCE_SOURCE_ID,),
     )
 
 
@@ -337,15 +339,15 @@ def _completeness_manifest(
 ) -> CalculationCompletenessManifest:
     """A minimal calculation-completeness manifest grounded on the dummy catalogues."""
     return CalculationCompletenessManifest(
-        source_ref=_DUMMY_SOURCE_ID,
+        source_ref=_REFERENCE_SOURCE_ID,
         casillas=casillas,
-        legal_refs=(_DUMMY_LEGAL_ID,),
-        source_refs=(_DUMMY_SOURCE_ID,),
+        legal_refs=(_REFERENCE_LEGAL_ID,),
+        source_refs=(_REFERENCE_SOURCE_ID,),
     )
 
 
-DUMMY_LEGAL_ID = _DUMMY_LEGAL_ID
-DUMMY_SOURCE_ID = _DUMMY_SOURCE_ID
+REFERENCE_LEGAL_ID = _REFERENCE_LEGAL_ID
+REFERENCE_SOURCE_ID = _REFERENCE_SOURCE_ID
 build_minimal_snapshot = _build_minimal_snapshot
 build_snapshot_with_missing_legal = _build_snapshot_with_missing_legal
 build_snapshot_with_missing_source = _build_snapshot_with_missing_source

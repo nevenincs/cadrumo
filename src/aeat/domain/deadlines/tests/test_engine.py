@@ -9,6 +9,7 @@ import pytest
 from ....core import Period
 from .. import (
     DeadlineEngine,
+    IrpfEstimationRegime,
     IVARegime,
     ModeloDeadline,
     ModeloEnrollment,
@@ -191,7 +192,7 @@ class TestCompute:
 
     def test_registry_condition_can_add_objective_estimation_deadline(self) -> None:
         schedule = _engine().compute(
-            _profile(uses_objective_estimation_irpf=True),
+            _profile(irpf_estimation_regime=IrpfEstimationRegime.OBJETIVA),
             2026,
             today=date(2026, 1, 1),
         )
@@ -350,7 +351,7 @@ class TestRegistryApplicability:
         assert applies_to(_profile(), "123") is False
         assert applies_to(_profile(pays_capital_income_with_retencion=True), "123") is True
         assert applies_to(_profile(), "131") is False
-        assert applies_to(_profile(uses_objective_estimation_irpf=True), "131") is True
+        assert applies_to(_profile(irpf_estimation_regime=IrpfEstimationRegime.OBJETIVA), "131") is True
 
     def test_explain_uses_registry_condition_text(self) -> None:
         text = explain(_profile(), "130")
@@ -433,13 +434,21 @@ class TestAnnualFilingWindows:
                 key=lambda p: p.code,
             )
             assert len(monthly_periods) > 0, f"M303 monthly windows absent for {year}"
+        january_2026 = next(
+            window
+            for code, _revision, window in _engine()._registry.deadline_windows(2026)
+            if code == "303" and window.period == _period(2026, "01")
+        )
+        assert january_2026.closes_on == date(2026, 3, 2)
+        assert january_2026.payment_cutoff_on == date(2026, 2, 25)
 
     def test_modelo_347_annual_window_resolves(self) -> None:
-        for year in (2025, 2026):
+        for year, closes_on in ((2025, date(2026, 3, 2)), (2026, date(2027, 2, 28))):
             windows = [
                 window for code, _revision, window in _engine()._registry.deadline_windows(year) if code == "347"
             ]
             assert [window.period for window in windows] == [_period(year, "0A")]
+            assert windows[0].closes_on == closes_on
 
 
 class TestEnginePurity:

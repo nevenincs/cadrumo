@@ -24,8 +24,8 @@ Legal sources (Ley 37/1992 del IVA, BOE-A-1992-28740):
   (LIVA-art.-20 exempt supplies and similar). Subvenciones not linked to
   operations, autoconsumos, and the disposal of bienes de inversión are
   excluded from both numerator and denominator per art. 104 LIVA; the
-  exclusion is the caller's responsibility — this module operates on the
-  amounts the application aggregator already filtered.
+  exclusion is the caller's responsibility; this module only accepts
+  already-filtered operation totals.
 
 * **Art. 102.Dos** — the resulting percentage is rounded **up** to the
   next whole integer (``ROUND_CEILING`` against ``Decimal("1")``).
@@ -50,9 +50,9 @@ typically the prior year's definitiva. The definitiva percentage is
 computed at year-end with the year's actual operations and produces a
 regularisation entry in Q4 303 (casilla 44) and Modelo 390.
 
-Live submission is not the concern of this module: the substrate emits
-calculation results consumed by Modelo 303 and 390 binding providers in
-the application aggregation layer.
+Live submission is not the concern of this module. Current filing
+surfaces either use registry-defined formula/manual prorrata casillas or
+carry validated prorrata references on IVA ledger observations.
 """
 
 from __future__ import annotations
@@ -526,7 +526,7 @@ def compute_sectoral_prorrata(
 
 
 # ---------------------------------------------------------------------------
-# Helpers for the application layer
+# Helpers for caller-side rollups
 # ---------------------------------------------------------------------------
 
 
@@ -535,10 +535,9 @@ def sum_deductible_amounts(
 ) -> Decimal:
     """Sum the ``deductible_amount`` field across a collection of inputs.
 
-    The application aggregation layer uses this to roll up per-input
-    deductions into the casilla 28 (Modelo 303) or casilla 33 (Modelo
-    390) totals after running :func:`classify_input_deduction` for each
-    purchase invoice evidence row.
+    Callers use this to roll up per-input deductions after running
+    :func:`classify_input_deduction` for each purchase invoice evidence
+    row. Modelo casilla routing remains registry-owned.
     """
     return sum((entry.deductible_amount for entry in deductions), Decimal("0"))
 

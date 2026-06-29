@@ -13,7 +13,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal, InvalidOperation
-from typing import TypedDict
 
 from ...core import Modelo, Period
 from ...core.parsing import parse_bool as _parse_bool
@@ -31,16 +30,6 @@ from ._models import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-
-
-class _ObjectiveFieldsDict(TypedDict, total=False):
-    """Optional dict shape for objective-estimation fields.
-
-    The field is only included when ``estimation_regime`` is ``None``,
-    so all fields are optional (``total=False``).
-    """
-
-    uses_objective_estimation_irpf: bool
 
 
 def taxpayer_profile_from_mapping(
@@ -112,15 +101,6 @@ def taxpayer_profile_from_mapping(
     income_categories = _resolve_income_categories(typed.irpf_income_categories)
     estimation_regime = typed.irpf_estimation_regime or None
 
-    # The structured estimation_regime is authoritative over the legacy
-    # uses_objective_estimation_irpf boolean. When a regime is declared,
-    # let TaxpayerProfile's mode="before" validator derive the boolean
-    # from it so the projection never raises a regime/boolean conflict;
-    # when no regime is declared the boolean is forwarded as before.
-    objective_fields: _ObjectiveFieldsDict = {}
-    if estimation_regime is None:
-        objective_fields["uses_objective_estimation_irpf"] = typed.uses_objective_estimation_irpf
-
     return TaxpayerProfile(
         tax_id=tax_id,
         entity_type=entity_type,
@@ -133,12 +113,14 @@ def taxpayer_profile_from_mapping(
         professional_income_withholding_ge_70pct=typed.professional_income_withholding_ge_70pct,
         pays_rent_with_retencion=typed.pays_rent_with_retencion,
         pays_capital_income_with_retencion=typed.pays_capital_income_with_retencion,
-        **objective_fields,
         objective_estimation_prior_year_gross_income_eur=_parse_decimal(
             canonical.get("irpf.objective_estimation_prior_year_gross_income_eur"),
         ),
         objective_estimation_prior_year_invoice_gross_income_eur=_parse_decimal(
             canonical.get("irpf.objective_estimation_prior_year_invoice_gross_income_eur"),
+        ),
+        objective_estimation_prior_year_agri_livestock_forest_gross_eur=_parse_decimal(
+            canonical.get("irpf.objective_estimation_prior_year_agri_livestock_forest_gross_eur"),
         ),
         objective_estimation_prior_year_purchases_eur=_parse_decimal(
             canonical.get("irpf.objective_estimation_prior_year_purchases_eur"),

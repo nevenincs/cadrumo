@@ -7,6 +7,7 @@ import tomllib
 import pytest
 
 from ....core.resources import bundled_path
+from ...calculations.registry._binding_selector_utils import selector_as_dict
 from .. import (
     InvoiceKind,
     IvaCategory,
@@ -42,6 +43,7 @@ def test_iva_flow_direction_string_values_are_kebab_case() -> None:
         (IvaCategory.RECARGO_EQUIVALENCIA, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
         (IvaCategory.INTRA_COMMUNITY_SUPPLY, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
         (IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
+        (IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
     ],
 )
 def test_derive_flow_classifies_issued_non_reverse_charge_as_repercutido(
@@ -288,7 +290,7 @@ def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
             continue
         binding_id = casilla_to_binding[casilla_id]
         binding = next(b for b in revision.bindings if b.id == binding_id)
-        flow_value = binding.selector["flow_direction"]
+        flow_value = selector_as_dict(binding)["flow_direction"]
         binding_flows.add(IvaFlowDirection(flow_value))
 
     assert binding_flows == DEVENGADA_FLOW_DIRECTIONS

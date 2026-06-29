@@ -7,6 +7,7 @@ Checks that every casilla named in the completeness manifest of a
 from __future__ import annotations
 
 from ._casilla_membership import casillas_by_id
+from ._record_design_coverage import calculation_closure_casilla_ids
 from ._schema import ModeloRevision
 
 
@@ -14,10 +15,19 @@ def _emit_completeness_gate_failures(
     failures: list[str],
     prefix: str,
     revision: ModeloRevision,
+    *,
+    modelo_id: str,
 ) -> None:
     """Append a failure for every calculation-completeness manifest violation."""
     manifest = revision.completeness_manifest
     if manifest is None:
+        closure = calculation_closure_casilla_ids(revision, modelo_id)
+        if closure:
+            failures.append(
+                f"{prefix}: calculation-bearing revision declares no "
+                "calculation-completeness manifest; closure casilla ids: "
+                f"{', '.join(sorted(closure))}",
+            )
         return
     declared_by_id = casillas_by_id(revision)
     for manifest_casilla in sorted(manifest.casillas, key=lambda item: item.casilla_id):

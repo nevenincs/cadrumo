@@ -853,8 +853,8 @@ class Transaction(BaseModel):
     value_in_eur: Decimal | None = None
     # FX provenance (ledger-fx-conversion ADR): the rate source label (e.g.
     # "ecb_reference") and the effective rate date as an ISO-8601 string.
-    # Optional/backward-compatible; populated at import when a normalizer supplied
-    # them. Cannot exist without an fx_rate (a rate provenance with no rate is
+    # Optional; populated at import when a normalizer supplied them. Cannot
+    # exist without an fx_rate (a rate provenance with no rate is
     # meaningless). Stored as a string (not date) to roundtrip cleanly through the
     # strict-frozen JSON persistence boundary.
     rate_source: str | None = None

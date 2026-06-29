@@ -19,7 +19,7 @@ from ....core import STRICT_FROZEN_CONFIG, Period
 from ....core.aggregation import RelationAggregationOp
 from ._binding_selector_utils import unique_tuple
 from ._errors import RegistryValidationError
-from ._ids import BindingId, CasillaId, RelationId
+from ._ids import BindingId, CasillaId, ModeloId, RelationId
 from ._observation_fold import gather_observed_requirement_values
 from ._period_offset_math import apply_period_offset
 from ._relation_aggregation import relation_aggregation_op
@@ -53,7 +53,7 @@ class RegistryFoldRequirement(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    source_modelo: str = Field(min_length=1, max_length=8)
+    source_modelo: ModeloId
     filing_year: int = Field(ge=2000, le=2099)
     filing_periods: tuple[Period, ...] = ()
     periods: tuple[str, ...] = Field(min_length=1)
@@ -279,15 +279,9 @@ def _active_relations(revision: ModeloRevision, *, period: str | None) -> tuple[
 
 def _relation_source_year(relation: RelationDefinition, *, filing_year: int) -> int:
     selector = relation.source_revision_selector
-    if "year" in selector:
-        year = selector["year"]
-        if not isinstance(year, int):
-            raise RegistryValidationError(f"relation {relation.id!r} source selector year must be an integer")
-        return year
-    delta = selector.get("filing_year_delta", 0)
-    if not isinstance(delta, int):
-        raise RegistryValidationError(f"relation {relation.id!r} source selector filing_year_delta must be an integer")
-    return filing_year + delta
+    if selector.year is not None:
+        return selector.year
+    return filing_year + (selector.filing_year_delta or 0)
 
 
 def _derive_offset_source_period(relation: RelationDefinition, *, target_period: str) -> str | None:
@@ -313,5 +307,3 @@ def _derive_offset_source_anchor(relation: RelationDefinition, *, target_period:
             f"relation {relation.id!r} source_period_offset_from_target "
             f"cannot interpret target period {target_period!r}",
         ) from exc
-
-

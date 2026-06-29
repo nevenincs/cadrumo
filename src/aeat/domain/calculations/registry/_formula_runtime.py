@@ -12,16 +12,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import date
-from decimal import ROUND_HALF_UP, Decimal, localcontext
-from pathlib import Path
+from decimal import Decimal, localcontext
 
 from pydantic import BaseModel, Field, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
-from ....core.money import round_to_cents as _round_to_cents
 from ._bindings import CasillaObservation
 from ._casilla_membership import casillas_by_id as _casillas_by_id
-from ._casilla_membership import undeclared_casilla_ids
 from ._errors import CasillaConstraintViolationError, RegistrySnapshotError, RegistryValidationError
 from ._formula_initial_values import (
     binding_values_with_absent_by_design_defaults as _binding_values_with_absent_by_design_defaults,
@@ -32,22 +29,28 @@ from ._formula_initial_values import (
 from ._formula_initial_values import (
     materialise_observations as _materialise_observations,
 )
+from ._formula_runtime_ops import apply_rounding as _apply_rounding
+from ._formula_runtime_ops import evaluate_args_op as _evaluate_args_op
+from ._formula_runtime_ops import read_parameter as read_parameter
+from ._formula_runtime_ops import reject_non_decimal as _reject_non_decimal
+from ._formula_runtime_ops import reject_non_string as _reject_non_string
+from ._formula_runtime_ops import reject_unknown_external_values as _reject_unknown_external_values
+from ._formula_runtime_ops import resolve_bracket as _resolve_bracket
+from ._formula_runtime_ops import resolve_parameter as _resolve_parameter
+from ._formula_runtime_ops import validated_decimal_input_casilla_ids as _validated_decimal_input_casilla_ids
 from ._formula_text_inputs import validate_text_input_targets as _validate_text_input_targets
 from ._formula_text_inputs import validated_text_input_casilla_ids as _validated_text_input_casilla_ids
 from ._ids import BindingId, CasillaId, FormulaId, ParameterId, RelationId, validated_casilla_id
 from ._runtime_graph import formula_evaluation_order
 from ._schema import (
-    DatedValue,
     FormulaExpression,
-    ModeloRevision,
     ParameterDefinition,
     RegistrySnapshot,
 )
 
 _ZERO = Decimal("0")
-_ONE = Decimal("1")
 
-# M210 IRNR Phase 1 sentinel rate values. Emitted by
+# M210 IRNR sentinel rate values. Emitted by
 # ``m210_resolve_rate`` when a deterministic rate cannot be resolved
 # from the registry parameters at evaluation time. The verification
 # layer rewrites these sentinels into BLOCKING findings post-engine
@@ -57,13 +60,11 @@ _ONE = Decimal("1")
 # authored rate, which is always in ``[0, 1]`` per TRLIRNR Art 25.
 _M210_DEFERRED_TIPO_SENTINEL = Decimal("-1")
 _M210_CONVENIO_MISSING_SENTINEL = Decimal("-2")
-_M210_NOT_YET_AUTHORED_SENTINEL = Decimal("-3")
 _M210_DOMESTIC_TARIFF_RATE = "DOMESTIC_TARIFF"
 _M210_RATE_SENTINELS = frozenset(
     {
         _M210_DEFERRED_TIPO_SENTINEL,
         _M210_CONVENIO_MISSING_SENTINEL,
-        _M210_NOT_YET_AUTHORED_SENTINEL,
     },
 )
 
@@ -73,7 +74,6 @@ _M210_RATE_SENTINELS = frozenset(
 # track the rename.
 M210_DEFERRED_TIPO_SENTINEL = _M210_DEFERRED_TIPO_SENTINEL
 M210_CONVENIO_MISSING_SENTINEL = _M210_CONVENIO_MISSING_SENTINEL
-M210_NOT_YET_AUTHORED_SENTINEL = _M210_NOT_YET_AUTHORED_SENTINEL
 M210_RATE_SENTINELS = _M210_RATE_SENTINELS
 
 
@@ -147,11 +147,10 @@ class RegistryCalculationResult(BaseModel):
     ``operand_refs``, and ``operand_values`` so the full evaluation
     lineage survives the engine boundary.
 
-    The legacy :attr:`values` and :attr:`entries` views are derived
-    properties for backward compatibility with downstream readers that
-    iterate the flat ``{casilla_id: Decimal}`` map or the
-    formula-only entry tuple. The typed envelope is the contract; the
-    flat views never grow new fields.
+    The :attr:`values` and :attr:`entries` views are derived convenience
+    properties for readers that need the flat ``{casilla_id: Decimal}``
+    map or the formula-only entry tuple. The typed envelope is the
+    contract; the flat views never grow new fields.
 
     Coverage asymmetry preserved by the derivation:
 
@@ -668,11 +667,7 @@ def _evaluate_m210_resolve_rate(expression: FormulaExpression, ctx: _EvalContext
     baseline_rate = _m210_baseline_rate(baseline_param, tipo_renta=tipo_renta, year=ctx.filing_year)
     country = ctx.enum_binding_values.get(args.country_binding) or ""
 
-    if (
-        tipo_renta == "pension"
-        and args.base_casilla_id is not None
-        and args.pension_tariff_parameter is not None
-    ):
+    if tipo_renta == "pension" and args.base_casilla_id is not None and args.pension_tariff_parameter is not None:
         rate = _m210_pension_effective_rate(
             args,
             ctx,
@@ -734,9 +729,7 @@ def _m210_resolve_rate_args(expression: FormulaExpression) -> _M210ResolveRateAr
         convenio_parameter=convenio_arg.parameter,
         country_binding=country_arg.binding,
         base_casilla_id=base_arg.casilla_id if base_arg is not None else None,
-        pension_tariff_parameter=(
-            pension_tariff_arg.parameter if pension_tariff_arg is not None else None
-        ),
+        pension_tariff_parameter=(pension_tariff_arg.parameter if pension_tariff_arg is not None else None),
     )
 
 
@@ -782,8 +775,6 @@ def _m210_convenio_rate_row(
 
 
 def _m210_rate_from_convenio_row(rate: str) -> Decimal | str:
-    if rate == "NOT_YET_AUTHORED":
-        return _M210_NOT_YET_AUTHORED_SENTINEL
     if rate == _M210_DOMESTIC_TARIFF_RATE:
         return _M210_DOMESTIC_TARIFF_RATE
     try:
@@ -884,8 +875,7 @@ def _evaluate_m210_resolve_base_imponible(expression: FormulaExpression, ctx: _E
     substitute_value = max(acquisition_value, administrative_value)
     if substitute_value <= _ZERO:
         raise RegistryValidationError(
-            "M210 inmobiliaria without cadastral value requires a positive acquisition "
-            "or administrative checked value",
+            "M210 inmobiliaria without cadastral value requires a positive acquisition or administrative checked value",
             translated_message="errors.calc.m210_imputation_no_catastral_value_missing",
             context={
                 "acquisition_casilla_id": args.acquisition_value_casilla_id,
@@ -1202,63 +1192,6 @@ def _evaluate_age_at_year_end(expression: FormulaExpression, ctx: _EvalContext) 
     return age
 
 
-_COMPARISON_OPS = frozenset({"less_than", "less_equal", "greater_than", "greater_equal", "equal"})
-_UNARY_PASSTHROUGH_OPS = frozenset({"copy", "lookup_parameter", "previous_period_value", "cross_model_sum"})
-
-
-def _evaluate_args_op(op: str, args: list[Decimal]) -> Decimal:
-    """Dispatch an N-arg arithmetic / comparison op once every arg has been evaluated."""
-    if op in {"add", "sum", "previous_period_sum"}:
-        if op == "previous_period_sum":
-            _require_non_empty(op, args)
-        return sum(args, _ZERO)
-    if op in _COMPARISON_OPS:
-        _require_arg_count(op, args, 2)
-        return _ONE if _compare(op, args[0], args[1]) else _ZERO
-    if op in _UNARY_PASSTHROUGH_OPS:
-        _require_arg_count(op, args, 1)
-        return args[0]
-    return _dispatch_named_arithmetic_op(op, args)
-
-
-def _dispatch_named_arithmetic_op(op: str, args: list[Decimal]) -> Decimal:
-    """Dispatch the per-name arithmetic ops (subtract / multiply / divide / percent / min / max / clamp / negate)."""
-    match op:
-        case "subtract":
-            _require_arg_count(op, args, 2)
-            return args[0] - args[1]
-        case "multiply":
-            result = _ONE
-            for arg in args:
-                result *= arg
-            return result
-        case "divide":
-            _require_arg_count(op, args, 2)
-            if args[1] == _ZERO:
-                raise RegistryValidationError(
-                    "formula expression divides by zero",
-                    translated_message="errors.calc.divide_by_zero",
-                )
-            return args[0] / args[1]
-        case "percent":
-            _require_arg_count(op, args, 2)
-            return args[0] * args[1] / Decimal("100")
-        case "min":
-            _require_non_empty(op, args)
-            return min(args)
-        case "max":
-            _require_non_empty(op, args)
-            return max(args)
-        case "clamp":
-            _require_arg_count(op, args, 3)
-            return max(args[1], min(args[0], args[2]))
-        case "negate":
-            _require_arg_count(op, args, 1)
-            return -args[0]
-        case _:
-            raise RegistryValidationError(f"formula expression uses unsupported op {op!r}")
-
-
 def _evaluate_leaf(
     expression: FormulaExpression,
     *,
@@ -1339,193 +1272,3 @@ def _evaluate_leaf(
         "empty formula expression",
         translated_message="errors.calc.empty_expression",
     )
-
-
-def _compare(op: str, left: Decimal, right: Decimal) -> bool:
-    if op == "less_than":
-        return left < right
-    if op == "less_equal":
-        return left <= right
-    if op == "greater_than":
-        return left > right
-    if op == "greater_equal":
-        return left >= right
-    if op == "equal":
-        return left == right
-    raise RegistryValidationError(f"formula expression uses unsupported comparison op {op!r}")
-
-
-def _resolve_bracket(
-    parameter: ParameterDefinition,
-    base: Decimal,
-    date_context: Mapping[str, date],
-) -> Decimal:
-    """Compute the cuota for ``base`` using parameter's piecewise-linear bracket schedule."""
-    if parameter.data_type != "bracket_table":
-        raise RegistryValidationError(
-            f"parameter {parameter.id!r} must declare data_type='bracket_table' to use lookup_bracket",
-        )
-    if parameter.bracket_axis is None:
-        raise RegistryValidationError(f"parameter {parameter.id!r} bracket_table requires bracket_axis")
-    if parameter.bracket_axis not in date_context:
-        raise RegistryValidationError(f"parameter {parameter.id!r} requires date axis {parameter.bracket_axis!r}")
-    selected = date_context[parameter.bracket_axis]
-    candidates = [
-        b for b in parameter.brackets if b.valid_from <= selected and (b.valid_to is None or selected <= b.valid_to)
-    ]
-    if not candidates:
-        raise RegistryValidationError(
-            f"parameter {parameter.id!r} has no bracket valid for {selected.isoformat()}",
-            translated_message="errors.calc.bracket_no_window",
-            context={"parameter_id": parameter.id, "as_of": selected.isoformat()},
-        )
-    base = Decimal(base)
-    if base < Decimal("0"):
-        raise RegistryValidationError(
-            f"parameter {parameter.id!r} lookup_bracket received negative base {base}",
-            translated_message="errors.calc.bracket_negative_base",
-            context={"parameter_id": parameter.id, "base": str(base)},
-        )
-    sorted_brackets = sorted(candidates, key=lambda b: b.lower_bound)
-    selected_entry = None
-    for entry in sorted_brackets:
-        if entry.lower_bound <= base and (entry.upper_bound is None or base <= entry.upper_bound):
-            selected_entry = entry
-            break
-    if selected_entry is None:
-        raise RegistryValidationError(
-            f"parameter {parameter.id!r} has no bracket covering base {base}",
-            translated_message="errors.calc.bracket_no_coverage",
-            context={"parameter_id": parameter.id, "base": str(base)},
-        )
-    return selected_entry.fixed_addition + selected_entry.marginal_rate * (base - selected_entry.lower_bound)
-
-
-def _resolve_parameter(parameter: ParameterDefinition, date_context: Mapping[str, date]) -> Decimal:
-    if not parameter.values:
-        raise RegistryValidationError(f"parameter {parameter.id!r} has no dated values")
-    matches: list[DatedValue] = []
-    for value in parameter.values:
-        if value.date_axis not in date_context:
-            raise RegistryValidationError(f"parameter {parameter.id!r} requires date axis {value.date_axis!r}")
-        selected = date_context[value.date_axis]
-        if value.valid_from <= selected and (value.valid_to is None or selected <= value.valid_to):
-            matches.append(value)
-    if len(matches) != 1:
-        raise RegistryValidationError(
-            f"parameter {parameter.id!r} expected exactly one dated value, found {len(matches)}",
-        )
-    return matches[0].value
-
-
-def _apply_rounding(value: Decimal, rounding: str | None) -> Decimal:
-    if rounding is None:
-        return value
-    if rounding == "money-2":
-        return _round_to_cents(value)
-    if rounding == "integer":
-        return value.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
-    raise RegistryValidationError(f"unsupported rounding rule {rounding!r}")
-
-
-def _reject_non_decimal[Key](items: Mapping[Key, Decimal], label: str) -> None:
-    for key, value in items.items():
-        if isinstance(value, bool) or not isinstance(value, Decimal):
-            raise RegistryValidationError(f"{label} {key!r} must be a Decimal")
-
-
-def _validated_decimal_input_casilla_ids[InputKey, InputValue](
-    inputs: Mapping[InputKey, InputValue],
-    *,
-    revision: ModeloRevision,
-) -> dict[CasillaId, Decimal]:
-    invalid = tuple(repr(key) for key in inputs if not isinstance(key, str))
-    if invalid:
-        raise RegistryValidationError(
-            f"input keys must be canonical casilla.id strings: {sorted(invalid)!r}",
-            translated_message="errors.calc.unknown_input_casillas",
-            context={"casilla_ids": ",".join(sorted(invalid))},
-        )
-    malformed: list[str] = []
-    canonical_inputs: dict[CasillaId, InputValue] = {}
-    for key in inputs:
-        try:
-            canonical_inputs[validated_casilla_id(key, surface="input casilla.id")] = inputs[key]
-        except ValueError:
-            malformed.append(str(key))
-    if malformed:
-        raise RegistryValidationError(
-            f"input keys must be canonical casilla.id strings: {sorted(malformed)!r}",
-            translated_message="errors.calc.unknown_input_casillas",
-            context={"casilla_ids": ",".join(sorted(malformed))},
-        )
-    unknown = undeclared_casilla_ids(revision, canonical_inputs)
-    if unknown:
-        raise RegistryValidationError.for_unknown_input_casilla_ids(casilla_ids=unknown)
-    resolved_inputs: dict[CasillaId, Decimal] = {}
-    for key, value in canonical_inputs.items():
-        if isinstance(value, bool) or not isinstance(value, Decimal):
-            raise RegistryValidationError(f"input {key!r} must be a Decimal")
-        resolved_inputs[key] = value
-    return resolved_inputs
-
-
-def _reject_non_string[Key](values: Mapping[Key, str], label: str) -> None:
-    for key, value in values.items():
-        if not isinstance(value, str) or not value:
-            raise RegistryValidationError(f"{label} {key!r} must be a non-empty string")
-
-
-def _reject_unknown_external_values[Key](items: Mapping[Key, Decimal], known_ids: set[Key], label: str) -> None:
-    unknown = sorted(set(items).difference(known_ids))
-    if unknown:
-        raise RegistryValidationError(f"unknown registry {label} ids: {unknown!r}")
-
-
-def _require_arg_count(op: str, args: list[Decimal], count: int) -> None:
-    if len(args) != count:
-        raise RegistryValidationError(f"formula op {op!r} expects {count} args, got {len(args)}")
-
-
-def _require_non_empty(op: str, args: list[Decimal]) -> None:
-    if not args:
-        raise RegistryValidationError(f"formula op {op!r} expects at least one arg")
-
-
-def read_parameter(
-    modelo_id: str,
-    revision_id: str,
-    parameter_id: str,
-    *,
-    date_context: Mapping[str, date],
-    registry_root: Path | None = None,
-) -> Decimal:
-    """Resolve a registered registry parameter value for the given date context.
-
-    Public delegate over the same ``_resolve_parameter`` logic the formula runtime
-    uses. Non-formula consumers (the rental tier resolver, IVA category resolver,
-    etc.) call this surface to read parameter values without going through a
-    formula expression. Registry access goes through ``ValidatedRegistryAuthority``
-    whether ``registry_root`` is provided or the bundled registry is used.
-
-    Raises :class:`RegistryValidationError` if the modelo / revision / parameter
-    is not registered, or if the date context selects 0 or >1 dated values.
-    """
-    from ....core.resources import bundled_path
-    from ._authority import ValidatedRegistryAuthority
-
-    root = registry_root if registry_root is not None else bundled_path("registry", "aeat")
-    authority = ValidatedRegistryAuthority.load(root, source_root=bundled_path())
-    try:
-        modelo_match = authority.modelo(modelo_id)
-    except RegistrySnapshotError as exc:
-        raise RegistryValidationError(f"modelo {modelo_id!r} not registered in {root}") from exc
-    revision = modelo_match.revisions.get(revision_id)
-    if revision is None:
-        raise RegistryValidationError(f"modelo {modelo_id!r} has no revision {revision_id!r}")
-    parameter = next((p for p in revision.parameters if p.id == parameter_id), None)
-    if parameter is None:
-        raise RegistryValidationError(
-            f"parameter {parameter_id!r} not registered under modelo {modelo_id!r} revision {revision_id!r}",
-        )
-    return _resolve_parameter(parameter, date_context)

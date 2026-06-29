@@ -536,8 +536,8 @@ def resolve_cross_reference_oracle(
     runs first and the resolver raises a typed
     :class:`RegistryValidationError` naming the unmet predicate fields if
     the binding is not applicable to the profile. Callers that don't
-    thread profile facts (legacy adapters, the audit) keep the old
-    catalogue-only resolution path by omitting both arguments.
+    thread profile facts (for example, audit code) use catalogue-only
+    resolution by omitting both arguments.
 
     Returns:
         The :class:`LiveParityOracle` bound to the cross-reference.
@@ -697,7 +697,7 @@ class ReplayPayload(_ParityModel):
     """Typed envelope for a decoded replay JSON payload.
 
     Every replay driver shares the same top-level JSON contract: an
-    ``observed`` mapping of legacy surface strings to string values (kept
+    ``observed`` mapping of captured surface strings to string values (kept
     only as audit evidence, not as a comparison key surface) and an optional
     ``raw_evidence_locator`` that links back to the raw HTTP response
     artifact for audit trails.
@@ -709,7 +709,7 @@ class ReplayPayload(_ParityModel):
       operator scenario the payload was captured against;
     * ``profile_overrides`` — per-fixture profile overrides used to
       drive the registry comparison;
-    * ``expected`` — legacy human-readable labels paired with their
+    * ``expected`` — captured human-readable labels paired with their
       expected values, retained only for audit readability;
     * ``expected_by_casilla_id`` — registry-casilla-id-keyed expected
       values, used by the oracle's matcher;

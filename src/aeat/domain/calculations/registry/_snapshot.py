@@ -4,6 +4,11 @@ Validates a :class:`ModeloDefinition` and selects the matching
 :class:`ModeloRevision` for a filing context, then assembles the immutable
 :class:`RegistrySnapshot` that downstream consumers (formula engine, export
 resolver, coverage auditor) depend on.
+
+This module only has the supplied modelo and catalogues. Cross-model relation
+closure needs the full registry tree and is enforced by
+:class:`ValidatedRegistryAuthority` / :meth:`RegistryValidator.validate_registry`
+before production snapshots are served.
 """
 
 from __future__ import annotations
@@ -83,6 +88,11 @@ def build_snapshot(
     revision_id: str | None = None,
 ) -> RegistrySnapshot:
     """Validate ``modelo`` and return the selected immutable snapshot.
+
+    This helper performs model-local validation and snapshot-local reference
+    checks. It cannot validate cross-model relation closure because it does not
+    receive the full modelo tree; production callers should request snapshots
+    through :class:`ValidatedRegistryAuthority`.
 
     Args:
         modelo: The :class:`ModeloDefinition` to validate and snapshot.
@@ -185,6 +195,10 @@ def build_validated_snapshot(
     revision_id: str | None = None,
 ) -> RegistrySnapshot:
     """Return a selected :class:`RegistrySnapshot` for an already validated modelo.
+
+    The precondition is model-local. Callers that need cross-model relation
+    closure must validate the full registry tree first, normally by using
+    :class:`ValidatedRegistryAuthority`.
 
     Args:
         modelo: The validated :class:`ModeloDefinition` whose revision is selected.
