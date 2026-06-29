@@ -7,6 +7,9 @@ legal_refs = [
     "orden-eha-3434-2007:art-8",
     "rd-1624-1992:art-71",
 ]
+orden_aplicabilidad = [
+    "orden-eha-3434-2007:art-2",
+]
 source_refs = [
     "aeat-dr-353-2026",
     "aeat-modelo-353-procedure",
