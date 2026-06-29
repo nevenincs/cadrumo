@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-21'
-modified: '2026-05-21'
+modified: '2026-06-29'
 related:
   - "[[2026-05-21-taxpayer-type-applicability-adr]]"
   - "[[2026-05-21-taxpayer-type-applicability-plan]]"
@@ -65,13 +65,12 @@ article precision.
   mandatory SII via the monthly-settlement obligation. The parent
   research already notes this correlation; the derivation must not
   treat the two facts as independent.
-- **VERI*FACTU is a different regime.** The existing
-  `topics/sii-verifactu.toml` couples SII with VERI*FACTU
+- **VERI*FACTU is a different regime.** The former combined
+  `topics/sii-verifactu.toml` coupled SII with VERI*FACTU
   (RD 1007/2023). VERI*FACTU concerns certified invoicing
   *software*, not the IVA Libros registro. Conflating them into one
-  enrolment flag would be wrong. Its applicability timeline and
-  obligated population were not grounded in the parent research and
-  are not grounded here.
+  enrolment flag would be wrong. The registry now keeps SII and
+  VERI*FACTU as separate topics; this ADR still models only SII.
 - **The four-day clock is a business-day calendar.** Computing it
   requires a Spanish national-holiday calendar. The deadline engine
   today only needs window endpoints; a rolling business-day count
@@ -191,11 +190,12 @@ enrolment facts; the engine does not special-case SII in code.
 ### 4. VERI*FACTU boundary — explicitly out of scope
 
 VERI*FACTU (RD 1007/2023, certified invoicing software) is a
-distinct regime and is **not** modelled by this ADR. The existing
-`topics/sii-verifactu.toml` topic must not be read as a single
-enrolment: SII and VERI*FACTU are separate facts. A VERI*FACTU
-enrolment model — its applicability timeline and obligated
-population — is a separate adjudication and is deferred.
+distinct regime and is **not** modelled by this ADR. The registry
+now has separate `sii` and `verifactu` topics, so SII and VERI*FACTU
+are not exposed as one enrolment. RD 1007/2023 Art. 3 and Disposición
+final cuarta now ground the VERI*FACTU population and current dates;
+a VERI*FACTU enrolment or profile-behaviour model remains a separate
+adjudication.
 
 ## Rationale
 
@@ -218,11 +218,11 @@ rather than a degenerate window — lets the overview surface tell
 the operator the truth: this is a standing obligation, not a dated
 deadline.
 
-Keeping VERI*FACTU out is a deliberate honesty boundary: the
-parent research did not ground it, the project owner flagged SII
-itself as unfamiliar, and merging two regimes the team does not
-yet fully understand would bake an unverified assumption into the
-schema.
+Keeping VERI*FACTU behaviour out is a deliberate boundary: the
+registry can now state the current Art. 3 population and final-
+provision dates, but merging SII ledger submission with certified
+invoicing-software obligations would still bake the wrong regime into
+the schema.
 
 ## Consequences
 
@@ -238,10 +238,9 @@ schema.
   suppressing Modelo 347 and Modelo 390 and switching Modelo 303
   to monthly for the mandatory collective, each with `legal_refs`
   (RD 596/2016, Orden HFP/417/2017 / BOE-A-2017-5312).
-- `topics/sii-verifactu.toml` should be split so SII and
-  VERI*FACTU are not a single coupled topic; the topic-level slugs
-  `rd-596-2016` / `rd-1007-2023` must become BOE-keyed legal
-  entries per the calculation-grounding rule.
+- Closed 2026-06-29: `topics/sii-verifactu.toml` has been split into
+  `topics/sii.toml` and `topics/verifactu.toml`; VERI*FACTU cites
+  BOE-keyed RD 1007/2023 article-level entries, not only the document.
 - This ADR is a hard prerequisite for any SII enrolment behaviour
   landing under the parent plan (it gates the Wave W01 SII schema
   field and the Wave W03 SII registry rules).
@@ -267,11 +266,19 @@ registry track before the corresponding rule is encoded:
 - **Fuel/warehouse depot collective (from 01/01/2025).** Confirmed
   as a mandatory-collective extension by AEAT pages; the
   enabling regulation and its exact scope were not read directly.
-- **Gran-empresa / SII threshold figure.** AEAT pages give both
-  "6 millones de €" (informal) and 6.010.121,04 € (precise); the
-  registry must cite the regulation that fixes the legal figure.
-- **VERI*FACTU (RD 1007/2023) entirely.** Applicability timeline
-  and obligated population were not researched. A separate ADR is
+- **Closed 2026-06-29 — Gran-empresa / SII threshold figure.** The
+  registry now cites the regulation that fixes the precise legal
+  figure: LIVA Art. 121 (`ley-37-1992:art-121`) for the operation-
+  volume calculation and RIVA Art. 71 (`rd-1624-1992:art-71`) for the
+  monthly IVA liquidation trigger above **6.010.121,04 euros** in the
+  immediately prior calendar year. The `censo.large_company` profile
+  field carries both refs; `iva.sii_enrolled` carries RIVA Art. 71
+  alongside RD 596/2016.
+- **Closed 2026-06-29 — VERI*FACTU population and timeline.** RD
+  1007/2023 Art. 3 now grounds the obligated population and
+  Disposición final cuarta now grounds the current dates: before
+  2027-01-01 for Art. 3.1.a IS taxpayers and before 2027-07-01 for
+  the rest of Art. 3.1 obligated taxpayers. A separate ADR is still
   required before any VERI*FACTU enrolment behaviour lands.
 - **Voluntary opt-in / opt-out mechanics.** The minimum
   one-calendar-year permanence and Modelo 036 entry are confirmed
@@ -295,5 +302,7 @@ registry track before the corresponding rule is encoded:
   (`boe.es/buscar/act.php?id=BOE-A-2017-5312`).
 - BOE — Real Decreto 596/2016, de 2 de diciembre (crea el SII,
   modifica el Reglamento del IVA RD 1624/1992).
-- BOE — Real Decreto 1007/2023 (VERI*FACTU; cited only to mark it
-  out of scope).
+- BOE — Real Decreto 1007/2023 (VERI*FACTU / SIF):
+  `boe.es/buscar/act.php?id=BOE-A-2023-24840`.
+- AEAT — Sistemas Informáticos de Facturación (SIF) y VERI*FACTU:
+  `sede.agenciatributaria.gob.es/Sede/iva/sistemas-informaticos-facturacion-verifactu.html`.

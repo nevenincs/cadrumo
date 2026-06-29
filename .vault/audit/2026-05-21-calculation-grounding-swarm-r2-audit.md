@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#codebase-health'
 date: '2026-05-21'
-modified: '2026-05-21'
+modified: '2026-06-29'
 related: []
 ---
 
@@ -28,33 +28,50 @@ Scope items checked:
 - Tautological calculation tests.
 - Registry internal coherence after M100 hardening (90 casilla declarations, 15 ids x 6 revisions).
 
+## Current State — 2026-06-29
+
+All three original findings are closed on the current implementation path:
+
+- Google Sheets calculation output emits computed rows through `GoogleSyncCalcComputeCasillaPayload`,
+  which requires non-empty `legal_refs` and `source_refs`.
+- Filed-declaration observations are converted through the registry snapshot; non-canonical casillas,
+  justificante metadata, incomplete extraction coverage, and incomplete registry grounding all fail
+  closed.
+- The calculation-completeness validator is fail-closed for calculation-bearing revisions with no
+  manifest. Informative/no-calculation revisions remain valid without an empty manifest.
+- Modelo 100 revision 2021 completeness manifest now includes `ley-35-2006:art-75`, matching the
+  closure legal refs for casilla `0527` and formula
+  `renta-2021-anualidades-alimentos-hijos-suma`.
+
 ## Findings
 
-### F1 — Google Sheets calc CLI emits formula entries without `legal_refs`/`source_refs`
+### F1 — CLOSED: Google Sheets calc CLI carries legal/source refs
 
-Pathway: `src/aeat/entrypoints/cli/_config/_google.py` lines 1200-1207.
+Original pathway: `src/aeat/entrypoints/cli/_config/_google.py` lines 1200-1207.
 
-The `_compute_casillas_from_pull` helper returns a plain dict per entry with only
-`casilla_id`, `value`, and `formula_id`. The `legal_refs` and `source_refs` fields available on
-`RegistryCalculationEntry` are silently dropped. Contrast with the main modelo calculation CLI
-payload (`_modelo_payloads.py`, `ObservationPayload`) which does surface both fields.
+Original gap (2026-05-21): The `_compute_casillas_from_pull` helper returned a plain dict per
+entry with only `casilla_id`, `value`, and `formula_id`. The `legal_refs` and `source_refs`
+fields available on `RegistryCalculationEntry` are silently dropped. Contrast with the main
+modelo calculation CLI payload (`_modelo_payloads.py`, `ObservationPayload`) which does surface
+both fields.
 
-Data lost / risk: Operators reading the Google Sheets calc output (via `aeat config google sync
+Original risk: Operators reading the Google Sheets calc output (via `aeat config google sync
 calc pull --compute`) receive formula provenance without regulatory grounding. This is an
 operator-facing JSON surface the grounding rule requires to carry `legal_refs` and `source_refs`.
 
-Remediation: Extend the per-entry dict in `_compute_casillas_from_pull` to include
-`"legal_refs": list(entry.legal_refs)` and `"source_refs": list(entry.source_refs)`.
-A `SheetsCalcEntryPayload` OutputSchema mirroring `ObservationPayload` would enforce the
-contract and enable JSON-contract test coverage.
+Current closure (2026-06-29): `src/aeat/entrypoints/cli/_config/_google_sync_calc.py` now builds
+`GoogleSyncCalcComputeCasillaPayload` rows with `legal_refs=list(entry.legal_refs)` and
+`source_refs=list(entry.source_refs)`. `src/aeat/entrypoints/cli/_config/_google_payloads.py`
+requires both fields with `Field(min_length=1)`. Regression coverage:
+`src/aeat/entrypoints/cli/tests/test_google_payloads.py::test_google_calc_compute_payload_rejects_computed_rows_without_provenance`.
 
 ---
 
-### F2 — `registry_observation_from_filed_declaration` produces `CasillaObservation` with empty provenance (undocumented external-boundary exception)
+### F2 — CLOSED: filed-declaration conversion backfills registry provenance
 
-Pathway: `src/aeat/adapters/outbound/aeat/sede/_declarations.py` line 1480.
+Original pathway: `src/aeat/adapters/outbound/aeat/sede/_declarations.py` line 1480.
 
-`registry_observation_from_filed_declaration` converts AEAT-scraped
+Original gap (2026-05-21): `registry_observation_from_filed_declaration` converted AEAT-scraped
 `FiledDeclaracionObservation` into a `RegistryModeloObservation` by building
 `CasillaObservation` items with no `legal_refs` or `source_refs`. The function has no inline
 comment explaining this is an external-API boundary exception. The produced observations are
@@ -62,41 +79,42 @@ consumed by `resolve_previous_filing_binding_values` and `resolve_relation_value
 purely as a value-lookup source for binding resolution; they are not persisted as the typed
 observations tuple on a `CalculationRevision` and do not flow through the CLI provenance chain.
 
-Data lost / risk: The grounding rule states every casilla observation carries provenance. The
+Original risk: The grounding rule states every casilla observation carries provenance. The
 binding-resolution consumer reads only `casilla_values` (the computed property), never
 `legal_refs`/`source_refs`, so the semantic gap is latent rather than causing an active
 calculation error. However, the boundary is not documented, which creates risk that a future
 consumer of these observations assumes provenance is present and silently receives empty tuples.
 
-Remediation: Add an inline comment on `registry_observation_from_filed_declaration`
-explicitly labelling this as an external-API boundary — the AEAT Sede does not expose
-legal-normative grounding; consumers must look up registry casilla provenance from the snapshot
-if they need it. Optionally, the function could accept an optional `RegistrySnapshot` and
-backfill provenance from `snapshot.revision.casillas` where available to close the gap fully.
+Current closure (2026-06-29):
+`src/aeat/adapters/outbound/aeat/sede/_declarations_observations.py::registry_observation_from_filed_declaration`
+resolves the current registry snapshot, validates every observed casilla against
+`casillas_by_id(snapshot.revision)`, refuses justificante metadata as registry input, refuses
+incomplete extraction coverage, and emits `CasillaObservation` rows with `legal_refs` and
+`source_refs` copied from the registry casilla definition. Regression coverage:
+`src/aeat/adapters/outbound/aeat/sede/tests/test_declarations_part1.py` and
+`src/aeat/adapters/outbound/aeat/sede/tests/test_declarations_part2.py::TestFiledObservationBindings`.
 
 ---
 
-### F3 — Completeness-manifest gate not fail-closed for manifestless calculation-bearing revisions (known staged rollout; gate-liveness test enforces the invariant)
+### F3 — CLOSED: completeness manifest gate is fail-closed for calculation-bearing revisions
 
-Pathway: `src/aeat/domain/calculations/registry/_validate_revision_identity.py` lines 180-191.
+Original pathway: `src/aeat/domain/calculations/registry/_validate_revision_identity.py` lines 180-191.
 
-`_emit_completeness_gate_failures` returns immediately when
+Original gap (2026-05-21): `_emit_completeness_gate_failures` returned immediately when
 `revision.completeness_manifest is None`. A calculation-bearing revision with no manifest
-passes validation silently. This is the documented staged-rollout design.
+passed validation silently. This was the documented staged-rollout design.
 
-Current state: The gate-liveness test
-`test_calculation_completeness_gate_is_live_for_every_calculation_bearing_modelo`
-(in `test_record_design.py` line 390) enforces that every non-empty calculation closure has a
-manifest, and asserts `dormant == 4` (M308, M347, M360, M840). All 26 modelos passed
-`RegistryValidator.validate_modelo` in live execution. The M347/M840 erroneous manifests were
-removed in commit `67ea2b0e7`. The gate is therefore live for the current corpus.
+Current closure (2026-06-29): `src/aeat/domain/calculations/registry/_validate_completeness.py`
+derives `calculation_closure_casilla_ids(revision, modelo_id)` when `completeness_manifest` is
+absent. If the closure is non-empty, validation fails with the closure casilla ids named.
+`src/aeat/domain/calculations/registry/_validate_revision_sections.py` passes the current
+`modelo.id` into the gate so cross-modelo selectors remain scoped correctly. No-calculation
+revisions still validate without empty manifests. Regression coverage:
+`test_calculation_bearing_revision_without_manifest_fails_closed`,
+`test_revision_without_calculation_closure_passes_without_completeness_manifest`, and the full
+`test_record_design.py` suite.
 
-Risk going forward: New modelos or new revisions added without a manifest will pass validation
-silently until the liveness test catches them. The fail-closed flip should land once every
-calculation-bearing modelo carries a manifest.
-
-Remediation: Once the liveness test has been stable across a full sprint, flip the gate: treat a
-`None` manifest on a calculation-bearing revision as a validation failure.
+Current dormant count is `5`: M308, M347, M360, M840, and M721 have no calculation closure and no manifest. Modelo 714 is calculation-bearing and manifest-gated.
 
 ## Clean Areas
 
@@ -146,16 +164,10 @@ values. No new tautological tests introduced in the recent churn.
 imported and wired in `_validate.py`. Live validation of all 26 modelos confirms no dead import
 paths or unreachable validator branches.
 
-## Recommendations
+## Closure Record
 
-1. Fix F1 first (low effort, high grounding impact): add `legal_refs`/`source_refs` to the
-   Google Sheets calc CLI entry dict in `_config/_google.py`. A two-line fix; adding a
-   `SheetsCalcEntryPayload` schema enables JSON-contract coverage.
+1. **F1 closed**: Google Sheets computed rows carry typed legal/source refs and reject empty provenance.
+2. **F2 closed**: filed-declaration conversion emits registry-grounded observations or fails closed.
+3. **F3 closed on 2026-06-29**: manifestless calculation-bearing revisions fail validation; M100 2021 manifest legal refs were restamped to include Art. 75.
 
-2. Document F2 boundary (low effort, prevents future breakage): add a one-line inline comment
-   on `registry_observation_from_filed_declaration` labelling the external-API boundary
-   exception so the next reader understands why provenance is empty.
-
-3. Schedule the completeness-manifest fail-closed flip (F3): one-line change in
-   `_emit_completeness_gate_failures` to fail on `manifest is None` for a non-empty closure;
-   land once the current corpus has been stable for a full sprint.
+Current verification on 2026-06-29: Google payload tests, filed-declaration observation tests, referential-integrity tests, and record-design tests passed.

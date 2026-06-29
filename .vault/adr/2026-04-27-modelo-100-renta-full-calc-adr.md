@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-100-renta-full-calc'
 date: '2026-04-27'
-modified: '2026-04-27'
+modified: '2026-06-13'
 related:
   - "[[2026-04-27-modelo-100-renta-full-calc-research]]"
   - "[[2026-04-21-modelo-100-renta-adr]]"
@@ -74,9 +74,12 @@ The 2026 Orden HAC for M100 has not been published at retrieval
 2026-04-27 (precedent: feb-mar 2027). The 2026 IRPF tarifa (estatal
 art. 63 + ahorro art. 66 post Ley 7/2024), mínimos (arts. 57-60),
 art. 20 reducción rendimientos del trabajo (post RD-Ley 4/2024), and
-RIRPF art. 30 5%/2.000€ cap are all stable for 2026. Only Andalucía
-has published its 2026 Ley de Presupuestos (Ley 8/2025) at retrieval;
-the other 14 ordinary CCAAs' 2026 deduction values are unverifiable.
+RIRPF art. 30 gastos de difícil justificación general 5%/2.000€ cap
+are all stable for 2026. The rate must still remain revision data
+because LIRPF DA 56 raised the 2023 rate to 7% for that tax period
+only. Only Andalucía has published its 2026 Ley de Presupuestos
+(Ley 8/2025) at retrieval; the other 14 ordinary CCAAs' 2026 deduction
+values are unverifiable.
 
 The user's directive expects a single PR closes `#317`/`#341`/`#342`/
 `#343`/`#344`. The implementation work realistically spans multiple
@@ -142,7 +145,7 @@ src/aeat/domain/formulas/_rulesets/
     ├── anexo_b2_<año>.py                    (rendimientos del capital mobiliario)
     ├── anexo_c_<año>.py                     (rendimientos del capital inmobiliario)
     ├── anexo_d_normal_<año>.py              (actividades económicas E.D. normal)
-    ├── anexo_d_simplificada_<año>.py        (E.D. simplificada — 5%/2.000€ cap)
+    ├── anexo_d_simplificada_<año>.py        (E.D. simplificada — revision rate/cap)
     ├── anexo_d_modulos_<año>.py             (estimación objetiva)
     ├── anexo_e_<año>.py                     (ganancias y pérdidas patrimoniales)
     ├── anexo_f_<año>.py                     (bases imponibles + reducciones + mínimos personal/familiar)
@@ -273,9 +276,11 @@ three and composes into one `RULESET`. The caller's filing declares
 the régimen via the existing `Modelo100GenParams` shape; only the
 matching régimen's casillas have non-zero values in any real filing.
 
-E.D. simplificada's 5%/2.000€ cap (RIRPF art. 30) is encoded as
-`min_op(percent(lit("0.05"), rendimiento_neto_pos), lit("2000.00"))`
-on the `D_SIMPLIFICADA_GASTOS_DIFICIL_JUSTIF` casilla.
+E.D. simplificada's gastos de difícil justificación cap (RIRPF art. 30,
+plus LIRPF DA 56 for 2023) is encoded as a revision-specific
+`min_op(percent(rate_param, rendimiento_neto_pos), cap_param)` on the
+`D_SIMPLIFICADA_GASTOS_DIFICIL_JUSTIF` casilla. Current non-exception
+revisions use 5%/2.000€, while 2023 uses DA 56's 7% rate.
 
 ### D6. Per-annum strategy — structural clone via re-import + 2026 conservative inheritance
 

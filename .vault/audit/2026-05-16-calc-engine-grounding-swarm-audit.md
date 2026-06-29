@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#calc-engine-grounding-swarm'
 date: '2026-05-16'
-modified: '2026-05-16'
+modified: '2026-06-29'
 related: []
 ---
-
-
 
 # `calc-engine-grounding-swarm` audit: `Calculation engine grounding`
 
@@ -25,98 +23,105 @@ Reference patterns consulted: `test_cross_boundary_roundtrip.py`, `test_secure_s
 
 ---
 
+## Current State — 2026-06-29
+
+The original 2026-05-16 gaps are closed on the current implementation path:
+
+- `RegistryCalculationResult.observations` is now the canonical all-casilla observation surface. It covers manual, bound, and formula-computed casillas; `values` and `entries` are derived views with documented asymmetry.
+- CLI JSON payloads for `modelo.work.calculate`, `modelo.work.revisions`, and `modelo.work.revision` carry the typed `observations` tuple with legal/source refs and operand traces.
+- `aeat app modelo work observations` now provides the dedicated read-only operator surface for persisted revision observations.
+- `modelo.calculation.created` bucket events carry `has_provenance`, allowing event readers to detect whether the stored revision has typed observations.
+
 ## Findings
 
-### F1 — engine→observations: input and bound casillas receive no `CasillaObservation` entry
+### F1 — CLOSED: engine observations cover input and bound casillas
 
 **Pathway**: engine → `CalculationRevision.observations`
 
-**Lossy site**: `src/aeat/application/modelo/_actions.py`, lines 846–857 and 845.
+**Original lossy site (2026-05-16)**: `src/aeat/application/modelo/_actions.py`, lines 846–857 and 845.
 
-**Data lost**: `CalculationRevision.observations` is built exclusively from `engine_result.entries`, which the runtime only populates for formula-computed casillas (the loop at `_formula_runtime.py:94` iterates `formula_evaluation_order`). Input casillas (`input_kind == "manual"` or `"bound"`) are initialised into `engine_result.values` via `_initial_values` but never appended to `entries`. Consequently, every manual and bound casilla present in `casilla_values` has no corresponding `CasillaObservation`. For those casillas, `legal_refs`, `source_refs`, `formula_id`, `operand_refs`, and `operand_values` are entirely absent from the typed envelope — even though the registry schema carries `legal_refs` and `source_refs` on the `CasillaDefinition` itself.
+**Original gap (2026-05-16)**: `CalculationRevision.observations` was built exclusively from `engine_result.entries`, which the runtime only populated for formula-computed casillas. Input casillas (`input_kind == "manual"` or `"bound"`) were initialised into `engine_result.values` via `_initial_values` but never appended to `entries`.
 
-**Remediation**: After building `typed_observations` from `engine_result.entries`, iterate over `resolved_inputs` and emit a `CasillaObservation` for each input casilla with `formula_id=None`, empty operand fields, and — by loading the casilla's `legal_refs`/`source_refs` from `snapshot.revision.casillas` — the regulatory citations the registry declares for that casilla. The runtime already has `casillas_by_id` built; the application action should build the same lookup from `snapshot.revision.casillas` and use it to populate input observations.
+**Current closure (2026-06-29)**: `src/aeat/domain/calculations/registry/_formula_runtime.py` materialises `RegistryCalculationResult.observations` as the all-casilla canonical observation surface. `src/aeat/application/modelo/_calculation_helpers.py` builds typed observations for non-formula values from registry casilla legal/source refs, so bound and manual casillas carry provenance with `formula_id=None`. Regression coverage lives in `src/aeat/application/modelo/tests/test_typed_observation_provenance.py` and `src/aeat/entrypoints/cli/tests/test_modelo_source_mesh_calculate.py`.
 
 ---
 
-### F2 — revision→CLI JSON: `observations` tuple silently absent from `_calculation_revision_payload`
+### F2 — CLOSED: revision JSON payloads include typed observations
 
 **Pathway**: revision → CLI JSON (`work calculate`, `work revisions`, `work status`)
 
-**Lossy site**: `src/aeat/entrypoints/cli/_modelo.py`, lines 938–953 (`_calculation_revision_payload`).
+**Original lossy site (2026-05-16)**: `src/aeat/entrypoints/cli/_modelo.py`, lines 938–953 (`_calculation_revision_payload`).
 
-**Data lost**: The function emits `casilla_values` as a flat `{str: str}` mapping (line 943) but does not include the `observations` tuple. All computed-casilla provenance that survived the domain boundary (`formula_id`, `legal_refs`, `source_refs`, `operand_refs`, `operand_values`) is therefore invisible to any JSON consumer of `work calculate` or `work revisions`. Because the CLI is the primary operator-facing surface, operators and downstream integrators have no programmatic access to the regulatory grounding carried in the typed envelope.
+**Original gap (2026-05-16)**: The CLI emitted `casilla_values` as a flat `{str: str}` mapping but did not include `observations`, making computed-casilla provenance invisible to JSON consumers of `work calculate` or `work revisions`.
 
-**Remediation**: Extend `_calculation_revision_payload` to include an `"observations"` list — one entry per `CasillaObservation` in `rev.observations`, serialised with all fields (`casilla_id`, `value`, `formula_id`, `legal_refs`, `source_refs`, `operand_refs`, `operand_values`). Add a matching `_calculation_revision_lines` row only when `--explain` is passed (mirroring the `formulas` command pattern at lines 580–590) to avoid flooding the default text output.
+**Current closure (2026-06-29)**: `src/aeat/entrypoints/cli/_modelo_rendering.py::calculation_revision_payload` serialises every `rev.observations` row into `ObservationPayload`. `WorkCalculateResult`, `WorkRevisionsResult`, and `WorkRevisionResult` all carry the same typed observation contract. Regression coverage lives in `src/aeat/entrypoints/cli/tests/test_modelo_payloads.py` and `src/aeat/entrypoints/cli/tests/test_modelo_source_mesh_calculate.py`.
 
 ---
 
-### F3 — revision→CLI JSON: `casilla_values` Decimals stringified without provenance key
+### F3 — CLOSED: flat casilla values are paired with joinable observation rows
 
 **Pathway**: revision → CLI JSON
 
-**Lossy site**: `src/aeat/entrypoints/cli/_modelo.py`, line 943.
+**Original lossy site (2026-05-16)**: `src/aeat/entrypoints/cli/_modelo.py`, line 943.
 
 ```
 "casilla_values": {k: str(v) for k, v in rev.casilla_values.items()},
 ```
 
-**Data lost**: `rev.casilla_values` is a plain `Mapping[str, Decimal]`; the `str()` coercion discards the `Decimal` precision but, more critically, there is no key in the emitted object that links each casilla value to its `formula_id` or regulatory citations. A consumer reading only the JSON envelope cannot determine whether a casilla value was manually supplied or computed, nor which BOE article authorises the formula. The `observations` tuple that carries this linkage is present on the domain object but not projected into the JSON (see F2). The two gaps compound: the mapping is emitted without any cross-reference pointer, so even a consumer that knew observations exist has no join key in the flat `casilla_values` dict to recover them.
+**Original gap (2026-05-16)**: `rev.casilla_values` was emitted without a companion surface linking each casilla value to its `formula_id` or regulatory citations.
 
-**Remediation**: Replace the flat `casilla_values` projection with the structured `observations` list proposed in F2. Retain `casilla_values` as a convenience alias pointing at the same data, but emit it alongside `observations` so existing consumers can continue reading the flat view while new consumers use the typed envelope.
+**Current closure (2026-06-29)**: `casilla_values` remains as the convenience flat map, and each revision payload now includes the joinable `observations` tuple keyed by `casilla_id`. The observation rows carry `value`, `formula_id`, `legal_refs`, `source_refs`, `operand_refs`, `operand_casilla_refs`, and `operand_values`.
 
 ---
 
-### F4 — no `observations` CLI subcommand: typed envelope has no dedicated read path
+### F4 — CLOSED: dedicated `work observations` read path exists
 
 **Pathway**: persistence → CLI operator surface
 
-**Lossy site**: `src/aeat/entrypoints/cli/_modelo.py` — no `work_app.command("observations")` exists (confirmed by reviewing all `@work_app.command(...)` decorators).
+**Original lossy site (2026-05-16)**: `src/aeat/entrypoints/cli/_modelo.py` had no `work_app.command("observations")`.
 
-**Data lost**: `CalculationRevision.observations` is persisted end-to-end (the model carries it, the repository serialises it via `model_dump_json()` through the encrypted envelope, the roundtrip test at `test_cross_boundary_roundtrip.py:446–488` confirms JSON fidelity). However, there is no CLI command that reads a persisted revision and prints its typed observations. An operator who wants to audit the `legal_refs` and `source_refs` of a filed casilla must deserialise the encrypted storage manually; the CLI provides no path. The `formulas` command surfaces static registry grounding (pre-calculation) but not the per-casilla runtime trace.
+**Original gap (2026-05-16)**: `CalculationRevision.observations` was persisted end-to-end, but there was no CLI command that read a persisted revision and printed its typed observations. Operators had to inspect encrypted storage manually to audit the legal/source refs of a filed casilla.
 
-**Remediation**: Add `work observations <work_unit_id> [--revision <revision_id>]` as a new `work_app` command. It loads the specified (or `current`) revision, iterates `rev.observations`, and emits a JSON list plus a tab-separated text table of `casilla_id`, `formula_id`, `legal_refs`, `source_refs`, `operand_refs`, `value`. The `--explain` flag pattern from the `formulas` command (lines 566–599) is the natural template.
+**Current closure (2026-06-29)**: `src/aeat/entrypoints/cli/_modelo_work_revision_cli.py` registers `aeat app modelo work observations`. The command accepts a direct `calculation_revision_id` positional or resolves the target through `--modelo`, `--year`, `--period`, `--registry-revision`, `--work-unit-id`, `--select`, and `--bucket-id`, then emits `WorkObservationsResult` in JSON and a tab-separated text table from `calculation_observation_lines`. Generated CLI docs include `docs/cli/app.rst` and `docs/cli/schemas.rst`; regression coverage lives in `src/aeat/entrypoints/cli/tests/test_modelo_source_mesh_calculate.py`.
 
 ---
 
-### F5 — bucket event payload: provenance counts only, no `formula_id` or `legal_refs` linkage
+### F5 — CLOSED: bucket events carry a provenance availability signal
 
 **Pathway**: engine→revision persistence → bucket event log
 
-**Lossy site**: `src/aeat/application/modelo/_actions.py`, lines 907–918 (`_emit_bucket_event` call inside `calculate_modelo_revision`).
+**Original lossy site (2026-05-16)**: `src/aeat/application/modelo/_actions.py`, lines 907–918 (`_emit_bucket_event` call inside `calculate_modelo_revision`).
 
-**Data lost**: The `payload` dict emitted in the `modelo.calculation.created` event carries metadata counts (`formula_count`, `casilla_count`, `input_casilla_count`) but no reference to any `formula_id`, `legal_refs`, or `source_refs`. The bucket event is the durable audit-trail record for the calculation. If the encrypted calculation-revision catalogue is ever rotated, migrated, or queried by an audit tool that only reads the event log, it cannot determine which regulatory articles authorised the calculation for that bucket event. This is a lightweight event by design, but the total absence of any grounding pointer (even a single canonical `revision_id` cross-reference from which grounding could be recovered) means the event log cannot stand alone as an audit trail.
+**Original gap (2026-05-16)**: The `modelo.calculation.created` event carried metadata counts but no signal that full grounding was available on the joined calculation revision.
 
-The `revision_id` is present as `object_id` (line 906), so grounding is recoverable by joining against the revision catalogue. The gap is that this join requirement is undocumented and the event carries no `grounding_available: true` signal.
+The `revision_id` is present as `object_id`, so grounding is recoverable by joining against the revision catalogue. The gap was that this join requirement was undocumented and the event carried no provenance-availability signal.
 
-**Remediation**: Add a `"has_provenance"` boolean string field (`"true"` / `"false"`) to the bucket event payload indicating whether the persisted revision carries a non-empty `observations` tuple. This allows audit tools to detect regressions (a calculation with no typed observations) without loading the full catalogue. The `revision_id` already present as `object_id` serves as the join key for full provenance recovery.
+**Current closure (2026-06-29)**: `src/aeat/application/modelo/_revision_persistence.py` emits `has_provenance` as `"true"` when the persisted revision carries observations and `"false"` otherwise. The event remains lightweight while allowing audit tools to detect a calculation revision with missing typed observations before loading the full catalogue.
 
 ---
 
-### F6 — `RegistryCalculationResult.entries` vs. `values`: coverage asymmetry not documented
+### F6 — CLOSED: `entries` vs. `values` asymmetry is documented
 
 **Pathway**: engine internal contract → application action consumer
 
-**Lossy site**: `src/aeat/domain/calculations/registry/_formula_runtime.py`, lines 86–145, specifically the distinction between `values` (all casillas) and `entries` (formula-computed casillas only).
+**Original lossy site (2026-05-16)**: `src/aeat/domain/calculations/registry/_formula_runtime.py`, lines 86–145, specifically the distinction between `values` (all casillas) and `entries` (formula-computed casillas only).
 
-**Data lost**: `RegistryCalculationResult` declares both `values: Mapping[str, Decimal]` (covers all casillas) and `entries: tuple[RegistryCalculationEntry, ...]` (covers formula targets only). The application action at `_actions.py:845–857` correctly reads from both: `casilla_values = dict(engine_result.values)` and `typed_observations` from `engine_result.entries`. However, the `RegistryCalculationResult` docstring and `RegistryCalculationEntry` docstring do not state this asymmetry. A future action author building on `RegistryCalculationResult` may assume `len(entries) == len(values)` and attempt to use `entries` as the sole source of truth for all casillas — reproducing the provenance gap described in F1. The contract is implicit, not enforced.
+**Original gap (2026-05-16)**: `RegistryCalculationResult` declared both `values` and `entries`, but the docstrings did not state that `values` covers all casillas while `entries` covers formula targets only.
 
-**Remediation**: Add a sentence to the `RegistryCalculationResult` docstring clarifying that `entries` covers only formula-computed casillas, while `values` covers all casillas (inputs + computed). Add a corresponding note to the `RegistryCalculationEntry` docstring. No code change is required, but the documentation gap leaves the boundary fragile for future implementors.
+**Current closure (2026-06-29)**: `src/aeat/domain/calculations/registry/_formula_runtime.py` documents `RegistryCalculationResult.observations` as canonical, `values` as the full value view derived from observations, and `entries` as the formula-computed compatibility view. This prevents future consumers from treating `entries` as the all-casilla source of truth.
 
 ---
 
-## Recommendations
+## Closure Record
 
-In priority order:
+- **P1 (F1)**: Closed. All-casilla `CasillaObservation` coverage is implemented and tested.
 
-- **P1 (F1)**: Populate `CasillaObservation` entries for input and bound casillas in `calculate_modelo_revision`. This is the highest-impact fix: without it, the typed envelope only covers part of the casilla space and the legal-grounding claim for manually-supplied casillas is unverifiable from the stored revision alone.
+- **P2 (F2, F3)**: Closed. CLI JSON payloads include the typed `observations` tuple alongside `casilla_values`.
 
-- **P2 (F2, F3)**: Extend `_calculation_revision_payload` to include the `observations` list in the CLI JSON output. The data already exists in the domain object; the serialisation gap is the only barrier to operator access.
+- **P3 (F4)**: Closed on 2026-06-29. `aeat app modelo work observations` reads persisted revision observations through the supported CLI surface.
 
-- **P3 (F4)**: Add `work observations` as a dedicated CLI subcommand so operators can inspect typed formula provenance without deserialising encrypted storage directly.
+- **P4 (F5)**: Closed. Bucket events carry `has_provenance`.
 
-- **P4 (F5)**: Add a `"has_provenance"` signal to the `modelo.calculation.created` bucket event payload to make the audit log self-describing.
+- **P5 (F6)**: Closed. Runtime result docs state the canonical observation surface and derived-view asymmetry.
 
-- **P5 (F6)**: Document the `entries` vs. `values` asymmetry in `RegistryCalculationResult` to prevent future implementors from reproducing the F1 gap.
-
-No production code was modified during this audit. No new tests were added. All boundary checks were performed by static code inspection against the five source files listed in Scope and the three reference test files.
+Current verification on 2026-06-29: focused CLI/source-mesh tests and CLI-reference drift passed after adding the dedicated observations command.

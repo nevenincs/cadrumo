@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cli-testimonial'
 date: '2026-05-27'
-modified: '2026-05-27'
+modified: '2026-06-29'
 related:
   - "[[2026-05-27-olivia-cli-testimonial-audit]]"
   - "[[2026-05-27-khadija-cli-testimonial-audit]]"
@@ -16,10 +16,17 @@ related:
 Twenty-sixth testimonial round, Felipe Aragoneses Cebrián — 68,
 retired civil engineer, Argentine fiscal resident since 2018,
 Spanish nationality + Spanish-state pension (€36k MUFACE retención
-7% Art. 25.1.b TRLIRNR) + small private pension (€3.5k retención
-24%) + vacant vivienda Madrid (Art. 13.1.h imputación rentas
+under the Art. 25.1.b TRLIRNR pension tariff) + small private pension
+(€3.5k retención 24%) + vacant vivienda Madrid (Art. 13.1.h imputación rentas
 inmobiliarias non-resident). Exercises Spanish-pensioner-abroad
 surface + Convenio España-Argentina BOE-A-1994-22783.
+
+> 2026-06-29 legal-grounding update: the current registry models
+> TRLIRNR art. 25.1.b as the statutory pension tariff table (8% up to
+> 12,000 EUR, 30% for the next tranche, 40% above 18,700 EUR), with
+> `AR/pension` delegated through `DOMESTIC_TARIFF`. Do not read the
+> original testimonial's 7% retention shorthand as the Art. 25.1.b
+> calculation rate.
 
 ## Findings
 
@@ -49,9 +56,11 @@ no axis for non-resident inmuebles + no M210 channel.
 ### HIGH — Art. 25.1.b TRLIRNR tipo especial pensión pública
 
 Spanish-state pensions to Spanish nationals abroad tributan
-exclusively in Spain at the Art. 25.1.b special tipo (7% on
-gross MUFACE pension). The CLI applies IRPF progressive tariff
-instead — wrong régimen for non-residents entirely.
+exclusively in Spain under the Art. 25.1.b special pension tariff.
+Current registry grounding uses the three-tranche 8%/30%/40% tariff,
+not a flat 7% calculation rate. The historical CLI finding remains:
+applying the IRPF progressive tariff would be the wrong régimen for
+non-residents entirely.
 
 ### HIGH — Convenio España-Argentina absent
 

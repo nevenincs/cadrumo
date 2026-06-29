@@ -56,7 +56,7 @@ distinct identities.
 referenced: `FormulaExpression.casilla`, `FormulaDefinition.target`,
 `DataBindingDefinition`, `ExportFieldDefinition.casilla`,
 `ExportRecordDefinition.row_field_casillas` and
-`requires_positive_casilla`, `RelationDefinition.source_output`,
+`requires_positive_casilla`, `RelationDefinition.source_casilla_id`,
 `AlgorithmBindingDefinition.target` / `inputs` / `outputs`,
 `VerificationExpectationDefinition.computed_casillas` and
 `reconciliation_totals`, `ExtractionProfileDefinition.target_casillas`.
@@ -175,8 +175,8 @@ typed as `CasillaId`. An identity-model change touches every site:
   and `requires_positive_casilla` (`_schema.py` lines 1658, 1660).
 - Bindings: `DataBindingDefinition` (`_schema.py` line 1313); a
   `source_casillas` selector tuple is read at `_validate.py` line 1485.
-- Relations: `RelationDefinition.source_output` typed `CasillaId`
-  (`_schema.py` line 1558), cross-modelo output references.
+- Relations: `RelationDefinition.source_casilla_id` typed `CasillaId`,
+  cross-modelo output references.
 - Algorithm bindings: `AlgorithmBindingDefinition.target`, `inputs`,
   `outputs` (`_schema.py` lines 1538-1540).
 - Verification expectations: `computed_casillas` and

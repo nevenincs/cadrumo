@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#registry-hardening-next-work'
 date: '2026-06-04'
-modified: '2026-06-04'
+modified: '2026-06-29'
 related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-04-registry-m200-completeness-audit]]'
@@ -76,12 +76,16 @@ The already segment-scoped M200 completeness rows remain valid:
   `orden-eha-3786-2008:art-1`, `rd-1624-1992:art-29`,
   `rd-1624-1992:art-30`, and `rd-1624-1992:art-71`.
 - **No form-data deletion:** casillas `27` and `45` remain declared and
-  export/extraction-backed as form totals. Only the stale
-  calculation-completeness manifest rows were removed.
-- **Closure consistency:** M303 `2009-y-siguientes` has 17 manifest identities
-  and 17 derived closure identities; M303 `2023-y-siguientes` has 29 manifest
-  identities and 29 derived closure identities. In both revisions,
-  manifest-only and closure-only sets are empty.
+  export/extraction-backed as form totals in both revisions.
+- **Current calculation status:** in `2009-y-siguientes`, casillas `27` and
+  `45` are not calculation-closure members and are absent from the manifest. In
+  `2023-y-siguientes`, both are formula-backed official Diseño projection
+  targets and must remain in the manifest.
+- **Closure consistency:** M303 `2009-y-siguientes` has 31 manifest identities
+  and 31 derived closure identities; M303 `2023-y-siguientes` has 53 manifest
+  identities and 53 derived closure identities. In both revisions,
+  manifest-only and closure-only sets are empty, and manifest legal refs match
+  the current calculation closure.
 
 ## Findings
 
@@ -89,9 +93,9 @@ The already segment-scoped M200 completeness rows remain valid:
   sources and did not create ungrounded or exportless public casillas.
 - **Pass:** The M200 manifest additions are calculation-closure rows, legally
   and source grounded through existing casilla and manifest references.
-- **Pass:** The M303 removals are legally safer than leaving stale rows: the
-  form total casillas still exist, but the calculation-completeness manifest no
-  longer claims they are traversed by the calculation closure.
+- **Pass:** The M303 manifests now track the current legal calculation surface:
+  2009 excludes non-computed total rows, while 2023 includes the same numbered
+  totals only because they are grounded projection formulas.
 - **Pass:** No schema semantics, loader behavior, or per-modelo ad hoc logic was
   added by these repairs.
 

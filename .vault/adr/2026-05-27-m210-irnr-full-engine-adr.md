@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#m210-irnr-full-engine'
 date: '2026-05-27'
-modified: '2026-05-27'
+modified: '2026-06-29'
 related:
   - "[[2026-05-27-non-resident-irnr-axis-adr]]"
   - "[[2026-04-21-calc-verification-adr]]"
@@ -37,7 +37,17 @@ Current state (post task #196 Path-B refusal stub):
   inmobiliarios at 24% under Art 25.1.a TRLIRNR), Khadija's
   seasonal-worker salary (Art 25.1.a with Convenio España-Marruecos
   treaty-rate override), Felipe's freelance services to Spanish
-  clients (Art 25.1.f if treaty-resident in a UE/EEA equivalent).
+  clients (Art 25.1.f income-class rate, with treaty overrides handled
+  separately).
+
+> 2026-06-29 legal-grounding update: any wording below that treated
+> TRLIRNR art. 25.1.f as a UE/EEA-resident branch is superseded by the
+> current registry and bundled corpus. The current taxonomy keeps
+> `ue_residente` under art. 25.1.a's reduced general rate, while
+> `interest` and `ganancia_patrimonial` are unconditional art. 25.1.f
+> income-class rows at 19%. The pension branch is no longer a sentinel:
+> it resolves through the art. 25.1.b bracket table
+> `m210-pension-tarifa-2025`.
 
 This ADR scopes the engine work to lift the M210 refusal stub
 into a working calculation surface. It is the authorising decision
@@ -55,8 +65,9 @@ testimonial personas under the residual general-rate flow.
 
 Phase 2 (follow-on L3 sub-plan, deferred): full casilla schema
 authoring per AEAT M210 diseño de registro, every tipo de renta
-slot (Arts 25.1.b pensiones, 25.1.f UE residentes, 25.2 rentas
-inmobiliarias, 25.3 plusvalías, 25.5 pagos a cuenta), every
+slot (Arts 25.1.b pensiones, 25.1.f dividendos/intereses/ganancias,
+25.1.a UE/EEE reduced general-rate cases, 25.2 rentas inmobiliarias,
+25.3 plusvalías, 25.5 pagos a cuenta), every
 Convenio rate table per country roster, agrupación anual support
 per Orden HAC/56/2024.
 
@@ -75,9 +86,13 @@ where:
 - For Art 25.1.a (general 24% rate): no deducibles permitted under
   TRLIRNR Art 24.1 — the base equals gross income. Phase 1 wires
   this branch only.
-- For Art 25.1.f (residentes UE 19% rate): TRLIRNR Art 24.6
-  permits the LIRPF deduction catalogue. Phase 1 declares the
-  binding shape; Phase 2 wires the full LIRPF cross-references.
+- For EU/EEE-resident deduction cases: TRLIRNR Art 24.6 permits the
+  LIRPF deduction catalogue where the statutory direct-link conditions
+  are met. Phase 1 declares the binding shape; Phase 2 wires the full
+  LIRPF cross-references.
+- For Art 25.1.f income classes: the 19% rate is keyed by income type
+  (dividends, interest, and capital gains), not by EU/EEE residence.
+  The base still follows the applicable Art 24 rule for that income.
 - For Art 25.2 (rentas inmobiliarias): TRLIRNR Art 24.5 routes to
   LIRPF Capítulo III rules. Deferred to Phase 2.
 - For Art 25.3 (ganancias patrimoniales): TRLIRNR Art 24.4 routes
@@ -87,16 +102,17 @@ where:
 
 Author a `bracket_table` parameter `m210-tipo-gravamen-2025` keyed
 on `tipo_renta` (Literal of `general` | `ue_residente` | `pension`
-| `inmobiliaria` | `ganancia_patrimonial`) returning:
+| `inmobiliaria` | `ganancia_patrimonial` | `interest`) returning:
 - `general` → Decimal("0.24") (TRLIRNR Art 25.1.a).
-- `ue_residente` → Decimal("0.19") (TRLIRNR Art 25.1.f).
-- `pension` → bracket table from Art 25.1.b (deferred to task #229
-  follow-on, but the registry entry exists with NOT_YET_AUTHORED
-  marker per the Path-B pattern).
+- `ue_residente` → Decimal("0.19") (TRLIRNR Art 25.1.a reduced
+  general rate for qualifying EU/EEE-resident cases).
+- `pension` → bracket table from Art 25.1.b via
+  `m210-pension-tarifa-2025`.
 - `inmobiliaria` → Decimal("0.24") with deduction routing per
   Art 24.5 (Phase 2).
 - `ganancia_patrimonial` → Decimal("0.19") (TRLIRNR Art 25.1.f
   treats plusvalías at the savings-base rate).
+- `interest` → Decimal("0.19") (TRLIRNR Art 25.1.f.2º).
 
 The bracket table is keyed on `tipo_renta` and time-windowed for
 2025; revisions for 2024 and earlier years carry the historical
@@ -246,40 +262,41 @@ Parameter-lookup dispatch is the canonical pattern.
 
 ## D6 — Tests
 
-Phase 1 acceptance tests (under
-`src/aeat/_data/registry/aeat/modelos/210/test_modelo_210_phase1.py`):
+Current focused gates:
 
-- `test_olivia_marbella_rental_general_rate` — UK profile,
-  rendimiento bruto 12000 EUR, no Convenio override, expects
-  cuota = 0.24 × 12000 = 2880 EUR. Cited against TRLIRNR Art
-  25.1.a + Olivia round-16 testimonial.
-- `test_khadija_marruecos_convenio_override` — Marruecos profile,
-  rendimiento 8000 EUR, Convenio España-Marruecos override at the
-  treaty rate (Art 14 Convenio MA), expects cuota at the treaty
-  rate. Cited against BOE-A-1985-... Convenio España-Marruecos.
-- `test_felipe_argentina_ue_residente_path` — Argentina profile,
-  rendimiento 15000 EUR, NOT in UE/EEA, no Convenio AR override
-  authored → BLOCKING finding emitted with next_action pointing
-  at the Convenio rate-row authoring gap.
-- `test_representante_fiscal_required_for_non_eea` —
-  non-EEA profile with `representante_fiscal_nif=None` →
-  BLOCKING finding via implies_nonzero predicate.
-- `test_eea_resident_skips_representante_fiscal_check` —
-  ue_eee_status=True profile passes the verification gate even
-  with `representante_fiscal_nif=None`.
+- `test_modelo_210_interest_rate_is_grounded_in_unconditional_art_25_1_f`
+  and `test_modelo_210_searchable_extract_preserves_unconditional_art_25_1_f`
+  prove the 19% `interest` row is grounded in unconditional TRLIRNR
+  art. 25.1.f text, not in the EU/EEE branch.
+- `test_khadija_ma_interest_convenio_override_replaces_baseline` proves
+  the Spain-Morocco interest override uses the current art. 11 treaty
+  row and replaces the domestic art. 25.1.f baseline.
+- `test_felipe_ar_pension_uses_domestic_tariff_without_blocking` proves
+  the Argentina pension path delegates to the live domestic art. 25.1.b
+  tariff instead of the old `NOT_YET_AUTHORED` sentinel.
+- `test_modelo_210_imputed_real_estate_art_13_1_h_is_catalogued_for_deferred_branch`
+  proves the imputed-real-estate branch is legally catalogued under
+  TRLIRNR art. 13.1.h while keeping the `inmobiliaria` rate row grounded
+  in art. 25.1.a.
+- The representante predicate tests in
+  `test_modelo_210_convenio_rate_resolution.py` cover the EEA and non-EEA
+  paths through the runtime evaluator.
 
-Anti-tautology proof: mutate the `m210-convenio-rates` row for
-ES-MA to 0.99, re-run Khadija test, assert the cuota diverges
-from the prior assertion. Confirms the test consumes the
-registry parameter rather than a hardcoded Decimal.
+Anti-tautology proof: `test_khadija_ma_interest_anti_tautology_mutation_pair`
+loads a mutated convenio table and proves the calculated cuota changes,
+confirming the test consumes the registry parameter rather than a hardcoded
+Decimal.
 
 ## D7 — Out of scope (Phase 2 / follow-on)
 
 - M210 full diseño de registro (80+ casillas across 12 tipo-de-
   renta variants).
 - Agrupación anual presentation mode per Orden HAC/56/2024.
-- Rentas inmobiliarias / plusvalías / pensiones tipo-de-renta
-  branches (deferred to tasks #229, #230, and the L3 sub-plan).
+- Full tipo-de-renta roster coverage beyond the current registry
+  baseline. The current tree already has the art. 25.1.b pension tariff,
+  art. 25.1.f interest/ganancia rows, and the art. 13.1.h imputed-real-
+  estate base branch; remaining work belongs to full layout/export and
+  any still-unauthored income variants.
 - Full Convenios España rate roster (~92 countries) — Phase 1
   ships three rows (UK, MA, AR) as testimonial coverage.
 - M216 (IRNR retenedor) and M247 (IRNR renta inmobiliaria) —

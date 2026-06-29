@@ -3,30 +3,43 @@ tags:
   - '#adr'
   - '#modelo-714-patrimonio-engine'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-29'
 related:
   - "[[2026-06-02-modelo-714-patrimonio-engine-research]]"
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
 ---
 
-
-
 # `modelo-714-patrimonio-engine` adr: `Modelo 714 Patrimonio engine — phased registry+fidelity then calc, corpus-gap sequenced` | (**status:** `accepted`)
+
+## 2026-06-29 status update
+
+The original sequencing decision remains useful, but the hard corpus-ingest
+blocker and the "empty scaffold" state are superseded in the current tree.
+Ley 19/1991 art. 4.Nueve, art. 28, art. 30, and art. 31 are now bundled and
+reviewed in `patrimonio.toml`; the `2021-y-siguientes` registry has casillas,
+constructs, application links, completeness metadata, the
+`patrimonio-escala-estatal` bracket parameter, and two formulas:
+`patrimonio-cuota-integra-escala-estatal` for casilla 29 (art. 30) and
+`patrimonio-reduccion-limite-80-suelo` for casilla 39 (art. 31). The remaining
+Phase-B tail is the full art. 31 same-year M100 joint-limit relation and the
+downstream result boxes that depend on that cross-modelo IRPF evidence, not the
+corpus ingest or the state-scale formula.
 
 ## Problem Statement
 
-Modelo 714 (Impuesto sobre el Patrimonio, Ley 19/1991) is one of the no-engine modelos the
+Modelo 714 (Impuesto sobre el Patrimonio, Ley 19/1991) was one of the no-engine modelos the
 foundational gate decision (`2026-06-02-modelo-multiyear-renta-adr`) flagged as requiring
-engine-build work before it can be authorized. This ADR is a mechanism-specific ADR
-co-backing the multi-year-renta campaign plan; it decides HOW 714 is built so its >=2-renta
-enrollment becomes real.
+engine-build work before authorization. This ADR is a mechanism-specific ADR co-backing the
+multi-year-renta campaign plan; it decided HOW 714 would be built so its >=2-renta enrollment
+became real.
 
-The current state, verified in-repo: the `modelos/714/revisions/2021-y-siguientes/` tree is an
-empty scaffold (only empty `application_links/` and `workbook_parity_refs/` dirs — no casillas,
-formulas, or parameters; not in the calculation registry), and `legal/patrimonio.toml` grounds
-only `ley-19-1991:art-28` (the €700.000 mínimo exento, CCAA-variable). The wealth-tax cuota
-chain — the tarifa, the vivienda exemption, and the IRPF+IP combined-quota limit — is entirely
-absent from the corpus. Building a calculation engine on top of that absence would mean
+At the time of the ADR, verified in-repo, the
+`modelos/714/revisions/2021-y-siguientes/` tree was an empty scaffold (only empty
+`application_links/` and `workbook_parity_refs/` dirs — no casillas, formulas, or parameters;
+not in the calculation registry), and `legal/patrimonio.toml` grounded only
+`ley-19-1991:art-28` (the €700.000 mínimo exento, CCAA-variable). The wealth-tax cuota chain
+— the tarifa, the vivienda exemption, and the IRPF+IP combined-quota limit — was entirely
+absent from the corpus. Building a calculation engine on top of that absence would have meant
 hand-typing tax brackets and percentages, which the project's grounding rules forbid.
 
 The decision is therefore how to sequence the build so the calculation is grounded, and how to
@@ -55,8 +68,8 @@ cross-reference the límite conjunto requires).
   límite conjunto (art.31) MUST be ingested from BOE into the legal corpus before any tarifa or
   límite formula is authored. Hand-typing the brackets or the 60%/80% percentages would violate
   aeat-calculation-grounding and no-tautological-calculation-tests — the engine would assert
-  numbers with no authoritative source on the snapshot. Until the ingest lands, Phase B does not
-  start.
+  numbers with no authoritative source on the snapshot. This prerequisite is now satisfied for
+  art.4.Nueve, art.30, and art.31; see the 2026-06-29 status update.
 - **Legal-article correction recorded.** The vivienda habitual €300.000 exemption is
   Ley 19/1991 **art.4 apartado Nueve**, not "art.4.Cuatro" as the task brief stated. Verified
   against the BOE consolidated text and Spanish tax references (the vivienda concept is taken by
@@ -67,19 +80,20 @@ cross-reference the límite conjunto requires).
   liquidable and cuota (`filing_year_delta = 0`). The relation mechanism exists, but a same-year
   IP→IRPF read has not been wired before; the plan must treat the wiring as a first-of-kind step
   and validate referential integrity at snapshot build.
-- The exact art.31 límite formula is **deferred** until art.31 is grounded — the ADR fixes the
-  shape (60% combined-quota limit with an 80% floor on the IP quota) but not literal coefficients.
+- The exact art.31 límite formula was **deferred** until art.31 was grounded. In the current tree,
+  art.31 is grounded and the 80%-floor reference is computed; the remaining work is the same-year
+  M100 joint-limit relation.
 
 ## Implementation
 
-A two-phase build. Phase A produces a grounded, fidelity-tested registry with no calculation;
-Phase B adds the calculation engine on top of the now-grounded corpus.
+The original two-phase build plan is retained as historical design context. The current state is
+the 2026-06-29 status update above.
 
-**Phase A — registry + fidelity (no calc).**
+**Phase A — registry + fidelity (historical no-calc baseline).**
 
 - *Step one (blocking):* ingest `ley-19-1991:art-4` (apartado Nueve, vivienda €300.000),
   `ley-19-1991:art-30` (tarifa / escala de gravamen), and `ley-19-1991:art-31` (límite conjunto)
-  into `legal/patrimonio.toml` from BOE (Ley 19/1991, BOE-A-1991-14461), each with `corpus_ref`,
+  into `legal/patrimonio.toml` from BOE (Ley 19/1991, BOE-A-1991-14392), each with `corpus_ref`,
   reviewed status, and `required_text` anchors, alongside the existing `art-28`.
 - Author the 714 casilla schema from the M714 diseño de registro (Orden HAC/1023/2021,
   BOE-A-2021-7593) into `modelos/714/revisions/2021-y-siguientes/`. Casillas are `input_kind =
@@ -95,8 +109,8 @@ Phase B adds the calculation engine on top of the now-grounded corpus.
   art.4.Nueve, reducing the base.
 - Author the art.31 límite conjunto formula reading a SAME-YEAR M100 cross-ref
   (`filing_year_delta = 0` over M100 base liquidable + cuota), capping the combined IRPF+IP quota
-  at 60% with the 80% reduction floor on the IP quota. The exact coefficients come from the
-  art.31 corpus text ingested in Phase A; the formula is deferred until then.
+  at 60% with the 80% reduction floor on the IP quota. The current registry has the art.31
+  80%-floor reference; the full same-year M100 joint-limit relation remains the open tail.
 - Wire the `modelo-714-...-calculation` application link (consumer
   `aeat.domain.calculations.registry`, `requires_snapshot = true`) only once the formulas exist.
 
@@ -104,7 +118,8 @@ Phase B adds the calculation engine on top of the now-grounded corpus.
 `filing_year_delta = -1` seeding the prior-year wealth base, proving the base carries across two
 714 filings, and (ii) the same-year M100 cross-ref. The enrollment E2E drives the real engine for
 two distinct filing years; the oracle for the límite is the AEAT Patrimonio manual worked example,
-usable only once art.31 is grounded — until then the E2E asserts structure and fichero-fidelity.
+now that art.31 is grounded; until the cross-modelo relation lands, the remaining downstream boxes
+stay manual.
 
 ## Rationale
 

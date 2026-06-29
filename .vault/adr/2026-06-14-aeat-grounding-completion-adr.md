@@ -3,13 +3,11 @@ tags:
   - '#adr'
   - '#aeat-grounding-completion'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-29'
 related:
   - '[[2026-06-14-aeat-grounding-completion-research]]'
   - "[[2026-06-14-legal-grounding-centralization-audit]]"
 ---
-
-
 
 # `aeat-grounding-completion` adr: `Build Legitimately-Missing Spanish-Tax Grounding Features` | (**status:** `accepted`)
 
@@ -63,6 +61,14 @@ mis-named micro-empresa "erd" scalar, and land the deferred bracket-based casill
 rate echo so the displayed micro-empresa rate reflects the two-tranche scale for
 2025/2026 instead of the stale flat 23%. Each wave is its own grounded, tested landing.
 
+Current-state note 2026-06-29: W01 and W02 have landed in the current tree. The
+objective-estimation advisory consumes structured profile volume fields and the
+objective-estimation selector is enum-only through `irpf.estimation_regime`; the legacy
+`uses_objective_estimation_irpf` boolean input is not a supported path. Modelo 131
+deadline-window predicates also use `irpf.estimation_regime == "objetiva"`. The Modelo
+200 Art.101 ERD schedule is encoded separately from the micro-empresa lane, and the
+casilla 00558 display echo is closed without weakening the bracket-derived cuota path.
+
 ## Rationale
 
 Per the operator directive, a verified missing feature is in scope to build, not defer.
@@ -86,6 +92,12 @@ regulated display casilla and must prove the cuota is unchanged. The broader cam
 (all Spanish-tax concepts) continues beyond these waves; this ADR covers the gaps the
 two verification swarms surfaced, and later swarms will surface more.
 
+2026-06-29 outcome: the gains above are present as current code/registry behavior, with
+the módulos limit implemented as advisory verification findings rather than a hard filing
+block. The remaining discipline is ongoing campaign hygiene: future legal surfaces must
+still be introduced through grounded registry parameters or explicit non-authoritative
+anchors, not by carrying secondary-source text as corpus.
+
 ## Codification candidates
 
 - **Rule slug:** `missing-regulatory-law-is-built-in-the-registry`. **Rule:** when a
@@ -93,7 +105,3 @@ two verification swarms surfaced, and later swarms will surface more.
   does not, author it as a grounded registry parameter (legal_refs→corpus_ref) with an
   advisory-first gate — do not leave it as a corpus-only reference or an un-enforced
   comment. (Promote only after this ADR's waves land and the pattern holds.)
-
-## Codification candidates
-
-

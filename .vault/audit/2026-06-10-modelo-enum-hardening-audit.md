@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#modelo-enum-hardening'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-29'
 related:
   - '[[2026-06-10-modelo-enum-hardening-adr]]'
   - '[[2026-06-10-modelo-enum-hardening-plan]]'
@@ -64,11 +64,14 @@ the amortisation parameter coverage matches the registry exactly. No gap.
 intermediate commit; corrected to `BOE-A-1994-15794` at HEAD. `DEFAULT_IVA_GENERAL_RATE_PCT`
 lacked a BOE id; now cites Ley 37/1992 `BOE-A-1992-28740` (fixed this pass).
 
-### N1 - stale BOE id in prior-campaign vault prose
+### N1 - stale BOE id in prior-campaign vault prose (closed 2026-06-29)
 
-The earlier `trabajador-del-mar` vault documents still carry `BOE-A-1994-16100`
-in prose. Production code, tests, and registry data are clean; this is a
-historical-paper-trail inconsistency only.
+The earlier `trabajador-del-mar` vault documents carried `BOE-A-1994-16100`
+in prose. Currentization on 2026-06-29 replaced those authority citations with
+`BOE-A-1994-15794`, matching the reviewed `ley-19-1994:art-75` legal catalogue
+entry and current production code. Remaining mentions of `BOE-A-1994-16100` in
+this audit/research stream identify the invalid former value, not current
+authority.
 
 ### Broad-test triage - 2 self-inflicted regressions of 31 failures
 
@@ -109,8 +112,8 @@ core-struct docstring-link ratchet on peer modules. They clear as peers land.
 - Coordinator awareness (Incident 2): commit `887cd5d4a` carries a peer's
   config-preflight feature under this session's message; treat its attribution
   as mixed when reviewing history.
-- Optional hygiene (N1): correct `BOE-A-1994-16100` to `BOE-A-1994-15794` in the
-  prior `trabajador-del-mar` vault prose.
+- N1 is closed: prior `trabajador-del-mar` authority citations now use
+  `BOE-A-1994-15794`.
 - The 29 peer-WIP broad-test failures are not this feature's gate; re-run the
   suite once the concurrent peer work lands to confirm they clear.
 

@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#modelo-130-relation-regression'
 date: '2026-05-26'
-modified: '2026-05-26'
+modified: '2026-06-29'
 related:
   - "[[2026-05-19-modelo-130-relation-regression-plan]]"
   - "[[2026-05-19-modelo-130-relation-regression-adr]]"
@@ -58,9 +58,10 @@ Casilla 15 carries `input_kind = "bound"`. The formula runtime's
 `_initial_values` helper falls back to `inputs.get(casilla.id, _ZERO)`
 for every non-computed casilla. With no binding value supplied and no
 input supplied, casilla 15 silently becomes Decimal("0"). The
-prior-quarter negative-result carry-forward (RD 439/2007 art. 110.5)
-never reaches the diferencia (casilla 17) or the resultado final
-(casilla 19).
+prior-quarter negative-result carry-forward (casilla 15 mechanics
+from AEAT Modelo 130 instructions under the RD 439/2007 art. 110
+payment framework) never reaches the diferencia (casilla 17) or the
+resultado final (casilla 19).
 
 ### S2 existing tests mask the dead binding
 
@@ -76,7 +77,8 @@ declares C15=0 in its input mapping.
 
 `130.toml` lines 318-325 document the intent:
 
-> Prior-quarter negative-result carry-forward (RD 439/2007 art. 110.5).
+> Prior-quarter negative-result carry-forward (AEAT Modelo 130 casilla 15
+> instructions under the RD 439/2007 art. 110 payment framework).
 > When a quarter's "Diferencia" (casilla 17) is negative, the absolute
 > value is carried forward as a deductible casilla 15 in the following
 > quarter within the same ejercicio. The saldo-negativo-fin-periodo

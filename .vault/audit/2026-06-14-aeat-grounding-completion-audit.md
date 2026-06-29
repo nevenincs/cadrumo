@@ -7,9 +7,8 @@ related:
   - "[[2026-06-14-aeat-grounding-completion-plan]]"
 promoted_to:
   - 'rule:legal-grounding-verifies-bundled-authoritative-corpus'
-modified: '2026-06-15'
+modified: '2026-06-29'
 ---
-
 
 # `aeat-grounding-completion` audit: `Campaign-Close Honesty Review — Centralization + Grounding`
 
@@ -58,12 +57,22 @@ single-probe. That casilla has no numeric AEAT box, so it was never an inline-nu
 routing literal (the finding's target). **Resolution:** reverted it to the direct
 single-probe `_casilla_value` lookup — behaviour-preserving and correct.
 
-### M2 (MEDIUM — TRACKED) — EO exclusion parameters have no consumers yet
+### M2 (MEDIUM — CLOSED 2026-06-29) — EO exclusion parameters now feed the advisory gate
 
-The three módulos magnitudes are inert grounded data: no production resolver/advisory gate
-consumes them (the W01.P02 advisory gate is honestly deferred). Audit finding V3 is thus
-HALF closed — the limits now exist as grounded registry data, still unenforced. Tracked as
-grounding-completion W01.P02 (which also needs a declared-volume input).
+The módulos magnitudes are now consumed by
+`src/aeat/application/modelo/_objective_estimation_advisory.py`. The advisory reads the
+current structured profile inputs
+`objective_estimation_prior_year_gross_income_eur`,
+`objective_estimation_prior_year_invoice_gross_income_eur`,
+`objective_estimation_prior_year_agri_livestock_forest_gross_eur`, and
+`objective_estimation_prior_year_purchases_eur`; emits Modelo 100/131 advisory findings
+inside the official 2016-2026 scope; and carries the relevant legal refs from the
+parameter grounding. The no-legacy cleanup also retired the old
+`uses_objective_estimation_irpf` input surface: objective-estimation routing is now driven
+by `irpf.estimation_regime`, and Modelo 131 deadline windows predicate on
+`irpf.estimation_regime == "objetiva"`. Focused tests include
+`test_objective_estimation_exclusion_advisory.py` and the profile/deadline coverage in the
+2026-06-29 focused run.
 
 ### L1 / N1 (LOW / NIT — awareness only) — F4 process + registry-load nit
 
@@ -72,32 +81,41 @@ in the follow-up `0ab778724` — net HEAD green, flagged as a clean-collection p
 N1: `_casilla_id_to_number` loads the whole registry tree (lru-cached, off hot path) to
 resolve ~7 box numbers — acceptable.
 
-### W02 blocker verification (C1-lesson applied) — remaining steps need authoritative human-reviewed sourcing
+### W02 current-state verification (C1-lesson applied) — rate gaps closed in registry
 
-Applying the C1 lesson (check the bundled authoritative corpus before authoring), the three
-remaining grounding-completion steps were each verified blocked on operator input, not merely
-asserted:
+Applying the C1 lesson (check the bundled authoritative corpus before authoring), the
+remaining grounding-completion steps were re-verified against the current registry:
 
-- **W02.P03 (IS ERD INCN<10M schedule):** the claimed 24/23/22/21 (2025–2028) schedule is
-  **NOT present in the bundled authoritative corpus** — `ley-27-2014-dt-44.html`
-  contains only the micro-empresa INCN<1M part (21/22 for 2025, 19/21 for 2026), and there
-  is no full `ley-27-2014.html` consolidation bundled. The verification-swarm claim came from
-  a secondary AEAT web page. Authoring it would repeat the C1 fabrication error. BLOCKED on an
-  operator-provided authoritative BOE excerpt (or confirmation the schedule is real and its
-  exact text).
-- **W02.P04 (M200 casilla 00558 two-tranche echo):** the cuota is already correct; only the
-  scalar rate echo is stale (flat 23 % for 2025/2026 micro-empresa). The fix needs AEAT's
-  exact 00558 convention for a two-tranche micro rate (does the box show 21, 23, or is it
-  computed?) — not derivable without the AEAT form spec. BLOCKED on that convention.
-- **W01.P02 (módulos advisory gate):** needs a *declared per-activity volume input* (250k
-  general / 125k factura / 250k compras) that the profile/ledger does not yet collect, AND
-  must gate on filing year because — per C1 — the limits are settled only for 2016–2024 and
-  derogated/unresolved for 2025+. Building it is a categorized-volume feature with a legal
-  year-scope, not a quick step.
+- **W02.P03 (IS ERD INCN<10M schedule):** 2026-06-29 current-state verification closes
+  this blocker. The legal catalogue now includes reviewed entries for
+  `ley-27-2014:dt-44` and `ley-27-2014:art-101`; the Modelo 200 parameter registry
+  declares `is.modelo-200.tipo-gravamen-erd-art101` and
+  `is.modelo-200.cuota-integra-bracket-erd-art101`; and the Art.101 schedule is encoded
+  for INCN below 10M and at least 1M as 25 (2024), 24 (2025), 23 (2026), 22 (2027), 21
+  (2028), and 20 (2029). `formulas.toml` routes general-rate Art.101 forms through those
+  parameters, and the completeness manifest carries both legal refs. Focused tests include
+  `test_modelo_200_tipo_gravamen_dispatch.py` and
+  `test_modelo_200_cuota_integra_lanes.py`.
+- **W02.P04 (M200 casilla 00558 two-tranche echo):** 2026-06-29 current-state
+  verification closes this blocker. The registry now declares
+  `is.modelo-200.tipo-gravamen-pyme-display` with dated scalar echo values 23
+  (2024), 21 (2025), and 19 (2026), and the `DP200014:00558` formula routes
+  micro-empresa general forms to that display parameter. The cuota remains
+  bracket-derived through `DP200014:00562`, so the trust/export echo changed
+  without weakening tax arithmetic. Focused tests passed:
+  `test_modelo_200_tipo_gravamen_dispatch.py` (18 passed),
+  `test_modelo_200_cuota_integra_lanes.py` (14 passed), and
+  `test_modelo_200_temporal_coverage.py` (7 passed).
+- **W01.P02 (módulos advisory gate):** 2026-06-29 current-state verification closes this
+  step. The user-profile schema now exposes the declared volume inputs, the advisory gate
+  consumes them, and tests prove the gate fires for official 2025/2026 AEAT scope while it
+  does not project beyond the supported scope. The path is advisory-only and legally
+  grounded; it is no longer represented as a hard filing block.
 
-These are documented blockers, not skipped work: completing them by fabricating legal text
-from secondary sources or guessing a regulated form convention is exactly what the
-safety-legal-gates discipline and the C1 finding forbid.
+These are current registry/application closures, not historical backfills. The C1 lesson
+still stands: future legal authoring must use bundled authoritative corpus evidence or
+honestly mark a non-authoritative anchor; secondary-source text must not become fabricated
+corpus.
 
 ### Verified-sound (honest green surface)
 
@@ -105,20 +123,22 @@ The reviewer independently confirmed: F4 binding selectors correct (rate_kind=ze
 drop observations; production resolves via the mesh, non-tautological 5000/3000 test); F4
 completeness-manifest edit consistent; F3 behaviour-preserving for every box number (zero
 cross-revision conflicts); F1 tier-resolver parity-preserving with a non-tautological
-causality proof; all landed citation fixes legally correct; F2 prorrata retain-and-defer
-decision consistent with `no-legacy-compatibility`. Clean `--collect-only` (15467, 0 errors).
+causality proof; all landed citation fixes legally correct. The earlier F2 prorrata
+deferral statement is superseded by the 2026-06-29 legal-grounding-centralization V33
+currentization: the exported application prorrata wrapper is deleted, while the domain
+IVA prorrata substrate remains for validated ledger prorrata references. Clean
+`--collect-only` (15467, 0 errors).
 
 ## Recommendations
 
-- C1/H1/M1 fixed this pass. M2 (W01.P02 advisory gate + declared-volume input) remains the
-  open grounding-completion step; until it lands, do not represent the módulos exclusion as
-  enforceable. W02 (ERD<10M schedule, M200 echo) still needs human-reviewed corpus.
-- Operator action: re-stamp the now-authoritatively-grounded DT 32ª legal entry after
-  confirming the 2016-2024 scope + the 2025/2026 derogation handling.
+- C1/H1/M1 fixed this pass. M2/W01.P02, W02.P03, and W02.P04 are closed in the current
+  registry/application state: módulos exclusion is surfaced as an advisory grounded in
+  declared volume inputs, the Art.101 ERD schedule is encoded separately from the
+  micro-empresa lane, and the M200 scalar echo now matches the two-tranche display policy.
+- Operator action: re-stamp the now-grounded DT 32ª / AEAT-manual source split after
+  confirming the 2016-2026 advisory scope and the 2025/2026 handling.
 - Lesson for future grounding work: always check the bundled authoritative corpus
   (`ley-35-2006.html` etc.) BEFORE authoring a new excerpt from a secondary source — the
   authoritative consolidated text is already shipped and is the faithful source.
 
 ## Codification candidates
-
-

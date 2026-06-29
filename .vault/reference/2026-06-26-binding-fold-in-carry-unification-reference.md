@@ -18,33 +18,88 @@ related:
 
 ## Summary
 
-This reference pins the EXACT current-state (HEAD 7cec5fa9c) anchors the phase-2.3 plan steps edit: the cross-filing fold-in value layer (two requirement records, three observation-fold loops, duplicated period-offset wrappers), the compensacion-carry surfaces, the MultiYearResolver orphan, the untyped relation aggregation op, and the conformant shapes plus carry-trust boundary that must be PRESERVED. Each anchor names the file, the line at HEAD, the current shape, the plan Step that edits it, and a preservation note. ADR-vs-HEAD drift is flagged inline and consolidated at the end.
+This reference originally pinned the HEAD `7cec5fa9c` anchors the phase-2.3
+plan steps were about to edit: the cross-filing fold-in value layer, the
+compensacion-carry surfaces, the MultiYearResolver orphan, the untyped relation
+aggregation op, and the conformant shapes plus carry-trust boundary that had to
+be preserved. Current-state corrections below mark which pre-collapse anchors
+are now retired and which live shapes replaced them.
 
 Module(s): `aeat.domain.calculations.registry`, `aeat.application.calculations`, `aeat.application.aggregation`, `aeat.domain.iva_compensation`, `aeat.core.aggregation`.
 
 File(s): `src/aeat/domain/calculations/registry/_relations.py`, `src/aeat/domain/calculations/registry/_bindings_previous_filing.py`, `src/aeat/domain/calculations/registry/_validate_relation_sources.py`, `src/aeat/domain/calculations/registry/_binding_aggregation.py`, `src/aeat/domain/calculations/registry/_period_offset_math.py`, `src/aeat/domain/calculations/registry/_schema_surfaces.py`, `src/aeat/application/calculations/_binding_prefill.py`, `src/aeat/application/calculations/_relation_prefill.py`, `src/aeat/application/calculations/_multi_year.py`, `src/aeat/application/calculations/_iva_wallet_reconciliation.py`, `src/aeat/application/calculations/_cross_period_clean_state.py`, `src/aeat/application/aggregation/_source_mesh.py`, `src/aeat/domain/iva_compensation/_carry_forward.py`, `src/aeat/core/aggregation.py`.
 
+## Current-state correction (2026-06-29)
+
+P02.S05 has landed. The two pre-collapse requirement records named below are
+retired historical anchors, not live implementation. Current code uses the
+single `RegistryFoldRequirement` model in
+`src/aeat/domain/calculations/registry/_relations.py`: `source_modelo:
+ModeloId`, `periods: tuple[str, ...]`, `source_casilla_ids:
+tuple[CasillaId, ...]`, plus relation and binding owner slots. Both
+`relation_source_requirements` and `previous_filing_observation_requirements`
+now return this one shape, and the application relation/binding prefill paths
+consume this one shape.
+
+The one observation-fold helper now lives in
+`src/aeat/domain/calculations/registry/_observation_fold.py`:
+`gather_observed_requirement_values`, `fold_observed_requirement_values`, and
+`resolve_observed_requirement_value`. Application relation prefill calls
+`resolve_observed_requirement_value` from `_relation_prefill.py`, and the
+previous-filing path shares `fold_sum_or_copy` for the aggregation primitive.
+
 ## Anchor 1 - the two requirement records to collapse (F3 / C4)
 
-`RegistryRelationSourceRequirement` - `src/aeat/domain/calculations/registry/_relations.py:33` (re-exported through the registry `__all__` at `_relations.py:25` and `registry/__init__.py:263,532`). Strict-frozen pydantic `BaseModel`. Fields: `source_modelo`, `filing_year`, `filing_periods: tuple[Period, ...]`, `periods: tuple[str, ...]`, `source_casilla_id: CasillaId` (SINGULAR), `relation_ids: tuple[RelationId, ...]`, `target_bindings: tuple[BindingId, ...]`, `dependency_role: str`, `dependency_treatment: str`, `aggregation_op: str`. Produced by `relation_source_requirements` (`_relations.py:56`). Consumed in `_relation_prefill.py` (line 45 import, lines 224/253 scoping, lines 431/450 fold) and `_cross_period_clean_state.py:26,914`.
+Current live shape: `RegistryFoldRequirement` -
+`src/aeat/domain/calculations/registry/_relations.py:40`. Strict-frozen
+pydantic `BaseModel`. Fields: `source_modelo: ModeloId`, `filing_year`,
+`filing_periods: tuple[Period, ...]`, `periods: tuple[str, ...]`,
+`source_casilla_ids: tuple[CasillaId, ...]`, `binding_ids:
+tuple[BindingId, ...]`, `relation_ids: tuple[RelationId, ...]`,
+`target_bindings: tuple[BindingId, ...]`, `dependency_role`,
+`dependency_treatment`, and `aggregation_op`. Produced by
+`relation_source_requirements` and `previous_filing_observation_requirements`.
+Consumed by `_relation_prefill.py`, `_binding_prefill.py`, and
+`_cross_period_clean_state.py`.
 
-`RegistryModeloObservationRequirement` - `src/aeat/domain/calculations/registry/_bindings_previous_filing.py:35` (re-exported through `_bindings.py:16,129` and `registry/__init__.py:53,530`). Strict-frozen pydantic `BaseModel`. Fields: `modelo`, `filing_period: Period | None`, `filing_year`, `period: str` (SINGULAR), `binding_ids: tuple[BindingId, ...]`, `source_casilla_ids: tuple[CasillaId, ...]` (PLURAL). Produced by `previous_filing_observation_requirements` (`_bindings_previous_filing.py:69`). Consumed in `_binding_prefill.py` (lines 349, 399, 545 walks) and `_cross_period_clean_state.py:25,897`.
+Retired historical anchors: `RegistryRelationSourceRequirement` and
+`RegistryModeloObservationRequirement`. They were the two records P02.S05
+collapsed. Do not use either name as a live import or current schema surface.
 
-Near-identical, NOT field-identical. Shared spine: source modelo plus filing year plus period(s) plus binding/relation ids plus source casilla id(s). Divergences the one record must absorb: relation carries `relation_ids` / `target_bindings` / `dependency_role` / `dependency_treatment` / `aggregation_op` and a singular `source_casilla_id`; observation carries `binding_ids` and a plural `source_casilla_ids` with a singular `period`. The collapse must keep BOTH consumer sets (the relation fold AND the previous_filing walk) and the two clean-state gate consumers (`_cross_period_clean_state.py:897,914`).
+Preservation result: the unified record keeps both consumer sets (relation fold
+and previous_filing walk) plus the clean-state gates without dropping owner
+slots or period/casilla cardinality. Relation producers emit one
+`source_casilla_ids` member; previous-filing producers can emit plural source
+casillas.
 
-Plan Step: P02.S05 (`relocation:RegistryFoldRequirement`, atomic with consumers plus top-level `__all__`). Preservation: both produced-record shapes feed live calc; one model must serve the relation fold, the previous_filing walk, and the two clean-state consumers without a field drop.
+Plan Step: P02.S05 (`relocation:RegistryFoldRequirement`, atomic with consumers
+plus top-level `__all__`) is implemented in current code.
 
 ## Anchor 2 - the three near-identical observation-folding loops
 
-Loop A (relation fold, application) - `src/aeat/application/calculations/_relation_prefill.py:431` (`_resolve_requirement_value`, the copy/sum fold over `RegistryRelationSourceRequirement`) with its per-period match helper `_observed_requirement_values` (`_relation_prefill.py:450`). Reached through the live entry point `resolve_relations_from_local_store` (`_relation_prefill.py:278`).
+Loop A (relation fold, application) - current relation prefill resolves
+`RegistryFoldRequirement` values through
+`resolve_observed_requirement_value` (`_relation_prefill.py:457-467`).
+Reached through the live entry point `resolve_relations_from_local_store`
+(`_relation_prefill.py:327`).
 
-Loop B (relation fold, domain) - `src/aeat/domain/calculations/registry/_relations.py:299` (`_observed_requirement_values`, a BYTE-FOR-BYTE near-twin of the Loop A helper) feeding `resolve_relation_values_from_observations` (`_relations.py:181`) and the copy/sum branch in `resolve_relation_values` (`_relations.py:163-177`).
+Loop B (relation fold, domain) - `resolve_relation_values_from_observations`
+uses `gather_observed_requirement_values` (`_relations.py:221`,
+`_observation_fold.py:27`) and `resolve_relation_values` for final relation-id
+materialisation.
 
-Loop C (previous_filing fold) - `src/aeat/domain/calculations/registry/_bindings_previous_filing.py:470` (`_aggregate_previous_filing_binding`: sum / copy / prior_pagos_fraccionados over a flat `values` list), reached through `resolve_previous_filing_binding_values` and the `_binding_prefill.py:330` `_gather_observations` walk plus `resolve_bindings_from_local_store` (`_binding_prefill.py:623`).
+Loop C (previous_filing fold) - `previous_filing_observation_requirements`
+emits `RegistryFoldRequirement` records (`_bindings_previous_filing.py:59`),
+and `_aggregate_previous_filing_binding` shares the `fold_sum_or_copy`
+primitive (`_bindings_previous_filing.py:517`, `_observation_fold.py:64`).
+Application binding prefill consumes the same requirement type in
+`_binding_prefill.py`.
 
 Plan Steps: P02.S06 (collapse onto the one phase-2.2 fold helper, in `_relation_prefill.py`), P02.S07 (route the previous_filing path through the one helper, in `_binding_prefill.py`). Preservation: Loop C carries the prior_pagos_fraccionados M130 casilla-05 identity (`_aggregate_prior_pagos_fraccionados`, `_bindings_previous_filing.py:488`) - a positive-part per-quarter plus minoracion subtraction that is NOT a plain sum/copy; the one helper must still produce it.
 
-DRIFT (flag for adjudication): the ADR/plan enumerate the three loops as relation, relation-prefill, previous_filing and cite a third loop at registry `_bindings.py:~394`. There is NO fold loop in `_bindings.py` at HEAD; `_bindings.py` only RE-EXPORTS `RegistryModeloObservationRequirement` (lines 16,129). The actual three folds are Loop A (`_relation_prefill.py:431`), Loop B (`_relations.py:299`), and Loop C (`_bindings_previous_filing.py:470`). The relation half is itself DOUBLED (A application-side and B domain-side), so three near-identical loops is really two relation twins plus one previous_filing aggregator. `_binding_prefill.py:~349` is a GATHER walk (`_gather_observations`), not a value fold.
+DRIFT resolved/currentized: `_bindings.py` no longer re-exports a separate
+requirement record. The live shared requirement is `RegistryFoldRequirement`,
+and the shared fold primitive is in `_observation_fold.py`.
 
 ## Anchor 3 - the duplicated period-offset math
 

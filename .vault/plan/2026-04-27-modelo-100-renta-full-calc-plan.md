@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#modelo-100-renta-full-calc'
 date: '2026-04-27'
-modified: '2026-04-27'
+modified: '2026-06-13'
 related:
   - "[[2026-04-27-modelo-100-renta-full-calc-adr]]"
   - "[[2026-04-27-modelo-100-renta-full-calc-research]]"
@@ -112,8 +112,10 @@ pass.
      amortizaciones via `AmortizationCategory` table, provisiones,
      deducciones por inversiones).
 7.2. Author `modelo_100/anexo_d_simplificada_<año>.py` for 2024 / 2025 /
-     2026 (RIRPF art. 30 — 5%/2.000€ cap encoded as
-     `min_op(percent(lit("0.05"), rendimiento_neto_pos), lit("2000.00"))`).
+     2026 (RIRPF art. 30 — gastos de difícil justificación encoded as
+     `min_op(percent(rate_param, rendimiento_neto_pos), cap_param)`;
+     current non-exception revisions use 5%/2.000€, while DA 56 keeps
+     2023 as a distinct 7% revision).
 7.3. Author `modelo_100/anexo_d_modulos_<año>.py` for 2024 / 2025 /
      2026 (RIRPF arts. 32-35 — módulos verification chain; 2026 module
      references Orden HAC/1425/2025 (`BOE-A-2025-25272`) for módulos

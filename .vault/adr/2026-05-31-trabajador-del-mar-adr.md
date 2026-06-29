@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#trabajador-del-mar"
 date: "2026-05-31"
-modified: '2026-05-31'
+modified: '2026-06-29'
 related:
   - "[[2026-05-31-trabajador-del-mar-research]]"
 ---
@@ -41,7 +41,7 @@ Primary exemption pathway. Conditions:
 - Confirmed by TEAR Galicia December 2024 for Galician fishing crew.
 - Extended April 2025 by Supreme Court doctrine to military Navy in NATO/UN sea ops.
 
-**REBECA -- 50% exemption (Ley 19/1994, Arts. 73.2, 73.3, 75.1, 75.3, BOE-A-1994-16100)**
+**REBECA -- 50% exemption (Ley 19/1994, Arts. 73.2, 73.3, 75.1, 75.3, BOE-A-1994-15794)**
 For crew of vessels enrolled in the Canary Islands special shipping register or on
 scheduled routes between the Canary Islands and mainland Spain:
 - 50% exemption on gross employment income from navigation.
@@ -117,7 +117,7 @@ Registry TOML additions under _data/registry/aeat/categories/:
 - Art. 7.p) binding entry: daily_rate = annual_salary / 365, cap = 60100,
   legal_refs = ["Ley 35/2006 Art. 7.p) BOE-A-2006-20764"].
 - REBECA binding entry: exempt_fraction = 0.50,
-  legal_refs = ["Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-16100"].
+  legal_refs = ["Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-15794"].
 - DA 41 binding entry: exempt_fraction = 0.50, status = inactive_pending_eu_clearance,
   legal_refs = ["Ley 35/2006 DA 41 BOE-A-2006-20764", "Ley 6/2018 BOE-A-2018-9268"].
 

@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#cli-workflow-redesign'
 date: '2026-05-21'
-modified: '2026-05-21'
+modified: '2026-06-29'
 related:
   - "[[2026-05-21-taxpayer-type-applicability-adr]]"
   - "[[2026-05-21-persona-fleet-round3-findings-audit]]"
@@ -144,12 +144,15 @@ IS taxpayer modelos and calendar:
   Modelo 202 instructions
   (`sede.agenciatributaria.gob.es/.../modelo-202-is-...`/instrucciones).
   Two modalidades: cuota-íntegra method (LIS Art. 40.2) and
-  base-imponible method (LIS Art. 40.3). The base-imponible method is
-  **mandatory** for entities whose importe neto de la cifra de
-  negocios (INCN) exceeded a threshold in the prior 12 months — the
-  commonly-cited threshold is **6 million euros**; the exact figure
-  and reference (LIS Art. 40.3) must be confirmed against the BOE
-  article text by the registry track (flagged in Limits).
+  base-imponible method (LIS Art. 40.3). Current registry/corpus
+  grounding confirms that the base-imponible method is **mandatory**
+  for entities whose importe neto de la cifra de negocios (INCN)
+  exceeded **6 million euros** in the 12 months before the start of
+  the relevant tax period: `legal/is.toml` carries
+  `ley-27-2014:art-40-3` against `corpus/normatives/html/ley-27-2014-art-40.html#a40`,
+  and `src/aeat/core/external_constants.py` exposes the shared
+  `MODELO_202_ART_40_3_INCN_THRESHOLD_EUR` constant consumed by
+  `derive_modelo_202_modality`.
 - **Modelo 220** — annual IS declaration for fiscal-consolidation
   groups (régimen de consolidación fiscal, LIS Title VII Chapter VI).
   Filed by the sociedad dominante / entidad representativa. Deadline:
@@ -221,9 +224,11 @@ as the `irpf-regime` topic `legal_refs`):
   and the taxpayer has not renounced it. Source: AEAT "Estimación
   directa simplificada"
   (`sede.agenciatributaria.gob.es/Sede/irpf/empresarios-individuales-profesionales/regimenes-determinar-rendimiento-actividad/estimacion-directa-simplificada.html`).
-  Simplified deductible-expense rules (notably a 5% gastos de difícil
-  justificación deduction, capped — cap figure to be confirmed by the
-  registry track). Pago fraccionado also on **Modelo 130**.
+  Simplified deductible-expense rules include a gastos de difícil
+  justificación deduction with a revision-specific rate/cap: the
+  current general rule is 5% capped at 2.000 euros, and LIRPF DA 56
+  raises the rate to 7% for the 2023 tax period only. Pago fraccionado
+  also on **Modelo 130**.
 - **Estimación objetiva (EO / módulos)** — net income computed from
   signos, índices y módulos rather than real income/expense, for
   activities and thresholds listed in the annual Orden de Módulos
@@ -301,10 +306,10 @@ informativo
 (`sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/G417/FicherosSuministros/bolinform_SII_es_es.pdf`);
 AEAT "Información general"
 (`sede.agenciatributaria.gob.es/Sede/iva/suministro-inmediato-informacion/informacion-general.html`).
-The project's `topics/sii-verifactu.toml` already lists `rd-596-2016`
-and `rd-1007-2023` as `legal_refs` but these are topic-level slugs,
-not the BOE-keyed legal entries the calculation-grounding rule
-requires — see the gap section.
+The registry track has now split SII and VERI*FACTU into separate
+topics. `topics/sii.toml` cites the SII legal package plus RIVA Art.
+71, while `topics/verifactu.toml` cites RD 1007/2023 Art. 3 and
+Disposición final cuarta as BOE-keyed legal catalogue entries.
 
 **Who is obliged.** The mandatory SII collective is every sujeto
 pasivo whose IVA self-assessment period is **monthly**, namely:
@@ -360,14 +365,33 @@ gran-empresa, it warrants a **child ADR** (see Wave plan).
 
 ### 3.2 Related: VERI*FACTU
 
-`topics/sii-verifactu.toml` couples SII with VERI*FACTU
-(RD 1007/2023, anti-fraud invoicing software / "sistemas
-informáticos de facturación"). VERI*FACTU is a *distinct* regime
-from the SII — it concerns the certification and optional real-time
-reporting of invoicing *software*, not the IVA Libros registro. The
-two should not be merged into one enrolment flag. VERI*FACTU's
-applicability timeline and obligated population were **not fully
-grounded in this research pass** — flagged in Limits.
+VERI*FACTU (RD 1007/2023, anti-fraud invoicing software / "sistemas
+informáticos de facturación") is a *distinct* regime from the SII: it
+concerns the certification and optional real-time reporting of
+invoicing *software*, not the IVA Libros registro. The registry now
+keeps the regimes separate through `topics/sii.toml` and
+`topics/verifactu.toml`.
+
+The current BOE-consolidated RD 1007/2023 text, as bundled in
+`corpus/normatives/html/rd-1007-2023.html`, grounds VERI*FACTU
+population and dates at article precision:
+
+- Art. 3 applies the regulation to users of invoicing software who
+  are IS taxpayers, IRPF taxpayers with economic activities, IRNR
+  taxpayers with a permanent establishment, and attribution-of-income
+  entities with economic activities; it also covers producers and
+  marketers of those systems for their production/commercialisation
+  activity and excludes taxpayers already keeping books under RIVA
+  Art. 62.6.
+- Disposición final cuarta, consolidated after Real Decreto-ley
+  15/2025, sets the current adaptation milestones at **before
+  2027-01-01** for Art. 3.1.a IS taxpayers and **before 2027-07-01**
+  for the rest of Art. 3.1 obligated taxpayers.
+
+This closes the timeline/population grounding gap without adding a
+VERI*FACTU enrolment field. Any behaviour that turns those legal
+facts into profile prompts or filing/application rules remains a
+separate implementation decision.
 
 ### 3.3 Other enrolments already partly modelled
 
@@ -532,8 +556,9 @@ model:
   directa_simplificada | objetiva` — replacing the lossy
   `uses_objective_estimation` boolean.
 - Extend `iva.regime` with `REAGP`.
-- New enrolment fields: `sii_enrolled`, `redeme_enrolled` (and
-  consider keeping VERI*FACTU separate per Axis 3.2).
+- New enrolment fields: `sii_enrolled`, `redeme_enrolled`. Keep
+  VERI*FACTU separate per Axis 3.2; the current registry grounding
+  records population and dates only, not an enrolment behaviour.
 
 Rename `AutonomoProfile` to an entity-neutral name. Wizard collects
 the new fields in plain operator language. This wave ships with strict
@@ -580,11 +605,10 @@ time ledger submission within four business days) that the deadline
 engine — which today models only periodic modelo windows — cannot
 express. It also re-shapes existing modelos (390/347 suppression,
 303 periodicity) and interacts with three correlated facts
-(gran-empresa, REDEME, grupos de IVA). The interaction with VERI*FACTU
-(which must stay a separate regime) and the unresolved VERI*FACTU
-timeline (see Limits) make this its own adjudication. This child ADR
-owns the SII enrolment model and the ledger-submission obligation
-class.
+(gran-empresa, REDEME, grupos de IVA). VERI*FACTU must stay a
+separate regime even though its current population and dates are now
+grounded in the registry. This child ADR owns the SII enrolment model
+and the ledger-submission obligation class only.
 
 A finer enrolment axis (recargo de equivalencia rate effects,
 OSS/IOSS Modelo 369) likely does **not** need its own ADR — it fits
@@ -599,39 +623,101 @@ points were **not** confirmed to BOE-article precision in this
 research pass and must be verified by the registry track before any
 rule is encoded:
 
-1. **Modelo 202 base-imponible mandatory threshold.** The
-   base-imponible pago-fraccionado method (LIS Art. 40.3) is
-   mandatory above an INCN threshold; the commonly-cited figure is
-   6 million euros, but the AEAT deadline page consulted did not
-   state it and the exact figure + the precise LIS Art. 40.3 wording
-   were not read directly. Confirm against BOE-A-2014-12328 Art. 40.
-2. **EDS gastos de difícil justificación cap.** Estimación directa
-   simplificada allows a 5% deduction for hard-to-justify expenses
-   with an annual cap; the cap amount (and any 2026 update) was not
-   confirmed. Confirm against RIRPF RD 439/2007 and the LIRPF.
-3. **Gran-empresa / SII turnover threshold exact figure.** AEAT
-   pages phrase it as "facturación superior a 6 millones de €"; the
-   precise legal figure is 6.010.121,04 € (the historical
-   1.000.000.000 ESETA conversion). Both figures appear in AEAT
-   materials; the registry should cite the regulation that fixes it.
-4. **VERI*FACTU (RD 1007/2023) applicability timeline and obligated
-   population.** Not researched in this pass beyond confirming it is
-   a *distinct* regime from the SII. The SII child ADR must research
-   it separately before coupling or separating the enrolment flags.
-5. **Modelo 100 / 303 / 347 deadline windows (round-3 R1).** This
-   research confirms *that* these windows are well-defined in AEAT
-   law (the Renta campaign, the quarterly 303 windows, the February
-   347 window) but did not transcribe the exact 2025/2026 dates;
-   the registry track owns transcribing them with `legal_refs`.
-6. **Per-entity-form IS rate detail.** LIS Art. 29's rate scale is
-   grounded via the existing registry entry, but the 2026 micro-
-   empresa bracket figures and any Ley de Presupuestos updates were
-   not re-verified for the current year. Confirm against the
-   in-force LIS text and the 2026 budget law.
+1. **Closed 2026-06-29 — Modelo 202 base-imponible mandatory
+   threshold.** The registry track now confirms the threshold to
+   BOE-article precision. `legal/is.toml` defines both
+   `ley-27-2014:art-40` and `ley-27-2014:art-40-3` as reviewed
+   BOE-backed legal authority entries pointing at
+   `corpus/normatives/html/ley-27-2014-art-40.html#a40`; the bundled
+   corpus extract contains the Art. 40.3 wording that makes the
+   modality mandatory when INCN has exceeded 6 million euros during
+   the prior 12 months. Implementation is current in
+   `src/aeat/core/external_constants.py`
+   (`MODELO_202_ART_40_3_INCN_THRESHOLD_EUR`), in
+   `src/aeat/domain/calculations/registry/_applicability_modelo202.py`
+   (`derive_modelo_202_modality` uses a strict `>` threshold), and in
+   `src/aeat/_data/registry/aeat/user_profile/schema.toml`
+   (`taxpayer.incn_prior_12_months` carries `ley-27-2014:art-40-3`).
+   The focused domain and CLI tests cover above-threshold mandatory
+   Art. 40.3, equality/below-threshold Art. 40.2 optional, missing-INCN
+   incomplete, and non-IS not-applicable paths without fakes or mocks.
+2. **Closed 2026-06-29 — EDS gastos de difícil justificación
+   rate and cap.** The registry track now confirms the rule to
+   BOE-article precision. Current RIRPF Art. 30
+   (`legal/irpf.toml` `rd-439-2007:art-30`) fixes the general
+   simplified direct-estimation deduction at **5%** of net income
+   excluding this concept, capped at **2.000 euros anuales**. LIRPF
+   DA 56 (`legal/irpf.toml` `ley-35-2006:da-56`) is encoded as the
+   2023-only exception that raises the rate to **7%** for the 2023
+   tax period while leaving the 2.000 euro cap grounded in
+   RIRPF Art. 30 / LIRPF Art. 30. The Modelo 100 registry now
+   reflects this by using 7% in revision 2023
+   (`revisions/2023/parameters/0026-...gastos-dificil-justificacion-rate.toml`)
+   with DA 56 source evidence, while the current non-exception
+   revisions keep the 5% rate and the shared cap. Focused tests
+   verify the public parameter read for 2023 returns `Decimal("7")`
+   and that a 2023 registry scenario calculates `0222 = 700.00` from
+   a 10.000 euro base, which would fail under the stale 5% assumption.
+3. **Closed 2026-06-29 — Gran-empresa / SII turnover threshold exact
+   figure.** The registry now cites the precise legal anchors. LIVA
+   Art. 121 (`legal/iva-flow.toml` `ley-37-1992:art-121`) defines
+   the "volumen de operaciones" calculation, and RIVA Art. 71
+   (`legal/iva-flow.toml` `rd-1624-1992:art-71`) switches IVA
+   liquidation to monthly when that prior-year volume exceeded
+   **6.010.121,04 euros**. The `censo.large_company` profile field in
+   `src/aeat/_data/registry/aeat/user_profile/schema.toml` now carries
+   both refs and states the exact threshold; `iva.sii_enrolled` also
+   cites RIVA Art. 71 alongside RD 596/2016. Focused profile-schema
+   tests verify the legal refs resolve against the catalogue and that
+   the exact threshold is visible in the field description.
+4. **Closed 2026-06-29 — VERI*FACTU (RD 1007/2023) applicability
+   timeline and obligated population.** The registry now grounds the
+   regime to BOE article precision. `legal/iva.toml` defines
+   `rd-1007-2023:art-3` for the obligated population and
+   `rd-1007-2023:df-4` for the current adaptation dates, both pointing
+   at the bundled `corpus/normatives/html/rd-1007-2023.html` text.
+   The current deadlines are before **2027-01-01** for Art. 3.1.a IS
+   taxpayers and before **2027-07-01** for the rest of Art. 3.1
+   obligated taxpayers, after the Real Decreto-ley 15/2025 amendment.
+   `topics/sii-verifactu.toml` has been removed; `topics/sii.toml`
+   and `topics/verifactu.toml` keep the regimes separate. No
+   VERI*FACTU enrolment or filing behaviour was added.
+5. **Partially closed 2026-06-29 — Modelo 100 / 303 / 347 deadline
+   windows (round-3 R1).** Modelo 100 campaign windows are present for
+   each registered revision. Modelo 303 quarterly 2025/2026 windows
+   were already registered; this pass corrected the SII monthly
+   January 2026 window to the AEAT 2026 calendar date: **2026-02-01**
+   through **2026-03-02**, with direct debit through **2026-02-25**.
+   Modelo 347 ejercicio 2025 now closes on **2026-03-02** rather than
+   2026-02-28. Both corrections are backed by bundled AEAT 2026
+   calendar sources in `legal/tax-framework.toml`
+   (`aeat-calendario-contribuyente-2026-hasta-2-marzo`,
+   `aeat-calendario-contribuyente-2026-domiciliacion`). Remaining
+   limitation: only representative M303 monthly anchors are
+   materialised; months 02-05 and 07-11 still require annual-calendar
+   materialisation before they can be claimed complete.
+6. **Closed 2026-06-29 — Modelo 322 / 353 January 2026 group-IVA
+   windows.** The same AEAT 2026 calendar page lists **Enero 2026**
+   Modelo 322 and Modelo 353 under the **hasta el 2 de marzo** due
+   date. The registry now corrects both January 2026 windows from
+   2026-02-28 to **2026-03-02**. Modelo 353 also carries the direct
+   debit cutoff **2026-02-25**, backed by the AEAT 2026
+   domiciliación page for Modelos 303 y 353.
+7. **Closed 2026-06-29 — Per-entity-form IS rate detail.** Current
+   registry state now carries the legal-entity rate lanes separately:
+   Modelo 200 encodes the LIS Art. 29 micro-empresa bracket table with
+   DT 44 transitional windows (**21/22% for 2025**, **19/21% for
+   2026**), the Art.101 ERD INCN<10M lane as a distinct parameter, and
+   the casilla 00558 display echo as dated scalar output values rather
+   than a stale flat micro-empresa calculation source. The current
+   closure evidence is recorded in
+   `2026-06-14-legal-grounding-centralization-audit.md` and
+   `2026-06-14-aeat-grounding-completion-audit.md`; focused tests cover
+   the rate dispatch, cuota lanes, and temporal windows.
 
 Everything in Axes 1-3 above that is *not* in this list is supported
-by the cited AEAT / BOE source; everything in this list is a
-known open question handed forward.
+by the cited AEAT / BOE source; the remaining unclosed entries in this
+list are known open questions handed forward.
 
 ## Sources
 
@@ -646,11 +732,16 @@ known open question handed forward.
 - AEAT — SII, información general: <https://sede.agenciatributaria.gob.es/Sede/iva/suministro-inmediato-informacion/informacion-general.html>
 - AEAT — Nuevo sistema de gestión del IVA (SII): <https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/iva/iva-libros-registro-iva-traves-aeat/nuevo-sistema.html>
 - AEAT — SII boletín informativo (RD 596/2016): <https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/G417/FicherosSuministros/bolinform_SII_es_es.pdf>
+- AEAT — Calendario del contribuyente 2026, hasta el 2 de marzo: <https://sede.agenciatributaria.gob.es/Sede/ayuda/calendario-contribuyente/calendario-contribuyente-2026/calendario-anual/marzo/hasta-2-marzo.html>
+- AEAT — Calendario del contribuyente 2026, plazos de presentación de autoliquidaciones con domiciliación bancaria: <https://sede.agenciatributaria.gob.es/Sede/ayuda/calendario-contribuyente/calendario-contribuyente-2026/plazos-presentacion-autoliquidaciones-domiciliacion-bancaria.html>
 - BOE — Orden HFP/417/2017 (SII especificaciones técnicas): <https://www.boe.es/buscar/act.php?id=BOE-A-2017-5312>
 - BOE — Orden HFP/227/2017 (modelos 202 y 222): <https://www.boe.es/buscar/doc.php?id=BOE-A-2017-2778>
 - BOE — Orden EHA/672/2007 (modelos 130 y 131): <https://www.boe.es/buscar/act.php?id=BOE-A-2007-6032>
+- BOE — Real Decreto 1007/2023 consolidated (SIF / VERI*FACTU): <https://www.boe.es/buscar/act.php?id=BOE-A-2023-24840>
+- AEAT — Sistemas Informáticos de Facturación (SIF) y VERI*FACTU: <https://sede.agenciatributaria.gob.es/Sede/iva/sistemas-informaticos-facturacion-verifactu.html>
 - AEAT — Régimen especial de la agricultura, ganadería y pesca: <https://sede.agenciatributaria.gob.es/Sede/iva/regimenes-tributacion-iva/regimen-especial-agricultura-ganaderia-pesca/que-consiste-regimen-especial-agricultura-pesca.html>
 - AEAT — Entidades en régimen de atribución de rentas: <https://sede.agenciatributaria.gob.es/Sede/irpf/empresarios-individuales-profesionales/entidades-regimen-atribucion-renta.html>
 - AEAT — Distinción sociedad civil / comunidad de bienes: <https://sede.agenciatributaria.gob.es/Sede/impuesto-sobre-sociedades/sociedades-civiles-impuesto-sobre-sociedades/que-son-sociedades-civiles/distincion-sociedad-civil-comunidad-bienes.html>
 - BOE — Ley 27/2014 LIS (corpus, registry `legal/is.toml`): BOE-A-2014-12328
-- BOE — Ley 35/2006 LIRPF: BOE-A-2006-20764
+- BOE — Ley 35/2006 LIRPF: <https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764>
+- BOE — Real Decreto 439/2007 RIRPF: <https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820>

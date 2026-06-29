@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#modelo-100-renta-full-calc'
 date: '2026-04-27'
-modified: '2026-04-27'
+modified: '2026-06-29'
 related:
   - "[[2026-04-21-modelo-100-renta-research]]"
   - "[[2026-04-21-modelo-100-renta-adr]]"
@@ -66,8 +66,9 @@ M100 universe
 │            • Imputación de rentas inmobiliarias (LIRPF art. 85)
 ├── Anexo D  — Actividades económicas (the big one — autónomo case)
 │            ├─ Estimación directa normal (P&L per LIS)
-│            ├─ Estimación directa simplificada (5% gastos genéricos cap,
-│            │   RIRPF art. 30)
+│            ├─ Estimación directa simplificada (gastos difícil
+│            │   justificación with revision-specific rate/cap,
+│            │   RIRPF art. 30 plus DA 56 for 2023)
 │            ├─ Estimación objetiva (módulos, RIRPF art. 32)
 │            ├─ Inventario (LIS art. 17 — FIFO / PMP / coste medio)
 │            └─ Amortizaciones (LIS arts. 12-14, libertad amort. PYMES
@@ -400,9 +401,12 @@ libertad amort. PYMES per art. 102). Provisiones per LIS arts. 13-14.
 #### D — estimación directa simplificada (RIRPF art. 30)
 
 Identical to E.D. normal **except**: gastos de difícil justificación
-capped at 5% of rendimiento neto positivo, with annual cap (currently
-2 000 EUR; verify per año). The 5% cap is a hard rule; encoded as a
-`min_op(percent(0.05, rendimiento_neto_pos), lit("2000.00"))`.
+are computed as a percentage of positive net income with an annual cap.
+The cap structure is the hard rule; the percentage is revision-specific
+registry data. Current non-exception revisions use the RIRPF Art. 30
+general 5% rate with a 2.000 EUR annual cap, while LIRPF DA 56 raises
+the 2023 rate to 7% for that tax period. Encoding must therefore read
+both `rate_param` and `cap_param` instead of hard-coding `0.05`.
 
 #### D — estimación objetiva / módulos (RIRPF art. 32)
 
@@ -755,7 +759,12 @@ Aplica sobre rendimiento neto positivo declarado. Contratos celebrados desde 26/
 
 ### 7.10 Estimación directa simplificada (RIRPF art. 30)
 
-Gastos de difícil justificación: **5%** del rendimiento neto positivo, con cap anual **2.000 €**. Encoding: `min_op(percent(0.05, rendimiento_neto_pos), lit("2000.00"))`. **Stable for 2024, 2025, 2026.**
+Gastos de difícil justificación: RIRPF Art. 30 keeps the general rate
+at **5%** of positive net income with annual cap **2.000 €** for the
+2024, 2025, and 2026 surface in this research. The registry must still
+encode the percentage as revision data because LIRPF DA 56 raises the
+2023 rate to **7%** for that tax period. Encoding:
+`min_op(percent(rate_param, rendimiento_neto_pos), cap_param)`.
 
 ### 7.11 LIS art. 12.1.a) — tabla de amortización lineal
 
@@ -813,7 +822,9 @@ posterior a 2025-12-31:
 - **Ajuste por inflación del mínimo personal (arts. 57-60) para 2026** — no localizable. Cifras siguen las de 2015.
 - **Modificaciones tarifa del ahorro (art. 66) para 2026** — no localizables. Sigue Ley 7/2024.
 - **Ampliaciones régimen Beckham 2026** — sin novedad post-Ley 28/2022.
-- **5% gastos difícil justificación (RIRPF art. 30) para 2026** — sin novedad. Sigue 5% con cap 2.000 €.
+- **Gastos difícil justificación (RIRPF art. 30) para 2026** — sin
+  novedad. Sigue 5% con cap 2.000 €, encoded through the revision
+  parameter rather than a shared literal.
 
 **Implementation rule:** El ruleset `modelo_100.2026` clona los valores
 2025 con `effective_from`/`effective_to` 2026; cada citación 2026 se

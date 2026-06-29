@@ -3,7 +3,7 @@ tags:
   - '#reference'
   - '#legal-grounding-audit'
 date: '2026-05-14'
-modified: '2026-05-14'
+modified: '2026-06-29'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
 ---
@@ -27,15 +27,15 @@ form.
 
 ### Coverage summary (verified by script)
 
-- **131 canonical `[legal."slug"]` entries** across the twelve
+- **348 canonical `[legal."slug"]` entries** across the
   `registry/aeat/legal/*.toml` topic files.
-- **131 of 131 entries have `corpus_ref` fields**; **131 of 131
+- **348 of 348 entries have `corpus_ref` fields**; **348 of 348
   resolve to an existing HTML file** under
   `corpus/normatives/html/`. No broken edges from registry to corpus.
-- **128 distinct `legal_refs` slugs cited** across the modelo
-  registry. **128 of 128 resolve** to a canonical legal entry.
-- **107 corpus HTML files**; **81 are consumed** by at least one
-  legal entry; **26 are orphans** (no legal entry cites them).
+- **297 distinct `legal_refs` slugs cited** across the modelo
+  registry. **297 of 297 resolve** to a canonical legal entry.
+- **262 corpus HTML files**; **245 are consumed** by at least one
+  legal entry; **17 are orphans** (no legal entry cites them).
 
 ### Citation graph: zero broken edges
 
@@ -44,51 +44,44 @@ a canonical legal entry; every canonical legal entry's `corpus_ref`
 resolves to a file that exists; the path from modelo binding to BOE
 text is intact for everything currently wired.
 
-### The 26 corpus orphans
+### The 17 corpus orphans
 
 These are corpus HTML files with no `[legal."slug"]` entry pointing
-at them. They split into two categories.
+at them. They currently fall into one category.
 
-**Whole-document orphans (9)** — full Ley / Orden HTML snapshots
-where the canonical legal entries index by `:art-...` slug pointing
-at the same file with an anchor. Indexing the whole-document by a
-bare-stem slug would create canonical entries with zero downstream
-consumers.
+All 17 current orphans are whole-document Orden snapshots where the
+canonical legal entries index by article/apartado slug or by narrower
+article-specific files. Indexing the whole-document by a bare-stem slug
+would create canonical entries with zero downstream consumers. There are
+no current `ley-37-1992-art-163-*` article-specific orphans.
 
-  - `ley-35-2006.html`
-  - `ley-37-1992.html`
+  - `orden-eha-2887-2008.html`
   - `orden-eha-3012-2008.html`
   - `orden-eha-3111-2009.html`
   - `orden-eha-3378-2011.html`
   - `orden-eha-3434-2007.html`
   - `orden-eha-3786-2008.html`
   - `orden-eha-789-2010.html`
+  - `orden-hac-1023-2021-modelo-714.html`
+  - `orden-hac-1432-2024.html`
+  - `orden-hac-2572-2003.html`
+  - `orden-hac-3625-2003.html`
+  - `orden-hac-610-2021.html`
+  - `orden-hac-623-2026.html`
+  - `orden-hac-657-2025.html`
   - `orden-hap-2250-2015.html`
-
-**Article-specific orphans (17)** — corpus files at the article
-granularity that no canonical legal entry indexes. The category
-splits further:
-
-  - `ley-37-1992:art-163-*` (7 OSS / IOSS sub-articles:
-    `duovicies`, `octovicies`, `septiesdecies`, `septvicies`,
-    `sexvicies`, `tervicies`, `vicies`) — Modelo 369 binds only 3
-    of the 11 art-163 sub-articles
-    (`octiesdecies`, `quinvicies`, `unvicies`). The other 7 are
-    corpus context; no current 369 binding needs them.
-  - `orden-eha-1274-2007-art-1.html`, etc. — orden-level articles
-    where the parent orden is consumed at a different article-id.
-  - `orden-hac-{1432-2024, 248-2021, 2572-2003, 265-2024,
-    3625-2003, 610-2021, 657-2025}.html`,
-    `orden-hap-72-2013.html`, `orden-hfp-{207-2022, 310-2023}.html`
-    — orden documents whose articles are not yet indexed because
-    the modelos they govern (308, 309, etc.) have no current
-    bindings cited at the article level.
+  - `orden-hap-72-2013.html`
+  - `orden-hfp-886-2023.html`
 
 ### What the audit does NOT establish
 
 The "no broken edges" finding is a structural property. It does NOT
-imply legal completeness. Two distinct gaps remain open and are NOT
-addressed by this audit:
+imply legal completeness. Currentization on 2026-06-29 closed the
+historical Modelo 100 deduction-family, Modelos 308/309 article-level
+grounding, and Modelo 369 scheme-range examples below. Future
+per-modelo reviews can still find casilla/binding completeness defects
+against AEAT-published forms, but these three cited examples are no
+longer current gaps:
 
 #### Modelo coverage completeness (separate work)
 
@@ -96,44 +89,82 @@ A modelo can have a fully-connected citation graph while still
 under-specifying its casilla / binding set against the AEAT-published
 form. Concrete examples surfaced during the audit:
 
-  - **Modelo 100 (IRPF) 2025**: 2,235 casillas, 44 bindings, 168
-    formulas. Only `ley-35-2006:art-68.4` (vivienda habitual
-    transitoria) is grounded from the IRPF deduction family. The
-    other art-68 sub-articles (donativos, planes pensiones,
-    maternidad, inversiones empresa nueva creación, alquiler
-    vivienda habitual transitoria, etc.) are not in the corpus and
-    are not bound by any Modelo 100 casilla. The modelo's deduction
-    casillas for those families exist as form fields but their
-    underlying calculations have no legal anchor in the registry.
-  - **Modelos 308 / 309**: registry TOMLs exist but the orden
-    ministerial corpus is unindexed at the article level. Coverage
-    against the AEAT form has not been verified.
-  - **Modelo 369 (OSS / IOSS)**: 31 art-163 citations, but only 3
-    of the 11 art-163 sub-articles are referenced. Whether the
-    remaining 8 are out-of-scope or simply unfetched is unverified.
-
-These cases are **not solvable by connecting existing corpus** —
-they require a per-modelo completeness review against the
-AEAT-published instruction booklet, followed by either fresh BOE
-fetches (for under-grounded articles) or explicit out-of-scope
-declarations (for sub-articles the modelo intentionally does not
-support).
+  - **Modelo 100 (IRPF) 2025 — currentized closed for the cited
+    deduction-family gap**: the earlier statement that only
+    `ley-35-2006:art-68.4` was grounded is stale. The current registry
+    carries fine-grained legal entries and casilla/formula references for
+    the cited state deduction families: `art-68.1` (empresas de nueva o
+    reciente creación), `art-68.2` (incentivos de actividad económica),
+    `art-68.3` (donativos), `art-68.4` (Ceuta/Melilla), `art-68.5`
+    (Patrimonio Histórico), plus the transitional or adjacent deduction
+    authorities used by the same M100 settlement surface (`dt-15`,
+    `dt-18`, `da-50`, `art-81`, and `art-81-bis`). The current
+    regression gate is
+    `src/aeat/domain/calculations/registry/tests/test_modelo_100_registry_legal_refs.py`;
+    focused verification on 2026-06-29 passed (`133 passed`) and asserts
+    those surfaces do not fall back to the broad `ley-35-2006:art-68`
+    reference where a fine-grained article exists. This closes the cited
+    deduction-family grounding defect; it does not by itself certify every
+    autonomous-community deduction row against every annual instruction.
+  - **Modelos 308 / 309 — currentized closed for article-level order
+    grounding**: the earlier statement that their orden ministerial corpus
+    was unindexed at the article level is stale. The current IVA legal
+    catalogue resolves `orden-eha-3786-2008:art-2` and `art-11` for
+    Modelo 308, and `orden-hac-3625-2003:apartado-1` and `apartado-3`
+    for Modelo 309, against article/apartado-level corpus files. The
+    current registry cites those refs from the model manifests, revisions,
+    filing schedules, constructs, links, and the M309 formula/binding
+    closure. Focused verification on 2026-06-29 passed
+    `test_modelo_308_registry.py` and `test_modelo_309_registry.py`
+    (`17 passed`). This closes the article-level-order grounding defect;
+    it does not by itself certify every ad-hoc IVA scenario against every
+    AEAT instruction row.
+  - **Modelo 369 (OSS / IOSS) — currentized closed for scheme-range
+    article grounding**: the earlier statement that only 3 of the 11
+    LIVA art. 163 OSS/IOSS sub-articles were referenced is stale. The
+    current Modelo 369 manifest and scheme envelopes carry the full
+    LIVA ranges advertised by their revision labels: Esquema Exterior
+    (`octiesdecies`, `noniesdecies`, `vicies`), Esquema Unión
+    (`unvicies`, `duovicies`, `tervicies`, `quatervicies`), and
+    Esquema Importación (`quinvicies`, `sexvicies`, `septvicies`,
+    `octovicies`). The current IVA legal catalogue also resolves the
+    two formerly missing range refs, `ley-37-1992:art-163-noniesdecies`
+    and `ley-37-1992:art-163-quatervicies`, against bundled
+    consolidated LIVA corpus anchors. Focused verification on
+    2026-06-29 passed `test_modelo_369_registry.py` (`32 passed`) and
+    asserts the loaded registry carries those ranges through the model
+    manifest, snapshots, revision envelopes, constructs, completeness
+    manifests, total casillas, formulas, and calculation links. This
+    closes the cited scheme-range grounding defect; it does not by
+    itself certify every destination/rate/correction row against the
+    full AEAT-published Modelo 369 instruction surface.
 
 #### Procedural-grounding gap (R14 / R15 follow-up)
 
-The procedural law for what makes a Modelo declaration *legally
-filed* is not in the corpus today. The apex CLI-workflow redesign
-ADR's R14 / R15 rows are now code-closed (the workflow gate is
-shipped) but the gate has no `legal_refs` annotation. Bridging
-requires net-new BOE fetches:
+Currentization on 2026-06-29 closes the LGT side of this finding for
+the local workflow-gate and cross-period verification surfaces. The
+current legal catalogue resolves:
 
 | Slug | Topic | Status |
 |---|---|---|
-| `ley-58-2003:art-119` | Autoliquidación general regime | not in corpus |
-| `ley-58-2003:art-120` | Rectificación de autoliquidación | not in corpus |
-| `ley-58-2003:art-122` | Autoliquidación complementaria | not in corpus |
-| `rd-1671-2009:art-*` | E-presentation framework | not in corpus |
-| `orden-hap-2194-2013:art-*` | E-presentation procedure | not in corpus |
+| `ley-58-2003:art-119` | Declaración tributaria | corpus-backed in `legal/lgt-autoliquidacion.toml` |
+| `ley-58-2003:art-120` | Autoliquidaciones and rectification | corpus-backed in `legal/lgt-autoliquidacion.toml` |
+| `ley-58-2003:art-122` | Complementarias / sustitutivas | corpus-backed in `legal/lgt-autoliquidacion.toml` |
+
+The application-level workflow constant
+`WORKFLOW_GATE_LEGAL_REFS` now carries those three refs, and
+`src/aeat/application/modelo/tests/test_cross_period_finding_legal_grounding.py`
+verifies that application literal legal refs resolve to bundled corpus.
+The same gate also verifies cross-period findings, including the
+same-year non-official local-chain advisory, carry non-empty legal refs.
+
+The e-presentation framework refs remain intentionally outside the
+current local workflow gate. This application does not perform live AEAT
+submission; it builds, verifies, exports, records local filing state, and
+reads official evidence through read-only surfaces. If a future feature
+adds actual electronic presentation, it must fetch and catalogue the
+governing `rd-1671-2009:art-*` and `orden-hap-2194-2013:art-*` articles
+before encoding that live-submission path.
 
 ### Schema patterns confirmed by the audit
 

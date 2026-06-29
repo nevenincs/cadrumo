@@ -4,7 +4,7 @@ tags:
   - "#exec"
   - "#trabajador-del-mar"
 date: "2026-05-31"
-modified: '2026-05-31'
+modified: '2026-06-29'
 related:
   - "[[2026-05-31-trabajador-del-mar-plan]]"
   - "[[2026-05-31-trabajador-del-mar-adr]]"
@@ -27,7 +27,7 @@ Write integration test asserting CLI JSON emit includes legal_refs and source_re
 ## BOE Citations
 
 - Ley 35/2006 Art. 7.p) BOE-A-2006-20764 — verified in legal_refs of Art. 7.p) observation
-- Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-16100 — verified in legal_refs of REBECA observation
+- Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-15794 — verified in legal_refs of REBECA observation
 - Ley 47/2015 BOE-A-2015-11346 — RETMAR gate verified in ProfileCompletenessError context
 
 ## Outcome

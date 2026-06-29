@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#modelo-100-renta-full-calc'
 date: '2026-04-28'
-modified: '2026-04-28'
+modified: '2026-06-13'
 related:
   - "[[2026-04-27-modelo-100-renta-full-calc-plan]]"
   - "[[2026-04-27-modelo-100-renta-full-calc-adr]]"

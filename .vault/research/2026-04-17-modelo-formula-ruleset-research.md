@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#modelo-formulas'
 date: '2026-04-17'
-modified: '2026-04-17'
+modified: '2026-06-29'
 related:
   - '[[2026-04-12-casilla-db-adr]]'
   - '[[2026-04-12-casilla-db-research]]'
@@ -146,9 +146,10 @@ The four quarters (periodos) are:
 
 - Official label: *"Gastos fiscalmente deducibles"*, including
   amortizaciones y provisiones deducibles. In estimación directa
-  simplificada, the gastos de difícil justificación (5% cap + absolute
-  annual cap per LIRPF art. 30.2.4ª + RIRPF art. 30) flow in through
-  here.
+  simplificada, the gastos de difícil justificación flow in through
+  here using the applicable revision's rate and absolute annual cap
+  under LIRPF art. 30.2.4ª / RIRPF art. 30, with LIRPF DA 56 carrying
+  the 2023-only 7% exception.
 - Type: EUR, user-entered. Sign ≥ 0. Scope: cumulative YTD.
 
 **Casilla 03 — Rendimiento neto**

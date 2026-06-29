@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#linkage-design-audit'
 date: '2026-05-15'
-modified: '2026-05-15'
+modified: '2026-06-29'
 related: []
 ---
 
@@ -51,35 +51,41 @@ Derived from triangulated convergent findings. Ordered by blast radius.
    `operand_values`) before persistence. Persist the entries inside
    `CalculationRevision`. This single change rescues most of the
    downstream linkage erasure called out by F1, F6, F12, F14.
-2. Replace the cross-boundary value envelope. `Mapping[str, Decimal]`
-   on `RegistryFilingObservation.casilla_values`,
-   `RegistryCalculationResult.values`, and
-   `CalculationRevision.casilla_values` becomes a typed observation
-   carrying `(casilla_id: CasillaId, value: Decimal, formula_id:
-   FormulaId | None, legal_refs, source_modelo: ModeloId,
-   source_period, source_filing_year)`. This is the single change
-   with the highest convergent witness count.
-3. Promote validation from deferred to load-time. Every existence
-   check currently gated on explicit `validate_registry` calls (legal
-   refs, source refs, relation source modelo, fixture id, validation
-   refs, algorithm binding inputs/outputs) must fire unconditionally
-   on snapshot construction. `aeat config repair` must add a cross-
-   domain linkage diagnostic that walks every reference field.
-4. Discriminated unions for every selector. `DataBindingDefinition
-   .selector` and `source_revision_selector` become typed
-   discriminated unions per `source` literal, validated at registry
-   load rather than at handler call.
+2. Replace the remaining cross-boundary value envelopes.
+   Current-state correction on 2026-06-29: the prior-filing
+   observation path is now `RegistryModeloObservation.observations:
+   tuple[CasillaObservation, ...]` with `modelo: ModeloId` and a
+   derived `Mapping[CasillaId, Decimal]` view. The unresolved surfaces
+   are `RegistryCalculationResult.values` and
+   `CalculationRevision.casilla_values`, plus the relation fold-in
+   boundary where typed source observations collapse to bare `Decimal`
+   relation values.
+3. Promote validation from deferred to load-time. Current-state
+   correction on 2026-06-29: snapshot-local typed-ID checks now run
+   during `_snapshot.py` construction. Cross-model relation closure is
+   intentionally a full-registry gate because a single-model snapshot
+   does not carry the source-modelo tree; production authority loads
+   run `validate_registry` before snapshots are served.
+4. Discriminated unions for every selector. Current-state correction on
+   2026-06-29: relation revision and period-alignment selectors are typed
+   schema surfaces, binding-derived export record selectors now project
+   through typed fixed-field/row-field models, Detalle row-set consumers
+   now project through `BindingRowSetSelector`, and
+   `DataBindingDefinition.selector` now stores the hydrated source-family
+   selector model rather than the raw `BindingSelectorMap` authoring shape.
 5. Adopt the typed JSON envelope that already exists. `SchemaEnvelope`
    / `register_schema` / `emit_json_success` in
    `core/json_contract.py` are written but unused. Apply them to every
    modelo work-lifecycle command. Add typed `context` keys to
    `RegistryValidationError` / `RegistrySnapshotError` carrying the
    failing casilla/formula/binding id.
-6. Move RENTA constants into the registry. The Python-side
-   `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` becomes a TOML-declared
-   binding selector field. Remove the cross-package import at
-   `domain/calculations/registry/_bindings.py:12`. Move
-   `RentaDeductibleExpenseObservation` into `application/aggregation`.
+6. Currentized 2026-06-29: the Renta first-slice finding no longer
+   matches the old unvalidated-import shape. The routing table now
+   lives in `domain/renta/_first_slice_routing.py`, `_ledger_expenses`
+   re-exports the same object, and snapshot construction installs a
+   `CrossDomainSnapshotCheck` before `check_all_id_references` runs.
+   The registry consumes Renta observations through a Protocol, not a
+   direct `domain.renta` import.
 7. Canonicalise CCAA. Pick one of `RentaCCAA` 3-letter codes,
    `domain/profile/_ccaa.CCAA` full names, or the dispatch-table
    lowercase strings. Delete the other two. Add a converter only at
@@ -112,10 +118,12 @@ before promotion.
   envelope. Witnesses: cross-modelo · schema↔registry · end-to-end
   trace · CLI inventory · CLI JSON contract · CLI command trace (6).
   Root drop site: `_actions.py:817`.
-- F2. Validation is deferred, conditional, and operationally
-  invisible. Witnesses: TOML data layer · cross-modelo · new-modelo
-  stress · operator surface (4). `aeat config repair` runs five
-  checks; zero are cross-domain linkage checks.
+- F2. Validation was historically deferred, conditional, and
+  operationally invisible. Current-state correction on 2026-06-29:
+  production registry access flows through `ValidatedRegistryAuthority`,
+  which runs full `validate_registry`; remaining F2 work should target
+  standalone diagnostics and selector-shape gaps, not relation closure
+  through the production snapshot path.
 - F3. Untyped selector sub-schemas. Witnesses: cross-modelo ·
   schema↔registry · end-to-end trace · type-system escapes (4).
   `DataBindingDefinition.selector` acts as 10+ sub-schemas keyed by
@@ -135,9 +143,10 @@ before promotion.
 
 - F7. `domain/calculations/registry/_bindings.py:12` imports from
   `domain/renta/`. Witnesses: renta drift · pattern sweep.
-- F8. `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` hardcodes casilla IDs
-  outside the registry. Witnesses: schema↔registry · pattern sweep ·
-  renta drift (3 — but architecturally distinct from F2, kept here).
+- F8. Currentized 2026-06-29: the old unvalidated
+  `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` finding is closed as a
+  defect. The current design keeps a Renta-owned first-slice routing
+  table and validates its casilla targets at snapshot construction.
 - F9. `SchemaEnvelope` typed JSON contract exists but is never used.
   Witnesses: CLI inventory · CLI JSON contract (2, both grep-
   confirmed).
@@ -221,31 +230,31 @@ by re-audit)` qualifier.
 | Row | Site | Symbol / concept | Class | Witnesses | Status |
 |-----|------|------------------|-------|-----------|--------|
 | R001 | `src/aeat/application/modelo/_actions.py:817` | `dict(engine_result.values)` discards `engine_result.entries` | A | F1, F12, F14| verified (re-audit) — no dict-cast of engine_result.values |
-| R002 | `domain/calculations/registry/_bindings.py:66-90` | `RegistryFilingObservation.casilla_values: Mapping[str, Decimal]` | A | F1 (6)| verified (re-audit) — typed observation envelope |
+| R002 | `domain/calculations/registry/_bindings.py:278-329` | `RegistryModeloObservation.observations: tuple[CasillaObservation, ...]` with derived `Mapping[CasillaId, Decimal]` view | A | F1 (6)| verified/currentized (2026-06-29) — typed observation envelope and typed `modelo: ModeloId` |
 | R003 | `domain/calculations/registry/_formula_runtime.py:36-47` | `RegistryCalculationResult.values: Mapping[str, Decimal]` | A | F1| regressed (re-audit) — RegistryCalculationResult.values still Mapping[str, Decimal] |
 | R004 | `domain/calculations/registry/_formula_runtime.py:43` | `values` map merges bound/computed/informational casillas | A | F1| regressed (re-audit) — RegistryCalculationResult.values still Mapping[str, Decimal] |
 | R005 | `domain/modelos/_calculation_revision.py:148,202` | `CalculationRevision.casilla_values` keys `str` | A | F1| regressed (re-audit) — CalculationRevision.casilla_values still Mapping[str, Decimal] |
 | R006 | `entrypoints/cli/_modelo.py:851-892` | `_calculation_revision_payload` serialises `dict[str, str]` | A,G | F1, F6| partial (re-audit) — no clear payload model match |
-| R007 | `domain/calculations/registry/_schema.py:884` | `DataBindingDefinition.selector: Mapping[str, str\|int\|...]` | B | F3| regressed (re-audit) — selector is still bare Mapping[str, ...] |
-| R008 | `domain/calculations/registry/_schema.py:1021` | `RelationDefinition.source_revision_selector: Mapping[str, str\|int]` | B | F3| regressed (re-audit) — still Mapping[str, ...] |
-| R009 | `domain/calculations/registry/_schema.py` | `period_alignment: Mapping[str, str\|int]` | B | F3| regressed (re-audit) — still Mapping[str, ...] |
+| R007 | `domain/calculations/registry/_schema.py:839` | `DataBindingDefinition.selector: BindingSelector` | B | F3| closed (2026-06-29 current-state recheck) — raw selector maps are authoring/input payloads only; constructed bindings store hydrated per-source selector models, all 1,060 bundled bindings scan as concrete selector model instances, and binding-derived export records, Detalle row-set consumers, and public binding query rows use typed projections |
+| R008 | `domain/calculations/registry/_schema_surfaces.py` | `RelationDefinition.source_revision_selector: RelationRevisionSelector` | B | F3| closed (2026-06-29 current-state recheck) — relation source revision selector is a typed model; legacy `revision`/`revision_id` aliases and mixed absolute/relative selectors are rejected at construction |
+| R009 | `domain/calculations/registry/_schema_surfaces.py` | `RelationDefinition.period_alignment: RelationPeriodAlignment` | B | F3| closed (2026-06-29 current-state recheck) — period alignment is a typed model; empty maps and retired `same_period` mode are rejected at construction |
 | R010 | `domain/calculations/registry/_bindings.py:884,1047,1147` | `model_validate(dict(binding.selector))` at handler call only | B,C | F3| verified (re-audit) — no model_validate(dict(...)) pattern |
-| R011 | `domain/calculations/registry/_schema.py:946,955` | `RelationDefinition.source_output: CasillaId \| str` | I | F1| regressed (re-audit) — still CasillaId | str union escape |
+| R011 | `domain/calculations/registry/_schema_surfaces.py:472-484` | `RelationDefinition.source_casilla_id: CasillaId`; legacy `source_output` rejected | I | F1| closed (2026-06-29 current-state recheck) — no `RelationDefinition.source_output` field or production `relation.source_output` access remains |
 | R012 | `domain/calculations/registry/_schema.py:923-929` | `AlgorithmBindingDefinition.target/inputs/outputs` accept bare `str` | I | F3, F5| verified (re-audit) — typed IDs only |
-| R013 | `domain/calculations/registry/_relations.py:23-31` | `RegistryRelationSourceRequirement.source_modelo/source_output: str` | A | F1| unverified (re-audit script could not match symbol) — class not found |
-| R014 | `domain/calculations/registry/_relations.py:65-66` | `str(relation.source_output)` strips `CasillaId` discriminant | A,D | F1| regressed (re-audit) — str() coercion still present |
-| R015 | `domain/calculations/registry/_relations.py:97,168-178,199` | `selector.get("year")` / `.get("filing_year_delta")` raw dict | B,C | F3| verified (re-audit) — no raw selector.get() lookups |
-| R016 | `domain/calculations/registry/_validate.py:1093` | `binding.selector.get("source_modelo")` raw lookup | B,C | F3| regressed (re-audit) — binding.selector.get('source_modelo') still raw |
-| R017 | `domain/calculations/registry/_validate.py:215` | `_validate_relation_closure` runs only on full-tree validation | C | F2, F5| partial (re-audit) — defined but not wired into snapshot |
-| R018 | `domain/calculations/registry/_validate.py:993-1001` | `_missing_refs` for legal_refs runs only at validate_modelo | C | F2, F5| partial (re-audit) — defined but only at validate_modelo, not snapshot |
-| R019 | `domain/calculations/registry/_schema.py:831` | `CasillaDefinition.validation_refs` has no `_missing_refs` call | C,I | F5| partial (re-audit) — no clear pairing of validation_refs and _missing_refs |
-| R020 | `domain/calculations/registry/_schema.py:426` | `WorkbookParityReference.fixture_id: str` opaque | I | F5| regressed (re-audit) — fixture_id still bare str |
-| R021 | `domain/calculations/registry/_ids.py:14-34` | All 21 ID types — regex only, no existence check | I | F5| partial (re-audit) — function defined but not wired into build_snapshot |
+| R013 | `domain/calculations/registry/_relations.py:40-60` | `RegistryFoldRequirement.source_modelo: ModeloId`, `source_casilla_ids: tuple[CasillaId, ...]` | A | F1| closed (2026-06-29 current-state recheck) — retired `RegistryRelationSourceRequirement`/`source_output` shape replaced by unified typed fold requirement; previous-filing/relation-prefill source selectors and filed/applicability modelo records now use `ModeloId` |
+| R014 | `domain/calculations/registry/_relations.py:118-139` | relation requirements group by `relation.source_casilla_id` without `str(source_output)` coercion | A,D | F1| closed (2026-06-29 current-state recheck) — exact production grep finds no `relation.source_output`; legacy `source_output` hits are rejection tests/helpers only |
+| R015 | `domain/calculations/registry/_relations.py` / `_validate_relation_periods.py` | typed `RelationRevisionSelector` attributes replace raw `selector.get("year")` / `.get("filing_year_delta")` dict probes | B,C | F3| closed (2026-06-29 current-state recheck) — no production `relation.source_revision_selector.get(...)` path remains |
+| R016 | `domain/calculations/registry/_record_design_coverage.py:104` and `domain/calculations/registry/_bindings.py:459` | record-design closure asks `binding_source_modelo(binding)` instead of peeking at `binding.selector.get("source_modelo")` | B,C | F3| closed (2026-06-29 current-state recheck) — no production `.get("source_modelo")` lookup remains; exact hits are test-only |
+| R017 | `domain/calculations/registry/_validate_relation_sources.py:45` and `domain/calculations/registry/_authority.py:256` | relation closure runs at full-registry validation, and production authority validates the full tree at load | C | F2, F5| closed (2026-06-29 current-state recheck) — single-model `build_snapshot` cannot validate cross-model closure by design; production snapshots are served only after `ValidatedRegistryAuthority.load` runs `validate_registry` |
+| R018 | `domain/calculations/registry/_snapshot.py:174` | snapshot build runs `check_all_id_references` after legal/source ref collection | C | F2, F5| closed (2026-06-29 current-state recheck) — missing legal/source refs now fail snapshot construction rather than only `validate_modelo` |
+| R019 | `domain/calculations/registry/_schema.py:831` | `CasillaDefinition.validation_refs` has no `_missing_refs` call | C,I | F5| closed (2026-06-29 current-state recheck) — the dead `validation_refs` field has been removed; exact grep finds it only in historical vault prose |
+| R020 | `domain/calculations/registry/_schema.py:533` | `WorkbookParityReference.fixture_id: WorkbookFixtureId` has typed shape but no fixture-catalogue lookup | I | F5| partial (2026-06-29 current-state recheck) — the bare-string finding is closed; fixture IDs are pattern-constrained and still not resolved against a declared fixture catalogue |
+| R021 | `domain/calculations/registry/_snapshot.py:174` | `check_all_id_references(snapshot)` is wired into snapshot construction | I | F5| closed (2026-06-29 current-state recheck) — `_snapshot.py` installs cross-domain checks, builds the `RegistrySnapshot`, and runs the 21-typed-ID integrity gate before returning |
 | R022 | `application/filing/runtime.py:78` | `RegistryCasillaSchema` dataclass — `str` IDs, `float\|int\|None` bounds | D | schema↔registry| partial (re-audit) — RegistryCasillaSchema name still present |
 | R023 | `domain/filing/_protocols.py:38,103` | `CasillaSchema` Protocol — duck-typed, no legal_refs | D,G | schema↔registry, F6| verified (re-audit) — Protocol declares legal_refs |
 | R024 | `domain/calculations/registry/_schema.py:882` vs `application/filing/runtime.py:78` vs `domain/filing/_protocols.py:38` | Three shapes of "casilla schema" | D | schema↔registry| regressed (re-audit) — 2 schemas still: [('runtime.py', 'RegistryCasillaSchema'), ('_protocols.py', 'Ca |
-| R025 | `domain/renta/_ledger_expenses.py:27` | `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` hardcoded mapping | E | F8| regressed (re-audit) — constant still present |
-| R026 | `domain/renta/_ledger_expenses.py:228` | Validator against the same hardcoded constant | E | F8| regressed (re-audit) — validator still uses hardcoded constant |
+| R025 | `domain/renta/_first_slice_routing.py:26-67` | Renta-owned first-slice routing table | E | F8| closed/accepted current design (2026-06-29 recheck) — table is the canonical Renta routing source and snapshot-time integrity asserts every target casilla exists on Modelo 100 |
+| R026 | `domain/renta/_ledger_expenses.py:240` | Observation validator checks against the canonical first-slice routing table | E | F8| closed/accepted current design (2026-06-29 recheck) — `_ledger_expenses` re-exports the same table object and tests guard against forked mappings |
 | R027 | `domain/calculations/registry/_bindings.py:1160` | Re-validates `target_casilla` against the constant | E | F8| verified (re-audit) — no cross-package constant reference |
 | R028 | `domain/calculations/registry/_bindings.py:12` | Registry imports from `domain/renta/` | F | F7| verified (re-audit) — renta import inverted |
 | R029 | `domain/renta/_substrate.py:49-83` | `RentaCCAA` 3-letter codes | D | F13| verified (re-audit) — RentaCCAA migrated |
@@ -443,7 +452,11 @@ Breakdown by target:
 - **from ..submission** (sibling domain): ~30
 - **from ..core.errors**: ~24
 
-Critical violation (F7): `domain/calculations/registry/_bindings.py:12` imports from `domain/renta/` (RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS).
+Current-state correction (2026-06-29): the old F7 import path is gone.
+The registry-side Renta resolver in `_ledger_bindings.py` consumes a
+structural Protocol and does not import `domain.renta`; the concrete
+Renta first-slice integrity check is registered through the
+`CrossDomainSnapshotCheck` extension point.
 
 ### 10. TOML key access via `.get("magic_string")` patterns
 
@@ -567,12 +580,12 @@ analysis, pure enumeration.
 Non-test files:
 
 - `src/aeat/domain/calculations/registry/_bindings.py` — public models:
-  `RegistryFilingObservation`, `RegistryFilingObservationRequirement`,
+  `RegistryModeloObservation`, `CasillaObservation`,
   `InvoiceObservation`, `InvoiceObservationRequirement`,
   `CounterpartAggregationObservation`, `OssIossLedgerObservation`,
   `IvaLedgerObservation`.
 - `src/aeat/domain/calculations/registry/_relations.py` — public models:
-  `RegistryRelationSourceRequirement`.
+  `RegistryFoldRequirement`.
 
 #### 2. Pydantic models with cross-reference fields
 
@@ -604,8 +617,9 @@ Registry schema (`_schema.py`):
 
 Bindings (`_bindings.py`):
 
-- `RegistryFilingObservation`: `modelo: str`, `casilla_values:
-  Mapping[str, Decimal]`.
+- `RegistryModeloObservation`: `modelo: ModeloId`, canonical
+  `observations: tuple[CasillaObservation, ...]`, derived
+  `casilla_values: Mapping[CasillaId, Decimal]`.
 - `InvoiceObservation`: `intracommunity_clave: str`, classifier fields
   for IVA.
 - `CounterpartAggregationObservation`: aggregation over counterpart
@@ -625,8 +639,9 @@ Type definition (`_ids.py`):
 
 Usage patterns across codebase:
 
-- String literals: `modelo: str` fields in bindings, e.g.
-  `RegistryFilingObservation.modelo`.
+- String literals: the old `RegistryFilingObservation.modelo` drift is
+  closed in current code; `RegistryModeloObservation.modelo` now uses
+  `ModeloId`.
 - Type alias: `ModeloId` in schema
   (`DependencyClassificationDefinition.source_modelo`).
 - Event codes: event type strings like `"MODELO_CALCULATION_CREATED"`
@@ -646,9 +661,12 @@ Usage:
 - Schema fields use `CasillaId` type (strict).
 - Bindings use `Mapping[str, Decimal]` for observed values
   (`casilla_values`).
-- Renta mapping: `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS:
-  Mapping[SpendingCategory, str]` (line 27, `_ledger_expenses.py`) —
-  literal casilla codes as strings: `"0186"`, `"0192"`, etc.
+- Renta mapping: `FIRST_SLICE_EXPENSE_CASILLAS:
+  Mapping[SpendingCategory, CasillaId]` in `_first_slice_routing.py`.
+  `_ledger_expenses.py` re-exports the same object as
+  `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` for the observation
+  validator; snapshot construction validates every target casilla
+  against the Modelo 100 registry.
 
 #### 5. Workbook and Sheets linkage
 
@@ -693,9 +711,10 @@ Renta-specific linkage primitives:
 
 - `RentaExpenseDirection`, `RentaDeductibilityStatus`,
   `RentaInvoiceEvidenceStatus`, `RentaReconciliationStatus` (enums).
-- `RentaDeductibleExpenseFact` → casilla mapping via
-  `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` (hardcoded category→casilla
-  dictionary).
+- `RentaDeductibleExpenseFact` → casilla mapping via the canonical
+  `FIRST_SLICE_EXPENSE_CASILLAS` routing table, re-exported by
+  `_ledger_expenses.py` for validator compatibility and checked at
+  snapshot construction through `CrossDomainSnapshotCheck`.
 - `SpendingCategory` enum (from `categories` package) — domain link to
   expense classification.
 - No separate modelo-100-specific binding schema; reuses generic
@@ -737,22 +756,27 @@ IDs, `float | int | None` instead of `Decimal | None`).
 
 Two distinct mechanisms:
 
-- `RelationDefinition` (`_schema.py:934`) — primary typed mechanism.
-  `source_modelo: ModeloId`, `source_output: CasillaId | str` (line
-  946), `target_binding: BindingId`, `kind:
+- `RelationDefinition` (`_schema_surfaces.py:472`) — primary typed
+  mechanism. `source_modelo: ModeloId`, `source_casilla_id:
+  CasillaId`, `target_binding: BindingId`, `kind:
   Literal["previous_period", "annual_summary", "cross_model_output"]`.
-  `source_output` admits bare `str` as a fallback, weakening the type
-  guarantee.
-- `RegistryFilingObservation` (`_bindings.py:66`) — runtime resolution
-  shape. `modelo: str`, `filing_year: int`, `period: str`,
-  `casilla_values: Mapping[str, Decimal]`. Both `modelo` and the
-  `casilla_values` keys are untyped strings. Cross-modelo resolution at
-  runtime (`_relations.py:97`) reconstructs string keys via
-  `str(relation.source_output)` (line 66), discarding typed-id benefit.
+  The legacy `source_output` key is no longer a model field and is
+  rejected by schema tests.
+- `RegistryModeloObservation` (`_bindings.py:278`) — runtime resolution
+  observation shape. `modelo: ModeloId`, `filing_year: int`, `period:
+  str`, and canonical `observations: tuple[CasillaObservation, ...]`.
+  The derived `casilla_values` view is keyed by `CasillaId`.
 
-`RegistryRelationSourceRequirement` (`_relations.py:23`) also uses
-`source_modelo: str` and `source_output: str`, not the typed ID
-aliases. No ADR governs when `CasillaId` vs bare `str` is acceptable.
+`RegistryFoldRequirement` (`_relations.py:40`) is the unified fold-in
+requirement for relation and direct previous-filing carries. Its source
+modelo and source-casilla fields are now typed as `ModeloId` and
+`tuple[CasillaId, ...]`. Relation selector shape is currentized:
+`RelationDefinition.source_revision_selector` stores
+`RelationRevisionSelector`, and `period_alignment` stores
+`RelationPeriodAlignment`. The remaining cross-modelo shape gap is not
+`source_output` or relation selector maps; it is the loss of source
+observation provenance once relation values enter formulas as bare
+`Decimal` values.
 
 #### C. Legal grounding attachment points
 
@@ -796,31 +820,28 @@ Canonical: modelo 100 is declared as a `ModeloDefinition` with
 `CasillaDefinition` entries and `FormulaDefinition` entries exactly
 like any other modelo.
 
-Parallel side channel: `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS`
-(`_ledger_expenses.py:27`) is a module-level `Mapping[SpendingCategory,
-str]` that hard-codes casilla IDs (`"0186"`, `"0192"`, `"0199"`,
-`"0203"`) outside the registry TOML. Consumed in two places:
-
-- `_ledger_expenses.py:228` — validates that
-  `observation.target_casilla` matches the hard-coded mapping.
-- `_bindings.py:1160` — validates that a
-  `ledger_renta_expense_aggregation` binding's `target_casilla` is
-  within the allowed set.
-
-Casilla-ID authority for Renta first-slice expenses is split: the
-registry TOML owns the `CasillaDefinition`, but the Python module owns
-the category→casilla mapping without any load-time cross-check.
+Current state (2026-06-29): the old side-channel wording is stale.
+`FIRST_SLICE_EXPENSE_CASILLAS` is the canonical Renta-domain routing
+table, typed as `Mapping[SpendingCategory, CasillaId]`. The
+`_ledger_expenses.py` validator re-exports that same object, while
+`_first_slice_routing_integrity.py` registers a snapshot-time check
+that fails Modelo 100 builds when a routed casilla is absent from the
+registry revision. The registry-side resolver accepts only the four
+declared first-slice targets through its own selector model and no
+longer imports `domain.renta`.
 
 #### F. Drift: same concept, different shapes
 
-- Casilla ID in cross-modelo reference: `CasillaId` typed in
-  `RelationDefinition.source_output` (`_schema.py:946`) vs bare `str`
-  accepted in same field.
-- Modelo ID in cross-modelo observation: `ModeloId` typed in
-  `RelationDefinition.source_modelo` (`_schema.py:944`) vs `str` in
-  `RegistryFilingObservation.modelo` (`_bindings.py:71`) and
-  `RegistryRelationSourceRequirement.source_modelo`
-  (`_relations.py:28`).
+- Cross-modelo source identifier drift is closed in current code:
+  `RelationDefinition.source_casilla_id`,
+  `RegistryFoldRequirement.source_casilla_ids`,
+  previous-filing/relation-prefill selector
+  source casillas, and `RegistryModeloObservation.modelo` all use the
+  typed registry aliases. Legacy `source_output` is rejected.
+- Modelo ID in filed-state and applicability records was currentized
+  on 2026-06-29: `RegistryModeloObservation.modelo`,
+  `RegistryFiledStateComparison.modelo`, `ModeloApplicability.modelo`,
+  and `ModeloApplicabilityRule.modelo` now use `ModeloId`.
 - Casilla schema for filing consumers: pydantic `CasillaDefinition`
   with `Decimal` bounds vs `RegistryCasillaSchema` dataclass with
   `float | int | None` bounds.
@@ -829,29 +850,29 @@ the category→casilla mapping without any load-time cross-check.
   ...]` (extracted from expression tree).
 - Legal grounding attachment: present on registry models but absent
   from `CasillaSchema` Protocol and `RegistryCasillaSchema` projection.
-- Renta casilla authority: Registry TOML vs module-level
-  `Mapping[SpendingCategory, str]`.
+- Renta first-slice authority is now a typed Renta-domain routing table
+  (`Mapping[SpendingCategory, CasillaId]`) with snapshot-time
+  validation against the Modelo 100 registry revision.
 
 #### Top 5 unresolved linkage-design gaps (no ADR)
 
-1. `source_output: CasillaId | str` in `RelationDefinition`
-   (`_schema.py:946`). Union allows any bare string without verifying
-   it is a valid `CasillaId` in the source modelo's revision.
-2. Loss of typed IDs at the filing application boundary
+1. Loss of typed IDs at the filing application boundary
    (`runtime.py:78`). `RegistryCasillaSchema` converts `CasillaId` to
    `str`, `Decimal` bounds to `float | int | None`, and drops
    `legal_refs`/`source_refs` entirely.
-3. `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` hard-codes casilla IDs
-   outside the registry (`_ledger_expenses.py:27`). No load-time
-   cross-check.
-4. `RegistryFilingObservation.casilla_values: Mapping[str, Decimal]`
-   (`_bindings.py:74`). Untyped string keys across cross-modelo
-   resolution.
-5. `AlgorithmBindingDefinition.target: CasillaId | str` and `inputs:
-   Mapping[str, BindingId | CasillaId | ParameterId | RelationId]`
-   (`_schema.py:926–927`). Algorithm bindings allow any string as
-   target and a union of four distinct typed IDs as input values, no
-   pydantic discriminator.
+2. `RegistryCalculationResult.values` and
+   `CalculationRevision.casilla_values` remain flat maps rather than
+   the canonical typed observation envelope.
+3. Relation fold-in values lose source-observation provenance before
+   formula evaluation: `resolve_relation_values_from_observations`
+   returns relation-id keyed `Decimal` values, not an observation
+   envelope carrying source modelo, period, filing year, and casilla.
+4. `DataBindingDefinition.selector` now stores the hydrated per-source
+   selector model; raw `BindingSelectorMap` payloads are confined to
+   TOML/dict authoring input and serialization projection.
+5. Selector consumer projections are narrowed for binding-derived export
+   records, Detalle row-set consumers, and public binding query rows
+   (`BindingSelectorQueryProjection`).
 
 ### Wave 1 — Agent 3 — Cross-modelo linkages
 
@@ -886,11 +907,11 @@ the category→casilla mapping without any load-time cross-check.
 No single unified resolver. Two parallel resolution paths exist:
 
 - Calculation-grade (relations): `resolve_relation_values_from_observations`
-  → `relation_source_requirements` → `RegistryFilingObservation` →
+  → `relation_source_requirements` → `RegistryModeloObservation` →
   Decimal values injected as `relation_values` into
   `calculate_registry_snapshot`.
 - Binding-grade (previous_filing): `resolve_previous_filing_binding_values`
-  → `_PreviousFilingSelector` → `RegistryFilingObservation` →
+  → `_PreviousModeloSelector` → `RegistryModeloObservation` →
   `binding_values` dict.
 
 Both are application-orchestrated; neither is called internally by the
@@ -899,15 +920,15 @@ fully separate mechanism governing oracle adapter dispatch.
 
 #### C. Cross-period modelling and provenance
 
-Prior-year and prior-period values modelled through
-`RegistryFilingObservation` (`_bindings.py:55–90`): `modelo: str`,
-`filing_year: int`, `period: str`, `casilla_values: Mapping[str,
-Decimal]`.
+Prior-year and prior-period values are modelled through
+`RegistryModeloObservation` (`_bindings.py:278`): `modelo: ModeloId`,
+`filing_year: int`, `period: str`, canonical typed
+`CasillaObservation` rows, and a derived
+`casilla_values: Mapping[CasillaId, Decimal]` view.
 
 Typed at observation level: modelo, year, period, and casilla id are
-explicit. `_PreviousFilingSelector.filing_year_delta` encodes the year
-offset (`-1`) in the relation definition itself
-(`_bindings.py:148`).
+explicit. `_PreviousModeloSelector.filing_year_delta` encodes the year
+offset (`-1`) in the binding selector itself.
 
 Provenance preserved at observation level but resolved scalar entering
 the formula engine (`relation_values: dict[str, Decimal]`) drops all
@@ -925,15 +946,19 @@ field is `str | None`, not a typed `OracleId` alias. No
 
 #### E. String-key lookups
 
-Several places use dict-key string lookup on `binding.selector`:
+Several places use dict-key string lookup on selector mappings:
 
-- `_validate.py:1093`: `binding.selector.get("source_modelo")`.
+- Currentized 2026-06-29: the old production
+  `binding.selector.get("source_modelo")` path is closed. Record-design
+  closure now calls `binding_source_modelo(binding)`, which dispatches
+  through the typed previous-filing and relation-prefill selector helpers.
 - `test_modelo_chain_cohesion.py:81`: same.
 - `test_relation_consistency.py:62`: same.
-- `_relations.py:168–178`: `selector.get("year")` /
-  `selector.get("filing_year_delta")`.
+- Relation revision selector helpers still use mapping lookups for
+  `year` / `filing_year_delta`; these belong to the residual
+  relation-selector surface, not R016.
 - `test_cross_dependency_contract.py:172–174`:
-  `selector.get("source_modelo")` / `selector.get("source_output")` /
+  `selector.get("source_modelo")` / legacy `selector.get("source_output")` /
   `selector.get("source_casillas")`.
 
 `_PreviousFilingSelector` pydantic model (`_bindings.py:208–250`)
@@ -954,22 +979,25 @@ Cross-reference vs cross-dependency distinction is principled:
 
 #### Top 5 governance gaps for cross-modelo linkage
 
-1. `source_revision_selector` is opaque `Mapping[str, str | int]`, not
-   a discriminated union. A typo silently defaults `filing_year_delta`
-   to 0, mapping the relation to the same year instead of prior year.
-2. Resolved relation values lose all provenance at the formula
+1. Resolved relation values lose all provenance at the formula
    boundary. `resolve_relation_values` returns `dict[str, Decimal]`
    keyed by relation id. Source modelo, source period, filing year,
    and casilla id are irrecoverable from inside the formula trace.
-3. Oracle-originated observations are not distinguishable from locally
+2. Oracle-originated observations are not distinguishable from locally
    computed ones. No `OracleFilingObservation` subtype.
-4. `DataBindingDefinition.selector` is untyped `dict`, validated only
-   late at `resolve_previous_filing_binding_values` call time.
-5. No registry-level constraint that a relation's `source_output`
-   exists in the source modelo's schema at the filing-year
-   intersection. `test_cross_dependency_contract.py:204–229` asserts
-   this at test time, but the constraint is not enforced by
-   `RegistryValidator.validate_modelo`.
+3. `DataBindingDefinition.selector` now stores the hydrated per-source
+   selector model; raw selector maps remain only the registry authoring and
+   serialization shape.
+4. Selector consumer projections are narrowed for binding-derived export
+   records, Detalle row-set consumers, and public binding query rows
+   (`BindingSelectorQueryProjection`).
+5. Currentized 2026-06-29: relation selector shape and the old
+   registry-level `source_output`
+   existence gap is closed. Relations now declare `source_casilla_id`,
+   `source_revision_selector: RelationRevisionSelector`, and
+   `period_alignment: RelationPeriodAlignment`; full-registry
+   validation checks the source casilla against matching source
+   revisions before production authority serves snapshots.
 
 ### Wave 1 — Agent 4 — Export and workbook linkages
 
@@ -1056,9 +1084,9 @@ modelo-100-exclusive (`_MODELO_100 = "100"`, line 27;
 
 No single type. Three distinct shapes:
 
-1. `RegistryFilingObservation` (`_bindings.py:66`): pure-value pydantic
-   model carrying `modelo: str`, `filing_year: int`, `period: str`,
-   `casilla_values: Mapping[str, Decimal]`. No persistence key, no
+1. `RegistryModeloObservation` (`_bindings.py:278`): pydantic model
+   carrying `modelo: ModeloId`, `filing_year: int`, `period: str`, and
+   canonical typed `CasillaObservation` rows. No persistence key, no
    SHA-256, no encryption metadata.
 2. `RegistryFiledStateComparison` / `RegistryFiledStateDrift`
    (`_filed_state.py:22,33`): Comparison verdict objects. No opaque ID
@@ -1079,7 +1107,7 @@ as a unified tuple. Linkage assembled ad hoc in application code.
 External to every linkage shape. `SensitivityClass` enum
 (`core/classification/__init__.py:30`) lives in persistence adapter
 layer. Domain models (`Justificante`, `Attachment`, `FilingDraft`,
-`RegistryFilingObservation`) carry no `sensitivity` or `classification`
+`RegistryModeloObservation`) carry no `sensitivity` or `classification`
 field. Repositories construct `Envelope` with hard-coded classes —
 e.g. `JustificanteRepository` hard-codes `SensitivityClass.AUDIT`,
 `AttachmentRepository` hard-codes `SensitivityClass.FINANCIAL`.
@@ -1091,10 +1119,10 @@ takes `inputs: Mapping[str, Decimal]` and `binding_values`, emits a
 `RegistryCalculationResult` carrying only computed `Decimal` values
 and formula trace entries.
 
-Frays at the input side: `RegistryFilingObservation` carries
-`casilla_values` expected to come from prior filings, but no typed
-protocol defining how those values are retrieved from the encrypted
-store. Registry cannot reject a fabricated observation.
+Frays at the input side: `RegistryModeloObservation` carries typed
+prior-filing observations, but no typed protocol defines how those rows
+are retrieved from the encrypted store. Registry cannot reject a
+fabricated observation on storage provenance alone.
 
 #### D. Evidence vs justificante vs attachment vs filing-record
 
@@ -1131,7 +1159,8 @@ with no shared type surface.
 #### Top 5 storage-linkage governance gaps
 
 1. No typed link from `FilingDraft` to `Justificante`.
-2. `RegistryFilingObservation` is unverified at the registry boundary.
+2. `RegistryModeloObservation` is typed at the registry boundary but
+   still unverified for storage provenance.
 3. No input-data blob reference in `RegistryCalculationResult`.
 4. `Attachment` has no link to `FilingDraft` or `Justificante`.
 5. Classification is not stamped on domain records, only at the
@@ -1146,14 +1175,14 @@ declares every casilla, formula, and binding using the identical
 schema contract used by 303, 130, 115, etc. Schema at `_schema.py` is
 shared; no renta-specific subclass of `RegistryModel`.
 
-Bespoke side: `domain/renta/` (`_ledger_expenses.py`, `_substrate.py`)
-introduces domain types with no parallel in any other modelo domain
-package. `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` hard-codes a
-`{SpendingCategory → casilla_str}` mapping in Python rather than
-deriving from the registry. The binding validator at
-`_bindings.py:1160` imports and re-validates against the same
-hard-coded mapping. Simpler modelos have no parallel Python-side
-casilla map.
+Bespoke side: `domain/renta/` (`_ledger_expenses.py`, `_substrate.py`,
+`_first_slice_routing.py`) introduces domain types with no parallel in
+any other modelo domain package. Current-state recheck on 2026-06-29
+found the old direct registry→Renta import and unvalidated first-slice
+constant closed: the registry resolver uses a Protocol, and the
+Renta-owned routing table registers a snapshot-time integrity check.
+The remaining design fact is intentional cross-domain routing, not a
+silent split of casilla authority.
 
 #### B. Sub-schedules
 
@@ -1212,14 +1241,13 @@ Divergent:
 `domain/profile/_ccaa.py:CCAA` with different value space. Most
 concrete promotion candidate.
 
-`_ledger_expenses.py` contains deductibility evaluation logic plus the
-hard-coded `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` mapping.
-Deductibility evaluator is renta-specific business logic. But
-`RentaDeductibleExpenseObservation` is a binding-ready observation —
-a boundary type consumed by `domain/calculations/registry/_bindings.py`.
-Direction violation: the calculations registry imports from
-`domain/renta` (`_bindings.py:12`), crossing what should be a
-unidirectional dependency.
+`_ledger_expenses.py` contains deductibility evaluation logic plus a
+re-export of the canonical first-slice routing table. Deductibility
+evaluator is renta-specific business logic. `RentaDeductibleExpenseObservation`
+remains a binding-ready observation, but the registry consumes it
+structurally through `RentaExpenseObservationProtocol` in
+`_ledger_bindings.py`; the old direct `domain/calculations` →
+`domain/renta` import is closed.
 
 Evidence pattern is ad-hoc: no other domain package is imported
 directly by `domain/calculations/registry/`. IVA ledger observation
@@ -1228,11 +1256,12 @@ observation type lives in `domain/renta/` — wrong layer.
 
 #### F. Clearest pattern violations
 
-1. `src/aeat/domain/calculations/registry/_bindings.py:12` — imports
-   `from ...renta import RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS,
-   RentaDeductibleExpenseObservation`.
-2. `src/aeat/domain/renta/_ledger_expenses.py:27–35` — hard-coded
-   `{SpendingCategory → "0186"|"0192"|…}` mapping.
+1. Currentized 2026-06-29: the old registry→Renta import violation is
+   closed; `_ledger_bindings.py` uses a Protocol and the Renta check is
+   registered through `CrossDomainSnapshotCheck`.
+2. Currentized 2026-06-29: the first-slice routing table is a typed
+   `SpendingCategory → CasillaId` Renta-domain table with snapshot-time
+   integrity, not an unvalidated hard-coded duplicate.
 3. `src/aeat/domain/renta/_substrate.py:49–83` — `RentaCCAA` duplicates
    `src/aeat/domain/profile/_ccaa.py:13` `CCAA` with incompatible
    value spaces.
@@ -1245,7 +1274,9 @@ observation type lives in `domain/renta/` — wrong layer.
 #### Renta-specific governance gaps
 
 - Dual CCAA enum problem must be collapsed to one canonical enum.
-- `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` must move into the registry.
+- The old `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` migration demand is
+  superseded by the current accepted design: Renta owns category routing
+  and the registry validates target casillas at snapshot construction.
 - Observation-type layer assignment: `RentaDeductibleExpenseObservation`
   should live in `application/aggregation`, not in `domain/renta/`.
 - Cross-model relations backfill across revisions for 2020–2024.
@@ -1280,12 +1311,15 @@ Inputs: `iva.cuota-devengada-total` is computed (formula sums 4
 `selector` that is `Mapping[str, str|int|DecimalValue|bool|tuple[str,...]]`.
 UNTYPED SEAM at `_schema.py:817`.
 
-Cross-period edge (303 → 390): TYPED at `_relations.py:23` carrying
-`source_output: str`. At `_relations.py:199`: `value =
-matches[0].casilla_values.get(requirement.source_output)`. UNTYPED
-SEAM #2: `casilla_values: Mapping[str, Decimal]` at `_bindings.py:74`.
-Key is plain `str`. Provenance does not survive this hop — value
-enters as a bare `Decimal`.
+Cross-period edge (303 → 390): currentized 2026-06-29. The fold-in
+requirement is `RegistryFoldRequirement` (`_relations.py:40`) carrying
+`source_modelo: ModeloId` and `source_casilla_ids: tuple[CasillaId,
+...]`. Observation folding extracts
+`requirement.source_casilla_ids[0]` from the
+`RegistryModeloObservation.casilla_values` view, which is keyed by
+`CasillaId` (`_observation_fold.py:38-53`). The old `source_output`
+string-key seam is closed. Provenance still does not survive the hop
+into formula evaluation — the value enters as a bare `Decimal`.
 
 Legal grounding: attached at casilla, formula, and relation levels.
 All three reference `rd-439-2007:art-109` but this overlap is
@@ -1321,14 +1355,17 @@ Inputs: `relation_values: Mapping[str, Decimal]` assembled by
 `resolve_relation_values_from_observations` at `_relations.py:133`.
 
 Cross-modelo edge: relation `renta-2025-rel-130-pagos-fraccionados`
-(`2025.toml:8310`) declares `kind="cross_model_output"`,
-`source_modelo="130"`, `source_output="19"`. TYPED at
-`_schema.py:943`. However `source_output: CasillaId | str` —
-`_schema.py:955` — the `| str` arm means no constraint.
+(`2025.toml`) declares `kind="cross_model_output"`,
+`source_modelo="130"`, `source_casilla_id="19"`. Current schema uses
+`source_modelo: ModeloId` and `source_casilla_id: CasillaId`
+(`_schema_surfaces.py:482-484`), and the registry validator checks the
+source casilla against matching source revisions. The legacy
+`source_output` key is rejected.
 
-By the time the value reaches `casilla_values.get(...)`, the type
-system can no longer distinguish a valid casilla id from an arbitrary
-string. SHAPE TRANSITION #2 (`CasillaId | str` → `str`).
+By the time the value reaches formula evaluation, the casilla-id type
+has survived the fold-in lookup, but the source filing provenance has
+not: the formula receives a `Decimal` relation value, not the observed
+source modelo/period/year/casilla envelope that produced it.
 
 Return is `Decimal`; no provenance link back to the M130 period or
 formula that produced it.
@@ -1345,22 +1382,26 @@ links to `ExportFieldDefinition` records by ID. UNTYPED SEAM #6 at
 
 #### Ranked untyped seams and shape transitions
 
-1. UNTYPED SEAM #2/#5 — `casilla_values: Mapping[str, Decimal]` in
-   `RegistryFilingObservation` + `casilla_values.get(requirement.source_output)`
-   in `_relations.py:199`. Most information lost.
+1. VALUE-PROVENANCE SEAM — relation fold-in resolves typed
+   source-casilla observations to bare `Decimal` relation values before
+   formula evaluation. Source modelo, filing year, period, source
+   casilla, and observation provenance are no longer carried as a typed
+   value envelope.
 2. SHAPE TRANSITION #1 — Form numeric casilla number vs semantic
    registry ID.
 3. UNTYPED SEAM #3 — `RegistryCalculationResult.values: Mapping[str,
    Decimal]` (`_formula_runtime.py:43`).
 4. UNTYPED SEAM #1 — `DataBindingDefinition.selector: Mapping[str, str
    | int | DecimalValue | bool | tuple[str,...]]` (`_schema.py:817`).
-5. SHAPE TRANSITION #2 — `RelationDefinition.source_output: CasillaId
-   | str` → `str` in `RegistryRelationSourceRequirement`
-   (`_relations.py:31,65`).
-6. UNTYPED SEAM #4 — `ResolvedExportLayout.fields_by_casilla:
+5. UNTYPED SEAM #4 — `ResolvedExportLayout.fields_by_casilla:
    Mapping[str, tuple[ExportFieldDefinition,...]]` (`_export.py:31`).
-7. UNTYPED SEAM #6 — `WorkbookParityReference.output_cells:
-   Mapping[str, str]` (`_schema.py:429`).
+6. PARITY-FIXTURE RESOLUTION — `WorkbookParityReference.fixture_id` is
+   now typed as `WorkbookFixtureId`, and `output_cells` is keyed by
+   `WorkbookOutputId`; the remaining gap is that fixture IDs do not
+   resolve against a declared fixture catalogue.
+7. RELATION-SELECTOR SHAPE — closed on 2026-06-29:
+   `RelationDefinition.source_revision_selector` and `period_alignment`
+   now store typed selector models.
 
 ### Wave 2 — Agent 8 — New-modelo onboarding stress test (Modelo 232)
 
@@ -1404,8 +1445,9 @@ settled.
    registry-wide test enforces what informative modelos without an
    oracle must do.
 7. Workbook export. Each revision inline-declares `export_layouts`.
-   `WorkbookParityReference.fixture_id` is free string. No
-   registry-level lookup.
+   `WorkbookParityReference.fixture_id` is a `WorkbookFixtureId`
+   pattern-constrained alias, not a free string. No fixture-catalogue
+   lookup exists at registry level.
 8. Persistence. `RegistryCalculationEntry` does not exist as a named
    type. Persistence goes through generic `Envelope` + `blob_store`
    infrastructure. Caller assigns `SensitivityClass` at write time.
@@ -1522,7 +1564,8 @@ selector as untyped sub-schema:
 
 - `_schema.py:817` — DataBindingDefinition.selector for 10+ binding
   sources.
-- `_schema.py:954,957` — source_revision_selector, period_alignment.
+- Currentized 2026-06-29 — relation `source_revision_selector` and
+  `period_alignment` are now typed models in `_schema_surfaces.py`.
 - `_queries.py:99` — Public query row exposes selector as opaque
   mapping.
 
@@ -1637,10 +1680,11 @@ id), within-revision (`_validate.py:248`), and registry-tree level
 #### Workbook fixture data
 
 `WorkbookParityReference` declared inline in revision TOML.
-`output_cells: Mapping[str, str]` maps scenario output label → casilla
-id. In data files (TOML). `fixture_id: str` is opaque string — no
-registry-side check that a fixture with that id actually exists at
-load time.
+`output_cells: Mapping[WorkbookOutputId, WorkbookCellRefStr]` maps
+scenario output label to workbook cells. In data files (TOML),
+`fixture_id: WorkbookFixtureId` is pattern-constrained, but there is
+still no registry-side check that a fixture with that id actually
+exists at load time.
 
 #### Legal corpus referential integrity
 
@@ -1660,15 +1704,19 @@ known catalogue entries.
 1. Legal and source ref IDs are plain strings at parse time. Typo
    passes parse time and is only caught during explicit
    validate_modelo / validate_registry calls.
-2. `fixture_id` on `WorkbookParityReference` is opaque string, never
-   resolved.
-3. `validation_refs` on `CasillaDefinition` is `tuple[str, ...]` with
-   no catalogue check. No `_missing_refs` call exists in
-   `_validate.py`. Typos here are permanently silent.
+2. `fixture_id` on `WorkbookParityReference` is a `WorkbookFixtureId`
+   alias, but it is never resolved against a declared fixture catalogue.
+3. Currentized 2026-06-29: the old `validation_refs` field on
+   `CasillaDefinition` has been removed, so this specific silent-reference
+   channel is closed. Exact grep now finds `validation_refs` only in
+   historical vault prose.
 4. `AlgorithmBindingDefinition.inputs` and `outputs` are `Mapping[str,
    str]`-like unions with no intra-revision resolution at load time.
-5. Cross-modelo `source_modelo` references validated only during full
-   `validate_registry`, not `validate_modelo`.
+5. Currentized 2026-06-29: cross-modelo `source_modelo` references are
+   validated during full `validate_registry`, not `validate_modelo`.
+   This is the intended boundary because the source-modelo tree is not
+   available to a single-model validator; `ValidatedRegistryAuthority`
+   runs the full gate at load before production snapshots are served.
 6. Directory-mode revision files can be loaded partially without
    duplicate-check coverage.
 
@@ -2205,9 +2253,10 @@ plus the rows tagged `open` or `wontfix-document`. Results:
 | wontfix-confirmed | 4     | matches the inventory's `wontfix-document` label |
 | unverified        | 1     | script could not produce a definitive verdict   |
 
-The 11 regressed rows (`R007`, `R008`, `R009`, `R011`, `R025`,
-`R050`, `R053`, `R096`, `R097`, `R101`, `R102`) reset the
-headline closure number. The earlier "98 / 102 closed (96%)"
+The historical 11 regressed rows in that re-audit sample (`R007`,
+`R008`, `R009`, `R011`, `R025`, `R050`, `R053`, `R096`, `R097`,
+`R101`, `R102`) reset the headline closure number at the time. The
+earlier "98 / 102 closed (96%)"
 figure is wrong in two ways: (a) it was extrapolated from
 inventory edits rather than verified, and (b) the sample shows
 ~31% of claimed-fixed rows in this set are not actually fixed.
@@ -2215,14 +2264,35 @@ inventory edits rather than verified, and (b) the sample shows
 their original execution-time status with a `(unverified by
 re-audit)` qualifier.
 
+Current-state correction (2026-06-29): `R008`, `R009`, `R011`, and
+`R025` no longer belong in the live regressed set. `R008` and `R009`
+are closed because `RelationDefinition` now declares
+`source_revision_selector: RelationRevisionSelector` and
+`period_alignment: RelationPeriodAlignment`, rejecting legacy revision
+aliases, empty alignment maps, and retired `same_period` mode at schema
+construction. `R011` is closed because `RelationDefinition` now declares
+`source_casilla_id: CasillaId`, legacy `source_output` is rejected, and
+production code has no `relation.source_output` access. `R025` is
+closed because the first-slice Renta routing table is typed, canonical
+within the Renta domain, and validated against Modelo 100 casillas at
+snapshot construction.
+
 Honest headline: **structural delivery is mixed.** Concrete typed-
-envelope work (CasillaObservation, capability flags, OracleId
-field on schema, typed CLI payloads, registry data backfill for
-M100 cross_model_output, M303 form_number) did land. The
-discriminated-union work on selectors, the `_check_all_id_references`
-wiring, the workflow-step typed details, the FilingDraft typed
-identity and snapshot reference, the `--relation` CLI surface, and
-the OracleFilingObservation subtype did not.
+envelope work (CasillaObservation, relation selector models, capability
+flags, OracleId field on schema, typed CLI payloads, registry data
+backfill for M100 cross_model_output, M303 form_number) did land. The
+broad stored binding-selector alias, workflow-step typed details, the
+FilingDraft typed identity and snapshot reference, the `--relation` CLI
+surface, and the OracleFilingObservation subtype did not.
+
+Current-state correction (2026-06-29): `_check_all_id_references`
+is wired into snapshot construction at `_snapshot.py:174`, so R021 is
+closed for the production snapshot path. Relation closure is also
+closed for production access: `ValidatedRegistryAuthority.load` runs
+full-tree `validate_registry`, whose registry-scope gate calls
+`validate_relation_closure`. Remaining validation-order questions
+should be scoped to standalone diagnostics and selector-shape surfaces,
+not to `build_snapshot`.
 
 ### Wontfix-document rationale
 

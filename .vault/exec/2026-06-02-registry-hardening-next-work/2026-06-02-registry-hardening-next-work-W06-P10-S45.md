@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#registry-hardening-next-work'
 date: '2026-06-04'
-modified: '2026-06-04'
+modified: '2026-06-29'
 step_id: 'S45'
 related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
@@ -31,3 +31,11 @@ closure-only rows. The full `test_record_design.py` gate passed with 41 tests.
 
 Verification also passed for `test_committed_registry.py` and
 `test_registry_reviewability.py`.
+
+## Current State - 2026-06-29
+
+This repair record is historical. Subsequent current registry work made
+`2023-y-siguientes` casillas `27` and `45` formula-backed official Diseño
+projection targets, so they are again valid completeness-manifest members for
+that revision. The current split is: `2009-y-siguientes` excludes `27` and `45`
+from closure and manifest; `2023-y-siguientes` includes them in both.
