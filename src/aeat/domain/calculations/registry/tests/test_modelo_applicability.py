@@ -273,6 +273,8 @@ def test_modelo_721_uses_crypto_abroad_threshold_not_modelo_720_bienes_fact() ->
     assert derive_modelo_applicability(base_profile, "720").verdict is ApplicabilityVerdict.INCOMPLETE
     base_721 = derive_modelo_applicability(base_profile, "721")
     assert base_721.verdict is ApplicabilityVerdict.INCOMPLETE
+    assert "monedas virtuales" in base_721.reason
+    assert "alquileres sujetos a retención" not in base_721.reason
     assert "ley-58-2003:da-18" in base_721.legal_refs
     assert "orden-hfp-886-2023:art-2" in base_721.legal_refs
 
