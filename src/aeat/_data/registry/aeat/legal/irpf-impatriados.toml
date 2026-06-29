@@ -87,6 +87,27 @@ required_text = [
     "modelo de comunicación",
 ]
 
+[legal."orden-eha-2887-2008:modelo-151"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-2887-2008.html#modelo-151"
+document_id = "BOE-A-2008-16237"
+article = "modelo 151"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-16237"
+published_at = 2008-10-08
+effective_from = 2008-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "codex"
+notes = "Orden EHA/2887/2008: aprueba el Modelo 151 de declaracion del IRPF para contribuyentes en el regimen especial aplicable a trabajadores desplazados a territorio espanol."
+required_text = [
+    "se aprueba el modelo 151 de declaración",
+    "régimen especial aplicable a los trabajadores desplazados",
+    "Esta orden aprueba el Modelo 151",
+    "artículo 93 de la Ley 35/2006",
+]
+
 [sources."aeat-modelo-151-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"

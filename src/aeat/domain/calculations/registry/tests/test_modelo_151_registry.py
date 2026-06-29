@@ -6,8 +6,11 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, load_registry_tree
+from .._legal import verify_legal_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_M151_FORM_ORDER_REF = "orden-eha-2887-2008:modelo-151"
 
 
 def _load_modelo_151() -> tuple[ModeloDefinition, RegistryCatalogues]:
@@ -50,3 +53,19 @@ def test_modelo_151_legal_authority_is_ley_35_2006_art_93() -> None:
     impatriado = next(c for c in revision.constructs if c.id == "m151-impatriado-calculation")
     assert "ley-35-2006:art-93" in impatriado.legal_refs
     assert "ley-35-2006:art-93" in catalogues.legal
+
+
+def test_modelo_151_form_order_is_boe_corpus_backed() -> None:
+    modelo, catalogues = _load_modelo_151()
+    revision = modelo.revisions["2015-y-siguientes"]
+    legal = {_M151_FORM_ORDER_REF: catalogues.legal[_M151_FORM_ORDER_REF]}
+
+    verify_legal_catalogue(legal, source_root=bundled_path())
+
+    assert _M151_FORM_ORDER_REF in modelo.legal_refs
+    assert _M151_FORM_ORDER_REF in revision.legal_refs
+    assert revision.orden_aplicabilidad == (_M151_FORM_ORDER_REF,)
+    reference = legal[_M151_FORM_ORDER_REF]
+    assert reference.document_id == "BOE-A-2008-16237"
+    assert reference.kind == "orden"
+    assert reference.article == "modelo 151"
