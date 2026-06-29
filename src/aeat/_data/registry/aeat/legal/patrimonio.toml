@@ -88,6 +88,27 @@ required_text = [
     "300.000 euros",
 ]
 
+[legal."orden-hac-1023-2021:modelo-714"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1023-2021-modelo-714.html#modelo-714"
+document_id = "BOE-A-2021-7593"
+article = "modelo 714"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-7593"
+published_at = 2021-09-28
+effective_from = 2021-09-28
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "codex"
+notes = "Orden HAC/1023/2021: aprueba los modelos de declaracion del Impuesto sobre el Patrimonio, ejercicio 2021 y siguientes, incluido el Modelo 714."
+required_text = [
+    "se aprueban los modelos de declaración",
+    "ejercicio 2021 y siguientes",
+    "aprueba el Modelo 714",
+    "Impuesto sobre el Patrimonio",
+]
+
 [sources."aeat-modelo-714-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"

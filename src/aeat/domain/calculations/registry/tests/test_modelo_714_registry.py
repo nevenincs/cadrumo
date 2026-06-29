@@ -71,6 +71,7 @@ _PATRIMONIO_LEGAL_REFS = (
     "ley-19-1991:art-30",
     "ley-19-1991:art-31",
 )
+_PATRIMONIO_FORM_ORDER_REF = "orden-hac-1023-2021:modelo-714"
 
 
 def _load_modelo_714() -> tuple[ModeloDefinition, RegistryCatalogues]:
@@ -140,6 +141,23 @@ def test_modelo_714_legal_refs_are_boe_corpus_backed() -> None:
     assert "80 por 100" in art31_required_text
 
 
+def test_modelo_714_form_order_is_boe_corpus_backed() -> None:
+    modelo, catalogues = _load_modelo_714()
+    revision = modelo.revisions["2021-y-siguientes"]
+    legal = {_PATRIMONIO_FORM_ORDER_REF: catalogues.legal[_PATRIMONIO_FORM_ORDER_REF]}
+
+    verify_legal_catalogue(legal, source_root=bundled_path())
+
+    assert _PATRIMONIO_FORM_ORDER_REF in modelo.legal_refs
+    assert _PATRIMONIO_FORM_ORDER_REF in revision.legal_refs
+    assert revision.orden_aplicabilidad == (_PATRIMONIO_FORM_ORDER_REF,)
+    reference = legal[_PATRIMONIO_FORM_ORDER_REF]
+    assert reference.document_id == "BOE-A-2021-7593"
+    assert reference.kind == "orden"
+    assert reference.article == "modelo 714"
+    assert "ejercicio 2021 y siguientes" in reference.required_text
+
+
 def test_modelo_714_revision_2021_declares_constructs() -> None:
     modelo, _ = _load_modelo_714()
     revision = modelo.revisions["2021-y-siguientes"]
@@ -201,6 +219,7 @@ def test_modelo_714_snapshot_builds_for_2021_event_period() -> None:
         period="0A",
     )
     assert snapshot.revision.id == "2021-y-siguientes"
+    assert _PATRIMONIO_FORM_ORDER_REF in snapshot.legal
 
 
 @pytest.mark.parametrize(
