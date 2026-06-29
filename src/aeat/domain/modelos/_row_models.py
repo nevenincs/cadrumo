@@ -43,6 +43,7 @@ from ...core.external_constants import M347_THRESHOLD_EUR as M347_THRESHOLD_EUR 
 
 _NifStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=20)]
 _NameStr = Annotated[str, StringConstraints(strip_whitespace=True, max_length=200)]
+_RequiredNameStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 _IsoCountryCode = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=2)]
 
 
@@ -305,7 +306,7 @@ class Modelo349OperadorRow(BaseModel):
     row_type: Literal["operador"] = "operador"
     codigo_pais: _IsoCountryCode
     nif_comunitario: _NifStr
-    razon_social: _NameStr = Field(default="")
+    razon_social: _RequiredNameStr
     clave_operacion: _M349_CLAVE_OPERACION
     importe: Decimal = Field(description="Base imponible o importe de la operacion en EUR")
 

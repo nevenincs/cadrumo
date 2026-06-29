@@ -192,17 +192,13 @@ class TestValidateM184ShareSum:
 
 
 class TestParseRowSpecM349:
-    def test_parse_operador_minimal(self) -> None:
-        """Minimal operador spec with required fields parses to Modelo349OperadorRow."""
-        result = _parse_row_spec("operador codigo_pais=DE nif_comunitario=DE123456789 clave_operacion=E importe=50000")
-        assert isinstance(result, Modelo349OperadorRow)
-        assert result.codigo_pais == "DE"
-        assert result.nif_comunitario == "DE123456789"
-        assert result.clave_operacion == "E"
-        assert result.importe == Decimal("50000")
+    def test_parse_operador_missing_razon_social_raises(self) -> None:
+        """M349 operador rows require the official apellidos/razon-social field."""
+        with pytest.raises(typer.BadParameter, match="razon_social"):
+            _parse_row_spec("operador codigo_pais=DE nif_comunitario=DE123456789 clave_operacion=E importe=50000")
 
     def test_parse_operador_with_razon_social(self) -> None:
-        """operador spec with optional razon_social round-trips."""
+        """operador spec with required razon_social round-trips."""
         result = _parse_row_spec(
             "operador codigo_pais=FR nif_comunitario=FR12345678901 "
             "razon_social=EntidadFR clave_operacion=S importe=30000",
@@ -213,29 +209,43 @@ class TestParseRowSpecM349:
 
     def test_parse_operador_type_case_insensitive(self) -> None:
         """TYPE token is lowercased before dispatch."""
-        result = _parse_row_spec("OPERADOR codigo_pais=IT nif_comunitario=IT12345678901 clave_operacion=M importe=1000")
+        result = _parse_row_spec(
+            "OPERADOR codigo_pais=IT nif_comunitario=IT12345678901 razon_social=EntidadIT "
+            "clave_operacion=M importe=1000",
+        )
         assert isinstance(result, Modelo349OperadorRow)
 
     def test_parse_operador_invalid_nif_format_raises(self) -> None:
         """operador with NIF not matching the country pattern raises BadParameter."""
         with pytest.raises(typer.BadParameter, match="NIF-IVA"):
             # DE requires 9 digits; this has only 8
-            _parse_row_spec("operador codigo_pais=DE nif_comunitario=DE12345678 clave_operacion=E importe=1000")
+            _parse_row_spec(
+                "operador codigo_pais=DE nif_comunitario=DE12345678 razon_social=EntidadDE "
+                "clave_operacion=E importe=1000",
+            )
 
     def test_parse_operador_unsupported_country_rejected(self) -> None:
         """operador rejects country prefixes absent from the Modelo 349 table."""
         with pytest.raises(typer.BadParameter, match="NIF-IVA"):
-            _parse_row_spec("operador codigo_pais=ZZ nif_comunitario=BADVAT clave_operacion=E importe=1000")
+            _parse_row_spec(
+                "operador codigo_pais=ZZ nif_comunitario=BADVAT razon_social=EntidadZZ clave_operacion=E importe=1000",
+            )
 
     def test_parse_operador_invalid_clave_raises(self) -> None:
         """Invalid clave_operacion raises BadParameter."""
         with pytest.raises(typer.BadParameter):
-            _parse_row_spec("operador codigo_pais=DE nif_comunitario=DE123456789 clave_operacion=Z importe=1000")
+            _parse_row_spec(
+                "operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=EntidadDE "
+                "clave_operacion=Z importe=1000",
+            )
 
     def test_parse_operador_negative_importe_raises(self) -> None:
         """Negative importe raises BadParameter."""
         with pytest.raises(typer.BadParameter):
-            _parse_row_spec("operador codigo_pais=DE nif_comunitario=DE123456789 clave_operacion=E importe=-100")
+            _parse_row_spec(
+                "operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=EntidadDE "
+                "clave_operacion=E importe=-100",
+            )
 
 
 class TestParseRowSpecM347:

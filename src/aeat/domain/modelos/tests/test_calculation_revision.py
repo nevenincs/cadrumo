@@ -526,6 +526,7 @@ def test_detail_rows_sort_key_handles_all_four_row_types() -> None:
     m349_row = Modelo349OperadorRow(
         codigo_pais="DE",
         nif_comunitario="DE123456789",
+        razon_social="Deutschland GmbH",
         clave_operacion="E",
         importe=Decimal("300.00"),
     )

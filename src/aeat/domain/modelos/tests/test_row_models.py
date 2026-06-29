@@ -116,10 +116,34 @@ _M232_INVALID_CASES = (
 
 _M349_INVALID_ROW_CASES = (
     _ValidationErrorCase(
+        "missing-razon-social",
+        lambda: Modelo349OperadorRow.model_validate(
+            {
+                "codigo_pais": "DE",
+                "nif_comunitario": "DE123456789",
+                "clave_operacion": "E",
+                "importe": Decimal("1"),
+            },
+        ),
+        "razon_social",
+    ),
+    _ValidationErrorCase(
+        "blank-razon-social",
+        lambda: Modelo349OperadorRow(
+            codigo_pais="DE",
+            nif_comunitario="DE123456789",
+            razon_social="   ",
+            clave_operacion="E",
+            importe=Decimal("1"),
+        ),
+        "razon_social",
+    ),
+    _ValidationErrorCase(
         "negative-importe",
         lambda: Modelo349OperadorRow(
             codigo_pais="DE",
             nif_comunitario="DE123456789",
+            razon_social="Entidad DE",
             clave_operacion="E",
             importe=Decimal("-1"),
         ),
@@ -130,6 +154,7 @@ _M349_INVALID_ROW_CASES = (
         lambda: Modelo349OperadorRow(
             codigo_pais="de",
             nif_comunitario="DE123456789",
+            razon_social="Entidad DE",
             clave_operacion="E",
             importe=Decimal("1"),
         ),
@@ -140,6 +165,7 @@ _M349_INVALID_ROW_CASES = (
             {
                 "codigo_pais": "DE",
                 "nif_comunitario": "DE123456789",
+                "razon_social": "Entidad DE",
                 "clave_operacion": "Z",
                 "importe": Decimal("1"),
             },
@@ -519,26 +545,18 @@ class TestModelo349OperadorRow:
         row = Modelo349OperadorRow(
             codigo_pais="FR",
             nif_comunitario="fr12345678901",
+            razon_social="France SARL",
             clave_operacion="S",
             importe=Decimal("1"),
         )
         assert row.nif_comunitario == "FR12345678901"
-
-    def test_razon_social_defaults_empty(self) -> None:
-        """razon_social defaults to empty string."""
-        row = Modelo349OperadorRow(
-            codigo_pais="IT",
-            nif_comunitario="IT12345678901",
-            clave_operacion="M",
-            importe=Decimal("1000"),
-        )
-        assert row.razon_social == ""
 
     def test_importe_zero_is_valid(self) -> None:
         """importe=0 is valid per Orden HAC/174/2020 (zero-value ops can appear)."""
         row = Modelo349OperadorRow(
             codigo_pais="PT",
             nif_comunitario="PT123456789",
+            razon_social="Portugal LDA",
             clave_operacion="T",
             importe=Decimal("0"),
         )
@@ -554,6 +572,7 @@ class TestModelo349OperadorRow:
         row = Modelo349OperadorRow(
             codigo_pais="DE",
             nif_comunitario="DE123456789",
+            razon_social="Deutschland GmbH",
             clave_operacion="E",
             importe=Decimal("1"),
         )
@@ -569,12 +588,14 @@ class TestModelo349OperadorRow:
         row1 = Modelo349OperadorRow(
             codigo_pais="DE",
             nif_comunitario="DE123456789",
+            razon_social="Deutschland GmbH",
             clave_operacion="E",
             importe=Decimal("50000"),
         )
         row2 = Modelo349OperadorRow(
             codigo_pais="FR",
             nif_comunitario="FR12345678901",
+            razon_social="France SARL",
             clave_operacion="S",
             importe=Decimal("30000"),
         )
@@ -582,6 +603,7 @@ class TestModelo349OperadorRow:
         row1_modified = Modelo349OperadorRow(
             codigo_pais="DE",
             nif_comunitario="DE123456789",
+            razon_social="Deutschland GmbH",
             clave_operacion="E",
             importe=Decimal("75000"),
         )
@@ -762,6 +784,7 @@ class TestRevisionIdAcrossAllFourRowTypes:
         return Modelo349OperadorRow(
             codigo_pais="DE",
             nif_comunitario="DE123456789",
+            razon_social="Deutschland GmbH",
             clave_operacion="E",
             importe=Decimal("3000"),
         )
@@ -840,6 +863,7 @@ class TestRevisionIdAcrossAllFourRowTypes:
                 Modelo349OperadorRow(
                     codigo_pais="DE",
                     nif_comunitario="DE123456789",
+                    razon_social="Deutschland GmbH",
                     clave_operacion="E",
                     importe=Decimal("1000"),
                 ),
@@ -851,6 +875,7 @@ class TestRevisionIdAcrossAllFourRowTypes:
                 Modelo349OperadorRow(
                     codigo_pais="FR",
                     nif_comunitario="FR12345678901",
+                    razon_social="France SARL",
                     clave_operacion="E",
                     importe=Decimal("1000"),
                 ),
