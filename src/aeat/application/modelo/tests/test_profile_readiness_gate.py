@@ -39,6 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 6, 27, 12, 0, 0, tzinfo=UTC)
 _M130_REVISION = "2019-y-siguientes"
+_M200_REVISION = "2024-y-siguientes"
 _M303_REVISION = "2023-y-siguientes"
 
 
@@ -92,6 +93,27 @@ def _store_ready_profile(bucket_id: str, *, activity_start_date: date) -> None:
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
                 UserProfileFact(path="censo.activity_start_date", value=activity_start_date),
+            ),
+            created_at=_NOW,
+            updated_at=_NOW,
+        ),
+    )
+
+
+def _store_nonresident_legal_entity_profile(bucket_id: str) -> None:
+    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name="NordHaus GmbH",
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="B66012345"),
+                UserProfileFact(path="identity.legal_name", value="NordHaus GmbH"),
+                UserProfileFact(path="activities.description", value="Spanish-source services"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
+                UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
+                UserProfileFact(path="taxpayer_type.fiscal_residency", value="non_resident_irnr"),
+                UserProfileFact(path="taxpayer_type.country_of_fiscal_residence", value="DE"),
             ),
             created_at=_NOW,
             updated_at=_NOW,
@@ -216,6 +238,36 @@ def test_create_work_unit_service_refuses_period_year_mismatch_with_typed_error(
         assert len(repository.load()) == 0
 
 
+def test_create_work_unit_service_refuses_nonresident_legal_entity_m200(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="nordhaus") as profile:
+        _store_nonresident_legal_entity_profile("nordhaus")
+        repository = WorkUnitCatalogueRepository(objects=profile.repository)
+
+        with pytest.raises(ModeloProfileReadinessError) as excinfo:
+            create_work_unit(
+                bucket_id="nordhaus",
+                modelo=Modelo.M200.value,
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "0A"),
+                revision_id=_M200_REVISION,
+                repository=repository,
+                clock=_NOW,
+            )
+
+        assert "NON_RESIDENT_IRNR" in str(excinfo.value)
+        assert "establecimiento permanente" in str(excinfo.value)
+        assert excinfo.value.context == {
+            "bucket_id": "nordhaus",
+            "modelo": Modelo.M200.value,
+            "applicability_verdict": "not_applicable",
+            "legal_refs": (
+                "ley-27-2014:art-124, trlirnr-rdleg-5-2004:art-2, "
+                "trlirnr-rdleg-5-2004:art-24"
+            ),
+        }
+        assert len(repository.load()) == 0
+
+
 def test_mark_verified_service_refuses_existing_work_unit_with_incomplete_profile(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator"):
         _store_incomplete_profile("operator")
@@ -249,6 +301,36 @@ def test_calculate_service_refuses_existing_work_unit_with_incomplete_profile(tm
                 work_unit_repository=repository,
                 clock=_NOW,
             )
+
+
+def test_calculate_service_refuses_existing_nonresident_legal_entity_m200(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="nordhaus") as profile:
+        _store_nonresident_legal_entity_profile("nordhaus")
+        work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
+        calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        work_unit = _store_work_unit(
+            work_repository,
+            bucket_id="nordhaus",
+            modelo=Modelo.M200,
+            filing_year=2026,
+            period_code="0A",
+            revision_id=_M200_REVISION,
+        )
+
+        with pytest.raises(ModeloProfileReadinessError) as excinfo:
+            calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs={},
+                binding_values={},
+                work_unit_repository=work_repository,
+                calculation_repository=calculation_repository,
+                clock=_NOW,
+            )
+
+        assert "NON_RESIDENT_IRNR" in str(excinfo.value)
+        assert "establecimiento permanente" in str(excinfo.value)
+        assert len(calculation_repository.load()) == 0
 
 
 def test_create_work_unit_service_refuses_pre_activity_m303_and_persists_no_work_unit(tmp_path: Path) -> None:

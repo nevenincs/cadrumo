@@ -614,7 +614,7 @@ def _build_modelo_readiness(
     if not requests or active_profile_id is None:
         return ()
 
-    from .modelo._profile_readiness_gate import pre_activity_period_refusal
+    from .modelo._profile_readiness_gate import modelo_applicability_refusal, pre_activity_period_refusal
     from .user_profile._orchestration import build_lifecycle_service
     from .user_profile._preflight import ProfilePreflightService
     from .workflow import read_profile_bucket_by_id
@@ -637,6 +637,13 @@ def _build_modelo_readiness(
             revision=revision,
         )
         profile_refusal = ""
+        applicability_refusal = modelo_applicability_refusal(
+            record=record,
+            bucket_id=pointer.bucket_id,
+            modelo=request.modelo,
+        )
+        if applicability_refusal is not None:
+            profile_refusal = applicability_refusal[0]
         pre_activity_refusal = pre_activity_period_refusal(
             record=record,
             bucket_id=pointer.bucket_id,
@@ -644,7 +651,7 @@ def _build_modelo_readiness(
             filing_year=request.filing_year,
             period=readiness_period,
         )
-        if pre_activity_refusal is not None:
+        if not profile_refusal and pre_activity_refusal is not None:
             profile_refusal = pre_activity_refusal[0]
         profile_ready = profile_report.ready and not profile_refusal
         ledger_report = None

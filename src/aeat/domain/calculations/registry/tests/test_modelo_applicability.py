@@ -163,6 +163,36 @@ def test_non_resident_irnr_natural_person_does_not_owe_modelo_100() -> None:
     assert "trlirnr-rdleg-5-2004:art-2" in result.legal_refs
 
 
+def test_non_resident_irnr_legal_entity_without_pe_does_not_owe_modelo_200() -> None:
+    """Declared IRNR non-residency must not be treated as resident-company M200."""
+
+    resident_company = TaxpayerProfile(
+        tax_id="B66012345",
+        entity_type=EntityType.LEGAL_ENTITY,
+        legal_entity_form=LegalEntityForm.SL,
+        iva_regime=IVARegime.GENERAL,
+    )
+    non_resident_company = TaxpayerProfile(
+        tax_id="B66012345",
+        entity_type=EntityType.LEGAL_ENTITY,
+        legal_entity_form=LegalEntityForm.SL,
+        iva_regime=IVARegime.GENERAL,
+        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        country_of_fiscal_residence="DE",
+    )
+
+    assert derive_modelo_applicability(resident_company, "200").verdict is ApplicabilityVerdict.APPLICABLE
+
+    result = derive_modelo_applicability(non_resident_company, "200")
+
+    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert result.applicable is False
+    assert "NON_RESIDENT_IRNR" in result.reason
+    assert "establecimiento permanente" in result.reason
+    assert "trlirnr-rdleg-5-2004:art-2" in result.legal_refs
+    assert "trlirnr-rdleg-5-2004:art-24" in result.legal_refs
+
+
 def test_objective_estimation_boolean_without_declared_regime_routes_to_m131() -> None:
     """An autónomo who flags módulos but leaves the regime undeclared owes M131, not M130.
 
