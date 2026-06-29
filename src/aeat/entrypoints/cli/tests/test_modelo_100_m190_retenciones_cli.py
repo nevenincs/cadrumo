@@ -1,0 +1,150 @@
+"""CLI reproduction for M100/2025 work-retention binding equivalence."""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from datetime import UTC, date, datetime
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from ....application.calculations import CalculationObservationRepository
+from ....application.modelo import APP_FILING_SOURCE_KIND
+from ....application.user_profile._repository import UserProfileLifecycleRepository
+from ....domain.calculations.registry import RegistryModeloObservation
+from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+from ....tests.cli_runner import invoke_cached_cli
+from ....tests.registry_observations import registry_grounded_observations
+from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from .envelope_helpers import unwrap_schema_envelope as _payload
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_PROFILE_ID = "m100-m190-retenciones-cli"
+_CAPTURED_AT = datetime(2026, 6, 29, 12, 0, tzinfo=UTC)
+
+
+@pytest.fixture
+def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with isolated_cli_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id=_PROFILE_ID,
+        label="M100 M190 retenciones CLI profile",
+    ) as profile:
+        yield profile
+
+
+def _seed_m100_2025_profile(runtime_profile: TestRuntimeProfile) -> None:
+    record = UserProfileRecord(
+        schema_id="aeat.user_profile",
+        schema_version=1,
+        profile_id=_PROFILE_ID,
+        display_name="M100 M190 retenciones CLI profile",
+        status=UserProfileStatus.ACTIVE,
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="identity.name", value="Marta"),
+            UserProfileFact(path="identity.surnames", value="Retenciones"),
+            UserProfileFact(path="activities.description", value="economic activity"),
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
+            UserProfileFact(path="renta_taxpayer.sex", value="H"),
+            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
+            UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
+            UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
+            UserProfileFact(path="filing_export.declaration_type", value="1"),
+            UserProfileFact(path="renta_family.minor_children_in_unit", value=Decimal("0")),
+            UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=Decimal("0")),
+            UserProfileFact(path="provenance.source", value="manual_cli"),
+        ),
+    )
+    UserProfileLifecycleRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository).save(record)
+
+
+def _create_m100_2025_work_unit() -> str:
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "100",
+            "--year",
+            "2025",
+            "--period",
+            "0A",
+            "--revision",
+            "2025",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    return _payload(result.output)["work_unit_id"]
+
+
+def _seed_prior_year_zero_carry(runtime_profile: TestRuntimeProfile) -> None:
+    CalculationObservationRepository(objects=runtime_profile.repository).save_observation(
+        RegistryModeloObservation(
+            modelo="100",
+            filing_year=2024,
+            period="0A",
+            observations=registry_grounded_observations(
+                modelo="100",
+                filing_year=2024,
+                period="0A",
+                casilla_values={"1391": Decimal("0")},
+            ),
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_CAPTURED_AT,
+    )
+
+
+def test_m100_2025_cli_m190_annual_retenciones_populates_0596(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """Real CLI reproduction: accepted M190 annual-retention binding affects 0596."""
+    _seed_m100_2025_profile(runtime_profile)
+    _seed_prior_year_zero_carry(runtime_profile)
+    work_unit_id = _create_m100_2025_work_unit()
+
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            work_unit_id,
+            "--casilla",
+            "0003=32000",
+            "--casilla",
+            "0102=9600",
+            "--binding",
+            "renta-2025-modelo-100-estimacion-directa-es-normal=1",
+            "--binding",
+            "renta-2025-modelo-184-atribucion-actividades-economicas=0",
+            "--binding",
+            "renta-2025-modelo-190-retenciones-anuales=4200",
+            "--relation",
+            "renta-2025-rel-130-pagos-fraccionados=0",
+            "--relation",
+            "renta-2025-rel-131-pagos-fraccionados=0",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = _payload(result.output)
+    assert Decimal(payload["casilla_values"]["0596"]) == Decimal("4200")
+    assert Decimal(payload["casilla_values"]["0609"]) == Decimal("4200")
