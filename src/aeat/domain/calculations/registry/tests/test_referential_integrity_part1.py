@@ -137,6 +137,34 @@ def test_bound_casilla_without_binding_definition_fails_snapshot_integrity() -> 
         build_minimal_snapshot(revision)
 
 
+def test_bound_casilla_dangling_alternate_binding_fails_snapshot_integrity() -> None:
+    """Alternate bound-casilla source slots are first-class binding references."""
+    binding = DataBindingDefinition(
+        id="test.binding",
+        source=BindingSourceKind.MANUAL_INPUT,
+        selector={
+            "record": "DPA",
+            "field": "test",
+            "offset": 1,
+            "length": 1,
+            "data_type": "integer",
+        },
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(REFERENCE_SOURCE_ID,),
+    )
+    casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(
+        update={
+            "input_kind": InputKind.BOUND,
+            "binding": "test.binding",
+            "alternate_bindings": ("nonexistent.binding",),
+        },
+    )
+    revision = minimal_revision(casillas=(casilla,), bindings=(binding,))
+
+    with pytest.raises(RegistryValidationError, match=r"casilla 01.alternate_bindings"):
+        build_minimal_snapshot(revision)
+
+
 def test_dangling_casilla_legal_refs() -> None:
     """casilla.legal_refs referencing a LegalRefId absent from snapshot.legal raises."""
     casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(

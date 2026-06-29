@@ -11,7 +11,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ._binding_selector_utils import selector_as_dict as _binding_selector_as_dict
-from ._bindings import CasillaObservation
+from ._bindings import CasillaObservation, bound_casilla_binding_ids, resolve_bound_casilla_binding_value
 from ._bindings_previous_filing import _PreviousModeloSelector
 from ._casilla_membership import casillas_by_id
 from ._errors import RegistryValidationError
@@ -111,8 +111,18 @@ def binding_values_with_absent_by_design_defaults(
 ) -> dict[BindingId, Decimal]:
     """Add structural zeroes for a :class:`ModeloRevision`'s absent-by-design bindings."""
     resolved = dict(binding_values)
+    equivalent_groups_by_binding: dict[BindingId, tuple[BindingId, ...]] = {
+        binding_id: group
+        for casilla in revision.casillas
+        if casilla.input_kind == InputKind.BOUND
+        for group in (bound_casilla_binding_ids(casilla),)
+        for binding_id in group
+    }
     for binding in revision.bindings:
         if binding.id in resolved:
+            continue
+        equivalent_group = equivalent_groups_by_binding.get(binding.id, (binding.id,))
+        if any(equivalent_id in resolved for equivalent_id in equivalent_group if equivalent_id != binding.id):
             continue
         if _binding_is_absent_by_design(binding, target_period=target_period):
             resolved[binding.id] = _ZERO
@@ -159,16 +169,18 @@ def _reject_computed_inputs(
 _OBSERVATION_BACKED_SLOT_SOURCES: frozenset[str] = frozenset({"previous_filing", "relation_prefill"})
 
 
-def _previous_filing_binding_for_bound_casilla(
+def _observation_backed_bindings_for_bound_casilla(
     casilla: CasillaDefinition,
     bindings_by_id: Mapping[BindingId, DataBindingDefinition],
-) -> DataBindingDefinition | None:
-    if casilla.input_kind != InputKind.BOUND or casilla.binding is None:
-        return None
-    binding = bindings_by_id.get(casilla.binding)
-    if binding is None or str(binding.source) not in _OBSERVATION_BACKED_SLOT_SOURCES:
-        return None
-    return binding
+) -> tuple[DataBindingDefinition, ...]:
+    if casilla.input_kind != InputKind.BOUND:
+        return ()
+    return tuple(
+        binding
+        for binding_id in bound_casilla_binding_ids(casilla)
+        if (binding := bindings_by_id.get(binding_id)) is not None
+        and str(binding.source) in _OBSERVATION_BACKED_SLOT_SOURCES
+    )
 
 
 def _reject_smuggled_previous_filing_inputs(
@@ -181,13 +193,13 @@ def _reject_smuggled_previous_filing_inputs(
     smuggled_previous_filing_bound = sorted(
         casilla_id
         for casilla_id in inputs
-        if (binding := _previous_filing_binding_for_bound_casilla(casillas[casilla_id], bindings_by_id)) is not None
-        and binding.id not in binding_values
+        if (bindings := _observation_backed_bindings_for_bound_casilla(casillas[casilla_id], bindings_by_id))
+        and not any(binding.id in binding_values for binding in bindings)
     )
     if smuggled_previous_filing_bound:
         raise RegistryValidationError(
-            "previous-filing bound registry casillas cannot be supplied via inputs "
-            "without the matching binding_values entry; the projection from "
+            "observation-backed bound registry casillas cannot be supplied via inputs "
+            "without a matching binding_values entry; the projection from "
             "resolve_bound_inputs_by_casilla_id must include the binding value as the "
             f"source of truth: {smuggled_previous_filing_bound!r}",
             translated_message="errors.calc.bound_input_smuggled_without_binding_value",
@@ -204,10 +216,10 @@ def _reject_inconsistent_previous_filing_projections(
 ) -> None:
     inconsistent: list[tuple[str, str]] = []
     for casilla_id, input_value in inputs.items():
-        binding = _previous_filing_binding_for_bound_casilla(casillas[casilla_id], bindings_by_id)
-        if binding is None:
+        casilla = casillas[casilla_id]
+        if not _observation_backed_bindings_for_bound_casilla(casilla, bindings_by_id):
             continue
-        binding_value = binding_values.get(binding.id)
+        binding_value, present_binding_ids = resolve_bound_casilla_binding_value(casilla, binding_values)
         if binding_value is None:
             continue
         if input_value != binding_value:
@@ -215,12 +227,12 @@ def _reject_inconsistent_previous_filing_projections(
                 (
                     casilla_id,
                     f"casilla {casilla_id!r}: inputs={input_value!r} vs "
-                    f"binding_values[{binding.id!r}]={binding_value!r}",
+                    f"binding_values[{present_binding_ids!r}]={binding_value!r}",
                 ),
             )
     if inconsistent:
         raise RegistryValidationError(
-            "previous-filing bound casilla projection is inconsistent between "
+            "observation-backed bound casilla projection is inconsistent between "
             "inputs and binding_values; the binding_values entry is the source "
             "of truth and the inputs projection must match it: " + "; ".join(message for _, message in inconsistent),
             translated_message="errors.calc.bound_projection_inconsistent",
@@ -262,17 +274,19 @@ def _initial_value_for_casilla(
     binding_values: Mapping[BindingId, Decimal],
     target_period: str,
 ) -> tuple[Decimal, bool]:
-    binding = _previous_filing_binding_for_bound_casilla(casilla, bindings_by_id)
-    if binding is None:
+    bindings = _observation_backed_bindings_for_bound_casilla(casilla, bindings_by_id)
+    if not bindings:
         return inputs.get(casilla.id, _ZERO), False
-    if binding.id in binding_values:
-        return binding_values[binding.id], False
-    if _binding_is_absent_by_design(binding, target_period=target_period):
+    value, _present_binding_ids = resolve_bound_casilla_binding_value(casilla, binding_values)
+    if value is not None:
+        return value, False
+    if any(_binding_is_absent_by_design(binding, target_period=target_period) for binding in bindings):
         return _ZERO, True
+    binding_ids = bound_casilla_binding_ids(casilla)
     raise RegistryValidationError(
-        f"bound casilla {casilla.id!r} requires resolved binding {binding.id!r} value",
+        f"bound casilla {casilla.id!r} requires resolved value for one of {binding_ids!r}",
         translated_message="errors.calc.bound_casilla_binding_value_missing",
-        context={"casilla_id": casilla.id, "binding_id": binding.id},
+        context={"casilla_id": casilla.id, "binding_id": ",".join(binding_ids)},
     )
 
 
