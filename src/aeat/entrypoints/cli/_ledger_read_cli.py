@@ -40,7 +40,7 @@ from ...domain.categories import (
     SpendingCategory,
     SpendingCategoryFamily,
 )
-from ...domain.transactions import Transaction, TransactionCatalogueRepository
+from ...domain.transactions import Transaction, TransactionCatalogueRepository, ledger_irpf_category_catalogue
 from ._common import _bad, _canonical_period, _emit_envelope, _optional_canonical_period, _state, _tx_repo
 from ._ledger_list import (
     LLM_DECISION_EVENT_TYPES,
@@ -139,6 +139,15 @@ def _register_ledger_providers_command(app: typer.Typer) -> None:
 
 
 def _register_ledger_categories_command(app: typer.Typer) -> None:
+    def _irpf_purpose_label(purpose: str) -> str:
+        if purpose == "activity_income_withholding":
+            return tr("cli.ledger.categories.irpf_purpose_activity_income_withholding")
+        if purpose == "rent_expense_withholding":
+            return tr("cli.ledger.categories.irpf_purpose_rent_expense_withholding")
+        if purpose == "employment_income":
+            return tr("cli.ledger.categories.irpf_purpose_employment_income")
+        return purpose
+
     @app.command("categories", help=tr("cli.ledger.categories.help"))
     def ledger_categories(ctx: typer.Context) -> None:
         """List the recognised `--category-id` spending-category catalogue."""
@@ -161,6 +170,32 @@ def _register_ledger_categories_command(app: typer.Typer) -> None:
         if first_category_id is not None:
             lines.append(tr("cli.ledger.categories.usage_example", example=first_category_id))
         lines.append(tr("cli.ledger.categories.income_note"))
+        irpf_categories = [
+            {
+                "id": category.id,
+                "purpose": category.purpose,
+                "directions": [direction.value for direction in category.directions],
+                "net_paid_invoice": category.net_paid_invoice,
+                "related_category_ids": list(category.related_category_ids),
+            }
+            for category in ledger_irpf_category_catalogue()
+        ]
+        lines.extend(
+            [
+                "",
+                tr("cli.ledger.categories.irpf_header"),
+                f"{tr('cli.ledger.categories.irpf_id_column')}\t{tr('cli.ledger.categories.irpf_use_column')}",
+            ],
+        )
+        for category in irpf_categories:
+            lines.append(f"{category['id']}\t{_irpf_purpose_label(str(category['purpose']))}")
+        lines.append(
+            tr(
+                "cli.ledger.categories.irpf_usage_example",
+                rent_category="arrendamiento_local",
+                activity_category="actividad_economica",
+            ),
+        )
         from ._ledger_payloads import LedgerCategoriesResult
 
         _emit_envelope(
@@ -170,6 +205,11 @@ def _register_ledger_categories_command(app: typer.Typer) -> None:
                 {
                     "families": families,
                     "category_ids": [category.value for category in SpendingCategory],
+                    "irpf_categories": irpf_categories,
+                    "irpf_category_ids": [category["id"] for category in irpf_categories],
+                    "net_paid_withholding_irpf_category_ids": [
+                        category["id"] for category in irpf_categories if category["net_paid_invoice"]
+                    ],
                     "income_requires_category": False,
                 },
             ),

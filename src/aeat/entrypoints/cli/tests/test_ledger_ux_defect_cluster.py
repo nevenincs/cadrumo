@@ -95,6 +95,11 @@ def test_categories_command_lists_the_canonical_spending_taxonomy(
     # Every listed id must belong to a family group, never float free.
     grouped = {category_id for family in payload["families"] for category_id in family["category_ids"]}
     assert grouped == expected
+    assert "actividad_economica" in payload["irpf_category_ids"]
+    assert "arrendamiento_local" in payload["irpf_category_ids"]
+    rent_category = next(item for item in payload["irpf_categories"] if item["id"] == "arrendamiento_local")
+    assert rent_category["net_paid_invoice"] is True
+    assert rent_category["related_category_ids"] == ["arrendamiento_local"]
 
 
 def test_classify_rejects_an_invented_category_id(tmp_path: Path) -> None:
@@ -800,7 +805,7 @@ def test_classify_with_valid_taxable_base_still_succeeds(tmp_path: Path) -> None
 
 
 def test_categories_output_names_the_category_id_column(tmp_path: Path) -> None:
-    """The catalogue makes the exact `--category-id` value unmistakable."""
+    """The catalogue makes exact category flag values unmistakable."""
     result = invoke_cached_cli(["app", "ledger", "categories"])
     assert result.exit_code == 0, result.output
     output = result.output
@@ -809,6 +814,21 @@ def test_categories_output_names_the_category_id_column(tmp_path: Path) -> None:
     assert "category-id" in output
     assert "--category-id" in output
     assert SpendingCategory.MATERIAL_OFICINA.value in output
+    assert "irpf-category" in output
+    assert "--irpf-category arrendamiento_local" in output
+    assert "actividad_economica" in output
+
+
+def test_classify_help_points_irpf_category_to_categories_catalogue(
+    tmp_path: Path,
+) -> None:
+    """`--help` names the public command that lists accepted IRPF category ids."""
+    result = invoke_cached_cli(["app", "ledger", "classify", "--help"], env={"COLUMNS": "160"})
+    assert result.exit_code == 0, result.output
+    flat = " ".join(result.output.split())
+    assert "aeat app ledger categories" in flat
+    assert "actividad_economica" in flat
+    assert "arrendamiento_local" in flat
 
 
 def test_invalid_category_error_shows_a_concrete_valid_example(
