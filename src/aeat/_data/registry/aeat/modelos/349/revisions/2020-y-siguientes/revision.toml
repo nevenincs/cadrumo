@@ -9,6 +9,10 @@ legal_refs = [
     "ley-58-2003:art-93",
     "rd-1624-1992:art-81",
 ]
+orden_aplicabilidad = [
+    "orden-eha-769-2010:art-1",
+    "orden-hac-174-2020:art-1",
+]
 source_refs = [
     "aeat-dr-349-2020-current",
     "aeat-modelo-349-instructions",
