@@ -29,7 +29,7 @@ class FilterParseError(ReviewError):
 
     Attributes:
         raw_token: The string the operator supplied (e.g. ``"status="`` or
-            ``"period: 1T"``). Kept for internal compatibility,
+            ``"period: 1T"``). Stored as an internal diagnostic attribute,
             but omitted from rendered messages and context because
             filter values may include free-text search strings or
             imported identifiers.
@@ -66,7 +66,7 @@ class EditParseError(ReviewError):
     """Raised when ``--set KEY=VALUE`` cannot be parsed.
 
     Attributes:
-        raw_token: The string the operator supplied. Kept for callers
+        raw_token: The string the operator supplied. Stored for callers
             that need to build a CLI recovery hint, but intentionally
             omitted from the rendered error text and structured context
             because edit values may contain file paths, references, or
@@ -128,7 +128,7 @@ class ReviewKindReservedError(ReviewError):
 
     Attributes:
         token: The ``--kind`` value supplied by the user.
-            Kept for internal compatibility, but omitted from rendered
+            Stored as an internal diagnostic attribute, but omitted from rendered
             messages and structured context because selector values are
             operator input and may contain copied identifiers.
         reason: Explanation naming the blocking upstream record type.
