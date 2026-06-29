@@ -55,9 +55,9 @@ class SnapshotNotFoundError(AeatError, KeyError):
 
     Inherits from both :class:`aeat.core.errors.AeatError` and
     :class:`KeyError` so the class is enrolled in the ``ERROR_REGISTRY``
-    via the ``AeatError.__init_subclass__`` hook, and callers that catch
-    the broad ``KeyError`` family remain unaffected. ``AeatError`` is
-    listed first so MRO routes ``__init__`` through
+    via the ``AeatError.__init_subclass__`` hook while preserving the
+    mapping-style lookup-miss type. ``AeatError`` is listed first so MRO
+    routes ``__init__`` through
     ``AeatError.__init__`` (which accepts the structured
     ``suggestion=`` / ``context=`` kwargs) rather than ``KeyError``'s
     C-level constructor.
