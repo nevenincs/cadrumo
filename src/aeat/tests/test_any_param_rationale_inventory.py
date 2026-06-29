@@ -128,11 +128,11 @@ def _preceding_lines_have_marker(source_lines: list[str], func_lineno: int) -> b
 
 
 def _collect_violations(
-    source_tree_ast: Mapping[Path, ast.AST],
+    source_tree_ast: Mapping[Path, ast.AST] | None = None,
 ) -> list[tuple[str, int]]:
     """Walk all production files and return (rel_path, lineno) pairs without markers.
 
-    Consumes the session-scoped AST cache so the per-file parse cost is
+    Consumes the shared production AST cache so the per-file parse cost is
     paid once per session rather than per ratchet test. The cache holds
     every parseable ``.py`` file under ``src/aeat/``; this helper applies
     the test-surface exclusion (``test_*.py`` / ``*_test.py``) as the
@@ -156,9 +156,7 @@ def _collect_violations(
     return violations
 
 
-def test_no_new_any_param_without_rationale(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
+def test_no_new_any_param_without_rationale() -> None:
     """New parameter-level ``Any`` annotations must carry an inline rationale marker.
 
     This test uses a ratchet against ``_KNOWN_VIOLATING_LINES``:
@@ -177,7 +175,7 @@ def test_no_new_any_param_without_rationale(
       ANY-RETURN-RATIONALE-<LABEL>
       ADAPTER-INTERNAL-ALIAS-RATIONALE-<LABEL>
     """
-    all_violations = _collect_violations(source_tree_ast)
+    all_violations = _collect_violations()
     new_violations = [(rel, lineno) for rel, lineno in all_violations if (rel, lineno) not in _KNOWN_VIOLATING_LINES]
 
     if new_violations:

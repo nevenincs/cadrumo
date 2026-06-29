@@ -16,8 +16,9 @@ casillas equal the cuota-integra casillas, i.e., 0585 = 0545, 0586 = 0546.
 Legal grounding:
     Ley 35/2006 art.50 (base liquidable general)
     Ley 35/2006 art.62-63 (cuota escala estatal)
-    Ley 35/2006 art.66-67 (cuota escala autonomica)
-    Ley 35/2006 art.68    (cuota liquida = cuota integra - deducciones)
+    Ley 35/2006 art.73-74 (cuota escala autonomica general)
+    Ley 35/2006 art.67/77, with art.68 deductions
+        (cuota liquida = cuota integra - deducciones)
 
 Corpus values are anchored to the registry's committed bracket tables
 (src/aeat/_data/registry/aeat/modelos/100/revisions/<year>/formulas/).

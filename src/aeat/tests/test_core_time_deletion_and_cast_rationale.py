@@ -58,15 +58,13 @@ def _collect_cast_violations(source_tree_ast: Mapping[Path, ast.AST] | None = No
     return cast_rationale_violations(source_tree_ast)
 
 
-def test_every_production_cast_has_rationale_marker(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
+def test_every_production_cast_has_rationale_marker() -> None:
     """Every production cast() call must carry a CAST-RATIONALE-* marker.
 
-    Consumes the session-scoped AST cache so the per-file parse cost is
-    amortised across the full ratchet suite.
+    Consumes the shared production AST cache so the per-file parse cost
+    is amortised across the full ratchet suite.
     """
-    violations = _collect_cast_violations(source_tree_ast)
+    violations = _collect_cast_violations()
     if violations:
         joined = "\n  ".join(violations)
         raise AssertionError(

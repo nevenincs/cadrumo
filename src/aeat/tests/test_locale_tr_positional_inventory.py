@@ -139,9 +139,7 @@ def _collect_violations(
     return violations
 
 
-def test_no_aeat_error_raise_with_positional_tr(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
+def test_no_aeat_error_raise_with_positional_tr() -> None:
     """Every production module must have zero raise-with-positional-tr() violations.
 
     The invariant applies unconditionally to every non-test module under
@@ -159,10 +157,10 @@ def test_no_aeat_error_raise_with_positional_tr(
 
         raise SomeError(tr("key"))   # WRONG — eager resolution
 
-    Consumes the session-scoped AST cache so the per-file parse cost is
-    amortised across the full ratchet suite.
+    Consumes the shared production AST cache so the per-file parse cost
+    is amortised across the full ratchet suite.
     """
-    violations = _collect_violations(source_tree_ast)
+    violations = _collect_violations()
     if violations:
         joined = "\n  ".join(violations)
         raise AssertionError(
