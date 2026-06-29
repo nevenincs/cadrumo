@@ -87,23 +87,58 @@ def _require_not_pre_activity_period(
     filing_year: int,
     period: Period,
 ) -> None:
+    refusal = pre_activity_period_refusal(
+        record=record,
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+    )
+    if refusal is None:
+        return
+    message, context = refusal
+    raise ModeloProfileReadinessError(
+        message,
+        context=context,
+        suggestion=f"aeat config profile edit {bucket_id}",
+    )
+
+
+def pre_activity_period_refusal(
+    *,
+    record: UserProfileRecord,
+    bucket_id: str,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+) -> tuple[str, dict[str, str | int]] | None:
+    """Return the pre-activity lifecycle refusal for a target, if any.
+
+    Args:
+        record: Active :class:`UserProfileRecord` carrying the profile facts
+            used to resolve ``censo.activity_start_date``.
+        bucket_id: Active profile bucket identifier included in the refusal
+            context.
+        modelo: Modelo code being checked.
+        filing_year: Filing year for the target period.
+        period: Target :class:`Period` whose date span is compared against the
+            profile activity-start date.
+    """
     modelo_code = modelo.strip()
     if modelo_code not in _PRE_ACTIVITY_LIFECYCLE_MODELOS or not period.has_date_span():
-        return
+        return None
     activity_start_date = _profile_activity_start_date(record)
     if activity_start_date is None:
-        return
+        return None
     period_end_date = period.end_date
     if period_end_date >= activity_start_date:
-        return
-    raise ModeloProfileReadinessError(
-        (
-            f"Modelo {modelo_code} {filing_year} {period.registry_token} is before the profile "
-            f"activity-start date {activity_start_date.isoformat()}; the filing period ends on "
-            f"{period_end_date.isoformat()}, so no Modelo {modelo_code} work unit, calculation, or verification "
-            "may proceed for this pre-activity period."
-        ),
-        context={
+        return None
+    return (
+        f"Modelo {modelo_code} {filing_year} {period.registry_token} is before the profile "
+        f"activity-start date {activity_start_date.isoformat()}; the filing period ends on "
+        f"{period_end_date.isoformat()}, so no Modelo {modelo_code} work unit, calculation, or verification "
+        "may proceed for this pre-activity period.",
+        {
             "bucket_id": bucket_id,
             "modelo": modelo_code,
             "filing_year": filing_year,
@@ -111,7 +146,6 @@ def _require_not_pre_activity_period(
             "activity_start_date": activity_start_date.isoformat(),
             "period_end_date": period_end_date.isoformat(),
         },
-        suggestion=f"aeat config profile edit {bucket_id}",
     )
 
 
@@ -221,6 +255,7 @@ def require_profile_ready_for_work_unit(work_unit: WorkUnit) -> None:
 
 
 __all__ = [
+    "pre_activity_period_refusal",
     "require_profile_ready_for_modelo_work",
     "require_profile_ready_for_work_unit",
 ]

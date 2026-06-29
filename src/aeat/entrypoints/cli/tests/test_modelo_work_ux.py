@@ -225,6 +225,30 @@ def test_work_create_refuses_pre_activity_m303_and_creates_no_unit() -> None:
     assert _payload(listed.output)["work_unit_count"] == 0
 
 
+def test_modelo_readiness_reports_pre_activity_m303_before_work_create() -> None:
+    _create_profile(activity_start_date="2026-05-01")
+
+    result = _invoke(
+        [
+            "app", "modelo", "readiness",
+            "--modelo", "303",
+            "--revision-id", "2023-y-siguientes",
+            "--year", "2026",
+            "--period", "1T",
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code == 0, result.output
+    assert "ready\tFalse" in result.output
+    assert "profile_ready\tFalse" in result.output
+    assert "profile_refusal\tModelo 303 2026 1T is before the profile activity-start date 2026-05-01" in result.output
+    assert "filing period ends on 2026-03-31" in result.output
+    assert "pre-activity period" in result.output
+
+    listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    assert listed.exit_code == 0, listed.output
+    assert _payload(listed.output)["work_unit_count"] == 0
+
 def test_work_create_refuses_pre_activity_m130_and_creates_no_unit() -> None:
     _create_profile(activity_start_date="2026-07-15")
 

@@ -1120,6 +1120,7 @@ class ModeloReadinessResult(OutputSchema):
     period: Period
     ready: bool
     profile_ready: bool
+    profile_refusal: str
     registry_ready: bool
     registry_refusal: str
     binding_ready: bool
