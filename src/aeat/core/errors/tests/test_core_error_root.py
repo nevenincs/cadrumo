@@ -83,7 +83,7 @@ def test_core_not_found_error_descends_from_core_error() -> None:
     assert isinstance(caught_as_core, CoreNotFoundError)
     assert isinstance(caught_as_core, KeyError)
 
-    # KeyError arm also fires (dict-like repository compatibility)
+    # KeyError arm also fires for mapping-style lookup misses.
     caught_as_key_error: KeyError | None = None
     try:
         raise CoreNotFoundError("key error arm")
