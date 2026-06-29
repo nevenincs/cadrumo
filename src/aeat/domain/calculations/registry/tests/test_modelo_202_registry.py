@@ -96,6 +96,14 @@ def test_committed_modelo_202_order_chain_is_boe_corpus_backed() -> None:
         assert revision.orden_aplicabilidad == order_refs
         assert set(order_refs).issubset(revision.legal_refs)
         assert set(source_refs).issubset(revision.source_refs)
+        assert len(revision.workbook_parity_refs) == 1
+        workbook_ref = revision.workbook_parity_refs[0]
+        assert workbook_ref.formula_coverage == "record_design_layout"
+        assert set(order_refs).issubset(workbook_ref.legal_refs)
+        assert set(source_refs).issubset(workbook_ref.source_refs)
+        construct = revision.constructs[0]
+        assert set(order_refs).issubset(construct.legal_refs)
+        assert set(source_refs).issubset(construct.source_refs)
 
     base = legal[_M202_BASE_ORDER_REF]
     assert base.document_id == "BOE-A-2017-2778"
