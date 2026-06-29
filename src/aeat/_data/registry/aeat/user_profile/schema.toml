@@ -214,9 +214,10 @@ type = "boolean"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Large-company enrollment fact used by filing cadence."
+description = "Large-company condition used by filing cadence. Applies when operation volume, calculated under LIVA Art. 121, exceeded 6.010.121,04 EUR during the immediately prior calendar year; RIVA Art. 71 then switches IVA liquidation to monthly."
 model_selectors = ["enrollment.large_company"]
 schedule_predicates = ["enrollment.large_company"]
+legal_refs = ["ley-37-1992:art-121", "rd-1624-1992:art-71"]
 
 [[sections.fields]]
 key = "public_administration_budget_gt_6000000"
@@ -493,16 +494,6 @@ model_selectors = ["professional_income_withholding_ge_70pct"]
 schedule_predicates = ["professional_income_withholding_ge_70pct"]
 
 [[sections.fields]]
-key = "uses_objective_estimation"
-type = "boolean"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Whether the profile uses objective estimation for IRPF. Derived from estimation_regime: objetiva implies true. Retained as a registry-condition predicate until the applicability engine reads estimation_regime directly."
-model_selectors = ["uses_objective_estimation_irpf"]
-schedule_predicates = ["uses_objective_estimation_irpf"]
-
-[[sections.fields]]
 key = "estimation_regime"
 type = "enum"
 required = false
@@ -526,9 +517,9 @@ type = "decimal"
 required = false
 sensitivity = "financial"
 effective_dated = true
-description = "Prior-year gross income volume for all economic activities except agricultural, livestock, and forestry activities. Used to advise when a declared objective-estimation profile exceeds the settled DT 32 exclusion magnitude."
+description = "Prior-year gross income volume for all economic activities except agricultural, livestock, and forestry activities. Used to advise when a declared objective-estimation profile exceeds the settled official exclusion magnitude."
 model_selectors = ["irpf.objective_estimation_prior_year_gross_income_eur"]
-legal_refs = ["ley-35-2006:dt-32"]
+legal_refs = ["ley-35-2006:art-31", "ley-35-2006:dt-32"]
 
 [[sections.fields]]
 key = "objective_estimation_prior_year_invoice_gross_income_eur"
@@ -536,9 +527,19 @@ type = "decimal"
 required = false
 sensitivity = "financial"
 effective_dated = true
-description = "Prior-year gross income volume from operations requiring an invoice to a business or professional recipient. Used to advise when a declared objective-estimation profile exceeds the settled DT 32 exclusion magnitude."
+description = "Prior-year gross income volume from operations requiring an invoice to a business or professional recipient. Used to advise when a declared objective-estimation profile exceeds the settled official exclusion magnitude."
 model_selectors = ["irpf.objective_estimation_prior_year_invoice_gross_income_eur"]
-legal_refs = ["ley-35-2006:dt-32"]
+legal_refs = ["ley-35-2006:art-31", "ley-35-2006:dt-32"]
+
+[[sections.fields]]
+key = "objective_estimation_prior_year_agri_livestock_forest_gross_eur"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Prior-year gross income volume for agricultural, livestock, and forestry activities. Used to advise when a declared objective-estimation profile exceeds the LIRPF Art. 31 exclusion magnitude."
+model_selectors = ["irpf.objective_estimation_prior_year_agri_livestock_forest_gross_eur"]
+legal_refs = ["ley-35-2006:art-31"]
 
 [[sections.fields]]
 key = "objective_estimation_prior_year_purchases_eur"
@@ -546,9 +547,9 @@ type = "decimal"
 required = false
 sensitivity = "financial"
 effective_dated = true
-description = "Prior-year purchase volume for goods and services, excluding fixed-asset acquisitions. Used to advise when a declared objective-estimation profile exceeds the settled DT 32 exclusion magnitude."
+description = "Prior-year purchase volume for goods and services, excluding fixed-asset acquisitions. Used to advise when a declared objective-estimation profile exceeds the settled official exclusion magnitude."
 model_selectors = ["irpf.objective_estimation_prior_year_purchases_eur"]
-legal_refs = ["ley-35-2006:dt-32"]
+legal_refs = ["ley-35-2006:art-31", "ley-35-2006:dt-32"]
 
 [[sections.fields]]
 key = "special_regime"
@@ -709,7 +710,7 @@ effective_dated = true
 description = "Whether the taxpayer is enrolled in the SII (Suministro Inmediato de Informacion), the near-real-time IVA Libros registro submission system. Mandatory for the monthly IVA collective (grandes empresas, REDEME, grupos de IVA); voluntary opt-in via Modelo 036 for everyone else."
 model_selectors = ["iva.sii_enrolled"]
 schedule_predicates = ["iva.sii_enrolled"]
-legal_refs = ["rd-596-2016"]
+legal_refs = ["rd-596-2016", "rd-1624-1992:art-71"]
 
 [[sections.fields]]
 key = "redeme_enrolled"

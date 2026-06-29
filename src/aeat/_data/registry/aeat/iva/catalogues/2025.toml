@@ -252,6 +252,23 @@ quoted_text = "iva.catalogue.export_third_country_zero_rated.citations.1.quoted_
 retrieval_date = 2026-04-13
 
 [[regulations]]
+category = "export_assimilated_zero_rated"
+label = "iva.catalogue.export_assimilated_zero_rated.label"
+description = "iva.catalogue.export_assimilated_zero_rated.description"
+triggers_when = "iva.catalogue.export_assimilated_zero_rated.triggers_when"
+iva_treatment = "iva.catalogue.export_assimilated_zero_rated.iva_treatment"
+requires_reverse_charge = false
+requires_supplier_iva_id = false
+boe_references = ["ley-37-1992"]
+manual_references = []
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 22"
+quoted_text = "iva.catalogue.export_assimilated_zero_rated.citations.0.quoted_text"
+retrieval_date = 2026-06-29
+
+[[regulations]]
 category = "import_third_country"
 label = "iva.catalogue.label_889802"
 description = "iva.catalogue.description_247574"

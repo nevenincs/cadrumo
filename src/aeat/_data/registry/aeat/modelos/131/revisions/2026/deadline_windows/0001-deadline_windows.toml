@@ -6,14 +6,14 @@ period_kind = "quarterly"
 opens_on = 2026-04-01
 closes_on = 2026-04-20
 payment_cutoff_on = 2026-04-15
-legal_refs = ["orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+legal_refs = ["orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-procedure"]
 [[revisions."2026".deadline_windows.applicability_conditions]]
-field = "uses_objective_estimation_irpf"
+field = "irpf.estimation_regime"
 op = "equals"
-value = true
+value = "objetiva"
 explanation = "Modelo 131 applies to IRPF economic activities under estimacion objetiva."
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-procedure", "aeat-modelo-131-instructions"]
 [[revisions."2026".deadline_windows]]
 id = "modelo-131-2026-2t"
@@ -23,14 +23,14 @@ period_kind = "quarterly"
 opens_on = 2026-07-01
 closes_on = 2026-07-20
 payment_cutoff_on = 2026-07-15
-legal_refs = ["orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+legal_refs = ["orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-procedure"]
 [[revisions."2026".deadline_windows.applicability_conditions]]
-field = "uses_objective_estimation_irpf"
+field = "irpf.estimation_regime"
 op = "equals"
-value = true
+value = "objetiva"
 explanation = "Modelo 131 applies to IRPF economic activities under estimacion objetiva."
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-procedure", "aeat-modelo-131-instructions"]
 [[revisions."2026".deadline_windows]]
 id = "modelo-131-2026-3t"
@@ -40,14 +40,14 @@ period_kind = "quarterly"
 opens_on = 2026-10-01
 closes_on = 2026-10-20
 payment_cutoff_on = 2026-10-15
-legal_refs = ["orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+legal_refs = ["orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-procedure"]
 [[revisions."2026".deadline_windows.applicability_conditions]]
-field = "uses_objective_estimation_irpf"
+field = "irpf.estimation_regime"
 op = "equals"
-value = true
+value = "objetiva"
 explanation = "Modelo 131 applies to IRPF economic activities under estimacion objetiva."
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-procedure", "aeat-modelo-131-instructions"]
 [[revisions."2026".deadline_windows]]
 id = "modelo-131-2026-4t"
@@ -57,14 +57,14 @@ period_kind = "quarterly"
 opens_on = 2027-01-01
 closes_on = 2027-01-20
 payment_cutoff_on = 2027-01-15
-legal_refs = ["orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+legal_refs = ["orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-procedure"]
 [[revisions."2026".deadline_windows.applicability_conditions]]
-field = "uses_objective_estimation_irpf"
+field = "irpf.estimation_regime"
 op = "equals"
-value = true
+value = "objetiva"
 explanation = "Modelo 131 applies to IRPF economic activities under estimacion objetiva."
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-procedure", "aeat-modelo-131-instructions"]
 
 # Calculation-completeness manifest for revision 2026: the

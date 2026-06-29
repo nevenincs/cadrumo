@@ -12,6 +12,7 @@ formulas = [
     "modelo-130-suma-parciales",
     "modelo-130-minoracion-rendimientos-netos",
     "modelo-130-neto-tras-minoracion",
+    "modelo-130-resultados-negativos-anteriores-cap",
     "modelo-130-diferencia",
     "modelo-130-resultado-final",
     "modelo-130-saldo-negativo-fin-periodo",

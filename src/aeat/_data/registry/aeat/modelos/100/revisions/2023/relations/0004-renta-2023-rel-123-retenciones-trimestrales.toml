@@ -4,7 +4,7 @@ kind = "cross_model_output"
 dependency_role = "factual_evidence"
 source_modelo = "123"
 source_revision_selector = { year = 2023 }
-source_casilla_id = "03-legacy"
+source_casilla_id = "03"
 target_binding = "renta-2023-modelo-123-retenciones-periodicas"
 period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["1T", "2T", "3T", "4T"]

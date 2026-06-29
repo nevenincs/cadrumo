@@ -10,21 +10,19 @@
 # filing-grade surface (review_status is Literal["reviewed"]); `reviewed_by`
 # records the agent author and the operator should re-stamp after confirming.
 #
-# TEMPORAL SCOPE — IMPORTANT: per the authoritative bundled corpus, LIRPF DT 32ª
-# fixes the art. 31.1.3ª magnitudes ONLY for the ejercicios 2016 a 2024. The
-# attempted extensions to 2025/2026 (RD-ley 9/2024, RD-ley 16/2025, RD-ley
-# 2/2026) were each DEROGATED by Congreso resolutions (latest BOE-A-2026-4667,
-# 26-feb-2026), so for 2025+ the DT 32ª override is repealed and the exclusion
-# magnitudes are legally UNRESOLVED in the bundled source (they do not simply
-# carry forward). These parameters are the settled 2016-2024 values; a consumer
-# (the future W01.P02 advisory gate) MUST gate on filing year and treat 2025+ as
-# unresolved rather than applying 250.000/125.000 universally.
+# TEMPORAL SCOPE — IMPORTANT: the bundled BOE consolidation of LIRPF DT 32ª
+# still carries required_text for ejercicios 2016 a 2024. The bundled AEAT Renta
+# 2025 manual, retrieved after the 2026 derogation churn, states that the same
+# quantitative exclusion limits apply to periods 2025 and 2026. The advisory
+# gate therefore applies these parameters only to the settled official-source
+# window 2016-2026. Do not project them beyond the authored revisions without a
+# fresh official-source check.
 #
 # Binding provision: Ley 35/2006 DT 32ª — the 150.000/75.000 EUR rendimientos-
 # íntegros limits (art. 31.1.3ª.b.a') become 250.000/125.000 EUR, and the 150.000
 # EUR volumen-de-compras limit (art. 31.1.3ª.c) becomes 250.000 EUR. The
-# agrícolas/ganaderas/forestales limit (art. 31.1.3ª.b, not a DT 32ª override) is
-# deferred until art. 31 itself is grounded.
+# agrícolas/ganaderas/forestales limit is a separate art. 31.1.3ª.b' magnitude,
+# not a DT 32ª override; it is authored below as its own art. 31 parameter.
 
 [legal."ley-35-2006:dt-32"]
 evidence_tier = "legal_authority"
@@ -39,12 +37,23 @@ effective_from = 2016-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-14
 reviewed_by = "claude-opus (agent-authored; grounded in bundled authoritative corpus; operator to re-stamp)"
-notes = "LIRPF DT 32ª: límites para la aplicación del método de estimación objetiva en los ejercicios 2016 a 2024. Para esos ejercicios, las magnitudes de 150.000 y 75.000 euros del art. 31.1.3ª.b.a' quedan fijadas en 250.000 y 125.000 euros, y la magnitud de 150.000 euros del art. 31.1.3ª.c (volumen de compras) queda fijada en 250.000 euros. Las prórrogas a 2025/2026 (RD-ley 9/2024, 16/2025, 2/2026) fueron derogadas por acuerdos del Congreso (BOE-A-2026-4667), por lo que para 2025+ el régimen transitorio está sin efecto y los límites quedan sin resolver en la fuente consolidada. Grounded against the bundled authoritative ley-35-2006.html (#dttrigesimasegunda); agent-authored entry pending operator re-stamp."
+notes = "LIRPF DT 32ª: límites para la aplicación del método de estimación objetiva en los ejercicios 2016 a 2024. Para esos ejercicios, las magnitudes de 150.000 y 75.000 euros del art. 31.1.3ª.b.a' quedan fijadas en 250.000 y 125.000 euros, y la magnitud de 150.000 euros del art. 31.1.3ª.c (volumen de compras) queda fijada en 250.000 euros. La guía oficial AEAT Renta 2025 incluida en el corpus declara aplicables esos mismos límites cuantitativos excluyentes a 2025 y 2026; la puerta de aviso consume esta referencia sólo para la ventana 2016-2026. Grounded against the bundled authoritative ley-35-2006.html (#dttrigesimasegunda) and the bundled AEAT Renta 2025 manual; agent-authored entry pending operator re-stamp."
 required_text = [
     "método de estimación objetiva en los ejercicios 2016 a 2024",
     "quedan fijadas en 250.000 y 125.000 euros",
     "queda fijada en 250.000 euros",
 ]
+
+[parameters."lirpf-art-31:eo-exclusion-rendimientos-agricolas-ganaderos-forestales-eur"]
+evidence_tier = "legal_authority"
+value = "250000"
+unit = "EUR"
+applies_to = "lirpf-estimacion-objetiva-magnitud-excluyente-rendimientos-agricolas-ganaderos-forestales"
+legal_refs = ["ley-35-2006:art-31"]
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "gpt-5 (agent-authored; grounded in bundled authoritative corpus; operator to confirm)"
+notes = "Magnitud excluyente de estimación objetiva por volumen de rendimientos íntegros del conjunto de actividades agrícolas, ganaderas y forestales: 250.000 euros anuales (LIRPF art. 31.1.3ª.b.b'). This magnitude is not a DT 32ª override."
 
 [parameters."lirpf-dt-32:eo-exclusion-rendimientos-conjunto-eur"]
 evidence_tier = "legal_authority"
@@ -55,7 +64,7 @@ legal_refs = ["ley-35-2006:dt-32"]
 review_status = "reviewed"
 reviewed_at = 2026-06-14
 reviewed_by = "claude-opus (agent-authored; operator to confirm)"
-notes = "Magnitud excluyente de estimación objetiva por volumen de rendimientos íntegros del conjunto de actividades económicas (excepto agrícolas, ganaderas y forestales): 250.000 euros anuales para los ejercicios 2016 a 2024 (DT 32ª, que eleva los 150.000 euros base del art. 31.1.3ª.b.a'). Para 2025+ la prórroga fue derogada (BOE-A-2026-4667); el límite queda sin resolver."
+notes = "Magnitud excluyente de estimación objetiva por volumen de rendimientos íntegros del conjunto de actividades económicas (excepto agrícolas, ganaderas y forestales): 250.000 euros anuales para los ejercicios 2016 a 2026 (DT 32ª / guía oficial AEAT Renta 2025)."
 
 [parameters."lirpf-dt-32:eo-exclusion-rendimientos-factura-eur"]
 evidence_tier = "legal_authority"
@@ -66,7 +75,7 @@ legal_refs = ["ley-35-2006:dt-32"]
 review_status = "reviewed"
 reviewed_at = 2026-06-14
 reviewed_by = "claude-opus (agent-authored; operator to confirm)"
-notes = "Magnitud excluyente de estimación objetiva por volumen de rendimientos íntegros correspondiente a operaciones con obligación de expedir factura cuando el destinatario sea empresario o profesional: 125.000 euros anuales para los ejercicios 2016 a 2024 (DT 32ª, que eleva los 75.000 euros base del art. 31.1.3ª.b.a'). Para 2025+ la prórroga fue derogada (BOE-A-2026-4667); el límite queda sin resolver."
+notes = "Magnitud excluyente de estimación objetiva por volumen de rendimientos íntegros correspondiente a operaciones con obligación de expedir factura cuando el destinatario sea empresario o profesional: 125.000 euros anuales para los ejercicios 2016 a 2026 (DT 32ª / guía oficial AEAT Renta 2025)."
 
 [parameters."lirpf-dt-32:eo-exclusion-compras-eur"]
 evidence_tier = "legal_authority"
@@ -77,4 +86,4 @@ legal_refs = ["ley-35-2006:dt-32"]
 review_status = "reviewed"
 reviewed_at = 2026-06-14
 reviewed_by = "claude-opus (agent-authored; operator to confirm)"
-notes = "Magnitud excluyente de estimación objetiva por volumen de compras en bienes y servicios (excluidas las adquisiciones de inmovilizado): 250.000 euros anuales para los ejercicios 2016 a 2024 (DT 32ª, que eleva los 150.000 euros base del art. 31.1.3ª.c). Para 2025+ la prórroga fue derogada (BOE-A-2026-4667); el límite queda sin resolver."
+notes = "Magnitud excluyente de estimación objetiva por volumen de compras en bienes y servicios (excluidas las adquisiciones de inmovilizado): 250.000 euros anuales para los ejercicios 2016 a 2026 (DT 32ª / guía oficial AEAT Renta 2025)."

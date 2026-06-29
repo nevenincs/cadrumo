@@ -3,6 +3,6 @@ id = "1117"
 number = "1117"
 label = "Por el pago de intereses de préstamos para adquisición de vivienda por jóvenes menores de 30 años"
 section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
-semantic_role = "irpf_anexo_b_arrendamiento_importe_pendiente"
+semantic_role = "irpf_deduccion_madrid_intereses_prestamos_vivienda"
 legal_refs = ["ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

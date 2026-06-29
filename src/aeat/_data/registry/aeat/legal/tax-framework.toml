@@ -47,6 +47,28 @@ review_status = "reviewed"
 notes = "LGT art. 5: la Administración tributaria; competencias de la AEAT."
 required_text = ["la Administración Tributaria estará integrada por los órganos y entidades"]
 
+[legal."ley-58-2003:art-26"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003-art-26.html#a26"
+document_id = "BOE-A-2003-23186"
+article = "26"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a26"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (agent-authored from official BOE-A-2003-23186#a26 and bundled ley-58-2003-art-26.html; operator to re-stamp)"
+notes = "LGT art 26: interes de demora. Define the accessory tax interest charge, the cases in which it is due, calculation over unpaid or improperly refunded amounts, and the art 26.6 legal-interest-plus-25-percent rule cited by RIRPF art 59 for lost deduction regularization."
+required_text = [
+    "Interés de demora",
+    "prestación accesoria",
+    "se calculará sobre el importe no ingresado en plazo",
+    "interés legal del dinero vigente",
+    "incrementado en un 25 por ciento",
+]
+
 [legal."ley-37-1992:art-148"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -186,3 +208,29 @@ effective_from = 2016-10-02
 review_status = "reviewed"
 notes = "Ley 40/2015 art. 38: la sede electrónica de las Administraciones Públicas."
 required_text = ["La sede electrónica es aquella dirección electrónica, disponible"]
+
+[sources."aeat-calendario-contribuyente-2026-hasta-2-marzo"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/calendars/files/calendario-contribuyente-2026-hasta-2-marzo.html"
+sha256 = "be1625d29c8428beb9eea2b090e03203de1298cf126e8b84ead03947ad27c537"
+bytes = 11154
+retrieved_at = 2026-06-29
+applies_from = 2026-01-01
+applies_to = 2026-12-31
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/calendario-contribuyente/calendario-contribuyente-2026/calendario-anual/marzo/hasta-2-marzo.html"
+review_status = "reviewed"
+
+[sources."aeat-calendario-contribuyente-2026-domiciliacion"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/calendars/files/calendario-contribuyente-2026-domiciliacion.html"
+sha256 = "e18fb8191a08989da2915466489318d09440a5ad89f4d07ce6bf5e95fa794ad3"
+bytes = 31703
+retrieved_at = 2026-06-29
+applies_from = 2026-01-01
+applies_to = 2026-12-31
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/calendario-contribuyente/calendario-contribuyente-2026/plazos-presentacion-autoliquidaciones-domiciliacion-bancaria.html"
+review_status = "reviewed"

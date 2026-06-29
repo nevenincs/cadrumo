@@ -15,7 +15,7 @@ discrepancy_causes = [
     "rounding",
     "correctness_divergence",
 ]
-legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-67", "ley-35-2006:art-68", "ley-35-2006:art-74", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-68", "ley-35-2006:art-73", "ley-35-2006:art-74", "ley-35-2006:art-76", "ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
 
 # Per-casilla export_refs are not declared for this revision. The xml_dictionary

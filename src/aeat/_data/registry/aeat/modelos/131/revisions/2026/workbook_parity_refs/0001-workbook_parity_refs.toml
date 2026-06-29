@@ -5,5 +5,5 @@ fixture_id = "modelo-131-2026-record-design-layout"
 formula_coverage = "record_design_layout"
 runner_required = false
 tolerance = "0.01"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]

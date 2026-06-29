@@ -15,6 +15,7 @@ legal_refs = [
     "orden-hac-56-2024:art-1",
     "orden-eha-3377-2011:art-1",
     "orden-eha-672-2007:art-1",
+    "orden-eha-672-2007:art-3",
 ]
 source_refs = [
     "aeat-dr-100-2024-dictionary",

@@ -6,12 +6,12 @@
 # from `broader` and must never be authored here.
 
 [concept]
-concept_id = "tema-sii-verifactu"
+concept_id = "tema-verifactu"
 domain = "concepto"
 lifecycle = "draft"
-domain_refs = ["topic:sii-verifactu"]
-created_at = 2026-06-10
-updated_at = 2026-06-10
+domain_refs = ["topic:verifactu"]
+created_at = 2026-06-29
+updated_at = 2026-06-29
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"

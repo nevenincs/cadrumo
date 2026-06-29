@@ -60,9 +60,12 @@ effective_from = 1991-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-02
 reviewed_by = "coder-opus-iva"
-notes = "Ley 19/1991 Art. 31 — límite de la cuota íntegra. La cuota del IP junto con las cuotas del IRPF no puede exceder del 60 % de la suma de las bases imponibles del IRPF; cuando se supera, la cuota del IP se reduce sin que la reducción exceda del 80 % (suelo del 20 %)."
+notes = "Ley 19/1991 Art. 31 — límite de la cuota íntegra. La cuota del IP junto con las cuotas del IRPF no puede exceder del 60 % de la suma de las bases imponibles del IRPF; cuando se supera, la cuota del IP se reduce sin que la reducción exceda del 80 % (suelo del 20 %). La regla excluye determinadas ganancias/pérdidas patrimoniales de la base del ahorro y la parte correspondiente de cuotas IRPF, y excluye la parte del IP de elementos no susceptibles de producir rendimientos gravados por IRPF."
 required_text = [
     "60 por 100",
+    "bases imponibles",
+    "más de un año",
+    "no sean susceptibles de producir los rendimientos",
     "80 por 100",
 ]
 

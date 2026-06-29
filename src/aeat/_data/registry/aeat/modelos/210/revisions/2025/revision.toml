@@ -18,4 +18,6 @@ source_refs = [
     "aeat-modelo-210-procedure",
     "aeat-irnr-renta-imputada-inmueble-urbano",
     "boe-modelo-210-2024-form-layout",
+    "boe-modelo-210-2026-deadline-update",
+    "boe-modelo-210-2026-form-layout",
 ]
