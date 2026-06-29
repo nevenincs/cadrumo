@@ -573,12 +573,13 @@ def _cross_period_modelo_not_applicable_advisory_finding(
         message=(
             "cross-period dependencies on source modelos the taxpayer does not file were scoped out as "
             f"not-applicable: {', '.join(modelos)}. For suffered retenciones, enter the income-certificate "
-            "amount on the corresponding casilla; for mutually exclusive pagos fraccionados, confirm the "
-            "activity-estimation regime on the profile."
+            "amount with the corresponding --binding KEY=VALUE source, not --casilla; for mutually "
+            "exclusive pagos fraccionados, confirm the activity-estimation regime on the profile."
         ),
         next_action=(
-            "Enter suffered retenciones from the income certificate where applicable, and confirm the "
-            "profile's IRPF estimation regime if a mutually exclusive pago-fraccionado modelo was scoped out."
+            "Use the bindings list --missing command to identify the retenciones binding, supply the "
+            "certificate amount with --binding KEY=VALUE where applicable, and confirm the profile's IRPF "
+            "estimation regime if a mutually exclusive pago-fraccionado modelo was scoped out."
         ),
         legal_refs=legal_refs,
     )

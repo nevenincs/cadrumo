@@ -196,6 +196,9 @@ def test_not_applicable_suppression_summary_carries_dependency_legal_refs() -> N
     summary = next(f for f in findings if "not-applicable" in f.message)
     assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= set(summary.legal_refs)
     assert _IVA_COMPENSATION_CARRY_LEGAL_REF in summary.legal_refs
+    assert "--binding KEY=VALUE" in summary.message
+    assert "--binding KEY=VALUE" in summary.next_action
+    assert "corresponding casilla" not in summary.message
 
 
 def test_non_official_local_chain_advisory_carries_dependency_legal_refs() -> None:
