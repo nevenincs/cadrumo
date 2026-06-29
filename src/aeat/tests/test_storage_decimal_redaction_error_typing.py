@@ -358,13 +358,13 @@ def test_m232_binding_error_too_many_rows() -> None:
     )
     from ..domain.modelos._row_models import Modelo232VinculadaRow
 
-    dummy_row = Modelo232VinculadaRow(
+    sample_row = Modelo232VinculadaRow(
         nif="12345678A",
         tipo_vinculacion="1",
         tipo_operacion="01",
         importe=_Decimal("0"),
     )
-    six_rows = tuple([dummy_row] * 6)
+    six_rows = tuple([sample_row] * 6)
 
     with pytest.raises(RegistryValidationError):
         # negative test: None rejected where ModeloRevision is required

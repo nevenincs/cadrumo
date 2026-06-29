@@ -133,7 +133,7 @@ class _Modelo123Fixture:
     Ground truth is the AEAT-published DiseÃ±o de Registro Modelo 123 available at:
       https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/
         DR_100_199/archivos/DR123v20.xlsx  (2024+ revision, Orden HAC/56/2024)
-    and the legacy Orden EHA/3435/2007 form for the 2019-2023 revision.
+    and the Orden EHA/3435/2007 form for the 2019-2023 revision.
 
     Layout verdict: LINE-START box numbers.
     The M123 autoliquidacion is a simple single-page sequential form (no multi-column
@@ -149,9 +149,9 @@ class _Modelo123Fixture:
     - 2024-1T.pdf: 2024-y-siguientes revision (Orden HAC/56/2024), 14 casillas 01-14.
       Amounts satisfy registry formulas: [03]=[01]+[02], [06]=[04]+[05],
       [09]=[07]+[08], [12]=[09]+[11], [14]=[12]-[13].
-    - 2023-1T.pdf: 2019-2023 legacy revision (Orden EHA/3435/2007), 8 casillas.
-      Casilla IDs use the -legacy suffix internally; the displayed box number is the
-      plain digit prefix (01..08).  Amounts satisfy: [06]=[03]+[05], [08]=[06]-[07].
+    - 2023-1T.pdf: 2019-2023 revision (Orden EHA/3435/2007), 8 casillas.
+      Casilla IDs use the official bare box numbers (01..08). Amounts satisfy:
+      [06]=[03]+[05], [08]=[06]-[07].
     """
 
     filename: str
@@ -187,19 +187,18 @@ _MODELO_123_2024_RENDER_ROWS: tuple[tuple[CasillaId, str, str], ...] = (
     (_casilla_id("14"), "14", "2.850,00"),
 )
 
-_MODELO_123_2023_LEGACY_RENDER_ROWS: tuple[tuple[CasillaId, str, str], ...] = (
-    # 2019-2023 legacy revision: 8 casillas (internal ids have -legacy suffix).
-    # Display prefix is the plain digit (01..08).
+_MODELO_123_2023_RENDER_ROWS: tuple[tuple[CasillaId, str, str], ...] = (
+    # 2019-2023 revision: 8 casillas using official bare box numbers (01..08).
     # Amounts satisfy: [06]=[03]+[05]=1.520,00+0,00=1.520,00, [08]=[06]-[07]=1.520,00-0,00=1.520,00
     # Integer casilla uses N,00 format so SPANISH_AMOUNT_GROUP regex (requires comma) matches.
-    (_casilla_id("01-legacy"), "01", "4,00"),
-    (_casilla_id("02-legacy"), "02", "8.000,00"),
-    (_casilla_id("03-legacy"), "03", "1.520,00"),
-    (_casilla_id("04-legacy"), "04", "0,00"),
-    (_casilla_id("05-legacy"), "05", "0,00"),
-    (_casilla_id("06-legacy"), "06", "1.520,00"),
-    (_casilla_id("07-legacy"), "07", "0,00"),
-    (_casilla_id("08-legacy"), "08", "1.520,00"),
+    (_casilla_id("01"), "01", "4,00"),
+    (_casilla_id("02"), "02", "8.000,00"),
+    (_casilla_id("03"), "03", "1.520,00"),
+    (_casilla_id("04"), "04", "0,00"),
+    (_casilla_id("05"), "05", "0,00"),
+    (_casilla_id("06"), "06", "1.520,00"),
+    (_casilla_id("07"), "07", "0,00"),
+    (_casilla_id("08"), "08", "1.520,00"),
 )
 
 _MODELO_123_FIXTURES: tuple[_Modelo123Fixture, ...] = (
@@ -217,7 +216,7 @@ _MODELO_123_FIXTURES: tuple[_Modelo123Fixture, ...] = (
         periodo="1T",
         tax_id="Y0000001S",
         full_name="DEMO EMPRESA SL",
-        render_rows=_MODELO_123_2023_LEGACY_RENDER_ROWS,
+        render_rows=_MODELO_123_2023_RENDER_ROWS,
     ),
 )
 

@@ -19,7 +19,6 @@ they enforce the extraction discipline rather than any runtime calculation.
 from __future__ import annotations
 
 import ast
-from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -49,7 +48,6 @@ _WORKBOOK_KIND_MEMBERS: frozenset[str] = frozenset(
 def _bare_string_literals_in_file(
     path: Path,
     target: str,
-    source_tree_ast: Mapping[Path, ast.AST] | None = None,
 ) -> list[int]:
     """Return line numbers where ``target`` appears as a bare string constant.
 
@@ -58,7 +56,7 @@ def _bare_string_literals_in_file(
     statement of a module / class / function body when they are an
     ``ast.Expr`` wrapping a ``Constant``).
     """
-    tree = ast_for_path(path, source_tree_ast)
+    tree = ast_for_path(path)
     assert tree is not None, f"{path} must be parseable"
     docstring_nodes: set[int] = _collect_docstring_ids(tree)
     hits: list[int] = []
@@ -82,10 +80,9 @@ def _collect_docstring_ids(tree: ast.AST) -> set[int]:
 
 def _workbook_kind_enum_members(
     path: Path,
-    source_tree_ast: Mapping[Path, ast.AST] | None = None,
 ) -> frozenset[str]:
     """Return the StrEnum member values declared for WorkbookKind in ``path``."""
-    tree = ast_for_path(path, source_tree_ast)
+    tree = ast_for_path(path)
     assert tree is not None, f"{path} must be parseable"
     for node in ast.walk(tree):
         if not isinstance(node, ast.ClassDef) or node.name != "WorkbookKind":
@@ -102,14 +99,14 @@ def _workbook_kind_enum_members(
     return frozenset()
 
 
-def test_no_bare_varchar64_in_secure_objects(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_no_bare_varchar64_in_secure_objects() -> None:
     """All VARCHAR(64) references in secure_objects.py must use _VARCHAR_64.
 
     Exactly one occurrence is permitted: the constant's own module-level
     assignment (``_VARCHAR_64: Final[str] = "VARCHAR(64)"``).  Every other
     site must reference the constant, not repeat the bare literal.
     """
-    hits = _bare_string_literals_in_file(_SECURE_OBJECTS_PATH, "VARCHAR(64)", source_tree_ast)
+    hits = _bare_string_literals_in_file(_SECURE_OBJECTS_PATH, "VARCHAR(64)")
     assert len(hits) <= 1, (
         f"Bare 'VARCHAR(64)' literal found in {_SECURE_OBJECTS_PATH.name} at lines {hits}. "
         "Only the _VARCHAR_64 constant definition may carry the bare literal; "
@@ -117,7 +114,7 @@ def test_no_bare_varchar64_in_secure_objects(source_tree_ast: Mapping[Path, ast.
     )
 
 
-def test_no_bare_libreoffice_engine_in_workbook_parity(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_no_bare_libreoffice_engine_in_workbook_parity() -> None:
     """All 'libreoffice-headless' references must use _ENGINE_LIBREOFFICE.
 
     The only allowed occurrence is the constant's own assignment; callsites
@@ -125,7 +122,7 @@ def test_no_bare_libreoffice_engine_in_workbook_parity(source_tree_ast: Mapping[
     by virtue of them being the canonical constant definition, not duplicate
     literal dispersal.  We assert zero hits *outside* the definition line.
     """
-    hits = _bare_string_literals_in_file(_WORKBOOK_PARITY_PATH, "libreoffice-headless", source_tree_ast)
+    hits = _bare_string_literals_in_file(_WORKBOOK_PARITY_PATH, "libreoffice-headless")
     # Two occurrences are structural: the Literal type alias definition and
     # the _ENGINE_LIBREOFFICE assignment.  Both are on module-level definition
     # lines, not callsites.  We allow at most those two.
@@ -155,9 +152,9 @@ def test_workbook_kind_is_strenum_with_all_members() -> None:
     )
 
 
-def test_workbook_kind_enum_members_in_ast(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_workbook_kind_enum_members_in_ast() -> None:
     """All six WorkbookKind values must appear as class-body assignments in source."""
-    enrolled = _workbook_kind_enum_members(_WORKBOOK_PARITY_TYPES_PATH, source_tree_ast)
+    enrolled = _workbook_kind_enum_members(_WORKBOOK_PARITY_TYPES_PATH)
     missing = _WORKBOOK_KIND_MEMBERS - enrolled
     assert not missing, (
         f"WorkbookKind class body in {_WORKBOOK_PARITY_TYPES_PATH.name} "

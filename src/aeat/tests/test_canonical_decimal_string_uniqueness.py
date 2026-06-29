@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import ast
 import sys
-from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -32,17 +31,13 @@ _SRC_ROOT = SRC_AEAT
 
 def _collect_function_defs(
     source_root: Path,
-    source_tree_ast: Mapping[Path, ast.AST] | None = None,
 ) -> dict[str, list[Path]]:
     """Return a mapping from function name to list of files that define it.
 
-    When *source_tree_ast* is supplied (test path), consume the cached
-    parsed AST per file scoped to *source_root*. When omitted, fall back
-    to walk-and-parse so the helper's signature stays compatible with
-    importlib callers.
+    Consumes the shared production AST inventory scoped to *source_root*.
     """
     defs: dict[str, list[Path]] = {}
-    for py_file, tree in production_ast_items(source_tree_ast):
+    for py_file, tree in production_ast_items():
         if not py_file.is_relative_to(source_root):
             continue
         for node in ast.walk(tree):
@@ -56,15 +51,13 @@ def _collect_function_defs(
 # ---------------------------------------------------------------------------
 
 
-def test_canonical_decimal_string_has_exactly_one_definition_site(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
+def test_canonical_decimal_string_has_exactly_one_definition_site() -> None:
     """AST walk across src/aeat/ must find exactly one def site.
 
-    Consumes the session-scoped AST cache so the per-file parse cost is
-    amortised across the full ratchet suite.
+    Uses the shared per-file AST cache so the scan stays scoped to production
+    modules.
     """
-    all_defs = _collect_function_defs(_SRC_ROOT, source_tree_ast)
+    all_defs = _collect_function_defs(_SRC_ROOT)
     sites = all_defs.get("canonical_decimal_string", [])
     relative_sites = [aeat_relative(p) for p in sites]
     assert len(sites) == 1, (

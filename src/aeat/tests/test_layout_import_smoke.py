@@ -11,6 +11,7 @@ shape of the public re-exports the wider codebase consumes.
 from __future__ import annotations
 
 import importlib
+import importlib.util
 from pathlib import Path
 
 import pytest
@@ -24,7 +25,6 @@ CANONICAL_LAYOUT_PACKAGES: tuple[str, ...] = (
     "aeat.domain",
     "aeat.domain.modelos",
     "aeat.domain.manuals",
-    "aeat.domain.normatives",
     "aeat.domain.portals",
     "aeat.domain.deadlines",
     "aeat.domain.contribuyente",
@@ -123,6 +123,11 @@ def test_canonical_public_symbols_are_exposed(module_name: str, symbol_name: str
 def test_relocated_surfaces_exist_at_canonical_paths(relative_path: str) -> None:
     """Moved implementation surfaces must exist at their canonical destinations."""
     assert (SRC_AEAT / relative_path).exists()
+
+
+def test_legacy_normatives_package_is_absent() -> None:
+    """The retired JSON normative catalogue package must not be importable."""
+    assert importlib.util.find_spec("aeat.domain.normatives") is None
 
 
 def test_domain_justificante_does_not_export_parser_pipeline() -> None:

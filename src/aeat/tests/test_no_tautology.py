@@ -11,6 +11,7 @@ Tautological patterns detected:
 - ``assert 1 == 1`` / ``assert "x" == "x"`` — equal constants.
 - ``assert 1 != 2`` / ``assert "x" != "y"`` — unequal constants.
 - ``assert x == x`` / ``assert x is x`` — identical name on both sides.
+- ``assert x in (x,)`` / ``assert x not in ()`` — guaranteed membership results.
 
 Explicitly NOT treated as tautological:
 - ``assert False, message`` — intentional unconditional failure idiom
@@ -27,13 +28,12 @@ deterministic test-control surface. The test asserts this inventory stays at zer
 from __future__ import annotations
 
 import ast
-from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
 from ..core.logging import get_logger
-from ._inventory import ast_for_path, discover_test_control_modules, repo_relative
+from ._inventory import ast_for_path, discover_test_control_modules, project_test_control_modules, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -66,6 +66,8 @@ def _is_tautological_assert(node: ast.AST) -> bool:
         left = test.left
         right = test.comparators[0]
         if _is_tautological_compare(left, test.ops[0], right):
+            return True
+        if _is_tautological_membership(left, test.ops[0], right):
             return True
 
     return False
@@ -110,53 +112,69 @@ def _is_tautological_compare(left: ast.expr, op: ast.cmpop, right: ast.expr) -> 
     return False
 
 
+def _is_tautological_membership(left: ast.expr, op: ast.cmpop, right: ast.expr) -> bool:
+    """Return True for structurally guaranteed-pass literal membership checks."""
+    if isinstance(op, ast.NotIn) and _literal_truthiness(right) is False:
+        return True
+    if not isinstance(op, ast.In) or not isinstance(right, ast.Tuple | ast.List | ast.Set):
+        return False
+    return any(_same_simple_expression(left, element) for element in right.elts)
+
+
+def _same_simple_expression(left: ast.expr, right: ast.expr) -> bool:
+    """Return True when two simple AST expressions are structurally identical."""
+    if isinstance(left, ast.Name) and isinstance(right, ast.Name):
+        return left.id == right.id
+    if isinstance(left, ast.Constant) and isinstance(right, ast.Constant):
+        return left.value == right.value
+    return False
+
+
 def _tautological_sites(
     path: Path,
     tree: ast.AST,
 ) -> list[tuple[int, str]]:
     """Return ``(lineno, snippet)`` for every tautological assertion in *path*.
 
-    Accepts the cached ``ast.AST`` for *path* from the session fixture
-    rather than parsing the file again. Reads the file's raw text only
-    to render snippets for the violation message.
+    Accepts the cached ``ast.AST`` for *path* and reads raw text only to render
+    snippets for the violation message.
     """
+    hit_linenos = [
+        node.lineno for node in ast.walk(tree) if isinstance(node, ast.Assert) and _is_tautological_assert(node)
+    ]
+    if not hit_linenos:
+        return []
+
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
     except OSError:
         lines = []
 
     hits: list[tuple[int, str]] = []
-    for node in ast.walk(tree):
-        if _is_tautological_assert(node):
-            assert isinstance(node, ast.Assert)
-            lineno = node.lineno
-            snippet = lines[lineno - 1].strip() if lineno <= len(lines) else "<unknown>"
-            hits.append((lineno, snippet))
-            _logger.warning(
-                "tautological assertion detected: %s:%d %s",
-                repo_relative(path),
-                lineno,
-                snippet,
-            )
+    for lineno in hit_linenos:
+        snippet = lines[lineno - 1].strip() if lineno <= len(lines) else "<unknown>"
+        hits.append((lineno, snippet))
+        _logger.warning(
+            "tautological assertion detected: %s:%d %s",
+            repo_relative(path),
+            lineno,
+            snippet,
+        )
     return hits
 
 
-def test_no_tautological_assertions(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_no_tautological_assertions() -> None:
     """No deterministic test-control module may contain tautological assertions.
 
-    Consumes the session-scoped ``source_tree_ast`` cache for the parsed
-    AST and uses :func:`discover_test_control_modules` as the per-test filter
-    so the existing fixtures-dir exclusion stays intact. Modules absent
-    from the cache (e.g. files that failed to parse at fixture-build
-    time) fall back to a per-test ``ast.parse`` so the ratchet remains
-    truthful for malformed files.
+    Uses :func:`discover_test_control_modules` as the per-test filter so the
+    existing fixtures-dir exclusion stays intact.
     """
-    modules = discover_test_control_modules()
+    modules = sorted(set(discover_test_control_modules()) | set(project_test_control_modules()))
     violations: list[str] = []
 
     for module_path in modules:
         relative = repo_relative(module_path)
-        tree = ast_for_path(module_path, source_tree_ast)
+        tree = ast_for_path(module_path)
         if tree is None:
             continue
         for lineno, snippet in _tautological_sites(module_path, tree):
@@ -194,6 +212,13 @@ def test_detection_is_non_trivial() -> None:
         "assert True is not False",
         "assert x == x",
         "assert x is x",
+        "assert x in (x,)",
+        "assert x in [x]",
+        "assert x in {x}",
+        "assert 'x' in ('x',)",
+        "assert x not in ()",
+        "assert x not in []",
+        "assert x not in {}",
     ]
     not_flagged = [
         "assert False, 'msg'",
@@ -210,6 +235,10 @@ def test_detection_is_non_trivial() -> None:
         "assert x == y",
         "assert x != x",
         "assert len(x) == len(y)",
+        "assert x in [y]",
+        "assert x in values",
+        "assert x not in {y}",
+        "assert x not in blocked_values",
     ]
 
     for src in flagged:
@@ -225,5 +254,5 @@ def test_detection_is_non_trivial() -> None:
 
 def test_discovery_found_modules() -> None:
     """Guardrail: the discovery walk must find at least one test module."""
-    modules = discover_test_control_modules()
+    modules = sorted(set(discover_test_control_modules()) | set(project_test_control_modules()))
     assert modules, "No test modules discovered — check glob roots."
