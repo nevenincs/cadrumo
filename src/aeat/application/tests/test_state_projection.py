@@ -38,6 +38,7 @@ from ...adapters.persistence.storage.bucket._manifest_io import write_manifest
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core import Period
 from ...core.config import SecretStoreBackend, override_settings
+from ...domain.categories import SpendingCategory
 from ...domain.transactions import BusinessClassification, TransactionDirection
 from ...tests.secure_sql import dev_test_database_password
 from ..auth._operator import inspect_operator_auth
@@ -314,6 +315,56 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers() -> None:
     assert readiness.ledger_period == Period.from_year_and_code(2026, "1T")
     assert readiness.ledger_checked_transaction_count == 1
     assert [issue.reason.value for issue in readiness.ledger_issues] == ["missing_category"]
+
+
+def test_modelo_303_readiness_does_not_report_ledger_bindings_missing_after_clean_preflight() -> None:
+    bucket_id = _register_active_profile()
+    create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            bucket_id=bucket_id,
+            booked_date=date(2026, 4, 15),
+            amount=Decimal("1210.00"),
+            direction=TransactionDirection.INCOMING,
+            description="consulting invoice with output IVA",
+            business_classification=BusinessClassification.BUSINESS,
+            taxable_base=Decimal("1000.00"),
+            iva_rate=Decimal("0.21"),
+            iva_amount=Decimal("210.00"),
+            actor="operator",
+        ),
+    )
+    create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            bucket_id=bucket_id,
+            booked_date=date(2026, 4, 20),
+            amount=Decimal("121.00"),
+            direction=TransactionDirection.OUTGOING,
+            description="office supplies with input IVA",
+            business_classification=BusinessClassification.BUSINESS,
+            category_id=SpendingCategory.MATERIAL_OFICINA.value,
+            taxable_base=Decimal("100.00"),
+            iva_rate=Decimal("0.21"),
+            iva_amount=Decimal("21.00"),
+            actor="operator",
+        ),
+    )
+
+    projection = build_operator_state_projection(
+        modelo_readiness_requests=(
+            ModeloReadinessRequest(
+                modelo="303",
+                revision_id="2023-y-siguientes",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "2T"),
+            ),
+        ),
+    )
+
+    readiness = projection.modelo_readiness[0]
+    assert readiness.ledger_preflight_required is True
+    assert readiness.ledger_ready is True
+    assert readiness.ledger_issues == ()
+    assert "ledger_iva_aggregation" not in {binding.source for binding in readiness.missing_bindings}
 
 
 def test_modelo_309_ad_hoc_readiness_fails_closed_for_non_span_ledger_period() -> None:

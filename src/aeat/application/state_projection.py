@@ -632,15 +632,6 @@ def _build_modelo_readiness(
             period=readiness_period,
             revision=revision,
         )
-        missing_bindings = (
-            _missing_calculation_bindings_for_readiness(
-                registry_resolution.snapshot,
-                bucket_id=pointer.bucket_id,
-                profile_record=record,
-            )
-            if registry_resolution.snapshot is not None
-            else ()
-        )
         ledger_report = None
         if registry_resolution.snapshot is not None and _snapshot_requires_ledger_preflight(
             registry_resolution.snapshot
@@ -649,6 +640,16 @@ def _build_modelo_readiness(
                 bucket_id=pointer.bucket_id,
                 period=readiness_period,
             )
+        missing_bindings = (
+            _missing_calculation_bindings_for_readiness(
+                registry_resolution.snapshot,
+                bucket_id=pointer.bucket_id,
+                profile_record=record,
+                ledger_sources_ready=ledger_report is not None and ledger_report.ready,
+            )
+            if registry_resolution.snapshot is not None
+            else ()
+        )
         reports.append(
             ProjectionModeloReadiness(
                 profile_id=profile_report.profile_id,
@@ -775,26 +776,26 @@ def _missing_calculation_bindings_for_readiness(
     *,
     bucket_id: str,
     profile_record: object,
+    ledger_sources_ready: bool,
 ) -> tuple[ProjectionModeloBindingRequirement, ...]:
-    """Return formula-consumed profile/manual bindings not available to calculation readiness."""
+    """Return non-constant registry bindings not available to calculation readiness.
+
+    Ledger aggregation bindings are available only through the ledger preflight
+    path. Once that preflight passes, the calculation mesh can resolve them from
+    the bucket ledger and readiness must not report them as missing operator
+    inputs.
+    """
     from ..domain.calculations.registry import (
         enum_consumed_binding_ids,
-        expression_binding_refs,
         revision_date_binding_ids,
     )
     from .modelo import ProfileBindingResolutionError, resolve_profile_sourced_bindings
 
     revision = snapshot.revision
-    decimal_consumed: set[str] = set()
-    for formula in revision.formulas:
-        decimal_consumed.update(str(binding_id) for binding_id in expression_binding_refs(formula.expression))
     enum_consumed = {str(binding_id) for binding_id in enum_consumed_binding_ids(revision)}
     date_consumed = {str(binding_id) for binding_id in revision_date_binding_ids(revision)}
-    consumed = decimal_consumed | enum_consumed | date_consumed
-    if not consumed:
+    if not revision.bindings:
         return ()
-
-    bindings_by_id = {str(binding.id): binding for binding in revision.bindings if str(binding.id) in consumed}
     try:
         profile_resolution = resolve_profile_sourced_bindings(
             snapshot,
@@ -816,13 +817,14 @@ def _missing_calculation_bindings_for_readiness(
         }
 
     missing: list[ProjectionModeloBindingRequirement] = []
-    for binding_id in sorted(consumed):
-        binding = bindings_by_id.get(binding_id)
-        source = _binding_source_value(binding.source) if binding is not None else "registry_missing"
-        if source == "profile":
-            if binding_id in profile_resolved:
-                continue
-        elif source != "manual_input":
+    for binding in sorted(revision.bindings, key=lambda item: str(item.id)):
+        binding_id = str(binding.id)
+        source = _binding_source_value(binding.source)
+        if source == "constant_value":
+            continue
+        if binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES and ledger_sources_ready:
+            continue
+        if source == "profile" and binding_id in profile_resolved:
             continue
         missing.append(
             ProjectionModeloBindingRequirement(
