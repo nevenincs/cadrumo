@@ -98,7 +98,7 @@ from ._retenciones_bindings import (
     resolve_retenciones_aggregation_binding_values,
     validate_retenciones_aggregation_binding,
 )
-from ._schema import DataBindingDefinition, InputKind, ModeloRevision
+from ._schema import CasillaDefinition, DataBindingDefinition, InputKind, ModeloRevision
 from ._withholding_bindings import (
     WithholdingObservation,
     WithholdingObservationRequirement,
@@ -138,12 +138,14 @@ __all__ = [
     "binding_aggregation_op",
     "binding_source_casilla_ids",
     "binding_source_modelo",
+    "bound_casilla_binding_ids",
     "counterpart_binding_requirements",
     "default_binding_aggregation_op",
     "invoice_binding_requirements",
     "previous_filing_observation_requirements",
     "previous_filing_source_reference",
     "resolve_atribucion_binding_row_values",
+    "resolve_bound_casilla_binding_value",
     "resolve_bound_inputs_by_casilla_id",
     "resolve_counterpart_binding_row_values",
     "resolve_counterpart_binding_values",
@@ -354,6 +356,44 @@ class OracleModeloObservation(RegistryModeloObservation):
     oracle_id: OracleId
 
 
+def bound_casilla_binding_ids(casilla: CasillaDefinition) -> tuple[BindingId, ...]:
+    """Return the primary plus reviewed equivalent bindings for one bound casilla."""
+    if casilla.input_kind != InputKind.BOUND:
+        return ()
+    if casilla.binding is None:
+        raise RegistryValidationError(f"bound casilla {casilla.id!r} has no binding")
+    return (casilla.binding, *casilla.alternate_bindings)
+
+
+def resolve_bound_casilla_binding_value(
+    casilla: CasillaDefinition,
+    facts: Mapping[BindingId, Decimal],
+) -> tuple[Decimal | None, tuple[BindingId, ...]]:
+    """Resolve equivalent binding facts for one casilla, rejecting disagreements.
+
+    A bound casilla can declare reviewed alternate bindings when multiple registry
+    source paths represent the same factual amount. Supplying two equivalent
+    source values is legal only if they agree exactly; otherwise accepting either
+    one would silently over- or under-declare the downstream calculation.
+    """
+    binding_ids = bound_casilla_binding_ids(casilla)
+    present = tuple((binding_id, facts[binding_id]) for binding_id in binding_ids if binding_id in facts)
+    if not present:
+        return None, ()
+    first_value = present[0][1]
+    disagreeing = tuple((binding_id, value) for binding_id, value in present if value != first_value)
+    if disagreeing:
+        values_by_binding = ", ".join(f"{binding_id!r}={value!r}" for binding_id, value in present)
+        raise RegistryValidationError(
+            f"bound casilla {casilla.id!r} received conflicting equivalent binding values: {values_by_binding}",
+            context={
+                "casilla_id": casilla.id,
+                "binding_ids": ",".join(binding_id for binding_id, _value in present),
+            },
+        )
+    return first_value, tuple(binding_id for binding_id, _value in present)
+
+
 def resolve_bound_inputs_by_casilla_id(
     revision: ModeloRevision,
     facts: Mapping[BindingId, Decimal],
@@ -378,11 +418,13 @@ def resolve_bound_inputs_by_casilla_id(
     for casilla in revision.casillas:
         if casilla.input_kind != InputKind.BOUND:
             continue
-        if casilla.binding is None:
-            raise RegistryValidationError(f"bound casilla {casilla.id!r} has no binding")
-        if casilla.binding not in facts:
-            raise RegistryValidationError(f"missing binding fact for casilla {casilla.id!r}: {casilla.binding!r}")
-        resolved[casilla.id] = facts[casilla.binding]
+        binding_ids = bound_casilla_binding_ids(casilla)
+        value, _present_binding_ids = resolve_bound_casilla_binding_value(casilla, facts)
+        if value is None:
+            raise RegistryValidationError(
+                f"missing binding fact for casilla {casilla.id!r}: one of {binding_ids!r}",
+            )
+        resolved[casilla.id] = value
     return resolved
 
 

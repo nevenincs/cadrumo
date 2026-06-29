@@ -55,6 +55,7 @@ from ...domain.calculations.registry import (
     InputKind,
     ModeloRevision,
     RelationId,
+    bound_casilla_binding_ids,
     calculate_registry_snapshot,
     casillas_by_id,
     relation_source_requirements,
@@ -1054,7 +1055,8 @@ def _source_owned_bound_casilla_ids(
     return frozenset(
         casilla.id
         for casilla in revision.casillas
-        if casilla.input_kind == InputKind.BOUND and casilla.binding in source_owned_binding_ids
+        if casilla.input_kind == InputKind.BOUND
+        and source_owned_binding_ids.intersection(bound_casilla_binding_ids(casilla))
     )
 
 

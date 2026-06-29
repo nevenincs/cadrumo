@@ -293,6 +293,8 @@ def calculation_closure_legal_refs(revision: ModeloRevision, modelo_id: str) -> 
             legal_refs.update(formulas_by_id[casilla.formula].legal_refs)
         if casilla.binding is not None:
             legal_refs.update(bindings_by_id[casilla.binding].legal_refs)
+        for binding_id in casilla.alternate_bindings:
+            legal_refs.update(bindings_by_id[binding_id].legal_refs)
     for expectation in revision.verification_expectations:
         legal_refs.update(expectation.legal_refs)
     return frozenset(legal_refs)
