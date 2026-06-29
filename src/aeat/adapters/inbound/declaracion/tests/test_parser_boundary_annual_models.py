@@ -65,26 +65,30 @@ def test_parser_extracts_modelo_390_profile_targets_from_corpus(pdf_stem: str, y
       2023-0A: c06=12600, c04=0, c02=0, c26=0, c49=9800 -> c47=12600, c64=9800, c65=2800
     """
     _EXPECTED: dict[str, dict[CasillaId, Decimal]] = {
-        "2022-0A": _expected_casilla_values({
-            "iva.anual.repercutido.general": Decimal("10500.00"),
-            "iva.anual.repercutido.reducido": Decimal("0.00"),
-            "iva.anual.repercutido.super-reducido": Decimal("0.00"),
-            "iva.anual.autorepercutido.intracomunitaria": Decimal("0.00"),
-            "iva.anual.soportado.interiores": Decimal("8400.00"),
-            "iva.anual.cuota-devengada-total": Decimal("10500.00"),
-            "iva.anual.cuota-deducible-total": Decimal("8400.00"),
-            "iva.anual.resultado-regimen-general": Decimal("2100.00"),
-        }),
-        "2023-0A": _expected_casilla_values({
-            "iva.anual.repercutido.general": Decimal("12600.00"),
-            "iva.anual.repercutido.reducido": Decimal("0.00"),
-            "iva.anual.repercutido.super-reducido": Decimal("0.00"),
-            "iva.anual.autorepercutido.intracomunitaria": Decimal("0.00"),
-            "iva.anual.soportado.interiores": Decimal("9800.00"),
-            "iva.anual.cuota-devengada-total": Decimal("12600.00"),
-            "iva.anual.cuota-deducible-total": Decimal("9800.00"),
-            "iva.anual.resultado-regimen-general": Decimal("2800.00"),
-        }),
+        "2022-0A": _expected_casilla_values(
+            {
+                "iva.anual.repercutido.general": Decimal("10500.00"),
+                "iva.anual.repercutido.reducido": Decimal("0.00"),
+                "iva.anual.repercutido.super-reducido": Decimal("0.00"),
+                "iva.anual.autorepercutido.intracomunitaria": Decimal("0.00"),
+                "iva.anual.soportado.interiores": Decimal("8400.00"),
+                "iva.anual.cuota-devengada-total": Decimal("10500.00"),
+                "iva.anual.cuota-deducible-total": Decimal("8400.00"),
+                "iva.anual.resultado-regimen-general": Decimal("2100.00"),
+            }
+        ),
+        "2023-0A": _expected_casilla_values(
+            {
+                "iva.anual.repercutido.general": Decimal("12600.00"),
+                "iva.anual.repercutido.reducido": Decimal("0.00"),
+                "iva.anual.repercutido.super-reducido": Decimal("0.00"),
+                "iva.anual.autorepercutido.intracomunitaria": Decimal("0.00"),
+                "iva.anual.soportado.interiores": Decimal("9800.00"),
+                "iva.anual.cuota-devengada-total": Decimal("12600.00"),
+                "iva.anual.cuota-deducible-total": Decimal("9800.00"),
+                "iva.anual.resultado-regimen-general": Decimal("2800.00"),
+            }
+        ),
     }
     expected = _EXPECTED[pdf_stem]
 
