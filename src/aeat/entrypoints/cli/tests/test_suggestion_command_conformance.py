@@ -51,11 +51,10 @@ from typing import cast
 
 import click
 import pytest
-from typer.main import get_command
 
 from ....application.operator_surface import HelpSurface, build_help_document
 from ....core.errors._registry import ERROR_REGISTRY
-from .. import app
+from ....tests.cli_runner import aeat_click_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -81,7 +80,7 @@ _CITATION_PATTERN = re.compile(r"\baeat (app|config)((?: (?:[a-z][a-z0-9-]*|\d{3
 @cache
 def _root_command() -> click.Command:
     """Build the live Click tree once for the whole module."""
-    return cast("click.Command", get_command(app))
+    return aeat_click_command()
 
 
 def _is_group(command: click.Command) -> bool:

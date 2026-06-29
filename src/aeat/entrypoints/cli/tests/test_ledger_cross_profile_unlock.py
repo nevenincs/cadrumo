@@ -18,7 +18,6 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile._orchestration import profile_create_storage_span
@@ -26,12 +25,11 @@ from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....tests import FIXTURES_DIR
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_RUNNER = CliRunner()
 _FIX = FIXTURES_DIR / "financial"
 _MARTA_CSV = _FIX / "ledger-corpus" / "n26-savings.csv"
 _RETAILER_CSV = _FIX / "ledger-corpus-retailer" / "bbva-retail-eur.csv"
@@ -57,12 +55,12 @@ def _register(name: str) -> None:
 
 
 def _import(csv_path: Path) -> None:
-    result = _RUNNER.invoke(app, ["app", "ledger", "import", str(csv_path), "--provider", "csv"])
+    result = invoke_cached_cli(["app", "ledger", "import", str(csv_path), "--provider", "csv"])
     assert result.exit_code == 0, result.output
 
 
 def _list_ids() -> set[str]:
-    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    listed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     rows = json.loads(listed.output)["result"]["rows"]
     return {r.get("full_id") or r["transaction_id"] for r in rows}
@@ -87,7 +85,7 @@ def test_two_profiles_keep_independent_ledgers_across_unlocks() -> None:
     # Unlocking a profile reopens its session and surfaces only that profile's
     # ledger -- no bleed-through.
     with profile_create_storage_span("marta"):
-        unlocked = _RUNNER.invoke(app, ["config", "switch", "marta"])
+        unlocked = invoke_cached_cli(["config", "switch", "marta"])
         assert unlocked.exit_code == 0, unlocked.output
         back = _list_ids()
     assert back == marta_ids

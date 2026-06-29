@@ -251,6 +251,15 @@ class CasillaDefinition(RegistryModel):
     input_kind: InputKindValue = InputKind.MANUAL
     formula: FormulaId | None = None
     binding: BindingId | None = None
+    alternate_bindings: tuple[BindingId, ...] = Field(
+        default_factory=tuple,
+        description=(
+            "Equivalent binding slots that may populate the same bound casilla. "
+            "Used only when the registry has reviewed multiple legally grounded "
+            "source paths for the same factual amount; conflicting supplied "
+            "values are rejected before calculation."
+        ),
+    )
     export_refs: tuple[ExportFieldId, ...] = ()
     constraints: CasillaConstraints | None = None
     form_number: str | None = Field(default=None, min_length=1, max_length=16)
@@ -296,8 +305,16 @@ class CasillaDefinition(RegistryModel):
             raise RegistryValidationError(f"computed casilla {self.id!r} must declare formula")
         if self.input_kind == InputKind.COMPUTED and self.binding is not None:
             raise RegistryValidationError(f"computed casilla {self.id!r} must not declare binding")
+        if self.input_kind != InputKind.BOUND and self.alternate_bindings:
+            raise RegistryValidationError(f"non-bound casilla {self.id!r} must not declare alternate_bindings")
         if self.input_kind == InputKind.BOUND and self.binding is None:
             raise RegistryValidationError(f"bound casilla {self.id!r} must declare binding")
+        if self.binding is not None and self.binding in self.alternate_bindings:
+            raise RegistryValidationError(
+                f"casilla {self.id!r} alternate_bindings must not repeat primary binding {self.binding!r}",
+            )
+        if len(set(self.alternate_bindings)) != len(self.alternate_bindings):
+            raise RegistryValidationError(f"casilla {self.id!r} alternate_bindings must be unique")
         if self.input_kind == InputKind.BOUND and self.formula is not None:
             raise RegistryValidationError(f"bound casilla {self.id!r} must not declare formula")
         if self.internal_only and self.export_refs:

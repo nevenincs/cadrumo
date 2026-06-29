@@ -99,6 +99,11 @@ def _scan() -> dict[str, object]:
                     dangling_binds.append(
                         f"{modelo.id}/{revision_id}/{casilla.id} -> {casilla.binding!r}",
                     )
+                for binding_id in casilla.alternate_bindings:
+                    if binding_id not in binding_ids:
+                        dangling_binds.append(
+                            f"{modelo.id}/{revision_id}/{casilla.id}.alternate_bindings -> {binding_id!r}",
+                        )
 
             for binding in revision.bindings:
                 source = binding.source

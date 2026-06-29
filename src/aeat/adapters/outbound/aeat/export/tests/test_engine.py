@@ -42,7 +42,7 @@ def _secure_database(tmp_path: Path) -> Iterator[None]:
 
 
 class _Draft(BaseModel):
-    """Frozen Protocol-conforming test double for ``ModeloDraftLike``.
+    """Frozen Protocol-conforming harness record for ``ModeloDraftLike``.
 
     Structural conformance only — ``ModeloDraftLike`` declares read-only
     properties, so a frozen pydantic model satisfies it without
@@ -61,7 +61,7 @@ class _Draft(BaseModel):
 
 
 class _OpenDeadlines:
-    """Deadline checker test double that always reports the filing window as open."""
+    """Deadline checker harness that always reports the filing window as open."""
 
     def is_window_open(self, modelo: str, period: Period, today: date) -> bool:
         """Return ``True`` for every (modelo, period, today) tuple."""
@@ -69,7 +69,7 @@ class _OpenDeadlines:
 
 
 class _OkAuthProvider:
-    """Auth provider test double that reports a healthy CERTIFICATE provider."""
+    """Auth provider harness that reports a healthy CERTIFICATE provider."""
 
     kind = AuthProviderKind.CERTIFICATE
 

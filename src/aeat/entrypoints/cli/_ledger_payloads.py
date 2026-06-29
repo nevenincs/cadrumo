@@ -110,6 +110,16 @@ class SpendingCategoryFamilyPayload(OutputSchema):
     category_ids: list[str]
 
 
+class LedgerIrpfCategoryPayload(OutputSchema):
+    """One ``--irpf-category`` value exposed by ``ledger categories``."""
+
+    id: str
+    purpose: str
+    directions: list[str]
+    net_paid_invoice: bool
+    related_category_ids: list[str]
+
+
 class LedgerReviewRowPayload(OutputSchema):
     """One ledger review row."""
 
@@ -498,9 +508,6 @@ class LedgerStatusResult(OutputSchema):
     """
 
     bucket_id: str
-    income_total: str = "0.00"
-    expense_total: str = "0.00"
-    net_total: str = "0.00"
     business_income_total: str = "0.00"
     business_expense_total: str = "0.00"
     business_net_total: str = "0.00"
@@ -555,6 +562,9 @@ class LedgerCategoriesResult(OutputSchema):
 
     families: list[SpendingCategoryFamilyPayload]
     category_ids: list[str]
+    irpf_categories: list[LedgerIrpfCategoryPayload]
+    irpf_category_ids: list[str]
+    net_paid_withholding_irpf_category_ids: list[str]
     income_requires_category: bool
 
 

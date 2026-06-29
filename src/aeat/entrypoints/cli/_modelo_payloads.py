@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pydantic import Field, model_validator
+from pydantic import Field
 
 from ...core import Period
 from ...core.identity import BucketId
@@ -28,6 +28,8 @@ from ...domain.modelos._ids import (
     VerificationReportId,
     WorkUnitId,
 )
+from ._modelo_revision_payload_parts import ObservationPayload, ResultSummaryRowPayload
+from ._modelo_work_revision_payloads import WorkObservationsResult, WorkRevisionResult
 from ._payloads_modelo_reconcile import (
     ModeloReconcileResult,
     ModeloReconciliationDiffPayload,
@@ -64,29 +66,6 @@ class WorkUnitPayload(OutputSchema):
     causante_ccaa: str | None = None
 
 
-class ObservationPayload(OutputSchema):
-    """One typed casilla observation with full provenance."""
-
-    casilla_id: CasillaId
-    value: str  # serialised Decimal
-    formula_id: FormulaId | None = None
-    operand_refs: tuple[str, ...] = ()
-    operand_casilla_refs: tuple[CasillaId, ...] = ()
-    operand_values: tuple[str, ...] = ()
-    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
-    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
-
-    @model_validator(mode="after")
-    def _operand_casilla_refs_are_traced(self) -> ObservationPayload:
-        missing = tuple(ref for ref in self.operand_casilla_refs if ref not in self.operand_refs)
-        if missing:
-            raise ValueError(
-                f"observation payload for {self.casilla_id!r} declares operand_casilla_refs "
-                f"that are absent from operand_refs: {missing!r}",
-            )
-        return self
-
-
 class WorkRecargoPayload(OutputSchema):
     """Recargo band provenance for an overdue work-unit filing deadline.
 
@@ -116,15 +95,6 @@ class WorkPlazoDeadlinePayload(OutputSchema):
     days_remaining: int | None = None
     days_overdue: int | None = None
     recargo: WorkRecargoPayload | None = None
-
-
-class ResultSummaryRowPayload(OutputSchema):
-    """One headline-result summary row (registry-declared lead figure)."""
-
-    role: str
-    casilla_id: CasillaId
-    value: str  # serialised Decimal
-    label: str
 
 
 class CalculationRevisionPayload(OutputSchema):
@@ -439,38 +409,6 @@ class WorkRevisionsResult(OutputSchema):
     work_unit_id_filter: str | None = None
     revision_count: int
     revisions: list[CalculationRevisionPayload]
-
-
-@register_schema("modelo.work.revision")
-class WorkRevisionResult(OutputSchema):
-    """Single-revision shape returned by ``aeat app modelo work revision``.
-
-    Carries the same calculation-revision fields as
-    :class:`WorkCalculateResult` minus the persistence-confirmation
-    pair (``saved`` / ``saved_confirmation``). Modelo 202 modality
-    surfaces on the same optional fields so the inspection verb stays
-    contract-compatible with the calculate verb's output.
-    """
-
-    operation: str = "modelo.work.revision"
-    calculation_revision_id: CalculationRevisionId
-    work_unit_id: WorkUnitId
-    state: str
-    casilla_values: dict[CasillaId, str]
-    observations: tuple[ObservationPayload, ...]
-    result_summary: tuple[ResultSummaryRowPayload, ...] = ()
-    binding_overrides: dict[BindingId, str]
-    relation_overrides: dict[RelationId, str] = Field(default_factory=dict)
-    input_values_by_casilla_id: dict[CasillaId, str]
-    created_at: str
-    updated_at: str
-    verified_at: str | None = None
-    verified_by: str | None = None
-    filed_at: str | None = None
-    filed_by: str | None = None
-    superseded_at: str | None = None
-    modality: str | None = None
-    modality_reason: str | None = None
 
 
 @register_schema("modelo.work.verify")
@@ -1308,9 +1246,11 @@ __all__ = [
     "WorkFileResult",
     "WorkHistoryResult",
     "WorkListResult",
+    "WorkObservationsResult",
     "WorkPreviewMaritimeExemptionResult",
     "WorkRenameResult",
     "WorkResumeResult",
+    "WorkRevisionResult",
     "WorkRevisionsResult",
     "WorkRunsResult",
     "WorkStatusResult",

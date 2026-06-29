@@ -3,8 +3,8 @@
 Drives the REAL Claude classifier (``build_claude_classifier`` → the ``claude``
 CLI) over a representative sample of the hand-authored corpus and scores its
 predictions against the ground-truth oracle. Marked ``aeat_live`` and excluded
-from the default unit selection; self-skips when the classifier is unavailable
-(no CLI / not logged in), mirroring ``test_live_anthropic``.
+from the default unit selection; after live opt-in, unavailable classifier
+credentials or CLI state fail loudly.
 
 When live classification IS available the harness:
 - behavior contract: scores per-classification accuracy against the oracle;
@@ -29,6 +29,7 @@ from ..adapters.inbound.financial.providers._csv import CsvProvider
 from ..domain.transactions import BusinessClassification, Transaction, TransactionDirection
 from ..domain.transactions._errors import LLMClassifierError
 from ..domain.transactions._llm import build_claude_classifier
+from .live_gate import requires_live_enabled
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_application]
 
@@ -80,20 +81,21 @@ def _sample_transactions() -> list[tuple[Transaction, dict[str, Any]]]:
     return out
 
 
-def _live_classifier_or_skip():
-    """Return a live Claude classifier, or skip when live LLM is unavailable."""
+def _live_classifier_or_fail():
+    """Return a live Claude classifier, failing when the live LLM is unavailable."""
     classifier = build_claude_classifier(alias="claude-sonnet")
     probe_account = next(CsvProvider().ingest(_CORPUS / _ACCOUNTS[0])).raw
     probe = Transaction.model_validate({"raw": probe_account, "direction": TransactionDirection.OUTGOING})
     try:
         classifier.classify(probe)
     except LLMClassifierError as exc:
-        pytest.skip(f"live LLM classifier unavailable: {exc}")
+        pytest.fail(f"live LLM classifier unavailable after live opt-in: {exc}")
     return classifier
 
 
 def test_llm_classification_scores_against_oracle_and_gates_accuracy() -> None:
-    classifier = _live_classifier_or_skip()
+    requires_live_enabled()
+    classifier = _live_classifier_or_fail()
     sample = _sample_transactions()
     assert sample, "corpus sample for LLM classification must be non-empty"
 

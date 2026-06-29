@@ -286,6 +286,7 @@ def _sheets_service(credentials: object) -> _GoogleResource:
 # .files() / .spreadsheets() only via runtime Discovery JSON dispatch; the published
 # typing surface carries .close() alone, so service helpers accept Any for the dynamic
 # attribute access.
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: runtime discovery Resource.
 def _verify_ownership(drive_service: Any, spreadsheet_id: str) -> None:
     """Refuse to read from a spreadsheet that lacks the ownership marker."""
     file_meta = execute_request(
@@ -310,6 +311,7 @@ def _verify_ownership(drive_service: Any, spreadsheet_id: str) -> None:
 # .spreadsheets() only via runtime Discovery JSON dispatch; the published typing
 # surface carries .close() alone, so the service helper accepts Any for the dynamic
 # attribute access.
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: runtime discovery Resource.
 def _read_developer_metadata(
     sheets_service: Any,
     spreadsheet_id: str,
@@ -548,6 +550,7 @@ def _operator_input_addresses(
 # .spreadsheets() only via runtime Discovery JSON dispatch; the published typing
 # surface carries .close() alone, so the service helper accepts Any for the dynamic
 # attribute access.
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: runtime discovery Resource.
 def _batch_get_values(
     sheets: Any,
     spreadsheet_id: str,
@@ -724,6 +727,7 @@ def _parse_relation_metadata(
 # .spreadsheets() only via runtime Discovery JSON dispatch; the published typing
 # surface carries .close() alone, so the service helper accepts Any for the dynamic
 # attribute access.
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: runtime discovery Resource.
 def _read_row_set_edits(
     snapshot: RegistrySnapshot,
     sheets: Any,
@@ -767,6 +771,7 @@ def _row_set_block_range(row_set: Any) -> str:
 # .spreadsheets() only via runtime Discovery JSON dispatch; the published typing
 # surface carries .close() alone, so the service helper accepts Any for the dynamic
 # attribute access.
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: runtime discovery Resource.
 def _batch_get_values_for_row_sets(
     sheets: Any,
     spreadsheet_id: str,

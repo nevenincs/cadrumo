@@ -564,10 +564,9 @@ class RepairProfileResult(OutputSchema):
     """JSON envelope for ``aeat config repair profile``.
 
     Covers the inspection branch (operator-readable profile-record status),
-    the ``--clear-active`` pointer-repair branch, and the
-    ``--repair-manifest-status`` manifest backfill branch. The application
-    layer model evolves independently across these branches; ``extra="allow"``
-    keeps the envelope shape stable without re-declaring every field.
+    and the ``--clear-active`` pointer-repair branch. The application layer
+    model evolves independently across these branches; ``extra="allow"`` keeps
+    the envelope shape stable without re-declaring every field.
     """
 
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:

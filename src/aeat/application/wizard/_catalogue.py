@@ -266,6 +266,15 @@ _DISABILITY_GRADE_CHOICES: tuple[WizardChoice, ...] = (
 
 
 _ENTITY_LEGAL = WizardCondition(question_id="entity-type", equals=EntityType.LEGAL_ENTITY.value)
+_LEY_49_2002_FORM = WizardCondition(
+    question_id="legal-entity-form",
+    equals=LegalEntityForm.SIN_FINES_LUCRATIVOS.value,
+)
+_LEY_49_2002_OPTION_DECLARED = WizardCondition(question_id="ley-49-2002-option-declared", equals="true")
+_LEY_49_2002_RENUNCIATION_DECLARED = WizardCondition(
+    question_id="ley-49-2002-renunciation-declared",
+    equals="true",
+)
 
 # `activity` (the actividad económica / epígrafe IAE free-text field)
 # is collected only for a taxpayer that actually carries on an
@@ -352,6 +361,46 @@ _TAXPAYER_TYPE_SECTION = WizardSection(
             required=False,
             visible_when=_ENTITY_LEGAL,
             answer_type=bool,
+        ),
+        WizardQuestion(
+            id="ley-49-2002-option-declared",
+            profile_key="taxpayer_type.ley_49_2002_special_regime_option_declared",
+            widget=WizardWidget.CONFIRM,
+            prompt=tr("wizard.setup.taxpayer-type.ley-49-2002-option-declared.prompt"),
+            help=tr("wizard.setup.taxpayer-type.ley-49-2002-option-declared.help"),
+            required=False,
+            visible_when=_LEY_49_2002_FORM,
+            answer_type=bool,
+        ),
+        WizardQuestion(
+            id="ley-49-2002-option-date",
+            profile_key="taxpayer_type.ley_49_2002_special_regime_option_date",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.taxpayer-type.ley-49-2002-option-date.prompt"),
+            help=tr("wizard.setup.taxpayer-type.ley-49-2002-option-date.help"),
+            required=False,
+            visible_when=_LEY_49_2002_OPTION_DECLARED,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="ley-49-2002-renunciation-declared",
+            profile_key="taxpayer_type.ley_49_2002_special_regime_renunciation_declared",
+            widget=WizardWidget.CONFIRM,
+            prompt=tr("wizard.setup.taxpayer-type.ley-49-2002-renunciation-declared.prompt"),
+            help=tr("wizard.setup.taxpayer-type.ley-49-2002-renunciation-declared.help"),
+            required=False,
+            visible_when=_LEY_49_2002_FORM,
+            answer_type=bool,
+        ),
+        WizardQuestion(
+            id="ley-49-2002-renunciation-date",
+            profile_key="taxpayer_type.ley_49_2002_special_regime_renunciation_date",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.taxpayer-type.ley-49-2002-renunciation-date.prompt"),
+            help=tr("wizard.setup.taxpayer-type.ley-49-2002-renunciation-date.help"),
+            required=False,
+            visible_when=_LEY_49_2002_RENUNCIATION_DECLARED,
+            answer_type=str,
         ),
     ),
 )

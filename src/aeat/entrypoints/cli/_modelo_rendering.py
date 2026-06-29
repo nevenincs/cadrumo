@@ -294,7 +294,7 @@ def _work_unit_deadline_output_from_summary(
 
 
 def work_unit_deadline_output(unit) -> tuple[WorkPlazoDeadlinePayload | None, list[Notice]]:
-    """Project a work unit's filing deadline onto a payload + notices."""
+    """Project a work unit's filing deadline onto :class:`WorkPlazoDeadlinePayload` plus :class:`Notice` rows."""
     return _work_unit_deadline_output_from_summary(modelo_work_plazo_summary(unit))
 
 
@@ -391,6 +391,35 @@ def calculation_revision_lines(rev) -> list[str]:
         fields = detail_row.model_dump(mode="json", exclude={"row_type"})
         field_str = " ".join(f"{key}={value}" for key, value in fields.items())
         lines.append(f"detail_row\t{index}\t{detail_row.row_type}\t{field_str}")
+    return lines
+
+
+def calculation_observation_lines(rev) -> list[str]:
+    """Return a stable text view of a revision's typed casilla observations."""
+    payload = calculation_revision_payload(rev)
+    observations = sorted(payload.observations, key=lambda obs: obs.casilla_id)
+    lines = [
+        f"calculation_revision_id\t{payload.calculation_revision_id}",
+        f"work_unit_id\t{payload.work_unit_id}",
+        f"state\t{payload.state}",
+        f"observation_count\t{len(observations)}",
+        "casilla_id\tvalue\tformula_id\tlegal_refs\tsource_refs\toperand_refs\toperand_casilla_refs\toperand_values",
+    ]
+    lines.extend(
+        "\t".join(
+            (
+                obs.casilla_id,
+                obs.value,
+                obs.formula_id or "",
+                ";".join(obs.legal_refs),
+                ";".join(obs.source_refs),
+                ";".join(obs.operand_refs),
+                ";".join(obs.operand_casilla_refs),
+                ";".join(obs.operand_values),
+            ),
+        )
+        for obs in observations
+    )
     return lines
 
 

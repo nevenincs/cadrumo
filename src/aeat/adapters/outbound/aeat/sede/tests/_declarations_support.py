@@ -382,12 +382,12 @@ def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: st
     else:
         inputs = _casilla_values(
             {
-                "01-legacy": Decimal("5"),
-                "02-legacy": Decimal("1201.00"),
-                "03-legacy": Decimal("228.19"),
-                "04-legacy": Decimal("0"),
-                "05-legacy": Decimal("7.50"),
-                "07-legacy": Decimal("12.25"),
+                "01": Decimal("5"),
+                "02": Decimal("1201.00"),
+                "03": Decimal("228.19"),
+                "04": Decimal("0"),
+                "05": Decimal("7.50"),
+                "07": Decimal("12.25"),
             },
         )
         headers = {

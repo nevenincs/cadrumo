@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import re
 from collections.abc import Iterable, Iterator, Mapping, Sequence
+from functools import cache
 from pathlib import Path
 
 SRC_AEAT: Path = Path(__file__).resolve().parents[1]
@@ -30,8 +31,11 @@ UTF8_HASH_ALLOWLIST_TOKENS = frozenset({"hashlib", "hmac", "sha256", "sha1", "md
 """Line tokens that exempt hash-protocol UTF-8 literals from text-I/O ratchets."""
 
 _TEST_MODULE_GLOBS: tuple[str, ...] = ("**/test_*.py", "**/_test_*.py")
+PROJECT_TEST_ROOTS: tuple[Path, ...] = (REPO_ROOT / "dev", REPO_ROOT / "docs")
+"""Project-level test roots outside the ``src/aeat`` package tree."""
 
 
+@cache
 def discover_test_modules() -> tuple[Path, ...]:
     """Return production test modules under ``src/aeat`` excluding fixture payloads."""
     collected: set[Path] = set()
@@ -43,6 +47,7 @@ def discover_test_modules() -> tuple[Path, ...]:
     return tuple(sorted(collected))
 
 
+@cache
 def discover_test_control_modules() -> tuple[Path, ...]:
     """Return deterministic test modules plus support/conftest files."""
     modules = set(discover_test_modules())
@@ -55,6 +60,36 @@ def discover_test_control_modules() -> tuple[Path, ...]:
     return tuple(sorted(modules))
 
 
+@cache
+def project_test_modules() -> tuple[Path, ...]:
+    """Return project-level ``test_*.py`` modules outside ``src/aeat``."""
+    collected: set[Path] = set()
+    for root in PROJECT_TEST_ROOTS:
+        if not root.exists():
+            continue
+        for path in root.glob("**/test_*.py"):
+            if "__pycache__" not in path.parts:
+                collected.add(path)
+    return tuple(sorted(collected))
+
+
+@cache
+def project_test_control_modules() -> tuple[Path, ...]:
+    """Return project-level tests plus support/conftest modules outside ``src/aeat``."""
+    modules = set(project_test_modules())
+    for root in PROJECT_TEST_ROOTS:
+        if not root.exists():
+            continue
+        for path in root.rglob("*.py"):
+            if "__pycache__" in path.parts or path.name == "__init__.py":
+                continue
+            relative_parts = path.relative_to(root).parts
+            if path.name == "conftest.py" or "tests" in relative_parts:
+                modules.add(path)
+    return tuple(sorted(modules))
+
+
+@cache
 def package_python_files(*, include_data: bool = False) -> tuple[Path, ...]:
     """Return package ``.py`` files under ``src/aeat``.
 
@@ -69,6 +104,7 @@ def package_python_files(*, include_data: bool = False) -> tuple[Path, ...]:
     )
 
 
+@cache
 def production_python_files() -> tuple[Path, ...]:
     """Return production ``.py`` files under ``src/aeat``.
 
@@ -142,6 +178,12 @@ def ast_for_path(path: Path, cache: Mapping[Path, ast.AST] | None = None) -> ast
     """
     if cache is not None and path in cache:
         return cache[path]
+    return _parsed_ast_for_path(path)
+
+
+@cache
+def _parsed_ast_for_path(path: Path) -> ast.AST | None:
+    """Return a parsed AST for *path*, cached for structural ratchets."""
     try:
         source = path.read_text(encoding="utf-8", errors="replace")
     except (OSError, UnicodeDecodeError):
@@ -173,8 +215,20 @@ def package_ast_items(
     include_data: bool = False,
 ) -> tuple[tuple[Path, ast.AST], ...]:
     """Return ``(path, AST)`` pairs for package files, reusing cache entries."""
+    paths = (
+        sorted(
+            path
+            for path in cache
+            if _is_relative_to(path, SRC_AEAT)
+            and path.suffix == ".py"
+            and "__pycache__" not in path.parts
+            and (include_data or "_data" not in path.relative_to(SRC_AEAT).parts)
+        )
+        if cache is not None
+        else package_python_files(include_data=include_data)
+    )
     items: list[tuple[Path, ast.AST]] = []
-    for path in package_python_files(include_data=include_data):
+    for path in paths:
         tree = ast_for_path(path, cache)
         if tree is not None:
             items.append((path, tree))

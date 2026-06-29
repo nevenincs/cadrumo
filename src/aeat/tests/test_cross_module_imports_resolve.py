@@ -133,9 +133,9 @@ _BASELINE_BROKEN_IMPORTS: frozenset[tuple[str, str, str]] = frozenset(set())
 
 
 @pytest.fixture(scope="module")
-def aeat_import_triples(source_tree_ast: Mapping[Path, ast.AST]) -> list[tuple[Path, str, str]]:
-    """Collect import triples once per module from the shared source AST cache."""
-    return _collect_import_pairs(source_tree_ast)
+def aeat_import_triples() -> list[tuple[Path, str, str]]:
+    """Collect import triples once per module from the shared package AST cache."""
+    return _collect_import_pairs()
 
 
 def _check_triple(triple: tuple[Path, str, str]) -> str | None:
@@ -313,7 +313,7 @@ def _extract_all_assignment(tree: ast.AST) -> set[str] | None:
     return None
 
 
-def test_init_public_imports_appear_in_all_against_baseline(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_init_public_imports_appear_in_all_against_baseline() -> None:
     """Every public name imported into an ``__init__.py`` from a sibling must be in ``__all__``.
 
     Catches the half-export pattern: a package imports a public name
@@ -333,7 +333,7 @@ def test_init_public_imports_appear_in_all_against_baseline(source_tree_ast: Map
     a file's count cannot grow without the gate failing, and any
     shrink must be locked in by trimming the cap.
     """
-    live_findings = _collect_init_missing_from_all(source_tree_ast)
+    live_findings = _collect_init_missing_from_all()
     live_counts: dict[str, int] = {}
     for path, _name in live_findings:
         live_counts[path] = live_counts.get(path, 0) + 1

@@ -171,6 +171,10 @@ def test_selected_sociedades_profile_refs_resolve_against_catalogue(
         "taxpayer_type.legal_entity_form": {"ley-27-2014:art-29", "ley-44-2015:art-1"},
         "taxpayer_type.incn_prior_12_months": {"ley-27-2014:art-40-3"},
         "taxpayer_type.new_entity_first_two_profit_periods": {"ley-27-2014:art-29"},
+        "taxpayer_type.ley_49_2002_special_regime_option_declared": {"ley-49-2002:art-14"},
+        "taxpayer_type.ley_49_2002_special_regime_option_date": {"ley-49-2002:art-14"},
+        "taxpayer_type.ley_49_2002_special_regime_renunciation_declared": {"ley-49-2002:art-14"},
+        "taxpayer_type.ley_49_2002_special_regime_renunciation_date": {"ley-49-2002:art-14"},
         "taxpayer_type.tributacion_estado_porcentaje": {"ley-12-2002:art-15", "ley-28-1990:art-19"},
         "taxpayer_type.sal_socios_trabajadores_count": {"ley-44-2015:art-1", "ley-44-2015:art-2"},
         "taxpayer_type.sal_reserva_especial_dotada": {"ley-44-2015:art-14"},
@@ -181,6 +185,57 @@ def test_selected_sociedades_profile_refs_resolve_against_catalogue(
         refs = set(schema.field(field_path).legal_refs)
         assert refs == expected_refs
         assert refs <= legal_ids
+
+
+def test_ley_49_2002_special_regime_fields_match_modelo_036_record_design(
+    schema: ProfileSchemaDefinition,
+) -> None:
+    """The Ley 49/2002 profile axis mirrors the current Modelo 036 censo fields."""
+    expected = {
+        "taxpayer_type.ley_49_2002_special_regime_option_declared": (
+            "boolean",
+            "taxpayer.ley_49_2002_special_regime_option_declared",
+            "casilla 651",
+        ),
+        "taxpayer_type.ley_49_2002_special_regime_option_date": (
+            "date",
+            "taxpayer.ley_49_2002_special_regime_option_date",
+            "casilla 653",
+        ),
+        "taxpayer_type.ley_49_2002_special_regime_renunciation_declared": (
+            "boolean",
+            "taxpayer.ley_49_2002_special_regime_renunciation_declared",
+            "casilla 652",
+        ),
+        "taxpayer_type.ley_49_2002_special_regime_renunciation_date": (
+            "date",
+            "taxpayer.ley_49_2002_special_regime_renunciation_date",
+            "casilla 654",
+        ),
+    }
+
+    for field_path, (field_type, selector, description_anchor) in expected.items():
+        field = schema.field(field_path)
+        assert field.type.value == field_type
+        assert field.model_selectors == (selector,)
+        assert field.legal_refs == ("ley-49-2002:art-14",)
+        assert description_anchor in field.description
+
+    record_design = bundled_path(
+        "corpus",
+        "aeat_official",
+        "disenos_registro",
+        "modelo_036",
+        "files",
+        "01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md",
+    ).read_text(encoding="utf-8")
+    assert "Opción/renuncia por el Regimen fiscal especial del Título II de la Ley 49/2002" in record_design
+    assert "Ejerce la opción por el Régimen fiscal especial del Tit. II Ley 49/2002" in record_design
+    assert "Ejercitada la opción por el Régimen fiscal especial del Tit. II Ley 49/2002, renuncia" in record_design
+    assert "[651]" in record_design
+    assert "[653]" in record_design
+    assert "[652]" in record_design
+    assert "[654]" in record_design
 
 
 def test_sal_reserva_profile_description_uses_twice_capital_threshold(

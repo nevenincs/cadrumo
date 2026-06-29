@@ -117,8 +117,10 @@ def _check_casilla_refs(checker: _IdReferenceChecker, revision: ModeloRevision) 
         checker.chk_opt(f"{cp}.formula", casilla.formula, checker.formula_ids)
         if casilla.input_kind == InputKind.BOUND:
             _check_bound_casilla_binding_coverage(checker, cp, casilla.binding)
+            checker.chk_tuple(f"{cp}.alternate_bindings", casilla.alternate_bindings, checker.binding_ids)
         else:
             checker.chk_opt(f"{cp}.binding", casilla.binding, checker.binding_ids)
+            checker.chk_tuple(f"{cp}.alternate_bindings", casilla.alternate_bindings, checker.binding_ids)
         checker.chk_tuple(f"{cp}.export_refs", casilla.export_refs, checker.export_field_ids)
         checker.chk_legal_source_refs(cp, casilla.legal_refs, casilla.source_refs)
         if casilla.constraints is not None:

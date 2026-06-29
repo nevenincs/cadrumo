@@ -373,6 +373,24 @@ def test_ley_19_1994_canary_tax_regime_refs_link_to_current_boe_corpus(
     verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
 
 
+def test_ley_49_2002_art_14_special_regime_option_links_to_boe_corpus() -> None:
+    catalogues = _catalogues()
+    reference = catalogues.legal["ley-49-2002:art-14"]
+
+    assert reference.corpus_ref == "corpus/normatives/html/ley-49-2002-art-14.html#a14"
+    assert reference.effective_from == date(2002, 12, 25)
+    assert reference.required_text == (
+        "Artículo 14. Aplicación del régimen fiscal especial.",
+        "podrán acogerse al régimen fiscal especial",
+        "plazo y en la forma que reglamentariamente se establezca",
+        "Ejercitada la opción",
+        "forma indefinida durante los períodos impositivos siguientes",
+        "mientras no se renuncie a su aplicación",
+        "deberán ser probados por la entidad",
+    )
+    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+
+
 def test_retired_normative_summary_corpus_files_are_not_bundled() -> None:
     retired_summary_json = (
         "ley-19-1994.json",

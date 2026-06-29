@@ -149,6 +149,18 @@ def taxpayer_profile_from_mapping(
         new_entity_first_two_profit_periods=_parse_optional_bool(
             canonical.get("taxpayer_type.new_entity_first_two_profit_periods"),
         ),
+        ley_49_2002_special_regime_option_declared=_parse_optional_bool(
+            canonical.get("taxpayer_type.ley_49_2002_special_regime_option_declared"),
+        ),
+        ley_49_2002_special_regime_option_date=_parse_date(
+            canonical.get("taxpayer_type.ley_49_2002_special_regime_option_date"),
+        ),
+        ley_49_2002_special_regime_renunciation_declared=_parse_optional_bool(
+            canonical.get("taxpayer_type.ley_49_2002_special_regime_renunciation_declared"),
+        ),
+        ley_49_2002_special_regime_renunciation_date=_parse_date(
+            canonical.get("taxpayer_type.ley_49_2002_special_regime_renunciation_date"),
+        ),
         establecimiento_type=canonical.get("censo.establecimiento_type", ""),
         elected_withholding_pct=canonical.get("censo.elected_withholding_pct", ""),
         vivienda_office_total_m2=_parse_decimal(canonical.get("vivienda_office.total_m2")),

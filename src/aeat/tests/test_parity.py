@@ -3,11 +3,11 @@ from pathlib import Path
 
 import pytest
 import yaml
-from typer.testing import CliRunner
 
 from ..locales._ast_scanner import scan_namespace_markers, scan_source_tree
 from ..locales.cli import app
 from ..locales.manager import LocaleError, LocaleManager, LocaleNode
+from .cli_runner import invoke_typer_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -170,6 +170,58 @@ def test_remove_locale_value_deletes_existing_leaf(tmp_path: Path):
     assert "    app_help: Auditar y generar catálogos de traducción\n" in text
 
 
+def test_remove_locale_value_prunes_empty_namespace(tmp_path: Path):
+    """Removing the last leaf below a namespace removes the stale parent row too."""
+
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    locale_path = locales_dir / "en.yml"
+    locale_path.write_text(
+        "wizard:\n"
+        "  setup:\n"
+        "    flags:\n"
+        "      old-option:\n"
+        "        help: Old option\n"
+        "      current-option:\n"
+        "        help: Current option\n",
+        encoding="utf-8",
+    )
+
+    temp_manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+
+    temp_manager.remove_locale_value("en", "wizard.setup.flags.old-option.help")
+
+    text = locale_path.read_text(encoding="utf-8")
+    assert "old-option" not in text
+    assert "      current-option:\n" in text
+    assert "        help: Current option\n" in text
+
+
+def test_remove_locale_value_deletes_yaml_null_leaf(tmp_path: Path):
+    """A stale empty YAML key can be removed through the locale manager."""
+
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    locale_path = locales_dir / "en.yml"
+    locale_path.write_text(
+        "wizard:\n"
+        "  setup:\n"
+        "    flags:\n"
+        "      old-option:\n"
+        "      current-option:\n"
+        "        help: Current option\n",
+        encoding="utf-8",
+    )
+
+    temp_manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+
+    temp_manager.remove_locale_value("en", "wizard.setup.flags.old-option")
+
+    text = locale_path.read_text(encoding="utf-8")
+    assert "old-option" not in text
+    assert "      current-option:\n" in text
+
+
 def test_set_locale_value_rejects_locale_path_traversal(tmp_path: Path):
     """The locale setter only writes locale files under its configured root."""
 
@@ -190,7 +242,7 @@ def test_set_locale_value_rejects_locale_path_traversal(tmp_path: Path):
 def test_locale_set_cli_rejects_path_like_locale_without_writing() -> None:
     """The canonical locale CLI rejects traversal-shaped locale arguments."""
 
-    result = CliRunner().invoke(app, ["set", "../outside", "cli.locales.app_help", "unsafe"])
+    result = invoke_typer_app(app, ["set", "../outside", "cli.locales.app_help", "unsafe"])
 
     assert result.exit_code != 0
     assert "Invalid locale code" in result.output

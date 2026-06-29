@@ -27,8 +27,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from ....core.errors import CoreError
-
 try:
     from playwright.async_api import Error as PlaywrightError
     from playwright.async_api import TimeoutError as PlaywrightTimeoutError
@@ -36,13 +34,15 @@ except ImportError:  # the optional `browser` extra is not installed
 
     # TYPE-IGNORE-RATIONALE-OPTIONAL-BROWSER-EXTRA: fallback redefinition of the playwright
     # async_api name when the optional `browser` extra is absent (the real symbol is the import above).
-    class PlaywrightError(CoreError):  # type: ignore[no-redef]
+    class PlaywrightError(Exception):  # type: ignore[no-redef]
         """Fallback for ``playwright.async_api.Error`` when the browser extra is absent.
 
         The fallback exists only so modules such as
         :mod:`aeat.adapters.outbound.aeat.browser` and
         :mod:`aeat.adapters.outbound.aeat.sede` can import their exception
-        handlers before a live browser path is requested.
+        handlers before a live browser path is requested. It is not an AEAT
+        registry-bound error; adapter boundaries catch and wrap it in registered
+        Browser/Sede errors.
         """
 
     # TYPE-IGNORE-RATIONALE-OPTIONAL-BROWSER-EXTRA: fallback redefinition when the optional

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import ast
-from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -91,9 +90,9 @@ def test_tracked_python_modules_do_not_exceed_line_budgets() -> None:
     assert offenders == [], "Python module size budget exceeded:\n  " + "\n  ".join(offenders)
 
 
-def test_tracked_production_callables_do_not_exceed_line_budgets(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_tracked_production_callables_do_not_exceed_line_budgets() -> None:
     offenders: list[str] = []
-    for path, tree in package_ast_items(source_tree_ast, include_data=True):
+    for path, tree in package_ast_items(include_data=True):
         relative = _relative(path)
         if "/tests/" in relative:
             continue

@@ -8,10 +8,9 @@ from typing import NotRequired, Unpack, cast
 
 import click
 from click.testing import CliRunner, Result
+from typer import Typer
 from typer.main import get_command
 from typing_extensions import TypedDict
-
-from ..entrypoints.cli import app
 
 _RUNNER = CliRunner()
 
@@ -24,7 +23,7 @@ class ClickInvokeKwargs(TypedDict, total=False):
     type-checker.
     """
 
-    env: NotRequired[Mapping[str, str] | None]
+    env: NotRequired[Mapping[str, str | None] | None]
     color: NotRequired[bool]
     catch_exceptions: NotRequired[bool]
     input: NotRequired[str | bytes | None]
@@ -34,11 +33,40 @@ class ClickInvokeKwargs(TypedDict, total=False):
 def aeat_click_command() -> click.Command:
     """Materialize the Typer app once for default-locale CLI tests."""
 
+    from ..entrypoints.cli import app
+
     # Typer vendors its own Click fork, so typer.main.get_command is typed to
     # return typer._click.core.Command; it is the same object family at runtime
     # as the upstream click.Command the CliRunner consumes. The cast bridges the
     # static vendored/upstream duality only.
     return cast(click.Command, get_command(app))
+
+
+@cache
+def click_command_for_typer_app(typer_app: Typer) -> click.Command:
+    """Materialize any Typer app once for direct app-surface tests."""
+
+    return cast(click.Command, get_command(typer_app))
+
+
+def invoke_typer_app(
+    typer_app: Typer,
+    args: Sequence[str],
+    **kwargs: Unpack[ClickInvokeKwargs],
+) -> Result:
+    """Invoke a Typer app through the shared cached Click runner."""
+
+    return _RUNNER.invoke(click_command_for_typer_app(typer_app), list(args), **kwargs)
+
+
+def invoke_uncached_typer_app(
+    typer_app: Typer,
+    args: Sequence[str],
+    **kwargs: Unpack[ClickInvokeKwargs],
+) -> Result:
+    """Invoke a Typer app without reusing a cached command tree."""
+
+    return _RUNNER.invoke(cast(click.Command, get_command(typer_app)), list(args), **kwargs)
 
 
 def invoke_cached_cli(args: Sequence[str], **kwargs: Unpack[ClickInvokeKwargs]) -> Result:

@@ -6,13 +6,12 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -29,12 +28,11 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def test_agenda_renders_envelope_with_explicit_date(cli_runner: CliRunner) -> None:
+def test_agenda_renders_envelope_with_explicit_date() -> None:
     """A concrete --date renders the agenda envelope including as_of,
     horizon, and the four cohort headers."""
 
-    result = cli_runner.invoke(
-        app,
+    result = invoke_cached_cli(
         ["app", "overview", "agenda", "--date", "2026-04-15", "--allow-incomplete"],
     )
     assert result.exit_code == 0, result.output
@@ -46,43 +44,40 @@ def test_agenda_renders_envelope_with_explicit_date(cli_runner: CliRunner) -> No
     assert "overdue\t" in result.output
 
 
-def test_agenda_rejects_zero_horizon(cli_runner: CliRunner) -> None:
+def test_agenda_rejects_zero_horizon() -> None:
     """A non-positive --horizon is refused before the service runs."""
 
-    result = cli_runner.invoke(
-        app,
+    result = invoke_cached_cli(
         ["app", "overview", "agenda", "--date", "2026-04-15", "--horizon", "0"],
     )
     assert result.exit_code != 0, result.output
 
 
-def test_agenda_rejects_malformed_date(cli_runner: CliRunner) -> None:
+def test_agenda_rejects_malformed_date() -> None:
     """A non-ISO --date is rejected by the parsing boundary."""
 
-    result = cli_runner.invoke(
-        app,
+    result = invoke_cached_cli(
         ["app", "overview", "agenda", "--date", "not-a-date"],
     )
     assert result.exit_code != 0, result.output
 
 
-def test_agenda_help_advertises_local_only(cli_runner: CliRunner) -> None:
+def test_agenda_help_advertises_local_only() -> None:
     """Help text must signal `local-only` across locales."""
 
-    result = cli_runner.invoke(app, ["app", "overview", "agenda", "--help"])
+    result = invoke_cached_cli(["app", "overview", "agenda", "--help"])
     assert result.exit_code == 0, result.output
     assert any(
         token in result.output.lower() for token in ("local-only", "local;", "nunca", "mai contacta", "csak helyi")
     ), result.output
 
 
-def test_agenda_horizon_widens_due_soon_window(cli_runner: CliRunner) -> None:
+def test_agenda_horizon_widens_due_soon_window() -> None:
     """A wider --horizon includes more entries in due_soon than the
     default 14-day window. Asserts the horizon is honoured by the
     service rather than being a cosmetic flag."""
 
-    narrow = cli_runner.invoke(
-        app,
+    narrow = invoke_cached_cli(
         [
             "app",
             "overview",
@@ -94,8 +89,7 @@ def test_agenda_horizon_widens_due_soon_window(cli_runner: CliRunner) -> None:
             "--allow-incomplete",
         ],
     )
-    wide = cli_runner.invoke(
-        app,
+    wide = invoke_cached_cli(
         [
             "app",
             "overview",

@@ -155,7 +155,7 @@ _MODELO_123_CURRENT_EXPECTED_TARGETS: tuple[CasillaId, ...] = _casilla_ids(
 )
 
 _MODELO_123_HISTORICAL_EXPECTED_TARGETS: tuple[CasillaId, ...] = _casilla_ids(
-    *(f"{index:02d}-legacy" for index in range(1, 9)),
+    *(f"{index:02d}" for index in range(1, 9)),
 )
 
 

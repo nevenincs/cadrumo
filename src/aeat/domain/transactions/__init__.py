@@ -32,6 +32,14 @@ from ._errors import (
     TransactionPersistenceError,
     TransactionValidationError,
 )
+from ._irpf_categories import (
+    IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
+    IRPF_CATEGORY_TRABAJO,
+    RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING,
+    RENT_IRPF_CATEGORIES_PAID_NET_OF_WITHHOLDING,
+    LedgerIrpfCategoryDescriptor,
+    ledger_irpf_category_catalogue,
+)
 from ._llm import (
     MINIMUM_CLASSIFICATION_TIER,
     PIPELINE_ONLY_CLASSIFICATIONS,
@@ -125,8 +133,12 @@ def __getattr__(name: str):
 
 __all__ = [
     "CLASSIFIED_STATES",
+    "IRPF_CATEGORY_ACTIVIDAD_ECONOMICA",
+    "IRPF_CATEGORY_TRABAJO",
     "MINIMUM_CLASSIFICATION_TIER",
     "PIPELINE_ONLY_CLASSIFICATIONS",
+    "RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING",
+    "RENT_IRPF_CATEGORIES_PAID_NET_OF_WITHHOLDING",
     "TX_BUCKET_NAMESPACE",
     "BucketTransactionRef",
     "BusinessClassification",
@@ -142,6 +154,7 @@ __all__ = [
     "LLMSplitProposer",
     "LLMSplitResponse",
     "LedgerClassificationRule",
+    "LedgerIrpfCategoryDescriptor",
     "LedgerNoActiveBucketError",
     "LedgerStorageError",
     "ModelCapability",
@@ -184,6 +197,7 @@ __all__ = [
     "derive_transaction_id",
     "find_transaction",
     "is_classified",
+    "ledger_irpf_category_catalogue",
     "link_invoice",
     "normalise_movement_reference",
     "parse_response",

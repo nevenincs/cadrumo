@@ -333,20 +333,38 @@ def export_draft(
     )
 
 
-def _raise_if_export_layout_not_renderable(modelo: str, layout: ExportLayoutDefinition) -> None:
+def export_layout_renderability_reason(
+    modelo: str,
+    layout: ExportLayoutDefinition | None,
+) -> str | None:
+    """Return why ``layout`` cannot currently produce local fichero-BOE bytes."""
+    if layout is None:
+        return "the registry snapshot has no complete export_layouts definition"
     if layout.format != "fixed_width":
-        raise FilingExportError(
-            f"modelo {modelo!r} export layout {layout.id!r} uses unsupported format {layout.format!r}; "
-            "the local fichero-BOE exporter currently renders fixed_width layouts only",
+        return (
+            f"export layout {layout.id!r} uses unsupported format {layout.format!r}; "
+            "the local fichero-BOE exporter currently renders fixed_width layouts only"
         )
     if not layout.records:
-        raise FilingExportError(f"modelo {modelo!r} export layout {layout.id!r} declares no export records")
+        return f"export layout {layout.id!r} declares no export records"
+    return None
+
+
+def _raise_if_export_layout_not_renderable(modelo: str, layout: ExportLayoutDefinition) -> None:
+    reason = export_layout_renderability_reason(modelo, layout)
+    if reason is not None:
+        raise FilingExportError(_export_layout_not_renderable_message(modelo, reason))
 
 
 def _missing_export_layout_message(modelo: str) -> str:
+    reason = export_layout_renderability_reason(modelo, None)
+    assert reason is not None
+    return _export_layout_not_renderable_message(modelo, reason)
+
+
+def _export_layout_not_renderable_message(modelo: str, reason: str) -> str:
     return (
-        f"modelo {modelo!r} fichero-BOE export is unsupported: "
-        "the registry snapshot has no complete export_layouts definition. "
+        f"modelo {modelo!r} fichero-BOE export is unsupported: {reason}. "
         "Calculation, verification, and local filing surfaces may exist for this modelo, "
         "but this command cannot produce a BOE export file and does not certify legal correctness."
     )

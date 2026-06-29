@@ -564,11 +564,9 @@ def test_secure_object_namespace_logical_path_uses_registered_sql_grammar() -> N
     assert marker.as_posix() == "db:/secure_objects/aeat.domain.attachments.blobs"
 
 
-def test_every_discovered_production_secure_object_namespace_is_registered(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
+def test_every_discovered_production_secure_object_namespace_is_registered() -> None:
     registered = {definition.namespace for definition in STORAGE_NAMESPACE_REGISTRY.namespaces}
-    discovered = _discover_production_secure_object_namespaces(source_tree_ast)
+    discovered = _discover_production_secure_object_namespaces()
 
     assert {
         ATTACHMENT_BLOB_NAMESPACE.namespace,
@@ -603,10 +601,10 @@ _SECURE_BOUND_CLASS_NAMES = {
 }
 
 
-def _discover_production_secure_object_namespaces(source_tree_ast: Mapping[Path, ast.AST]) -> set[str]:
+def _discover_production_secure_object_namespaces() -> set[str]:
     namespaces: set[str] = set()
     for path in _iter_aeat_production_sources():
-        tree = ast_for_path(path, source_tree_ast)
+        tree = ast_for_path(path)
         assert tree is not None, f"{repo_relative(path)} must be parseable"
         bindings = _collect_namespace_value_bindings(tree)
         namespaces.update(_namespace_values_from_assignments(tree, bindings))

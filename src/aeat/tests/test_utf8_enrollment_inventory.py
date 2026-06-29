@@ -130,7 +130,6 @@ _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
         "domain/modelos/_verification_report.py",
         "domain/modelos/_verification_repository.py",
         "domain/modelos/_work_unit.py",
-        "domain/normatives/_loader.py",
         "domain/transactions/_llm.py",
         "domain/transactions/_repository.py",
         "domain/usage_ratios/_service.py",

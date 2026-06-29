@@ -6,13 +6,12 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -29,12 +28,11 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def test_backlog_renders_envelope_with_explicit_window(cli_runner: CliRunner) -> None:
+def test_backlog_renders_envelope_with_explicit_window() -> None:
     """A concrete --from / --to window renders the backlog envelope
     including the range echo, as_of, and late_count header."""
 
-    result = cli_runner.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "app",
             "overview",
@@ -53,37 +51,35 @@ def test_backlog_renders_envelope_with_explicit_window(cli_runner: CliRunner) ->
     assert "late_count\t" in result.output
 
 
-def test_backlog_rejects_malformed_from_date(cli_runner: CliRunner) -> None:
+def test_backlog_rejects_malformed_from_date() -> None:
     """A non-ISO --from is rejected by the parsing boundary."""
 
-    result = cli_runner.invoke(
-        app,
+    result = invoke_cached_cli(
         ["app", "overview", "backlog", "--from", "not-a-date"],
     )
     assert result.exit_code != 0, result.output
 
 
-def test_backlog_rejects_malformed_to_date(cli_runner: CliRunner) -> None:
+def test_backlog_rejects_malformed_to_date() -> None:
     """A non-ISO --to is rejected by the parsing boundary."""
 
-    result = cli_runner.invoke(
-        app,
+    result = invoke_cached_cli(
         ["app", "overview", "backlog", "--to", "not-a-date"],
     )
     assert result.exit_code != 0, result.output
 
 
-def test_backlog_help_advertises_local_only(cli_runner: CliRunner) -> None:
+def test_backlog_help_advertises_local_only() -> None:
     """Help text must signal `local-only` across locales."""
 
-    result = cli_runner.invoke(app, ["app", "overview", "backlog", "--help"])
+    result = invoke_cached_cli(["app", "overview", "backlog", "--help"])
     assert result.exit_code == 0, result.output
     assert any(
         token in result.output.lower() for token in ("local-only", "local;", "nunca", "mai contacta", "csak helyi")
     ), result.output
 
 
-def test_backlog_emits_zero_late_count_for_future_window(cli_runner: CliRunner) -> None:
+def test_backlog_emits_zero_late_count_for_future_window() -> None:
     """A window entirely in the future (but within the registry's known
     year range) has nothing past-due relative to today, so late_count == 0.
 
@@ -94,8 +90,7 @@ def test_backlog_emits_zero_late_count_for_future_window(cli_runner: CliRunner) 
     entirely in the future relative to the test-run date (2026-05-20).
     """
 
-    result = cli_runner.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "app",
             "overview",

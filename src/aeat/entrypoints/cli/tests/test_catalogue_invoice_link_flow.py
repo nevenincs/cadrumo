@@ -30,7 +30,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from ....application.invoices import build_catalogue_invoice
 from ....application.user_profile._orchestration import profile_create_storage_span
@@ -38,8 +37,8 @@ from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
 from ....domain.iva import InvoiceKind, IvaCategory
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -69,9 +68,8 @@ def _line_value(output: str, key: str) -> str:
     raise AssertionError(f"no {key!r} line in CLI output:\n{output}")
 
 
-def _add_outgoing_transaction(cli_runner: CliRunner) -> str:
-    result = cli_runner.invoke(
-        app,
+def _add_outgoing_transaction() -> str:
+    result = invoke_cached_cli(
         [
             "app", "ledger", "add",
             "--date", "2026-03-10", "--amount", "121.00",
@@ -82,9 +80,8 @@ def _add_outgoing_transaction(cli_runner: CliRunner) -> str:
     return _line_value(result.output, "ID")
 
 
-def _create_catalogue_invoice(cli_runner: CliRunner) -> str:
-    result = cli_runner.invoke(
-        app,
+def _create_catalogue_invoice() -> str:
+    result = invoke_cached_cli(
         [
             "app", "ledger", "invoice", "catalogue", "create",
             "--kind", "received",
@@ -103,18 +100,17 @@ def _create_catalogue_invoice(cli_runner: CliRunner) -> str:
     return invoice_id
 
 
-def test_catalogue_create_then_link_succeeds_bidirectionally(cli_runner: CliRunner) -> None:
+def test_catalogue_create_then_link_succeeds_bidirectionally() -> None:
     """The documented create -> link chain works end to end through the CLI.
 
     Before this verb existed there was no operator path to mint a linkable
     invoice, so ``link --invoice-id`` was dead for operators. The catalogue
     ``create`` verb closes that gap.
     """
-    transaction_id = _add_outgoing_transaction(cli_runner)
-    invoice_id = _create_catalogue_invoice(cli_runner)
+    transaction_id = _add_outgoing_transaction()
+    invoice_id = _create_catalogue_invoice()
 
-    linked = cli_runner.invoke(
-        app,
+    linked = invoke_cached_cli(
         ["app", "ledger", "link", transaction_id, "--invoice-id", invoice_id],
     )
     assert linked.exit_code == 0, linked.output
@@ -127,7 +123,7 @@ def test_catalogue_create_then_link_succeeds_bidirectionally(cli_runner: CliRunn
     assert stored is not None, "catalogue invoice missing after link"
     assert stored.linked_transaction_ids == (transaction_id,), stored.linked_transaction_ids
 
-    check = cli_runner.invoke(app, ["app", "ledger", "check"])
+    check = invoke_cached_cli(["app", "ledger", "check"])
     assert check.exit_code == 0, check.output
     # ``check`` reports one-sided invoice/transaction links as issues; a clean
     # bidirectional link must not surface a link inconsistency for this id.
@@ -135,15 +131,14 @@ def test_catalogue_create_then_link_succeeds_bidirectionally(cli_runner: CliRunn
     assert "transaction-only" not in check.output, check.output
 
 
-def test_catalogue_create_id_differs_from_slim_invoice_add_id(cli_runner: CliRunner) -> None:
+def test_catalogue_create_id_differs_from_slim_invoice_add_id() -> None:
     """The rich catalogue id and the slim ``invoice add`` id are distinct shapes.
 
     The slim ``invoice add`` id is a short uuid hex; the catalogue id is the
     hex-64 content hash ``link`` resolves. This pins the documented sharp edge:
     the two stores are addressed by different identifiers.
     """
-    slim = cli_runner.invoke(
-        app,
+    slim = invoke_cached_cli(
         [
             "app", "ledger", "invoice", "add",
             "--kind", "received",
@@ -157,13 +152,13 @@ def test_catalogue_create_id_differs_from_slim_invoice_add_id(cli_runner: CliRun
     assert slim.exit_code == 0, slim.output
     slim_id = _line_value(slim.output, "invoice_id")
 
-    rich_id = _create_catalogue_invoice(cli_runner)
+    rich_id = _create_catalogue_invoice()
     assert slim_id != rich_id
     assert len(slim_id) != 64
     assert len(rich_id) == 64
 
 
-def test_link_refuses_cross_bucket_catalogue_invoice(cli_runner: CliRunner) -> None:
+def test_link_refuses_cross_bucket_catalogue_invoice() -> None:
     """An invoice stamped to a foreign bucket is refused by the link guard.
 
     The catalogue ``create`` verb stamps the active bucket, but the cross-bucket
@@ -172,7 +167,7 @@ def test_link_refuses_cross_bucket_catalogue_invoice(cli_runner: CliRunner) -> N
     persisted into the active catalogue directly, then ``link`` is attempted; the
     guard must refuse it rather than persist a cross-bucket link.
     """
-    transaction_id = _add_outgoing_transaction(cli_runner)
+    transaction_id = _add_outgoing_transaction()
 
     foreign_invoice = build_catalogue_invoice(
         bucket_id="some-other-bucket",
@@ -189,8 +184,7 @@ def test_link_refuses_cross_bucket_catalogue_invoice(cli_runner: CliRunner) -> N
     repo = InvoiceCatalogueRepository()
     repo.save(InvoiceCatalogue.from_invoices([foreign_invoice]))
 
-    linked = cli_runner.invoke(
-        app,
+    linked = invoke_cached_cli(
         ["app", "ledger", "link", transaction_id, "--invoice-id", foreign_invoice.invoice_id],
     )
     assert linked.exit_code != 0, linked.output
@@ -200,7 +194,7 @@ def test_link_refuses_cross_bucket_catalogue_invoice(cli_runner: CliRunner) -> N
     assert reloaded.linked_transaction_ids == (), reloaded.linked_transaction_ids
 
 
-def test_catalogue_create_stamps_intra_community_category(cli_runner: CliRunner) -> None:
+def test_catalogue_create_stamps_intra_community_category() -> None:
     """``--operation-type E`` stamps the iva_category the M349 calculation reads.
 
     Without it the catalogue invoice defaults to a domestic operation and never
@@ -208,8 +202,7 @@ def test_catalogue_create_stamps_intra_community_category(cli_runner: CliRunner)
     intra-community category; this is the CLI counterpart of the resolver test
     that proves the category drives the M349 aggregate.
     """
-    result = cli_runner.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "app", "ledger", "invoice", "catalogue", "create",
             "--kind", "issued",
@@ -229,7 +222,7 @@ def test_catalogue_create_stamps_intra_community_category(cli_runner: CliRunner)
     assert stored.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
 
 
-def test_catalogue_create_refuses_unrepresentable_operation_type(cli_runner: CliRunner) -> None:
+def test_catalogue_create_refuses_unrepresentable_operation_type() -> None:
     """A service/rectification/miscellany code is refused, never silently dropped.
 
     The recapitulative resolver derives a clave only for E/A/T, so an
@@ -237,8 +230,7 @@ def test_catalogue_create_refuses_unrepresentable_operation_type(cli_runner: Cli
     and names the supported set rather than persisting an invoice that cannot
     reach the calculation it was created for.
     """
-    result = cli_runner.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "app", "ledger", "invoice", "catalogue", "create",
             "--kind", "issued",

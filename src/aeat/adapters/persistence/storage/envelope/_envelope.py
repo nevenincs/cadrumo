@@ -4,7 +4,7 @@ The envelope is the single contract every file-backed persistence
 consumer adheres to. It pins:
 
 - the on-disk schema version (so per-domain migrators can roll forward
-  legacy payloads);
+  older-version payloads);
 - the timestamp of the write (timezone-aware datetime);
 - the sensitivity classification (so the substrate can refuse to load
   a record if a consumer accidentally bypasses its repository);
@@ -108,7 +108,7 @@ class EncryptionMetadata(BaseModel):
         ciphertext_b64: Base64-encoded ``ciphertext_with_tag``.
         associated_data_b64: Base64-encoded AAD bytes. The field is
             required so persisted metadata distinguishes an explicitly
-            empty AAD from legacy or malformed metadata where the AAD
+            empty AAD from malformed metadata where the AAD
             member is missing.
     """
 

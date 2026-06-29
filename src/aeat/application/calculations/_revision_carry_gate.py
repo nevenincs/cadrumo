@@ -1,21 +1,33 @@
 """Single shared ADR-R2 revision-carry gate.
 
-Used by: :mod:`~._binding_prefill`, :mod:`~._cross_period_clean_state`, and
-:mod:`~._relation_prefill` — every cross-period / cross-year carry read.
+Used by :mod:`~._binding_prefill`, :mod:`~._cross_period_clean_state`, and
+:mod:`~._relation_prefill`: every cross-period or cross-year carry read shares
+this gate.
 
 ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2 decides the
 carry path is the one place a revision error compounds across years: a prior
 filed under the wrong revision injects that revision's norms into every later
 filing that folds it in. The carry read therefore re-confirms each carried
 observation's ``stamped_revision_id`` against the law-determined revision
-for its source context (:meth:`ValidatedRegistryAuthority.snapshot` /
-``select_revision``) before trusting the value.
+for its source context
+(:meth:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority.snapshot`,
+which delegates to law-determined revision selection) before trusting the value.
 
 This module is the single implementation of that gate. Before this extraction
 the same ``(diverges, advisory)`` decision was open-coded in three carry sites
 with subtly duplicated try/except handling; ``carried-observations-stamp-their-
 revision`` and ``revision-resolution-is-law-determined`` require one
 law-determined re-confirmation, not three parallel copies that can drift.
+
+See Also:
+    :func:`~aeat.application.calculations._binding_prefill.resolve_bindings_from_local_store`
+        Previous-filing binding reader that drops divergent carries and surfaces
+        unstamped advisories.
+    :func:`~aeat.application.calculations._relation_prefill.resolve_relations_from_local_store`
+        Relation-prefill reader that applies the same revision-stamp gate.
+    :func:`~aeat.application.calculations._cross_period_clean_state.evaluate_cross_period_clean_state`
+        Filing-grade dependency proof that maps the shared outcome to blockers
+        and advisories.
 """
 
 from __future__ import annotations
@@ -31,6 +43,10 @@ def revision_carry_outcome(
     source_period: str,
 ) -> tuple[bool, bool]:
     """Return ``(diverges, advisory)`` for a carried observation's revision stamp.
+
+    Uses
+    :meth:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority.snapshot`
+    to resolve the current law-determined revision for the source context.
 
     ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2:
 

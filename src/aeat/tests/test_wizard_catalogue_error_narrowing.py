@@ -99,7 +99,7 @@ class TestAdvisoryPredicateDecimalNarrowing:
 
     def test_invalid_decimal_threshold_returns_false(self) -> None:
         """A non-parseable threshold string hits InvalidOperation → returns False."""
-        from ..application.modelo._actions import _evaluate_advisory_predicate_fires
+        from ..application.modelo._verification_actions import _evaluate_advisory_predicate_fires
 
         result = _evaluate_advisory_predicate_fires(
             self._INVALID_THR_EXPR,
@@ -109,7 +109,7 @@ class TestAdvisoryPredicateDecimalNarrowing:
 
     def test_valid_ratio_ge_evaluates_true(self) -> None:
         """A valid threshold parses and evaluates the ratio correctly."""
-        from ..application.modelo._actions import _evaluate_advisory_predicate_fires
+        from ..application.modelo._verification_actions import _evaluate_advisory_predicate_fires
 
         # 2/1 = 2.0 >= 0.5 → True
         result = _evaluate_advisory_predicate_fires(
@@ -120,7 +120,7 @@ class TestAdvisoryPredicateDecimalNarrowing:
 
     def test_valid_ratio_below_threshold_evaluates_false(self) -> None:
         """A ratio below threshold correctly returns False."""
-        from ..application.modelo._actions import _evaluate_advisory_predicate_fires
+        from ..application.modelo._verification_actions import _evaluate_advisory_predicate_fires
 
         # 0.1/1 = 0.1, which is < 0.5 → False
         result = _evaluate_advisory_predicate_fires(

@@ -95,6 +95,7 @@ from ..filing import (
     build_draft,
     build_runtime_schema_provider,
     export_draft,
+    export_layout_renderability_reason,
     filing_profile_from_taxpayer,
 )
 from ..filing.runtime import RegistrySchemaAccessor
@@ -640,14 +641,20 @@ def _raise_if_export_layout_unsupported(*, work_unit: WorkUnit, schema_provider:
     """Refuse a modelo whose registry snapshot cannot render fichero-BOE bytes."""
     modelo = str(work_unit.modelo)
     subview = schema_provider.get_subview(modelo)
-    if subview.export_layout_ids:
+    layout = subview.export_layouts[0] if subview.export_layouts else None
+    reason = export_layout_renderability_reason(modelo, layout)
+    if reason is None:
         return
+    context = {
+        "modelo": modelo,
+        "reason": reason,
+    }
+    if layout is not None:
+        context["layout_id"] = layout.id
+        context["layout_format"] = layout.format
     raise ModeloExportUnsupportedError(
         translated_message="application.modelo.errors.export_unsupported",
-        context={
-            "modelo": modelo,
-            "reason": "registry snapshot has no complete export_layouts definition",
-        },
+        context=context,
         suggestion=f"aeat app modelo describe {modelo}",
     )
 
@@ -880,8 +887,8 @@ def export_modelo_revision(
     The revision must be ``VERIFICADO_COMPLETO``, ``PRESENTADO``, or
     ``PRESENTADO_SUPERSEDIDO`` and must belong to the active bucket. Before
     writing any operator-visible file, the service validates the output path,
-    profile readiness, ledger evidence, IVA wallet decision provenance, and
-    cross-period clean state. It then rebuilds and approves a transient
+    export-layout renderability, profile readiness, ledger evidence, IVA wallet
+    decision provenance, and cross-period clean state. It then rebuilds and approves a transient
     :class:`ModeloDraft`, composes the fichero headers, serializes through
     :func:`aeat.application.filing.export_draft`, appends ``MODELO_EXPORTED`` to
     the bucket-event-history catalogue, and finally atomically renames the
@@ -943,6 +950,13 @@ def export_modelo_revision(
             translated_message="application.modelo.errors.export_cross_bucket_refused",
             context={"work_unit_id": work_unit.work_unit_id},
         )
+    export_period = _resolve_work_unit_period(work_unit)
+    schema_provider = build_runtime_schema_provider(
+        filing_year=export_period.filing_year,
+        period=export_period,
+        modelos=(work_unit.modelo,),
+    )
+    _raise_if_export_layout_unsupported(work_unit=work_unit, schema_provider=schema_provider)
     from ._profile_readiness_gate import require_profile_ready_for_work_unit
 
     require_profile_ready_for_work_unit(work_unit)
@@ -951,13 +965,6 @@ def export_modelo_revision(
         revision=revision,
         action="export",
     )
-    export_period = _resolve_work_unit_period(work_unit)
-    schema_provider = build_runtime_schema_provider(
-        filing_year=export_period.filing_year,
-        period=export_period,
-        modelos=(work_unit.modelo,),
-    )
-    _raise_if_export_layout_unsupported(work_unit=work_unit, schema_provider=schema_provider)
     iva_wallet_decision = require_persisted_iva_compensation_decision_matches_revision(
         work_unit,
         revision,

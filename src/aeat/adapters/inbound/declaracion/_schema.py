@@ -107,7 +107,7 @@ class DeclaracionObservation(BaseModel):
     persisted observation can be re-resolved against the live registry
     catalogue with a single
     :meth:`ValidatedRegistryAuthority.snapshot` call. ``None`` for
-    legacy observations parsed before this field existed; new
+    unstamped observations parsed before this field existed; current
     observations carry the ref to detect silent AEAT template drift
     on subsequent registry releases.
     """

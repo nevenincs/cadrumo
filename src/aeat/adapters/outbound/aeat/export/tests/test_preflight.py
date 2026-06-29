@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 
 class _Draft(BaseModel):
-    """Frozen Protocol-conforming test double for ``ModeloDraftLike``.
+    """Frozen Protocol-conforming harness record for ``ModeloDraftLike``.
 
     Structural conformance only — ``ModeloDraftLike`` declares read-only
     properties, so a frozen pydantic model satisfies it without

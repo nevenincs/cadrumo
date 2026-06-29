@@ -23,15 +23,13 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from ....core.paths import PROJECT_ROOT
-from .. import app
+from ....tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _EDU_DIRS = ("docs/tutorials", "docs/explanation", "docs/how-to", "docs/architecture")
-_runner = CliRunner()
 
 # A leading run of lowercase verb-ish tokens after `aeat` (subcommands use
 # lowercase words and hyphens). Args (NAME, paths) and flags (-x/--x) end the run.
@@ -56,7 +54,7 @@ def _edu_docs() -> list[Path]:
 @cache
 def _verb_resolves(path_tuple: tuple[str, ...]) -> bool:
     """True if `aeat <path...> --help` resolves to a real command."""
-    result = _runner.invoke(app, [*path_tuple, "--help"])
+    result = invoke_cached_cli((*path_tuple, "--help"))
     return result.exit_code == 0
 
 

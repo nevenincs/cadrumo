@@ -1,13 +1,17 @@
 """Application-layer service for maritime worker IRPF exemption resolution.
 
-Bridges the domain-layer maritime exemption calculation functions with the
-application-layer observation pipeline. Accepts resolved MaritimeWorkerFacts
-and income inputs, routes to the appropriate domain calculation function, and
-returns typed :class:`CasillaObservation` rows alongside a flat casilla_values
-mapping.
+Bridges the domain maritime exemption engine with the application observation
+pipeline. The service accepts resolved
+:class:`~aeat.domain.renta._maritime_exemption.MaritimeWorkerFacts` and income
+inputs, evaluates the Art. 7.p) and REBECA selectors, delegates calculation to
+:func:`~aeat.domain.renta._maritime_exemption.calculate_art_7p_exemption` and
+:func:`~aeat.domain.renta._maritime_exemption.calculate_rebeca_exemption`, and
+returns typed :class:`~aeat.domain.calculations.registry.CasillaObservation`
+rows alongside a derived flat ``casilla_values`` mapping.
 
-The flat mapping is for human readability; the typed observation list is the
-canonical contract per aeat-calculation-grounding.
+The flat mapping is for human readability; the typed observation tuple is the
+canonical contract per ``aeat-calculation-grounding`` because it carries
+``legal_refs`` and ``source_refs`` from the registry binding entries.
 
 Calling conventions::
 
@@ -20,18 +24,19 @@ Calling conventions::
       annual_salary=Decimal("36500"),
       qualifying_days=180,
   )
-  # result.observations: tuple of CasillaObservation with legal_refs
+  # result.observations: tuple of CasillaObservation with legal_refs/source_refs
   # result.casilla_values: {casilla_id: Decimal} derived view
 
 Error handling::
 
-  MaritimeExemptionInactiveError  — DA 41 selector resolved True (inactive)
-  ProfileCompletenessError      — RETMAR mandatory filing gate triggered
-  RentaValidationError            — input validation failed
+  MaritimeExemptionInactiveError  - DA 41 selector resolved True (inactive)
+  ProfileCompletenessError        - RETMAR mandatory filing gate triggered
+  RentaValidationError            - input validation failed
 
-Callers are responsible for catching ProfileCompletenessError, surfacing
-its message to the operator, and continuing processing. It is not a blocking
-error.
+Callers are responsible for catching
+:class:`~aeat.domain.renta._maritime_exemption.ProfileCompletenessError`,
+surfacing its message to the operator, and continuing processing. It is not a
+blocking calculation error.
 """
 
 from __future__ import annotations
@@ -58,10 +63,11 @@ from ...domain.renta._maritime_exemption import (
 class MaritimeExemptionResult(BaseModel):
     """Typed result for a maritime worker exemption resolution.
 
-    Carries the ordered tuple of CasillaObservation rows with full
-    provenance and a derived flat mapping for human readability.
-    The observations field is the canonical contract; callers must not
-    persist or transmit only the flat casilla_values view.
+    Carries the ordered tuple of
+    :class:`~aeat.domain.calculations.registry.CasillaObservation` rows with
+    full legal/source provenance and a derived flat mapping for human
+    readability. The ``observations`` field is the canonical contract; callers
+    must not persist or transmit only the flat ``casilla_values`` view.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -71,11 +77,13 @@ class MaritimeExemptionResult(BaseModel):
 
     @property
     def casilla_values(self) -> Mapping[CasillaId, Decimal]:
-        """Derived flat view: casilla_id -> Decimal.
+        """Derived flat view from canonical observations.
 
-        Provided for human readability only. The canonical storage is
-        ``observations``; this view must not be used for persistence or
-        wire payloads.
+        Returns a ``Mapping[CasillaId, Decimal]`` for display and operator
+        preview paths. The canonical storage is ``observations``; this view
+        must not be used for persistence or wire payloads because it omits
+        :class:`~aeat.domain.calculations.registry.CasillaObservation`
+        provenance.
         """
         return {obs.casilla_id: obs.value for obs in self.observations}
 
@@ -89,19 +97,26 @@ def resolve_maritime_exemption(
 ) -> MaritimeExemptionResult:
     """Resolve the applicable maritime exemption pathway and produce typed observations.
 
-    Evaluates the binding selector predicates for Art. 7.p) and REBECA in
-    order. For each eligible pathway the corresponding domain calculation
-    function is called and its CasillaObservation is appended to the result.
+    Evaluates
+    :func:`~aeat.domain.renta._maritime_exemption.art_7p_eligible` and
+    :func:`~aeat.domain.renta._maritime_exemption.rebeca_eligible` in order.
+    For each eligible pathway the corresponding domain calculation function is
+    called and its
+    :class:`~aeat.domain.calculations.registry.CasillaObservation` is appended
+    to the result.
 
-    The DA 41 inactive guard runs before any calculation — if the DA 41
-    selector resolves True (which it currently always will when tuna_fleet +
-    pending_eu_clearance are both set on a trabajador del mar profile),
-    MaritimeExemptionInactiveError is raised and no observations are produced.
+    The DA 41 inactive guard runs before any calculation: if the DA 41 selector
+    resolves true (currently when ``tuna_fleet`` and ``pending_eu_clearance``
+    are both set on a trabajador del mar profile),
+    :class:`~aeat.domain.renta._maritime_exemption.MaritimeExemptionInactiveError`
+    is raised and no observations are produced.
 
-    The RETMAR mandatory-filing gate is checked independently. When
-    retmar_registered is True, ProfileCompletenessError is raised. Callers
-    should catch it, surface the message to the operator, and continue
-    processing. The gate does not suppress exemption calculations.
+    The RETMAR mandatory-filing gate is checked independently through
+    :func:`~aeat.domain.renta._maritime_exemption.check_retmar_mandatory_filing`.
+    When ``retmar_registered`` is true,
+    :class:`~aeat.domain.renta._maritime_exemption.ProfileCompletenessError` is
+    raised. Callers should catch it, surface the message to the operator, and
+    continue processing. The gate does not suppress exemption calculations.
 
     Args:
         facts: Resolved MaritimeWorkerFacts from the user profile.
@@ -116,11 +131,12 @@ def resolve_maritime_exemption(
         :class:`MaritimeExemptionResult` with typed observations and flat view.
 
     Raises:
-        RentaValidationError: Eligibility predicate mismatch or invalid input.
-            The DA 41 inactive guard and RETMAR completeness gate (described
-            above) raise their own exceptions from the called guards.
+        :class:`~aeat.domain.renta._errors.RentaValidationError`: Eligibility
+            predicate mismatch or invalid input. The DA 41 inactive guard and
+            RETMAR completeness gate raise their own typed exceptions from the
+            called guards.
     """
-    # DA 41 inactive guard runs first — must not silently produce output.
+    # DA 41 inactive guard runs first; it must not silently produce output.
     guard_da41_inactive(facts)
 
     # RETMAR completeness gate — callers catch and surface to operator.

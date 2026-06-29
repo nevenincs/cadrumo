@@ -1,15 +1,23 @@
-"""Typer registration for modelo work calculation revision read commands."""
+"""Typer registration for modelo work :class:`CalculationRevision` read commands.
+
+The registered commands list stored calculation revisions, show one persisted
+revision, and render its typed casilla observations without mutating modelo
+state.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Annotated, Any
+from dataclasses import dataclass
+from typing import Annotated
 
 import typer
 
 from ...application.modelo import (
+    CalculationRevision,
     CalculationRevisionNotFoundError,
     ModeloCalculationRevisionSelector,
+    WorkUnit,
     list_calculation_revisions,
     modelo_202_modality_for_work_unit,
     resolve_modelo_work_unit_for_operator_target,
@@ -18,29 +26,57 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ._common import _emit_envelope
 from ._modelo_cli_support import OutputLanguageOpt
-from ._modelo_payloads import WorkRevisionResult, WorkRevisionsResult
+from ._modelo_payloads import WorkObservationsResult, WorkRevisionResult, WorkRevisionsResult
 from ._modelo_rendering import (
+    calculation_observation_lines,
     calculation_revision_lines,
     calculation_revision_payload,
     short_id,
 )
 
 
-# KWARGS-ANY-RATIONALE-CLI-DI-RESOLVERS: resolve_work_unit_for_cli and
-# resolve_revision_for_cli are injected resolver callables whose concrete return
-# type varies by call site; Callable[..., Any] is the DI composition seam.
-def register_work_revision_commands(
-    work_app: typer.Typer,
-    *,
-    activate_output_language: Callable[[typer.Context, OutputLanguage | None], None],
-    require_active_profile: Callable[[], None],
-    resolve_work_unit_for_cli: Callable[..., Any],
-    resolve_revision_for_cli: Callable[..., Any],
-    bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
-    selector_bad_parameter: Callable[[BaseException], typer.BadParameter],
-) -> None:
-    """Register read-only calculation revision commands."""
+@dataclass(frozen=True)
+class _WorkRevisionCommandDeps:
+    """Injected CLI dependencies shared by work revision command handlers."""
 
+    activate_output_language: Callable[[typer.Context, OutputLanguage | None], None]
+    require_active_profile: Callable[[], None]
+    resolve_work_unit_for_cli: Callable[..., WorkUnit]
+    resolve_revision_for_cli: Callable[..., CalculationRevision]
+    bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
+    selector_bad_parameter: Callable[[BaseException], typer.BadParameter]
+
+
+def _resolve_selected_revision(
+    deps: _WorkRevisionCommandDeps,
+    *,
+    calculation_revision_id: str | None,
+    work_unit_id: str | None,
+    modelo: str | None,
+    year: int | None,
+    period: str | None,
+    registry_revision: str | None,
+    bucket_id: str | None,
+    selector: str,
+) -> CalculationRevision:
+    try:
+        return deps.resolve_revision_for_cli(
+            calculation_revision_id=calculation_revision_id,
+            work_unit_id=work_unit_id,
+            modelo=modelo,
+            year=year,
+            period=period,
+            registry_revision=registry_revision,
+            bucket_id=bucket_id,
+            selector=selector,
+        )
+    except CalculationRevisionNotFoundError as exc:
+        if calculation_revision_id is not None:
+            raise deps.bad_parameter_from_error(exc) from exc
+        raise deps.selector_bad_parameter(exc) from exc
+
+
+def _register_work_revisions_command(work_app: typer.Typer, deps: _WorkRevisionCommandDeps) -> None:
     @work_app.command("revisions", help=tr("cli.app.modelo.work.revisions_help"))
     def work_revisions(
         ctx: typer.Context,
@@ -71,11 +107,11 @@ def register_work_revision_commands(
         output_language: OutputLanguageOpt = None,
     ) -> None:
         """List calculation revisions, optionally filtered to one work unit."""
-        activate_output_language(ctx, output_language)
-        require_active_profile()
+        deps.activate_output_language(ctx, output_language)
+        deps.require_active_profile()
         resolved_work_unit_id = work_unit_id
         if work_unit_id is not None or modelo is not None or year is not None or period is not None:
-            unit = resolve_work_unit_for_cli(
+            unit = deps.resolve_work_unit_for_cli(
                 work_unit_id=work_unit_id,
                 modelo=modelo,
                 year=year,
@@ -114,6 +150,8 @@ def register_work_revision_commands(
         )
         _emit_envelope(ctx, command="modelo.work.revisions", result=result, lines=lines)
 
+
+def _register_work_revision_command(work_app: typer.Typer, deps: _WorkRevisionCommandDeps) -> None:
     @work_app.command("revision", help=tr("cli.app.modelo.work.revision_show_help"))
     def work_revision(
         ctx: typer.Context,
@@ -155,23 +193,19 @@ def register_work_revision_commands(
         output_language: OutputLanguageOpt = None,
     ) -> None:
         """Show one stored calculation revision's persisted casilla values."""
-        activate_output_language(ctx, output_language)
-        require_active_profile()
-        try:
-            selected_revision = resolve_revision_for_cli(
-                calculation_revision_id=calculation_revision_id,
-                work_unit_id=work_unit_id,
-                modelo=modelo,
-                year=year,
-                period=period,
-                registry_revision=registry_revision,
-                bucket_id=bucket_id,
-                selector=select,
-            )
-        except CalculationRevisionNotFoundError as exc:
-            if calculation_revision_id is not None:
-                raise bad_parameter_from_error(exc) from exc
-            raise selector_bad_parameter(exc) from exc
+        deps.activate_output_language(ctx, output_language)
+        deps.require_active_profile()
+        selected_revision = _resolve_selected_revision(
+            deps,
+            calculation_revision_id=calculation_revision_id,
+            work_unit_id=work_unit_id,
+            modelo=modelo,
+            year=year,
+            period=period,
+            registry_revision=registry_revision,
+            bucket_id=bucket_id,
+            selector=select,
+        )
 
         modality_payload: dict[str, object] = {}
         modality_lines: list[str] = []
@@ -196,6 +230,121 @@ def register_work_revision_commands(
             *modality_lines,
         ]
         _emit_envelope(ctx, command="modelo.work.revision", result=result, lines=lines)
+
+
+def _register_work_observations_command(work_app: typer.Typer, deps: _WorkRevisionCommandDeps) -> None:
+    @work_app.command(
+        "observations",
+        help=tr(
+            "cli.app.modelo.work.observations_help",
+            default="Show typed per-casilla calculation observations and provenance.",
+        ),
+    )
+    def work_observations(
+        ctx: typer.Context,
+        calculation_revision_id: Annotated[
+            str | None,
+            typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help")),
+        ] = None,
+        modelo: Annotated[
+            str | None,
+            typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
+        ] = None,
+        year: Annotated[
+            int | None,
+            typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
+        ] = None,
+        period: Annotated[
+            str | None,
+            typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
+        ] = None,
+        registry_revision: Annotated[
+            str | None,
+            typer.Option("--registry-revision", help=tr("cli.app.modelo.work.revision_help")),
+        ] = None,
+        work_unit_id: Annotated[
+            str | None,
+            typer.Option("--work-unit-id", help=tr("cli.app.modelo.work.work_unit_id_help")),
+        ] = None,
+        select: Annotated[
+            str,
+            typer.Option(
+                "--select",
+                help=tr("cli.app.modelo.work.revision_selector_help", default="Revision selector."),
+            ),
+        ] = ModeloCalculationRevisionSelector.CURRENT.value,
+        bucket_id: Annotated[
+            str | None,
+            typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
+        ] = None,
+        output_language: OutputLanguageOpt = None,
+    ) -> None:
+        """Show typed casilla observations for one stored calculation revision."""
+        deps.activate_output_language(ctx, output_language)
+        deps.require_active_profile()
+        selected_revision = _resolve_selected_revision(
+            deps,
+            calculation_revision_id=calculation_revision_id,
+            work_unit_id=work_unit_id,
+            modelo=modelo,
+            year=year,
+            period=period,
+            registry_revision=registry_revision,
+            bucket_id=bucket_id,
+            selector=select,
+        )
+
+        revision_payload = calculation_revision_payload(selected_revision)
+        result = WorkObservationsResult.model_validate(
+            {
+                "calculation_revision_id": revision_payload.calculation_revision_id,
+                "work_unit_id": revision_payload.work_unit_id,
+                "state": revision_payload.state,
+                "observation_count": len(revision_payload.observations),
+                "observations": revision_payload.observations,
+            },
+        )
+        lines = [
+            "operation\tmodelo.work.observations",
+            *calculation_observation_lines(selected_revision),
+        ]
+        _emit_envelope(ctx, command="modelo.work.observations", result=result, lines=lines)
+
+
+def register_work_revision_commands(
+    work_app: typer.Typer,
+    *,
+    activate_output_language: Callable[[typer.Context, OutputLanguage | None], None],
+    require_active_profile: Callable[[], None],
+    resolve_work_unit_for_cli: Callable[..., WorkUnit],
+    resolve_revision_for_cli: Callable[..., CalculationRevision],
+    bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
+    selector_bad_parameter: Callable[[BaseException], typer.BadParameter],
+) -> None:
+    """Register read-only calculation revision commands.
+
+    Args:
+        work_app: Typer sub-application that receives the commands.
+        activate_output_language: CLI language activation hook.
+        require_active_profile: Guard invoked before reading profile-scoped
+            revision state.
+        resolve_work_unit_for_cli: Resolver for visible work-unit targets.
+        resolve_revision_for_cli: Resolver returning the selected
+            :class:`CalculationRevision`.
+        bad_parameter_from_error: Error adapter for direct revision-id failures.
+        selector_bad_parameter: Error adapter for selector-based failures.
+    """
+    deps = _WorkRevisionCommandDeps(
+        activate_output_language=activate_output_language,
+        require_active_profile=require_active_profile,
+        resolve_work_unit_for_cli=resolve_work_unit_for_cli,
+        resolve_revision_for_cli=resolve_revision_for_cli,
+        bad_parameter_from_error=bad_parameter_from_error,
+        selector_bad_parameter=selector_bad_parameter,
+    )
+    _register_work_revisions_command(work_app, deps)
+    _register_work_revision_command(work_app, deps)
+    _register_work_observations_command(work_app, deps)
 
 
 __all__ = ["register_work_revision_commands"]

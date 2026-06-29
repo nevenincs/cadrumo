@@ -399,6 +399,31 @@ required_text = [
     "tipo del 10 por 100",
 ]
 
+[legal."ley-49-2002:art-14"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-49-2002-art-14.html#a14"
+document_id = "BOE-A-2002-25039"
+article = "14"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-25039#a14"
+published_at = 2002-12-24
+effective_from = 2002-12-25
+consolidated_as_of = 2023-12-20
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "codex (verified against live BOE-A-2002-25039 art. 14 and bundled corpus excerpt)"
+notes = "Ley 49/2002 art 14: application of the Title II special fiscal regime by option in the regulatory form/period, indefinite linkage while art. 3 requirements remain met and no renunciation is filed, proof burden on the entity, and non-compliance repayment consequences."
+required_text = [
+    "Artículo 14. Aplicación del régimen fiscal especial.",
+    "podrán acogerse al régimen fiscal especial",
+    "plazo y en la forma que reglamentariamente se establezca",
+    "Ejercitada la opción",
+    "forma indefinida durante los períodos impositivos siguientes",
+    "mientras no se renuncie a su aplicación",
+    "deberán ser probados por la entidad",
+]
+
 # LIS disposición transitoria cuadragésima cuarta, added by Ley 7/2024
 # (disposición final octava). Binding source for the micro-empresa
 # (INCN < 1M EUR) two-tranche transitional rate schedule applied to the

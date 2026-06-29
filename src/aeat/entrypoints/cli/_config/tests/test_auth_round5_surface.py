@@ -17,7 +17,6 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from .....adapters.persistence.storage.sql.engine import dispose_engine
 from .....application.auth._operator import (
@@ -32,6 +31,7 @@ from .....application.user_profile import profile_create_storage_span
 from .....application.user_profile._testing import register_minimal_profile
 from .....application.workflow._persistence import workflow_state_repository
 from .....core.config import load_settings, override_settings
+from .....tests.cli_runner import invoke_typer_app
 from .. import app as config_app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -66,11 +66,6 @@ def _isolated_application_layer(tmp_path: Path) -> Iterator[None]:
                 yield
             finally:
                 dispose_engine(settings)
-
-
-@pytest.fixture
-def runner() -> CliRunner:
-    return CliRunner()
 
 
 # ── B1: configure and status agree on ``configured`` ────────────────────────
@@ -207,26 +202,26 @@ def test_operator_login_without_pytest_context_does_not_require_live_test_gate(
 # ── B3: --output-language parity on status / test / login ──────────────────
 
 
-def test_status_accepts_output_language_flag(runner: CliRunner) -> None:
+def test_status_accepts_output_language_flag() -> None:
     """Round-5 B3: ``auth status`` registers ``--output-language``."""
 
-    help_result = runner.invoke(config_app, ["auth", "status", "--help"])
+    help_result = invoke_typer_app(config_app, ["auth", "status", "--help"])
     assert help_result.exit_code == 0
     assert "--output-language" in help_result.output
 
 
-def test_test_accepts_output_language_flag(runner: CliRunner) -> None:
+def test_test_accepts_output_language_flag() -> None:
     """Round-5 B3: ``auth test`` registers ``--output-language``."""
 
-    help_result = runner.invoke(config_app, ["auth", "test", "--help"])
+    help_result = invoke_typer_app(config_app, ["auth", "test", "--help"])
     assert help_result.exit_code == 0
     assert "--output-language" in help_result.output
 
 
-def test_login_accepts_output_language_flag(runner: CliRunner) -> None:
+def test_login_accepts_output_language_flag() -> None:
     """Round-5 B3: ``auth login`` registers ``--output-language``."""
 
-    help_result = runner.invoke(config_app, ["auth", "login", "--help"])
+    help_result = invoke_typer_app(config_app, ["auth", "login", "--help"])
     assert help_result.exit_code == 0
     assert "--output-language" in help_result.output
 

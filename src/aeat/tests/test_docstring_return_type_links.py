@@ -23,12 +23,10 @@ from __future__ import annotations
 import ast
 import re
 from collections import defaultdict
-from collections.abc import Mapping
-from pathlib import Path
 
 import pytest
 
-from ._inventory import ast_for_path, module_name, production_python_files
+from ._inventory import module_name, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -48,27 +46,21 @@ def _annotation_names(node: ast.AST) -> set[str]:
     return names
 
 
-def _linkable_classes(source_tree_ast: Mapping[Path, ast.AST]) -> set[str]:
+def _linkable_classes() -> set[str]:
     """Public aeat classes with exactly one canonical definition (documentable)."""
     counts: dict[str, int] = defaultdict(int)
-    for path in production_python_files():
-        tree = ast_for_path(path, source_tree_ast)
-        if tree is None:
-            continue
+    for _path, tree in production_ast_items():
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef) and not node.name.startswith("_"):
                 counts[node.name] += 1
     return {name for name, n in counts.items() if n == 1}
 
 
-def test_public_functions_link_their_aeat_return_type(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_public_functions_link_their_aeat_return_type() -> None:
     """A documented public function must cross-link an aeat-typed return annotation."""
-    linkable = _linkable_classes(source_tree_ast)
+    linkable = _linkable_classes()
     violations: set[tuple[str, str]] = set()
-    for path in production_python_files():
-        tree = ast_for_path(path, source_tree_ast)
-        if tree is None:
-            continue
+    for path, tree in production_ast_items():
         module = module_name(path)
         for node in ast.walk(tree):
             if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):

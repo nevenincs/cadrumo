@@ -512,8 +512,8 @@ def test_parser_extracts_modelo_123_2024_corpus_round_trip() -> None:
         )
 
 
-def test_parser_extracts_modelo_123_2023_legacy_corpus_round_trip() -> None:
-    """Round-trip: parse the committed M123 2019-2023 legacy revision synthetic fixture.
+def test_parser_extracts_modelo_123_2023_historical_corpus_round_trip() -> None:
+    """Round-trip: parse the committed M123 2019-2023 revision synthetic fixture.
 
     Ground truth is the AEAT-published Orden EHA/3435/2007 and the Diseño de Registro
     Modelo 123 v13 (source_ref: aeat-dr-123-2019-2023-v13).
@@ -523,21 +523,20 @@ def test_parser_extracts_modelo_123_2023_legacy_corpus_round_trip() -> None:
     single-page autoliquidacion with box numbers at line start.  The numeric_casilla
     strategy is valid for both revisions.
 
-    The 2019-2023 registry revision uses internal casilla IDs with the -legacy suffix
-    (e.g. "01-legacy") to disambiguate them from the 2024+ plain IDs. The printed
-    form still carries bare box numbers ("01", "02", ...); the parser must match the
-    printed number and emit the canonical legacy casilla.id.
+    The 2019-2023 registry revision uses the official bare box numbers ("01",
+    "02", ...) as canonical casilla IDs. The parser must match those printed
+    numbers directly and emit the selected revision's canonical casilla.id.
 
     The fixture encodes synthetic amounts satisfying both registry formulas:
       [06] = [03] + [05] = 1.520,00 + 0,00 = 1.520,00
       [08] = [06] - [07] = 1.520,00 - 0,00 = 1.520,00
 
     Ground truth values are derived from the fixture data in _generate.py
-    _MODELO_123_2023_LEGACY_CASILLAS — not re-computed from the registry formula.
+    _MODELO_123_2023_RENDER_ROWS — not re-computed from the registry formula.
 
     Non-tautology: the fixture prints the official bare box number while the expected
-    output keys are the registry's legacy casilla IDs. A parser that anchors on
-    casilla.id text instead of casilla.number would produce coverage=0 here.
+    output keys are the registry's canonical 2019-2023 casilla IDs. A parser that
+    fails to select the period-specific revision would produce the wrong shape here.
     """
     filing = parse_declaracion(
         _MODELO_123_2023_SYNTHETIC_FIXTURE,
@@ -559,20 +558,20 @@ def test_parser_extracts_modelo_123_2023_legacy_corpus_round_trip() -> None:
 
     # All 8 casillas defined by the 2019-2023 declaracion_pdf profile must be present.
     assert set(values.keys()) == set(_MODELO_123_HISTORICAL_EXPECTED_TARGETS), (
-        f"expected exactly the 8 M123 legacy profile casillas, got {set(values.keys())!r}"
+        f"expected exactly the 8 M123 2019-2023 profile casillas, got {set(values.keys())!r}"
     )
 
-    # Ground truth: fixture amounts from _generate.py _MODELO_123_2023_LEGACY_CASILLAS.
+    # Ground truth: fixture amounts from _generate.py _MODELO_123_2023_RENDER_ROWS.
     expected_values = _expected_casilla_values(
         {
-            "01-legacy": Decimal("4.00"),
-            "02-legacy": Decimal("8000.00"),
-            "03-legacy": Decimal("1520.00"),
-            "04-legacy": Decimal("0.00"),
-            "05-legacy": Decimal("0.00"),
-            "06-legacy": Decimal("1520.00"),
-            "07-legacy": Decimal("0.00"),
-            "08-legacy": Decimal("1520.00"),
+            "01": Decimal("4.00"),
+            "02": Decimal("8000.00"),
+            "03": Decimal("1520.00"),
+            "04": Decimal("0.00"),
+            "05": Decimal("0.00"),
+            "06": Decimal("1520.00"),
+            "07": Decimal("0.00"),
+            "08": Decimal("1520.00"),
         },
     )
     for casilla_id, expected_value in expected_values.items():

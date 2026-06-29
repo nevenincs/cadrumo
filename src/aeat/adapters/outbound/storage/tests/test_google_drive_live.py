@@ -1,6 +1,6 @@
 """Live-gated tests for `GoogleDriveProvider`.
 
-Skip cleanly unless `AEAT_LIVE_TESTS_ENABLED=1` AND the operator has
+Deselect unless `AEAT_LIVE_TESTS_ENABLED=1` AND the operator has
 pre-registered an OAuth client + token for the named test profile
 (`AEAT_GOOGLE_LIVE_PROFILE`, default `live-test`) AND
 `aeat_google_drive_root_folder_id` is configured in the environment.
@@ -57,19 +57,19 @@ def _live_profile() -> str:
     return os.environ.get("AEAT_GOOGLE_LIVE_PROFILE", "live-test")
 
 
-def _skip_unless_drive_configured() -> None:
+def _require_drive_configured() -> None:
     requires_live_enabled()
     requires_live_google_enabled()
     from .....core.config import load_settings
 
     settings = load_settings()
     if settings.aeat_storage_provider_kind != "google_drive":
-        pytest.skip(
+        pytest.fail(
             "aeat_storage_provider_kind is not google_drive; "
-            "set AEAT_STORAGE_PROVIDER_KIND=google_drive to run live drive tests",
+            "set AEAT_STORAGE_PROVIDER_KIND=google_drive after live Google opt-in",
         )
     if not settings.aeat_google_drive_root_folder_id:
-        pytest.skip("aeat_google_drive_root_folder_id is not configured")
+        pytest.fail("aeat_google_drive_root_folder_id is not configured after live Google opt-in")
 
 
 @contextmanager
@@ -85,7 +85,7 @@ def _active_profile_storage_session() -> Iterator[None]:
 
 
 def _provider_or_skip() -> StorageProvider:
-    _skip_unless_drive_configured()
+    _require_drive_configured()
     try:
         with _active_profile_storage_session():
             return get_storage_provider()

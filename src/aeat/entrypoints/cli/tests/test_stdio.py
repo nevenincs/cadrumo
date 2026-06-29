@@ -228,7 +228,8 @@ def test_console_help_invocation_widens_before_rich_renders_long_flags(tmp_path:
     assert "--does-intracomunitario" in result.stdout
     assert "--third-party-transactions-above-347-threshold" in result.stdout
     assert "--iva-intracommunity-operations-exceed-50000-eur" in result.stdout
-    assert "--uses-objective-estimation-irpf" in result.stdout
+    assert "--irpf-estimation-regime" in result.stdout
+    assert "--uses-objective-estimation-irpf" not in result.stdout
     assert "--does-intracomu…" not in result.stdout
     assert "--third-party-tr…" not in result.stdout
     assert "--iva-intracommu…" not in result.stdout

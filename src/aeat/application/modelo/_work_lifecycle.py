@@ -73,7 +73,6 @@ def create_work_unit(
     without emitting another creation event. Otherwise a BORRADOR work unit is
     inserted and a ``MODELO_WORK_UNIT_CREATED`` bucket event is appended.
     """
-    reject_unknown_revision(modelo=modelo, revision_id=revision_id)
     if period.filing_year != filing_year:
         raise WorkUnitMutationRefusedError(
             f"filing_year {filing_year!r} does not match period year {period.filing_year!r}",
@@ -86,8 +85,19 @@ def create_work_unit(
             },
             suggestion="pass a Period whose filing year matches the filing_year argument",
         )
+    from ._profile_readiness_gate import (
+        require_existing_profile_baseline_ready_for_modelo_work,
+        require_profile_ready_for_modelo_work,
+    )
+
+    require_existing_profile_baseline_ready_for_modelo_work(
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+    )
+    reject_unknown_revision(modelo=modelo, revision_id=revision_id)
     reject_unknown_period_for_revision(modelo=modelo, revision_id=revision_id, period=period)
-    from ._profile_readiness_gate import require_profile_ready_for_modelo_work
 
     require_profile_ready_for_modelo_work(
         bucket_id=bucket_id,

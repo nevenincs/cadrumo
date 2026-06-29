@@ -47,10 +47,9 @@ class SanitizerSourceParseError(SanitizationError):
         """Construct a redacted source-parse error.
 
         Args:
-            message: Legacy positional diagnostic text. Accepted for
-                compatibility, but intentionally not rendered or copied
-                into context because historical callers passed raw
-                pikepdf/QPDF diagnostics here.
+            message: Positional diagnostic text, intentionally not
+                rendered or copied into context because callers may pass
+                raw pikepdf/QPDF diagnostics here.
             failure: Optional underlying parser exception type name,
                 safe for debug envelopes because it excludes operator
                 paths and provider payload text.

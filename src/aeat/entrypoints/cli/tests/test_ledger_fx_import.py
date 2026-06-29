@@ -252,7 +252,7 @@ def test_track_surfaces_import_provenance_for_imported_rows() -> None:
 
 
 def test_status_surfaces_income_expense_net_rollup() -> None:
-    """status carries an income/expense/net money roll-up (year-end finding)."""
+    """status carries the current business income/expense/net money roll-up."""
 
     assert _import_statement(_CORPUS / "bbva-business-eur.csv").exit_code == 0
     rows = _ledger_rows()
@@ -262,9 +262,12 @@ def test_status_surfaces_income_expense_net_rollup() -> None:
         classify_result = _invoke(["app", "ledger", "classify", tx, "--classification", "BUSINESS"])
         assert classify_result.exit_code == 0
     report = _json_result(_invoke(["--format", "json", "app", "ledger", "status"]))
-    assert report["income_total"] != "0.00"
-    assert report["expense_total"] != "0.00"
-    assert "net_total" in report
+    assert report["business_income_total"] != "0.00"
+    assert report["business_expense_total"] != "0.00"
+    assert "business_net_total" in report
+    assert "income_total" not in report
+    assert "expense_total" not in report
+    assert "net_total" not in report
 
 
 def test_review_filter_text_search() -> None:

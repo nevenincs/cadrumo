@@ -220,6 +220,9 @@ class TestInvalidatePersistedCleanupIsolated:
         class _OriginalError(Exception):
             pass
 
+        class _CleanupError(Exception):
+            pass
+
         import contextlib
 
         cleanup_called = False
@@ -229,7 +232,7 @@ class TestInvalidatePersistedCleanupIsolated:
             try:
                 raise _OriginalError("persist failure")
             except Exception:
-                with contextlib.suppress(Exception):
+                with contextlib.suppress(_CleanupError):
                     cleanup_called = True
                     # cleanup succeeds (no raise)
                 raise

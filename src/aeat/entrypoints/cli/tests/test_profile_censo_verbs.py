@@ -12,37 +12,26 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
 from datetime import UTC, date, datetime
-from functools import cache
 from pathlib import Path
-from typing import cast
 
-import click
 import pytest
-from click.testing import CliRunner, Result
-from typer.main import get_command
+from click.testing import Result
 
 from ....application.live._censo import CensoSnapshotService
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....core.config import Settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .._config import profile_app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 _AEAT = Settings.external_constants().aeat
 _G313 = f"{_AEAT.domains.sede}{_AEAT.sede_paths.censo_g313_launcher}"
-_PROFILE_RUNNER = CliRunner()
-
-
-@cache
-def _profile_command() -> click.Command:
-    return cast(click.Command, get_command(profile_app))
 
 
 def _invoke_profile(args: Sequence[str]) -> Result:
-    return _PROFILE_RUNNER.invoke(_profile_command(), list(args))
+    return invoke_cached_cli(["config", "profile", *args])
 
 
 @pytest.fixture(autouse=True)

@@ -447,9 +447,20 @@ class TaxpayerProfile(BaseModel):
             activate IRNR obligations (Modelos 210/216/247) when
             their registry entries are wired.
         country_of_fiscal_residence: ISO 3166-1 alpha-2 code of the
-            country of fiscal residence. Required when
-            ``fiscal_residency`` is ``NON_RESIDENT_IRNR``; ``None`` is
-            valid only for IRPF residents.
+        country of fiscal residence. Required when
+        ``fiscal_residency`` is ``NON_RESIDENT_IRNR``; ``None`` is
+        valid only for IRPF residents.
+        ley_49_2002_special_regime_option_declared: Whether the entity
+            has declared the Modelo 036 option for the Title II Ley
+            49/2002 special fiscal regime. ``None`` means undeclared.
+        ley_49_2002_special_regime_option_date: Date declared for that
+            option on Modelo 036. ``None`` means undeclared.
+        ley_49_2002_special_regime_renunciation_declared: Whether the
+            entity has declared renunciation of the Title II Ley
+            49/2002 special regime. ``None`` means undeclared.
+        ley_49_2002_special_regime_renunciation_date: Date declared
+            for that renunciation on Modelo 036. ``None`` means
+            undeclared.
     """
 
     model_config = _STRICT_FROZEN
@@ -482,6 +493,10 @@ class TaxpayerProfile(BaseModel):
     activity_end_date: date | None = None
     incn_prior_12_months: Decimal | None = None
     new_entity_first_two_profit_periods: bool | None = None
+    ley_49_2002_special_regime_option_declared: bool | None = None
+    ley_49_2002_special_regime_option_date: date | None = None
+    ley_49_2002_special_regime_renunciation_declared: bool | None = None
+    ley_49_2002_special_regime_renunciation_date: date | None = None
     tributacion_estado_porcentaje: Decimal | None = None
     establecimiento_type: str = ""
     elected_withholding_pct: str = ""

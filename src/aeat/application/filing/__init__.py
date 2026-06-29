@@ -148,6 +148,7 @@ from ._export import (
     DeclaracionVerifyResult,
     DeclaracionVerifyVerdict,
     export_draft,
+    export_layout_renderability_reason,
     render_layout,
     verify_export,
 )
@@ -820,6 +821,7 @@ __all__ = [
     "derive_validation_status",
     "describe_stale_reason",
     "export_draft",
+    "export_layout_renderability_reason",
     "filing_profile_from_taxpayer",
     "import_filing_from_justificante",
     "iter_findings",

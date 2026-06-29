@@ -65,6 +65,11 @@ def validate_casilla_section(
             )
         if casilla.binding is not None and casilla.binding not in bindings:
             failures.append(f"{prefix}: casilla {casilla.id!r} references unknown binding {casilla.binding!r}")
+        for binding in casilla.alternate_bindings:
+            if binding not in bindings:
+                failures.append(
+                    f"{prefix}: casilla {casilla.id!r} references unknown alternate binding {binding!r}",
+                )
         for export_ref in casilla.export_refs:
             if export_ref not in export_field_ids:
                 failures.append(f"{prefix}: casilla {casilla.id!r} references unknown export field {export_ref!r}")

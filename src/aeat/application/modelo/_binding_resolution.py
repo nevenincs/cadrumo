@@ -37,6 +37,7 @@ from ...domain.calculations.registry import (
     casillas_by_id,
     enum_consumed_binding_ids,
     expression_binding_refs,
+    resolve_bound_casilla_binding_value,
 )
 from ...domain.modelos._errors import ModeloError
 from ..aggregation._source_mesh import CalculationSourceResolution
@@ -303,7 +304,7 @@ def resolve_available_bound_inputs_by_casilla_id(
     for casilla in revision.casillas:
         if casilla.input_kind != InputKind.BOUND or casilla.binding is None:
             continue
-        value = binding_values.get(casilla.binding)
+        value, _binding_ids = resolve_bound_casilla_binding_value(casilla, binding_values)
         if value is not None:
             resolved[casilla.id] = value
     return resolved

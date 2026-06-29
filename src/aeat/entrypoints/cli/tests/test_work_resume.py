@@ -10,6 +10,7 @@ import pytest
 from click.testing import Result
 
 from ....application.modelo import create_work_unit, workflow_period_for_work_unit
+from ....application.user_profile import UserProfileLifecycleRepository
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow import (
@@ -22,6 +23,7 @@ from ....application.workflow import (
 from ....application.workflow._persistence import workflow_state_repository
 from ....core import Period, resolve_active_bucket_id
 from ....domain.deadlines import ModeloDeadline, ObligationStatus
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 
@@ -32,6 +34,34 @@ def _invoke_work(args: Sequence[str]) -> Result:
     return invoke_cached_cli(["app", "modelo", "work", *args])
 
 
+_T = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
+_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
+    UserProfileFact(path="identity.tax_id", value="00000000T"),
+    UserProfileFact(path="identity.name", value="Operator"),
+    UserProfileFact(path="identity.surnames", value="Resume"),
+    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="activities.description", value="economic activity"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="provenance.source", value="test_fixture"),
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+)
+
+
+def _seed_ready_profile_record(bucket_id: str) -> None:
+    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name=bucket_id,
+            facts=_READY_PROFILE_FACTS,
+            created_at=_T,
+            updated_at=_T,
+        ),
+    )
+
+
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
@@ -39,10 +69,8 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         profile_create_storage_span("operator"),
     ):
         workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+        _seed_ready_profile_record("operator")
         yield
-
-
-_T = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
 
 
 def _obligation(modelo: str = "130", period: Period | None = None) -> ModeloDeadline:
@@ -205,7 +233,7 @@ def test_resume_accepts_modelo_year_period_without_raw_id() -> None:
     assert f"work_unit_id\t{work_unit.work_unit_id}" in result.output
 
 
-def test_resume_accepts_legacy_work_unit_id() -> None:
+def test_resume_accepts_exact_work_unit_id() -> None:
     work_unit = _seed_work_unit()
     workflow_period = workflow_period_for_work_unit(work_unit)
     earlier = _aborted_run("1" * 16, reason=WorkflowAbortReason.SITE_UNAVAILABLE).model_copy(

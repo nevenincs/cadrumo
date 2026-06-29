@@ -2,19 +2,14 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
+from .....tests.cli_runner import invoke_typer_app
 from .....tests.secure_sql import isolated_profile_storage_root
 from ... import app as root_app
 from ..._errors import CliRefusedBoundaryError
 from ..__init__ import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture
-def runner() -> CliRunner:
-    return CliRunner()
 
 
 @pytest.fixture
@@ -28,12 +23,12 @@ def _per_bucket_backend(tmp_path: Path) -> Iterator[Path]:
         yield storage_root
 
 
-def test_apoderado_status_fails_without_profile(runner: CliRunner, tmp_path: Path) -> None:
+def test_apoderado_status_fails_without_profile(tmp_path: Path) -> None:
     # Pin an isolated storage root with no active profile so an ambient
     # active-profile pointer left by a peer test cannot mask the
     # no-active-profile refusal this test asserts.
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        result = runner.invoke(app, ["auth", "apoderado", "status"])
+        result = invoke_typer_app(app, ["auth", "apoderado", "status"])
         # Must refuse — any non-zero exit code is acceptable (boundary maps
         # refusals to its own exit category).
         assert result.exit_code != 0
@@ -50,8 +45,8 @@ def test_apoderado_status_fails_without_profile(runner: CliRunner, tmp_path: Pat
         assert result.exception.translated_message == "cli.config.profile.no_active_profile"
 
 
-def test_apoderado_scopes_list(runner: CliRunner) -> None:
-    result = runner.invoke(app, ["auth", "apoderado", "scopes", "list"])
+def test_apoderado_scopes_list() -> None:
+    result = invoke_typer_app(app, ["auth", "apoderado", "scopes", "list"])
     assert result.exit_code == 0
     assert "GENERAL" in result.output
 
@@ -66,8 +61,7 @@ def test_apoderado_happy_path_against_active_profile(_per_bucket_backend: Path) 
     """
     from .....adapters.persistence.storage.sql.engine import dispose_engine
 
-    runner = CliRunner()
-    create = runner.invoke(
+    create = invoke_typer_app(
         root_app,
         [
             "config",
@@ -77,8 +71,12 @@ def test_apoderado_happy_path_against_active_profile(_per_bucket_backend: Path) 
             "--quiet",
             "--tax-id",
             "12345678Z",
+            "--entity-type",
+            "natural_person",
             "--name",
             "MyCo",
+            "--surnames",
+            "Operator",
             "--activity",
             "design",
             "--iva-regime",
@@ -90,13 +88,13 @@ def test_apoderado_happy_path_against_active_profile(_per_bucket_backend: Path) 
     # status: exit 0 on the active profile (previously crashed with
     # AttributeError because the UUID never matched a label).
     dispose_engine()
-    status = runner.invoke(root_app, ["config", "auth", "apoderado", "status"])
+    status = invoke_typer_app(root_app, ["config", "auth", "apoderado", "status"])
     assert status.exit_code == 0, f"apoderado status failed: {status.output}"
     assert "configured\tFalse" in status.output
 
     # configure: exit 0, persists the apoderado config.
     dispose_engine()
-    configure = runner.invoke(
+    configure = invoke_typer_app(
         root_app,
         [
             "config",
@@ -120,7 +118,7 @@ def test_apoderado_happy_path_against_active_profile(_per_bucket_backend: Path) 
 
     # status now reflects the configured state.
     dispose_engine()
-    status_after = runner.invoke(root_app, ["config", "auth", "apoderado", "status"])
+    status_after = invoke_typer_app(root_app, ["config", "auth", "apoderado", "status"])
     assert status_after.exit_code == 0, status_after.output
     assert "configured\tTrue" in status_after.output
 
@@ -130,7 +128,7 @@ def test_apoderado_happy_path_against_active_profile(_per_bucket_backend: Path) 
     # copy instead. Any non-zero exit is acceptable; the refusal carries the
     # operator-facing message.
     dispose_engine()
-    check = runner.invoke(root_app, ["config", "auth", "apoderado", "check"])
+    check = invoke_typer_app(root_app, ["config", "auth", "apoderado", "check"])
     assert check.exit_code != 0, f"apoderado check should refuse, got: {check.output}"
     assert "configured\tTrue" not in check.output, (
         f"check leaked a stored-config status as a live result: {check.output!r}"
@@ -138,6 +136,6 @@ def test_apoderado_happy_path_against_active_profile(_per_bucket_backend: Path) 
 
     # clear: exit 0, retires the apoderado config.
     dispose_engine()
-    clear = runner.invoke(root_app, ["config", "auth", "apoderado", "clear"])
+    clear = invoke_typer_app(root_app, ["config", "auth", "apoderado", "clear"])
     assert clear.exit_code == 0, f"apoderado clear failed: {clear.output}"
     assert "cleared\tTrue" in clear.output

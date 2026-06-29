@@ -17,7 +17,6 @@ from time import sleep
 from typing import cast
 
 import pytest
-from typer.testing import CliRunner
 
 from ....application.auth import LiveAuthPreflightReport
 from ....application.live import (
@@ -37,8 +36,8 @@ from ....application.workflow._persistence import workflow_state_repository
 from ....core import Period
 from ....core.config import override_settings
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app as root_app
 from .._app_live import (
     _iva_remote_state_capture_lines,
     _live_iva_evidence_pull_command_timeout_ms,
@@ -70,6 +69,18 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
+def _invoke_expedientes(*args: str):
+    return invoke_cached_cli(["app", "live", "expedientes", *args])
+
+
+def _invoke_verify(*args: str):
+    return invoke_cached_cli(["app", "live", "verify", *args])
+
+
+def _invoke_borrador_100(*args: str):
+    return invoke_cached_cli(["app", "live", "borrador", "100", *args])
+
+
 def test_live_auth_preflight_lines_redact_active_profile_identifier() -> None:
     report = LiveAuthPreflightReport(
         provider="clave_movil",
@@ -90,40 +101,40 @@ def test_live_auth_preflight_lines_redact_active_profile_identifier() -> None:
 
 
 class TestExpedientesSubgroup:
-    def test_expedientes_list_is_empty_on_fresh_bucket(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(expedientes_app, ["list"])
+    def test_expedientes_list_is_empty_on_fresh_bucket(self) -> None:
+        result = _invoke_expedientes("list")
         assert result.exit_code == 0, result.output
         assert "count\t0" in result.output
 
-    def test_expedientes_show_refuses_unknown_snapshot(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(expedientes_app, ["view", "no-such-id"])
+    def test_expedientes_show_refuses_unknown_snapshot(self) -> None:
+        result = _invoke_expedientes("view", "no-such-id")
         assert result.exit_code != 0
 
-    def test_expedientes_latest_is_dash_on_fresh_bucket(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(expedientes_app, ["latest"])
+    def test_expedientes_latest_is_dash_on_fresh_bucket(self) -> None:
+        result = _invoke_expedientes("latest")
         assert result.exit_code == 0, result.output
         assert "snapshot_id\t-" in result.output
 
 
 class TestVerifySubgroup:
-    def test_verify_list_is_empty_on_fresh_bucket(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(verify_app, ["list"])
+    def test_verify_list_is_empty_on_fresh_bucket(self) -> None:
+        result = _invoke_verify("list")
         assert result.exit_code == 0, result.output
         assert "count\t0" in result.output
 
-    def test_verify_list_refuses_unknown_surface(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(verify_app, ["list", "--surface", "not-a-surface"])
+    def test_verify_list_refuses_unknown_surface(self) -> None:
+        result = _invoke_verify("list", "--surface", "not-a-surface")
         assert result.exit_code != 0
 
-    def test_verify_list_accepts_known_surface(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(verify_app, ["list", "--surface", "nif_iva"])
+    def test_verify_list_accepts_known_surface(self) -> None:
+        result = _invoke_verify("list", "--surface", "nif_iva")
         assert result.exit_code == 0, result.output
 
-    def test_verify_show_refuses_unknown_observation(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(verify_app, ["view", "no-such-observation"])
+    def test_verify_show_refuses_unknown_observation(self) -> None:
+        result = _invoke_verify("view", "no-such-observation")
         assert result.exit_code != 0
 
-    def test_verify_latest_renders_persisted_observation(self, cli_runner: CliRunner) -> None:
+    def test_verify_latest_renders_persisted_observation(self) -> None:
         # Seed an observation via the service surface so the CLI has
         # something to render.
         bucket_id = "default"
@@ -134,42 +145,33 @@ class TestVerifySubgroup:
             verdict="valid",
             checked_at=datetime(2025, 3, 15, tzinfo=UTC),
         )
-        result = cli_runner.invoke(
-            verify_app,
-            ["latest", "--surface", "nif_iva", "--nif", "ESB12345678"],
-        )
+        result = _invoke_verify("latest", "--surface", "nif_iva", "--nif", "ESB12345678")
         assert result.exit_code == 0, result.output
         assert "nif\tESB12345678" in result.output
         assert "verdict\tvalid" in result.output
 
-    def test_verify_latest_renders_dash_when_no_observation(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(
-            verify_app,
-            ["latest", "--surface", "tgvi", "--nif", "B99999999"],
-        )
+    def test_verify_latest_renders_dash_when_no_observation(self) -> None:
+        result = _invoke_verify("latest", "--surface", "tgvi", "--nif", "B99999999")
         assert result.exit_code == 0, result.output
         assert "observation_id\t-" in result.output
 
 
 class TestBorrador100Subgroup:
-    def test_borrador_100_list_is_empty_on_fresh_bucket(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(borrador_100_app, ["list"])
+    def test_borrador_100_list_is_empty_on_fresh_bucket(self) -> None:
+        result = _invoke_borrador_100("list")
         assert result.exit_code == 0, result.output
         assert "count\t0" in result.output
 
-    def test_borrador_100_latest_is_dash_when_no_snapshot(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(borrador_100_app, ["latest", "--filing-year", "2024"])
+    def test_borrador_100_latest_is_dash_when_no_snapshot(self) -> None:
+        result = _invoke_borrador_100("latest", "--filing-year", "2024")
         assert result.exit_code == 0, result.output
         assert "snapshot_id\t-" in result.output
 
-    def test_borrador_100_show_refuses_unknown_snapshot(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(borrador_100_app, ["view", "no-such-id"])
+    def test_borrador_100_show_refuses_unknown_snapshot(self) -> None:
+        result = _invoke_borrador_100("view", "no-such-id")
         assert result.exit_code != 0
 
-    def test_borrador_100_full_lifecycle_via_service_seed(
-        self,
-        cli_runner: CliRunner,
-    ) -> None:
+    def test_borrador_100_full_lifecycle_via_service_seed(self) -> None:
         bucket_id = "default"
         Borrador100SnapshotService(bucket_id=bucket_id).capture(
             filing_year=2024,
@@ -179,12 +181,12 @@ class TestBorrador100Subgroup:
             binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("1000.00")},
         )
 
-        listed = cli_runner.invoke(borrador_100_app, ["list"])
+        listed = _invoke_borrador_100("list")
         assert listed.exit_code == 0, listed.output
         assert "count\t1" in listed.output
         assert "active" in listed.output
 
-        latest = cli_runner.invoke(borrador_100_app, ["latest", "--filing-year", "2024"])
+        latest = _invoke_borrador_100("latest", "--filing-year", "2024")
         assert latest.exit_code == 0, latest.output
         assert "filing_year\t2024" in latest.output
 
@@ -192,15 +194,12 @@ class TestBorrador100Subgroup:
         snapshot_id = next(
             line.split("\t", 1)[1] for line in latest.output.splitlines() if line.startswith("snapshot_id\t")
         )
-        shown = cli_runner.invoke(borrador_100_app, ["view", snapshot_id])
+        shown = _invoke_borrador_100("view", snapshot_id)
         assert shown.exit_code == 0, shown.output
         assert "binding_count\t1" in shown.output
         assert "state\tactive" in shown.output
 
-        shown_json = cli_runner.invoke(
-            root_app,
-            ["--format", "json", "app", "live", "borrador", "100", "view", snapshot_id],
-        )
+        shown_json = invoke_cached_cli(["--format", "json", "app", "live", "borrador", "100", "view", snapshot_id])
         assert shown_json.exit_code == 0, shown_json.output
         payload = json.loads(shown_json.output)
         assert payload["command"] == "app.live.borrador.100.view"
@@ -208,8 +207,8 @@ class TestBorrador100Subgroup:
             "renta-2025-modelo-111-retenciones-periodicas": "1000.00",
         }
 
-    def test_borrador_100_list_rejects_unknown_state(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(borrador_100_app, ["list", "--state", "old"])
+    def test_borrador_100_list_rejects_unknown_state(self) -> None:
+        result = _invoke_borrador_100("list", "--state", "old")
         assert result.exit_code != 0
 
 

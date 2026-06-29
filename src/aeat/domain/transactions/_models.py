@@ -42,35 +42,19 @@ from ..iva._schema import EUMemberState, IvaCategory
 from ._enums import BusinessClassification, SplitRole, TransactionDirection, TransactionLifecycleState
 from ._errors import TransactionValidationError
 from ._ids import TransactionId
+from ._irpf_categories import (
+    IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
+    RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING,
+    format_irpf_category_ids,
+    has_activity_irpf_category,
+    has_non_work_irpf_category,
+    has_rent_irpf_category,
+)
 from ._raw_transaction import RawTransaction
 
-_IRPF_CATEGORY_TRABAJO = "trabajo"
-_IRPF_CATEGORY_ACTIVIDAD_ECONOMICA = "actividad_economica"
 # LIRPF art. 101.5 / RIRPF art. 95: supported professional activity
 # withholding rates are 15% or lower reduced rates, not the 21% IVA delta.
 _MAX_SUPPORTED_ACTIVITY_WITHHOLDING_RATE = Decimal("0.15")
-_RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING = frozenset(
-    {
-        "arrendamiento_local",
-        "arrendamiento_vivienda_afecto",
-    },
-)
-_RENT_IRPF_CATEGORIES_PAID_NET_OF_WITHHOLDING = _RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING
-
-
-def _has_non_work_irpf_category(value: str | None) -> bool:
-    """Return whether a row carries an explicit non-salary withholding axis."""
-    return value not in {None, "", _IRPF_CATEGORY_TRABAJO}
-
-
-def _has_activity_irpf_category(value: str | None) -> bool:
-    """Return whether a row carries the actividad-economica withholding axis."""
-    return value == _IRPF_CATEGORY_ACTIVIDAD_ECONOMICA
-
-
-def _has_rent_irpf_category(value: str | None) -> bool:
-    """Return whether a row carries an explicit rental withholding axis."""
-    return value in _RENT_IRPF_CATEGORIES_PAID_NET_OF_WITHHOLDING
 
 
 def derive_transaction_id(raw: RawTransaction) -> str:
@@ -1067,11 +1051,11 @@ class Transaction(BaseModel):
             return self
         if (
             self.direction == TransactionDirection.INCOMING
-            and _has_non_work_irpf_category(self.irpf_category)
+            and has_non_work_irpf_category(self.irpf_category)
             and reconstituted > expected
         ):
             inferred_withholding = round_to_cents(reconstituted - expected)
-            if _has_activity_irpf_category(self.irpf_category):
+            if has_activity_irpf_category(self.irpf_category):
                 maximum_supported_withholding = round_to_cents(
                     self.taxable_base * _MAX_SUPPORTED_ACTIVITY_WITHHOLDING_RATE,
                 )
@@ -1083,8 +1067,8 @@ class Transaction(BaseModel):
             return self
         if (
             self.direction == TransactionDirection.OUTGOING
-            and self.category_id in _RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING
-            and _has_rent_irpf_category(self.irpf_category)
+            and self.category_id in RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING
+            and has_rent_irpf_category(self.irpf_category)
             and reconstituted > expected
         ):
             return self
@@ -1092,16 +1076,21 @@ class Transaction(BaseModel):
         if reconstituted > expected and self.direction == TransactionDirection.INCOMING:
             detail = (
                 " If this is an income receipt paid net of IRPF withholding, "
-                "set irpf_category so the invoice base and IVA can be kept."
+                f"set irpf_category={IRPF_CATEGORY_ACTIVIDAD_ECONOMICA} for professional invoices "
+                "so the invoice base and IVA can be kept. Run `aeat app ledger categories` "
+                "to list public IRPF category ids."
             )
         if (
             reconstituted > expected
             and self.direction == TransactionDirection.OUTGOING
-            and self.category_id in _RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING
+            and self.category_id in RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING
         ):
+            rent_irpf_ids = format_irpf_category_ids(RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING)
             detail = (
                 " If this is rent paid net of withholding, set irpf_category "
-                "to the rental withholding category so the invoice base and IVA can be kept."
+                f"to the matching rental withholding category ({rent_irpf_ids}) so the invoice "
+                "base and IVA can be kept. Run `aeat app ledger categories` to list public "
+                "IRPF category ids."
             )
         if reconstituted != expected:
             raise TransactionValidationError(

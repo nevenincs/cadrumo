@@ -98,8 +98,8 @@ _M115_CLOSURE_CASILLAS: tuple[CasillaId, ...] = (
     _M115_RESULTADO_CASILLA,
 )
 _M123_2019_CLOSURE_CASILLAS: tuple[CasillaId, ...] = (
-    _casilla_id("06-legacy"),
-    _casilla_id("08-legacy"),
+    _casilla_id("06"),
+    _casilla_id("08"),
 )
 _M123_TOTAL_RENTAS_CASILLA: CasillaId = _casilla_id("03")
 _M123_TOTAL_BASE_CASILLA: CasillaId = _casilla_id("06")
@@ -605,8 +605,8 @@ def test_verification_chain_m123_engine_recomputes_closure_casillas(
     committed at src/aeat/tests/fixtures/justificantes/123/.
 
     2023-1T (2019-2023 revision):
-      06-legacy = 03-legacy + 05-legacy  (total liquidación)
-      08-legacy = 06-legacy - 07-legacy  (resultado a ingresar)
+      06 = 03 + 05  (total liquidación)
+      08 = 06 - 07  (resultado a ingresar)
       Fixture prints: 01=4, 02=8000, 03=1520, 04=0, 05=0, 06=1520, 07=0, 08=1520.
 
     2024-1T (2024-y-siguientes revision):

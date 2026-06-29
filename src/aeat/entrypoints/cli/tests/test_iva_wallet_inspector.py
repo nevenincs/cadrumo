@@ -11,7 +11,6 @@ from typing import cast
 
 import pytest
 from pydantic import ValidationError
-from typer.testing import CliRunner
 
 from ....application.calculations._iva_compensation_history import (
     IvaCompensationHistoryRepository,
@@ -35,12 +34,10 @@ from ....domain.iva_compensation._carry_forward import (
 from ....domain.iva_compensation._errors import IvaCompensationSeedConflictError
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_runtime_profile, isolated_runtime_profile
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _WIZARD_REGISTRATION_MODULES = (_wizard_catalogue, _wizard_persistence)
-_RUNNER = CliRunner()
 _NIF = "12345678Z"
 
 
@@ -49,19 +46,16 @@ def _unwrap_envelope(payload: object) -> dict[str, object]:
 
     Every CLI verb now emits ``{schema_version, command, result, warnings}``
     via the centralised output schema.  Tests assert against the
-    operator-visible payload, which lives under ``result``.  Raw payloads
-    (pre-envelope) are returned unchanged so this helper is safe to apply
-    unconditionally.
+    operator-visible payload, which lives under ``result``.
     """
-    if isinstance(payload, dict) and "result" in payload and "schema_version" in payload:
-        payload_dict = cast(dict[str, object], payload)
-        result_obj = payload_dict["result"]
-        if isinstance(result_obj, dict):
-            return cast(dict[str, object], result_obj)
-        raise AssertionError(f"result field is not a dict: {type(result_obj).__name__}")
     if not isinstance(payload, dict):
         raise AssertionError(f"unexpected JSON shape: {type(payload).__name__}")
-    return cast(dict[str, object], payload)
+    if "result" not in payload or "schema_version" not in payload:
+        raise AssertionError(f"missing CLI output envelope keys: {sorted(payload)}")
+    result_obj = payload["result"]
+    if isinstance(result_obj, dict):
+        return cast(dict[str, object], result_obj)
+    raise AssertionError(f"result field is not a dict: {type(result_obj).__name__}")
 
 
 def _state(
@@ -168,8 +162,7 @@ def test_cli_balance_verb_emits_expected_keys(
         repo.save_period(_state(filing_year=2024, period="2T", applied=Decimal("300.00")))
         repo.save_period(_state(filing_year=2025, period="1T", applied=Decimal("500.00")))
 
-        result = _RUNNER.invoke(
-            app,
+        result = invoke_cached_cli(
             ["--format", "json", "app", "modelo", "iva-wallet", "balance", "--as-of-year", "2028"],
             env={"AEAT_OUTPUT_LANGUAGE": "en"},
         )
@@ -192,8 +185,7 @@ def test_cli_balance_verb_text_output_lines(
         repo.save_period(_state(filing_year=2024, period="2T", applied=Decimal("300.00")))
         repo.save_period(_state(filing_year=2025, period="1T", applied=Decimal("500.00")))
 
-        result = _RUNNER.invoke(
-            app,
+        result = invoke_cached_cli(
             ["app", "modelo", "iva-wallet", "balance", "--as-of-year", "2028"],
             env={"AEAT_OUTPUT_LANGUAGE": "en"},
         )
@@ -354,8 +346,7 @@ def test_cli_seed_verb_refuses_without_confirm(tmp_path: Path) -> None:
     """Seed verb requires --confirm; without it, exit code is non-zero."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
         _store_profile_with_nif(_NIF)
-        result = _RUNNER.invoke(
-            app,
+        result = invoke_cached_cli(
             ["app", "modelo", "iva-wallet", "seed", "--filing-year", "2024", "--period", "4T", "--amount", "1200.00"],
             env={"AEAT_OUTPUT_LANGUAGE": "en"},
         )
@@ -367,8 +358,7 @@ def test_cli_seed_verb_happy_path(tmp_path: Path) -> None:
     """Seed verb with --confirm creates the state and emits the correct fields."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
         _store_profile_with_nif(_NIF)
-        result = _RUNNER.invoke(
-            app,
+        result = invoke_cached_cli(
             [
                 "--format",
                 "json",
@@ -418,8 +408,7 @@ def test_cli_override_verb_records_taxpayer_override_decision(tmp_path: Path) ->
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
         _store_profile_with_nif(_NIF)
-        result = _RUNNER.invoke(
-            app,
+        result = invoke_cached_cli(
             [
                 "--format",
                 "json",
@@ -460,8 +449,7 @@ def test_cli_override_verb_refuses_without_confirm(tmp_path: Path) -> None:
     """Override verb requires --confirm; without it, exit code is non-zero (no decision written)."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
         _store_profile_with_nif(_NIF)
-        result = _RUNNER.invoke(
-            app,
+        result = invoke_cached_cli(
             [
                 "app",
                 "modelo",
@@ -488,8 +476,7 @@ def test_cli_override_verb_requires_evidence_locator(tmp_path: Path) -> None:
     """A blank --evidence-locator is refused: provenance is mandatory, not optional."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
         _store_profile_with_nif(_NIF)
-        result = _RUNNER.invoke(
-            app,
+        result = invoke_cached_cli(
             [
                 "app",
                 "modelo",
@@ -517,8 +504,7 @@ def test_cli_seed_verb_refuses_duplicate(tmp_path: Path) -> None:
     """Seed verb refuses a second seed for the same period."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
         _store_profile_with_nif(_NIF)
-        first_result = _RUNNER.invoke(
-            app,
+        first_result = invoke_cached_cli(
             [
                 "app",
                 "modelo",
@@ -535,8 +521,7 @@ def test_cli_seed_verb_refuses_duplicate(tmp_path: Path) -> None:
             env={"AEAT_OUTPUT_LANGUAGE": "en"},
         )
         assert first_result.exit_code == 0, first_result.output
-        result = _RUNNER.invoke(
-            app,
+        result = invoke_cached_cli(
             [
                 "app",
                 "modelo",
@@ -609,6 +594,7 @@ def _seed_full_autónomo_profile_for_guidance(bucket_id: str) -> None:
                     value="actividad_economica",
                 ),
                 UserProfileFact(path="censo.activity_start_date", value="2024-01-01"),
+                UserProfileFact(path="activities.description", value="economic activity"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
                 UserProfileFact(path="tax_residence.ccaa", value="madrid"),
@@ -658,13 +644,8 @@ def test_m303_fresh_profile_binding_override_surfaces_seed_verb_not_mode_flag(
             ],
         )
         assert work_unit_result.exit_code == 0, work_unit_result.output
-        import json as _json
-
-        raw = _json.loads(work_unit_result.output)
-        if "schema_version" in raw and "result" in raw:
-            work_unit_id = raw["result"]["work_unit_id"]
-        else:
-            work_unit_id = raw["work_unit_id"]
+        work_unit_payload = _unwrap_envelope(json.loads(work_unit_result.output))
+        work_unit_id = str(work_unit_payload["work_unit_id"])
 
         result = invoke_cached_cli(
             [
@@ -767,13 +748,8 @@ def test_m303_fresh_profile_calculate_without_binding_override_does_not_raise_wa
             ],
         )
         assert work_unit_result.exit_code == 0, work_unit_result.output
-        import json as _json
-
-        raw = _json.loads(work_unit_result.output)
-        if "schema_version" in raw and "result" in raw:
-            work_unit_id = raw["result"]["work_unit_id"]
-        else:
-            work_unit_id = raw["work_unit_id"]
+        work_unit_payload = _unwrap_envelope(json.loads(work_unit_result.output))
+        work_unit_id = str(work_unit_payload["work_unit_id"])
 
         # Calculate WITHOUT a compensation binding override — fresh profile
         # with no prior filings should succeed with zero compensation.
@@ -808,8 +784,7 @@ def test_cli_seed_help_text_contains_liva_art_99_legal_grounding(tmp_path: Path)
     so operators can verify the basis for non-blocking zero treatment.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="help-text-test"):
-        result = _RUNNER.invoke(
-            app,
+        result = invoke_cached_cli(
             ["app", "modelo", "iva-wallet", "seed", "--help"],
             env={"AEAT_OUTPUT_LANGUAGE": "en"},
         )
@@ -836,8 +811,7 @@ def test_cli_correct_verb_requires_confirm(tmp_path: Path) -> None:
             period=Period.from_year_and_code(2024, "4T"),
             amount=Decimal("500.00"),
         )
-        result = _RUNNER.invoke(
-            app,
+        result = invoke_cached_cli(
             [
                 "app",
                 "modelo",
@@ -867,8 +841,7 @@ def test_cli_correct_verb_happy_path_overwrites_seed(tmp_path: Path) -> None:
             period=Period.from_year_and_code(2024, "4T"),
             amount=Decimal("500.00"),
         )
-        result = _RUNNER.invoke(
-            app,
+        result = invoke_cached_cli(
             [
                 "--format",
                 "json",
@@ -905,8 +878,7 @@ def test_cli_correct_verb_refuses_when_no_record(tmp_path: Path) -> None:
     """Correct verb refuses a period that has no seeded record (seed first)."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
         _store_profile_with_nif(_NIF)
-        result = _RUNNER.invoke(
-            app,
+        result = invoke_cached_cli(
             [
                 "app",
                 "modelo",

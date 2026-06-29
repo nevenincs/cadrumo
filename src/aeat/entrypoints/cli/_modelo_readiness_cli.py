@@ -184,6 +184,8 @@ def _readiness_lines(
     filing_year: int,
     period: str | None,
 ) -> list[str]:
+    export_context = _export_readiness_context(report)
+    export_ready = export_context is None
     lines = [
         f"profile_id\t{report.profile_id}",
         f"modelo\t{modelo}",
@@ -216,7 +218,9 @@ def _readiness_lines(
             f"ledger_period\t{report.ledger_period or ''}",
             f"ledger_checked\t{report.ledger_checked_transaction_count}",
             f"ledger_issues\t{len(report.ledger_issues)}",
-            "finish_line\texport verified-complete revision via 'aeat app modelo export' (local finish line)",
+            f"export_ready\t{export_ready}",
+            f"export_refusal\t{export_context['reason'] if export_context is not None else ''}",
+            _readiness_finish_line(export_context),
         ],
     )
     for requirement in report.missing:
@@ -234,27 +238,72 @@ def _readiness_lines(
 
 
 def _readiness_notices(report) -> tuple[Notice, ...]:
-    if not _ledger_ready_but_bindings_missing(report):
-        return ()
-    return (
-        Notice(
-            severity=NoticeSeverity.INFO,
-            code="modelo.readiness.ledger_preflight_scope",
-            message=(
-                "ledger_ready only means the period ledger rows passed transaction preflight; "
-                "missing_bindings/source_binding_ready still decide source completeness."
+    notices: list[Notice] = []
+    if _ledger_ready_but_bindings_missing(report):
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="modelo.readiness.ledger_preflight_scope",
+                message=(
+                    "ledger_ready only means the period ledger rows passed transaction preflight; "
+                    "missing_bindings/source_binding_ready still decide source completeness."
+                ),
+                context={
+                    "ledger_ready": "true",
+                    "binding_ready": "false",
+                    "missing_bindings": str(len(report.missing_bindings)),
+                },
             ),
-            context={
-                "ledger_ready": "true",
-                "binding_ready": "false",
-                "missing_bindings": str(len(report.missing_bindings)),
-            },
-        ),
-    )
+        )
+    if export_context := _export_readiness_context(report):
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="modelo.readiness.export_unsupported",
+                message=(
+                    f"Modelo {report.modelo} cannot produce a local fichero-BOE export: "
+                    f"{export_context['reason']}."
+                ),
+                suggestion=f"aeat app modelo describe {report.modelo}",
+                context=export_context,
+            ),
+        )
+    return tuple(notices)
 
 
 def _ledger_ready_but_bindings_missing(report) -> bool:
     return report.ledger_ready is True and not report.binding_ready and bool(report.missing_bindings)
+
+
+def _export_readiness_context(report) -> dict[str, str] | None:
+    if not report.registry_ready:
+        return None
+    from ...application.filing import build_runtime_schema_provider, export_layout_renderability_reason
+
+    provider = build_runtime_schema_provider(
+        filing_year=report.period.filing_year,
+        period=report.period,
+        modelos=(report.modelo,),
+    )
+    subview = provider.get_subview(report.modelo)
+    layout = subview.export_layouts[0] if subview.export_layouts else None
+    reason = export_layout_renderability_reason(report.modelo, layout)
+    if reason is None:
+        return None
+    context = {
+        "modelo": str(report.modelo),
+        "reason": reason,
+    }
+    if layout is not None:
+        context["layout_id"] = str(layout.id)
+        context["layout_format"] = str(layout.format)
+    return context
+
+
+def _readiness_finish_line(export_context: dict[str, str] | None) -> str:
+    if export_context is not None:
+        return "finish_line\tlocal calculation, verification, and internal filing only; fichero-BOE export unsupported"
+    return "finish_line\texport verified-complete revision via 'aeat app modelo export' (local finish line)"
 
 
 __all__ = ["register_readiness_commands"]

@@ -47,7 +47,11 @@ def _create_profile() -> None:
             "--accept-defaults",
             "--tax-id",
             "12345678Z",
+            "--entity-type",
+            "natural_person",
             "--name",
+            "Operator",
+            "--surnames",
             "Operator",
             "--activity",
             "design",
@@ -232,6 +236,47 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
     payload_observations = {observation["casilla_id"]: observation for observation in payload["observations"]}
     assert payload_observations["iva.repercutido.general"]["source_refs"] == list(output_observation.source_refs)
     assert payload_observations["iva.soportado.interiores"]["source_refs"] == list(input_observation.source_refs)
+
+    observations_result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "observations",
+            revision_id,
+        ],
+    )
+    assert observations_result.exit_code == 0, observations_result.output
+    observations_payload = _payload(observations_result.output)
+    assert observations_payload["operation"] == "modelo.work.observations"
+    assert observations_payload["calculation_revision_id"] == revision_id
+    assert observations_payload["work_unit_id"] == work_unit["work_unit_id"]
+    assert observations_payload["observation_count"] == len(payload["observations"])
+    command_observations = {
+        observation["casilla_id"]: observation for observation in observations_payload["observations"]
+    }
+    assert command_observations["iva.repercutido.general"]["legal_refs"] == list(output_observation.legal_refs)
+    assert command_observations["iva.repercutido.general"]["source_refs"] == list(output_observation.source_refs)
+    assert command_observations["iva.soportado.interiores"]["legal_refs"] == list(input_observation.legal_refs)
+    assert command_observations["iva.soportado.interiores"]["source_refs"] == list(input_observation.source_refs)
+
+    text_observations = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "work",
+            "observations",
+            revision_id,
+        ],
+    )
+    assert text_observations.exit_code == 0, text_observations.output
+    assert "operation\tmodelo.work.observations" in text_observations.output
+    assert f"calculation_revision_id\t{revision_id}" in text_observations.output
+    assert "iva.repercutido.general" in text_observations.output
+    assert output_observation.legal_refs[0] in text_observations.output
+    assert output_observation.source_refs[0] in text_observations.output
 
 
 def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:

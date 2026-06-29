@@ -71,6 +71,7 @@ def rasterise_pdf_pages_to_base64_png(pdf_bytes: bytes, *, scale: float = 2.0) -
     try:
         pages: list[str] = []
         for page in document:
+            # CAST-RATIONALE-PDFIUM-PAGE: pypdfium2 yields untyped page objects; the adapter only needs render/close.
             pdf_page = cast("_PdfiumPageLike", page)
             try:
                 bitmap = pdf_page.render(scale=scale)

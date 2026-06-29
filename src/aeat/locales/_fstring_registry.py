@@ -54,6 +54,13 @@ _CAPABILITY_QUESTION_IDS: tuple[str, ...] = (
     "google-export",
 )
 
+_LEY_49_2002_QUESTION_IDS: tuple[str, ...] = (
+    "ley-49-2002-option-declared",
+    "ley-49-2002-option-date",
+    "ley-49-2002-renunciation-declared",
+    "ley-49-2002-renunciation-date",
+)
+
 
 def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     """Construct the registration tuple at import time.
@@ -129,6 +136,21 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             description="wizard.setup.flags.*.help (service-capability CLI flags)",
             key_factory=lambda v: f"wizard.setup.flags.{v}.help",
             values=_CAPABILITY_QUESTION_IDS,
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.taxpayer-type Ley 49/2002 question prompts",
+            key_factory=lambda v: f"wizard.setup.taxpayer-type.{v}.prompt",
+            values=_LEY_49_2002_QUESTION_IDS,
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.taxpayer-type Ley 49/2002 question help",
+            key_factory=lambda v: f"wizard.setup.taxpayer-type.{v}.help",
+            values=_LEY_49_2002_QUESTION_IDS,
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.flags Ley 49/2002 CLI flags",
+            key_factory=lambda v: f"wizard.setup.flags.{v}.help",
+            values=_LEY_49_2002_QUESTION_IDS,
         ),
     )
 

@@ -146,7 +146,7 @@ def _unwrap_blob_payload(stored: bytes) -> bytes:
     """Strip the envelope prefix from a stored blob; refuse an un-enveloped payload.
 
     Every blob is wrapped by :func:`_wrap_blob_payload` at write time, so a
-    missing prefix can only mean corruption — never legacy data. Refuse it
+    missing prefix can only mean corruption, never valid data. Refuse it
     rather than returning unframed bytes.
     """
     if not stored.startswith(_ATTACHMENT_BLOB_ENVELOPE_PREFIX):

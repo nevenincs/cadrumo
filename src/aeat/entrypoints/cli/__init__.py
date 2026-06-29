@@ -529,7 +529,7 @@ def _verb_path_from_context(ctx: typer.Context) -> str | None:
     # Click 9 exposes the unparsed remainder on ``ctx.args``. Click 8 still
     # stages the same data on the internal protected list during root-callback
     # execution; reading the deprecated public ``protected_args`` property emits
-    # a warning, so use the internal storage only as a compatibility fallback.
+    # a warning, so use the internal storage only for supported Click 8 runtimes.
     remainder = list(ctx.args)
     if not remainder:
         remainder = list(getattr(ctx, "_protected_args", ()))

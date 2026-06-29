@@ -1,4 +1,4 @@
-"""Read-only ``aeat app registry`` exposure of normatives + manuals."""
+"""Read-only ``aeat app registry`` exposure of legal citations and manuals."""
 
 from __future__ import annotations
 
@@ -67,7 +67,7 @@ def list_citations_cmd(
         typer.Option("--tag", help=tr("cli.registry.citations.tag_help")),
     ] = None,
 ) -> None:
-    """List the normatives codified in the project's legal corpus."""
+    """List the legal authorities codified in the project's legal corpus."""
     report = list_registry_citations(RegistryCitationsListCommand(tag=tag))
     typed = CitationListResult.model_validate(report.model_dump(mode="json"))
     _emit_envelope(ctx, command="registry.citations.list", result=typed, lines=_citation_list_lines(report))
@@ -76,17 +76,17 @@ def list_citations_cmd(
 @citations_app.command("view", help=tr("cli.registry.citations.view_help"))
 def show_citation_cmd(
     ctx: typer.Context,
-    normative_id: Annotated[
+    legal_id: Annotated[
         str,
-        typer.Argument(help=tr("cli.registry.citations.normative_id_help")),
+        typer.Argument(help=tr("cli.registry.citations.legal_id_help")),
     ],
     articulo: Annotated[
         str | None,
         typer.Option("--articulo", help=tr("cli.registry.citations.articulo_help")),
     ] = None,
 ) -> None:
-    """View one normative and, optionally, one cited article."""
-    report = show_registry_citation(RegistryCitationShowCommand(normative_id=normative_id, articulo=articulo))
+    """View one legal authority and, optionally, one cited article."""
+    report = show_registry_citation(RegistryCitationShowCommand(legal_id=legal_id, articulo=articulo))
     typed = CitationShowResult.model_validate(report.model_dump(mode="json"))
     _emit_envelope(ctx, command="registry.citations.view", result=typed, lines=_citation_show_lines(report))
 

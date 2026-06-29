@@ -160,14 +160,14 @@ def _drafts_line(report: OverviewStatusReport) -> str:
         # Two independent operators read the bare "no saved declaration
         # drafts" line - which sits next to the work-units line - as
         # "your work is gone". When work units exist, the line must say
-        # so explicitly: legacy drafts and modelo work units are
+        # so explicitly: declaration drafts and modelo work units are
         # separate stores, and an empty draft store never means lost
         # modelo work.
         if report.work_units > 0:
             return tr(
                 "cli.overview.status.drafts_empty_with_work_units",
                 default=(
-                    "No legacy declaration drafts are saved - this is normal and "
+                    "No declaration drafts are saved - this is normal and "
                     "does not affect your modelo work units below."
                 ),
             )

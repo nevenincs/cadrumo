@@ -6,6 +6,12 @@ from :mod:`aeat.adapters.outbound.google._errors`, and scoped document-link
 helpers from :mod:`aeat.adapters.outbound.google._document_link_resolver`.
 Google Sheets remains a one-way export mirror here, never an authority.
 
+The Drive document-link helper follows the integration's minimal-scope posture:
+``drive.file`` links the app can reach are fetched as bytes for callers to store
+as encrypted evidence, while Gmail links, arbitrary URLs, and Drive files that
+need broader read scopes are refused instead of being stored as link-only
+evidence.
+
 Major declarations:
 
 * :class:`OAuthClient`, :class:`OAuthToken`, and :class:`OAuthMetadata` —
@@ -17,6 +23,12 @@ Major declarations:
   minimal-scope Drive document-link helpers.
 * :class:`GoogleAuthError` and its subclasses — the Google auth failure
   taxonomy.
+
+See Also:
+    - :mod:`aeat.adapters.outbound.storage` for the Google Drive storage mirror
+      that owns remote ciphertext synchronisation.
+    - :mod:`aeat.domain.attachments` for byte-bearing attachment records that
+      consume resolved Drive document bytes.
 """
 
 from ._document_link_resolver import parse_drive_file_id, resolve_document_link

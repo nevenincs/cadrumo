@@ -145,6 +145,7 @@ class VerifyBrowserSessionLike(Protocol):
     stays structurally honest.
     """
 
+    # ADAPTER-INTERNAL-ALIAS-RATIONALE-BROWSER-CONTEXT: mirrors optional Playwright/browser session kwargs.
     async def create_context(
         self,
         *,
