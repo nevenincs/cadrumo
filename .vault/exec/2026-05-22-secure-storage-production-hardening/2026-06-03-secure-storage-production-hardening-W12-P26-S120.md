@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-29'
 step_id: 'S120'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
@@ -29,7 +29,7 @@ related:
 - Add malformed CURRENCY and RESERVED canary tests proving parser errors do not echo taxpayer-like bytes.
 - Update date decode rejection tests to expect typed export-format errors.
 - Re-run the broader export-format batch after the first focused closure uncovered registry drift and stale golden-output evidence.
-- Keep Modelo 714 Phase-A registry data honest by removing invalid fake formula rows and asserting the current manual casilla baseline directly through registry loading.
+- Keep the then-current Modelo 714 Phase-A registry data honest by removing invalid fake formula rows and asserting the manual casilla baseline directly through registry loading.
 - Refresh the Modelo 303 BOE golden hash only after grounding the changed bytes against the official DP30303 workbook rows for casillas 110, 78, and 87.
 - Close `AFR-018` and `W12.P26.S120` in the active-profile rollout ledger.
 
@@ -48,4 +48,5 @@ related:
 ## Notes
 
 - The initial broader run did expose real non-S120 blockers. They were not ignored: Modelo 151 now validates in the focused registry test, Modelo 714 no longer carries invalid placeholder formula metadata, and the Modelo 303 hash update is backed by explicit official-layout offset assertions rather than a hash-only update.
+- Currentization on 2026-06-29: the S120 Modelo 714 manual-baseline language is historical. The current registry computes the art. 30 cuota íntegra scale (casilla 29) and the art. 31 80%-floor reference (casilla 39); the full art. 31 same-year M100 joint-limit relation remains the open downstream tail.
 - The next affected-file row is `W12.P26.S121` for `_record_spec.py`.

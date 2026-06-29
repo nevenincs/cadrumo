@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#linkage-design-audit'
 date: '2026-05-18'
-modified: '2026-05-18'
+modified: '2026-06-29'
 related:
   - "[[2026-05-15-linkage-design-audit-research]]"
   - "[[2026-05-15-linkage-design-audit-reference]]"
@@ -48,34 +48,73 @@ Counting partials as "ingredient delivered" raises that to
 claimed `fixed (Wave N)` in the inventory but whose anti-pattern
 is still present at the named site.
 
-### Severity: high — full list of 30 regressed rows
+### Severity: high — historical regressed-row list with 2026-06-29 corrections
 
 Every row listed below was marked `fixed (Wave N)` in the inventory
 but the re-audit found the original anti-pattern still present at
-the named site:
+the named site. Current-state notes identify rows whose original
+anti-pattern has since been closed or narrowed.
 
 - **Typed observation envelope (Wave 3, T-01).** `R003`, `R004`,
   `R005` — `RegistryCalculationResult.values` and
   `CalculationRevision.casilla_values` still typed as
   `Mapping[str, Decimal]`. The `CasillaObservation` envelope landed
-  on `RegistryFilingObservation` (`R002` verified) but the
+  on `RegistryModeloObservation` (`R002` verified/currentized) but the
   surrounding calculation-result types kept the bare mapping.
-- **Discriminated selector unions (Wave 1, T-01 / T-02).** `R007`,
-  `R008`, `R009`, `R011` — `DataBindingDefinition.selector`,
-  `RelationDefinition.source_revision_selector`, `period_alignment`,
-  `RelationDefinition.source_output` all still bare `Mapping[str, ...]`
-  or `CasillaId | str` union escapes.
+- **Discriminated selector unions (Wave 1, T-01 / T-02).** `R007`
+  is closed in current state: `DataBindingDefinition.selector` now
+  stores a hydrated per-source pydantic selector model (`BindingSelector`)
+  rather than the broad raw `BindingSelectorMap` authoring shape. The
+  serializer projects the concrete model back to the authored selector
+  mapping for dump/JSON compatibility. The same 2026-06-29 pass narrowed
+  two production consumers of this gap: binding-derived export
+  records now consume `BindingFixedExportSelector` /
+  `BindingRowExportSelector` through `binding_export_selector`, and
+  Detalle row-set assembly / Sheets layout now consume
+  `BindingRowSetSelector` through `binding_row_set_selector`. The same pass
+  narrowed public binding query rows: they now expose
+  `BindingSelectorQueryProjection` / `BindingSelectorQueryEntry` ordered
+  entries instead of the raw selector map. A follow-up 2026-06-29 pass made the
+  construction-time selector registry fail closed for all 1,060 bundled
+  registry bindings, including `withholding` and `retenciones_aggregation`;
+  mesh-only `borrador` / `iva_wallet_decision` source kinds are refused as
+  `DataBindingDefinition.source` values. The final 2026-06-29 pass verified
+  all 1,060 bundled bindings carry concrete selector model instances and no
+  production raw `binding.selector.get` / subscript path remains. Current-state recheck on
+  2026-06-29 closed
+  `R008` and `R009`: `RelationDefinition` now stores
+  `source_revision_selector: RelationRevisionSelector` and
+  `period_alignment: RelationPeriodAlignment`; legacy revision-id
+  selector aliases, empty alignment maps, and retired `same_period`
+  alignment are rejected at schema construction. The same recheck
+  closed `R011`: `RelationDefinition` now uses
+  `source_casilla_id: CasillaId`, rejects legacy `source_output`, and
+  production code has no `relation.source_output` access.
 - **Relation/selector internal plumbing (Wave 1/3).** `R014` —
-  `str(relation.source_output)` coercion still present; `R016` —
-  `binding.selector.get("source_modelo")` raw lookup still
-  present; `R020` — `WorkbookParityReference.fixture_id` still
-  bare `str`; `R024` — two `CasillaSchema` shapes still coexist
-  (`runtime.py` + `_protocols.py`).
-- **Renta constant (Wave 2, T-05).** `R025`, `R026` —
-  `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` constant still defined
-  in `domain/renta/_ledger_expenses.py` and the validator still
-  uses it. Note: the cross-package re-validation in
-  `_bindings.py` (`R027`) IS removed.
+  current-state recheck on 2026-06-29 closed the old
+  `str(relation.source_output)` coercion: relation requirements group
+  by `relation.source_casilla_id`; `R013` also closed the retired
+  `RegistryRelationSourceRequirement`/`source_output` shape by using
+  `RegistryFoldRequirement.source_modelo: ModeloId` and
+  `source_casilla_ids: tuple[CasillaId, ...]`. `R016` —
+  current-state recheck on 2026-06-29 closed the production
+  `binding.selector.get("source_modelo")` path: record-design closure
+  now asks the typed `binding_source_modelo(binding)` helper. `R015`
+  is closed in current relation code: selector helpers consume typed
+  `RelationRevisionSelector` attributes and no production
+  `relation.source_revision_selector.get(...)` path remains; `R020` —
+  current-state recheck on 2026-06-29 found
+  `WorkbookParityReference.fixture_id` is now typed as
+  `WorkbookFixtureId`; the remaining gap is absence of a
+  fixture-catalogue lookup, not a bare string; `R024` — two
+  `CasillaSchema` shapes still coexist (`runtime.py` + `_protocols.py`).
+- **Renta routing (Wave 2, T-05).** `R025`, `R026` — current-state
+  recheck on 2026-06-29 found the old unvalidated constant finding
+  closed. `FIRST_SLICE_EXPENSE_CASILLAS` is the canonical
+  Renta-domain routing table, `_ledger_expenses.py` re-exports the
+  same object, and a `CrossDomainSnapshotCheck` validates every routed
+  casilla against the Modelo 100 snapshot. The registry-side resolver
+  consumes a Protocol and no longer imports `domain.renta`.
 - **Errors / CLI surfaces (Wave 3/4).** `R045` —
   `RegistryValidationError` has no typed context field. `R050`,
   `R053` — `--relation` flag absent on `work calculate`;
@@ -96,29 +135,35 @@ the named site:
   raw. `R101` — `LiveCrossReferenceDecision.oracle_id: str | None`
   still untyped. `R102` — no `OracleFilingObservation` subtype.
 
-### Severity: medium — 16 partial closures
+### Severity: medium — historical 16 partial closures; 12 remain after 2026-06-29 recheck
 
 These rows landed a structural ingredient but the full fix did not.
-Most actionable next-phase candidates: `R017`, `R018`, `R021` —
-the validation functions are defined and tested but **not wired
-into `build_snapshot`**, so production registry builds skip
-referential-integrity and relation-closure gates entirely. `R046`,
+Current-state recheck on 2026-06-29 closed the old `R017`, `R018`,
+and `R021` validation-order claims for production access:
+`ValidatedRegistryAuthority.load` runs full-tree `validate_registry`
+before serving snapshots, and production snapshot builds now call
+`check_all_id_references(snapshot)` before returning. `R046`,
 `R047`, `R048` — CLI / review / diagnostics surfaces partially
 expose `legal_refs` / cross-domain checks. `R095` — only
 `profile_tax_id: str` (bare) on `FilingDraft`, not the typed
 `SubjectTaxId` claimed.
 
-Full partial list: `R006`, `R017`, `R018`, `R019`, `R021`, `R022`,
-`R046`, `R047`, `R048`, `R060`, `R064`, `R067`, `R069`, `R071`,
-`R074`, `R095`.
+Historical partial list: `R006`, `R017`, `R018`, `R019`, `R021`,
+`R022`, `R046`, `R047`, `R048`, `R060`, `R064`, `R067`, `R069`,
+`R071`, `R074`, `R095`. Current-state recheck closes `R017`,
+`R018`, `R019`, and `R021`; the remaining partial set is `R006`,
+`R022`, `R046`, `R047`, `R048`, `R060`, `R064`, `R067`, `R069`,
+`R071`, `R074`, `R095`.
 
 ### Severity: informational — the 48 verified rows
 
 What did actually land, grouped by theme:
 
 - **Typed envelope foundation.** `CasillaObservation` on
-  `RegistryFilingObservation` (`R002`); `AlgorithmBindingDefinition`
-  targets / inputs / outputs typed (`R012`).
+  `RegistryModeloObservation` (`R002`); `AlgorithmBindingDefinition`
+  targets / inputs / outputs typed (`R012`); relation source
+  references currentized to `source_casilla_id` / typed fold
+  requirements (`R011`, `R013`, `R014`).
 - **Capability flags replace hard-wired modelo strings.**
   `_borrador_binding` migrated to capability lookup (`R034`);
   renta-ledger default removed (`R035`); `ModeloDefinition.output_sensitivity`
@@ -194,11 +239,14 @@ inline in the research record.
 - **Do not treat this epic as closed.** The structural work
   named in earlier drafts of this audit was not delivered. A
   follow-up phase is needed to land the selector discriminated
-  unions, the `_check_all_id_references` wiring at `build_snapshot`,
+  unions, the remaining relation/standalone-validation ordering work,
   the `WorkflowStep.details` typed union, the FilingDraft typed
   identity / snapshot reference, the Oracle typing, the CLI
-  `--relation` flag, the Google-export `RegistrySnapshotError`
-  catch, and the removal of `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS`.
+  `--relation` flag, and the Google-export `RegistrySnapshotError`
+  catch. The old `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` removal item
+  is no longer a live prerequisite after the 2026-06-29 recheck: the
+  current design keeps Renta-owned routing and validates it at snapshot
+  construction.
 - Re-run the re-audit script against the remaining 67 unvisited
   inventory rows before any subsequent closure claim. Extend the
   script with one verdict function per row so the verdict is

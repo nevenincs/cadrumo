@@ -172,6 +172,17 @@ before it reaches the assembler. In the assemblers, reject (rather than silently
 default) rows whose mandatory fields (`perceptor_tax_id`, `member_tax_id`,
 `counterparty_tax_id`) are empty strings, since these are AEAT-required fields.
 
+**Current-state note (2026-06-29):** the selector/op sub-gap is narrowed for the
+two production consumers named here. `_row_field_lookup` and the calc-sheets
+`collect_row_sets` path route row-producer detection through
+`binding_aggregation_op` and parse Detalle row fields/groupings through
+`binding_row_set_selector` / `BindingRowSetSelector`; malformed
+`fact = "row_field"` projections now raise instead of silently omitting the
+column. Repeating Modelo 100 profile `rows` bindings are deliberately skipped
+because they are not Detalle row-set producers. Field-level row assembly defaults
+remain a separate residual under this finding and are not closed by the selector
+projection work.
+
 ---
 
 ### F6 — `IvaLedgerAggregation` drops `prorrata_reference` linkage from `IvaLedgerObservation`; cross-domain traceability gap

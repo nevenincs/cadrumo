@@ -3,7 +3,7 @@ tags:
   - '#reference'
   - '#linkage-design-audit'
 date: '2026-05-15'
-modified: '2026-05-15'
+modified: '2026-06-29'
 related: []
 ---
 
@@ -20,7 +20,8 @@ AEAT codebase. The taxonomy is the primary input for writing mechanical checks.
 Audit posture: LLM-driven agents are the discovery layer; mechanical checks
 (registry validators, structural tests, lint rules, import-linter rules) are
 the verification layer. Coverage is measured as `mechanical_checks / surface_elements`,
-not as `agents_run`. All numerators below are zero at time of writing.
+not as `agents_run`. Current-state notes below reflect the 2026-06-29
+verification pass where rows were rechecked against live code.
 
 ---
 
@@ -43,23 +44,28 @@ cross-boundary observation or revision type (identified by appearing in
 `Subscript` with `slice` containing `str` as first element and `Decimal` or
 `str` as second.
 
-**Surface.** Every pydantic field on `RegistryFilingObservation`,
-`RegistryCalculationResult`, `CalculationRevision`, `RegistryRelationSourceRequirement`,
-`ExportFieldDefinition`, and `WorkbookParityReference` under `src/aeat/`. The
-surface is enumerable mechanically by inspecting `model_fields` on all pydantic
-models in the package.
+**Surface.** Every pydantic field on `RegistryCalculationResult`,
+`CalculationRevision`, `ExportFieldDefinition`, `WorkbookParityReference`, and
+other cross-boundary observation/revision/result types under `src/aeat/`. The
+historical `RegistryFilingObservation` and
+`RegistryRelationSourceRequirement` surfaces are closed in current code:
+`RegistryModeloObservation` stores typed `CasillaObservation` rows, and
+`RegistryFoldRequirement` stores typed `source_modelo: ModeloId` plus
+`source_casilla_ids: tuple[CasillaId, ...]`.
 
-**Coverage.** 0 / 11 confirmed inventory sites. Broader surface — 116
-`Mapping[str, ...]` field declarations across `src/aeat/domain/` per the
-surface enumeration — narrows to ~25 cross-boundary value envelopes
-once filtered to observation, result, and revision types.
+**Coverage.** Partial. Current-state recheck on 2026-06-29 verifies R002,
+R013, and R014 as closed for the observation/fold-requirement path.
+`RegistryCalculationResult.values` and `CalculationRevision.casilla_values`
+remain flat map surfaces.
 
 **Inventory rows.** R001, R002, R003, R004, R005, R006, R013, R014, R089, R092, R096.
+R002, R013, and R014 are closed in current state; remaining rows retain their
+own status.
 
-**Example.** R002 — `src/aeat/domain/calculations/registry/_bindings.py:66-90`:
-`RegistryFilingObservation.casilla_values: Mapping[str, Decimal]`. Any string
-is accepted as a casilla key; the `CasillaId` pattern constraint (`^[A-Za-z0-9][A-Za-z0-9._:-]*$`)
-is never enforced at the point of construction.
+**Example.** R002 is closed:
+`src/aeat/domain/calculations/registry/_bindings.py` stores
+`RegistryModeloObservation.observations: tuple[CasillaObservation, ...]` and
+exposes only a derived `Mapping[CasillaId, Decimal]` view.
 
 **Promotion path.** Adopt the typed observation envelope pattern (analogous
 to OpenFisca's `Population.get_holder(variable).get_array(period)` returning
@@ -76,50 +82,85 @@ recommended adoption order.
 ### T-02. Untyped selector sub-schema
 
 **Description.** A pydantic field holds a `Mapping[str, str | int | ...]` that
-acts as one of ten or more mutually exclusive sub-schemas discriminated at
-runtime by a sibling `source` literal field. The correct sub-schema is
-validated only when a binding handler calls `model_validate(dict(binding.selector))`
-at invocation time, not at registry load. Any structural error in the selector
-is invisible until that handler executes.
+acts as one of several mutually exclusive sub-schemas discriminated at runtime
+by a sibling `source` or `kind` field. Current-state recheck on 2026-06-29:
+`DataBindingDefinition.selector` now validates source-family selector shape at
+model construction through the registered per-source selector models. The
+2026-06-29 follow-up made that construction-time registry fail closed for every
+bundled registry binding source, including `withholding` and
+`retenciones_aggregation`; mesh-only `borrador` / `iva_wallet_decision` source
+kinds are refused as `DataBindingDefinition.source` values. The stored field
+remains a map alias. Relation selector surfaces were currentized:
+`RelationDefinition.source_revision_selector` now stores
+`RelationRevisionSelector`, and `RelationDefinition.period_alignment` now stores
+`RelationPeriodAlignment`. Binding-derived export record projections now parse
+through `BindingFixedExportSelector` / `BindingRowExportSelector`, and Detalle
+row-set consumers now parse through `BindingRowSetSelector`. Public binding
+query rows now expose `BindingSelectorQueryProjection` /
+`BindingSelectorQueryEntry` ordered entries instead of map-shaped selector
+payloads.
 
 **Signature.** Pydantic-model field annotated `Mapping[str, str | int | ...]`
 on a model that also has a `source: Literal[...]` or `kind: Literal[...]` field.
 Python `ast` pattern: `AnnAssign` on a class that has another field annotated
 with `Literal`.
 
-**Surface.** `DataBindingDefinition.selector`, `RelationDefinition.source_revision_selector`,
-and `RelationDefinition.period_alignment` in `src/aeat/domain/calculations/registry/_schema.py`.
-All downstream raw-dict accesses (`selector.get("year")`, `selector.get("source_modelo")`)
-in `_relations.py` and `_validate.py`. Surface is enumerable by searching for
-`.get(` calls on fields annotated `Mapping`.
+**Surface.** `DataBindingDefinition.selector` in
+`src/aeat/domain/calculations/registry/_bindings.py` / `_schema.py`, plus
+public selector projections such as query row selectors. The old production
+`selector.get("source_modelo")` access is closed: record-design closure now asks
+`binding_source_modelo(binding)`. Binding-derived export record projection is
+also closed for production export resolution and export validation: those paths
+consume `binding_export_selector` and its typed fixed-field/row-field selector
+models. Detalle row-set assembly and Sheets layout also avoid raw selector-map
+lookup through `binding_row_set_selector`; profile collection `rows` bindings
+remain outside that Detalle projection. The public `ModeloBindingQueryRow.selector`
+projection is also closed through `BindingSelectorQueryProjection`, which carries
+the source tag plus ordered selector entries instead of a `Mapping`. The old
+relation map surface is also closed: relation source revision and period
+alignment rows validate as typed pydantic models at construction, and runtime
+helpers consume attributes.
 
-**Coverage.** 0 / 3 confirmed selector fields. Surface enumeration confirms
-only 5 explicit discriminated unions exist across `src/aeat/` against 195
-`Literal[...]` declarations — promotion ceiling is high.
+**Coverage.** Binding source-family selector shape is validated at construction
+and at snapshot build for all registry-declared bundled binding sources; the
+mesh-only source kinds are not accepted as registry bindings.
+`DataBindingDefinition.selector` now stores the hydrated per-source pydantic
+selector model and serializes back to the authored mapping. Relation revision
+selectors and period-alignment maps are also typed construction-time schema
+surfaces. Binding-derived export record selectors, Detalle row-set selectors,
+and public binding query row selectors are typed projections.
 
-**Inventory rows.** R007, R008, R009, R010, R015, R016.
+**Inventory rows.** R007, R008, R009, R010, R015, R016. R008, R009, R015, and
+R016 are closed in current state. R007 is also closed: the raw
+`BindingSelectorMap` remains only the authoring/input mapping, while the
+constructed binding field stores a concrete per-source selector model. R010
+remains governed by its own handler-call pattern.
 
-**Example.** R007 — `src/aeat/domain/calculations/registry/_schema.py:817`:
-`DataBindingDefinition.selector: Mapping[str, str | int | ...]`. The `source`
-field on the same model takes values such as `"ledger"`, `"invoice"`,
-`"rental"`, each requiring a different selector shape. Validation is deferred
-to the handler (see R010).
+**Example.** R007 — `DataBindingDefinition.selector` hydrates a raw TOML/dict
+selector through `selector_model_for_source` into the source family's strict
+pydantic model. Malformed source-family shapes fail before snapshot build, and
+mesh-only sources cannot be constructed as registry bindings. Export record
+derivation/validation and Detalle row-set layout/assembly consume typed
+projections; `ModeloBindingQueryRow.selector` serializes a typed ordered-entry
+projection. The former broad stored shape is now only the raw authoring input
+shape.
 
-**Promotion path.** Adopt pydantic v2 discriminated unions via
-`Field(discriminator='source')` over a `Union` of narrow per-source pydantic
-models. This is item 1 of the prior-art adoption order — confirmed
-in-session against the pydantic v2 documentation. Enforces the correct
-selector shape at `ModeloRevision.model_validate(payload)` time, eliminating
-all raw `.get()` call sites; mypy/pyright flag missing match arms in
-consumers as a side benefit.
+**Promotion path.** Keep the existing per-source selector-model registry for
+binding selectors and the new typed relation selector models. Extend the same
+typed-selector pattern to any future public selector payload surfaces discovered
+outside `ModeloBindingQueryRow`. For new selector families, reject raw mapping
+probes in production code unless the field is intentionally free-form and
+documented as such.
 
 ---
 
 ### T-03. Deferred or absent cross-domain validation
 
 **Description.** A referential integrity check exists in the codebase but is
-guarded by an explicit call to `validate_registry` or `validate_modelo`, making
-it conditional on user or test action rather than automatic at snapshot construction.
+guarded by an explicit validation boundary. Current-state recheck on
+2026-06-29 narrows this class: production registry access uses
+`ValidatedRegistryAuthority.load`, which runs full `validate_registry`,
+and production snapshot construction runs `check_all_id_references`.
 Some checks are entirely absent despite the referenced field being declared on
 the schema. The registry loads successfully with broken cross-references.
 
@@ -134,28 +175,32 @@ and any field declared as an ID type on a schema model. The surface is enumerabl
 by cross-referencing the 21 ID types in `_ids.py` against the call graph of
 `_validate.py`.
 
-**Coverage.** 0 / 21 ID types confirmed mechanically (surface enumeration:
-21 in `_ids.py`, all `Annotated[str, Field(pattern=...)]`, none currently
-with existence checks at snapshot construction). Wider validator surface:
-411 `ConfigDict` instances of which 51 lack `extra="forbid"` — a separate
-T-03 sub-class.
+**Coverage.** Current-state recheck on 2026-06-29 closes the 21-ID
+snapshot-construction gap: `_snapshot.py` calls
+`check_all_id_references(snapshot)` before returning. Relation closure is
+also delivered for production access through `ValidatedRegistryAuthority.load`
+-> `RegistryValidator.validate_registry` -> `validate_registry_scope` ->
+`validate_relation_closure`. The remaining wider validator surface is
+separate: selector-shape hardening, standalone diagnostics, and 411
+`ConfigDict` instances of which 51 lack `extra="forbid"` are T-03 sub-classes
+outside the R021 snapshot gate.
 
 **Inventory rows.** R010, R015, R016, R017, R018, R019, R036, R037, R038, R048,
 R049, R053, R071, R091, R100.
 
-**Example.** R019 — `src/aeat/domain/calculations/registry/_schema.py:831`:
-`CasillaDefinition.validation_refs` is a tuple of `LegalRefId` values but no
-`_missing_refs` call exists for this field in any validation path. A
-`CasillaDefinition` referencing a non-existent legal ref loads silently.
+**Example.** R019 is closed in current state: the dead
+`CasillaDefinition.validation_refs` field was removed before the 2026-06-29
+recheck, so there is no longer a silent dangling-reference surface under that
+name. Current nested reference coverage instead lives in the alias, constraint,
+continuity-evolution, completeness-manifest, and verification-predicate gates.
 
-**Promotion path.** Adopt pydantic `@model_validator(mode="after")` on the
-`RegistrySnapshot` constructor (item 1 of prior-art adoption). Complement
-with `taplo check --schema` against pydantic-exported JSON Schemas (item 4)
-to catch dangling references at the TOML source layer before Python
-execution. Add a `validate_registry` invocation to `aeat config repair` so
-the operator-facing surface (F2) gains observability. This promotion path
-ties directly to Alexis King's "Parse, Don't Validate" principle cited in
-Part E of the prior-art research.
+**Promotion path.** Do not reopen the snapshot-build gate or relation-closure
+gate for production access. The snapshot gate is delivered through `_snapshot.py`
+and `_validate_references.py`; relation closure is delivered through
+`ValidatedRegistryAuthority.load` and `validate_registry_scope`. The remaining
+T-03 work is validation-order parity for standalone diagnostics and selector
+shapes. `taplo check --schema` remains a TOML-layer complement, not a replacement
+for the runtime gates.
 
 ---
 
@@ -210,6 +255,15 @@ a module-level Python constant rather than as a TOML-declared registry field.
 The registry TOML and the Python constant can diverge silently; no load-time
 cross-check enforces agreement.
 
+**Current-state correction (2026-06-29).** The Renta first-slice portion of
+this defect is closed under the current accepted design. The live code keeps
+`FIRST_SLICE_EXPENSE_CASILLAS` as a Renta-domain
+`Mapping[SpendingCategory, CasillaId]`, re-exports the same object from
+`_ledger_expenses.py`, and registers a `CrossDomainSnapshotCheck` that validates
+every routed casilla against the Modelo 100 snapshot before calculation. The
+remaining T-05 surface is therefore not R025/R026 as originally written; it is
+only other unvalidated module-level casilla maps.
+
 **Signature.** Module-level `Mapping[..., str]` or `dict[..., str]` where the
 values are strings matching the `CasillaId` pattern (`^\d{4}$` or
 `^[A-Za-z0-9][A-Za-z0-9._:-]*$`) and the mapping is consumed in a binding
@@ -220,25 +274,26 @@ handler or validator that is not connected to registry load. Grep: top-level
 `domain/calculations/registry/` that declares module-level casilla-ID constants.
 Surface is small and enumerable by direct inspection.
 
-**Coverage.** 0 / 4 confirmed constant sites in inventory (the 4th is
-`_export.py:_ROW_FIELD_CASILLA_BY_RECORD`). Surface is small and fully
-enumerated.
+**Coverage.** R025/R026 closed for the Renta first-slice routing surface on
+2026-06-29; the 4th inventory site remains `_export.py:_ROW_FIELD_CASILLA_BY_RECORD`.
+Surface is small and fully enumerated.
 
-**Inventory rows.** R025, R026, R027, R090.
+**Inventory rows.** R025 and R026 are closed under the current
+cross-domain snapshot-check design; R027 was already verified; R090 remains in
+the non-Renta export surface.
 
-**Example.** R025 — `src/aeat/domain/renta/_ledger_expenses.py:27`:
-`RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS: Mapping[SpendingCategory, str]`
-hard-codes casilla IDs `"0186"`, `"0192"`, `"0199"`, `"0203"`. The registry
-TOML owns the authoritative `CasillaDefinition` for these same IDs but the
-Python constant has no load-time assertion that the IDs still exist in the
-snapshot.
+**Example.** Current R025/R026 evidence:
+`src/aeat/domain/renta/_first_slice_routing.py` declares
+`FIRST_SLICE_EXPENSE_CASILLAS: Mapping[SpendingCategory, CasillaId]`, and
+`src/aeat/domain/renta/_first_slice_routing_integrity.py` registers the
+snapshot-time check. `src/aeat/domain/renta/tests/test_first_slice_routing.py`
+proves the `_ledger_expenses.py` re-export is the same object and that every
+target exists in the bundled Modelo 100 registry.
 
-**Promotion path.** Move the mapping into the registry TOML as a
-`category_casilla_mapping` field on `DataBindingDefinition.selector`. Once
-the discriminated-union selector (T-02 promotion) lands, this field becomes
-typed automatically. A `semgrep` rule (prior-art item 2) flags any future
-module-level `Mapping[..., str]` constant whose values match the
-`CasillaId` pattern, preventing regression.
+**Promotion path.** Do not reopen R025/R026 without a new ADR that supersedes
+the current cross-domain routing-table design. For non-Renta constants, a
+`semgrep` rule (prior-art item 2) can still flag new module-level
+`Mapping[..., str]` constants whose values match the `CasillaId` pattern.
 
 ---
 
@@ -378,27 +433,35 @@ referencing the registry.
 cross-referenced against all model fields that use them. Enumerable via pydantic
 `model_fields` introspection combined with call-graph analysis of validators.
 
-**Coverage.** 0 / 21 mechanically confirmed (every ID type in `_ids.py`).
-Per the surface enumeration: 20 of 21 ID types have pattern validation
-only, with no existence check anywhere in the validator path.
+**Coverage.** 21 typed-ID reference families are now checked on the
+production snapshot path. `_snapshot.py` calls
+`check_all_id_references(snapshot)` after constructing the
+`RegistrySnapshot`; the checker walks legal/source refs, casilla/formula/
+binding/relation refs, cross-reference predicates, workbook refs,
+construct refs, dependency classifications, algorithm refs, export refs,
+and registered cross-domain snapshot checks.
 
 **Inventory rows.** R011, R012, R019, R020, R021, R073, R089, R092, R101.
+R011 is closed in current code because `RelationDefinition` now declares
+`source_casilla_id: CasillaId`, rejects legacy `source_output`, and full
+registry validation checks relation source casillas against matching source
+revisions. R020 is closed for bare-string typing in current code because
+`WorkbookParityReference.fixture_id` is now `WorkbookFixtureId`; it remains
+relevant here only as the unresolved question of whether workbook fixture IDs
+should resolve against a declared fixture catalogue.
 
-**Example.** R021 — `src/aeat/domain/calculations/registry/_ids.py:14-34`:
-All 21 ID types are `Annotated[str, Field(pattern=...)]`. The pattern constraint
-validates the format of the string but no check confirms the referenced entity
-(formula, binding, relation, legal ref, etc.) exists in the snapshot. R011 is
-a specific instance: `RelationDefinition.source_output: CasillaId | str` where
-the `str` fallback eliminates even the format guarantee.
+**Example.** R021 is closed for snapshot construction:
+`src/aeat/domain/calculations/registry/_snapshot.py` calls
+`check_all_id_references(snapshot)` before returning a snapshot, and
+`src/aeat/domain/calculations/registry/_validate_references.py` owns the
+typed-ID existence walk. Remaining selector-union and relation-closure
+issues are separate rows; they are not evidence that the snapshot
+referential-integrity gate is absent.
 
-**Promotion path.** Implement `_check_all_id_references` as a pydantic
-`@model_validator(mode="after")` on `RegistrySnapshot` (prior-art item 1).
-For each ID type, declare a mapping from ID type to the registry
-collection that owns it; the validator walks all fields of all registered
-models and asserts existence. This closes all 21 ID types with one
-implementation and is the single highest-leverage promotion in the entire
-taxonomy (closes T-09 and most of T-03 simultaneously — see the promotion
-plan below).
+**Promotion path.** No new promotion path for R021. Future work should
+focus on validation-order parity for standalone `validate_registry`
+callers and on the remaining non-snapshot surfaces, without reopening
+the snapshot-build gate.
 
 ---
 
@@ -543,22 +606,22 @@ range over once written.
 | Class | Description (short) | Surface (broader denominator) | Inventory rows covered | Mechanical surface coverage | Recommended tool | Highest-impact row |
 |-------|---------------------|-------------------------------|------------------------|-----------------------------|------------------|--------------------|
 | T-01 | Untyped string-keyed value envelope | 116 `Mapping[str, ...]` fields in `src/aeat/domain/` | 0 / 11 | 0 / ~25 cross-boundary subset | libcst codemod + pydantic typed envelope + semgrep regression rule | R001 |
-| T-02 | Untyped selector sub-schema | 5 explicit discriminated unions vs 195 `Literal[...]` declarations | 0 / 6 | 0 / 3 selector fields | pydantic `Field(discriminator=...)` | R007 |
-| T-03 | Deferred or absent validation | 21 ID types in `_ids.py`; 51 pydantic models without `extra="forbid"` | 0 / 15 | 0 / 21 (ID types) plus 0 / 51 (extra-forbid gaps) | pydantic `model_validator(mode="after")` + taplo TOML schema | R017 |
+| T-02 | Selector sub-schema typing | Binding selectors, relation revision selectors, relation period alignment selectors | R007/R008/R009/R015/R016 closed in current state | constructed binding selectors hydrate to per-source models; remaining selector work belongs to future surfaces, not this inventory row | pydantic selector models + projection helpers | R010 |
+| T-03 | Deferred or absent validation | Standalone validation-order gaps after production authority closure | R017/R018/R021 closed for production registry and snapshot access; R016 closed for production selector access | snapshot typed-ID gate wired; relation closure runs through full-registry authority load | targeted diagnostics and selector-shape hardening, not new snapshot gates | R048 |
 | T-04 | Same-concept multiple shapes | 580 `BaseModel` subclasses | 0 / 16 | 0 / ~30 estimated name-pattern pairs | import-linter + libcst codemod + semgrep | R024 |
-| T-05 | Hard-coded constants outside registry | Module-level mappings in `domain/renta/` and `domain/calculations/registry/_export.py` | 0 / 4 | 0 / 4 (fully enumerated) | TOML migration + semgrep | R025 |
+| T-05 | Hard-coded constants outside registry | Non-Renta module-level casilla maps; Renta first-slice routing closed by snapshot-time check | R025/R026 closed, R027 verified; R090 remains | Renta routing verified by current tests; export map still separate | semgrep for new non-Renta maps | R090 |
 | T-06 | Architecture-boundary violation | 424 cross-package imports under `src/aeat/domain/` | 0 / 1 | 0 / 1 confirmed; layers contract over full surface | import-linter | R028 |
 | T-07 | CLI / operator output erasure | 153 CLI commands in `src/aeat/entrypoints/` | 0 / 11 | 0 / ~25 emit sites | SchemaEnvelope adoption + OpenFisca `reference` pattern + semgrep | R001 |
 | T-08 | Unused typed JSON contract | 0 of 3 `json_contract.py` symbols imported by CLI | 0 / 6 | 0 / 3 unused symbols | adopt `emit_json_success` + structural caller-count test | R043 |
-| T-09 | Missing existence check for typed ID | 21 ID types in `_ids.py` | 0 / 9 | 0 / 21 (one per ID type) | pydantic `model_validator` + `_check_all_id_references` | R021 |
+| T-09 | Missing existence check for typed ID | Snapshot typed-ID gate | R021 closed for snapshot builds | `check_all_id_references(snapshot)` wired at `_snapshot.py:174` | keep standalone validator parity visible | none from R021 |
 | T-10 | Hard-wired per-modelo gate | 1005 modelo-number string literals (most in data/tests); 3 confirmed application gates | 0 / 4 | 0 / 3 application-level gates | `ModeloDefinition.capabilities` field + semgrep | R034 |
 | T-11 | Type-system escape | 100 `cast()` + 85 `# type: ignore` + 33 files with `dict[str, Any]` + 50 files with `Mapping[str, Any]` ≈ 268 raw sites | 0 / 28 | 0 / 268 raw surface | ruff `ANN401` + semgrep + libcst codemod | R056 |
 | T-12 | Hand-authored data without schema coupling | Per-modelo `_RECORD_SPECS` modules + parity tapes + Sheets magic keys | 0 / 8 | 0 / 8 | parametrised pytest + OpenFisca `reference: list[LegalRef]` per spec entry | R088 |
 
-Reading: T-09's coverage `0 / 21` is the most actionable single denominator
-in the taxonomy — every one of 21 ID types is currently unchecked, every
-one closes with one validator function, and T-09 plus T-03's existence-
-check subset are closed by the same implementation.
+Reading: the old T-09 `0 / 21` denominator is closed for production
+snapshots. The actionable residue is now narrower: standalone diagnostic
+coverage and selector-shape hardening, not the snapshot-build typed-ID
+existence gate or production relation closure.
 
 ---
 
@@ -568,16 +631,14 @@ Ordered by leverage (rows closed per mechanical check). Tool recommendations
 are sourced from the prior-art research and have been confirmed in-session
 against authoritative documentation.
 
-- **T-09 + T-03 together (closes ~42 rows with one implementation).**
-  Implement `_check_all_id_references` as a pydantic
-  `@model_validator(mode="after")` on the `RegistrySnapshot` constructor.
-  Walks all 21 ID types, confirms every reference points to an existing
-  entity, fires at every registry load. Subsumes most of T-03's
-  deferred-validation gap and all of T-09's missing-existence gap.
-  Tooling: pydantic v2 model validators (prior-art item 1). This is the
-  highest-leverage single change in the entire taxonomy. Complementary:
-  `taplo check --schema` (item 4) catches the same dangling references at
-  the TOML source layer before Python execution.
+- **T-09 + T-03 current state (2026-06-29).** The snapshot-build
+  `_check_all_id_references` implementation is delivered and wired:
+  `_snapshot.py` runs `check_all_id_references(snapshot)` before
+  returning a production `RegistrySnapshot`. Relation closure is also
+  current for production access because `ValidatedRegistryAuthority.load`
+  validates the full registry tree before serving snapshots. Remaining
+  work is narrower: keep standalone diagnostics from skipping selector
+  shape/order checks.
 
 - **T-01 (closes ~11 inventory rows; structurally repairs the canonical
   drop site).** Persist `engine_result.entries` in `CalculationRevision`
@@ -629,12 +690,11 @@ against authoritative documentation.
   violation is resolved. `tach` was evaluated as a candidate but flagged
   unmaintained after mid-2025 and is not recommended.
 
-- **T-05 (closes 4 rows).** Move `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS`
-  and similar constants into the registry TOML as binding selector
-  fields. After T-02's discriminated-union selectors land, these fields
-  are validated at load with no Python-side constants required. A
-  `semgrep` rule (item 2) flags any new module-level
-  `Mapping[..., str]` whose values look like `CasillaId`.
+- **T-05 (currentized 2026-06-29).** Do not treat the old Renta
+  first-slice migration as live. R025/R026 are closed by the
+  `FIRST_SLICE_EXPENSE_CASILLAS` routing table plus
+  `CrossDomainSnapshotCheck`; non-Renta module-level casilla maps
+  should still be blocked with a `semgrep` rule (item 2).
 
 - **T-08 (closes 6 rows).** Adopt `emit_json_success` in every `_emit_*`
   function. Add a structural pytest that imports every public symbol
@@ -654,7 +714,7 @@ against authoritative documentation.
 
 | Tool / pattern | Prior-art rank | Closes classes | Status |
 |----------------|----------------|----------------|--------|
-| pydantic discriminated unions + `model_validator(mode="after")` | 1 | T-02, T-03, T-09 | not adopted |
+| pydantic discriminated unions + `model_validator(mode="after")` | 1 | T-02, T-03, T-09 | partially adopted: T-09 snapshot gate delivered; T-02 selector unions still absent |
 | `semgrep` taxonomy rules | 2 | T-01, T-04, T-05, T-07, T-08, T-10, T-11 (regression detection) | not adopted |
 | `import-linter` forbidden + layers contracts | 3 | T-04, T-06 | not adopted |
 | `taplo check --schema` | 4 | T-03 (TOML-layer) | not adopted |
@@ -694,15 +754,15 @@ structural delivery only; partials are not counted.
 
 | Class | Verified closures (re-audit sample) | Notes |
 |-------|--------------------------------------|-------|
-| T-01 | partial — `CasillaObservation` typed envelope verified on `RegistryFilingObservation` (`R002`). Selector typing across `DataBindingDefinition` / `RelationDefinition` / `period_alignment` (`R007`, `R008`, `R009`) regressed: fields are still bare `Mapping[str, ...]`. The semgrep regression rule exists; the structural rewrite did not land. |
-| T-02 | regressed — discriminated `BindingSelector` `Union` does not exist in `_schema.py`. Selector fields remain bare `Mapping[str, ...]`. |
-| T-03 | partial — `AlgorithmBindingDefinition` targets typed (`R012` verified); `_check_all_id_references` exists and is tested (`R021` partial) but **not wired into `build_snapshot`** — runs only in tests, never at runtime. |
+| T-01 | partial/currentized — `CasillaObservation` typed envelope verified on `RegistryModeloObservation` (`R002`), and the old relation fold requirement/source-output path is closed (`R013`, `R014`). `RegistryCalculationResult.values` and `CalculationRevision.casilla_values` still keep flat map surfaces (`R003`-`R005`). |
+| T-02 | currentized — binding source-family selector shape validates through per-source selector models at construction for every bundled registry-declared binding source, and `DataBindingDefinition.selector` now stores the hydrated concrete selector model (`R007` closed). Relation selectors store `RelationRevisionSelector` / `RelationPeriodAlignment` (`R008`, `R009`, `R015` closed), binding-derived export record selectors project through typed fixed-field/row-field models, Detalle row-set consumers project through `BindingRowSetSelector`, and public binding query row selectors project through `BindingSelectorQueryProjection`. |
+| T-03 | currentized — `AlgorithmBindingDefinition` targets typed (`R012` verified); `_check_all_id_references` is wired into snapshot construction at `_snapshot.py:174`; relation closure runs through `ValidatedRegistryAuthority.load` -> `validate_registry_scope`. Remaining validation-order gaps belong to standalone diagnostics and selector-shape paths, not to `build_snapshot`. |
 | T-04 | partial — typed-envelope migrations on observation models verified; selector unions absent (see T-02). |
-| T-05 | partial — `_MODELO_100` gate removed and replaced with capability lookup (`R034` verified); `_renta_ledger.modelo` default removed (`R035` verified); but `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` constant in `_ledger_expenses.py` is still present (`R025` regressed). |
+| T-05 | currentized — `_MODELO_100` gate removed and replaced with capability lookup (`R034` verified); `_renta_ledger.modelo` default removed (`R035` verified); R025/R026 closed by the canonical `FIRST_SLICE_EXPENSE_CASILLAS` routing table plus snapshot-time cross-domain validation. |
 | T-06 | partial — registry→renta import inverted (`R028` verified); two of the four `import-linter` contracts are kept (`no-renta-in-registry`, `core-not-outer`); the `layered` and `domain-not-application` contracts remain broken. |
 | T-07 | partial — `SchemaEnvelope` adopted at 20+ `register_schema` sites in CLI (`R043` verified); no raw-dict `_emit` sites remain in `_modelo.py` (`R044` verified); but `formulas` command body does not surface `legal_refs` / `--explain` (`R046` partial). |
 | T-08 | verified — `_modelo_payloads.py` declares 15+ typed payload classes wired to CLI emit sites. |
-| T-09 | **not delivered as a runtime gate** — the validator function is defined in `_validate.py` and tested, but is **not invoked by `build_snapshot`**. Production builds do not run the gate; only the dedicated tests do. |
+| T-09 | currentized — delivered as a runtime snapshot gate. Production snapshot builds call `check_all_id_references(snapshot)` before returning. |
 | T-10 | partial — `_borrador_binding` migrated to capability lookup (`R034` verified); the renta ledger default migrated (`R035` verified). |
 | T-11 | not re-verified — the suppression-inventory dashboard still reports 175 total ty:ignores (76 internal); no claim can be made about removed sites without per-site tracking. |
 | T-12 | partial — M303 `form_number` declared (`R098` verified); M100 2025 `export_refs` present (`R032` verified); `_RECORD_SPECS` modules are still hand-authored without `legal_refs` declarations (`R088` open, as inventory recorded). |
@@ -714,10 +774,10 @@ The earlier write-up of this appendix overstated coverage on:
 - **Selector discriminated unions (T-01 / T-02).** No discriminated
   `Union` over selector sub-shapes exists in `_schema.py`. The
   selector remains structurally untyped at the schema boundary.
-- **Snapshot referential-integrity gate (T-03 / T-09).** The
-  validator is implemented; the wiring into `build_snapshot` is
-  not. Snapshots constructed in production do not currently run the
-  21-typed-ID existence check.
+- **Snapshot referential-integrity gate (T-03 / T-09).** Current-state
+  recheck on 2026-06-29 found the earlier appendix wrong: the validator
+  is implemented and wired into `build_snapshot` through `_snapshot.py`.
+  Production snapshots run the typed-ID existence check before returning.
 - **Workflow-step typed details (operator surface).** `WorkflowStep.details`
   is still `dict[str, str] | None`. The `WorkflowStepDetails`
   discriminated `Union` claimed in this document does not exist in

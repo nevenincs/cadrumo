@@ -3,14 +3,12 @@ tags:
   - '#audit'
   - '#modelo-multiyear-renta'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-29'
 related:
   - '[[2026-06-02-modelo-multiyear-renta-plan]]'
   - '[[2026-06-02-modelo-multiyear-renta-income-adr]]'
   - '[[2026-06-02-modelo-multiyear-renta-353-grupo-aggregation-adr]]'
 ---
-
-
 
 # `modelo-multiyear-renta` audit: `multi-year-renta campaign-close honesty review`
 
@@ -47,49 +45,67 @@ invariant rather than a hand-computed value. The recorder enforces its
 its own type boundary, and `assert_enrollment_matches_manifest` converts the
 manifest from an honour claim into a verified one.
 
-Structural completeness is **gated on the HIGH and MEDIUM findings below** — none
-of which falsify the gate, but each of which is a real honesty or correctness gap
-the rule requires be tracked to closure (or formally deferred) before the
+Structural completeness remains **gated on the remaining HIGH and MEDIUM findings
+below**. HIGH-1 and HIGH-2 are closed on the current corpus/registry path; HIGH-3
+and the MEDIUM findings still require closure or formal deferral before the
 campaign is declared complete.
+
+## Current State — 2026-06-29
+
+The current registry/corpus closes the two legal-grounding findings from this audit:
+
+- HIGH-1 is closed: `src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_721/manifest.json`
+  exists, and `src/aeat/_data/registry/aeat/legal/monedas-virtuales.toml` anchors
+  Modelo 721 to Orden HFP/886/2023 / `BOE-A-2023-17429`. Unreferenced stale
+  `orden-hfp-887-2023` corpus files that carried obsolete Modelo 721 text were
+  removed from the shipped corpus so search cannot re-ground the model on the
+  custodian-side order.
+- HIGH-2 is closed: the M100 general-base negative carry is grounded on
+  `ley-35-2006:art-48`; casilla 1388 also carries the base-liquidable context
+  ref `ley-35-2006:art-50`. `ley-35-2006:art-49` remains reserved for savings-base
+  formulas and casillas.
 
 ## Findings
 
-### HIGH-1 — M721 legal-grounding gate is RED on a missing corpus manifest
+### HIGH-1 — CLOSED: M721 legal-grounding gate resolves against bundled corpus
 
 - **Pathway / site:** `aeat-dr-721` source-ref → the registry catalogue
-  verification gate (`test_catalogue_verification`), which resolves to a missing
+  verification gate (`test_catalogue_verification`), which resolved to a missing
   `modelo_721/manifest.json` corpus manifest.
-- **Gap:** the M721 cripto-exterior source registry references a corpus manifest
+- **Original gap:** the M721 cripto-exterior source registry referenced a corpus manifest
   path that does not exist on disk, so the legal-grounding catalogue gate is RED.
   A reviewed-but-unresolvable source is higher risk than an absent one — a
   casilla author trusts it.
-- **Remediation:** land the missing `modelo_721/manifest.json` corpus manifest
-  (against the corrected BOE-A-2023-17429 / Orden HFP/886/2023 anchor per the A5
-  721 ADR) or correct the `aeat-dr-721` source path to the real manifest.
-- **Verification gate:** `test_catalogue_verification` green; the M721
+- **Current closure:** the bundled corpus now includes
+  `src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_721/manifest.json`.
+  The manifest identifies the Modelo 721 record design as Orden HFP/886/2023, and
+  `src/aeat/_data/registry/aeat/legal/monedas-virtuales.toml` points Modelo 721
+  legal/source refs to `BOE-A-2023-17429`, not the custodian-side Orden HFP/887/2023.
+  The obsolete unreferenced `orden-hfp-887-2023` corpus artifacts were removed to
+  keep shipped search authority aligned with the current registry.
+- **Verification gate:** `test_catalogue_verification` is green; the M721
   legal-grounding tier resolves. Tracked as task `#40`.
 
-### HIGH-2 — M100 general-base carry cites the wrong LIS/LIRPF article
+### HIGH-2 — CLOSED: M100 general-base carry uses Art. 48 grounding
 
 - **Pathway / site:** the M100 Anexo-C carry binding
   `renta-{2024,2025}-base-liquidable-negativa-general-anterior`, `legal_refs`
   citing `ley-35-2006:art-49`.
-- **Gap:** `art-49` grounds the integración y compensación of the base imponible
-  del **ahorro** (the savings base, 4-year window + inter-component límite). The
-  carry the binding implements is the base liquidable **general** negativa
-  carry-forward, whose binding provision is `art-48` (integración y compensación
-  de la base imponible general). The general-base carry is grounded against the
-  ahorro article — a mis-citation that the registry-calculation-legal-grounding
-  rule forbids (the value's binding provision must be the one that establishes
-  it).
-- **Remediation:** re-ground the carry binding (and the casilla-1388 `legal_refs`)
-  to `ley-35-2006:art-48`, with the art-48 body ingested into the legal catalogue
-  and corpus so the evidence gate can cross-check it. Registry surface, owned by
-  legal-authority / irpf — NOT the enrollment test, whose docstring legal
-  reference follows the registry once corrected.
-- **Verification gate:** the carry binding cites `art-48`; `art-48` is defined in
-  `legal/irpf.toml` with a resolving `corpus_ref`; the grounding evidence gate
-  green. Tracked as task `#39` (corpus prerequisite `#44`).
+- **Original gap:** `art-49` grounds the integración y compensación of the base
+  imponible del **ahorro** (the savings base, 4-year window + inter-component
+  límite). The carry the binding implements is the base liquidable **general**
+  negativa carry-forward, whose binding provision is `art-48` (integración y
+  compensación de la base imponible general). The general-base carry was grounded
+  against the ahorro article — a mis-citation that the
+  registry-calculation-legal-grounding rule forbids.
+- **Current closure:** `src/aeat/_data/registry/aeat/legal/irpf.toml` defines
+  `ley-35-2006:art-48` with resolving BOE corpus text. The 2024 previous-filing
+  binding cites `ley-35-2006:art-48` and `ley-35-2006:art-50`; the 2025 binding
+  cites `ley-35-2006:art-48` plus the current annual order. Casilla 1388 carries
+  `ley-35-2006:art-48` and `ley-35-2006:art-50` in both revisions. Savings-base
+  formulas remain grounded on `ley-35-2006:art-49`.
+- **Verification gate:** the grounding evidence gate is green. Tracked as task
+  `#39` (corpus prerequisite `#44`).
 
 ### HIGH-3 — M353 enrollment test carries stale "expected to fail / held-pending-A2" framing
 
@@ -257,7 +273,6 @@ here so the close is honest about what it does and does not cover.
   gate is that an honest review ran before closure was declared, which it did.
 
 ## Codification candidates
-
 
 - **Source:** finding HIGH-3 (M353 enrollment test framed EXPECTED-TO-FAIL /
   HELD-PENDING-A2 while actually passing, with a dead `type: ignore`).

@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#trabajador-del-mar'
 date: '2026-05-31'
-modified: '2026-05-31'
+modified: '2026-06-29'
 tier: L3
 related:
   - '[[2026-05-31-trabajador-del-mar-adr]]'
@@ -34,7 +34,7 @@ Adds the trabajador_del_mar category TOML with all three exemption binding entri
 and confirms referential integrity on snapshot build.
 
 - [x] `W01.P02.S04` - create trabajador_del_mar.toml with Art. 7.p) binding entry (cap=60100, daily_rate formula, legal_refs=Ley 35/2006 Art. 7.p) BOE-A-2006-20764); `src/aeat/_data/registry/aeat/categories/trabajador_del_mar.toml`.
-- [x] `W01.P02.S05` - add REBECA binding entry (exempt_fraction=0.50, legal_refs=Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-16100); `src/aeat/_data/registry/aeat/categories/trabajador_del_mar.toml`.
+- [x] `W01.P02.S05` - add REBECA binding entry (exempt_fraction=0.50, legal_refs=Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-15794); `src/aeat/_data/registry/aeat/categories/trabajador_del_mar.toml`.
 - [x] `W01.P02.S06` - add DA 41 binding entry (exempt_fraction=0.50, status=inactive_pending_eu_clearance, legal_refs=Ley 35/2006 DA 41 BOE-A-2006-20764 and Ley 6/2018 BOE-A-2018-9268); `src/aeat/_data/registry/aeat/categories/trabajador_del_mar.toml`.
 - [x] `W01.P02.S07` - write registry snapshot integrity test asserting all three binding entries resolve with legal_refs populated; `src/aeat/domain/calculations/registry/test_trabajador_del_mar_profile.py`.
 

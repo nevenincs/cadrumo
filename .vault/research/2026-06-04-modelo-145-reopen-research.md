@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#modelo-145-reopen'
 date: '2026-06-04'
-modified: '2026-06-04'
+modified: '2026-06-29'
 related:
   - "[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-plan]]"
   - "[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-adr]]"
@@ -50,12 +50,13 @@ The binding chain for the M145 surface:
 - ley-35-2006:art-99 (LIRPF Art. 99, obligation to retain on rendimientos
   del trabajo). Present in legal/irpf.toml.
 - ley-35-2006:art-88 (LIRPF Art. 88, communication of personal/family data
-  governing the withholding rate). Present in legal/irpf.toml line 1626.
+  governing the withholding rate). Present in legal/irpf.toml.
 - rd-439-2007:art-88 (Reglamento IRPF Art. 88, the article AEAT
-  mod145_es_es.pdf cites as the form regulatory anchor). NOT present in
-  legal/irpf.toml; the catalogue currently has rd-439-2007 art-80, 86, 90,
-  95, 108, 110 but no art-88. This is the one catalogue gap that blocks
-  P03 casilla legal_refs from citing the RIRPF article directly.
+  mod145_es_es.pdf cites as the form regulatory anchor). Present in
+  legal/irpf.toml with corpus_ref
+  corpus/normatives/html/rd-439-2007-art-88.html#a88. Currentized
+  2026-06-29: this is no longer a catalogue blocker for P03 casilla
+  legal_refs.
 - resolucion-dgt-2011-01-03-modelo-145:aprobacion (BOE-A-2011-208) plus
   the two amendment entries above. These establish the form itself and
   are ready to cite as modelo.legal_refs and revision.legal_refs.
@@ -143,14 +144,15 @@ is the last substantive change). The revision uses cadence = ad_hoc, a
 year-only period_selector, and casillas all input_kind = manual with
 export_refs keyed to dr145v20.pdf field positions. The application_links
 directory MUST declare only communication and payer_delivery surfaces.
+The earlier rd-439-2007:art-88 legal-catalogue blocker is closed as of
+2026-06-29.
 
 ## Recommended Decision
 
-P03 (S11 through S15) is ready to author EXCEPT for one catalogue gap:
-rd-439-2007:art-88 does not appear in legal/irpf.toml. Either land that
-legal entry first (small addendum to P01), or scope casilla legal_refs to
-the LIRPF (ley-35-2006:art-88 and art-99) plus the BOE-A-2011-208 primero
-clause only, deferring the RIRPF citation to a P03 catalogue addendum.
+P03 (S11 through S15) is ready to author. The previous legal-catalogue gap
+for rd-439-2007:art-88 is closed: the legal entry is present in
+legal/irpf.toml, points at the bundled RIRPF article 88 corpus excerpt, and
+can be cited directly by M145 casilla legal_refs.
 
 A new SituacionFamiliarM145 StrEnum (3 values) must be added under
 domain/contribuyente/ (or under a new M145-specific module) before any
@@ -158,8 +160,8 @@ casilla cites it as a value-domain constraint.
 
 ## Concrete Implementation Scope
 
-- Verify or add legal "rd-439-2007:art-88" to legal/irpf.toml (1-entry
-  catalogue addendum; corpus_ref pointing at the RIRPF art-88 html).
+- Cite legal "rd-439-2007:art-88" from M145 casillas where the AEAT form's
+  Reglamento IRPF anchor applies.
 - Author domain/contribuyente/_m145_codes.py (or extend _renta_codes.py)
   with SituacionFamiliarM145 StrEnum (3 values per Art. 81 LIRPF).
 - Author _data/registry/aeat/modelos/145/manifest.toml.

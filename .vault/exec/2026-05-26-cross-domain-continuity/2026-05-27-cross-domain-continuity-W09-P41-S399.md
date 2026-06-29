@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cross-domain-continuity'
 date: 2026-05-27
-modified: '2026-05-27'
+modified: '2026-06-29'
 step_id: S399
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
@@ -14,6 +14,13 @@ related:
 Author the TRLIRNR legal catalogue supporting M210 Phase 1 (post-Path-B stub) and stage the consolidated-text HTML corpus for the citation surface.
 
 Commit: `8dce6db35` (architect-2)
+
+> 2026-06-29 currentization: this exec record describes the original
+> S399 commit. The current registry has since expanded the IRNR catalogue
+> to include art. 13.1.h and art. 25.1.b, populated non-empty
+> `required_text`, and corrected art. 25.1.f to the unconditional
+> dividend/interest/capital-gain income-class rate. Do not interpret
+> art. 25.1.f as a third-country or UE/EEE residency split.
 
 - Modified: `src/aeat/_data/registry/aeat/legal/irnr.toml`
 - Modified: `src/aeat/_data/corpus/normatives/html/trlirnr-rdleg-5-2004.html`
@@ -26,13 +33,14 @@ Authored five `[legal."trlirnr-rdleg-5-2004:art-N"]` catalogue entries grounded 
 - `art-10` — representante fiscal mandate for non-resident filers.
 - `art-24` — base imponible.
 - `art-25.1.a` — UE/EEE rate split numerator.
-- `art-25.1.f` — third-country rate split numerator.
+- `art-25.1.f` — unconditional dividend/interest/capital-gain
+  income-class rate.
 
-Each entry carries `evidence_tier=legal_authority`, `authority=boe`, `kind=real_decreto`, `corpus_ref` pointing at the consolidated-text HTML anchor, `document_id`, `article`, `permalink`, `published_at`, `effective_from`, and `reviewed_at=2026-05-27`. `required_text` is intentionally empty for Phase 1 per the m210-irnr-full-engine ADR D5 hygiene-deferral note; a follow-on hygiene pass populates the patterns against verified BOE text once Phase 1 lands and testimonial replay confirms the article identifiers cited at the engine boundary.
+Each entry carried `evidence_tier=legal_authority`, `authority=boe`, `kind=real_decreto`, `corpus_ref` pointing at the consolidated-text HTML anchor, `document_id`, `article`, `permalink`, `published_at`, `effective_from`, and `reviewed_at=2026-05-27`. At the time of this commit, `required_text` was intentionally empty for Phase 1 per the m210-irnr-full-engine ADR D5 hygiene-deferral note. Current registry state supersedes that hygiene deferral: the live IRNR legal rows carry corpus-checked `required_text` for the implemented branches.
 
 A header comment on `irnr.toml` carries two correctness anchors:
 
-- Art. 25.1.b (pensiones special tarifa) is RESERVED for task #229 follow-on authoring; NOT included in this commit.
+- Art. 25.1.b (pensiones special tarifa) was RESERVED for task #229 follow-on authoring in this commit; it is authored in the current registry.
 - An earlier draft of the M210 ADR mis-cited "TRLIRNR Art 47" for the representante mandate; the correct citation is Art. 10. Art. 47 (sucesión en deuda tributaria) is out of M210 Phase 1 scope. The parallel LGT representante authority is `ley-58-2003:art-47` if a future cross-LGT surface needs it.
 
 ## Verification

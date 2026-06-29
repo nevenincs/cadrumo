@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#bindings-architecture-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-29'
 related:
   - '[[2026-06-14-bindings-interface-hardening-adr]]'
   - '[[2026-06-15-bindings-interface-hardening-audit]]'
@@ -226,14 +226,34 @@ families. Confidence: HIGH.
 
 ### MEDIUM
 
-#### F8 — The canonical binding model's most-used field is untyped; type-safety is bolted on at validate-time, never at the schema
+#### F8 — The canonical binding model's selector field was untyped; current state hydrates it to a source-family model
 
-`DataBindingDefinition.selector` is a free-form `Mapping[str, BindingSelectorValue]`
-(`_schema_scalars.py:399`); the per-family strict selector models are applied only
-during the validate pass and never replace the stored field type. `typed_enum: str |
-None` is a stringly-typed pointer to an enum *class*. These are the residual
-type-erasure inside the otherwise-hardened registry core. Confidence: HIGH
-(swarm-sourced; consistent with the hardening ADR's own "out of scope" notes).
+Historical finding: `DataBindingDefinition.selector` was a free-form
+`Mapping[str, BindingSelectorValue]` (`_schema_scalars.py:399`), and the
+per-family strict selector models were applied only during validation. Current
+state closes that selector half of F8: `DataBindingDefinition.selector` stores a
+hydrated `BindingSelector` concrete pydantic model selected by
+`selector_model_for_source`, while raw `BindingSelectorMap` dictionaries remain
+only the TOML/dict authoring input and serialization projection. The `typed_enum`
+half is also closed on the canonical binding schema:
+`DataBindingDefinition.typed_enum` is `BindingTypedEnumKind | None`; public query
+rows serialize it as the string token by design. Confidence: HIGH (swarm-sourced;
+consistent with the hardening ADR's own "out of scope" notes).
+
+Current-state note (2026-06-29): the export-record projection sub-surface no
+longer consumes `binding.selector` as a raw map. Export derivation and export
+validation parse binding selectors through `BindingFixedExportSelector` /
+`BindingRowExportSelector`. Detalle row-set assembly and Sheets layout now parse
+row-producing binding selectors through `BindingRowSetSelector`; the 11 current
+Modelo 100 profile collection `rows` bindings are intentionally outside that
+Detalle projection. Public binding query rows now expose
+`BindingSelectorQueryProjection` ordered entries instead of the raw selector map.
+The construction-time selector registry also now covers every bundled
+registry-declared binding source, including `withholding` and
+`retenciones_aggregation`, and refuses mesh-only `borrador` /
+`iva_wallet_decision` source kinds as registry bindings. A follow-up scan
+verified all 1,060 bundled bindings carry concrete selector model instances and
+no production raw `binding.selector.get` / subscript path remains.
 
 #### F9 — Some source-kind collections are still hand-listed, not derived from the canonical enum
 

@@ -4,7 +4,7 @@ tags:
   - "#exec"
   - "#trabajador-del-mar"
 date: "2026-05-31"
-modified: '2026-05-31'
+modified: '2026-06-29'
 related:
   - "[[2026-05-31-trabajador-del-mar-plan]]"
   - "[[2026-05-31-trabajador-del-mar-adr]]"
@@ -33,10 +33,10 @@ Add REBECA binding entry to trabajador_del_mar.toml.
 
 ## BOE Citations
 
-- Ley 19/1994 Art. 73.2 BOE-A-1994-16100 — REBECA 50% exemption on gross navigation employment income
-- Ley 19/1994 Art. 73.3 BOE-A-1994-16100 — conditions: REBECA-enrolled vessel, employer withholding adjustment
-- Ley 19/1994 Art. 75.1 BOE-A-1994-16100 — 2021 extension to EU/EEA sister-registry vessels
-- Ley 19/1994 Art. 75.3 BOE-A-1994-16100 — employer withholds on 50% of gross; exempt 50% excluded from Modelo 111 base
+- Ley 19/1994 Art. 73.2 BOE-A-1994-15794 — REBECA 50% exemption on gross navigation employment income
+- Ley 19/1994 Art. 73.3 BOE-A-1994-15794 — conditions: REBECA-enrolled vessel, employer withholding adjustment
+- Ley 19/1994 Art. 75.1 BOE-A-1994-15794 — 2021 extension to EU/EEA sister-registry vessels
+- Ley 19/1994 Art. 75.3 BOE-A-1994-15794 — employer withholds on 50% of gross; exempt 50% excluded from Modelo 111 base
 
 ## Outcome
 

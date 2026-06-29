@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#m210-irnr-phase-1'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-29'
 related:
   - "[[2026-06-03-m210-irnr-phase-1-research]]"
 ---
@@ -46,7 +46,7 @@ profile.representante_fiscal_nif is None".
 
 ### Predicate evaluator dispatch
 
-`src/aeat/application/modelo/_actions.py:2607` carries the
+`src/aeat/application/modelo/_verification_actions.py` carries the
 `_resolve_predicate_next_action` dispatcher that maps
 `m210-representante-fiscal-required` to its
 operator-facing next_action translation key
@@ -54,12 +54,14 @@ operator-facing next_action translation key
 
 ### Predicate test coverage
 
-`src/aeat/application/modelo/test_modelo_210_phase1.py` lines
-421-450+ carry the full triad:
+`src/aeat/application/modelo/tests/test_modelo_210_convenio_rate_resolution.py`
+carries the full predicate truth table:
 
 - `test_representante_predicate_holds_for_eea_resident_without_representante`
 - `test_representante_predicate_holds_for_eea_resident_with_representante`
 - `test_representante_predicate_violated_for_non_eea_resident_without_representante`
+- `test_representante_predicate_holds_for_non_eea_resident_with_representante`
+- `test_representante_predicate_emits_blocking_finding_via_evaluator`
 
 The triad uses the actual predicate expression string
 (`_REPRESENTANTE_PREDICATE_EXPRESSION`) and the real
@@ -90,9 +92,8 @@ ue_eee_status is False" is ambiguous between two readings:
    persisted, so the operator's mental model surfaces the
    refusal at the first opportunity. Today's create path does
    NOT do this; an early check would land at
-   `src/aeat/entrypoints/cli/_modelo.py:_guard_stub_modelo`
-   (line 1814 fall-through) or in `work_create` itself (line
-   1926).
+   `src/aeat/entrypoints/cli/_modelo_work_lifecycle_cli.py` or the
+   shared work-create policy layer.
 
 Reading 1 is more conservative; reading 2 is operator-UX
 preferable.
@@ -116,7 +117,8 @@ In-place verification pass 2026-06-03 against #627 W09.P41.S393.
 Cited file:line evidence:
 - `src/aeat/_data/registry/aeat/user_profile/schema.toml:360-386`
 - `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/verification_expectations/0001-verification_predicates.toml:13-14`
-- `src/aeat/application/modelo/_actions.py:2607-2610`
-- `src/aeat/application/modelo/test_modelo_210_phase1.py:421-450`
-- `src/aeat/entrypoints/cli/_modelo.py:1814` (work_create stub-guard
-  fall-through; site for the early-check follow-up)
+- `src/aeat/application/modelo/_verification_actions.py`
+- `src/aeat/application/modelo/tests/test_modelo_210_convenio_rate_resolution.py`
+- `src/aeat/entrypoints/cli/_modelo_work_lifecycle_cli.py` and
+  `src/aeat/application/modelo/_work_create_policy.py` (work_create
+  policy sites for any early-check follow-up)

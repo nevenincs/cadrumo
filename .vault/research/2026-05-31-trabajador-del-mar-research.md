@@ -3,7 +3,7 @@ tags:
   - "#research"
   - "#trabajador-del-mar"
 date: "2026-05-31"
-modified: '2026-05-31'
+modified: '2026-06-29'
 related: []
 ---
 
@@ -75,7 +75,7 @@ this exemption valid for Galician fishing crew.
 
 ### 3. REBECA -- Registro Especial de Buques y Empresas Navieras de Canarias
 
-Source: Ley 19/1994, Arts. 73.2, 73.3, 75.1, 75.3 | BOE-A-1994-16100
+Source: Ley 19/1994, Arts. 73.2, 73.3, 75.1, 75.3 | BOE-A-1994-15794
 
 For crew members (IRPF taxpayers) of vessels enrolled in REBECA, or vessels on regular
 scheduled routes between the Canary Islands and mainland Spain:
@@ -176,7 +176,7 @@ This affects profile completeness requirements but has no direct impact on casil
 | Ley 35/2006, DA 24 | Withholding on January 2015 work income (NOT maritime) | BOE-A-2006-20764 |
 | Ley 35/2006, DA 41 | Tuna fleet crew 50% exemption (pending EU, inactive 2024) | BOE-A-2006-20764 |
 | Real Decreto 439/2007, Art. 9 | Daily dieta caps: 26.67/53.34 national, 48.08/91.35 abroad | BOE-A-2007-6820 |
-| Ley 19/1994, Arts. 73-75 | REBECA 50% exemption for Canary Islands vessel crews | BOE-A-1994-16100 |
+| Ley 19/1994, Arts. 73-75 | REBECA 50% exemption for Canary Islands vessel crews | BOE-A-1994-15794 |
 | Ley 47/2015 | RETMAR: mandatory IRPF filing for all registered sea workers | BOE-A-2015-11346 |
 | Ley 26/2014 | Reform of LIRPF introducing current Art. 11 structure | BOE-A-2014-12327 |
 | Real Decreto 142/2024 | 2024 RIRPF amendments on withholding | BOE-A-2024-2249 |

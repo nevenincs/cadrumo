@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#registry-hardening-next-work'
 date: '2026-06-04'
-modified: '2026-06-04'
+modified: '2026-06-29'
 related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
 ---
@@ -16,6 +16,21 @@ Audited the Modelo 200 `2024-y-siguientes` calculation-completeness failure
 reported by `test_record_design.py`. The audit was limited to registry
 declaration data, calculation closure derivation, checked-in export refs, and
 the official Diseño coverage extraction.
+
+## Current State — 2026-06-29
+
+The M200 completeness drift reproduced by this audit is closed in the current
+registry:
+
+- The listed calculation-surface casillas are present in the M200
+  `completeness-manifest.toml` with reviewed segment metadata.
+- The five segment-scoped Liquidación closure identities are present in the
+  manifest.
+- `DP200014:bin-aplicada-maxima` remains intentionally app-internal and
+  `internal_only = true`; the full-Diseño subset gate subtracts internal-only
+  metadata before requiring exported closure casillas to appear in the official
+  Diseño coverage.
+- The full `test_record_design.py` suite passes in the current tree.
 
 ## Evidence
 
@@ -53,32 +68,30 @@ The full-Diseño subset failure is only the eight bare identities:
 
 ## Findings
 
-- **High:** Eight declared M200 casillas participate in the calculation closure
-  but still carry no `segmento`, so the identity-preserving closure emits
-  `(None, number)` pairs that can never match the multi-segment Diseño coverage.
-  The Diseño extraction and export refs map them to:
+- **Closed High:** the eight M200 calculation-surface casillas that previously
+  emitted `(None, number)` closure identities are now enumerated in
+  `completeness-manifest.toml` with their reviewed Diseño segments:
   `00501 -> DP200012`, `00670 -> DP200015`, `00671 -> DP200015`,
   `01032 -> DP200014`, and `01494/01495/01498/01499 -> DP200020D`.
-- **High:** Five segment-scoped closure identities are valid registry
-  declarations but absent from the completeness manifest:
+- **Closed High:** the five segment-scoped closure identities are present in the
+  completeness manifest:
   `DP200013:00417`, `DP200013:00418`, `DP200014:00547`,
   `DP200014:00550`, and `DP200014:bin-aplicada-maxima`.
-- **Medium:** The bare-number declarations for `00417`, `00418`, `00547`, and
-  `00550` remain legitimate accounting-statement occurrences. The calculation
-  formulas already reference the segment-scoped Liquidación aliases, so the
-  repair should add only the missing manifest rows, not remove or rewrite the
-  unrelated bare declarations.
-- **Medium:** `DP200014:bin-aplicada-maxima` is `internal_only = true` and is
-  intentionally absent from the Diseño coverage, but the completeness manifest
-  still needs to enumerate it because it is a formula target in the calculation
-  closure.
+- **Closed Medium:** the bare-number declarations for `00417`, `00418`, `00547`,
+  and `00550` remain legitimate accounting-statement occurrences; the
+  calculation formulas reference the segment-scoped Liquidación aliases, so the
+  repair preserved the unrelated bare declarations.
+- **Closed Medium:** `DP200014:bin-aplicada-maxima` remains enumerated in the
+  completeness manifest because it is a formula target, while the
+  full-Diseño coverage assertion treats it as an internal-only exception.
 
-## Recommended repair
+## Closure Record
 
-1. Add `segmento` to the eight bare calculation-surface casilla declarations
-   listed above, preserving their existing ids, numbers, labels, legal refs, and
-   export refs.
-2. Add the five valid closure-only segment-scoped identities to the M200
+1. The eight formerly bare calculation-surface identities are represented in the
+   manifest with reviewed segment metadata.
+2. The five valid closure-only segment-scoped identities were added to the M200
    completeness manifest.
-3. Re-run `test_record_design.py` and the committed registry gate to detect any
-   newly exposed manifest rows after the segment repair.
+3. The full-Diseño subset gate now subtracts `internal_only` casillas before
+   comparing exported closure identities against Diseño coverage.
+
+Current verification on 2026-06-29: `test_record_design.py` passes.

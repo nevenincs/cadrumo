@@ -3,7 +3,7 @@ tags:
   - "#audit"
   - "#finding-coverage"
 date: "2026-05-27"
-modified: '2026-05-27'
+modified: '2026-06-29'
 related:
   - "[[2026-05-27-eva-cli-testimonial-audit]]"
   - "[[2026-05-27-david-cli-testimonial-audit]]"
@@ -241,7 +241,7 @@ POSITIVE findings (confirmed working) excluded.
 ### Round 25 - Khadija El Idrissi (Moroccan seasonal worker)
 
 - HIGH 183-day rule advisory absent (Art. 9 LIRPF near threshold) -> #225 tracked
-- HIGH Convenio Espana-Marruecos absent (BOE-A-1985-13340) -> #225 tracked
+- HIGH Convenio Espana-Marruecos absent (old BOE-A-1985-13340 anchor) -> current M210 registry has MA/interest grounded in `convenio-es-ma-1978:art-11` / BOE-A-1985-9280; remaining MA/general or 183-day advisory scope needs plan reconciliation if still required
 - MEDIUM 24% non-EU tipo not derivable (requires #197 axis) -> tracked under #197
 - LOW French + Arabic locales absent -> ORPHAN
 
@@ -249,9 +249,9 @@ POSITIVE findings (confirmed working) excluded.
 
 - CRITICAL P0 S176 regression aeat config bricked (wizard KeyError) -> #228 tracked (confirmed resolved)
 - CRITICAL M210 stub re-confirms #196 -> #196 tracked
-- CRITICAL Art. 13.1.h TRLIRNR vivienda vacia imputacion non-resident -> ORPHAN
-- HIGH Art. 25.1.b TRLIRNR tipo especial pension publica (7% not progressive) -> ORPHAN
-- HIGH Convenio Espana-Argentina absent (#198 cited; no exec dir) -> ORPHAN
+- CRITICAL Art. 13.1.h TRLIRNR vivienda vacia imputacion non-resident -> current M210 registry authors the legal/corpus/base primitives; plan reconciliation still needed before marking historical steps closed
+- HIGH Art. 25.1.b TRLIRNR tipo especial pension publica -> current M210 registry authors the 8%/30%/40% pension tariff and AR `DOMESTIC_TARIFF` delegation; plan reconciliation still needed before marking historical steps closed
+- HIGH Convenio Espana-Argentina absent (#198 cited; no exec dir) -> current M210 registry has `convenio-es-ar-1992:art-19`; plan reconciliation still needed before marking historical steps closed
 - HIGH Non-resident axis re-confirmed -> #197 tracked
 
 ### Round 27 - Maria Reverter (Fundacion Ley 49/2002)

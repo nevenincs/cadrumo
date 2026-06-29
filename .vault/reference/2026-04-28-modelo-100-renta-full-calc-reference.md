@@ -3,7 +3,7 @@ tags:
   - '#reference'
   - '#modelo-100-renta-full-calc'
 date: '2026-04-28'
-modified: '2026-04-28'
+modified: '2026-06-29'
 related:
   - "[[2026-04-27-modelo-100-renta-full-calc-research]]"
   - "[[2026-04-27-modelo-100-renta-full-calc-adr]]"
@@ -109,10 +109,13 @@ reducido).
 
 #### D simplificada — estimación directa simplificada (7 casillas: 3 inputs + 4 computed)
 
-RIRPF art. 30 5%/2.000 € cap on gastos de difícil justificación.
+RIRPF art. 30 general rate/cap on gastos de difícil justificación:
+5% for the current non-exception revisions in this manifest, capped
+at 2.000 €, with the rate read from the revision parameter so temporary
+legal exceptions such as LIRPF DA 56 for 2023 cannot be flattened.
 Casillas 0210 (ingresos), 0215 (gastos generales), 0235 (reducciones
 art. 32) → computed: 0220 (rendimiento previo al cap), 0225 (gastos
-difícil justificación = `min(0.05 * 0220, 2000.00)`), 0230
+difícil justificación = `min(rate_param * 0220, cap_param)`), 0230
 (rendimiento neto previo), 0240 (rendimiento neto reducido).
 
 #### D módulos — estimación objetiva (3 casillas: 2 inputs + 1 computed)
@@ -350,7 +353,8 @@ progressive_tarifa applications × 6 brackets each, plus the cuota
 chain).
 
 The 20 mul_div_scalar nodes fan out: 2 in Anexo B1 (slopes 1.75 +
-1.14 in art. 20 piecewise), 1 in D simplificada (0.05 in 5% cap),
+1.14 in art. 20 piecewise), 1 in D simplificada (revision-specific
+rate parameter for the RIRPF art. 30 / DA 56 difficult-expense cap),
 17 in G (rate literals across 3 progressive_tarifa applications).
 
 ## Out-of-scope (post-merge / separate issues)

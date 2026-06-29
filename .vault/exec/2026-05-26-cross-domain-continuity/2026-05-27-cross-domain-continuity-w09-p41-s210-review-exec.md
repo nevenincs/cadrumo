@@ -3,7 +3,7 @@ tags:
   - "#exec"
   - "#cross-domain-continuity"
 date: 2026-05-27
-modified: '2026-05-27'
+modified: '2026-06-29'
 related:
   - "[[2026-05-26-cross-domain-continuity-W09-P41-S208]]"
   - "[[2026-05-26-cross-domain-continuity-P19-S210]]"
@@ -67,6 +67,8 @@ The tipo formula carries [ley-27-2014:art-29, ley-27-2014:art-30, ley-31-2022:ar
 
 The task brief requests ley-27-2014:art-29-1, ley-27-2014:art-29-2, and ley-49-2002:art-10. None are present. The registry uses article-level IDs (art-29) not paragraph-level (art-29-1, art-29-2) as a pre-existing convention -- this commit is consistent. ley-49-2002:art-10 is not registered in is.toml and is absent from tipo-gravamen-non-profit-special-regime legal_refs. Pre-existing provenance gap, not introduced here.
 
+2026-06-29 currentization: the paragraph-level reference convention remains unchanged, but the regime-specific gap is closed. `ley-49-2002:art-10` is registered in `is.toml`, backed by bundled corpus excerpt `corpus/normatives/html/ley-49-2002-art-10.html#a10`, and cited by the non-profit 10% scalar parameter, its cuota bracket, and the 00558/00562 formulas.
+
 **CQ4 -- Cross-cut with #183 and #234**
 
 
@@ -97,7 +99,7 @@ Sergio shape (INCN 4.2M -> 25): Covered by test_tipo_gravamen_dispatch_routes_ge
 Aitor shape (SAL, INCN 850k -> 23): Directly exercised by test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m.
 
 
-Maria shape (sin_fines_lucrativos -> 10): Covered by pre-existing test_tipo_gravamen_dispatch_routes_00558_by_legal_entity_form (INCN 10M, above ERD threshold). No new test asserts sin_fines_lucrativos + INCN < 1M -> 10 (not 23). Minor gap -- see TIPO-001.
+Maria shape (sin_fines_lucrativos -> 10): Covered by pre-existing test_tipo_gravamen_dispatch_routes_00558_by_legal_entity_form (INCN 10M, above ERD threshold). 2026-06-29 currentization adds test_nonprofit_special_regime_stays_at_10_percent_inside_erd_threshold for sin_fines_lucrativos + INCN 500k -> 10 and cuota 100.000 on a 1.000.000 base.
 
 
 New-entity shape (new-entity = True -> 15): Directly exercised by test_new_entity_flag_overrides_erd_threshold (SL, INCN 200k, flag = 1 -> 15).
@@ -114,16 +116,16 @@ test_tipo_gravamen_dispatch_routes_general_25_when_incn_at_or_above_1m uses INCN
 ### Findings
 
 
-**TIPO-001 | LOW | Missing sin_fines_lucrativos oracle in ERD lane**
+**TIPO-001 | RESOLVED 2026-06-29 | sin_fines_lucrativos oracle covers ERD lane**
 
 
-No test asserts sin_fines_lucrativos + INCN < 1M -> 10% (not 23%). The dispatch table routes correctly by construction; the pre-existing INCN 10M test covers the general-lane non-profit path. A dedicated ERD-lane test for this form would complete the four-persona oracle matrix (Sergio / Aitor / Maria / new-entity). Correctness is assured by table inspection; this is oracle documentation debt.
+Resolved by test_nonprofit_special_regime_stays_at_10_percent_inside_erd_threshold, which calculates the real Modelo 200 snapshot for sin_fines_lucrativos with INCN 500k and asserts 00558 = 10 and 00562 = 100.000 on a 1.000.000 base. The Maria oracle now covers both the general lane and the ERD-threshold lane.
 
 
-**TIPO-002 | LOW | ley-49-2002:art-10 absent from non-profit parameter legal_refs**
+**TIPO-002 | RESOLVED 2026-06-29 | ley-49-2002:art-10 registered for non-profit rate**
 
 
-is.modelo-200.tipo-gravamen-non-profit-special-regime cites only ley-27-2014:art-29. The task brief names ley-49-2002:art-10 as the authority for the Maria 10% rate. Pre-existing gap not introduced by this commit. A follow-up should register ley-49-2002:art-10 in is.toml and add it to the non-profit parameter legal_refs.
+Resolved by registering `ley-49-2002:art-10` in the IS legal catalogue and adding the bundled BOE corpus excerpt verified against BOE-A-2002-25039 art. 10. The reference is now carried by `is.modelo-200.tipo-gravamen-non-profit-special-regime`, `is.modelo-200.cuota-integra-bracket-non-profit-special-regime`, the tipo-gravamen formula, the cuota-integra formula, the Modelo 200 completeness manifest, the revision, and the foundation construct.
 
 
 **TIPO-003 | LOW | Paragraph-level art refs (art-29-1, art-29-2) not used**
@@ -147,4 +149,4 @@ Two source citations on existing SAL-related bindings had required_text correcte
 **PASS** -- No CRITICAL or HIGH issues. The three-lane tipo formula is correctly structured. The ERD 23% rate is properly scoped to INCN < 1M for general-rate forms only. Special regimes (cooperative 20%, non-profit 10%) are preserved across all three lanes. The new-entity override takes unconditional priority. The anti-tautology boundary test is present and effective. Four LOW findings are all pre-existing gaps or minor oracle coverage notes; none block merge.
 
 
-Follow-up recommended (non-blocking): add explicit sin_fines_lucrativos + INCN < 1M -> 10% oracle test; register ley-49-2002:art-10 in is.toml and on the non-profit parameter.
+Follow-up recommended (non-blocking): decide whether the registry should introduce paragraph-level LIS identifiers such as `ley-27-2014:art-29-1` and `ley-27-2014:art-29-2`, or keep the current article-level convention.

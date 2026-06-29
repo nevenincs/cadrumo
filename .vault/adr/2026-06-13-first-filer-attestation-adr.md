@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#first-filer-attestation'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-29'
 related:
   - "[[2026-06-12-first-filer-attestation-research]]"
   - "[[2026-06-12-first-filer-attestation-adr]]"
@@ -105,10 +105,13 @@ revision.
 The legal reality is unchanged and remains the foundation. Spanish tax law does
 not require a first-period filer to have filed anything for periods before
 activity began. The Modelo 130 obligation arises from carrying on economic
-activity (RD 439/2007 art. 110, cumulative-from-start-of-activity computation);
-the resultados-negativos-anteriores carry is a same-ejercicio prior-quarter carry
-only (RD 439/2007 art. 110.5; `max_year_delta = 0`), so a quarter before activity
-began has no prior saldo - the carry is null, not unevidenced. The Modelo 100
+activity (RD 439/2007 art. 110, cumulative-from-start-of-activity payment
+framework); the resultados-negativos-anteriores carry is a same-ejercicio
+prior-quarter carry only (`max_year_delta = 0`), so a quarter before activity
+began has no prior saldo - the carry is null, not unevidenced. Current
+verification on 2026-06-29 rejects the old `RD 439/2007 art. 110.5` premise: the
+current BOE consolidated art. 110 has no vigente apartado 5, and the casilla 15
+mechanics are grounded in AEAT Modelo 130 instructions. The Modelo 100
 prior-year-negative carry cites Ley 35/2006 art. 48; a first-year filer has no
 prior ejercicio that could have generated the saldo.
 
