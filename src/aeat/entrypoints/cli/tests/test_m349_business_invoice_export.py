@@ -167,7 +167,17 @@ def test_m349_business_invoices_persist_and_export_operador_rows(tmp_path: Path)
     assert calculated.exit_code == 0, calculated.output
     assert "casilla\tdecl.numero-operadores\t4" in calculated.output
     assert "casilla\tdecl.importe-operaciones\t28700.00" in calculated.output
-    assert len([line for line in calculated.output.splitlines() if line.startswith("detail_row\t")]) == 4
+    detail_lines = [line for line in calculated.output.splitlines() if line.startswith("detail_row\t")]
+    assert len(detail_lines) == 4
+    assert any(
+        "codigo_pais=DE" in line
+        and "nif_comunitario=DE123456789" in line
+        and "clave_operacion=E" in line
+        and "importe=1000.00" in line
+        for line in detail_lines
+    ), calculated.output
+    assert "casilla\tiva-349-operador-row" not in calculated.output
+    assert "casilla\ttipo2." not in calculated.output
 
     verified = _invoke(
         [
