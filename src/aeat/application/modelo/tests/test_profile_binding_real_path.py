@@ -101,7 +101,7 @@ def _full_m100_profile() -> UserProfileRecord:
             # 0010 renta-2025-profile-taxpayer-sex
             UserProfileFact(path="renta_taxpayer.sex", value="H"),
             # 0011 renta-2025-profile-marital-status
-            UserProfileFact(path="renta_taxpayer.marital_status", value="casado"),
+            UserProfileFact(path="renta_taxpayer.marital_status", value="2"),
             # 0045 renta-2025-profile-marriage-full-year (derived from marriage_date at bind time)
             # 0046 renta-2025-profile-marriage-month-start
             # 0047 renta-2025-profile-marriage-month-end
