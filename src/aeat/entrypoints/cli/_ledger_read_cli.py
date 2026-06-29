@@ -595,6 +595,8 @@ def _register_ledger_view_command(app: typer.Typer, *, resolve_transaction_id: R
             f"\t{_field(transaction_payload.business_classification)}",
             f"{tr('cli.ledger.labels.business_pct', default='Business %')}\t{_field(transaction_payload.business_pct)}",
             f"{tr('cli.ledger.labels.category_id', default='Category')}\t{_field(transaction_payload.category_id)}",
+            f"{tr('cli.ledger.labels.usage_ratio_id', default='Usage ratio id')}"
+            f"\t{_field(transaction_payload.usage_ratio_id)}",
             f"{tr('cli.ledger.labels.taxable_base', default='Taxable base')}"
             f"\t{_field(transaction_payload.taxable_base)}",
             f"{tr('cli.ledger.labels.iva_rate', default='IVA rate')}\t{_field(transaction_payload.iva_rate)}",
