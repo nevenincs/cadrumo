@@ -11,6 +11,9 @@ legal_refs = [
     "ley-27-2014:art-19",
     "ley-58-2003:art-93",
 ]
+orden_aplicabilidad = [
+    "orden-hfp-816-2017:art-1",
+]
 source_refs = [
     "aeat-dr-232-2018",
     "aeat-modelo-232-procedure",
