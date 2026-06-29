@@ -1,9 +1,8 @@
 """Opt-in live integration test for the Anthropic provider adapter.
 
-Performs a tiny real round trip against the Anthropic API when
-``AEAT_LLM_ANTHROPIC_API_KEY`` is configured; the test self-skips
-otherwise. Tagged ``aeat_live`` so it is excluded from the default unit
-test selection.
+Performs a tiny real round trip against the Anthropic API. Tagged
+``aeat_live`` so it is excluded from the default unit test selection; after
+live opt-in, missing provider credentials are a failing prerequisite.
 """
 
 from __future__ import annotations
@@ -15,6 +14,7 @@ import pytest
 from pydantic_settings import SettingsConfigDict
 
 from .....core.config import Settings
+from .....tests.live_gate import requires_live_enabled
 from .. import LLMClient, LLMRequest
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
@@ -27,12 +27,13 @@ class _LiveSettings(Settings):
 def test_live_anthropic_round_trip(tmp_path: Path) -> None:
     """Run a tiny Anthropic round trip when live testing is explicitly enabled."""
 
+    requires_live_enabled()
     settings = _LiveSettings(
         aeat_llm_cache_dir=tmp_path / "cache",
         aeat_llm_usage_dir=tmp_path / "usage",
     )
     if settings.aeat_llm_anthropic_api_key is None:
-        pytest.skip("AEAT_LLM_ANTHROPIC_API_KEY is not configured.")
+        pytest.fail("AEAT_LLM_ANTHROPIC_API_KEY is not configured after live opt-in.")
     client = LLMClient(settings=settings)
     response = asyncio.run(
         client.complete(

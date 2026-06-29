@@ -192,7 +192,7 @@ _M390_PREVIOUS_FILING_BINDING_IDS = (
 
 _COMPUTED_CASILLAS_M115: frozenset[CasillaId] = _casilla_ids("03", "05")
 
-_COMPUTED_CASILLAS_M123_2019: frozenset[CasillaId] = _casilla_ids("06-legacy", "08-legacy")
+_COMPUTED_CASILLAS_M123_2019: frozenset[CasillaId] = _casilla_ids("06", "08")
 
 _COMPUTED_CASILLAS_M123_2024: frozenset[CasillaId] = _casilla_ids("03", "06", "09", "12", "14")
 

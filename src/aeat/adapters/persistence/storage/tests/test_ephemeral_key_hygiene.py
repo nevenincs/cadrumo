@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import ast
-from collections.abc import Mapping
 from functools import cache
 from pathlib import Path
 from typing import NamedTuple
@@ -72,13 +71,11 @@ _INJECTION_KEYWORDS: frozenset[str] = frozenset(
 )
 
 
-def test_ephemeral_master_key_tests_isolate_default_secure_object_repository(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
+def test_ephemeral_master_key_tests_isolate_default_secure_object_repository() -> None:
     """Ephemeral keys must not write through the process-default SQL repository."""
 
     violations: list[_Violation] = []
-    for _path, relative_path, tree in _iter_test_module_trees(source_tree_ast):
+    for _path, relative_path, tree in _iter_test_module_trees():
         if not _uses_ephemeral_master_key(tree):
             continue
         risky_calls = _default_sql_backed_constructor_calls(tree)
@@ -97,11 +94,11 @@ def test_ephemeral_master_key_tests_isolate_default_secure_object_repository(
     )
 
 
-def test_database_operating_passphrases_use_core_test_setting(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_database_operating_passphrases_use_core_test_setting() -> None:
     """Database-backed tests must not carry local master-key passphrase literals."""
 
     violations: list[str] = []
-    for _path, relative_path, tree in _iter_test_module_trees(source_tree_ast):
+    for _path, relative_path, tree in _iter_test_module_trees():
         if not _operates_database_storage(tree):
             continue
         for node in ast.walk(tree):
@@ -123,11 +120,11 @@ def test_database_operating_passphrases_use_core_test_setting(source_tree_ast: M
     )
 
 
-def _iter_test_module_trees(source_tree_ast: Mapping[Path, ast.AST]) -> tuple[tuple[Path, str, ast.AST], ...]:
+def _iter_test_module_trees() -> tuple[tuple[Path, str, ast.AST], ...]:
     modules: list[tuple[Path, str, ast.AST]] = []
     for path in _iter_test_modules():
         relative_path = repo_relative(path)
-        tree = ast_for_path(path, source_tree_ast)
+        tree = ast_for_path(path)
         assert tree is not None, f"{relative_path} must be parseable"
         modules.append((path, relative_path, tree))
     return tuple(modules)

@@ -4,8 +4,8 @@ Drives :func:`aeat.adapters.outbound.aeat.auth.load_certificate` and
 :func:`aeat.adapters.outbound.aeat.auth.verify_handshake` against the real AEAT
 verify URL. Gated on ``AEAT_LIVE_TESTS_ENABLED=1`` and the certificate
 environment variables being set on
-:class:`aeat.core.config.Settings`; skips cleanly in every other
-configuration so CI never fails when credentials are unavailable.
+:class:`aeat.core.config.Settings`; after live opt-in, missing certificate
+configuration is a failing prerequisite.
 Contains zero test doubles.
 """
 
@@ -28,7 +28,7 @@ pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
 def test_verify_handshake_live_against_aeat() -> None:
     """Load the operator's certificate and hit the configured AEAT verify URL.
 
-    Skips when ``AEAT_LIVE_TESTS_ENABLED`` is not ``"1"`` or the
+    Deselected when ``AEAT_LIVE_TESTS_ENABLED`` is not ``"1"``; fails when the
     certificate path / password env vars are unset on
     :class:`aeat.core.config.Settings`.
     """
@@ -36,7 +36,7 @@ def test_verify_handshake_live_against_aeat() -> None:
 
     settings = Settings()
     if settings.aeat_certificate_path is None or settings.aeat_certificate_password_secret is None:
-        pytest.skip("AEAT certificate env vars are not fully configured")
+        pytest.fail("AEAT certificate env vars are not fully configured after live opt-in")
 
     bundle = CertificateBundle(
         path=settings.aeat_certificate_path,

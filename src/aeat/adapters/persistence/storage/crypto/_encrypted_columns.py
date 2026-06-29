@@ -145,11 +145,11 @@ def decrypt_encrypted_bytes_column(wire: bytes) -> bytes:
 
 
 def decrypt_encrypted_string_column(wire: bytes) -> str:
-    """Decrypt one legacy ``EncryptedString`` on-wire payload.
+    """Decrypt one ``EncryptedString`` on-wire payload.
 
     New lookup columns should use :class:`HashedLookup`; the
     secure-object repository uses this helper only to migrate rows
-    written by the old randomized ``object_key`` mapper into
+    written by the randomized ``object_key`` mapper into
     deterministic lookup digests.
     """
     blob = EncryptedBlob.from_wire(wire)
@@ -158,7 +158,7 @@ def decrypt_encrypted_string_column(wire: bytes) -> str:
     try:
         return plaintext.decode("utf-8")
     except UnicodeDecodeError as exc:
-        raise DecryptionError("legacy EncryptedString payload is not valid UTF-8") from exc
+        raise DecryptionError("EncryptedString payload is not valid UTF-8") from exc
 
 
 _HASHED_LOOKUP_DIGEST_SIZE = 32

@@ -1,10 +1,14 @@
-"""Outbound adapter layer.
+"""Outbound adapter namespace for external service integrations.
 
-Hosts adapters that drive external systems on behalf of the domain.
-Submodules group adapters by external counterpart, currently
-:mod:`aeat.adapters.outbound.aeat` for the Spanish tax administration
-portal.
+This package root exports no provider classes. Focused child packages group
+concrete integrations by external counterpart: :mod:`aeat.adapters.outbound.aeat`
+for AEAT Sede authentication, browser, read, verify, and export adapters;
+:mod:`aeat.adapters.outbound.google` for Google-backed collaboration services;
+:mod:`aeat.adapters.outbound.llm` for model-provider completion adapters;
+:mod:`aeat.adapters.outbound.fx` for exchange-rate acquisition; and
+:mod:`aeat.adapters.outbound.storage` for outbound storage synchronisation.
 
-This module uses ``AeatSession``, ``AuthProvider``,
-``BrowserSessionFactory``, and ``GoogleService`` for external integration.
+Application-layer facades define the stable protocols and operator actions.
+Outbound adapters provide concrete implementations without becoming import-time
+dependencies of state-free command paths.
 """
