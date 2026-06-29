@@ -399,6 +399,52 @@ def test_modelo_readiness_refuses_period_without_registry_coverage() -> None:
     assert "aeat app modelo describe 210" in flat
 
 
+def test_describe_m210_accepts_declared_event_token_with_year_scope() -> None:
+    """M210 describe accepts the registry-declared ``evento`` period token."""
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "describe",
+            "210",
+            "--year",
+            "2026",
+            "--period",
+            "evento",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "Invalid value" not in result.output
+    assert "Modelo\t210" in result.output
+    assert "Revision\t2025" in result.output
+    assert "Periods\tevento" in result.output
+
+
+def test_describe_m210_still_rejects_undeclared_event_token_with_year_scope() -> None:
+    """M210 describe still refuses tokens the registry does not declare."""
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "describe",
+            "210",
+            "--year",
+            "2026",
+            "--period",
+            "not-evento",
+        ],
+    )
+
+    assert result.exit_code != 0, result.output
+    flat = result.output.replace("\n", " ")
+    assert "Traceback" not in flat
+    assert "evento" in flat
+    assert "not-evento" in flat
+
+
 def test_bindings_list_m210_event_token_refuses_as_unsupported_local_work() -> None:
     """M210's registry ``evento`` token must not produce contradictory period guidance."""
 
