@@ -114,6 +114,48 @@ def test_ledger_add_accepts_and_persists_iva_category() -> None:
     assert viewed_transaction["iva_category"] == "domestic_general_21"
 
 
+def test_ledger_add_accepts_and_persists_counterparty_eu_member_state() -> None:
+    _create_active_profile()
+
+    added = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2025-01-01",
+            "--amount",
+            "1000",
+            "--direction",
+            "INCOMING",
+            "--description",
+            "intra-community supply",
+            "--classification",
+            "BUSINESS",
+            "--taxable-base",
+            "1000",
+            "--iva-rate",
+            "0",
+            "--iva-amount",
+            "0",
+            "--iva-category",
+            "intra_community_supply",
+            "--counterparty-eu-member-state",
+            "de",
+            "--source-jurisdiction",
+            "DE",
+        ],
+    )
+
+    assert added.exit_code == 0, added.output
+    transaction = _json(added)["transaction"]
+    assert transaction["iva_category"] == "intra_community_supply"
+    assert transaction["counterparty_eu_member_state"] == "de"
+    assert transaction["source_jurisdiction"] == "DE"
+
+
 def test_ledger_view_text_shows_usage_ratio_id_when_present() -> None:
     _create_active_profile()
 
