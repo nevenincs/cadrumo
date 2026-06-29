@@ -129,6 +129,13 @@ def test_modelo_180_validated_snapshot_gates_workflow_surfaces_for_annual_summar
         period=period,
     )
 
+    if filing_year <= 2022:
+        assert snapshot.revision.orden_aplicabilidad == ("orden-hap-1732-2014:art-2",)
+    else:
+        assert snapshot.revision.orden_aplicabilidad == (
+            "orden-hap-1732-2014:art-2",
+            "orden-hfp-1284-2023:art-7",
+        )
     construct = snapshot.revision.constructs[0]
     linked_by_surface = {
         link.surface: link for link in snapshot.revision.application_links if link.id in construct.application_links
