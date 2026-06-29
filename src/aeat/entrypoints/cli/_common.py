@@ -8,6 +8,13 @@ accessors return typed domain objects: :class:`TransactionCatalogue` and
 invoice data, :class:`ModeloDraft` for in-progress modelo drafts, and
 :class:`TaxpayerProfile` for deadline and period calculations.
 
+The output boundary has two paths. Legacy/exempt surfaces call :func:`_emit`,
+which delegates to :func:`~aeat.core.output_rendering.render_command_output`.
+Envelope-aware command handlers call :func:`_emit_envelope`, which routes JSON
+through :class:`~aeat.core.json_contract.SchemaEnvelope` and carries typed
+:class:`~aeat.core.json_contract.Notice` diagnostics while preserving the text
+line iterator unchanged.
+
 Application-layer and domain symbols are imported lazily inside each
 helper to avoid pulling the registry parse into fast-path commands such
 as ``aeat --version``.
@@ -67,7 +74,12 @@ def _format_of(ctx: typer.Context) -> str:
 
 
 def _emit(ctx: typer.Context, payload: object, lines: Iterable[str]) -> None:
-    """Render the result either as JSON or as line-formatted text."""
+    """Render a bare payload or text lines through the shared output renderer.
+
+    This helper is for documented non-envelope surfaces; registered command
+    results should use :func:`_emit_envelope` so their JSON path carries the
+    shared :class:`~aeat.core.json_contract.SchemaEnvelope` spine.
+    """
     rendered = render_command_output(format_name=_format_of(ctx), payload=payload, lines=lines)
     if rendered.text:
         typer.echo(rendered.text)
