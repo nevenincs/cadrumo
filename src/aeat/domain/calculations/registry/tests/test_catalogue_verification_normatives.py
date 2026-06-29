@@ -237,6 +237,36 @@ def test_orden_hac_242_2025_art_8_deadline_links_to_full_boe_corpus() -> None:
 
 
 @pytest.mark.parametrize(
+    ("ref_id", "corpus_ref", "document_id"),
+    (
+        ("orden-hac-248-2021:art-3", "corpus/normatives/html/orden-hac-248-2021.html#a3", "BOE-A-2021-4238"),
+        ("orden-hfp-207-2022:art-3", "corpus/normatives/html/orden-hfp-207-2022.html#a3", "BOE-A-2022-4296"),
+        ("orden-hfp-310-2023:art-3", "corpus/normatives/html/orden-hfp-310-2023.html#a3", "BOE-A-2023-8118"),
+        ("orden-hac-265-2024:art-3", "corpus/normatives/html/orden-hac-265-2024.html#a3", "BOE-A-2024-5721"),
+        ("orden-hac-242-2025:art-3", "corpus/normatives/html/orden-hac-242-2025.html#a3", "BOE-A-2025-5049"),
+    ),
+)
+def test_modelo_100_historical_form_order_refs_link_to_boe_corpus(
+    ref_id: str,
+    corpus_ref: str,
+    document_id: str,
+) -> None:
+    catalogues = _catalogues()
+    reference = catalogues.legal[ref_id]
+
+    assert reference.kind == "orden"
+    assert reference.article == "3"
+    assert reference.document_id == document_id
+    assert reference.corpus_ref == corpus_ref
+    assert reference.required_text == (
+        "Artículo 3",
+        "modelo D-100",
+        "Modelo 100. Documento de ingreso o devolución",
+    )
+    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+
+
+@pytest.mark.parametrize(
     ("ref_id", "article", "corpus_ref"),
     (
         ("orden-hac-248-2021:art-10", "10", "corpus/normatives/html/orden-hac-248-2021.html#a1-2"),
