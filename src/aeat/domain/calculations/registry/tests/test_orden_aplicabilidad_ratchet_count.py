@@ -5,7 +5,7 @@ follow-up (advisory) population to shrink monotonically. This test loads the
 REAL registry and counts every revision that produces a follow-up item, then
 asserts the count is at or below the ceiling N.
 
-N is pinned at the CURRENT count (17 as of 2026-06-29). DO NOT raise N. Only
+N is pinned at the CURRENT count (16 as of 2026-06-29). DO NOT raise N. Only
 lower it as backfill progresses. The gate exists to ensure the unstamped
 pre-ratchet population can only ratchet DOWN.
 
@@ -35,7 +35,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # Lower it as follow-up backfill progresses.
 # Current as of 2026-06-29 (legal-grounding gap discovery pass).
 # ---------------------------------------------------------------------------
-_FOLLOW_UP_COUNT_CEILING: int = 17
+_FOLLOW_UP_COUNT_CEILING: int = 16
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 
