@@ -7,11 +7,13 @@ imported lazily, so the core CLI builds and runs without it.
 
 This module is the single source of truth for those extras. It lives in ``core``
 — the innermost layer — so an adapter can guard its own external-library import
-without importing the application layer, and the doctor (application) can probe
-the same registry. :func:`require_optional_extra` is the seam every feature
-boundary calls before its lazy import so a missing extra becomes one instructive
-:class:`MissingOptionalExtraError` naming ``pip install aeat[<extra>]`` instead of
-a raw deep-stack ``ModuleNotFoundError``.
+without importing the application layer, and the application doctor can probe the
+same :data:`OPTIONAL_EXTRAS` registry through
+:func:`aeat.application.provisioning.probe_optional_extra`. :func:`require_optional_extra`
+is the seam every feature boundary calls before its lazy import so a missing
+extra becomes one instructive :class:`MissingOptionalExtraError` naming
+``pip install aeat[<extra>]`` instead of a raw deep-stack
+``ModuleNotFoundError``.
 """
 
 from __future__ import annotations
@@ -36,7 +38,13 @@ __all__ = [
 
 
 class OptionalExtra(BaseModel):
-    """A capability-gated optional package extra and how to probe/install it."""
+    """A capability-gated optional package extra and how to probe/install it.
+
+    Attributes:
+        extra: The ``[project.optional-dependencies]`` key.
+        import_name: Importable package/module name used by the spec-only probe.
+        feature: Human-readable feature label used in refusals and doctor rows.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -66,7 +74,9 @@ class MissingOptionalExtraError(CoreError, ImportError):
     Descends from :class:`~aeat.core.errors.CoreError` so the project-wide
     :class:`~aeat.core.errors.AeatError` boundary sees the refusal, and from
     :class:`ImportError` so adapters that already catch import failures keep
-    working.
+    working. Application probes report the same missing package as a
+    :class:`aeat.application.provisioning.DependencyStatus`; feature guards raise
+    this exception only when the operator reaches the guarded boundary.
     """
 
     def __init__(self, extra: OptionalExtra) -> None:
@@ -88,6 +98,13 @@ def optional_extra_available(extra: OptionalExtra) -> bool:
     A spec-only check (:func:`importlib.util.find_spec`) — no side effects, no
     heavy module load. Never raises: a missing parent package resolves to
     ``False``.
+
+    Args:
+        extra: The :class:`OptionalExtra` registry record to probe.
+
+    Returns:
+        ``True`` when ``extra.import_name`` has an import spec; otherwise
+        ``False``.
     """
     try:
         return importlib.util.find_spec(extra.import_name) is not None
@@ -101,6 +118,12 @@ def require_optional_extra(extra: OptionalExtra) -> None:
     Call this at a feature boundary, immediately before the lazy import of the
     extra's package, so a missing extra becomes a single actionable message
     instead of a raw deep-stack ``ModuleNotFoundError``.
+
+    Args:
+        extra: The :class:`OptionalExtra` required by the feature boundary.
+
+    Raises:
+        MissingOptionalExtraError: If ``extra.import_name`` is not importable.
     """
     if not optional_extra_available(extra):
         raise MissingOptionalExtraError(extra)
