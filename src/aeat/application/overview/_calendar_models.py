@@ -7,6 +7,11 @@ The models separate legal obligation rows
 :class:`OverviewLocalFilingState` distinct from
 :class:`OverviewAeatSubmissionState` so local readiness, AEAT submission,
 and justificante verification remain auditable independent axes.
+
+These DTOs are consumed by :func:`aeat.application.overview.build_overview_calendar`
+and serialized by the overview CLI payload layer. Period-bearing models hydrate
+serialized :class:`~aeat.core.Period` values back into typed periods so merge
+keys stay aligned with the registry-token authority.
 """
 
 from __future__ import annotations
@@ -26,14 +31,14 @@ from ...domain.deadlines import Recovery as _Recovery
 
 
 def _period_from_serialized(value: object) -> object:
-    """Hydrate the display string emitted by overview JSON serializers."""
+    """Hydrate overview JSON period strings into :class:`~aeat.core.Period`."""
     if isinstance(value, str):
         return _Period.from_string(value)
     return value
 
 
 class OverviewPeriodState(StrEnum):
-    """Closed 4-state user-facing period state for the calendar view."""
+    """Closed user-facing state derived from deadline obligation status."""
 
     DUE = "due"
     LATE = "late"
@@ -42,7 +47,7 @@ class OverviewPeriodState(StrEnum):
 
 
 class OverviewCensoEnrolmentState(StrEnum):
-    """Live censo provenance state for one calendar obligation."""
+    """Live Modelo 036 / censo provenance state for one calendar obligation."""
 
     NOT_CHECKED = "not_checked"
     NOT_REQUIRED = "not_required"
@@ -51,7 +56,12 @@ class OverviewCensoEnrolmentState(StrEnum):
 
 
 class OverviewLocalFilingState(StrEnum):
-    """Local application-side filing readiness for a calendar obligation."""
+    """Local application-side filing axis for one calendar obligation.
+
+    These values describe the application's internal filing lifecycle only.
+    They are intentionally separate from :class:`OverviewAeatSubmissionState`
+    so a ready or imported local record cannot imply official AEAT submission.
+    """
 
     NOT_READY_TO_FILE = "not_ready_to_file"
     READY_TO_FILE = "ready_to_file"
@@ -59,7 +69,13 @@ class OverviewLocalFilingState(StrEnum):
 
 
 class OverviewAeatSubmissionState(StrEnum):
-    """Observed AEAT-side submission evidence for a calendar obligation."""
+    """Observed AEAT-side submission evidence for one calendar obligation.
+
+    :attr:`OverviewAeatSubmissionState.NOT_OBSERVED` is the default until
+    already-loaded official evidence proves a submitted, accepted, or
+    justificante-verified state. Overview calendar commands never create this
+    evidence by contacting AEAT.
+    """
 
     NOT_OBSERVED = "not_observed"
     SUBMITTED_OBSERVED = "submitted_observed"
@@ -80,12 +96,17 @@ _USER_STATE_FOR_OBLIGATION_STATUS: MappingProxyType[_ObligationStatus, OverviewP
 
 
 def user_state_for(obligation_status: _ObligationStatus) -> OverviewPeriodState:
-    """Return the :class:`OverviewPeriodState` for an engine status."""
+    """Return the :class:`OverviewPeriodState` for a deadline engine status."""
     return _USER_STATE_FOR_OBLIGATION_STATUS[obligation_status]
 
 
 class OverviewCalendarRange(BaseModel):
-    """Inclusive date window for the ``overview calendar`` query."""
+    """Inclusive date window for the ``overview calendar`` query.
+
+    :func:`aeat.application.overview.build_overview_calendar` expands the
+    window to the covered filing years and filters legal obligation rows back to
+    this inclusive range.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -110,9 +131,11 @@ class OverviewCalendarFilingEvidence(BaseModel):
     """Filing evidence attached to one legal calendar obligation.
 
     The local fields describe the application's filing-record axis; the
-    AEAT fields describe observed submission evidence. Validators require
-    ``justificante_verified`` and ``verified_justificante_csv`` to agree
-    exactly with :attr:`OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED`.
+    AEAT fields describe observed submission evidence from persisted official
+    sources. Validators require ``justificante_verified`` and
+    ``verified_justificante_csv`` to agree exactly with
+    :attr:`OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED`, preventing a
+    malformed event from claiming receipt verification without CSV evidence.
     """
 
     model_config = _STRICT_FROZEN
@@ -166,7 +189,13 @@ class OverviewCalendarFilingEvidence(BaseModel):
 
 
 class OverviewCalendarEntry(BaseModel):
-    """One ``(modelo, period)`` row in the calendar view."""
+    """One legal ``(modelo, period)`` row in the calendar view.
+
+    The deadline fields mirror :class:`~aeat.domain.deadlines.ModeloDeadline`.
+    The optional :class:`OverviewCalendarFilingEvidence` row attaches local and
+    AEAT evidence without changing the legal deadline status from the deadline
+    engine.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -224,7 +253,7 @@ class OverviewCalendarEntry(BaseModel):
 
 
 class OverviewCalendarEventType(StrEnum):
-    """Observed local event types shown alongside legal filing windows."""
+    """Observed event categories shown alongside legal filing windows."""
 
     FILING = "filing"
     MESSAGE = "message"
@@ -233,9 +262,10 @@ class OverviewCalendarEventType(StrEnum):
 class OverviewCalendarEvent(BaseModel):
     """One observed local event attached to an overview calendar range.
 
-    Filing events may carry AEAT submission state when a persisted
-    snapshot already observed it, but messages and unverified filings can
-    remain event-only observations without implying receipt verification.
+    Filing events may carry :class:`OverviewAeatSubmissionState` when a
+    persisted snapshot already observed it. Messages and unverified filings
+    remain event-only observations and do not imply
+    :class:`OverviewCalendarFilingEvidence` or receipt verification.
     """
 
     model_config = _STRICT_FROZEN
@@ -306,7 +336,7 @@ class CalendarWarning(BaseModel):
 
 
 class CalendarCompleteness(BaseModel):
-    """Breakdown of which modelos are computed under explicit values vs defaults."""
+    """Breakdown of explicit profile values versus deadline-engine defaults."""
 
     model_config = _STRICT_FROZEN
 
@@ -317,7 +347,7 @@ class CalendarCompleteness(BaseModel):
 
 
 class SuppressedCalendarEntry(BaseModel):
-    """One filtered obligation when ``--show-suppressed`` is set."""
+    """One non-applicable obligation retained by ``--show-suppressed``."""
 
     model_config = _STRICT_FROZEN
 
@@ -337,7 +367,12 @@ class SuppressedCalendarEntry(BaseModel):
 
 
 class OverviewCalendar(BaseModel):
-    """Result of an ``aeat app overview calendar`` query."""
+    """Result of an ``aeat app overview calendar`` query.
+
+    ``entries`` contains legal filing windows, ``events`` contains additive
+    local observations, and ``suppressed_entries`` preserves filtered
+    applicability rows only when the caller explicitly requests them.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -353,7 +388,11 @@ class OverviewCalendar(BaseModel):
 
 
 class OverviewStatusReport(BaseModel):
-    """Current active-profile readiness counters for ``overview status``."""
+    """Current active-profile readiness counters for ``overview status``.
+
+    Produced from :class:`~aeat.application.state_projection.OperatorStateProjection`
+    by :func:`aeat.application.overview.overview_status_report_from_projection`.
+    """
 
     model_config = _STRICT_FROZEN
 
