@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 # tests only assert how the override helper carries Path values through
 # pydantic validation. Using a sentinel keeps Bandit B108 (probable
 # insecure /tmp usage) quiet for this pure-data flow.
-_FAKE_PATH_PREFIX = "non-existent-sentinel"
+_NONEXISTENT_PATH_PREFIX = "non-existent-sentinel"
 
 
 def _expected_path(*parts: str) -> Path:
@@ -40,13 +40,13 @@ def _expected_path(*parts: str) -> Path:
     validator normalises every configured path (drive-anchored,
     resolved), so assertions stay portable across POSIX and Windows."""
 
-    return resolve_project_path(Path(_FAKE_PATH_PREFIX, *parts))
+    return resolve_project_path(Path(_NONEXISTENT_PATH_PREFIX, *parts))
 
 
 def test_override_settings_swaps_scalar_field_inside_block() -> None:
     baseline_log_dir = load_settings().aeat_log_dir
 
-    target = Path(_FAKE_PATH_PREFIX, "aeat-test-logs")
+    target = Path(_NONEXISTENT_PATH_PREFIX, "aeat-test-logs")
     expected = _expected_path("aeat-test-logs")
     with override_settings(aeat_log_dir=target) as overridden:
         assert overridden.aeat_log_dir == expected
@@ -59,7 +59,7 @@ def test_override_settings_swaps_scalar_field_inside_block() -> None:
 def test_override_settings_restores_prior_value_on_normal_exit() -> None:
     baseline_log_dir = load_settings().aeat_log_dir
 
-    with override_settings(aeat_log_dir=Path(_FAKE_PATH_PREFIX, "scratch")):
+    with override_settings(aeat_log_dir=Path(_NONEXISTENT_PATH_PREFIX, "scratch")):
         assert load_settings().aeat_log_dir == _expected_path("scratch")
 
     # On exit the ContextVar is reset; the baseline default is
@@ -72,7 +72,7 @@ def test_override_settings_restores_prior_value_on_exception() -> None:
 
     baseline_log_dir = load_settings().aeat_log_dir
 
-    scratch = Path(_FAKE_PATH_PREFIX, "scratch")
+    scratch = Path(_NONEXISTENT_PATH_PREFIX, "scratch")
     with pytest.raises(RuntimeError, match="planned-failure"), override_settings(aeat_log_dir=scratch):
         assert load_settings().aeat_log_dir == _expected_path("scratch")
         raise RuntimeError("planned-failure")
@@ -101,8 +101,8 @@ def test_override_settings_nested_blocks_compose_lifo() -> None:
 
     baseline_log_dir = load_settings().aeat_log_dir
 
-    outer_path = Path(_FAKE_PATH_PREFIX, "outer")
-    inner_path = Path(_FAKE_PATH_PREFIX, "inner")
+    outer_path = Path(_NONEXISTENT_PATH_PREFIX, "outer")
+    inner_path = Path(_NONEXISTENT_PATH_PREFIX, "inner")
 
     with override_settings(aeat_log_dir=outer_path):
         assert load_settings().aeat_log_dir == _expected_path("outer")
@@ -126,7 +126,7 @@ def test_override_settings_preserves_explicit_fields_set_signal() -> None:
     baseline_explicit = set(baseline.model_fields_set)
     assert "aeat_log_dir" not in baseline_explicit
 
-    with override_settings(aeat_log_dir=Path(f"{_FAKE_PATH_PREFIX}/explicit")):
+    with override_settings(aeat_log_dir=Path(f"{_NONEXISTENT_PATH_PREFIX}/explicit")):
         overridden = load_settings()
         # The override key is now in the explicit set.
         assert "aeat_log_dir" in overridden.model_fields_set

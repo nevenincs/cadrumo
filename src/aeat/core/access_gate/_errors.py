@@ -10,6 +10,14 @@ have a single root they can catch at integration boundaries.
    ``core/`` must remain independent from adapter implementations.
 2. The policy "live AEAT submission is permanently forbidden" is
    a foundational invariant, not an adapter implementation detail.
+
+See Also:
+    :class:`aeat.core.access_gate.AeatAccessGate`
+        Gate that raises these errors from live-read and live-write checks.
+    :class:`LiveSubmitForbiddenError`
+        Permanent refusal raised by every attempted live AEAT write.
+    :mod:`aeat.adapters.outbound.aeat.export._submitters`
+        Empty adapter namespace kept free of remote submitter implementations.
 """
 
 from __future__ import annotations

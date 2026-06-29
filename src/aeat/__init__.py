@@ -1,15 +1,17 @@
-"""Top-level package for the AEAT (Agencia Estatal de Administración Tributaria) toolkit.
+"""Import-light root package for the AEAT toolkit.
 
-Exposes the ``__version__`` of the distribution. Subpackages provide the
-layered architecture: :mod:`aeat.adapters` (inbound / outbound integrations),
-:mod:`aeat.application` (use-cases), :mod:`aeat.domain` (pure rules),
-:mod:`aeat.entrypoints` (CLI / scripts), and :mod:`aeat.core`
-(cross-cutting infrastructure).
+The package root exposes only the distribution ``__version__``. Concrete
+capabilities live behind layer facades: :mod:`aeat.core` for shared primitives
+and runtime context, :mod:`aeat.domain` for business authorities,
+:mod:`aeat.application` for use-case orchestration, :mod:`aeat.adapters` for
+inbound, outbound, and persistence infrastructure, and :mod:`aeat.entrypoints`
+for operator transports such as the Typer CLI.
 
-The ``pikepdf._core`` bridge logger is silenced via the ``loggers`` block in
-:func:`aeat.core.logging.configure_logging` (dictConfig) rather than via a
-bootstrap-time ``setLevel`` call here. This keeps all logger-level policy in
-a single, auditable location.
+Importing ``aeat`` must not configure logging, load registries, open storage, or
+materialise browser/PDF integrations. The ``pikepdf._core`` bridge logger is
+silenced via the ``loggers`` block in
+:func:`aeat.core.logging.configure_logging` rather than by bootstrap-time side
+effects here, keeping logger policy in one auditable location.
 """
 
 __version__ = "0.1.0"
