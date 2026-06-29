@@ -8,7 +8,8 @@ Tests cover:
 - A dangling (non-existent) orden_aplicabilidad entry is a hard failure.
 - An orden_aplicabilidad entry present in the catalogue but absent from
   legal_refs is a hard failure.
-- Backfilled revisions (M100/2025, M130, M111, M123, M131, M303, M369)
+- Backfilled revisions (M100/2025, M130, M111, M123, M131, M232,
+  M303, M369)
   load from the committed registry without hard failures.
 - Open-ended *-y-siguientes revisions in the backfilled set have
   orden_aplicabilidad declared (connective gate).
@@ -319,6 +320,8 @@ def _committed_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCa
         ("184", "2015-y-siguientes"),
         ("190", "2024-y-siguientes"),
         ("193", "2024-y-siguientes"),
+        ("232", "2016-2017"),
+        ("232", "2018-y-siguientes"),
         ("303", "2023-y-siguientes"),
         ("303", "2009-y-siguientes"),
         ("322", "2008-y-siguientes"),
@@ -377,6 +380,7 @@ def test_backfilled_revision_has_valid_orden_aplicabilidad(modelo_id: str, revis
         ("184", "2015-y-siguientes"),
         ("190", "2024-y-siguientes"),
         ("193", "2024-y-siguientes"),
+        ("232", "2018-y-siguientes"),
         ("303", "2023-y-siguientes"),
         ("303", "2009-y-siguientes"),
         ("322", "2008-y-siguientes"),
