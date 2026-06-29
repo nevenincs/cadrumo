@@ -25,6 +25,7 @@ from ....core.config import (
 )
 from ....core.external_constants import DEFAULT_OUTPUT_LANGUAGE
 from ....core.logging import get_logger
+from ....core.storage_route_guidance import EXPLICIT_DATABASE_URL_PROFILE_RECOVERY
 from ....core.time import now as _utc_now
 from ._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .errors import (
@@ -64,6 +65,7 @@ class StorageRuntimeReadinessIssue(BaseModel):
     code: StorageRuntimeReadinessCode
     message_key: str = Field(min_length=1)
     message: str = Field(min_length=1)
+    recovery_hint: str = ""
 
 
 class StorageRuntimeSession(BaseModel):
@@ -114,9 +116,13 @@ class StorageRuntime(BaseModel):
         details = "; ".join(issue.message for issue in self.readiness.issues)
         if not details:
             details = "storage runtime reported no detailed readiness issue."
+        context: dict[str, object] = {"details": _render_readiness_details(self.readiness.issues)}
+        recovery = _render_recovery_hints(self.readiness.issues)
+        if recovery:
+            context["recovery"] = recovery
         raise StorageValidationError(
             f"storage runtime is not ready for profile-bound storage: {details}",
-            context={"details": _render_readiness_details(self.readiness.issues)},
+            context=context,
             translated_message="errors.storage.runtime.not_ready",
         )
 
@@ -191,8 +197,14 @@ def _readiness_issue(
     code: StorageRuntimeReadinessCode,
     message: str,
     message_key: str,
+    recovery_hint: str = "",
 ) -> StorageRuntimeReadinessIssue:
-    return StorageRuntimeReadinessIssue(code=code, message=message, message_key=message_key)
+    return StorageRuntimeReadinessIssue(
+        code=code,
+        message=message,
+        message_key=message_key,
+        recovery_hint=recovery_hint,
+    )
 
 
 def _render_readiness_details(issues: tuple[StorageRuntimeReadinessIssue, ...]) -> str:
@@ -203,6 +215,11 @@ def _render_readiness_details(issues: tuple[StorageRuntimeReadinessIssue, ...]) 
     if not rendered:
         return tr("errors.storage.runtime.no_detail", locale=locale)
     return "; ".join(rendered)
+
+
+def _render_recovery_hints(issues: tuple[StorageRuntimeReadinessIssue, ...]) -> str:
+    rendered = tuple(dict.fromkeys(issue.recovery_hint for issue in issues if issue.recovery_hint))
+    return " ".join(rendered)
 
 
 def _settings_output_language() -> str:
@@ -282,11 +299,20 @@ def inspect_storage_runtime(
             )
 
     if route.kind is not StorageRouteKind.ACTIVE_BUCKET_DATABASE:
+        recovery_hint = (
+            EXPLICIT_DATABASE_URL_PROFILE_RECOVERY
+            if route.kind is StorageRouteKind.EXPLICIT_DATABASE_URL
+            else ""
+        )
+        message = "the primary database route is not attached to an active profile bucket."
+        if recovery_hint:
+            message = f"{message} {recovery_hint}"
         issues.append(
             _readiness_issue(
                 code=StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET,
                 message_key="errors.storage.runtime.route_not_active_bucket",
-                message="the primary database route is not attached to an active profile bucket.",
+                message=message,
+                recovery_hint=recovery_hint,
             ),
         )
     elif (

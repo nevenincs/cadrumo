@@ -196,6 +196,8 @@ def test_guarded_write_verbs_refuse_explicit_database_url(tmp_path: Path, verb: 
     output = _combined_output(result)
     assert "Storage runtime is not ready" in output
     assert "database route is not attached to an active profile bucket" in output
+    assert "AEAT_DATABASE_URL" in output
+    assert "AEAT_LOCAL_STORAGE_ROOT" in output
     assert not (tmp_path / "explicit.db").exists()
 
 
