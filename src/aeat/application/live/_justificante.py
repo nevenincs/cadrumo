@@ -20,6 +20,24 @@ The captured PDF bytes ride inside the encrypted snapshot :class:`Envelope`
 as a base64 ``str`` (binary cannot survive the JSON envelope verbatim); the
 raw-bytes ``pdf_sha256`` is the content address used for snapshot-id
 derivation and dedup.
+
+See Also:
+    :mod:`aeat.application.live`
+        Public read-only live facade that orchestrates capture and reports
+        :class:`~aeat.application.live.JustificanteCaptureOutcome`.
+    :func:`aeat.application.live._filed_observation_persistence.enroll_filed_justificante_evidence`
+        Filed-history path that performs the same metadata registration and
+        current-record evidence stamping from declaration-register artefacts.
+    :mod:`aeat.application.overview`
+        Calendar projection that reads :class:`JustificanteCaptureSnapshot`
+        rows and matching domain justificante metadata as AEAT-side evidence.
+    :class:`aeat.application.live._snapshot_base.SecureSnapshotRepository`
+        Shared encrypted snapshot repository used by this bucket-scoped
+        capture repository.
+    :class:`~aeat.domain.modelos.ModeloRecord`
+        Local filing record stamped with live
+        :class:`~aeat.domain.modelos.ExternalEvidence` only after the receipt
+        matches the current filing axis.
 """
 
 from __future__ import annotations

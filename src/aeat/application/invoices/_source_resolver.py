@@ -1,8 +1,21 @@
-"""Source-mesh resolver for the governed invoice catalogue.
+"""Source-mesh resolver for governed invoice records.
 
-:class:`InvoiceCatalogueSourceResolver` loads the catalogue from the
-active bucket through :class:`InvoiceCatalogueRepository` and projects
-scalar invoice-source binding values for the calculation mesh.
+:class:`InvoiceCatalogueSourceResolver` reads the
+:class:`~aeat.domain.invoices.InvoiceCatalogue` selected by
+:attr:`~aeat.application.aggregation.CalculationSourceContext.bucket_id` through
+:class:`~aeat.domain.invoices.InvoiceCatalogueRepository` and also adapts slim
+:class:`~aeat.application.ledger.BusinessOperationInvoice` records when their
+repository is available. It projects those records into the
+calculation mesh as :class:`~aeat.application.aggregation.CalculationSourceResolution`
+values for :attr:`~aeat.core.BindingSourceKind.COLLECTIBLE_INVOICE` and
+:attr:`~aeat.core.BindingSourceKind.PAYABLE_INVOICE`.
+
+The rich :class:`~aeat.domain.invoices.Invoice` aggregate remains the
+reconciliation and link authority; the slim ledger-mounted invoice records are
+operator-editable source-kind records. Both paths converge here only after they
+can be represented as registry :class:`~aeat.domain.calculations.registry.InvoiceObservation`
+facts, with Modelo 349 summary bindings, detail rows, transaction ids, and
+source provenance emitted through one resolver envelope.
 """
 
 from __future__ import annotations
@@ -18,6 +31,7 @@ from ...adapters.persistence.storage.errors import (
 )
 from ...core import BindingSourceKind, Period
 from ...core.hashing import sha256_hex
+from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import (
     BindingId,
     InvoiceObservation,
@@ -79,7 +93,14 @@ def invoice_direction_to_source_kind(kind: InvoiceKind) -> BusinessOperationInvo
 
 
 class InvoiceCatalogueSourceResolver:
-    """Resolve scalar invoice-source bindings from persisted invoice records."""
+    """Resolve invoice-source bindings and detail rows from persisted invoice records.
+
+    The resolver owns both invoice source kinds in the calculation mesh. It
+    filters records by :class:`CalculationSourceContext`, turns declarable
+    intracommunity entries into :class:`InvoiceObservation` facts, and returns a
+    :class:`CalculationSourceResolution` carrying binding values, Modelo 349
+    detail rows, linked transaction ids, and stable source provenance.
+    """
 
     resolver_id = "invoice_catalogue"
     owned_sources = _OWNED_SOURCES
@@ -113,11 +134,12 @@ class InvoiceCatalogueSourceResolver:
             for invoice in catalogue.values()
             if _invoice_in_context(invoice, context) and _invoice_source_kind(invoice) in active_sources
         )
-        catalogue_observed = tuple(
-            (invoice, observation)
-            for invoice in source_invoices
-            if (observation := _invoice_observation(invoice, context=context)) is not None
-        )
+        catalogue_observed_items: list[tuple[Invoice, InvoiceObservation]] = []
+        for invoice in source_invoices:
+            observation = _invoice_observation(invoice, context=context)
+            if observation is not None:
+                catalogue_observed_items.append((invoice, observation))
+        catalogue_observed = tuple(catalogue_observed_items)
         try:
             business_invoices = _load_business_operation_invoices(
                 context,
@@ -131,12 +153,14 @@ class InvoiceCatalogueSourceResolver:
                 source_kinds=tuple(active_sources),
                 error=exc,
             )
-        business_observed = tuple(
-            (invoice, observation)
-            for invoice in business_invoices
-            if _business_invoice_source_kind(invoice) in active_sources
-            if (observation := _business_invoice_observation(invoice, context=context)) is not None
-        )
+        business_observed_items: list[tuple[BusinessOperationInvoice, InvoiceObservation]] = []
+        for invoice in business_invoices:
+            if _business_invoice_source_kind(invoice) not in active_sources:
+                continue
+            observation = _business_invoice_observation(invoice, context=context)
+            if observation is not None:
+                business_observed_items.append((invoice, observation))
+        business_observed = tuple(business_observed_items)
         observations = tuple(observation for _, observation in catalogue_observed) + tuple(
             observation for _, observation in business_observed
         )
@@ -195,7 +219,7 @@ def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext)
         )
     return InvoiceObservation(
         invoice_id=invoice.invoice_id,
-        source_kind=_invoice_source_kind(invoice),
+        source_kind=BindingSourceKind(_invoice_source_kind(invoice)),
         party_tax_id=invoice.counterparty_tax_id,
         country_code=invoice.counterparty_country,
         transaction_date=invoice.issued_at,
@@ -243,11 +267,7 @@ def _m349_operador_rows_from_observations(
     row_values = resolve_invoice_binding_row_values(context.revision, observations)
     rows: list[Modelo349OperadorRow] = []
     row_indexes = sorted(
-        {
-            row_index
-            for binding_id, row_index in row_values
-            if binding_id in _M349_OPERADOR_ROW_BINDINGS
-        },
+        {row_index for binding_id, row_index in row_values if binding_id in _M349_OPERADOR_ROW_BINDINGS},
     )
     for row_index in row_indexes:
         values = {
@@ -271,12 +291,14 @@ def _m349_operador_rows_from_observations(
         ):
             raise RegistryValidationError(f"Modelo 349 invoice row {row_index} has invalid field types")
         try:
-            row = Modelo349OperadorRow(
-                codigo_pais=codigo_pais,
-                nif_comunitario=f"{codigo_pais}{nif_comunitario}",
-                razon_social=razon_social,
-                clave_operacion=clave_operacion,
-                importe=importe,
+            row = Modelo349OperadorRow.model_validate(
+                {
+                    "codigo_pais": codigo_pais,
+                    "nif_comunitario": f"{codigo_pais}{nif_comunitario}",
+                    "razon_social": razon_social,
+                    "clave_operacion": clave_operacion,
+                    "importe": importe,
+                },
             )
         except ValueError as exc:
             raise RegistryValidationError(str(exc)) from exc
@@ -342,11 +364,16 @@ def _business_invoice_observation(
 
 def _business_invoice_date(invoice: BusinessOperationInvoice) -> date:
     try:
-        return date.fromisoformat(invoice.invoice_date)
+        parsed = parse_iso8601_date(invoice.invoice_date)
     except ValueError as exc:
         raise RegistryValidationError(
             f"business invoice {invoice.invoice_id!r} has invalid invoice_date {invoice.invoice_date!r}",
         ) from exc
+    if parsed is None:
+        raise RegistryValidationError(
+            f"business invoice {invoice.invoice_id!r} has invalid invoice_date {invoice.invoice_date!r}",
+        )
+    return parsed
 
 
 def _business_invoice_clave(invoice: BusinessOperationInvoice) -> str | None:

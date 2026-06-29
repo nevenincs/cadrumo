@@ -1,7 +1,10 @@
-"""Google Sheets export engine for modelo registry snapshots.
+"""Workbook export planning engine for modelo registry snapshots.
 
-Translates a ``RegistrySnapshot`` into a workbook whose formulas produce the same per-casilla
-rounded values as the local registry runtime.
+Translates a :class:`RegistrySnapshot` into a :class:`SheetExportPlan` whose
+formulas produce the same per-casilla rounded values as the local registry
+runtime. The plan is shared by the Google Sheets apply adapter and the offline
+XLSX materializer, so layout, formulas, styling, provenance, and evidence stay
+on one contract.
 
 The package exposes three layers:
 
@@ -15,10 +18,21 @@ The package exposes three layers:
 - Engine driver (`_engine`) — consumes a `RegistrySnapshot` plus a
   caller-supplied `OperatorInputs` payload and assembles a
   `SheetExportPlan` ready for the apply adapter.
+- Offline export (`_workbook_export`) — serializes the same plan into XLSX
+  bytes plus the machine-readable evidence sidecar.
 
 Operator-facing CLI surface lives under
 `src/aeat/entrypoints/cli/_config/_google.py`; this package contains
 domain and application logic only.
+
+See Also:
+    :class:`aeat.domain.calculations.registry.RegistrySnapshot`
+        Registry-authored calculation surface compiled by the engine.
+    :class:`SheetExportPlan`
+        Shared workbook plan consumed by online and offline renderers.
+    :func:`serialize_offline_export`
+        Offline XLSX plus evidence-sidecar serializer for operator-directed
+        exports.
 """
 
 from ._engine import build_export_plan, collect_row_sets, registry_sha

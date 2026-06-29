@@ -92,7 +92,7 @@ def _autonomo_without_declared_regime() -> TaxpayerProfile:
     )
 
 
-def test_calendar_autonomo_without_declared_regime_shows_all_four_m130_quarters() -> None:
+def test_calendar_autonomo_without_declared_regime_shows_range_intersecting_m130_quarters() -> None:
     """Operator repro fix: an actividad-económica profile with no declared
     estimation regime owes the four Modelo 130 quarterly pago-fraccionado
     deadlines.
@@ -111,8 +111,8 @@ def test_calendar_autonomo_without_declared_regime_shows_all_four_m130_quarters(
 
     profile = _autonomo_without_declared_regime()
     assert profile.irpf_estimation_regime is None
-    # A range wide enough to admit the 4T window, whose AEAT filing window
-    # opens 2027-01-01 (the prior fiscal year's Q4 pago fraccionado).
+    # The range includes the closing 2025 4T filing window in January
+    # 2026 and all four filing-year 2026 quarterly windows.
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2027, 2, 28))
     cal = build_overview_calendar(profile, rng, today=date(2026, 4, 1))
 
@@ -121,17 +121,25 @@ def test_calendar_autonomo_without_declared_regime_shows_all_four_m130_quarters(
         (entry for entry in cal.entries if entry.modelo == "130"),
         key=lambda entry: entry.closes_on,
     )
-    # All four quarterly pago-fraccionado windows are present.
-    assert len(m130_entries) == 4, [(e.period.registry_token, e.closes_on) for e in m130_entries]
+    # Every M130 filing window intersecting the calendar range is present.
+    assert len(m130_entries) == 5, [(e.period.year, e.period.registry_token, e.closes_on) for e in m130_entries]
     # The close dates are the registry deadline windows — never hand-invented.
-    # (M130 2019-y-siguientes deadline_windows: 1T/2T/3T/4T for filing year 2026.)
+    # (M130 deadline_windows: 2025 4T closes in January 2026; filing-year
+    # 2026 contributes its 1T/2T/3T/4T windows.)
+    assert [(entry.period.year, entry.period.registry_token) for entry in m130_entries] == [
+        (2025, "4T"),
+        (2026, "1T"),
+        (2026, "2T"),
+        (2026, "3T"),
+        (2026, "4T"),
+    ]
     assert [entry.closes_on for entry in m130_entries] == [
+        date(2026, 1, 30),
         date(2026, 4, 20),
         date(2026, 7, 20),
         date(2026, 10, 20),
         date(2027, 1, 30),
     ]
-    assert [entry.period.registry_token for entry in m130_entries] == ["1T", "2T", "3T", "4T"]
     # The business-day-adjusted close is never earlier than the legal close.
     for entry in m130_entries:
         assert entry.adjusted_closes_on >= entry.closes_on

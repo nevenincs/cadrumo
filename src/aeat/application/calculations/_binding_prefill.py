@@ -1,6 +1,9 @@
-"""Binding prefill: resolve `previous_filing` bindings from prior filings.
+"""Binding prefill: resolve ``previous_filing`` bindings from prior filings.
 
-Used by: :mod:`~aeat.application.calculations._calculate` (model calculation orchestrator).
+Used by :class:`~._multi_year.PreviousFilingSourceResolver` for the source-mesh
+calculation path and by
+:func:`extract_modelo_303_local_iva_compensation_recurrence` for the IVA wallet
+comparison path.
 
 One of three distinct prefill tiers, NOT to be merged: this is the
 PREVIOUS-FILING direct-carry tier. The other two are the relation tier
@@ -8,16 +11,26 @@ PREVIOUS-FILING direct-carry tier. The other two are the relation tier
 `aeat_prefilled` flag, an AEAT-live source). They share only the word
 "prefill"; each routes a different source through a different mechanism.
 
-Sister module to `_relation_prefill`. The runtime distinguishes
-`relation` leaves (cross-revision aggregations declared as
-`RelationDefinition` records) from `previous_filing` bindings
-(declared as `DataBindingDefinition` with `source = "previous_filing"`).
+Sister module to :mod:`~._relation_prefill`. The runtime distinguishes
+``relation`` leaves (cross-revision aggregations declared as
+``RelationDefinition`` records) from ``previous_filing`` bindings
+(declared as ``DataBindingDefinition`` with ``source = "previous_filing"``).
 Modelo 390 uses bindings — modelo 200 uses relations — both express
 "sum a prior modelo's casilla across periods" but route through
 different schema entities.
 
 Prior-filing values are gathered as :class:`CasillaObservation` records and
-merged with casilla-level provenance before the binding is resolved.
+merged inside
+:class:`~aeat.domain.calculations.registry.RegistryModeloObservation` rows before
+the binding is resolved.
+
+The strict registry boundary remains
+:func:`~aeat.domain.calculations.registry.previous_filing_observation_requirements`
+and
+:func:`~aeat.domain.calculations.registry.resolve_previous_filing_binding_values`;
+this module is the application reader that supplies local observations from
+:class:`~._observations_repository.CalculationObservationRepository` and returns
+:class:`BindingPrefillReport` coverage.
 """
 
 from __future__ import annotations
@@ -145,7 +158,7 @@ class _GatheredObservation(BaseModel):
     source_kind: str
     casilla_source_kinds: Mapping[CasillaId, str]
     unstamped_revision_advisory: bool = False
-    """Non-blocking advisory: source observation has no revision stamp (legacy record)."""
+    """Non-blocking advisory: source observation has no revision stamp."""
 
 
 def _gathered_observation(
@@ -196,7 +209,13 @@ def _merge_gathered_observations(
 
 
 class PrefilledBinding(BaseModel):
-    """One binding's resolved value with provenance for downstream stamping."""
+    """One resolved previous-filing binding with local-source provenance.
+
+    Emitted by :func:`resolve_bindings_from_local_store` and collected in
+    :class:`BindingPrefillReport`. The ``source_*`` fields point back to the
+    :class:`~aeat.domain.calculations.registry.RegistryModeloObservation` rows
+    that satisfied the registry previous-filing requirement.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -209,16 +228,23 @@ class PrefilledBinding(BaseModel):
     source_periods: tuple[str, ...]
     resolved_at: datetime
     unstamped_revision_advisory: bool = False
-    """Non-blocking advisory: source observation has no revision stamp (legacy record).
+    """Non-blocking advisory: source observation has no revision stamp.
 
-    True when the carry proceeded from a legacy observation without a revision
+    True when the carry proceeded from an unstamped observation without a revision
     provenance stamp (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2).
     Operators should re-file the source period to obtain a stamped record.
     """
 
 
 class BindingPrefillReport(BaseModel):
-    """Outcome of one binding-prefill pass."""
+    """Outcome of one direct previous-filing binding-prefill pass.
+
+    ``binding_values`` is the mapping passed to
+    :func:`~aeat.domain.calculations.registry.calculate_registry_snapshot`;
+    ``prefilled`` keeps the :class:`PrefilledBinding` provenance used by
+    :class:`~._multi_year.PreviousFilingSourceResolver` when stamping source-mesh
+    results.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -227,15 +253,16 @@ class BindingPrefillReport(BaseModel):
 
     @property
     def has_unstamped_revision_advisory(self) -> bool:
-        """True when any prefilled binding carries a legacy unstamped-revision advisory."""
+        """True when any prefilled binding carries an unstamped-revision advisory."""
         return any(item.unstamped_revision_advisory for item in self.prefilled)
 
 
 class LocalIvaCompensationRecurrence(BaseModel):
-    """Local Modelo 303 recurrence extracted for wallet reconciliation only.
+    """Local Modelo 303 recurrence evidence extracted for wallet reconciliation only.
 
     This is comparison evidence. It does not choose the effective casilla `110`
-    value; the wallet reconciliation decision remains the only selector.
+    value; the :class:`~._iva_wallet_reconciliation.IvaWalletDecisionSourceResolver`
+    and wallet reconciliation decision remain the only selectors.
     """
 
     model_config = _STRICT_FROZEN
@@ -624,7 +651,7 @@ def _advisory_for_binding(
     """Return True when any gathered observation matching this binding's source carries the unstamped advisory.
 
     ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2:
-    propagates the legacy-record non-blocking advisory from the source observation
+    propagates the unstamped-record non-blocking advisory from the source observation
     through to the :class:`PrefilledBinding` so callers can surface it to operators.
     """
     required_periods = set(source_periods)
@@ -682,6 +709,13 @@ def resolve_bindings_from_local_store(
 ) -> BindingPrefillReport:
     """Resolve every ``previous_filing`` binding the revision declares against observations in the local store.
 
+    The caller provides a :class:`RegistrySnapshot`; this function asks the
+    registry for
+    :class:`~aeat.domain.calculations.registry.RegistryFoldRequirement` records,
+    loads matching :class:`RegistryModeloObservation` rows, then delegates the
+    final value calculation to
+    :func:`~aeat.domain.calculations.registry.resolve_previous_filing_binding_values`.
+
     Args:
         snapshot: The :class:`RegistrySnapshot` whose revision's ``previous_filing``
             bindings are resolved from the local calculation observation store.
@@ -708,6 +742,13 @@ def resolve_bindings_from_local_store(
     the engine emits blank cells the operator fills by hand. Strict
     enforcement (refusing the export when prior filings are missing)
     is the caller's choice via the prefill report's coverage.
+
+    See Also:
+        :class:`~._multi_year.PreviousFilingSourceResolver` adapts this report
+        to :class:`~aeat.application.aggregation.CalculationSourceResolution`;
+        :func:`~._relation_prefill.resolve_relations_from_local_store` resolves
+        the separate ``relation_prefill`` source family over the same
+        observation repository.
     """
     repo = repository if repository is not None else CalculationObservationRepository()
     # The Modelo 303 IVA-compensation-history merge is NO LONGER an implicit
@@ -801,6 +842,12 @@ def extract_modelo_303_local_iva_compensation_recurrence(
 ) -> tuple[LocalIvaCompensationRecurrence | None, BindingPrefillReport]:
     """Extract the local Modelo 303 compensation recurrence for comparison.
 
+    This is the explicit wallet-feeding path over
+    :class:`IvaCompensationHistoryRepository`: it reconstructs the local
+    previous-filing amount so
+    :func:`~._iva_wallet_reconciliation.reconcile_modelo_303_iva_compensation`
+    can compare it with current AEAT wallet evidence.
+
     Args:
         snapshot: The :class:`RegistrySnapshot` identifying the Modelo 303 target revision.
         repository: Optional :class:`CalculationObservationRepository`;
@@ -822,7 +869,7 @@ def extract_modelo_303_local_iva_compensation_recurrence(
     :class:`BindingPrefillReport`.
     """
     if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != Modelo.M303.value:
-        from ..modelo._actions import ModeloApplicabilityFilterError
+        from ..modelo import ModeloApplicabilityFilterError
 
         raise ModeloApplicabilityFilterError("local IVA compensation recurrence extraction only applies to Modelo 303")
     # This is the explicit wallet-feeding path: reconstruct the local Modelo 303

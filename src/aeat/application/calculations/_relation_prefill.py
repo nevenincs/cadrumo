@@ -2,35 +2,53 @@
 
 One of three distinct prefill tiers, NOT to be merged: this is the
 RELATION tier (cross-revision aggregations declared as
-`RelationDefinition`). The other two are the previous-filing direct-carry
-tier (`_binding_prefill`) and the AEAT borrador pre-fill tier (the registry
-`aeat_prefilled` flag, an AEAT-live source). Each names a different
-mechanism and source; they share only the word "prefill".
+``RelationDefinition`` records). The other two are the previous-filing
+direct-carry tier (:mod:`aeat.application.calculations._binding_prefill`)
+and the AEAT borrador pre-fill tier (the registry ``aeat_prefilled`` flag,
+an AEAT-live source). Each names a different mechanism and source; they
+share only the word "prefill".
 
 Sits between the engine and the local observation store. The engine
 asks "what's the resolved value of every relation this revision
-declares?" and this module answers by consulting a :class:`RegistrySnapshot`
-to enumerate the declared relations:
+declares?" and this module answers by consulting a
+:class:`RegistrySnapshot` to enumerate the declared relations:
 
-1. Reading the revision's relations to determine `(source_modelo,
-   source_revision_selector, source_periods, source_casilla_id,
-   aggregation.op)`.
-2. Scanning the local `CalculationObservationRepository` for prior
-   filings matching the source quadruple.
+1. Reading the revision's relations to determine ``source_modelo``,
+   ``source_revision_selector``, ``source_periods``, ``source_casilla_id``,
+   and ``aggregation.op``.
+2. Scanning the local
+   :class:`~aeat.application.calculations.CalculationObservationRepository`
+   for prior :class:`RegistryModeloObservation` filings matching the source
+   quadruple.
 3. Folding the source filings' casilla values through the declared
-   aggregation op (`sum`, `copy`).
-4. Returning a `RelationValues` record stamped with provenance the
-   apply adapter writes onto the workbook so the pull adapter can
-   detect stale prefills.
+   aggregation op (``sum``, ``copy``).
+4. Returning a
+   :class:`~aeat.application.storage.calc_sheets._records.RelationValues`
+   record stamped with provenance the apply adapter writes onto the workbook
+   so the pull adapter can detect stale prefills.
 
 When no prior filings exist for a relation, the resolver returns a
-`RelationValue` with `value=None` and `provenance="operator_manual"`
-so the engine emits a blank cell the operator must fill by hand.
+:class:`~aeat.application.storage.calc_sheets._records.RelationValue` with
+``value=None`` and ``provenance="operator_manual"`` so the engine emits a
+blank cell the operator must fill by hand.
 
 This is the local-tier prefill. The AEAT-live tier (parsing
 justificantes from Sede) lives in a separate adapter that produces
-the same `RelationValues` shape; callers route between tiers based
+the same
+:class:`~aeat.application.storage.calc_sheets._records.RelationValues`
+shape; callers route between tiers based
 on the operator's preferences and the local store's coverage.
+
+See Also:
+    :class:`~aeat.application.calculations.RelationPrefillSourceResolver`
+        Source-mesh adapter that exposes resolved relations as
+        :class:`~aeat.application.aggregation.CalculationSourceResolution`.
+    :func:`aeat.domain.calculations.registry.relation_source_requirements`
+        Registry authority that derives the source filings required by a
+        relation.
+    :func:`aeat.domain.calculations.registry.materialize_relation_binding_values`
+        Bridge from resolved relation values to declared ``relation_prefill``
+        binding slots.
 """
 
 from __future__ import annotations
@@ -111,16 +129,17 @@ def _gather_observations_for_snapshot(
     repository: CalculationObservationRepository,
     activity_start_date: date | None = None,
 ) -> tuple[RegistryModeloObservation, ...]:
-    """Collect every observation a relation in `snapshot.revision` could need.
+    """Collect every observation a relation in ``snapshot.revision`` could need.
 
     Uses the registry relation requirement resolver to compute the set of
-    `(source_modelo, filing_year, period)` requirements, and pulls matching observations
-    from the local store. Returns the union (deduplicated) so the
-    runtime resolver can fold them through the declared aggregation
-    in one pass. ``activity_start_date`` scopes out source periods strictly
-    before the operator's activity start (a mid-year-start filer has no
-    obligation for the pre-start quarters), so the gather set matches the scoped
-    requirement set the resolver folds.
+    ``(source_modelo, filing_year, period)`` requirements, and pulls matching
+    :class:`RegistryModeloObservation` rows from
+    :class:`~aeat.application.calculations.CalculationObservationRepository`.
+    Returns the union (deduplicated) so the runtime resolver can fold them
+    through the declared aggregation in one pass. ``activity_start_date`` scopes
+    out source periods strictly before the operator's activity start (a
+    mid-year-start filer has no obligation for the pre-start quarters), so the
+    gather set matches the scoped requirement set the resolver folds.
     """
     needed: dict[tuple[str, int, str], RegistryModeloObservation] = {}
     requirements = _scoped_relation_source_requirements(snapshot, activity_start_date)
@@ -165,6 +184,13 @@ def _provenance_note(
         f"prefilled from operator's local filing of modelo {source_modelo} "
         f"{period_text} {source_year} (resolved {when})"
     )
+
+
+def _relation_source_filing_year(relation: object, *, filing_year: int) -> int:
+    selector = relation.source_revision_selector
+    if selector.year is not None:
+        return selector.year
+    return filing_year + (selector.filing_year_delta or 0)
 
 
 def _profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
@@ -274,20 +300,21 @@ def _scoped_relation_source_requirements(
     snapshot: RegistrySnapshot,
     activity_start_date: date | None,
 ) -> tuple[RegistryFoldRequirement, ...]:
-    """``relation_source_requirements`` with pre-activity-start source periods scoped out.
+    """Return ``relation_source_requirements`` with pre-start periods scoped out.
 
     A quarterly source period STRICTLY before the operator-declared activity
     start is a period in which the taxpayer had no filing obligation, so its
     absence must NOT unresolve the whole fold (the partial-year-start
     enhancement for a mid-year-start filer). Reuses the cross-period clean-state
-    gate's :func:`_period_strictly_before_activity_start` predicate — one shared
-    partition governs both the gate and the relation fold-in (one-aggregation-
-    path; no parallel scoping math). Non-calendar instalment claves (1P/2P/3P)
-    have no date span and are never scoped, so sociedad Modelo 202 cumulation is
-    unaffected. A genuinely-absent IN-SCOPE quarter still unresolves the
-    requirement downstream, preserving ``no-silent-under-declaration``. Returns
-    the requirements unchanged when ``activity_start_date`` is ``None`` (the
-    common full-year / fail-closed case).
+    gate's ``_period_strictly_before_activity_start`` predicate - one shared
+    partition governs both the gate and the relation fold-in
+    (one-aggregation-path; no parallel scoping math). Non-calendar instalment
+    claves (1P/2P/3P) have no date span and are never scoped, so sociedad
+    Modelo 202 cumulation is unaffected. A genuinely-absent IN-SCOPE quarter
+    still unresolves the requirement downstream, preserving
+    ``no-silent-under-declaration``. Returns the requirements unchanged when
+    ``activity_start_date`` is ``None`` (the common full-year / fail-closed
+    case).
     """
     requirements = relation_source_requirements(
         snapshot.revision,
@@ -332,13 +359,14 @@ def resolve_relations_from_local_store(
     modelo_202_first_year_cuota: bool = False,
     activity_start_date: date | None = None,
 ) -> RelationValues:
-    """Build a :class:`RelationValues` record from the local observation store.
+    """Build a relation-value record from the local observation store.
 
     Args:
-        snapshot: The :class:`RegistrySnapshot` whose declared relations are resolved
-            from prior observation records in the local store.
+        snapshot: The :class:`RegistrySnapshot` whose declared relations are
+            resolved from prior observation records in the local store.
         repository: Optional observation repository. Defaults to the active
-            profile's calculation observation repository.
+            profile's
+            :class:`~aeat.application.calculations.CalculationObservationRepository`.
         captured_at: Optional timestamp for relation provenance. Defaults to
             the current clock.
         modelo_202_first_year_cuota: When ``True`` (IS-3), an otherwise-unresolved
@@ -353,12 +381,14 @@ def resolve_relations_from_local_store(
             obligation for instead of leaving the annual fold unresolved. ``None``
             (the default / fail-closed case) keeps the full all-quarters behaviour.
 
-    Returns a :class:`RelationValues` whose ``values`` tuple has one
-    ``RelationValue`` per relation declared in the snapshot's
-    revision, with provenance stamped per entry. Relations the
-    local store cannot resolve get ``value=None`` and
-    ``provenance="operator_manual"`` so the engine emits a blank cell
-    the operator can fill by hand.
+    Returns a
+    :class:`~aeat.application.storage.calc_sheets._records.RelationValues`
+    whose ``values`` tuple has one
+    :class:`~aeat.application.storage.calc_sheets._records.RelationValue` per
+    relation declared in the snapshot's revision, with provenance stamped per
+    entry. Relations the local store cannot resolve get ``value=None`` and
+    ``provenance="operator_manual"`` so the engine emits a blank cell the
+    operator can fill by hand.
     """
     repo = repository if repository is not None else CalculationObservationRepository()
     when = captured_at if captured_at is not None else now()
@@ -392,12 +422,7 @@ def resolve_relations_from_local_store(
         target_year = (
             requirement.filing_year
             if requirement is not None
-            else snapshot.filing_year
-            + int(
-                relation.source_revision_selector.get("filing_year_delta", 0)
-                if relation.source_revision_selector
-                else 0,
-            )
+            else _relation_source_filing_year(relation, filing_year=snapshot.filing_year)
         )
         source_periods = requirement.periods if requirement is not None else tuple(relation.source_periods)
         resolved = resolved_map.get(relation.id)
@@ -654,7 +679,15 @@ def _fifo_compensation_carry_binding_values(
 
 
 class RelationPrefillSourceResolver:
-    """Source mesh adapter for local relation prefill values."""
+    """Source-mesh adapter for local ``relation_prefill`` values.
+
+    Resolves registry relations through :func:`resolve_relations_from_local_store`,
+    materialises resolved relation values into declared target-binding slots, and
+    returns a :class:`~aeat.application.aggregation.CalculationSourceResolution`
+    carrying relation values, binding values, diagnostics for unresolved formula
+    relations, and provenance for local
+    :class:`RegistryModeloObservation` filings.
+    """
 
     resolver_id = "relation_prefill"
     owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.RELATION_PREFILL,)

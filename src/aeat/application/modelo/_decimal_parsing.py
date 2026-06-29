@@ -1,25 +1,26 @@
-"""Shared str→Decimal parser for modelo binding pipelines.
+"""Shared string-to-Decimal parser for borrador-sourced modelo bindings.
 
-This module is a parsing helper, not a binding: ``decimal_from_string`` coerces a
-raw string into a :class:`~decimal.Decimal`. It is named for what it does
-(parsing) rather than the pipelines that consume it, so "binding" stays reserved
-for the registry-data-input concept.
+This module is a parsing helper, not a binding: :func:`decimal_from_string`
+coerces a raw string into a :class:`~decimal.Decimal` for a registry binding
+identifier. It is named for what it does (parsing) rather than the pipeline that
+consumes it, so "binding" stays reserved for the registry-data-input concept.
 
-The borrador-binding and profile-binding pipelines each shipped a near-duplicate ``_decimal_value``
-helper. They diverged on:
+The borrador-binding path accepts live snapshot values as either
+:class:`~decimal.Decimal` or :class:`str`. Its resolver keeps that boundary
+local and delegates only the string coercion here. Profile-sourced bindings use
+typed profile facts directly and keep their Decimal-channel refusal in the
+profile resolver instead of reusing this raw-string helper.
 
-- accepted input shapes: the profile-binding variant accepts
-  :class:`bool` / :class:`int` / :class:`Decimal` / :class:`str`; the
-  borrador-binding variant accepts only :class:`Decimal` / :class:`str`
-- error class: each raised a pipeline-specific error so the operator
-  refusal carried the right boundary context (Modelo100BorradorBindingError
-  vs ProfilePreflightError)
+See Also:
+    :func:`aeat.application.modelo._borrador_binding.resolve_modelo_100_borrador_bindings`
+        Consumes this helper after registry eligibility and caller-precedence
+        checks decide that a borrador snapshot may supply the value.
+    :func:`aeat.application.modelo._profile_binding.resolve_profile_sourced_bindings`
+        Resolves the same registry binding channels from typed profile facts,
+        without raw string parsing.
 
-This module owns the shared str→Decimal coercion that both helpers
-delegate to. The per-pipeline helpers stay (they keep the error-class
-boundary the surface needs), but the string parsing now lives in one
-place; bool-sentinel handling on the profile-binding side wraps this
-helper rather than re-implementing the parse.
+The caller supplies the pipeline-specific error factory so the operator-facing
+refusal keeps the boundary context of the surface that found the bad value.
 """
 
 from __future__ import annotations
@@ -40,23 +41,28 @@ def decimal_from_string(
     """Parse a stripped string as a Decimal or raise the pipeline-specific error.
 
     Args:
-        binding_id: Identifier of the binding being resolved; appears in
-            the error message so the operator can locate the offending
-            value.
-        value: Free string from the registry / profile fact.
+        binding_id: Registry binding identifier being resolved; appears in the
+            error message so the operator can locate the offending value.
+        value: Free string from a source pipeline such as a live borrador
+            snapshot.
         error_factory: Callable invoked with the formatted message when
-            the string does not parse. Each pipeline supplies its own
-            boundary error class so refusals carry the right context
-            (borrador vs profile-binding vs another future pipeline).
+            the string does not parse. Each pipeline supplies its own boundary
+            error class so refusals carry the right context; the factory may
+            use the message directly or translate it into structured context.
         pipeline_label: Operator-facing label that prefixes the refusal
-            message ("borrador value" / "profile fact" / ...); defaults
-            to the generic "value".
+            message (for example, ``"borrador value"``); defaults to the
+            generic ``"value"``.
 
     Returns:
-        The parsed :class:`Decimal`.
+        The parsed :class:`~decimal.Decimal`.
 
     Raises:
         Exception: Whatever ``error_factory`` produced.
+
+    See Also:
+        :func:`aeat.application.modelo._borrador_binding.resolve_modelo_100_borrador_bindings`
+            Resolver that validates the borrador snapshot and calls this helper
+            for Decimal-channel snapshot strings.
     """
     try:
         return Decimal(value.strip())

@@ -8,7 +8,13 @@ not own; the inner primitives keep emitting their lifecycle events
 (``PROFILE_RENAMED`` etc.) so each operator action surfaces both
 perspectives in the bucket-event history.
 
-This module uses :class:`BucketEventHistoryRepository` for event emission.
+This module uses :class:`BucketEventHistoryRepository` for event
+emission, :class:`~aeat.domain.user_profile.UserProfilePortableExport`
+for sealed export/import payloads, and
+:class:`~aeat.adapters.persistence.storage.bucket.ExportArchiveHeader`
+for archive frontmatter. The archive file is an explicit operator
+handoff artifact; bucket state remains owned by the profile and secure
+repository primitives the service composes.
 """
 
 from __future__ import annotations
@@ -280,11 +286,12 @@ class BucketMaintenanceService:
         """Write a sealed bucket archive for ``command.bucket_id``.
 
         The method composes the existing profile portable-bundle serializer,
-        sealed-archive writer, active bucket DEK, and bucket-event history.
-        It does not reimplement profile export logic. When a recovery
-        passphrase is supplied, the payload is sealed under a passphrase-derived
-        key and the archive carries a small recovery-wrap salt member; otherwise
-        the currently active bucket DEK seals the payload for same-host backup.
+        :func:`compute_manifest_digest`, sealed-archive writer, active bucket
+        DEK, and bucket-event history. It does not reimplement profile export
+        logic. When a recovery passphrase is supplied, the payload is sealed
+        under a passphrase-derived key and the archive carries a small
+        recovery-wrap salt member; otherwise the currently active bucket DEK
+        seals the payload for same-host backup.
 
         Returns:
             An :class:`ExportBucketResult` describing the written sealed archive.
@@ -390,7 +397,11 @@ class BucketMaintenanceService:
         Archives with a recovery-wrap member require the matching passphrase.
         Archives without one are same-host backups and require the active bucket
         DEK to match the archive payload. New buckets are provisioned through
-        the canonical profile create span before the bundle data is restored.
+        the canonical profile create span before the
+        :class:`~aeat.domain.user_profile.UserProfilePortableExport` payload is
+        restored. The archive header's manifest digest is authenticated through
+        AEAD associated data during decryption; it is not recomputed against the
+        imported host manifest.
 
         Returns:
             An :class:`ImportBucketResult` describing the restored bucket.

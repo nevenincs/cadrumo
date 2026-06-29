@@ -11,6 +11,10 @@ only when the snapshot is still loadable. When a workflow
 explicit zeroes for relation slots whose source modelo is
 :class:`~aeat.domain.calculations.registry.ApplicabilityVerdict`
 ``NOT_APPLICABLE``.
+
+This is not a recalculation path. It rehydrates the persisted replay surface the
+filing renderer needs: manual casilla inputs, binding channels, relation values,
+calculated informational casillas, and Modelo 349 detail-row bindings.
 """
 
 from __future__ import annotations
@@ -53,8 +57,14 @@ def revision_filing_replay_inputs(
 ) -> filing_domain.ModeloInputs:
     """Return replayable filing inputs for one :class:`CalculationRevision`.
 
+    The returned flat map is ordered by merge precedence: calculated
+    informational casillas first, persisted manual casillas and binding
+    overrides, Modelo 349 detail-row bindings, synthesized not-applicable
+    relation zeroes, and finally persisted relation overrides. A stored relation
+    override therefore always wins over a synthesized zero.
+
     See also :class:`TaxpayerProfile` for the optional profile applicability
-    context used by relation-zero synthesis.
+    context used by relation-zero synthesis. No engine formulas are rerun here.
     """
     snapshot = _snapshot_for_work_unit(work_unit)
     return {
@@ -76,6 +86,13 @@ def _m349_detail_row_replay_inputs(
     revision: CalculationRevision,
     work_unit: WorkUnit,
 ) -> dict[BindingId, dict[str, filing_domain.ModeloInputScalar]]:
+    """Project persisted Modelo 349 operador rows into indexed binding maps.
+
+    The filing runtime accepts repeating-row values as ``binding_id -> row-index
+    -> scalar``. Stored :class:`Modelo349OperadorRow` values are the durable row
+    source; the EU VAT NIF subfield is normalized with the same export helper
+    used by the row model so replay does not duplicate country-prefix logic.
+    """
     if str(work_unit.modelo) != Modelo.M349.value:
         return {}
     rows = tuple(row for row in revision.detail_rows if isinstance(row, Modelo349OperadorRow))
@@ -95,6 +112,7 @@ def _m349_detail_row_replay_inputs(
 
 
 def _snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnapshot | None:
+    """Return the law-determined registry snapshot for ``work_unit``, if loadable."""
     try:
         return resources().modelos.authority.snapshot(
             work_unit.modelo,
@@ -110,6 +128,7 @@ def _informational_casilla_replay_inputs(
     revision: CalculationRevision,
     snapshot: RegistrySnapshot | None,
 ) -> dict[str, str]:
+    """Return calculated informational casillas that the filing renderer needs as inputs."""
     if snapshot is None:
         return {}
     return {

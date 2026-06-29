@@ -1,18 +1,30 @@
-"""Typed contracts for the Modelo 036 declarative-recording verbs.
+"""Modelo 036 declarative-recording contracts, storage, and event emission.
 
-Per the 2026-05-16 amendment to
-``cli-workflow-redesign-modelo-036-037-foundation-adr`` the local
-app never files a 036. AEAT is the authority; the operator files
-at sede. The verbs surfaced by ``aeat app modelo m036
-{alta,modificacion,baja}`` are declarative recording — they
-record that the operator filed at sede so downstream profile
-state and stale-cascade logic can react.
+Per the accepted Modelo 036/037 foundation decision, the local app never files a
+036. AEAT is the authority; the operator files the declaration at sede or in
+person, then records that fact locally through ``aeat app modelo m036
+{alta,modificacion,baja}``. This module owns the typed application service behind
+that surface: it persists encrypted
+:data:`~aeat.adapters.persistence.storage.LIVE_M036_DECLARATION_NAMESPACE` rows,
+emits the matching ``modelo.036.declaration.*`` bucket event, and exposes the
+same :class:`~aeat.application.live.SecureSnapshotRepository` path for list/view
+read-back.
 
-This module defines the Pydantic command + result contracts the
-verb handlers and downstream service implementations consume.
-The service implementation lands in a follow-up commit per the
-3-commit landing plan in
-``2026-06-03-m036-lifecycle-verbs-research``.
+The closed event-kind axis comes from
+:class:`~aeat.domain.calculations.registry.CensoModeloEventKind`, whose values are
+derived from the registry-owned censo foundation. Modelo 037 remains historical
+metadata and is intentionally outside this recording surface.
+
+See Also:
+    :mod:`aeat.domain.calculations.registry._censo_modelos`
+        Registry-owned Modelo 036 active-foundation and Modelo 037 historical
+        routing.
+    :mod:`aeat.entrypoints.cli._modelo_m036_cli`
+        Thin Typer boundary that turns CLI verbs into these application commands.
+    :class:`aeat.domain.buckets.BucketEventType`
+        Declares the ``CENSO_DECLARATION_ALTA``,
+        ``CENSO_DECLARATION_MODIFICACION``, and ``CENSO_DECLARATION_BAJA`` audit
+        events emitted here.
 """
 
 from __future__ import annotations
@@ -57,6 +69,11 @@ def derive_m036_declaration_id(
     in unmangled (``"-"`` when omitted) so a same-day same-kind
     re-declaration that acquires the acuse is recorded as a distinct
     record, not silently coalesced with the pre-acuse draft.
+
+    The ``event_kind`` member is a
+    :class:`~aeat.domain.calculations.registry.CensoModeloEventKind`, so the
+    digest can only describe one of the registry-backed ``alta``,
+    ``modificacion``, or ``baja`` lifecycle events.
     """
     canonical = "\x1f".join(
         [
@@ -77,6 +94,10 @@ class M036DeclarationCommand(BaseModel):
     declaration happened locally so the downstream stale-cascade
     + audit-trail logic can react. The command MUST NOT trigger
     any local filing action.
+
+    ``event_kind`` is typed as
+    :class:`~aeat.domain.calculations.registry.CensoModeloEventKind`, preserving
+    the registry foundation's closed event set at the application boundary.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -105,6 +126,10 @@ class M036DeclarationResult(BaseModel):
     repository binding), per the M036-declaration-service Path A ADR
     decision. Downstream consumers (stale-cascade engine, profile-state
     re-derivation) read these fields to decide what to recompute.
+
+    The record is the payload model for
+    :class:`~aeat.application.live.SecureSnapshotRepository` rows stored under
+    :data:`~aeat.adapters.persistence.storage.LIVE_M036_DECLARATION_NAMESPACE`.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -194,6 +219,10 @@ def list_m036_declarations(*, bucket_id: BucketId) -> tuple[M036DeclarationResul
     ``recorded_at``, ``sede_justificante``, ``note``) is preserved, never
     collapsed to a flat mapping. An empty bucket returns an empty tuple, the
     clean "no declarations recorded yet" signal, not an error.
+
+    See Also:
+        :func:`read_m036_declaration`
+        :func:`record_m036_declaration`
     """
     return _m036_declaration_repository(bucket_id).list_snapshots()
 
@@ -207,6 +236,10 @@ def read_m036_declaration(declaration_id: str, *, bucket_id: BucketId) -> M036De
     not-found error for an unknown id and the ambiguous-prefix error when a
     prefix matches more than one record, mirroring the established
     secure-object id-or-prefix resolution.
+
+    See Also:
+        :func:`list_m036_declarations`
+        :class:`~aeat.application.live.SecureSnapshotRepository`
     """
     return _m036_declaration_repository(bucket_id).resolve(declaration_id)
 
@@ -216,7 +249,7 @@ def record_m036_declaration(
     *,
     bucket_id: BucketId,
 ) -> M036DeclarationResult:
-    """Persist an M036 declaration record + emit its BucketEvent atomically.
+    """Persist an M036 declaration record and emit its BucketEvent.
 
     Records that the operator filed an M036 declaration at sede.  The local
     app NEVER files; this verb only records the operator's declaration so
@@ -237,6 +270,11 @@ def record_m036_declaration(
     surface through :func:`_m036_declaration_repository`).  ``bucket_id`` is
     checked against the repository binding at save time, so a cross-bucket
     payload cannot land silently.
+
+    See Also:
+        :class:`~aeat.domain.calculations.registry.CensoModeloEventKind`
+        :class:`aeat.domain.buckets.BucketEventType`
+        :data:`~aeat.adapters.persistence.storage.LIVE_M036_DECLARATION_NAMESPACE`
     """
     declaration_id = derive_m036_declaration_id(
         profile_id=command.profile_id,

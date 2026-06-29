@@ -15,8 +15,8 @@ from ....domain.modelos._calculation_revision import (
 )
 from ....domain.modelos._verification_report import ModeloVerificationFindingSeverity
 from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
-from .._actions import _collect_revision_verification_findings
 from .._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
+from .._verification_actions import _collect_revision_verification_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -75,31 +75,75 @@ def test_objective_estimation_exclusion_advisory_fires_for_settled_year_excess()
     profile = _objective_profile(
         objective_estimation_prior_year_gross_income_eur=Decimal("250000.01"),
         objective_estimation_prior_year_invoice_gross_income_eur=Decimal("125000.01"),
+        objective_estimation_prior_year_agri_livestock_forest_gross_eur=Decimal("250000.01"),
         objective_estimation_prior_year_purchases_eur=Decimal("250000.01"),
     )
 
     findings = _objective_estimation_exclusion_advisory_findings(work_unit=_work_unit(), profile=profile)
 
-    assert len(findings) == 3
+    assert len(findings) == 4
     assert {finding.kind for finding in findings} == {ModeloVerificationFindingKind.ADVISORY}
     assert {finding.severity for finding in findings} == {ModeloVerificationFindingSeverity.WARNING}
-    assert all("ley-35-2006:dt-32" in finding.legal_refs for finding in findings)
-    assert {finding.message.split("field=")[1].split(" ")[0] for finding in findings} == {
+    legal_refs_by_field = {
+        finding.message.split("field=")[1].split(" ")[0]: set(finding.legal_refs) for finding in findings
+    }
+    assert legal_refs_by_field == {
+        "objective_estimation_prior_year_gross_income_eur": {"ley-35-2006:dt-32"},
+        "objective_estimation_prior_year_invoice_gross_income_eur": {"ley-35-2006:dt-32"},
+        "objective_estimation_prior_year_agri_livestock_forest_gross_eur": {"ley-35-2006:art-31"},
+        "objective_estimation_prior_year_purchases_eur": {"ley-35-2006:dt-32"},
+    }
+    assert set(legal_refs_by_field) == {
         "objective_estimation_prior_year_gross_income_eur",
         "objective_estimation_prior_year_invoice_gross_income_eur",
+        "objective_estimation_prior_year_agri_livestock_forest_gross_eur",
         "objective_estimation_prior_year_purchases_eur",
     }
 
 
-def test_objective_estimation_exclusion_advisory_does_not_apply_unresolved_2025_scope() -> None:
+def test_objective_estimation_exclusion_advisory_applies_to_aeat_2025_scope() -> None:
     profile = _objective_profile(
-        objective_estimation_prior_year_gross_income_eur=Decimal("999999.00"),
-        objective_estimation_prior_year_invoice_gross_income_eur=Decimal("999999.00"),
-        objective_estimation_prior_year_purchases_eur=Decimal("999999.00"),
+        objective_estimation_prior_year_gross_income_eur=Decimal("250000.01"),
+        objective_estimation_prior_year_invoice_gross_income_eur=Decimal("125000.01"),
+        objective_estimation_prior_year_agri_livestock_forest_gross_eur=Decimal("250000.01"),
+        objective_estimation_prior_year_purchases_eur=Decimal("250000.01"),
     )
 
     findings = _objective_estimation_exclusion_advisory_findings(
         work_unit=_work_unit(filing_year=2025),
+        profile=profile,
+    )
+
+    assert len(findings) == 4
+    assert all("year=2025" in finding.message for finding in findings)
+    assert {finding.source_refs for finding in findings} == {("aeat-renta-2025-manual-parte1",)}
+
+
+def test_objective_estimation_exclusion_advisory_applies_to_aeat_2026_scope() -> None:
+    profile = _objective_profile(
+        objective_estimation_prior_year_invoice_gross_income_eur=Decimal("125000.01"),
+    )
+
+    findings = _objective_estimation_exclusion_advisory_findings(
+        work_unit=_work_unit(filing_year=2026),
+        profile=profile,
+    )
+
+    assert len(findings) == 1
+    assert findings[0].legal_refs == ("ley-35-2006:dt-32",)
+    assert findings[0].source_refs == ("aeat-renta-2025-manual-parte1",)
+
+
+def test_objective_estimation_exclusion_advisory_does_not_project_beyond_official_scope() -> None:
+    profile = _objective_profile(
+        objective_estimation_prior_year_gross_income_eur=Decimal("999999.00"),
+        objective_estimation_prior_year_invoice_gross_income_eur=Decimal("999999.00"),
+        objective_estimation_prior_year_agri_livestock_forest_gross_eur=Decimal("999999.00"),
+        objective_estimation_prior_year_purchases_eur=Decimal("999999.00"),
+    )
+
+    findings = _objective_estimation_exclusion_advisory_findings(
+        work_unit=_work_unit(filing_year=2027),
         profile=profile,
     )
 
@@ -119,9 +163,7 @@ def test_revision_verification_collects_objective_estimation_exclusion_advisory(
     )
 
     matching = [
-        finding
-        for finding in findings
-        if "objective_estimation_prior_year_gross_income_eur" in finding.message
+        finding for finding in findings if "objective_estimation_prior_year_gross_income_eur" in finding.message
     ]
     assert len(matching) == 1
     assert matching[0].kind is ModeloVerificationFindingKind.ADVISORY

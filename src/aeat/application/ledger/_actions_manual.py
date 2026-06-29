@@ -391,9 +391,6 @@ def summarize_manual_transactions(
             expense_total += eur
     return LedgerStatusReport(
         bucket_id=bucket_id,
-        income_total=_display_decimal(income_total),
-        expense_total=_display_decimal(expense_total),
-        net_total=_display_decimal(income_total - expense_total),
         business_income_total=_display_decimal(income_total),
         business_expense_total=_display_decimal(expense_total),
         business_net_total=_display_decimal(income_total - expense_total),

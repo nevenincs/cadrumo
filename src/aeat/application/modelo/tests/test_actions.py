@@ -1,4 +1,4 @@
-"""Real-behavior tests for _actions module-level surfaces.
+"""Real-behavior tests for modelo action module surfaces.
 
 contract: ``_IVA_LEDGER_EXEMPT_REGIMES`` uses ``IVARegime`` enum members rather
 than raw strings, so the frozenset membership check is typed at the schema
@@ -39,20 +39,28 @@ from ....domain.modelos._calculation_revision import (
 )
 from ....domain.modelos._codes import ModeloCode
 from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
-from .._actions import (
+from ...workflow import WorkflowInputMismatchError
+from .. import ModeloAggregationBindingError
+from .._calculation_actions import (
     _IVA_LEDGER_EXEMPT_REGIMES,
-    ModeloAggregationBindingError,
+    _reject_caller_overrides_of_source_bindings,
+)
+from .._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
-    WorkflowInputMismatchError,
-    _apply_iva_compensation_decision_binding,
+    iva_wallet_blocked_message,
+)
+from .._iva_wallet_gate import (
+    apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding,
+)
+from .._verification_actions import (
     _art20_reduccion_advisory_finding,
     _collect_revision_verification_findings,
     _dt12_reduccion_advisory_finding,
     _evaluate_verification_predicates,
-    _iva_wallet_blocked_message,
     _iva_wallet_blocking_verification_finding,
     _missing_required_casilla_finding,
-    _reject_caller_overrides_of_source_bindings,
+)
+from .._workflow_gate import (
     _RevisionInputsProvider,
     workflow_period_for_work_unit,
 )
@@ -515,19 +523,19 @@ def test_iva_wallet_blocking_finding_next_action_is_localised() -> None:
 
 
 # ---------------------------------------------------------------------------
-# contract/contract — _iva_wallet_blocked_message uses tr(); exception carries translated_message
+# contract/contract — iva_wallet_blocked_message uses tr(); exception carries translated_message
 # ---------------------------------------------------------------------------
 
 
 def test_iva_wallet_blocked_message_is_localised() -> None:
-    """_iva_wallet_blocked_message renders via tr() interpolating divergence and reason.
+    """iva_wallet_blocked_message renders via tr() interpolating divergence and reason.
 
     The returned string must contain the divergence and reason tokens as
     produced by the locale template, not a raw f-string fallback.
     """
     decision = _blocked_wallet_decision(divergence="wallet_missing", reason="No history available.")
 
-    message = _iva_wallet_blocked_message(decision)
+    message = iva_wallet_blocked_message(decision)
 
     # The divergence and reason tokens must appear in the rendered message.
     assert "wallet_missing" in message
@@ -542,14 +550,12 @@ def test_iva_wallet_blocked_exception_carries_translated_message_key() -> None:
     """ModeloIvaWalletReconciliationBlocked raised via _raise_if_persisted... carries
     translated_message='application.modelo.errors.iva_wallet_blocked'.
 
-    This test exercises the raise site through _iva_wallet_blocked_message
+    This test exercises the raise site through iva_wallet_blocked_message
     indirectly by constructing the exception the same way the raise site does
     after contract — with both the rendered message and the translated_message key.
     """
-    from .._actions import ModeloIvaWalletReconciliationBlocked
-
     decision = _blocked_wallet_decision(divergence="filed_history_only", reason="Only filed history present.")
-    rendered = _iva_wallet_blocked_message(decision)
+    rendered = iva_wallet_blocked_message(decision)
 
     exc = ModeloIvaWalletReconciliationBlocked(
         rendered,
@@ -628,7 +634,7 @@ class TestWorkflowInputMismatchError:
 
     def test_matching_request_does_not_raise(self) -> None:
         """load_inputs with the correct modelo and workflow period returns inputs."""
-        from .._actions import workflow_period_for_work_unit
+        from .._workflow_gate import workflow_period_for_work_unit
 
         work_unit = _minimal_work_unit(modelo="100", period="0A")
         revision = _minimal_calculation_revision(work_unit)
@@ -643,7 +649,7 @@ class TestWorkflowInputMismatchError:
 
     def test_mismatched_modelo_raises_workflow_input_mismatch_error(self) -> None:
         """load_inputs with a wrong modelo raises WorkflowInputMismatchError."""
-        from .._actions import workflow_period_for_work_unit
+        from .._workflow_gate import workflow_period_for_work_unit
 
         work_unit = _minimal_work_unit(modelo="100", period="0A")
         revision = _minimal_calculation_revision(work_unit)

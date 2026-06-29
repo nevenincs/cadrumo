@@ -1,22 +1,26 @@
-"""Calculate-path advisory for unpopulated official Diseño-de-Registros boxes.
+"""Calculate-path collector for registry-authored official-box advisories.
 
-The Modelo 303 2023-y-siguientes revision (and any future revision that follows
-the same two-layer pattern) carries both a semantic aggregate casilla layer that
-the ledger source mesh populates and feeds into the resultado chain, and the
-official Diseño-de-Registros numbered boxes (``input_kind = "manual"``) that the
-operator transcribes to the AEAT sede. A ledger-driven calculate folds real cuota
-into the semantic layer while every official numbered box stays zero — a silent
-under-declaration (``no-silent-under-declaration``): the human files the numbered
-boxes (all zero) outside the application.
+The collector is intentionally revision-driven: it scans the
+:class:`ModeloRevision` for ADVISORY ``implies_any_nonzero`` verification
+predicates and mirrors the same predicate shape as a non-blocking
+:class:`~aeat.application.aggregation.CalculationSourceDiagnostic` on the
+calculate path. The verification predicate remains the single source of truth
+for any total-to-official-box mapping, so calculate diagnostics and verify
+findings cannot drift.
 
-This module surfaces that contradiction on the calculate path as a non-blocking
-:class:`~aeat.application.aggregation.CalculationSourceDiagnostic`. It reuses the
-revision's ADVISORY ``implies_any_nonzero`` verification predicates as the SINGLE
-source of truth for the total→constituent mapping (the same predicates the verify
-gate evaluates), so the calculate advisory and the verify finding cannot drift.
-A predicate "fires" — and therefore an advisory is emitted — exactly when the
-antecedent (a computed total) is strictly positive and every listed consequent
-(the official numbered boxes) is zero.
+Modelo 303's 2023-y-siguientes revision used this mechanism in Stage 1, when
+ledger-backed semantic totals could be positive while manual official
+Diseño-de-Registros cuota boxes stayed zero. Stage 2 now projects those boxes
+from their semantic sources and retired the Stage-1 ADVISORY predicates, so this
+collector normally emits no M303 official-box diagnostics for that revision.
+
+See Also:
+    :mod:`aeat.application.modelo._calculation_diagnostics`
+        Post-calculation coordinator that calls this collector with the engine
+        casilla values.
+    :mod:`aeat.application.modelo._verification_actions`
+        Verification predicate parser/evaluator whose ``implies_any_nonzero``
+        shape this collector mirrors.
 """
 
 from __future__ import annotations
@@ -46,11 +50,16 @@ def collect_official_box_unpopulated_diagnostics(
 
     Args:
         revision: The :class:`ModeloRevision` whose ADVISORY
-            ``implies_any_nonzero`` predicates are evaluated.
-        casilla_values: The computed casilla values (engine result) to test
-            the predicates against — keyed by casilla id, so both the semantic
-            antecedent (e.g. ``iva.cuota-devengada-total``) and the official
-            box ids (e.g. ``09``) resolve.
+            ``implies_any_nonzero`` predicates are evaluated. If the revision
+            has retired those predicates, no diagnostic is emitted.
+        casilla_values: The computed engine values keyed by :class:`CasillaId`
+            and used to test the predicates, so both the semantic antecedent
+            (e.g. ``iva.cuota-devengada-total``) and the official box ids
+            (e.g. ``09``) resolve.
+
+    See Also:
+        :func:`aeat.application.modelo._verification_actions._evaluate_predicate_expression`
+            Verification-side evaluator for the same predicate DSL.
     """
     # Lazy import to avoid a module-load cycle: _verification_actions imports from
     # _calculation_actions, which imports this module at top level. The predicate

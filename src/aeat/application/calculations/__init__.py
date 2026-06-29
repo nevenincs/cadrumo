@@ -1,14 +1,59 @@
-"""Application-layer calculation utilities: observation repository and multi-year resolver for prior-year inputs.
+"""Application-layer calculation source stores, proof records, and prefill helpers.
 
-The runtime calc engine (`aeat.domain.calculations.registry._formula_runtime`)
-takes pre-resolved `relation_values` and `binding_values` mappings.
-This package provides the application-side helpers that produce
-those mappings from the operator's local filing history, so annual
-modelos (e.g. modelo 200, IS) and multi-year regimes (e.g. IVA
-prorrata four-year average, IVA regularización inversiones five-year
-straight-line, IS BIN unlimited carryforward) can resolve their
-inputs from authoritative prior filings instead of operator
-hand-entry.
+The registry runtime consumes already-resolved ``binding_values`` and
+``relation_values`` for
+:func:`~aeat.domain.calculations.registry.calculate_registry_snapshot`. This
+package is the public application facade for the stores, source resolvers, and
+typed proof records that produce those inputs from local filing history, IVA
+wallet reconciliation, relation prefill, row-set detail captures, and
+cross-period clean-state evidence.
+
+Direct prior-filing bindings and registry relations are deliberately separate
+source owners. :class:`PreviousFilingSourceResolver` resolves
+:attr:`~aeat.core.BindingSourceKind.PREVIOUS_FILING` binding carries;
+:class:`RelationPrefillSourceResolver` resolves
+:attr:`~aeat.core.BindingSourceKind.RELATION_PREFILL` relation fold-ins and
+their materialised target bindings; :class:`IvaWalletDecisionSourceResolver`
+resolves the Modelo 303
+:attr:`~aeat.core.BindingSourceKind.IVA_WALLET_DECISION` compensation authority
+outside the ordinary previous-filing carry.
+
+The main public surfaces are:
+
+* :class:`CalculationObservationRepository` and
+  :class:`IvaWalletDecisionRepository`, encrypted stores for prior
+  :class:`~aeat.domain.calculations.registry.RegistryModeloObservation` records,
+  plus :class:`IvaCompensationHistoryRepository` for secure Modelo 303
+  compensation history.
+* :class:`PreviousFilingSourceResolver`,
+  :class:`RelationPrefillSourceResolver`, and
+  :class:`IvaWalletDecisionSourceResolver`, source-mesh adapters that produce
+  :class:`~aeat.application.aggregation.CalculationSourceResolution` envelopes.
+* :func:`resolve_bindings_from_local_store` and
+  :func:`resolve_relations_from_local_store`, prefill readers over the same
+  local observation substrate; :class:`BindingPrefillReport` and
+  :class:`PrefilledBinding` carry the direct previous-filing coverage.
+* :func:`cross_period_dependency_requirements` and
+  :func:`evaluate_cross_period_clean_state`, the filing-grade dependency proof
+  whose
+  :class:`~aeat.application.calculations._cross_period_models.CrossPeriodCleanStateVerdict`
+  joins
+  :class:`~aeat.application.calculations._cross_period_models.CrossPeriodDependencyRequirement`
+  rows to filing records, revisions, verification reports, and justificante
+  evidence.
+* Row-set assemblers such as :func:`assemble_withholding_observations`, which
+  turn pull-side Detalle cells into ``AssembledObservations`` payloads for
+  persistence.
+
+See Also:
+    :mod:`aeat.application.aggregation`
+        Defines the source-mesh contracts consumed by the calculation path.
+    :mod:`aeat.domain.calculations.registry`
+        Owns the pure registry snapshots, binding definitions, relation
+        requirements, and formula runtime.
+    :mod:`aeat.application.modelo`
+        Orchestrates these package-level services inside work calculation,
+        verification, filing, and export workflows.
 """
 
 from ._binding_prefill import (

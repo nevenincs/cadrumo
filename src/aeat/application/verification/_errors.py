@@ -5,6 +5,11 @@ verification failures rooted at :class:`aeat.core.errors.AeatError`.
 Ordinary discrepancies between printed and computed values are *not*
 exceptions — they are encoded in
 :class:`aeat.application.verification.VerificationVerdict`.
+
+See Also:
+    :class:`VerificationError`,
+    :class:`aeat.application.verification.VerificationVerdict`, and
+    :class:`aeat.application.verification.ClassifiedDiscrepancy`.
 """
 
 from __future__ import annotations

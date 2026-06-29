@@ -65,7 +65,7 @@ def _verdict(evidence: CrossPeriodDependencyEvidence) -> CrossPeriodCleanStateVe
     )
 
 
-def test_legacy_unstamped_clean_dependency_produces_warning_advisory_finding() -> None:
+def test_unstamped_clean_dependency_produces_warning_advisory_finding() -> None:
     """A clean dependency carrying the unstamped advisory still produces a WARNING finding.
 
     This is the exact silent-degradation case the review flagged: the dependency

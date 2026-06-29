@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from functools import cache
+from typing import TYPE_CHECKING
 
 import pytest
 
 from ....core import Period
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
 from ....domain.filing import (
     ModeloAmendmentError,
     ModeloBuilderError,
@@ -27,6 +29,9 @@ from .. import (
 from ..testing import ModeloTestProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+if TYPE_CHECKING:
+    from ..runtime import RegistrySchemaAccessor
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
@@ -65,6 +70,20 @@ def _persisted_amendment_ids() -> tuple[str, ...]:
     return ModeloAmendmentRepository().list_amendment_ids()
 
 
+def _snapshot_ref(*, modelo: str, period: Period, schema_version: str) -> RegistrySnapshotRef:
+    return RegistrySnapshotRef(
+        modelo=modelo,
+        revision_id=schema_version,
+        modelo_year=period.filing_year,
+        period=period.registry_token,
+    )
+
+
+@cache
+def _schema_provider() -> RegistrySchemaAccessor:
+    return build_runtime_schema_provider()
+
+
 def _submitted_filing(
     draft: ModeloDraft,
     *,
@@ -96,6 +115,7 @@ def _submitted_filing(
 
 def _draft(modelo: str, period: Period, casillas: dict[CasillaId, Decimal]) -> ModeloDraft:
     now = datetime(2026, 4, 13, 8, 0, tzinfo=UTC)
+    schema_version = f"registry:{modelo}:missing"
     values = tuple(
         ModeloValue(
             casilla_id=casilla_id,
@@ -110,11 +130,13 @@ def _draft(modelo: str, period: Period, casillas: dict[CasillaId, Decimal]) -> M
         modelo=modelo,
         period=period,
         profile_tax_id="00000000T",
+        subject_tax_id="00000000T",
+        snapshot_ref=_snapshot_ref(modelo=modelo, period=period, schema_version=schema_version),
         status=ModeloDraftStatus.PRESENTADA,
         values=values,
         created_at=now,
         updated_at=now,
-        schema_version=f"registry:{modelo}:missing",
+        schema_version=schema_version,
     )
 
 
@@ -127,7 +149,7 @@ def _registry_draft(*, inputs: ModeloInputs) -> ModeloDraft:
             display_name="Complementaria registry test",
         ),
         inputs=inputs,
-        schema_provider=build_runtime_schema_provider(),
+        schema_provider=_schema_provider(),
     )
 
 
@@ -165,7 +187,7 @@ class TestBuildComplementaria:
                 "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
                 "modelo-130-pagos-fraccionados-anteriores": Decimal("400"),
             },
-            schema_provider=build_runtime_schema_provider(),
+            schema_provider=_schema_provider(),
         )
 
         changed = {change.casilla_id: change for change in amendment.delta}
@@ -193,7 +215,7 @@ class TestBuildComplementaria:
             build_complementaria(
                 original,
                 {_M130_INGRESOS_CASILLA: Decimal("11000")},
-                schema_provider=build_runtime_schema_provider(),
+                schema_provider=_schema_provider(),
             )
         assert _persisted_amendment_ids() == ()
 
@@ -212,7 +234,7 @@ class TestBuildComplementaria:
             build_complementaria(
                 original,
                 {_M130_INGRESOS_CASILLA: Decimal("11000")},
-                schema_provider=build_runtime_schema_provider(),
+                schema_provider=_schema_provider(),
             )
         assert _persisted_amendment_ids() == ()
 
@@ -232,7 +254,7 @@ class TestBuildComplementaria:
                     _UNSUPPORTED_M999_UPDATE_BASE_CASILLA: Decimal("11000.00"),
                     _UNSUPPORTED_M999_UPDATE_CUOTA_CASILLA: Decimal("200.00"),
                 },
-                schema_provider=build_runtime_schema_provider(),
+                schema_provider=_schema_provider(),
             )
         assert _persisted_amendment_ids() == ()
 
@@ -249,6 +271,6 @@ class TestBuildComplementaria:
             build_complementaria(
                 original,
                 {_UNSUPPORTED_M998_EJERCICIO_CASILLA: 2024},
-                schema_provider=build_runtime_schema_provider(),
+                schema_provider=_schema_provider(),
             )
         assert _persisted_amendment_ids() == ()

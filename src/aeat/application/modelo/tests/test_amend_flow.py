@@ -51,7 +51,6 @@ from ....domain.modelos._verification_repository import (
 )
 from ....domain.modelos._work_unit import WorkUnit
 from ....tests.registry_observations import registry_grounded_observations
-from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     AmendmentEvidenceMissingError,
     AmendmentOverrideCasillaError,
@@ -65,7 +64,11 @@ from .. import (
     get_work_unit,
     verify_modelo_revision,
 )
-from ._file_flow_support import _seed_clean_cross_period_sources, _workflow_profile
+from ._file_flow_support import (
+    _repos,  # pyright: ignore[reportPrivateUsage]
+    seed_clean_cross_period_sources,
+    workflow_profile,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -107,16 +110,9 @@ _M303_PRINTED_RESULT_TOKEN: CasillaId = _casilla_id("69")
 
 @pytest.fixture
 def repos(tmp_path: Path) -> Generator[_Repos]:
-    """Yield the five catalogue repositories over an encrypted SQLite db."""
+    """Yield the shared ready-profile repository bundle for amend-flow tests."""
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
-        objects = profile.repository
-        wu = WorkUnitCatalogueRepository(objects=objects)
-        cr = CalculationRevisionCatalogueRepository(objects=objects)
-        fr = ModeloRecordCatalogueRepository(objects=objects)
-        vr = VerificationReportCatalogueRepository(objects=objects)
-        bv = BucketEventHistoryRepository(objects=objects)
-        yield wu, cr, fr, vr, bv
+    yield from _repos(tmp_path)
 
 
 def _seed_work_unit(
@@ -282,7 +278,6 @@ def test_amend_refuses_without_external_evidence(repos: _Repos) -> None:
             _AMEND_PREVIOUS_PAYMENT_CASILLA: Decimal("0"),
             _AMEND_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
             _AMEND_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
-            _AMEND_CARRY_FORWARD_CASILLA: Decimal("0"),
             _AMEND_HOME_DEDUCTION_CASILLA: Decimal("0"),
             _AMEND_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
         },
@@ -292,7 +287,7 @@ def test_amend_refuses_without_external_evidence(repos: _Repos) -> None:
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    _seed_clean_cross_period_sources(
+    seed_clean_cross_period_sources(
         work_unit,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -302,7 +297,7 @@ def test_amend_refuses_without_external_evidence(repos: _Repos) -> None:
     report = verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator-A",
-        workflow_profile=_workflow_profile(),
+        workflow_profile=workflow_profile(),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
@@ -345,7 +340,7 @@ def test_amend_refuses_when_baseline_already_superseded(repos: _Repos) -> None:
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     _, _, baseline = _seed_external_baseline(repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")})
-    fake_successor = "f" * 64
+    successor_record_id = "f" * 64
     fr_repo.save(
         upsert_filing_record(
             fr_repo.load(),
@@ -353,7 +348,7 @@ def test_amend_refuses_when_baseline_already_superseded(repos: _Repos) -> None:
                 update={
                     "status": ModeloRecordStatus.SUPERSEDIDO,
                     "superseded_at": _T3,
-                    "superseded_by_filing_record_id": fake_successor,
+                    "superseded_by_filing_record_id": successor_record_id,
                 },
             ),
         ),
@@ -458,9 +453,10 @@ def test_amend_unoverridden_casilla_inherits_baseline_value(repos: _Repos) -> No
     outcome = _drive_amend_creates_complementaria(repos)
     _, cr_repo, _, _, _ = repos
     new_revision = get_calculation_revision(outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo)
-    assert new_revision.casilla_values[_AMEND_EXPENSE_CASILLA] == outcome.baseline_revision.casilla_values[
-        _AMEND_EXPENSE_CASILLA
-    ]
+    assert (
+        new_revision.casilla_values[_AMEND_EXPENSE_CASILLA]
+        == outcome.baseline_revision.casilla_values[_AMEND_EXPENSE_CASILLA]
+    )
 
 
 def test_amend_work_unit_pointers_advance_to_new_filing(repos: _Repos) -> None:

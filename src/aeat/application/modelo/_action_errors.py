@@ -1,4 +1,31 @@
-"""Typed application errors for modelo actions."""
+"""Typed exception vocabulary for modelo application actions.
+
+The classes in this module are the stable application-layer errors raised by
+modelo work-unit lifecycle, calculation, verification, filing, amendment,
+external-import, and workflow-gate services. They all inherit from
+:class:`aeat.domain.modelos._errors.ModeloError` so CLI and API error
+boundaries can route them through the central error-code registry without
+depending on the implementation module that raised them.
+
+Most classes are deliberately thin taxonomy markers whose operator-facing code,
+message key, and suggestion live in :mod:`aeat.core.errors.registry`. The richer
+contracts are kept here when the exception must preserve domain context without
+leaking it into rendered error payloads, as with
+:class:`ModeloWorkflowGateError` and its private
+:class:`~aeat.application.workflow.WorkflowResult`.
+
+See Also:
+    :mod:`aeat.application.modelo`:
+        Public package facade for these action errors.
+    :mod:`aeat.core.errors.registry`:
+        Maps these exception classes to stable error codes and suggestions.
+    :mod:`aeat.application.modelo._workflow_gate`:
+        Raises :class:`ModeloWorkflowGateError` after persisting an aborted
+        workflow run.
+    :mod:`aeat.application.modelo._profile_readiness_gate`:
+        Raises :class:`ModeloProfileReadinessError` for filing-grade profile
+        preflight failures.
+"""
 
 from __future__ import annotations
 
@@ -11,7 +38,13 @@ WORKFLOW_GATE_LEGAL_REFS: tuple[str, ...] = (
     "ley-58-2003:art-120",
     "ley-58-2003:art-122",
 )
-"""Legal anchors for the modelo workflow gate."""
+"""Legal anchors attached to workflow-gate refusal observations.
+
+The cross-period clean-state finding tests assert these ids remain present in
+the workflow-gate provenance payload. They correspond to the Ley 58/2003
+articles that frame declaration, self-assessment, and complementary declaration
+flows.
+"""
 
 
 class WorkUnitNotFoundError(ModeloError, KeyError):
@@ -58,12 +91,29 @@ class ExternalModeloImportError(ModeloError):
     """Raised when the external-filing import path cannot persist an imported baseline."""
 
 
+class ModeloLocalObservationError(ModeloError):
+    """Raised when an operator-supplied local observation cannot be persisted."""
+
+
 class ModeloCrossPeriodCleanStateError(ModeloError):
     """Raised when a filing-grade workflow lacks clean prior-filing proof."""
 
 
 class ModeloWorkflowGateError(ModeloError):
-    """Raised when the workflow gate refuses an internal file transition."""
+    """Raised when the workflow gate refuses an internal file transition.
+
+    The constructor stores the live :class:`~aeat.application.workflow.WorkflowResult`
+    on a private attribute and exposes it through :attr:`result`. The rendered
+    error context contains only primitive machine codes (``abort_code`` and
+    ``stage``), which keeps CLI JSON/text payloads stable while allowing
+    telemetry and tests to inspect the full workflow run.
+
+    See Also:
+        :func:`aeat.application.modelo._workflow_gate.run_revision_workflow_gate`:
+            Persists the workflow run and raises this error for aborted results.
+        :func:`aeat.core.errors.render_error_text`:
+            Renders the primitive context without serialising the live result.
+    """
 
     def __init__(self, result: WorkflowResult) -> None:
         self._result = result
@@ -83,16 +133,12 @@ class ModeloWorkflowGateError(ModeloError):
 
     @property
     def result(self) -> WorkflowResult:
-        """Return the live :class:`WorkflowResult` that triggered the abort."""
+        """Return the live :class:`~aeat.application.workflow.WorkflowResult` that triggered the abort."""
         return self._result
 
 
 class AmendmentOverrideCasillaError(ModeloError):
     """Raised when an amendment override targets an undeclared casilla id."""
-
-
-class ModeloLocalObservationError(ModeloError):
-    """Raised when an operator-supplied local observation cannot be persisted."""
 
 
 class AmendmentVerificationRefusedError(ModeloError):

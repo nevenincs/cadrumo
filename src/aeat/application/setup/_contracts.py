@@ -1,9 +1,10 @@
 """Pydantic contracts for workspace initialization.
 
 :class:`InitializeWorkspaceCommand` carries the first-run profile facts,
-including :class:`IVARegime` and :class:`OutputLanguage` selections;
-:class:`InitializeWorkspaceResult` reports the created :class:`ProfileId` and
-:class:`BucketId`.
+including :class:`IVARegime` and :class:`OutputLanguage` selections, without
+allocating storage itself. :class:`InitializeWorkspaceResult` reports the
+generated :class:`ProfileId` and matching :class:`BucketId` created by the
+setup service.
 """
 
 from __future__ import annotations
@@ -29,13 +30,15 @@ class InitializeWorkspaceCommand(BaseModel):
     The profile facts are consumed by
     :func:`aeat.application.setup.initialize_workspace`; enum fields preserve
     the domain vocabulary of :class:`IVARegime` and :class:`OutputLanguage`.
+    ``profile_name`` is an operator-facing display label; the service mints
+    the immutable :class:`ProfileId` / :class:`BucketId` storage identity.
     """
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     profile_name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)] = Field(
         default="default",
-        description="Name of the profile to create. Will be used as the bucket_id.",
+        description="Operator-facing profile label; the service generates the bucket identity.",
     )
     tax_id: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)] = Field(
         description="NIF/NIE of the operator.",
@@ -83,8 +86,9 @@ class InitializeWorkspaceCommand(BaseModel):
 class InitializeWorkspaceResult(BaseModel):
     """Result of successful workspace initialization.
 
-    The created :class:`ProfileId` is also the initial storage
-    :class:`BucketId`, matching the UUID bucket-provisioning contract.
+    The generated :class:`ProfileId` is also the initial storage
+    :class:`BucketId`, matching the UUID bucket-provisioning contract; the
+    operator profile name remains a decoupled display label.
     """
 
     model_config = ConfigDict(frozen=True, extra="forbid")

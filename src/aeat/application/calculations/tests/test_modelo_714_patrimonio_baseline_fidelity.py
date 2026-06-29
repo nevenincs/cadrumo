@@ -1,10 +1,10 @@
 """E2E data-fidelity: Modelo 714 Patrimonio prior-year wealth baseline across 2 renta years.
 
 Modelo 714 (Impuesto sobre el Patrimonio) is the annual wealth-tax
-declaration (Ley 19/1991, Orden HAC/1023/2021). Its initial enrollment is
-DATA_FIDELITY + threshold-continuity (no calculation engine yet — the
-casillas are ``input_kind = manual``; the tarifa art. 30 + límite art. 31
-deferred calc is a follow-on contract). This module proves the part that can be built now: the
+declaration (Ley 19/1991, Orden HAC/1023/2021). Its baseline enrollment keeps
+an E2E DATA_FIDELITY + threshold-continuity proof separate from the registry
+calculation tests: the current registry computes the art. 30 cuota íntegra
+scale and the art. 31 80 %-floor reference, while this module proves the
 prior-year wealth base carries across two distinct renta ejercicios through
 the real encrypted-SQLite observation store with strict pydantic equality.
 
@@ -13,9 +13,9 @@ legal catalogue):
 - Year N: patrimonio neto / base imponible €2.100.000 (above the €2.000.000
   Modelo-714 filing obligation, Orden HAC/1023/2021), base liquidable
   €1.400.000 after the €700.000 mínimo exento (Ley 19/1991 art. 28), and a
-  cuota íntegra as an arbitrary non-default manual entry (baseline contract has no calc
-  engine; the art. 30 escala computation is deferred — this figure
-  is a roundtrip-fidelity input, not an escala-derived value).
+  cuota íntegra as an arbitrary non-default stored entry. This fixture value
+  is a roundtrip-fidelity input, not an oracle for the art. 30 escala; the
+  escala is verified by the dedicated M714 registry calculation tests.
 - Year N+1: the wealth base grows to €2.300.000 (base liquidable €1.600.000)
   — a distinct ejercicio whose figures must not bleed into year N.
 
@@ -27,11 +27,11 @@ The fidelity tests cover (mirroring the 720 prior-year-baseline pattern):
 - Anti-tautology probe: omitting the cuota casilla surfaces strict inequality.
 - EnrollmentRecorder over both ejercicios + assert_enrollment_matches_manifest.
 
-Evidence class: DATA_FIDELITY (baseline contract; the prior-year-base ``previous_filing``
-binding and the deferred tarifa/límite calc are follow-on work). Legal grounding:
-Ley 19/1991 art. 28 (base liquidable / €700.000 mínimo exento), art. 30 (escala
-0,2-3,5 %), art. 31 (límite conjunto 60 % / suelo 80 %), art. 4.Nueve (vivienda
-habitual €300.000); Orden HAC/1023/2021 (Modelo 714, €2.000.000 obligación).
+Evidence class: DATA_FIDELITY (baseline persistence contract). Legal
+grounding: Ley 19/1991 art. 28 (base liquidable / €700.000 mínimo exento),
+art. 30 (escala 0,2-3,5 %), art. 31 (límite conjunto 60 % / suelo 80 %),
+art. 4.Nueve (vivienda habitual €300.000); Orden HAC/1023/2021 (Modelo 714,
+€2.000.000 obligación).
 """
 
 from __future__ import annotations
@@ -71,7 +71,7 @@ _FILING_OBLIGATION_EUR = Decimal("2000000.00")
 # Year-N wealth figures (above the €2.000.000 filing obligation).
 _BASE_IMPONIBLE_N = Decimal("2100000.00")  # patrimonio neto
 _BASE_LIQUIDABLE_N = Decimal("1400000.00")  # tras €700.000 mínimo exento (art. 28)
-_CUOTA_INTEGRA_N = Decimal("8523.36")  # arbitrary manual baseline figure (no calc; NOT escala-derived)
+_CUOTA_INTEGRA_N = Decimal("8523.36")  # stored baseline fixture; formula oracle lives in registry tests
 
 # Year-N+1 wealth figures (distinct ejercicio; grown base).
 _BASE_IMPONIBLE_N1 = Decimal("2300000.00")
@@ -232,7 +232,8 @@ def test_anti_tautology_proof_missing_cuota_surfaces_as_inequality(tmp_path: Pat
 
         assert loaded is not None
         assert loaded.observation != obs_n_no_cuota, (
-            "loaded observation equals the cuota-omitted stub — the roundtrip dropped patrimonio.cuota-integra"
+            "loaded observation equals the cuota-omitted observation; "
+            "the roundtrip dropped patrimonio.cuota-integra"
         )
         assert loaded.observation == obs_n
 
@@ -246,7 +247,7 @@ def test_enrollment_recorder_evidences_two_ejercicios_and_matches_manifest(tmp_p
     (authorization.d/714.toml) declares renta_years = [2023, 2024] in the same
     commit as this test. Evidence class DATA_FIDELITY: the two-year wealth-base
     fidelity (roundtrip + isolation + obligation-threshold) is the real ≥2-renta
-    contract for the baseline behavior; the deferred tarifa/límite calc is follow-on.
+    persistence contract; formula correctness is covered by the registry tests.
     """
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()

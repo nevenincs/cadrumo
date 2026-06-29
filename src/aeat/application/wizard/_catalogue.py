@@ -719,11 +719,6 @@ _OBLIGATIONS_SECTION = WizardSection(
             "withholding.pays_capital_income_with_retencion",
             suffix="obligations",
         ),
-        _confirm(
-            "uses-objective-estimation-irpf",
-            "irpf.uses_objective_estimation",
-            suffix="obligations",
-        ),
         WizardQuestion(
             id="irpf-estimation-regime",
             profile_key="irpf.estimation_regime",

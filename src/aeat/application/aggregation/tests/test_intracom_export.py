@@ -12,8 +12,8 @@ Scenario (cross-border contract):
     with category=DOMESTIC_NOT_SUBJECT.
   - D5 gate: an INTRA_COMMUNITY_SUPPLY row with counterparty_eu_member_state=es
     is rejected as DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION.
-  - D5 gate: an EXPORT_THIRD_COUNTRY_ZERO_RATED row with a non-None
-    eu_member_state is rejected as EU_MEMBER_STATE_ON_EXPORT_TRANSACTION.
+  - D5 gate: export and export-assimilated rows with a non-None eu_member_state
+    are rejected as EU_MEMBER_STATE_ON_EXPORT_TRANSACTION.
   - D5 gate: an INTRA_COMMUNITY_SUPPLY row with no eu_member_state is rejected
     as MISSING_COUNTERPARTY_EU_MEMBER_STATE.
 """
@@ -211,6 +211,23 @@ def test_export_third_country_populates_casilla_60() -> None:
     assert _casilla_base(aggregation, "59") == Decimal("0")
 
 
+def test_export_assimilated_operation_populates_casilla_60() -> None:
+    """An EXPORT_ASSIMILATED_ZERO_RATED art.22 row feeds the same casilla 60 base."""
+    tx = _inbound_tx(
+        "export-assimilated-ship-01",
+        amount=Decimal("1750.00"),
+        taxable_base=Decimal("1750.00"),
+        iva_category=IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
+        counterparty_eu_member_state=None,
+    )
+    catalogue = TransactionCatalogue.from_transactions([tx])
+    aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
+
+    assert len(aggregation.issues) == 0, f"unexpected issues: {aggregation.issues}"
+    assert _casilla_base(aggregation, "60") == Decimal("1750.00")
+    assert _casilla_base(aggregation, "59") == Decimal("0")
+
+
 def test_d5_intracom_with_es_counterparty_is_rejected() -> None:
     """INTRA_COMMUNITY_SUPPLY with Spain as counterparty is a gate failure (contract D5)."""
     tx = _inbound_tx(
@@ -253,6 +270,23 @@ def test_d5_export_with_eu_member_state_is_rejected() -> None:
         amount=Decimal("800.00"),
         taxable_base=Decimal("800.00"),
         iva_category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        counterparty_eu_member_state=_DE,
+    )
+    catalogue = TransactionCatalogue.from_transactions([tx])
+    aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
+
+    assert len(aggregation.observations) == 0
+    assert len(aggregation.issues) == 1
+    assert aggregation.issues[0].reason is IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION
+
+
+def test_d5_export_assimilated_with_eu_member_state_is_rejected() -> None:
+    """EXPORT_ASSIMILATED_ZERO_RATED with a non-None eu_member_state is rejected."""
+    tx = _inbound_tx(
+        "export-assimilated-with-eu-01",
+        amount=Decimal("800.00"),
+        taxable_base=Decimal("800.00"),
+        iva_category=IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
         counterparty_eu_member_state=_DE,
     )
     catalogue = TransactionCatalogue.from_transactions([tx])

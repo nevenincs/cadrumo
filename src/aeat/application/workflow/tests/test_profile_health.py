@@ -8,8 +8,7 @@ import pytest
 
 from ....adapters.persistence.storage import SecureObjectRepository
 from ....adapters.persistence.storage.bucket._layout import bucket_paths
-from ....adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
-from ....adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest
+from ....adapters.persistence.storage.bucket._manifest_io import manifest_path
 from ....application.user_profile import UserProfileLifecycleRepository
 from ....core import BucketPointer, read_pointer, write_pointer
 from ....core.config import override_settings
@@ -18,7 +17,6 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ... import wizard as _wizard  # noqa: F401
 from .._profile_health import (
     assess_active_profile_health,
-    repair_active_profile_manifest_status,
     repair_active_profile_pointer,
 )
 
@@ -109,7 +107,7 @@ def test_profile_repair_does_not_clear_healthy_pointer(tmp_path: Path) -> None:
         assert read_pointer(profile.storage_root) is not None
 
 
-def test_manifest_status_repair_backfills_from_profile_record(tmp_path: Path) -> None:
+def test_manifest_without_status_is_not_backfilled_from_profile_record(tmp_path: Path) -> None:
     with isolated_runtime_profile(
         tmp_path=tmp_path,
         bucket_id="operator",
@@ -123,13 +121,8 @@ def test_manifest_status_repair_backfills_from_profile_record(tmp_path: Path) ->
         target.write_text(f"{legacy_text}\n", encoding="utf-8")
 
         broken = assess_active_profile_health()
-        repaired = repair_active_profile_manifest_status(confirmed=True)
 
         assert broken.status == "manifest_unreadable"
-        assert broken.next_action == "aeat config repair profile --repair-manifest-status --yes"
-        assert repaired.dry_run is False
-        assert repaired.repaired is True
-        assert repaired.status == BucketLifecycleStatus.ACTIVE.value
-        assert repaired.after is not None
-        assert repaired.after.status == "ready"
-        assert read_manifest(bucket_paths(profile.storage_root, "operator")).status is BucketLifecycleStatus.ACTIVE
+        assert broken.repairable_by_clearing_pointer is False
+        assert broken.next_action == "unset AEAT_ACTIVE_PROFILE or switch to a readable profile"
+        assert "status = " not in target.read_text(encoding="utf-8")

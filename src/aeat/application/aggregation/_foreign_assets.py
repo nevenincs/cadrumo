@@ -1,15 +1,17 @@
-"""Modelo 720 foreign-assets aggregator.
+"""Modelo 720 foreign-assets aggregation for the per-modelo service.
 
-Modelo 720: Declaración informativa sobre bienes y derechos situados en el
-extranjero. Per-asset records grouped by asset class. Each class carries
-a €50,000 valuation threshold; declarability is per-class, not per-asset.
+Modelo 720 is an informativa declaration for assets and rights abroad. This
+module groups per-asset observations by ``(source_kind, asset_class)`` and
+returns :class:`ForeignAssetsAggregation` for
+:mod:`aeat.application.aggregation._service`; it is not a live calculate
+source-mesh resolver.
 
-Used by: :mod:`aeat.application.aggregation._service` (central per-modelo aggregator).
-
-Bare ``invoice`` source-kind is rejected at observation construction;
-the four canonical source kinds are accepted: ``ledger_transaction``,
+Declarability is per asset class. The aggregate keeps raw class totals, and
+:func:`declarable_asset_classes_720` applies the EUR 50,000 threshold across all
+source-kind cohorts for a class. Observation construction accepts only the four
+canonical source-kind values ``ledger_transaction``,
 ``purchase_invoice_evidence``, ``payable_invoice``, and
-``collectible_invoice``.
+``collectible_invoice``; bare ``invoice`` is rejected.
 """
 
 from __future__ import annotations

@@ -1,4 +1,14 @@
-"""Application facades for modelo registry discovery queries."""
+"""Application facades for modelo registry discovery queries.
+
+CLI discovery commands call this module instead of constructing
+:class:`RegistryQueryService` or reading the registry authority directly. Each
+facade delegates to the central validated authority exposed by
+``resources().modelos.authority`` and returns the domain query report unchanged.
+
+The ``*_for_scope`` helpers accept a concrete :class:`~aeat.core.Period` and
+pass its filing year plus bare registry token into the query service, so
+revision selection stays inside the authority-backed registry layer.
+"""
 
 from __future__ import annotations
 
@@ -14,7 +24,7 @@ def _service() -> RegistryQueryService:
 
 
 def declared_modelo_period_tokens(modelo: str | None) -> tuple[str, ...]:
-    """Return every registry-declared period token for one modelo."""
+    """Return every period token declared by any revision of one modelo."""
     if not modelo or not modelo.strip():
         return ()
     definition = resources().modelos.authority.validate_modelo(modelo.strip())
@@ -24,7 +34,7 @@ def declared_modelo_period_tokens(modelo: str | None) -> tuple[str, ...]:
 
 
 def registry_modelo_codes() -> tuple[str, ...]:
-    """Return modelo codes in registry order."""
+    """Return registry-backed modelo codes in authority order."""
     return tuple(str(modelo.id) for modelo in _service()._authority.modelos)
 
 
@@ -39,7 +49,7 @@ def registry_describe_modelo(modelo: str, *, period: str | None = None, as_of: d
 
 
 def registry_describe_modelo_for_scope(modelo: str, *, period: Period, as_of: date | None = None):
-    """Return the registry modelo description report for an exact filing scope."""
+    """Return the registry modelo description report for an exact :class:`Period`."""
     return _service().describe_modelo_for_scope(
         modelo,
         filing_year=period.year,
@@ -92,7 +102,7 @@ def registry_casillas_for_scope(
     required: bool | None = None,
     form_number: str | None = None,
 ):
-    """Return the registry casilla report for an exact filing scope."""
+    """Return the registry casilla report for an exact :class:`Period`."""
     return _service().casillas_for_scope(
         modelo,
         filing_year=period.year,
@@ -136,7 +146,7 @@ def registry_bindings_for_year(modelo: str, *, filing_year: int, as_of: date | N
 
 
 def registry_bindings_for_scope(modelo: str, *, period: Period, as_of: date | None = None):
-    """Return the registry bindings report for an exact filing scope."""
+    """Return the registry bindings report for an exact :class:`Period`."""
     return _service().bindings_for_scope(
         modelo,
         filing_year=period.year,
@@ -151,7 +161,7 @@ def registry_formulas(modelo: str, *, period: str | None = None, as_of: date | N
 
 
 def registry_formulas_for_scope(modelo: str, *, period: Period, as_of: date | None = None):
-    """Return the registry formulas report for an exact filing scope."""
+    """Return the registry formulas report for an exact :class:`Period`."""
     return _service().formulas_for_scope(
         modelo,
         filing_year=period.year,

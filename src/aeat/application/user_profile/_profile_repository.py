@@ -1,26 +1,41 @@
 """The single, sole writer of a logical profile's physical stores.
 
 A logical profile fragments across a bucket directory, a plaintext
-``manifest.toml``, an encrypted :class:`UserProfileRecord` row in a
-per-bucket SQLite database, and an append-only bucket-event history.
+:class:`~aeat.adapters.persistence.storage.bucket.BucketManifest`, an
+encrypted :class:`~aeat.domain.user_profile.UserProfileRecord` row in a
+per-bucket SQLite database, and an append-only
+:class:`~aeat.domain.buckets.BucketEventHistoryRepository`.
 Before this repository, every CLI handler and application service
 wrote whichever stores it remembered; consistency was by convention
 and a failure mid-sequence left a half-live profile.
 
 :class:`ProfileRepository` makes "touch every store" structural.
-``create`` and ``delete`` are cross-store units of work: the
+:meth:`ProfileRepository.create` and :meth:`ProfileRepository.delete`
+are cross-store units of work: the
 filesystem directory + manifest are staged first (a directory with no
 secure-object row is detectable, reclaimable garbage), the encrypted
-record commits next inside the SQLite transaction, the active-profile
-pointer moves last. On any failure the staged filesystem state is
-rolled back. ``load`` runs :func:`verify_profile_integrity` so a
-profile whose stores have drifted surfaces the drift instead of being
-served silently.
+record commits next inside the SQLite transaction, the
+:class:`~aeat.core.BucketPointer` moves last. On any failure the staged
+filesystem state is rolled back. :meth:`ProfileRepository.load` runs
+:func:`~aeat.application.user_profile._integrity.verify_profile_integrity`
+so a profile whose stores have drifted surfaces the drift instead of
+being served silently.
 
-Application orchestration (``register_active_profile``,
-``remove_active_profile``, ``select_profile``) and the CLI ``config
-profile`` verbs delegate their store writes here; there is exactly one
-implementation of the cross-store profile write.
+Application orchestration
+(:func:`~aeat.application.user_profile.register_active_profile`,
+:func:`~aeat.application.user_profile.remove_active_profile`,
+:func:`~aeat.application.user_profile.select_profile`) and the CLI
+``config profile`` verbs delegate their store writes here; there is
+exactly one implementation of the cross-store profile write.
+
+See Also:
+    :class:`~aeat.application.user_profile.ProfileLifecycleService`
+        Bucket-local record and lifecycle-event service composed by this
+        repository.
+    :func:`~aeat.application.workflow.read_profile_bucket`
+        Manifest scan used by label lookup and live-profile surfaces.
+    :class:`~aeat.application.user_profile._aggregate.ProfileAggregate`
+        In-memory cross-store profile aggregate returned by this repository.
 """
 
 from __future__ import annotations
@@ -134,9 +149,12 @@ class ProfileRepository:
     """The sole writer of a logical profile's cross-store physical state.
 
     The repository composes the existing lower-level pieces — the
-    secure-record :class:`UserProfileLifecycleRepository`, the bucket
-    directory provisioner, the manifest IO, and the active-profile
-    pointer IO. It is the single place those writes happen.
+    secure-record
+    :class:`~aeat.application.user_profile.UserProfileLifecycleRepository`,
+    :func:`~aeat.adapters.persistence.storage.bucket.provision_bucket_directory`,
+    the :class:`~aeat.adapters.persistence.storage.bucket.BucketManifest`
+    IO helpers, and the active-profile :class:`~aeat.core.BucketPointer`
+    IO. It is the single place those writes happen.
     """
 
     def __init__(
@@ -151,7 +169,8 @@ class ProfileRepository:
         Args:
             root: AEAT local storage root (the parent of ``buckets/``).
                 When ``None`` the value is resolved from the
-                pydantic-settings :class:`Settings` object.
+                pydantic-settings :class:`~aeat.core.config.Settings`
+                object.
             secure_objects: Optional injected secure-object repository.
                 When supplied, every encrypted-store read and write is
                 routed through it instead of a per-bucket engine
@@ -202,8 +221,9 @@ class ProfileRepository:
         2. Write the active-profile pointer. The per-bucket SQLAlchemy
            engine resolves its URL from the pointer chain, so the
            pointer must precede the encrypted-record write.
-        3. Commit the encrypted :class:`UserProfileRecord` (the SQLite
-           transaction).
+        3. Commit the encrypted
+           :class:`~aeat.domain.user_profile.UserProfileRecord` (the
+           SQLite transaction).
 
         The pre-create active-profile pointer is captured here, before
         the first store write, so a failure at any step rolls back the
@@ -224,7 +244,8 @@ class ProfileRepository:
                 ``profile_id`` when supplied.
 
         Returns:
-            The assembled :class:`ProfileAggregate`.
+            The assembled
+            :class:`~aeat.application.user_profile._aggregate.ProfileAggregate`.
 
         Raises:
             ProfileNotFoundError: If the profile already carries a
@@ -347,16 +368,19 @@ class ProfileRepository:
         """Assemble the aggregate from every store; verify integrity.
 
         Reads the plaintext manifest and the encrypted record, runs
-        :func:`verify_profile_integrity` to confirm the directory, the
-        manifest, and the record all agree on the UUID, the lifecycle
-        status, and the display label, then builds the
-        :class:`ProfileAggregate`.
+        :func:`~aeat.application.user_profile._integrity.verify_profile_integrity`
+        to confirm the directory, the manifest, and the record all
+        agree on the UUID, the lifecycle status, and the display label,
+        then builds the
+        :class:`~aeat.application.user_profile._aggregate.ProfileAggregate`.
 
         Args:
             profile_id: The UUID of the profile to load.
 
         Returns:
-            The assembled :class:`ProfileAggregate` for the profile.
+            The assembled
+            :class:`~aeat.application.user_profile._aggregate.ProfileAggregate`
+            for the profile.
 
         Raises:
             ProfileNotFoundError: If the bucket directory or manifest
@@ -430,23 +454,26 @@ class ProfileRepository:
 
         Profile identity is an immutable UUID, so a rename is a pure
         metadata edit: only the label moves, in the two stores that
-        hold a copy of it — the encrypted :class:`UserProfileRecord`
-        ``display_name`` and the plaintext manifest ``label``. There is
-        no directory move and no re-key.
+        hold a copy of it - the encrypted
+        :class:`~aeat.domain.user_profile.UserProfileRecord`
+        ``display_name`` and the plaintext manifest ``label``. There
+        is no directory move and no re-key.
 
         Both writes happen here, inside the sole writer: the lifecycle
         service updates the record and emits ``PROFILE_RENAMED``, then
         the manifest label projection is rewritten. ``load`` runs the
         cross-store integrity check first, so a drifted profile raises
-        :class:`ProfileIntegrityError` rather than being relabelled in
-        a torn state.
+        :class:`~aeat.application.user_profile._integrity.ProfileIntegrityError`
+        rather than being relabelled in a torn state.
 
         Args:
             profile_id: The UUID of the profile to rename.
             new_label: The new operator-visible display name.
 
         Returns:
-            The updated :class:`ProfileAggregate` with the new label.
+            The updated
+            :class:`~aeat.application.user_profile._aggregate.ProfileAggregate`
+            with the new label.
 
         Raises:
             ProfileAlreadyRegisteredError: If ``new_label`` is already
@@ -515,8 +542,9 @@ class ProfileRepository:
         ``load`` runs the cross-store integrity check, which compares
         the manifest status against the record status, so a profile
         left in the step-2/step-3 drift state by a crash raises
-        :class:`ProfileIntegrityError` on the next load — reclaiming a
-        drifted profile is the ``repair`` surface's domain.
+        :class:`~aeat.application.user_profile._integrity.ProfileIntegrityError`
+        on the next load - reclaiming a drifted profile is the
+        ``repair`` surface's domain.
 
         Args:
             profile_id: The UUID of the profile to tombstone.
@@ -592,7 +620,8 @@ class ProfileRepository:
         are included so callers that need the full inventory (repair,
         audit) see them; live-surface callers filter on ``status``.
 
-        Each element is a :class:`ProfileSummary`.
+        Each element is a :class:`ProfileSummary`; live label lookups
+        use :func:`~aeat.application.workflow.read_profile_bucket`.
         """
         buckets_root = self._root / BUCKETS_DIRNAME
         if not buckets_root.is_dir():
@@ -615,7 +644,7 @@ class ProfileRepository:
             try:
                 manifest = read_manifest(paths)
             except (StorageValidationError, ValidationError, OSError) as exc:
-                # A torn or legacy manifest (e.g. missing the lifecycle
+                # A torn or obsolete manifest (e.g. missing the lifecycle
                 # `status` field added by a later schema version) must not
                 # prevent the inventory scan that uniqueness guards and
                 # operator-facing list rely on. Skip it with a warning so
@@ -724,6 +753,8 @@ class ProfileRepository:
         encrypted-record write plus its schema validation and the
         PROFILE_BUCKET_CREATED / PROFILE_TOMBSTONED audit events; this
         repository composes it inside the cross-store unit of work.
+        It is created by
+        :func:`~aeat.application.user_profile._orchestration.build_lifecycle_service`.
         """
         from ._orchestration import build_lifecycle_service
 

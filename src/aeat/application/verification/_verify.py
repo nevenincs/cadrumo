@@ -3,6 +3,12 @@
 Verifies a parsed declaracion against the engine output for the same inputs.
 The :class:`ValidatedRegistryAuthority` supplies the :class:`RegistrySnapshot`
 used to run the formula engine over operator-provided casilla values.
+
+The verifier consumes :class:`DeclaracionObservation` values from the inbound
+parser, selects the law-determined registry revision for the filing period,
+calculates the snapshot with supplied :class:`BindingId` values, and emits a
+local :class:`VerificationVerdict`. It does not perform live AEAT reads or
+filing-state reconciliation.
 """
 
 from __future__ import annotations
@@ -86,17 +92,15 @@ def verify_declaracion(
     Args:
         declaracion: The parsed filing returned by
             :func:`aeat.adapters.inbound.declaracion.parse_declaracion`.
-        binding_values: External registry binding facts required for
+        binding_values: External :class:`BindingId` facts required for
             calculations that depend on facts not printed in the declaration.
         registry_root: Optional registry root override. Defaults to
             ``registry/aeat`` under the repository root.
 
     Returns:
-        A frozen :class:`aeat.application.verification.VerificationVerdict`
-        carrying the status, every
-        :class:`aeat.application.verification.ClassifiedDiscrepancy`,
-        the coverage fraction, a multilingual narrative, and the UTC
-        timestamp the verdict was produced.
+        A frozen :class:`VerificationVerdict` carrying the status, every
+        :class:`ClassifiedDiscrepancy`, the coverage fraction, a multilingual
+        narrative key, and the UTC timestamp the verdict was produced.
 
     Raises:
         VerificationError: When the registry snapshot cannot be loaded for
@@ -201,6 +205,7 @@ def _load_snapshot(
     period: Period,
     registry_root: Path | None,
 ) -> RegistrySnapshot:
+    """Load the :class:`RegistrySnapshot` selected by declaracion modelo and period."""
     try:
         from ...core.resources import resources
 
@@ -226,6 +231,7 @@ def _load_snapshot(
 
 
 def _decimal_extracted_values(declaracion: DeclaracionObservation) -> dict[CasillaId, Decimal]:
+    """Return decimal printed values keyed by canonical :class:`CasillaId`."""
     extracted: dict[CasillaId, Decimal] = {}
     for value in declaracion.values:
         printed = value.printed_value
@@ -258,7 +264,7 @@ def _period_context(period: Period) -> str:
 
 
 def _period_end_date(period: Period) -> date:
-    """Return the verification filing date while preserving legacy semantics."""
+    """Return the registry date context for this :class:`Period`."""
     code = period.registry_token
     if code in {"1T", "2T", "3T", "4T", "0A"}:
         return period.end_date

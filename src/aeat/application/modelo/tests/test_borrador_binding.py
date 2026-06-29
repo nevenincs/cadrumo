@@ -255,6 +255,15 @@ def _seed_profile_with_birth_date(objects: SecureObjectRepository) -> None:
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="identity.name", value="Test"),
+            UserProfileFact(path="identity.surnames", value="Operator"),
+            UserProfileFact(path="activities.description", value="economic activity"),
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
             UserProfileFact(path="renta_taxpayer.marital_status", value="soltero"),
             # Seed derived marriage facts directly (unmarried -> all zero) so the

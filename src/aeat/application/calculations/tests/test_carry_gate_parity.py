@@ -1,150 +1,198 @@
-"""Parity tests for the single shared revision-carry gate.
+"""Public-behavior coverage for the shared revision-carry gate.
 
-The carry gate (period-revision-resolution-adr, Ruling 3 /
-R2) was implemented across three carry-read sites:
+The period-revision-resolution R2 gate is shared by carry-read sites. These
+tests exercise the resolvable cases through public application contracts:
 
-- ``_binding_prefill._revision_carry_outcome`` (returns ``(diverges, advisory)``);
-- ``_cross_period_clean_state._revision_carry_check`` (returns ``(blockers, advisory)``);
-- ``_relation_prefill._gather_observations_for_snapshot`` (drops divergent priors).
+- ``resolve_bindings_from_local_store`` for previous-filing binding prefill.
+- ``evaluate_cross_period_clean_state`` for cross-period verification gates.
 
-They were later collapsed onto the one
-``_revision_carry_gate.revision_carry_outcome`` implementation. These tests prove
-the two adapter sites map the SAME shared decision onto their respective shapes
-for every R2 outcome — matching, divergent, missing-stamp, and indeterminate —
-so the gate cannot drift across the three sites again.
-
-Real registry authority, real law-determined revision ids, no mocks.
+The indeterminate authority case is pinned directly on the shared gate because
+the public carry readers only operate on registry-derived, resolvable
+requirements.
 """
 
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
-from ....core import Period
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    RegistryModeloObservation,
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....domain.modelos import (
+    CalculationRevisionCatalogueRepository,
+    ModeloRecordCatalogueRepository,
+    VerificationReportCatalogueRepository,
 )
-from .._binding_prefill import _revision_carry_outcome
-from .._cross_period_clean_state import CrossPeriodCleanStateBlocker, _revision_carry_check
-from .._observations_repository import _ObservationEnvelopePayload
+from ....tests.registry_observations import registry_grounded_modelo_observation
+from ....tests.secure_sql import isolated_runtime_profile
+from .. import (
+    CalculationObservationRepository,
+    CrossPeriodCleanStateBlocker,
+    CrossPeriodCleanStateVerdict,
+    cross_period_dependency_requirements,
+    evaluate_cross_period_clean_state,
+    resolve_bindings_from_local_store,
+)
 from .._revision_carry_gate import revision_carry_outcome
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_BUCKET_ID = "revision-carry-gate-test"
+_TAX_ID = "X1234567L"
 _MODELO = "303"
 _YEAR = 2025
-_PERIOD = "1T"
+_SOURCE_PERIOD = "1T"
+_TARGET_PERIOD = "2T"
+_M390_PERIOD = "0A"
 _CLOCK = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
-_FAKE_REVISION_ID = "definitely-not-the-right-revision-id-xyzzy"
+_DIVERGENT_REVISION_ID = "definitely-not-the-right-revision-id-xyzzy"
 _NONEXISTENT_MODELO = "999"
+_M303_CARRY_BINDING_ID = "modelo-303-compensacion-pendiente-anteriores"
+_M303_CARRY_SOURCE_CASILLA: CasillaId = validated_casilla_id(
+    "iva.compensacion-disponible-fin-periodo",
+    surface="_M303_CARRY_SOURCE_CASILLA",
+)
 
 
-def _law_revision_id(modelo: str = _MODELO, year: int = _YEAR, period: str = _PERIOD) -> str:
+def _law_revision_id(modelo: str = _MODELO, year: int = _YEAR, period: str = _SOURCE_PERIOD) -> str:
     snapshot = resources().modelos.authority.snapshot(modelo, filing_year=year, period=period)
     return str(snapshot.revision.id)
 
 
-def _observation(modelo: str = _MODELO, year: int = _YEAR, period: str = _PERIOD) -> RegistryModeloObservation:
-    return RegistryModeloObservation(modelo=modelo, filing_year=year, period=period)
-
-
-def _payload(stamped_revision_id: str | None, observation: RegistryModeloObservation) -> _ObservationEnvelopePayload:
-    return _ObservationEnvelopePayload(
-        observation=observation,
-        captured_at=_CLOCK,
-        source_kind="aeat_sede_justificante",
-        stamped_revision_id=stamped_revision_id,
+def _m390_first_quarter_requirements():
+    snapshot = resources().modelos.authority.snapshot("390", filing_year=_YEAR, period=_M390_PERIOD)
+    return snapshot, tuple(
+        requirement
+        for requirement in cross_period_dependency_requirements(snapshot)
+        if requirement.source_modelo == _MODELO and requirement.period.registry_token == _SOURCE_PERIOD
     )
 
 
-def _binding_adapter_outcome(
-    stamped_revision_id: str | None, observation: RegistryModeloObservation
-) -> tuple[bool, bool]:
-    """``(diverges, advisory)`` as the binding-prefill adapter reports it."""
-    return _revision_carry_outcome(_payload(stamped_revision_id, observation))
+def _source_values(source_casilla_ids: tuple[CasillaId, ...]) -> dict[CasillaId, Decimal]:
+    values = {_M303_CARRY_SOURCE_CASILLA: Decimal("500.00")}
+    for index, casilla_id in enumerate(sorted(source_casilla_ids), start=1):
+        values.setdefault(casilla_id, Decimal(index))
+    return values
 
 
-def _cross_period_adapter_outcome(
-    stamped_revision_id: str | None,
+def _save_source_observation(
+    repository: CalculationObservationRepository,
     *,
-    modelo: str,
-    year: int,
-    period: str,
-) -> tuple[bool, bool]:
-    """``(diverges, advisory)`` reconstructed from the cross-period adapter's shape.
-
-    The cross-period site maps a divergence onto a
-    ``REGISTRY_REVISION_DIVERGENCE`` blocker; we invert that mapping to compare
-    the underlying decision against the shared gate.
-    """
-    blockers, advisory = _revision_carry_check(
-        stamped_revision_id,
-        modelo,
-        year,
-        Period.from_year_and_code(year, period),
+    source_casilla_ids: tuple[CasillaId, ...],
+    stamped_revision_id: str | None,
+) -> None:
+    repository.save_observation(
+        registry_grounded_modelo_observation(
+            modelo=_MODELO,
+            filing_year=_YEAR,
+            period=_SOURCE_PERIOD,
+            casilla_values=_source_values(source_casilla_ids),
+        ),
+        source_kind="aeat_sede_justificante",
+        captured_at=_CLOCK,
+        stamped_revision_id=stamped_revision_id,
+        source_metadata={
+            "aeat_register_status": "ALTA",
+            "aeat_expediente_id": "EXP-303-2025-1T",
+            "authenticated_identity": _TAX_ID,
+        },
     )
-    diverges = CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE in blockers
+
+
+def _cross_period_outcome(
+    verdict: CrossPeriodCleanStateVerdict,
+    *,
+    requirement_keys: set[tuple[str, int, str]],
+) -> tuple[bool, bool]:
+    evidence = tuple(
+        item
+        for item in verdict.dependencies
+        if (
+            item.requirement.source_modelo,
+            item.requirement.filing_year,
+            item.requirement.period.registry_token,
+        )
+        in requirement_keys
+    )
+    assert evidence, "M390 must expose first-quarter M303 cross-period dependencies"
+    diverges = any(CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE in item.blockers for item in evidence)
+    advisory = any(item.unstamped_revision_advisory for item in evidence)
     return diverges, advisory
 
 
-@pytest.mark.parametrize(
-    "case",
-    ["matching", "divergent", "missing", "indeterminate"],
-)
-def test_three_carry_sites_agree_via_shared_gate(case: str) -> None:
-    """The binding-prefill and cross-period adapters report the shared decision.
+def _public_carry_outcomes(
+    tmp_path: Path,
+    stamped_revision_id: str | None,
+) -> tuple[tuple[bool, bool], tuple[bool, bool]]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        repository = CalculationObservationRepository()
+        cross_snapshot, cross_requirements = _m390_first_quarter_requirements()
+        source_casilla_ids = tuple(
+            {casilla_id for requirement in cross_requirements for casilla_id in requirement.source_casilla_ids}
+        )
+        _save_source_observation(
+            repository,
+            source_casilla_ids=source_casilla_ids,
+            stamped_revision_id=stamped_revision_id,
+        )
 
-    For each R2 case the shared ``revision_carry_outcome`` is the single source of
-    truth; both adapters MUST surface the same ``(diverges, advisory)`` pair so the
-    gate cannot drift across sites.
-    """
+        binding_snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR, period=_TARGET_PERIOD)
+        binding_report = resolve_bindings_from_local_store(binding_snapshot, repository=repository)
+        binding_outcome = (
+            _M303_CARRY_BINDING_ID not in binding_report.binding_values,
+            binding_report.has_unstamped_revision_advisory,
+        )
+
+        cross_verdict = evaluate_cross_period_clean_state(
+            cross_snapshot,
+            bucket_id=_BUCKET_ID,
+            observation_repository=repository,
+            filing_repository=ModeloRecordCatalogueRepository(),
+            calculation_repository=CalculationRevisionCatalogueRepository(),
+            verification_repository=VerificationReportCatalogueRepository(),
+            taxpayer_tax_id=_TAX_ID,
+        )
+        requirement_keys = {
+            (requirement.source_modelo, requirement.filing_year, requirement.period.registry_token)
+            for requirement in cross_requirements
+        }
+        return binding_outcome, _cross_period_outcome(cross_verdict, requirement_keys=requirement_keys)
+
+
+@pytest.mark.parametrize("case", ["matching", "divergent", "missing"])
+def test_public_carry_reads_match_shared_gate_for_resolvable_source(tmp_path: Path, case: str) -> None:
+    """Binding-prefill and cross-period readers expose the shared R2 decision."""
     if case == "matching":
         stamp: str | None = _law_revision_id()
-        modelo, year, period = _MODELO, _YEAR, _PERIOD
         expected = (False, False)
     elif case == "divergent":
-        stamp = _FAKE_REVISION_ID
-        modelo, year, period = _MODELO, _YEAR, _PERIOD
+        stamp = _DIVERGENT_REVISION_ID
         expected = (True, False)
-    elif case == "missing":
+    else:
         stamp = None
-        modelo, year, period = _MODELO, _YEAR, _PERIOD
         expected = (False, True)
-    else:  # indeterminate: a source context the authority cannot resolve
-        stamp = _FAKE_REVISION_ID
-        modelo, year, period = _NONEXISTENT_MODELO, _YEAR, _PERIOD
-        expected = (False, True)
-
-    observation = _observation(modelo, year, period)
 
     shared = revision_carry_outcome(
         stamp,
-        source_modelo=modelo,
-        source_filing_year=year,
-        source_period=period,
+        source_modelo=_MODELO,
+        source_filing_year=_YEAR,
+        source_period=_SOURCE_PERIOD,
     )
-    binding = _binding_adapter_outcome(stamp, observation)
-    cross_period = _cross_period_adapter_outcome(stamp, modelo=modelo, year=year, period=period)
+    binding, cross_period = _public_carry_outcomes(tmp_path / case, stamp)
 
     assert shared == expected, f"shared gate disagreed with the spec for {case!r}"
-    assert binding == expected, f"binding-prefill adapter diverged from the shared gate for {case!r}"
-    assert cross_period == expected, f"cross-period adapter diverged from the shared gate for {case!r}"
+    assert binding == expected, f"binding prefill diverged from the shared gate for {case!r}"
+    assert cross_period == expected, f"cross-period clean state diverged from the shared gate for {case!r}"
 
 
-def test_divergent_stamp_maps_to_registry_revision_divergence_blocker() -> None:
-    """The cross-period adapter still raises the divergence blocker on a divergent stamp.
-
-    Behaviour-preservation check: unification must not weaken the cross-period
-    site's blocking semantics.
-    """
-    blockers, advisory = _revision_carry_check(
-        _FAKE_REVISION_ID,
-        _MODELO,
-        _YEAR,
-        Period.from_year_and_code(_YEAR, _PERIOD),
-    )
-    assert blockers == [CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE]
-    assert advisory is False
+def test_shared_gate_treats_unresolvable_source_as_advisory() -> None:
+    """A source context the registry cannot resolve is advisory, not divergent."""
+    assert revision_carry_outcome(
+        _DIVERGENT_REVISION_ID,
+        source_modelo=_NONEXISTENT_MODELO,
+        source_filing_year=_YEAR,
+        source_period=_SOURCE_PERIOD,
+    ) == (False, True)

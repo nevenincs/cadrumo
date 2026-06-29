@@ -85,6 +85,11 @@ with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345678"),
+            UserProfileFact(path="identity.legal_name", value="No Wizard SL"),
+            UserProfileFact(path="activities.description", value="economic activity"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
             UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
             UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),

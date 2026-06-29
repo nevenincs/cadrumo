@@ -44,7 +44,7 @@ from ...tests.secure_sql import dev_test_database_password
 from ..auth._operator import inspect_operator_auth
 from ..auth._operator import test_operator_auth as probe_operator_auth
 from ..ledger import ManualLedgerTransactionCommand, create_manual_transaction
-from ..modelo._actions import create_work_unit, discard_work_unit
+from ..modelo import create_work_unit, discard_work_unit
 from ..overview import build_overview_status_report
 from ..state_projection import (
     ModeloReadinessRequest,
@@ -144,7 +144,7 @@ def test_overview_status_reports_modelo_work_units(tmp_path: Path) -> None:
     present, ``overview status`` must report them.
 
     Before the canonical projection, ``build_overview_status_report``
-    read the legacy ``ModeloDraft`` store but never the
+    read the declaration-draft ``ModeloDraft`` store but never the
     ``WorkUnitCatalogue`` store, so an operator who used ``modelo work
     create`` saw a silently-zero count. The projection carries
     ``work_units`` as a distinct counter."""
@@ -162,7 +162,7 @@ def test_overview_status_reports_modelo_work_units(tmp_path: Path) -> None:
     report = build_overview_status_report()
 
     assert report.work_units == 1, "overview status must surface modelo work units, not zero"
-    assert report.drafts == 0, "the legacy ModeloDraft store is separate and stays at zero"
+    assert report.drafts == 0, "the ModeloDraft store is separate and stays at zero"
 
 
 def test_overview_status_distinguishes_drafts_from_work_units() -> None:

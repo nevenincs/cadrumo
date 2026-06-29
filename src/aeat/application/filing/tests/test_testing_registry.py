@@ -37,7 +37,7 @@ _M130_PAGO_FRACCIONADO_CASILLA: CasillaId = _casilla_id("05")
 _M130_RETENCIONES_CASILLA: CasillaId = _casilla_id("06")
 _M130_RENDIMIENTO_NETO_PREVIO_CASILLA: CasillaId = _casilla_id("08")
 _M130_MINORACION_CASILLA: CasillaId = _casilla_id("10")
-_M130_DIFERENCIA_CASILLA: CasillaId = _casilla_id("15")
+_M130_RESULTADOS_NEGATIVOS_CASILLA: CasillaId = _casilla_id("15")
 _M130_DEDUCCION_ART_110_3_CASILLA: CasillaId = _casilla_id("16")
 _M130_RETENCIONES_ARRENDAMIENTOS_CASILLA: CasillaId = _casilla_id("18")
 _M130_RESULTADO_CASILLA: CasillaId = _casilla_id("19")
@@ -185,8 +185,13 @@ def test_values_are_registry_projected_and_sorted() -> None:
     values = {value.casilla_id: value for value in draft.values}
     assert tuple(values) == tuple(sorted(values))
     assert values[_M130_INGRESOS_CASILLA].kind is ModeloValueKind.INHERITED
-    assert values[_M130_DIFERENCIA_CASILLA].kind is ModeloValueKind.INHERITED
-    assert values[_M130_DIFERENCIA_CASILLA].value == Decimal("0")
+    assert values[_M130_RESULTADOS_NEGATIVOS_CASILLA].kind is ModeloValueKind.COMPUTED
+    assert values[_M130_RESULTADOS_NEGATIVOS_CASILLA].value == Decimal("0")
+    assert (
+        values[_M130_RESULTADOS_NEGATIVOS_CASILLA].source
+        == "registry formula modelo-130-resultados-negativos-anteriores-cap"
+    )
+    assert values[_M130_RESULTADOS_NEGATIVOS_CASILLA].formula_trace_casilla_ids == ("14",)
     assert values[_M130_RESULTADO_CASILLA].kind is ModeloValueKind.COMPUTED
     assert values[_M130_RESULTADO_CASILLA].formula_trace_casilla_ids == ("17", "18")
 

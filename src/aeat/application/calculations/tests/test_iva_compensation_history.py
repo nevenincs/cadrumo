@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 from typing import Literal
 
@@ -24,6 +25,7 @@ from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
     RegistryModeloObservation,
+    RegistrySnapshot,
     RegistryValidationError,
     materialize_relation_binding_values,
     validated_casilla_id,
@@ -89,6 +91,11 @@ _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = _casilla_id(
 _M303_PRINTED_PERIOD_RESULT_REFERENCE_CASILLA: CasillaId = _casilla_id("69")
 _M303_PRINTED_COMPENSATION_REFERENCE_CASILLA: CasillaId = _casilla_id("87")
 _M390_PRINTED_LAST_PERIOD_COMPENSATION_REFERENCE_CASILLA: CasillaId = _casilla_id("97")
+
+
+@cache
+def _modelo_390_2026_snapshot() -> RegistrySnapshot:
+    return resources().modelos.authority.snapshot("390", filing_year=2026, period="0A")
 
 
 def _state(
@@ -457,7 +464,7 @@ def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pend
                 captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
             )
 
-        snapshot = resources().modelos.authority.snapshot("390", filing_year=2026, period="0A")
+        snapshot = _modelo_390_2026_snapshot()
         relation_vals = resolve_relations_from_local_store(
             snapshot,
             repository=observation_repo,
@@ -526,7 +533,7 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
                 captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
             )
 
-        snapshot = resources().modelos.authority.snapshot("390", filing_year=2026, period="0A")
+        snapshot = _modelo_390_2026_snapshot()
         relation_vals = resolve_relations_from_local_store(
             snapshot,
             repository=observation_repo,
@@ -924,7 +931,7 @@ def test_iva_compensation_annual_summary_refuses_printed_number_references() -> 
 def test_relation_prefill_fifo_state_refuses_printed_number_compensation_references() -> None:
     from .._relation_prefill import _fifo_compensation_carry_binding_values
 
-    snapshot = resources().modelos.authority.snapshot("390", filing_year=2026, period="0A")
+    snapshot = _modelo_390_2026_snapshot()
     generated_observation = registry_grounded_observations(
         modelo="303",
         filing_year=2026,

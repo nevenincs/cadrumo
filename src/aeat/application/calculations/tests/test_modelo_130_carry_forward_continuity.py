@@ -31,7 +31,7 @@ the prior-quarter negative result carried forward "sin signo".
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -138,12 +138,14 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="identity.tax_id", value="00000000T"),
     UserProfileFact(path="identity.name", value="Sofia"),
     UserProfileFact(path="identity.surnames", value="Operator"),
+    UserProfileFact(path="activities.description", value="professional services"),
     UserProfileFact(path="tax_residence.ccaa", value="madrid"),
     UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
     UserProfileFact(path="iva.regime", value="GENERAL"),
     UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
     UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
     UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+    UserProfileFact(path="censo.activity_start_date", value=date(2025, 1, 1)),
 )
 
 

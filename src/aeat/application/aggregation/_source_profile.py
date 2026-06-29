@@ -1,8 +1,11 @@
-"""Source mesh resolver for user-profile backed registry bindings.
+"""Source-mesh resolver for user-profile backed registry bindings.
 
-Accepts an optional :class:`RegistrySnapshot` at construction; when none
-is supplied the resolver fetches it lazily from the resident registry
-authority at resolution time.
+Owns :attr:`~aeat.core.aggregation.BindingSourceKind.PROFILE` and returns the
+profile-sourced values as a :class:`~._source_mesh.CalculationSourceResolution`.
+Accepts an optional
+:class:`~aeat.domain.calculations.registry.RegistrySnapshot` at construction;
+when none is supplied the resolver fetches the matching snapshot lazily from the
+resident registry authority at resolution time.
 """
 
 from __future__ import annotations
@@ -18,7 +21,7 @@ from ._source_mesh import (
 
 
 class ProfileSourceResolver:
-    """Resolve formula-consumed ``source = "profile"`` bindings through the source mesh."""
+    """Resolve formula-consumed ``source = "profile"`` bindings."""
 
     resolver_id = "profile"
     owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.PROFILE,)

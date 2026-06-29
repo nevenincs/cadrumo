@@ -3,6 +3,18 @@
 :class:`EvidenceBundleService` persists bundles through
 :class:`EvidenceBundleRepository` and reports integrity checks as an
 :class:`EvidenceBundleVerificationReport`.
+
+The repository is a :class:`SecureBoundRepository` namespace for
+encrypted bucket-local manifests. :meth:`EvidenceBundleService.export`
+is the narrow operator-directed plaintext exception: it verifies first,
+writes record bytes to the requested archive path before
+``manifest.json``, and does not mutate the secure catalogue.
+
+See Also:
+    :class:`EvidenceBundle`,
+    :class:`EvidenceRecordRef`,
+    :class:`BundleVerificationState`, and
+    :class:`EvidenceBundleCheckResult`.
 """
 
 from __future__ import annotations
@@ -41,7 +53,13 @@ _MANIFEST_FILENAME = "manifest.json"
 
 
 class EvidenceBundleRepository(SecureBoundRepository[EvidenceBundle]):
-    """Encrypted repository for bucket-local evidence bundle manifests."""
+    """Encrypted repository for bucket-local :class:`EvidenceBundle` manifests.
+
+    The namespace, sensitivity, schema version, and payload type come
+    from ``APPLICATION_EVIDENCE_BUNDLE_NAMESPACE`` so evidence bundles
+    use the same secure-object envelope contract as other sensitive
+    bucket-local application state.
+    """
 
     namespace: ClassVar[str] = APPLICATION_EVIDENCE_BUNDLE_NAMESPACE.namespace
     sensitivity: ClassVar = APPLICATION_EVIDENCE_BUNDLE_NAMESPACE.sensitivity
@@ -55,7 +73,13 @@ class EvidenceBundleRepository(SecureBoundRepository[EvidenceBundle]):
 
 
 class EvidenceBundleVerificationReport(BaseModel):
-    """Outcome of a verification pass over an :class:`EvidenceBundle`."""
+    """Outcome of a verification pass over an :class:`EvidenceBundle`.
+
+    ``findings`` carries per-check :class:`EvidenceBundleCheckResult`
+    values, ``verification_state`` is the summarized
+    :class:`BundleVerificationState`, and ``completeness_ratio`` reports
+    how much of the manifest's referenced object payload was reachable.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -76,6 +100,10 @@ class EvidenceBundleService:
     ``build`` is the constructor side of ``add``-equivalent (audit bundles
     are produced by the file/verify path, not the operator). ``show``,
     ``check``, ``export``, ``replay`` are operator-facing.
+
+    Persisted manifests stay inside :class:`EvidenceBundleRepository`.
+    Exported ZIP archives are separate caller-directed artifacts and are
+    never treated as authoritative storage records.
     """
 
     def __init__(
@@ -111,8 +139,9 @@ class EvidenceBundleService:
     ) -> EvidenceBundle:
         """Build a new bundle from a mapping of (object_type, object_id) -> raw bytes.
 
-        Returns the persisted :class:`EvidenceBundle` with all record refs
-        and provenance metadata populated.
+        The returned :class:`EvidenceBundle` has all record refs and
+        provenance metadata populated and has already been saved through
+        :class:`EvidenceBundleRepository`.
         """
         from ...domain.buckets._event import BucketEventObjectType
 
@@ -290,7 +319,9 @@ class EvidenceBundleService:
         Runs verification first. On failed verification, refuses with
         :class:`EvidenceBundleVerificationError` unless ``force_incomplete``
         is True. Incomplete bundles require ``force_incomplete=True``;
-        failed-verification bundles always refuse.
+        failed-verification bundles always refuse. The archive is an
+        operator-directed plaintext export written to ``output_path``;
+        it does not create or update encrypted bucket catalogue records.
         """
         if record_payloads is None:
             record_payloads = {}

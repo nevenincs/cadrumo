@@ -4,8 +4,9 @@
 ``aeat app overview explain MODELO [--year YYYY]``. The ``applicable``
 verdict is DERIVED from the three-axis
 :class:`~aeat.domain.deadlines.TaxpayerProfile` taxpayer model through
-the registry-grounded rule table in :mod:`._applicability` — never
-assumed from an autónomo default. An undeclared taxpayer
+the registry-grounded rule table in
+:mod:`aeat.domain.calculations.registry.applicability`, never assumed
+from an autónomo default. An undeclared taxpayer
 model yields an explicit ``incomplete`` verdict: the service
 reports "declare your taxpayer type first" rather than a confident
 wrong obligation.
@@ -62,12 +63,12 @@ class OverviewExplain(BaseModel):
         year: The fiscal year the applicability was evaluated against.
         applicable: Whether the modelo positively applies to the
             profile this year. Only an
-            :attr:`~._applicability.ApplicabilityVerdict.APPLICABLE`
+            :attr:`ApplicabilityVerdict.APPLICABLE`
             verdict is ``True``; ``NOT_APPLICABLE`` and ``INCOMPLETE``
             are both ``False`` — the operator is never told a modelo
             applies unless the taxpayer model positively justifies it.
         verdict: The three-state
-            :class:`~._applicability.ApplicabilityVerdict` derived from
+            :class:`ApplicabilityVerdict` derived from
             the taxpayer model. ``INCOMPLETE`` means the operator must
             declare their taxpayer type first.
         rationale: Operator-facing prose explaining the verdict,
@@ -109,7 +110,6 @@ _DEADLINE_RELEVANT_FIELDS: tuple[str, ...] = (
     "professional_income_withholding_ge_70pct",
     "pays_rent_with_retencion",
     "pays_capital_income_with_retencion",
-    "uses_objective_estimation_irpf",
     "does_intracomunitario",
     "third_party_transactions_above_347_threshold",
     "bienes_extranjero_above_threshold",
@@ -208,35 +208,35 @@ def build_overview_explain(
             unknown to the registry, or when the deadline engine fails
             for a reason other than a missing deadline-window dataset.
     """
-    if not modelo.strip():
+    modelo_id = modelo.strip()
+    if not modelo_id:
         raise OverviewExplainError(
             translated_message="application.overview.explain.errors.modelo_blank",
         )
     resolved_year = year or date.today().year
 
-    applicability = derive_modelo_applicability(profile, modelo)
+    if not _modelo_is_registered(modelo_id):
+        # Refuse operator typos before calling the domain applicability
+        # model: the domain schema validates known ModeloId shape and
+        # must not leak a Pydantic error through the overview boundary.
+        raise OverviewExplainError(
+            f"could not evaluate modelo {modelo_id!r} for year {resolved_year}: modelo is not registered",
+        )
+
+    applicability = derive_modelo_applicability(profile, modelo_id)
     # The scheduling rationale is independent of the applicability
     # verdict: it explains the filing window, not whether the taxpayer
     # owes the modelo. It is only meaningful when the registry carries
     # deadline windows for the modelo/year.
     scheduling_rationale = _scheduling_rationale(
         profile,
-        modelo=modelo,
+        modelo=modelo_id,
         year=resolved_year,
         engine=engine,
     )
 
-    if applicability.verdict is ApplicabilityVerdict.INCOMPLETE and not _modelo_is_registered(modelo):
-        # A modelo identifier the registry knows nothing about is an
-        # operator typo, not an undeclared-profile case. Keep the
-        # historic refusal so a typo does not masquerade as "declare
-        # your taxpayer type first".
-        raise OverviewExplainError(
-            f"could not evaluate modelo {modelo!r} for year {resolved_year}: modelo is not registered",
-        )
-
     return OverviewExplain(
-        modelo=modelo,
+        modelo=modelo_id,
         year=resolved_year,
         applicable=applicability.applicable,
         verdict=applicability.verdict,

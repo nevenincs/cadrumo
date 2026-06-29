@@ -5,6 +5,26 @@ current :class:`ModeloRecord` after the :class:`WorkflowEngine` preflight gate
 passes. Filing transitions and audit entries are persisted through the
 :class:`BucketEventHistoryRepository` path shared by the modelo revision
 services.
+
+The action records the operator's local/internal filing state only. It never
+submits to AEAT, never marks AEAT acceptance, and never fabricates official
+external evidence. A successful transition sets the target revision to
+``PRESENTADO``, creates a ``VIGENTE`` :class:`ModeloRecord` with
+``aeat_accepted=False``, and delegates cross-period carry projection to
+:func:`persist_filed_revision`, which stamps locally-filed observations as
+non-official ``app_filing`` evidence.
+
+See Also:
+    :func:`persist_filed_revision`:
+        Persists the filing catalogue, revision state, work-unit pointers,
+        bucket events, participation index rows, and optional carry observation.
+    :func:`aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`:
+        Projects filed casillas into non-official cross-period observations.
+    :func:`aeat.application.modelo._result_disposition_resolution.resolve_modelo_result_disposition`:
+        Resolves the shared Modelo 303 refund/carry disposition before the file
+        transition persists.
+    :func:`aeat.application.modelo._verification_actions._require_cross_period_clean_state`:
+        Rechecks cross-period dependencies before local filing state is written.
 """
 
 from __future__ import annotations
@@ -90,25 +110,30 @@ def file_modelo_revision(
     settings: Settings | None = None,
     clock: datetime | None = None,
 ) -> ModeloRecord:
-    """File a verified-complete revision as the current filed answer.
+    """Mark a verified-complete revision as the current internal filed answer.
 
-    State transitions performed atomically (from the caller's
-    perspective — each repository save is sequenced):
+    This is the application service behind ``aeat app modelo work file``. It is
+    a local state transition, not an AEAT presentation: the resulting
+    :class:`ModeloRecord` has ``aeat_accepted=False`` and no external evidence.
+
+    Preconditions and state changes:
 
     1. Verify the revision is in ``VERIFICADO_COMPLETO`` state.
-    2. Run the workflow gate for the revision's modelo and period.
-    3. Look up any existing current filing record for the same
-       (bucket, modelo, year, period) tuple.
-    4. If a prior current filing exists:
-        * mark the prior filing record ``SUPERSEDED`` with
-          ``superseded_at`` and ``superseded_by_filing_record_id``;
-        * transition the prior filed calculation revision from
-          ``FILED`` to ``FILED_SUPERSEDED``.
-    5. Create the new filing record with status ``CURRENT``.
-    6. Transition the target calculation revision from
-       ``VERIFICADO_COMPLETO`` to ``FILED``.
-    7. Advance the work unit's ``filed_calculation_revision_id``
-       and ``current_filing_record_id`` pointers.
+    2. Recheck profile readiness, persisted Modelo 303 IVA-wallet decision
+       compatibility, and cross-period clean state.
+    3. Run the :class:`WorkflowEngine` gate for the revision's modelo and period.
+    4. Resolve the Modelo 303 refund/carry disposition from
+       :class:`RefundElection` and :class:`TaxpayerProfile`.
+    5. If a prior current filing exists, mark its :class:`ModeloRecord` as
+       ``SUPERSEDIDO`` and its prior :class:`CalculationRevision` as
+       ``PRESENTADO_SUPERSEDIDO``.
+    6. Create the new filing record with status ``VIGENTE`` and transition the
+       target calculation revision from ``VERIFICADO_COMPLETO`` to
+       ``PRESENTADO``.
+    7. Advance the work unit's ``filed_calculation_revision_id`` and
+       ``current_filing_record_id`` pointers, emit ``MODELO_FILED``/
+       ``MODELO_FILED_SUPERSEDED`` bucket events, and persist any local
+       ``app_filing`` carry observation.
 
     Args:
         calculation_revision_id: The id of the verified-complete revision
@@ -135,9 +160,11 @@ def file_modelo_revision(
         bucket_event_repository: Optional bucket-event history repository
             override.
         iva_compensation_decision_repository: Optional IVA wallet decision
-            repository override.
+            repository override used to require that a persisted decision still
+            matches the target revision.
         calculation_observation_repository: Optional calculation-observation
-            repository override used by the cross-period clean-state proof.
+            repository override used by the cross-period clean-state proof and
+            the non-official local carry projection.
         cross_period_expected_member_sets: Optional expected grupo member
             rosters used by the cross-period clean-state proof.
         workflow_engine: Optional workflow engine override for the preflight
@@ -147,7 +174,7 @@ def file_modelo_revision(
         clock: Optional UTC timestamp override.
 
     Returns:
-        The newly created :class:`ModeloRecord` in ``CURRENT`` status.
+        The newly created local :class:`ModeloRecord` in ``VIGENTE`` status.
 
     Raises:
         CalculationRevisionNotFoundError: When the revision id is
@@ -156,6 +183,16 @@ def file_modelo_revision(
             ``VERIFICADO_COMPLETO`` state.
         WorkUnitNotFoundError: When the revision's parent work
             unit cannot be loaded.
+
+    See Also:
+        :func:`persist_filed_revision`:
+            Performs the repository writes once all gates pass.
+        :func:`aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`:
+            Saves the non-official ``app_filing`` observation used by later
+            ``previous_filing`` calculations.
+        :func:`aeat.application.modelo._export.export_modelo_revision`:
+            Sibling local finish line that writes the fichero-BOE artefact
+            without requiring this internal file marker.
     """
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
@@ -185,6 +222,92 @@ def file_modelo_revision(
         raise WorkUnitNotFoundError(
             f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}",
         )
+    _require_filing_preconditions(
+        work_unit=work_unit,
+        target=target,
+        workflow_profile=workflow_profile,
+        observation_repository=obs_repo,
+        filing_repository=fr_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        iva_compensation_decision_repository=iva_compensation_decision_repository,
+        cross_period_expected_member_sets=cross_period_expected_member_sets,
+    )
+
+    now = clock or _utc_now()
+    gate_engine = workflow_engine or _build_revision_workflow_engine(
+        revision=target,
+        work_unit=work_unit,
+        profile=workflow_profile,
+        actor=actor.strip(),
+        clock=now,
+        settings=settings,
+    )
+    _run_revision_workflow_gate(
+        engine=gate_engine,
+        profile=workflow_profile,
+        work_unit=work_unit,
+        today=now.date(),
+        runs_dir=workflow_runs_dir,
+        run_repository=run_repo,
+    )
+
+    refunded = _filed_revision_refunded(
+        work_unit=work_unit,
+        target=target,
+        workflow_profile=workflow_profile,
+        refund_election=refund_election,
+    )
+
+    return persist_filed_revision(
+        target=target,
+        work_unit=work_unit,
+        work_units=work_units,
+        notes=notes,
+        actor=actor,
+        now=now,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        work_unit_repository=wu_repo,
+        bucket_event_repository=bv_repo,
+        calculation_observation_repository=obs_repo,
+        refunded=refunded,
+        taxpayer_nif=workflow_profile.tax_id,
+    )
+
+
+def _filed_revision_refunded(
+    *,
+    work_unit,
+    target,
+    workflow_profile: TaxpayerProfile,
+    refund_election: RefundElection,
+) -> bool:
+    # Determine the filing disposition ONCE from the same shared resolver the
+    # export reads. A Modelo 303 devolución period returns the credit, so the
+    # cross-period carry persisted by filing must generate zero compensación
+    # rather than double-claim the refunded credit into the next period.
+    return revision_is_refund_disposition(
+        work_unit=work_unit,
+        revision=target,
+        workflow_profile=workflow_profile,
+        period=work_unit.period,
+        refund_election=refund_election,
+    )
+
+
+def _require_filing_preconditions(
+    *,
+    work_unit,
+    target,
+    workflow_profile: TaxpayerProfile,
+    observation_repository: CalculationObservationRepository,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol,
+    iva_compensation_decision_repository: IvaWalletDecisionRepository | None,
+    cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
+) -> None:
     from ._profile_readiness_gate import require_profile_ready_for_work_unit
 
     raise_if_deductible_vat_evidence_missing(
@@ -206,10 +329,10 @@ def file_modelo_revision(
     )
     _require_cross_period_clean_state(
         work_unit,
-        observation_repository=obs_repo,
-        filing_repository=fr_repo,
-        calculation_repository=cr_repo,
-        verification_repository=vr_repo,
+        observation_repository=observation_repository,
+        filing_repository=filing_repository,
+        calculation_repository=calculation_repository,
+        verification_repository=verification_repository,
         iva_compensation_decision=iva_compensation_decision,
         expected_member_sets=_cross_period_expected_member_sets_from_profile(
             workflow_profile,
@@ -221,57 +344,6 @@ def file_modelo_revision(
         taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
         workflow_profile=workflow_profile,
         target_revision=target,
-    )
-
-    now = clock or _utc_now()
-    gate_engine = workflow_engine or _build_revision_workflow_engine(
-        revision=target,
-        work_unit=work_unit,
-        profile=workflow_profile,
-        actor=actor.strip(),
-        clock=now,
-        settings=settings,
-    )
-    _run_revision_workflow_gate(
-        engine=gate_engine,
-        profile=workflow_profile,
-        work_unit=work_unit,
-        today=now.date(),
-        runs_dir=workflow_runs_dir,
-        run_repository=run_repo,
-    )
-
-    # Determine the filing disposition ONCE from the same shared resolver the
-    # export reads (resolve_modelo_result_disposition): a Modelo 303 devolución
-    # period (REDEME monthly-refund or non-REDEME last-period opt-in) returns the
-    # credit, so the cross-period carry persisted below must generate zero
-    # compensación rather than double-claim the refunded credit into the next
-    # period's casilla 110. The export's fichero "D" and this carry now read one
-    # determined fact from the same ``refund_election`` (RD 1624/1992 art. 30 /
-    # Ley 37/1992 art. 116). An out-of-window ``DEVOLVER`` election is refused
-    # here, before the filing transition persists.
-    refunded = revision_is_refund_disposition(
-        work_unit=work_unit,
-        revision=target,
-        workflow_profile=workflow_profile,
-        period=work_unit.period,
-        refund_election=refund_election,
-    )
-
-    return persist_filed_revision(
-        target=target,
-        work_unit=work_unit,
-        work_units=work_units,
-        notes=notes,
-        actor=actor,
-        now=now,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        work_unit_repository=wu_repo,
-        bucket_event_repository=bv_repo,
-        calculation_observation_repository=obs_repo,
-        refunded=refunded,
-        taxpayer_nif=workflow_profile.tax_id,
     )
 
 

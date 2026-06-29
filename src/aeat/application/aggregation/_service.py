@@ -1,12 +1,19 @@
 """Central per-modelo aggregation service contracts.
 
-Used by: :mod:`aeat.application.aggregation` package to route aggregation commands to appropriate providers.
+This module owns the non-CLI service boundary for the aggregate command
+surface. It routes a strict :class:`PerModeloAggregationCommand` to the
+provider family that owns the requested modelo and returns a typed
+:class:`PerModeloAggregationResult` without requiring CLI-local conversion
+logic.
 
-This module owns the non-CLI aggregation boundary required by the CLI
-workflow redesign. It routes strict Pydantic command payloads to the
-implemented family aggregators without adding CLI-local conversion logic.
+The service is distinct from the live calculate source mesh. Retenciones,
+counterpart, and foreign-assets providers return per-modelo aggregation
+payloads for operator-facing aggregation/reporting flows; source-derived
+values that feed calculation use :class:`~aeat.application.aggregation.CalculationSourceResolution`
+from :mod:`aeat.application.aggregation._source_mesh`.
 
-Providers: ``retenciones`` (111/115/123/180/190/193), ``counterpart`` (347/349), ``foreign_assets`` (720).
+Providers: ``retenciones`` (111/115/123/180/190/193), ``counterpart``
+(347/349), and ``foreign_assets`` (720).
 """
 
 from __future__ import annotations

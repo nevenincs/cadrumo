@@ -1,22 +1,36 @@
-"""Schema-driven wizard subpackage.
+"""Schema-driven setup-wizard application facade.
 
-The wizard descriptor catalogue is the single source of truth for every
-operator-facing configuration question. A ``WizardFlow`` declares the
-sections, questions, widgets, conditional branches, and answer model;
-the runtime walks that descriptor against a ``Prompter`` implementation
-to collect canonical-token answers, runs per-widget validation, parses
-the typed projection, and persists the result through the standard
-profile workflow. The descriptor also projects onto the
-``PROFILE_KEYS`` registry via ``compile_profile_keys``, keeping the
-catalogue and the validation registry in lockstep.
+The concrete setup flow lives in this package. ``WizardFlow``
+descriptors declare the operator-facing sections, questions, widgets,
+visibility gates, and answer model. The command builder walks those
+descriptors through a ``Prompter`` implementation, validates raw input
+with the per-widget canonical-token rules, rebuilds the typed answer
+projection, and persists profile facts through the user-profile
+orchestration layer.
 
-Importing this package eagerly registers both surfaces (DB-17 / S64): the
-``_compiler`` import runs the import-time ``register_profile_keys`` push (and,
-through it, the ``_catalogue`` wizard-catalogue registration), so any consumer
-that imports ``aeat.application.wizard`` — the CLI composition root, the
-test-session conftests — guarantees the domain ``PROFILE_KEYS`` registry is
-seeded before first access. The domain therefore never pulls upward into the
-application layer to compile its keys.
+Importing :mod:`aeat.application.wizard` intentionally performs the
+startup registrations that downstream layers consume without importing
+the application package directly. ``_catalogue`` registers ``SETUP_FLOW``
+and ``WIZARD_FLOWS`` in :mod:`aeat.core.wizard_catalogue`; ``_persistence``
+registers its concrete ``project_answers`` implementation in
+:mod:`aeat.core.setup_answers`; and ``_compiler`` compiles the wizard
+catalogue into ``ProfileKey`` rows before pushing them into the
+contribuyente profile-key registry. Domain modules read those core slots
+and the domain registry only, preserving the one-way application boundary.
+
+See Also:
+    :func:`aeat.application.wizard.build_wizard_command`: Build a setup
+        CLI command from a registered flow descriptor.
+    :func:`aeat.application.wizard.validate_widget_answer`: Validate one
+        raw answer into canonical-token form.
+    :func:`aeat.application.wizard.project_answers`: Rebuild typed setup
+        answers from persisted canonical profile values.
+    :class:`aeat.core.setup_answers.SetupAnswers`: Canonical typed model
+        for setup answers.
+    :func:`aeat.core.wizard_catalogue.get_setup_flow`: Return the
+        registered setup flow for core and domain consumers.
+    :func:`aeat.domain.contribuyente.get_profile_key`: Resolve compiled
+        profile-key rows registered by the wizard compiler.
 """
 
 from . import _compiler as _compiler

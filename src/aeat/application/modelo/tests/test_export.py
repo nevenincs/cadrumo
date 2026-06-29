@@ -10,7 +10,6 @@ build through a typer invocation.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from contextlib import ExitStack
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -21,18 +20,14 @@ from ....adapters.persistence.storage.runtime import inspect_bucket_storage_runt
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core import Period
 from ....core.config import Settings, override_settings
-from ....core.identity import nif_check_letter
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.calculations.registry import (
     BindingId,
-    CasillaId,
-    CasillaObservation,
     RegistryModeloObservation,
-    validated_casilla_id,
 )
 from ....domain.deadlines import TaxpayerProfile
-from ....domain.deadlines._models import EntityType, IVARegime, LegalEntityForm, ModeloIVAProfile, RefundAccount
+from ....domain.deadlines._models import IVARegime
 from ....domain.filing import ModeloCasillaProvenance
 from ....domain.iva_compensation._reconciliation import (
     IvaCompensationAuthoritySource,
@@ -47,23 +42,17 @@ from ....domain.modelos._calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ....domain.modelos._codes import ModeloCode
 from ....domain.modelos._filing_record import ExternalEvidenceKind
 from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....tests.registry_observations import registry_grounded_observations
-from ....tests.secure_sql import isolated_profile_storage_root
 from ...calculations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
     cross_period_dependency_requirements,
 )
-from ...user_profile._orchestration import profile_create_storage_span
-from ...user_profile._testing import register_minimal_profile
-from ...workflow._persistence import workflow_state_repository
-from .._actions import (
+from .. import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloIvaWalletReconciliationBlocked,
@@ -76,525 +65,33 @@ from .._actions import (
 from .._export import (
     ModeloExportCommand,
     ModeloExportCrossBucketRefusedError,
-    ModeloExportError,
     ModeloExportNoActiveBucketError,
     ModeloExportOutputPathError,
     ModeloExportResult,
     ModeloIvaWalletDecisionProvenance,
-    compose_export_headers,
     export_modelo_revision,
     iva_wallet_decision_export_provenance,
 )
 from .._selectors import ModeloCalculationRevisionSelectorStateError, select_exportable_revision
+from ._export_test_support import (
+    _M130_INPUT_CASILLA,
+    _M130_RENDIMIENTO_NETO_CASILLA,
+    _casilla_id_from_payload,
+    _profile,
+    _seed_profile,
+    _seed_revision,
+    _synthetic_valid_nif,
+    isolated_backend_context,
+)
 from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_ACTIVE_STORAGE_STACK: ExitStack | None = None
-_PROFILE_SPAN_OPEN = False
-_M130_INPUT_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INPUT_CASILLA")
-_M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("03", surface="_M130_RENDIMIENTO_NETO_CASILLA")
-_M130_RESULT_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULT_CASILLA")
-_M303_RESULT_CASILLA: CasillaId = validated_casilla_id("71", surface="_M303_RESULT_CASILLA")
-_M200_REFUND_RESULT_CASILLA: CasillaId = validated_casilla_id(
-    "DP200014B:00599",
-    surface="_M200_REFUND_RESULT_CASILLA",
-)
 
-
-def _casilla_id_from_payload(value: object) -> CasillaId:
-    return validated_casilla_id(value, surface="test casilla id")
-
-
-def _profile() -> TaxpayerProfile:
-    return TaxpayerProfile(
-        tax_id="taxpayerdefault",
-        iva_regime=IVARegime.GENERAL,
-    )
-
-
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def isolated_backend(tmp_path: Path) -> Iterator[None]:
-    global _ACTIVE_STORAGE_STACK, _PROFILE_SPAN_OPEN
-
-    with ExitStack() as stack:
-        stack.enter_context(isolated_profile_storage_root(tmp_path=tmp_path))
-        _ACTIVE_STORAGE_STACK = stack
-        _PROFILE_SPAN_OPEN = False
-        try:
-            yield
-        finally:
-            _PROFILE_SPAN_OPEN = False
-            _ACTIVE_STORAGE_STACK = None
-
-
-def _ensure_operator_storage_span() -> None:
-    global _PROFILE_SPAN_OPEN
-
-    if _PROFILE_SPAN_OPEN:
-        return
-    if _ACTIVE_STORAGE_STACK is None:
-        raise RuntimeError("modelo export test storage span is not active")
-    _ACTIVE_STORAGE_STACK.enter_context(profile_create_storage_span("operator"))
-    _PROFILE_SPAN_OPEN = True
-
-
-def _seed_profile(*, tax_id: str | None = None, profile_overrides: dict[str, str] | None = None) -> str:
-    _ensure_operator_storage_span()
-    overrides = {
-        "identity.name": "Test",
-        "identity.surnames": "Operator",
-        **dict(profile_overrides or {}),
-    }
-    if tax_id is not None:
-        overrides["identity.tax_id"] = tax_id
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="operator", overrides=overrides or None),
-    )
-    bucket_id = workflow_state_repository().load().active_profile_bucket_id()
-    assert bucket_id is not None
-    return bucket_id
-
-
-def _seed_revision(
-    *,
-    bucket_id: str,
-    state: CalculationRevisionState,
-    modelo: str = "130",
-    filing_year: int = 2026,
-    period: str = "1T",
-    casilla_values: dict[CasillaId, Decimal] | None = None,
-) -> tuple[str, str]:
-    casilla_values = dict(casilla_values or {})
-    typed_period = Period.from_year_and_code(filing_year, period)
-    snapshot = resources().modelos.authority.snapshot(
-        modelo,
-        filing_year=filing_year,
-        period=typed_period.registry_token,
-    )
-    revision_id = snapshot.revision.id
-    work_unit_id = derive_work_unit_id(
-        bucket_id=bucket_id,
-        modelo=modelo,
-        filing_year=filing_year,
-        period=typed_period,
-        revision_id=revision_id,
-    )
-    now = datetime.now(UTC)
-    work_unit = WorkUnit(
-        work_unit_id=work_unit_id,
-        bucket_id=bucket_id,
-        modelo=ModeloCode(modelo),
-        filing_year=filing_year,
-        period=typed_period,
-        revision_id=revision_id,
-        name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
-        created_at=now,
-        updated_at=now,
-    )
-    WorkUnitCatalogueRepository().save(
-        upsert_work_unit(WorkUnitCatalogueRepository().load(), work_unit),
-    )
-    calculation_revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit_id,
-        input_values_by_casilla_id={},
-        binding_overrides={},
-        casilla_values=casilla_values,
-    )
-    revision = CalculationRevision(
-        calculation_revision_id=calculation_revision_id,
-        work_unit_id=work_unit_id,
-        state=state,
-        created_at=now,
-        updated_at=now,
-        casilla_values=casilla_values,
-        observations=registry_grounded_observations(
-            modelo=modelo,
-            filing_year=filing_year,
-            period=period,
-            casilla_values=casilla_values,
-        )
-        if casilla_values
-        else (),
-        verified_at=now if state is not CalculationRevisionState.BORRADOR else None,
-        verified_by="operator" if state is not CalculationRevisionState.BORRADOR else None,
-    )
-    cr_repo = CalculationRevisionCatalogueRepository()
-    cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
-    return work_unit_id, calculation_revision_id
-
-
-_RESULT_DISPOSITION_TEST_CLOCK = datetime(2026, 1, 1, 0, 0, 0, tzinfo=UTC)
-
-
-def _result_disposition_work_unit(*, modelo: str, period: Period) -> WorkUnit:
-    snapshot = resources().modelos.authority.snapshot(
-        modelo,
-        filing_year=period.filing_year,
-        period=period.registry_token,
-    )
-    work_unit_id = derive_work_unit_id(
-        bucket_id="operator",
-        modelo=modelo,
-        filing_year=period.filing_year,
-        period=period,
-        revision_id=snapshot.revision.id,
-    )
-    return WorkUnit(
-        work_unit_id=work_unit_id,
-        bucket_id="operator",
-        modelo=ModeloCode(modelo),
-        filing_year=period.filing_year,
-        period=period,
-        revision_id=snapshot.revision.id,
-        name=f"{modelo}-{period.filing_year}-{period.registry_token}",
-        created_at=_RESULT_DISPOSITION_TEST_CLOCK,
-        updated_at=_RESULT_DISPOSITION_TEST_CLOCK,
-    )
-
-
-def _result_disposition_revision(
-    *,
-    work_unit: WorkUnit,
-    casilla_values: dict[CasillaId, Decimal],
-) -> CalculationRevision:
-    calculation_revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit.work_unit_id,
-        input_values_by_casilla_id={},
-        binding_overrides={},
-        casilla_values=casilla_values,
-    )
-    return CalculationRevision(
-        calculation_revision_id=calculation_revision_id,
-        work_unit_id=work_unit.work_unit_id,
-        state=CalculationRevisionState.BORRADOR,
-        casilla_values=casilla_values,
-        observations=tuple(
-            CasillaObservation(
-                casilla_id=casilla_id,
-                value=value,
-                legal_refs=("result-disposition-test",),
-                source_refs=("result-disposition-test",),
-            )
-            for casilla_id, value in casilla_values.items()
-        ),
-        created_at=_RESULT_DISPOSITION_TEST_CLOCK,
-        updated_at=_RESULT_DISPOSITION_TEST_CLOCK,
-    )
-
-
-def _resolve_result_disposition(
-    *,
-    modelo: str,
-    casilla_values: dict[CasillaId, Decimal],
-    profile: TaxpayerProfile,
-    period: Period,
-) -> str:
-    from .._result_disposition_resolution import resolve_modelo_result_disposition
-
-    work_unit = _result_disposition_work_unit(modelo=modelo, period=period)
-    revision = _result_disposition_revision(work_unit=work_unit, casilla_values=casilla_values)
-    return resolve_modelo_result_disposition(
-        work_unit=work_unit,
-        revision=revision,
-        workflow_profile=profile,
-        period=period,
-    ).value
-
-
-def _result_disposition_profile(kind: str) -> TaxpayerProfile:
-    if kind == "redeme":
-        return TaxpayerProfile(
-            tax_id="redemecompany",
-            iva_regime=IVARegime.GENERAL,
-            iva=ModeloIVAProfile(redeme_enrolled=True),
-        )
-    if kind == "ordinary":
-        return _profile()
-    raise AssertionError(f"unknown result-disposition profile kind: {kind}")
-
-
-@pytest.mark.parametrize(
-    ("modelo", "casilla_values", "period", "expected"),
-    (
-        ("303", {_M303_RESULT_CASILLA: Decimal("357.00")}, Period.from_year_and_code(2024, "1T"), "I"),
-        ("303", {_M303_RESULT_CASILLA: Decimal("-210.00")}, Period.from_year_and_code(2024, "1T"), "C"),
-        ("303", {_M303_RESULT_CASILLA: Decimal("0.00")}, Period.from_year_and_code(2024, "1T"), "N"),
-        ("303", {}, Period.from_year_and_code(2024, "1T"), "N"),
-        ("130", {_M130_RESULT_CASILLA: Decimal("-50.00")}, Period.from_year_and_code(2024, "1T"), "B"),
-        ("200", {_M200_REFUND_RESULT_CASILLA: Decimal("-1000.00")}, Period.from_year_and_code(2024, "0A"), "D"),
-        ("390", {}, Period.from_year_and_code(2026, "0A"), "I"),
-    ),
-    ids=(
-        "m303-positive-ingreso",
-        "m303-negative-carry-forward",
-        "m303-zero-negative",
-        "m303-missing-result-defaults-zero",
-        "m130-negative-deducir",
-        "m200-negative-refund",
-        "uncodified-modelo-provisional-ingreso",
-    ),
-)
-def test_resolve_modelo_result_disposition_maps_result_to_disposition(
-    modelo: str,
-    casilla_values: dict[CasillaId, Decimal],
-    period: Period,
-    expected: str,
-) -> None:
-    """The fichero 'Tipo de declaración' is derived from the result, never hardcoded.
-
-    Regression for the credit-misfiling defect: the export used to emit a constant
-    ``"I"`` (ingreso) for every return. The shared resolver follows the computed
-    final result and codified per-modelo result catalogue.
-    """
-    assert (
-        _resolve_result_disposition(
-            modelo=modelo,
-            casilla_values=casilla_values,
-            profile=_profile(),
-            period=period,
-        )
-        == expected
-    )
-
-
-@pytest.mark.parametrize(
-    ("profile_kind", "period_code", "casilla_values", "expected"),
-    (
-        *(("redeme", code, {_M303_RESULT_CASILLA: Decimal("-210.00")}, "D") for code in ("01", "02", "03", "12")),
-        *(("ordinary", code, {_M303_RESULT_CASILLA: Decimal("-210.00")}, "C") for code in ("01", "1T", "4T")),
-        ("redeme", "01", {_M303_RESULT_CASILLA: Decimal("357.00")}, "I"),
-        ("redeme", "01", {_M303_RESULT_CASILLA: Decimal("0.00")}, "N"),
-        ("redeme", "1T", {_M130_RESULT_CASILLA: Decimal("-50.00")}, "B"),
-    ),
-    ids=(
-        *(f"redeme-negative-{code}" for code in ("01", "02", "03", "12")),
-        *(f"ordinary-negative-{code}" for code in ("01", "1T", "4T")),
-        "redeme-positive-not-upgraded",
-        "redeme-zero-not-upgraded",
-        "redeme-non-m303-not-upgraded",
-    ),
-)
-def test_resolve_modelo_result_disposition_redeme_upgrade_boundaries(
-    profile_kind: str,
-    period_code: str,
-    casilla_values: dict[CasillaId, Decimal],
-    expected: str,
-) -> None:
-    """REDEME monthly-refund election: a REDEME taxpayer's negative Modelo 303 period
-    resolves to a refund "D" (devolución, art. 30 RD 1624/1992 / LIVA art. 116) every
-    period; a non-REDEME taxpayer keeps the carry-forward "C". Only an M303
-    carry-forward is upgraded. Cross-period + cross-entity multi-persona verification.
-
-    Exercises the SINGLE shared resolver both the export and the cross-period carry
-    persistence now read.
-    """
-    modelo = "130" if _M130_RESULT_CASILLA in casilla_values else "303"
-    assert (
-        _resolve_result_disposition(
-            modelo=modelo,
-            casilla_values=casilla_values,
-            profile=_result_disposition_profile(profile_kind),
-            period=Period.from_year_and_code(2024, period_code),
-        )
-        == expected
-    )
-
-
-def test_compose_export_headers_emits_devolucion_for_redeme_negative_303(isolated_backend: None) -> None:
-    """End-to-end through the real header composition: a REDEME company's negative
-    Modelo 303 (monthly period) composes a fichero with Tipo de declaración "D"
-    (solicitud de devolución); an otherwise-identical ordinary company composes "C"
-    (a compensar). The only difference is the REDEME enrolment on the passed profile.
-    """
-    bucket_id = _seed_profile(profile_overrides={"identity.surnames": "Redeme", "identity.name": "Company"})
-    work_unit_id, revision_id = _seed_revision(
-        bucket_id=bucket_id,
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        modelo="303",
-        filing_year=2026,
-        period="02",
-        casilla_values={_M303_RESULT_CASILLA: Decimal("-210.00")},
-    )
-    work_unit = WorkUnitCatalogueRepository().load().get(work_unit_id)
-    revision = CalculationRevisionCatalogueRepository().load().get(revision_id)
-    assert work_unit is not None
-    assert revision is not None
-
-    period = Period.from_year_and_code(2026, "02")
-    redeme = TaxpayerProfile(
-        tax_id="redemecompany",
-        iva_regime=IVARegime.GENERAL,
-        # A refund disposition needs a refund account on file; without it the
-        # composer refuses (ModeloRefundAccountMissingError) rather than emitting
-        # an empty DID block.
-        iva=ModeloIVAProfile(redeme_enrolled=True, refund_account=RefundAccount(iban=_SPANISH_IBAN)),
-    )
-
-    headers_redeme = compose_export_headers(
-        work_unit=work_unit, revision=revision, workflow_profile=redeme, period=period
-    )
-    headers_ordinary = compose_export_headers(
-        work_unit=work_unit, revision=revision, workflow_profile=_profile(), period=period
-    )
-
-    # The REDEME company's negative period is a refund "D"; the ordinary company's
-    # identical negative period carries forward "C" (regression control).
-    assert headers_redeme["declaration_type"] == "D"
-    assert headers_ordinary["declaration_type"] == "C"
-    # REDEME byte: "1" for the enrolled filer, "2" for the ordinary one.
-    assert headers_redeme["redeme"] == "1"
-    assert headers_ordinary["redeme"] == "2"
-    assert headers_ordinary["full_name"] == "Redeme Company"
-    # The refund composer emitted the DID block for the REDEME refund; the ordinary
-    # compensación carries no DID fields.
-    assert headers_redeme["iban"] == _SPANISH_IBAN
-    assert headers_redeme["sepa_marca"] == "1"
-    assert "iban" not in headers_ordinary
-
-
-def test_export_headers_use_typed_instalment_period_dates(isolated_backend: None) -> None:
-    bucket_id = _seed_profile(profile_overrides={"identity.surnames": "Test Surnames", "identity.name": "Test Name"})
-    work_unit_id, calculation_revision_id = _seed_revision(
-        bucket_id=bucket_id,
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        modelo="202",
-        filing_year=2026,
-        period="2P",
-    )
-    work_unit = WorkUnitCatalogueRepository().load().get(work_unit_id)
-    revision = CalculationRevisionCatalogueRepository().load().get(calculation_revision_id)
-    assert work_unit is not None
-    assert revision is not None
-
-    headers = compose_export_headers(
-        work_unit=work_unit,
-        revision=revision,
-        workflow_profile=_profile(),
-        period=Period.from_year_and_code(2026, "2P"),
-    )
-
-    assert headers["fecha_inicio_periodo"] == "01102026"
-    assert headers["fecha_fin_periodo"] == "31102026"
-    assert headers["devengo_start_date"] == "01102026"
-
-
-def test_modelo_202_legal_entity_exports_company_name_in_razon_social_slot(
-    isolated_backend: None,
-    tmp_path: Path,
-) -> None:
-    from ....application.filing import build_runtime_schema_provider, export_draft
-    from ....domain.filing import ModeloDraft
-    from ....domain.submission._protocols import ModeloDraftStatus
-
-    company_name = "Rocio Ferrer Administracion Sociedad Limitada"
-    tax_id = "B12345674"
-    bucket_id = _seed_profile(
-        tax_id=tax_id,
-        profile_overrides={
-            "identity.legal_name": company_name,
-            "identity.name": company_name,
-            "identity.surnames": "Rocio Ferrer",
-            "taxpayer_type.entity_type": "legal_entity",
-            "taxpayer_type.legal_entity_form": "sl",
-            "taxpayer_type.irpf_income_categories": "",
-            "irpf.estimation_regime": "",
-        },
-    )
-    work_unit_id, revision_id = _seed_revision(
-        bucket_id=bucket_id,
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        modelo="202",
-        filing_year=2026,
-        period="1P",
-    )
-    work_unit = WorkUnitCatalogueRepository().load().get(work_unit_id)
-    revision = CalculationRevisionCatalogueRepository().load().get(revision_id)
-    assert work_unit is not None
-    assert revision is not None
-    period = Period.from_year_and_code(2026, "1P")
-    workflow_profile = TaxpayerProfile(
-        tax_id=tax_id,
-        entity_type=EntityType.LEGAL_ENTITY,
-        legal_entity_form=LegalEntityForm.SL,
-        iva_regime=IVARegime.GENERAL,
-        incn_prior_12_months=Decimal("500000"),
-        new_entity_first_two_profit_periods=False,
-    )
-
-    headers = compose_export_headers(
-        work_unit=work_unit,
-        revision=revision,
-        workflow_profile=workflow_profile,
-        period=period,
-    )
-
-    assert headers["surnames"] == company_name
-    assert headers["name"] == ""
-
-    provider = build_runtime_schema_provider(filing_year=2026, period=period, modelos=("202",))
-    subview = provider.get_subview("202")
-    draft = ModeloDraft(
-        draft_id="d" + "2" * 63,
-        modelo="202",
-        period=period,
-        profile_tax_id=tax_id,
-        status=ModeloDraftStatus.APROBADO,
-        values=(),
-        created_at=datetime(2026, 6, 28, 10, 0, tzinfo=UTC),
-        updated_at=datetime(2026, 6, 28, 10, 0, tzinfo=UTC),
-        schema_version=subview.schema_version,
-    )
-
-    output_path = tmp_path / "modelo-202-legal-entity.txt"
-    receipt = export_draft(draft, output_path=output_path, headers=headers, schema_provider=provider)
-    text = output_path.read_bytes().decode("latin-1")
-
-    assert receipt.byte_size == len(output_path.read_bytes())
-    page_start = text.index("<T20201000>")
-    assert text[page_start + 22 : page_start + 82].rstrip() == company_name
-    assert text[page_start + 82 : page_start + 102] == " " * 20
-
-
-def test_modelo_202_legal_entity_export_requires_legal_name(isolated_backend: None) -> None:
-    tax_id = "B12345674"
-    bucket_id = _seed_profile(
-        tax_id=tax_id,
-        profile_overrides={
-            "taxpayer_type.entity_type": "legal_entity",
-            "taxpayer_type.legal_entity_form": "sl",
-            "taxpayer_type.irpf_income_categories": "",
-            "irpf.estimation_regime": "",
-        },
-    )
-    work_unit_id, revision_id = _seed_revision(
-        bucket_id=bucket_id,
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        modelo="202",
-        filing_year=2026,
-        period="1P",
-    )
-    work_unit = WorkUnitCatalogueRepository().load().get(work_unit_id)
-    revision = CalculationRevisionCatalogueRepository().load().get(revision_id)
-    assert work_unit is not None
-    assert revision is not None
-
-    with pytest.raises(ModeloExportError) as exc_info:
-        compose_export_headers(
-            work_unit=work_unit,
-            revision=revision,
-            workflow_profile=TaxpayerProfile(
-                tax_id=tax_id,
-                entity_type=EntityType.LEGAL_ENTITY,
-                legal_entity_form=LegalEntityForm.SL,
-                iva_regime=IVARegime.GENERAL,
-                incn_prior_12_months=Decimal("500000"),
-                new_entity_first_two_profit_periods=False,
-            ),
-            period=Period.from_year_and_code(2026, "1P"),
-        )
-
-    assert exc_info.value.context == {"missing": ["identity.legal_name"]}
+    with isolated_backend_context(tmp_path):
+        yield
 
 
 def _blocked_wallet_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCompensationReconciliationDecision:
@@ -758,10 +255,6 @@ def _seed_modelo_303_1t_clean_state(
             "authenticated_identity": taxpayer_tax_id,
         },
     )
-
-
-def _synthetic_valid_nif(number: int) -> str:
-    return f"{number:08d}{nif_check_letter(number)}"
 
 
 def _wallet_decision_repository_at(sidecar_root: Path) -> tuple[IvaWalletDecisionRepository, Settings]:
@@ -1481,222 +974,3 @@ def test_exportable_selector_refuses_verified_fallback_when_current_draft_confli
 
     with pytest.raises(ModeloCalculationRevisionSelectorStateError, match="still draft"):
         select_exportable_revision(work_unit, calculation_repository=calc_repo)
-
-
-# --- P02: REDEME indicator + cuenta-devolución (DID) refund block ----------------
-#
-# The DR303 Diseño positions the REDEME indicator at page-1 offset 110 (length 1)
-# and the refund-account block on the DP303DID page (SWIFT-BIC offset 12, IBAN
-# offset 23, Marca SEPA offset 194). These tests drive the REAL header composition
-# and the REAL registry-backed layout render — never a hand-built byte string — so
-# a wrong offset, a missing REDEME byte, or an empty DID page on a refund fails
-# loudly. The IBAN/SWIFT values are synthetic but structurally valid (real ISO
-# 13616 IBANs pass the mod-97 boundary validator on the encrypted carrier).
-
-# Synthetic but structurally valid IBANs (pass the RefundAccount mod-97 validator).
-_SPANISH_IBAN = "ES9121000418450200051332"
-_GERMAN_IBAN = "DE89370400440532013000"
-_DID_OPEN_TAG = "<T303DID00>"
-_PAGE1_OPEN_TAG = "<T30301000>"
-_DID_PAGE_LENGTH = 823
-# DR303 Diseño offsets within the DID page (1-based) -> 0-based slice starts.
-_DID_SWIFT_OFFSET = 12
-_DID_IBAN_OFFSET = 23
-_DID_BANK_NAME_OFFSET = 57
-_DID_SEPA_OFFSET = 194
-# DR303 page-1 REDEME indicator offset (1-based).
-_PAGE1_REDEME_OFFSET = 110
-
-
-def _redeme_byte(text: str) -> str:
-    """Return the REDEME indicator byte at page-1 offset 110 (1-based, page-relative).
-
-    The page-1 record opens with the literal ``<T30301000>`` tag, and the REDEME
-    field sits at offset 110 within that record. Anchoring on the tag avoids
-    hand-computing the preceding envelope length.
-    """
-    page1_start = text.index(_PAGE1_OPEN_TAG)
-    return text[page1_start + _PAGE1_REDEME_OFFSET - 1]
-
-
-def _did_page(text: str) -> str:
-    """Return the DP303DID page slice after proving the page is present."""
-    did_start = text.index(_DID_OPEN_TAG)
-    did = text[did_start : did_start + _DID_PAGE_LENGTH]
-    assert did.startswith(_DID_OPEN_TAG)
-    return did
-
-
-def _redeme_profile(*, refund_account: RefundAccount | None = None) -> TaxpayerProfile:
-    """A REDEME-enrolled IVA profile so a negative M303 period resolves to a refund."""
-    return TaxpayerProfile(
-        tax_id=_synthetic_valid_nif(12_345_678),
-        iva_regime=IVARegime.GENERAL,
-        iva=ModeloIVAProfile(redeme_enrolled=True, refund_account=refund_account),
-    )
-
-
-def _ordinary_valid_nif_profile() -> TaxpayerProfile:
-    """A non-REDEME IVA profile with a valid 9-char NIF (carries forward -> "C")."""
-    return TaxpayerProfile(
-        tax_id=_synthetic_valid_nif(87_654_321),
-        iva_regime=IVARegime.GENERAL,
-    )
-
-
-def _render_modelo_303_fichero(
-    *,
-    workflow_profile: TaxpayerProfile,
-    casilla_71: Decimal,
-    period_code: str = "02",
-) -> str:
-    """Compose real headers and render the real M303 layout as latin-1 text.
-
-    Drives the genuine ``compose_export_headers`` into the genuine
-    registry-backed ``filing.render_layout`` against the live DR303
-    export layout — a minimal hand-built :class:`ModeloDraft` carries only the
-    casilla-71 result that determines the disposition, so the test exercises the
-    REDEME byte, the DID block, and the disposition-keyed page suppression without
-    re-running the full registry calculation. The returned text is decoded latin-1
-    so per-offset assertions read the actual serialised positions.
-    """
-    from ....application.filing import build_runtime_schema_provider, render_layout
-    from ....domain.filing import ModeloDraft
-    from ....domain.filing._schema import ModeloValue, ModeloValueKind
-    from ....domain.submission._protocols import ModeloDraftStatus
-
-    bucket_id = _seed_profile(profile_overrides={"identity.surnames": "Redeme", "identity.name": "Company"})
-    work_unit_id, revision_id = _seed_revision(
-        bucket_id=bucket_id,
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        modelo="303",
-        filing_year=2026,
-        period=period_code,
-        casilla_values={_M303_RESULT_CASILLA: casilla_71},
-    )
-    work_unit = WorkUnitCatalogueRepository().load().get(work_unit_id)
-    revision = CalculationRevisionCatalogueRepository().load().get(revision_id)
-    assert work_unit is not None
-    assert revision is not None
-
-    period = Period.from_year_and_code(2026, period_code)
-    headers = compose_export_headers(
-        work_unit=work_unit,
-        revision=revision,
-        workflow_profile=workflow_profile,
-        period=period,
-    )
-
-    provider = build_runtime_schema_provider(filing_year=2026, period=period, modelos=("303",))
-    subview = provider.get_subview("303")
-    now_ts = datetime(2026, 5, 21, 12, 3, tzinfo=UTC)
-    draft = ModeloDraft(
-        draft_id="d" + "0" * 63,
-        modelo="303",
-        period=period,
-        profile_tax_id=str(workflow_profile.tax_id),
-        status=ModeloDraftStatus.APROBADO,
-        values=(
-            ModeloValue(
-                casilla_id=_M303_RESULT_CASILLA,
-                value=casilla_71,
-                kind=ModeloValueKind.LITERAL,
-                source="test-supplied result",
-            ),
-        ),
-        created_at=now_ts,
-        updated_at=now_ts,
-        schema_version=subview.schema_version,
-    )
-    payload = render_layout(subview.export_layouts[0], draft=draft, headers=headers)
-    return payload.decode("latin-1")
-
-
-def test_refund_export_emits_iban_redeme_and_marca_for_sepa_account(isolated_backend: None) -> None:
-    """A REDEME refund (devolución) with a Spanish IBAN emits the IBAN at the DID
-    slot, REDEME="1" at page-1 offset 110, and Marca SEPA="1" (Cuenta España).
-
-    Exercises the REDEME byte, SEPA mark derivation, DID block, and refund-only
-    DID page emission. Offsets are the published DR303 positions, not values
-    copied from a render — a wrong slot fails the assertion.
-    """
-    account = RefundAccount(iban=_SPANISH_IBAN)
-    text = _render_modelo_303_fichero(
-        workflow_profile=_redeme_profile(refund_account=account),
-        casilla_71=Decimal("-210.00"),
-    )
-
-    # REDEME indicator on page 1 (offset 110, 1-based) is "1" for an enrolled filer.
-    assert _redeme_byte(text) == "1"
-
-    # The DID page is present and 823 bytes; locate it by its open tag.
-    did = _did_page(text)
-
-    # IBAN at DID offset 23 (1-based), left-justified, space-padded to 34.
-    iban_field = did[_DID_IBAN_OFFSET - 1 : _DID_IBAN_OFFSET - 1 + 34]
-    assert iban_field.rstrip() == _SPANISH_IBAN
-    # Marca SEPA at offset 194 (1-based): "1" Cuenta España for a Spanish IBAN.
-    assert did[_DID_SEPA_OFFSET - 1] == "1"
-    # The IBAN reaches the fichero exactly once and nowhere outside the DID page.
-    assert text.count(_SPANISH_IBAN) == 1
-
-
-def test_refund_export_emits_swift_and_bank_block_for_non_sepa_account(isolated_backend: None) -> None:
-    """A REDEME refund with a non-SEPA (US) SWIFT account emits Marca SEPA="3",
-    the SWIFT-BIC, and the foreign-bank block — the Resto Países DID layout.
-    """
-    account = RefundAccount(
-        iban=None,
-        swift_bic="CHASUS33XXX",
-        bank_name="Synthetic US Bank",
-        bank_address="1 Synthetic Plaza",
-        bank_city="New York",
-        bank_country_code="US",
-    )
-    text = _render_modelo_303_fichero(
-        workflow_profile=_redeme_profile(refund_account=account),
-        casilla_71=Decimal("-210.00"),
-    )
-
-    assert _redeme_byte(text) == "1"
-    did = _did_page(text)
-
-    # Marca SEPA "3" (Resto Países) for a non-SEPA country.
-    assert did[_DID_SEPA_OFFSET - 1] == "3"
-    # SWIFT-BIC at offset 12 (1-based), length 11.
-    assert did[_DID_SWIFT_OFFSET - 1 : _DID_SWIFT_OFFSET - 1 + 11].rstrip() == "CHASUS33XXX"
-    # Foreign bank name at offset 57 (1-based), length 70.
-    assert did[_DID_BANK_NAME_OFFSET - 1 : _DID_BANK_NAME_OFFSET - 1 + 70].rstrip() == "Synthetic US Bank"
-    # The non-SEPA account carries no IBAN, so the IBAN slot stays blank.
-    assert did[_DID_IBAN_OFFSET - 1 : _DID_IBAN_OFFSET - 1 + 34].strip() == ""
-
-
-def test_refund_disposition_without_account_refuses_rather_than_emitting_empty_did(
-    isolated_backend: None,
-) -> None:
-    """A refund disposition with NO refund account on file is refused with the typed
-    ``ModeloRefundAccountMissingError`` — never an empty/partial DID block.
-    """
-    from .._action_errors import ModeloRefundAccountMissingError
-
-    with pytest.raises(ModeloRefundAccountMissingError):
-        _render_modelo_303_fichero(
-            workflow_profile=_redeme_profile(refund_account=None),
-            casilla_71=Decimal("-210.00"),
-        )
-
-
-def test_non_refund_filing_emits_no_did_page_and_redeme_two(isolated_backend: None) -> None:
-    """An ordinary (non-REDEME) negative M303 period carries forward (disposition
-    "C"), so it emits REDEME="2" and NO DID page — no empty refund block.
-    """
-    text = _render_modelo_303_fichero(
-        workflow_profile=_ordinary_valid_nif_profile(),  # non-REDEME -> "C"
-        casilla_71=Decimal("-210.00"),
-    )
-
-    # Non-REDEME -> REDEME indicator "2" (NO) at page-1 offset 110.
-    assert _redeme_byte(text) == "2"
-    # A carry-forward (compensación) filing is not a refund: the DID page is suppressed.
-    assert _DID_OPEN_TAG not in text
-    assert "DID00" not in text

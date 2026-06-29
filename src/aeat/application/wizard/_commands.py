@@ -328,10 +328,6 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         "--pays-capital-income-with-retencion/--no-pays-capital-income-with-retencion",
         help=tr("wizard.setup.flags.pays-capital-income-with-retencion.help"),
     ),
-    "uses-objective-estimation-irpf": typer.Option(
-        "--uses-objective-estimation-irpf/--no-uses-objective-estimation-irpf",
-        help=tr("wizard.setup.flags.uses-objective-estimation-irpf.help"),
-    ),
     "does-intracomunitario": typer.Option(
         "--does-intracomunitario/--no-does-intracomunitario",
         help=tr("wizard.setup.flags.does-intracomunitario.help"),

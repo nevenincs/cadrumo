@@ -93,8 +93,8 @@ def known_auth_provider_ids() -> tuple[str, ...]:
 def get_auth_provider(provider_id: str) -> AuthProviderListing:
     """Resolve a provider id to its catalogue listing.
 
-    Provider ids are exact. Legacy spellings and unavailable providers
-    are rejected instead of being carried as compatibility paths.
+    Provider ids are exact. Retired spellings and unavailable providers
+    are rejected instead of being carried as alternate paths.
 
     Args:
         provider_id: The provider identifier to look up (case-insensitive,

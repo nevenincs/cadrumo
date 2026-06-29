@@ -31,7 +31,6 @@ from ....core.resources import resources
 from ....domain.calculations.registry import (
     M210_CONVENIO_MISSING_SENTINEL,
     M210_DEFERRED_TIPO_SENTINEL,
-    M210_NOT_YET_AUTHORED_SENTINEL,
     CasillaId,
     CasillaObservation,
     RegistrySnapshot,
@@ -41,12 +40,12 @@ from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos._verification_report import (
     ModeloVerificationFindingKind,
 )
-from .._actions import (
-    ModeloApplicabilityFilterError,
+from .. import ModeloApplicabilityFilterError
+from .._m210_rate import resolve_m210_rate as _resolve_m210_rate
+from .._verification_actions import (
     _evaluate_applicability_filter,
     _evaluate_predicate_expression,
     _evaluate_verification_predicates,
-    _resolve_m210_rate,
     _rewrite_m210_sentinels,
 )
 
@@ -233,9 +232,7 @@ def test_non_convenio_country_zw_general_emits_missing_finding(
 
     Zimbabwe is not in the Convenio seed; the lookup misses on
     ``(ZW, general)`` and the helper emits a BLOCKING finding with the
-    ``m210-convenio-rate-missing`` predicate id. This branch is distinct
-    from the ``NOT_YET_AUTHORED`` branch and must surface a different
-    predicate id.
+    ``m210-convenio-rate-missing`` predicate id.
     """
 
     profile = _irnr_profile("ZW")
@@ -300,44 +297,6 @@ def test_rewrite_m210_sentinels_passes_through_non_sentinel_observations(
 
     assert rewritten == observations
     assert findings == []
-
-
-def test_rewrite_m210_sentinels_replaces_not_yet_authored_with_zero_and_emits_finding(
-    m210_snapshot: RegistrySnapshot,
-) -> None:
-    """A NOT_YET_AUTHORED sentinel observation gets rewritten and emits a finding.
-
-    The committed AR/pension row is now authored as DOMESTIC_TARIFF, so this
-    uses a mutated snapshot to preserve the safety contract for any future
-    NOT_YET_AUTHORED convenio row.
-    """
-    snapshot = _snapshot_with_mutated_convenio_row(
-        m210_snapshot,
-        country_code="AR",
-        tipo_renta="pension",
-        new_rate="NOT_YET_AUTHORED",
-    )
-
-    observations = (
-        _observation("base_imponible", Decimal("15000")),
-        _observation("tipo_gravamen", M210_NOT_YET_AUTHORED_SENTINEL),
-        _observation("cuota_integra", Decimal("-45000.00")),
-    )
-    rewritten, findings = _rewrite_m210_sentinels(
-        observations,
-        profile=_irnr_profile("AR"),
-        snapshot=snapshot,
-        year=2025,
-        tipo_renta="pension",
-    )
-
-    rewritten_by_id = {obs.casilla_id: obs for obs in rewritten}
-    assert rewritten_by_id["tipo_gravamen"].value == Decimal("0")
-    # Non-sentinel observations preserved as-is.
-    assert rewritten_by_id["base_imponible"].value == Decimal("15000")
-    assert rewritten_by_id["cuota_integra"].value == Decimal("-45000.00")
-    assert len(findings) == 1
-    assert "m210-convenio-rate-not-yet-authored" in findings[0].message
 
 
 def test_rewrite_m210_sentinels_replaces_convenio_missing_sentinel(

@@ -1,11 +1,36 @@
 """Application services for read-only registry workflows.
 
 Registry query and corpus validation services consume a
-:class:`ValidatedRegistryAuthority` as the single entry point for
-:class:`ModeloDefinition` instances, :class:`RegistrySnapshot` values, and
+:class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority` as
+the single entry point for
+:class:`~aeat.domain.calculations.registry.ModeloDefinition` instances,
+:class:`~aeat.domain.calculations.registry.RegistrySnapshot` values, and
 deadline windows.
+
+The package exposes three local read surfaces: registry-tree inspection
+and verification over the bundled ``registry/aeat`` tree, corpus/manual
+projection over :class:`RegistryTopicProjection` and related report
+records, and filed-state comparison that loads captured AEAT observations
+before recomputing a registry snapshot locally.
+
 The observation-persistence path reads captured filed state through the
 active-bucket encrypted observation store.
+
+See Also:
+    :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority`
+        Domain authority used to load, validate, and snapshot modelo registry
+        definitions.
+    :class:`RegistryTreeReport`
+        Application report returned by registry-tree inspection and verification.
+    :class:`RegistryCitationsListReport`
+        Citation projection over reviewed registry legal references and topics.
+    :class:`RegistryManualVerificationReport`
+        Manual/casilla verification report for bundled manual corpus checks.
+    :class:`FiledStateVerificationReport`
+        Filed-state comparison report built from encrypted captured AEAT
+        observations and local registry recalculation.
+    :mod:`aeat.application.modelo._registry_discovery`
+        Modelo work-unit discovery facade for CLI-facing registry queries.
 """
 
 from __future__ import annotations

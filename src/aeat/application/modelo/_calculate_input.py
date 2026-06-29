@@ -2,13 +2,26 @@
 
 This module converts CLI override tokens into a
 :class:`WorkCalculateInputBundle`, resolves the active work unit's
-:class:`ModeloRevision`, and validates canonical casilla ids, binding channels,
-relation ids, and shortcut-derived semantic-role casillas before the calculate
-service persists a :class:`CalculationRevision`.
+:class:`ModeloRevision`, and validates canonical :class:`CasillaId` values,
+binding channels, relation ids, and shortcut-derived semantic-role casillas
+before the calculate service persists a :class:`CalculationRevision`.
 
 The application result pairs that persisted revision with its parent
 :class:`~aeat.domain.modelos._work_unit.WorkUnit` and any non-blocking
 :class:`CalculationSourceDiagnostic` rows surfaced by bucket aggregation.
+
+See Also:
+    :func:`aeat.entrypoints.cli._modelo_work_calculate_cli.register_work_calculate_commands`:
+        Parses the operator-facing ``modelo work calculate`` command and calls
+        this module to build the input bundle.
+    :func:`aeat.application.modelo._calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+        Consumes the validated bundle and persists the draft calculation
+        revision.
+    :mod:`aeat.application.modelo._calculation_resolution`:
+        Merges caller, backend, profile, relation, and borrador channels before
+        registry-engine execution.
+    :func:`aeat.application.modelo._semantic_role_resolution.casilla_id_for_unique_semantic_role`:
+        Resolves shortcut inputs onto the unique casilla declared by a revision.
 """
 
 from __future__ import annotations
@@ -96,7 +109,13 @@ class ModeloCalculateSemanticRoleError(ModeloCalculateInputError):
 
 @dataclass(frozen=True, slots=True)
 class WorkCalculateInputBundle:
-    """Application-facing inputs for one `modelo work calculate` run."""
+    """Application-facing input channels for one ``modelo work calculate`` run.
+
+    The bundle is the handoff from CLI parsing to application calculation. It
+    separates manual casilla inputs, decimal binding overrides, enum binding
+    overrides, relation values, typed detail rows, and the optional borrador
+    snapshot id so each downstream channel keeps its registry-declared type.
+    """
 
     casilla_inputs: Mapping[CasillaId, Decimal]
     binding_values: Mapping[BindingId, Decimal]
@@ -131,7 +150,7 @@ class WorkCalculateInputBundle:
         )
 
     def optional_binding_values(self) -> Mapping[BindingId, Decimal] | None:
-        """Return binding values using the calculation-service optional contract."""
+        """Return decimal binding values using the calculation-service optional contract."""
         return self.binding_values or None
 
     def optional_enum_binding_values(self) -> Mapping[BindingId, str] | None:
@@ -145,7 +164,12 @@ class WorkCalculateInputBundle:
 
 @dataclass(frozen=True, slots=True)
 class Modelo202ModalitySummary:
-    """Application summary of the Modelo 202 Art. 40.2 / 40.3 modality."""
+    """Application summary of the Modelo 202 Art. 40.2 / 40.3 modality.
+
+    The calculate CLI includes this advisory when the work unit is a Modelo 202
+    calculation so the operator can see which registry modality the profile
+    selected and why.
+    """
 
     modality: str
     reason: str
@@ -153,7 +177,12 @@ class Modelo202ModalitySummary:
 
 @dataclass(frozen=True, slots=True)
 class ModeloAuthorizationAdvisorySummary:
-    """Application summary for an unauthorized-but-computable modelo."""
+    """Application summary for an unauthorized-but-computable modelo.
+
+    A modelo can have a local registry engine while still being marked as not
+    authorised for filing. The calculate command keeps the computation path
+    available and carries this advisory for the rendering layer.
+    """
 
     state: str
 
@@ -161,6 +190,12 @@ class ModeloAuthorizationAdvisorySummary:
 @dataclass(frozen=True, slots=True)
 class ModeloWorkCalculationServiceResult:
     """Application-owned result for one `modelo work calculate` command.
+
+    ``revision`` is the persisted :class:`CalculationRevision`; ``work_unit`` is
+    the parent :class:`~aeat.domain.modelos._work_unit.WorkUnit` loaded after
+    persistence so renderers do not have to repeat the lookup. The optional
+    advisory summaries are presentation data derived from registry
+    applicability and authorization metadata.
 
     ``source_diagnostics`` carries the NON-blocking
     :class:`CalculationSourceDiagnostic` rows the source mesh raised while
@@ -185,7 +220,20 @@ def calculate_modelo_work_revision(
     actor: str,
     inputs: WorkCalculateInputBundle,
 ) -> ModeloWorkCalculationServiceResult:
-    """Persist a draft revision and return a :class:`ModeloWorkCalculationServiceResult`."""
+    """Persist a draft calculation revision as a :class:`ModeloWorkCalculationServiceResult`.
+
+    The function forwards the already validated :class:`WorkCalculateInputBundle`
+    into the bucket-aggregation calculation path, reloads the parent
+    :class:`~aeat.domain.modelos._work_unit.WorkUnit`, and attaches any Modelo
+    202 modality, authorization, or non-blocking source diagnostics needed by
+    the CLI payload.
+
+    See Also:
+        :func:`aeat.application.modelo._calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+            Runs source aggregation and persists the calculation revision.
+        :func:`aeat.entrypoints.cli._modelo_work_calculate_cli._run_work_calculate`:
+            Calls this service and serialises the result for the operator.
+    """
     from ._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
     from ._work_lifecycle import get_work_unit
 
@@ -228,7 +276,20 @@ def build_work_calculate_input_bundle(
     sal_capital_social: Decimal | None = None,
     autoconsumo_promotor_base: Decimal | None = None,
 ) -> WorkCalculateInputBundle:
-    """Build a :class:`WorkCalculateInputBundle` from operator-supplied override tokens."""
+    """Build a :class:`WorkCalculateInputBundle` from operator-supplied tokens.
+
+    The active work unit determines the :class:`ModeloRevision` used for every
+    validation step. ``--casilla`` values must be canonical casilla ids; printed
+    numbers and ambiguous noncanonical references are refused. ``--binding`` is
+    routed by the registry-declared channel, so enum bindings stay as strings,
+    decimal bindings are parsed as :class:`~decimal.Decimal`, and date-valued
+    profile bindings are rejected with profile guidance. ``--relation`` values
+    must match declared relation ids.
+
+    Detail rows are checked before engine dispatch, and shortcut flags are
+    translated into semantic-role casilla values or backend-owned bindings by
+    :func:`apply_calculation_shortcut_inputs`.
+    """
     _validate_detail_rows(detail_rows)
     revision = _revision_for_work_unit(work_unit_id)
     casilla_inputs: dict[CasillaId, Decimal] = {}
@@ -386,8 +447,7 @@ def _validated_relation_id(key: str, known_relation_ids: set[RelationId]) -> Rel
         return key
     accepted = ", ".join(sorted(known_relation_ids))
     raise ModeloCalculateRelationInputError(
-        f"--relation {key!r} does not match any relation id in this revision. "
-        f"Accepted relation ids: {accepted}.",
+        f"--relation {key!r} does not match any relation id in this revision. Accepted relation ids: {accepted}.",
         context={"key": key, "accepted": accepted},
         translated_message="application.modelo.errors.calculate_relation_unknown",
     )
@@ -430,7 +490,12 @@ def _validated_canonical_casilla_id(key: str, revision: ModeloRevision) -> Casil
 
 
 def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalitySummary | None:
-    """Return a :class:`Modelo202ModalitySummary` for a work unit, or ``None`` when not applicable."""
+    """Return a :class:`Modelo202ModalitySummary` for ``work_unit`` when applicable.
+
+    Non-Modelo-202 work units return ``None``. For Modelo 202, the active
+    profile projection is passed to the registry applicability helper so the
+    calculate payload can disclose whether Art. 40.2 or Art. 40.3 was selected.
+    """
     if str(work_unit.modelo) != Modelo.M202:
         return None
 
@@ -446,7 +511,12 @@ def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalityS
 
 
 def authorization_advisory_for_modelo(modelo: str) -> ModeloAuthorizationAdvisorySummary | None:
-    """Return a :class:`ModeloAuthorizationAdvisorySummary` for an unauthorized-but-computable modelo."""
+    """Return a :class:`ModeloAuthorizationAdvisorySummary` for an unauthorized-but-computable modelo.
+
+    Authorized modelos and modelos without a local calculation engine return
+    ``None``. Unauthorized modelos with an engine return the registry
+    authorization state for non-blocking CLI disclosure.
+    """
     from ...core.access_gate import AuthorizationState
 
     try:
@@ -479,7 +549,18 @@ def apply_calculation_shortcut_inputs(
 
     The CLI may parse option strings into typed values, but legal-rule
     computations, semantic casilla routing, and special binding injection
-    belong to the application layer.
+    belong to the application layer. INSS maternity/paternity, maternity
+    deduction, DT 12 pension-rescue reduction, and SAL reserve inputs resolve to
+    unique semantic-role casillas. The Modelo 303 autoconsumo-promotor shortcut
+    writes the backend-owned binding consumed by the registry engine.
+
+    Returns:
+        A pair of mutable dictionaries: resolved casilla inputs and resolved
+        decimal binding values.
+
+    See Also:
+        :func:`aeat.application.modelo._semantic_role_resolution.casilla_id_for_unique_semantic_role`:
+            Selects the unique semantic-role casilla for shortcut values.
     """
     resolved_casilla_values = dict(casilla_inputs)
     resolved_bindings = dict(binding_values)
@@ -491,8 +572,8 @@ def apply_calculation_shortcut_inputs(
 
     if meses_trabajo_con_hijo_menor_3:
         deduccion = compute_deduccion_maternidad_0611(list(meses_trabajo_con_hijo_menor_3))
-        resolved_casilla_values[_semantic_role_casilla_id(work_unit_id, _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE)] = (
-            Decimal(deduccion)
+        resolved_casilla_values[_semantic_role_casilla_id(work_unit_id, _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE)] = Decimal(
+            deduccion
         )
 
     pension_values = (

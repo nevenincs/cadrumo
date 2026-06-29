@@ -58,7 +58,7 @@ def _requirement(
     )
 
 
-def test_cross_period_requirement_rejects_legacy_source_casillas_key() -> None:
+def test_cross_period_requirement_rejects_retired_source_casillas_key() -> None:
     payload = _requirement("202").model_dump()
     payload["source_casillas"] = payload.pop("source_casilla_ids")
 

@@ -1,26 +1,42 @@
-"""Reassemble pull-side `RowSetEdit` records into typed observations.
+"""Reassemble pull-side row-set records into typed observations.
 
-The pull adapter captures Detalle-tab detail rows as a flat tuple of
-``RowSetCellEdit(binding, row_index, value)`` records grouped by the
-row-set's grouping key. To consume those rows in the local-store
-ingest path the codebase needs typed observations of the matching
-domain shape (``WithholdingObservation`` for modelo 190 / 193,
-``Modelo720RowObservation`` for modelo 720, etc.). Each assembler
-looks up binding selectors in the :class:`ModeloRevision` supplied
-through the snapshot argument.
+The pull adapter captures
+:class:`~aeat.adapters.outbound.google._calc_sheets_pull.RowSetEdit` Detalle-tab
+detail rows as a flat tuple of
+:class:`~aeat.adapters.outbound.google._calc_sheets_pull.RowSetCellEdit`
+records grouped by the row-set's grouping key. To consume those rows in the
+local-store ingest path the codebase needs typed observations of the matching
+domain shape (for example,
+:class:`~aeat.domain.calculations.registry.WithholdingObservation` for modelo
+190 / 193, or
+:class:`~aeat.domain.calculations.registry.Modelo720RowObservation` for modelo
+720). Each assembler looks up binding selectors in the
+:class:`~aeat.domain.calculations.registry.ModeloRevision` supplied by the
+caller.
 
 The assemblers in this module bridge the two: they walk a row-set's
 cells, group them by ``row_index``, look up each cell's binding in
-the snapshot's revision to derive its ``row_field`` selector key,
-and construct the matching observation type from the per-row field
-mapping plus a small set of synthesized defaults (``source_id``,
-``transaction_date``) that the Detalle layout doesn't carry.
+the revision to derive its
+:class:`~aeat.domain.calculations.registry.BindingRowSetSelector`
+``row_field`` key, and construct the matching observation type from the
+per-row field mapping plus a small set of synthesized defaults
+(``source_id``, ``transaction_date``) that the Detalle layout doesn't carry.
 
-Each assembler is self-contained per source kind so the per-modelo
-field mapping is explicit at the call site rather than threaded
-through a generic abstraction. Adding a new detail-record source
-adds a new assembler here; nothing else in the calling code has
-to change.
+Each assembler is self-contained per source kind so the per-modelo field mapping
+is explicit at the call site rather than threaded through a generic abstraction.
+The module only reassembles typed observations; persistence stays in the
+source-specific repository helpers. Adding a new detail-record source adds a new
+assembler here and a dispatch entry for its row-set grouping.
+
+See Also:
+    :func:`~aeat.domain.calculations.registry.binding_row_set_selector`
+        Typed projection used to read row-set selector fields without probing raw
+        selector dictionaries.
+    :class:`~aeat.core.aggregation.RowSetGroupingKind`
+        Closed grouping-axis values consumed by this module's dispatcher.
+    :mod:`aeat.domain.calculations.registry`
+        Registry-side row-value resolvers that perform the inverse operation for
+        export and sheet population.
 """
 
 from __future__ import annotations
@@ -32,7 +48,7 @@ from typing import Protocol
 
 from pydantic import ValidationError
 
-from ...core.aggregation import RowSetGroupingKind
+from ...core.aggregation import RetencionClave, RowSetGroupingKind
 from ...core.decimal import coerce_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.parsing._dates import _parse_iso8601_date
@@ -46,6 +62,7 @@ from ...domain.calculations.registry import (
     RelatedPartyOperationObservation,
     WithholdingObservation,
     binding_aggregation_op,
+    binding_row_set_selector,
 )
 
 __all__ = [
@@ -96,19 +113,30 @@ def assemble_observations_for_grouping(
 ) -> AssembledObservations:
     """Dispatch the right assembler based on the row-set's grouping value.
 
+    The dispatcher maps registry-authored grouping tokens onto the closed
+    :class:`~aeat.core.aggregation.RowSetGroupingKind` axis, then returns an
+    :data:`~aeat.application.calculations._row_set_assembly.AssembledObservations`
+    payload whose source-kind discriminator names the typed observation family
+    produced.
+
     Args:
         grouping: Row-set grouping token; selects which assembler runs
             (``withholding`` / ``related_party`` / ``foreign_asset`` /
             ``atribucion`` / ``refund``).
         cells: Per-row cell shapes consumed by the chosen assembler.
-        revision: The :class:`ModeloRevision` used to look up binding selectors.
+        revision: The
+            :class:`~aeat.domain.calculations.registry.ModeloRevision` used to
+            look up typed
+            :class:`~aeat.domain.calculations.registry.BindingRowSetSelector`
+            projections.
         filing_year: AEAT filing year carried through to the produced
             observations' provenance.
 
     Returns a 2-tuple ``(source_kind, observations)`` where
     ``source_kind`` identifies the assembler that ran (``withholding`` /
     ``related_party`` / ``foreign_asset`` / ``atribucion`` /
-    ``refund``). Raises :class:`RegistryValidationError` for groupings
+    ``refund``). Raises
+    :class:`~aeat.domain.calculations.registry.RegistryValidationError` for groupings
     that have no matching assembler — those are registry layout
     declarations the application layer cannot consume yet.
     """
@@ -134,7 +162,11 @@ def assemble_observations_for_grouping(
 
 
 class _RowCellShape(Protocol):
-    """Structural protocol for the pull adapter's `RowSetCellEdit`.
+    """Structural protocol for pull-side row-set cells.
+
+    This mirrors the pull adapter's
+    :class:`~aeat.adapters.outbound.google._calc_sheets_pull.RowSetCellEdit`
+    shape without importing the adapter module.
 
     Kept here as a Protocol so the assembler module never imports the
     outbound adapter package — preserving the application→adapter
@@ -172,14 +204,22 @@ def _cells_by_row(cells: Iterable[_RowCellShape]) -> dict[int, dict[str, Decimal
 
 
 def _row_field_lookup(revision: ModeloRevision) -> Mapping[str, str]:
-    """Return ``binding_id → selector.row_field`` for every row-producer binding."""
+    """Return ``binding_id → selector.row_field`` for every row-producer binding.
+
+    Uses
+    :func:`~aeat.domain.calculations.registry.binding_row_set_selector`
+    rather than raw selector access, preserving the typed
+    :class:`~aeat.domain.calculations.registry.BindingRowSetSelector` contract
+    closed by the registry selector validation gates.
+    """
     lookup: dict[str, str] = {}
     for binding in revision.bindings:
         if binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
             continue
-        row_field = binding.selector.get("row_field")
-        if isinstance(row_field, str) and row_field:
-            lookup[binding.id] = row_field
+        selector = binding_row_set_selector(binding)
+        if selector is None:
+            continue
+        lookup[str(binding.id)] = selector.row_field
     return lookup
 
 
@@ -235,7 +275,9 @@ def assemble_withholding_observations(
 
     Args:
         cells: Row-set cells exported from the calc sheet.
-        revision: The :class:`ModeloRevision` used to map binding ids to row fields.
+        revision: The
+            :class:`~aeat.domain.calculations.registry.ModeloRevision` used to
+            map binding ids to row fields.
         filing_year: Calendar year of the filing; used to derive default dates.
 
     Synthesised fields (not carried by the Detalle tab):
@@ -244,8 +286,14 @@ def assemble_withholding_observations(
         modelo 190 / 193 are annual summaries.
       * ``country_code`` -- defaults to ``ES`` per the AEAT diseno de
         registro convention for unspecified perceptors.
+      * ``clave`` is NOT synthesised. A missing clave raises
+        :class:`~aeat.domain.calculations.registry.RegistryValidationError`
+        because the Modelo 190/193 distinct percepciones count is keyed by
+        perceptor plus clave/subclave; supplied values are validated against
+        :class:`~aeat.core.aggregation.RetencionClave`.
 
-    Each element in the returned tuple is a :class:`WithholdingObservation`.
+    Each element in the returned tuple is a
+    :class:`~aeat.domain.calculations.registry.WithholdingObservation`.
     """
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
@@ -272,6 +320,12 @@ def assemble_withholding_observations(
                 f"row-set assembly: row {row_index} has no clave; a percepción must declare its "
                 "AEAT clave (Modelo 190/193 Diseño de Registros, registro de tipo 2), not a default",
             )
+        try:
+            clave = RetencionClave(clave_value)
+        except ValueError as exc:
+            raise RegistryValidationError(
+                f"row-set assembly: row {row_index} declares unsupported AEAT clave {clave_value!r}",
+            ) from exc
 
         try:
             observations.append(
@@ -281,7 +335,7 @@ def assemble_withholding_observations(
                     perceptor_legal_name=_coerce_text(fields.get("perceptor_legal_name")),
                     country_code=_coerce_text(fields.get("country_code"), default="ES") or "ES",
                     transaction_date=default_date,
-                    clave=clave_value,
+                    clave=clave,
                     subclave=_coerce_text(fields.get("subclave")),
                     percibido_dinerario=coerce_decimal(fields.get("percibido_dinerario"), default=Decimal("0")),
                     percibido_especie=coerce_decimal(fields.get("percibido_especie"), default=Decimal("0")),
@@ -305,11 +359,15 @@ def assemble_related_party_observations(
     Args:
         cells: Per-row cell shapes the assembler projects into typed
             observations.
-        revision: The :class:`ModeloRevision` used to look up binding selectors.
+        revision: The
+            :class:`~aeat.domain.calculations.registry.ModeloRevision` used to
+            look up typed row-set selector projections.
         filing_year: AEAT filing year carried through to each observation's
             provenance.
 
-    Returns a tuple of :class:`RelatedPartyOperationObservation` instances.
+    Returns a tuple of
+    :class:`~aeat.domain.calculations.registry.RelatedPartyOperationObservation`
+    instances.
     """
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
@@ -348,12 +406,18 @@ def assemble_foreign_asset_observations(
     *,
     filing_year: int,
 ) -> tuple[Modelo720RowObservation, ...]:
-    """Reassemble per-asset :class:`Modelo720RowObservation` rows from row-set cells (modelo 720).
+    """Reassemble per-asset Modelo 720 rows from row-set cells.
 
     Args:
         cells: Row-set cells exported from the calc sheet.
-        revision: The :class:`ModeloRevision` used to map binding ids to row fields.
-        filing_year: Calendar year of the filing; used to derive default acquisition dates.
+        revision: The
+            :class:`~aeat.domain.calculations.registry.ModeloRevision` used to
+            map binding ids to row fields.
+        filing_year: Calendar year of the filing; used to derive default
+            acquisition dates.
+
+    Each element in the returned tuple is a
+    :class:`~aeat.domain.calculations.registry.Modelo720RowObservation`.
     """
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
@@ -397,11 +461,14 @@ def assemble_atribucion_observations(
     Args:
         cells: Per-row cell shapes the assembler projects into typed
             member observations.
-        revision: The :class:`ModeloRevision` used to look up binding selectors.
+        revision: The
+            :class:`~aeat.domain.calculations.registry.ModeloRevision` used to
+            look up typed row-set selector projections.
         filing_year: AEAT filing year carried through to each observation's
             provenance.
 
-    Each element in the returned tuple is an :class:`AtributionMemberObservation`.
+    Each element in the returned tuple is an
+    :class:`~aeat.domain.calculations.registry.AtributionMemberObservation`.
     """
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
@@ -439,12 +506,18 @@ def assemble_refund_observations(
     *,
     filing_year: int,
 ) -> tuple[RefundOperationObservation, ...]:
-    """Reassemble per-operation :class:`RefundOperationObservation` records from row-set cells (modelo 360).
+    """Reassemble Modelo 360 refund-operation records from row-set cells.
 
     Args:
         cells: Row-set cells exported from the calc sheet.
-        revision: The :class:`ModeloRevision` used to map binding ids to row fields.
-        filing_year: Calendar year of the filing; used to derive default operation dates.
+        revision: The
+            :class:`~aeat.domain.calculations.registry.ModeloRevision` used to
+            map binding ids to row fields.
+        filing_year: Calendar year of the filing; used to derive default
+            operation dates.
+
+    Each element in the returned tuple is a
+    :class:`~aeat.domain.calculations.registry.RefundOperationObservation`.
     """
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)

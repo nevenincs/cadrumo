@@ -1,20 +1,31 @@
 """Application services for registry corpus projections.
 
-Citation services project :class:`TopicCatalogue` entries and
-:class:`NormativeReference` records into operator-facing reports.
+Citation services project :class:`TopicCatalogue` entries and reviewed
+registry legal references into operator-facing reports.
 Manual services project extracted manual parts, rules, and verification
 results. Manual verification can receive a
 :class:`ValidatedRegistryAuthority` so manual casilla references are
 checked against the same validated registry authority as runtime
 registry workflows.
+
+All services are local and read-only: they load bundled topic, registry,
+and manual catalogues, then return strict report records for the CLI
+layer. They do not fetch manuals, mutate registry TOML, or emit bucket
+events.
+
+See Also:
+    :class:`RegistryCitationsListReport`,
+    :class:`RegistryManualsListReport`,
+    :class:`RegistryManualRulesReport`,
+    :class:`RegistryManualVerificationReport`, and
+    :class:`RegistryCorpusIssueProjection`.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from enum import StrEnum
 from pathlib import Path
-from typing import get_args
 
 from pydantic import BaseModel, Field
 
@@ -23,54 +34,56 @@ from ...core.config import Settings, load_settings
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
 from ...core.logging import get_logger
 from ...core.topics import Topic, TopicCatalogue, load_topic_catalogue
-from ...domain.calculations.registry import RegistrySnapshotError, ValidatedRegistryAuthority, bundled_authority
+from ...domain.calculations.registry import (
+    LegalReference,
+    RegistryValidationError,
+    ValidatedRegistryAuthority,
+    bundled_authority,
+    verify_legal_catalogue,
+)
 from ...domain.manuals import (
     ManualCasillaReference,
     ManualId,
     ManualPart,
     ManualVerificationIssue,
     ManualVerificationReport,
-    RuleKind,
     find_rules,
     iter_sections,
-    load_manifest,
     load_manual,
-    resolve_part_root,
     verify_manual_dir,
 )
 from ...domain.manuals import (
     load_catalogue as load_manual_catalogue,
 )
 from ...domain.manuals._errors import ManualNotFoundError
-from ...domain.normatives import (
-    NormativeReference,
-    NormativeVerificationIssue,
-    cite,
-    find_articulo,
-    find_reference,
-    short_title,
+from ._corpus_manual_helpers import load_manual_manifest as _load_manual_manifest
+from ._corpus_manual_helpers import (
+    manual_report_with_registry_casilla_issues as _manual_report_with_registry_casilla_issues,
 )
-from ...domain.normatives import (
-    load_catalogue as load_normative_catalogue,
-)
-from ...domain.normatives import (
-    verify_catalogue as verify_normative_catalogue,
-)
-from ...domain.normatives._errors import NormativeParseError
+from ._corpus_manual_helpers import manual_rule_kind as _manual_rule_kind
 from ._errors import RegistryApplicationInputError
 
 _LOGGER = get_logger(__name__)
 
 
 class RegistryManualId(StrEnum):
-    """Manual identifiers approved for the registry manual operator surface."""
+    """Manual identifiers approved for the registry manual operator surface.
+
+    These values intentionally narrow the wider :class:`ManualId` domain to the
+    manual families exposed by ``aeat app registry manuals``.
+    """
 
     RENTA = "renta"
     IVA = "iva"
 
 
 class RegistryTopicProjection(BaseModel):
-    """Resolved :class:`Topic` content exposed by registry corpus services."""
+    """Resolved :class:`Topic` content exposed by registry corpus services.
+
+    Topic projections attach localized explanatory text and related legal refs
+    to citation and manual reports without widening those report contracts to
+    the full :class:`TopicCatalogue`.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -82,7 +95,12 @@ class RegistryTopicProjection(BaseModel):
 
 
 class RegistryCitationReferenceProjection(BaseModel):
-    """One :class:`NormativeReference` row in the registry citations surface."""
+    """One legal document row in the registry citations surface.
+
+    The row is derived from reviewed registry :class:`LegalReference` entries
+    grouped by document id, preserving the document id for article lookup and
+    topic cross-linking.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -100,7 +118,11 @@ class RegistryCitationReferenceProjection(BaseModel):
 
 
 class RegistryCitationArticleProjection(BaseModel):
-    """One cited article projection in the registry citations surface."""
+    """One cited article projection in the registry citations surface.
+
+    Built from the current reviewed registry :class:`LegalReference` entry and
+    its bundled authoritative corpus permalink.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -124,7 +146,7 @@ class RegistryCitationShowCommand(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    normative_id: str = Field(min_length=1)
+    legal_id: str = Field(min_length=1)
     articulo: str | None = None
 
 
@@ -132,8 +154,8 @@ class RegistryCitationsListReport(BaseModel):
     """Typed report for registry citation listing.
 
     Carries rendered :class:`RegistryTopicProjection` rows and
-    :class:`RegistryCitationReferenceProjection` rows from the local
-    normative corpus.
+    :class:`RegistryCitationReferenceProjection` rows from the reviewed legal
+    catalogue.
     """
 
     model_config = _STRICT_FROZEN
@@ -162,7 +184,12 @@ class RegistryCitationShowReport(BaseModel):
 
 
 class RegistryCorpusIssueProjection(BaseModel):
-    """Normalized issue row for registry corpus verification reports."""
+    """Normalized issue row for registry corpus verification reports.
+
+    Used by citation verification and manual verification so CLI payloads carry
+    one stable issue shape even though the underlying domain issues come from
+    different registry and corpus verifiers.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -187,7 +214,7 @@ class RegistryCitationsVerificationReport(BaseModel):
 
 
 class RegistryManualPartProjection(BaseModel):
-    """One discovered manual part row."""
+    """One discovered local :class:`ManualPart` row."""
 
     model_config = _STRICT_FROZEN
 
@@ -257,7 +284,7 @@ class RegistryManualsListReport(BaseModel):
 
 
 class RegistryManualSectionProjection(BaseModel):
-    """One manual section projection."""
+    """One extracted manual section projection."""
 
     model_config = _STRICT_FROZEN
 
@@ -268,7 +295,11 @@ class RegistryManualSectionProjection(BaseModel):
 
 
 class RegistryManualShowReport(BaseModel):
-    """Typed report for one manual lookup."""
+    """Typed report for one manual lookup.
+
+    When extracted structure is absent, manifest metadata still populates the
+    report with ``structure_available=False`` and zero section/chapter counts.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -287,7 +318,12 @@ class RegistryManualShowReport(BaseModel):
 
 
 class RegistryManualRuleProjection(BaseModel):
-    """One manual rule projection."""
+    """One manual rule projection.
+
+    ``references_casillas`` preserves typed :class:`ManualCasillaReference`
+    values so verification can cross-check the rule against
+    :class:`ValidatedRegistryAuthority`.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -348,19 +384,24 @@ def list_registry_citations(
     topic_catalogue: TopicCatalogue | None = None,
     locale: str | None = None,
 ) -> RegistryCitationsListReport:
-    """Return topic-backed citation references from the local corpus.
+    """Return topic-backed citation references from the reviewed legal catalogue.
 
     Returns a :class:`RegistryCitationsListReport`.
     """
     resolved_command = command or RegistryCitationsListCommand()
     topics = _topic_projections(topic_catalogue, locale=locale)
-    catalogue = load_normative_catalogue()
-    references = tuple(catalogue.references.values())
+    authority = bundled_authority()
+    references_by_document = _legal_references_by_document(authority.catalogues.legal.values())
     if resolved_command.tag is not None:
         needle = resolved_command.tag.strip().lower()
-        references = tuple(reference for reference in references if needle in {tag.lower() for tag in reference.tags})
+        references_by_document = {
+            document_id: references
+            for document_id, references in references_by_document.items()
+            if _legal_group_matches_tag(document_id, references, topics=topics, needle=needle)
+        }
     rows = tuple(
-        _citation_reference_projection(reference, topics=topics) for reference in sorted(references, key=_ref_id)
+        _citation_reference_projection(document_id, references, topics=topics)
+        for document_id, references in sorted(references_by_document.items())
     )
     _LOGGER.info(
         "registry.citations.list",
@@ -386,54 +427,45 @@ def show_registry_citation(
     topic_catalogue: TopicCatalogue | None = None,
     locale: str | None = None,
 ) -> RegistryCitationShowReport:
-    """Return one topic-backed citation reference from the local corpus.
+    """Return one topic-backed citation reference from the reviewed legal catalogue.
 
     Returns a :class:`RegistryCitationShowReport` with the matched
-    normative reference and optional article detail.
+    legal document and optional article detail.
     """
     topics = _topic_projections(topic_catalogue, locale=locale)
-    catalogue = load_normative_catalogue()
+    authority = bundled_authority()
+    legal = authority.catalogues.legal
+    references_by_document = _legal_references_by_document(legal.values())
     try:
-        reference = find_reference(catalogue, command.normative_id)
-        article = find_articulo(catalogue, reference.id, command.articulo) if command.articulo is not None else None
-    # BROAD-EXCEPT-RATIONALE-CORPUS-LOOKUP-BOUNDARY:
-    # find_reference/find_articulo surface KeyError, ValueError, and
-    # catalogue-specific exceptions; warning-and-continue is the boundary
-    # contract.
-    except Exception:  # BROAD-EXCEPT-RATIONALE-CORPUS-LOOKUP-BOUNDARY
+        document_id, references, article_reference = _resolve_legal_citation(
+            legal,
+            references_by_document=references_by_document,
+            command=command,
+        )
+    except KeyError as exc:
         _LOGGER.warning(
             "registry.citations.show failed",
             extra={
                 "registry_service": "registry.citations.show",
-                "registry_normative_id": command.normative_id,
+                "registry_legal_id": command.legal_id,
                 "registry_articulo": command.articulo or "",
             },
             exc_info=True,
         )
-        raise
+        raise _citation_not_found_error(command) from exc
     _LOGGER.info(
         "registry.citations.show",
         extra={
             "registry_service": "registry.citations.show",
-            "registry_normative_id": command.normative_id,
+            "registry_legal_id": command.legal_id,
             "registry_articulo": command.articulo or "",
             "registry_topic_count": len(topics),
         },
     )
     return RegistryCitationShowReport(
-        reference=_citation_reference_projection(reference, topics=topics),
-        articulo=(
-            RegistryCitationArticleProjection(
-                numero=article.numero,
-                titulo=_localized(article.titulo),
-                summary=_localized(article.summary),
-                permalink=str(article.permalink),
-                cite=cite(reference, article),
-            )
-            if article is not None
-            else None
-        ),
-        related_topics=_topics_for_reference(topics, reference_id=reference.id, articulo=command.articulo),
+        reference=_citation_reference_projection(document_id, references, topics=topics),
+        articulo=(_citation_article_projection(article_reference) if article_reference is not None else None),
+        related_topics=_topics_for_reference(topics, reference_id=document_id, articulo=command.articulo),
     )
 
 
@@ -442,25 +474,28 @@ def verify_registry_citations(
     topic_catalogue: TopicCatalogue | None = None,
     locale: str | None = None,
 ) -> RegistryCitationsVerificationReport:
-    """Verify the local citation corpus and return a :class:`RegistryCitationsVerificationReport`."""
+    """Verify the reviewed legal catalogue and return a :class:`RegistryCitationsVerificationReport`."""
     topics = _topic_projections(topic_catalogue, locale=locale)
-    report = verify_normative_catalogue()
-    reference_count = 0
+    authority = bundled_authority()
     try:
-        catalogue = load_normative_catalogue()
-    except NormativeParseError as exc:
+        verify_legal_catalogue(
+            authority.catalogues.legal,
+            source_root=authority.source_root,
+            corpus_strict=True,
+        )
+    except RegistryValidationError as exc:
         _LOGGER.warning(
-            "registry citations verification: strict corpus load failed",
+            "registry citations verification: strict legal catalogue check failed",
             extra={"error_type": type(exc).__name__, "error_message": str(exc)},
         )
+        issues = _legal_validation_issue_projections(exc)
     else:
-        reference_count = len(catalogue.references)
-    issues = tuple(_normative_issue_projection(issue) for issue in report.issues)
+        issues = ()
     return RegistryCitationsVerificationReport(
-        reference_count=reference_count,
+        reference_count=len(authority.catalogues.legal),
         issue_count=len(issues),
         issues=issues,
-        passed=report.clean,
+        passed=not issues,
         topic_count=len(topics),
         topics=topics,
     )
@@ -692,153 +727,6 @@ def verify_registry_manual(
     return _manual_verification_report(report, topics=topics)
 
 
-def _manual_report_with_registry_casilla_issues(
-    report: ManualVerificationReport,
-    *,
-    settings: Settings | None,
-    registry_authority: ValidatedRegistryAuthority | None,
-) -> ManualVerificationReport:
-    issues = _manual_registry_casilla_reference_issues(
-        report,
-        settings=settings,
-        registry_authority=registry_authority,
-    )
-    if not issues:
-        return report
-    return report.model_copy(update={"issues": (*report.issues, *issues)})
-
-
-def _manual_registry_casilla_reference_issues(
-    report: ManualVerificationReport,
-    *,
-    settings: Settings | None,
-    registry_authority: ValidatedRegistryAuthority | None,
-) -> tuple[ManualVerificationIssue, ...]:
-    if any(issue.code == "load-failed" for issue in report.errors):
-        return ()
-    part_root = resolve_part_root(
-        manual_id=report.manual_id,
-        year=report.year,
-        part=report.part,
-        settings=settings,
-    )
-    if not (part_root / "structure" / "manual.json").exists():
-        return ()
-
-    manual = load_manual(report.manual_id, report.year, report.part, settings=settings)
-    authority = registry_authority or bundled_authority()
-
-    issues: list[ManualVerificationIssue] = []
-    for section in iter_sections(manual, settings=settings):
-        for rule in section.rules:
-            for reference in rule.references_casillas:
-                issues.extend(
-                    _manual_registry_casilla_reference_rule_issues(
-                        reference,
-                        authority=authority,
-                        manual_year=report.year,
-                        rule_id=rule.rule_id,
-                    ),
-                )
-    return tuple(issues)
-
-
-def _manual_registry_casilla_reference_rule_issues(
-    reference: ManualCasillaReference,
-    *,
-    authority: ValidatedRegistryAuthority,
-    manual_year: int,
-    rule_id: str,
-) -> tuple[ManualVerificationIssue, ...]:
-    try:
-        modelo = authority.modelo(reference.modelo_id)
-    except RegistrySnapshotError:
-        return (
-            ManualVerificationIssue(
-                level="error",
-                code="unknown-casilla-modelo-ref",
-                message=(
-                    f"rule {rule_id} references modelo {reference.modelo_id!r} casilla "
-                    f"{reference.casilla_id!r}, but the modelo is absent from the registry"
-                ),
-            ),
-        )
-
-    covering_revisions = tuple(
-        sorted(
-            (
-                revision
-                for revision in modelo.revisions.values()
-                if revision.period_selector.includes_year(manual_year)
-            ),
-            key=lambda revision: (revision.valid_from, str(revision.id)),
-        ),
-    )
-    if not covering_revisions:
-        return (
-            ManualVerificationIssue(
-                level="error",
-                code="no-casilla-revision-ref",
-                message=(
-                    f"rule {rule_id} references modelo {reference.modelo_id!r} casilla "
-                    f"{reference.casilla_id!r}, but no registry revision covers year {manual_year}"
-                ),
-            ),
-        )
-
-    issues: list[ManualVerificationIssue] = []
-    missing_revisions: list[str] = []
-    resolved_signatures: dict[tuple[str | None, str, str, tuple[str, ...], str], list[str]] = {}
-    for revision in covering_revisions:
-        matches = tuple(casilla for casilla in revision.casillas if casilla.id == reference.casilla_id)
-        if len(matches) > 1:
-            issues.append(
-                ManualVerificationIssue(
-                    level="error",
-                    code="ambiguous-casilla-ref",
-                    message=(
-                        f"rule {rule_id} references modelo {reference.modelo_id!r} casilla "
-                        f"{reference.casilla_id!r}, but revision {revision.id!r} declares "
-                        f"{len(matches)} matching casilla ids"
-                    ),
-                ),
-            )
-            continue
-        if not matches:
-            missing_revisions.append(str(revision.id))
-            continue
-        casilla = matches[0]
-        signature = (casilla.segmento, casilla.number, casilla.label, casilla.section, casilla.data_type)
-        resolved_signatures.setdefault(signature, []).append(str(revision.id))
-
-    if missing_revisions:
-        issues.append(
-            ManualVerificationIssue(
-                level="error",
-                code="dangling-casilla-ref",
-                message=(
-                    f"rule {rule_id} references modelo {reference.modelo_id!r} casilla "
-                    f"{reference.casilla_id!r}, but that casilla.id is missing from "
-                    f"revision(s) {tuple(missing_revisions)!r} for year {manual_year}"
-                ),
-            ),
-        )
-    if len(resolved_signatures) > 1:
-        signature_revisions = tuple(tuple(revisions) for revisions in resolved_signatures.values())
-        issues.append(
-            ManualVerificationIssue(
-                level="error",
-                code="ambiguous-casilla-ref",
-                message=(
-                    f"rule {rule_id} references modelo {reference.modelo_id!r} casilla "
-                    f"{reference.casilla_id!r}, but year {manual_year} resolves to divergent "
-                    f"casilla definitions across revision groups {signature_revisions!r}"
-                ),
-            ),
-        )
-    return tuple(issues)
-
-
 def _topic_projections(
     topic_catalogue: TopicCatalogue | None,
     *,
@@ -883,37 +771,222 @@ def _registry_topic_locale(locale: str | None) -> str:
     return normalized
 
 
-def _localized(text: Mapping[str, str]) -> str:
-    """Resolve a multilingual normative field to the operator's language.
+_LEGAL_KIND_LABELS: Mapping[str, str] = {
+    "ley": "Ley",
+    "real_decreto": "Real Decreto",
+    "real_decreto_legislativo": "Real Decreto Legislativo",
+    "real_decreto_ley": "Real Decreto-ley",
+    "orden": "Orden",
+    "reglamento": "Reglamento",
+    "acuerdo_internacional": "Acuerdo internacional",
+    "directiva": "Directiva",
+    "manual": "Manual",
+    "instruction": "Instruccion",
+}
 
-    Normative ``title`` / ``titulo`` / ``summary`` fields are
-    :data:`LocalizedText` mappings. Citation projections are
-    operator-facing and carry a single rendered string, so the field
-    is flattened to the operator's output language, falling back to
-    the authoritative ``es`` entry (guaranteed present by the
-    normatives schema).
-    """
-    return text.get(output_language()) or text["es"]
+_LEGAL_REF_SUFFIX_PREFIXES = (
+    "art-",
+    "da-",
+    "dd-",
+    "df-",
+    "dt-",
+    "apartado-",
+    "anexo-",
+    "aprobacion",
+    "amendment",
+)
 
 
 def _citation_reference_projection(
-    reference: NormativeReference,
+    document_id: str,
+    references: tuple[LegalReference, ...],
     *,
     topics: tuple[RegistryTopicProjection, ...],
 ) -> RegistryCitationReferenceProjection:
+    reference = references[0]
+    related_topics = _topics_for_legal_references(topics, references=references)
+    tags = _legal_group_tags(document_id, references, topics=related_topics)
     return RegistryCitationReferenceProjection(
-        id=reference.id,
-        kind=reference.kind.value,
-        number=reference.number,
-        title=_localized(reference.title),
-        published_at=reference.published_at.isoformat(),
-        boe_id=reference.boe_id,
-        boe_url=str(reference.boe_url),
-        tags=reference.tags,
-        articulo_count=len(reference.articulos),
-        short_title=short_title(reference),
-        topic_slugs=tuple(topic.slug for topic in _topics_for_reference(topics, reference_id=reference.id)),
+        id=document_id,
+        kind=reference.kind,
+        number=_legal_document_number(document_id),
+        title=_legal_document_title(document_id, reference),
+        published_at=(reference.published_at or reference.effective_from).isoformat(),
+        boe_id=reference.document_id,
+        boe_url=_base_permalink(reference),
+        tags=tags,
+        articulo_count=len(references),
+        short_title=_legal_document_title(document_id, reference),
+        topic_slugs=tuple(topic.slug for topic in related_topics),
     )
+
+
+def _citation_article_projection(reference: LegalReference) -> RegistryCitationArticleProjection:
+    return RegistryCitationArticleProjection(
+        numero=_legal_article_number(reference),
+        titulo=_legal_article_title(reference),
+        summary=reference.notes or _legal_cite(reference),
+        permalink=reference.permalink,
+        cite=_legal_cite(reference),
+    )
+
+
+def _legal_references_by_document(
+    references: Iterable[LegalReference],
+) -> dict[str, tuple[LegalReference, ...]]:
+    grouped: dict[str, list[LegalReference]] = {}
+    for reference in references:
+        grouped.setdefault(_legal_document_id(reference), []).append(reference)
+    return {
+        document_id: tuple(sorted(values, key=_legal_reference_sort_key)) for document_id, values in grouped.items()
+    }
+
+
+def _resolve_legal_citation(
+    legal: Mapping[str, LegalReference],
+    *,
+    references_by_document: Mapping[str, tuple[LegalReference, ...]],
+    command: RegistryCitationShowCommand,
+) -> tuple[str, tuple[LegalReference, ...], LegalReference | None]:
+    if command.legal_id in legal and command.articulo is None:
+        article_reference = legal[command.legal_id]
+        document_id = _legal_document_id(article_reference)
+        return document_id, references_by_document[document_id], article_reference
+    document_id = _legal_document_id_from_input(command.legal_id)
+    references = references_by_document[document_id]
+    if command.articulo is None:
+        return document_id, references, None
+    ref_id = _legal_ref_id_for_article(document_id, command.articulo)
+    return document_id, references, legal[ref_id]
+
+
+def _citation_not_found_error(command: RegistryCitationShowCommand) -> RegistryApplicationInputError:
+    return RegistryApplicationInputError(
+        translated_message="application.registry.errors.citation_not_found",
+        context={
+            "registry_service": "registry.citations.show",
+            "legal_id": command.legal_id,
+            "articulo": command.articulo,
+        },
+    )
+
+
+def _legal_ref_id_for_article(document_id: str, articulo: str) -> str:
+    normalized = articulo.strip()
+    if normalized.startswith(_LEGAL_REF_SUFFIX_PREFIXES):
+        return f"{document_id}:{normalized}"
+    return f"{document_id}:art-{normalized}"
+
+
+def _legal_document_id(reference: LegalReference) -> str:
+    return _legal_document_id_from_input(reference.id)
+
+
+def _legal_document_id_from_input(ref_id: str) -> str:
+    return ref_id.split(":", 1)[0]
+
+
+def _legal_reference_sort_key(reference: LegalReference) -> tuple[str, str]:
+    return (_legal_article_number(reference), reference.id)
+
+
+def _legal_document_number(document_id: str) -> str:
+    parts = document_id.split("-")
+    if len(parts) >= 3 and parts[0] in {"ley", "rd", "rdl", "rdleg"}:
+        return f"{parts[-2]}/{parts[-1]}"
+    if "rdleg" in parts:
+        rdleg_index = parts.index("rdleg")
+        if len(parts) > rdleg_index + 2:
+            return f"{parts[rdleg_index + 1]}/{parts[rdleg_index + 2]}"
+    if len(parts) >= 4 and parts[0] == "real" and parts[1] == "decreto" and parts[2] == "ley":
+        return f"{parts[-2]}/{parts[-1]}"
+    if len(parts) >= 4 and parts[0] == "orden" and parts[1].isalpha():
+        return f"{parts[1].upper()}/{parts[-2]}/{parts[-1]}"
+    return document_id
+
+
+def _legal_document_title(document_id: str, reference: LegalReference) -> str:
+    label = _LEGAL_KIND_LABELS.get(reference.kind, reference.kind.replace("_", " ").title())
+    return f"{label} {_legal_document_number(document_id)}"
+
+
+def _legal_article_number(reference: LegalReference) -> str:
+    if reference.article:
+        return reference.article
+    if reference.section:
+        return reference.section
+    suffix = reference.id.split(":", 1)[1] if ":" in reference.id else reference.id
+    for prefix in _LEGAL_REF_SUFFIX_PREFIXES:
+        if suffix.startswith(prefix):
+            return suffix.removeprefix(prefix)
+    return suffix
+
+
+def _legal_article_title(reference: LegalReference) -> str:
+    if reference.article:
+        return f"Art. {reference.article}"
+    if reference.section:
+        return reference.section
+    return _legal_article_number(reference)
+
+
+def _legal_cite(reference: LegalReference) -> str:
+    document_id = _legal_document_id(reference)
+    title = _legal_document_title(document_id, reference)
+    if reference.article:
+        cite = f"{title}, art. {reference.article}"
+    elif reference.section:
+        cite = f"{title}, {reference.section}"
+    else:
+        cite = title
+    return f"{cite} ({reference.document_id})"
+
+
+def _base_permalink(reference: LegalReference) -> str:
+    return reference.permalink.split("#", 1)[0]
+
+
+def _topics_for_legal_references(
+    topics: tuple[RegistryTopicProjection, ...],
+    *,
+    references: tuple[LegalReference, ...],
+) -> tuple[RegistryTopicProjection, ...]:
+    refs = frozenset(reference.id for reference in references)
+    document_ids = frozenset(_legal_document_id(reference) for reference in references)
+    return tuple(
+        topic
+        for topic in topics
+        if any(
+            legal_ref in refs
+            or legal_ref in document_ids
+            or any(legal_ref.startswith(f"{document_id}:") for document_id in document_ids)
+            for legal_ref in topic.legal_refs
+        )
+    )
+
+
+def _legal_group_tags(
+    document_id: str,
+    references: tuple[LegalReference, ...],
+    *,
+    topics: tuple[RegistryTopicProjection, ...],
+) -> tuple[str, ...]:
+    tokens = {document_id, *(part for part in document_id.split("-") if part)}
+    tokens.update(reference.kind for reference in references)
+    tokens.update(topic.slug for topic in topics)
+    return tuple(sorted(tokens))
+
+
+def _legal_group_matches_tag(
+    document_id: str,
+    references: tuple[LegalReference, ...],
+    *,
+    topics: tuple[RegistryTopicProjection, ...],
+    needle: str,
+) -> bool:
+    related_topics = _topics_for_legal_references(topics, references=references)
+    haystack = _legal_group_tags(document_id, references, topics=related_topics)
+    return any(needle in item.lower() for item in haystack)
 
 
 def _topics_for_reference(
@@ -934,7 +1007,7 @@ def _topic_mentions_reference(
     articulo: str | None,
 ) -> bool:
     reference_prefix = f"{reference_id}:"
-    article_ref = f"{reference_id}:art-{articulo}" if articulo is not None else None
+    article_ref = _legal_ref_id_for_article(reference_id, articulo) if articulo is not None else None
     for legal_ref in topic.legal_refs:
         if (legal_ref == reference_id or legal_ref.startswith(reference_prefix)) and (
             article_ref is None or legal_ref == article_ref
@@ -943,13 +1016,34 @@ def _topic_mentions_reference(
     return False
 
 
-def _normative_issue_projection(issue: NormativeVerificationIssue) -> RegistryCorpusIssueProjection:
-    return RegistryCorpusIssueProjection(
-        level=issue.level,
-        code=issue.code,
-        message=issue.message,
-        reference_id=issue.reference_id,
+def _legal_validation_issue_projections(error: RegistryValidationError) -> tuple[RegistryCorpusIssueProjection, ...]:
+    message = str(error)
+    failures = tuple(
+        line.strip().removeprefix("-").strip() for line in message.splitlines() if line.strip().startswith("-")
+    ) or (message,)
+    return tuple(
+        RegistryCorpusIssueProjection(
+            level="error",
+            code="legal-catalogue-validation",
+            message=failure,
+            reference_id=_legal_issue_reference_id(failure),
+        )
+        for failure in failures
     )
+
+
+def _legal_issue_reference_id(message: str) -> str | None:
+    marker = "legal reference "
+    if marker in message:
+        tail = message.split(marker, 1)[1]
+        if tail.startswith("'"):
+            return tail.split("'", 2)[1]
+    marker = "legal catalogue key "
+    if marker in message:
+        tail = message.split(marker, 1)[1]
+        if tail.startswith("'"):
+            return tail.split("'", 2)[1]
+    return None
 
 
 def _manual_issue_projection(issue: ManualVerificationIssue) -> RegistryCorpusIssueProjection:
@@ -1047,54 +1141,6 @@ def _domain_manual_id(manual_id: RegistryManualId) -> ManualId:
     return ManualId(manual_id.value)
 
 
-def _manual_rule_kind(kind: str | None) -> RuleKind | None:
-    if kind is None:
-        return None
-    match kind:
-        case "computation":
-            return "computation"
-        case "applicability":
-            return "applicability"
-        case "valuation":
-            return "valuation"
-        case "deductibility":
-            return "deductibility"
-        case "formal_obligation":
-            return "formal_obligation"
-        case "procedural":
-            return "procedural"
-        case "other":
-            return "other"
-    allowed = tuple(str(value) for value in get_args(RuleKind))
-    _LOGGER.warning(
-        "registry.manuals.rules refused unknown rule kind",
-        extra={
-            "registry_service": "registry.manuals.rules",
-            "registry_rule_kind": kind,
-            "registry_allowed_rule_kinds": allowed,
-        },
-    )
-    raise RegistryApplicationInputError(
-        translated_message="application.registry.errors.invalid_manual_rule_kind",
-        context={
-            "registry_service": "registry.manuals.rules",
-            "rule_kind": kind,
-            "allowed_rule_kinds": allowed,
-        },
-    )
-
-
-def _load_manual_manifest(
-    *,
-    manual_id: ManualId,
-    year: int,
-    part: ManualPart,
-    settings: Settings | None,
-):
-    part_root = resolve_part_root(manual_id=manual_id, year=year, part=part, settings=settings)
-    return load_manifest(part_root / "manifest.json"), part_root
-
-
 def _manual_verification_report(
     report: ManualVerificationReport,
     *,
@@ -1115,10 +1161,6 @@ def _manual_verification_report(
         topic_count=len(topics),
         topics=topics,
     )
-
-
-def _ref_id(reference: NormativeReference) -> str:
-    return reference.id
 
 
 __all__ = [

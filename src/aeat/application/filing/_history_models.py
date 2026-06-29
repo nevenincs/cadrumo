@@ -15,6 +15,9 @@ See Also:
     :mod:`aeat.domain.modelos`
         Work-unit filing records and supersession history for calculation
         revisions.
+    :class:`aeat.domain.modelos.ModeloRecordCatalogue`
+        Current/superseded filing-record catalogue that owns the authoritative
+        work-unit filing lifecycle.
     :mod:`aeat.application.calculations`
         Past-filing casilla observations used by cross-period calculation
         resolvers.

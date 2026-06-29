@@ -1,11 +1,25 @@
-"""Persistence helpers for modelo calculation revisions and filing transitions.
+"""Repository mutation helpers for modelo calculation and filing transitions.
 
 The calculate path stores draft :class:`CalculationRevision` rows with their
-provenance-bearing :class:`CasillaObservation` entries and emits
-``modelo.calculation.created`` through the bucket-event catalogue. The filing
-path promotes a verified revision into a current :class:`ModeloRecord`,
-supersedes any prior current filing for the work target, and co-emits
-participation-index and cross-period observation projections.
+provenance-bearing :class:`CasillaObservation` entries, advances the parent
+:class:`WorkUnit` pointer, and emits ``modelo.calculation.created`` through the
+bucket-event catalogue.
+
+The filing path runs here only after its caller has passed readiness, workflow,
+and clean-state gates. It records the local/internal filing transition: create a
+current :class:`ModeloRecord`, supersede any prior current filing for the work
+target, move calculation revisions into ``PRESENTADO`` states, and co-emit
+participation-index plus cross-period observation projections. It never submits
+to AEAT and never turns the non-official ``app_filing`` carry projection into
+filing-grade external evidence.
+
+See Also:
+    :func:`aeat.application.modelo.file_modelo_revision`:
+        Orchestrates preconditions and result-disposition resolution before
+        delegating successful mutations here.
+    :func:`aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`:
+        Projects filed casilla observations into non-official cross-period
+        carry evidence.
 """
 
 from __future__ import annotations
@@ -117,8 +131,11 @@ def persist_calculation_revision(
     """Persist a freshly calculated draft revision and return the :class:`CalculationRevision`.
 
     Returns the existing duplicate when an identical revision is already persisted.
-    The supplied :class:`CasillaObservation` rows carry the legal and source
-    provenance persisted with a new calculation revision.
+    The content-addressed revision id includes manual casilla inputs,
+    binding/relation overrides, ledger source transactions, borrador provenance,
+    detail rows, and calculated casilla values. The supplied
+    :class:`CasillaObservation` rows carry the legal and source provenance
+    persisted with a new calculation revision.
     """
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -260,7 +277,8 @@ def persist_filed_revision(
 ) -> ModeloRecord:
     """Persist the filing transition for a verified-complete calculation revision and return a :class:`ModeloRecord`.
 
-    The ``target`` :class:`CalculationRevision` is the verified-complete source
+    The caller has already run verification/workflow/readiness gates. The
+    ``target`` :class:`CalculationRevision` is the verified-complete source
     revision that becomes ``PRESENTADO`` when this transition succeeds.
 
     When ``calculation_observation_repository`` is supplied the filed revision's

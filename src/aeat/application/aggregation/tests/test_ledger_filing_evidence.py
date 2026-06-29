@@ -42,7 +42,7 @@ from ....domain.transactions import (
 )
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...modelo._actions import _assert_evidence_covers_snapshot
+from ...modelo._verification_actions import _assert_evidence_covers_snapshot
 from .._ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
@@ -211,7 +211,7 @@ def test_evidence_roundtrips_through_encrypted_revision(_objects: SecureObjectRe
 
 
 def test_no_silent_omission_guard_refuses_uncovered_evidence() -> None:
-    from ...modelo._actions import ModeloError
+    from ...modelo import ModeloError
 
     txn = _txn()
     catalogue = TransactionCatalogue.from_transactions((txn,))

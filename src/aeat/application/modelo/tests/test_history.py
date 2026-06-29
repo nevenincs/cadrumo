@@ -21,7 +21,9 @@ from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
 )
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
+from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     WorkUnitNotFoundError,
     assemble_work_unit_history,
@@ -40,10 +42,32 @@ _Repos = tuple[
 ]
 
 
+def _seed_ready_profile(objects: object) -> None:
+    UserProfileLifecycleRepository(bucket_id="default", objects=objects).save(
+        UserProfileRecord(
+            profile_id="default",
+            display_name="Test runtime profile",
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+            ),
+        ),
+    )
+
+
 @pytest.fixture
 def repos(tmp_path: Path) -> Iterator[_Repos]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
         objects = profile.repository
+        _seed_ready_profile(objects)
         yield (
             WorkUnitCatalogueRepository(objects=objects),
             CalculationRevisionCatalogueRepository(objects=objects),

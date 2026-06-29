@@ -28,7 +28,7 @@ from ...workflow import (
     WorkflowStage,
     WorkflowStep,
 )
-from .._actions import ModeloWorkflowGateError
+from .. import ModeloWorkflowGateError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

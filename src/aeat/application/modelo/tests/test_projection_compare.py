@@ -22,8 +22,10 @@ from ....domain.modelos._calculation_revision import (
 )
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.modelos._work_unit import WorkUnit
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
+from ...user_profile import UserProfileLifecycleRepository
 from .. import create_work_unit
 from .._projection import compare_modelo_years
 
@@ -100,6 +102,27 @@ def _seed_revision(
 def test_compare_uses_revision_observation_rows_from_registry_snapshot(tmp_path: Path) -> None:
     """Comparison rows must not lose registry-grounded provenance."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="modelo-compare-provenance") as profile:
+        UserProfileLifecycleRepository(bucket_id=profile.bucket_id, objects=profile.repository).save(
+            UserProfileRecord(
+                profile_id=profile.bucket_id,
+                display_name="Modelo compare profile",
+                facts=(
+                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                    UserProfileFact(path="identity.name", value="Test"),
+                    UserProfileFact(path="identity.surnames", value="Operator"),
+                    UserProfileFact(path="activities.description", value="economic activity"),
+                    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                    UserProfileFact(path="iva.regime", value="GENERAL"),
+                    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                    UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
+                ),
+                created_at=_T0,
+                updated_at=_T0,
+            ),
+        )
         work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
         calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
         work_2025 = _seed_work_unit(
