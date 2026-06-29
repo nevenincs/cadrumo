@@ -2631,7 +2631,8 @@ cli:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       amount_help: Tranzakciós összeg a tranzakció pénznemében (tizedes, pl. 1200.50).
       attachment_help: Kiegészítő mellékletek azonosítója (ismételhető).
-      business_pct_help: Üzleti célú arány 0 és 1 között (csak MIXED besorolásnál).
+      business_pct_help: Üzleti célú arány 0 és 1 között; csak MIXED sorokhoz. Teljesen
+        BUSINESS soroknál hagyja ki.
       category_help: Levonható költség kategóriaidentifikátora (csak kiadásoknál;
         bevételekhez nem szükséges).
       classification_help: Üzleti besorolás (BUSINESS / PERSONAL / MIXED / ...).
@@ -2665,17 +2666,24 @@ cli:
         állítja be, kézzel nem adható meg. Válassz egyet: BUSINESS, PERSONAL, MIXED,
         vagy hagyd ki a --classification kapcsolót, hogy a sor besorolatlan maradjon.'
       taxable_base_help: ÁFA-mentes alapösszeg.
-      usage_ratio_help: Felhasználási arány azonosítója az arányos üzleti használathoz.
+      usage_ratio_help: Meglévő, beállított felhasználásiarány-azonosító arányos
+        üzleti használathoz. Használjon olyan kategóriaazonosítót, amelyet az 'aeat
+        app ledger ratios list' vagy az 'aeat app ledger ratios eligible' mutat; létrehozás:
+        'aeat app ledger ratios set <category-id> <ratio>'. Nem szabad szöveg.
       value_date_help: Értékdátum (ÉÉÉÉ-HH-NN).
     allocate:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
-      business_pct_help: Üzleti célú arány 0 és 1 között.
+      business_pct_help: Üzleti célú arány 0 és 1 között MIXED/arányos sorokhoz;
+        teljesen BUSINESS sorhoz ne használja a ledger allocate parancsot.
       category_help: Levonható költség kategóriaidentifikátora (csak kiadásoknál;
         bevételekhez nem szükséges).
       help: Üzleti/magáncélú arányosság rögzítése egy főkönyvi tranzakcióhoz.
       id_help: A kiosztandó főkönyvi tranzakció azonosítója.
       prorrata_reference_help: IVA prorrata hivatkozás ÁFA-munkafolyamatokhoz.
-      usage_ratio_help: Felhasználási arány azonosítója az arányos üzleti használathoz.
+      usage_ratio_help: Meglévő, beállított felhasználásiarány-azonosító arányos
+        üzleti használathoz. Használjon olyan kategóriaazonosítót, amelyet az 'aeat
+        app ledger ratios list' vagy az 'aeat app ledger ratios eligible' mutat; létrehozás:
+        'aeat app ledger ratios set <category-id> <ratio>'. Nem szabad szöveg.
     app_help: Könyvelési főkönyvek és ÁFA-nyilvántartások kezelése.
     archive:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
@@ -2707,6 +2715,10 @@ cli:
       help: Főkönyvi tranzakciók vizsgálata a megcímzett profilban és rendellenesség-sorok
         jelentése az összes érintett időszakra összesítve. Csak helyi; soha nem lép
         kapcsolatba az AEAT-tal.
+      period_help: 'Opcionális bevallási időszak AEAT tokenként: 1T-4T (negyedévek),
+        0A (éves), 01-12 (hónapok). A --year kapcsolóval használja, a ledger status
+        felülettel egyezően.'
+      year_help: Bevallási év a --period kapcsolóhoz (pl. 2024).
     classify:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       apply_help: 'Az LLM javaslatat llm: eredettel menti, nem csak elonezetet keszit.'
@@ -2722,7 +2734,8 @@ cli:
       bulk_all_failed: 'bulk classify sikertelen: minden sor hibás volt; egyetlen
         főkönyvi sor sem frissült'
       business_pct_help: Üzleti célú arány 0 és 1 között; kötelező --classification
-        MIXED esetén, és elutasított minden más besorolásnál.
+        MIXED esetén, minden más besorolásnál elutasított, teljesen BUSINESS soroknál
+        pedig kihagyandó.
       business_pct_requires_mixed: Elutasítva. A --business-pct csak MIXED besorolásra
         vonatkozik. Egy BUSINESS vagy PERSONAL sor teljes egészében üzleti vagy magáncélú;
         hagyja el a --business-pct értéket, vagy adja meg a --classification MIXED

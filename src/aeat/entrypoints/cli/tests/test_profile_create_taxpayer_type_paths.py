@@ -108,6 +108,30 @@ def test_non_resident_irnr_quiet_create_requires_country_before_registration() -
     assert _registered_profile_exists("irnr-no-country") is False
 
 
+def test_non_resident_irnr_create_guides_to_m210_discovery_not_work_create() -> None:
+    """A successful IRNR profile must not point at unsupported local M210 work."""
+
+    result = _create_profile(
+        "marta-irnr",
+        "--entity-type",
+        "natural_person",
+        "--irpf-income-categories",
+        "capital_inmobiliario",
+        "--fiscal-residency",
+        "non_resident_irnr",
+        "--country-of-fiscal-residence",
+        "FR",
+        "--tax-id",
+        "X1234567L",
+        "--iva-regime",
+        "GENERAL",
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "next\taeat app modelo describe 210" in result.output
+    assert "next\taeat app modelo work create" not in result.output
+
+
 def test_gb_legal_entity_irnr_quiet_create_requires_representante_before_registration() -> None:
     """GB is outside EU/EEA post-Brexit, so representante facts are a hard gate."""
 

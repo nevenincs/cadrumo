@@ -685,6 +685,43 @@ def _add_eligible_mixed_expense() -> str:
     return json.loads(result.output)["result"]["transaction_id"]
 
 
+def test_usage_ratio_help_points_to_configured_ratio_commands(tmp_path: Path) -> None:
+    """`--usage-ratio-id` help names the configured-ratio discovery path."""
+
+    for args in (
+        ["app", "ledger", "add", "--help"],
+        ["app", "ledger", "allocate", "--help"],
+    ):
+        result = _invoke(args, env={"AEAT_OUTPUT_LANGUAGE": "en", "COLUMNS": "260"})
+
+        assert result.exit_code == 0, result.output
+        flat = _flatten_box(result.output or "")
+        assert "--usage-ratio-id" in flat, result.output
+        assert "aeat app ledger ratios list" in flat, result.output
+        assert "aeat app ledger ratios eligible" in flat, result.output
+        assert "aeat app ledger ratios set" in flat, result.output
+        assert "category-id" in flat, result.output
+        assert "Not arbitrary prose" in flat, result.output
+
+
+def test_business_pct_help_is_mixed_only_across_public_verbs(tmp_path: Path) -> None:
+    """`--business-pct` help tells operators to omit it for fully BUSINESS rows."""
+
+    for args in (
+        ["app", "ledger", "add", "--help"],
+        ["app", "ledger", "classify", "--help"],
+        ["app", "ledger", "allocate", "--help"],
+    ):
+        result = _invoke(args, env={"AEAT_OUTPUT_LANGUAGE": "en", "COLUMNS": "260"})
+
+        assert result.exit_code == 0, result.output
+        flat = _flatten_box(result.output or "")
+        assert "--business-pct" in flat, result.output
+        assert "MIXED" in flat, result.output
+        assert "BUSINESS" in flat, result.output
+        assert "fully BUSINESS" in flat, result.output
+
+
 def test_mixed_row_with_business_pct_alone_is_not_preflight_ready(tmp_path: Path) -> None:
     """A MIXED row classified with ``--business-pct`` alone fails preflight.
 
@@ -718,6 +755,10 @@ def test_mixed_row_with_business_pct_alone_is_not_preflight_ready(tmp_path: Path
     assert preflight.exit_code == 0, preflight.output
     assert "ready\tfalse" in preflight.output, preflight.output
     assert "missing_proportionality_reference" in preflight.output, preflight.output
+    assert "aeat app ledger ratios list" in preflight.output, preflight.output
+    assert "aeat app ledger ratios eligible" in preflight.output, preflight.output
+    assert "aeat app ledger ratios set" in preflight.output, preflight.output
+    assert "--usage-ratio-id <category-id>" in preflight.output, preflight.output
 
 
 def test_documented_mixed_use_flow_reaches_preflight_ready(tmp_path: Path) -> None:

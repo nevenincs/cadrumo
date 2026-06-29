@@ -488,7 +488,10 @@ def _is_introspection_only_invocation(ctx: typer.Context) -> bool:
         if subcommand is None:
             return True
         command = subcommand
-    return False
+    # A bare subgroup invocation (for example `aeat config profile`) can
+    # only render that group's help/callback surface. Treat it like help so
+    # discovery never asks for the encrypted profile passphrase first.
+    return hasattr(command, "list_commands")
 
 
 def _verb_path_from_context(ctx: typer.Context) -> str | None:

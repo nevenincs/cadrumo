@@ -693,7 +693,7 @@ def _collect_flag_values(
     return canonical
 
 
-def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile_id: str) -> None:
+def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile_id: str) -> dict[str, str]:
     """Persist a non-interactive ``edit`` as a true patch.
 
     Only the flags the operator named on the command line are written;
@@ -704,12 +704,17 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     from ..workflow._persistence import workflow_state_repository
     from ._persistence import persist_patch, profile_values_from_patch, project_answers
 
+    patched_values = profile_values_from_patch(flow, explicit_flags)
+    merged_values: dict[str, str] | None = None
+
     with profile_storage_session(profile_id):
         repository = workflow_state_repository()
 
         def _persist_if_filing_baseline_survives(state):
+            nonlocal merged_values
             values = record_to_path_values(read_active_profile(state))
-            values.update(profile_values_from_patch(flow, explicit_flags))
+            values.update(patched_values)
+            merged_values = values
             missing_baseline = _missing_filing_baseline_flags(flow, project_answers(flow, values))
             if missing_baseline:
                 raise WizardMissingFlagError(
@@ -723,6 +728,7 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
             return persist_patch(flow, explicit_flags, state=state)
 
         repository.update(_persist_if_filing_baseline_survives)
+    return merged_values or patched_values
 
 
 def _run_full_flow(
@@ -736,7 +742,7 @@ def _run_full_flow(
     profile_id: str,
     mode: WizardPersistMode,
     explicit_question_ids: frozenset[str] = frozenset(),
-) -> None:
+) -> dict[str, str]:
     """Walk the full wizard flow and persist the resulting answer set.
 
     Used for ``create`` (every path) and for an interactive ``edit``,
@@ -809,6 +815,7 @@ def _run_full_flow(
     # `create` writes the full answer set. An interactive `edit`
     # re-walks every visible question, so the full answer set is the
     # operator's confirmed intent.
+    profile_values = serialise_answers(flow, answers)
     supplied_question_ids = frozenset(question.id for section in flow.sections for question in section.questions)
     if mode == "create":
         missing_baseline = _missing_filing_baseline_flags(flow, answers)
@@ -827,7 +834,7 @@ def _run_full_flow(
         def _persist_if_filing_baseline_survives(state):
             if mode == "edit":
                 values = record_to_path_values(read_active_profile(state))
-                values.update({path: value for path, value in serialise_answers(flow, answers).items() if value})
+                values.update({path: value for path, value in profile_values.items() if value})
                 missing_baseline = _missing_filing_baseline_flags(flow, project_answers(flow, values))
                 if missing_baseline:
                     raise WizardMissingFlagError(
@@ -850,6 +857,7 @@ def _run_full_flow(
             )
 
         workflow_state_repository().update(_persist_if_filing_baseline_survives)
+    return profile_values
 
 
 def _enter_requested_output_language(kwargs: dict[str, object], language_stack: contextlib.ExitStack) -> None:
@@ -943,14 +951,13 @@ def _run_wizard_persistence_path(
     accept_defaults: bool,
     profile_name: str,
     profile_id: str,
-) -> None:
+) -> dict[str, str]:
     """Dispatch to patch-edit or full-flow persistence."""
     non_interactive = quiet or accept_defaults
     if mode == "edit" and non_interactive:
-        _run_patch_edit(flow, explicit_flags, profile_id=profile_id)
-        return
+        return _run_patch_edit(flow, explicit_flags, profile_id=profile_id)
 
-    _run_full_flow(
+    return _run_full_flow(
         flow,
         canonical,
         _prompter=_prompter,
@@ -963,7 +970,23 @@ def _run_wizard_persistence_path(
     )
 
 
-def _emit_wizard_success(mode: WizardPersistMode, profile_name: str) -> None:
+_DEFAULT_PROFILE_NEXT_COMMAND = "aeat app modelo work create"
+_NON_RESIDENT_IRNR_NEXT_COMMAND = "aeat app modelo describe 210"
+
+
+def _next_step_command_for_profile_values(profile_values: dict[str, str]) -> str:
+    fiscal_residency = profile_values.get("taxpayer_type.fiscal_residency", "").strip().lower()
+    if fiscal_residency == "non_resident_irnr":
+        return _NON_RESIDENT_IRNR_NEXT_COMMAND
+    return _DEFAULT_PROFILE_NEXT_COMMAND
+
+
+def _emit_wizard_success(
+    mode: WizardPersistMode,
+    profile_name: str,
+    *,
+    next_command: str = _DEFAULT_PROFILE_NEXT_COMMAND,
+) -> None:
     """Emit the success payload in JSON or tabular CLI form.
 
     The post-create / post-edit next-step hint rides on the envelope
@@ -979,7 +1002,6 @@ def _emit_wizard_success(mode: WizardPersistMode, profile_name: str) -> None:
     from ...core.output_rendering import render_command_output
 
     verb = tr("wizard.commands.status.created" if mode == "create" else "wizard.commands.status.updated")
-    next_command = "aeat app modelo work create"
     next_notice = Notice(
         severity=NoticeSeverity.INFO,
         code=f"config.profile.{'create' if mode == 'create' else 'edit'}.next_step",
@@ -1025,7 +1047,7 @@ def _execute_wizard_command(
 
     _seed_output_language_from_environment(canonical)
     _refuse_foral_ccaa(canonical, explicit_flags)
-    _run_wizard_persistence_path(
+    profile_values = _run_wizard_persistence_path(
         flow,
         mode,
         canonical,
@@ -1036,7 +1058,7 @@ def _execute_wizard_command(
         profile_name=profile_name,
         profile_id=profile_id,
     )
-    _emit_wizard_success(mode, profile_name)
+    _emit_wizard_success(mode, profile_name, next_command=_next_step_command_for_profile_values(profile_values))
 
 
 def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callable[..., None]:

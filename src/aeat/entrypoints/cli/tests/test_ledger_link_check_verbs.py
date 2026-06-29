@@ -84,6 +84,57 @@ def test_check_empty_catalogue_is_ready() -> None:
     assert "ready\ttrue" in result.output
 
 
+def _add_business_expense(*, booked_date: str, idempotency_key: str) -> None:
+    result = _invoke(
+        [
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            booked_date,
+            "--amount",
+            "121.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            f"business expense {booked_date}",
+            "--classification",
+            "BUSINESS",
+            "--idempotency-key",
+            idempotency_key,
+        ],
+    )
+    assert result.exit_code == 0, result.output
+
+
+def test_check_accepts_period_year_filter_like_status() -> None:
+    """`ledger check --period --year` scopes readiness checks to that period."""
+
+    _add_business_expense(booked_date="2026-02-10", idempotency_key="check-q1")
+    _add_business_expense(booked_date="2026-05-10", idempotency_key="check-q2")
+
+    filtered = _invoke(["app", "ledger", "check", "--period", "1T", "--year", "2026"])
+
+    assert filtered.exit_code == 0, filtered.output
+    assert "periods\t1T 2026" in filtered.output
+    assert "checked\t1" in filtered.output
+    assert "ready\tfalse" in filtered.output
+
+    unfiltered = _invoke(["app", "ledger", "check"])
+    assert unfiltered.exit_code == 0, unfiltered.output
+    assert "periods\t2026" in unfiltered.output
+    assert "checked\t2" in unfiltered.output
+
+
+def test_check_period_without_year_refuses_like_status() -> None:
+    """`ledger check --period 1T` refuses with the same --year guidance."""
+
+    result = _invoke(["app", "ledger", "check", "--period", "1T"])
+
+    assert result.exit_code != 0, result.output
+    assert "--year" in result.output
+
+
 def test_check_help_advertises_local_only() -> None:
     """Help text must signal `local-only`."""
 
@@ -92,6 +143,9 @@ def test_check_help_advertises_local_only() -> None:
     assert any(token in result.output.lower() for token in ("local-only", "local;", "nunca", "csak helyi")), (
         result.output
     )
+    assert "--period" in result.output
+    assert "--year" in result.output
+    assert "1T" in result.output
 
 
 def test_check_refuses_foreign_bucket_id_without_unlocked_session() -> None:

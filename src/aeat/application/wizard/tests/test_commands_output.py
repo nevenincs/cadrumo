@@ -23,7 +23,7 @@ def _json_context() -> Iterator[None]:
     :func:`json_output_requested`, which walks the active Click context
     chain. Pushing an upstream :class:`click.Context` whose ``obj``
     carries the JSON flag drives the real JSON branch without a full
-    CliRunner round-trip — the same probe the production root callback
+    CLI-runner round-trip — the same probe the production root callback
     populates.
     """
     command = click.Command("probe")
@@ -40,6 +40,14 @@ def test_wizard_success_text_uses_central_output_redaction(capsys: pytest.Captur
     assert profile_id_like_label not in output
     assert CLI_PROFILE_ID_PLACEHOLDER in output
     assert "next\taeat app modelo work create" in output
+
+
+def test_wizard_success_text_accepts_non_resident_next_step(capsys: pytest.CaptureFixture[str]) -> None:
+    _emit_wizard_success("create", "marta-irnr", next_command="aeat app modelo describe 210")
+
+    output = capsys.readouterr().out
+    assert "next\taeat app modelo describe 210" in output
+    assert "next\taeat app modelo work create" not in output
 
 
 @pytest.mark.parametrize(
