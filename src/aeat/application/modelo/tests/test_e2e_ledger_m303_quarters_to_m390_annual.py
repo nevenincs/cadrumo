@@ -49,6 +49,7 @@ import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
+from ....core.errors import AeatError
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
@@ -58,6 +59,7 @@ from ....domain.iva_compensation._reconciliation import IvaCompensationReconcili
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._calculation_revision import CalculationRevision
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos._work_unit import WorkUnit
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -74,6 +76,7 @@ from ...calculations import IvaWalletDecisionRepository
 from ...calculations._observations_repository import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
+    ModeloCrossPeriodCleanStateError,
     calculate_modelo_revision_from_bucket_aggregation,
     create_work_unit,
     persist_filed_revision_observation,
@@ -335,8 +338,12 @@ def _store_profile(secure_objects: SecureObjectRepository) -> None:
     )
 
 
-def _calculate_and_file_m303_quarter(secure_objects: SecureObjectRepository, *, period: str) -> CalculationRevision:
-    """Run the live bucket-aggregation M303 calc for one quarter and file it."""
+def _calculate_m303_quarter_revision(
+    secure_objects: SecureObjectRepository,
+    *,
+    period: str,
+) -> tuple[WorkUnit, CalculationRevision]:
+    """Run the live bucket-aggregation M303 calc for one quarter without projecting filed observations."""
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     event_repo = BucketEventHistoryRepository(objects=secure_objects)
@@ -368,6 +375,12 @@ def _calculate_and_file_m303_quarter(secure_objects: SecureObjectRepository, *, 
         transaction_repository=tx_repo,
         clock=_FILE_AT,
     )
+    return work_unit, revision
+
+
+def _calculate_and_file_m303_quarter(secure_objects: SecureObjectRepository, *, period: str) -> CalculationRevision:
+    """Run the live bucket-aggregation M303 calc for one quarter and project its filed observation."""
+    work_unit, revision = _calculate_m303_quarter_revision(secure_objects, period=period)
     persist_filed_revision_observation(
         revision=revision,
         work_unit=work_unit,
@@ -465,3 +478,42 @@ def test_ledger_drives_m303_quarters_and_folds_into_m390_annual(
     assert Decimal(casillas[_M390_DEVENGADA]) == _LAURA_ANNUAL_EXPECTED["devengada"]
     assert Decimal(casillas[_M390_DEDUCIBLE]) == _LAURA_ANNUAL_EXPECTED["deducible"]
     assert Decimal(casillas[_M390_RESULTADO]) == _LAURA_ANNUAL_EXPECTED["resultado"]
+
+
+def test_m390_refuses_zero_reconciliation_when_m303_calculated_but_observations_missing(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Laura regression: calculated nonzero 303 quarters must not become zero M390 reconciliation slots."""
+    _store_profile(secure_objects)
+    _persist_year_of_invoices(secure_objects)
+
+    computed: ComputedM303CasillasByPeriod = {}
+    for period in _QUARTER_ORDER:
+        _work_unit, revision = _calculate_m303_quarter_revision(secure_objects, period=period)
+        computed[period] = {
+            _DEVENGADA_TOTAL: Decimal(revision.casilla_values[_DEVENGADA_TOTAL]),
+            _DEDUCIBLE_TOTAL: Decimal(revision.casilla_values[_DEDUCIBLE_TOTAL]),
+            _RESULTADO: Decimal(revision.casilla_values[_RESULTADO]),
+        }
+
+    assert sum((computed[p][_DEVENGADA_TOTAL] for p in _QUARTER_ORDER), Decimal("0")) == Decimal("9828.00")
+    assert sum((computed[p][_DEDUCIBLE_TOTAL] for p in _QUARTER_ORDER), Decimal("0")) == Decimal("2163.00")
+    assert sum((computed[p][_RESULTADO] for p in _QUARTER_ORDER), Decimal("0")) == Decimal("7665.00")
+
+    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    before_revision_ids = frozenset(cr_repo.load().revisions)
+    with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
+        _calculate_m390_annual(secure_objects)
+    after_revision_ids = frozenset(cr_repo.load().revisions)
+
+    assert after_revision_ids == before_revision_ids
+    assert isinstance(exc_info.value, AeatError)
+    assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
+    context = exc_info.value.context or {}
+    assert context["reason"] == "missing_clean_cross_period_303_filings_or_observations"
+    assert context["missing_303_periods"] == ("1T", "2T", "3T", "4T")
+    assert context["zero_reconciliation_casillas_at_risk"] == (
+        _M390_DEVENGADA,
+        _M390_DEDUCIBLE,
+        _M390_RESULTADO,
+    )

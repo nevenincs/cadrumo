@@ -32,6 +32,7 @@ from ...domain.calculations.registry import (
     RelationId,
     calculate_registry_snapshot,
     casillas_by_id,
+    relation_source_requirements,
 )
 from ...domain.deadlines import IVARegime
 from ...domain.invoices import InvoiceCatalogueRepository
@@ -280,6 +281,13 @@ _M349_NUMERO_OPERADORES_BINDING: BindingId = "iva-349-declarante-numero-operador
 _M349_IMPORTE_OPERACIONES_BINDING: BindingId = "iva-349-declarante-importe-operaciones"
 _M349_NUMERO_RECTIFICACIONES_BINDING: BindingId = "iva-349-declarante-numero-rectificaciones"
 _M349_IMPORTE_RECTIFICACIONES_BINDING: BindingId = "iva-349-declarante-importe-rectificaciones"
+_ZERO = Decimal("0")
+_M390_ANNUAL_PERIOD_CODE = "0A"
+_M390_303_RECONCILIATION_ANNUAL_CASILLA_BY_SOURCE: Mapping[CasillaId, CasillaId] = {
+    "iva.cuota-devengada-total": "iva.anual.cuota-devengada-total",
+    "iva.cuota-deducible-total": "iva.anual.cuota-deducible-total",
+    "iva.resultado-regimen-general": "iva.anual.resultado-regimen-general",
+}
 
 
 def _m349_row_field_template_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
@@ -288,6 +296,102 @@ def _m349_row_field_template_casilla_ids(revision: ModeloRevision) -> frozenset[
         for export_layout in revision.export_layouts
         for record in export_layout.records
         for casilla_id in record.row_field_casilla_ids.values()
+    )
+
+
+def _calculated_decimal(value: object | None) -> Decimal:
+    if value is None:
+        return _ZERO
+    if isinstance(value, Decimal):
+        return value
+    return Decimal(str(value))
+
+
+def _m390_303_reconciliation_targets(
+    snapshot: RegistrySnapshot,
+) -> tuple[tuple[RelationId, BindingId, CasillaId, CasillaId, CasillaId], ...]:
+    """Return M390 reconciliation relation targets keyed by their M303 source output."""
+    target_casillas_by_binding = {
+        casilla.binding: casilla.id for casilla in snapshot.revision.casillas if casilla.binding is not None
+    }
+    targets: list[tuple[RelationId, BindingId, CasillaId, CasillaId, CasillaId]] = []
+    for relation in snapshot.revision.relations:
+        if relation.source_modelo != Modelo.M303.value:
+            continue
+        annual_casilla = _M390_303_RECONCILIATION_ANNUAL_CASILLA_BY_SOURCE.get(relation.source_casilla_id)
+        if annual_casilla is None:
+            continue
+        target_casilla = target_casillas_by_binding.get(relation.target_binding)
+        if target_casilla is None:
+            continue
+        targets.append(
+            (
+                relation.id,
+                relation.target_binding,
+                target_casilla,
+                relation.source_casilla_id,
+                annual_casilla,
+            ),
+        )
+    return tuple(targets)
+
+
+def _m390_303_required_periods(snapshot: RegistrySnapshot, relation_ids: frozenset[RelationId]) -> tuple[str, ...]:
+    periods: set[str] = set()
+    for requirement in relation_source_requirements(
+        snapshot.revision,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+    ):
+        if relation_ids.intersection(requirement.relation_ids):
+            periods.update(requirement.periods)
+    return tuple(sorted(periods))
+
+
+def _raise_if_m390_303_reconciliation_would_save_silent_zero(
+    *,
+    work_unit: WorkUnit,
+    snapshot: RegistrySnapshot,
+    casilla_values: Mapping[CasillaId, Decimal],
+    resolved_binding_values: Mapping[BindingId, Decimal],
+) -> None:
+    """Refuse an M390 draft that would save zero 303 reconciliation slots from missing fold-in evidence."""
+    if str(work_unit.modelo) != Modelo.M390.value or work_unit.period.registry_token != _M390_ANNUAL_PERIOD_CODE:
+        return
+
+    missing: list[tuple[RelationId, BindingId, CasillaId, CasillaId]] = []
+    for relation_id, binding_id, target_casilla, _source_casilla, annual_casilla in _m390_303_reconciliation_targets(
+        snapshot,
+    ):
+        if binding_id in resolved_binding_values:
+            continue
+        if _calculated_decimal(casilla_values.get(annual_casilla)) == _ZERO:
+            continue
+        missing.append((relation_id, binding_id, target_casilla, annual_casilla))
+
+    if not missing:
+        return
+
+    missing_relation_ids = frozenset(relation_id for relation_id, _binding_id, _target, _annual in missing)
+    raise ModeloCrossPeriodCleanStateError(
+        (
+            "Modelo 390 calculation refused: nonzero annual IVA totals are present, "
+            "but the Modelo 303 reconciliation bindings did not resolve from clean "
+            "current quarterly filing observations."
+        ),
+        translated_message="application.modelo.errors.cross_period_clean_state_incomplete",
+        context={
+            "modelo": str(work_unit.modelo),
+            "filing_year": str(work_unit.filing_year),
+            "period": work_unit.period.registry_token,
+            "finding_count": len(missing),
+            "reason": "missing_clean_cross_period_303_filings_or_observations",
+            "missing_303_periods": _m390_303_required_periods(snapshot, missing_relation_ids),
+            "missing_303_reconciliation_bindings": tuple(binding_id for _rel, binding_id, _target, _annual in missing),
+            "zero_reconciliation_casillas_at_risk": tuple(target for _rel, _binding, target, _annual in missing),
+            "nonzero_annual_casillas": tuple(annual for _rel, _binding, _target, annual in missing),
+        },
+        suggestion="aeat app live filed pull-sources --modelo 303",
     )
 
 
@@ -512,6 +616,12 @@ def calculate_modelo_revision(
         resolved_relations=resolved_relations,
     )
     casilla_values = dict(engine_result.values)
+    _raise_if_m390_303_reconciliation_would_save_silent_zero(
+        work_unit=work_unit,
+        snapshot=snapshot,
+        casilla_values=casilla_values,
+        resolved_binding_values=channels.bindings,
+    )
     typed_observations = _build_typed_observations(engine_result=engine_result, snapshot=snapshot)
     casilla_values, typed_observations = _suppress_m349_row_field_template_outputs(
         work_unit=work_unit,
