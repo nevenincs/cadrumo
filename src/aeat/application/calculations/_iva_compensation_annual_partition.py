@@ -1,4 +1,12 @@
-"""Modelo 390 IVA compensation annual partition source resolver."""
+"""Modelo 390 IVA compensation annual partition source resolver.
+
+The resolver reads a :class:`~aeat.domain.calculations.registry.RegistrySnapshot`
+for the annual Modelo 390 revision, inspects its
+:class:`~aeat.domain.calculations.registry.ModeloRevision` bindings owned by
+:attr:`~aeat.core.BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION`, and
+derives the two annual compensation partition amounts from filed Modelo 303
+:class:`~aeat.domain.calculations.registry.RegistryModeloObservation` rows.
+"""
 
 from __future__ import annotations
 
@@ -138,7 +146,17 @@ def resolve_iva_compensation_annual_partition_binding_values(
     *,
     filing_year: int,
 ) -> dict[BindingId, Decimal]:
-    """Resolve Modelo 390 annual compensation bindings from filed M303 states."""
+    """Resolve Modelo 390 annual compensation bindings from filed M303 states.
+
+    Args:
+        revision: The annual Modelo 390 :class:`~aeat.domain.calculations.registry.ModeloRevision`
+            whose partition bindings declare the target output slots.
+        observations: Filed Modelo 303
+            :class:`~aeat.domain.calculations.registry.RegistryModeloObservation`
+            rows used to reconstruct the compensation FIFO state.
+        filing_year: Annual filing year used to select same-year Modelo 303
+            observations.
+    """
     binding_by_output = _partition_bindings_by_output(revision)
     if not binding_by_output:
         return {}
