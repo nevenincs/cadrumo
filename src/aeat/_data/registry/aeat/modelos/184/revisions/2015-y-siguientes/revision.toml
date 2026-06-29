@@ -10,9 +10,11 @@ legal_refs = [
     "orden-hap-2250-2015:art-5",
     "ley-58-2003:art-93",
 ]
+orden_aplicabilidad = [
+    "orden-hap-2250-2015:art-1",
+]
 source_refs = [
     "aeat-dr-184-2025",
     "aeat-modelo-184-procedure",
     "boe-modelo-184-2015-form",
 ]
-
