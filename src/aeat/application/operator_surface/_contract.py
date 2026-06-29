@@ -1,10 +1,14 @@
-"""Application-owned operator surface contract for the CLI workflow redesign.
+"""Application-owned operator-surface contract for the workflow redesign.
 
-This module declares the accepted :class:`RootSurface` records, parser
-:class:`BindingSourceKind` aliases, mounted :class:`MountedCommandFamily`
-records, and :class:`ServiceOwner` inventory that build the immutable
-:class:`OperatorSurfaceContract`. It owns contract data only; CLI entrypoints
-render and enforce this shape without redefining it.
+This module declares the accepted :class:`RootSurface` records, canonical
+:class:`~aeat.core.BindingSourceKind` subset, parser-only
+:class:`SourceKindAlias` records, mounted :class:`MountedCommandFamily`
+records, backend :class:`ServiceOwner` inventory, log metadata, and registered
+error-code tuple that build the immutable :class:`OperatorSurfaceContract`.
+
+It owns contract data only: command adapters render and enforce this shape
+without redefining it. The module does not inspect storage, read environment
+variables, construct repositories, or traverse the live command tree.
 """
 
 from __future__ import annotations
@@ -299,8 +303,10 @@ def build_operator_surface_contract() -> OperatorSurfaceContract:
     Returns the canonical declaration of modelo lifecycle steps, accepted
     :class:`RootSurface` values, parser-only :class:`SourceKindAlias` records,
     mounted :class:`MountedCommandFamily` values, and backend
-    :class:`ServiceOwner` mappings. The contract is constructed once at import
-    time so every consumer sees the same shape.
+    :class:`ServiceOwner` mappings. The resulting
+    :class:`OperatorSurfaceLogFields` are emitted through the shared logger as
+    stable, non-secret metadata. Consumers that need the singleton view should
+    call :func:`get_operator_surface_contract`, which caches this builder.
     """
     lifecycle = LifecycleContract(
         steps=(
@@ -334,7 +340,9 @@ def get_operator_surface_contract() -> OperatorSurfaceContract:
 
     Returns the :class:`OperatorSurfaceContract` describing the accepted
     root surfaces, source-kind aliases, command families, service owners, log
-    fields, and registered error-code contract.
+    fields, and registered error-code contract. The cache guarantees every
+    application and adapter consumer observes the same immutable contract object
+    for the current process.
     """
     return build_operator_surface_contract()
 
@@ -343,7 +351,9 @@ def require_accepted_root(name: str) -> RootSurface:
     """Return the :class:`RootSurface` for an accepted root.
 
     Raises :class:`OperatorSurfaceContractError` when ``name`` is outside the
-    backend-owned root contract.
+    backend-owned root contract. The refusal carries localized reason and
+    suggestion text, while the accepted path returns the exact
+    :class:`RootSurface` record from :func:`get_operator_surface_contract`.
     """
     normalized = name.strip().lower()
     for root in get_operator_surface_contract().roots:
@@ -363,7 +373,9 @@ def resolve_source_kind_alias(value: str) -> BindingSourceKind:
     """Resolve canonical source kinds and parser-only aliases.
 
     Returns a canonical :class:`BindingSourceKind` from either the enum token
-    itself or an input-only :class:`SourceKindAlias`.
+    itself or an input-only :class:`SourceKindAlias`. The accepted set is the
+    :data:`SOURCE_KINDS` subset, and aliases in :data:`SOURCE_KIND_ALIASES`
+    never introduce an operator-only source-kind taxonomy.
     """
     normalized = value.strip().lower()
     for source_kind in SOURCE_KINDS:
