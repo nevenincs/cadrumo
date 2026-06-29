@@ -177,6 +177,41 @@ reviewed_by = "codex"
 notes = "Spain-Argentina double-taxation treaty art 19: public-function pensions paid by one contracting state for services rendered to that state may be taxed only in that state, unless the recipient is resident and national of the other state. Row-level allocation authority for the AR/pension M210 convenio seed; DOMESTIC_TARIFF delegates the Spain-side amount to the TRLIRNR art 25.1.b pension bracket table."
 required_text = ["Las pensiones pagadas por un Estado Contratante", "solo pueden someterse a imposicion en este Estado", "residente y nacional de este Estado"]
 
+[legal."orden-eha-3316-2010:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3316-2010.html#a1"
+document_id = "BOE-A-2010-19707"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-19707#a1"
+published_at = 2010-12-23
+effective_from = 2011-01-03
+consolidated_as_of = 2026-06-23
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "codex (downloaded consolidated BOE-A-2010-19707 from BOE on 2026-06-29; operator to re-stamp)"
+notes = "Orden EHA/3316/2010 art 1, consolidated as of 2026-06-23: approves Modelo 210 for IRNR taxpayers obtaining Spanish-source income without permanent establishment and its ingreso/devolucion document. This is the formal approval-order anchor for the open M210 2025-y-siguientes revision; later HAC/56/2024 and HAC/623/2026 source refs carry layout/deadline amendments."
+required_text = [
+    "Artículo 1",
+    "Se aprueba el modelo 210",
+    "No residentes sin establecimiento permanente",
+    "rentas en España sin mediación de establecimiento permanente",
+]
+
+[sources."boe-modelo-210-base-order"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3316-2010.html"
+sha256 = "413352a4ff18d20aad32a88e422375598c16fdc9d98553fb6e0ee7b9be4559af"
+bytes = 249463
+retrieved_at = 2026-06-29
+published_at = 2010-12-23
+applies_from = 2011-01-03
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-19707"
+review_status = "reviewed"
+
 [sources."aeat-modelo-210-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "boe"

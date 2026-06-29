@@ -9,8 +9,11 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
+from .._legal import verify_legal_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_M210_FORM_ORDER_REF = "orden-eha-3316-2010:art-1"
 
 
 def _load_modelo_210() -> tuple[ModeloDefinition, RegistryCatalogues]:
@@ -78,6 +81,36 @@ def test_modelo_210_snapshot_builds_for_2025_event_period() -> None:
         period="evento",
     )
     assert snapshot.revision.id == "2025"
+
+
+def test_modelo_210_form_order_is_boe_corpus_backed() -> None:
+    modelo, catalogues = _load_modelo_210()
+    revision = modelo.revisions["2025"]
+    legal = {_M210_FORM_ORDER_REF: catalogues.legal[_M210_FORM_ORDER_REF]}
+    source = catalogues.sources["boe-modelo-210-base-order"]
+
+    verify_legal_catalogue(legal, source_root=bundled_path())
+
+    assert _M210_FORM_ORDER_REF in modelo.legal_refs
+    assert _M210_FORM_ORDER_REF in revision.legal_refs
+    assert revision.orden_aplicabilidad == (_M210_FORM_ORDER_REF,)
+    assert "boe-modelo-210-base-order" in modelo.source_refs
+    assert "boe-modelo-210-base-order" in revision.source_refs
+
+    reference = legal[_M210_FORM_ORDER_REF]
+    assert reference.document_id == "BOE-A-2010-19707"
+    assert reference.kind == "orden"
+    assert reference.article == "1"
+    assert reference.consolidated_as_of == date(2026, 6, 23)
+    assert "Se aprueba el modelo 210" in reference.required_text
+
+    assert source.corpus_path == "corpus/normatives/html/orden-eha-3316-2010.html"
+    assert source.sha256 == "413352a4ff18d20aad32a88e422375598c16fdc9d98553fb6e0ee7b9be4559af"
+    assert source.bytes == 249463
+    assert source.applies_from == date(2011, 1, 3)
+    source_text = (bundled_path() / source.corpus_path).read_text(encoding="utf-8")
+    assert "Última actualización publicada el 23/06/2026" in source_text
+    assert "Se aprueba el modelo 210" in source_text
 
 
 def test_modelo_210_2026_order_is_bundled_and_referenced_by_current_surfaces() -> None:
