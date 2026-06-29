@@ -8,7 +8,8 @@ Tests cover:
 - A dangling (non-existent) orden_aplicabilidad entry is a hard failure.
 - An orden_aplicabilidad entry present in the catalogue but absent from
   legal_refs is a hard failure.
-- Backfilled revisions (M100/2025, M130, M111, M123, M131, M303, M369)
+- Backfilled revisions (M036, M100/2025, M130, M111, M123, M131, M232,
+  M303, M369)
   load from the committed registry without hard failures.
 - Open-ended *-y-siguientes revisions in the backfilled set have
   orden_aplicabilidad declared (connective gate).
@@ -304,8 +305,15 @@ def _committed_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCa
 @pytest.mark.parametrize(
     ("modelo_id", "revision_id"),
     [
+        ("036", "2025-02-03-y-siguientes"),
+        ("100", "2020"),
+        ("100", "2021"),
+        ("100", "2022"),
+        ("100", "2023"),
+        ("100", "2024"),
         ("100", "2025"),
         ("111", "2019-y-siguientes"),
+        ("115", "2019-y-siguientes"),
         ("123", "2019-2023"),
         ("123", "2024-y-siguientes"),
         ("130", "2019-y-siguientes"),
@@ -313,13 +321,31 @@ def _committed_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCa
         ("131", "2024"),
         ("131", "2025"),
         ("131", "2026"),
+        ("151", "2015-y-siguientes"),
+        ("180", "2019-2022"),
+        ("180", "2023-y-siguientes"),
+        ("184", "2015-y-siguientes"),
+        ("190", "2024-y-siguientes"),
+        ("193", "2024-y-siguientes"),
+        ("200", "2024-y-siguientes"),
+        ("232", "2016-2017"),
+        ("232", "2018-y-siguientes"),
         ("303", "2023-y-siguientes"),
         ("303", "2009-y-siguientes"),
+        ("322", "2008-y-siguientes"),
         ("308", "2009-y-siguientes"),
         ("309", "2004-y-siguientes"),
+        ("347", "2008-y-siguientes"),
+        ("353", "2008-y-siguientes"),
+        ("360", "2010-y-siguientes"),
         ("369", "esquema-exterior"),
         ("369", "esquema-union"),
         ("369", "esquema-importacion"),
+        ("390", "2010-y-siguientes"),
+        ("349", "2020-y-siguientes"),
+        ("714", "2021-y-siguientes"),
+        ("720", "2013-y-siguientes"),
+        ("840", "2003-y-siguientes"),
     ],
 )
 def test_backfilled_revision_has_valid_orden_aplicabilidad(modelo_id: str, revision_id: str) -> None:
@@ -355,16 +381,34 @@ def test_backfilled_revision_has_valid_orden_aplicabilidad(modelo_id: str, revis
 @pytest.mark.parametrize(
     ("modelo_id", "revision_id"),
     [
+        ("036", "2025-02-03-y-siguientes"),
         ("111", "2019-y-siguientes"),
+        ("115", "2019-y-siguientes"),
         ("123", "2024-y-siguientes"),
         ("130", "2019-y-siguientes"),
+        ("151", "2015-y-siguientes"),
+        ("180", "2023-y-siguientes"),
+        ("184", "2015-y-siguientes"),
+        ("190", "2024-y-siguientes"),
+        ("193", "2024-y-siguientes"),
+        ("200", "2024-y-siguientes"),
+        ("232", "2018-y-siguientes"),
         ("303", "2023-y-siguientes"),
         ("303", "2009-y-siguientes"),
+        ("322", "2008-y-siguientes"),
         ("308", "2009-y-siguientes"),
         ("309", "2004-y-siguientes"),
+        ("347", "2008-y-siguientes"),
+        ("353", "2008-y-siguientes"),
+        ("360", "2010-y-siguientes"),
         ("369", "esquema-exterior"),
         ("369", "esquema-union"),
         ("369", "esquema-importacion"),
+        ("390", "2010-y-siguientes"),
+        ("349", "2020-y-siguientes"),
+        ("714", "2021-y-siguientes"),
+        ("720", "2013-y-siguientes"),
+        ("840", "2003-y-siguientes"),
     ],
 )
 def test_s24_open_ended_backfilled_revision_has_orden_aplicabilidad(modelo_id: str, revision_id: str) -> None:

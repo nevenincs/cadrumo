@@ -175,6 +175,31 @@ def test_modelo_100_tfi_detail_fields_cite_revision_order_documentation_article(
         assert expected_order_ref in casilla.legal_refs, casilla.id
 
 
+@pytest.mark.parametrize(
+    ("filing_year", "expected_order_ref"),
+    (
+        (2020, "orden-hac-248-2021:art-3"),
+        (2021, "orden-hfp-207-2022:art-3"),
+        (2022, "orden-hfp-310-2023:art-3"),
+        (2023, "orden-hac-265-2024:art-3"),
+        (2024, "orden-hac-242-2025:art-3"),
+        (2025, "orden-hac-277-2026:art-3"),
+    ),
+)
+def test_modelo_100_revision_declares_annual_form_order(
+    filing_year: int,
+    expected_order_ref: str,
+) -> None:
+    modelos_by_id, catalogues = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    revision = modelo.revisions[str(filing_year)]
+
+    assert expected_order_ref in catalogues.legal
+    assert expected_order_ref in modelo.legal_refs
+    assert expected_order_ref in revision.legal_refs
+    assert revision.orden_aplicabilidad == (expected_order_ref,)
+
+
 def test_modelo_100_2025_zec_reduced_rate_parameter_cites_special_rate_article() -> None:
     revision = _modelo_100_snapshot(2025).revision
     parameters_by_id = {parameter.id: parameter for parameter in revision.parameters}

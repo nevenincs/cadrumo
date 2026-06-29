@@ -2881,6 +2881,26 @@ required_text = [
     "Justificación de los impuestos satisfechos respecto de la renta positiva",
 ]
 
+[legal."orden-hac-265-2024:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-265-2024.html#a3"
+document_id = "BOE-A-2024-5721"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-5721#a3"
+published_at = 2024-03-22
+effective_from = 2024-03-23
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "codex (verified against bundled orden-hac-265-2024.html; operator to re-stamp)"
+notes = "Orden HAC/265/2024 art 3: aprobacion del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2023."
+required_text = [
+    "Artículo 3",
+    "modelo D-100",
+    "Modelo 100. Documento de ingreso o devolución",
+]
+
 [legal."orden-hac-265-2024:art-8"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -2922,6 +2942,26 @@ required_text = [
     "Nombre o razón social y lugar del domicilio social",
     "Importe de las rentas positivas que deban ser imputadas",
     "Justificación de los impuestos satisfechos respecto de la renta positiva",
+]
+
+[legal."orden-hac-248-2021:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-248-2021.html#a3"
+document_id = "BOE-A-2021-4238"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-4238#a3"
+published_at = 2021-03-18
+effective_from = 2021-03-18
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "codex (verified against bundled orden-hac-248-2021.html; operator to re-stamp)"
+notes = "Orden HAC/248/2021 art 3: aprobacion del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2020."
+required_text = [
+    "Artículo 3",
+    "modelo D-100",
+    "Modelo 100. Documento de ingreso o devolución",
 ]
 
 [legal."orden-hac-248-2021:art-8"]
@@ -2967,6 +3007,26 @@ required_text = [
     "Justificación de los impuestos satisfechos respecto de la renta positiva",
 ]
 
+[legal."orden-hfp-207-2022:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-207-2022.html#a3"
+document_id = "BOE-A-2022-4296"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-4296#a3"
+published_at = 2022-03-18
+effective_from = 2022-03-18
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "codex (verified against bundled orden-hfp-207-2022.html; operator to re-stamp)"
+notes = "Orden HFP/207/2022 art 3: aprobacion del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2021."
+required_text = [
+    "Artículo 3",
+    "modelo D-100",
+    "Modelo 100. Documento de ingreso o devolución",
+]
+
 [legal."orden-hfp-207-2022:art-8"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -3010,6 +3070,26 @@ required_text = [
     "Justificación de los impuestos satisfechos respecto de la renta positiva",
 ]
 
+[legal."orden-hfp-310-2023:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-310-2023.html#a3"
+document_id = "BOE-A-2023-8118"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-8118#a3"
+published_at = 2023-03-31
+effective_from = 2023-04-01
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "codex (verified against bundled orden-hfp-310-2023.html; operator to re-stamp)"
+notes = "Orden HFP/310/2023 art 3: aprobacion del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2022."
+required_text = [
+    "Artículo 3",
+    "modelo D-100",
+    "Modelo 100. Documento de ingreso o devolución",
+]
+
 [legal."orden-hfp-310-2023:art-8"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -3051,6 +3131,26 @@ required_text = [
     "Nombre o razón social y lugar del domicilio social",
     "Importe de las rentas positivas que deban ser imputadas",
     "Justificación de los impuestos satisfechos respecto de la renta positiva",
+]
+
+[legal."orden-hac-242-2025:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-242-2025.html#a3"
+document_id = "BOE-A-2025-5049"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2025-5049#a3"
+published_at = 2025-03-14
+effective_from = 2025-03-15
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "codex (verified against bundled orden-hac-242-2025.html; operator to re-stamp)"
+notes = "Orden HAC/242/2025 art 3: aprobacion del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2024."
+required_text = [
+    "Artículo 3",
+    "modelo D-100",
+    "Modelo 100. Documento de ingreso o devolución",
 ]
 
 [legal."orden-hac-242-2025:art-8"]

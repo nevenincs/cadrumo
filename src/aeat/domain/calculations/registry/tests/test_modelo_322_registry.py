@@ -44,6 +44,7 @@ def test_modelo_322_revision_starts_at_2008() -> None:
     assert revision.valid_from == date(2008, 1, 1)
     assert revision.period_selector.year_from == 2008
     assert len(revision.period_selector.periods) == 12
+    assert revision.orden_aplicabilidad == ("orden-eha-3434-2007:art-1",)
 
 
 def test_modelo_322_snapshot_builds_for_each_month() -> None:
@@ -57,6 +58,7 @@ def test_modelo_322_snapshot_builds_for_each_month() -> None:
             period=period,
         )
         assert snapshot.revision.id == "2008-y-siguientes"
+        assert snapshot.revision.orden_aplicabilidad == ("orden-eha-3434-2007:art-1",)
 
 
 def test_modelo_322_january_period_uses_official_calendar_shift() -> None:

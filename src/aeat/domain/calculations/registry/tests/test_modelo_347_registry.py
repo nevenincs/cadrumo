@@ -59,6 +59,10 @@ def test_committed_modelo_347_resolves_revision_by_filing_year(filing_year: int)
         period="0A",
     )
     assert snapshot.revision.id == "2008-y-siguientes"
+    assert snapshot.revision.orden_aplicabilidad == (
+        "orden-eha-3012-2008:art-1",
+        "orden-hac-1431-2025:art-1",
+    )
 
 
 def test_committed_modelo_347_is_informative_only() -> None:

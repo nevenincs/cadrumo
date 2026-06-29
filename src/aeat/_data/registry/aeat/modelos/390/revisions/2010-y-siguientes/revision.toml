@@ -7,9 +7,11 @@ legal_refs = [
     "orden-eha-3111-2009:art-1",
     "orden-eha-3111-2009:art-8",
 ]
+orden_aplicabilidad = [
+    "orden-eha-3111-2009:art-1",
+]
 source_refs = [
     "aeat-dr-390-2025",
     "aeat-modelo-390-procedure",
     "boe-modelo-390-2009-form",
 ]
-

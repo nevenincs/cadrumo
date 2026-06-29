@@ -67,6 +67,7 @@ def test_committed_modelo_840_resolves_revision_by_filing_year(filing_year: int)
         period="0A",
     )
     assert snapshot.revision.id == "2003-y-siguientes"
+    assert snapshot.revision.orden_aplicabilidad == ("orden-hac-2572-2003:apartado-1",)
 
 
 def test_committed_modelo_840_is_informative_only() -> None:

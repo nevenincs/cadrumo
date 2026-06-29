@@ -11,6 +11,11 @@ legal_refs = [
     "orden-hac-1526-2024:art-1",
     "orden-hac-1526-2024:df-unica",
 ]
+orden_aplicabilidad = [
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+    "orden-hac-1526-2024:df-unica",
+]
 source_refs = [
     "aeat-dr-036-2025",
     "aeat-modelo-036-procedure",

@@ -54,6 +54,7 @@ def test_modelo_184_revision_period_selector_starts_at_2015() -> None:
     assert revision.valid_from == date(2015, 10, 30)
     assert revision.period_selector.year_from == 2015
     assert revision.period_selector.periods == ("0A",)
+    assert revision.orden_aplicabilidad == ("orden-hap-2250-2015:art-1",)
 
 
 def test_modelo_184_snapshot_builds_for_each_published_filing_year() -> None:
@@ -76,6 +77,7 @@ def test_modelo_184_snapshot_exposes_legal_and_source_grounding() -> None:
 
     assert "orden-hap-2250-2015:art-1" in snapshot.legal
     assert "orden-hap-2250-2015:art-4" in snapshot.legal
+    assert snapshot.revision.orden_aplicabilidad == ("orden-hap-2250-2015:art-1",)
     assert snapshot.legal["orden-hap-2250-2015:art-4"].article == "4"
     assert "aeat-dr-184-2025" in snapshot.sources
     assert "aeat-modelo-184-procedure" in snapshot.sources

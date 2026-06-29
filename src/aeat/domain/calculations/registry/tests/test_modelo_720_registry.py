@@ -87,6 +87,7 @@ def test_committed_modelo_720_resolves_revision_by_filing_year(
         period="0A",
     )
     assert snapshot.revision.id == expected_revision
+    assert snapshot.revision.orden_aplicabilidad == ("orden-hap-72-2013:art-1",)
 
 
 def test_committed_modelo_720_is_informative_only() -> None:

@@ -3,14 +3,18 @@
 The package owns the typed DTOs and pure builders behind the overview
 ``status``, ``calendar``, ``agenda``, ``backlog``, and ``explain``
 surfaces. CLI adapters supply the active profile or bucket state,
-already-persisted live-read snapshots, filing records, and query dates;
+already-persisted live-read snapshots, local filing records, and query dates;
 these builders do not contact AEAT and do not mutate storage.
 
-``overview status`` projects the canonical ``OperatorStateProjection``
-into :class:`OverviewStatusReport`. ``overview calendar`` composes the
-existing :class:`aeat.domain.deadlines.DeadlineEngine` over the requested
-year window, returning :class:`OverviewCalendarEntry` obligation rows,
-additive :class:`OverviewCalendarEvent` observations, and
+``overview status`` delegates to
+:func:`~aeat.application.state_projection.build_operator_state_projection`
+and projects the canonical
+:class:`~aeat.application.state_projection.OperatorStateProjection` through
+:func:`overview_status_report_from_projection` into
+:class:`OverviewStatusReport`. ``overview calendar`` composes the existing
+:class:`~aeat.domain.deadlines.DeadlineEngine` over the requested year
+window, returning :class:`OverviewCalendarEntry` obligation rows, additive
+:class:`OverviewCalendarEvent` observations, and
 :class:`OverviewCalendarFilingEvidence` rows.
 
 Calendar evidence deliberately keeps :class:`OverviewLocalFilingState`
@@ -19,7 +23,8 @@ record never implies an AEAT submission, and an observed AEAT submission
 is not a verified justificante until persisted receipt metadata proves
 the CSV/model/year/period/taxpayer match. Raw profile values may also
 produce typed :class:`CalendarWarning` and :class:`CalendarCompleteness`
-records so deadline-engine defaults are visible rather than silent.
+records through :func:`build_filing_obligation_advisories` so
+deadline-engine defaults are visible rather than silent.
 
 See Also:
     :mod:`aeat.application.state_projection`
@@ -100,15 +105,19 @@ _log = _get_logger(__name__)
 def build_filing_obligation_advisories(
     raw_values: Mapping[str, object] | None,
 ) -> tuple[str, ...]:
-    """Derive filing-obligation advisory locale keys from the profile values.
+    """Derive overview-status advisory locale keys from raw profile values.
 
-    Currently implements the Art. 96.3 LIRPF multiple-pagadores rule:
+    The helper feeds :class:`OverviewStatusReport` and stays on the local
+    read-model path. It currently implements the Art. 96.3 LIRPF
+    multiple-pagadores rule through
+    :func:`~aeat.domain.deadlines.evaluate_multiple_pagadores_obligation`:
     when the operator has declared ``irpf.pagadores_count >= 2`` and
     ``irpf.pagadores_secondary_income > 1500``, Modelo 100 filing is
     mandatory regardless of the general income thresholds.
 
     Returns a tuple of ``tr()``-resolvable locale keys, empty when no
-    evidence of a mandatory obligation is present.
+    evidence of a mandatory obligation is present. Malformed raw values are
+    logged only by profile-field name and exception type.
     """
     if raw_values is None:
         return ()
@@ -148,7 +157,13 @@ def build_filing_obligation_advisories(
 def build_unsupported_work_create_modelos(
     raw_values: Mapping[str, object] | None,
 ) -> tuple[str, ...]:
-    """Return registry-visible modelos whose local work-create path is unsupported."""
+    """Return modelos whose local work-create path is unsupported.
+
+    The result feeds :class:`OverviewStatusReport` and uses canonical
+    :class:`~aeat.core.Modelo` identifiers. Non-resident IRNR profile state
+    currently advertises Modelo 210 because the local work-create path is not
+    available for that filing.
+    """
     if raw_values is None:
         return ()
     fiscal_residency = (
@@ -171,9 +186,11 @@ def overview_status_report_from_projection(
     """Project the canonical state projection into the ``overview status`` emit shape.
 
     The :class:`OverviewStatusReport` is a CLI emit shape derived from
-    the one :class:`OperatorStateProjection`; it is not a second
-    state-assembly path. Both the declaration-draft ``ModeloDraft`` count and the
-    ``WorkUnitCatalogue`` count are carried distinctly.
+    the one :class:`~aeat.application.state_projection.OperatorStateProjection`;
+    it is not a second state-assembly path. Both the declaration-draft
+    :class:`~aeat.domain.filing.ModeloDraft` count and the
+    :class:`~aeat.domain.modelos.WorkUnitCatalogue` count are carried
+    distinctly.
 
     Args:
         projection: The canonical state projection to project.
@@ -206,11 +223,13 @@ def build_overview_status_report(
 ) -> OverviewStatusReport:
     """Build and return the :class:`OverviewStatusReport` used by root and overview status.
 
-    Consumes the canonical :func:`build_operator_state_projection`; the
-    bespoke per-surface store assembly this function once carried is
+    Consumes the canonical
+    :func:`~aeat.application.state_projection.build_operator_state_projection`
+    and projects it through :func:`overview_status_report_from_projection`;
+    the bespoke per-surface store assembly this function once carried is
     deleted. ``overview status`` therefore reports the same counters as
-    every other operator surface — including the ``modelo work`` work
-    units the old assembly never read.
+    every other operator surface — including the ``modelo work`` work units the
+    old assembly never read.
     """
     from ..state_projection import build_operator_state_projection
 

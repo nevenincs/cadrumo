@@ -9,6 +9,9 @@ legal_refs = [
     "orden-hac-2572-2003:apartado-1",
     "orden-hac-2572-2003:apartado-6",
 ]
+orden_aplicabilidad = [
+    "orden-hac-2572-2003:apartado-1",
+]
 source_refs = [
     "aeat-dr-840",
     "boe-modelo-840-2003-form",

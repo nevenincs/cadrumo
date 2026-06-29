@@ -1,33 +1,30 @@
-"""Backend-owned operator-surface contract for the CLI command tree.
+"""Public re-export boundary for the backend-owned operator surface.
 
-Declares, in the application layer, the shape the CLI must present: the
-accepted root command families, the canonical CRUD verb vocabulary, and
-the help/landing documents. The CLI is a thin renderer of this contract
-rather than its author.
+The package collects the application-layer command-shape declarations from
+:mod:`aeat.application.operator_surface._contract`,
+:mod:`aeat.application.operator_surface._models`,
+:mod:`aeat.application.operator_surface._help`,
+:mod:`aeat.application.operator_surface._crud_contract`,
+:mod:`aeat.application.operator_surface._crud_registry`, and
+:mod:`aeat.application.operator_surface._errors`. Command adapters consume this
+surface as data and render it; they do not define a second contract.
 
-Source-kind aliases are parser-only conveniences. They resolve to canonical
-:class:`~aeat.core.BindingSourceKind` members through
-:func:`resolve_source_kind_alias`; no operator-only source-kind taxonomy is
-introduced here. This package also stays free of command-framework and CLI
-imports so the application layer owns command-shape data without depending on
-entrypoint mechanics.
+Root-surface declarations flow through :func:`get_operator_surface_contract`,
+:data:`ACCEPTED_ROOTS`, :data:`MOUNTED_COMMAND_FAMILIES`, and
+:class:`OperatorSurfaceContract`. Source-kind aliases remain parser-only
+:class:`SourceKindAlias` records that resolve through
+:func:`resolve_source_kind_alias` to canonical
+:class:`~aeat.core.BindingSourceKind` members. No operator-specific source-kind
+taxonomy is introduced here.
 
-Major declarations:
-
-* :func:`get_operator_surface_contract` returning
-  :class:`OperatorSurfaceContract`, with :data:`ACCEPTED_ROOTS` and
-  :data:`MOUNTED_COMMAND_FAMILIES` — the root-surface definition.
-* :class:`CrudVerb` and :data:`CANONICAL_CRUD_VERBS` with
-  :class:`MutatingNounGroupContract` — the orthogonal CRUD vocabulary.
-* :func:`build_help_document` and :func:`build_root_landing_report` with
-  :class:`HelpDocument` and :class:`RootLandingReport` — the rendered
-  help and landing surfaces.
-* :class:`OperatorSurfaceContractError` — the contract-violation failure.
-
-See Also:
-    - The entrypoint command tree renders this backend-owned contract.
-    - :mod:`aeat.core` for the canonical :class:`~aeat.core.BindingSourceKind`
-      values accepted by source-kind aliases.
+The CRUD vocabulary is exposed through :class:`CrudVerb`,
+:data:`CANONICAL_CRUD_VERBS`, :class:`MutatingNounGroupContract`,
+:class:`CrudContractCatalogue`, and :func:`get_builtin_catalogue`. Help and
+landing surfaces are exposed through :func:`build_help_document`,
+:func:`build_root_landing_report`, :class:`HelpDocument`, and
+:class:`RootLandingReport`. Refused surfaces use the registered
+:class:`OperatorSurfaceContractError` path shared with
+:func:`require_accepted_root`.
 """
 
 from __future__ import annotations

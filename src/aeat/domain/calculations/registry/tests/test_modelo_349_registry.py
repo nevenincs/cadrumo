@@ -90,6 +90,10 @@ def test_committed_modelo_349_resolves_revision_for_monthly_and_quarterly_period
     )
 
     assert snapshot.revision.id == expected_revision
+    assert snapshot.revision.orden_aplicabilidad == (
+        "orden-eha-769-2010:art-1",
+        "orden-hac-174-2020:art-1",
+    )
 
 
 def test_committed_modelo_349_is_informative_static_documentation_only() -> None:
