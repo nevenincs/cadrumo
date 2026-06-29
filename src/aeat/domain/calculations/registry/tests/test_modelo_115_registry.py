@@ -30,6 +30,7 @@ def test_modelo_115_validated_snapshot_owns_workflow_surfaces() -> None:
         period="1T",
     )
 
+    assert snapshot.revision.orden_aplicabilidad == ("orden-2000-11-20:apartado-primero",)
     construct = snapshot.revision.constructs[0]
     linked_by_surface = {
         link.surface: link for link in snapshot.revision.application_links if link.id in construct.application_links

@@ -306,6 +306,7 @@ def _committed_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCa
     [
         ("100", "2025"),
         ("111", "2019-y-siguientes"),
+        ("115", "2019-y-siguientes"),
         ("123", "2019-2023"),
         ("123", "2024-y-siguientes"),
         ("130", "2019-y-siguientes"),
@@ -313,6 +314,8 @@ def _committed_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCa
         ("131", "2024"),
         ("131", "2025"),
         ("131", "2026"),
+        ("180", "2019-2022"),
+        ("180", "2023-y-siguientes"),
         ("190", "2024-y-siguientes"),
         ("193", "2024-y-siguientes"),
         ("303", "2023-y-siguientes"),
@@ -364,8 +367,10 @@ def test_backfilled_revision_has_valid_orden_aplicabilidad(modelo_id: str, revis
     ("modelo_id", "revision_id"),
     [
         ("111", "2019-y-siguientes"),
+        ("115", "2019-y-siguientes"),
         ("123", "2024-y-siguientes"),
         ("130", "2019-y-siguientes"),
+        ("180", "2023-y-siguientes"),
         ("190", "2024-y-siguientes"),
         ("193", "2024-y-siguientes"),
         ("303", "2023-y-siguientes"),
