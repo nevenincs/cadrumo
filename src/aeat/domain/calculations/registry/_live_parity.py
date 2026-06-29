@@ -463,8 +463,7 @@ class CrossReferenceApplicability(_ParityModel):
 
     The model is the typed signal callers consume to decide whether to
     invoke a cross-reference at all. ``applicable=True`` with no
-    predicates declared is the default backwards-compatible case (every
-    binding declared before the applicability gate landed).
+    predicates declared is the explicit unconditionally-applicable case.
     """
 
     cross_reference_id: CrossReferenceId
@@ -485,7 +484,7 @@ def evaluate_cross_reference_applicability(
     performs no network or catalogue lookup.
 
     A decision with no applicability_predicates is unconditionally
-    applicable (backwards-compat). When predicates are declared, mode
+    applicable. When predicates are declared, mode
     governs combination: ``all`` requires every predicate to match;
     ``any`` requires at least one match.
     """
