@@ -38,8 +38,16 @@ def _seed_modelo_130_ready_profile(bucket_id: str) -> None:
             profile_id=bucket_id,
             display_name="Modelo 130 guidance profile",
             facts=(
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="identity.name", value="Test"),
                 UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="guidance"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             ),
         ),
     )
