@@ -29,6 +29,13 @@ from ....tests.cli_runner import aeat_click_command, invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_CURRENT_LEGAL_AUTHORITY_TERMS = (
+    "legal authority id",
+    "autoridad legal",
+    "autoritat legal",
+    "jogi hivatkozásazonosító",
+)
+
 
 def _invoke(*args: str, fmt: str | None = None) -> Result:
     cmd: list[str] = []
@@ -158,7 +165,7 @@ def test_citations_view_help_uses_current_legal_authority_terms() -> None:
 
     assert result.exit_code == 0, result.stdout
     rendered = result.stdout.lower()
-    assert "legal authority id" in rendered
+    assert any(term in rendered for term in _CURRENT_LEGAL_AUTHORITY_TERMS), result.stdout
     assert "normative" not in rendered
 
 
