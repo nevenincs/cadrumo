@@ -914,13 +914,17 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         source_resolution.binding_values,
         detail_row_binding_values,
     )
-    backend_inputs = _merge_bucket_bound_inputs(
-        revision=snapshot.revision,
-        casilla_inputs=casilla_inputs or {},
-        bound_inputs=resolve_available_bound_inputs_by_casilla_id(
+    backend_source_inputs = {
+        **dict(source_resolution.bound_inputs_by_casilla_id),
+        **resolve_available_bound_inputs_by_casilla_id(
             snapshot.revision,
             backend_binding_values,
         ),
+    }
+    backend_inputs = _merge_bucket_bound_inputs(
+        revision=snapshot.revision,
+        casilla_inputs=casilla_inputs or {},
+        bound_inputs=backend_source_inputs,
     )
     # Feed the relation-resolver's resolved relation_values onto the engine's
     # first-class relation channel so computed casillas that reference

@@ -40,6 +40,7 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from ....tests.secure_sql import isolated_runtime_profile
+from .._modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from .._renta_income_ledger import (
     RentaIncomeLedgerAggregationIssueReason,
     RentaIncomeObservation,
@@ -47,6 +48,7 @@ from .._renta_income_ledger import (
     aggregate_renta_income_ledger_from_repositories,
     aggregate_renta_m100_income_ledger,
 )
+from .._source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -68,7 +70,9 @@ def _casilla_id(value: object) -> CasillaId:
 
 
 _M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
+_M130_RETENCIONES_CASILLA: CasillaId = _casilla_id("06")
 _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA: CasillaId = _casilla_id("0171")
+_M130_RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
 
 
 @pytest.fixture
@@ -410,6 +414,8 @@ def _actividad_transaction(
     value_date: date,
     amount: Decimal = Decimal("1000.00"),
     taxable_base: Decimal | None = None,
+    iva_rate: Decimal | None = None,
+    iva_amount: Decimal | None = None,
     irpf_category: str | None = "actividad_economica",
     business_classification: BusinessClassification = BusinessClassification.NOT_YET_PROCESSED,
     business_pct: Decimal | None = None,
@@ -433,8 +439,8 @@ def _actividad_transaction(
             "purchase_invoice_evidence_id": None,
             "category_id": None,
             "taxable_base": taxable_base,
-            "iva_rate": None,
-            "iva_amount": None,
+            "iva_rate": iva_rate,
+            "iva_amount": iva_amount,
             "irpf_category": irpf_category,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
@@ -532,6 +538,65 @@ def test_taxable_base_amount_populated_when_set() -> None:
     obs = result.observations[0]
     assert obs.gross_amount == gross
     assert obs.taxable_base_amount == taxable
+
+
+def test_net_paid_professional_invoice_derives_withheld_amount_for_m130() -> None:
+    """Professional invoice withholding is the invoice gross minus bank cash.
+
+    Fixture: 2000 base + 420 IVA - 300 IRPF withholding = 2120 bank receipt.
+    Modelo 130 casilla 06 is the cumulative withholding amount, while casilla
+    01 remains the IVA-exclusive income base. These two expectations come from
+    the invoice arithmetic and the AEAT casilla roles, not from the resolver
+    implementation.
+    """
+    tx = _actividad_transaction(
+        "ae-net-paid",
+        value_date=date(2024, 3, 15),
+        amount=Decimal("2120.00"),
+        taxable_base=Decimal("2000.00"),
+        iva_rate=Decimal("0.21"),
+        iva_amount=Decimal("420.00"),
+    )
+    catalogue = TransactionCatalogue.from_transactions((tx,))
+
+    aggregation = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    assert len(aggregation.observations) == 1
+    observation = aggregation.observations[0]
+    assert observation.taxable_base_amount == Decimal("2000.00")
+    assert observation.withheld_amount == Decimal("300.00")
+
+    revision = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T").revision
+    resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
+    assert aggregation.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == Decimal("2000.00")
+    assert resolved[_M130_RETENCIONES_BINDING] == Decimal("300.00")
+
+
+def test_income_source_resolver_projects_withheld_amount_to_m130_casilla_06(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    tx = _actividad_transaction(
+        "ae-net-paid-resolver",
+        value_date=date(2026, 3, 15),
+        amount=Decimal("2120.00"),
+        taxable_base=Decimal("2000.00"),
+        iva_rate=Decimal("0.21"),
+        iva_amount=Decimal("420.00"),
+    )
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(TransactionCatalogue.from_transactions((tx,)))
+    snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
+    context = CalculationSourceContext(
+        bucket_id="test",
+        modelo="130",
+        filing_year=2026,
+        period=_period(2026, "1T"),
+        revision=snapshot.revision,
+    )
+
+    resolution = LedgerRentaIncomeAggregationSourceResolver(transaction_repository=tx_repo).resolve(context)
+
+    assert resolution.binding_values[_M130_RETENCIONES_BINDING] == Decimal("300.00")
+    assert resolution.bound_inputs_by_casilla_id[_M130_RETENCIONES_CASILLA] == Decimal("300.00")
 
 
 def test_casilla_projection_uses_base_for_tagged_and_gross_for_untagged() -> None:
