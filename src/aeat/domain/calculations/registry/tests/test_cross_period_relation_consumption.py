@@ -134,3 +134,25 @@ def test_evidence_relations_are_the_only_unconsumed_relations() -> None:
         f"Unconsumed relations carry unexpected roles {unconsumed_roles - {_EVIDENCE_ROLE}!r}; "
         f"only {_EVIDENCE_ROLE!r} cross-checks may stand unconsumed."
     )
+
+
+def test_modelo_100_factual_evidence_relations_are_not_value_consumed() -> None:
+    """A consumed Modelo 100 relation must not keep the supplementary-evidence role."""
+    modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
+    consumed_evidence: list[str] = []
+    for modelo in modelos:
+        if str(modelo.id) != "100":
+            continue
+        for revision_id, revision in modelo.revisions.items():
+            relations = revision.relations
+            if not relations:
+                continue
+            index = _consumption_index(revision)
+            for relation in relations:
+                if relation.dependency_role == _EVIDENCE_ROLE and _relation_is_consumed(relation, index):
+                    consumed_evidence.append(f"{modelo.id}/{revision_id}: relation {relation.id!r}")
+
+    assert not consumed_evidence, (
+        "Factual-evidence relation(s) are value-consumed; reclassify them as value-feeding roles:\n"
+        + "\n".join(f"  * {gap}" for gap in consumed_evidence)
+    )

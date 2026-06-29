@@ -1,7 +1,7 @@
 [[revisions."2021".relations]]
 id = "renta-2021-rel-111-retenciones-trimestrales"
 kind = "cross_model_output"
-dependency_role = "factual_evidence"
+dependency_role = "direct_calculation"
 source_modelo = "111"
 source_revision_selector = { year = 2021 }
 source_casilla_id = "28"
