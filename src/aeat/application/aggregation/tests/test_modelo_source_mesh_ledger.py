@@ -52,10 +52,12 @@ from ....domain.transactions import (
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     CalculationSourceContext,
+    IvaLedgerAggregationIssueReason,
     LedgerIvaAggregationSourceResolver,
     LedgerRentaExpenseAggregationSourceResolver,
     OssIossLedgerCandidate,
     OssIossLedgerSourceResolver,
+    aggregate_iva_ledger_observations,
     aggregate_oss_ioss_bindings,
     merge_source_resolutions,
 )
@@ -388,6 +390,77 @@ def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_con
 
     assert resolution.binding_values
     assert resolution.diagnostics == ()
+
+
+def test_iva_source_mesh_resolver_suppresses_out_of_period_personal_source_diagnostic(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    revision = _revision("303", "2009-y-siguientes")
+    tx_repo = TransactionCatalogueRepository(
+        bucket_id="bucket-a",
+        objects=secure_objects,
+    )
+    personal_q2 = _iva_transaction(
+        "personal-q2",
+        direction=TransactionDirection.OUTGOING,
+        amount=Decimal("121.00"),
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+        booked_date=date(2026, 4, 10),
+    ).model_copy(update={"business_classification": BusinessClassification.PERSONAL})
+    catalogue = TransactionCatalogue.from_transactions((personal_q2,))
+    tx_repo.save(catalogue)
+
+    raw_aggregation = aggregate_iva_ledger_observations(catalogue, period=Period.from_year_and_code(2026, "1T"))
+    assert [issue.reason for issue in raw_aggregation.issues] == [IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD]
+
+    resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
+        CalculationSourceContext(
+            bucket_id="bucket-a",
+            modelo="303",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision=revision,
+        ),
+    )
+
+    assert resolution.diagnostics == ()
+    assert personal_q2.transaction_id not in resolution.source_transaction_ids
+
+
+def test_iva_source_mesh_resolver_keeps_in_period_missing_fact_diagnostic(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    revision = _revision("303", "2009-y-siguientes")
+    tx_repo = TransactionCatalogueRepository(
+        bucket_id="bucket-a",
+        objects=secure_objects,
+    )
+    missing_rate = _iva_transaction(
+        "business-missing-rate",
+        direction=TransactionDirection.OUTGOING,
+        amount=Decimal("121.00"),
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+    ).model_copy(update={"iva_rate": None})
+    catalogue = TransactionCatalogue.from_transactions((missing_rate,))
+    tx_repo.save(catalogue)
+
+    raw_aggregation = aggregate_iva_ledger_observations(catalogue, period=Period.from_year_and_code(2026, "1T"))
+    assert [issue.reason for issue in raw_aggregation.issues] == [IvaLedgerAggregationIssueReason.MISSING_IVA_RATE]
+
+    resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
+        CalculationSourceContext(
+            bucket_id="bucket-a",
+            modelo="303",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision=revision,
+        ),
+    )
+
+    assert [diagnostic.reason for diagnostic in resolution.diagnostics] == ["source_issue"]
+    assert "transaction has no iva_rate fact" in resolution.diagnostics[0].message
 
 
 def test_iva_source_mesh_resolver_degrades_on_unreadable_storage(

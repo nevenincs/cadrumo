@@ -31,7 +31,7 @@ from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoicePersis
 from ...domain.renta import RentaDeductibleExpenseObservation
 from ...domain.transactions import TransactionCatalogueRepositoryProtocol, TransactionPersistenceError
 from ._errors import AggregationValidationError, t
-from ._iva_ledger import aggregate_iva_ledger_observations_from_repositories
+from ._iva_ledger import IvaLedgerAggregationIssueReason, aggregate_iva_ledger_observations_from_repositories
 from ._renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
 from ._renta_income_ledger import (
     aggregate_renta_income_ledger_from_repositories,
@@ -57,6 +57,12 @@ _STORAGE_DEGRADATION_ERRORS = (
     EnvelopeVersionError,
     InvoicePersistenceError,
     TransactionPersistenceError,
+)
+_IVA_SOURCE_DIAGNOSTIC_SUPPRESSED_REASONS = frozenset(
+    {
+        IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
+        IvaLedgerAggregationIssueReason.PERSONAL_TRANSACTION,
+    },
 )
 
 
@@ -115,6 +121,7 @@ class LedgerIvaAggregationSourceResolver:
                     message=issue.detail,
                 )
                 for issue in aggregation.issues
+                if issue.reason not in _IVA_SOURCE_DIAGNOSTIC_SUPPRESSED_REASONS
             )
             + tuple(
                 CalculationSourceDiagnostic(
