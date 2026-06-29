@@ -13,10 +13,13 @@ legal_refs = [
     "rd-439-2007:art-86",
     "ley-58-2003:art-93",
 ]
+orden_aplicabilidad = [
+    "orden-eha-3127-2009:art-1",
+    "orden-hac-1431-2025:art-2",
+]
 source_refs = [
     "aeat-dr-190-2025",
     "aeat-modelo-190-procedure",
     "boe-modelo-190-2025-form",
     "boe-modelo-190-2025-amendment",
 ]
-

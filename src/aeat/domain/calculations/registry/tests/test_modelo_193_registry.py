@@ -43,6 +43,7 @@ def test_modelo_193_validates_and_gates_workflow_surfaces_through_snapshot() -> 
         period="0A",
     )
 
+    assert snapshot.revision.orden_aplicabilidad == ("orden-eha-3377-2011:art-1",)
     construct = snapshot.revision.constructs[0]
     linked_surfaces = {
         link.surface for link in snapshot.revision.application_links if link.id in construct.application_links
