@@ -445,6 +445,9 @@ def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(tmp
 def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path: Path) -> None:
     """A salaried M100 with explicit zero prior BIN is filable without prior M100 evidence."""
     zero_binding = "renta-2025-base-liquidable-negativa-general-anterior"
+    retenciones_trabajo_binding = "renta-2025-modelo-111-retenciones-periodicas"
+    retenciones_trabajo_casilla = "0596"
+    retenciones_trabajo_amount = Decimal("4200.00")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="c3-salaried-m100-zero-bin") as profile:
         _seed_m100_profile_facts(profile.bucket_id, profile.repository)
         snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
@@ -468,13 +471,15 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path:
             },
             binding_values={
                 "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0"),
-                "renta-2025-modelo-111-retenciones-periodicas": Decimal("4200.00"),
+                retenciones_trabajo_binding: retenciones_trabajo_amount,
                 "renta-2025-modelo-115-retenciones-periodicas": Decimal("0"),
                 "renta-2025-modelo-123-retenciones-periodicas": Decimal("0"),
                 zero_binding: Decimal("0"),
             },
             clock=_CLOCK,
         ).revision
+        assert Decimal(revision.casilla_values[retenciones_trabajo_casilla]) == retenciones_trabajo_amount
+        assert Decimal(revision.binding_overrides[retenciones_trabajo_binding]) == retenciones_trabajo_amount
         revision_id = revision.calculation_revision_id
         salaried = _workflow_profile().model_copy(
             update={
@@ -492,6 +497,13 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path:
     assert report.granted_verificado_completo is True
     assert not any(
         finding.kind is ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN for finding in report.findings
+    )
+    assert any(
+        finding.kind is ModeloVerificationFindingKind.ADVISORY
+        and "not-applicable" in finding.message
+        and "--binding KEY=VALUE" in finding.message
+        and "--casilla" in finding.message
+        for finding in report.findings
     )
     assert any(
         finding.kind is ModeloVerificationFindingKind.ADVISORY
