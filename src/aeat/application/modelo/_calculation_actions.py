@@ -47,8 +47,13 @@ from ...domain.modelos._protocols import (
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.modelos._row_models import Modelo349OperadorRow, ModeloDetailRow
 from ...domain.modelos._work_unit import WorkUnit, WorkUnitState
-from ...domain.period import period_end_date
-from ...domain.transactions import TransactionCatalogueRepository
+from ...domain.period import period_end_date, period_start_date
+from ...domain.transactions import (
+    BusinessClassification,
+    TransactionCatalogueRepository,
+    TransactionDirection,
+    TransactionLifecycleState,
+)
 from ..aggregation._source_mesh import DEFERRED_SOURCE_KINDS as _DEFERRED_SOURCE_KINDS
 from ..aggregation._source_mesh import (
     BindingSourceDisposition as _BindingSourceDisposition,
@@ -412,6 +417,12 @@ def calculate_modelo_revision(
         revision=snapshot.revision,
         transaction_repository=ledger_preflight_transaction_repository,
     )
+    _raise_if_m200_ledger_requires_accounting_result_input(
+        work_unit=work_unit,
+        casilla_inputs=casilla_inputs,
+        backend_casilla_inputs=backend_casilla_inputs,
+        transaction_repository=ledger_preflight_transaction_repository,
+    )
     iva_compensation_decision = resolve_iva_compensation_decision_for_calculation(
         work_unit,
         snapshot=snapshot,
@@ -566,6 +577,19 @@ _LEDGER_PREFLIGHT_BINDING_SOURCES = frozenset(
 # clients supply régimen-simplificado casillas (47-58) directly as manual
 # inputs rather than deriving them from the transaction ledger.
 _IVA_LEDGER_EXEMPT_REGIMES = frozenset({IVARegime.SIMPLIFICADO})
+_M200_ACCOUNTING_RESULT_CASILLA: CasillaId = "00501"
+_M200_ACCOUNTING_LEDGER_CLASSIFICATIONS = frozenset(
+    {
+        BusinessClassification.BUSINESS,
+        BusinessClassification.MIXED,
+    },
+)
+_M200_ACCOUNTING_LEDGER_DIRECTIONS = frozenset(
+    {
+        TransactionDirection.INCOMING,
+        TransactionDirection.OUTGOING,
+    },
+)
 
 
 def _raise_if_ledger_preflight_blocks_calculation(
@@ -601,6 +625,74 @@ def _raise_if_ledger_preflight_blocks_calculation(
         },
         suggestion=f"aeat app ledger preflight --period {report.period.registry_token} --year {report.period.year}",
     )
+
+
+def _raise_if_m200_ledger_requires_accounting_result_input(
+    *,
+    work_unit: WorkUnit,
+    casilla_inputs: Mapping[CasillaId, Decimal],
+    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
+    transaction_repository: TransactionCatalogueRepository | None,
+) -> None:
+    if str(work_unit.modelo) != Modelo.M200.value:
+        return
+    if _M200_ACCOUNTING_RESULT_CASILLA in casilla_inputs or (
+        backend_casilla_inputs is not None and _M200_ACCOUNTING_RESULT_CASILLA in backend_casilla_inputs
+    ):
+        return
+    ledger_transaction_count = _m200_accounting_ledger_transaction_count(
+        work_unit=work_unit,
+        transaction_repository=transaction_repository,
+    )
+    if ledger_transaction_count == 0:
+        return
+    period_label = f"{work_unit.filing_year}/{work_unit.period.registry_token}"
+    raise ModeloAggregationBindingError(
+        (
+            "Modelo 200 does not derive accounting profit from ledger transactions yet; "
+            f"the bucket has {ledger_transaction_count} business ledger row(s) in {period_label}. "
+            "Supply casilla 00501 from the company's accounting result before calculating."
+        ),
+        context={
+            "modelo": str(work_unit.modelo),
+            "filing_year": work_unit.filing_year,
+            "period": work_unit.period.registry_token,
+            "ledger_transaction_count": ledger_transaction_count,
+            "required_casilla_id": _M200_ACCOUNTING_RESULT_CASILLA,
+        },
+        suggestion=(
+            f"aeat app modelo work calculate {work_unit.work_unit_id} "
+            f"--casilla {_M200_ACCOUNTING_RESULT_CASILLA}=<resultado-contable>"
+        ),
+    )
+
+
+def _m200_accounting_ledger_transaction_count(
+    *,
+    work_unit: WorkUnit,
+    transaction_repository: TransactionCatalogueRepository | None,
+) -> int:
+    repository = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
+    period_start = period_start_date(
+        filing_year=work_unit.filing_year,
+        registry_period=work_unit.period.registry_token,
+    )
+    period_end = period_end_date(
+        filing_year=work_unit.filing_year,
+        registry_period=work_unit.period.registry_token,
+    )
+    count = 0
+    for transaction in repository.load():
+        if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+            continue
+        if transaction.direction not in _M200_ACCOUNTING_LEDGER_DIRECTIONS:
+            continue
+        if transaction.business_classification not in _M200_ACCOUNTING_LEDGER_CLASSIFICATIONS:
+            continue
+        effective_date = transaction.raw.value_date or transaction.raw.booked_date
+        if period_start <= effective_date <= period_end:
+            count += 1
+    return count
 
 
 def calculate_modelo_revision_from_bucket_aggregation(
