@@ -386,10 +386,9 @@ class LiveCrossReferenceDecision(RegistryModel):
     # Optional applicability gate: when non-empty the cross-reference is
     # only applicable to a taxpayer profile whose values satisfy these
     # predicates under the chosen mode. An empty tuple (the default) means
-    # the cross-reference is unconditionally applicable, preserving the
-    # behaviour of every binding declared before this field existed. Used
-    # to gate optional surfaces (GROI / IXVI for ROI-enrolled subjects,
-    # OSS bindings for OSS-enrolled subjects, etc.).
+    # the cross-reference is unconditionally applicable. Used to gate
+    # optional surfaces (GROI / IXVI for ROI-enrolled subjects, OSS
+    # bindings for OSS-enrolled subjects, etc.).
     applicability_condition_mode: Literal["all", "any"] = "all"
     applicability_predicates: tuple[ProfilePredicateDefinition, ...] = ()
 
