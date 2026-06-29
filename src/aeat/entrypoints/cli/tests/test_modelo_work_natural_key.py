@@ -58,6 +58,27 @@ def _create_profile() -> None:
     assert result.exit_code == 0, result.output
 
 
+def _create_first_year_activity_profile() -> None:
+    result = _invoke(
+        [
+            "config", "profile", "create", "operator",
+            "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
+            "--tax-id", "12345678Z",
+            "--name", "Daniel",
+            "--surnames", "Persona",
+            "--activity", "consultoria",
+            "--activity-start-date", "2025-01-01",
+            "--irpf-income-categories", "actividad_economica",
+            "--irpf-estimation-regime", "directa_simplificada",
+            "--iva-regime", "GENERAL",
+            "--fiscal-residency", "resident_irpf",
+            "--tax-residence-ccaa", "madrid",
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+
+
 def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -> None:
     """Create, calculate, verify, and export through natural keys."""
 
@@ -193,6 +214,64 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
     assert blocking["context"]["severity"] == "blocking"
     assert blocking["context"]["kind"] == "cross_period_dependency_unclean"
     assert blocking["suggestion"] == payload["findings"][0]["next_action"]
+
+
+def test_modelo_130_first_year_activity_can_file_late_by_natural_key() -> None:
+    """A verified M130 first-year activity revision can seed later local carry."""
+
+    _create_first_year_activity_profile()
+    seed_m130_income_transaction(
+        amount=Decimal("4000.00"),
+        filing_year=2025,
+        source_key="first-year-file",
+    )
+    created = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "130", "--year", "2025", "--period", "1T",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+
+    calculated = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate",
+            "--modelo", "130", "--year", "2025", "--period", "1T",
+            "--binding", "irpf.previous_year_economic_activity_net_income=0",
+            "--binding", "modelo-130-resultados-negativos-anteriores=0",
+        ],
+    )  # fmt: skip
+    assert calculated.exit_code == 0, calculated.output
+    calculation_revision_id = _payload(calculated.output)["calculation_revision_id"]
+
+    verified = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "verify",
+            "--modelo", "130", "--year", "2025", "--period", "1T",
+        ],
+    )  # fmt: skip
+    assert verified.exit_code == 0, verified.output
+    verify_payload = _payload(verified.output)
+    assert verify_payload["calculation_revision_id"] == calculation_revision_id
+    assert verify_payload["granted_verificado_completo"] is True
+
+    filed = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "file",
+            "--modelo", "130", "--year", "2025", "--period", "1T",
+            "--select", "current",
+            "--by", "Daniel",
+            "--notes", "local-only first-year M130 filing",
+        ],
+    )  # fmt: skip
+    assert filed.exit_code == 0, filed.output
+    file_payload = _payload(filed.output)
+    assert file_payload["calculation_revision_id"] == calculation_revision_id
+    assert file_payload["aeat_accepted"] is False
 
 
 def test_work_create_refuses_conflicting_registry_revision_for_visible_target() -> None:
