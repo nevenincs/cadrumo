@@ -74,7 +74,6 @@ from ..domain.modelos._calculation_repository import CalculationRevisionCatalogu
 from ..domain.modelos._repository import WorkUnitCatalogueRepository
 from ..domain.modelos._work_unit import WorkUnitState
 from ..domain.transactions import TransactionCatalogueRepository
-from ..domain.user_profile import load_user_profile_schema
 from .auth import AuthProviderKind, select_provider
 from .ledger import LedgerPreflightIssue, preflight_ledger_tax_readiness
 from .user_profile import ProfilePreflightRequirement
@@ -660,27 +659,31 @@ def _build_modelo_readiness(
     if not requests or active_profile_id is None:
         return ()
 
-    from .modelo._profile_readiness_gate import modelo_applicability_refusal, pre_activity_period_refusal
+    from .modelo import (
+        modelo_applicability_refusal,
+        modelo_work_profile_preflight_report,
+        pre_activity_period_refusal,
+    )
     from .user_profile._orchestration import build_lifecycle_service
-    from .user_profile._preflight import ProfilePreflightService
     from .workflow import read_profile_bucket_by_id
 
     pointer = read_profile_bucket_by_id(active_profile_id)
     if pointer is None:
         return ()
     record = build_lifecycle_service(bucket_id=pointer.bucket_id).read(active_profile_id)
-    service = ProfilePreflightService(schema=load_user_profile_schema())
     reports: list[ProjectionModeloReadiness] = []
     for request in requests:
         readiness_period = _ledger_period_for_modelo_readiness(request)
         registry_resolution = _resolve_modelo_readiness_registry(request, period=readiness_period)
         revision = registry_resolution.snapshot.revision if registry_resolution.snapshot is not None else None
-        profile_report = service.report(
+        profile_report = modelo_work_profile_preflight_report(
             record=record,
             modelo=request.modelo,
             revision_id=revision.id if revision is not None else request.revision_id,
+            filing_year=readiness_period.filing_year,
             period=readiness_period,
             revision=revision,
+            resolve_revision_when_missing=registry_resolution.snapshot is not None,
         )
         profile_refusal = ""
         applicability_refusal = modelo_applicability_refusal(

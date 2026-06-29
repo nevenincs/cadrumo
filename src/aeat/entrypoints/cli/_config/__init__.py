@@ -462,8 +462,8 @@ def config_profile_preflight(
     operators discover the gap via the shell exit status.
     """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile import ProfilePreflightService
-    from ....domain.user_profile import ProfileNotFoundError, load_user_profile_schema
+    from ....application.modelo import modelo_work_profile_preflight_report
+    from ....domain.user_profile import ProfileNotFoundError
 
     pointer = _resolve_active_profile_pointer()
     if pointer is None:
@@ -484,22 +484,33 @@ def config_profile_preflight(
             translated_message="cli.config.profile.preflight_revision_unresolved",
             context={"modelo": modelo, "filing_year": filing_year, "period": period},
         ) from exc
-    resolved_revision_id = _resolve_preflight_revision_id(
-        modelo=modelo,
-        period=filing_period,
-        revision_id=revision_id,
-    )
-    from ....core.resources import resources
     from .._config_payloads import ConfigProfilePreflightResult, ProfilePreflightMissingPayload
 
-    revision = resources().modelos.authority.validate_modelo(modelo).revisions[resolved_revision_id]
-    report = ProfilePreflightService(schema=load_user_profile_schema()).report(
+    report = modelo_work_profile_preflight_report(
         record=record,
         modelo=modelo,
-        revision_id=resolved_revision_id,
+        revision_id=revision_id.strip() if revision_id else "unresolved",
+        filing_year=filing_period.filing_year,
         period=filing_period,
-        revision=revision,
+        resolve_revision_when_missing=False,
     )
+    if report.ready:
+        resolved_revision_id = _resolve_preflight_revision_id(
+            modelo=modelo,
+            period=filing_period,
+            revision_id=revision_id,
+        )
+        from ....core.resources import resources
+
+        revision = resources().modelos.authority.validate_modelo(modelo).revisions[resolved_revision_id]
+        report = modelo_work_profile_preflight_report(
+            record=record,
+            modelo=modelo,
+            revision_id=resolved_revision_id,
+            filing_year=filing_period.filing_year,
+            period=filing_period,
+            revision=revision,
+        )
     result = ConfigProfilePreflightResult(
         profile_id=report.profile_id,
         modelo=report.modelo,
@@ -557,6 +568,7 @@ def config_profile_validate(
     payload (no fact dump).
     """
     _activate_subcommand_output_language(ctx, output_language)
+    from ....application.modelo import modelo_work_profile_baseline_validation_issues
     from ....application.user_profile import ProfileValidationService
     from ....domain.user_profile import ProfileNotFoundError, load_user_profile_schema
 
@@ -596,7 +608,15 @@ def config_profile_validate(
     from .._config_payloads import ConfigProfileValidateResult, ProfileIssuePayload
 
     report = ProfileValidationService(schema=load_user_profile_schema()).validate_record(record)
-    blocking = [issue for issue in report.issues if issue.severity.value == "error"]
+    issues = list(report.issues)
+    seen_issues = {(issue.code, issue.path) for issue in issues}
+    for issue in modelo_work_profile_baseline_validation_issues(record):
+        key = (issue.code, issue.path)
+        if key in seen_issues:
+            continue
+        seen_issues.add(key)
+        issues.append(issue)
+    blocking = [issue for issue in issues if issue.severity.value == "error"]
     result = ConfigProfileValidateResult(
         profile_id=record.profile_id,
         display_name=record.display_name,
@@ -610,18 +630,18 @@ def config_profile_validate(
                 path=issue.path,
                 message=issue.message,
             )
-            for issue in report.issues
+            for issue in issues
         ],
     )
     lines = [
-        f"readiness\t{'blocked' if blocking else 'ready'}\tissues={len(report.issues)}",
+        f"readiness\t{'blocked' if blocking else 'ready'}\tissues={len(issues)}",
         f"profile_id\t{record.profile_id}",
         f"display_name\t{record.display_name}",
         f"status\t{record.status.value}",
         f"schema_version\t{report.schema_version}",
         f"valid\t{not blocking}",
     ]
-    for issue in report.issues:
+    for issue in issues:
         lines.append(f"{issue.severity.value}\t{issue.code}\t{issue.path or '-'}\t{issue.message}")
     _emit_envelope(ctx, command="config.profile.validate", result=result, lines=lines)
     if blocking:
