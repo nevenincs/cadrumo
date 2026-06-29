@@ -163,7 +163,7 @@ def unsupported_local_work_period_refusal(
     modelo: str | None,
     token: str | None,
 ) -> CliRefusedBoundaryError | None:
-    """Return the central unsupported-work refusal for declared non-Period tokens.
+    """Return the central :class:`CliRefusedBoundaryError` for declared non-Period tokens.
 
     Some registry-visible modelos declare event tokens such as ``evento`` that
     are valid registry metadata but cannot become a local typed

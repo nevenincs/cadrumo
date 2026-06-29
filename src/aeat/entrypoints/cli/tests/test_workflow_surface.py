@@ -9,7 +9,6 @@ from pathlib import Path
 
 import pytest
 from click.testing import Result
-from typer.testing import CliRunner
 
 from ....adapters.persistence.storage.sql import dispose_engine
 from ....application.diagnostics import build_cli_version_report
@@ -17,16 +16,35 @@ from ....core.config import SecretStoreBackend, load_settings, override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.transactions import TransactionCatalogueRepository
-from ....tests.cli_runner import invoke_cached_cli
+from ....tests.cli_runner import invoke_cached_cli, invoke_typer_app
 from .. import _import_failure_surface, _startup_import_error_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_RUNNER = CliRunner()
-
 
 def _invoke(args: list[str]):
     return invoke_cached_cli(args)
+
+
+def _profile_create_args(*extra_args: str) -> list[str]:
+    return [
+        "config",
+        "profile",
+        "create",
+        "operator",
+        "--quiet",
+        "--tax-id",
+        "00000000T",
+        "--entity-type",
+        "natural_person",
+        "--name",
+        "Operator",
+        "--surnames",
+        "Workflow",
+        "--activity",
+        "Servicios",
+        *extra_args,
+    ]
 
 
 def _json_output(result: Result) -> str:
@@ -149,23 +167,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     from ....application.user_profile._orchestration import fact_value
     from ....application.workflow import workflow_state_repository
 
-    create_result = _invoke(
-        [
-            "config",
-            "profile",
-            "create",
-            "operator",
-            "--quiet",
-            "--tax-id",
-            "00000000T",
-            "--activity",
-            "Servicios",
-            "--iva-regime",
-            "GENERAL",
-            "--tax-residence-ccaa",
-            "madrid",
-        ],
-    )
+    create_result = _invoke(_profile_create_args("--iva-regime", "GENERAL", "--tax-residence-ccaa", "madrid"))
     assert create_result.exit_code == 0, create_result.output
 
     # Modelo applicability is derived from the taxpayer model; declare
@@ -210,7 +212,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
         assert fact_value(refreshed, "preferences.output_language") == "en"
 
     # `config profile status` reads the profile-bound secure store, needing an
-    # active bucket session that in-process CliRunner does not re-open per invoke
+    # active bucket session that the in-process test runner does not re-open per invoke
     # (#52 / master_key _active_session); hold the provider active across it.
     with activate_master_key_provider(provider):
         status_result = _invoke(["--format", "json", "config", "profile", "status"])
@@ -231,7 +233,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
         assert fact_value(stored, "preferences.output_language") == "en"
 
     # overview calendar reads the profile-bound store for obligation derivation,
-    # needing an active bucket session that in-process CliRunner does not re-open
+    # needing an active bucket session that the in-process test runner does not re-open
     # per invoke (#52 / master_key _active_session); hold the provider active.
     with activate_master_key_provider(get_master_key_provider()):
         calendar_result = _invoke(
@@ -349,7 +351,7 @@ def test_startup_import_failure_points_to_config_repair_without_traceback() -> N
     assert "aeat config repair" in text, text
     assert "Traceback" not in text, text
 
-    result = _RUNNER.invoke(_import_failure_surface("app", error), [])
+    result = invoke_typer_app(_import_failure_surface("app", error), [])
 
     assert result.exit_code == 1, result.output
     assert "xlrd" in result.output
@@ -546,23 +548,11 @@ def test_review_filter_help_lists_supported_filter_keys() -> None:
 def test_config_auth_accepts_supported_provider_and_rejects_others(
     encrypted_user_cli: Path,
 ) -> None:
-    created = _invoke(
-        [
-            "config",
-            "profile",
-            "create",
-            "operator",
-            "--quiet",
-            "--tax-id",
-            "00000000T",
-            "--activity",
-            "Servicios",
-        ],
-    )
+    created = _invoke(_profile_create_args())
     assert created.exit_code == 0, created.output
 
     # config auth verbs write the auth provider into the profile-bound secure
-    # store, which needs an active bucket session. In-process CliRunner does not
+    # store, which needs an active bucket session. The in-process test runner does not
     # re-open the session per invoke as a fresh CLI process does (#52 /
     # master_key _active_session), so hold the master-key provider active across
     # these invokes.
@@ -591,6 +581,8 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
 
 
 def test_ledger_import_accepts_n26_csv_dry_run(isolated_user_cli: Path) -> None:
+    _seed_profile(tax_id="00000000T", name="operator", activity="design")
+
     statement = isolated_user_cli / "n26-q1.csv"
     statement.write_text(
         "\n".join(
@@ -639,9 +631,9 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
     )
 
     # The import invoke decrypts/persists to the profile-bound store, which needs
-    # an active bucket session. In-process CliRunner does not re-open the session
+    # an active bucket session. The in-process test runner does not re-open the session
     # per invoke the way a fresh CLI process does (see #52 / master_key
-    # _active_session), so hold the master-key provider active across the invoke —
+    # _active_session), so hold the master-key provider active across the invoke -
     # the same idiom this test already uses for its read-back below.
     from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
 
@@ -679,6 +671,8 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
 
 def test_ledger_import_verify_source_records_original_file_digest(isolated_user_cli: Path) -> None:
     import hashlib
+
+    _seed_profile(tax_id="00000000T", name="operator", activity="design")
 
     statement = isolated_user_cli / "n26-q1.csv"
     statement.write_text(
@@ -733,6 +727,8 @@ def test_ledger_import_verify_source_rejects_missing_original_file(
 
     import contextlib
 
+    _seed_profile(tax_id="00000000T", name="operator", activity="design")
+
     statement = isolated_user_cli / "n26-q1.csv"
     statement.write_text(
         "\n".join(
@@ -769,7 +765,7 @@ def test_read_only_status_commands_use_isolated_local_state(encrypted_user_cli: 
     _seed_profile(tax_id="00000000T", name="operator", activity="design")
 
     # Both status commands read the profile-bound secure store, needing an active
-    # bucket session that in-process CliRunner does not re-open per invoke (#52 /
+    # bucket session that the in-process test runner does not re-open per invoke (#52 /
     # master_key _active_session); hold the provider active across them.
     from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
 
@@ -819,21 +815,7 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
     from ....application.workflow import workflow_state_repository
     from ....domain.deadlines import IVARegime
 
-    created = _invoke(
-        [
-            "config",
-            "profile",
-            "create",
-            "operator",
-            "--quiet",
-            "--tax-id",
-            "00000000T",
-            "--activity",
-            "Servicios",
-            "--iva-regime",
-            "general",
-        ],
-    )
+    created = _invoke(_profile_create_args("--iva-regime", "general"))
     assert created.exit_code == 0, created.output
 
     from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
@@ -853,21 +835,7 @@ def test_config_profile_create_persists_situacion_familiar(
     from ....application.user_profile import record_to_path_values
     from ....application.workflow import workflow_state_repository
 
-    created = _invoke(
-        [
-            "config",
-            "profile",
-            "create",
-            "operator",
-            "--quiet",
-            "--tax-id",
-            "00000000T",
-            "--activity",
-            "Servicios",
-            "--situacion-familiar",
-            "soltero",
-        ],
-    )
+    created = _invoke(_profile_create_args("--situacion-familiar", "soltero"))
     assert created.exit_code == 0, created.output
 
     from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
@@ -887,20 +855,7 @@ def test_config_profile_create_does_intracomunitario_round_trips_to_deadline_eng
     from ....application.user_profile._projections import projection_for_taxpayer
     from ....application.workflow import workflow_state_repository
 
-    created = _invoke(
-        [
-            "config",
-            "profile",
-            "create",
-            "operator",
-            "--quiet",
-            "--tax-id",
-            "00000000T",
-            "--activity",
-            "Servicios",
-            "--does-intracomunitario",
-        ],
-    )
+    created = _invoke(_profile_create_args("--does-intracomunitario"))
     assert created.exit_code == 0, created.output
 
     show_result = _invoke(["--format", "json", "config", "profile", "show"])

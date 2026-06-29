@@ -241,7 +241,7 @@ def _walk_cli_command_paths(app: typer.Typer) -> set[str]:
 
 
 def _live_app() -> typer.Typer:
-    from .. import app as live_app
+    from aeat.entrypoints.cli import app as live_app
 
     return live_app
 

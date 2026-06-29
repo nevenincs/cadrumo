@@ -112,7 +112,7 @@ def register_work_run_commands(
                 help=tr(
                     "cli.app.modelo.work.resume_target_help",
                     default=(
-                        "Optional legacy 16-character workflow run id or 64-character "
+                        "Optional 16-character workflow run id or 64-character "
                         "work-unit id. Prefer --modelo --year --period."
                     ),
                 ),

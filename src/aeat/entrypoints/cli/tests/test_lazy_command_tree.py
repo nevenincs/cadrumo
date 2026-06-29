@@ -147,13 +147,24 @@ def test_state_free_surface_does_not_import_registry(argv: list[str]) -> None:
     args_repr = " ".join(argv) if argv else "(bare invocation)"
     completed = _run_python(
         f"""
+        from contextlib import redirect_stderr, redirect_stdout
+        from io import StringIO
         import sys
-        from click.testing import CliRunner
+        from click.exceptions import Exit as ClickExit
         from typer.main import get_command
         from aeat.entrypoints.cli import app
 
-        result = CliRunner().invoke(get_command(app), {argv!r})
-        assert result.exit_code == 0, result.output
+        stdout = StringIO()
+        stderr = StringIO()
+        try:
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                result = get_command(app).main(args={argv!r}, prog_name="aeat", standalone_mode=False)
+        except ClickExit as exit_:
+            exit_code = exit_.exit_code
+        else:
+            exit_code = result if isinstance(result, int) else 0
+        output = stdout.getvalue() + stderr.getvalue()
+        assert exit_code == 0, output
 
         forbidden = {forbidden!r}
         leaked = sorted(
@@ -182,16 +193,26 @@ def test_dispatching_a_subcommand_loads_its_module() -> None:
 
     completed = _run_python(
         """
+        from contextlib import redirect_stderr, redirect_stdout
+        from io import StringIO
         import sys
-        from click.testing import CliRunner
+        from click.exceptions import Exit as ClickExit
         from typer.main import get_command
         from aeat.entrypoints.cli import app
 
         command = get_command(app)
         assert "aeat.entrypoints.cli._modelo" not in sys.modules
 
-        result = CliRunner().invoke(command, ["app", "modelo", "--help"])
-        assert result.exit_code == 0, result.output
+        stdout = StringIO()
+        stderr = StringIO()
+        try:
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                result = command.main(args=["app", "modelo", "--help"], prog_name="aeat", standalone_mode=False)
+        except ClickExit as exit_:
+            exit_code = exit_.exit_code
+        else:
+            exit_code = result if isinstance(result, int) else 0
+        assert exit_code == 0, stdout.getvalue() + stderr.getvalue()
         print("loaded" if "aeat.entrypoints.cli._modelo" in sys.modules else "missing")
         """,
     )

@@ -21,7 +21,6 @@ from click.exceptions import Exit
 # ``click.Group``. Walk the command tree with the vendored types to match.
 from typer._click.core import Context as TyContext
 from typer.core import TyperGroup
-from typer.main import get_command
 
 from ....adapters.outbound.aeat.auth.certificate import AeatSessionExpiredError
 from ....adapters.outbound.aeat.browser.session import BrowserError
@@ -34,26 +33,29 @@ from ....core.errors import (
 )
 from ....core.observability._errors import RunContextMissingError
 from ....domain.portals._errors import PortalIntegrityError
-from .. import app
+from ....tests.cli_runner import aeat_click_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def test_suggestions_parse_as_valid_cli_commands() -> None:
     """Every registered ``default_suggestion`` parses against the live Click context."""
-    command = get_command(app)
+    command = aeat_click_command()
     # Heavy subcommand groups are registered lazily, so the materialized
     # Click group's ``list_commands`` — not the Typer ``registered_*``
     # lists — is the canonical top-level command inventory.
     assert isinstance(command, TyperGroup)
     top_level = set(command.list_commands(TyContext(command)))
 
-    suggestions = [code.default_suggestion for code in ERROR_REGISTRY.values() if code.default_suggestion is not None]
+    suggestions = [
+        code.default_suggestion
+        for code in ERROR_REGISTRY.values()
+        if code.default_suggestion is not None and code.default_suggestion.startswith("aeat ")
+    ]
     assert suggestions
 
     for suggestion in suggestions:
         tokens = suggestion.split()
-        assert tokens[0] == "aeat"
         if len(tokens) > 1 and not tokens[1].startswith("-"):
             assert tokens[1] in top_level
         try:

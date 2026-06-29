@@ -13,7 +13,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
@@ -28,8 +27,8 @@ from ....domain.buckets._event import (
     BucketEventObjectType,
     derive_bucket_event_id,
 )
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -95,17 +94,17 @@ def _active_bucket_id() -> str:
     return bucket_id
 
 
-def test_history_returns_empty_envelope_for_modelo_with_no_events(cli_runner: CliRunner) -> None:
+def test_history_returns_empty_envelope_for_modelo_with_no_events() -> None:
     """`aeat app modelo history --modelo 303` against an empty bucket
     surfaces a typed envelope with ``count=0`` and no events."""
 
-    result = cli_runner.invoke(app, ["app", "modelo", "history", "--modelo", "303"])
+    result = invoke_cached_cli(["app", "modelo", "history", "--modelo", "303"])
     assert result.exit_code == 0, result.output
     assert "modelo\t303" in result.output
     assert "count\t0" in result.output
 
 
-def test_history_filters_events_to_requested_modelo(cli_runner: CliRunner) -> None:
+def test_history_filters_events_to_requested_modelo() -> None:
     """Only events whose payload's ``modelo`` matches the ``--modelo``
     flag appear in the history output."""
 
@@ -126,7 +125,7 @@ def test_history_filters_events_to_requested_modelo(cli_runner: CliRunner) -> No
         offset_seconds=1,
     )
 
-    result = cli_runner.invoke(app, ["app", "modelo", "history", "--modelo", "303"])
+    result = invoke_cached_cli(["app", "modelo", "history", "--modelo", "303"])
     assert result.exit_code == 0, result.output
     assert "count\t1" in result.output, result.output
     # The line-emitted history rows carry "<iso>\t<event_type>\t<object_id>\t<actor>";
@@ -135,7 +134,7 @@ def test_history_filters_events_to_requested_modelo(cli_runner: CliRunner) -> No
     assert result.output.count("modelo.calculation.created") == 1
 
 
-def test_history_year_and_period_filters_narrow_results(cli_runner: CliRunner) -> None:
+def test_history_year_and_period_filters_narrow_results() -> None:
     """Adding ``--year`` and ``--period`` filters narrows the result set."""
 
     bucket_id = _active_bucket_id()
@@ -163,8 +162,7 @@ def test_history_year_and_period_filters_narrow_results(cli_runner: CliRunner) -
         offset_seconds=2,
     )
 
-    result = cli_runner.invoke(
-        app,
+    result = invoke_cached_cli(
         ["app", "modelo", "history", "--modelo", "303", "--year", "2026", "--period", "1T"],
     )
     assert result.exit_code == 0, result.output

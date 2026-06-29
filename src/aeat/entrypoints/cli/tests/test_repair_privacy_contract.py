@@ -111,7 +111,6 @@ def test_config_repair_profile_cli_redacts_profile_identifiers() -> None:
     commands = (
         ("config", "repair", "profile"),
         ("config", "repair", "profile", "--profile", "operator"),
-        ("config", "repair", "profile", "--repair-manifest-status", "--yes"),
     )
     results: dict[tuple[str, ...], tuple[Result, Result]] = {}
     for command in commands:
@@ -318,12 +317,20 @@ def _create_operator_profile() -> None:
             "operator",
             "--quiet",
             "--accept-defaults",
+            "--entity-type",
+            "natural_person",
             "--tax-id",
             "00000000T",
             "--name",
             "Operator",
+            "--surnames",
+            "Privacy",
             "--activity",
             "design",
+            "--irpf-income-categories",
+            "actividad_economica",
+            "--irpf-estimation-regime",
+            "directa_normal",
             "--iva-regime",
             "GENERAL",
         ],

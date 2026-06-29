@@ -8,19 +8,17 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import override_settings
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_RUNNER = CliRunner()
 _PROFILE_ID = "source-jurisdiction-export"
 
 
@@ -51,8 +49,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def _add_manual_row(*, date: str, description: str, source_jurisdiction: str) -> str:
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -77,8 +74,7 @@ def _add_manual_row(*, date: str, description: str, source_jurisdiction: str) ->
 
 def _export_rows(tmp_path: Path, export_format: str) -> list[dict[str, str]]:
     output = tmp_path / f"ledger-source-jurisdiction.{export_format}"
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         ["app", "ledger", "export", "--output", str(output), "--export-format", export_format],
     )
     assert result.exit_code == 0, result.output
@@ -125,7 +121,7 @@ def test_import_csv_source_jurisdiction_reaches_canonical_exports(
         encoding="utf-8",
     )
 
-    imported = _RUNNER.invoke(app, ["app", "ledger", "import", str(statement), "--provider", "csv"])
+    imported = invoke_cached_cli(["app", "ledger", "import", str(statement), "--provider", "csv"])
     assert imported.exit_code == 0, imported.output
 
     rows = _export_rows(tmp_path, export_format)

@@ -64,6 +64,7 @@ from ....application.modelo import ModeloCalculationRevisionSelector
 from ....core.errors import ERROR_REGISTRY
 from ....core.i18n._render import _locale_map
 from ....domain.attachments import AttachmentSource
+from ....tests.cli_runner import aeat_click_command
 from .test_documented_command_conformance import (
     _AEAT_TOKEN_RE,
     _CitedCommand,
@@ -286,11 +287,8 @@ def _advertised_option_choices(verb_path: tuple[str, ...], option_flag: str) -> 
     """
     import typer._click as click_vendored
     from typer.core import TyperGroup
-    from typer.main import get_command
 
-    from .. import app
-
-    root = get_command(app)
+    root = aeat_click_command()
     assert isinstance(root, (click_vendored.Command, TyperGroup))
     ctx = click_vendored.Context(root, info_name="aeat")
     cmd: object = root

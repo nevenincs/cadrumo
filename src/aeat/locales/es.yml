@@ -947,11 +947,6 @@ application:
         next_action: Autorice la fila Convenio España-{cc} en m210-convenio-rates
           para tipo_renta={tipo_renta}, o desestablezca profile.convenio_doble_imposicion_country
           para usar el baseline TRLIRNR Art 25.
-      m210_convenio_rate_not_yet_authored:
-        next_action: La fila Convenio España-{cc} para tipo_renta={tipo_renta} contiene
-          el marcador NOT_YET_AUTHORED según ADR D2.4. Autorice la tarifa verificada
-          del corpus BOE antes de poder completar la declaración; abra una tarea de
-          seguimiento bloqueada por corpus citando el artículo del Convenio.
       missing_required_casilla: La casilla requerida %{casilla_id} no está presente
         en los datos de entrada del cálculo.
       modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: La
@@ -964,7 +959,7 @@ application:
         autoliquidación (C595) es cero; confirme que es un cero legítimo (base igual
         o inferior al mínimo personal y familiar, o compensada por deducciones) y
         no una laguna no modelada.
-      modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exento de
+      modelo_130_art109_exencion_alta_retencion: 'Art. 109 RIRPF: exento de
         presentar M130 este trimestre porque las retenciones e ingresos a cuenta acumulados
         en el año representan el 70% o más de los rendimientos íntegros.'
       modelo_131_2019_2023_pago_fraccionado_determinado_cuando_rendimientos_positivos: Los
@@ -2068,7 +2063,7 @@ cli:
         resume_help: Valida si puedes reintentar una ejecución de flujo interrumpida
           sin contactar con AEAT. Usa --modelo --year --period como ruta normal; los
           ids exactos quedan como escape avanzado.
-        resume_target_help: Id heredado opcional de ejecución de flujo de 16 caracteres
+        resume_target_help: Id opcional de ejecución de flujo de 16 caracteres
           o id de unidad de trabajo de 64 caracteres. Prefiere --modelo --year --period.
         revision_help: Identificador estable de la revisión registrada del modelo;
           ejecuta `aeat app modelo describe MODELO` para ver los ids de revisión disponibles.
@@ -2560,9 +2555,6 @@ cli:
         perfil activo; '%{profile}' no está activo.
       profile_help: Inspeccionar y reparar el puntero de perfil activo.
       profile_name_help: Inspeccionar un perfil registrado concreto.
-      profile_one_action: Elige --clear-active o --repair-manifest-status, no ambos.
-      profile_repair_manifest_status_help: Rellenar el estado de un manifiesto legacy
-        del bucket activo desde el registro cifrado del perfil.
       profile_requires_yes: Pasa --yes para aplicar la reparación del perfil activo.
       quarantine_dry_run_help: Previsualizar las filas que se pondrían en cuarentena
         sin mover nada
@@ -2826,7 +2818,7 @@ cli:
       counterparty_eu_member_state_help: Estado miembro de la UE o prefijo IVA
         de Irlanda del Norte de la contraparte (ISO 3166-1 alfa-2 minúsculas, p.
         ej. de o xi); obligatorio con --iva-category intra_community_supply,
-        prohibido con export_third_country_zero_rated
+        prohibido con export_third_country_zero_rated o export_assimilated_zero_rated
       evidence_acknowledged_help: Confirma que leer la evidencia con un proveedor
         en la nube la sube fuera de tu equipo (lo exige la verificacion de consentimiento).
       from_csv_exclusive: --from-csv no puede combinarse con un id de transacción
@@ -2841,7 +2833,8 @@ cli:
       irpf_category_help: Categoría de IRPF para cálculos de modelos
       iva_amount_help: Importe de IVA
       iva_category_help: Categoría de IVA explícita para esta transacción (p. ej.
-        intra_community_supply, export_third_country_zero_rated, domestic_not_subject)
+        intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
+        domestic_not_subject)
       iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
       llm_classified_by_label: clasificado-por
       llm_confidence_label: confianza
@@ -3407,7 +3400,7 @@ cli:
       01-12 (meses). Combínelo con --year para elegir el año.'
     status:
       drafts_empty: No se encontraron borradores de declaraciones guardados.
-      drafts_empty_with_work_units: No hay borradores de declaraciones antiguos guardados;
+      drafts_empty_with_work_units: No hay borradores de declaraciones guardados;
         es normal y no afecta a tus unidades de trabajo de modelos mostradas abajo.
       drafts_present: '%{count} borrador(es) de declaraciones guardados existen en
         este almacenamiento local. Un espacio vacio recien creado normalmente tiene
@@ -3468,11 +3461,11 @@ cli:
     citations:
       app_help: Inspeccionar el corpus normativo (Ley 37/1992, Ley 35/2006, ...)
       articulo_help: Artículo concreto a mostrar (p. ej. 91.Uno.2.1º)
-      list_help: Listar las normativas registradas en el corpus legal
-      normative_id_help: Id estable de la normativa (p. ej. ley-37-1992)
+      legal_id_help: Id estable de la autoridad legal (p. ej. ley-37-1992)
+      list_help: Listar las autoridades legales registradas en el corpus legal
       tag_help: Filtrar por etiqueta de dominio fiscal (p. ej. 'irpf', 'iva')
       verify_help: Verificar la integridad del corpus normativo
-      view_help: Mostrar una normativa y, opcionalmente, uno de sus artículos
+      view_help: Mostrar una autoridad legal y, opcionalmente, uno de sus artículos
     inspect_help: Inspeccionar el estado del registro y las referencias
     inspect_registry_root_help: Ruta al directorio raíz del registro
     manuals:
@@ -4063,9 +4056,6 @@ errors:
     error_modelo_work_unit_not_found: No se encontró la unidad de trabajo solicitada.
     error_modelos: Se produjo un error en los modelos tributarios.
     error_modelos_validation: Un código de modelo infringe sus invariantes de forma.
-    error_normatives_normative: Se produjo un error relacionado con la normativa.
-    error_normatives_normative_not_found: No se encontró la norma o el artículo solicitados.
-    error_normatives_validation: Un valor de la normativa no es válido.
     error_observation_key: Un componente de la clave de observación no cumple el contrato
       del repositorio.
     error_outbound_storage_not_found: No existe el objeto o el espacio de almacenamiento
@@ -4207,8 +4197,6 @@ errors:
       de informes de verificación.
     fail_modelo_work_unit_persistence: No se pudo guardar o leer el catálogo de unidades
       de trabajo.
-    fail_normatives_normative_parse: Un registro normativo no superó la validación
-      del esquema.
     fail_observability_run_trace_persistence: El almacén de trazas de ejecución no
       pudo completar una operación del sistema de archivos.
     fail_outbound_storage: Se produjo un error en el proveedor de almacenamiento.
@@ -4989,11 +4977,16 @@ topic:
       principales son IVA (general, simplificado, recargo de equivalencia, exento)
       e IRPF (directa, objetiva).
     title: Regímenes fiscales
-  sii-verifactu:
-    body: Sistemas de remisión electrónica de facturas a la AEAT. SII (Suministro
-      Inmediato de Información) aplica obligatoriamente a grandes empresas; Verifactu
-      (RD 1007/2023) es un requisito gradual para sistemas de facturación.
-    title: SII y Verifactu
+  sii:
+    body: Suministro Inmediato de Información del IVA. Obliga a quienes liquidan
+      IVA mensualmente, incluidas grandes empresas, grupos de IVA y REDEME, a llevar
+      los libros registro en la Sede de la AEAT.
+    title: SII
+  verifactu:
+    body: Requisitos RD 1007/2023 para sistemas informáticos de facturación. El hito
+      actual es 1 de enero de 2027 para contribuyentes del Impuesto sobre Sociedades
+      del art. 3.1.a y 1 de julio de 2027 para el resto de obligados del art. 3.1.
+    title: VERI*FACTU
 transactions:
   import:
     message_053465: Transacción duplicada detectada dentro del archivo importado.
@@ -5268,8 +5261,6 @@ wizard:
         help: 'Sexo del primer declarante: H = hombre, M = mujer.'
       third-party-transactions-above-347-threshold:
         help: Operaciones con terceros superan el umbral del Modelo 347
-      uses-objective-estimation-irpf:
-        help: Tributa IRPF en estimación objetiva
     intro: 'Configuración guiada del perfil tributario
 
 
@@ -5345,8 +5336,6 @@ wizard:
       third-party-transactions-above-347-threshold:
         prompt: Operaciones con terceros superan el umbral del Modelo 347
       title: Obligaciones
-      uses-objective-estimation-irpf:
-        prompt: Tributa IRPF en estimación objetiva
     profile:
       activity:
         prompt: Actividad económica (texto normal; usa el epígrafe IAE si lo conoces)

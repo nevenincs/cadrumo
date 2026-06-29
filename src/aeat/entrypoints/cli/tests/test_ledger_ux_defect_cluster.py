@@ -21,7 +21,6 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile._orchestration import profile_create_storage_span
@@ -29,12 +28,11 @@ from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....domain.categories import SpendingCategory
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_RUNNER = CliRunner()
 
 _N26_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
 
@@ -71,9 +69,9 @@ def _imported_transaction_id(tmp_path: Path) -> str:
         _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
-    imported = _RUNNER.invoke(app, ["app", "ledger", "import", str(statement), "--provider", "csv"])
+    imported = invoke_cached_cli(["app", "ledger", "import", str(statement), "--provider", "csv"])
     assert imported.exit_code == 0, imported.output
-    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    listed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
     rows = payload.get("result", payload).get("rows", [])
@@ -88,7 +86,7 @@ def test_categories_command_lists_the_canonical_spending_taxonomy(
     tmp_path: Path,
 ) -> None:
     """`ledger categories` enumerates every SpendingCategory id."""
-    result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "categories"])
+    result = invoke_cached_cli(["--format", "json", "app", "ledger", "categories"])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
     listed = set(payload["category_ids"])
@@ -102,8 +100,7 @@ def test_categories_command_lists_the_canonical_spending_taxonomy(
 def test_classify_rejects_an_invented_category_id(tmp_path: Path) -> None:
     """An id outside the closed taxonomy is refused, not silently kept."""
     txn = _imported_transaction_id(tmp_path)
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "app",
             "ledger",
@@ -123,8 +120,7 @@ def test_classify_rejects_an_invented_category_id(tmp_path: Path) -> None:
 def test_classify_accepts_a_canonical_category_id(tmp_path: Path) -> None:
     """A real SpendingCategory id still classifies successfully."""
     txn = _imported_transaction_id(tmp_path)
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -146,8 +142,7 @@ def test_classify_accepts_a_canonical_category_id(tmp_path: Path) -> None:
 def test_classify_reaffirm_json_output_is_a_single_envelope(tmp_path: Path) -> None:
     """`--reaffirm` must not print a plain-text notice before JSON output."""
     txn = _imported_transaction_id(tmp_path)
-    first = _RUNNER.invoke(
-        app,
+    first = invoke_cached_cli(
         [
             "app",
             "ledger",
@@ -159,8 +154,7 @@ def test_classify_reaffirm_json_output_is_a_single_envelope(tmp_path: Path) -> N
     )
     assert first.exit_code == 0, first.output
 
-    reaffirmed = _RUNNER.invoke(
-        app,
+    reaffirmed = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -189,7 +183,7 @@ def test_classify_reaffirm_json_output_is_a_single_envelope(tmp_path: Path) -> N
 
 def test_import_help_lists_recognised_providers() -> None:
     """`import --help` enumerates the accepted --provider values."""
-    result = _RUNNER.invoke(app, ["app", "ledger", "import", "--help"])
+    result = invoke_cached_cli(["app", "ledger", "import", "--help"])
     assert result.exit_code == 0, result.output
     haystack = " ".join(result.output.split())
     for provider in ("csv", "ofx", "xlsx", "n26"):
@@ -203,11 +197,25 @@ def test_unknown_provider_error_enumerates_known_providers(tmp_path: Path) -> No
         _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
-    result = _RUNNER.invoke(app, ["app", "ledger", "import", str(statement), "--provider", "quickbooks"])
+    result = invoke_cached_cli(["app", "ledger", "import", str(statement), "--provider", "quickbooks"])
     assert result.exit_code != 0
     assert "quickbooks" in result.output
     for provider in ("csv", "ofx", "xlsx", "n26"):
         assert provider in result.output
+
+
+def test_generic_csv_missing_currency_warning_is_provider_neutral_in_cli(tmp_path: Path) -> None:
+    """`--provider csv` warnings must not invent a bank brand for generic CSV."""
+    statement = tmp_path / "generic.csv"
+    statement.write_text("Date,Description,Amount\n2026-04-15,Invoice 1,121.00\n", encoding="utf-8")
+
+    result = invoke_cached_cli(
+        ["app", "ledger", "import", str(statement), "--provider", "csv", "--dry-run", "--verbose"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "CSV has no currency column; falling back to EUR" in result.output
+    assert "N26 CSV has no currency column" not in result.output
 
 
 # --- M12: explained zero-import ---------------------------------------------
@@ -223,7 +231,7 @@ def test_import_of_a_headers_only_csv_explains_zero_rows(tmp_path: Path) -> None
     """
     statement = tmp_path / "empty.csv"
     statement.write_text(_N26_HEADER, encoding="utf-8")
-    result = _RUNNER.invoke(app, ["app", "ledger", "import", str(statement), "--provider", "csv"])
+    result = invoke_cached_cli(["app", "ledger", "import", str(statement), "--provider", "csv"])
     assert result.exit_code != 0
     assert "no data rows" in result.output.lower()
 
@@ -238,8 +246,7 @@ def test_import_of_a_blank_data_row_csv_emits_a_notice(tmp_path: Path) -> None:
     """
     statement = tmp_path / "blank.csv"
     statement.write_text(_N26_HEADER + " , , , , , \n", encoding="utf-8")
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         ["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv"],
     )
     assert result.exit_code == 0, result.output
@@ -256,10 +263,9 @@ def test_reimport_of_existing_rows_explains_the_zero_import(tmp_path: Path) -> N
         _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
-    first = _RUNNER.invoke(app, ["app", "ledger", "import", str(statement), "--provider", "csv"])
+    first = invoke_cached_cli(["app", "ledger", "import", str(statement), "--provider", "csv"])
     assert first.exit_code == 0, first.output
-    second = _RUNNER.invoke(
-        app,
+    second = invoke_cached_cli(
         ["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv"],
     )
     assert second.exit_code == 0, second.output
@@ -281,8 +287,7 @@ def test_add_with_business_pct_on_a_business_row_surfaces_the_real_cause(
     A non-MIXED classification forbids --business-pct. The refusal must
     name that exact rule rather than the misleading "run config repair".
     """
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "app",
             "ledger",
@@ -315,8 +320,7 @@ def test_add_with_business_pct_on_a_business_row_surfaces_the_real_cause(
 
 def test_add_business_row_without_business_pct_succeeds(tmp_path: Path) -> None:
     """The same row minus --business-pct is legal and still works."""
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -354,7 +358,7 @@ def test_review_by_short_id_prefix_resolves_the_transaction(
 ) -> None:
     """`review <prefix>` resolves the prefix instead of refusing."""
     txn = _imported_transaction_id(tmp_path)
-    result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "review", txn[:8]])
+    result = invoke_cached_cli(["--format", "json", "app", "ledger", "review", txn[:8]])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
     assert payload["id"] == txn
@@ -366,7 +370,7 @@ def test_review_by_full_id_still_resolves_the_transaction(
 ) -> None:
     """`review <full>` keeps working after the prefix-resolution fix."""
     txn = _imported_transaction_id(tmp_path)
-    result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "review", txn])
+    result = invoke_cached_cli(["--format", "json", "app", "ledger", "review", txn])
     assert result.exit_code == 0, result.output
     assert json.loads(result.output)["result"]["id"] == txn
 
@@ -384,8 +388,7 @@ def test_ledger_view_shows_iva_counterparty_and_notes_detail(
     way to verify those persisted: the old view rendered five fields and
     dropped the rest. The full stored field set is now shown.
     """
-    added = _RUNNER.invoke(
-        app,
+    added = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -417,7 +420,7 @@ def test_ledger_view_shows_iva_counterparty_and_notes_detail(
     assert added.exit_code == 0, added.output
     txn = json.loads(added.output)["result"]["transaction_id"]
 
-    viewed = _RUNNER.invoke(app, ["app", "ledger", "view", txn[:8]])
+    viewed = invoke_cached_cli(["app", "ledger", "view", txn[:8]])
     assert viewed.exit_code == 0, viewed.output
     output = viewed.output
     # The IVA triple the operator entered is visible for confirmation.
@@ -447,20 +450,18 @@ def test_ledger_view_shows_the_linked_purchase_invoice_evidence_id(tmp_path: Pat
 
     pdf = tmp_path / "factura.pdf"
     pdf.write_bytes(_MINIMAL_PDF)
-    added = _RUNNER.invoke(
-        app,
+    added = invoke_cached_cli(
         ["--format", "json", "app", "ledger", "evidence", "add", str(pdf), "--supplier", "Proveedor SL"],
     )
     assert added.exit_code == 0, added.output
     evidence_id = json.loads(added.output)["result"]["evidence_id"]
 
-    attached = _RUNNER.invoke(
-        app,
+    attached = invoke_cached_cli(
         ["app", "ledger", "attach", txn, "--purchase-invoice-evidence-id", evidence_id],
     )
     assert attached.exit_code == 0, attached.output
 
-    viewed = _RUNNER.invoke(app, ["app", "ledger", "view", txn[:8]])
+    viewed = invoke_cached_cli(["app", "ledger", "view", txn[:8]])
     assert viewed.exit_code == 0, viewed.output
     assert f"Purchase invoice evidence\t{evidence_id}" in viewed.output
 
@@ -468,8 +469,7 @@ def test_ledger_view_shows_the_linked_purchase_invoice_evidence_id(tmp_path: Pat
 def test_ledger_view_json_carries_the_full_transaction(tmp_path: Path) -> None:
     """The JSON payload exposes the typed transaction with every field,
     so the text view and the JSON contract agree."""
-    added = _RUNNER.invoke(
-        app,
+    added = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -497,7 +497,7 @@ def test_ledger_view_json_carries_the_full_transaction(tmp_path: Path) -> None:
     assert added.exit_code == 0, added.output
     txn = json.loads(added.output)["result"]["transaction_id"]
 
-    viewed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "view", txn])
+    viewed = invoke_cached_cli(["--format", "json", "app", "ledger", "view", txn])
     assert viewed.exit_code == 0, viewed.output
     transaction = json.loads(viewed.output)["result"]["transaction"]
     assert transaction["counterparty"] == "PC Shop SL"
@@ -516,8 +516,7 @@ def test_classify_can_correct_and_view_iva_category(tmp_path: Path) -> None:
     stored value. This reproduces that flow through the real CLI.
     """
     txn = _imported_transaction_id(tmp_path)
-    first = _RUNNER.invoke(
-        app,
+    first = invoke_cached_cli(
         [
             "app",
             "ledger",
@@ -536,12 +535,11 @@ def test_classify_can_correct_and_view_iva_category(tmp_path: Path) -> None:
         ],
     )
     assert first.exit_code == 0, first.output
-    viewed_first = _RUNNER.invoke(app, ["app", "ledger", "view", txn[:8]])
+    viewed_first = invoke_cached_cli(["app", "ledger", "view", txn[:8]])
     assert viewed_first.exit_code == 0, viewed_first.output
     assert "IVA category\terroneous_invoice" in viewed_first.output
 
-    corrected = _RUNNER.invoke(
-        app,
+    corrected = invoke_cached_cli(
         [
             "app",
             "ledger",
@@ -563,11 +561,11 @@ def test_classify_can_correct_and_view_iva_category(tmp_path: Path) -> None:
     assert corrected.exit_code == 0, corrected.output
     assert "manual ledger update must change at least one ledger field" not in corrected.output
 
-    viewed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "view", txn])
+    viewed = invoke_cached_cli(["--format", "json", "app", "ledger", "view", txn])
     assert viewed.exit_code == 0, viewed.output
     transaction = json.loads(viewed.output)["result"]["transaction"]
     assert transaction["iva_category"] == "domestic_general_21"
-    text_view = _RUNNER.invoke(app, ["app", "ledger", "view", txn[:8]])
+    text_view = invoke_cached_cli(["app", "ledger", "view", txn[:8]])
     assert text_view.exit_code == 0, text_view.output
     assert "IVA category\tdomestic_general_21" in text_view.output
 
@@ -620,8 +618,7 @@ def test_import_dry_run_reports_the_real_would_import_count(tmp_path: Path) -> N
     statement = tmp_path / "statement.csv"
     statement.write_text(_FOUR_ROW_CSV, encoding="utf-8")
 
-    dry_run = _RUNNER.invoke(
-        app,
+    dry_run = invoke_cached_cli(
         ["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv", "--dry-run"],
     )
     assert dry_run.exit_code == 0, dry_run.output
@@ -632,8 +629,7 @@ def test_import_dry_run_reports_the_real_would_import_count(tmp_path: Path) -> N
     assert "dry_run_notice" in payload
 
     # A real import of the same file adds exactly what the preview said.
-    real = _RUNNER.invoke(
-        app,
+    real = invoke_cached_cli(
         ["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv"],
     )
     assert real.exit_code == 0, real.output
@@ -645,11 +641,10 @@ def test_import_dry_run_counts_existing_rows_as_would_skip(tmp_path: Path) -> No
     statement = tmp_path / "statement.csv"
     statement.write_text(_FOUR_ROW_CSV, encoding="utf-8")
 
-    first = _RUNNER.invoke(app, ["app", "ledger", "import", str(statement), "--provider", "csv"])
+    first = invoke_cached_cli(["app", "ledger", "import", str(statement), "--provider", "csv"])
     assert first.exit_code == 0, first.output
 
-    dry_run = _RUNNER.invoke(
-        app,
+    dry_run = invoke_cached_cli(
         ["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv", "--dry-run"],
     )
     assert dry_run.exit_code == 0, dry_run.output
@@ -670,22 +665,20 @@ def test_reimport_after_editing_a_transaction_still_deduplicates(
     statement = tmp_path / "statement.csv"
     statement.write_text(_FOUR_ROW_CSV, encoding="utf-8")
 
-    first = _RUNNER.invoke(app, ["app", "ledger", "import", str(statement), "--provider", "csv"])
+    first = invoke_cached_cli(["app", "ledger", "import", str(statement), "--provider", "csv"])
     assert first.exit_code == 0, first.output
 
-    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    listed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
     rows = json.loads(listed.output)["result"]["rows"]
     assert len(rows) == 4
     target = rows[0]["transaction_id"]
 
-    edited = _RUNNER.invoke(
-        app,
+    edited = invoke_cached_cli(
         ["app", "ledger", "update", target, "--description", "Invoice 1 - corrected narrative"],
     )
     assert edited.exit_code == 0, edited.output
 
-    reimport = _RUNNER.invoke(
-        app,
+    reimport = invoke_cached_cli(
         ["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv"],
     )
     assert reimport.exit_code == 0, reimport.output
@@ -694,7 +687,7 @@ def test_reimport_after_editing_a_transaction_still_deduplicates(
     assert payload["skipped"] == 4
     # The catalogue still holds exactly four rows — no duplicate of the
     # edited transaction.
-    after = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    after = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
     assert len(json.loads(after.output)["result"]["rows"]) == 4
 
 
@@ -712,18 +705,17 @@ def test_cross_format_import_of_the_same_movements_deduplicates(
     ofx_statement = tmp_path / "statement.ofx"
     ofx_statement.write_text(_FOUR_ROW_OFX, encoding="ascii")
 
-    csv_import = _RUNNER.invoke(app, ["app", "ledger", "import", str(csv_statement), "--provider", "csv"])
+    csv_import = invoke_cached_cli(["app", "ledger", "import", str(csv_statement), "--provider", "csv"])
     assert csv_import.exit_code == 0, csv_import.output
 
-    ofx_import = _RUNNER.invoke(
-        app,
+    ofx_import = invoke_cached_cli(
         ["--format", "json", "app", "ledger", "import", str(ofx_statement), "--provider", "ofx"],
     )
     assert ofx_import.exit_code == 0, ofx_import.output
     payload = json.loads(ofx_import.output)["result"]
     assert payload["imported"] == 0, payload
     assert payload["skipped"] == 4
-    after = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    after = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
     assert len(json.loads(after.output)["result"]["rows"]) == 4
 
 
@@ -740,7 +732,7 @@ def test_import_warns_on_likely_cross_format_duplicate(tmp_path: Path) -> None:
         _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
-    assert _RUNNER.invoke(app, ["app", "ledger", "import", str(first), "--provider", "csv"]).exit_code == 0
+    assert invoke_cached_cli(["app", "ledger", "import", str(first), "--provider", "csv"]).exit_code == 0
 
     # Same date and amount, deliberately different reference text.
     second = tmp_path / "second.csv"
@@ -748,8 +740,7 @@ def test_import_warns_on_likely_cross_format_duplicate(tmp_path: Path) -> None:
         _N26_HEADER + "2026-04-15,Client SL,TRANSFER 99887766,121.00,EUR,xx-999\n",
         encoding="utf-8",
     )
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         ["--format", "json", "app", "ledger", "import", str(second), "--provider", "csv"],
     )
     assert result.exit_code == 0, result.output
@@ -774,8 +765,7 @@ def test_classify_with_negative_taxable_base_names_the_real_cause(
     cannot fix a bad CLI argument and must not be suggested.
     """
     txn = _imported_transaction_id(tmp_path)
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         ["app", "ledger", "classify", txn, "--classification", "BUSINESS", "--taxable-base", "-397.11"],
     )
     assert result.exit_code != 0
@@ -786,8 +776,7 @@ def test_classify_with_negative_taxable_base_names_the_real_cause(
 def test_classify_with_valid_taxable_base_still_succeeds(tmp_path: Path) -> None:
     """A non-negative `--taxable-base` classifies the row normally."""
     txn = _imported_transaction_id(tmp_path)
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -812,7 +801,7 @@ def test_classify_with_valid_taxable_base_still_succeeds(tmp_path: Path) -> None
 
 def test_categories_output_names_the_category_id_column(tmp_path: Path) -> None:
     """The catalogue makes the exact `--category-id` value unmistakable."""
-    result = _RUNNER.invoke(app, ["app", "ledger", "categories"])
+    result = invoke_cached_cli(["app", "ledger", "categories"])
     assert result.exit_code == 0, result.output
     output = result.output
     # A header row names the id column, and an example line shows the
@@ -827,8 +816,7 @@ def test_invalid_category_error_shows_a_concrete_valid_example(
 ) -> None:
     """A rejected `--category-id` names one concrete valid id."""
     txn = _imported_transaction_id(tmp_path)
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "app",
             "ledger",
@@ -855,8 +843,7 @@ def test_invalid_category_error_shows_a_concrete_valid_example(
 def test_classify_accepts_business_pct_for_a_mixed_row(tmp_path: Path) -> None:
     """`classify --classification MIXED --business-pct` works in one step."""
     txn = _imported_transaction_id(tmp_path)
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -879,8 +866,7 @@ def test_classify_accepts_business_pct_for_a_mixed_row(tmp_path: Path) -> None:
 def test_classify_mixed_without_business_pct_names_the_flag(tmp_path: Path) -> None:
     """`classify --classification MIXED` without the share names `--business-pct`."""
     txn = _imported_transaction_id(tmp_path)
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         ["app", "ledger", "classify", txn, "--classification", "MIXED"],
     )
     assert result.exit_code != 0
@@ -891,8 +877,7 @@ def test_classify_mixed_without_business_pct_names_the_flag(tmp_path: Path) -> N
 def test_classify_business_pct_on_non_mixed_row_is_refused(tmp_path: Path) -> None:
     """`--business-pct` with a non-MIXED classification is refused, not dropped."""
     txn = _imported_transaction_id(tmp_path)
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         ["app", "ledger", "classify", txn, "--classification", "BUSINESS", "--business-pct", "0.5"],
     )
     assert result.exit_code != 0
@@ -903,7 +888,7 @@ def test_classify_business_pct_on_non_mixed_row_is_refused(tmp_path: Path) -> No
 def test_history_accepts_the_id_positionally_like_view(tmp_path: Path) -> None:
     """`ledger history <id>` takes the id positionally, matching `ledger view`."""
     txn = _imported_transaction_id(tmp_path)
-    result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", txn])
+    result = invoke_cached_cli(["--format", "json", "app", "ledger", "history", txn])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
     assert payload["transaction_id"] == txn
@@ -931,16 +916,16 @@ def test_list_and_view_render_accented_descriptions_identically(
         _N26_HEADER + f"2026-04-15,Proveedor SA,{accented},-50.00,EUR,n26-acc\n",
         encoding="utf-8",
     )
-    imported = _RUNNER.invoke(app, ["app", "ledger", "import", str(statement), "--provider", "csv"])
+    imported = invoke_cached_cli(["app", "ledger", "import", str(statement), "--provider", "csv"])
     assert imported.exit_code == 0, imported.output
 
-    listed = _RUNNER.invoke(app, ["app", "ledger", "list"])
+    listed = invoke_cached_cli(["app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     assert accented in listed.output
     assert "?" not in listed.output
 
-    txn = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    txn = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
     transaction_id = json.loads(txn.output)["result"]["rows"][0]["transaction_id"]
-    viewed = _RUNNER.invoke(app, ["app", "ledger", "view", transaction_id])
+    viewed = invoke_cached_cli(["app", "ledger", "view", transaction_id])
     assert viewed.exit_code == 0, viewed.output
     assert accented in viewed.output

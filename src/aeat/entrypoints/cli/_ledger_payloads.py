@@ -498,9 +498,6 @@ class LedgerStatusResult(OutputSchema):
     """
 
     bucket_id: str
-    income_total: str = "0.00"
-    expense_total: str = "0.00"
-    net_total: str = "0.00"
     business_income_total: str = "0.00"
     business_expense_total: str = "0.00"
     business_net_total: str = "0.00"

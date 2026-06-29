@@ -9,12 +9,13 @@ against a real participation index built from a real revision lifecycle.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
 import typer
+from click.testing import Result
 from typer.core import TyperGroup
-from typer.testing import CliRunner
 
 from ....application.ledger import get_transaction_participation
 from ....core import Period
@@ -24,6 +25,7 @@ from ....domain.modelos._participation_index import (
     TransactionRevisionParticipation,
     TransactionRevisionParticipationIndex,
 )
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_runtime_profile
 from .._ledger_payloads import LedgerTrackResult, LedgerTransactionParticipationPayload
 from .._participation_cli import register_participation_commands
@@ -73,13 +75,37 @@ def test_participation_rebuild_subcommand_is_registered() -> None:
     assert "rebuild" in group.commands
 
 
-def _participation_app() -> typer.Typer:
-    def _resolve(_repo: object, transaction_id: str) -> str:
-        return transaction_id
+def _invoke_participation(*args: str) -> Result:
+    return invoke_cached_cli(["app", "ledger", "participation", *args])
 
-    app = typer.Typer()
-    register_participation_commands(app, resolve_transaction_id=_resolve)
-    return app
+
+def _seed_transaction_id() -> str:
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-05-02",
+            "--amount",
+            "121.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "participation lookup seed",
+            "--counterparty",
+            "Proveedor SL",
+            "--idempotency-key",
+            "participation-lookup-seed",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    envelope = json.loads(result.output)
+    transaction_id = envelope["result"]["transaction_id"]
+    assert isinstance(transaction_id, str)
+    return transaction_id
 
 
 def test_participation_rebuild_dispatches_not_swallowed_as_id(tmp_path: Path) -> None:
@@ -94,7 +120,7 @@ def test_participation_rebuild_dispatches_not_swallowed_as_id(tmp_path: Path) ->
     """
     bucket_id = "participation-cli-rebuild"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
-        result = CliRunner().invoke(_participation_app(), ["participation", "rebuild"])
+        result = _invoke_participation("rebuild")
 
     assert result.exit_code == 0, result.output
     assert "no hexadecimales" not in result.output
@@ -110,9 +136,9 @@ def test_participation_lookup_still_works_for_transaction_id(tmp_path: Path) -> 
     genuine lookup ids.
     """
     bucket_id = "participation-cli-lookup"
-    transaction_id = "a" * 64
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
-        result = CliRunner().invoke(_participation_app(), ["participation", transaction_id])
+        transaction_id = _seed_transaction_id()
+        result = _invoke_participation(transaction_id)
 
     assert result.exit_code == 0, result.output
     assert transaction_id in result.output

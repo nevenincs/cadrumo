@@ -933,11 +933,6 @@ application:
         next_action: Autoritzeu la fila Convenio España-{cc} a m210-convenio-rates
           per a tipo_renta={tipo_renta}, o desestableixi profile.convenio_doble_imposicion_country
           per usar el baseline TRLIRNR Art 25.
-      m210_convenio_rate_not_yet_authored:
-        next_action: La fila Convenio España-{cc} per a tipo_renta={tipo_renta} conté
-          el marcador NOT_YET_AUTHORED segons ADR D2.4. Autoritzeu la tarifa verificada
-          del corpus BOE abans que aquesta declaració pugui completar-se; obriu una
-          tasca de seguiment bloquejada per corpus citant l'article del Convenio.
       missing_required_casilla: La casella obligatòria %{casilla_id} no és present
         a les dades d'entrada del càlcul.
       modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: La
@@ -950,7 +945,7 @@ application:
         (C595) és zero; confirmeu que és un zero legítim (base igual o inferior al
         mínim personal i familiar, o compensada per deduccions) i no una llacuna no
         modelada.
-      modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exempt de
+      modelo_130_art109_exencion_alta_retencion: 'Art. 109 RIRPF: exempt de
         presentar M130 aquest trimestre perquè les retencions i ingressos a compte
         acumulats a l''any representen el 70% o més dels rendiments íntegres.'
       modelo_131_2019_2023_pago_fraccionado_determinado_cuando_rendimientos_positivos: Els
@@ -2034,7 +2029,7 @@ cli:
         resume_help: Valida si pots reintentar una execució de flux interrompuda sense
           contactar amb AEAT. Fes servir --modelo --year --period com a ruta normal;
           els ids exactes queden com a escape avançat.
-        resume_target_help: Id heretat opcional d'execució de flux de 16 caràcters
+        resume_target_help: Id opcional d'execució de flux de 16 caràcters
           o id d'unitat de treball de 64 caràcters. Prefereix --modelo --year --period.
         revision_help: Identificador estable de la revisió registrada del model; executa
           `aeat app modelo describe MODEL` per veure els ids de revisió disponibles.
@@ -2523,10 +2518,6 @@ cli:
         perfil actiu; '%{profile}' no està actiu.
       profile_help: Inspeccionar i reparar el punter de perfil actiu.
       profile_name_help: Inspeccionar un perfil registrat concret.
-      profile_one_action: Tria --clear-active o --repair-manifest-status, no tots
-        dos.
-      profile_repair_manifest_status_help: Reomplir l'estat d'un manifest legacy del
-        bucket actiu des del registre xifrat del perfil.
       profile_requires_yes: Passa --yes per aplicar la reparació del perfil actiu.
       quarantine_dry_run_help: Previsualitza les files que es posarien en quarantena
         sense moure res
@@ -2786,6 +2777,7 @@ cli:
       counterparty_eu_member_state_help: Estat membre de la UE o prefix IVA d'Irlanda
         del Nord de la contrapart (ISO 3166-1 alfa-2 minúscules, p. ex. de o xi);
         obligatori amb --iva-category intra_community_supply, prohibit amb export_third_country_zero_rated
+        o export_assimilated_zero_rated
       evidence_acknowledged_help: Confirma que llegir l'evidencia amb un proveidor
         al nuvol la puja fora del teu equip (ho exigeix la verificacio de consentiment).
       from_csv_exclusive: --from-csv no pot combinar-se amb un id de transacció ni
@@ -2800,7 +2792,8 @@ cli:
       irpf_category_help: Categoria d'IRPF per a càlculs de models
       iva_amount_help: Import d'IVA
       iva_category_help: Categoria d'IVA explícita per a aquesta transacció (p. ex.
-        intra_community_supply, export_third_country_zero_rated, domestic_not_subject)
+        intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
+        domestic_not_subject)
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
       llm_classified_by_label: classificat-per
       llm_confidence_label: confianca
@@ -3366,7 +3359,7 @@ cli:
       0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
     status:
       drafts_empty: No s'han trobat esborranys de declaracions desats.
-      drafts_empty_with_work_units: No hi ha esborranys de declaracions antics desats;
+      drafts_empty_with_work_units: No hi ha esborranys de declaracions desats;
         es normal i no afecta les teves unitats de treball de models mostrades a sota.
       drafts_present: '%{count} esborrany(s) de declaracions desats existeixen en
         aquest emmagatzematge local. Un espai buit acabat de crear normalment en te
@@ -3425,11 +3418,11 @@ cli:
     citations:
       app_help: Inspeccionar el corpus normatiu (Llei 37/1992, Llei 35/2006, ...)
       articulo_help: Article concret a mostrar (p. ex. 91.U.2.1r)
-      list_help: Llistar les normatives registrades al corpus legal
-      normative_id_help: Id estable de la normativa (p. ex. ley-37-1992)
+      legal_id_help: Id estable de l'autoritat legal (p. ex. ley-37-1992)
+      list_help: Llistar les autoritats legals registrades al corpus legal
       tag_help: Filtrar per etiqueta de domini fiscal (p. ex. 'irpf', 'iva')
       verify_help: Verificar la integritat del corpus normatiu
-      view_help: Mostrar una normativa i, opcionalment, un dels seus articles
+      view_help: Mostrar una autoritat legal i, opcionalment, un dels seus articles
     inspect_help: Inspeccionar l'estat del registre i les referències
     inspect_registry_root_help: Ruta al directori arrel del registre
     manuals:
@@ -4018,9 +4011,6 @@ errors:
     error_modelos: S'ha produït un error en els models tributaris.
     error_modelos_validation: Un codi de model infringeix les seves invariants de
       forma.
-    error_normatives_normative: S'ha produït un error relacionat amb la normativa.
-    error_normatives_normative_not_found: No s'ha trobat la norma o l'article sol·licitats.
-    error_normatives_validation: Un valor de la normativa no és vàlid.
     error_observation_key: Un component de la clau d'observació no compleix el contracte
       del repositori.
     error_outbound_storage_not_found: No existeix l'objecte o l'espai d'emmagatzematge
@@ -4160,8 +4150,6 @@ errors:
       d'informes de verificació.
     fail_modelo_work_unit_persistence: No s'ha pogut desar o llegir el catàleg d'unitats
       de treball.
-    fail_normatives_normative_parse: Un registre normatiu no ha superat la validació
-      de l'esquema.
     fail_observability_run_trace_persistence: El magatzem de traces d'execució no
       ha pogut completar una operació del sistema de fitxers.
     fail_outbound_storage: S'ha produït un error en el proveïdor d'emmagatzematge.
@@ -4939,11 +4927,17 @@ topic:
       són IVA (general, simplificat, recàrrec d'equivalència, exempt) i IRPF (directa,
       objectiva).
     title: Règims fiscals
-  sii-verifactu:
-    body: Sistemes de transmissió electrònica de factures a l'AEAT. SII (Subministrament
-      Immediat d'Informació) aplica obligatòriament a grans empreses; Verifactu (RD
-      1007/2023) és un requisit gradual per a sistemes de facturació.
-    title: SII i Verifactu
+  sii:
+    body: Subministrament Immediat d'Informació de l'IVA. Obliga qui liquida IVA mensualment,
+      incloses grans empreses, grups d'IVA i contribuents REDEME, a portar els llibres
+      registre a la seu de l'AEAT.
+    title: SII
+  verifactu:
+    body: Requisits del RD 1007/2023 per als sistemes informàtics de facturació. La
+      fita actual és l'1 de gener de 2027 per als contribuents de l'Impost sobre Societats
+      de l'art. 3.1.a i l'1 de juliol de 2027 per a la resta d'obligats de l'art.
+      3.1.
+    title: VERI*FACTU
 transactions:
   import:
     message_053465: Transacció duplicada detectada dins de l'arxiu importat.
@@ -5213,8 +5207,6 @@ wizard:
         help: 'Sexe del primer declarant: H = home, M = dona.'
       third-party-transactions-above-347-threshold:
         help: Operacions amb tercers superen el llindar del Modelo 347
-      uses-objective-estimation-irpf:
-        help: Tributa IRPF en estimació objectiva
     intro: 'Configuració guiada del perfil tributari
 
 
@@ -5290,8 +5282,6 @@ wizard:
       third-party-transactions-above-347-threshold:
         prompt: Operacions amb tercers superen el llindar del Modelo 347
       title: Obligacions
-      uses-objective-estimation-irpf:
-        prompt: Tributa IRPF en estimació objectiva
     profile:
       activity:
         prompt: Activitat econòmica (text normal; usa l'epígraf IAE si el coneixes)

@@ -23,14 +23,13 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from ....application.filing._testing_registry import build_registry_filing_draft
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core import Period
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
 from ....domain.filing import (
     ModeloDraft,
     ModeloDraftRepository,
@@ -39,8 +38,8 @@ from ....domain.filing import (
     compute_modelo_draft_id,
 )
 from ....domain.submission import ModeloDraftStatus
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -52,6 +51,15 @@ _M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10", surface=
 _M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16", surface="_M130_HOME_DEDUCTION_CASILLA")
 _M130_PRIOR_RETURN_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_PRIOR_RETURN_CASILLA")
 _M202_CUOTA_CASILLA: CasillaId = validated_casilla_id("03", surface="_M202_CUOTA_CASILLA")
+
+
+def _snapshot_ref(*, modelo: str, period: Period, schema_version: str) -> RegistrySnapshotRef:
+    return RegistrySnapshotRef(
+        modelo=modelo,
+        revision_id=schema_version,
+        modelo_year=period.filing_year,
+        period=period.registry_token,
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -70,26 +78,26 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 @pytest.mark.parametrize("verb", ["status", "calendar", "agenda", "backlog", "explain"])
-def test_overview_verb_help_renders(cli_runner: CliRunner, verb: str) -> None:
+def test_overview_verb_help_renders(verb: str) -> None:
     """Every `aeat app overview <verb> --help` renders cleanly; each
     verb is mounted and its help-text translation key resolves to a
     non-empty default."""
 
-    result = cli_runner.invoke(app, ["app", "overview", verb, "--help"])
+    result = invoke_cached_cli(["app", "overview", verb, "--help"])
     assert result.exit_code == 0, result.output
     assert "Usage:" in result.output or "Uso:" in result.output, result.output
 
 
-def test_overview_status_returns_envelope_on_empty_bucket(cli_runner: CliRunner) -> None:
+def test_overview_status_returns_envelope_on_empty_bucket() -> None:
     """`aeat app overview status` against an isolated profile with no
     work units emits a typed envelope (no exception, no missing-data
     error). The verb is read-only and works without a populated bucket."""
 
-    result = cli_runner.invoke(app, ["app", "overview", "status"])
+    result = invoke_cached_cli(["app", "overview", "status"])
     assert result.exit_code == 0, result.output
 
 
-def test_overview_status_period_filter_matches_typed_draft_period(cli_runner: CliRunner) -> None:
+def test_overview_status_period_filter_matches_typed_draft_period() -> None:
     q1_draft = build_registry_filing_draft(
         modelo="130",
         period=Period.from_year_and_code(2026, "1T"),
@@ -108,14 +116,14 @@ def test_overview_status_period_filter_matches_typed_draft_period(cli_runner: Cl
     repository.save(q1_draft)
     repository.save(q2_draft)
 
-    result = cli_runner.invoke(app, ["app", "overview", "status", "--period", "1T", "--year", "2026"])
+    result = invoke_cached_cli(["app", "overview", "status", "--period", "1T", "--year", "2026"])
 
     assert result.exit_code == 0, result.output
     assert q1_draft.draft_id in result.output
     assert q2_draft.draft_id not in result.output
 
 
-def test_overview_status_period_filter_accepts_instalment_period(cli_runner: CliRunner) -> None:
+def test_overview_status_period_filter_accepts_instalment_period() -> None:
     p1_draft = _minimal_stored_draft(
         modelo="202",
         period=Period.from_year_and_code(2026, "1P"),
@@ -132,7 +140,7 @@ def test_overview_status_period_filter_accepts_instalment_period(cli_runner: Cli
     repository.save(p1_draft)
     repository.save(q1_draft)
 
-    result = cli_runner.invoke(app, ["app", "overview", "status", "--period", "1P", "--year", "2026"])
+    result = invoke_cached_cli(["app", "overview", "status", "--period", "1P", "--year", "2026"])
 
     assert result.exit_code == 0, result.output
     assert "1P 2026" in result.output
@@ -157,7 +165,6 @@ def test_overview_status_period_filter_accepts_instalment_period(cli_runner: Cli
     ],
 )
 def test_retired_deadlines_noun_group_is_unknown(
-    cli_runner: CliRunner,
     retired_verb: list[str],
 ) -> None:
     """Reaching for `aeat deadlines ...` (or `aeat app deadlines ...`)
@@ -165,7 +172,7 @@ def test_retired_deadlines_noun_group_is_unknown(
     retired the standalone deadlines noun-group; its surfaces live
     under `aeat app overview` (calendar, agenda, backlog)."""
 
-    result = cli_runner.invoke(app, retired_verb)
+    result = invoke_cached_cli(retired_verb)
     assert result.exit_code != 0, (
         f"retired verb path {retired_verb!r} should be unknown but exited 0: {result.output!r}"
     )
@@ -229,6 +236,8 @@ def _minimal_stored_draft(
         modelo=modelo,
         period=period,
         profile_tax_id="00000000T",
+        subject_tax_id="00000000T",
+        snapshot_ref=_snapshot_ref(modelo=modelo, period=period, schema_version=schema_version),
         status=ModeloDraftStatus.BORRADOR,
         values=values,
         created_at=now,

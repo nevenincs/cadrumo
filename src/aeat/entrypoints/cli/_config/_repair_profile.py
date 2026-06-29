@@ -56,18 +56,10 @@ def register_repair_profile_command(
             "--clear-active",
             help=tr("cli.config.repair.profile_clear_active_help"),
         ),
-        repair_manifest_status: bool = typer.Option(
-            False,
-            "--repair-manifest-status",
-            help=tr(
-                "cli.config.repair.profile_repair_manifest_status_help",
-                default="Backfill a legacy active bucket manifest status from the encrypted profile record.",
-            ),
-        ),
         yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.yes_help")),
     ) -> None:
-        """Inspect profile health or safely repair a degraded active-profile pointer/manifest."""
-        if profile is not None and not clear_active and not repair_manifest_status:
+        """Inspect profile health or safely repair a degraded active-profile pointer."""
+        if profile is not None and not clear_active:
             _emit_profile_record_status(
                 ctx,
                 profile,
@@ -78,13 +70,9 @@ def register_repair_profile_command(
         _validate_repair_action_preconditions(
             profile=profile,
             clear_active=clear_active,
-            repair_manifest_status=repair_manifest_status,
             yes=yes,
             resolve_profile_by_label=resolve_profile_by_label,
         )
-        if repair_manifest_status:
-            _emit_manifest_status_repair(ctx, confirmed=yes)
-            return
         _emit_pointer_repair(ctx, clear_active=clear_active, confirmed=yes)
 
 
@@ -92,20 +80,15 @@ def _validate_repair_action_preconditions(
     *,
     profile: str | None,
     clear_active: bool,
-    repair_manifest_status: bool,
     yes: bool,
     resolve_profile_by_label: ProfileResolver,
 ) -> None:
     """Refuse mutually-exclusive, mismatched, or unconfirmed repair actions.
 
-    Raises :class:`CliRefusedBoundaryError` when both repair actions are
-    requested at once, when ``--profile`` names a non-active bucket for a
-    pointer/manifest repair, or when a destructive action lacks ``--yes``.
+    Raises :class:`CliRefusedBoundaryError` when ``--profile`` names a
+    non-active bucket for pointer repair, or when a destructive action lacks
+    ``--yes``.
     """
-    if clear_active and repair_manifest_status:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.repair.profile_one_action",
-        )
     if profile is not None:
         resolved = resolve_profile_by_label(profile)
         if resolved.bucket_id != _resolve_active_bucket_id():
@@ -113,33 +96,10 @@ def _validate_repair_action_preconditions(
                 translated_message="cli.config.repair.profile_clear_active_mismatch",
                 context={"profile": profile},
             )
-    if (clear_active or repair_manifest_status) and not yes:
+    if clear_active and not yes:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.repair.profile_requires_yes",
         )
-
-
-def _emit_manifest_status_repair(ctx: typer.Context, *, confirmed: bool) -> None:
-    """Backfill a legacy active-bucket manifest status and emit the result."""
-    from ....application.workflow import repair_active_profile_manifest_status
-    from .._config_payloads import RepairProfileResult
-
-    result = repair_active_profile_manifest_status(confirmed=confirmed)
-    health = result.after or result.before
-    lines = [
-        f"dry_run\t{result.dry_run}",
-        f"repaired\t{result.repaired}",
-        f"active_profile\t{CLI_PROFILE_ID_PLACEHOLDER if health.active_profile else ''}",
-        f"status\t{health.status}",
-        f"manifest_status\t{result.status or ''}",
-        f"reason\t{result.reason}",
-    ]
-    if health.profile_record_error:
-        lines.append(f"profile_record_error\t{health.profile_record_error}")
-    if health.next_action:
-        lines.append(f"next_action\t{health.next_action}")
-    repair_payload = RepairProfileResult.model_validate(_redact_profile_repair_payload(result.model_dump(mode="json")))
-    _emit_envelope(ctx, command="config.repair.profile", result=repair_payload, lines=lines)
 
 
 def _emit_pointer_repair(ctx: typer.Context, *, clear_active: bool, confirmed: bool) -> None:
