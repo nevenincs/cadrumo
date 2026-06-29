@@ -1,13 +1,14 @@
 """Overview agenda: upcoming-deadline ranking with a top-of-payload next_due.
 
 :func:`build_overview_agenda` is the application service backing
-``aeat app overview agenda``. It accepts a :class:`TaxpayerProfile`
-and composes :func:`build_overview_calendar` over a window anchored
-on the operator's ``as_of`` date, then partitions the resulting entries
-into ``overdue`` / ``due_today`` / ``due_soon`` cohorts and surfaces the
-earliest future obligation as ``next_due`` so the CLI can render a
-single "what is the next thing I have to do" answer without re-walking
-the calendar.
+``aeat app overview agenda``. It accepts a
+:class:`~aeat.domain.deadlines.TaxpayerProfile` and composes
+:func:`aeat.application.overview.build_overview_calendar` over a window anchored
+on the operator's ``as_of`` date, then partitions the resulting
+:class:`OverviewCalendarEntry` rows into ``overdue`` / ``due_today`` /
+``due_soon`` cohorts. The earliest future obligation becomes ``next_due`` so
+the CLI can render a single "what is the next thing I have to do" answer
+without re-walking the calendar.
 
 Local-only: never contacts AEAT. Pure aggregator over the deadline
 engine, the festivos table, and the operator's profile values.
@@ -42,6 +43,12 @@ _OVERDUE_LOOKBACK_DAYS = 90
 
 class OverviewAgenda(BaseModel):
     """Outcome of ``build_overview_agenda``.
+
+    The model is the agenda-shaped projection of
+    :class:`aeat.application.overview.OverviewCalendar`: cohorts retain the
+    original :class:`OverviewCalendarEntry` rows, warnings are
+    :class:`CalendarWarning` values inherited from the calendar build, and
+    completeness is the same :class:`CalendarCompleteness` report.
 
     Attributes:
         as_of: Date the agenda is rendered against.
@@ -95,19 +102,20 @@ def build_overview_agenda(
     """Rank upcoming and past-due obligations around ``as_of``.
 
     Args:
-        profile: The :class:`TaxpayerProfile` whose obligations are ranked.
+        profile: The :class:`~aeat.domain.deadlines.TaxpayerProfile` whose
+            obligations are ranked.
         as_of: Anchor date for the lookback / lookahead window.
         horizon_days: Number of days after ``as_of`` to include in the
             lookahead window.
-        engine: Optional :class:`DeadlineEngine` override; defaults to the
-            registry-backed engine when ``None``.
+        engine: Optional :class:`~aeat.domain.deadlines.DeadlineEngine`
+            override; defaults to the registry-backed engine when ``None``.
         raw_values: Optional mapping of registry binding raw values forwarded
             to the deadline engine for context-sensitive deadlines.
 
-    Composes :func:`build_overview_calendar` over a window that spans
-    ``as_of - 90 days`` (so overdue obligations from the prior quarter
-    surface) through ``as_of + horizon_days`` (so the lookahead matches
-    the operator's requested ``--horizon``).
+    Composes :func:`aeat.application.overview.build_overview_calendar` over a
+    window that spans ``as_of - 90 days`` (so overdue obligations from the
+    prior quarter surface) through ``as_of + horizon_days`` (so the lookahead
+    matches the operator's requested ``--horizon``).
 
     The returned ``next_due`` is the single entry with the smallest
     ``adjusted_closes_on >= as_of``; if multiple obligations close on
