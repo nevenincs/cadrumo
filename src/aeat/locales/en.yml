@@ -1942,13 +1942,7 @@ cli:
         row_empty_key: Empty field key in --row {token}; each field must be in KEY=VALUE
           format.
         row_empty_spec: --row spec cannot be empty; expected TYPE FIELD=value [...]
-        row_help: 'Typed detail row for multi-record informational modelos. Format:
-          TYPE FIELD=value [FIELD=value ...]. TYPE is ''miembro'' (M184 attribution
-          member), ''vinculada'' (M232 related-party operation), ''operador'' (M349
-          intracom operator), or ''contraparte'' (M347 declared counterparty). Repeat
-          to add multiple rows. M184 example: --row ''miembro nif=12345678A porcentaje=40
-          importe=10000''. M349 example: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
-          clave_operacion=E importe=50000''.'
+        row_help: 'Typed detail row for multi-record informational modelos. Format: TYPE FIELD=value [FIELD=value ...]. TYPE is ''miembro'' (M184 attribution member), ''vinculada'' (M232 related-party operation), ''operador'' (M349 intracom operator), or ''contraparte'' (M347 declared counterparty). Repeat to add multiple rows. Quote the whole row argument; quote spaced legal names inside it. M184 example: --row ''miembro nif=12345678A porcentaje=40 importe=10000''. M349 example: --row ''operador codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" clave_operacion=E importe=50000''.'
         row_kv_format_error: --row field {token} must be in KEY=VALUE format.
         row_m349_invalid_nif: '--row operador: nif_comunitario {nif} does not match
           the expected NIF-IVA format for country {pais} (Council Directive 2006/112/EC

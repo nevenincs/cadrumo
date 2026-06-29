@@ -2048,13 +2048,7 @@ cli:
         row_empty_key: Clau de camp buida a --row {token}; cada camp ha de tenir el
           format CLAU=VALOR.
         row_empty_spec: --row no pot estar buit; s'esperava TIPUS CAMP=valor [...]
-        row_help: 'Fila de detall tipada per a models informatius amb registres repetibles.
-          Format: TIPUS CAMP=valor [CAMP=valor ...]. TIPUS és ''miembro'' (soci/partícip
-          M184), ''vinculada'' (operació vinculada M232), ''operador'' (operador intracomunitari
-          M349) o ''contraparte'' (declarada M347). Repetir per afegir més files.
-          Exemple M184: --row ''miembro nif=12345678A porcentaje=40 importe=10000''.
-          Exemple M349: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
-          clave_operacion=E importe=50000''.'
+        row_help: 'Fila de detall tipada per a models informatius amb registres repetibles. Format: TIPUS CAMP=valor [CAMP=valor ...]. TIPUS és ''miembro'' (soci/partícip M184), ''vinculada'' (operació vinculada M232), ''operador'' (operador intracomunitari M349) o ''contraparte'' (declarada M347). Repetir per afegir més files. Poseu entre cometes l''argument complet de --row; manteniu entre cometes els noms legals amb espais. Exemple M184: --row ''miembro nif=12345678A porcentaje=40 importe=10000''. Exemple M349: --row ''operador codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" clave_operacion=E importe=50000''.'
         row_kv_format_error: El camp --row {token} ha de tenir el format CLAU=VALOR.
         row_m349_invalid_nif: '--row operador: nif_comunitario {nif} no coincideix
           amb el format NIF-IVA esperat per al país {pais} (Directiva 2006/112/CE

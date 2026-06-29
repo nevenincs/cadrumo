@@ -218,6 +218,16 @@ class TestParseRowSpecM349:
         assert result.razon_social == "DE Auto GmbH"
         assert result.importe == Decimal("1500.00")
 
+    def test_parse_operador_with_unquoted_underscore_razon_social(self) -> None:
+        """M349 underscore/no-space legal names remain accepted."""
+        result = _parse_row_spec(
+            "operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=DE_Auto_GmbH "
+            "clave_operacion=E importe=1500.00",
+        )
+
+        assert isinstance(result, Modelo349OperadorRow)
+        assert result.razon_social == "DE_Auto_GmbH"
+
     def test_parse_operador_type_case_insensitive(self) -> None:
         """TYPE token is lowercased before dispatch."""
         result = _parse_row_spec(
@@ -413,6 +423,14 @@ class TestRevisionViewSurfacesDetailRows:
             timeout=300,
             check=False,
         )
+
+    def test_work_calculate_help_documents_quoted_m349_legal_name(self, tmp_path: Path) -> None:
+        """The real CLI help shows the shell-safe M349 spaced-name row contract."""
+        result = self._run_cli(tmp_path, ["app", "modelo", "work", "calculate", "--help"])
+
+        assert result.returncode == 0, result.stderr
+        assert "razon_social=\"DE Auto GmbH\"" in result.stdout
+        assert "operador codigo_pais=DE" in result.stdout
 
     def test_m184_member_rows_surface_in_revision_view(self, tmp_path: Path) -> None:
         """A cold M184 ``--row`` flow renders the members as ``detail_row`` lines.

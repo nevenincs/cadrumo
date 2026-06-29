@@ -109,10 +109,13 @@ _RowOpt = Annotated[
             "cli.app.modelo.work.row_help",
             default=(
                 "Typed detail row for multi-record informational modelos. Format: TYPE FIELD=value "
-                "[FIELD=value ...]. TYPE is 'miembro' (M184 atribución member) or 'vinculada' "
-                "(M232 operación vinculada). Repeat to add multiple rows. M184 example: "
-                "--row 'miembro nif=12345678A porcentaje=40 importe=10000'. M232 example: "
-                "--row 'vinculada nif=A12345678 tipo_operacion=01 importe=50000'."
+                "[FIELD=value ...]. TYPE is 'miembro' (M184 attribution member), 'vinculada' "
+                "(M232 related-party operation), 'operador' (M349 intracom operator), or 'contraparte' "
+                "(M347 declared counterparty). Repeat to add multiple rows. Quote the whole row argument; "
+                'quote spaced legal names inside it. M184 example: --row '
+                "'miembro nif=12345678A porcentaje=40 importe=10000'. M349 example: --row "
+                "'operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=\"DE Auto GmbH\" "
+                "clave_operacion=E importe=50000'."
             ),
         ),
     ),
