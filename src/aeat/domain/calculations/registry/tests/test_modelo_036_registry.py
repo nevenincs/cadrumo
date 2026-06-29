@@ -58,6 +58,11 @@ def test_modelo_036_revision_starts_at_2025_02_03() -> None:
     assert revision.valid_from == date(2025, 2, 3)
     assert revision.period_selector.year_from == 2025
     assert set(revision.period_selector.periods) == {"alta", "modificacion", "baja"}
+    assert revision.orden_aplicabilidad == (
+        "orden-eha-1274-2007:art-1",
+        "orden-hac-1526-2024:art-1",
+        "orden-hac-1526-2024:df-unica",
+    )
 
 
 def test_modelo_036_snapshot_builds_for_event_periods() -> None:
