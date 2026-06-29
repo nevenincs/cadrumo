@@ -1,7 +1,7 @@
 [[revisions."2023".dependency_classifications]]
 id = "renta-2023-dep-115"
 source_modelo = "115"
-treatment = "direct_annual_settlement"
+treatment = "factual_evidence"
 taxpayer_files_source = false
 target_constructs = ["renta-2023-dependent-modelos"]
 relation_refs = ["renta-2023-rel-115-retenciones-trimestrales"]
