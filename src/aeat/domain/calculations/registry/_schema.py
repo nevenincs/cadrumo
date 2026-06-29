@@ -1122,10 +1122,9 @@ class ModeloRevision(RegistryModel):
     amend this revision's form for its declared applicability window
     (e.g. ``["orden-hac-277-2026:art-3"]`` for M100 ejercicio 2025).
 
-    The field is **optional-but-monotonic** (ratchet gate): new revisions
-    SHOULD declare it; existing unstamped revisions are accepted but flagged
-    by :func:`validate_orden_aplicabilidad` so the backfill corpus shrinks
-    monotonically.  See the ``period-revision-resolution`` ADR, Ruling 4 / D3.
+    The field is mandatory at validation time: every revision must cite the
+    Ordenes that approve or amend the form for its applicability window. See
+    the ``period-revision-resolution`` ADR, Ruling 4 / D3.
     """
 
     id: RevisionId
@@ -1135,9 +1134,8 @@ class ModeloRevision(RegistryModel):
     period_selector: PeriodSelector
     legal_refs: LegalRefs
     source_refs: SourceRefs
-    # Optional-but-monotonic: declare for new revisions; existing unstamped
-    # revisions are accepted under the ratchet but surface a validation advisory
-    # (see validate_orden_aplicabilidad in _validate_revision_rules.py).
+    # Required by validate_orden_aplicabilidad; kept default-empty so the
+    # validator can report a grounded registry failure instead of a parse error.
     orden_aplicabilidad: tuple[LegalRefId, ...] = ()
     parameters: tuple[ParameterDefinition, ...] = ()
     casillas: tuple[CasillaDefinition, ...] = ()
