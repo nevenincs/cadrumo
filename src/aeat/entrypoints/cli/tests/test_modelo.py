@@ -7,14 +7,18 @@ error (malformed period, unknown modelo) must surface as a
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from pathlib import Path
+
 import pytest
 import typer
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core.config import override_settings
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.secure_sql import isolated_cli_runtime_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _VERIFICATION_FINDING_CASILLA: CasillaId = validated_casilla_id(
@@ -22,203 +26,14 @@ _VERIFICATION_FINDING_CASILLA: CasillaId = validated_casilla_id(
     surface="_VERIFICATION_FINDING_CASILLA",
 )
 
-# ---------------------------------------------------------------------------
-# filing-record emitter surface — external_evidence + amends_filing_record_id
-# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def _active_cli_profile(tmp_path: Path) -> Iterator[None]:
+    with override_settings(aeat_output_language="en"), isolated_cli_runtime_profile(tmp_path=tmp_path):
+        yield
 
 
-def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
-    """The JSON-format emitter for ``aeat app modelo filing-record show``
-    surfaces both ``external_evidence`` (kind / reference_id / imported_at)
-    and ``amends_filing_record_id`` so amendment chains are operator-discoverable
-    from the record's own listing surface, not only via the amend action."""
-
-    from datetime import UTC, datetime
-
-    from ....domain.modelos._codes import ModeloCode
-    from ....domain.modelos._filing_record import (
-        ExternalEvidence,
-        ExternalEvidenceKind,
-        ModeloRecord,
-        ModeloRecordStatus,
-        derive_filing_record_id,
-    )
-    from .._modelo_payloads import FilingRecordImportResult, ModeloRecordShowResult, WorkAmendResult
-    from .._modelo_rendering import filing_record_payload as _filing_record_payload
-
-    imported_at = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
-    filed_at = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
-    work_unit_id = "a" * 64
-    revision_id = "c" * 64
-    amends_id = derive_filing_record_id(
-        work_unit_id=work_unit_id,
-        calculation_revision_id="d" * 64,
-        filed_at=datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC),
-        filed_by="aeat-import",
-    )
-    record = ModeloRecord(
-        filing_record_id=derive_filing_record_id(
-            work_unit_id=work_unit_id,
-            calculation_revision_id=revision_id,
-            filed_at=filed_at,
-            filed_by="operator-A",
-        ),
-        work_unit_id=work_unit_id,
-        calculation_revision_id=revision_id,
-        bucket_id="default",
-        modelo=ModeloCode("130"),
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        filed_at=filed_at,
-        filed_by="operator-A",
-        notes=None,
-        aeat_accepted=True,
-        status=ModeloRecordStatus.VIGENTE,
-        external_evidence=ExternalEvidence(
-            kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-            reference_id="JUST-2026-130-1T-XYZ789",
-            imported_at=imported_at,
-        ),
-        amends_filing_record_id=amends_id,
-    )
-
-    payload = _filing_record_payload(record)
-
-    assert payload.amends_filing_record_id == amends_id
-    evidence = payload.external_evidence
-    assert evidence is not None
-    assert evidence.kind == "aeat_justificante_pdf"
-    assert evidence.reference_id == "JUST-2026-130-1T-XYZ789"
-    assert evidence.imported_at == imported_at.isoformat()
-    payload_dict = payload.model_dump(mode="python")
-    show_result = ModeloRecordShowResult.model_validate(payload_dict)
-    import_result = FilingRecordImportResult.model_validate(
-        {
-            "evidence_kind": evidence.kind,
-            "evidence_reference_id": evidence.reference_id,
-            **payload_dict,
-        },
-    )
-    amend_result = WorkAmendResult.model_validate({"amendment_kind": "complementaria", **payload_dict})
-    assert show_result.external_evidence is not None
-    assert import_result.external_evidence is not None
-    assert amend_result.external_evidence is not None
-
-
-def test_filing_record_payload_omits_evidence_fields_when_absent() -> None:
-    """A locally-filed record (no external_evidence, no amends link)
-    surfaces those fields as ``None`` in JSON so downstream consumers
-    can rely on the schema shape without optional-key checks."""
-
-    from datetime import UTC, datetime
-
-    from ....domain.modelos._codes import ModeloCode
-    from ....domain.modelos._filing_record import (
-        ModeloRecord,
-        ModeloRecordStatus,
-        derive_filing_record_id,
-    )
-    from .._modelo_payloads import ModeloRecordShowResult, WorkFileResult
-    from .._modelo_rendering import filing_record_payload as _filing_record_payload
-
-    work_unit_id = "a" * 64
-    revision_id = "c" * 64
-    filed_at = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
-    record = ModeloRecord(
-        filing_record_id=derive_filing_record_id(
-            work_unit_id=work_unit_id,
-            calculation_revision_id=revision_id,
-            filed_at=filed_at,
-            filed_by="operator-A",
-        ),
-        work_unit_id=work_unit_id,
-        calculation_revision_id=revision_id,
-        bucket_id="default",
-        modelo=ModeloCode("130"),
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        filed_at=filed_at,
-        filed_by="operator-A",
-        notes=None,
-        aeat_accepted=False,
-        status=ModeloRecordStatus.VIGENTE,
-    )
-
-    payload = _filing_record_payload(record)
-
-    assert payload.external_evidence is None
-    assert payload.amends_filing_record_id is None
-    payload_dict = payload.model_dump(mode="python")
-    file_result = WorkFileResult.model_validate(payload_dict)
-    show_result = ModeloRecordShowResult.model_validate(payload_dict)
-    assert file_result.external_evidence is None
-    assert file_result.amends_filing_record_id is None
-    assert show_result.external_evidence is None
-    assert show_result.amends_filing_record_id is None
-
-
-def test_filing_record_lines_renders_external_evidence_and_amends_in_text_mode() -> None:
-    """The text-format emitter surfaces ``external_evidence.{kind, reference_id,
-    imported_at}`` and ``amends_filing_record_id`` as discrete tab-separated
-    lines so operators reading ``--format text`` see the amendment context."""
-
-    from datetime import UTC, datetime
-
-    from ....domain.modelos._codes import ModeloCode
-    from ....domain.modelos._filing_record import (
-        ExternalEvidence,
-        ExternalEvidenceKind,
-        ModeloRecord,
-        ModeloRecordStatus,
-        derive_filing_record_id,
-    )
-    from .._modelo_rendering import filing_record_lines as _filing_record_lines
-
-    imported_at = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
-    work_unit_id = "a" * 64
-    revision_id = "c" * 64
-    filed_at = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
-    amends_id = derive_filing_record_id(
-        work_unit_id=work_unit_id,
-        calculation_revision_id="d" * 64,
-        filed_at=datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC),
-        filed_by="aeat-import",
-    )
-    record = ModeloRecord(
-        filing_record_id=derive_filing_record_id(
-            work_unit_id=work_unit_id,
-            calculation_revision_id=revision_id,
-            filed_at=filed_at,
-            filed_by="operator-A",
-        ),
-        work_unit_id=work_unit_id,
-        calculation_revision_id=revision_id,
-        bucket_id="default",
-        modelo=ModeloCode("130"),
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        filed_at=filed_at,
-        filed_by="operator-A",
-        notes=None,
-        aeat_accepted=True,
-        status=ModeloRecordStatus.VIGENTE,
-        external_evidence=ExternalEvidence(
-            kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
-            reference_id="CSV-303-2026-Q1",
-            imported_at=imported_at,
-        ),
-        amends_filing_record_id=amends_id,
-    )
-
-    lines = _filing_record_lines(record)
-
-    assert "external_evidence.kind\taeat_csv_register" in lines
-    assert "external_evidence.reference_id\tCSV-303-2026-Q1" in lines
-    assert f"external_evidence.imported_at\t{imported_at.isoformat()}" in lines
-    assert f"amends_filing_record_id\t{amends_id}" in lines
-
-
-def test_work_discard_refuses_without_yes() -> None:
+def test_work_discard_refuses_without_yes(_active_cli_profile: None) -> None:
     """``work discard`` without ``--yes`` is refused with the exact re-run command.
 
     The discard gate is symmetric with ``config profile delete``: an
@@ -243,7 +58,7 @@ def test_work_discard_help_advertises_yes_flag() -> None:
     assert "--yes" in result.output
 
 
-def test_work_amend_batch_reports_all_missing_options() -> None:
+def test_work_amend_batch_reports_all_missing_options(_active_cli_profile: None) -> None:
     """``work amend`` with no flags reports every missing required option at once.
 
     Before fix: typer surfaced the missing options one at a time,
@@ -260,7 +75,7 @@ def test_work_amend_batch_reports_all_missing_options() -> None:
         assert flag in flat, f"{flag} not reported; output: {result.output}"
 
 
-def test_work_amend_batch_reports_partial_missing_options() -> None:
+def test_work_amend_batch_reports_partial_missing_options(_active_cli_profile: None) -> None:
     """A run missing two of four required options reports both, not just one."""
 
     result = invoke_cached_cli(
@@ -306,7 +121,7 @@ def test_work_calculate_help_exposes_by_actor_flag() -> None:
         "Q1X",  # garbled quarter token
     ],
 )
-def test_work_create_rejects_invalid_period_at_create_time(period: str) -> None:
+def test_work_create_rejects_invalid_period_at_create_time(period: str, _active_cli_profile: None) -> None:
     """``work create`` must reject an un-parseable period token immediately
     rather than storing it and failing later at ``calculate`` time.
 
@@ -339,7 +154,7 @@ def test_work_create_rejects_invalid_period_at_create_time(period: str) -> None:
     assert "period must be" in output_lower or "invalid value" in output_lower
 
 
-def test_work_create_rejects_unknown_modelo() -> None:
+def test_work_create_rejects_unknown_modelo(_active_cli_profile: None) -> None:
     """``work create --modelo 999`` is refused naming the registry's known modelos.
 
     Before fix: an unknown modelo code provisioned a work unit that
@@ -371,7 +186,7 @@ def test_work_create_rejects_unknown_modelo() -> None:
 
 
 @pytest.mark.parametrize("year", ["1899", "2100", "1000"])
-def test_work_create_rejects_out_of_range_year(year: str) -> None:
+def test_work_create_rejects_out_of_range_year(year: str, _active_cli_profile: None) -> None:
     """``work create --year 1899`` is refused with the bad year named.
 
     Before fix: an out-of-range year built a token like ``1899-Q1``,
@@ -404,7 +219,7 @@ def test_work_create_rejects_out_of_range_year(year: str) -> None:
     assert "config repair" not in result.output
 
 
-def test_work_create_rejects_unknown_revision() -> None:
+def test_work_create_rejects_unknown_revision(_active_cli_profile: None) -> None:
     """``work create --revision nope`` is refused naming the modelo's revisions."""
 
     result = invoke_cached_cli(
@@ -467,7 +282,7 @@ def test_optional_cli_period_requires_year() -> None:
 # --- Period-token confusion: --year and --period are composed ---
 
 
-def test_work_create_year_repeated_into_period_explains_composition() -> None:
+def test_work_create_year_repeated_into_period_explains_composition(_active_cli_profile: None) -> None:
     """``--year 2024 --period 2024`` is refused with a clear composition hint.
 
     The disaster-recovery testimony flagged the M100 annual confusion:

@@ -18,21 +18,20 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from pathlib import Path
 from typing import cast
 
-import click
 import pytest
-from click.testing import CliRunner, Result
+from click.testing import Result
 
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core import Period
 from ....core.resources import resources
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app as root_app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -43,7 +42,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _seed_active_profile(name: str = "operator") -> None:
+def _seed_active_profile(name: str = "operator", *, overrides: Mapping[str, str] | None = None) -> None:
     """Provision and activate a real minimal profile bucket.
 
     ``register_minimal_profile`` populates ``identity.tax_id`` and an
@@ -55,6 +54,7 @@ def _seed_active_profile(name: str = "operator") -> None:
             lambda state: register_minimal_profile(
                 state,
                 profile_id=name,
+                overrides=overrides,
                 enforce_unique_tax_id=False,
             ),
         )
@@ -86,18 +86,12 @@ def _active_revision_for(modelo: str, *, filing_year: int, period: str) -> str:
     )
 
 
-def test_preflight_defaults_revision_from_natural_key(cli_runner: CliRunner) -> None:
+def test_preflight_defaults_revision_from_natural_key() -> None:
     """Preflight answers from modelo, filing year, and period alone."""
-    from typer.core import TyperGroup
-    from typer.main import get_command
-
     _seed_active_profile()
     expected_revision = _active_revision_for("303", filing_year=2026, period="1T")
 
-    cmd = get_command(root_app)
-    assert isinstance(cmd, (click.Command, TyperGroup))
-    result = cli_runner.invoke(
-        cast(click.Command, cmd),
+    result = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -127,18 +121,12 @@ def test_preflight_defaults_revision_from_natural_key(cli_runner: CliRunner) -> 
     assert result_data["revision_id"] == expected_revision
 
 
-def test_preflight_explicit_revision_override_is_honoured(cli_runner: CliRunner) -> None:
+def test_preflight_explicit_revision_override_is_honoured() -> None:
     """An explicit --revision-id selects that exact revision for replay."""
-    from typer.core import TyperGroup
-    from typer.main import get_command
-
     _seed_active_profile()
     expected_revision = _active_revision_for("303", filing_year=2026, period="1T")
 
-    cmd = get_command(root_app)
-    assert isinstance(cmd, (click.Command, TyperGroup))
-    result = cli_runner.invoke(
-        cast(click.Command, cmd),
+    result = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -165,7 +153,7 @@ def test_preflight_explicit_revision_override_is_honoured(cli_runner: CliRunner)
     assert result_data["revision_id"] == expected_revision
 
 
-def test_preflight_reports_legal_entity_export_legal_name_requirement(cli_runner: CliRunner) -> None:
+def test_preflight_reports_legal_entity_export_legal_name_requirement() -> None:
     """Legal-entity M202 preflight must include export-header profile facts.
 
     The command resolves a registry revision from the natural key, then passes
@@ -173,40 +161,22 @@ def test_preflight_reports_legal_entity_export_legal_name_requirement(cli_runner
     export-header requirements such as ``identity.legal_name`` are invisible
     and the CLI can claim readiness before modelo work creation refuses.
     """
-    from typer.core import TyperGroup
-    from typer.main import get_command
-
-    cmd = get_command(root_app)
-    assert isinstance(cmd, (click.Command, TyperGroup))
-    create = cli_runner.invoke(
-        cast(click.Command, cmd),
-        [
-            "config",
-            "profile",
-            "create",
-            "sl-no-legal-name",
-            "--quiet",
-            "--accept-defaults",
-            "--entity-type",
-            "legal_entity",
-            "--legal-entity-form",
-            "sl",
-            "--tax-id",
-            "B66012345",
-            "--name",
-            "Visible SL",
-            "--surnames",
-            "Visible SL",
-            "--activity",
-            "asesoria",
-            "--incn-prior-12-months",
-            "500000",
-        ],
+    _seed_active_profile(
+        "sl-no-legal-name",
+        overrides={
+            "identity.tax_id": "B66012345",
+            "identity.name": "Visible SL",
+            "identity.surnames": "Visible SL",
+            "activities.description": "asesoria",
+            "taxpayer_type.entity_type": "legal_entity",
+            "taxpayer_type.legal_entity_form": "sl",
+            "taxpayer_type.irpf_income_categories": "",
+            "taxpayer_type.incn_prior_12_months": "500000",
+            "irpf.estimation_regime": "",
+        },
     )
-    assert create.exit_code == 0, create.output
 
-    result = cli_runner.invoke(
-        cast(click.Command, cmd),
+    result = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -237,8 +207,7 @@ def test_preflight_reports_legal_entity_export_legal_name_requirement(cli_runner
         "field_key": "legal_name",
     } in missing_obj
 
-    text_result = cli_runner.invoke(
-        cast(click.Command, cmd),
+    text_result = invoke_cached_cli(
         [
             "config",
             "profile",
@@ -255,17 +224,11 @@ def test_preflight_reports_legal_entity_export_legal_name_requirement(cli_runner
     assert "identity\tlegal_name" in text_result.output
 
 
-def test_preflight_refuses_unresolvable_natural_key_with_discovery_pointer(cli_runner: CliRunner) -> None:
+def test_preflight_refuses_unresolvable_natural_key_with_discovery_pointer() -> None:
     """A period the modelo never declares refuses with a discovery pointer."""
-    from typer.core import TyperGroup
-    from typer.main import get_command
-
     _seed_active_profile()
 
-    cmd = get_command(root_app)
-    assert isinstance(cmd, (click.Command, TyperGroup))
-    result = cli_runner.invoke(
-        cast(click.Command, cmd),
+    result = invoke_cached_cli(
         ["config", "profile", "preflight", "--modelo", "303", "--filing-year", "2026", "--period", "ZZ"],
     )
 
@@ -274,17 +237,11 @@ def test_preflight_refuses_unresolvable_natural_key_with_discovery_pointer(cli_r
     assert "aeat app modelo describe 303" in result.output
 
 
-def test_preflight_refuses_invalid_explicit_override_with_registered_revisions(cli_runner: CliRunner) -> None:
+def test_preflight_refuses_invalid_explicit_override_with_registered_revisions() -> None:
     """An explicit --revision-id unknown to the modelo refuses instructively."""
-    from typer.core import TyperGroup
-    from typer.main import get_command
-
     _seed_active_profile()
 
-    cmd = get_command(root_app)
-    assert isinstance(cmd, (click.Command, TyperGroup))
-    result = cli_runner.invoke(
-        cast(click.Command, cmd),
+    result = invoke_cached_cli(
         [
             "config",
             "profile",
@@ -304,7 +261,7 @@ def test_preflight_refuses_invalid_explicit_override_with_registered_revisions(c
     assert "aeat app modelo describe 303" in result.output
 
 
-def test_preflight_refuses_ambiguous_natural_key_with_candidates(cli_runner: CliRunner) -> None:
+def test_preflight_refuses_ambiguous_natural_key_with_candidates() -> None:
     """When two revisions match the natural key, preflight lists candidates.
 
     The bundled registry is authored without overlapping revisions, so a
@@ -313,8 +270,6 @@ def test_preflight_refuses_ambiguous_natural_key_with_candidates(cli_runner: Cli
     genuine ``select_revision`` dedup branch and the genuine candidate-listing
     refusal translation, with no mock or patch object in play.
     """
-    from typer.main import get_command
-
     _seed_active_profile()
     authority = resources().modelos.authority
     definition = authority.modelo("303")
@@ -324,13 +279,7 @@ def test_preflight_refuses_ambiguous_natural_key_with_candidates(cli_runner: Cli
     original = authority._modelos_by_id["303"]
     authority._modelos_by_id["303"] = ambiguous
     try:
-        from typer.core import TyperGroup
-        from typer.main import get_command
-
-        cmd = get_command(root_app)
-        assert isinstance(cmd, (click.Command, TyperGroup))
-        result = cli_runner.invoke(
-            cast(click.Command, cmd),
+        result = invoke_cached_cli(
             ["config", "profile", "preflight", "--modelo", "303", "--filing-year", "2026", "--period", "1T"],
         )
     finally:

@@ -139,14 +139,17 @@ def _require_period_with_year(*, year: int | None, period: str | None) -> None:
 
 def _resolve_discovery_year_period(
     *,
+    modelo: str,
     year: int | None,
     period: str | None,
+    deps: _DiscoveryDeps,
 ) -> _RegistryDiscoveryScope | None:
     _require_period_with_year(year=year, period=period)
     if year is None:
         return None
     assert period is not None
-    return _RegistryDiscoveryScope(filing_year=year, period=period)
+    resolved = deps.resolve_year_period(year, period, modelo=modelo)
+    return _RegistryDiscoveryScope(filing_year=resolved.filing_year, period=resolved.registry_token)
 
 
 def _register_list_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
@@ -202,7 +205,7 @@ def _register_describe_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
         as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.describe.as_of_help"))] = None,
     ) -> None:
         try:
-            resolved_scope = _resolve_discovery_year_period(year=year, period=period)
+            resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
             if resolved_scope is not None:
                 report = registry_describe_modelo_for_registry_scope(
                     modelo,
@@ -291,7 +294,7 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
         ] = False,
     ) -> None:
         def _query():
-            resolved_scope = _resolve_discovery_year_period(year=year, period=period)
+            resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
             if resolved_scope is not None:
                 return registry_casillas_for_registry_scope(
                     modelo,
@@ -739,7 +742,7 @@ def _register_formulas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
         ] = False,
     ) -> None:
         def _query():
-            resolved_scope = _resolve_discovery_year_period(year=year, period=period)
+            resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
             if resolved_scope is not None:
                 return registry_formulas_for_registry_scope(
                     modelo,

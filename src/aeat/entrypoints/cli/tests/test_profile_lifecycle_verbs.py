@@ -10,27 +10,17 @@ that exercise the same surface live in the sibling
 from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
-from functools import cache
 from pathlib import Path
-from typing import cast
 
-import click
 import pytest
-from click.testing import CliRunner, Result
-from typer.main import get_command
+from click.testing import Result
 
-from ....adapters.persistence.storage.bucket._layout import bucket_paths
-from ....adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
-from ....adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest
-from ....core.config import load_settings
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .._config import profile_app
 from ._profile_lifecycle_support import seed, stage_bucket_manifest
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-_PROFILE_APP_RUNNER = CliRunner()
 
 
 @pytest.fixture(autouse=True)
@@ -49,13 +39,8 @@ def _invoke_profile(args: Sequence[str]) -> Result:
     return _invoke_config(("profile", *args))
 
 
-@cache
-def _profile_app_command() -> click.Command:
-    return cast(click.Command, get_command(profile_app))
-
-
 def _invoke_profile_app(args: Sequence[str]) -> Result:
-    return _PROFILE_APP_RUNNER.invoke(_profile_app_command(), list(args))
+    return _invoke_profile(args)
 
 
 def _invoke_repair(args: Sequence[str]) -> Result:
@@ -148,32 +133,6 @@ def test_repair_profile_named_active_clear_active_clears_pointer(tmp_path: Path)
     assert result.exit_code == 0, result.output
     assert "cleared_pointer\tTrue" in result.output
     assert read_pointer(tmp_path) is None
-
-
-def test_repair_profile_manifest_status_backfills_legacy_active_manifest() -> None:
-    from ....application.user_profile._orchestration import profile_storage_session
-
-    seed("operator")
-    root = load_settings().aeat_local_storage_root
-    target = manifest_path(bucket_paths(root, "operator"))
-
-    # The repair scenario: a legacy manifest has no ``status`` field.  The
-    # session must be opened BEFORE stripping the status, because
-    # _bucket_key_schedule calls read_manifest which enforces status presence;
-    # the session stays open (via the context manager) while we mutate the
-    # manifest on disk and invoke the repair command.
-    with profile_storage_session("operator"):
-        legacy_text = "\n".join(
-            line for line in target.read_text(encoding="utf-8").splitlines() if not line.startswith("status = ")
-        )
-        target.write_text(f"{legacy_text}\n", encoding="utf-8")
-
-        result = _invoke_repair(("profile", "--repair-manifest-status", "--yes"))
-
-    assert result.exit_code == 0, result.output
-    assert "repaired\tTrue" in result.output
-    assert "manifest_status\tactive" in result.output
-    assert read_manifest(bucket_paths(root, "operator")).status is BucketLifecycleStatus.ACTIVE
 
 
 def test_config_profile_create_refuses_existing_profile() -> None:
@@ -492,7 +451,21 @@ def test_show_and_status_do_not_contradict_on_a_freshly_created_profile() -> Non
     shows ``readiness ready`` on one surface and ``readiness blocked`` on
     the other.
     """
-    create_result = _invoke_profile(("create", "maria", "--quiet", "--tax-id", "12345678Z"))
+    create_result = _invoke_profile(
+        (
+            "create",
+            "maria",
+            "--quiet",
+            "--tax-id",
+            "12345678Z",
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Maria",
+            "--surnames",
+            "Operator",
+        ),
+    )
     assert create_result.exit_code == 0, create_result.output
 
     show_result = _invoke_profile(("show", "maria"))
@@ -548,8 +521,12 @@ def test_config_profile_create_quiet_emits_confirmation() -> None:
             "--quiet",
             "--tax-id",
             "12345678Z",
+            "--entity-type",
+            "natural_person",
             "--name",
             "Test",
+            "--surnames",
+            "Operator",
             "--activity",
             "Design",
             "--iva-regime",

@@ -1,10 +1,10 @@
-"""Real-behaviour tests for the normatives + manuals CLI exposure.
+"""Real-behaviour tests for the legal citation + manuals CLI exposure.
 
 Tests exercise the ``aeat app registry citations`` and
 ``aeat app registry manuals`` Typer surfaces end-to-end through the
-``CliRunner``, against the committed corpus on disk. No mocks /
+shared cached CLI runner, against the committed corpus on disk. No mocks /
 fakes / fixtures — every command consumes the same domain APIs the
-production runtime uses (``aeat.domain.normatives.load_catalogue``,
+production runtime uses (the reviewed registry legal catalogue,
 ``aeat.domain.manuals.load_manual``, etc.).
 
 The CLI exposure lives under ``aeat app registry``, not under a new
@@ -52,80 +52,34 @@ def _env_with_normatives_root(root: Path) -> dict[str, str]:
     return env
 
 
-def _write_valid_normative(root: Path) -> None:
-    (root / "ley-35-2006.json").write_text(
-        json.dumps(
-            {
-                "id": "ley-35-2006",
-                "kind": "ley",
-                "number": "35/2006",
-                "title": {"es": "Ley 35/2006"},
-                "published_at": "2006-11-29",
-                "boe_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
-                "boe_id": "BOE-A-2006-20764",
-                "articulos": [
-                    {
-                        "numero": "32",
-                        "titulo": {"es": "Reducciones"},
-                        "summary": {"es": "Resumen."},
-                        "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32",
-                    },
-                ],
-                "tags": ["irpf"],
-                "last_reviewed_at": "2026-04-12",
-                "reviewed_by": "wgergely",
-            },
-        ),
-        encoding="utf-8",
-    )
-
-
 # ---------------------------------------------------------------------------
 # citations
 # ---------------------------------------------------------------------------
 
 
-def test_citations_verify_surfaces_corpus_state_resiliently() -> None:
-    """``citations verify`` must not crash on a corpus that contains
-    files failing the current schema. Instead it surfaces a
-    structured ``parse_error`` issue and exits with a non-zero
-    code, so an operator can act on it. This is the verifier's
-    documented contract."""
-
+def test_citations_verify_surfaces_current_legal_catalogue_state() -> None:
     result = _invoke("citations", "verify")
-    # The current committed corpus carries pre-restructure files that
-    # don't yet match the tightened ``NormativeReference`` schema.
-    # The verifier surfaces this as a ``parse_error`` issue — that is
-    # the desired behaviour.
+
+    assert result.exit_code == 0, result.stdout
     assert "operation\tregistry.citations.verify" in result.stdout
-    assert "issue_count\t" in result.stdout
-    assert "passed\t" in result.stdout
+    assert "issue_count\t0" in result.stdout
+    assert "passed\tTrue" in result.stdout
 
 
 def test_citations_verify_emits_json_when_format_json_is_set() -> None:
-    """The root ``--format json`` flag must drive the JSON emitter
-    path for the verifier."""
-
     result = _invoke("citations", "verify", fmt="json")
-    # JSON path emits a parseable document on stdout (with non-zero
-    # exit when the corpus has errors; we don't assert the rc here).
+
+    assert result.exit_code == 0, result.stdout
     envelope = json.loads(result.stdout)
     assert envelope["command"] == "registry.citations.verify"
     payload = envelope["result"]
     assert payload["operation"] == "registry.citations.verify"
-    assert "issue_count" in payload
-    assert isinstance(payload["issues"], list)
+    assert payload["issue_count"] == 0
+    assert payload["passed"] is True
+    assert payload["issues"] == []
 
 
-def test_citations_list_propagates_corpus_load_failures_through_error_boundary(tmp_path: Path) -> None:
-    """``citations list`` is not resilient by design — it cannot list
-    references when the schema-strict loader fails. The CLI must
-    surface the failure through the central error boundary, not
-    crash the process."""
-
-    # A normative whose title is a bare string violates the
-    # LocalizedText schema; the schema-strict loader rejects the
-    # corpus at load time.
+def test_citations_list_ignores_legacy_normatives_root_override(tmp_path: Path) -> None:
     (tmp_path / "ley-broken.json").write_text(
         json.dumps(
             {
@@ -145,41 +99,33 @@ def test_citations_list_propagates_corpus_load_failures_through_error_boundary(t
         encoding="utf-8",
     )
     result = _invoke_with_env("citations", "list", env=_env_with_normatives_root(tmp_path))
-    # The central error boundary turns the typed exception into a
-    # non-zero exit. The exact code depends on the
-    # NormativeParseError → ErrorCategory mapping.
-    assert result.exit_code != 0
+
+    assert result.exit_code == 0, result.stdout
+    assert "operation\tregistry.citations.list" in result.stdout
 
 
-def test_citations_list_emits_json_payload_through_root_format(tmp_path: Path) -> None:
-    _write_valid_normative(tmp_path)
-
-    result = _invoke_with_env("citations", "list", "--tag", "irpf", env=_env_with_normatives_root(tmp_path), fmt="json")
+def test_citations_list_emits_json_payload_through_root_format() -> None:
+    result = _invoke("citations", "list", "--tag", "irpf", fmt="json")
 
     assert result.exit_code == 0, result.stdout
     envelope = json.loads(result.stdout)
     assert envelope["command"] == "registry.citations.list"
     payload = envelope["result"]
     assert payload["operation"] == "registry.citations.list"
-    assert payload["reference_count"] == 1
+    assert payload["reference_count"] >= 1
     assert payload["tag_filter"] == "irpf"
-    assert payload["references"][0]["id"] == "ley-35-2006"
-    assert payload["references"][0]["topic_slugs"] == []
+    assert any(reference["id"] == "rd-439-2007" for reference in payload["references"])
     assert "topics" in payload
 
 
-def test_citations_show_emits_text_and_json_payloads_through_root_format(tmp_path: Path) -> None:
-    _write_valid_normative(tmp_path)
-    env = _env_with_normatives_root(tmp_path)
-
-    text = _invoke_with_env("citations", "view", "ley-35-2006", "--articulo", "32", env=env)
-    json_result = _invoke_with_env(
+def test_citations_show_emits_text_and_json_payloads_through_root_format() -> None:
+    text = _invoke("citations", "view", "ley-35-2006", "--articulo", "32")
+    json_result = _invoke(
         "citations",
         "view",
         "ley-35-2006",
         "--articulo",
         "32",
-        env=env,
         fmt="json",
     )
 
@@ -205,6 +151,15 @@ def test_citations_list_help_text_renders() -> None:
     result = _invoke("citations", "--help")
     assert result.exit_code == 0
     assert "citations" in result.stdout.lower()
+
+
+def test_citations_view_help_uses_current_legal_authority_terms() -> None:
+    result = _invoke("citations", "view", "--help")
+
+    assert result.exit_code == 0, result.stdout
+    rendered = result.stdout.lower()
+    assert "legal authority id" in rendered
+    assert "normative" not in rendered
 
 
 # ---------------------------------------------------------------------------

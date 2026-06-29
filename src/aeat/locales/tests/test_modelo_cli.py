@@ -7,10 +7,10 @@ import shutil
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from ...core.resources import bundled_path
 from ...domain.calculations.registry import load_modelo_directory
+from ...tests.cli_runner import invoke_typer_app
 from ..cli import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -29,16 +29,9 @@ def registry_root(tmp_path: Path) -> Path:
     return root
 
 
-@pytest.fixture
-def runner() -> CliRunner:
-    """Return an isolated Typer runner."""
-    return CliRunner()
-
-
-def test_coverage_command_reports_complete_revision(runner: CliRunner, registry_root: Path) -> None:
+def test_coverage_command_reports_complete_revision(registry_root: Path) -> None:
     """Coverage reports translated and required counts for one revision."""
     result = _invoke_modelo(
-        runner,
         registry_root,
         "coverage",
         "en",
@@ -52,12 +45,11 @@ def test_coverage_command_reports_complete_revision(runner: CliRunner, registry_
     assert "help=20/20" in result.output
 
 
-def test_audit_command_fails_and_lists_missing_schema_keys(runner: CliRunner, registry_root: Path) -> None:
+def test_audit_command_fails_and_lists_missing_schema_keys(registry_root: Path) -> None:
     """Audit exits nonzero when a required schema-local translation is absent."""
     _remove_revision_label(registry_root, "02")
 
     result = _invoke_modelo(
-        runner,
         registry_root,
         "audit",
         "en",
@@ -71,14 +63,13 @@ def test_audit_command_fails_and_lists_missing_schema_keys(runner: CliRunner, re
     assert "field=labels key=02" in result.output
 
 
-def test_scaffold_check_reports_drift_without_writing(runner: CliRunner, registry_root: Path) -> None:
+def test_scaffold_check_reports_drift_without_writing(registry_root: Path) -> None:
     """Scaffold check mode reports drift and leaves registry TOML unchanged."""
     locale_path = _revision_locale_path(registry_root)
     _remove_revision_label(registry_root, "02")
     before = locale_path.read_text(encoding="utf-8")
 
     result = _invoke_modelo(
-        runner,
         registry_root,
         "scaffold",
         "en",
@@ -92,12 +83,11 @@ def test_scaffold_check_reports_drift_without_writing(runner: CliRunner, registr
     assert locale_path.read_text(encoding="utf-8") == before
 
 
-def test_scaffold_set_and_remove_commands_write_validated_leaf(runner: CliRunner, registry_root: Path) -> None:
+def test_scaffold_set_and_remove_commands_write_validated_leaf(registry_root: Path) -> None:
     """Scaffold, set, and remove mutate the registry-local file through the CLI."""
     _remove_revision_label(registry_root, "02")
 
     scaffolded = _invoke_modelo(
-        runner,
         registry_root,
         "scaffold",
         "en",
@@ -107,7 +97,6 @@ def test_scaffold_set_and_remove_commands_write_validated_leaf(runner: CliRunner
     after_scaffold = _revision_locale_path(registry_root).read_text(encoding="utf-8")
 
     set_result = _invoke_modelo(
-        runner,
         registry_root,
         "set",
         "en",
@@ -120,7 +109,6 @@ def test_scaffold_set_and_remove_commands_write_validated_leaf(runner: CliRunner
     after_set = _revision_locale_path(registry_root).read_text(encoding="utf-8")
 
     remove_result = _invoke_modelo(
-        runner,
         registry_root,
         "remove",
         "en",
@@ -141,10 +129,9 @@ def test_scaffold_set_and_remove_commands_write_validated_leaf(runner: CliRunner
     assert '"02" = "Operating expenses"' not in after_remove
 
 
-def test_set_command_rejects_unknown_schema_key(runner: CliRunner, registry_root: Path) -> None:
+def test_set_command_rejects_unknown_schema_key(registry_root: Path) -> None:
     """Set refuses keys that are not present in the selected registry revision."""
     result = _invoke_modelo(
-        runner,
         registry_root,
         "set",
         "en",
@@ -159,12 +146,11 @@ def test_set_command_rejects_unknown_schema_key(runner: CliRunner, registry_root
     assert "Modelo schema key not found" in result.output
 
 
-def test_modelo_commands_do_not_mutate_eager_locale_catalogues(runner: CliRunner, registry_root: Path) -> None:
+def test_modelo_commands_do_not_mutate_eager_locale_catalogues(registry_root: Path) -> None:
     """Modelo-local writes stay in registry-local TOML, not core locale YAML."""
     before = _eager_locale_hashes()
 
     scaffolded = _invoke_modelo(
-        runner,
         registry_root,
         "scaffold",
         "en",
@@ -172,7 +158,6 @@ def test_modelo_commands_do_not_mutate_eager_locale_catalogues(runner: CliRunner
         REVISION_ID,
     )
     updated = _invoke_modelo(
-        runner,
         registry_root,
         "set",
         "en",
@@ -183,7 +168,6 @@ def test_modelo_commands_do_not_mutate_eager_locale_catalogues(runner: CliRunner
         "Revenue",
     )
     removed = _invoke_modelo(
-        runner,
         registry_root,
         "remove",
         "en",
@@ -199,10 +183,9 @@ def test_modelo_commands_do_not_mutate_eager_locale_catalogues(runner: CliRunner
     assert _eager_locale_hashes() == before
 
 
-def test_set_command_does_not_mutate_official_spanish_schema_label(runner: CliRunner, registry_root: Path) -> None:
+def test_set_command_does_not_mutate_official_spanish_schema_label(registry_root: Path) -> None:
     """Setting an English label leaves the legally-bound schema label intact."""
     result = _invoke_modelo(
-        runner,
         registry_root,
         "set",
         "en",
@@ -220,8 +203,8 @@ def test_set_command_does_not_mutate_official_spanish_schema_label(runner: CliRu
     assert casilla.get_label("en") == "Revenue"
 
 
-def _invoke_modelo(runner: CliRunner, registry_root: Path, *args: str):
-    return runner.invoke(
+def _invoke_modelo(registry_root: Path, *args: str):
+    return invoke_typer_app(
         app,
         ["modelo", *args, "--registry-root", str(registry_root)],
         env={"AEAT_OUTPUT_LANGUAGE": "en"},

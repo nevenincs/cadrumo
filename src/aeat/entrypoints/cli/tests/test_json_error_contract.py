@@ -24,7 +24,7 @@ value at the very end) falls back to text rendering — the format wish is
 itself part of the unparseable input.
 
 Real-behavior only: the real ``aeat`` app object through
-``CliRunner`` over a real isolated profile, plus a real subprocess for
+the shared CLI runner over a real isolated profile, plus a real subprocess for
 the crash funnel (the only honest way to observe a terminal traceback
 replacement).
 """
@@ -40,14 +40,13 @@ from pathlib import Path
 from typing import cast
 
 import pytest
-from typer.testing import CliRunner
 
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core.json_contract import ENVELOPE_SCHEMA_VERSION
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -85,31 +84,31 @@ def _assert_shared_spine(document: dict[str, object]) -> dict[str, object]:
     return cast("dict[str, object]", error)
 
 
-def test_json_usage_error_emits_shared_spine_document(cli_runner: CliRunner) -> None:
+def test_json_usage_error_emits_shared_spine_document() -> None:
     """A parse-time bad value emits the error document, exit 2 preserved."""
-    result = cli_runner.invoke(app, ["--format", "json", "app", "ledger", "view", "not-hex!"])
+    result = invoke_cached_cli(["--format", "json", "app", "ledger", "view", "not-hex!"])
     assert result.exit_code == 2, result.output
     error = _assert_shared_spine(_error_document(result.output))
     assert error["category"] == "REFUSED"
     assert "Usage:" not in result.output
 
 
-def test_json_unknown_command_emits_shared_spine_document(cli_runner: CliRunner) -> None:
+def test_json_unknown_command_emits_shared_spine_document() -> None:
     """An unknown subcommand emits the error document, exit 2 preserved."""
-    result = cli_runner.invoke(app, ["--format", "json", "config", "nosuchcmd"])
+    result = invoke_cached_cli(["--format", "json", "config", "nosuchcmd"])
     assert result.exit_code == 2, result.output
     error = _assert_shared_spine(_error_document(result.output))
     assert "nosuchcmd" in str(error["message"])
 
 
-def test_json_boundary_refusal_emits_shared_spine_document(cli_runner: CliRunner) -> None:
+def test_json_boundary_refusal_emits_shared_spine_document() -> None:
     """An AeatError refusal inside a callback renders JSON, not prose.
 
     This is the vendored-context-stack regression: the probe used to
     consult upstream click's (empty) stack and render text for every
     refusal even under ``--format json``.
     """
-    result = cli_runner.invoke(app, ["--format", "json", "config", "reset"])
+    result = invoke_cached_cli(["--format", "json", "config", "reset"])
     assert result.exit_code == 2, result.output
     error = _assert_shared_spine(_error_document(result.output))
     assert error["code"] == "REFUSED_CLI_BOUNDARY"
@@ -118,9 +117,9 @@ def test_json_boundary_refusal_emits_shared_spine_document(cli_runner: CliRunner
     assert "accepted_scopes" in context
 
 
-def test_text_mode_usage_error_keeps_human_rendering(cli_runner: CliRunner) -> None:
+def test_text_mode_usage_error_keeps_human_rendering() -> None:
     """Anti-regression: without --format json the human rendering survives."""
-    result = cli_runner.invoke(app, ["app", "ledger", "view", "not-hex!"])
+    result = invoke_cached_cli(["app", "ledger", "view", "not-hex!"])
     assert result.exit_code == 2, result.output
     assert "Usage:" in result.output
     assert not result.output.lstrip().startswith("{")
@@ -146,9 +145,8 @@ def test_vendored_context_stack_is_visible_to_json_probe() -> None:
 
     assert probe.__name__ == "probe"
 
-    runner = CliRunner()
-    result = runner.invoke(probe_app, ["--json"])
-    assert result.exit_code == 0, result.output
+    command = typer.main.get_command(probe_app)
+    command.main(args=["--json"], standalone_mode=False)
     assert observed == [True]
 
 

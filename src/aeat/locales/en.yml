@@ -866,11 +866,6 @@ application:
         next_action: Author Convenio España-{cc} rate row in m210-convenio-rates for
           tipo_renta={tipo_renta}, or unset profile.convenio_doble_imposicion_country
           to fall back to the TRLIRNR Art 25 baseline.
-      m210_convenio_rate_not_yet_authored:
-        next_action: The Convenio España-{cc} rate row for tipo_renta={tipo_renta}
-          carries the NOT_YET_AUTHORED placeholder per ADR D2.4. Author the verified
-          BOE corpus rate before this filing can complete; file a corpus-blocked follow-up
-          task referencing the Convenio article number.
       missing_required_casilla: Required casilla %{casilla_id} is not present in the
         calculation revision inputs.
       modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: The
@@ -883,7 +878,7 @@ application:
         (C595) is zero; confirm this is a legitimate zero (base at or below the personal
         and family minimum, or fully offset by deductions) rather than an unmodelled
         gap.
-      modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exempt from
+      modelo_130_art109_exencion_alta_retencion: 'Art. 109 RIRPF: exempt from
         filing M130 this quarter because accumulated withholdings and payments on
         account for the year represent 70% or more of gross income.'
       modelo_131_2019_2023_pago_fraccionado_determinado_cuando_rendimientos_positivos: Net
@@ -1928,7 +1923,7 @@ cli:
         resume_help: Validate whether you can retry an interrupted workflow run without
           contacting AEAT. Use --modelo --year --period for the normal path; exact
           ids remain advanced escape hatches.
-        resume_target_help: Optional legacy 16-character workflow run id or 64-character
+        resume_target_help: Optional 16-character workflow run id or 64-character
           work-unit id. Prefer --modelo --year --period.
         revision_help: Stable id of the targeted registry modelo revision; run `aeat
           app modelo describe MODELO` to see the available revision ids.
@@ -2387,10 +2382,6 @@ cli:
         pointer; '%{profile}' is not active.
       profile_help: Inspect and repair the active-profile pointer.
       profile_name_help: Inspect a specific registered profile.
-      profile_one_action: Choose either --clear-active or --repair-manifest-status,
-        not both.
-      profile_repair_manifest_status_help: Backfill a legacy active bucket manifest
-        status from the encrypted profile record.
       profile_requires_yes: Pass --yes to apply the active-profile repair.
       quarantine_dry_run_help: Preview the rows that would be quarantined without
         moving anything
@@ -2639,6 +2630,7 @@ cli:
       counterparty_eu_member_state_help: EU member state or Northern Ireland IVA
         prefix of the counterparty (ISO 3166-1 alpha-2 lowercase, e.g. de or xi);
         required with --iva-category intra_community_supply, prohibited with export_third_country_zero_rated
+        or export_assimilated_zero_rated
       evidence_acknowledged_help: Acknowledge that reading evidence with a cloud provider
         uploads it off your machine (required by the consent gate).
       from_csv_exclusive: --from-csv cannot be combined with a transaction id or --classification.
@@ -2652,7 +2644,8 @@ cli:
       irpf_category_help: IRPF category for modelo calculations
       iva_amount_help: IVA amount
       iva_category_help: Explicit IVA category override for this transaction (e.g.
-        intra_community_supply, export_third_country_zero_rated, domestic_not_subject)
+        intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
+        domestic_not_subject)
       iva_rate_help: IVA rate as a decimal, for example 0.21
       llm_classified_by_label: classified-by
       llm_confidence_label: confidence
@@ -3193,7 +3186,7 @@ cli:
       (months). Combine with --year to choose the year.'
     status:
       drafts_empty: No saved declaration drafts were found.
-      drafts_empty_with_work_units: No legacy declaration drafts are saved - this
+      drafts_empty_with_work_units: No declaration drafts are saved - this
         is normal and does not affect your modelo work units below.
       drafts_present: '%{count} saved declaration draft(s) exist in this local storage.
         A fresh empty workspace normally has 0, so this profile/database already contains
@@ -3250,11 +3243,11 @@ cli:
     citations:
       app_help: Inspect the legal-norm corpus (Ley 37/1992, Ley 35/2006, ...)
       articulo_help: Specific article to show (e.g. 91.Uno.2.1º)
-      list_help: List the normatives codified in the legal corpus
-      normative_id_help: Stable normative id (e.g. ley-37-1992)
+      legal_id_help: Stable legal authority id (e.g. ley-37-1992)
+      list_help: List the legal authorities codified in the legal corpus
       tag_help: Filter by tax-domain tag (e.g. 'irpf', 'iva')
       verify_help: Verify the legal-norm corpus integrity
-      view_help: Show one normative and, optionally, one of its articles
+      view_help: Show one legal authority and, optionally, one of its articles
     inspect_help: Inspect registry status and references
     inspect_registry_root_help: Path to the registry root directory
     manuals:
@@ -3817,10 +3810,6 @@ errors:
     error_modelo_work_unit_not_found: The requested work unit was not found.
     error_modelos: A tax-modelo error occurred.
     error_modelos_validation: A modelo code violates its shape invariants.
-    error_normatives_normative: A normative-related error occurred.
-    error_normatives_normative_not_found: The requested normative or article was not
-      found.
-    error_normatives_validation: A normative field value is not valid.
     error_observation_key: An observation key component failed its repository contract.
     error_outbound_storage_not_found: The requested storage object or namespace does
       not exist.
@@ -3942,7 +3931,6 @@ errors:
       could not be saved or loaded.
     fail_modelo_work_unit_persistence: The work-unit catalogue could not be saved
       or read
-    fail_normatives_normative_parse: A normative record failed schema validation.
     fail_observability_run_trace_persistence: The run trace store could not complete
       a filesystem operation.
     fail_outbound_storage: A storage-provider error occurred.
@@ -4679,11 +4667,16 @@ topic:
     body: Set of tax regimes applicable to an autonomo. The two main axes are IVA
       (general, simplified, recargo de equivalencia, exempt) and IRPF (direct, objective).
     title: Tax regimes
-  sii-verifactu:
-    body: Electronic invoice transmission systems to AEAT. SII (Suministro Inmediato
-      de Información) is mandatory for large companies; Verifactu (RD 1007/2023) is
-      a phased requirement for billing systems.
-    title: SII and Verifactu
+  sii:
+    body: IVA Suministro Inmediato de Información. It requires taxpayers on monthly
+      IVA settlement, including large companies, IVA groups, and REDEME taxpayers,
+      to keep VAT record books through AEAT Sede.
+    title: SII
+  verifactu:
+    body: RD 1007/2023 requirements for invoicing software systems. The current milestone
+      is 1 January 2027 for Corporate Income Tax taxpayers under art. 3.1.a and 1
+      July 2027 for the other obligated taxpayers under art. 3.1.
+    title: VERI*FACTU
 transactions:
   import:
     message_053465: Duplicate transaction detected within imported file.
@@ -4951,8 +4944,6 @@ wizard:
         help: 'First taxpayer sex: H = male, M = female.'
       third-party-transactions-above-347-threshold:
         help: Third-party transactions exceed Modelo 347 threshold
-      uses-objective-estimation-irpf:
-        help: Files IRPF under objective estimation
     intro: 'Guided tax profile setup
 
       This prepares the local profile the app uses for ledger work and tax-form checks.
@@ -5023,8 +5014,6 @@ wizard:
       third-party-transactions-above-347-threshold:
         prompt: Third-party transactions exceed Modelo 347 threshold
       title: Modelo obligations
-      uses-objective-estimation-irpf:
-        prompt: Files IRPF under objective estimation
     profile:
       activity:
         prompt: Business activity (plain text is fine; use the IAE heading if you

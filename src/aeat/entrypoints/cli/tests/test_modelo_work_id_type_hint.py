@@ -23,7 +23,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile._orchestration import profile_create_storage_span
@@ -33,8 +32,8 @@ from ....core import Period
 from ....domain.modelos._codes import ModeloCode
 from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -92,7 +91,7 @@ def _seed_work_unit_without_revision(*, modelo: str = "130", filing_year: int = 
     return work_unit_id
 
 
-def test_verify_with_work_unit_id_hints_at_calculate(cli_runner: CliRunner) -> None:
+def test_verify_with_work_unit_id_hints_at_calculate() -> None:
     """``work verify`` given a work-unit id names the mismatch and the calculate verb.
 
     The id resolves to a real work unit but to no calculation revision, so the
@@ -101,7 +100,7 @@ def test_verify_with_work_unit_id_hints_at_calculate(cli_runner: CliRunner) -> N
     (echoing the offending id) that produces one -- not a bare "not found".
     """
     work_unit_id = _seed_work_unit_without_revision()
-    result = cli_runner.invoke(app, ["app", "modelo", "work", "verify", work_unit_id])
+    result = invoke_cached_cli(["app", "modelo", "work", "verify", work_unit_id])
 
     assert result.exit_code != 0, result.output
     collapsed = " ".join(result.output.split())
@@ -113,10 +112,10 @@ def test_verify_with_work_unit_id_hints_at_calculate(cli_runner: CliRunner) -> N
     assert f"work calculate {work_unit_id}" not in collapsed
 
 
-def test_file_with_work_unit_id_hints_at_calculate(cli_runner: CliRunner) -> None:
+def test_file_with_work_unit_id_hints_at_calculate() -> None:
     """``work file`` given a work-unit id gets the same instructive id-type hint."""
     work_unit_id = _seed_work_unit_without_revision()
-    result = cli_runner.invoke(app, ["app", "modelo", "work", "file", work_unit_id])
+    result = invoke_cached_cli(["app", "modelo", "work", "file", work_unit_id])
 
     assert result.exit_code != 0, result.output
     collapsed = " ".join(result.output.split())
@@ -128,7 +127,7 @@ def test_file_with_work_unit_id_hints_at_calculate(cli_runner: CliRunner) -> Non
     assert f"work calculate {work_unit_id}" not in collapsed
 
 
-def test_verify_with_unknown_id_keeps_plain_not_found(cli_runner: CliRunner) -> None:
+def test_verify_with_unknown_id_keeps_plain_not_found() -> None:
     """An id resolving to no work unit at all keeps the plain not-found error.
 
     The hint is targeted at the work-unit-vs-calc-revision confusion. A 64-char
@@ -138,7 +137,7 @@ def test_verify_with_unknown_id_keeps_plain_not_found(cli_runner: CliRunner) -> 
     every not-found.
     """
     unknown_id = "f" * 64
-    result = cli_runner.invoke(app, ["app", "modelo", "work", "verify", unknown_id])
+    result = invoke_cached_cli(["app", "modelo", "work", "verify", unknown_id])
 
     assert result.exit_code != 0, result.output
     collapsed = " ".join(result.output.split())

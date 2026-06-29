@@ -245,7 +245,7 @@ class LocaleManager:
         if isinstance(cursor, dict):
             raise LocaleError(f"Cannot remove {dotted_key!r}: it resolves to a namespace")
 
-        _remove_existing_yaml_leaf(locale_path, parts)
+        _remove_existing_yaml_leaf(locale_path, parts, allow_empty_leaf=cursor is None)
         return locale_path
 
 
@@ -387,19 +387,34 @@ def _append_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
     raise LocaleError(f"Locale parent key not found in YAML text: {'.'.join(parent_parts)!r}")
 
 
-def _remove_existing_yaml_leaf(path: Path, parts: list[str]) -> None:
+def _remove_existing_yaml_leaf(path: Path, parts: list[str], *, allow_empty_leaf: bool = False) -> None:
     """Remove a single existing leaf line without rebuilding the whole YAML file."""
     lines = path.read_text(encoding=UTF_8_ENCODING).splitlines(keepends=True)
 
     for index, _match, indent, _key, rest, current_parts in _iter_yaml_key_matches(lines):
         if current_parts == parts:
-            if not rest.strip():
+            if not rest.strip() and not allow_empty_leaf:
                 raise LocaleError(f"Cannot remove {'.'.join(parts)!r}: it resolves to a namespace")
             del lines[index : _yaml_leaf_end(lines, index, indent)]
+            _prune_empty_yaml_namespaces(lines, parts[:-1])
             path.write_text("".join(lines), encoding=UTF_8_ENCODING)
             return
 
     raise LocaleError(f"Locale key not found in YAML text: {'.'.join(parts)!r}")
+
+
+def _prune_empty_yaml_namespaces(lines: list[str], parts: list[str]) -> None:
+    """Delete now-empty namespace rows after removing a locale leaf."""
+    for depth in range(len(parts), 0, -1):
+        current_path = parts[:depth]
+        for index, _match, indent, _key, rest, current_parts in _iter_yaml_key_matches(lines):
+            if current_parts != current_path:
+                continue
+            if rest.strip():
+                break
+            if _yaml_leaf_end(lines, index, indent) == index + 1:
+                del lines[index : index + 1]
+            break
 
 
 def _preferred_newline(lines: list[str], fallback_index: int) -> str:

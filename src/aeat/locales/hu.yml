@@ -883,11 +883,6 @@ application:
         next_action: Hozzon létre Convenio España-{cc} sort a m210-convenio-rates
           paraméterben tipo_renta={tipo_renta} értékhez, vagy állítsa vissza profile.convenio_doble_imposicion_country
           értékét a TRLIRNR Art 25 alapérték használatához.
-      m210_convenio_rate_not_yet_authored:
-        next_action: A Convenio España-{cc} sor a tipo_renta={tipo_renta} értékhez
-          NOT_YET_AUTHORED jelölővel rendelkezik az ADR D2.4 szerint. Az ellenőrzött
-          BOE-korpusz tarifa szerzői joga szükséges, mielőtt a bevallás befejeződhetne;
-          nyisson korpusz-blokkolt nyomon követési feladatot a Convenio cikkének megadásával.
       missing_required_casilla: A kötelező %{casilla_id} casilla hiányzik a számítási
         revízió bemeneti adataiból.
       modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: Az
@@ -900,7 +895,7 @@ application:
         nulla; erősítse meg, hogy ez jogszerű nulla (a személyi és családi minimum
         alatti alap, vagy levonásokkal teljesen ellentételezve), nem pedig modellezetlen
         hiányosság.
-      modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: mentesülön
+      modelo_130_art109_exencion_alta_retencion: 'Art. 109 RIRPF: mentesülön
         az M130 benyújtása alól ebben a negyedévben, mert az évben felhalmozott forrásadó-előleg
         és számla előleg a bruttó bevétel legalább 70%-át teszi ki.'
       modelo_131_2019_2023_pago_fraccionado_determinado_cuando_rendimientos_positivos: Az
@@ -1976,7 +1971,7 @@ cli:
         resume_help: Ellenőrzi, hogy megszakított munkafolyamat újrapróbálható-e az
           AEAT megkeresése nélkül. A normál út a --modelo --year --period; a pontos
           azonosítók haladó menekülőútvonalak.
-        resume_target_help: 'Opcionális régi 16 karakteres munkafolyamat-futtatás
+        resume_target_help: 'Opcionális 16 karakteres munkafolyamat-futtatás
           azonosító vagy 64 karakteres munkaegység-azonosító. Előnyben: --modelo --year
           --period.'
         revision_help: 'A célzott nyilvántartási nyomtatvány-revízió stabil azonosítója;
@@ -2479,10 +2474,6 @@ cli:
         törölheti; a(z) %{profile} nem aktív.
       profile_help: Az aktív-profil-mutató vizsgálata és javítása.
       profile_name_help: Konkrét regisztrált profil vizsgálata.
-      profile_one_action: 'Válasszon egyet: --clear-active vagy --repair-manifest-status,
-        nem mindkettő.'
-      profile_repair_manifest_status_help: Örökölt aktív bucket-manifeszt állapotának
-        visszatöltése a titkosított profilrekordból.
       profile_requires_yes: Adja meg a --yes kapcsolót az aktív-profil javítás alkalmazásához.
       quarantine_dry_run_help: A karanténba kerülő sorok előnézete mozgatás nélkül.
       quarantine_help: Visszafejthető sorok előnézete; az aktív karantén le van tiltva
@@ -2660,10 +2651,12 @@ cli:
         állítja be, kézzel nem adható meg. Válassz egyet: BUSINESS, PERSONAL, MIXED,
         vagy hagyd ki a --classification kapcsolót, hogy a sor besorolatlan maradjon.'
       taxable_base_help: ÁFA-mentes alapösszeg.
-      usage_ratio_help: Meglévő, beállított felhasználásiarány-azonosító arányos
-        üzleti használathoz. Használjon olyan kategóriaazonosítót, amelyet az 'aeat
-        app ledger ratios list' vagy az 'aeat app ledger ratios eligible' mutat; létrehozás:
-        'aeat app ledger ratios set <category-id> <ratio>'. Nem szabad szöveg.
+      usage_ratio_help: >-
+        Meglévő, beállított felhasználásiarány-azonosító arányos üzleti
+        használathoz. Használjon olyan kategóriaazonosítót, amelyet az 'aeat app
+        ledger ratios list' vagy az 'aeat app ledger ratios eligible' mutat;
+        létrehozás: 'aeat app ledger ratios set <category-id> <ratio>'. Nem
+        szabad szöveg.
       value_date_help: Értékdátum (ÉÉÉÉ-HH-NN).
     allocate:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
@@ -2674,10 +2667,12 @@ cli:
       help: Üzleti/magáncélú arányosság rögzítése egy főkönyvi tranzakcióhoz.
       id_help: A kiosztandó főkönyvi tranzakció azonosítója.
       prorrata_reference_help: IVA prorrata hivatkozás ÁFA-munkafolyamatokhoz.
-      usage_ratio_help: Meglévő, beállított felhasználásiarány-azonosító arányos
-        üzleti használathoz. Használjon olyan kategóriaazonosítót, amelyet az 'aeat
-        app ledger ratios list' vagy az 'aeat app ledger ratios eligible' mutat; létrehozás:
-        'aeat app ledger ratios set <category-id> <ratio>'. Nem szabad szöveg.
+      usage_ratio_help: >-
+        Meglévő, beállított felhasználásiarány-azonosító arányos üzleti
+        használathoz. Használjon olyan kategóriaazonosítót, amelyet az 'aeat app
+        ledger ratios list' vagy az 'aeat app ledger ratios eligible' mutat;
+        létrehozás: 'aeat app ledger ratios set <category-id> <ratio>'. Nem
+        szabad szöveg.
     app_help: Könyvelési főkönyvek és ÁFA-nyilvántartások kezelése.
     archive:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
@@ -2742,7 +2737,7 @@ cli:
       counterparty_eu_member_state_help: A szerződő fél EU-tagállama vagy észak-írországi
         IVA-előtagja (ISO 3166-1 alpha-2 kisbetűs, pl. de vagy xi); kötelező
         --iva-category intra_community_supply esetén, tiltott export_third_country_zero_rated
-        esetén.
+        vagy export_assimilated_zero_rated esetén.
       evidence_acknowledged_help: Erositse meg, hogy a bizonyitek felhoszolgaltatoval
         valo beolvasasa feltolti azt a geperol (a hozzajarulasi kapu megkoveteli).
       from_csv_exclusive: --from-csv nem kombinálható tranzakció-azonosítóval vagy
@@ -2757,7 +2752,8 @@ cli:
       irpf_category_help: IRPF-kategória a nyomtatványszámításokhoz.
       iva_amount_help: IVA-összeg.
       iva_category_help: Explicit IVA-kategória felülbírálat erre a tranzakcióra (pl.
-        intra_community_supply, export_third_country_zero_rated, domestic_not_subject).
+        intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
+        domestic_not_subject).
       iva_rate_help: IVA-kulcs tizedes törtként, pl. 0,21.
       llm_classified_by_label: osztalyozta
       llm_confidence_label: bizonyossag
@@ -3333,7 +3329,7 @@ cli:
       01-12 (hónapok). A --year kapcsolóval adja meg az évet.'
     status:
       drafts_empty: Nincs mentett bevallástervezet.
-      drafts_empty_with_work_units: Nincs mentett régi bevallástervezet – ez normális,
+      drafts_empty_with_work_units: Nincs mentett bevallástervezet – ez normális,
         és nem befolyásolja az alábbi modellómunka-egységeket.
       drafts_present: '%{count} mentett bevallástervezet található a helyi tárban.
         Egy üres munkaterületen ez általában 0, tehát ez a profil/adatbázis már tartalmaz
@@ -3389,11 +3385,11 @@ cli:
     citations:
       app_help: A jogi norma-korpusz vizsgálata (Ley 37/1992, Ley 35/2006, ...).
       articulo_help: A megjelenítendő konkrét cikk (pl. 91.Uno.2.1°).
-      list_help: A jogi korpuszban kodifikált normák listázása.
-      normative_id_help: Stabil normaazonosító (pl. ley-37-1992).
+      legal_id_help: Stabil jogi hivatkozásazonosító (pl. ley-37-1992).
+      list_help: A jogi korpuszban kodifikált jogi hivatkozások listázása.
       tag_help: Szűrés adójogi tag alapján (pl. irpf, iva).
       verify_help: A jogi norma-korpusz integritásának ellenőrzése.
-      view_help: Egy norma és opcionálisan egy cikkének megjelenítése.
+      view_help: Egy jogi hivatkozás és opcionálisan egy cikkének megjelenítése.
     inspect_help: A nyilvántartás állapotának és hivatkozásainak vizsgálata.
     inspect_registry_root_help: A nyilvántartás gyökérkönyvtárának elérési útja.
     manuals:
@@ -3961,9 +3957,6 @@ errors:
     error_modelo_work_unit_not_found: A kért munkajegység nem található.
     error_modelos: Adómodelo hiba történt.
     error_modelos_validation: Egy modelo-kód sérti az alaki invariánsait.
-    error_normatives_normative: Normatívával kapcsolatos hiba történt.
-    error_normatives_normative_not_found: A kért normatíva vagy cikkely nem található.
-    error_normatives_validation: Egy normatíva-mezőérték érvénytelen.
     error_observation_key: Egy megfigyelési kulcs komponense nem felel meg a tárrepozitórium
       szerződésének.
     error_outbound_storage_not_found: A kért tárolási objektum vagy névtér nem létezik.
@@ -4085,7 +4078,6 @@ errors:
       nem sikerült menteni vagy betölteni.
     fail_modelo_work_unit_persistence: A munkajegység-katalógust nem sikerült menteni
       vagy olvasni
-    fail_normatives_normative_parse: Egy normatíva-rekord nem ment át a sémaérvényesítésen.
     fail_observability_run_trace_persistence: A futási nyomkövetési tároló nem tudott
       fájlrendszer-műveletet elvégezni.
     fail_outbound_storage: Tárhelyszolgáltatói hiba történt.
@@ -4826,11 +4818,16 @@ topic:
       ÁFA (általános, egyszerűsített, equivalencia-felár, mentes) és IRPF (közvetlen,
       objektív).'
     title: Adórezsimek
-  sii-verifactu:
-    body: Elektronikus számlaküldési rendszerek az AEAT-nak. A SII (Suministro Inmediato
-      de Información) nagyvállalatoknak kötelező; a Verifactu (RD 1007/2023) a számlázó
-      rendszerekre vonatkozó fokozatos követelmény.
-    title: SII és Verifactu
+  sii:
+    body: IVA Suministro Inmediato de Información. A havi IVA-elszámolású adóalanyoknak,
+      köztük a nagyvállalatoknak, IVA-csoportoknak és REDEME-adóalanyoknak az AEAT
+      székhelyén kell vezetniük az IVA nyilvántartási könyveket.
+    title: SII
+  verifactu:
+    body: A RD 1007/2023 követelményei a számlázó informatikai rendszerekre. A jelenlegi
+      határidő 2027. január 1. a 3.1.a cikk szerinti társaságiadó-alanyoknak, és
+      2027. július 1. a 3.1 cikk szerinti többi kötelezettnek.
+    title: VERI*FACTU
 transactions:
   import:
     message_053465: Ismétlődő tranzakció észlelve az importált fájlban.
@@ -5121,8 +5118,6 @@ wizard:
         help: 'Az első adózó neme: H = férfi, M = nő.'
       third-party-transactions-above-347-threshold:
         help: Harmadik féllel folytatott ügyletek meghaladják a Modelo 347 küszöbértékét
-      uses-objective-estimation-irpf:
-        help: IRPF objektív becslés szerint adózik
     intro: 'Irányított adóügyi profil-beállítás
 
       Ez előkészíti a helyi profilt, amelyet az alkalmazás a könyveléshez és az adóűrlap-ellenőrzésekhez
@@ -5193,8 +5188,6 @@ wizard:
       third-party-transactions-above-347-threshold:
         prompt: Harmadik féllel folytatott ügyletek meghaladják a Modelo 347 küszöbértékét
       title: Modelo kötelezettségek
-      uses-objective-estimation-irpf:
-        prompt: IRPF objektív becslés szerint adózik
     profile:
       activity:
         prompt: Gazdasági tevékenység (egyszerű szöveg is megfelelő; használja az

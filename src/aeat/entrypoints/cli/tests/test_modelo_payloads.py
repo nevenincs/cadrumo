@@ -22,6 +22,7 @@ from .._modelo_payloads import (
     CalculationRevisionPayload,
     ObservationPayload,
     WorkCalculateResult,
+    WorkObservationsResult,
     WorkRevisionResult,
 )
 
@@ -238,3 +239,20 @@ def test_work_revision_result_casilla_values_rejects_non_canonical_casilla_key()
 
     with pytest.raises(ValidationError, match="String should match pattern"):
         WorkRevisionResult(**fields)
+
+
+def test_work_observations_result_roundtrips_observation_contract() -> None:
+    """The observations-only command preserves the same strict observation payload contract."""
+    fields = _base_revision_fields()
+    payload = WorkObservationsResult(
+        calculation_revision_id=fields["calculation_revision_id"],
+        work_unit_id=fields["work_unit_id"],
+        state=fields["state"],
+        observation_count=len(fields["observations"]),
+        observations=fields["observations"],
+    )
+    restored = WorkObservationsResult.model_validate_json(payload.model_dump_json())
+
+    assert restored == payload
+    assert restored.observation_count == 1
+    assert restored.observations[0].legal_refs == ("art-1",)

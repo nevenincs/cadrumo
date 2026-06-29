@@ -74,10 +74,9 @@ from typing import cast
 
 import click
 import pytest
-from typer.main import get_command
 
 from ....core.paths import PROJECT_ROOT
-from .. import app
+from ....tests.cli_runner import aeat_click_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -122,11 +121,7 @@ def _flat_docs() -> list[Path]:
 @cache
 def _root_command() -> click.Command:
     """Materialize the live ``aeat`` click command (root of the tree)."""
-    # Typer vendors its own Click fork, so typer.main.get_command is typed to
-    # return typer._click.core.Command. It is the same object family at runtime;
-    # the cast bridges the static vendored/upstream duality so the rest of this
-    # module reasons about the tree as upstream click.Command.
-    return cast(click.Command, get_command(app))
+    return aeat_click_command()
 
 
 @cache

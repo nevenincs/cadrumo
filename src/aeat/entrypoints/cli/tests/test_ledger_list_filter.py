@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from typer.testing import CliRunner
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile._orchestration import profile_create_storage_span
@@ -25,12 +24,11 @@ from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....tests import FIXTURES_DIR
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_RUNNER = CliRunner()
 _CORPUS = FIXTURES_DIR / "financial" / "ledger-corpus"
 _FILES = (
     "bbva-business-eur.csv",
@@ -57,7 +55,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 def _import_corpus() -> None:
     for name in _FILES:
-        result = _RUNNER.invoke(app, ["app", "ledger", "import", str(_CORPUS / name), "--provider", "csv"])
+        result = invoke_cached_cli(["app", "ledger", "import", str(_CORPUS / name), "--provider", "csv"])
         assert result.exit_code == 0, f"{name}: {result.output}"
 
 
@@ -65,14 +63,14 @@ def _list_rows(*filters: str) -> list[dict[str, Any]]:
     args = ["--format", "json", "app", "ledger", "list"]
     for clause in filters:
         args += ["--filter", clause]
-    listed = _RUNNER.invoke(app, args)
+    listed = invoke_cached_cli(args)
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
     return payload.get("result", payload).get("rows", [])
 
 
 def _list_rows_with_options(*args: str) -> list[dict[str, Any]]:
-    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list", *args])
+    listed = invoke_cached_cli(["--format", "json", "app", "ledger", "list", *args])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
     return payload.get("result", payload).get("rows", [])
@@ -118,7 +116,7 @@ def test_period_year_options_match_filter_clauses() -> None:
 
 def test_year_option_without_period_refuses_with_annual_guidance() -> None:
     """Bare ``--year`` refuses with annual-period guidance, not an internal parser token."""
-    result = _RUNNER.invoke(app, ["app", "ledger", "list", "--year", "2025"])
+    result = invoke_cached_cli(["app", "ledger", "list", "--year", "2025"])
 
     assert result.exit_code != 0
     assert "ledger-period-year-pairing" not in result.output
@@ -130,7 +128,7 @@ def test_year_option_without_period_refuses_with_annual_guidance() -> None:
 
 def test_year_filter_without_period_refuses_with_matching_annual_guidance() -> None:
     """Bare ``--filter year=...`` guidance keeps the operator's requested year."""
-    result = _RUNNER.invoke(app, ["app", "ledger", "list", "--filter", "year=2026"])
+    result = invoke_cached_cli(["app", "ledger", "list", "--filter", "year=2026"])
 
     assert result.exit_code != 0
     assert "ledger-period-year-pairing" not in result.output
@@ -238,22 +236,21 @@ def test_unknown_filter_key_is_rejected() -> None:
     refusal itself rather than the echoed substring.
     """
     _import_corpus()
-    result = _RUNNER.invoke(app, ["app", "ledger", "list", "--filter", "bogus=1"])
+    result = invoke_cached_cli(["app", "ledger", "list", "--filter", "bogus=1"])
     assert result.exit_code != 0
 
 
 def test_malformed_filter_token_is_rejected() -> None:
     """A ``--filter`` token without ``=`` is a parse error, not a silent pass."""
     _import_corpus()
-    result = _RUNNER.invoke(app, ["app", "ledger", "list", "--filter", "period"])
+    result = invoke_cached_cli(["app", "ledger", "list", "--filter", "period"])
     assert result.exit_code != 0
 
 
 def test_period_filter_combined_shape_refuses_with_period_guidance() -> None:
     """A combined period filter refuses with the same AEAT-token guidance as --period."""
     combined_period = "2026" + "Q1"
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         ["app", "ledger", "list", "--filter", f"period={combined_period}", "--filter", "year=2026"],
     )
 

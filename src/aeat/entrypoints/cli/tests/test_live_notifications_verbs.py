@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
+from click.testing import Result
 
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import override_settings
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .._app_live import notifications_app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -29,12 +29,16 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def test_notifications_list_is_empty_on_fresh_bucket(cli_runner: CliRunner) -> None:
-    result = cli_runner.invoke(notifications_app, ["list"])
+def _invoke_notifications(args: Sequence[str]) -> Result:
+    return invoke_cached_cli(["app", "live", "notifications", *args])
+
+
+def test_notifications_list_is_empty_on_fresh_bucket() -> None:
+    result = _invoke_notifications(["list"])
     assert result.exit_code == 0, result.output
     assert "count\t0" in result.output
 
 
-def test_notifications_show_refuses_unknown_snapshot(cli_runner: CliRunner) -> None:
-    result = cli_runner.invoke(notifications_app, ["view", "no-such-snapshot"])
+def test_notifications_show_refuses_unknown_snapshot() -> None:
+    result = _invoke_notifications(["view", "no-such-snapshot"])
     assert result.exit_code != 0

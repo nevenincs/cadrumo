@@ -133,17 +133,14 @@ def test_reset_progress_on_fresh_root_reports_nothing_to_reset(_fresh_storage_ro
     assert "nothing to reset" in result.output
 
 
-def test_repair_profile_refuses_both_repair_actions_at_once(_fresh_storage_root: Path) -> None:
-    """``--clear-active`` and ``--repair-manifest-status`` together are refused.
+def test_repair_profile_refuses_removed_manifest_status_flag(_fresh_storage_root: Path) -> None:
+    """The removed manifest backfill flag is not accepted as a hidden repair path."""
 
-    Exercises the mutually-exclusive-action precondition guard; a refusal is a
-    non-zero exit, never a crash.
-    """
-
-    result = invoke_cached_cli(["config", "repair", "profile", "--clear-active", "--repair-manifest-status", "--yes"])
+    result = invoke_cached_cli(["config", "repair", "profile", "--repair-manifest-status", "--yes"])
 
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
+    assert "repair-manifest-status" in result.output
 
 
 def test_repair_profile_clear_active_requires_confirmation(_fresh_storage_root: Path) -> None:

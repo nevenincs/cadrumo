@@ -12,7 +12,7 @@ that contract against the real installed ``aeat`` console.
 The help-text localisation only occurs through the real ``main()`` entry point
 (the pre-parse runs there, before the lazy command tree imports), so the
 subprocess tests invoke the installed console script rather than an in-process
-``CliRunner`` (which bypasses ``main()``). The pure-parser unit tests isolate the
+test runner (which bypasses ``main()``). The pure-parser unit tests isolate the
 argv-scan logic, which carries no external dependency.
 """
 
