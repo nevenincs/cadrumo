@@ -136,13 +136,11 @@ def test_evidence_relations_are_the_only_unconsumed_relations() -> None:
     )
 
 
-def test_modelo_100_factual_evidence_relations_are_not_value_consumed() -> None:
-    """A consumed Modelo 100 relation must not keep the supplementary-evidence role."""
+def test_factual_evidence_relations_are_not_value_consumed() -> None:
+    """A consumed relation must not keep the supplementary-evidence role."""
     modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
     consumed_evidence: list[str] = []
     for modelo in modelos:
-        if str(modelo.id) != "100":
-            continue
         for revision_id, revision in modelo.revisions.items():
             relations = revision.relations
             if not relations:

@@ -1,7 +1,7 @@
 [[revisions."2010-y-siguientes".relations]]
 id = "modelo-390-rel-303-compensacion-generada-ejercicio-no-97"
-kind = "cross_model_output"
-dependency_role = "factual_evidence"
+kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
 source_modelo = "303"
 source_revision_selector = { year_from = 2009 }
 source_casilla_id = "iva.compensacion-generada-periodo"
