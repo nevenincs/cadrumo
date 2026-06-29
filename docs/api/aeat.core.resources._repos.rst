@@ -21,7 +21,6 @@ Submodules
    aeat.core.resources._repos.legal_parameters
    aeat.core.resources._repos.manuals
    aeat.core.resources._repos.modelos
-   aeat.core.resources._repos.normatives
    aeat.core.resources._repos.recargo_bands
    aeat.core.resources._repos.topics
    aeat.core.resources._repos.user_profile

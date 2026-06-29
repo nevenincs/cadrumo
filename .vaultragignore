@@ -27,6 +27,7 @@ src/aeat/_data/corpus/normatives/html/*.html
 
 # Local caches, reports, and ad-hoc execution output that may appear before
 # .gitignore pruning catches up.
+.campaign-runs/
 .import_linter_cache/
 .playwright-mcp/
 .pytest_cache/
@@ -35,6 +36,7 @@ src/aeat/_data/corpus/normatives/html/*.html
 .pyrefly_cache/
 .complexipy_cache/
 htmlcov/
+output/
 playwright-report/
 test-results/
 scratch/

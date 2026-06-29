@@ -13,8 +13,8 @@ REAL service (committed as a fixture) through the real resolver + wrangler, so
 the resolution / wrangling / laundering is exercised against genuine hits
 without depending on live-service latency. A separate ``integration`` test runs
 at least one query against the LIVE service so the real retrieval path is
-covered; it is skipped (not failed) when the service is unreachable -- the
-resident store is single-writer and a peer index-rebuild can make it busy.
+covered; if the service is unreachable, the integration test fails with the
+service error rather than skipping.
 """
 
 from __future__ import annotations
@@ -233,7 +233,7 @@ def test_below_floor_query_yields_only_the_seeded_concept_card() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Live-service integration (skipped when the service is busy/unreachable)
+# Live-service integration
 # ---------------------------------------------------------------------------
 
 
@@ -242,14 +242,14 @@ def test_live_service_sweep_runs_at_least_one_term() -> None:
     """The real retrieval path runs against the LIVE service for one term.
 
     Routes through the resident service on port 8766 with an explicit timeout.
-    Skipped (not failed) when the service is unreachable / busy behind a peer
-    index-rebuild -- the single-writer store can be mid-rebuild.
+    If the service is unreachable or busy behind a peer index-rebuild, this
+    integration test fails with the service error instead of self-skipping.
     """
     client = ServiceRagSearchClient(timeout_s=60.0)
     try:
         result = run_sweep(client=client, concept_ids={"prorrata"}, reindex=False, score_floor=0.5)
     except SweepError as exc:
-        pytest.skip(f"RAG service unreachable/busy: {exc}")
+        raise AssertionError(f"RAG service unreachable/busy: {exc}") from exc
 
     assert result.query_count > 0
     # At least one prorrata query should resolve to a target against the live

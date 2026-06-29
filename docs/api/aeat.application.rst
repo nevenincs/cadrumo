@@ -45,7 +45,6 @@ Submodules
    :maxdepth: 4
 
    aeat.application._errors
-   aeat.application._storage_paths
    aeat.application.config_reset
    aeat.application.diagnostics
    aeat.application.provisioning

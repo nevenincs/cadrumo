@@ -1,55 +1,64 @@
-import os
+"""Static hygiene for executable-looking shell examples in documentation."""
+
+from __future__ import annotations
+
 import re
-import subprocess
-import glob
+from pathlib import Path
 
-docs_dir = r"Y:\code\aeat-worktrees\chore-476-restructure-execution\docs"
-failed_commands = []
-passed_commands = []
+import pytest
 
-for root, _, files in os.walk(docs_dir):
-    for file in files:
-        if file.endswith(".md"):
-            file_path = os.path.join(root, file)
-            with open(file_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-            
-            # Find all bash/sh/pwsh blocks
-            blocks = re.findall(r'```(?:bash|sh|pwsh)\n(.*?)\n```', content, re.DOTALL)
-            
-            for block in blocks:
-                commands = block.strip().split('\n')
-                for cmd in commands:
-                    cmd = cmd.strip()
-                    if cmd and not cmd.startswith('#'):
-                        # If the command starts with '$ ', strip it
-                        if cmd.startswith('$ '):
-                            cmd = cmd[2:]
-                        
-                        print(f"Running in {file}: {cmd}")
-                        try:
-                            # Using shell=True to execute commands properly
-                            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
-                            if result.returncode != 0:
-                                failed_commands.append((file, cmd, result.returncode, result.stderr))
-                                print(f"FAILED (code {result.returncode}): {result.stderr.strip()}")
-                            else:
-                                passed_commands.append((file, cmd))
-                                print("PASSED")
-                        except subprocess.TimeoutExpired:
-                            failed_commands.append((file, cmd, -1, "Timeout"))
-                            print("TIMEOUT")
-                        except Exception as e:
-                            failed_commands.append((file, cmd, -1, str(e)))
-                            print(f"EXCEPTION: {e}")
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
-print("\n--- Summary ---")
-print(f"Passed: {len(passed_commands)}")
-print(f"Failed: {len(failed_commands)}")
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_DOCS_ROOT = _REPO_ROOT / "docs"
+_SHELL_FENCE_RE = re.compile(r"```(?:bash|sh|pwsh)\n(?P<body>.*?)\n```", re.DOTALL)
+_DANGEROUS_COMMAND_PATTERNS = (
+    re.compile(r"\brm\s+-rf\b"),
+    re.compile(r"\bRemove-Item\b.*\s-(?:Recurse|r)\b", re.IGNORECASE),
+    re.compile(r"\bgit\s+reset\s+--hard\b"),
+    re.compile(r"\bgit\s+clean\s+-[^\n]*f\b"),
+)
 
-if failed_commands:
-    print("\nFailures:")
-    for file, cmd, code, err in failed_commands:
-        print(f"{file} | {cmd} | Code: {code}")
-        if err:
-            print(f"  Error: {err.strip()}")
+
+def _markdown_docs() -> tuple[Path, ...]:
+    """Return checked-in markdown documentation pages."""
+    return tuple(sorted(path for path in _DOCS_ROOT.rglob("*.md") if "_build" not in path.parts))
+
+
+def _shell_fence_commands(path: Path) -> list[tuple[int, str]]:
+    """Return executable-looking command lines from shell fences in one page."""
+    source = path.read_text(encoding="utf-8")
+    commands: list[tuple[int, str]] = []
+    for match in _SHELL_FENCE_RE.finditer(source):
+        fence_start_line = source[: match.start()].count("\n") + 1
+        for offset, raw_line in enumerate(match.group("body").splitlines(), start=1):
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.startswith("$ "):
+                line = line[2:].strip()
+            commands.append((fence_start_line + offset, line))
+    return commands
+
+
+def test_documentation_shell_examples_are_static_inventory() -> None:
+    """Docs shell examples are inventoried but never executed at collection time."""
+    command_sites = [
+        f"{path.relative_to(_REPO_ROOT).as_posix()}:{lineno}: {command}"
+        for path in _markdown_docs()
+        for lineno, command in _shell_fence_commands(path)
+    ]
+
+    assert command_sites, "expected at least one shell example in docs markdown"
+
+
+def test_documentation_shell_examples_do_not_embed_destructive_commands() -> None:
+    """Documentation shell fences must not publish destructive one-liners."""
+    violations: list[str] = []
+    for path in _markdown_docs():
+        relative = path.relative_to(_REPO_ROOT).as_posix()
+        for lineno, command in _shell_fence_commands(path):
+            if any(pattern.search(command) for pattern in _DANGEROUS_COMMAND_PATTERNS):
+                violations.append(f"{relative}:{lineno}: {command}")
+
+    assert not violations, "destructive shell examples in docs:\n" + "\n".join(violations)

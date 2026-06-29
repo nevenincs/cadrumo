@@ -29,7 +29,6 @@ Subpackages
    aeat.domain.justificante
    aeat.domain.manuals
    aeat.domain.modelos
-   aeat.domain.normatives
    aeat.domain.portals
    aeat.domain.renta
    aeat.domain.submission

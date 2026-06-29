@@ -546,6 +546,7 @@ convention = "google"
 # with literal short / weak / sentinel passphrases as assertion inputs.
 "src/aeat/adapters/persistence/storage/master_key/tests/test_master_key.py" = ["S105", "S106"]
 "src/aeat/adapters/persistence/storage/master_key/tests/test_master_key_failclosed.py" = ["S105", "S106"]
+"src/aeat/adapters/persistence/storage/master_key/tests/test_master_key_file_fallback.py" = ["S105", "S106"]
 "src/aeat/adapters/persistence/storage/tests/test_path_safety.py" = ["S105", "S106"]
 "src/aeat/core/tests/test_logging.py" = ["S105", "S106"]
 # Subprocess invocations from tests and from the CLI's own doc-reference
@@ -629,7 +630,7 @@ search_path = ["src", "stubs"]
 testpaths = ["src/aeat"]
 pythonpath = ["src"]
 python_files = ["test_*.py"]
-addopts = "-v --tb=short -m 'unit' --strict-markers --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity"
+addopts = "--tb=short -m 'unit' --strict-markers --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity"
 asyncio_mode = "strict"
 markers = [
   "unit: deterministic tests with no external I/O",
