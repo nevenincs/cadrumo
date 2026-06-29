@@ -83,6 +83,7 @@ from ._action_errors import (
     WorkUnitNotFoundError,
 )
 from ._iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
+from ._ledger_evidence_gate import raise_if_deductible_vat_evidence_missing
 from ._result_disposition_resolution import resolve_modelo_result_disposition
 from ._revision_persistence import emit_bucket_event as _emit_bucket_event
 from ._revision_replay_inputs import revision_filing_replay_inputs
@@ -724,6 +725,12 @@ def export_modelo_revision(
 
     revision = _load_revision_for_export(command.calculation_revision_id, repo=cr_repo)
     _raise_if_ledger_export_evidence_missing(revision)
+    raise_if_deductible_vat_evidence_missing(
+        revision,
+        error_type=ModeloExportEvidenceMissingError,
+        surface="export",
+        suggestion="aeat app ledger attach <transaction-id> --attachment-id <attachment-id>",
+    )
     work_unit = wu_repo.load().get(revision.work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(

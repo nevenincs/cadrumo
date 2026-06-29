@@ -24,6 +24,7 @@ from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._calculation_revision import CalculationRevisionState
 from ...domain.modelos._codes import ModeloCode
+from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._filing_record import ModeloRecord, ModeloRecordStatus
 from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from ...domain.modelos._protocols import (
@@ -47,6 +48,7 @@ from ._action_errors import (
 from ._iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
+from ._ledger_evidence_gate import raise_if_deductible_vat_evidence_missing
 from ._result_disposition_resolution import revision_is_refund_disposition
 from ._revision_persistence import persist_filed_revision
 from ._verification_actions import (
@@ -59,6 +61,10 @@ from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow
 
 if TYPE_CHECKING:
     from ..calculations._observations_repository import IvaWalletDecisionRepository
+
+
+class ModeloFilingEvidenceMissingError(ModeloError):
+    """Raised when internal filing would seal deductible IVA without evidence."""
 
 
 def file_modelo_revision(
@@ -178,6 +184,12 @@ def file_modelo_revision(
         )
     from ._profile_readiness_gate import require_profile_ready_for_work_unit
 
+    raise_if_deductible_vat_evidence_missing(
+        target,
+        error_type=ModeloFilingEvidenceMissingError,
+        surface="internal filing",
+        suggestion="aeat app ledger attach <transaction-id> --attachment-id <attachment-id>",
+    )
     require_profile_ready_for_work_unit(work_unit)
     iva_compensation_decision = _require_iva_compensation_revision_match(
         work_unit,

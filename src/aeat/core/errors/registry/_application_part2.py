@@ -261,6 +261,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._filing_actions.ModeloFilingEvidenceMissingError",
+        ErrorCode(
+            code="REFUSED_MODELO_FILING_EVIDENCE_MISSING",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_modelos",
+            default_suggestion="aeat app ledger attach <transaction-id> --attachment-id <attachment-id>",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._export.ModeloExportNoActiveBucketError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_NO_ACTIVE_BUCKET",
