@@ -283,9 +283,9 @@ def test_ledger_classify_persists_rent_paid_net_of_withholding(
 ) -> None:
     """A rent bank payment net of withholding can keep full invoice IVA facts.
 
-    Persona repro: commercial rent 1000 + 210 IVA - 190 withholding = 1020 paid.
+    Persona repro: commercial rent 2700 + 567 IVA - 513 withholding = 2754 paid.
     The CLI path must persist the full rent invoice substrate so Modelo 303 can
-    aggregate the 210 IVA soportado instead of rejecting the row at classify time.
+    aggregate the 567 IVA soportado instead of rejecting the row at classify time.
     """
     added = _invoke(
         [
@@ -297,7 +297,7 @@ def test_ledger_classify_persists_rent_paid_net_of_withholding(
             "--date",
             "2025-04-05",
             "--amount",
-            "1020.00",
+            "2754.00",
             "--direction",
             "OUTGOING",
             "--description",
@@ -318,15 +318,17 @@ def test_ledger_classify_persists_rent_paid_net_of_withholding(
             "--category-id",
             "arrendamiento_local",
             "--taxable-base",
-            "1000.00",
+            "2700.00",
             "--iva-rate",
             "0.21",
             "--iva-amount",
-            "210.00",
+            "567.00",
             "--iva-category",
             "domestic_general_21",
             "--irpf-category",
             "arrendamiento_local",
+            "--actor",
+            "Javier",
         ],
         env={"AEAT_OUTPUT_LANGUAGE": "en"},
     )
@@ -336,14 +338,69 @@ def test_ledger_classify_persists_rent_paid_net_of_withholding(
     assert viewed.exit_code == 0, viewed.output
     transaction = json.loads(viewed.output)["result"]["transaction"]
 
-    assert transaction["amount"] == "1020"
+    assert transaction["amount"] == "2754"
     assert transaction["direction"] == "OUTGOING"
     assert transaction["category_id"] == "arrendamiento_local"
-    assert transaction["taxable_base"] == "1000"
-    assert transaction["iva_amount"] == "210"
+    assert transaction["taxable_base"] == "2700"
+    assert transaction["iva_amount"] == "567"
     assert transaction["iva_rate"] == "0.21"
     assert transaction["iva_category"] == "domestic_general_21"
     assert transaction["irpf_category"] == "arrendamiento_local"
+
+
+def test_ledger_classify_rent_net_withholding_refusal_names_accepted_irpf_ids(
+    tmp_path: Path,
+) -> None:
+    """A guessed rent withholding id is refused with discoverable accepted ids."""
+    added = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2025-04-05",
+            "--amount",
+            "2754.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "Alquiler local neto de retencion",
+        ],
+    )
+    assert added.exit_code == 0, added.output
+    transaction_id = json.loads(added.output)["result"]["transaction_id"]
+
+    classified = _invoke(
+        [
+            "app",
+            "ledger",
+            "classify",
+            transaction_id,
+            "--classification",
+            "BUSINESS",
+            "--category-id",
+            "arrendamiento_local",
+            "--taxable-base",
+            "2700.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "567.00",
+            "--iva-category",
+            "domestic_general_21",
+            "--irpf-category",
+            "rental_withholding",
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en", "COLUMNS": "160"},
+    )
+
+    assert classified.exit_code != 0
+    flat = " ".join(classified.output.split())
+    assert "arrendamiento_local" in flat
+    assert "arrendamiento_vivienda_afecto" in flat
+    assert "aeat app ledger categories" in flat
 
 
 def test_ledger_add_accepts_nonnegative_amount_with_direction(tmp_path: Path) -> None:

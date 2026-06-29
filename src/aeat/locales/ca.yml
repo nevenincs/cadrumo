@@ -322,13 +322,6 @@ aggregation:
   per_modelo:
     errors:
       unsupported_modelo: Model no admès per a l'agregació per model
-  prorrata:
-    errors:
-      current_year_not_after_prior: L'any actual ha de ser estrictament major que
-        l'any anterior.
-      invalid_provisional_period: El període provisional ha de ser un token trimestral
-        (Qn) o mensual (Mnn).
-      year_out_of_range: L'any d'agregació de prorrata és fora del rang admès 2000-2100.
   renta_ledger:
     errors:
       annual_period_required: Es requereix un període anual per a l'agregació del
@@ -550,12 +543,14 @@ application:
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
+      import_missing_filing_baseline: 'El perfil de l''arxiu de bucket no te camps
+        d''identitat per presentar: %{missing_flags}. Repara el perfil d''origen i
+        torna''l a exportar.'
       import_payload_invalid: application.bucket_maintenance.errors.import_payload_invalid
       import_recovery_passphrase_required: application.bucket_maintenance.errors.import_recovery_passphrase_required
       import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
       import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
       unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
-      import_missing_filing_baseline: 'El perfil de l''arxiu de bucket no te camps d''identitat per presentar: %{missing_flags}. Repara el perfil d''origen i torna''l a exportar.'
   calculations:
     iva_compensation:
       errors:
@@ -773,6 +768,8 @@ application:
       cross_period_clean_state_incomplete: La prova d'estat net entre periodes esta
         incompleta per al model {modelo} {filing_year} {period}; queden {finding_count}
         troballa(es).
+      deductible_vat_evidence_missing: Les files d'IVA deduïble del llibre requereixen
+        evidència de factura de compra vinculada abans d'aquesta acció.
       export_cross_bucket_refused: La revisio indicada pertany a un bucket diferent
         del bucket del perfil actiu. Canvia de perfil abans d'exportar.
       export_draft_approval_failed: No s'ha pogut aprovar l'esborrany per a la revisio
@@ -794,10 +791,11 @@ application:
         %{period}, que no es pot assignar a un periode de registre.
       export_revision_state_refused: La revisio de calcul %{calculation_revision_id}
         no esta verificada-completa ni presentada i no es pot exportar.
-      export_unsupported: El model %{modelo} no es pot exportar a fichero-BOE
-        perque l'snapshot del registre no te una definicio completa d'export_layouts.
-        El calcul, la verificacio i els registres locals de presentacio poden existir,
-        pero aquesta ordre no pot produir un fitxer per pujar a l'AEAT per a aquest model.
+      export_unsupported: El model %{modelo} no es pot exportar a fichero-BOE perque
+        l'snapshot del registre no te una definicio completa d'export_layouts. El
+        calcul, la verificacio i els registres locals de presentacio poden existir,
+        pero aquesta ordre no pot produir un fitxer per pujar a l'AEAT per a aquest
+        model.
       external_filing_evidence_reference_blank: La importació de declaració externa
         requereix un evidence_reference_id no buit.
       external_filing_no_casilla_values: La importació de declaració externa requereix
@@ -911,11 +909,11 @@ application:
           esta evidenciat localment (app_filing), no per l''AEAT; presenteu cada periode
           a l''AEAT de manera externa.'
         next_action: Exporteu i presenteu cada periode a l'AEAT de manera externa,
-          despres actualitzeu la cadena local amb evidencia oficial; useu `aeat
-          app live justificante pull` quan hi hagi acces en viu, o `aeat app modelo
-          filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf
-          --evidence-id CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file
-          WORK_UNIT_ID --file PATH` per a evidencia que ja tingueu.
+          despres actualitzeu la cadena local amb evidencia oficial; useu `aeat app
+          live justificante pull` quan hi hagi acces en viu, o `aeat app modelo filing-record
+          import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id
+          CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID
+          --file PATH` per a evidencia que ja tingueu.
       dt12a_reduccion_next_action: Proporcioneu --rescate-plan-pensiones-capital IMPORT
         --rescate-plan-pensiones-aportaciones-pre-2007 IMPORT --rescate-plan-pensiones-aportaciones-totales
         IMPORT per injectar automàticament la reducció DT 12a a la casella corresponent
@@ -945,9 +943,9 @@ application:
         (C595) és zero; confirmeu que és un zero legítim (base igual o inferior al
         mínim personal i familiar, o compensada per deduccions) i no una llacuna no
         modelada.
-      modelo_130_art109_exencion_alta_retencion: 'Art. 109 RIRPF: exempt de
-        presentar M130 aquest trimestre perquè les retencions i ingressos a compte
-        acumulats a l''any representen el 70% o més dels rendiments íntegres.'
+      modelo_130_art109_exencion_alta_retencion: 'Art. 109 RIRPF: exempt de presentar
+        M130 aquest trimestre perquè les retencions i ingressos a compte acumulats
+        a l''any representen el 70% o més dels rendiments íntegres.'
       modelo_131_2019_2023_pago_fraccionado_determinado_cuando_rendimientos_positivos: Els
         rendiments nets d'activitats en dades-base (C01) són positius però el pagament
         fraccionat previ per dades-base (C02) és zero; reviseu la casella 02 amb el
@@ -1024,6 +1022,8 @@ application:
         app live portals list' per veure els portals disponibles.
   registry:
     errors:
+      citation_not_found: No s'ha trobat cap cita del registre per a la referència
+        legal sol·licitada.
       invalid_manual_id: El manual del registre ha de ser un de {allowed_manual_ids};
         sha rebut {manual_id}.
       invalid_manual_rule_kind: El tipus de regla manual ha de ser un de {allowed_rule_kinds};
@@ -1184,6 +1184,11 @@ application:
         per verificar la declaració.
   wizard:
     errors:
+      create_missing_filing_baseline: 'A la creació del perfil li falten dades d''identitat
+        per presentar models. Afegeix aquests flags i torna a executar l''ordre: %{missing_flags}.'
+      edit_missing_filing_baseline: 'Aquesta edició deixaria incompletes les dades
+        d''identitat per presentar models. Afegeix aquests flags a la mateixa ordre
+        i torna-la a executar: %{missing_flags}.'
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
         requires supplied_question_ids — edit is a patch, not a full rewrite.
       persist_patch_unknown_question_id: El pedaç de l'assistent referencia un id
@@ -1193,12 +1198,6 @@ application:
       quiet_missing_flags: 'A aquesta execució amb --quiet li falten dades obligatòries.
         Afegeix aquests flags i torna a executar l''ordre: %{missing_flags}. O executa-la
         sense --quiet des d''un terminal interactiu per fer servir l''assistent guiat.'
-      create_missing_filing_baseline: 'A la creació del perfil li falten dades
-        d''identitat per presentar models. Afegeix aquests flags i torna a executar
-        l''ordre: %{missing_flags}.'
-      edit_missing_filing_baseline: 'Aquesta edició deixaria incompletes les
-        dades d''identitat per presentar models. Afegeix aquests flags a la mateixa
-        ordre i torna-la a executar: %{missing_flags}.'
     next_hint:
       modelo_work_create: aeat app modelo work create
     output_labels:
@@ -1541,6 +1540,13 @@ cli:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         list_help: Llistar els bindings requerits i disponibles per a un model / exercici
           / període
+        m200_m202_relation_channel: "%{relation_id}\tM202 %{modality} casilla %{casilla}\t\
+          usar --relation %{relation_id}=VALUE\tbinding desti associat %{binding_id}"
+        m200_m202_relation_guidance: Els pagos fraccionados M202 del Modelo 200 alimenten
+          DP200014B:00611 mitjancant valors --relation, no mitjancant ids de binding
+          desti en --binding. Els canals M202 40.3 casilla 34 i 40.2 casilla 03 son
+          mutuament exclusius per declaracio; en introduir valors manuals de relacio,
+          posa la suma anual a la modalitat elegida i 0 a la modalitat no usada.
         missing_help: 'Filtrar als bindings encara pendents: descarta els de valor
           constant i els que el perfil actiu ja resol. Sense perfil actiu es mostren
           tots els bindings no constants (la resposta conservadora).'
@@ -1554,8 +1560,6 @@ cli:
         unknown_keys: 'Clau(s) de --binding desconeguda(es) {keys}; vinculacions conegudes
           per a {code}@{revision} ({period}): {suggestion}.'
         year_help: Exercici fiscal del model (p. ex. 2026)
-        m200_m202_relation_guidance: 'Els pagos fraccionados M202 del Modelo 200 alimenten DP200014B:00611 mitjancant valors --relation, no mitjancant ids de binding desti en --binding. Els canals M202 40.3 casilla 34 i 40.2 casilla 03 son mutuament exclusius per declaracio; en introduir valors manuals de relacio, posa la suma anual a la modalitat elegida i 0 a la modalitat no usada.'
-        m200_m202_relation_channel: "%{relation_id}\tM202 %{modality} casilla %{casilla}\tusar --relation %{relation_id}=VALUE\tbinding desti associat %{binding_id}"
       casillas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         explain_help: Incloure el text d'ajuda localitzat a la sortida de text.
@@ -1564,6 +1568,7 @@ cli:
         input_kind_help: Filtrar les caselles per tipus d'entrada (manual, bound,
           computed, informational)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
+        number_help: Filtrar caselles pel número imprès o id canònic (p. ex. 0596).
         period_help: 'Token de periode per resoldre la revisio del model: 0A anual,
           1T-4T trimestres, 01-12 mesos; per a models censals (036) usa alta, modificacion
           o baja.'
@@ -1962,10 +1967,27 @@ cli:
           les files corresponents del llibre major, executa `aeat app ledger preflight`
           i torna a calcular. Executa `%{discover}` per veure tots els bindings que
           el càlcul encara necessita.'
+        missing_date_binding_guidance: '%{base} Estableix %{binding_id} al perfil
+          actiu i torna a calcular. Les dades de perfil amb data no es poden aportar
+          amb --binding. Executa `%{discover}` per llistar tots els bindings que encara
+          necessita el càlcul.'
+        missing_relation_guidance: '%{base} Aporta el valor amb --relation KEY=VALUE
+          en aquest comandament; KEY es un id de relacio del registre, no un id de
+          binding. Executa %{discover} per llistar la guia de relacions i els altres
+          bindings que encara necessita el calcul.'
+        missing_relation_guidance_m200_m202: '%{base} Aporta els pagos fraccionados
+          del Modelo 202 al Modelo 200 amb --relation RELATION_ID=VALUE, no amb --binding.
+          DP200014B:00611 resta dos canals de relacio M202 mutuament exclusius: modelo-200-2024-rel-202-pagos-fraccionados
+          per a 40.3 casilla 34 i modelo-200-2024-rel-202-pagos-fraccionados-40-2
+          per a 40.2 casilla 03. En introduir valors manuals, posa 0 a la modalitat
+          no usada. Executa %{discover} per llistar la guia de relacions i els bindings
+          restants.'
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         name_help: Nom de visualització opcional de la unitat de treball
         name_required: Proporcioneu --name.
         notes_help: Notes opcionals associades al filing record
+        observations_help: Mostrar observacions de càlcul tipades per casella i la
+          seva procedència.
         output_language_help: Idioma de sortida per als missatges renderitzats.
         override_help: Valor de binding amb sintaxi KEY=VALUE (repetible); executa
           `aeat app modelo bindings list --missing` per veure els bindings que necessita
@@ -2011,7 +2033,13 @@ cli:
           fora del territori espanyol en l'exercici. Obligatori juntament amb --annual-salary
           quan s'aplica l'Art. 7.p).
         reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
-        relation_help: 'Valor de relacio del registre amb sintaxi KEY=VALUE (repetible). KEY es un id de relacio del registre, no un id de binding; fes-lo servir per a entrades de relacio entre periodes o entre models. Executa aeat app modelo bindings list --missing per veure la guia de relacions de l ambit. Per als pagos fraccionados M202 del Modelo 200, usa els canals de relacio mutuament exclusius 40.3 casilla 34 i 40.2 casilla 03, posant 0 a la modalitat no usada quan introdueixis valors manuals.'
+        relation_help: Valor de relacio del registre amb sintaxi KEY=VALUE (repetible).
+          KEY es un id de relacio del registre, no un id de binding; fes-lo servir
+          per a entrades de relacio entre periodes o entre models. Executa aeat app
+          modelo bindings list --missing per veure la guia de relacions de l ambit.
+          Per als pagos fraccionados M202 del Modelo 200, usa els canals de relacio
+          mutuament exclusius 40.3 casilla 34 i 40.2 casilla 03, posant 0 a la modalitat
+          no usada quan introdueixis valors manuals.
         rename_help: Actualitzar el nom de visualització d'una unitat de treball
         rescate_plan_pensiones_aportaciones_pre_2007_help: Aportacions fetes al pla
           de pensions fins al 31-des-2006 (base de prorrateig DT 12a LIRPF). Necessari
@@ -2029,8 +2057,8 @@ cli:
         resume_help: Valida si pots reintentar una execució de flux interrompuda sense
           contactar amb AEAT. Fes servir --modelo --year --period com a ruta normal;
           els ids exactes queden com a escape avançat.
-        resume_target_help: Id opcional d'execució de flux de 16 caràcters
-          o id d'unitat de treball de 64 caràcters. Prefereix --modelo --year --period.
+        resume_target_help: Id opcional d'execució de flux de 16 caràcters o id d'unitat
+          de treball de 64 caràcters. Prefereix --modelo --year --period.
         revision_help: Identificador estable de la revisió registrada del model; executa
           `aeat app modelo describe MODEL` per veure els ids de revisió disponibles.
         revision_selector_ambiguous: Mes d una revisio de calcul coincideix amb aquest
@@ -2043,7 +2071,15 @@ cli:
         row_empty_key: Clau de camp buida a --row {token}; cada camp ha de tenir el
           format CLAU=VALOR.
         row_empty_spec: --row no pot estar buit; s'esperava TIPUS CAMP=valor [...]
-        row_help: 'Fila de detall tipada per a models informatius amb registres repetibles. Format: TIPUS CAMP=valor [CAMP=valor ...]. TIPUS és ''miembro'' (soci/partícip M184), ''vinculada'' (operació vinculada M232), ''operador'' (operador intracomunitari M349) o ''contraparte'' (declarada M347). Repetir per afegir més files. Poseu entre cometes l''argument complet de --row; manteniu entre cometes els noms legals amb espais. Exemple M184: --row ''miembro nif=12345678A porcentaje=40 importe=10000''. Exemple M349: --row ''operador codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" clave_operacion=E importe=50000''.'
+        row_help: 'Fila de detall tipada per a models informatius amb registres repetibles.
+          Format: TIPUS CAMP=valor [CAMP=valor ...]. TIPUS és ''miembro'' (soci/partícip
+          M184), ''vinculada'' (operació vinculada M232), ''operador'' (operador intracomunitari
+          M349) o ''contraparte'' (declarada M347). Repetir per afegir més files.
+          Poseu entre cometes l''argument complet de --row; manteniu entre cometes
+          els noms legals amb espais. Exemple M184: --row ''miembro nif=12345678A
+          porcentaje=40 importe=10000''. Exemple M349: --row ''operador codigo_pais=DE
+          nif_comunitario=DE123456789 razon_social="DE Auto GmbH" clave_operacion=E
+          importe=50000''.'
         row_kv_format_error: El camp --row {token} ha de tenir el format CLAU=VALOR.
         row_m349_invalid_nif: '--row operador: nif_comunitario {nif} no coincideix
           amb el format NIF-IVA esperat per al país {pais} (Directiva 2006/112/CE
@@ -2089,8 +2125,6 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
-        missing_relation_guidance: '%{base} Aporta el valor amb --relation KEY=VALUE en aquest comandament; KEY es un id de relacio del registre, no un id de binding. Executa %{discover} per llistar la guia de relacions i els altres bindings que encara necessita el calcul.'
-        missing_relation_guidance_m200_m202: '%{base} Aporta els pagos fraccionados del Modelo 202 al Modelo 200 amb --relation RELATION_ID=VALUE, no amb --binding. DP200014B:00611 resta dos canals de relacio M202 mutuament exclusius: modelo-200-2024-rel-202-pagos-fraccionados per a 40.3 casilla 34 i modelo-200-2024-rel-202-pagos-fraccionados-40-2 per a 40.2 casilla 03. En introduir valors manuals, posa 0 a la modalitat no usada. Executa %{discover} per llistar la guia de relacions i els bindings restants.'
   common:
     errors:
       draft_id_not_found: ID d'esborrany %{draft_id} no trobat
@@ -2423,9 +2457,6 @@ cli:
       import_invalid_tax_id: 'L''identificador fiscal del paquet de perfil no és vàlid:
         %{error}. Corregeix l''identificador i torna a exportar, o importa un paquet
         vàlid.'
-      import_missing_filing_baseline: 'Al paquet de perfil li falten dades d''identitat
-        per presentar models. Corregeix el paquet o torna a exportar un perfil complet
-        amb aquests camps: %{missing_flags}.'
       import_label_help: Nom visible per al perfil importat; per defecte el nom desat
         al paquet. Fes-lo servir per importar una segona còpia amb un altre nom.
       import_label_taken: Ja existeix un perfil amb el nom %{name}. Torna a executar
@@ -2434,6 +2465,9 @@ cli:
         amb un identificador diferent. Useu --label NOU_NOM per importar amb un nom
         diferent.
       import_missing_bundle: No s'ha trobat el paquet de perfil a %{path}
+      import_missing_filing_baseline: 'Al paquet de perfil li falten dades d''identitat
+        per presentar models. Corregeix el paquet o torna a exportar un perfil complet
+        amb aquests camps: %{missing_flags}.'
       import_path_help: Ruta al paquet JSON del perfil
       import_uuid_collision: El UUID del paquet entra en conflicte amb un perfil existent.
       logout_help: Tanca la sessió del perfil actiu netejant el punter local
@@ -2696,10 +2730,10 @@ cli:
         automàticament i no es pot establir a mà. Tria''n una: BUSINESS, PERSONAL,
         MIXED, o omet --classification per deixar la fila sense classificar.'
       taxable_base_help: Import de base imposable
-      usage_ratio_help: Id de proporció d'ús ja configurat per a ús professional
-        proporcional. Usa un id de categoria mostrat per 'aeat app ledger ratios list'
-        o 'aeat app ledger ratios eligible'; crea'l amb 'aeat app ledger ratios set
-        <category-id> <ratio>'. No és text lliure.
+      usage_ratio_help: Id de proporció d'ús ja configurat per a ús professional proporcional.
+        Usa un id de categoria mostrat per 'aeat app ledger ratios list' o 'aeat app
+        ledger ratios eligible'; crea'l amb 'aeat app ledger ratios set <category-id>
+        <ratio>'. No és text lliure.
       value_date_help: Data valor de la transacció (AAAA-MM-DD)
     allocate:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
@@ -2711,10 +2745,10 @@ cli:
         llibre
       id_help: Id del moviment del llibre a assignar
       prorrata_reference_help: Referència de prorrata d'IVA per a fluxos d'IVA
-      usage_ratio_help: Id de proporció d'ús ja configurat per a ús professional
-        proporcional. Usa un id de categoria mostrat per 'aeat app ledger ratios list'
-        o 'aeat app ledger ratios eligible'; crea'l amb 'aeat app ledger ratios set
-        <category-id> <ratio>'. No és text lliure.
+      usage_ratio_help: Id de proporció d'ús ja configurat per a ús professional proporcional.
+        Usa un id de categoria mostrat per 'aeat app ledger ratios list' o 'aeat app
+        ledger ratios eligible'; crea'l amb 'aeat app ledger ratios set <category-id>
+        <ratio>'. No és text lliure.
     app_help: Gestió de llibres comptables i registres d'IVA
     archive:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
@@ -2733,12 +2767,20 @@ cli:
     categories:
       family_column: família
       header: CATEGORIES DE DESPESA RECONEGUDES DEL LLIBRE
-      help: Llista els identificadors de categoria acceptats per --category-id, agrupats
-        per família
+      help: Llista els identificadors acceptats per --category-id i --irpf-category
       id_column: category-id (passa aquest valor exacte)
       income_note: Només despeses deduïbles. Els moviments d'ingrés (INCOMING) es
         classifiquen per direcció i no necessiten --category-id; `ledger check` i
         `ledger preflight` no marquen un ingrés com a missing_category.
+      irpf_header: CATEGORIES D'IRPF PER A --irpf-category
+      irpf_id_column: irpf-category (passa aquest valor exacte)
+      irpf_purpose_activity_income_withholding: retencio d'ingres professional cobrat
+        net
+      irpf_purpose_employment_income: rendiments del treball (no per a factures netes)
+      irpf_purpose_rent_expense_withholding: retencio de lloguer pagat net
+      irpf_usage_example: 'Lloguer net: --category-id {rent_category} --irpf-category
+        {rent_category}. Ingres professional net: --irpf-category {activity_category}.'
+      irpf_use_column: us
       usage_example: Passa l'id sense prefix, p. ex. --category-id {example} (no una
         clau composta ni amb prefix de família).
     check:
@@ -2760,10 +2802,10 @@ cli:
         de divisió es llegeix de la factura.'
       auto_split_single_line: 'factura d''una sola línia: no cal divisió; --apply
         la classifica al lloc'
-      bulk_summary: 'classificació massiva: %{total} files, %{applied} aplicades,
-        %{skipped} omeses, %{fail} fallides'
       bulk_all_failed: 'classificació massiva fallida: totes les files han fallat;
         no s''ha actualitzat cap moviment del llibre'
+      bulk_summary: 'classificació massiva: %{total} files, %{applied} aplicades,
+        %{skipped} omeses, %{fail} fallides'
       business_pct_help: Percentatge d'ús professional de 0 a 1; obligatori amb --classification
         MIXED, rebutjat per a qualsevol altra classificació i omès en files totalment
         BUSINESS
@@ -2789,7 +2831,9 @@ cli:
       help: Classificar un moviment del llibre al perfil actiu
       id_help: Id del moviment del llibre a classificar
       id_required: Cal un id de transacció quan no s'usa --from-csv.
-      irpf_category_help: Categoria d'IRPF per a càlculs de models
+      irpf_category_help: Id de categoria d'IRPF. Usa aeat app ledger categories;
+        les factures professionals cobrades netes usen actividad_economica i els lloguers
+        pagats nets usen arrendamiento_local o arrendamiento_vivienda_afecto.
       iva_amount_help: Import d'IVA
       iva_category_help: Categoria d'IVA explícita per a aquesta transacció (p. ex.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -2865,9 +2909,6 @@ cli:
         llibre.
       filter_parse_error: 'Fallada en analitzar el filtre del llibre prop de %{token}:
         %{reason}.'
-      period_year_pairing: Els filtres de període del llibre requereixen període
-        i exercici junts. Per a un any complet useu --period 0A --year %{year},
-        o --filter period=0A --filter year=%{year}.
       id_prefix_collision: 'El prefix d''id de transacció %{prefix!r} coincideix amb
         més d''una transacció: %{candidates}. Allarga el prefix per desambiguar.'
       id_prefix_empty: El prefix d'id de transacció és buit; passa almenys un caràcter
@@ -2886,6 +2927,9 @@ cli:
       negative_amount: L'--amount %{raw} ha de ser una magnitud no negativa. Indica
         l'import sense signe i defineix el flux amb --direction (OUTGOING per a sortides,
         INCOMING per a entrades, INTERNAL_TRANSFER entre els teus propis comptes).
+      period_year_pairing: Els filtres de període del llibre requereixen període i
+        exercici junts. Per a un any complet useu --period 0A --year %{year}, o --filter
+        period=0A --filter year=%{year}.
       unknown_category: --category-id {category!r} no reconegut. Passa un id de categoria
         sense prefix com {example!r}, no una clau composta ni amb prefix de família.
         Executa `aeat app ledger categories` per veure tots els identificadors reconeguts.
@@ -2983,6 +3027,7 @@ cli:
       split_group_id: id_grup_divisio
       stashed: Apartades
       taxable_base: Base imposable
+      usage_ratio_id: Id de proporció d'ús
       valid: Vàlid
       value_date: Data valor
       warning: Avís
@@ -3041,6 +3086,10 @@ cli:
       reason_help: Motiu registrat a l'historial de cicle de vida
       yes_help: Confirma la fusió de les transaccions filles
     preflight:
+      empty_ledger_advisory: No s'han comprovat transaccions actives del llibre per
+        a aquest període. Si hi va haver activitat, afegeix o importa files del llibre
+        abans de calcular; si realment no hi va haver activitat, el llibre buit pot
+        donar suport a una presentació local sense activitat.
       help: Informa de les dades comptables que falten (categoria, base imposable,
         import/tipus d'IVA, moneda, referència de prorrata) per als moviments del
         perfil actiu en un període donat. Local; mai contacta amb AEAT.
@@ -3359,8 +3408,8 @@ cli:
       0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
     status:
       drafts_empty: No s'han trobat esborranys de declaracions desats.
-      drafts_empty_with_work_units: No hi ha esborranys de declaracions desats;
-        es normal i no afecta les teves unitats de treball de models mostrades a sota.
+      drafts_empty_with_work_units: No hi ha esborranys de declaracions desats; es
+        normal i no afecta les teves unitats de treball de models mostrades a sota.
       drafts_present: '%{count} esborrany(s) de declaracions desats existeixen en
         aquest emmagatzematge local. Un espai buit acabat de crear normalment en te
         0, aixi que aquest perfil/base de dades ja conte estat local d''esborranys.'
@@ -3377,7 +3426,9 @@ cli:
       next_import_command: '  aeat app ledger import <extracte-bancari.csv> --provider
         csv - importar moviments bancaris.'
       next_landing_command: '  aeat --help - tornar a la guia de comandes.'
-      next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - El Modelo 210 es visible per descobriment IRNR, pero la creacio local de treballs encara no esta suportada; presenta per AEAT Sede G320.'
+      next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - El Modelo
+        210 es visible per descobriment IRNR, pero la creacio local de treballs encara
+        no esta suportada; presenta per AEAT Sede G320.'
       next_modelo_work_command: '  aeat app modelo work create - iniciar una declaració
         de model a partir de les dades del teu llibre.'
       next_review_command: '  aeat app ledger review - revisar files importades.'
@@ -4396,6 +4447,9 @@ errors:
       184 han de sumar exactament el 100 %.
     modelo_347_threshold: Les operacions del Model 347 per sobre del llindar informatiu
       requereixen cobertura declarativa explícita.
+    modelo_349_country_prefix_context: 'El model 349 rebutja el prefix de pais {country_code}
+      per a la clau d''operacio {clave_operacion} en {filing_year}/{period}: {reason}.
+      Fonament: instruccions AEAT Brexit IVA NIF-IVA / model 349.'
     modelo_ambiguous_semantic_role_casilla: Mes d una casella usa el rol semantic
       %{semantic_role}; usa el casilla.id canonic exacte.
     modelo_calculate_binding_input: errors.refused.modelo_calculate_binding_input
@@ -4680,7 +4734,6 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
-    modelo_349_country_prefix_context: 'El model 349 rebutja el prefix de pais {country_code} per a la clau d''operacio {clave_operacion} en {filing_year}/{period}: {reason}. Fonament: instruccions AEAT Brexit IVA NIF-IVA / model 349.'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'
@@ -5055,8 +5108,6 @@ wizard:
         help: Codi postal del domicili fiscal
       bienes-extranjero-above-threshold:
         help: Béns a l'estranger superen el llindar legal
-      monedas-virtuales-extranjero-above-threshold:
-        help: Monedes virtuals a l'estranger superen el llindar del Modelo 721
       cloud-evidence-upload:
         help: Permetre pujar evidència sensible a proveïdors LLM al núvol (desactivat
           per defecte).
@@ -5118,8 +5169,18 @@ wizard:
         help: Forma jurídica reconeguda quan el tipus d'entitat és persona jurídica
       legal-name:
         help: Raó social de la persona jurídica per a capçaleres d'exportació
+      ley-49-2002-option-date:
+        help: wizard.setup.flags.ley-49-2002-option-date.help
+      ley-49-2002-option-declared:
+        help: wizard.setup.flags.ley-49-2002-option-declared.help
+      ley-49-2002-renunciation-date:
+        help: wizard.setup.flags.ley-49-2002-renunciation-date.help
+      ley-49-2002-renunciation-declared:
+        help: wizard.setup.flags.ley-49-2002-renunciation-declared.help
       llm-vision:
         help: Activar la visió LLM local per llegir factures.
+      monedas-virtuales-extranjero-above-threshold:
+        help: Monedes virtuals a l'estranger superen el llindar del Modelo 721
       name:
         help: Nom visible mostrat en revisions locals
       new-entity-first-two-profit-periods:
@@ -5241,8 +5302,6 @@ wizard:
     obligations:
       bienes-extranjero-above-threshold:
         prompt: Béns a l'estranger superen el llindar legal
-      monedas-virtuales-extranjero-above-threshold:
-        prompt: Monedes virtuals a l'estranger superen el llindar del Modelo 721
       does-intracomunitario:
         prompt: Realitza operacions intracomunitàries
       has-employees:
@@ -5271,6 +5330,8 @@ wizard:
         help: Data en què el treballador va optar pel règim d'impatriats (RIRPF Art.
           116). El règim expira en acabar el 6è any natural.
         prompt: Data d'inici del règim especial (AAAA-MM-DD)
+      monedas-virtuales-extranjero-above-threshold:
+        prompt: Monedes virtuals a l'estranger superen el llindar del Modelo 721
       pays-capital-income-with-retencion:
         prompt: Paga rendes de capital amb retenció
       pays-professionals-with-retencion:
@@ -5304,12 +5365,12 @@ wizard:
             label: Recàrrec d'equivalència
           simplificado:
             label: Règim simplificat
-      name:
-        prompt: Nom visible mostrat en revisions locals
       legal-name:
         help: Per a persones jurídiques, és el nom fiscal usat a les capçaleres d'exportació.
           És diferent del nom visible local.
         prompt: Raó social de l'entitat per a capçaleres d'exportació
+      name:
+        prompt: Nom visible mostrat en revisions locals
       output-language:
         choices:
           ca:
@@ -5503,6 +5564,18 @@ wizard:
           sociedad-civil-mercantil:
             label: Societat civil amb objecte mercantil
         prompt: Forma jurídica
+      ley-49-2002-option-date:
+        help: wizard.setup.taxpayer-type.ley-49-2002-option-date.help
+        prompt: wizard.setup.taxpayer-type.ley-49-2002-option-date.prompt
+      ley-49-2002-option-declared:
+        help: wizard.setup.taxpayer-type.ley-49-2002-option-declared.help
+        prompt: wizard.setup.taxpayer-type.ley-49-2002-option-declared.prompt
+      ley-49-2002-renunciation-date:
+        help: wizard.setup.taxpayer-type.ley-49-2002-renunciation-date.help
+        prompt: wizard.setup.taxpayer-type.ley-49-2002-renunciation-date.prompt
+      ley-49-2002-renunciation-declared:
+        help: wizard.setup.taxpayer-type.ley-49-2002-renunciation-declared.help
+        prompt: wizard.setup.taxpayer-type.ley-49-2002-renunciation-declared.prompt
       new-entity-first-two-profit-periods:
         help: S'aplica només a persones jurídiques. Si ho marques, l'entitat tributa
           al tipus reduït del 15 per cent durant aquests dos períodes.

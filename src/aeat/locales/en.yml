@@ -294,13 +294,6 @@ aggregation:
   per_modelo:
     errors:
       unsupported_modelo: Unsupported modelo for per-modelo aggregation
-  prorrata:
-    errors:
-      current_year_not_after_prior: current_year must be strictly greater than prior_year.
-      invalid_provisional_period: Provisional period must be a quarterly (Qn) or monthly
-        (Mnn) token.
-      year_out_of_range: Prorrata aggregation year is outside the supported range
-        2000-2100.
   renta_ledger:
     errors:
       annual_period_required: Annual period is required for Renta ledger aggregation.
@@ -499,12 +492,14 @@ application:
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
+      import_missing_filing_baseline: 'The bucket archive profile is missing filing
+        identity fields: %{missing_flags}. Repair the source profile and export it
+        again.'
       import_payload_invalid: application.bucket_maintenance.errors.import_payload_invalid
       import_recovery_passphrase_required: application.bucket_maintenance.errors.import_recovery_passphrase_required
       import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
       import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
       unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
-      import_missing_filing_baseline: 'The bucket archive profile is missing filing identity fields: %{missing_flags}. Repair the source profile and export it again.'
   calculations:
     iva_compensation:
       errors:
@@ -705,6 +700,8 @@ application:
         and cannot be overridden by external binding. Affected casillas: %{computed}.'
       cross_period_clean_state_incomplete: Cross-period clean-state proof is incomplete
         for modelo {modelo} {filing_year} {period}; {finding_count} finding(s) remain.
+      deductible_vat_evidence_missing: Deductible IVA ledger rows require linked purchase
+        invoice evidence before this action.
       export_cross_bucket_refused: The addressed revision belongs to a bucket other
         than the active profile bucket. Switch profile before exporting.
       export_draft_approval_failed: Could not approve the draft for calculation revision
@@ -840,13 +837,12 @@ application:
           origin=%{origin}. The within-year chain is admitted for local export, but
           the carried value is locally evidenced (app_filing), not AEAT-evidenced;
           file every period with AEAT externally.'
-        next_action: >-
-          Export and file each period with AEAT externally, then upgrade
+        next_action: Export and file each period with AEAT externally, then upgrade
           the local chain with official evidence; use `aeat app live justificante
-          pull` when live access is available, or `aeat app modelo filing-record
-          import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id
-          CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID
-          --file PATH` for evidence you already hold.
+          pull` when live access is available, or `aeat app modelo filing-record import
+          WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id CSV --set
+          CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID --file PATH`
+          for evidence you already hold.
       dt12a_reduccion_next_action: Supply --rescate-plan-pensiones-capital IMPORTE
         --rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE --rescate-plan-pensiones-aportaciones-totales
         IMPORTE to aeat app modelo work calculate to auto-inject the DT 12a reduccion
@@ -878,9 +874,9 @@ application:
         (C595) is zero; confirm this is a legitimate zero (base at or below the personal
         and family minimum, or fully offset by deductions) rather than an unmodelled
         gap.
-      modelo_130_art109_exencion_alta_retencion: 'Art. 109 RIRPF: exempt from
-        filing M130 this quarter because accumulated withholdings and payments on
-        account for the year represent 70% or more of gross income.'
+      modelo_130_art109_exencion_alta_retencion: 'Art. 109 RIRPF: exempt from filing
+        M130 this quarter because accumulated withholdings and payments on account
+        for the year represent 70% or more of gross income.'
       modelo_131_2019_2023_pago_fraccionado_determinado_cuando_rendimientos_positivos: Net
         income from datos-base activities (C01) is positive but the fractional payment
         for datos-base (C02) is zero; check casilla 02 using the applicable Orden
@@ -956,6 +952,7 @@ application:
         live portals list' to see available portals.
   registry:
     errors:
+      citation_not_found: No registry citation matched the requested legal reference.
       invalid_manual_id: Registry manual must be one of {allowed_manual_ids}; got
         {manual_id}.
       invalid_manual_rule_kind: Registry manual rule kind must be one of {allowed_rule_kinds};
@@ -1112,6 +1109,11 @@ application:
         verification.
   wizard:
     errors:
+      create_missing_filing_baseline: 'Profile creation is missing filing identity
+        details. Add these flags and run the command again: %{missing_flags}.'
+      edit_missing_filing_baseline: 'This profile edit would leave filing identity
+        details incomplete. Add these flags to the same command and run it again:
+        %{missing_flags}.'
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
         requires supplied_question_ids — edit is a patch, not a full rewrite.
       persist_patch_unknown_question_id: Wizard patch references an unknown question
@@ -1121,11 +1123,6 @@ application:
       quiet_missing_flags: 'This --quiet run is missing required details. Add these
         flags and run the command again: %{missing_flags}. Or run it without --quiet
         from an interactive terminal to use the guided setup.'
-      create_missing_filing_baseline: 'Profile creation is missing filing identity
-        details. Add these flags and run the command again: %{missing_flags}.'
-      edit_missing_filing_baseline: 'This profile edit would leave filing identity
-        details incomplete. Add these flags to the same command and run it again:
-        %{missing_flags}.'
     next_hint:
       modelo_work_create: aeat app modelo work create
     output_labels:
@@ -1451,6 +1448,13 @@ cli:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         list_help: List the required and available bindings for a modelo / year /
           period
+        m200_m202_relation_channel: "%{relation_id}\tM202 %{modality} casilla %{casilla}\t\
+          use --relation %{relation_id}=VALUE\tpaired target binding %{binding_id}"
+        m200_m202_relation_guidance: Modelo 200 M202 pagos fraccionados feed DP200014B:00611
+          through --relation values, not --binding target binding ids. The M202 40.3
+          casilla 34 and 40.2 casilla 03 channels are mutually exclusive per filing;
+          when entering manual relation values, put the annual sum on the elected
+          modality and 0 on the unused modality.
         missing_help: 'Filter to the bindings still owed: drops constant-valued bindings
           and any the active profile already resolves. With no active profile every
           non-constant binding is shown (the conservative answer).'
@@ -1464,8 +1468,6 @@ cli:
         unknown_keys: 'Unknown --binding key(s) {keys}; known bindings for {code}@{revision}
           ({period}): {suggestion}.'
         year_help: Tax year of the modelo (e.g. 2026)
-        m200_m202_relation_guidance: 'Modelo 200 M202 pagos fraccionados feed DP200014B:00611 through --relation values, not --binding target binding ids. The M202 40.3 casilla 34 and 40.2 casilla 03 channels are mutually exclusive per filing; when entering manual relation values, put the annual sum on the elected modality and 0 on the unused modality.'
-        m200_m202_relation_channel: "%{relation_id}\tM202 %{modality} casilla %{casilla}\tuse --relation %{relation_id}=VALUE\tpaired target binding %{binding_id}"
       casillas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         explain_help: Include localized help text in the text output.
@@ -1473,6 +1475,8 @@ cli:
         help: List all casillas (fields/boxes) defined for a specific modelo revision.
         input_kind_help: Filter casillas by input kind (manual, bound, computed, informational)
         modelo_help: Tax form code (e.g. 303, 130, 100)
+        number_help: Filter casillas by printed casilla number or canonical id (e.g.
+          0596).
         period_help: 'Period token used to resolve the modelo revision: 0A annual,
           1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion,
           or baja.'
@@ -1857,10 +1861,25 @@ cli:
           bucket ledger and cannot be supplied with --binding. Add or classify the
           relevant ledger rows, run `aeat app ledger preflight`, then rerun calculate.
           Run `%{discover}` to list every binding the calculation still needs.'
+        missing_date_binding_guidance: '%{base} Set %{binding_id} on the active profile,
+          then rerun calculate. Date-valued profile facts cannot be supplied with
+          --binding. Run `%{discover}` to list every binding the calculation still
+          needs.'
+        missing_relation_guidance: '%{base} Supply the value with --relation KEY=VALUE
+          on this command; KEY is a registry relation id, not a binding id. Run %{discover}
+          to list relation guidance and the remaining bindings the calculation still
+          needs.'
+        missing_relation_guidance_m200_m202: '%{base} Supply Modelo 200 pagos fraccionados
+          from Modelo 202 with --relation RELATION_ID=VALUE, not --binding. DP200014B:00611
+          subtracts two mutually exclusive M202 payment relation channels: modelo-200-2024-rel-202-pagos-fraccionados
+          for 40.3 casilla 34 and modelo-200-2024-rel-202-pagos-fraccionados-40-2
+          for 40.2 casilla 03. When entering manual values, set the unused modality
+          to 0. Run %{discover} to list the relation guidance and remaining bindings.'
         modelo_help: Tax form code (e.g. 303, 130, 100)
         name_help: Optional display name for the work unit
         name_required: Supply --name.
         notes_help: Optional notes attached to the filing record
+        observations_help: Show typed per-casilla calculation observations and provenance.
         output_language_help: Output language for rendered messages.
         override_help: Binding value with KEY=VALUE syntax (repeatable); run `aeat
           app modelo bindings list --missing` to see the bindings the calculation
@@ -1905,7 +1924,12 @@ cli:
           Spanish territory in the tax year. Required alongside --annual-salary when
           Art. 7.p) applies.
         reason_help: Optional free-text reason for the discard (up to 500 chars)
-        relation_help: 'Registry relation value as KEY=VALUE (repeatable). KEY is a registry relation id, not a binding id; use this for cross-period or cross-modelo relation inputs. Run aeat app modelo bindings list --missing for scoped relation guidance. For Modelo 200 M202 pagos fraccionados, use the mutually exclusive 40.3 casilla 34 and 40.2 casilla 03 relation channels, setting the unused modality to 0 when entering manual values.'
+        relation_help: Registry relation value as KEY=VALUE (repeatable). KEY is a
+          registry relation id, not a binding id; use this for cross-period or cross-modelo
+          relation inputs. Run aeat app modelo bindings list --missing for scoped
+          relation guidance. For Modelo 200 M202 pagos fraccionados, use the mutually
+          exclusive 40.3 casilla 34 and 40.2 casilla 03 relation channels, setting
+          the unused modality to 0 when entering manual values.
         rename_help: Update the display name of a work unit
         rescate_plan_pensiones_aportaciones_pre_2007_help: Contributions made to the
           pension plan up to 31 Dec 2006 (LIRPF transitional provision 12 proration
@@ -1937,7 +1961,14 @@ cli:
         row_empty_key: Empty field key in --row {token}; each field must be in KEY=VALUE
           format.
         row_empty_spec: --row spec cannot be empty; expected TYPE FIELD=value [...]
-        row_help: 'Typed detail row for multi-record informational modelos. Format: TYPE FIELD=value [FIELD=value ...]. TYPE is ''miembro'' (M184 attribution member), ''vinculada'' (M232 related-party operation), ''operador'' (M349 intracom operator), or ''contraparte'' (M347 declared counterparty). Repeat to add multiple rows. Quote the whole row argument; quote spaced legal names inside it. M184 example: --row ''miembro nif=12345678A porcentaje=40 importe=10000''. M349 example: --row ''operador codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" clave_operacion=E importe=50000''.'
+        row_help: 'Typed detail row for multi-record informational modelos. Format:
+          TYPE FIELD=value [FIELD=value ...]. TYPE is ''miembro'' (M184 attribution
+          member), ''vinculada'' (M232 related-party operation), ''operador'' (M349
+          intracom operator), or ''contraparte'' (M347 declared counterparty). Repeat
+          to add multiple rows. Quote the whole row argument; quote spaced legal names
+          inside it. M184 example: --row ''miembro nif=12345678A porcentaje=40 importe=10000''.
+          M349 example: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
+          razon_social="DE Auto GmbH" clave_operacion=E importe=50000''.'
         row_kv_format_error: --row field {token} must be in KEY=VALUE format.
         row_m349_invalid_nif: '--row operador: nif_comunitario {nif} does not match
           the expected NIF-IVA format for country {pais} (Council Directive 2006/112/EC
@@ -1979,8 +2010,6 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
-        missing_relation_guidance: '%{base} Supply the value with --relation KEY=VALUE on this command; KEY is a registry relation id, not a binding id. Run %{discover} to list relation guidance and the remaining bindings the calculation still needs.'
-        missing_relation_guidance_m200_m202: '%{base} Supply Modelo 200 pagos fraccionados from Modelo 202 with --relation RELATION_ID=VALUE, not --binding. DP200014B:00611 subtracts two mutually exclusive M202 payment relation channels: modelo-200-2024-rel-202-pagos-fraccionados for 40.3 casilla 34 and modelo-200-2024-rel-202-pagos-fraccionados-40-2 for 40.2 casilla 03. When entering manual values, set the unused modality to 0. Run %{discover} to list the relation guidance and remaining bindings.'
   common:
     errors:
       draft_id_not_found: Draft ID %{draft_id} not found
@@ -2291,9 +2320,6 @@ cli:
         the profile bundle schema.'
       import_invalid_tax_id: 'The profile bundle''s tax identifier is invalid: %{error}.
         Fix the identifier and re-export, or import a valid bundle.'
-      import_missing_filing_baseline: 'The profile bundle is missing filing identity
-        details. Fix the bundle or re-export a complete profile with these fields:
-        %{missing_flags}.'
       import_label_help: Display name for the imported profile; defaults to the name
         stored in the bundle. Use it to import a second copy under a fresh label.
       import_label_taken: A profile named %{name} already exists. Re-run with `--label
@@ -2301,6 +2327,9 @@ cli:
       import_label_taken_different_id: The specified label belongs to a profile with
         a different identifier. Pass --label NEW_NAME to import under a distinct name.
       import_missing_bundle: Profile bundle not found at %{path}
+      import_missing_filing_baseline: 'The profile bundle is missing filing identity
+        details. Fix the bundle or re-export a complete profile with these fields:
+        %{missing_flags}.'
       import_path_help: Path to the profile bundle JSON file
       import_uuid_collision: The UUID in the bundle conflicts with an existing profile.
       logout_help: Sign out of the active profile by clearing the local pointer
@@ -2586,11 +2615,19 @@ cli:
     categories:
       family_column: family
       header: RECOGNISED LEDGER SPENDING CATEGORIES
-      help: List the spending-category ids accepted by --category-id, grouped by family
+      help: List the category ids accepted by --category-id and --irpf-category
       id_column: category-id (pass this exact value)
       income_note: Deductible expenses only. Income (INCOMING) transactions are classified
         by direction and need no --category-id; `ledger check` and `ledger preflight`
         do not flag income as missing_category.
+      irpf_header: IRPF CATEGORIES FOR --irpf-category
+      irpf_id_column: irpf-category (pass this exact value)
+      irpf_purpose_activity_income_withholding: net-paid professional income withholding
+      irpf_purpose_employment_income: employment income (not for net-paid invoices)
+      irpf_purpose_rent_expense_withholding: net-paid rent expense withholding
+      irpf_usage_example: 'Net-paid rent example: --category-id {rent_category} --irpf-category
+        {rent_category}. Net-paid professional income: --irpf-category {activity_category}.'
+      irpf_use_column: use
       usage_example: Pass the bare id, e.g. --category-id {example} (not a family-prefixed
         or compound key).
     check:
@@ -2612,10 +2649,10 @@ cli:
         decision is read from the invoice.'
       auto_split_single_line: 'single-line invoice: no split warranted; --apply classifies
         it in place'
-      bulk_summary: 'bulk classify: %{total} rows, %{applied} applied, %{skipped}
-        skipped, %{fail} failed'
       bulk_all_failed: 'bulk classify failed: every row failed; no ledger rows were
         updated'
+      bulk_summary: 'bulk classify: %{total} rows, %{applied} applied, %{skipped}
+        skipped, %{fail} failed'
       business_pct_help: Business-use share from 0 to 1; required with --classification
         MIXED, rejected for any other classification, and omitted for fully BUSINESS
         rows
@@ -2627,9 +2664,9 @@ cli:
       classification_help: Business classification state for the transaction
       classification_required: --classification is required when --from-csv is not
         provided.
-      counterparty_eu_member_state_help: EU member state or Northern Ireland IVA
-        prefix of the counterparty (ISO 3166-1 alpha-2 lowercase, e.g. de or xi);
-        required with --iva-category intra_community_supply, prohibited with export_third_country_zero_rated
+      counterparty_eu_member_state_help: EU member state or Northern Ireland IVA prefix
+        of the counterparty (ISO 3166-1 alpha-2 lowercase, e.g. de or xi); required
+        with --iva-category intra_community_supply, prohibited with export_third_country_zero_rated
         or export_assimilated_zero_rated
       evidence_acknowledged_help: Acknowledge that reading evidence with a cloud provider
         uploads it off your machine (required by the consent gate).
@@ -2641,7 +2678,9 @@ cli:
       help: Classify one ledger transaction in the active profile
       id_help: Ledger transaction id to classify
       id_required: A transaction id is required when --from-csv is not provided.
-      irpf_category_help: IRPF category for modelo calculations
+      irpf_category_help: IRPF category id. Use aeat app ledger categories; net-paid
+        professional invoices use actividad_economica and net-paid rent uses arrendamiento_local
+        or arrendamiento_vivienda_afecto.
       iva_amount_help: IVA amount
       iva_category_help: Explicit IVA category override for this transaction (e.g.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -2710,9 +2749,6 @@ cli:
       command_input_invalid_fallback: one or more fields failed validation
       confirm_required: Pass --yes to confirm this destructive ledger operation.
       filter_parse_error: 'Failed to parse ledger filter near %{token}: %{reason}.'
-      period_year_pairing: Ledger period filters require period and year together.
-        For a full year use --period 0A --year %{year}, or --filter period=0A
-        --filter year=%{year}.
       id_prefix_collision: 'Transaction id prefix %{prefix!r} matches more than one
         transaction: %{candidates}. Lengthen the prefix to disambiguate.'
       id_prefix_empty: Transaction id prefix is empty; pass at least one hex character.
@@ -2729,6 +2765,9 @@ cli:
       negative_amount: The --amount %{raw} must be a non-negative magnitude. Pass
         the amount without a sign and set the flow with --direction (OUTGOING for
         money out, INCOMING for money in, INTERNAL_TRANSFER between your own accounts).
+      period_year_pairing: Ledger period filters require period and year together.
+        For a full year use --period 0A --year %{year}, or --filter period=0A --filter
+        year=%{year}.
       unknown_category: Unrecognised --category-id {category!r}. Pass a bare category
         id such as {example!r} - not a family-prefixed or compound key. Run `aeat
         app ledger categories` to list every recognised id.
@@ -2824,6 +2863,7 @@ cli:
       split_group_id: Split group id
       stashed: Stashed
       taxable_base: Taxable base
+      usage_ratio_id: Usage ratio id
       valid: Valid
       value_date: Value date
       warning: Warning
@@ -2883,6 +2923,10 @@ cli:
       yes_help: Confirm the merge (archives every child and the parent, persists a
         fresh content-addressed merged transaction)
     preflight:
+      empty_ledger_advisory: No active ledger transactions were checked for this period.
+        If activity occurred, add or import ledger rows before calculating; if there
+        was genuinely no activity, the empty ledger can support a zero-activity local
+        filing.
       help: Report missing ledger facts (category, taxable base, IVA amount/rate,
         currency, proportionality reference) for the active profile's transactions
         in a given period. Local-only; never contacts AEAT.
@@ -3186,8 +3230,8 @@ cli:
       (months). Combine with --year to choose the year.'
     status:
       drafts_empty: No saved declaration drafts were found.
-      drafts_empty_with_work_units: No declaration drafts are saved - this
-        is normal and does not affect your modelo work units below.
+      drafts_empty_with_work_units: No declaration drafts are saved - this is normal
+        and does not affect your modelo work units below.
       drafts_present: '%{count} saved declaration draft(s) exist in this local storage.
         A fresh empty workspace normally has 0, so this profile/database already contains
         local draft state.'
@@ -3203,7 +3247,9 @@ cli:
       next_import_command: '  aeat app ledger import <bank-statement.csv> --provider
         csv - import bank transactions.'
       next_landing_command: '  aeat --help - return to the command guide.'
-      next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - Modelo 210 is visible for IRNR discovery, but local work-unit creation is not supported yet; file through AEAT Sede G320.'
+      next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - Modelo
+        210 is visible for IRNR discovery, but local work-unit creation is not supported
+        yet; file through AEAT Sede G320.'
       next_modelo_work_command: '  aeat app modelo work create - start a modelo declaration
         from your ledger data.'
       next_review_command: '  aeat app ledger review - review imported rows.'
@@ -4160,6 +4206,9 @@ errors:
       100%.
     modelo_347_threshold: Modelo 347 operations above the reporting threshold require
       explicit declaration coverage.
+    modelo_349_country_prefix_context: 'Modelo 349 rejects country prefix {country_code}
+      for operation key {clave_operacion} in {filing_year}/{period}: {reason}. Authority:
+      AEAT Brexit IVA NIF-IVA / Modelo 349 instructions.'
     modelo_ambiguous_semantic_role_casilla: More than one casilla uses semantic role
       %{semantic_role}; use the exact canonical casilla.id.
     modelo_calculate_binding_input: errors.refused.modelo_calculate_binding_input
@@ -4427,7 +4476,6 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
-    modelo_349_country_prefix_context: 'Modelo 349 rejects country prefix {country_code} for operation key {clave_operacion} in {filing_year}/{period}: {reason}. Authority: AEAT Brexit IVA NIF-IVA / Modelo 349 instructions.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'
@@ -4793,8 +4841,6 @@ wizard:
         help: Tax address postcode
       bienes-extranjero-above-threshold:
         help: Foreign-held assets above legal threshold
-      monedas-virtuales-extranjero-above-threshold:
-        help: Virtual currencies held abroad above Modelo 721 threshold
       cloud-evidence-upload:
         help: Allow uploading sensitive evidence to cloud LLM providers (off by default).
       country-of-fiscal-residence:
@@ -4854,8 +4900,18 @@ wizard:
         help: Recognised legal form when the entity type is a legal entity
       legal-name:
         help: Legal or company name for legal-entity export headers
+      ley-49-2002-option-date:
+        help: wizard.setup.flags.ley-49-2002-option-date.help
+      ley-49-2002-option-declared:
+        help: wizard.setup.flags.ley-49-2002-option-declared.help
+      ley-49-2002-renunciation-date:
+        help: wizard.setup.flags.ley-49-2002-renunciation-date.help
+      ley-49-2002-renunciation-declared:
+        help: wizard.setup.flags.ley-49-2002-renunciation-declared.help
       llm-vision:
         help: Enable on-host LLM vision for reading invoices.
+      monedas-virtuales-extranjero-above-threshold:
+        help: Virtual currencies held abroad above Modelo 721 threshold
       name:
         help: Display name shown in local reviews
       new-entity-first-two-profit-periods:
@@ -4973,8 +5029,6 @@ wizard:
     obligations:
       bienes-extranjero-above-threshold:
         prompt: Foreign-held assets above legal threshold
-      monedas-virtuales-extranjero-above-threshold:
-        prompt: Virtual currencies held abroad above Modelo 721 threshold
       does-intracomunitario:
         prompt: Conducts intracomunitario operations
       has-employees:
@@ -5003,6 +5057,8 @@ wizard:
         help: Date the worker opted into the inpatriate regime (RIRPF Art. 116). The
           regime expires at the end of the 6th calendar year.
         prompt: Special regime election date (YYYY-MM-DD)
+      monedas-virtuales-extranjero-above-threshold:
+        prompt: Virtual currencies held abroad above Modelo 721 threshold
       pays-capital-income-with-retencion:
         prompt: Pays capital income with retención
       pays-professionals-with-retencion:
@@ -5037,12 +5093,12 @@ wizard:
             label: Equivalence surcharge
           simplificado:
             label: Simplified regime
-      name:
-        prompt: Display name shown in local reviews
       legal-name:
         help: For legal entities this is the filing name used in entity-style export
           headers. It is separate from the local display name.
         prompt: Legal or company name for export headers
+      name:
+        prompt: Display name shown in local reviews
       output-language:
         choices:
           ca:
@@ -5235,6 +5291,18 @@ wizard:
           sociedad-civil-mercantil:
             label: Civil partnership with commercial object
         prompt: Legal form
+      ley-49-2002-option-date:
+        help: 'Use the ISO date corresponding to Modelo 036 casilla 653.'
+        prompt: 'Date declared for the Ley 49/2002 special-regime option'
+      ley-49-2002-option-declared:
+        help: 'Use the declaration fact from Modelo 036 casilla 651; legal application still depends on the statutory requirements and no renunciation.'
+        prompt: 'Has the entity filed the Modelo 036 option for the Title II Ley 49/2002 special fiscal regime?'
+      ley-49-2002-renunciation-date:
+        help: wizard.setup.taxpayer-type.ley-49-2002-renunciation-date.help
+        prompt: wizard.setup.taxpayer-type.ley-49-2002-renunciation-date.prompt
+      ley-49-2002-renunciation-declared:
+        help: 'Use the declaration fact from Modelo 036 casilla 652.'
+        prompt: 'Has the entity filed a Modelo 036 renunciation of the Title II Ley 49/2002 special fiscal regime?'
       new-entity-first-two-profit-periods:
         help: Applies only to legal entities. When set, the entity is taxed at the
           15 percent reduced rate during those two periods.
