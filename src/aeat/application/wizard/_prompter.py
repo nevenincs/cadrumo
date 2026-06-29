@@ -55,6 +55,8 @@ def _resolve_no_console_error_types() -> tuple[type[BaseException], ...]:
     covers POSIX TTY misconfiguration.
     """
     error_types: list[type[BaseException]] = [OSError]
+    if sys.platform != "win32":
+        return tuple(error_types)
     try:
         from prompt_toolkit.output.win32 import NoConsoleScreenBufferError as _Win32NoConsole
 
