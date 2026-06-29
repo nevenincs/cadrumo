@@ -167,7 +167,14 @@ def calendar_events_from_expedientes_snapshots(
     *,
     expected_tax_id: str | None = None,
 ) -> tuple[OverviewCalendarEvent, ...]:
-    """Project persisted AEAT declaration-register snapshots into :class:`OverviewCalendarEvent` tuples."""
+    """Project persisted declaration-register snapshots into calendar events.
+
+    Each in-range declaration becomes an :class:`OverviewCalendarEvent` when
+    its authenticated identity matches ``expected_tax_id``. Only active
+    ``ALTA`` rows carry :attr:`OverviewAeatSubmissionState.SUBMITTED_OBSERVED`;
+    non-active rows remain historical events and cannot upgrade
+    :class:`OverviewCalendarFilingEvidence`.
+    """
     events: list[OverviewCalendarEvent] = []
     for snapshot in sorted(snapshots, key=lambda item: item.captured_at):
         if not _authenticated_identity_matches_expected(
@@ -214,7 +221,12 @@ def calendar_events_from_notification_snapshots(
     *,
     expected_tax_id: str | None = None,
 ) -> tuple[OverviewCalendarEvent, ...]:
-    """Project persisted AEAT notifications and communications into :class:`OverviewCalendarEvent` tuples."""
+    """Project persisted AEAT notifications into message events.
+
+    Notifications become :class:`OverviewCalendarEventType.MESSAGE` rows only;
+    they are additive calendar observations and never imply
+    :class:`OverviewAeatSubmissionState` or filing evidence for an obligation.
+    """
     events: list[OverviewCalendarEvent] = []
     for snapshot in sorted(snapshots, key=lambda item: item.captured_at):
         snapshot_identity = getattr(snapshot, "authenticated_identity", None)
@@ -260,7 +272,12 @@ def calendar_events_from_justificante_capture_snapshots(
 ) -> tuple[OverviewCalendarEvent, ...]:
     """Project verified live justificante captures into calendar filing events.
 
-    Returns a tuple of :class:`OverviewCalendarEvent`.
+    A :class:`~aeat.application.live.JustificanteCaptureSnapshot` becomes an
+    :class:`OverviewCalendarEvent` only after loaded
+    :class:`~aeat.domain.justificante.Justificante` metadata proves the same
+    CSV/model/year/period/taxpayer tuple. The event therefore carries
+    :attr:`OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED` without opening a
+    new live read.
     """
     justificantes_by_csv = _justificantes_by_csv(justificantes)
     events: list[OverviewCalendarEvent] = []
@@ -331,8 +348,11 @@ def build_overview_calendar_events(
     """Build observed events from persisted live-read snapshots.
 
     The snapshots are inputs loaded by the caller. This helper only
-    projects them into :class:`OverviewCalendarEvent` tuples and filters
-    them by range and authenticated taxpayer identity.
+    fans out through :func:`calendar_events_from_expedientes_snapshots`,
+    :func:`calendar_events_from_notification_snapshots`, and
+    :func:`calendar_events_from_justificante_capture_snapshots`, then dedupes
+    :class:`OverviewCalendarEvent` rows by their stable observation keys. It
+    performs no storage or AEAT I/O.
     """
     events = [
         *calendar_events_from_expedientes_snapshots(
@@ -364,8 +384,15 @@ def calendar_events_from_modelo_records(
 ) -> tuple[OverviewCalendarEvent, ...]:
     """Project persisted Modelo filing records into calendar filing events.
 
+    A :class:`~aeat.domain.modelos.ModeloRecord` always contributes on the
+    :class:`OverviewLocalFilingState` axis. It only contributes
+    :class:`OverviewAeatSubmissionState` when its external evidence reference is
+    corroborated by loaded :class:`~aeat.domain.justificante.Justificante`
+    metadata for the same taxpayer and filing target.
+
     Args:
-        filing_records: The persisted :class:`ModeloRecord` filings to project.
+        filing_records: The persisted :class:`~aeat.domain.modelos.ModeloRecord`
+            filings to project.
         calendar_range: The window that bounds which records become events.
         justificantes: Optional AEAT justificantes corroborating the filings.
         expected_tax_id: The taxpayer NIF the justificantes must match.
@@ -430,9 +457,12 @@ def calendar_filing_evidence_from_sources(
 
     The function is pure and intentionally accepts already-loaded
     records. CLI/storage code owns I/O; this projection only reconciles
-    the existing local Modelo filing catalogue, calendar-visible AEAT
-    register events, persisted calculation observations from
-    justificante capture, and already-loaded justificante metadata. The
+    the existing local :class:`~aeat.domain.modelos.ModeloRecord` catalogue,
+    calendar-visible AEAT register events,
+    :class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionObservation`
+    rows, persisted calculation observations from justificante capture,
+    :class:`~aeat.application.live.JustificanteCaptureSnapshot` rows, and
+    already-loaded justificante metadata. The
     ``filing_records`` are filed :class:`ModeloRecord` rows whose
     external justificante references are only promoted to
     ``justificante_verified`` when matching persisted metadata exists
@@ -658,7 +688,7 @@ def _filing_evidence_from_observed_event(
     *,
     expected_tax_id: str | None,
 ) -> OverviewCalendarFilingEvidence | None:
-    """Project an AEAT calendar event into per-obligation evidence."""
+    """Project an active filing event into AEAT-side obligation evidence."""
     if event.event_type is not OverviewCalendarEventType.FILING:
         return None
     if event.modelo is None or event.filing_year is None or event.period is None:
@@ -703,7 +733,13 @@ def _filing_evidence_from_filed_declaration_observation(
     verified_artefact_refs: frozenset[str],
     verified_artefact_csv_by_ref: Mapping[str, str],
 ) -> OverviewCalendarFilingEvidence | None:
-    """Project a captured AEAT filed-declaration observation into calendar evidence."""
+    """Project one captured filed-declaration observation into evidence.
+
+    The observation must belong to the expected authenticated identity and must
+    be an active ``ALTA`` register row. Justificante verification is granted
+    only when the storage layer has already verified and supplied the encrypted
+    justificante artefact reference and CSV.
+    """
     expected = (expected_tax_id or "").strip().upper()
     if expected and observation.authenticated_identity.strip().upper() != expected:
         return None
@@ -754,7 +790,13 @@ def _filing_evidence_from_calculation_observation(
     expected_tax_id: str | None,
     justificantes_by_csv: Mapping[str, tuple[Justificante, ...]],
 ) -> OverviewCalendarFilingEvidence | None:
-    """Project a persisted calculation observation into AEAT-submitted evidence."""
+    """Project official calculation observations into AEAT-submitted evidence.
+
+    Only official AEAT source kinds with active register metadata are accepted.
+    A matching loaded :class:`~aeat.domain.justificante.Justificante` upgrades
+    the row to :attr:`OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED`;
+    otherwise the row remains submitted-observed evidence.
+    """
     source_kind = str(getattr(payload, "source_kind", ""))
     if source_kind not in _OFFICIAL_CALCULATION_SOURCE_KINDS:
         return None
@@ -855,7 +897,13 @@ def _filing_evidence_from_justificante_capture_snapshot(
     justificantes_by_csv: Mapping[str, tuple[Justificante, ...]],
     expected_tax_id: str | None,
 ) -> OverviewCalendarFilingEvidence | None:
-    """Project one verified live justificante capture into AEAT-side evidence."""
+    """Project one verified live justificante capture into AEAT-side evidence.
+
+    The persisted snapshot is accepted only when it is active, carries a typed
+    :class:`~aeat.core.Period`, and resolves to loaded
+    :class:`~aeat.domain.justificante.Justificante` metadata for the same filing
+    target.
+    """
     if not _capture_snapshot_is_active(snapshot):
         return None
     if not isinstance(snapshot.period, _Period):
@@ -949,7 +997,7 @@ def _stronger_filing_evidence(
     existing: OverviewCalendarFilingEvidence,
     candidate: OverviewCalendarFilingEvidence,
 ) -> OverviewCalendarFilingEvidence:
-    """Return a merged evidence row preserving the strongest signal on each axis."""
+    """Return a merged row preserving the strongest local and AEAT axes."""
     local = existing
     conflict_reference_ids = _merged_conflict_reference_ids(existing, candidate)
     if (
@@ -987,7 +1035,7 @@ def _merged_aeat_submitted_at(
     existing: OverviewCalendarFilingEvidence,
     candidate: OverviewCalendarFilingEvidence,
 ) -> datetime | None:
-    """Prefer official justificante presentation time over later local capture time."""
+    """Prefer official justificante presentation time over local capture time."""
     if (
         existing.justificante_verified
         and candidate.justificante_verified
@@ -1187,22 +1235,24 @@ def build_overview_calendar(
 ) -> OverviewCalendar:
     """Build a typed calendar view for ``profile`` over ``calendar_range``.
 
-    Composes the existing :class:`aeat.domain.deadlines.DeadlineEngine`
+    Composes the existing :class:`~aeat.domain.deadlines.DeadlineEngine`
     over each year the range spans, filters obligations to those whose
     filing window intersects the range, attaches the user-state
-    mapping, merges already-loaded filing evidence, and returns the
-    typed result. The builder does not load repositories and does not
-    contact AEAT.
+    mapping, merges already-loaded :class:`OverviewCalendarFilingEvidence`,
+    enriches :class:`OverviewCalendarEvent` rows, and returns the typed
+    :class:`OverviewCalendar`. The builder does not load repositories and does
+    not contact AEAT.
 
     Args:
-        profile: The operator's :class:`_TaxpayerProfile`.
+        profile: The operator's :class:`~aeat.domain.deadlines.TaxpayerProfile`.
         calendar_range: Inclusive date window to enumerate.
         today: Reference date for engine status classification.
-        engine: Optional :class:`_ScheduleProducer` the caller wants to
+        engine: Optional :class:`~aeat.domain.deadlines.ScheduleProducer` the caller wants to
             share across queries — a concrete
-            :class:`aeat.domain.deadlines.DeadlineEngine` or any object
+            :class:`~aeat.domain.deadlines.DeadlineEngine` or any object
             satisfying the schedule-producing protocol. When ``None``,
-            a default :class:`_DeadlineEngine` is constructed.
+            a default :class:`~aeat.domain.deadlines.DeadlineEngine` is
+            constructed.
         raw_values: Optional mapping of casilla id to raw value, forwarded
             to the engine for user-state annotation. When ``None``, the
             engine uses an empty mapping.
