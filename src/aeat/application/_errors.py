@@ -1,7 +1,8 @@
 """Typed application errors for diagnostics model construction.
 
 This module currently owns the diagnostics-specific validation error raised by
-:class:`~aeat.application.diagnostics.DiagnosticCheck` validators. The class
+:class:`~aeat.application.diagnostics.DiagnosticCheck` validators while building
+:class:`~aeat.application.diagnostics.ConfigRepairReport` rows. The class
 inherits from :class:`~aeat.core.errors.CoreValidationError`, so it remains
 catchable as ``ValueError`` for Pydantic validator compatibility while still
 participating in the project-wide :class:`~aeat.core.errors.AeatError` registry
@@ -18,10 +19,12 @@ class DiagnosticModelError(CoreValidationError):
 
     ``DiagnosticCheck`` rows with status ``fail`` or ``warn`` must carry exactly
     one of ``next_action`` or ``dead_end``; ``ok`` rows must carry neither. The
+    per-cause :class:`~aeat.application.diagnostics.DiagnosticFinding` rows stay
+    supplementary; they do not replace the required recovery channel. The
     validator raises this typed :class:`~aeat.core.errors.CoreValidationError`
-    instead of a bare :class:`ValueError` so Pydantic can wrap it as the cause of
-    a validation failure while CLI and JSON callers can still render a registered
-    :class:`~aeat.core.errors.ErrorEnvelope` through
+    instead of a bare :class:`ValueError` so Pydantic can wrap it as the cause
+    of a validation failure while CLI and JSON callers can still render a
+    registered :class:`~aeat.core.errors.ErrorEnvelope` through
     :func:`~aeat.core.errors.build_error_envelope`.
     """
 
