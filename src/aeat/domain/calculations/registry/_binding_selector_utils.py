@@ -4,14 +4,19 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from decimal import Decimal
-from typing import Protocol
+from typing import Literal, Protocol
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition
 
 __all__ = [
+    "BindingExportDataType",
+    "BindingExportSelector",
+    "BindingFixedExportSelector",
+    "BindingRowExportSelector",
+    "binding_export_selector",
     "intracommunity_clave_validator",
     "invariant_diagnostics",
     "selector_against_model",
@@ -22,12 +27,115 @@ __all__ = [
 ]
 
 
+BindingExportDataType = Literal["text", "integer", "decimal", "money", "date", "boolean"]
+
+
+class BindingFixedExportSelector(BaseModel):
+    """Typed fixed-width export projection carried by a binding selector."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    record: str = Field(min_length=1, max_length=64)
+    offset: int = Field(ge=1)
+    length: int = Field(ge=1)
+    data_type: BindingExportDataType
+    field: str | None = Field(default=None, min_length=1, max_length=128)
+
+
+class BindingRowExportSelector(BaseModel):
+    """Typed row-field export projection carried by a binding selector."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    record: str = Field(min_length=1, max_length=64)
+    row_field: str = Field(min_length=1, max_length=128)
+
+
+BindingExportSelector = BindingFixedExportSelector | BindingRowExportSelector
+
+
+class _BindingExportProjection(BaseModel):
+    """Projection model for export-specific keys embedded in source-family selectors."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="ignore")
+
+    record: str | None = Field(default=None, min_length=1, max_length=64)
+    row_field: str | None = Field(default=None, min_length=1, max_length=128)
+    offset: int | None = Field(default=None, ge=1)
+    length: int | None = Field(default=None, ge=1)
+    data_type: BindingExportDataType | None = None
+    field: str | None = Field(default=None, min_length=1, max_length=128)
+
+    def export_selector(self, *, binding_id: str) -> BindingExportSelector | None:
+        """Return the typed export selector, or ``None`` for non-export selectors."""
+        if self.record is None:
+            if self.offset is not None or self.length is not None:
+                raise RegistryValidationError(
+                    f"binding {binding_id!r} export selector projection must declare record with offset or length",
+                )
+            return None
+
+        fixed_values = (self.offset, self.length, self.data_type)
+        fixed_count = sum(value is not None for value in fixed_values)
+        if fixed_count == len(fixed_values):
+            if self.row_field is not None:
+                raise RegistryValidationError(
+                    f"binding {binding_id!r} export selector projection cannot declare row_field "
+                    "with offset/length/data_type",
+                )
+            assert self.offset is not None
+            assert self.length is not None
+            assert self.data_type is not None
+            return BindingFixedExportSelector(
+                record=self.record,
+                offset=self.offset,
+                length=self.length,
+                data_type=self.data_type,
+                field=self.field,
+            )
+        if fixed_count:
+            missing = [
+                key
+                for key, value in (
+                    ("offset", self.offset),
+                    ("length", self.length),
+                    ("data_type", self.data_type),
+                )
+                if value is None
+            ]
+            raise RegistryValidationError(
+                f"binding {binding_id!r} export selector projection is missing fixed-field keys {missing!r}",
+            )
+        if self.row_field is not None:
+            return BindingRowExportSelector(record=self.record, row_field=self.row_field)
+        raise RegistryValidationError(
+            f"binding {binding_id!r} export selector projection must declare row_field or offset/length/data_type",
+        )
+
+
 def selector_as_dict(binding: DataBindingDefinition) -> dict[str, object]:
     """Return a plain selector mapping without injected source metadata."""
     selector = binding.selector
     if isinstance(selector, BaseModel):
         return selector.model_dump(exclude={"source"}, exclude_none=True)
     return {key: value for key, value in selector.items() if key != "source"}
+
+
+def binding_export_selector(binding: DataBindingDefinition) -> BindingExportSelector | None:
+    """Return the typed export projection embedded in ``binding.selector``.
+
+    Binding source-family selectors remain authoritative for business facts.
+    Export record resolution only needs the official record-coordinate
+    projection; this helper parses that projection once into a typed fixed-field
+    or row-field selector instead of letting callers probe the raw selector map.
+    """
+    try:
+        projection = _BindingExportProjection.model_validate(selector_as_dict(binding))
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} has malformed export selector projection: {exc}",
+        ) from exc
+    return projection.export_selector(binding_id=binding.id)
 
 
 def selector_against_model(

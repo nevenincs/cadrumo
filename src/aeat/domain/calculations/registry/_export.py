@@ -8,11 +8,17 @@ them against a :class:`RegistrySnapshot`. The resolved layout is a
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from decimal import Decimal
-from typing import Literal, TypeGuard
+from typing import Literal
 
 from ....core.aggregation import BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
+from ._binding_selector_utils import (
+    BindingExportDataType,
+    BindingExportSelector,
+    BindingFixedExportSelector,
+    BindingRowExportSelector,
+    binding_export_selector,
+)
 from ._casilla_membership import casillas_by_id
 from ._errors import RegistryValidationError
 from ._ids import CasillaId, ExportFieldId
@@ -27,9 +33,9 @@ from ._schema import (
     RegistrySnapshot,
 )
 
-_BindingExportDataType = Literal["text", "integer", "decimal", "money", "date", "boolean"]
 _ExportPadding = Literal["left_zero", "left_space", "right_space", "none"]
 _ExportJustification = Literal["left", "right", "none"]
+_BindingExportMember = tuple[DataBindingDefinition, BindingExportSelector]
 
 
 class ResolvedExportLayout(RegistryModel):
@@ -99,12 +105,12 @@ def derive_export_layouts_from_bindings(revision: ModeloRevision) -> tuple[Expor
     """
     if not revision.export_layouts:
         return ()
-    bindings_by_record: dict[str, list[DataBindingDefinition]] = {}
+    bindings_by_record: dict[str, list[_BindingExportMember]] = {}
     for binding in revision.bindings:
-        binding_record_id = binding.selector.get("record")
-        if not isinstance(binding_record_id, str):
+        selector = binding_export_selector(binding)
+        if selector is None:
             continue
-        bindings_by_record.setdefault(binding_record_id, []).append(binding)
+        bindings_by_record.setdefault(selector.record, []).append((binding, selector))
 
     resolved_layouts: list[ExportLayoutDefinition] = []
     for layout in revision.export_layouts:
@@ -122,7 +128,8 @@ def derive_export_layouts_from_bindings(revision: ModeloRevision) -> tuple[Expor
             base_fields = tuple(
                 field
                 for field in record.fields
-                if not any(_export_fields_overlap(field, derived_field) for derived_field in derived)
+                if field.kind == CasillaFieldKind.BINDING
+                or not any(_export_fields_overlap(field, derived_field) for derived_field in derived)
             )
             resolved_records.append(record.model_copy(update={"fields": (*base_fields, *derived)}))
         resolved_layouts.append(layout.model_copy(update={"records": tuple(resolved_records)}))
@@ -139,29 +146,47 @@ def _export_fields_overlap(left: ExportFieldDefinition, right: ExportFieldDefini
 
 def _export_fields_from_record_bindings(
     record: ExportRecordDefinition,
-    bindings: Sequence[DataBindingDefinition],
+    bindings: Sequence[_BindingExportMember],
 ) -> tuple[ExportFieldDefinition, ...]:
     fields: list[ExportFieldDefinition] = []
-    for binding in bindings:
-        if "offset" in binding.selector and "length" in binding.selector:
-            fields.append(_export_field_from_binding(record, binding))
+    bindings_by_id = {binding.id: (binding, selector) for binding, selector in bindings}
+    derived_row_fields: set[str] = set()
+    for binding, selector in bindings:
+        if isinstance(selector, BindingFixedExportSelector):
+            fields.append(_export_field_from_binding(record, binding, selector))
             continue
-        field = _export_field_from_row_binding(record, binding)
+        row_field = _row_binding_field(binding, selector)
+        if row_field is not None:
+            if row_field in derived_row_fields:
+                continue
+            derived_row_fields.add(row_field)
+        field = _export_field_from_row_binding(record, binding, selector, bindings_by_id=bindings_by_id)
         if field is not None:
             fields.append(field)
     return tuple(fields)
 
 
+def _row_binding_field(binding: DataBindingDefinition, selector: BindingExportSelector) -> str | None:
+    if binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
+        return None
+    if not isinstance(selector, BindingRowExportSelector):
+        return None
+    return selector.row_field
+
+
 def _export_field_from_row_binding(
     record: ExportRecordDefinition,
     binding: DataBindingDefinition,
+    selector: BindingExportSelector,
+    *,
+    bindings_by_id: Mapping[str, _BindingExportMember],
 ) -> ExportFieldDefinition | None:
     if binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
         return None
     if record.binding_record is None:
         return None
-    row_field = binding.selector.get("row_field")
-    if not isinstance(row_field, str):
+    row_field = _row_binding_field(binding, selector)
+    if row_field is None:
         return None
     casilla_id = record.row_field_casilla_ids.get(row_field)
     if casilla_id is None:
@@ -170,11 +195,15 @@ def _export_field_from_row_binding(
             " has no casilla mapping in row_field_casilla_ids",
         )
     # Pattern A: the record already hand-authors a kind="binding" field pinned
-    # to this binding id — trust the operator-pinned offset/length and skip
-    # derivation. base_fields will pass the hand-authored field through.
+    # to this exact binding id. Trust the operator-pinned offset/length.
     if any(field.kind == CasillaFieldKind.BINDING and field.binding == binding.id for field in record.fields):
         return None
-    # Pattern B: a kind="casilla" template field exists for this casilla — derive
+    # Pattern B: another hand-authored binding field already occupies this
+    # row slot. It is the public field for the row_field, so source mirrors must
+    # not derive duplicate export fields from the same fixed-width slot.
+    if _record_binding_field_for_row_field(record, row_field=row_field, bindings_by_id=bindings_by_id) is not None:
+        return None
+    # Pattern C: a kind="casilla" template field exists for this casilla — derive
     # a binding-kind field by copying the template's offset/length/data_type.
     template = next(
         (field for field in record.fields if field.kind == CasillaFieldKind.CASILLA and field.casilla_id == casilla_id),
@@ -187,7 +216,6 @@ def _export_field_from_row_binding(
         )
     return template.model_copy(
         update={
-            "id": f"{record.id}.{binding.id}",
             "kind": CasillaFieldKind.BINDING,
             "casilla_id": None,
             "binding": binding.id,
@@ -197,54 +225,51 @@ def _export_field_from_row_binding(
     )
 
 
+def _record_binding_field_for_row_field(
+    record: ExportRecordDefinition,
+    *,
+    row_field: str,
+    bindings_by_id: Mapping[str, _BindingExportMember],
+) -> ExportFieldDefinition | None:
+    for field in record.fields:
+        if field.kind != CasillaFieldKind.BINDING or field.binding is None:
+            continue
+        if field.binding not in bindings_by_id:
+            continue
+        _binding, selector = bindings_by_id[field.binding]
+        if isinstance(selector, BindingRowExportSelector) and selector.row_field == row_field:
+            return field
+    return None
+
+
 def _export_field_from_binding(
     record: ExportRecordDefinition,
     binding: DataBindingDefinition,
+    selector: BindingFixedExportSelector,
 ) -> ExportFieldDefinition:
-    selector = binding.selector
-    data_type = _binding_data_type(binding, selector.get("data_type"))
     return ExportFieldDefinition(
         id=f"{record.id}.{binding.id}",
-        offset=_selector_int(binding, "offset"),
-        length=_selector_int(binding, "length"),
+        offset=selector.offset,
+        length=selector.length,
         kind=CasillaFieldKind.BINDING,
         binding=binding.id,
-        data_type=data_type,
+        data_type=selector.data_type,
         required=False,
-        padding=_padding_for_binding_data_type(data_type),
-        justification=_justification_for_binding_data_type(data_type),
+        padding=_padding_for_binding_data_type(selector.data_type),
+        justification=_justification_for_binding_data_type(selector.data_type),
         signed=False,
         legal_refs=binding.legal_refs,
         source_refs=binding.source_refs,
     )
 
 
-def _selector_int(binding: DataBindingDefinition, key: str) -> int:
-    value = binding.selector.get(key)
-    if isinstance(value, tuple) or value is None:
-        raise RegistryValidationError(f"binding {binding.id!r} selector {key!r} must be numeric")
-    if isinstance(value, Decimal):
-        return int(value)
-    return int(value)
-
-
-def _is_binding_export_data_type(value: str) -> TypeGuard[_BindingExportDataType]:
-    return value in {"text", "integer", "decimal", "money", "date", "boolean"}
-
-
-def _binding_data_type(binding: DataBindingDefinition, value: object) -> _BindingExportDataType:
-    if not isinstance(value, str) or not _is_binding_export_data_type(value):
-        raise RegistryValidationError(f"binding {binding.id!r} selector data_type is not exportable")
-    return value
-
-
-def _padding_for_binding_data_type(data_type: _BindingExportDataType) -> _ExportPadding:
+def _padding_for_binding_data_type(data_type: BindingExportDataType) -> _ExportPadding:
     if data_type in {"money", "integer", "decimal"}:
         return "left_zero"
     return "right_space"
 
 
-def _justification_for_binding_data_type(data_type: _BindingExportDataType) -> _ExportJustification:
+def _justification_for_binding_data_type(data_type: BindingExportDataType) -> _ExportJustification:
     if data_type in {"money", "integer", "decimal"}:
         return "right"
     return "left"
