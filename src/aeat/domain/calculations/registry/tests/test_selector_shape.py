@@ -129,6 +129,7 @@ def test_binding_selector_registry_covers_typed_sources() -> None:
         "refund_operation",
         "manual_input",
         "profile",
+        "iva_compensation_annual_partition",
     }
     assert set(_BINDING_SELECTOR_REGISTRY) == expected
 
