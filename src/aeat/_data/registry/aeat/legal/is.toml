@@ -575,6 +575,89 @@ required_text = [
     "el porcentaje que resulte de multiplicar por cinco séptimos el tipo de gravamen redondeado por defecto",
 ]
 
+[legal."orden-hfp-227-2017:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-227-2017.html#a1"
+document_id = "BOE-A-2017-2778"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-2778#a1"
+published_at = 2017-03-15
+effective_from = 2017-03-16
+consolidated_as_of = 2025-03-19
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "codex (downloaded consolidated BOE-A-2017-2778 from BOE on 2026-06-29)"
+notes = "Base approval order for Modelo 202 pagos fraccionados. Article 1 approves the model and establishes mandatory use for IS and IRNR permanent-establishment pagos fraccionados."
+required_text = [
+    "Artículo 1. Aprobación del modelo 202",
+    "Se aprueba el modelo 202",
+    "Pago fraccionado",
+    "uso obligatorio para efectuar los pagos fraccionados",
+]
+
+[legal."orden-hac-941-2018:art-primero-5-anexo-i"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-941-2018.html#textoxslt"
+document_id = "BOE-A-2018-12515"
+article = "primero.5"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-12515"
+published_at = 2018-09-14
+effective_from = 2018-09-15
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "codex (downloaded BOE-A-2018-12515 from BOE on 2026-06-29)"
+notes = "Amendment order replacing Modelo 202 annex I under Orden HFP/227/2017. Grounds the 2019-2022 record-design revision, whose official AEAT design is labelled Orden HAC/941/2018."
+required_text = [
+    "Artículo primero. Modificación de la Orden HFP/227/2017",
+    "Cinco. Se sustituye el anexo I",
+    "modelo 202, por el que figura como anexo I",
+    "será aplicable por primera vez para los modelos de pagos fraccionados, 202 y 222, cuyo plazo de presentación sea octubre de 2018",
+]
+
+[legal."orden-hfp-312-2023:art-unico-1-anexo-i"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-312-2023.html#textoxslt"
+document_id = "BOE-A-2023-8120"
+article = "unico.1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-8120"
+published_at = 2023-03-31
+effective_from = 2023-04-01
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "codex (downloaded BOE-A-2023-8120 from BOE on 2026-06-29)"
+notes = "Amendment order replacing Modelo 202 annex I under Orden HFP/227/2017 for the 2023-2024 form surface."
+required_text = [
+    "Artículo único. Modificación de la Orden HFP/227/2017",
+    "Uno. Se sustituye el anexo I",
+    "modelo 202 y 222, cuyo plazo de presentación comienza en abril de 2023",
+]
+
+[legal."orden-hac-262-2025:art-unico-1-anexo-i"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-262-2025.html#textoxslt"
+document_id = "BOE-A-2025-5407"
+article = "unico.1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-5407"
+published_at = 2025-03-19
+effective_from = 2025-03-20
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "codex (downloaded BOE-A-2025-5407 from BOE on 2026-06-29)"
+notes = "Current amendment order replacing Modelo 202 annex I under Orden HFP/227/2017, first applicable to pagos fraccionados whose filing period begins in April 2025."
+required_text = [
+    "Artículo único. Modificación de la Orden HFP/227/2017",
+    "Uno. Se sustituye el anexo I",
+    "modelo 202 y 222, cuyo plazo de presentación comienza en abril de 2025",
+]
+
 [sources."aeat-dr-202-2025"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -636,6 +719,58 @@ retrieved_at = 2026-05-03
 applies_from = 2019-01-01
 applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_19/DR202v52.xlsx"
+review_status = "reviewed"
+
+[sources."boe-modelo-202-base-order"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-227-2017.html"
+sha256 = "6b6d43ce28a1117d93d97c20436004e7ac18adf80200d3636a5bbde65219b2ee"
+bytes = 131156
+retrieved_at = 2026-06-29
+published_at = 2017-03-15
+applies_from = 2017-03-16
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-2778"
+review_status = "reviewed"
+
+[sources."boe-modelo-202-2018-amendment"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-941-2018.html"
+sha256 = "2481fd9016b8216a8a2bbfae9ea23e8846850a9dfb0039edd7e078e075c84218"
+bytes = 58327
+retrieved_at = 2026-06-29
+published_at = 2018-09-14
+applies_from = 2018-09-15
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-12515"
+review_status = "reviewed"
+
+[sources."boe-modelo-202-2023-amendment"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-312-2023.html"
+sha256 = "a318fa1d8afcac5ebf671f5e6b24a57f392004569b97ca5cfa337d69b23ee64c"
+bytes = 43041
+retrieved_at = 2026-06-29
+published_at = 2023-03-31
+applies_from = 2023-04-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-8120"
+review_status = "reviewed"
+
+[sources."boe-modelo-202-2025-amendment"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-262-2025.html"
+sha256 = "f0d43850934d3beca67e1c2ccd49bb484151d5580e5f4126e944097ce0399e12"
+bytes = 39732
+retrieved_at = 2026-06-29
+published_at = 2025-03-19
+applies_from = 2025-03-20
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-5407"
 review_status = "reviewed"
 
 [legal."ley-27-2014:art-18"]
