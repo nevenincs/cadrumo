@@ -17,7 +17,9 @@ plus :func:`pointer_path`, :func:`read_pointer`, :func:`write_pointer`,
 :func:`read_toml`, :func:`parse_toml_text`, :func:`freeze_toml`,
 :class:`OptionalExtra`, and :func:`require_optional_extra`. Filing-result
 helpers expose the codified :class:`ResultDisposition` mapping and its
-casilla/refund predicates.
+casilla/refund predicates. Service and operator-adjacent primitives include
+:class:`ServiceCapability`, :class:`LedgerSortField`,
+:class:`LedgerSortOrder`, :data:`IBAN_SHAPE_RE`, and :func:`iban_mod_97`.
 
 ``BindingSourceKind``, ``BucketPointer``, and the active-bucket IO helpers are
 resolved through ``__getattr__`` so storage, config, and aggregation callers
@@ -25,12 +27,13 @@ can import the public core facade without recreating the cycles those helpers
 break internally.
 
 Major subpackages remain the specialised homes for broader contracts:
-:mod:`aeat.core.config` owns settings, :mod:`aeat.core.errors` owns the error
-taxonomy and registry, :mod:`aeat.core.money` and :mod:`aeat.core.decimal` own
-Decimal primitives, :mod:`aeat.core.time` owns clocks, :mod:`aeat.core.identity`
-owns NIF/NIE/bucket/profile identifiers, :mod:`aeat.core.access_gate` owns
-live-read and write-refusal gating, :mod:`aeat.core.redaction` owns safe output,
-and :mod:`aeat.core.classification` owns sensitivity policy.
+:mod:`aeat.core.config` owns :class:`~aeat.core.config.Settings` and storage
+route classification, :mod:`aeat.core.errors` owns the error taxonomy and
+registry, :mod:`aeat.core.money` and :mod:`aeat.core.decimal` own Decimal
+primitives, :mod:`aeat.core.time` owns clocks, :mod:`aeat.core.identity` owns
+NIF/NIE/bucket/profile identifiers, :mod:`aeat.core.access_gate` owns live-read
+and write-refusal gating, :mod:`aeat.core.redaction` owns safe output, and
+:mod:`aeat.core.classification` owns sensitivity policy.
 
 See Also:
     :class:`aeat.core.Period`: Canonical filing year plus registry period-code
