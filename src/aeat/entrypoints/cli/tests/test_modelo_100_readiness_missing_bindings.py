@@ -1,4 +1,4 @@
-"""Modelo 100 readiness must expose every missing calculation binding."""
+"""Modelo 100 readiness must expose actionable missing calculation bindings."""
 
 from __future__ import annotations
 
@@ -48,12 +48,13 @@ def _create_natural_person_profile() -> None:
     assert result.exit_code == 0, result.output
 
 
-def test_modelo_100_readiness_matches_bindings_list_missing_blockers() -> None:
-    """Profile-ready M100 still blocks when calculation bindings are missing.
+def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight() -> None:
+    """Profile-ready M100 still blocks only on unresolved non-ledger bindings.
 
-    The real CLI surfaces must agree: the readiness report cannot claim or imply
-    the operator can calculate while ``bindings list --missing`` still shows
-    required manual, ledger, relation, or previous-filing inputs.
+    ``bindings list --missing`` remains the raw binding-discovery surface. The
+    readiness report is the operator gate: ledger-sourced bindings become
+    available once the real ledger preflight passes, while manual, relation, and
+    previous-filing inputs remain actionable blockers.
     """
 
     _create_natural_person_profile()
@@ -85,7 +86,8 @@ def test_modelo_100_readiness_matches_bindings_list_missing_blockers() -> None:
     bindings_payload = _payload(missing.output)
 
     readiness_missing = {row["binding_id"]: row for row in readiness_payload["missing_bindings"]}
-    bindings_missing_ids = {row["binding_id"] for row in bindings_payload["bindings"]}
+    bindings_missing_by_id = {row["binding_id"]: row for row in bindings_payload["bindings"]}
+    bindings_missing_ids = set(bindings_missing_by_id)
 
     assert readiness_payload["profile_ready"] is True
     assert readiness_payload["ledger_ready"] is True
@@ -94,13 +96,23 @@ def test_modelo_100_readiness_matches_bindings_list_missing_blockers() -> None:
     envelope = json.loads(readiness.output)
     assert envelope["notices"][0]["code"] == "modelo.readiness.ledger_preflight_scope"
     assert envelope["notices"][0]["context"]["missing_bindings"] == str(len(readiness_missing))
-    assert readiness_missing.keys() == bindings_missing_ids
+    assert readiness_missing.keys() <= bindings_missing_ids
+    preflight_resolved_ids = bindings_missing_ids - set(readiness_missing)
+    assert preflight_resolved_ids
+    preflight_resolved_sources = {
+        bindings_missing_by_id[binding_id]["source"] for binding_id in preflight_resolved_ids
+    }
+    assert {
+        "ledger_renta_expense_aggregation",
+        "ledger_renta_income_aggregation",
+    } <= preflight_resolved_sources
+    assert all(source.startswith("ledger_") for source in preflight_resolved_sources)
     assert {
         "manual_input",
-        "ledger_renta_expense_aggregation",
         "relation_prefill",
         "previous_filing",
     } <= {row["source"] for row in readiness_missing.values()}
+    assert all(not row["source"].startswith("ledger_") for row in readiness_missing.values())
 
     text_readiness = invoke_cached_cli(
         [
