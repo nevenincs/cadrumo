@@ -1,0 +1,68 @@
+# Packaging smoke workflow for AEAT release artifacts.
+# Proves wheel installation, bundled data, optional browser provisioning, and
+# clean Linux image behavior independently from the shared developer worktree.
+
+name: Packaging Smoke
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  packaging-smoke:
+    name: Ubuntu / Python 3.13 / wheel artifact
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # just
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Dependency surface preflight
+        run: python -m dev.packaging.dependency_surface
+
+      - name: Shipped data source preflight
+        run: python -m dev.packaging.source_preflight
+
+      - name: Sync frozen development environment
+        run: uv sync --frozen
+
+      - name: Packaging preflight command tests
+        run: just packaging-smoke-preflight-tests
+
+      - name: Fresh development dependency smoke
+        run: just packaging-smoke-dev
+
+      - name: Host Linux packaging smoke
+        run: just packaging-smoke-linux
+
+      - name: Clean Docker image packaging smoke
+        run: just packaging-smoke-docker
+
+      - name: Upload packaging smoke evidence
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: packaging-smoke-manifests
+          path: var/packaging-smoke/**/packaging-smoke-manifest.json
+          if-no-files-found: warn
+          retention-days: 14

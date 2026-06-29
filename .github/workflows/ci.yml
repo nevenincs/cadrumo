@@ -74,7 +74,7 @@ jobs:
         # Windows. Rules in `.semgrep/rules/` enforce the type-uniformity
         # discipline; see `.semgrep/README.md` for the rule inventory and policy.
         if: matrix.os == 'ubuntu-latest'
-        run: uv run --no-sync semgrep --config .semgrep/rules/ --error src/aeat/
+        run: uvx --from semgrep==1.168.0 semgrep --config .semgrep/rules/ --error src/aeat/
 
       - name: Registry verify
         run: uv run --no-sync aeat app registry verify --json
