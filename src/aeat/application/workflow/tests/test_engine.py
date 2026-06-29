@@ -495,6 +495,34 @@ class TestAbortReasons:
         assert isinstance(deadline_step.details, WorkflowStepDetails)
         assert deadline_step.details.get("extemporanea") == "true"
 
+    def test_targeted_future_obligation_refuses_until_window_opens(self) -> None:
+        fx = _fixtures()
+        future = _obligation(
+            period=_period(2026, "3T"),
+            closes_on=date(2026, 10, 20),
+        )
+        fx.deadline_engine = _ConcreteDeadlineEngine(obligation=future, profile=fx.profile)
+
+        result = _run_for_period(
+            fx.engine(),
+            fx.profile,
+            future.modelo,
+            future.period,
+            today=date(2026, 6, 29),
+        )
+
+        assert result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION
+        deadline_step = next(s for s in result.steps if s.stage is WorkflowStage.COMPUTING_DEADLINES)
+        assert deadline_step.success is False
+        assert deadline_step.details is not None
+        assert deadline_step.details["filing_window"] == "future"
+        assert deadline_step.details["opens_on"] == "2026-09-20"
+        assert "aeat app modelo export" in deadline_step.summary
+        stages = [step.stage for step in result.steps]
+        assert WorkflowStage.BUILDING_DRAFT not in stages
+        assert WorkflowStage.RUNNING_PREFLIGHT not in stages
+        assert fx.submission_engine.preflight_calls == []
+
     def test_inbox_blocking_requerimiento(self) -> None:
         fx = _fixtures()
         fx.notifications_source.rows = (
