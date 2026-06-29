@@ -604,6 +604,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._action_errors.ModeloLocalObservationError",
+        ErrorCode(
+            code="REFUSED_MODELO_LOCAL_OBSERVATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_modelos",
+            default_suggestion="aeat app modelo filing-record observe-local --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.modelos._calculation_repository.CalculationRevisionPersistenceError",
         ErrorCode(
             code="FAIL_MODELO_CALCULATION_REVISION_PERSISTENCE",
