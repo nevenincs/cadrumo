@@ -1,8 +1,20 @@
-"""Protocol definitions for application-layer calculations boundary ports.
+"""Structural calculation ports for read-only filed declaration data.
 
-These protocols declare the interfaces the calculations application layer
-depends on for filed declaration data.  Concrete implementations live in
-the adapter layer and satisfy these protocols structurally.
+These runtime-checkable protocols declare the subset of AEAT filed-declaration
+records that the calculations application layer reads without importing the
+Sede adapter. Concrete records such as
+:class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionObservation`,
+:class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionArtefact`, and
+:class:`~aeat.adapters.outbound.aeat.sede.ObservedCasillaValue` satisfy these
+ports structurally while remaining adapter-owned evidence records.
+
+See Also:
+    :mod:`aeat.application.calculations._iva_compensation_history`:
+        Consumes :class:`FiledDeclaracionObservationProtocol` for Modelo 303
+        period states and Modelo 390 annual cross-checks.
+    :mod:`aeat.application.live`:
+        Captures filed declarations and promotes registry-consumable
+        observations into local encrypted stores.
 """
 
 from __future__ import annotations
@@ -17,11 +29,18 @@ from ...domain.calculations.registry import CasillaId
 
 @runtime_checkable
 class FiledDeclaracionArtefactProtocol(Protocol):
-    """Minimal surface the application reads from a filed declaration artefact."""
+    """Minimal artefact surface read by calculation evidence consumers.
+
+    The concrete
+    :class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionArtefact`
+    carries more capture metadata, but calculation history only needs the
+    artefact kind and hash witness to choose submitted-file evidence where it is
+    present.
+    """
 
     @property
     def kind(self) -> str:
-        """Artefact kind identifier (e.g. 'submitted_file')."""
+        """Artefact kind identifier, for example ``submitted_file``."""
         ...
 
     @property
@@ -32,7 +51,13 @@ class FiledDeclaracionArtefactProtocol(Protocol):
 
 @runtime_checkable
 class ObservedCasillaValueProtocol(Protocol):
-    """Minimal surface the application reads from an observed casilla value."""
+    """Minimal casilla-observation surface read by calculations.
+
+    Values arrive as read-only evidence from an adapter-owned
+    :class:`~aeat.adapters.outbound.aeat.sede.ObservedCasillaValue`. The
+    application treats ``casilla_id`` as a canonical ``CasillaId`` string and
+    validates it against the resolved registry snapshot before using the value.
+    """
 
     @property
     def source_artefact_kind(self) -> str:
@@ -41,7 +66,7 @@ class ObservedCasillaValueProtocol(Protocol):
 
     @property
     def casilla_id(self) -> CasillaId:
-        """Casilla identifier string."""
+        """Canonical ``CasillaId`` string observed in the filed artefact."""
         ...
 
     @property
@@ -55,10 +80,12 @@ class FiledDeclaracionObservationProtocol(Protocol):
     """Structural interface for a filed AEAT declaration observation.
 
     The application layer depends on this protocol rather than the concrete
-    ``FiledDeclaracionObservation`` model from
-    ``adapters/outbound/aeat/sede/_schema.py``, eliminating the
-    application -> adapters import edge at
-    ``application/calculations/_iva_compensation_history.py:13``.
+    :class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionObservation`
+    model, eliminating the application-to-adapter import edge. The surface is
+    intentionally limited to the fields consumed by
+    :func:`~aeat.application.calculations._iva_compensation_history.iva_compensation_state_from_filed_observation`
+    and
+    :func:`~aeat.application.calculations._iva_compensation_history.iva_compensation_annual_summary_from_filed_observation`.
     """
 
     @property
@@ -73,7 +100,7 @@ class FiledDeclaracionObservationProtocol(Protocol):
 
     @property
     def period(self) -> Period:
-        """Typed :class:`Period` for the declaration."""
+        """Typed :class:`~aeat.core.Period` for the declaration."""
         ...
 
     @property
