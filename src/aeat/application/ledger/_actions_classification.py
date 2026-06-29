@@ -63,6 +63,10 @@ _BULK_CLASSIFY_NON_PATCH_COLUMNS = frozenset({"transaction_id"})
 _BULK_CLASSIFY_PATCH_COLUMNS = BULK_CLASSIFY_ALLOWED_COLUMNS - _BULK_CLASSIFY_NON_PATCH_COLUMNS
 
 
+def _raw_csv_text(value: object) -> str:
+    return value.strip() if isinstance(value, str) else ""
+
+
 def bulk_classify_from_csv(
     *,
     bucket_id: str,
@@ -116,7 +120,36 @@ def bulk_classify_from_csv(
     parsed_rows: list[tuple[int, BulkClassifyRow, frozenset[str]]] = []
     parse_failures: list[BulkClassifyFailure] = []
     for idx, raw_row in enumerate(reader):
-        normalised_row = {k: (v.strip() or None if v is not None else v) for k, v in raw_row.items()}
+        transaction_id = _raw_csv_text(raw_row.get("transaction_id", ""))
+        surplus_cells = raw_row.get(None)
+        if surplus_cells:
+            parse_failures.append(
+                BulkClassifyFailure(
+                    row_index=idx,
+                    transaction_id=transaction_id,
+                    reason="bulk classify CSV row has more cells than header columns",
+                ),
+            )
+            continue
+        normalised_row: dict[str, str | None] = {}
+        malformed_cells: list[str] = []
+        for key, value in raw_row.items():
+            if key is None:
+                malformed_cells.append("<extra>")
+                continue
+            if value is not None and not isinstance(value, str):
+                malformed_cells.append(str(key))
+                continue
+            normalised_row[key] = (value.strip() or None) if value is not None else None
+        if malformed_cells:
+            parse_failures.append(
+                BulkClassifyFailure(
+                    row_index=idx,
+                    transaction_id=transaction_id,
+                    reason=f"bulk classify CSV row contains non-text cells: {', '.join(malformed_cells)}",
+                ),
+            )
+            continue
         try:
             parsed = BulkClassifyRow.model_validate(
                 # A present-but-blank optional cell (e.g. an empty
@@ -133,7 +166,7 @@ def bulk_classify_from_csv(
             parse_failures.append(
                 BulkClassifyFailure(
                     row_index=idx,
-                    transaction_id=raw_row.get("transaction_id", ""),
+                    transaction_id=transaction_id,
                     reason=str(exc),
                 ),
             )
