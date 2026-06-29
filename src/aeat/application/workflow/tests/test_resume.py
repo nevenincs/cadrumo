@@ -23,6 +23,7 @@ from ....domain.modelos._calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import (
     ModeloCalculationRevisionSelector,
@@ -31,6 +32,7 @@ from ...modelo import (
     create_work_unit,
     workflow_period_for_work_unit,
 )
+from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     WorkflowAbortReason,
     WorkflowError,
@@ -53,14 +55,40 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-@pytest.fixture(autouse=True)
-def _patch_secure_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        yield
-
-
 _T = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "test-runtime-profile"
+_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
+    UserProfileFact(path="identity.tax_id", value="00000000T"),
+    UserProfileFact(path="identity.name", value="Test Operator"),
+    UserProfileFact(path="identity.surnames", value="Resume"),
+    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="activities.description", value="economic activity"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="provenance.source", value="test_fixture"),
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+)
+
+
+def _seed_ready_profile_record(bucket_id: str) -> None:
+    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name=bucket_id,
+            facts=_READY_PROFILE_FACTS,
+            created_at=_T,
+            updated_at=_T,
+        ),
+    )
+
+
+@pytest.fixture(autouse=True)
+def _patch_secure_backend(tmp_path: Path) -> Iterator[None]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        _seed_ready_profile_record(_BUCKET_ID)
+        yield
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -489,7 +517,7 @@ def test_visible_modelo_resume_target_refuses_ambiguous_workflow_runs(tmp_path: 
     assert [candidate.run_id for candidate in raised.value.candidates] == [later.run_id, earlier.run_id]
 
 
-def test_exact_modelo_work_target_preserves_latest_run_resume_compatibility(tmp_path: Path) -> None:
+def test_exact_modelo_work_target_resolves_latest_run_for_period(tmp_path: Path) -> None:
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
@@ -551,7 +579,7 @@ def test_unified_resume_target_resolves_visible_modelo_target_with_projection(tm
     assert resolved.period == workflow_period
 
 
-def test_unified_resume_target_preserves_legacy_work_unit_id_latest_run(tmp_path: Path) -> None:
+def test_unified_resume_target_resolves_work_unit_id_to_latest_run(tmp_path: Path) -> None:
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",

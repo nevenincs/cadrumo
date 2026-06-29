@@ -14,6 +14,19 @@ The session and certificate-bundle slots remain ``None`` by default:
 :class:`aeat.application.workflow.WorkflowEngine` tolerates ``None`` for
 each and records the skipped stages as "not wired" diagnostics rather
 than failing.
+
+See Also:
+    :mod:`aeat.application.workflow._protocols`
+        Declares the narrow contracts each adapter satisfies.
+    :class:`~aeat.application.workflow.WorkflowEngine`
+        Consumes the adapted deadline, draft-building, submission, and live
+        read collaborators.
+    :class:`~aeat.domain.submission.SubmissionEngine`
+        Read-only domain preflight engine wrapped by
+        :class:`SubmissionEngineAdapter`.
+    :mod:`aeat.application.modelo._workflow_gate`
+        Builds revision-scoped workflow engines with the same adapter
+        boundaries for verification and local mark-as-filed paths.
 """
 
 from __future__ import annotations
@@ -136,7 +149,7 @@ class ModeloDraftBuilderAdapter:
 
 
 class SubmissionEngineAdapter:
-    """Wrap :class:`aeat.adapters.outbound.aeat.export.SubmissionEngine` as a workflow Protocol.
+    """Wrap :class:`~aeat.domain.submission.SubmissionEngine` as a workflow Protocol.
 
     The adapter uses the engine's public preflight method so the
     workflow's ``RUNNING_PREFLIGHT`` stage can execute the gate without
@@ -248,7 +261,7 @@ def default_engine(
 
 # Re-exported so importing :mod:`aeat.application.workflow` surfaces the primary
 # preflight-exception type without callers having to dig into
-# :mod:`aeat.adapters.outbound.aeat.export` for an isinstance check.
+# :mod:`aeat.domain.submission` for an isinstance check.
 __all__ = [
     "DeadlineEngineAdapter",
     "ModeloDraftBuilderAdapter",

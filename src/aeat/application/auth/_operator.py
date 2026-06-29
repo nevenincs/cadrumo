@@ -1,8 +1,28 @@
 """Operator-facing auth application services for the config CLI.
 
-Auth configuration and login actions emit bucket events through
-:class:`BucketEventHistoryRepository` so every provider switch and
-session renewal is reflected in the audit trail.
+Auth configuration and login actions mutate
+:class:`~aeat.application.workflow.WorkflowState`, validate the active bucket
+through :func:`~aeat.application.workflow.assess_active_profile_health`, and
+emit durable :class:`~aeat.domain.buckets.BucketEvent` records through
+:class:`~aeat.domain.buckets.BucketEventHistoryRepository`.
+
+Status, test, and preflight surfaces consume the canonical
+:func:`~aeat.application.state_projection.build_operator_state_projection`
+producer, then narrow its
+:class:`~aeat.application.state_projection.ProjectionAuthReadiness` and
+:class:`~aeat.application.state_projection.ProjectionActiveProfile` fields into
+operator-facing result records.
+
+See Also:
+    :class:`~aeat.application.auth.AuthState`
+        Persisted local auth selection embedded in workflow state.
+    :class:`~aeat.application.auth.AuthStatusResult`
+        CLI readiness result emitted by ``auth status``.
+    :class:`~aeat.application.auth.AuthTestResult`
+        CLI readiness result emitted by ``auth test`` with local provider
+        probes.
+    :class:`~aeat.application.auth.LiveAuthPreflightReport`
+        Redacted readiness report used before a live read can request login.
 """
 
 from __future__ import annotations
@@ -64,15 +84,19 @@ def list_operator_auth_providers() -> AuthProvidersReport:
 def configure_operator_auth(provider: str, *, certificate_path: Path | None = None) -> AuthConfigureResult:
     """Configure the active auth provider in workflow state.
 
+    The active profile is resolved through
+    :func:`~aeat.application.workflow.assess_active_profile_health` before the
+    :class:`~aeat.application.workflow.WorkflowState` mutation is written, so a
+    dangling or unreadable active bucket cannot receive an auth selection.
     Persists the workflow-state update and a typed
     ``AUTH_PROVIDER_CONFIGURED`` event into the bucket-event-history
     catalogue in a single SQL transaction (via
-    :meth:`SecureObjectRepository.save_many`), so a crash between the
-    two writes cannot leave the state mutated without the catalogue
-    event landing. The certificate path is recorded as a payload value
-    when supplied because it is a filesystem reference, not credential
-    material; certificate passwords, private keys, and session tokens
-    never enter the payload.
+    :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.save_many`),
+    so a crash between the two writes cannot leave the state mutated without
+    the catalogue event landing. The certificate path is recorded as a payload
+    value when supplied because it is a filesystem reference, not credential
+    material; certificate passwords, private keys, and session tokens never
+    enter the payload.
 
     Args:
         provider: The auth provider identifier to configure (e.g.
@@ -88,6 +112,12 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
             exists yet. The operator must run ``aeat config profile create NAME`` first.
         AuthConfigureDanglingActiveProfileError: When the active-profile
             pointer does not resolve to a registered bucket.
+
+    See Also:
+        :class:`~aeat.domain.buckets.BucketEventHistoryRepository`
+            Durable per-bucket event history that receives the typed auth event.
+        :class:`~aeat.application.workflow.ActiveProfileHealth`
+            Redacted health verdict used to accept or refuse the active bucket.
     """
     from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
     from ...core import resolve_active_bucket_id
@@ -187,11 +217,15 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
 def inspect_operator_auth(provider: str | None = None) -> AuthStatusResult:
     """Return current local auth state as :class:`AuthStatusResult`, optionally scoped to a known provider slot.
 
-    Consumes the canonical :func:`build_operator_state_projection`. The
-    ``configured`` field is the projection's single canonical
-    operational-readiness definition — ``auth status`` and ``auth test``
-    read the same datum and cannot disagree. The live backend is probed
-    (via the projection) for the ``available`` / ``health_*`` fields.
+    Consumes the canonical
+    :func:`~aeat.application.state_projection.build_operator_state_projection`.
+    The ``configured`` field is the
+    :class:`~aeat.application.state_projection.ProjectionAuthReadiness` single
+    canonical operational-readiness definition; ``auth status`` and ``auth
+    test`` read the same datum and cannot disagree. The live backend is probed
+    (via the projection) for the ``available`` / ``health_*`` fields, while the
+    active-profile fields mirror
+    :class:`~aeat.application.state_projection.ProjectionActiveProfile`.
     """
     if provider is not None:
         get_auth_provider(provider)
@@ -445,7 +479,15 @@ def build_live_auth_preflight_report(
     """Return a redacted preflight report before a live read may trigger auth.
 
     Returns a :class:`LiveAuthPreflightReport` with provider status,
-    identity alignment, and active-profile health indicators.
+    identity alignment, persisted-session indicators, and active-profile health
+    fields inherited from :class:`AuthTestResult`.
+
+    See Also:
+        :class:`~aeat.core.access_gate.AeatAccessGate`
+            Live-read gate evaluated before an authenticated AEAT operation can
+            proceed.
+        :func:`test_operator_auth`
+            Shared provider-readiness probe that supplies the preflight base.
     """
     resolved_settings = settings or load_settings()
     provider_kind = _provider_kind_or_none(provider)
@@ -515,6 +557,13 @@ async def login_operator_auth(
     live-test opt-in, or when the configured provider is locally
     incomplete (certificate path unset / file missing / unreadable).
     Round-5 B2.
+
+    See Also:
+        :class:`~aeat.core.access_gate.AeatAccessGate`
+            Enforces the live-read opt-in before provider authentication.
+        :func:`~aeat.application.auth.ensure_authenticated_aeat_session`
+            Provider-session lifecycle helper that returns the verified session
+            result consumed here.
     """
     if settings is not None:
         with _auth_operator_settings_scope(settings):
@@ -598,7 +647,14 @@ def clear_operator_auth(
     locks: bool = False,
     settings: Settings | None = None,
 ) -> AuthClearResult:
-    """Clear workflow auth state, persisted sessions, and acquisition locks, returning a :class:`AuthClearResult`."""
+    """Clear workflow auth state, persisted sessions, and acquisition locks.
+
+    Returns an :class:`AuthClearResult` after resetting
+    :class:`~aeat.application.auth.AuthState` in
+    :class:`~aeat.application.workflow.WorkflowState` when the requested target
+    matches the currently configured provider. Session and lock removals append
+    bucket events through the same workflow-state event trail.
+    """
     if settings is not None:
         with _auth_operator_settings_scope(settings):
             return clear_operator_auth(

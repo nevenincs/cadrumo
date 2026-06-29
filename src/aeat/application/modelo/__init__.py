@@ -1,54 +1,56 @@
-"""Application services for modelo work-unit lifecycle.
+"""Public application facade for modelo work-unit services.
 
-The modelo work-unit verbs (``create``, ``list``, ``status``,
-``rename``) call into this package. The CLI layer at
-``aeat.entrypoints.cli._modelo`` is a thin Typer transport over
-the services exposed here.
+This package is the canonical application-layer import boundary for modelo
+CLI transports and cross-package application services. Callers import from
+``aeat.application.modelo`` instead of private ``_...`` modules so work
+selection, registry revision checks, calculation, verification, filing,
+export, reconciliation, and storage orchestration stay behind one facade.
 
-Bucket scoping is honoured at the API boundary: every action
-accepts an explicit ``bucket_id`` rather than implicitly reading
-the active profile. The CLI layer derives ``bucket_id`` from the
-active profile when the caller did not pass one explicitly; this
-keeps the application service unit-testable without a workflow-
-state fixture.
+Bucket scoping is explicit at the API boundary. Services accept a caller
+provided ``bucket_id`` or a resolved work target; CLI modules may derive that
+value from the active profile, but the application surface itself does not read
+implicit workflow state.
 
-This module re-exports :class:`CalculationRevision`, :class:`ModeloRecord`,
-and other core types for convenient access by callers.
+The facade carries :class:`CalculationRevision` and :class:`WorkUnit` through
+the operator lifecycle: work-unit creation and addressing, calculation-revision
+creation, verification, filing, export, history, reconciliation, registry
+discovery, M036 declaration records, IVA-wallet decisions, projections, and
+advisory helpers. It also re-exports the status and finding vocabulary used by
+those services, including :class:`CalculationRevisionState`,
+:class:`ModeloRecordStatus`, :class:`ModeloVerificationFindingKind`, and
+:class:`VerificationCompletenessStatus`.
 
-Verification boundary
----------------------
-``verify_modelo_revision`` enforces a four-layer gate before the
-``VERIFICADO_COMPLETO`` state transition is granted:
+Verification, filing, and export remain owned by their focused service modules.
+``verify_modelo_revision`` persists a verification report for one
+:class:`CalculationRevision`; filing and export then consume the same persisted
+revision rather than rebuilding parallel workflow state.
 
-1. **State machine** -- the target revision must be in ``BORRADOR``
-   state; any other state raises :exc:`CalculationRevisionStateError`.
+Local filing and external evidence are deliberately separate. ``file_modelo_revision``
+creates an internal current :class:`aeat.domain.modelos.ModeloRecord` without
+:class:`aeat.domain.modelos.ExternalEvidence`; ``import_external_filing_evidence``
+creates the AEAT-attested evidence baseline, and ``amend_modelo_revision`` requires
+that baseline before recording a :class:`CalculationRevisionAmendmentKind`.
 
-2. **Per-casilla required-input gate (Layer 1)** -- every casilla
-   declared ``required = true`` and ``input_kind = "manual"`` in the
-   registry must be present in the revision's ``input_values_by_casilla_id``.
-   Absent casillas produce :attr:`ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA`
-   findings and set ``completeness_status`` to ``INCOMPLETE``.
-
-3. **Cross-casilla predicate gate (Layer 2)** -- each
-   :class:`~aeat.domain.calculations.registry.VerificationPredicateDefinition`
-   attached to the revision's registry snapshot is evaluated against the
-   stored ``casilla_values``.  A failing predicate produces a
-   :attr:`ModeloVerificationFindingKind.BLOCKING_RULE` finding.
-
-4. **Provenance re-validation** -- :func:`_assert_revision_content_integrity`
-   re-derives the SHA-256 content address from the stored payload and
-   raises :exc:`StoredCalculationDriftError` if it does not match the
-   persisted ``calculation_revision_id``.  This defends against raw-storage
-   tampering or schema-migration bugs that mutate the payload without
-   updating the content-addressed id.
-
-Only when layers 1-3 produce zero blocking findings AND layer 4 passes
-does ``verify_modelo_revision`` grant ``VERIFICADO_COMPLETO`` and
-persist the :class:`~aeat.domain.modelos._verification_report.ModeloVerificationReport`.
-
-The facade carries :class:`CalculationRevision` through calculation,
-verification, filing, and export so callers address one persisted revision
-instead of duplicating workflow state.
+See Also:
+    :mod:`aeat.application.modelo._work_lifecycle`:
+        Work-unit creation, listing, rename, discard, and lookup services.
+    :mod:`aeat.application.modelo._work_addressing`:
+        Visible modelo/year/period addressing and exact-id resolution.
+    :mod:`aeat.application.modelo._calculation_actions`:
+        Calculation revision creation, lookup, and completion services.
+    :mod:`aeat.application.modelo._verification_actions`:
+        Verification findings and report persistence for draft revisions.
+    :mod:`aeat.application.modelo._filing_actions`:
+        Local filing-record transitions and verification-report reads.
+    :mod:`aeat.application.modelo._external_import_actions`:
+        External-evidence import path that stamps official AEAT evidence on
+        current filing records.
+    :mod:`aeat.application.modelo._amendment_actions`:
+        Amendment path for current externally evidenced filing records.
+    :mod:`aeat.application.modelo._workflow_gate`:
+        Workflow preflight adapter used by verification and filing services.
+    :mod:`aeat.application.modelo._export`:
+        Local official-file export for verified or filed revisions.
 """
 
 from __future__ import annotations
@@ -69,6 +71,7 @@ from ...domain.modelos import (
     validate_m349_nif_format,
 )
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
+from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._filing_record import ExternalEvidenceKind
 from ...domain.modelos._work_unit import WorkUnit
 from ._action_errors import (
@@ -82,6 +85,7 @@ from ._action_errors import (
     CasillaProvenanceMissingError,
     ExternalModeloImportError,
     ModeloAggregationBindingError,
+    ModeloApplicabilityFilterError,
     ModeloCrossPeriodCleanStateError,
     ModeloLocalObservationError,
     ModeloProfileReadinessError,
@@ -349,8 +353,8 @@ from ._workflow_gate import workflow_period_for_work_unit
 
 __all__ = [
     "APP_FILING_SOURCE_KIND",
-    "STUB_MODELO_LOCALE_KEYS",
     "OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND",
+    "STUB_MODELO_LOCALE_KEYS",
     "STUB_ONLY_MODELOS",
     "AmendmentEvidenceMissingError",
     "AmendmentOverrideCasillaError",
@@ -379,6 +383,7 @@ __all__ = [
     "Modelo349CountryPrefixContextError",
     "Modelo349OperadorRow",
     "ModeloAggregationBindingError",
+    "ModeloApplicabilityFilterError",
     "ModeloAuthorizationAdvisorySummary",
     "ModeloCalculationRevisionCandidate",
     "ModeloCalculationRevisionDefault",
@@ -397,6 +402,7 @@ __all__ = [
     "ModeloCompareServiceResult",
     "ModeloCrossPeriodCleanStateError",
     "ModeloDetailRow",
+    "ModeloError",
     "ModeloExactWorkUnitTarget",
     "ModeloExportCommand",
     "ModeloExportCrossBucketRefusedError",
@@ -413,10 +419,10 @@ __all__ = [
     "ModeloIvaWalletSeedError",
     "ModeloIvaWalletSeedNegativeAmountError",
     "ModeloIvaWalletSeedNoTaxpayerError",
-    "ModeloMaritimeExemptionPreview",
-    "ModeloProfileReadinessError",
     "ModeloLocalObservationError",
     "ModeloLocalObservationResult",
+    "ModeloMaritimeExemptionPreview",
+    "ModeloProfileReadinessError",
     "ModeloProjectInvalidDecimalOverrideError",
     "ModeloProjectM100Projection",
     "ModeloProjectM130Accumulated",
@@ -538,9 +544,9 @@ __all__ = [
     "rebuild_participation_index",
     "record_iva_compensation_override_for_bucket",
     "record_m036_declaration",
+    "record_operator_local_observation",
     "registry_bindings",
     "registry_bindings_for_scope",
-    "record_operator_local_observation",
     "registry_bindings_for_year",
     "registry_casillas",
     "registry_casillas_for_registry_scope",

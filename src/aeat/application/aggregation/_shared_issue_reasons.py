@@ -1,10 +1,9 @@
 """Shared issue-reason strings for ledger aggregators.
 
-Several aggregator pipelines (currently IVA and Renta first-slice
-expense) emit traceable rejection issues for rows the upstream
-catalogue could not classify. The reason vocabularies diverge by 77%
-— each ledger has 10–18 domain-specific codes — but five upstream
-filter rejections converge:
+Several aggregator pipelines (IVA, Modelo 100 Renta expense, M130 income, and
+M130 gasto) emit traceable rejection issues for rows the upstream catalogue
+could not classify. The reason vocabularies still diverge by domain, but five
+upstream filter rejections converge:
 
 - A direction the ledger cannot project.
 - A currency outside the EUR-only scope.

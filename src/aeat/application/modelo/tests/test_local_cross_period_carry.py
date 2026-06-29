@@ -216,6 +216,14 @@ def _seed_first_year_activity_profile(repos_: _Repos) -> None:
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="identity.name", value="Test"),
             UserProfileFact(path="identity.surnames", value="Autonomo"),
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="activities.description", value="economic activity"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="provenance.source", value="test_fixture"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             UserProfileFact(path="censo.activity_start_date", value="2026-01-01"),
         ),
         created_at=_T1,
@@ -238,7 +246,9 @@ def _seed_existing_303_activity_profile(repos_: _Repos) -> None:
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
             UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
+            UserProfileFact(path="activities.description", value="economic activity"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="provenance.source", value="test_fixture"),
             UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
         ),
         created_at=_T1,
@@ -261,7 +271,9 @@ def _seed_first_303_activity_profile(repos_: _Repos) -> None:
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
             UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
+            UserProfileFact(path="activities.description", value="economic activity"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="provenance.source", value="test_fixture"),
             UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),
         ),
         created_at=_T1,
@@ -404,17 +416,12 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) 
     )
     assert verdict is not None
     same_year = [
-        d
-        for d in verdict.dependencies
-        if d.requirement.source_modelo == "130" and d.requirement.filing_year == 2026
+        d for d in verdict.dependencies if d.requirement.source_modelo == "130" and d.requirement.filing_year == 2026
     ]
     assert same_year, "expected the same-year M130/2026 carry dependency"
     assert all(d.clean for d in same_year)
     assert all(d.non_official_local_chain_advisory for d in same_year)
-    assert all(
-        CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE not in d.blockers
-        for d in same_year
-    )
+    assert all(CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE not in d.blockers for d in same_year)
     assert verdict.has_non_official_local_chain_advisory
     # The cross-YEAR dependency is NOT relaxed - the same-year scope is the safety boundary.
     cross_year = [d for d in verdict.dependencies if d.requirement.filing_year != 2026]
@@ -658,9 +665,7 @@ def test_first_filer_same_year_chain_is_fully_reachable(repos: _Repos) -> None:
     assert all(d.suppressed_pre_activity for d in cross_year)
     # The same-year M130/2026 dep is admitted with the disclosing advisory.
     same_year = [
-        d
-        for d in verdict.dependencies
-        if d.requirement.source_modelo == "130" and d.requirement.filing_year == 2026
+        d for d in verdict.dependencies if d.requirement.source_modelo == "130" and d.requirement.filing_year == 2026
     ]
     assert same_year and all(d.non_official_local_chain_advisory for d in same_year)
     # Both handled -> the verdict is clean -> the quarter is reachable.

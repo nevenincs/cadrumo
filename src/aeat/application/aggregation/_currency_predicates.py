@@ -1,9 +1,11 @@
 """Shared currency predicates for aggregation gates.
 
-Used by: :mod:`_iva_ledger`, :mod:`_renta_ledger`, :mod:`_renta_income_ledger`
-to gate non-EUR rows and extract effective EUR amounts.
+Used by :mod:`~._iva_ledger`, :mod:`~._renta_ledger`,
+:mod:`~._renta_income_ledger`, and :mod:`~._renta_gasto_ledger` to gate
+non-EUR rows and extract effective EUR amounts.
 
-Provides two predicates that replace independent ``if transaction.raw.currency != "EUR": ...`` guards.
+Provides two predicates that replace independent
+``if transaction.raw.currency != "EUR": ...`` guards.
 """
 
 from __future__ import annotations

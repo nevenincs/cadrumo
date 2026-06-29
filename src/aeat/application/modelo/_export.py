@@ -6,6 +6,14 @@ a fichero-BOE-formatted artefact to the operator-supplied output path. A
 ``MODELO_EXPORTED`` event is appended to the
 :class:`BucketEventHistoryRepository`.
 
+Export consumes the registry-authored fichero-BOE layouts through the filing
+runtime schema provider; Python code owns orchestration and safety checks, while
+the registry remains the authority for record fields, casillas, header keys, and
+provenance. The service refuses non-exportable revision states, cross-bucket
+targets, missing profile facts, unclean cross-period prerequisites, unmatched IVA
+wallet decisions, missing ledger evidence, and unusable output paths before the
+operator-visible file is committed.
+
 The service is local-only: it never contacts AEAT and never invokes
 ``require_live_read``. Export is fundamentally an offline operation
 that produces a file the operator presents through sede.agenciatributaria.gob.es
@@ -13,6 +21,18 @@ themselves.
 
 The CLI verb ``aeat app modelo export`` is a thin delegate over this
 service.
+
+See Also:
+    :func:`aeat.application.modelo._revision_replay_inputs.revision_filing_replay_inputs`:
+        Reconstructs the filing inputs from the persisted revision.
+    :func:`aeat.application.filing.build_draft`:
+        Builds the transient registry-backed draft that is exported.
+    :func:`aeat.application.filing.export_draft`:
+        Serializes the approved draft through registry export layouts.
+    :func:`aeat.application.modelo._verification_actions.require_cross_period_clean_state`:
+        Rechecks cross-period filing prerequisites before writing the export.
+    :func:`aeat.application.modelo._result_disposition_resolution.resolve_modelo_result_disposition`:
+        Determines the fichero declaration type and refund disposition.
 """
 
 from __future__ import annotations
@@ -31,6 +51,7 @@ from ...core.logging import get_logger
 from ...core.time import now as _utc_now
 from ...domain import filing as filing_domain
 from ...domain.buckets import (
+    BucketEvent,
     BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
@@ -68,6 +89,7 @@ from ..calculations import (
     IvaWalletDecisionRepository,
 )
 from ..filing import (
+    DeclaracionExportResult,
     ModeloDraft,
     approve_draft,
     build_draft,
@@ -312,6 +334,7 @@ def _discard_tmp_output_after_failure(tmp_output: Path, *, stage: str) -> None:
 def _iva_wallet_decision_export_provenance(
     decision: IvaCompensationReconciliationDecision | None,
 ) -> ModeloIvaWalletDecisionProvenance | None:
+    """Project an IVA wallet decision into a redacted export/event join record."""
     if decision is None:
         return None
     return ModeloIvaWalletDecisionProvenance(
@@ -348,6 +371,7 @@ def _load_revision_for_export(
     *,
     repo: CalculationRevisionCatalogueRepositoryProtocol,
 ) -> CalculationRevision:
+    """Load an exportable :class:`CalculationRevision` or raise a typed refusal."""
     revisions = repo.load()
     revision = revisions.get(calculation_revision_id)
     if revision is None:
@@ -674,6 +698,161 @@ def _approve_export_draft(
     return period, approved
 
 
+def _persist_exported_draft(
+    *,
+    command: ModeloExportCommand,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    workflow_profile: TaxpayerProfile,
+    period: Period,
+    approved: ModeloDraft,
+    exported_at: datetime,
+    iva_wallet_provenance: ModeloIvaWalletDecisionProvenance | None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
+) -> ModeloExportResult:
+    headers = _compose_export_headers(
+        work_unit=work_unit,
+        revision=revision,
+        workflow_profile=workflow_profile,
+        period=period,
+        refund_election=command.refund_election,
+    )
+    receipt = _write_export_tmp(command=command, approved=approved, headers=headers)
+    event = _emit_export_event(
+        command=command,
+        work_unit=work_unit,
+        receipt=receipt,
+        iva_wallet_provenance=iva_wallet_provenance,
+        exported_at=exported_at,
+        bucket_event_repository=bucket_event_repository,
+    )
+    tmp_output = command.output_path.with_name(command.output_path.name + ".tmp")
+    # Defence in depth: even though _validate_output_path refused an
+    # existing-directory / unwritable destination up front, a concurrent
+    # change to the destination (a TOCTOU race) can still make this atomic
+    # rename fail with an OSError. Sensitive fichero-BOE bytes already exist
+    # in tmp_output at this point, so any failure here MUST remove them
+    # (sensitive-financial-data-secure-storage) and surface a typed refusal
+    # rather than a raw traceback that strands cleartext financial data.
+    try:
+        tmp_output.replace(command.output_path)
+    except OSError as exc:
+        _discard_tmp_output_after_failure(tmp_output, stage="atomic-rename")
+        raise ModeloExportOutputPathError(
+            translated_message="application.modelo.errors.export_output_path_invalid",
+            context={"output_path": str(command.output_path), "reason": str(exc)},
+        ) from exc
+
+    return ModeloExportResult(
+        calculation_revision_id=command.calculation_revision_id,
+        work_unit_id=work_unit.work_unit_id,
+        bucket_id=work_unit.bucket_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=period,
+        output_path=command.output_path,
+        byte_size=receipt.byte_size,
+        file_sha256=receipt.file_sha256,
+        format=receipt.format.value,
+        exported_at=exported_at,
+        actor=command.actor,
+        bucket_event_id=event.event_id,
+        casilla_provenance=receipt.casilla_provenance,
+        iva_wallet_decision_provenance=iva_wallet_provenance,
+    )
+
+
+def _write_export_tmp(
+    *,
+    command: ModeloExportCommand,
+    approved: ModeloDraft,
+    headers: dict[str, str],
+) -> DeclaracionExportResult:
+    # Atomic-rename: write the fichero-BOE artefact to a sibling .tmp
+    # path, append the MODELO_EXPORTED event, and only rename into the
+    # operator-visible output path after the event commits. A crash
+    # between the file write and the event persistence leaves only the
+    # .tmp file, which carries no provenance and is safe to discard.
+    tmp_output = command.output_path.with_name(command.output_path.name + ".tmp")
+    try:
+        return export_draft(approved, output_path=tmp_output, headers=headers)
+    except filing_domain.FilingExportError as exc:
+        _discard_tmp_output_after_failure(tmp_output, stage="draft-write")
+        # Surface the underlying FilingExportError cause in the typed context
+        # (cli-notices-are-the-only-diagnostic-channel: structured provenance
+        # rides on context). The generic write-failed message otherwise masks
+        # structural causes the operator must act on — most importantly a modelo
+        # whose registry snapshot declares no export layout (e.g. Modelo 202 has
+        # no Diseño de Registros authored, so a verified-complete revision cannot
+        # be written to fichero-BOE), which reads as a misleading disk/IO failure.
+        raise ModeloExportError(
+            translated_message="application.modelo.errors.export_draft_write_failed",
+            context={
+                "calculation_revision_id": command.calculation_revision_id,
+                "cause": str(exc),
+            },
+        ) from exc
+
+
+def _emit_export_event(
+    *,
+    command: ModeloExportCommand,
+    work_unit: WorkUnit,
+    receipt: DeclaracionExportResult,
+    iva_wallet_provenance: ModeloIvaWalletDecisionProvenance | None,
+    exported_at: datetime,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
+) -> BucketEvent:
+    # Route through the shared ``_emit_bucket_event`` helper every
+    # other modelo service uses rather than re-implementing the
+    # derive / append / save sequence inline. The helper performs a
+    # single-catalogue ``save_many`` write (via
+    # ``BucketEventHistoryRepository.save``), which is exactly what
+    # export needs — there is no second persisted record to bundle,
+    # so the multi-write co-transactional pattern does not apply here.
+    # The atomic-rename ordering is preserved: the event commits inside
+    # the helper before ``tmp_output.replace`` runs, and a failure in
+    # the helper unwinds the .tmp file before propagating.
+    event_payload = {
+        "calculation_revision_id": command.calculation_revision_id,
+        "work_unit_id": work_unit.work_unit_id,
+        "output_path": str(command.output_path),
+        "byte_size": str(receipt.byte_size),
+        "file_sha256": receipt.file_sha256,
+        "format": receipt.format.value,
+        "modelo": work_unit.modelo,
+        "filing_year": str(work_unit.filing_year),
+        "period": work_unit.period.registry_token,
+    }
+    if iva_wallet_provenance is not None:
+        event_payload.update(
+            {
+                "iva_wallet_decision_ref": iva_wallet_provenance.decision_ref,
+                "iva_wallet_selected_authority": iva_wallet_provenance.selected_authority,
+                "iva_wallet_divergence": iva_wallet_provenance.divergence,
+                "iva_wallet_target_year": str(iva_wallet_provenance.target_year),
+                "iva_wallet_target_period": iva_wallet_provenance.target_period.registry_token,
+                "iva_wallet_authority_source_kinds": ",".join(iva_wallet_provenance.authority_source_kinds),
+                "iva_wallet_authority_source_refs": ",".join(iva_wallet_provenance.authority_source_refs),
+            },
+        )
+    tmp_output = command.output_path.with_name(command.output_path.name + ".tmp")
+    try:
+        return _emit_bucket_event(
+            repository=bucket_event_repository,
+            bucket_id=work_unit.bucket_id,
+            event_type=BucketEventType.MODELO_EXPORTED,
+            occurred_at=exported_at,
+            actor=command.actor,
+            object_type=BucketEventObjectType.CALCULATION_REVISION,
+            object_id=command.calculation_revision_id,
+            payload=event_payload,
+        )
+    except Exception:
+        _discard_tmp_output_after_failure(tmp_output, stage="bucket-event")
+        raise
+
+
 def export_modelo_revision(
     command: ModeloExportCommand,
     *,
@@ -698,12 +877,31 @@ def export_modelo_revision(
     so the exported file reflects the same legal casilla and relation map that
     would be filed.
 
-    Emits ``MODELO_EXPORTED`` into the bucket-event-history catalogue
-    with the calculation revision id, work unit id, output path,
-    byte size, and file digest captured in the payload.
+    The revision must be ``VERIFICADO_COMPLETO``, ``PRESENTADO``, or
+    ``PRESENTADO_SUPERSEDIDO`` and must belong to the active bucket. Before
+    writing any operator-visible file, the service validates the output path,
+    profile readiness, ledger evidence, IVA wallet decision provenance, and
+    cross-period clean state. It then rebuilds and approves a transient
+    :class:`ModeloDraft`, composes the fichero headers, serializes through
+    :func:`aeat.application.filing.export_draft`, appends ``MODELO_EXPORTED`` to
+    the bucket-event-history catalogue, and finally atomically renames the
+    sibling ``.tmp`` file into place. Any write, event, or rename failure removes
+    the temporary cleartext artefact before raising.
 
     Returns:
-        :class:`ModeloExportResult`: The export result.
+        :class:`ModeloExportResult`: The export receipt, including byte size,
+        digest, event id, casilla provenance, and any redacted IVA wallet
+        decision provenance.
+
+    See Also:
+        :class:`ModeloExportCommand`:
+            Strict input envelope for the revision id, output path, actor, and
+            refund election.
+        :func:`_compose_export_headers`:
+            Builds required fichero-BOE header keys from the work unit, profile,
+            revision, period, amendment marker, and refund election.
+        :func:`_validate_output_path`:
+            Refuses unsafe destinations before fichero bytes are written.
     """
     from ...core import resolve_active_bucket_id
 
@@ -795,119 +993,16 @@ def export_modelo_revision(
         period=export_period,
         schema_provider=schema_provider,
     )
-
-    # Atomic-rename: write the fichero-BOE artefact to a sibling .tmp
-    # path, append the MODELO_EXPORTED event, and only rename into the
-    # operator-visible output path after the event commits. A crash
-    # between the file write and the event persistence leaves only the
-    # .tmp file, which carries no provenance and is safe to discard.
-    headers = _compose_export_headers(
+    return _persist_exported_draft(
+        command=command,
         work_unit=work_unit,
         revision=revision,
         workflow_profile=workflow_profile,
         period=export_period,
-        refund_election=command.refund_election,
-    )
-    tmp_output = command.output_path.with_name(command.output_path.name + ".tmp")
-    try:
-        receipt = export_draft(approved, output_path=tmp_output, headers=headers)
-    except filing_domain.FilingExportError as exc:
-        _discard_tmp_output_after_failure(tmp_output, stage="draft-write")
-        # Surface the underlying FilingExportError cause in the typed context
-        # (cli-notices-are-the-only-diagnostic-channel: structured provenance
-        # rides on context). The generic write-failed message otherwise masks
-        # structural causes the operator must act on — most importantly a modelo
-        # whose registry snapshot declares no export layout (e.g. Modelo 202 has
-        # no Diseño de Registros authored, so a verified-complete revision cannot
-        # be written to fichero-BOE), which reads as a misleading disk/IO failure.
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context={
-                "calculation_revision_id": command.calculation_revision_id,
-                "cause": str(exc),
-            },
-        ) from exc
-
-    # Route through the shared ``_emit_bucket_event`` helper every
-    # other modelo service uses rather than re-implementing the
-    # derive / append / save sequence inline. The helper performs a
-    # single-catalogue ``save_many`` write (via
-    # ``BucketEventHistoryRepository.save``), which is exactly what
-    # export needs — there is no second persisted record to bundle,
-    # so the multi-write co-transactional pattern does not apply here.
-    # The atomic-rename ordering is preserved: the event commits inside
-    # the helper before ``tmp_output.replace`` runs, and a failure in
-    # the helper unwinds the .tmp file before propagating.
-    event_payload = {
-        "calculation_revision_id": command.calculation_revision_id,
-        "work_unit_id": work_unit.work_unit_id,
-        "output_path": str(command.output_path),
-        "byte_size": str(receipt.byte_size),
-        "file_sha256": receipt.file_sha256,
-        "format": receipt.format.value,
-        "modelo": work_unit.modelo,
-        "filing_year": str(work_unit.filing_year),
-        "period": work_unit.period.registry_token,
-    }
-    if iva_wallet_provenance is not None:
-        event_payload.update(
-            {
-                "iva_wallet_decision_ref": iva_wallet_provenance.decision_ref,
-                "iva_wallet_selected_authority": iva_wallet_provenance.selected_authority,
-                "iva_wallet_divergence": iva_wallet_provenance.divergence,
-                "iva_wallet_target_year": str(iva_wallet_provenance.target_year),
-                "iva_wallet_target_period": iva_wallet_provenance.target_period.registry_token,
-                "iva_wallet_authority_source_kinds": ",".join(iva_wallet_provenance.authority_source_kinds),
-                "iva_wallet_authority_source_refs": ",".join(iva_wallet_provenance.authority_source_refs),
-            },
-        )
-    try:
-        event = _emit_bucket_event(
-            repository=bv_repo,
-            bucket_id=work_unit.bucket_id,
-            event_type=BucketEventType.MODELO_EXPORTED,
-            occurred_at=now,
-            actor=command.actor,
-            object_type=BucketEventObjectType.CALCULATION_REVISION,
-            object_id=command.calculation_revision_id,
-            payload=event_payload,
-        )
-    except Exception:
-        _discard_tmp_output_after_failure(tmp_output, stage="bucket-event")
-        raise
-
-    # Defence in depth: even though _validate_output_path refused an
-    # existing-directory / unwritable destination up front, a concurrent
-    # change to the destination (a TOCTOU race) can still make this atomic
-    # rename fail with an OSError. Sensitive fichero-BOE bytes already exist
-    # in tmp_output at this point, so any failure here MUST remove them
-    # (sensitive-financial-data-secure-storage) and surface a typed refusal
-    # rather than a raw traceback that strands cleartext financial data.
-    try:
-        tmp_output.replace(command.output_path)
-    except OSError as exc:
-        _discard_tmp_output_after_failure(tmp_output, stage="atomic-rename")
-        raise ModeloExportOutputPathError(
-            translated_message="application.modelo.errors.export_output_path_invalid",
-            context={"output_path": str(command.output_path), "reason": str(exc)},
-        ) from exc
-
-    return ModeloExportResult(
-        calculation_revision_id=command.calculation_revision_id,
-        work_unit_id=work_unit.work_unit_id,
-        bucket_id=work_unit.bucket_id,
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=export_period,
-        output_path=command.output_path,
-        byte_size=receipt.byte_size,
-        file_sha256=receipt.file_sha256,
-        format=receipt.format.value,
+        approved=approved,
         exported_at=now,
-        actor=command.actor,
-        bucket_event_id=event.event_id,
-        casilla_provenance=receipt.casilla_provenance,
-        iva_wallet_decision_provenance=iva_wallet_provenance,
+        iva_wallet_provenance=iva_wallet_provenance,
+        bucket_event_repository=bv_repo,
     )
 
 

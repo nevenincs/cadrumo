@@ -1,31 +1,35 @@
-"""Financial aggregation: roll classified ledger entries into casilla inputs.
+"""Public aggregation facade for rollup helpers and typed source-mesh resolvers.
 
-Turns the classified ledger and profile facts into the per-casilla and
-per-binding values a modelo calculation consumes, with one aggregation
-family per AEAT surface (IVA, retenciones, third-party operations, foreign
-assets, prorrata, OSS / IOSS, renta expenses). Pure value logic; the
-repositories it reads are injected.
+This package exposes two related surfaces. The pure aggregation helpers
+(``aggregate_*`` functions plus value records such as :class:`CasillaAggregation`
+and :class:`RetencionesAggregation`) roll classified observations into
+family-specific totals. The live calculation surface is the source mesh:
+:class:`ModeloSourceResolver` implementations claim one or more
+:class:`~aeat.core.BindingSourceKind` members and return the canonical
+:class:`CalculationSourceResolution` envelope consumed by the modelo calculate
+path.
 
-Major declarations:
+:func:`aggregate_per_modelo` remains the provider-grouped service for
+per-modelo rollup workflows. It is not the resolved-source envelope used by
+calculation; mesh helpers such as :func:`merge_source_resolutions`,
+:func:`merge_source_resolutions_by_precedence`,
+:func:`collect_unhandled_source_diagnostics`, and
+:func:`build_binding_source_dispositions` enforce exclusive ownership, declared
+precedence, no-silent-blank diagnostics, and the enrolled / deferred / reserved
+:class:`BindingSourceDisposition` registry.
 
-* :func:`aggregate_per_modelo` with :class:`PerModeloAggregationContributor`
-  and :class:`PerModeloAggregationResult` — the unified per-modelo entry
-  point.
-* :func:`aggregate_iva_ledger_observations` with :class:`IvaLedgerAggregation`
-  — the IVA (Modelo 303 family) rollup.
-* :func:`aggregate_retenciones_111` and its 115 / 123 / 180 / 190 / 193
-  siblings, with :class:`RetencionesAggregation` — withholding rollups.
-* :func:`aggregate_counterpart_347`, :func:`aggregate_counterpart_349`, and
-  :func:`aggregate_foreign_assets_720` — informativa rollups.
-* :class:`CasillaAggregation` and :class:`CasillaProvenance` — the typed
-  per-modelo ledger-aggregation value plus its source provenance, produced by
-  the ``aggregate_*`` family. These are aggregation-family value records, NOT a
-  resolved-source envelope; the single resolved-source envelope across the
-  calculate mesh is :class:`CalculationSourceResolution` below.
-* :class:`ModeloSourceResolver` and :class:`CalculationSourceResolution` —
-  the source mesh that reconciles ledger, profile, and registry sources, and
-  the one canonical resolved-source envelope every mesh resolver returns.
-* :class:`AggregationError` and its subclasses — the failure taxonomy.
+Concrete resolvers re-exported here include
+:class:`LedgerIvaAggregationSourceResolver`,
+:class:`RetencionesAggregationSourceResolver`,
+:class:`OssIossLedgerSourceResolver`, :class:`ProfileSourceResolver`, and
+:class:`WithholdingSourceResolver`. The calculation path also composes
+prior-filing, relation-prefill, invoice, borrador, and IVA-wallet resolvers from
+neighboring application packages; their shared contract is still
+:class:`CalculationSourceResolution`, not :class:`CasillaAggregation`.
+
+The facade also re-exports encrypted observation repositories for the
+retenciones and withholding stores, informativa rollups, and the shared
+:class:`AggregationError` failure taxonomy.
 """
 
 from __future__ import annotations
@@ -95,14 +99,6 @@ from ._oss_ioss import (
     oss_ioss_candidates_from_repositories,
     validate_oss_ioss_observation,
     validate_oss_ioss_observations,
-)
-from ._prorrata import (
-    IvaOperation,
-    IvaOperationKind,
-    ProrrataAggregation,
-    aggregate_definitiva_prorrata,
-    aggregate_prorrata_inputs,
-    aggregate_provisional_prorrata,
 )
 from ._renta_ledger import (
     RentaLedgerAggregationIssue,
@@ -195,8 +191,6 @@ __all__ = [
     "IvaLedgerAggregationIssueReason",
     "IvaLedgerCandidate",
     "IvaLedgerInputKind",
-    "IvaOperation",
-    "IvaOperationKind",
     "LedgerIvaAggregationSourceResolver",
     "LedgerRentaExpenseAggregationSourceResolver",
     "LedgerRentaGastoAggregationSourceResolver",
@@ -213,7 +207,6 @@ __all__ = [
     "Period",
     "PeriodKind",
     "ProfileSourceResolver",
-    "ProrrataAggregation",
     "ProrrataLedgerReference",
     "RentaLedgerAggregationIssue",
     "RentaLedgerAggregationIssueReason",
@@ -229,7 +222,6 @@ __all__ = [
     "WithholdingSourceResolver",
     "aggregate_counterpart_347",
     "aggregate_counterpart_349",
-    "aggregate_definitiva_prorrata",
     "aggregate_foreign_assets_720",
     "aggregate_iva_ledger_candidate_bindings",
     "aggregate_iva_ledger_candidates",
@@ -238,8 +230,6 @@ __all__ = [
     "aggregate_oss_ioss_bindings",
     "aggregate_oss_ioss_from_repositories",
     "aggregate_per_modelo",
-    "aggregate_prorrata_inputs",
-    "aggregate_provisional_prorrata",
     "aggregate_renta_ledger_expenses",
     "aggregate_renta_ledger_expenses_from_repositories",
     "aggregate_retenciones_111",

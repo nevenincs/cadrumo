@@ -6,6 +6,27 @@ Evidence-bearing imports validate the referenced :class:`Justificante`, stamp an
 :class:`ExternalEvidence` payload on the filing record, supersede any prior
 current filing for the same target, and emit ``modelo.filing.imported`` through
 :class:`BucketEventHistoryRepository`.
+
+The imported record is the production baseline consumed by the amendment path.
+It is intentionally distinct from a locally calculated and filed return:
+``external_evidence`` marks that the values came from official AEAT evidence,
+while :func:`aeat.application.modelo._calculation_helpers.external_filing_observations`
+keeps the imported casilla values on the same registry-grounded
+:class:`~aeat.domain.calculations.registry.CasillaObservation` contract as local
+calculation revisions.
+
+See Also:
+    :func:`aeat.entrypoints.cli._modelo_records_cli.filing_record_import`:
+        CLI surface that parses ``filing-record import`` options and calls this
+        service.
+    :func:`aeat.application.modelo._amendment_actions.amend_modelo_revision`:
+        Consumes the imported current :class:`ModeloRecord` as an amendment
+        baseline.
+    :func:`aeat.application.modelo._registry_helpers.reject_unknown_import_casillas`:
+        Resolves the registry snapshot and refuses noncanonical or undeclared
+        imported casilla ids.
+    :class:`aeat.domain.modelos._filing_record.ExternalEvidence`:
+        Filing-record metadata that records the official evidence source.
 """
 
 from __future__ import annotations
@@ -43,7 +64,7 @@ from ...domain.modelos._protocols import (
     WorkUnitCatalogueRepositoryProtocol,
 )
 from ...domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ...domain.modelos._work_unit import WorkUnitState
+from ...domain.modelos._work_unit import WorkUnit, WorkUnitState
 from ._action_errors import ExternalModeloImportError, WorkUnitMutationRefusedError, WorkUnitNotFoundError
 from ._calculation_helpers import external_filing_observations as _external_filing_observations
 from ._registry_helpers import reject_unknown_import_casillas as _reject_unknown_import_casillas
@@ -103,7 +124,30 @@ def import_external_filing_evidence[CasillaKey](
     expected_tax_id: str | None = None,
     clock: datetime | None = None,
 ) -> ModeloRecord:
-    """Persist an externally-filed return and return a :class:`ModeloRecord`."""
+    """Persist an externally-filed return and return its current :class:`ModeloRecord`.
+
+    The target :class:`~aeat.domain.modelos._work_unit.WorkUnit` supplies the
+    bucket, modelo, filing year, period, and registry revision used to validate
+    imported casilla ids. Justificante-bound evidence kinds require a stored
+    :class:`~aeat.domain.justificante.Justificante` whose modelo, year, period,
+    and taxpayer id match the target.
+
+    The service writes a ``PRESENTADO`` :class:`CalculationRevision` containing
+    the imported values and registry-grounded observations, creates a
+    ``VIGENTE`` filing record with :class:`ExternalEvidence`, supersedes any
+    previous current filing for the same target, advances the work-unit pointers,
+    and emits ``modelo.filing.imported``.
+
+    Returns:
+        The new current :class:`ModeloRecord` carrying the external evidence
+        metadata.
+
+    See Also:
+        :func:`aeat.application.modelo._calculation_helpers.external_filing_observations`:
+            Builds provenance-bearing observations for imported casilla values.
+        :func:`aeat.application.modelo._amendment_actions.amend_modelo_revision`:
+            Requires this external-evidence baseline before filing amendments.
+    """
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()
@@ -179,46 +223,23 @@ def import_external_filing_evidence[CasillaKey](
         period=work_unit.period,
     )
 
-    new_filing = ModeloRecord(
+    new_filing = _build_external_filing_record(
         filing_record_id=new_filing_id,
-        work_unit_id=work_unit_id,
+        work_unit=work_unit,
         calculation_revision_id=revision_id,
-        bucket_id=work_unit.bucket_id,
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
         filed_at=now,
         filed_by=actor.strip(),
-        notes=None,
-        aeat_accepted=True,
-        status=ModeloRecordStatus.VIGENTE,
-        external_evidence=ExternalEvidence(
-            kind=evidence_kind,
-            reference_id=cleaned_reference,
-            imported_at=now,
-        ),
+        evidence_kind=evidence_kind,
+        evidence_reference_id=cleaned_reference,
     )
 
-    updated_filing_catalogue = filing_catalogue
-    if prior_current is not None:
-        superseded_prior = prior_current.model_copy(
-            update={
-                "status": ModeloRecordStatus.SUPERSEDIDO,
-                "superseded_at": now,
-                "superseded_by_filing_record_id": new_filing_id,
-            },
-        )
-        updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, superseded_prior)
-        prior_revision = revisions.get(prior_current.calculation_revision_id)
-        if prior_revision is not None and prior_revision.state is CalculationRevisionState.PRESENTADO:
-            superseded_revision = prior_revision.model_copy(
-                update={
-                    "state": CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
-                    "superseded_at": now,
-                    "updated_at": now,
-                },
-            )
-            revisions = upsert_calculation_revision(revisions, superseded_revision)
+    updated_filing_catalogue, revisions = _supersede_prior_current_external_filing(
+        filing_catalogue=filing_catalogue,
+        prior_current=prior_current,
+        revisions=revisions,
+        new_filing_id=new_filing_id,
+        now=now,
+    )
     updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, new_filing)
 
     cr_repo.save(revisions)
@@ -262,10 +283,74 @@ def import_external_filing_evidence[CasillaKey](
     return new_filing
 
 
+def _supersede_prior_current_external_filing(
+    *,
+    filing_catalogue,
+    prior_current: ModeloRecord | None,
+    revisions,
+    new_filing_id: str,
+    now: datetime,
+):
+    updated_filing_catalogue = filing_catalogue
+    if prior_current is None:
+        return updated_filing_catalogue, revisions
+    superseded_prior = prior_current.model_copy(
+        update={
+            "status": ModeloRecordStatus.SUPERSEDIDO,
+            "superseded_at": now,
+            "superseded_by_filing_record_id": new_filing_id,
+        },
+    )
+    updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, superseded_prior)
+    prior_revision = revisions.get(prior_current.calculation_revision_id)
+    if prior_revision is not None and prior_revision.state is CalculationRevisionState.PRESENTADO:
+        superseded_revision = prior_revision.model_copy(
+            update={
+                "state": CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
+                "superseded_at": now,
+                "updated_at": now,
+            },
+        )
+        revisions = upsert_calculation_revision(revisions, superseded_revision)
+    return updated_filing_catalogue, revisions
+
+
+def _build_external_filing_record(
+    *,
+    filing_record_id: str,
+    work_unit: WorkUnit,
+    calculation_revision_id: str,
+    filed_at: datetime,
+    filed_by: str,
+    evidence_kind: ExternalEvidenceKind,
+    evidence_reference_id: str,
+) -> ModeloRecord:
+    return ModeloRecord(
+        filing_record_id=filing_record_id,
+        work_unit_id=work_unit.work_unit_id,
+        calculation_revision_id=calculation_revision_id,
+        bucket_id=work_unit.bucket_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        filed_at=filed_at,
+        filed_by=filed_by,
+        notes=None,
+        aeat_accepted=True,
+        status=ModeloRecordStatus.VIGENTE,
+        external_evidence=ExternalEvidence(
+            kind=evidence_kind,
+            reference_id=evidence_reference_id,
+            imported_at=filed_at,
+        ),
+    )
+
+
 def _validated_external_reference[CasillaKey](
     casilla_values: Mapping[CasillaKey, Decimal],
     evidence_reference_id: str,
 ) -> str:
+    """Return a stripped evidence reference after basic import-shape checks."""
     if not casilla_values:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_filing_no_casilla_values",
@@ -288,6 +373,13 @@ def _require_bound_justificante_artifact(
     expected_tax_id: str | None,
     justificante_repository: JustificanteRepository,
 ) -> None:
+    """Require matching stored :class:`Justificante` metadata for bound evidence kinds.
+
+    CSV-register, justificante-PDF, and live-capture imports are treated as
+    receipt-bound baselines: the evidence reference must resolve to stored
+    justificante metadata for the same taxpayer, modelo, filing year, and
+    period. The taxpayer comparison is case-insensitive after stripping.
+    """
     if evidence_kind not in _JUSTIFICANTE_BOUND_EVIDENCE_KINDS:
         return
     cleaned_expected_tax_id = (expected_tax_id or "").strip().upper()
@@ -334,6 +426,7 @@ def _justificante_matches_import_target(
     period: Period,
     expected_tax_id: str,
 ) -> bool:
+    """Return whether ``justificante`` matches the external-import target axis."""
     return (
         justificante.modelo.strip() == modelo
         and str(justificante.ejercicio or "").strip() == str(filing_year)

@@ -2,7 +2,8 @@
 
 This module owns the adapter objects that let immutable calculation revisions
 participate in the filing workflow engine. The public application facade
-continues to export the operator-facing services from `aeat.application.modelo`.
+continues to export the operator-facing services from
+:mod:`aeat.application.modelo`.
 
 The gate adapts one persisted :class:`CalculationRevision` and its
 :class:`~aeat.domain.modelos._work_unit.WorkUnit` into
@@ -10,6 +11,30 @@ The gate adapts one persisted :class:`CalculationRevision` and its
 filing-window checks with :class:`TaxpayerProfile`, and locally approves filing
 drafts through the transient :class:`TransactionCatalogue` used by the filing
 surface.
+
+The gate is a precondition runner, not the owner of verification reports or
+filing records. :mod:`aeat.application.modelo._verification_actions` invokes it
+with :class:`~aeat.application.workflow.WorkflowPurpose.VERIFY` after local
+verification findings have granted, while
+:mod:`aeat.application.modelo._filing_actions` invokes it with
+:class:`~aeat.application.workflow.WorkflowPurpose.FILE` before local
+mark-as-filed persistence. Aborted workflow runs are persisted for audit and then
+surfaced as :class:`ModeloWorkflowGateError`.
+
+See Also:
+    :mod:`aeat.application.workflow._engine`:
+        Owns deadline-independence for VERIFY and late-local FILE behavior.
+    :mod:`aeat.application.workflow._deadline_stage`:
+        Selects the workflow obligation before submission preflight is reached.
+    :class:`~aeat.domain.submission.SubmissionEngine`:
+        Runs the read-only preflight gates using the deadline-window checker
+        configured here.
+    :class:`~aeat.domain.submission.DeadlineWindowChecker`:
+        Protocol satisfied by the revision deadline-window adapter below.
+    :mod:`aeat.application.modelo._verification_actions`:
+        Owns verification finding/report persistence around this gate.
+    :mod:`aeat.application.modelo._filing_actions`:
+        Owns local filing-record persistence after this gate succeeds.
 """
 
 from __future__ import annotations
@@ -81,7 +106,14 @@ def _deadline_window_period_for_registry_period(
 
 
 def workflow_period_for_work_unit(work_unit: WorkUnit) -> Period:
-    """Return the canonical :class:`~aeat.core.Period` consumed by the workflow engine."""
+    """Return the canonical :class:`~aeat.core.Period` consumed by the workflow engine.
+
+    Quarterly work units use their registry token (for example ``"1T"``) but the
+    deadline engine may declare a typed window period with a richer canonical
+    shape. When the registry exposes such a deadline window, this helper returns
+    that declared period so the workflow run addresses the same obligation the
+    deadline engine will compute.
+    """
     registry_period = work_unit.period.registry_token
     if registry_period.endswith("T") and len(registry_period) == 2:
         declared = _deadline_window_period_for_registry_period(
@@ -185,7 +217,15 @@ class _RevisionDraftBuilder:
 
 
 class _RevisionDeadlineWindowChecker:
-    """Checks the same deadline schedule the workflow gate already computed."""
+    """Checks the same deadline schedule the workflow gate already computed.
+
+    This adapter satisfies :class:`~aeat.domain.submission.DeadlineWindowChecker`
+    and is passed to :class:`~aeat.domain.submission.SubmissionEngine` for
+    submission-preflight window checks. The workflow engine decides by
+    :class:`~aeat.application.workflow.WorkflowPurpose` whether that preflight
+    window check is relevant; this adapter only answers the raw "is the window
+    open today?" question.
+    """
 
     def __init__(self, *, profile: TaxpayerProfile, engine: DeadlineEngine) -> None:
         self._profile = profile
@@ -213,9 +253,28 @@ def build_revision_workflow_engine(
 ) -> WorkflowEngine:
     """Build and return a :class:`WorkflowEngine` configured for one calculation revision.
 
-    See also :class:`CalculationRevision` for the immutable source inputs,
-    :class:`~aeat.domain.modelos._work_unit.WorkUnit` for the modelo/period
-    identity, and :class:`TaxpayerProfile` for deadline scoping.
+    The engine is wired with:
+
+    * a deadline adapter over :class:`~aeat.domain.deadlines.DeadlineEngine`;
+    * a revision-backed inputs provider that replays persisted calculation values;
+    * a draft builder that validates and locally approves a registry draft;
+    * a submission engine using the configured auth provider.
+
+    The returned engine does not persist verification reports or filing records;
+    callers decide the :class:`WorkflowPurpose` and perform state mutation only
+    after :func:`run_revision_workflow_gate` returns successfully.
+
+    Args:
+        revision: The immutable :class:`CalculationRevision` whose persisted
+            values are replayed into the workflow draft.
+        work_unit: The :class:`~aeat.domain.modelos._work_unit.WorkUnit` that
+            supplies modelo, filing year, period, and bucket identity.
+        profile: The :class:`TaxpayerProfile` used for deadline and applicability
+            scoping inside the workflow engine.
+        actor: Operator label used when locally approving the transient draft.
+        clock: Timestamp used for local draft approval metadata.
+        settings: Optional runtime :class:`~aeat.core.config.Settings`; defaults
+            to :func:`~aeat.core.config.load_settings`.
     """
     cfg = settings or load_settings()
     deadline_engine = DeadlineEngine()
@@ -256,9 +315,27 @@ def run_revision_workflow_gate(
 ) -> WorkflowResult:
     """Run and persist the workflow gate for one modelo work unit and return a :class:`WorkflowResult`.
 
-    The supplied :class:`WorkflowEngine` runs with the caller's
-    :class:`TaxpayerProfile`; an aborted :class:`WorkflowResult` is persisted before
-    being surfaced as :class:`ModeloWorkflowGateError`.
+    ``purpose`` selects the workflow policy: VERIFY validates the calculation
+    independently of the filing-window calendar, while FILE retains the local
+    filing obligation gate and late-filing handling. Every result is saved through
+    ``run_repository`` before the caller sees it. If the workflow aborts, the
+    persisted result is raised as :class:`ModeloWorkflowGateError`; no downstream
+    verification or filing state should be written by the caller after that.
+
+    Returns:
+        The successful :class:`WorkflowResult`.
+
+    Args:
+        engine: The :class:`WorkflowEngine` configured for the target revision.
+        profile: The :class:`TaxpayerProfile` used by the workflow run.
+        work_unit: The :class:`~aeat.domain.modelos._work_unit.WorkUnit` whose
+            modelo and period select the workflow target.
+        today: Reference date for deadline and preflight stages.
+        runs_dir: Optional filesystem location for persisted workflow runs.
+        run_repository: Repository that stores the resulting workflow run.
+        resumed_from: Optional workflow run id when this execution resumes a
+            prior run.
+        purpose: Workflow policy to apply, usually VERIFY or FILE.
     """
     result = asyncio.run(
         engine.run_for_period(

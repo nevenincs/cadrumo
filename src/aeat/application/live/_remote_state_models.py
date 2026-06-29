@@ -1,4 +1,16 @@
-"""Typed report models for live AEAT filed-data and IVA remote-state services."""
+"""Typed report models for live AEAT filed-data and IVA remote-state services.
+
+These frozen records are renderer-facing summaries, not raw evidence stores.
+They carry typed :class:`~aeat.core.Period` values, secure-storage references,
+redacted diagnostic fields, and counts/ids needed by CLI and workflow surfaces
+after live capture has persisted the underlying observations.
+
+See Also:
+    :class:`aeat.application.live.IvaRemoteStateAcquisitionReport`
+        Combined read-only IVA remote-state acquisition result.
+    :class:`aeat.application.live.IvaRemoteStateStoredEvidenceReport`
+        Stored-evidence view that can be loaded without live AEAT contact.
+"""
 
 from __future__ import annotations
 
@@ -335,12 +347,7 @@ class IvaRemoteStateAcquisitionReport(BaseModel):
     year_to: int
     target_year: int
     target_period: Period
-    auth: LiveIvaAuthOutcome = LiveIvaAuthOutcome(
-        status=LiveIvaReadStatus.FAILED,
-        outcome_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,
-        failure_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,
-        failure_type="MissingAuthResult",
-    )
+    auth: LiveIvaAuthOutcome
     filed_history: IvaCompensationHistoryCaptureReport | None
     wallet: IvaWalletCaptureReport | None
     outcomes: tuple[LiveIvaReadOutcome, ...]
@@ -394,12 +401,7 @@ class IvaRemoteStateAcquisitionManifest(BaseModel):
     year_to: int
     target_year: int
     target_period: Period
-    auth: LiveIvaAuthOutcome = LiveIvaAuthOutcome(
-        status=LiveIvaReadStatus.FAILED,
-        outcome_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,
-        failure_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,
-        failure_type="LegacyManifestAuthOutcome",
-    )
+    auth: LiveIvaAuthOutcome
     filed_history_succeeded: bool
     wallet_succeeded: bool
     surfaces: tuple[IvaRemoteStateAcquisitionSurfaceManifest, ...]

@@ -3,9 +3,10 @@
 The CLI uses a closed catalogue of import
 diagnostic kinds emitted by ``aeat app ledger import PATH --provider PROVIDER --verify``:
 
-- ``original-file`` — verifies an imported batch against the
-  original source file (encoding, byte size, hash) so a partial
-  download or rename surfaces clearly.
+- ``original-file`` — records the caller-supplied original source file
+  path when it is available, so import reports can distinguish the
+  parsed input path from the source artefact the operator intended to
+  verify.
 - ``gap`` — detects calendar gaps in the imported transaction
   stream so the operator notices a missing month / week / day
   without rerunning analytics.
@@ -19,6 +20,11 @@ diagnostic kinds emitted by ``aeat app ledger import PATH --provider PROVIDER --
 The CLI consumes :class:`LedgerImportDiagnostic` records via
 :func:`build_ledger_import_diagnostic` and renders them grouped
 by ``severity`` and ``kind``.
+
+See Also:
+    :class:`LedgerImportDiagnosticKind`,
+    :class:`LedgerImportDiagnostic`, and
+    :func:`build_ledger_import_diagnostic`.
 """
 
 from __future__ import annotations
@@ -110,7 +116,9 @@ def build_ledger_import_diagnostic(
     """Construct a :class:`LedgerImportDiagnostic` with the canonical field order.
 
     Centralised factory so adding new optional metadata later means
-    extending this helper rather than every emit site.
+    extending this helper rather than every emit site. The returned
+    diagnostic preserves the closed :class:`LedgerImportDiagnosticKind`
+    and :class:`BaseSeverity` values the CLI groups by.
     """
     return LedgerImportDiagnostic(
         kind=kind,

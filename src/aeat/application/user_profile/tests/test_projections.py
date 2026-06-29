@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.deadlines._models import IVARegime
+from ....domain.deadlines._models import IrpfEstimationRegime, IVARegime
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ...wizard import _catalogue as _wizard_catalogue  # noqa: F401  (registration side effect)
 from .. import (
@@ -86,13 +86,13 @@ def test_projection_for_taxpayer_carries_section_prefixed_withholding_facts() ->
                 path="irpf.professional_income_withholding_ge_70pct",
                 value=True,
             ),
-            UserProfileFact(path="irpf.uses_objective_estimation", value=True),
+            UserProfileFact(path="irpf.estimation_regime", value="objetiva"),
             UserProfileFact(path="withholding.has_employees", value=True),
         ),
     )
     profile = projection_for_taxpayer(record)
     assert profile.professional_income_withholding_ge_70pct is True
-    assert profile.uses_objective_estimation_irpf is True
+    assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
     assert profile.has_employees is True
 
 

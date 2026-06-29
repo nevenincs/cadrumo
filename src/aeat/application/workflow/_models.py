@@ -13,6 +13,21 @@ storage backend without going through the runtime default. The
 This module uses :class:`WorkflowResult`, :class:`WorkflowEngine`,
 and :class:`UserProfileRecord` for workflow persistence and state management.
 
+See Also:
+    :class:`~aeat.application.workflow.WorkflowEngine`
+        Produces :class:`WorkflowResult` records and advances
+        :class:`WorkflowStage` values.
+    :class:`~aeat.application.workflow.WorkflowPurpose`
+        Selects the local FILE or VERIFY policy that controls deadline and
+        preflight treatment.
+    :class:`~aeat.application.workflow.WorkflowRunRepository`
+        Persists terminal :class:`WorkflowResult` records in secure storage.
+    :class:`~aeat.application.workflow.WorkflowStateRepository`
+        Persists the encrypted :class:`WorkflowState` envelope.
+    :mod:`aeat.application.modelo._workflow_gate`
+        Drives calculation revisions through the workflow and persists the
+        resulting run record before verification or local filing state changes.
+
 Import ordering note
 --------------------
 The ``SiteHealthStatus`` and ``ModeloDeadline`` imports are placed

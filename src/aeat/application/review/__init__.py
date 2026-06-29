@@ -1,25 +1,41 @@
-"""Unified review queue across the produce -> verify -> export pipeline.
+"""Application facade for the read-only operator review queue.
 
-Public surface — callers must import review enums, models, adapters,
-and the aggregator exclusively from :mod:`aeat.application.review` and
-must not reach into the private underscore modules inside this package.
+Callers import review enums, models, adapters, and projections exclusively from
+:mod:`aeat.application.review`; private underscore modules remain implementation
+details. The canonical CLI surface is ``aeat app review queue`` and ``show``.
+Those commands are read-only: queue adapters load bucket-scoped source records,
+derive severity, and emit typed rows without mutating ledger, invoice, filing, or
+modelo state.
 
-The queue is read-only: every adapter loads from disk and emits a
-typed :class:`ReviewItem` without mutating the source. Severity is
-derived per-source by the adapter, not stored on the underlying record.
-New review kinds land as additional adapters; existing adapters are
-not re-touched.
+Internally, :class:`ReviewQueue` aggregates the three concrete
+:class:`ReviewItem` variants:
+:class:`TransactionReviewItem`, :class:`InvoiceReviewItem`, and
+:class:`FindingReviewItem`. The operator-facing projection layer maps those
+internal kinds into :class:`ReviewQueueRow` values using the accepted
+``--kind`` / ``--source-kind`` vocabulary exposed by :data:`ACCEPTED_KINDS`:
+``ledger_transaction``, ``purchase_invoice_evidence``, ``payable_invoice``,
+``collectible_invoice``, and ``modelo_finding``. ``live_notification`` and
+``sync_divergence`` remain reserved vocabulary until concrete review sources are
+wired.
 
-Key exports:
+The exported :func:`update_ledger_review` and :func:`update_invoice_review`
+helpers append workflow-attention history only. Durable ledger facts, invoice
+facts, filing findings, and bucket events stay owned by their source
+application surfaces.
 
-* :class:`ReviewQueue` — cross-source aggregator.
-* :class:`ReviewItem` — discriminated union over the three per-source
-  shapes (:class:`TransactionReviewItem`, :class:`InvoiceReviewItem`,
-  :class:`FindingReviewItem`).
-* :class:`ReviewItemKind`, :class:`ReviewSeverity`, :class:`ReviewState`,
-  :class:`ReviewFormat` — closed enumerations.
-* :class:`ReviewError`, :class:`ReviewSourceLoadError`,
-  :class:`ReviewKindReservedError` — error hierarchy.
+See Also:
+    :class:`ReviewQueue`
+        Cross-source aggregator over read-only adapters.
+    :class:`ReviewQueueReport`
+        Application report consumed by the CLI review renderer.
+    :class:`ReviewQueueRow`
+        Operator-facing queue row with owner surface and next command metadata.
+    :class:`ReviewItem`
+        Internal discriminated union emitted by source adapters.
+    :class:`ReviewItemKind`
+        Internal adapter-kind enum, distinct from accepted operator kind strings.
+    :data:`ACCEPTED_KINDS`
+        Accepted operator ``--kind`` values after source-kind projection.
 """
 
 from __future__ import annotations

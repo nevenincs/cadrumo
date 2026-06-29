@@ -5,16 +5,30 @@ internal reconstruction. This module is the application boundary that turns
 those evidence sources, plus an explicit taxpayer override when present, into
 the effective binding decision consumed by Modelo 303 calculation.
 
-The pure decision logic (``reconcile_iva_compensation_wallet`` and its
-wallet/recurrence predicates) lives in
+The pure decision logic
+(:func:`~aeat.domain.iva_compensation._reconciliation.reconcile_iva_compensation_wallet`
+and its wallet/recurrence predicates) lives in
 :mod:`aeat.domain.iva_compensation._reconciliation`; it consumes structural
-ports (``IvaCompensationWalletObservationProtocol``,
-``LocalIvaCompensationRecurrenceProtocol``) so the domain never imports the
-Sede adapter. This module orchestrates the repository reads and persistence
-around that pure decision, and resolves it onto the source mesh.
+ports such as
+:class:`~aeat.domain.iva_compensation._reconciliation.IvaCompensationWalletObservationProtocol`
+and
+:class:`~aeat.domain.iva_compensation._reconciliation.LocalIvaCompensationRecurrenceProtocol`
+so the domain never imports the Sede adapter. This module orchestrates
+:class:`~._observations_repository.CalculationObservationRepository` reads,
+:class:`~._observations_repository.IvaWalletDecisionRepository` persistence, and
+source-mesh resolution around that pure decision.
 
 Binding resolution reads its active revision through a
-:class:`RegistrySnapshot` supplied via the source mesh context.
+:class:`~aeat.domain.calculations.registry.RegistrySnapshot` supplied via the
+source mesh context.
+
+See Also:
+    :func:`~._binding_prefill.extract_modelo_303_local_iva_compensation_recurrence`
+        Reconstructs the local Modelo 303 recurrence compared with wallet
+        evidence.
+    :class:`~aeat.application.aggregation.CalculationSourceResolution`
+        The source-mesh envelope produced by
+        :class:`~aeat.application.calculations._iva_wallet_reconciliation.IvaWalletDecisionSourceResolver`.
 """
 
 from __future__ import annotations
@@ -50,7 +64,13 @@ if TYPE_CHECKING:
 
 
 class IvaCompensationReconciliationReport(BaseModel):
-    """Application-level reconciliation result for one Modelo 303 target."""
+    """Application-level reconciliation result for one Modelo 303 target.
+
+    Carries the domain
+    :class:`~aeat.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`
+    plus the :class:`~._binding_prefill.BindingPrefillReport` used to reconstruct
+    the local recurrence side of the comparison.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
 
@@ -59,7 +79,15 @@ class IvaCompensationReconciliationReport(BaseModel):
 
 
 class IvaWalletDecisionSourceResolver:
-    """Source mesh adapter for persisted Modelo 303 IVA wallet decisions."""
+    """Source-mesh adapter for persisted Modelo 303 IVA wallet decisions.
+
+    Owns ``iva_wallet_decision`` and materialises the
+    ``modelo-303-compensacion-pendiente-anteriores`` binding from a persisted
+    :class:`~aeat.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`.
+    The returned :class:`~aeat.application.aggregation.CalculationSourceResolution`
+    carries the selected amount plus provenance for every authority source that
+    participated in the wallet/filed-history/local-recurrence decision.
+    """
 
     resolver_id = "iva_wallet_decision"
     owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.IVA_WALLET_DECISION,)
@@ -116,13 +144,30 @@ def reconcile_modelo_303_iva_compensation(
 ) -> IvaCompensationReconciliationReport:
     """Resolve, compare, and optionally persist the Modelo 303 IVA wallet decision.
 
+    The function validates wallet evidence against the target
+    :class:`~aeat.domain.calculations.registry.RegistrySnapshot`, reconstructs local recurrence through
+    :func:`~._binding_prefill.extract_modelo_303_local_iva_compensation_recurrence`,
+    delegates authority selection to
+    :func:`~aeat.domain.iva_compensation._reconciliation.reconcile_iva_compensation_wallet`,
+    and persists the resulting
+    :class:`~aeat.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`
+    through :class:`~._observations_repository.IvaWalletDecisionRepository` when
+    ``persist`` is true.
+
     Args:
-        snapshot: The :class:`RegistrySnapshot` identifying the Modelo 303 target revision.
+        snapshot: The :class:`~aeat.domain.calculations.registry.RegistrySnapshot`
+            identifying the Modelo 303 target revision.
         taxpayer_nif: Taxpayer identifier expected to match live wallet evidence.
         wallet: Live AEAT wallet observation to reconcile, when available.
-        repository: Optional observation repository used to read prior local recurrence.
-        decision_repository: Optional decision repository used to persist the resulting wallet authority.
-        override: Explicit taxpayer override evidence, when the operator has resolved a divergence.
+        repository: Optional
+            :class:`~aeat.application.calculations._observations_repository.CalculationObservationRepository`
+            used to read prior local recurrence.
+        decision_repository: Optional
+            :class:`~aeat.application.calculations._observations_repository.IvaWalletDecisionRepository`
+            used to persist the resulting wallet authority.
+        override: Optional
+            :class:`~aeat.domain.iva_compensation._reconciliation.IvaCompensationOverride`
+            evidence when the operator has resolved a divergence.
         decided_at: Decision timestamp override for deterministic replay and tests.
         max_wallet_age_days: Maximum accepted age for live wallet evidence.
         treat_absent_recurrence_as_first_period: When ``True`` and there is no
@@ -138,7 +183,13 @@ def reconcile_modelo_303_iva_compensation(
     The local side is not recomputed here. It is read through the same
     previous-filing binding resolver used by the calculation chain.
 
-    Returns an :class:`IvaCompensationReconciliationReport`.
+    Returns an
+    :class:`~aeat.application.calculations._iva_wallet_reconciliation.IvaCompensationReconciliationReport`.
+
+    See Also:
+        :class:`~aeat.application.calculations._iva_wallet_reconciliation.IvaWalletDecisionSourceResolver`
+            Converts a persisted non-blocking decision into the Modelo 303
+            ``iva_wallet_decision`` source value.
     """
     if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != Modelo.M303.value:
         raise IvaCompensationReconciliationInputError(

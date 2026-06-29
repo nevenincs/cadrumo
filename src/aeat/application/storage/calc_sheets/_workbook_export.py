@@ -1,4 +1,16 @@
-"""Offline XLSX materializer for ``SheetExportPlan`` records."""
+"""Offline XLSX materializer for :class:`SheetExportPlan` records.
+
+This module serializes the shared workbook plan into operator-directed
+plaintext export bytes: an XLSX workbook and an adjacent machine-readable JSON
+evidence sidecar. It returns bytes and digests to the caller; it does not choose
+paths, persist secure-object state, or make the export file canonical.
+
+See Also:
+    :class:`aeat.application.storage.calc_sheets.SheetExportPlan`
+        Renderer-neutral workbook contract emitted by the calc-sheets engine.
+    :class:`aeat.application.storage.calc_sheets.SheetEvidenceFacet`
+        Evidence facet rendered into the Evidencia tab and JSON sidecar.
+"""
 
 from __future__ import annotations
 
@@ -67,7 +79,12 @@ _EVIDENCE_HEADERS: tuple[str, ...] = (
 
 
 class OfflineWorkbookEvidenceSidecar(BaseModel):
-    """Machine-readable evidence sidecar emitted beside an offline workbook."""
+    """Machine-readable evidence sidecar emitted beside an offline workbook.
+
+    The sidecar binds :class:`SheetExportMetadata`, the workbook SHA-256, and
+    :class:`SheetEvidenceFacet` so external review can inspect the fact basis
+    without parsing XLSX cells.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -78,7 +95,12 @@ class OfflineWorkbookEvidenceSidecar(BaseModel):
 
 
 class OfflineWorkbookExportResult(BaseModel):
-    """Serialized offline workbook plus its machine-readable evidence sidecar."""
+    """Serialized offline workbook plus its machine-readable evidence sidecar.
+
+    The payloads are operator-directed export bytes. Callers decide where to
+    write them and remain responsible for protecting the plaintext files after
+    export.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -108,7 +130,7 @@ def evidence_table(plan: SheetExportPlan) -> tuple[str, tuple[str, ...], tuple[t
 
 
 def build_offline_workbook(plan: SheetExportPlan) -> Workbook:
-    """Materialise a ``SheetExportPlan`` as an offline openpyxl workbook."""
+    """Materialise a :class:`SheetExportPlan` as an offline openpyxl workbook."""
     workbook = Workbook()
     default = workbook.active
     assert default is not None
@@ -227,6 +249,10 @@ def build_evidence_sidecar(
 ) -> OfflineWorkbookEvidenceSidecar:
     """Build the machine-readable evidence sidecar for one workbook export.
 
+    The sidecar is keyed to the workbook payload digest, so a reviewer can pair
+    the JSON evidence with the exact XLSX bytes produced by
+    :func:`serialize_offline_workbook`.
+
     Returns:
         :class:`OfflineWorkbookEvidenceSidecar`: The evidence sidecar.
     """
@@ -254,6 +280,10 @@ def serialize_offline_workbook(plan: SheetExportPlan) -> bytes:
 
 def serialize_offline_export(plan: SheetExportPlan) -> OfflineWorkbookExportResult:
     """Serialize an offline workbook and its adjacent evidence sidecar.
+
+    The return value is a pure byte payload plus integrity metadata. No file is
+    written here; this keeps the plaintext-export exception at the caller's
+    explicit output path boundary.
 
     Returns:
         :class:`OfflineWorkbookExportResult`: The export result.

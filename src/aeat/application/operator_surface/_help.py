@@ -1,4 +1,10 @@
-"""Backend-owned help and discovery documents for the accepted CLI roots."""
+"""Backend-owned help and discovery documents for the accepted CLI roots.
+
+The builders return typed :class:`HelpDocument` and
+:class:`RootLandingReport` records for the contract-backed root, config, and
+app help surfaces. Rendering stays plain text so CLI adapters can display the
+documents without owning command inventory.
+"""
 
 from __future__ import annotations
 
@@ -9,8 +15,9 @@ from ._models import HelpDocument, HelpEntry, HelpSection, HelpSurface, RootLand
 def build_help_document(surface: HelpSurface | str) -> HelpDocument:
     """Return the curated help document for ``surface``.
 
-    Returns a :class:`HelpDocument` with sections and entries for the
-    requested surface.
+    Accepts a :class:`HelpSurface` member or its string token and returns a
+    :class:`HelpDocument` with workflow-ordered :class:`HelpSection` and
+    :class:`HelpEntry` records for the requested surface.
     """
     resolved = HelpSurface(surface)
     if resolved is HelpSurface.ROOT:
@@ -21,7 +28,7 @@ def build_help_document(surface: HelpSurface | str) -> HelpDocument:
 
 
 def build_root_landing_report(active_profile: str | None) -> RootLandingReport:
-    """Return the :class:`RootLandingReport` for the current profile state."""
+    """Return the :class:`RootLandingReport` for the caller-supplied profile state."""
     if active_profile:
         return RootLandingReport(
             active_profile=active_profile,
@@ -36,7 +43,7 @@ def build_root_landing_report(active_profile: str | None) -> RootLandingReport:
 
 
 def render_help_text(document: HelpDocument) -> str:
-    """Render a curated help document as terminal-safe plain text."""
+    """Render a curated :class:`HelpDocument` as terminal-safe plain text."""
     lines: list[str] = [document.heading, ""]
     for paragraph in document.paragraphs:
         lines.append(paragraph)
@@ -52,7 +59,7 @@ def render_help_text(document: HelpDocument) -> str:
 
 
 def render_root_landing_text(report: RootLandingReport) -> str:
-    """Render the bare-invocation landing report."""
+    """Render the bare-invocation :class:`RootLandingReport`."""
     return tr("cli.operator_surface.landing.text_template", message=report.message, command=report.command)
 
 

@@ -1,14 +1,12 @@
-"""Application-layer wrapper for Modelo 369 OSS / IOSS aggregation.
+"""Modelo 369 OSS/IOSS source-mesh resolver and candidate validator.
 
-Used by: :mod:`~._modelo_bindings` (Modelo 369 binding resolver) to validate and aggregate ledger candidates.
-
-This module sits between the bucket's persisted ledger lines and the
-Modelo 369 registry binding resolver. It accepts a sequence of
-substrate-classified ledger candidates, validates each line's persisted
-IVA amount against the destination Member State's published rate
-through :func:`aeat.domain.iva.lookup_rate`, and produces validated
-:class:`~aeat.domain.calculations.registry.OssIossLedgerObservation` records the registry can aggregate.
-Callers source persisted invoices through :class:`InvoiceCatalogueRepository`.
+The ``ledger_oss_aggregation`` source projects OSS/IOSS-tagged issued invoices
+from the bucket's :class:`~aeat.domain.invoices.InvoiceCatalogueRepository` into
+substrate-classified :class:`OssIossLedgerCandidate` rows. Pre-classified callers
+can also pass candidates directly. Each candidate is validated against the
+destination Member State's published IVA rate through
+:func:`aeat.domain.iva.lookup_rate` and becomes a registry-ready
+:class:`~aeat.domain.calculations.registry.OssIossLedgerObservation`.
 
 Per the OSS / IOSS regulation suite, the IVA amount on each line MUST
 match the destination Member State's published rate for the chosen
@@ -17,9 +15,10 @@ with the lookup is a data-quality blocker: the wrapper rejects it
 before the registry resolver sees it, so calculation revisions never
 land on inconsistent ledger facts.
 
-The wrapper does not own classification, persistence, or event
-emission; those concerns live in the modelo calculation orchestrator
-the wrapper feeds.
+The :class:`OssIossLedgerSourceResolver` returns a
+:class:`~._source_mesh.CalculationSourceResolution` with resolved binding values,
+transaction provenance, and non-blocking diagnostics for empty live catalogues or
+declarable OSS observations that no ``ledger_oss_aggregation`` binding consumes.
 """
 
 from __future__ import annotations

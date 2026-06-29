@@ -51,7 +51,7 @@ from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos._verification_report import ModeloVerificationFindingKind
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...modelo._actions import _evaluate_verification_predicates
+from ...modelo._verification_actions import _evaluate_verification_predicates
 from .._binding_prefill import resolve_bindings_from_local_store
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository

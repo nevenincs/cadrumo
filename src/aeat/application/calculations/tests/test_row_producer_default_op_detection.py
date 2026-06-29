@@ -18,10 +18,12 @@ from __future__ import annotations
 import pytest
 
 from ....core import BindingSourceKind
+from ....core.aggregation import BindingAggregation
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     BindingAggregationOp,
     DataBindingDefinition,
+    RegistryValidationError,
     binding_aggregation_op,
 )
 from .._row_set_assembly import _row_field_lookup
@@ -68,3 +70,19 @@ def test_row_field_lookup_detects_none_aggregation_rows_default_binding() -> Non
     lookup = _row_field_lookup(revision_with_default)
 
     assert lookup == {"synthetic-detail-row": "valuation_amount"}
+
+
+def test_row_field_lookup_rejects_rows_binding_without_row_set_projection() -> None:
+    revision = resources().modelos.get("720").revisions["2013-y-siguientes"]
+    malformed_row_binding = DataBindingDefinition(
+        id="synthetic-row-without-grouping",
+        source=BindingSourceKind.FOREIGN_ASSET,
+        selector={"fact": "row_field", "row_field": "valuation_amount"},
+        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
+        legal_refs=("ley-7-2012:dt-18",),
+        source_refs=("aeat-modelo-720",),
+    )
+    revision_with_malformed_row = revision.model_copy(update={"bindings": (malformed_row_binding,)})
+
+    with pytest.raises(RegistryValidationError, match="missing grouping"):
+        _row_field_lookup(revision_with_malformed_row)

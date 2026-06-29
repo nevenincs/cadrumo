@@ -1,9 +1,18 @@
-"""Invoice orchestration surface.
+"""Application invoice orchestration and calculation-source surface.
 
-Re-exports the application-level invoice service entry points from
-:mod:`aeat.domain.invoices._service`. Callers outside the subpackage
-must import only from this module so the private underscore-prefixed
-implementation can evolve freely.
+This package is the public application boundary for invoice catalogue import,
+linking, review, reconciliation, and source-mesh projection. Callers outside the
+subpackage must import only from this module so private underscore-prefixed
+implementation modules can evolve freely.
+
+The calculation-facing export is :class:`InvoiceCatalogueSourceResolver`. It
+projects both rich :class:`~aeat.domain.invoices.InvoiceCatalogue` entries and
+slim :class:`~aeat.application.ledger.BusinessOperationInvoice` records into
+:class:`~aeat.application.aggregation.CalculationSourceResolution` values for
+the :attr:`~aeat.core.BindingSourceKind.COLLECTIBLE_INVOICE` and
+:attr:`~aeat.core.BindingSourceKind.PAYABLE_INVOICE` source kinds. The helper
+:func:`invoice_direction_to_source_kind` is the single direction-to-settlement
+mapping shared with the operator ``aeat app ledger invoice`` surface.
 
 Key exports:
 
@@ -16,6 +25,8 @@ Key exports:
   invoices.
 * :func:`verify_link_consistency` and :class:`LinkInconsistency` —
   audit helpers for cross-side link integrity.
+* :class:`InvoiceCatalogueSourceResolver` — the live calculate-path resolver for
+  invoice-source bindings and Modelo 349 detail rows.
 """
 
 from __future__ import annotations

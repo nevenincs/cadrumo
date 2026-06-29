@@ -39,7 +39,7 @@ from ....domain.modelos._verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-from .._actions import (
+from .._verification_actions import (
     _evaluate_advisory_predicate_fires,
     _evaluate_verification_predicates,
 )

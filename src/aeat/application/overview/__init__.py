@@ -1,34 +1,43 @@
-"""Typed overview-status surface for ``aeat app overview``.
+"""Application read models for ``aeat app overview``.
 
-The CLI exposes::
+The package owns the typed DTOs and pure builders behind the overview
+``status``, ``calendar``, ``agenda``, ``backlog``, and ``explain``
+surfaces. CLI adapters supply the active profile or bucket state,
+already-persisted live-read snapshots, filing records, and query dates;
+these builders do not contact AEAT and do not mutate storage.
 
-    aeat app overview status                                # bare readiness
-    aeat app overview status --period {period} --verbose
-    aeat app overview calendar --from DATE --to DATE
+``overview status`` projects the canonical ``OperatorStateProjection``
+into :class:`OverviewStatusReport`. ``overview calendar`` composes the
+existing :class:`aeat.domain.deadlines.DeadlineEngine` over the requested
+year window, returning :class:`OverviewCalendarEntry` obligation rows,
+additive :class:`OverviewCalendarEvent` observations, and
+:class:`OverviewCalendarFilingEvidence` rows.
 
-The calendar view uses a closed 4-state user-facing taxonomy that maps
-from the existing :class:`aeat.domain.deadlines.ObligationStatus`
-six-state enum. The typed query record
-(:class:`OverviewCalendarRange`), the per-period entry record
-(:class:`OverviewCalendarEntry`), the result wrapper
-(:class:`OverviewCalendar`), the user-facing state enum
-(:class:`OverviewPeriodState`), and the
-:func:`build_overview_calendar` aggregator that composes the existing
-:class:`aeat.domain.deadlines.DeadlineEngine` over the year window.
+Calendar evidence deliberately keeps :class:`OverviewLocalFilingState`
+separate from :class:`OverviewAeatSubmissionState`: a local ready/filed
+record never implies an AEAT submission, and an observed AEAT submission
+is not a verified justificante until persisted receipt metadata proves
+the CSV/model/year/period/taxpayer match. Raw profile values may also
+produce typed :class:`CalendarWarning` and :class:`CalendarCompleteness`
+records so deadline-engine defaults are visible rather than silent.
 
-The aggregator is pure: no I/O, no mutation. The CLI wires it to the
-operator's active :class:`TaxpayerProfile` and the parsed ``--from`` /
-``--to`` dates. The resulting :class:`Schedule` drives obligation
-date computation and period-level state classification.
-
-When the caller supplies ``raw_values`` (the operator's user_cli
-profile values mapping), the aggregator additionally detects which
-deadline-engine-consumed keys are unset and surfaces a typed
-``CalendarWarning`` per missing key plus a ``CalendarCompleteness``
-breakdown listing computable / under-default modelos. The
-profile-completeness surface ensures the engine never silently
-computes obligations from its defaults without flagging that the
-operator never declared a gating field.
+See Also:
+    :mod:`aeat.application.state_projection`
+        Canonical producer for the :class:`~aeat.application.state_projection.OperatorStateProjection`
+        consumed by ``overview status``.
+    :mod:`aeat.domain.deadlines`
+        Deadline engine and :class:`~aeat.domain.deadlines.Schedule` authority
+        used by calendar, agenda, backlog, and explain read models.
+    :mod:`aeat.application.live`
+        Read-only capture surface that persists the live evidence this package
+        can display without opening AEAT again.
+    :mod:`aeat.domain.modelos`
+        Local :class:`~aeat.domain.modelos.ModeloRecord` and
+        :class:`~aeat.domain.modelos.ExternalEvidence` records projected into
+        overview calendar evidence.
+    :mod:`aeat.application.workflow`
+        Active-profile and pending-obligation state that remains upstream of
+        overview rendering.
 """
 
 from __future__ import annotations
@@ -163,7 +172,7 @@ def overview_status_report_from_projection(
 
     The :class:`OverviewStatusReport` is a CLI emit shape derived from
     the one :class:`OperatorStateProjection`; it is not a second
-    state-assembly path. Both the legacy ``ModeloDraft`` count and the
+    state-assembly path. Both the declaration-draft ``ModeloDraft`` count and the
     ``WorkUnitCatalogue`` count are carried distinctly.
 
     Args:

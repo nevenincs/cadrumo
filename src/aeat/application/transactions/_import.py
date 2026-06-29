@@ -2,8 +2,13 @@
 
 :func:`import_ledger_with_diagnostics` accepts an existing
 :class:`TransactionCatalogue` and an iterable of raw rows. It emits
-structured diagnostics for duplicate and likely-duplicate detection
-during import verification.
+structured diagnostics for parser-empty, duplicate, calendar-gap, and
+original-file checks during import verification.
+
+Duplicate detection uses the stable
+:func:`~aeat.domain.transactions.derive_import_fingerprint` identity so
+the dry-run diagnostics match the persistence path used by ledger import
+actions.
 """
 
 from __future__ import annotations
@@ -30,7 +35,13 @@ _logger = get_logger(__name__)
 
 
 class LedgerImportResult(BaseModel):
-    """Return value of an orchestrated ledger import with diagnostics."""
+    """Return value of an orchestrated ledger import with diagnostics.
+
+    ``imported_count`` and ``skipped_count`` reflect the previewed outcome for
+    the supplied :class:`RawTransaction` rows; ``diagnostics`` carries the
+    structured :class:`LedgerImportDiagnostic` records explaining parser,
+    duplicate, gap, or original-file findings.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -50,8 +61,10 @@ def import_ledger_with_diagnostics(
     Args:
         source_path: Path of the file being imported.
         raw_transactions: Unmerged raw transactions emitted by the provider.
-        existing_catalogue: The current :class:`TransactionCatalogue` used for duplicate detection.
-        original_source_path: Optional original file to verify against.
+        existing_catalogue: The current :class:`TransactionCatalogue` used for
+            import-fingerprint duplicate detection.
+        original_source_path: Optional original file path to record when it is
+            present on disk.
 
     Returns:
         An immutable :class:`LedgerImportResult` with finding diagnostics.

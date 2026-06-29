@@ -1,14 +1,22 @@
 """Repository-backed IVA observation projection from ledger catalogues.
 
-Consumes a :class:`~aeat.domain.calculations.registry.ModeloRevision` to resolve the IVA aggregation binding
-values declared for the target modelo period. The primary entry point
-:func:`aggregate_iva_ledger_observations` accepts a
-:class:`~aeat.domain.transactions.TransactionCatalogue` and returns an :class:`IvaLedgerAggregation`.
-The repository-backed entry point constructs a
-:class:`~aeat.domain.transactions.TransactionCatalogueRepository` for the active bucket when none
-is supplied.
+This module classifies bucket-local
+:class:`~aeat.domain.transactions.TransactionCatalogue` rows into typed
+:class:`~aeat.domain.calculations.registry.IvaLedgerObservation` records and
+binding-ready totals. The source-mesh resolver in :mod:`~._modelo_bindings`
+then applies the target
+:class:`~aeat.domain.calculations.registry.ModeloRevision`, resolves
+``ledger_iva_aggregation`` bindings, and surfaces source diagnostics for ledger
+rows that no declared binding consumes.
 
-Related: :mod:`_renta_ledger`, :mod:`_renta_income_ledger` for similar pipelines.
+The repository-backed entry point constructs a
+:class:`~aeat.domain.transactions.TransactionCatalogueRepository` for the active
+bucket when none is supplied. Pre-classified callers can use
+:class:`IvaLedgerCandidate` and :func:`aggregate_iva_ledger_candidate_bindings`
+to run the same validation and registry binding path.
+
+Related: :mod:`~._renta_ledger`, :mod:`~._renta_income_ledger`, and
+:mod:`~._renta_gasto_ledger` for the sibling Renta ledger projections.
 """
 
 from __future__ import annotations
@@ -271,7 +279,7 @@ def aggregate_iva_ledger_candidates(
     """Project pre-classified IVA candidates into period-scoped observations.
 
     This path complements :func:`aggregate_iva_ledger_observations`,
-    which remains the legacy domestic-rate projection from bank
+    which remains the domestic-rate projection from bank
     transactions. Pre-classified candidates are required for non-domestic
     IVA and adjustments because those axes cannot be recovered from a
     transaction amount or direction without guessing.
@@ -615,7 +623,7 @@ def _validate_intracom_export_counterparty(
 
     Rules (ADR D5):
     - ``INTRA_COMMUNITY_SUPPLY`` requires a non-ES ``EUMemberState``.
-    - ``EXPORT_THIRD_COUNTRY_ZERO_RATED`` must carry no ``EUMemberState``.
+    - Export and export-assimilated categories must carry no ``EUMemberState``.
     """
     if category is IvaCategory.INTRA_COMMUNITY_SUPPLY:
         if eu_member_state is None:
@@ -633,11 +641,17 @@ def _validate_intracom_export_counterparty(
                     "not a valid intra-community counterparty"
                 ),
             )
-    if category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED and eu_member_state is not None:
+    if category in {
+        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
+    } and eu_member_state is not None:
         return IvaLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION,
-            detail=f"export to third country must not carry an EU member state; got {eu_member_state.value!r}",
+            detail=(
+                "export/export-assimilated operation must not carry an EU member "
+                f"state; got {eu_member_state.value!r}"
+            ),
         )
     return None
 

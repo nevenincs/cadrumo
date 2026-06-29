@@ -1,15 +1,12 @@
 """Contract tests for identity fields populated by the production build_draft path.
 
 :class:`ModeloDraft.subject_tax_id` and :class:`ModeloDraft.snapshot_ref`
-both default to ``None`` on the model so already-persisted drafts remain
-loadable. The production ``build_draft`` entry point is the only path
-that constructs a *new* draft, and it must populate both fields:
-``subject_tax_id`` from the validated profile substrate and
-``snapshot_ref`` from the resolved registry snapshot. Without a contract
-test exercising the real ``build_draft``, a regression that stopped
-wiring either field would leave new drafts silently identity-less and
-the encrypted-persistence roundtrip suite would not catch it (the
-roundtrip fixtures build drafts directly, not via ``build_draft``).
+are required on the model. The production ``build_draft`` entry point
+must populate both fields: ``subject_tax_id`` from the validated profile
+substrate and ``snapshot_ref`` from the resolved registry snapshot.
+Without a contract test exercising the real ``build_draft``, a
+regression that stopped wiring either field would fail only at the
+model boundary, away from the builder code that owns the data.
 """
 
 from __future__ import annotations
@@ -69,10 +66,9 @@ def _profile() -> ModeloTestProfile:
 def test_build_draft_populates_subject_tax_id_and_snapshot_ref() -> None:
     """The production build_draft path populates both identity fields.
 
-    Both ``subject_tax_id`` and ``snapshot_ref`` default to ``None`` on
-    :class:`ModeloDraft`; this contract test pins that a freshly built
-    draft carries the validated taxpayer identity and the registry
-    snapshot reference resolved during the build.
+    This contract test pins that a freshly built draft carries the
+    validated taxpayer identity and the registry snapshot reference
+    resolved during the build.
     """
 
     draft = build_draft(

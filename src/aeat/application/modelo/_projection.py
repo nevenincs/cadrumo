@@ -2,8 +2,11 @@
 
 The Modelo 100 projection path reads persisted :class:`CalculationRevision`
 rows from quarterly Modelo 130 work units, resolves the annual
-:class:`RegistrySnapshot`, overlays profile-sourced bindings, and runs
-:func:`calculate_registry_snapshot` without persisting a new revision.
+:class:`RegistrySnapshot`, injects the latest cumulative Modelo 130 income at
+the annual Renta input leaf, threads pagos fraccionados through the relation
+channel, overlays decimal, enum, and date profile facts from
+:func:`resolve_profile_sourced_bindings`, and runs
+:func:`calculate_registry_snapshot` without persisting the synthetic result.
 
 The comparison path selects the best draft or verified
 :class:`CalculationRevision` for each requested year, grounds each delta row in
@@ -182,7 +185,7 @@ class ModeloProjectM100Projection(BaseModel):
 
 
 class ModeloProjectServiceResult(BaseModel):
-    """Year-end Modelo 100 projection from quarterly Modelo 130 filings."""
+    """Year-end Modelo 100 projection from quarterly Modelo 130 revisions."""
 
     model_config = _STRICT_FROZEN
 
@@ -307,14 +310,7 @@ def _relation_id(value: object, *, surface: str) -> RelationId:
         raise RegistryValidationError(f"{surface} must be a canonical relation id: {value!r}") from exc
 
 
-def project_modelo_100_from_m130(
-    *,
-    year: int,
-    ccaa: str,
-    casilla_overrides: Mapping[CasillaId, str] | None = None,
-    binding_overrides: Mapping[BindingId, str] | None = None,
-) -> ModeloProjectServiceResult:
-    """Project annual Modelo 100 values from quarterly M130 revisions into a :class:`ModeloProjectServiceResult`."""
+def _m130_quarter_revisions(year: int) -> dict[str, CalculationRevision]:
     all_units = list_work_units()
     m130_units = [
         unit
@@ -340,7 +336,24 @@ def project_modelo_100_from_m130(
             context={"year": year},
             translated_message="cli.app.modelo.project.no_m130_revisions",
         )
+    return m130_quarters
 
+
+def project_modelo_100_from_m130(
+    *,
+    year: int,
+    ccaa: str,
+    casilla_overrides: Mapping[CasillaId, str] | None = None,
+    binding_overrides: Mapping[BindingId, str] | None = None,
+) -> ModeloProjectServiceResult:
+    """Project annual Modelo 100 values from quarterly M130 revisions.
+
+    The service reads stored :class:`CalculationRevision` rows, uses the latest
+    cumulative Modelo 130 figures for annual income, sums casilla 19 as the paid
+    instalment relation, resolves the annual :class:`RegistrySnapshot`, and
+    returns a :class:`ModeloProjectServiceResult` without writing a new revision.
+    """
+    m130_quarters = _m130_quarter_revisions(year)
     quarters_filed = len(m130_quarters)
     # Modelo 130 casillas 01/02/03 are year-to-date cumulative (their registry
     # bindings are named ``...-cumulative``): each quarter's value already
@@ -654,7 +667,13 @@ def compare_modelo_years(
     modelo: str,
     years: Iterable[int],
 ) -> ModeloCompareServiceResult:
-    """Compare the best calculation revision for two filing years and return a :class:`ModeloCompareServiceResult`."""
+    """Compare the best persisted revision for two filing years.
+
+    Verified :class:`CalculationRevision` rows win over drafts. Each emitted
+    :class:`ModeloCompareDeltaRow` is grounded against the compared
+    :class:`RegistrySnapshot` metadata or the revision's recorded observation
+    provenance before the :class:`ModeloCompareServiceResult` is returned.
+    """
     requested_years = list(years)
     if len(requested_years) != 2:
         raise ModeloCompareNeedTwoYearsError(translated_message="cli.app.modelo.compare.need_two_years")

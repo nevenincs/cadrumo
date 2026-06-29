@@ -89,10 +89,10 @@ def _transaction_dedup_fingerprint(transaction: Transaction) -> str:
 
     Rows imported after the cross-format dedup landed carry a stamped
     :attr:`Transaction.import_fingerprint`; that value is the canonical
-    identity and is used verbatim. Hand-entered rows (and any legacy
-    imported row that predates the stamp) have no fingerprint, so the
+    identity and is used verbatim. Hand-entered rows and unstamped imported
+    rows have no fingerprint, so the
     fingerprint is derived from the current ``raw`` as a best-effort
-    fallback â€” this keeps re-imports of legacy rows idempotent.
+    fallback - this keeps re-imports of unstamped rows idempotent.
     """
     return transaction.import_fingerprint or derive_import_fingerprint(transaction.raw)
 

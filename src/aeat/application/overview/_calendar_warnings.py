@@ -1,4 +1,11 @@
-"""Calendar completeness and evidence-warning helpers."""
+"""Calendar completeness and evidence-warning helpers.
+
+These helpers inspect already-built :class:`OverviewCalendarEntry` and
+:class:`OverviewCalendarEvent` DTOs to derive :class:`CalendarWarning`
+and :class:`CalendarCompleteness` payloads. They do not read remote state;
+warnings about censo provenance, missing justificante verification, and
+conflicting AEAT evidence only describe gaps in the local projection.
+"""
 
 from __future__ import annotations
 
@@ -44,7 +51,7 @@ _PAYER_FACT_PROFILE_KEY: dict[_PayerFact, tuple[str, str]] = {
 
 _ESTIMATION_REGIME_PROFILE_KEY: dict[_IrpfEstimationRegime, tuple[str, str]] = {
     _IrpfEstimationRegime.OBJETIVA: (
-        "uses_objective_estimation_irpf",
+        "irpf.estimation_regime",
         "cli.overview.warning.estimacion_objetiva_unset",
     ),
 }

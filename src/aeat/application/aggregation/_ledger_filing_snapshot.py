@@ -8,7 +8,7 @@ This application module holds the Transaction-aware halves:
 computing a contributor's content fingerprint from the live
 :class:`~aeat.domain.transactions.TransactionCatalogue`, building a
 :class:`~aeat.domain.modelos._ledger_filing_snapshot.LedgerFilingSnapshot` for a
-:class:`~aeat.domain.calculations.registry.CalculationRevision`'s ``source_transaction_ids``,
+:class:`~aeat.domain.modelos._calculation_revision.CalculationRevision`'s ``source_transaction_ids``,
 and evaluating drift between a filed snapshot and the current ledger state.
 
 The fingerprint covers exactly the transaction facts that can move a casilla --
@@ -271,7 +271,7 @@ def stale_filed_revisions(
     Each item pairs a :class:`CalculationRevision` with its
     :class:`LedgerFilingStalenessVerdict`. Scans verified/filed revisions
     carrying a ``ledger_filing_snapshot`` and re-evaluates each against the
-    live catalogue. A revision with no snapshot (legacy) or a non-finalized
+    live catalogue. A revision with no snapshot or a non-finalized
     state is skipped. Pure given its inputs.
 
     Args:

@@ -18,14 +18,31 @@ registry-declared preflight requirements for the requested work surface.
 
 The projection is pure read: building it mutates no store.
 
-Background: ``overview status`` historically reconstructed workspace
+Background: ``overview status`` once reconstructed workspace
 counters from a different store subset than ``modelo work`` writes —
 it read the ``ModeloDraft`` store but never the ``WorkUnitCatalogue``
 or ``CalculationRevisionCatalogue`` stores — so an operator who used
 ``modelo work create`` / ``calculate`` saw ``drafts: 0``. This
-projection carries ``drafts`` (the legacy ``ModeloDraft`` store) and
+projection carries ``drafts`` (the declaration-draft ``ModeloDraft`` store) and
 ``work_units`` (the ``WorkUnitCatalogue`` store) as distinct counters,
 so neither is silently zero.
+
+See Also:
+    :class:`~aeat.application.overview.OverviewStatusReport`
+        Overview emit shape derived from this projection, rather than from a
+        second store assembly path.
+    :class:`~aeat.application.auth.AuthStatusResult`
+        Auth emit shape that reads the same canonical configured/authenticated
+        readiness values carried here.
+    :class:`~aeat.application.workflow.WorkflowEngine`
+        Filing workflow gate that shares the pending-obligation schedule
+        producer with this projection.
+    :func:`~aeat.domain.deadlines.compute_obligation_schedule`
+        Single deadline schedule producer used for projection obligations and
+        workflow ``NO_PENDING_OBLIGATION`` checks.
+    :class:`~aeat.domain.calculations.registry.RegistrySnapshot`
+        Registry authority snapshot used to resolve modelo-readiness preflight
+        requirements.
 """
 
 from __future__ import annotations
@@ -146,7 +163,7 @@ class ProjectionWorkspaceSummary(BaseModel):
     """Counters for every workspace store, so none is silently zero.
 
     ``drafts`` and ``work_units`` are deliberately distinct counters:
-    ``modelo file`` writes the legacy :class:`ModeloDraft` store while
+    ``modelo file`` writes the declaration-draft :class:`ModeloDraft` store while
     ``modelo work create`` / ``calculate`` write the
     :class:`WorkUnitCatalogue` store. A single ``drafts`` counter that
     read only the first store reported ``0`` for an operator who used
@@ -155,7 +172,7 @@ class ProjectionWorkspaceSummary(BaseModel):
     Attributes:
         transactions: Count of imported transactions.
         invoices: Count of imported invoices.
-        drafts: Count of legacy ``ModeloDraft`` entries.
+        drafts: Count of declaration-draft ``ModeloDraft`` entries.
         work_units: Count of *active* (``BORRADOR``) ``WorkUnitCatalogue``
             entries written by ``modelo work create``. Discarded units
             are excluded so the counter is never inflated by units the
@@ -219,8 +236,9 @@ class OperatorStateProjection(BaseModel):
         pending_obligations: The full, unfiltered deadline obligations
             for the active profile's current year, as
             :class:`ProjectionObligation` records. Computed through
-            :func:`compute_obligation_schedule`, the single producer
-            shared with the ``WorkflowEngine``
+            :func:`~aeat.domain.deadlines.compute_obligation_schedule`,
+            the single producer shared with
+            :class:`~aeat.application.workflow.WorkflowEngine`
             ``NO_PENDING_OBLIGATION`` gate. The gate filters the same
             schedule down to its narrow ``next_deadline`` /
             ``(modelo, period)`` target; this field carries every
@@ -488,9 +506,10 @@ def build_pending_obligations(
 ) -> tuple[ProjectionObligation, ...]:
     """Compute the deadline obligations for the active profile.
 
-    Routes through :func:`compute_obligation_schedule`, the single
-    producer of the pending-obligation datum shared with the
-    ``WorkflowEngine`` ``NO_PENDING_OBLIGATION`` gate, so the gate and
+    Routes through :func:`~aeat.domain.deadlines.compute_obligation_schedule`,
+    the single producer of the pending-obligation datum shared with the
+    :class:`~aeat.application.workflow.WorkflowEngine`
+    ``NO_PENDING_OBLIGATION`` gate, so the gate and
     the projection cannot draw a divergent obligation set. A failure to
     compute the schedule is logged and degrades to an empty tuple
     rather than failing the whole projection.
@@ -529,13 +548,15 @@ class ModeloReadinessRequest(BaseModel):
     """One ``(modelo, revision, year, period)`` readiness target.
 
     The projection producer accepts a tuple of these and computes one
-    :class:`ProfilePreflightReport` per request, so ``modelo readiness``
-    never builds its own preflight pass.
+    :class:`ProjectionModeloReadiness` per request, so ``modelo readiness``
+    never builds its own profile, registry, binding, or ledger preflight
+    pass.
 
     Attributes:
-        periodo: Typed :class:`~aeat.core.Period` scoping the readiness
+        period: Typed :class:`~aeat.core.Period` scoping the readiness
             check, or ``None`` when the caller omits the period (the
-            authority then uses the modelo's sole revision for the year).
+            projection uses the annual ``0A`` period for registry and
+            ledger preflight resolution).
     """
 
     model_config = _STRICT_FROZEN
@@ -547,7 +568,13 @@ class ModeloReadinessRequest(BaseModel):
 
 
 class ProjectionModeloBindingRequirement(BaseModel):
-    """One calculation binding that readiness cannot currently satisfy."""
+    """One registry calculation binding readiness cannot currently satisfy.
+
+    These are non-constant binding declarations from the resolved
+    :class:`~aeat.domain.calculations.registry.RegistrySnapshot` that are not
+    supplied by profile binding resolution, enum/date helpers, or a successful
+    ledger preflight.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -557,15 +584,34 @@ class ProjectionModeloBindingRequirement(BaseModel):
 
 
 class ProjectionModeloReadiness(BaseModel):
-    """Readiness for one modelo target across profile and ledger facts.
+    """Readiness for one modelo target across all preflight axes.
+
+    The projection combines profile requirements, registry-snapshot
+    availability, calculation binding resolution, and ledger preflight
+    into one emit shape. ``ready`` is true only when every axis is ready.
 
     Attributes:
+        missing: Profile fields still required by the
+            :class:`~aeat.application.user_profile.ProfilePreflightReport`.
         profile_refusal: Operator-facing refusal when profile facts are
             present but disqualify the target period.
+        registry_ready: Whether the requested modelo/year/period/revision
+            resolved to a usable registry snapshot.
+        registry_refusal: Operator-facing explanation when registry
+            resolution failed.
+        binding_ready: Whether every non-constant registry binding can be
+            supplied by the current profile or ledger state.
+        missing_bindings: Missing :class:`ProjectionModeloBindingRequirement`
+            records for unresolved calculation inputs.
         period: Typed :class:`~aeat.core.Period` the readiness check was
             scoped to.
+        ledger_preflight_required: Whether the registry declares any
+            ledger aggregation binding requiring ledger preflight.
+        ledger_ready: Ledger-preflight verdict, or ``None`` when no
+            ledger preflight was required.
         ledger_period: The :class:`~aeat.core.Period` the ledger preflight
             was scoped to, or ``None`` when no ledger preflight was run.
+        ledger_issues: Blocking :class:`LedgerPreflightIssue` rows.
     """
 
     model_config = _STRICT_FROZEN
@@ -632,7 +678,7 @@ def _build_modelo_readiness(
         profile_report = service.report(
             record=record,
             modelo=request.modelo,
-            revision_id=request.revision_id,
+            revision_id=revision.id if revision is not None else request.revision_id,
             period=readiness_period,
             revision=revision,
         )
@@ -710,7 +756,12 @@ def _build_modelo_readiness(
 
 
 def modelo_requires_ledger_preflight(request: ModeloReadinessRequest) -> bool:
-    """Return whether a modelo readiness target requires ledger preflight."""
+    """Return whether a modelo readiness target requires ledger preflight.
+
+    An unresolved registry snapshot is treated as "not required" for this
+    predicate and logged at DEBUG; the full readiness projection reports
+    the registry refusal through :attr:`ProjectionModeloReadiness.registry_refusal`.
+    """
     readiness_period = _ledger_period_for_modelo_readiness(request)
     resolution = _resolve_modelo_readiness_registry(request, period=readiness_period)
     if resolution.snapshot is None:
@@ -728,6 +779,7 @@ def modelo_requires_ledger_preflight(request: ModeloReadinessRequest) -> bool:
 
 
 def _snapshot_requires_ledger_preflight(snapshot: RegistrySnapshot) -> bool:
+    """Return whether the registry snapshot declares ledger-backed bindings."""
     return any(binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES for binding in snapshot.revision.bindings)
 
 
@@ -736,6 +788,12 @@ def _resolve_modelo_readiness_registry(
     *,
     period: Period,
 ) -> _ModeloReadinessRegistryResolution:
+    """Resolve the registry snapshot used by modelo readiness.
+
+    Registry lookup failures are converted into a typed refusal string so
+    callers can render ``registry_ready: false`` instead of losing the
+    rest of the projection.
+    """
     from ..core.resources import resources
     from ..domain.calculations.registry import RegistrySnapshotError, RegistryValidationError
 
@@ -745,7 +803,6 @@ def _resolve_modelo_readiness_registry(
             request.modelo,
             filing_year=request.filing_year,
             period=period_token,
-            revision_id=request.revision_id,
         )
     except (FileNotFoundError, RegistrySnapshotError, RegistryValidationError) as exc:
         refusal = _registry_readiness_refusal(request, period_token=period_token, exc=exc)
@@ -761,11 +818,11 @@ def _resolve_modelo_readiness_registry(
             exc_info=True,
         )
         return _ModeloReadinessRegistryResolution(snapshot=None, refusal=refusal)
-    if snapshot.revision.id != request.revision_id:
-        refusal = (
-            "registry revision mismatch for modelo "
-            f"{request.modelo!r}: requested {request.revision_id!r}, resolved {snapshot.revision.id!r}. "
-            f"Run 'aeat app modelo describe {request.modelo}' to inspect declared revision_ids and periods."
+    if request.revision_id and snapshot.revision.id != request.revision_id:
+        refusal = _registry_readiness_revision_mismatch_refusal(
+            request,
+            period_token=period_token,
+            resolved_revision_id=snapshot.revision.id,
         )
         return _ModeloReadinessRegistryResolution(snapshot=None, refusal=refusal)
     return _ModeloReadinessRegistryResolution(snapshot=snapshot)
@@ -782,6 +839,21 @@ def _registry_readiness_refusal(
         "registry snapshot unresolved for modelo "
         f"{request.modelo!r}, year {request.filing_year}, period {period_token!r}, "
         f"revision {request.revision_id!r}: {detail}. "
+        f"Run 'aeat app modelo describe {request.modelo}' to inspect declared revision_ids and periods."
+    )
+
+
+def _registry_readiness_revision_mismatch_refusal(
+    request: ModeloReadinessRequest,
+    *,
+    period_token: str,
+    resolved_revision_id: str,
+) -> str:
+    return (
+        "registry snapshot unresolved for modelo "
+        f"{request.modelo!r}, year {request.filing_year}, period {period_token!r}, "
+        f"revision {request.revision_id!r}: requested revision {request.revision_id!r} "
+        f"does not match law-determined revision {resolved_revision_id!r}. "
         f"Run 'aeat app modelo describe {request.modelo}' to inspect declared revision_ids and periods."
     )
 
@@ -930,7 +1002,7 @@ def build_operator_state_projection(
             so they should not fail because an unrelated period-readiness
             path changes.
         modelo_readiness_requests: Optional readiness targets; one
-            :class:`ProfilePreflightReport` is computed per request.
+            :class:`ProjectionModeloReadiness` is computed per request.
         today: Reference date for the deadline computation. Defaults to
             :meth:`date.today`.
 

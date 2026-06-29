@@ -8,12 +8,11 @@ and the verb from ``wizard.commands.status.created`` /
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 import pytest
 import typer
-from typer.testing import CliRunner
 
 from ....core.i18n import tr
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -23,10 +22,20 @@ from .._persistence import WizardPersistMode
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-
-@pytest.fixture
-def runner() -> CliRunner:
-    return CliRunner()
+_QUIET_PROFILE_ARGS = [
+    "operator",
+    "--quiet",
+    "--tax-id",
+    "00000000T",
+    "--entity-type",
+    "natural_person",
+    "--name",
+    "Operator",
+    "--surnames",
+    "Tester",
+    "--activity",
+    "Servicios",
+]
 
 
 @pytest.fixture
@@ -43,44 +52,55 @@ def _wizard_app(mode: WizardPersistMode) -> typer.Typer:
     return app
 
 
+def _invoke_wizard(mode: WizardPersistMode, args: Sequence[str], capsys: pytest.CaptureFixture[str]) -> str:
+    command = typer.main.get_command(_wizard_app(mode))
+    command.main(args=list(args), standalone_mode=False)
+    captured = capsys.readouterr()
+    assert captured.err == ""
+    return captured.out
+
+
 # Derive expected tab-key label and verbs from the locale authority.
 _EXPECTED_STATUS_LABEL = tr("application.wizard.output_labels.status")
 _EXPECTED_CREATED = tr("wizard.commands.status.created")
 _EXPECTED_UPDATED = tr("wizard.commands.status.updated")
 
 
-def test_wizard_create_status_verb_is_localized(runner: CliRunner, _isolated_backend: Path) -> None:
+def test_wizard_create_status_verb_is_localized(
+    _isolated_backend: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Wizard create emits the locale-resolved tab-key and verb, not raw English."""
-    app = _wizard_app("create")
-    result = runner.invoke(
-        app,
-        ["operator", "--quiet", "--tax-id", "00000000T", "--activity", "Servicios"],
+    output = _invoke_wizard(
+        "create",
+        _QUIET_PROFILE_ARGS,
+        capsys,
     )
 
-    assert result.exit_code == 0, result.output
-    assert f"{_EXPECTED_STATUS_LABEL}\t{_EXPECTED_CREATED}" in result.output
+    assert f"{_EXPECTED_STATUS_LABEL}\t{_EXPECTED_CREATED}" in output
     # Confirm the raw English literals are absent when locale resolves differently.
     if _EXPECTED_CREATED != "created" or _EXPECTED_STATUS_LABEL != "status":
-        assert "status\tcreated" not in result.output
+        assert "status\tcreated" not in output
 
 
-def test_wizard_edit_status_verb_is_localized(runner: CliRunner, _isolated_backend: Path) -> None:
+def test_wizard_edit_status_verb_is_localized(
+    _isolated_backend: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Wizard edit emits the locale-resolved tab-key and updated verb."""
     # Seed a profile first via create so edit has a target.
-    create_app = _wizard_app("create")
-    seed = runner.invoke(
-        create_app,
-        ["operator", "--quiet", "--tax-id", "00000000T", "--activity", "Servicios"],
-    )
-    assert seed.exit_code == 0, seed.output
-
-    edit_app = _wizard_app("edit")
-    result = runner.invoke(
-        edit_app,
-        ["operator", "--quiet", "--tax-id", "00000000T", "--activity", "Servicios"],
+    _invoke_wizard(
+        "create",
+        _QUIET_PROFILE_ARGS,
+        capsys,
     )
 
-    assert result.exit_code == 0, result.output
-    assert f"{_EXPECTED_STATUS_LABEL}\t{_EXPECTED_UPDATED}" in result.output
+    output = _invoke_wizard(
+        "edit",
+        _QUIET_PROFILE_ARGS,
+        capsys,
+    )
+
+    assert f"{_EXPECTED_STATUS_LABEL}\t{_EXPECTED_UPDATED}" in output
     if _EXPECTED_UPDATED != "updated" or _EXPECTED_STATUS_LABEL != "status":
-        assert "status\tupdated" not in result.output
+        assert "status\tupdated" not in output

@@ -1,7 +1,13 @@
-"""Inventory application service: bucket-scoped CRUD over InventoryLedger.
+"""Inventory application service: bucket-scoped CRUD over :class:`InventoryLedger`.
 
-Every mutating verb (add, update, remove) appends an event to the
-per-bucket audit trail via :class:`BucketEventHistoryRepository`.
+The service persists :class:`InventoryLedgerDocument` through
+:class:`InventoryLedgerRepository`, whose runtime default is built by
+:func:`secure_object_repository_for_bucket`. It does not read or write
+plaintext inventory JSON side stores.
+
+State-changing and audit-significant verbs append events to the
+per-bucket audit trail via :class:`BucketEventHistoryRepository`;
+valuation math remains delegated to :func:`compute_inventory_valuation`.
 """
 
 from __future__ import annotations
@@ -44,7 +50,12 @@ from ._errors import (
 
 
 class InventoryActividadSummary(BaseModel):
-    """One row in ``inventory list``: actividad + year + movement count."""
+    """One row in ``inventory list``.
+
+    The row summarizes actividad, year, :class:`ValuationMethod`, opening
+    stock, and movement count without returning the full
+    :class:`InventoryLedger`.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -56,7 +67,11 @@ class InventoryActividadSummary(BaseModel):
 
 
 class InventoryMovementCommand(BaseModel):
-    """Strict input shape for ``inventory movement add``."""
+    """Strict input shape for ``inventory movement add``.
+
+    The command is projected into a domain :class:`MovementRecord` with a
+    closed :class:`MovementKind` before valuation and persistence.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -70,7 +85,7 @@ class InventoryMovementCommand(BaseModel):
 
 
 class InventoryValuationPreview(BaseModel):
-    """Outcome of a ``valuation preview`` invocation."""
+    """Operator-facing projection of an :class:`InventoryValuationResult`."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -82,7 +97,11 @@ class InventoryValuationPreview(BaseModel):
 
 
 class InventoryLedgerResult(BaseModel):
-    """Return record from a mutating inventory verb — ledger plus emitted event id."""
+    """Return record from a mutating inventory verb.
+
+    ``ledger`` is the affected :class:`InventoryLedger`; ``bucket_event_ids``
+    lists the audit events emitted for the application operation.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -91,7 +110,7 @@ class InventoryLedgerResult(BaseModel):
 
 
 class InventoryValuationPreviewResult(BaseModel):
-    """Return record from valuation_preview — preview plus emitted event id."""
+    """Return record from ``valuation_preview`` plus emitted event id."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -167,7 +186,15 @@ def _replace_ledger(document: InventoryLedgerDocument, ledger: InventoryLedger) 
 
 
 class InventoryService:
-    """Bucket-scoped CRUD over per-actividad inventory ledgers."""
+    """Bucket-scoped CRUD over per-actividad :class:`InventoryLedger` records.
+
+    Runtime construction routes the repository through
+    :func:`secure_object_repository_for_bucket`, so the requested
+    ``bucket_id`` is checked by the storage runtime instead of bypassing
+    custody with a local file path. Tests may inject an
+    :class:`InventoryLedgerRepository` factory or
+    :class:`BucketEventHistoryRepository` protocol implementation.
+    """
 
     def __init__(
         self,
@@ -199,7 +226,9 @@ class InventoryService:
     ) -> InventoryLedgerResult:
         """Create a fresh ledger for one actividad/year. Rejects duplicates.
 
-        Returns an :class:`InventoryLedgerResult`.
+        Saves the containing :class:`InventoryLedgerDocument`, emits a
+        ``LEDGER_INVENTORY_CREATED`` bucket event, and returns an
+        :class:`InventoryLedgerResult`.
         """
         try:
             method = parse_valuation_method(valuation_method)
@@ -241,6 +270,11 @@ class InventoryService:
         return InventoryLedgerResult(ledger=ledger, bucket_event_ids=(event_id,))
 
     def list_all(self, *, bucket_id: str) -> tuple[InventoryActividadSummary, ...]:
+        """Return one :class:`InventoryActividadSummary` per stored ledger.
+
+        This is a read-only projection over the bucket's
+        :class:`InventoryLedgerDocument`; it emits no bucket event.
+        """
         document = self._repository_for(bucket_id).load()
         return tuple(
             InventoryActividadSummary(
@@ -254,6 +288,11 @@ class InventoryService:
         )
 
     def show(self, *, bucket_id: str, actividad_id: str, year: int) -> InventoryLedger:
+        """Return the exact :class:`InventoryLedger` for ``actividad_id`` and ``year``.
+
+        Raises :class:`InventoryActividadNotFoundError` when the bucket's
+        inventory document has no matching actividad/year ledger.
+        """
         document = self._repository_for(bucket_id).load()
         ledger = _find_ledger(document, actividad_id, year)
         if ledger is None:
@@ -276,8 +315,10 @@ class InventoryService:
     ) -> InventoryLedgerResult:
         """Append a movement to the named ledger; refuses duplicate movement_id.
 
-        Returns an :class:`InventoryLedgerResult` with the updated ledger
-        after the movement is appended.
+        The :class:`InventoryMovementCommand` is converted to a
+        :class:`MovementRecord`, then the domain valuation guard runs
+        before persistence. Returns an :class:`InventoryLedgerResult`
+        with the updated ledger after the movement is appended.
         """
         ledger = self.show(bucket_id=bucket_id, actividad_id=actividad_id, year=year)
         if any(m.movement_id == movement.movement_id for m in ledger.period_movements):
@@ -366,7 +407,10 @@ class InventoryService:
     ) -> InventoryLedgerResult:
         """Drop the entire ledger for actividad/year.
 
-        Returns an :class:`InventoryLedgerResult`. Idempotent on absence.
+        Raises :class:`InventoryActividadNotFoundError` on absence.
+        Otherwise saves the remaining :class:`InventoryLedgerDocument`,
+        emits ``LEDGER_INVENTORY_REMOVED``, and returns the removed
+        :class:`InventoryLedger` in an :class:`InventoryLedgerResult`.
         """
         repository = self._repository_for(bucket_id)
         document = repository.load()

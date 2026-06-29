@@ -16,6 +16,19 @@ Every Protocol here describes **only** the attributes the workflow
 engine actually reads. :class:`DeadlineEngineProtocol` wraps the
 deadline engine's ``compute`` method that returns a :class:`Schedule`
 for a given :class:`TaxpayerProfile`.
+
+See Also:
+    :class:`~aeat.application.workflow.WorkflowEngine`
+        Orchestrates these contracts stage by stage.
+    :mod:`aeat.application.workflow._adapters`
+        Adapts production deadline, draft-building, submission, and live-read
+        components to these contracts.
+    :class:`~aeat.domain.submission.SubmissionEngine`
+        Implements the read-only preflight surface described by
+        :class:`SubmissionEngineProtocol`.
+    :class:`~aeat.application.workflow.WorkflowPurpose`
+        Decides when workflow callers skip the AEAT filing-window preflight
+        gate for local verification or local mark-as-filed paths.
 """
 
 from __future__ import annotations
@@ -86,7 +99,7 @@ class ModeloDraftBuilderProtocol(Protocol):
 
 @runtime_checkable
 class SubmissionEngineProtocol(Protocol):
-    """Read-only preflight surface over :class:`aeat.adapters.outbound.aeat.export.SubmissionEngine`."""
+    """Read-only preflight surface over :class:`~aeat.domain.submission.SubmissionEngine`."""
 
     def preflight(
         self,
@@ -97,9 +110,11 @@ class SubmissionEngineProtocol(Protocol):
     ) -> None:
         """Run preflight gates against ``draft``; raise on failure.
 
-        ``skip_deadline_window`` skips the AEAT filing-window gate so a
-        calculation can be verified independently of the filing
-        calendar; filing always runs the window gate.
+        ``skip_deadline_window`` skips the AEAT filing-window gate. The
+        local workflow uses this for both :attr:`WorkflowPurpose.VERIFY`
+        and :attr:`WorkflowPurpose.FILE`: VERIFY is calendar-independent,
+        while FILE is a local mark-as-filed path whose obligation existence
+        has already been enforced by the deadline stage.
         """
         ...
 

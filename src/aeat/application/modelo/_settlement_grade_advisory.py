@@ -1,19 +1,20 @@
-"""Calculate-path advisory for revisions that do not COMPUTE their settlement casilla.
+"""Calculate-path advisory for revisions that do not compute settlement casillas.
 
 A settlement-bearing modelo's terminal liquidación casilla (Modelo 100 cuota
-resultante de la autoliquidación / resultado de la declaración) is ``computed`` via
-formula on a fully-modelled revision (M100 2024+), but a partially-modelled revision
-leaves it ``input_kind = "manual"`` -- the formulas for the inputs / intermediates
-exist, yet the final liquidación is a manual cell. A ledger-driven calculate on such
-a revision populates the inputs but never computes the settlement, so an operator
-could file a blank/zero liquidación on positive activity
-(``no-silent-under-declaration``). M100 2020-2023 are the live case (149-166
-formulas, manual cuota resultante); M100 2025 computes it (no advisory).
+resultante de la autoliquidación / resultado de la declaración) is
+``computed`` via formula on a fully-modelled revision (M100 2024 and 2025 in the
+loaded registry). A partially-modelled revision leaves those casillas as
+``input_kind = "manual"``: formulas for upstream inputs and intermediates exist,
+yet the final liquidación cells remain operator-entered. A ledger-driven
+calculate on such a revision populates the inputs but never computes the
+settlement, so an operator could file a blank or zero liquidación on positive
+activity (``no-silent-under-declaration``). M100 2020-2023 are the live advisory
+case.
 
 This module surfaces that STRUCTURAL gap on the calculate path as a non-blocking
 :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`, grounded in the
-LOADED snapshot's casilla ``input_kind`` (format-agnostic: inline + fragmented
-merged per ``registry-revision-content-inline-or-fragmented``) -- never the formula
+loaded :class:`ModeloRevision` casilla ``input_kind`` (format-agnostic: inline
+and fragmented registry content have already been merged) -- never the formula
 output, so it is non-tautological. It is the structural complement to the
 value-level settlement-completeness ADVISORY predicate (``implies_nonzero``) the
 verify gate runs on revisions whose settlement IS computed (#24-B / #38): together
@@ -25,6 +26,16 @@ Scope: the guard fires only for the grounded terminal-liquidación
 #39 settlement-completeness audit); extend the set as further modelos' settlement
 chains are modelled. A revision with no formula chain at all yields no advisory
 (an informativa or an unmodelled revision is not a partial-settlement calc surface).
+
+See Also:
+    :func:`aeat.application.modelo._calculation_diagnostics.collect_bucket_aggregation_advisory_diagnostics`:
+        Wires this structural advisory into the bucket-aggregation calculate path.
+    :mod:`aeat.application.modelo._verification_actions`:
+        Evaluates the value-level settlement-completeness predicates that complement
+        this structural guard.
+    :class:`InputKind`:
+        The registry enum used to distinguish manual settlement cells from computed
+        ones.
 """
 
 from __future__ import annotations
@@ -69,6 +80,12 @@ def collect_settlement_not_computed_diagnostics(
     Returns:
         Tuple of :class:`CalculationSourceDiagnostic` advisories for settlement
         casillas that require operator verification.
+
+    See Also:
+        :data:`SETTLEMENT_SEMANTIC_ROLES`:
+            The narrow terminal-liquidación role allowlist this collector inspects.
+        :func:`aeat.application.modelo._calculation_diagnostics.collect_bucket_aggregation_advisory_diagnostics`:
+            Calls this collector after calculation revision creation.
     """
     if not revision.formulas:
         return ()

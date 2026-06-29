@@ -1,7 +1,25 @@
 """IVA remote-state, compensation-history, and wallet live actions.
 
+The module separates stored-evidence reads from live acquisition. Listing and
+load helpers read encrypted local IVA compensation history, wallet decisions,
+wallet observations, and acquisition manifests without contacting AEAT. Capture
+helpers enforce the live-read gate, acquire an authenticated :class:`AeatSession`,
+then persist filed-history and wallet evidence before reconciliation consumes it.
+
 Encrypted acquisition manifests are stored through the active bucket's
-:class:`SecureObjectRepository` via the typed manifest repository.
+:class:`SecureObjectRepository` via the typed manifest repository. The manifest
+is redacted operational evidence of the acquisition attempt; it is not a remote
+submission record.
+
+See Also:
+    :class:`aeat.application.live.IvaRemoteStateStoredEvidenceReport`
+        Stored-evidence report returned without a live AEAT read.
+    :class:`aeat.application.live.IvaRemoteStateAcquisitionReport`
+        Combined read-only acquisition report for filed history and wallet
+        surfaces.
+    :func:`aeat.application.live._session.active_verified_session`
+        Shared read-only authenticated-session helper used by individual
+        capture surfaces.
 """
 
 from __future__ import annotations
@@ -88,7 +106,12 @@ from ._session import active_verified_session as _active_verified_session
 
 
 class IvaRemoteStateAcquisitionManifestRepository(_SecureBoundRepository[IvaRemoteStateAcquisitionManifest]):
-    """Repository for encrypted live IVA acquisition manifests."""
+    """Repository for encrypted live IVA acquisition manifests.
+
+    The repository stores redacted :class:`IvaRemoteStateAcquisitionManifest`
+    payloads under the active profile bucket. Raw AEAT rows remain in their
+    dedicated evidence stores.
+    """
 
     namespace: ClassVar[str] = _LIVE_IVA_REMOTE_STATE_ACQUISITIONS_STORAGE_NAMESPACE.namespace
     sensitivity: ClassVar = _LIVE_IVA_REMOTE_STATE_ACQUISITIONS_STORAGE_NAMESPACE.sensitivity
@@ -142,7 +165,8 @@ def load_iva_remote_state(
     """Reload stored remote IVA evidence from the active profile without contacting AEAT.
 
     Returns an :class:`IvaRemoteStateStoredEvidenceReport` with the
-    stored compensation history and reconciliation decisions.
+    stored compensation history, wallet observations, reconciliation decisions,
+    and redacted acquisition manifests.
     """
     with _active_profile_storage_span():
         history = list_iva_compensation_history(
@@ -636,6 +660,11 @@ async def capture_iva_remote_state(
     output_root: Path | None = None,
 ) -> IvaRemoteStateAcquisitionReport:
     """Acquire filed-history and wallet/cartera IVA state as one typed read-only operation.
+
+    The operation reports each remote surface independently. A partial failure is
+    captured as a redacted outcome and persisted in the acquisition manifest; a
+    successful surface still persists and reloads its evidence before being
+    reported.
 
     Returns an :class:`IvaRemoteStateAcquisitionReport` with the acquired
     state, compensation history, and any acquisition issues.

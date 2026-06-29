@@ -802,8 +802,7 @@ def test_calendar_completeness_lists_uncomputable_with_reason() -> None:
     With only ``iva.regime`` declared, the completeness payload must
     list it under explicitly_set_keys and the remaining gating keys
     (does_intracomunitario, pays_professionals_with_retencion,
-    pays_rent_with_retencion, uses_objective_estimation_irpf) under
-    defaulted_keys.
+    pays_rent_with_retencion, irpf.estimation_regime) under defaulted_keys.
     """
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
     today = date(2026, 4, 1)
@@ -817,4 +816,4 @@ def test_calendar_completeness_lists_uncomputable_with_reason() -> None:
     assert "does_intracomunitario" in cal.completeness.defaulted_keys
     assert "pays_professionals_with_retencion" in cal.completeness.defaulted_keys
     assert "pays_rent_with_retencion" in cal.completeness.defaulted_keys
-    assert "uses_objective_estimation_irpf" in cal.completeness.defaulted_keys
+    assert "irpf.estimation_regime" in cal.completeness.defaulted_keys

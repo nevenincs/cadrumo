@@ -3,9 +3,10 @@
 The AEAT fichero "Tipo de declaración" encodes the *result disposition* of an
 autoliquidación (a ingresar / a compensar / a devolver / negativa). For Modelo
 303 a negative result is, by default, a credit carried forward (compensación,
-``C``); a taxpayer inscribed in the Registro de devolución mensual (REDEME) — or
-filing the last period of the year — may instead request the credit back
-(devolución, ``D``).
+``C``). A taxpayer inscribed in the Registro de devolución mensual (REDEME)
+refunds eligible negative periods under a standing election; a non-REDEME
+taxpayer may explicitly request the credit back (devolución, ``D``) only in the
+last filing period of the year.
 
 This module is the ONE place that determination is made. The export header
 composer and the cross-period carry persistence both read the disposition from

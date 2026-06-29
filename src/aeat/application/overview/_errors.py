@@ -1,4 +1,10 @@
-"""Narrow exceptions for the overview application service."""
+"""Narrow exceptions for overview read-model assembly.
+
+Overview services are local application projections. These exceptions
+cover failures to assemble status, calendar, agenda, backlog, or explain
+payloads from already-loaded inputs rather than transport or AEAT live
+read failures.
+"""
 
 from __future__ import annotations
 

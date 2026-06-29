@@ -1,4 +1,13 @@
-"""Typed overview calendar models."""
+"""Typed DTOs for the overview calendar read model.
+
+The models separate legal obligation rows
+(:class:`OverviewCalendarEntry`), observed local events
+(:class:`OverviewCalendarEvent`), and filing evidence
+(:class:`OverviewCalendarFilingEvidence`). Filing evidence keeps
+:class:`OverviewLocalFilingState` distinct from
+:class:`OverviewAeatSubmissionState` so local readiness, AEAT submission,
+and justificante verification remain auditable independent axes.
+"""
 
 from __future__ import annotations
 
@@ -98,7 +107,13 @@ class OverviewCalendarRange(BaseModel):
 
 
 class OverviewCalendarFilingEvidence(BaseModel):
-    """Filing evidence attached to one legal calendar obligation."""
+    """Filing evidence attached to one legal calendar obligation.
+
+    The local fields describe the application's filing-record axis; the
+    AEAT fields describe observed submission evidence. Validators require
+    ``justificante_verified`` and ``verified_justificante_csv`` to agree
+    exactly with :attr:`OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED`.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -216,7 +231,12 @@ class OverviewCalendarEventType(StrEnum):
 
 
 class OverviewCalendarEvent(BaseModel):
-    """One observed local event attached to an overview calendar range."""
+    """One observed local event attached to an overview calendar range.
+
+    Filing events may carry AEAT submission state when a persisted
+    snapshot already observed it, but messages and unverified filings can
+    remain event-only observations without implying receipt verification.
+    """
 
     model_config = _STRICT_FROZEN
 

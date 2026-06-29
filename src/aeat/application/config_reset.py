@@ -1,7 +1,8 @@
-"""Scoped config reset for ``aeat config reset``.
+"""Scoped reset service for ``aeat config reset``.
 
 Removes one or more pieces of operator-local state behind an explicit
-``--yes`` confirmation gate. Four scopes are supported:
+``--yes`` confirmation gate and the CLI requires an explicit ``--scope``.
+Four :class:`ConfigResetScope` values are supported:
 
 - ``PROFILE``: clears every operator profile pointer and deletes each
   persisted profile bucket.
@@ -11,12 +12,32 @@ Removes one or more pieces of operator-local state behind an explicit
   owned by the ledger backend so finalized modelo protections can run.
 - ``ALL``: combines the three scopes above.
 
+The service returns a :class:`ConfigResetReport` and runs through the
+normal runtime storage routes.
+:class:`~aeat.application.workflow.WorkflowStateRepository` loads the typed
+:class:`~aeat.application.workflow.WorkflowState`, profile removal goes
+through :class:`~aeat.application.user_profile.UserProfileLifecycleRepository`
+plus :func:`~aeat.application.user_profile.remove_profile_bucket_directory`,
+and DATA reset delegates to
+:func:`~aeat.application.diagnostics.quarantine_unreadable_secure_objects`
+for a :class:`~aeat.application.diagnostics.SecureObjectIntegrityReport`.
+It does not bypass runtime readiness or directly erase readable ledger data.
+
 Each scope writes one log line through the project's standard
 :mod:`aeat.core.logging` channel so post-mortem analysis of an
 operator's reset history is possible without an extra audit-only
-backend. The function rejects calls without explicit confirmation;
-the CLI wrapper requires ``--yes`` before the confirmation gate
-flips.
+backend. The function rejects calls without explicit confirmation and
+raises :class:`ConfigResetUnconfirmedError` with a registered translated
+message key.
+
+See Also:
+    :func:`aeat.application.workflow._persistence.reset_workflow_state`
+        Narrow ``aeat config repair reset-progress`` route that deletes the
+        saved workflow-state envelope after producing a
+        :class:`~aeat.application.workflow.WorkflowStateResetFingerprint`.
+    :mod:`aeat.application.repair_integrity`
+        Policy registry for repair surfaces, including the metadata-only
+        workflow-state reset plan.
 """
 
 from __future__ import annotations
@@ -33,7 +54,12 @@ _log = get_logger(__name__)
 
 
 class ConfigResetScope(StrEnum):
-    """Closed catalogue of operator-driven reset scopes."""
+    """Closed catalogue of operator-driven reset scopes.
+
+    The enum is the shared application/CLI contract: CLI tokens are parsed
+    into these values before :func:`reset_config` runs, and
+    :class:`ConfigResetReport` echoes the applied scope.
+    """
 
     PROFILE = "PROFILE"
     AUTH = "AUTH"
@@ -42,7 +68,7 @@ class ConfigResetScope(StrEnum):
 
 
 CONFIG_RESET_SCOPE_CLI_VALUES: tuple[str, ...] = tuple(scope.value.lower() for scope in ConfigResetScope)
-"""Lowercase scope tokens accepted by ``aeat config reset --scope``."""
+"""Lowercase :class:`ConfigResetScope` tokens accepted by ``aeat config reset --scope``."""
 
 
 def parse_config_reset_scope(raw: str) -> ConfigResetScope:
@@ -51,7 +77,12 @@ def parse_config_reset_scope(raw: str) -> ConfigResetScope:
 
 
 class ConfigResetUnconfirmedError(AeatError):
-    """Raised when :func:`reset_config` is called without ``confirmed=True``."""
+    """Raised when :func:`reset_config` is called without ``confirmed=True``.
+
+    The error carries ``errors.refused.refused_config_reset_unconfirmed`` and
+    the refused :class:`ConfigResetScope` value in structured context so the
+    CLI/error envelope renders through the registered refusal catalogue.
+    """
 
 
 class ConfigResetReport(BaseModel):
@@ -59,9 +90,9 @@ class ConfigResetReport(BaseModel):
 
     Attributes:
         scope: The :class:`ConfigResetScope` that was applied.
-        removed_profile_ids: Sorted tuple of profile UUIDs cleared
-            from the profile bucket repository. Empty when the scope
-            did not touch profiles.
+        removed_profile_ids: Sorted tuple of profile UUIDs cleared from the
+            profile lifecycle repository and then removed from their bucket
+            directories. Empty when the scope did not touch profiles.
         removed_auth_session: True when the auth session was reset.
         quarantined_namespace_count: Number of secure-object namespaces
             whose unreadable rows were archived to the quarantine table
@@ -77,7 +108,18 @@ class ConfigResetReport(BaseModel):
 
 
 def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetReport:
-    """Apply the scoped reset; raise unless ``confirmed=True``.
+    """Apply the scoped reset and return a :class:`ConfigResetReport`.
+
+    The operation is destructive and therefore refuses unless
+    ``confirmed=True``. Confirmed PROFILE / ALL resets enumerate profile
+    manifests via :func:`~aeat.application.workflow.list_profile_buckets`,
+    delete each profile through
+    :class:`~aeat.application.user_profile.UserProfileLifecycleRepository`, and
+    then remove bucket directories after disposing cached SQL engines. AUTH
+    resets replace auth state inside
+    :class:`~aeat.application.workflow.WorkflowState`. DATA resets call
+    :func:`~aeat.application.diagnostics.quarantine_unreadable_secure_objects`
+    for unreadable secure-object rows only.
 
     Args:
         scope: The :class:`ConfigResetScope` to apply.
@@ -88,7 +130,7 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
         A :class:`ConfigResetReport` summarising what was cleared.
 
     Raises:
-        ConfigResetUnconfirmedError: When ``confirmed`` is ``False``.
+        :class:`ConfigResetUnconfirmedError`: When ``confirmed`` is ``False``.
     """
     if not confirmed:
         raise ConfigResetUnconfirmedError(

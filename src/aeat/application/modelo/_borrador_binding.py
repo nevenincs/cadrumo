@@ -10,6 +10,19 @@ receives any values. Eligibility is determined by inspecting the
 Only modelos that declare the ``"borrador"`` capability in their registry
 manifest are eligible. Adding support for a new modelo requires only a
 TOML edit — no code change.
+
+See Also:
+    :func:`aeat.application.modelo._binding_resolution.resolve_borrador_source_tier`
+        Binding-resolution tier that inserts this resolver before backend mesh
+        and caller-value overlay.
+    :class:`aeat.application.aggregation._source_mesh.CalculationSourceResolution`
+        Typed source-resolution envelope carrying the resolved borrador values.
+    :class:`aeat.application.aggregation._source_mesh.BorradorSourceProvenance`
+        Snapshot id and sourced-binding trace persisted onto the calculation
+        revision.
+    :class:`aeat.application.live._borrador_100.Borrador100SnapshotRepository`
+        Secure snapshot repository used to load the explicitly selected
+        borrador capture.
 """
 
 from __future__ import annotations
@@ -50,7 +63,12 @@ class Modelo100BorradorBindingError(ModeloError):
 
 
 class Modelo100BorradorBindingCommand(BaseModel):
-    """Command contract for resolving one optional borrador snapshot."""
+    """Command contract for resolving one optional borrador snapshot.
+
+    The typed :class:`Period` and bucket/modelo axes are checked against both
+    the selected :class:`RegistrySnapshot` and the loaded live borrador snapshot
+    before any binding values are emitted.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -92,6 +110,12 @@ def resolve_modelo_100_borrador_bindings(
     supplied, caller values take precedence and the snapshot may only
     contribute bindings explicitly marked ``aeat_prefilled`` by the
     registry revision passed to the service.
+
+    Returns:
+        A :class:`CalculationSourceResolution` with ``owned_sources`` set to
+        ``borrador`` and, when values participate, typed
+        :class:`BorradorSourceProvenance` plus generic
+        :class:`CalculationSourceProvenance` rows for each sourced binding.
     """
     if command.borrador_snapshot_id is None:
         return CalculationSourceResolution(
@@ -174,7 +198,13 @@ _BORRADOR_RESOLVER_ID = "modelo_100_borrador"
 
 
 class Modelo100BorradorSourceResolver:
-    """Source mesh adapter for explicitly selected Modelo 100 borrador snapshots."""
+    """Source mesh adapter for explicitly selected Modelo 100 borrador snapshots.
+
+    The adapter lets the general source mesh call
+    :func:`resolve_modelo_100_borrador_bindings` with a
+    :class:`CalculationSourceContext`. When no :class:`RegistrySnapshot` was
+    supplied at construction, the context selects one from the registry authority.
+    """
 
     resolver_id = "modelo_100_borrador"
     owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.BORRADOR,)
@@ -195,6 +225,12 @@ class Modelo100BorradorSourceResolver:
         self._snapshot_repository = snapshot_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve the optional borrador tier for ``context``.
+
+        Secure-storage degradation while loading the selected borrador snapshot
+        returns an empty :class:`CalculationSourceResolution` carrying diagnostics
+        instead of raising, matching the source-mesh resolver contract.
+        """
         snapshot = self._registry_snapshot
         if snapshot is None:
             from ...core.resources import resources

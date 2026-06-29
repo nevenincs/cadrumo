@@ -23,7 +23,16 @@ The records intentionally do not embed the AEAT submission lifecycle
 (:mod:`aeat.domain.submission`) — local export and live submit are
 separate concerns and live submit is permanently forbidden.
 
+This module is the draft-level renderer. The work-unit export service in
+:mod:`aeat.application.modelo._export` rebuilds an approved
+:class:`aeat.domain.filing.ModeloDraft` from a
+:class:`aeat.domain.modelos.CalculationRevision`, then delegates here to write
+and verify the fichero-BOE bytes.
+
 See Also:
+    :func:`aeat.application.modelo._export.export_modelo_revision`
+        Higher-level work-unit export service that replays a calculation
+        revision before calling this draft renderer.
     :mod:`aeat.adapters.outbound.aeat.export`
         Outbound export-format adapter errors and fixed-width helper
         namespace.
@@ -36,6 +45,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -73,6 +83,12 @@ _logger = get_logger(__name__)
 
 _SHA256_HEX_LENGTH = 64
 """Length of a hex-encoded SHA-256 digest used by export receipts."""
+
+
+@dataclass(frozen=True)
+class _RecordRenderRow:
+    row_index: int | None
+    active_binding_ids: frozenset[BindingId]
 
 
 class DeclaracionExportFormat(StrEnum):
@@ -280,6 +296,9 @@ def export_draft(
         :func:`verify_export`
             Re-read a local export file and compare parser-covered casillas
             against the approved draft.
+        :func:`aeat.application.modelo._export.export_modelo_revision`
+            Work-unit-facing export orchestration that supplies an approved
+            draft reconstructed from a calculation revision.
         :func:`aeat.domain.calculations.registry.parse_export_payload`
             Registry parser used by the verification path.
     """
@@ -455,7 +474,7 @@ def _render_layout(layout: ExportLayoutDefinition, *, draft: ModeloDraft, header
     for record in sorted(layout.records, key=lambda item: item.order):
         if _did_page_suppressed(record, headers=normalized_headers):
             continue
-        for row_index in _record_row_indexes(record, binding_values):
+        for row in _record_render_rows(record, binding_values):
             _guard_record_export(record, casilla_values=casilla_values)
             text = _render_record(
                 record,
@@ -463,7 +482,7 @@ def _render_layout(layout: ExportLayoutDefinition, *, draft: ModeloDraft, header
                 headers=normalized_headers,
                 casilla_values=casilla_values,
                 binding_values=binding_values,
-                row_index=row_index,
+                row=row,
             )
             if record.line_ending == "crlf":
                 text += "\r\n"
@@ -476,30 +495,78 @@ def _render_layout(layout: ExportLayoutDefinition, *, draft: ModeloDraft, header
 render_layout = _render_layout
 
 
-def _record_row_indexes(
+def _record_render_rows(
     record: ExportRecordDefinition,
     binding_values: dict[tuple[BindingId, int | None], object],
-) -> tuple[int | None, ...]:
+) -> tuple[_RecordRenderRow, ...]:
     if record.repeat != "binding_rows":
         if record.binding_record is not None and not _record_has_binding_value(record, binding_values):
             return ()
-        return (None,)
-    binding_ids = {
-        field.binding for field in record.fields if field.kind == CasillaFieldKind.BINDING and field.binding is not None
-    }
+        return (_RecordRenderRow(row_index=None, active_binding_ids=frozenset()),)
+    binding_fields = _record_binding_fields(record)
     row_indexes = sorted(
-        row_index for binding_id, row_index in binding_values if binding_id in binding_ids and row_index is not None
+        {
+            row_index
+            for binding_id, row_index in binding_values
+            if row_index is not None
+            and any(field.binding == binding_id for field in binding_fields)
+            and _is_active_binding_value(binding_values[(binding_id, row_index)])
+        },
     )
-    return tuple(dict.fromkeys(row_indexes))
+    rows: list[_RecordRenderRow] = []
+    for row_index in row_indexes:
+        active_fields = tuple(
+            field
+            for field in binding_fields
+            if _is_active_binding_value(binding_values.get((field.binding, row_index)))
+        )
+        for group in _compatible_binding_field_groups(active_fields):
+            rows.append(
+                _RecordRenderRow(
+                    row_index=row_index,
+                    active_binding_ids=frozenset(field.binding for field in group if field.binding is not None),
+                ),
+            )
+    return tuple(rows)
+
+
+def _record_binding_fields(record: ExportRecordDefinition) -> tuple[ExportFieldDefinition, ...]:
+    return tuple(
+        field for field in record.fields if field.kind == CasillaFieldKind.BINDING and field.binding is not None
+    )
+
+
+def _is_active_binding_value(value: object) -> bool:
+    return value is not None and value != ""
+
+
+def _compatible_binding_field_groups(
+    fields: tuple[ExportFieldDefinition, ...],
+) -> tuple[tuple[ExportFieldDefinition, ...], ...]:
+    groups: list[list[ExportFieldDefinition]] = []
+    for field in sorted(fields, key=lambda item: (item.offset or 0, str(item.id))):
+        for group in groups:
+            if not any(_export_fields_overlap(field, existing) for existing in group):
+                group.append(field)
+                break
+        else:
+            groups.append([field])
+    return tuple(tuple(group) for group in groups)
+
+
+def _export_fields_overlap(left: ExportFieldDefinition, right: ExportFieldDefinition) -> bool:
+    if left.offset is None or left.length is None or right.offset is None or right.length is None:
+        return False
+    left_end = left.offset + left.length - 1
+    right_end = right.offset + right.length - 1
+    return left.offset <= right_end and right.offset <= left_end
 
 
 def _record_has_binding_value(
     record: ExportRecordDefinition,
     binding_values: dict[tuple[BindingId, int | None], object],
 ) -> bool:
-    binding_ids = {
-        field.binding for field in record.fields if field.kind == CasillaFieldKind.BINDING and field.binding is not None
-    }
+    binding_ids = {field.binding for field in _record_binding_fields(record)}
     return any(
         binding_id in binding_ids and value not in {None, ""} for (binding_id, _), value in binding_values.items()
     )
@@ -523,7 +590,7 @@ def _render_record(
     headers: dict[str, str],
     casilla_values: dict[CasillaId, object],
     binding_values: dict[tuple[BindingId, int | None], object],
-    row_index: int | None,
+    row: _RecordRenderRow,
 ) -> str:
     positioned = all(field.offset is not None for field in record.fields)
     if not positioned:
@@ -534,13 +601,16 @@ def _render_record(
                 headers=headers,
                 casilla_values=casilla_values,
                 binding_values=binding_values,
-                row_index=row_index,
+                row_index=row.row_index,
             )
             for field in record.fields
+            if _field_is_active_for_row(field, row)
         )
     length = max((field.offset or 0) + (field.length or 0) - 1 for field in record.fields)
     buffer = [" "] * length
     for field in sorted(record.fields, key=lambda item: item.offset or 0):
+        if not _field_is_active_for_row(field, row):
+            continue
         if field.offset is None:
             raise FilingExportValidationError(f"export field {field.id!r} must declare offset")
         rendered = _render_field(
@@ -549,7 +619,7 @@ def _render_record(
             headers=headers,
             casilla_values=casilla_values,
             binding_values=binding_values,
-            row_index=row_index,
+            row_index=row.row_index,
         )
         start = field.offset - 1
         end = start + len(rendered)
@@ -557,6 +627,14 @@ def _render_record(
             raise FilingExportError(f"export field {field.id!r} overlaps another field")
         buffer[start:end] = rendered
     return "".join(buffer)
+
+
+def _field_is_active_for_row(field: ExportFieldDefinition, row: _RecordRenderRow) -> bool:
+    if not row.active_binding_ids:
+        return True
+    if field.kind != CasillaFieldKind.BINDING:
+        return True
+    return field.binding in row.active_binding_ids
 
 
 def _render_field(

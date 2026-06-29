@@ -16,7 +16,6 @@ from ....core.resources import resources
 from ....core.topics import Topic, TopicCatalogue
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.manuals import ManualId, ManualPart
-from ....domain.normatives import NormativeNotFoundError
 from .. import (
     RegistryApplicationInputError,
     RegistryCitationShowCommand,
@@ -52,34 +51,6 @@ _RENTA_2025_BORRADOR_RENTA_FAMILIAR_CASILLA: CasillaId = _casilla_id("0695")
 _UNDECLARED_MANUAL_RULE_CASILLA: CasillaId = _casilla_id("not-real")
 
 
-def _write_valid_normative(root: Path) -> None:
-    (root / "ley-35-2006.json").write_text(
-        json.dumps(
-            {
-                "id": "ley-35-2006",
-                "kind": "ley",
-                "number": "35/2006",
-                "title": {"es": "Ley 35/2006"},
-                "published_at": "2006-11-29",
-                "boe_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
-                "boe_id": "BOE-A-2006-20764",
-                "articulos": [
-                    {
-                        "numero": "32",
-                        "titulo": {"es": "Reducciones"},
-                        "summary": {"es": "Resumen."},
-                        "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32",
-                    },
-                ],
-                "tags": ["irpf"],
-                "last_reviewed_at": "2026-04-12",
-                "reviewed_by": "wgergely",
-            },
-        ),
-        encoding="utf-8",
-    )
-
-
 def test_oracle_audit_rejects_invalid_environment_with_localized_application_error() -> None:
     with pytest.raises(RegistryApplicationInputError) as exc_info:
         audit_registry_oracles(Path("unused-registry-root"), environment="staging")
@@ -91,7 +62,7 @@ def test_oracle_audit_rejects_invalid_environment_with_localized_application_err
     }
 
 
-def _topic_catalogue_for_normative() -> TopicCatalogue:
+def _topic_catalogue_for_legal_ref() -> TopicCatalogue:
     return TopicCatalogue(
         topics=(
             Topic(
@@ -108,39 +79,37 @@ def test_citations_verification_report_consumes_topic_catalogue() -> None:
     report = verify_registry_citations()
 
     assert report.operation == "registry.citations.verify"
+    assert report.passed is True
+    assert report.issue_count == 0
     assert report.topic_count == len(resources().topics.singleton.topics)
-    assert {topic.slug for topic in report.topics} >= {"iva-regime", "casilla", "modelos"}
+    assert {topic.slug for topic in report.topics} >= {"iva-regime", "casilla", "modelos", "sii", "verifactu"}
+    assert "sii-verifactu" not in {topic.slug for topic in report.topics}
     assert report.issue_count == len(report.issues)
 
 
-def test_citations_list_projects_topic_slugs_from_valid_registry_corpus(tmp_path: Path) -> None:
-    _write_valid_normative(tmp_path)
-
-    with override_settings(aeat_normatives_root=tmp_path):
-        report = list_registry_citations(
-            RegistryCitationsListCommand(tag="irpf"),
-            topic_catalogue=_topic_catalogue_for_normative(),
-            locale="es",
-        )
+def test_citations_list_projects_topic_slugs_from_current_legal_catalogue() -> None:
+    report = list_registry_citations(
+        RegistryCitationsListCommand(tag="irpf"),
+        topic_catalogue=_topic_catalogue_for_legal_ref(),
+        locale="es",
+    )
 
     assert report.operation == "registry.citations.list"
     assert report.reference_count == 1
     assert report.topic_count == 1
     assert report.references[0].id == "ley-35-2006"
+    assert report.references[0].articulo_count >= 1
     assert report.references[0].topic_slugs == ("irpf-deduction",)
     assert report.topics[0].slug == "irpf-deduction"
     assert report.topics[0].title == "Régimen IRPF"
 
 
-def test_citation_show_projects_article_and_related_topics(tmp_path: Path) -> None:
-    _write_valid_normative(tmp_path)
-
-    with override_settings(aeat_normatives_root=tmp_path):
-        report = show_registry_citation(
-            RegistryCitationShowCommand(normative_id="ley-35-2006", articulo="32"),
-            topic_catalogue=_topic_catalogue_for_normative(),
-            locale="es",
-        )
+def test_citation_show_projects_article_and_related_topics_from_current_legal_catalogue() -> None:
+    report = show_registry_citation(
+        RegistryCitationShowCommand(legal_id="ley-35-2006", articulo="32"),
+        topic_catalogue=_topic_catalogue_for_legal_ref(),
+        locale="es",
+    )
 
     assert report.operation == "registry.citations.show"
     assert report.reference.id == "ley-35-2006"
@@ -148,6 +117,25 @@ def test_citation_show_projects_article_and_related_topics(tmp_path: Path) -> No
     assert report.articulo.numero == "32"
     assert report.articulo.cite == "Ley 35/2006, art. 32 (BOE-A-2006-20764)"
     assert tuple(topic.slug for topic in report.related_topics) == ("irpf-deduction",)
+
+
+def test_citation_show_command_rejects_retired_normative_id_field() -> None:
+    with pytest.raises(ValidationError):
+        RegistryCitationShowCommand(normative_id="ley-35-2006", articulo="32")
+
+
+def test_citation_show_preserves_current_legislative_decree_kind_for_trlirnr() -> None:
+    report = show_registry_citation(
+        RegistryCitationShowCommand(legal_id="trlirnr-rdleg-5-2004", articulo="25.1.a"),
+        locale="es",
+    )
+
+    assert report.reference.id == "trlirnr-rdleg-5-2004"
+    assert report.reference.kind == "real_decreto_legislativo"
+    assert report.reference.number == "5/2004"
+    assert report.reference.title == "Real Decreto Legislativo 5/2004"
+    assert report.articulo is not None
+    assert report.articulo.cite == "Real Decreto Legislativo 5/2004, art. 25.1.a (BOE-A-2004-4527)"
 
 
 def test_topic_projection_resolves_central_output_language_override() -> None:
@@ -241,29 +229,30 @@ def test_manual_rule_kind_refusal_uses_structured_registry_logging(caplog: pytes
 
 def test_citation_missing_article_uses_structured_registry_logging(
     caplog: pytest.LogCaptureFixture,
-    tmp_path: Path,
 ) -> None:
     caplog.set_level(logging.WARNING, logger="aeat.application.registry._corpus")
-    _write_valid_normative(tmp_path)
 
-    with (
-        override_settings(aeat_normatives_root=tmp_path),
-        pytest.raises(NormativeNotFoundError, match=r"999|articulo"),
-    ):
+    with pytest.raises(RegistryApplicationInputError) as exc_info:
         show_registry_citation(
             RegistryCitationShowCommand(
-                normative_id="ley-35-2006",
+                legal_id="ley-35-2006",
                 articulo="999",
             ),
         )
 
+    assert exc_info.value.translated_message == "application.registry.errors.citation_not_found"
+    assert exc_info.value.context == {
+        "registry_service": "registry.citations.show",
+        "legal_id": "ley-35-2006",
+        "articulo": "999",
+    }
     records = [
         record for record in caplog.records if getattr(record, "registry_service", "") == "registry.citations.show"
     ]
     assert len(records) == 1
     record = records[0]
     assert record.levelno == logging.WARNING
-    assert record.__dict__["registry_normative_id"] == "ley-35-2006"
+    assert record.__dict__["registry_legal_id"] == "ley-35-2006"
     assert record.__dict__["registry_articulo"] == "999"
 
 
