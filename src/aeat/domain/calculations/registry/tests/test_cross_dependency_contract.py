@@ -195,6 +195,32 @@ def test_cross_dependency_source_requirements_are_derivable_for_target_periods()
                     )
 
 
+def test_unconsumed_factual_evidence_relations_use_evidence_treatment() -> None:
+    modelos, _catalogues = _validated_registry_tree()
+    offenders: list[str] = []
+
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            classifications_by_source = {
+                classification.source_modelo: classification for classification in revision.dependency_classifications
+            }
+            consumed = _consumed_relation_refs(revision)
+            for relation in revision.relations:
+                if relation.dependency_role != "factual_evidence" or relation.id in consumed:
+                    continue
+                classification = classifications_by_source.get(relation.source_modelo)
+                if classification is not None and classification.treatment != "factual_evidence":
+                    offenders.append(
+                        f"{modelo.id}/{revision.id}/{relation.id}: classification {classification.id!r} "
+                        f"treatment={classification.treatment!r}"
+                    )
+
+    assert not offenders, (
+        "Unconsumed factual-evidence relation(s) must not advertise direct annual-settlement treatment:\n"
+        + "\n".join(f"  * {offender}" for offender in offenders)
+    )
+
+
 def test_formula_bearing_revisions_consume_calculation_relations() -> None:
     modelos, _catalogues = _validated_registry_tree()
 
