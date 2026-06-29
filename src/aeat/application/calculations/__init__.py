@@ -17,7 +17,8 @@ their materialised target bindings; :class:`IvaWalletDecisionSourceResolver`
 resolves the Modelo 303
 :attr:`~aeat.core.BindingSourceKind.IVA_WALLET_DECISION` compensation authority
 outside the ordinary previous-filing carry; and
-:class:`IvaCompensationAnnualPartitionSourceResolver` resolves Modelo 390
+:class:`~aeat.application.calculations._iva_compensation_annual_partition.IvaCompensationAnnualPartitionSourceResolver`
+resolves Modelo 390
 :attr:`~aeat.core.BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION` boxes 97
 and 662 from the same FIFO carry projection.
 
