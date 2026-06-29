@@ -566,22 +566,20 @@ def test_deadline_window_any_mode_requires_conditions() -> None:
 @pytest.mark.parametrize(
     ("authored_period", "expected_code"),
     (
-        ("2026Q1", "1T"),
-        ("2026-1T", "1T"),
-        ("2026-0A", "0A"),
-        ("2026-03", "03"),
-        ("2026-1P", "1P"),
-        ("2026-EXT-1T", "EXT-1T"),
-        ("2026", "0A"),
+        ("2026 1T", "1T"),
+        ("2026 0A", "0A"),
+        ("2026 03", "03"),
+        ("2026 1P", "1P"),
+        ("2026 EXT-1T", "EXT-1T"),
     ),
 )
-def test_deadline_window_hydrates_toml_periods_at_schema_boundary(
+def test_deadline_window_accepts_current_display_periods_at_schema_boundary(
     authored_period: str,
     expected_code: str,
 ) -> None:
     window = DeadlineWindowDefinition.model_validate(
         {
-            "id": f"test-window-{authored_period.lower()}",
+            "id": f"test-window-{authored_period.lower().replace(' ', '-')}",
             "filing_year": 2026,
             "period": authored_period,
             "period_kind": "quarterly",
@@ -598,6 +596,23 @@ def test_deadline_window_hydrates_toml_periods_at_schema_boundary(
     assert window.model_dump(mode="json")["period"] == {"filing_year": 2026, "code": expected_code}
     assert '"period":"2026' not in window.model_dump_json()
     assert DeadlineWindowDefinition.model_validate(window.model_dump()).period == expected_period
+
+
+@pytest.mark.parametrize("combined_period", ("2026Q1", "2026-1T", "2026-0A", "2026-03", "2026"))
+def test_deadline_window_rejects_combined_period_shapes(combined_period: str) -> None:
+    with pytest.raises(ValueError, match="expected 'YYYY <period-code>'"):
+        DeadlineWindowDefinition.model_validate(
+            {
+                "id": f"test-window-{combined_period.lower()}",
+                "filing_year": 2026,
+                "period": combined_period,
+                "period_kind": "quarterly",
+                "opens_on": date(2026, 4, 1),
+                "closes_on": date(2026, 4, 20),
+                "legal_refs": ("test-law:art-1",),
+                "source_refs": ("test-source",),
+            },
+        )
 
 
 def test_keyed_bracket_table_parses_with_distinct_keys() -> None:

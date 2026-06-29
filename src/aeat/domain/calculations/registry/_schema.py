@@ -781,7 +781,7 @@ def _parse_deadline_window_period(value: object) -> Period:
         raise ValueError(f"deadline window period must be a string or Period, got {type(value).__name__}")
 
     try:
-        return Period.from_registry_authoring_string(value)
+        return Period.from_string(value)
     except ValueError as exc:
         raise ValueError(f"invalid deadline window period {value!r}: {exc}") from exc
 

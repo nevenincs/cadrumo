@@ -1,7 +1,7 @@
 [[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-111-2025-10"
 filing_year = 2025
-period = "2025-10"
+period = "2025 10"
 period_kind = "monthly"
 opens_on = 2025-11-01
 closes_on = 2025-11-20
@@ -28,7 +28,7 @@ source_refs = ["aeat-modelo-111-instructions"]
 [[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-111-2025-11"
 filing_year = 2025
-period = "2025-11"
+period = "2025 11"
 period_kind = "monthly"
 opens_on = 2025-12-01
 closes_on = 2025-12-20
@@ -55,7 +55,7 @@ source_refs = ["aeat-modelo-111-instructions"]
 [[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-111-2025-12"
 filing_year = 2025
-period = "2025-12"
+period = "2025 12"
 period_kind = "monthly"
 opens_on = 2026-01-01
 closes_on = 2026-01-20

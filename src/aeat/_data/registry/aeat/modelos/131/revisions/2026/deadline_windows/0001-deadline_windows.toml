@@ -1,7 +1,7 @@
 [[revisions."2026".deadline_windows]]
 id = "modelo-131-2026-1t"
 filing_year = 2026
-period = "2026Q1"
+period = "2026 1T"
 period_kind = "quarterly"
 opens_on = 2026-04-01
 closes_on = 2026-04-20
@@ -18,7 +18,7 @@ source_refs = ["aeat-modelo-131-procedure", "aeat-modelo-131-instructions"]
 [[revisions."2026".deadline_windows]]
 id = "modelo-131-2026-2t"
 filing_year = 2026
-period = "2026Q2"
+period = "2026 2T"
 period_kind = "quarterly"
 opens_on = 2026-07-01
 closes_on = 2026-07-20
@@ -35,7 +35,7 @@ source_refs = ["aeat-modelo-131-procedure", "aeat-modelo-131-instructions"]
 [[revisions."2026".deadline_windows]]
 id = "modelo-131-2026-3t"
 filing_year = 2026
-period = "2026Q3"
+period = "2026 3T"
 period_kind = "quarterly"
 opens_on = 2026-10-01
 closes_on = 2026-10-20
@@ -52,7 +52,7 @@ source_refs = ["aeat-modelo-131-procedure", "aeat-modelo-131-instructions"]
 [[revisions."2026".deadline_windows]]
 id = "modelo-131-2026-4t"
 filing_year = 2026
-period = "2026Q4"
+period = "2026 4T"
 period_kind = "quarterly"
 opens_on = 2027-01-01
 closes_on = 2027-01-20
