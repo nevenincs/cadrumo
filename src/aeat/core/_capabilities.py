@@ -21,6 +21,12 @@ from :func:`~aeat.application.provisioning.probe_ollama_vision`,
 :func:`~aeat.application.provisioning.probe_subprocess_providers`, and
 :func:`~aeat.application.provisioning.probe_optional_extras`, keeping operator
 intent separate from dependency availability.
+
+This enum is deliberately separate from
+:attr:`aeat.domain.calculations.registry.ModeloDefinition.capabilities` and
+:data:`aeat.domain.calculations.registry.ModeloFilingCapability`. Registry
+capabilities describe which workflows a modelo definition supports; service
+capabilities describe what an active profile permits the app to use.
 """
 
 from __future__ import annotations
@@ -38,6 +44,14 @@ class ServiceCapability(StrEnum):
     :func:`~aeat.core.require_optional_extra`; a capability records whether the
     profile permits the service, not whether its import/runtime dependency is
     installed.
+
+    See Also:
+        :class:`~aeat.application.user_profile.CapabilityDecision`
+            Resolved posture after applying gestor mode, profile facts, defaults,
+            and global settings.
+        :mod:`aeat.entrypoints.cli._config._capabilities_cli`
+            Operator-facing ``show`` and ``set`` commands that expose these enum
+            values directly.
 
     Members:
         CLOUD_EVIDENCE_UPLOAD: Whether this profile permits sending sensitive
