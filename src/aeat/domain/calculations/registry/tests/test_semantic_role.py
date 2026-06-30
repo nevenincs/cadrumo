@@ -305,6 +305,7 @@ class TestTypoTwinWarning:
             ("100", "2025", "0361", "irpf_ganancia_premios_juegos_pub_valoracion_b"),
             ("100", "2025", "0238", "irpf_eo_reintegro_subvenciones"),
             ("100", "2025", "0239", "irpf_eo_agr_reintegro_subvenciones"),
+            ("100", "2025", "2202", "irpf_anexo_b_aav_importe_satisfecho"),
             # M303 compensacion-pendiente roles appear in both 2009-y-siguientes and
             # 2023-y-siguientes revisions; the validator requires unique occurrence for
             # intentional_singleton, so they carry semantic_role_cardinality="shared".
@@ -364,6 +365,7 @@ class TestTypoTwinWarning:
             "irpf_ganancia_premios_juegos_pub_valoracion_b",
             "irpf_eo_reintegro_subvenciones",
             "irpf_eo_agr_reintegro_subvenciones",
+            "irpf_anexo_b_aav_importe_satisfecho",
             "iva_oss_union_servicios_destino_de_cuota",
             "iva_oss_union_servicios_destino_fr_cuota",
         }
@@ -558,14 +560,14 @@ class TestTypoTwinWarning:
             _emit_semantic_role_typo_twin_warnings([m])
         assert captured == []
 
-    def test_optional_scope_axis_roles_do_not_warn_as_typos(self) -> None:
-        listed = _casilla(cid="a", semantic_role="irpf_anexo_b_aav_importe_satisfecho")
-        general = _casilla(cid="b", semantic_role="irpf_anexo_b_importe_satisfecho")
-        m = _registry_modelo("100", "2025", [listed, general])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
+    def test_anexo_b_aav_marker_is_not_optional_axis_token(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "irpf_anexo_b_aav_importe_satisfecho",
+                "irpf_anexo_b_importe_satisfecho",
+            )
+            is False
+        )
 
     def test_coti_scope_marker_is_not_optional_axis_token(self) -> None:
         coti = _casilla(cid="a", semantic_role="irpf_ganancia_fondos_coti_ganancia")
