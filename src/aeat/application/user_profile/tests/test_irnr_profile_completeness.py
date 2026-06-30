@@ -20,42 +20,45 @@ _BASE_VALUES: dict[str, str] = {
 }
 
 
-def test_profile_key_validation_blocks_irnr_without_country() -> None:
-    result = validate_profile_values(
-        {
-            **_BASE_VALUES,
-            "taxpayer_type.fiscal_residency": "non_resident_irnr",
-        },
-    )
+@pytest.mark.parametrize(
+    ("overrides", "expected_valid", "expected_missing"),
+    (
+        pytest.param(
+            {"taxpayer_type.fiscal_residency": "non_resident_irnr"},
+            False,
+            ("taxpayer_type.country_of_fiscal_residence",),
+            id="missing-country",
+        ),
+        pytest.param(
+            {
+                "taxpayer_type.fiscal_residency": "non_resident_irnr",
+                "taxpayer_type.country_of_fiscal_residence": "GB",
+            },
+            False,
+            ("taxpayer_type.representante_fiscal_nif", "taxpayer_type.representante_fiscal_nombre"),
+            id="gb-missing-representante",
+        ),
+        pytest.param(
+            {
+                "taxpayer_type.fiscal_residency": "non_resident_irnr",
+                "taxpayer_type.country_of_fiscal_residence": "FR",
+            },
+            True,
+            (),
+            id="eu-country",
+        ),
+    ),
+)
+def test_profile_key_validation_applies_irnr_conditional_requirements(
+    overrides: dict[str, str],
+    expected_valid: bool,
+    expected_missing: tuple[str, ...],
+) -> None:
+    result = validate_profile_values({**_BASE_VALUES, **overrides})
 
-    assert result.valid is False
-    assert "taxpayer_type.country_of_fiscal_residence" in result.missing_required
-
-
-def test_profile_key_validation_blocks_gb_irnr_without_representante() -> None:
-    result = validate_profile_values(
-        {
-            **_BASE_VALUES,
-            "taxpayer_type.fiscal_residency": "non_resident_irnr",
-            "taxpayer_type.country_of_fiscal_residence": "GB",
-        },
-    )
-
-    assert result.valid is False
-    assert "taxpayer_type.representante_fiscal_nif" in result.missing_required
-    assert "taxpayer_type.representante_fiscal_nombre" in result.missing_required
-
-
-def test_profile_key_validation_accepts_eu_irnr_without_representante() -> None:
-    result = validate_profile_values(
-        {
-            **_BASE_VALUES,
-            "taxpayer_type.fiscal_residency": "non_resident_irnr",
-            "taxpayer_type.country_of_fiscal_residence": "FR",
-        },
-    )
-
-    assert result.valid is True
+    assert result.valid is expected_valid
+    for missing_path in expected_missing:
+        assert missing_path in result.missing_required
 
 
 def test_lifecycle_validation_reports_conditional_irnr_profile_errors() -> None:
