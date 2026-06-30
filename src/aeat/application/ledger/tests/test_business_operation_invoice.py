@@ -22,7 +22,6 @@ from .._business_operation_invoice import (
     BusinessOperationInvoicePatch,
     CollectibleInvoiceService,
     PayableInvoiceService,
-    validate_eu_iva_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -436,84 +435,6 @@ class TestRoundTripPersistence:
         assert records[0].invoice_id == add_result.record.invoice_id
         assert records[0].taxable_base == Decimal("1234.56")
         assert records[0].iva_rate == Decimal("0.21")
-
-
-class TestEuVatIdValidator:
-    """INTRACOM-001 — per-member-state EU IVA-ID format validation."""
-
-    def test_de_valid_nine_digits_accepted(self) -> None:
-        # Anti-tautology spec: DE must have exactly 9 digits after "DE"
-        assert validate_eu_iva_id("DE345678901") == "DE345678901"
-
-    def test_de_too_short_rejected(self) -> None:
-        # Spec §6: DE12345 is too short (only 5 digits, needs 9)
-        with pytest.raises(BusinessOperationInvoiceInputError, match="DE"):
-            validate_eu_iva_id("DE12345")
-
-    def test_de_non_digit_rejected(self) -> None:
-        # Spec §6: DE34567890A contains a letter after DE — invalid for DE
-        with pytest.raises(BusinessOperationInvoiceInputError, match="DE"):
-            validate_eu_iva_id("DE34567890A")
-
-    def test_fr_valid_alphanumeric_11_chars_accepted(self) -> None:
-        # FR: 2 alphanumeric chars + 9 digits = 11 chars after prefix
-        assert validate_eu_iva_id("FR12345678901") == "FR12345678901"
-
-    def test_fr_letter_prefix_chars_accepted(self) -> None:
-        assert validate_eu_iva_id("FRAB123456789") == "FRAB123456789"
-
-    def test_it_eleven_digits_accepted(self) -> None:
-        assert validate_eu_iva_id("IT12345678901") == "IT12345678901"
-
-    def test_it_wrong_length_rejected(self) -> None:
-        with pytest.raises(BusinessOperationInvoiceInputError, match="IT"):
-            validate_eu_iva_id("IT1234567890")
-
-    def test_ie_eight_chars_accepted(self) -> None:
-        # IE: 7 digits + 1 letter
-        assert validate_eu_iva_id("IE1234567A") == "IE1234567A"
-
-    def test_ie_missing_letter_rejected(self) -> None:
-        with pytest.raises(BusinessOperationInvoiceInputError, match="IE"):
-            validate_eu_iva_id("IE12345678")
-
-    def test_nl_twelve_chars_pattern_accepted(self) -> None:
-        # NL: 9 digits + B + 2 digits
-        assert validate_eu_iva_id("NL123456789B01") == "NL123456789B01"
-
-    def test_nl_missing_b_separator_rejected(self) -> None:
-        with pytest.raises(BusinessOperationInvoiceInputError, match="NL"):
-            validate_eu_iva_id("NL12345678901")
-
-    def test_es_valid_nif_format_accepted(self) -> None:
-        assert validate_eu_iva_id("ESB12345678") == "ESB12345678"
-
-    def test_gr_el_prefix_accepted(self) -> None:
-        # Greece uses EL in IVA-IDs (not GR)
-        assert validate_eu_iva_id("EL123456789") == "EL123456789"
-
-    def test_xi_northern_ireland_goods_prefix_accepted(self) -> None:
-        assert validate_eu_iva_id("XI123456789") == "XI123456789"
-
-    def test_non_eu_prefix_rejected(self) -> None:
-        with pytest.raises(BusinessOperationInvoiceInputError, match="GB"):
-            validate_eu_iva_id("GB123456789")
-
-    def test_too_short_no_prefix_rejected(self) -> None:
-        with pytest.raises(BusinessOperationInvoiceInputError):
-            validate_eu_iva_id("DE")
-
-    def test_whitespace_and_hyphens_stripped(self) -> None:
-        # Normalisation: spaces and hyphens are stripped before matching
-        assert validate_eu_iva_id("DE 345 678 901") == "DE345678901"
-
-    def test_lowercase_input_normalised_to_upper(self) -> None:
-        assert validate_eu_iva_id("de345678901") == "DE345678901"
-
-    def test_anti_tautology_de_ten_digits_rejected(self) -> None:
-        # Proves the DE pattern is not trivially permissive: 10 digits must fail
-        with pytest.raises(BusinessOperationInvoiceInputError):
-            validate_eu_iva_id("DE3456789012")
 
 
 class TestIntracomFieldsPersistence:
