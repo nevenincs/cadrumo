@@ -440,20 +440,23 @@ def _is_explicit_profile_show_invocation(ctx: typer.Context, verb_path: str | No
     ``config profile show`` form still depends on the active profile and remains
     active-profile guarded.
     """
-    if verb_path is not None:
-        verb_tokens = verb_path.split()
-        if verb_tokens[:3] == ["config", "profile", "show"] and len(verb_tokens) > 3:
-            return True
-
     from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
 
     raw_tokens = _full_invocation_tokens() or tuple(
         str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ())
     )
-    command_start = _profile_show_command_start(raw_tokens)
-    if command_start is None:
+    if raw_tokens:
+        command_start = _profile_show_command_start(raw_tokens)
+        if command_start is None:
+            return False
+        return _has_explicit_profile_show_target(raw_tokens[command_start + 3 :])
+
+    if verb_path is None:
         return False
-    return _has_explicit_profile_show_target(raw_tokens[command_start + 3 :])
+    verb_tokens = tuple(verb_path.split())
+    if verb_tokens[:3] != ("config", "profile", "show"):
+        return False
+    return _has_explicit_profile_show_target(verb_tokens[3:])
 
 
 def _profile_show_command_start(tokens: tuple[str, ...]) -> int | None:
@@ -620,7 +623,7 @@ def _full_invocation_verb_path() -> str | None:
             skip_next = False
             continue
         if token.startswith("-"):
-            if token in ("--language", "--lang", "--format", "--profile") and "=" not in token:
+            if token in ("--language", "--lang", "--format", "--profile", "--output-language") and "=" not in token:
                 skip_next = True
             continue
         verb_tokens.append(token)

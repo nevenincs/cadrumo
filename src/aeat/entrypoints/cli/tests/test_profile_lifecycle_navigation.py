@@ -660,3 +660,38 @@ def test_explicit_profile_show_reaches_tombstoned_target_with_stale_active_uuid(
         assert "status\ttombstoned" in result.output
         assert "record_validity\ttombstoned" in result.output
         assert "Unknown profile" not in result.output
+
+
+def test_no_arg_profile_show_output_language_does_not_mask_stale_active_uuid(
+    _per_bucket_backend: Path,
+) -> None:
+    """No-arg ``show --output-language en`` still depends on the active profile."""
+
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....core.config import override_settings
+
+    seed("alpha")
+    pointer = read_profile_bucket("alpha")
+    assert pointer is not None
+    tombstoned_uuid = pointer.bucket_id
+
+    dispose_engine()
+    deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
+    assert deleted.exit_code == 0, deleted.output
+
+    dispose_engine()
+    with override_settings(aeat_active_profile=tombstoned_uuid):
+        no_target = _invoke(("config", "profile", "show", "--output-language", "en"))
+        by_label = _invoke(("config", "profile", "show", "alpha", "--output-language", "en"))
+        by_uuid = _invoke(("config", "profile", "show", tombstoned_uuid, "--output-language", "en"))
+
+    assert no_target.exit_code != 0, no_target.output
+    assert "Unknown profile" in no_target.output
+    assert "record_validity\ttombstoned" not in no_target.output
+
+    for result in (by_label, by_uuid):
+        assert result.exit_code == 0, result.output
+        assert "status\ttombstoned" in result.output
+        assert "record_validity\ttombstoned" in result.output
+        assert "Unknown profile" not in result.output
