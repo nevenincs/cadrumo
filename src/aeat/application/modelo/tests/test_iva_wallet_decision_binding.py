@@ -20,6 +20,7 @@ from .._iva_wallet_gate import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_BUCKET_ID = "34343434-3434-4343-8343-343434343434"
 _TAXPAYER_REF = "taxpayeralpha"
 _OTHER_TAXPAYER_REF = "othertaxpayeralpha"
 _M303_PRIOR_COMPENSATION_CASILLA: CasillaId = validated_casilla_id(
@@ -70,7 +71,7 @@ def _apply(
         "303",
         2026,
         Period.from_year_and_code(2026, "2T"),
-        bucket_id="operator",
+        bucket_id=_BUCKET_ID,
         revision=_revision(),
         taxpayer_nif=taxpayer_nif,
         casilla_inputs=casilla_inputs or {},
@@ -105,7 +106,7 @@ def test_blocked_iva_wallet_decision_refuses_modelo_303_automatic_calculation() 
             "303",
             2026,
             Period.from_year_and_code(2026, "2T"),
-            bucket_id="operator",
+            bucket_id=_BUCKET_ID,
             revision=_revision(),
             taxpayer_nif=_TAXPAYER_REF,
             casilla_inputs={},
@@ -122,7 +123,7 @@ def test_caller_binding_conflict_with_wallet_decision_is_refused() -> None:
             "303",
             2026,
             Period.from_year_and_code(2026, "2T"),
-            bucket_id="operator",
+            bucket_id=_BUCKET_ID,
             revision=_revision(),
             taxpayer_nif=_TAXPAYER_REF,
             casilla_inputs={},
@@ -140,7 +141,7 @@ def test_modelo_303_prior_compensation_binding_without_wallet_decision_is_refuse
             "303",
             2026,
             Period.from_year_and_code(2026, "2T"),
-            bucket_id="operator",
+            bucket_id=_BUCKET_ID,
             revision=_revision(),
             taxpayer_nif=_TAXPAYER_REF,
             casilla_inputs={},
@@ -167,7 +168,7 @@ def test_modelo_303_prior_compensation_casilla_without_wallet_decision_is_refuse
             "303",
             2026,
             Period.from_year_and_code(2026, "2T"),
-            bucket_id="operator",
+            bucket_id=_BUCKET_ID,
             revision=_revision(),
             taxpayer_nif=_TAXPAYER_REF,
             casilla_inputs={_M303_PRIOR_COMPENSATION_CASILLA: Decimal("800")},
@@ -185,7 +186,7 @@ def test_modelo_303_backend_prior_compensation_casilla_without_wallet_decision_i
             "303",
             2026,
             Period.from_year_and_code(2026, "2T"),
-            bucket_id="operator",
+            bucket_id=_BUCKET_ID,
             revision=_revision(),
             taxpayer_nif=_TAXPAYER_REF,
             casilla_inputs={},
@@ -203,7 +204,7 @@ def test_modelo_303_wallet_decision_for_other_taxpayer_is_refused() -> None:
             "303",
             2026,
             Period.from_year_and_code(2026, "2T"),
-            bucket_id="operator",
+            bucket_id=_BUCKET_ID,
             revision=_revision(),
             taxpayer_nif=_OTHER_TAXPAYER_REF,
             casilla_inputs={},
@@ -221,7 +222,7 @@ def test_modelo_303_prior_compensation_casilla_conflict_with_wallet_decision_is_
             "303",
             2026,
             Period.from_year_and_code(2026, "2T"),
-            bucket_id="operator",
+            bucket_id=_BUCKET_ID,
             revision=_revision(),
             taxpayer_nif=_TAXPAYER_REF,
             casilla_inputs={_M303_PRIOR_COMPENSATION_CASILLA: Decimal("800")},
