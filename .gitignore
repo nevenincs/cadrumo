@@ -236,9 +236,15 @@ test-results/
 
 # AEAT Manual practico raw PDFs (#25): binaries are materialised by
 # `aeat manual fetch` and verified against the committed manifest.json.
-# Keep raw PDFs ignored unless a registry source catalogue explicitly enrolls
-# the official payload as legal/source evidence.
+# Keep raw PDFs ignored unless a registry source catalogue or committed
+# manual-corpus guard explicitly enrolls the official payload as evidence.
 src/aeat/_data/corpus/manuals/**/source.pdf
+!src/aeat/_data/corpus/manuals/iva/2020/source.pdf
+!src/aeat/_data/corpus/manuals/iva/2021/source.pdf
+!src/aeat/_data/corpus/manuals/iva/2022/source.pdf
+!src/aeat/_data/corpus/manuals/iva/2023/source.pdf
+!src/aeat/_data/corpus/manuals/iva/2024/source.pdf
+!src/aeat/_data/corpus/manuals/iva/2025/source.pdf
 !src/aeat/_data/corpus/manuals/renta/2020/part1/source.pdf
 !src/aeat/_data/corpus/manuals/renta/2021/part1/source.pdf
 !src/aeat/_data/corpus/manuals/renta/2022/part1/source.pdf

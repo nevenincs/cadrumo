@@ -128,7 +128,7 @@ PART_SPECS: tuple[PartSpec, ...] = (
         manual_id=ManualId.IVA,
         year=2021,
         part=ManualPart.SINGLE,
-        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IVA/Manual_IVA_2021.pdf",
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IVA/ManualIVA2021.pdf",
     ),
     PartSpec(
         manual_id=ManualId.IVA,
