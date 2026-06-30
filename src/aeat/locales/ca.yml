@@ -3613,6 +3613,7 @@ cli:
     app_help: Cua de revisió humana per a registres que requereixen criteri de l'operador
     errors:
       invalid_state: 'Estat de revisió no vàlid: %{state}'
+      invalid_confidence: 'El llindar de confiança %{value} està fora de rang; indica un valor entre 0 i 1.'
     labels:
       affected_object_id: Objecte
       id: ID
@@ -3631,6 +3632,7 @@ cli:
       modelo_help: Filtrar per model
       source_kind_help: Filtrar per tipus d'origen
       state_help: Filtrar estat (pending o all)
+      confidence_below_help: 'Limita la cua a les transaccions classificades la confiança de classificació de les quals és estrictament inferior a aquest llindar (un valor entre 0 i 1). Les files de menys confiança apareixen primer per poder prioritzar-les.'
     show:
       explain_help: Inclou les referències legals que fonamenten aquesta troballa
         a la sortida de text. La càrrega JSON sempre les inclou.

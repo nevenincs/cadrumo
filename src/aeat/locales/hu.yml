@@ -3577,6 +3577,7 @@ cli:
       és nyomtatvány-megállapítások osztályozása.'
     errors:
       invalid_state: 'Érvénytelen felülvizsgálati állapot: %{state}'
+      invalid_confidence: 'A(z) %{value} megbízhatósági küszöb a tartományon kívül esik; adjon meg egy 0 és 1 közötti értéket.'
     labels:
       affected_object_id: Objektum
       id: Azonosító
@@ -3594,6 +3595,7 @@ cli:
       modelo_help: A sor szűrése egy nyomtatványra.
       source_kind_help: A sor szűrése egy forrástípusra.
       state_help: A sor szűrése egy felülvizsgálati állapotra.
+      confidence_below_help: 'A sort a besorolt tranzakciókra szűkíti, amelyek besorolási megbízhatósága szigorúan e küszöbérték alatt van (0 és 1 közötti érték). A legalacsonyabb megbízhatóságú sorok jelennek meg először, hogy priorizálhatók legyenek.'
     show:
       explain_help: Egyetlen felülvizsgálati elem részleteinek és a szükséges lépések
         megjelenítése.

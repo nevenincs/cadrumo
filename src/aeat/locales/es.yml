@@ -3648,6 +3648,7 @@ cli:
       de compra e incidencias de modelo'
     errors:
       invalid_state: 'Estado de revisión inválido: %{state}'
+      invalid_confidence: 'El umbral de confianza %{value} está fuera de rango; indica un valor entre 0 y 1.'
     labels:
       affected_object_id: Objeto
       id: ID
@@ -3666,6 +3667,7 @@ cli:
       modelo_help: Restringir la cola a un modelo
       source_kind_help: Restringir la cola a un tipo de origen
       state_help: Restringir la cola a un estado de revisión
+      confidence_below_help: 'Limita la cola a las transacciones clasificadas cuya confianza de clasificación es estrictamente inferior a este umbral (un valor entre 0 y 1). Las filas de menor confianza aparecen primero para poder priorizarlas.'
     show:
       explain_help: Incluir las referencias legales que fundamentan este hallazgo
         en la salida de texto. La carga JSON siempre las incluye.

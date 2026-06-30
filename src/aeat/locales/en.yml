@@ -3420,6 +3420,7 @@ cli:
       and modelo findings'
     errors:
       invalid_state: 'Invalid review state: %{state}'
+      invalid_confidence: 'Confidence threshold %{value} is out of range; supply a value between 0 and 1.'
     labels:
       affected_object_id: Object
       id: ID
@@ -3438,6 +3439,7 @@ cli:
       modelo_help: Restrict the queue to one modelo
       source_kind_help: Restrict the queue to one source kind
       state_help: Restrict the queue to one review state
+      confidence_below_help: 'Restrict the queue to classified transactions whose classification confidence is strictly below this threshold (a value between 0 and 1). Lowest-confidence rows surface first so they can be triaged.'
     show:
       explain_help: Include the legal_refs that ground this finding in the text output.
         The JSON payload always carries them.
