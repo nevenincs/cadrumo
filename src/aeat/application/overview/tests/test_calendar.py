@@ -287,7 +287,7 @@ def test_multi_payer_total_undeclared_surfaces_conservatively() -> None:
 def test_obligation_advisory_key_resolves_to_a_translation() -> None:
     # The surfaced key must resolve to a real (non-humanised-fallback) locale
     # string in every shipped locale — the half-shipped gap this closes.
-    from aeat.core.i18n._render import tr
+    from ....core.i18n._render import tr
 
     rendered = tr(_MULTIPLE_PAGADORES_OBLIGATION_KEY)
     # Cites the binding provision and names the form; not the humanised fallback.
