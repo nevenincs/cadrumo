@@ -1,13 +1,12 @@
 """Proof: the indeterminate revision-stamp advisory is operator-visible.
 
 The period-revision-resolution decision (Ruling 3) mandates that a
-cross-period carry from a prior filing with no re-confirmable registry revision
+cross-period carry whose source context cannot re-confirm the registry revision
 stamp MUST surface a NON-BLOCKING operator-facing advisory finding — never a
-silent grant. These tests prove the WARNING ``ADVISORY`` finding IS PRODUCED by
+silent grant. These tests prove the WARNING ``ADVISORY`` finding is produced by
 the real findings path (``_cross_period_clean_state_findings``) for a dependency
-carrying ``unstamped_revision_advisory``, even when that dependency is otherwise
-``clean`` (the silent-degradation case the review flagged), and that the WARNING
-does not flip the grant outcome.
+carrying the advisory flag, even when that dependency is otherwise ``clean``,
+and that the WARNING does not flip the grant outcome.
 
 These use the real production domain models (``CrossPeriodCleanStateVerdict``,
 ``CrossPeriodDependencyEvidence``, ``ModeloVerificationFinding``) — the same types
@@ -66,7 +65,7 @@ def _verdict(evidence: CrossPeriodDependencyEvidence) -> CrossPeriodCleanStateVe
 
 
 def test_unstamped_clean_dependency_produces_warning_advisory_finding() -> None:
-    """A clean dependency carrying the unstamped advisory still produces a WARNING finding.
+    """A clean dependency carrying the re-confirmation advisory produces a WARNING finding.
 
     This is the exact silent-degradation case the review flagged: the dependency
     is ``clean`` (no blocker) so the old early-return emitted NO finding. The fix
@@ -87,14 +86,14 @@ def test_unstamped_clean_dependency_produces_warning_advisory_finding() -> None:
         if f.kind is ModeloVerificationFindingKind.ADVISORY and f.severity is ModeloVerificationFindingSeverity.WARNING
     ]
     assert len(advisory) == 1, (
-        "a clean dependency carrying unstamped_revision_advisory MUST produce exactly one "
+        "a clean dependency carrying the revision advisory MUST produce exactly one "
         f"WARNING ADVISORY finding; got findings={findings!r}"
     )
     finding = advisory[0]
     assert "revision stamp" in finding.message
     assert finding.next_action is not None
     assert "aeat app live filed pull-sources" in finding.next_action
-    # No BLOCKING finding may be emitted for a clean-but-unstamped dependency.
+    # No BLOCKING finding may be emitted for a clean dependency carrying only this advisory.
     assert not any(f.severity is ModeloVerificationFindingSeverity.BLOCKING for f in findings)
 
 

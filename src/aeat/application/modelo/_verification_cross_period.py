@@ -316,10 +316,9 @@ def _cross_period_clean_state_findings(
 
     Emits a BLOCKING ``CROSS_PERIOD_DEPENDENCY_UNCLEAN`` finding for each unclean
     dependency, plus a NON-BLOCKING ``ADVISORY`` (``WARNING`` severity) finding for
-    each dependency that carried an unstamped or indeterminate revision stamp
+    each dependency whose source revision stamp could not be re-confirmed
     (``unstamped_revision_advisory``). The advisory is surfaced even when the
-    dependency is otherwise ``clean`` — ADR 2026-06-10-period-revision-resolution-adr,
-    Ruling 3 / R2 mandates that an unstamped carry must never degrade
+    dependency is otherwise ``clean`` so an indeterminate carry never degrades
     silently. The WARNING severity keeps the grant path open (see
     :func:`_classify_verification_outcome`) while making the carry operator-visible.
 
@@ -503,12 +502,10 @@ def _cross_period_unstamped_revision_advisory_finding(
 ) -> ModeloVerificationFinding:
     """Build the NON-BLOCKING revision-stamp advisory finding for one dependency.
 
-    ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2: a prior filing
-    whose persisted observation has no revision stamp — or whose
-    stamp could not be re-confirmed because the source context will not resolve
-    (indeterminate) — carries, but the operator MUST be told so the value is not
-    accepted silently. The remediation is to re-file the source period so a
-    stamped observation is captured.
+    A prior filing whose stamp could not be re-confirmed because the source
+    context will not resolve carries, but the operator MUST be told so the value
+    is not accepted silently. The remediation is to re-pull the source period so
+    a currently verifiable observation is captured.
     """
     requirement = evidence.requirement
     requirement_period = requirement.period.registry_token
@@ -522,14 +519,15 @@ def _cross_period_unstamped_revision_advisory_finding(
         kind=ModeloVerificationFindingKind.ADVISORY,
         severity=ModeloVerificationFindingSeverity.WARNING,
         message=(
-            "cross-period carry used a prior filing with no re-confirmable registry "
-            f"revision stamp: modelo={requirement.source_modelo} year={requirement.filing_year} "
+            "cross-period carry used a prior filing whose registry "
+            f"revision stamp could not be re-confirmed: modelo={requirement.source_modelo} "
+            f"year={requirement.filing_year} "
             f"period={requirement_period} origin={requirement.origin.value}. The carried value "
             "was accepted but its source revision could not be re-confirmed against the "
-            "law-determined revision (unstamped or indeterminate record)."
+            "law-determined revision."
         ),
         next_action=(
-            f"Re-file the source period to capture a revision-stamped observation: run `{re_file_capture}`, "
+            f"Re-pull the source period to capture a currently verifiable observation: run `{re_file_capture}`, "
             "then rerun verification so the carry is re-confirmed against the law-determined revision."
         ),
         legal_refs=_cross_period_dependency_legal_refs(requirement.origin_ids),
@@ -772,7 +770,7 @@ def _require_cross_period_clean_state(
         activity_start_date=activity_start_date,
     )
     # Only BLOCKING findings gate the file/export path. NON-BLOCKING WARNING
-    # advisories (e.g. the unstamped/indeterminate revision-stamp advisory) surface
+    # advisories (e.g. indeterminate revision-stamp re-confirmation) surface
     # in the verification report but must never brick the file/export gate —
     # ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2.
     blocking_findings = [f for f in findings if f.severity is ModeloVerificationFindingSeverity.BLOCKING]
