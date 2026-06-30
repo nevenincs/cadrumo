@@ -274,6 +274,18 @@ class TestTypoTwinWarning:
                 "irpf_anexo_c_exceso_sps_rg_aportaciones_aplicado",
             ),
             (
+                "200",
+                "2024-y-siguientes",
+                "00827",
+                "is_deduccion_di_internacional_rdleg_pendiente",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "00848",
+                "is_deduccion_di_interna_rdleg_pendiente",
+            ),
+            (
                 "100",
                 "2020",
                 "1171",
@@ -481,6 +493,7 @@ class TestTypoTwinWarning:
             _bundled_modelo("100"),
             _bundled_modelo("184"),
             _bundled_modelo("190"),
+            _bundled_modelo("200"),
             _bundled_modelo("202"),
             _bundled_modelo("303"),
             _bundled_modelo("369"),
@@ -492,6 +505,8 @@ class TestTypoTwinWarning:
             "irpf_red_prevision_social_exceso_2016_2020",
             "irpf_anexo_c_exceso_sps_rg_aportaciones_periodo",
             "irpf_anexo_c_exceso_sps_rg_aportaciones_aplicado",
+            "is_deduccion_di_internacional_rdleg_pendiente",
+            "is_deduccion_di_interna_rdleg_pendiente",
             "irpf_deduccion_c_valenciana_ayudas_publicas_generalitat_2020",
             "irpf_num_hijos_maternidad_2020",
             "irpf_incremento_maternidad_no_aplicado_2020",
@@ -739,6 +754,15 @@ class TestTypoTwinWarning:
             semantic_roles_are_axis_siblings(
                 "irpf_anexo_c_exceso_sps_rg_aportaciones_periodo",
                 "irpf_anexo_c_exceso_sps_rg_aportaciones_aplicado",
+            )
+            is False
+        )
+
+    def test_internal_international_tokens_are_not_axis_tokens(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "is_deduccion_di_interna_rdleg_pendiente",
+                "is_deduccion_di_internacional_rdleg_pendiente",
             )
             is False
         )
