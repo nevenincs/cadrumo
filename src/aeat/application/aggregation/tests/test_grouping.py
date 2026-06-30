@@ -2,43 +2,60 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from decimal import Decimal
 
 import pytest
 
+from ....core import BindingSourceKind
+from ....core.aggregation import RetencionScheme
 from .._grouping import group_and_collect_names
+from .._retenciones import RetencionObservation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-@dataclass(frozen=True)
-class _Obs:
-    """Minimal test record covering all helper-relevant fields."""
-
-    source_kind: str
-    nif: str
-    kind: str
-    name: str | None
+_SOURCE_LEDGER = BindingSourceKind.LEDGER_TRANSACTION
+_SOURCE_INVOICE = BindingSourceKind.COLLECTIBLE_INVOICE
+_SCHEME_WORK = RetencionScheme.WORK_INCOME
+_SCHEME_RENT = RetencionScheme.URBAN_RENTAL
 
 
-def _name(obs: _Obs) -> str | None:
-    return obs.name
+def _observation(
+    source_kind: BindingSourceKind,
+    perceptor_nif: str,
+    scheme: RetencionScheme,
+    perceptor_name: str = "",
+) -> RetencionObservation:
+    return RetencionObservation(
+        source_kind=source_kind,
+        source_object_id=f"{source_kind.value}:{perceptor_nif}:{scheme.value}:{perceptor_name or 'empty'}",
+        perceptor_nif=perceptor_nif,
+        perceptor_name=perceptor_name,
+        scheme=scheme,
+        taxable_base=Decimal("1.00"),
+        retencion_amount=Decimal("0.15"),
+        accrued_on="2026-01-01",
+    )
 
 
-def _group_key(obs: _Obs) -> tuple[str, str, str]:
-    return (obs.source_kind, obs.nif, obs.kind)
+def _name(obs: RetencionObservation) -> str | None:
+    return obs.perceptor_name or None
 
 
-def _identity_key(obs: _Obs) -> tuple[str, str]:
-    return (obs.source_kind, obs.nif)
+def _group_key(obs: RetencionObservation) -> tuple[BindingSourceKind, str, RetencionScheme]:
+    return (BindingSourceKind(obs.source_kind), obs.perceptor_nif, obs.scheme)
+
+
+def _identity_key(obs: RetencionObservation) -> tuple[BindingSourceKind, str]:
+    return (BindingSourceKind(obs.source_kind), obs.perceptor_nif)
 
 
 def test_group_and_collect_names_buckets_by_composite_key() -> None:
     observations = (
-        _Obs("ledger", "A", "k1", "Alpha"),
-        _Obs("ledger", "A", "k1", "Alpha"),
-        _Obs("ledger", "A", "k2", "Alpha"),
-        _Obs("ledger", "B", "k1", "Beta"),
+        _observation(_SOURCE_LEDGER, "A", _SCHEME_WORK, "Alpha"),
+        _observation(_SOURCE_LEDGER, "A", _SCHEME_WORK, "Alpha"),
+        _observation(_SOURCE_LEDGER, "A", _SCHEME_RENT, "Alpha"),
+        _observation(_SOURCE_LEDGER, "B", _SCHEME_WORK, "Beta"),
     )
     grouped, _ = group_and_collect_names(
         observations,
@@ -47,33 +64,33 @@ def test_group_and_collect_names_buckets_by_composite_key() -> None:
         name_fn=_name,
     )
     assert set(grouped.keys()) == {
-        ("ledger", "A", "k1"),
-        ("ledger", "A", "k2"),
-        ("ledger", "B", "k1"),
+        (_SOURCE_LEDGER, "A", _SCHEME_WORK),
+        (_SOURCE_LEDGER, "A", _SCHEME_RENT),
+        (_SOURCE_LEDGER, "B", _SCHEME_WORK),
     }
-    assert len(grouped[("ledger", "A", "k1")]) == 2
-    assert len(grouped[("ledger", "A", "k2")]) == 1
-    assert len(grouped[("ledger", "B", "k1")]) == 1
+    assert len(grouped[(_SOURCE_LEDGER, "A", _SCHEME_WORK)]) == 2
+    assert len(grouped[(_SOURCE_LEDGER, "A", _SCHEME_RENT)]) == 1
+    assert len(grouped[(_SOURCE_LEDGER, "B", _SCHEME_WORK)]) == 1
 
 
 def test_group_and_collect_names_preserves_iteration_order_within_bucket() -> None:
-    first = _Obs("ledger", "A", "k1", "Alpha")
-    second = _Obs("ledger", "A", "k1", "Alpha-2nd")
-    third = _Obs("ledger", "A", "k1", "Alpha-3rd")
+    first = _observation(_SOURCE_LEDGER, "A", _SCHEME_WORK, "Alpha")
+    second = _observation(_SOURCE_LEDGER, "A", _SCHEME_WORK, "Alpha-2nd")
+    third = _observation(_SOURCE_LEDGER, "A", _SCHEME_WORK, "Alpha-3rd")
     grouped, _ = group_and_collect_names(
         (first, second, third),
         group_key_fn=_group_key,
         identity_key_fn=_identity_key,
         name_fn=_name,
     )
-    assert grouped[("ledger", "A", "k1")] == [first, second, third]
+    assert grouped[(_SOURCE_LEDGER, "A", _SCHEME_WORK)] == [first, second, third]
 
 
 def test_group_and_collect_names_first_non_empty_name_wins() -> None:
     observations = (
-        _Obs("ledger", "A", "k1", None),
-        _Obs("ledger", "A", "k1", "First Real Name"),
-        _Obs("ledger", "A", "k1", "Later Name"),
+        _observation(_SOURCE_LEDGER, "A", _SCHEME_WORK),
+        _observation(_SOURCE_LEDGER, "A", _SCHEME_WORK, "First Real Name"),
+        _observation(_SOURCE_LEDGER, "A", _SCHEME_WORK, "Later Name"),
     )
     _, names = group_and_collect_names(
         observations,
@@ -81,14 +98,14 @@ def test_group_and_collect_names_first_non_empty_name_wins() -> None:
         identity_key_fn=_identity_key,
         name_fn=_name,
     )
-    assert names[("ledger", "A")] == "First Real Name"
+    assert names[(_SOURCE_LEDGER, "A")] == "First Real Name"
 
 
 def test_group_and_collect_names_skips_empty_names_without_clearing_prior_win() -> None:
     observations = (
-        _Obs("ledger", "A", "k1", "Real Name"),
-        _Obs("ledger", "A", "k1", ""),
-        _Obs("ledger", "A", "k1", None),
+        _observation(_SOURCE_LEDGER, "A", _SCHEME_WORK, "Real Name"),
+        _observation(_SOURCE_LEDGER, "A", _SCHEME_WORK, ""),
+        _observation(_SOURCE_LEDGER, "A", _SCHEME_WORK),
     )
     _, names = group_and_collect_names(
         observations,
@@ -96,14 +113,14 @@ def test_group_and_collect_names_skips_empty_names_without_clearing_prior_win() 
         identity_key_fn=_identity_key,
         name_fn=_name,
     )
-    assert names[("ledger", "A")] == "Real Name"
+    assert names[(_SOURCE_LEDGER, "A")] == "Real Name"
 
 
 def test_group_and_collect_names_separate_identities_get_separate_names() -> None:
     observations = (
-        _Obs("ledger", "A", "k1", "Alpha"),
-        _Obs("ledger", "B", "k1", "Beta"),
-        _Obs("invoice", "A", "k1", "Alpha-Invoice"),
+        _observation(_SOURCE_LEDGER, "A", _SCHEME_WORK, "Alpha"),
+        _observation(_SOURCE_LEDGER, "B", _SCHEME_WORK, "Beta"),
+        _observation(_SOURCE_INVOICE, "A", _SCHEME_WORK, "Alpha-Invoice"),
     )
     _, names = group_and_collect_names(
         observations,
@@ -112,9 +129,9 @@ def test_group_and_collect_names_separate_identities_get_separate_names() -> Non
         name_fn=_name,
     )
     assert names == {
-        ("ledger", "A"): "Alpha",
-        ("ledger", "B"): "Beta",
-        ("invoice", "A"): "Alpha-Invoice",
+        (_SOURCE_LEDGER, "A"): "Alpha",
+        (_SOURCE_LEDGER, "B"): "Beta",
+        (_SOURCE_INVOICE, "A"): "Alpha-Invoice",
     }
 
 
@@ -135,9 +152,9 @@ def test_group_and_collect_names_identity_subset_of_group_key_is_consistent() ->
     # consistent — first non-empty name wins regardless of which group
     # observed it.
     observations = (
-        _Obs("ledger", "A", "k1", None),
-        _Obs("ledger", "A", "k2", "Name From K2"),
-        _Obs("ledger", "A", "k1", "Name From K1"),
+        _observation(_SOURCE_LEDGER, "A", _SCHEME_WORK),
+        _observation(_SOURCE_LEDGER, "A", _SCHEME_RENT, "Name From K2"),
+        _observation(_SOURCE_LEDGER, "A", _SCHEME_WORK, "Name From K1"),
     )
     grouped, names = group_and_collect_names(
         observations,
@@ -145,6 +162,6 @@ def test_group_and_collect_names_identity_subset_of_group_key_is_consistent() ->
         identity_key_fn=_identity_key,
         name_fn=_name,
     )
-    assert names[("ledger", "A")] == "Name From K2"
-    assert len(grouped[("ledger", "A", "k1")]) == 2
-    assert len(grouped[("ledger", "A", "k2")]) == 1
+    assert names[(_SOURCE_LEDGER, "A")] == "Name From K2"
+    assert len(grouped[(_SOURCE_LEDGER, "A", _SCHEME_WORK)]) == 2
+    assert len(grouped[(_SOURCE_LEDGER, "A", _SCHEME_RENT)]) == 1
