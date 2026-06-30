@@ -8,25 +8,15 @@ from ._verification_chain_support import (
     Decimal,
     DeclaracionParseError,
     RegistryValidationError,
+    _casilla_id,
+    _casilla_ids,
     _registry_snapshot,
     calculate_registry_snapshot,
     date,
     parse_declaracion,
-    validated_casilla_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
-
-
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-def _casilla_ids(*values: object) -> frozenset[CasillaId]:
-    return frozenset(_casilla_id(value) for value in values)
 
 
 _M100_INGRESOS_EXPLOTACION_CASILLA: CasillaId = _casilla_id("0171")
