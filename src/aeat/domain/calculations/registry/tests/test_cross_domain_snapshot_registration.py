@@ -56,7 +56,7 @@ def test_m100_build_on_renta_free_import_path_registers_the_gate() -> None:
     The subprocess imports only the registry -- it never imports
     ``aeat.domain.renta`` itself -- and confirms zero cross-domain checks
     are registered up front. Building a Modelo 100 snapshot then runs
-    ``_install_cross_domain_snapshot_checks`` inside ``_build_validated_snapshot``,
+    ``_install_cross_domain_snapshot_checks`` during snapshot construction,
     which imports the peer-domain check module by name. The build must
     succeed with the renta first-slice routing check registered, proving
     the registration is import-order-independent rather than a side effect
@@ -67,9 +67,7 @@ def test_m100_build_on_renta_free_import_path_registers_the_gate() -> None:
         """
         import sys
 
-        from aeat.core.resources import bundled_path
-        from aeat.domain.calculations.registry import load_registry_tree
-        from aeat.domain.calculations.registry._snapshot import _build_validated_snapshot
+        from aeat.core.resources import resources
         from aeat.domain.calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
         assert "aeat.domain.renta" not in sys.modules, (
@@ -79,19 +77,7 @@ def test_m100_build_on_renta_free_import_path_registers_the_gate() -> None:
             "no cross-domain checks must be registered before the snapshot build"
         )
 
-        source_root = bundled_path("registry", "aeat")
-        modelos, catalogues = load_registry_tree(source_root)
-        modelo_100 = next(m for m in modelos if m.id == "100")
-        revision = next(iter(modelo_100.revisions.values()))
-        period = next(iter(revision.period_selector.periods))
-
-        snapshot = _build_validated_snapshot(
-            modelo_100,
-            catalogues,
-            filing_year=int(revision.id),
-            period=period,
-            revision_id=revision.id,
-        )
+        snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
         assert snapshot.modelo.id == "100"
         assert _CROSS_DOMAIN_SNAPSHOT_CHECKS, (
             "building an M100 snapshot must register the renta first-slice "
@@ -119,28 +105,14 @@ def test_m100_build_succeeds_when_renta_is_imported() -> None:
         """
         import aeat.domain.renta  # noqa: F401  -- registration side effect
 
-        from aeat.core.resources import bundled_path
-        from aeat.domain.calculations.registry import load_registry_tree
-        from aeat.domain.calculations.registry._snapshot import _build_validated_snapshot
+        from aeat.core.resources import resources
         from aeat.domain.calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
         assert _CROSS_DOMAIN_SNAPSHOT_CHECKS, (
             "importing renta must register at least one cross-domain check"
         )
 
-        source_root = bundled_path("registry", "aeat")
-        modelos, catalogues = load_registry_tree(source_root)
-        modelo_100 = next(m for m in modelos if m.id == "100")
-        revision = next(iter(modelo_100.revisions.values()))
-        period = next(iter(revision.period_selector.periods))
-
-        snapshot = _build_validated_snapshot(
-            modelo_100,
-            catalogues,
-            filing_year=int(revision.id),
-            period=period,
-            revision_id=revision.id,
-        )
+        snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
         assert snapshot.modelo.id == "100"
         print("M100_BUILD_OK")
         """,
@@ -164,9 +136,7 @@ def test_non_m100_build_on_renta_free_path_does_not_require_the_gate() -> None:
         """
         import sys
 
-        from aeat.core.resources import bundled_path
-        from aeat.domain.calculations.registry import load_registry_tree
-        from aeat.domain.calculations.registry._snapshot import _build_validated_snapshot
+        from aeat.core.resources import resources
         from aeat.domain.calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
         assert "aeat.domain.renta" not in sys.modules, (
@@ -176,21 +146,7 @@ def test_non_m100_build_on_renta_free_path_does_not_require_the_gate() -> None:
             "no cross-domain checks must be registered without renta imported"
         )
 
-        source_root = bundled_path("registry", "aeat")
-        modelos, catalogues = load_registry_tree(source_root)
-        modelo_303 = next(m for m in modelos if m.id == "303")
-        revision = next(iter(modelo_303.revisions.values()))
-        period = next(iter(revision.period_selector.periods))
-        filing_year = revision.period_selector.year_from
-        assert filing_year is not None, "modelo 303 revision must declare year_from"
-
-        snapshot = _build_validated_snapshot(
-            modelo_303,
-            catalogues,
-            filing_year=filing_year,
-            period=period,
-            revision_id=revision.id,
-        )
+        snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period="1T")
         assert snapshot.modelo.id == "303"
         print("M303_BUILD_OK")
         """,
