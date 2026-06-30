@@ -332,6 +332,8 @@ def _clean_state_repair_evidence(
             source_casilla_ids=(_M303_SOURCE_CASILLA_01,),
             origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
             origin_ids=("binding-303-casilla-01",),
+            legal_refs=("ley-58-2003:art-119",),
+            source_refs=("aeat-modelo-303-procedure",),
         ),
         missing_member_nifs=missing_member_nifs,
         unexpected_member_nifs=unexpected_member_nifs,

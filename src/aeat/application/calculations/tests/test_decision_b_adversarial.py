@@ -24,6 +24,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _DELTA: tuple[CrossPeriodCleanStateBlocker, ...] = tuple(_OFFICIAL_EVIDENCE_DELTA_BLOCKERS)
 _M130_SOURCE_CASILLA_19: CasillaId = validated_casilla_id("19", surface="_M130_SOURCE_CASILLA_19")
+_M130_REQUIREMENT_LEGAL_REFS = ("rd-439-2007:art-110",)
+_M130_REQUIREMENT_SOURCE_REFS = ("aeat-modelo-130-instructions",)
 
 
 def _evidence(
@@ -39,6 +41,8 @@ def _evidence(
         source_casilla_ids=(_M130_SOURCE_CASILLA_19,),
         origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
         origin_ids=("modelo-130-pagos-fraccionados-anteriores",),
+        legal_refs=_M130_REQUIREMENT_LEGAL_REFS,
+        source_refs=_M130_REQUIREMENT_SOURCE_REFS,
     )
     return CrossPeriodDependencyEvidence(
         requirement=req,

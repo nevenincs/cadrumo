@@ -597,6 +597,8 @@ def _requirements_from_previous_filing(
         source_casilla_ids=requirement.source_casilla_ids,
         origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
         origin_ids=requirement.binding_ids,
+        legal_refs=requirement.legal_refs,
+        source_refs=requirement.source_refs,
         requires_member_fan_in=(requirement.source_modelo, requirement.filing_year, source_period) in grouped_keys,
     )
 
@@ -613,6 +615,8 @@ def _requirements_from_relation(
             source_casilla_ids=(source_casilla_id,),
             origin=CrossPeriodDependencyOrigin.REGISTRY_RELATION,
             origin_ids=requirement.relation_ids,
+            legal_refs=requirement.legal_refs,
+            source_refs=requirement.source_refs,
         )
 
 

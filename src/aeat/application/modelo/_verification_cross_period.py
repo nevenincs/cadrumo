@@ -43,6 +43,7 @@ from ..calculations import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,
+    CrossPeriodDependencyRequirement,
     CrossPeriodExpectedMemberSet,
     evaluate_cross_period_clean_state,
 )
@@ -321,6 +322,23 @@ def _cross_period_dependency_legal_refs(origin_ids: tuple[str, ...]) -> tuple[st
     return tuple(refs)
 
 
+def _cross_period_requirement_legal_refs(requirement: CrossPeriodDependencyRequirement) -> tuple[str, ...]:
+    """Return generic cross-period refs plus the registry requirement refs."""
+    return tuple(
+        dict.fromkeys(
+            (
+                *_cross_period_dependency_legal_refs(requirement.origin_ids),
+                *(str(ref) for ref in requirement.legal_refs),
+            ),
+        ),
+    )
+
+
+def _cross_period_requirement_source_refs(requirement: CrossPeriodDependencyRequirement) -> tuple[str, ...]:
+    """Return source refs carried by the registry requirement row."""
+    return tuple(dict.fromkeys(str(ref) for ref in requirement.source_refs))
+
+
 def _cross_period_clean_state_findings(
     verdict: CrossPeriodCleanStateVerdict | None,
     *,
@@ -375,7 +393,8 @@ def _cross_period_clean_state_findings(
                             f"origin_ids={origin_text} blockers={blocker_text}"
                         ),
                         next_action=_cross_period_clean_state_next_action(verdict, evidence),
-                        legal_refs=_cross_period_dependency_legal_refs(requirement.origin_ids),
+                        legal_refs=_cross_period_requirement_legal_refs(requirement),
+                        source_refs=_cross_period_requirement_source_refs(requirement),
                     ),
                 )
         if evidence.unstamped_revision_advisory:
@@ -430,6 +449,7 @@ def _cross_period_operator_declared_suppression_advisory_finding(
             "available, the date will be corroborated and this advisory cleared."
         ),
         legal_refs=_CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
+        source_refs=_cross_period_requirement_source_refs(requirement),
     )
 
 
@@ -479,6 +499,7 @@ def _cross_period_first_year_fractional_suppression_advisory_finding(
             "rerun verification."
         ),
         legal_refs=_M202_FIRST_YEAR_LEGAL_REFS,
+        source_refs=_cross_period_requirement_source_refs(requirement),
     )
 
 
@@ -547,7 +568,8 @@ def _cross_period_unstamped_revision_advisory_finding(
             f"Re-pull the source period to capture a currently verifiable observation: run `{re_file_capture}`, "
             "then rerun verification so the carry is re-confirmed against the law-determined revision."
         ),
-        legal_refs=_cross_period_dependency_legal_refs(requirement.origin_ids),
+        legal_refs=_cross_period_requirement_legal_refs(requirement),
+        source_refs=_cross_period_requirement_source_refs(requirement),
     )
 
 
@@ -579,7 +601,15 @@ def _cross_period_modelo_not_applicable_advisory_finding(
             ref
             for item in verdict.dependencies
             if item.modelo_not_applicable_advisory
-            for ref in _cross_period_dependency_legal_refs(item.requirement.origin_ids)
+            for ref in _cross_period_requirement_legal_refs(item.requirement)
+        ),
+    )
+    source_refs = tuple(
+        dict.fromkeys(
+            ref
+            for item in verdict.dependencies
+            if item.modelo_not_applicable_advisory
+            for ref in _cross_period_requirement_source_refs(item.requirement)
         ),
     )
     return ModeloVerificationFinding(
@@ -597,6 +627,7 @@ def _cross_period_modelo_not_applicable_advisory_finding(
             "estimation regime if a mutually exclusive pago-fraccionado modelo was scoped out."
         ),
         legal_refs=legal_refs,
+        source_refs=source_refs,
     )
 
 
@@ -622,7 +653,10 @@ def _cross_period_zero_value_previous_filing_advisory_finding(
             "If a prior-year negative general base balance exists and is being applied, replace the zero "
             "with the carried amount and capture/import the prior Modelo 100 AEAT evidence before filing."
         ),
-        legal_refs=(*_M100_ZERO_BIN_LEGAL_REFS, *_cross_period_dependency_legal_refs(requirement.origin_ids)),
+        legal_refs=tuple(
+            dict.fromkeys((*_M100_ZERO_BIN_LEGAL_REFS, *_cross_period_requirement_legal_refs(requirement))),
+        ),
+        source_refs=_cross_period_requirement_source_refs(requirement),
     )
 
 
@@ -650,7 +684,10 @@ def _cross_period_m111_no_retenciones_advisory_finding(
             "payment existed, remove that period from the profile fact, capture the per-perceptor "
             "retencion observation, calculate/file Modelo 111, and rerun verification."
         ),
-        legal_refs=(*_M111_NO_RETENCIONES_LEGAL_REFS, *_cross_period_dependency_legal_refs(requirement.origin_ids)),
+        legal_refs=tuple(
+            dict.fromkeys((*_M111_NO_RETENCIONES_LEGAL_REFS, *_cross_period_requirement_legal_refs(requirement))),
+        ),
+        source_refs=_cross_period_requirement_source_refs(requirement),
     )
 
 
@@ -675,7 +712,8 @@ def _cross_period_non_official_local_chain_advisory_finding(
             origin=requirement.origin.value,
         ),
         next_action=tr("application.modelo.findings.cross_period_non_official_local_chain.next_action"),
-        legal_refs=_cross_period_dependency_legal_refs(requirement.origin_ids),
+        legal_refs=_cross_period_requirement_legal_refs(requirement),
+        source_refs=_cross_period_requirement_source_refs(requirement),
     )
 
 
