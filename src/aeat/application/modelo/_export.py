@@ -45,7 +45,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period, RefundElection, ResultDisposition, result_disposition_is_refund
+from ...core import Modelo, Period, RefundElection, ResultDisposition, result_disposition_is_refund
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ...core.logging import get_logger
@@ -134,7 +134,7 @@ _PROFILE_NAME_PATH = "identity.name"
 _PROFILE_LEGAL_NAME_PATH = "identity.legal_name"
 _PROFILE_ENTITY_TYPE_PATH = "taxpayer_type.entity_type"
 _LEGAL_ENTITY_TYPE = "legal_entity"
-_LEGAL_ENTITY_NAME_SLOT_MODELOS: frozenset[str] = frozenset({"111"})
+_LEGAL_ENTITY_NAME_SLOT_MODELOS: frozenset[str] = frozenset({Modelo.M111.value})
 _LOGGER = get_logger(__name__)
 
 

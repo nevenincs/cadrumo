@@ -6,7 +6,7 @@ import re
 from collections.abc import Mapping
 from typing import Final
 
-from ...core import Period, PeriodError
+from ...core import Modelo, Period, PeriodError
 
 M111_NO_RETENCIONES_PROFILE_PATH: Final = "withholding.modelo_111_no_retenciones_periods"
 """Profile fact carrying comma-separated ``YYYY:PERIOD`` no-obligation M111 periods."""
@@ -71,7 +71,7 @@ def is_m111_no_retenciones_period(
     attested_periods: frozenset[tuple[int, str]],
 ) -> bool:
     """Return whether a source requirement is attested as no-obligation M111."""
-    return source_modelo == "111" and (filing_year, period_token) in attested_periods
+    return source_modelo == Modelo.M111.value and (filing_year, period_token) in attested_periods
 
 
 __all__ = [

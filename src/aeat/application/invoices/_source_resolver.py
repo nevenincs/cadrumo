@@ -29,7 +29,7 @@ from ...adapters.persistence.storage.errors import (
     EnvelopeVersionError,
     StorageValidationError,
 )
-from ...core import BindingSourceKind, IntracomOperationType, Period
+from ...core import BindingSourceKind, IntracomOperationType, Modelo, Period
 from ...core.hashing import sha256_hex
 from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import (
@@ -228,7 +228,7 @@ def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext)
     clave = _intracommunity_clave(invoice)
     if clave is None:
         return None
-    if str(context.modelo) == "349":
+    if context.modelo == Modelo.M349.value:
         validate_m349_country_prefix_context(
             country_code=invoice.counterparty_country,
             clave_operacion=clave,
@@ -294,7 +294,7 @@ def _m349_declarante_summary_union(
     context: CalculationSourceContext,
     binding_values: dict[str, Decimal],
 ) -> dict[str, Decimal]:
-    if str(context.modelo) != "349":
+    if context.modelo != Modelo.M349.value:
         return binding_values
     merged = dict(binding_values)
     for payable_binding, public_binding in _M349_PAYABLE_SUMMARY_BINDING_MIRRORS.items():
@@ -309,7 +309,7 @@ def _m349_operador_rows_from_observations(
     context: CalculationSourceContext,
     observations: tuple[InvoiceObservation, ...],
 ) -> tuple[Modelo349OperadorRow, ...]:
-    if str(context.modelo) != "349" or not observations:
+    if context.modelo != Modelo.M349.value or not observations:
         return ()
     row_values = resolve_invoice_binding_row_values(context.revision, observations)
     rows: list[Modelo349OperadorRow] = []
@@ -390,7 +390,7 @@ def _business_invoice_observation(
         return None
     country_code = _business_invoice_country_code(invoice)
     party_tax_id = _business_invoice_party_tax_id(invoice)
-    if str(context.modelo) == "349":
+    if context.modelo == Modelo.M349.value:
         validate_m349_country_prefix_context(
             country_code=country_code,
             clave_operacion=clave,
