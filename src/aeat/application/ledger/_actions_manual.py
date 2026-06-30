@@ -433,9 +433,13 @@ def update_manual_transaction(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
-    """Replace one manual ledger transaction with a validated command payload.
+    """Replace one manual ledger transaction from a validated command payload.
 
-    Returns a :class:`ManualLedgerTransactionResult`.
+    The replacement is built from
+    :class:`~aeat.application.ledger.ManualLedgerTransactionCommand` and saved
+    as a new :class:`~aeat.domain.transactions.Transaction` revision.
+
+    Returns a :class:`~aeat.application.ledger.ManualLedgerTransactionResult`.
     """
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
@@ -496,11 +500,11 @@ def _prepare_manual_transaction_update(
     attachment_store: _AttachmentStoreProtocol | None = None,
     usage_ratio_profile: UsageRatioProfile | None = None,
 ) -> tuple[Transaction, tuple[BucketEvent, ...]] | None:
-    """Build the replacement transaction + bucket events for one in-memory edit.
+    """Build a replacement transaction and bucket events for one in-memory edit.
 
     Returns ``None`` when the command is a field-for-field no-op (the caller
     decides whether that is an error or a skip). Verifies evidence and usage-ratio
-    references but performs **no** persistence and **no** catalogue load â€” the
+    references but performs **no** persistence and **no** catalogue load - the
     caller owns a single load/save so a batch re-encrypts the catalogue once
     rather than per row (the ``bulk_classify_from_csv`` load-once/save-once
     contract). Lifecycle and blocking-modelo guards remain the caller's
@@ -598,6 +602,12 @@ def update_manual_transaction_fields(
 ) -> ManualLedgerTransactionResult:
     """Apply a typed field patch to one active bucket-scoped ledger transaction.
 
+    The patch is a
+    :class:`~aeat.application.ledger.ManualLedgerTransactionPatch` converted
+    into a :class:`~aeat.application.ledger.ManualLedgerTransactionCommand`
+    before the same replacement path used by
+    :func:`~aeat.application.ledger.update_manual_transaction`.
+
     When ``reaffirm`` is :data:`True` the automatic re-affirmation no-op guard
     is bypassed and the command is forced through even if the patched fields are
     field-for-field identical to the stored transaction. This is the explicit
@@ -605,12 +615,13 @@ def update_manual_transaction_fields(
 
     ``_preloaded_catalogue`` is an internal optimisation: a caller that has
     already decrypted the bucket :class:`TransactionCatalogue` (e.g.
-    :func:`attach_manual_transaction_evidence`) passes it through so this function
-    does not decrypt the whole catalogue a second time. There is no write between
-    the caller's load and this one, so the preloaded view is current.
+    :func:`~aeat.application.ledger.attach_manual_transaction_evidence`) passes
+    it through so this function does not decrypt the whole catalogue a second
+    time. There is no write between the caller's load and this one, so the
+    preloaded view is current.
 
-    Returns a :class:`ManualLedgerTransactionResult` reflecting the updated
-    transaction state after the patch is applied.
+    Returns a :class:`~aeat.application.ledger.ManualLedgerTransactionResult`
+    reflecting the updated transaction state after the patch is applied.
     """
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     catalogue = _preloaded_catalogue if _preloaded_catalogue is not None else repository.load()
