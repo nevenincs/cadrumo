@@ -248,7 +248,7 @@ _M349_NIF_PATTERNS: dict[str, re.Pattern[str]] = {
 }
 
 # Valid clave de operación codes per Orden HAC/174/2020 Anexo II.
-_M349_CLAVE_OPERACION = Literal["E", "S", "T", "R", "A", "I", "M"]
+_M349_CLAVE_OPERACION = Literal["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"]
 _M349_NI_PREFIX = "XI"
 _M349_GB_PREFIX = "GB"
 _M349_SERVICE_CLAVES = frozenset({"S", "I"})

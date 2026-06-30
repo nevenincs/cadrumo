@@ -7,6 +7,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ....core import IntracomOperationType
 from ....core.errors import AeatError, get_registered_error_code, resolve_error_message
 from .._row_models import (
     Modelo349CountryPrefixContextError,
@@ -191,6 +192,18 @@ class TestModelo349OperadorRow:
             importe=Decimal("0"),
         )
         assert row.importe == Decimal("0")
+
+    @pytest.mark.parametrize("operation_type", tuple(IntracomOperationType), ids=lambda member: member.value)
+    def test_current_intracom_operation_claves_are_accepted(self, operation_type: IntracomOperationType) -> None:
+        row = Modelo349OperadorRow(
+            codigo_pais="DE",
+            nif_comunitario="DE123456789",
+            razon_social="Deutschland GmbH",
+            clave_operacion=operation_type.value,
+            importe=Decimal("1"),
+        )
+
+        assert row.clave_operacion == operation_type.value
 
     @pytest.mark.parametrize("case", _M349_INVALID_ROW_CASES, ids=lambda case: case.case_id)
     def test_invalid_operador_rows_rejected(self, case: _ValidationErrorCase) -> None:
