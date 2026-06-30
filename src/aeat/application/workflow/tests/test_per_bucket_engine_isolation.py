@@ -30,6 +30,9 @@ from .._persistence import WorkflowStateRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_BUCKET_A_ID = "f06b58c0-56c1-4f38-9a03-7f6d716bf246"
+_BUCKET_B_ID = "a1d7c210-82f7-4573-9d17-9502f6e73373"
+
 
 def _state_for_label(label: str) -> WorkflowState:
     """Build a minimal WorkflowState whose AuthState carries a unique label."""
@@ -51,24 +54,24 @@ def test_two_buckets_persist_into_two_distinct_workflow_histories(tmp_path: Path
     bucket_a_root = tmp_path / "a"
     bucket_b_root = tmp_path / "b"
 
-    with isolated_runtime_profile(tmp_path=bucket_a_root, bucket_id="bucket-a") as profile_a:
+    with isolated_runtime_profile(tmp_path=bucket_a_root, bucket_id=_BUCKET_A_ID) as profile_a:
         repo_a = WorkflowStateRepository(objects=profile_a.repository)
-        state_a = _state_for_label("bucket-a")
+        state_a = _state_for_label("profile-a")
         repo_a.save(state_a)
         a_db = profile_a.paths.db_dir / "aeat.db"
         assert a_db.exists(), "bucket A's per-bucket SQLite database must exist after a save"
 
-    with isolated_runtime_profile(tmp_path=bucket_b_root, bucket_id="bucket-b") as profile_b:
+    with isolated_runtime_profile(tmp_path=bucket_b_root, bucket_id=_BUCKET_B_ID) as profile_b:
         repo_b = WorkflowStateRepository(objects=profile_b.repository)
-        state_b = _state_for_label("bucket-b")
+        state_b = _state_for_label("profile-b")
         repo_b.save(state_b)
         b_db = profile_b.paths.db_dir / "aeat.db"
         assert b_db.exists(), "bucket B's per-bucket SQLite database must exist after a save"
 
     assert a_db != b_db
     assert a_db.parent != b_db.parent
-    assert a_db.parent.parent.name == "bucket-a"
-    assert b_db.parent.parent.name == "bucket-b"
+    assert a_db.parent.parent.name == _BUCKET_A_ID
+    assert b_db.parent.parent.name == _BUCKET_B_ID
 
 
 def test_mutating_one_bucket_db_leaves_other_bucket_reads_unaffected(tmp_path: Path) -> None:
@@ -82,9 +85,9 @@ def test_mutating_one_bucket_db_leaves_other_bucket_reads_unaffected(tmp_path: P
     """
     bucket_a_root = tmp_path / "a"
     bucket_b_root = tmp_path / "b"
-    expected_state = _state_for_label("bucket-b")
+    expected_state = _state_for_label("profile-b")
 
-    with isolated_runtime_profile(tmp_path=bucket_b_root, bucket_id="bucket-b") as profile_b:
+    with isolated_runtime_profile(tmp_path=bucket_b_root, bucket_id=_BUCKET_B_ID) as profile_b:
         repo_b = WorkflowStateRepository(objects=profile_b.repository)
         repo_b.save(expected_state)
         b_db = profile_b.paths.db_dir / "aeat.db"
@@ -96,9 +99,9 @@ def test_mutating_one_bucket_db_leaves_other_bucket_reads_unaffected(tmp_path: P
     # comparison isolates A's corruption from B's routine WAL fold.
     b_db_bytes_before = b_db.read_bytes()
 
-    with isolated_runtime_profile(tmp_path=bucket_a_root, bucket_id="bucket-a") as profile_a:
+    with isolated_runtime_profile(tmp_path=bucket_a_root, bucket_id=_BUCKET_A_ID) as profile_a:
         repo_a = WorkflowStateRepository(objects=profile_a.repository)
-        repo_a.save(_state_for_label("bucket-a"))
+        repo_a.save(_state_for_label("profile-a"))
         a_db = profile_a.paths.db_dir / "aeat.db"
         assert a_db.exists()
 
