@@ -1187,7 +1187,9 @@ application:
         registre.
       registry_snapshot_invalid: No s'ha pogut carregar la instantània del registre
         per verificar la declaració.
-      registry_snapshot_ref_mismatch: 'La instantania del registre per al model %{modelo} %{period} no coincideix amb la referencia estampada a la declaracio: observada %{observed_ref}, resolta %{resolved_ref}.'
+      registry_snapshot_ref_mismatch: 'La instantania del registre per al model %{modelo}
+        %{period} no coincideix amb la referencia estampada a la declaracio: observada
+        %{observed_ref}, resolta %{resolved_ref}.'
   wizard:
     errors:
       create_missing_filing_baseline: 'A la creació del perfil li falten dades d''identitat
@@ -1618,7 +1620,11 @@ cli:
         actor_help: Etiqueta de l'operador registrada a l'esdeveniment MODELO_EXPORTED.
         errors:
           output_required: Proporcioneu --output PATH per a l artefacte fichero-BOE.
-        help: 'Exporta una revisió de modelo verificada o presentada a un fitxer local compatible amb AEAT (fichero-BOE). Local; mai contacta amb AEAT, i el fitxer generat no és evidència oficial de presentació davant AEAT. Useu el justificant AEAT, la consulta de declaracions presentades o el coteig CSV després de presentar.'
+        help: Exporta una revisió de modelo verificada o presentada a un fitxer local
+          compatible amb AEAT (fichero-BOE). Local; mai contacta amb AEAT, i el fitxer
+          generat no és evidència oficial de presentació davant AEAT. Useu el justificant
+          AEAT, la consulta de declaracions presentades o el coteig CSV després de
+          presentar.
         output_help: Ruta on escriure l'artefacte fichero-BOE.
         revision_help: Identificador de la revisió de càlcul a exportar; per defecte,
           la revisió verificada o presentada més recent de la unitat de treball.
@@ -1719,7 +1725,19 @@ cli:
         seed_conflict: 'Error intern: conflicte amb un registre d''import inicial
           de compensació d''IVA existent.'
         seed_filing_year_help: Any fiscal de l'import inicial.
-        seed_help: "Declara un saldo inicial d'arrossegament del Model 303 per a un període anterior a l'historial local. Es rebutja si ja existeix un registre per al període.\n\nDos casos:\n\n  --amount 0   Saldo inicial zero: declara que no hi ha compensació pendent per arrossegar a aquest període. Això també pot correspondre a un contribuent que ja havia presentat M303 anteriors si l'últim M303 no va deixar compensació pendent.\n\n  --amount X   Traspàs: el contribuent ha presentat M303 anteriors amb una altra eina o directament a l'AEAT. X és la compensació pendent de períodes posteriors de l'última declaració presentada.\n\nEl cas automàtic first_period_zero és independent de l'ordre seed: durant el càlcul i la conciliació es prova amb les condicions d'inici d'activitat i del registre que és el primer període IVA; aleshores la casella AEAT 110 és zero segons LIVA art. 99.5 (Llei 37/1992) i no bloqueja."
+        seed_help: "Declara un saldo inicial d'arrossegament del Model 303 per a un\
+          \ període anterior a l'historial local. Es rebutja si ja existeix un registre\
+          \ per al període.\n\nDos casos:\n\n  --amount 0   Saldo inicial zero: declara\
+          \ que no hi ha compensació pendent per arrossegar a aquest període. Això\
+          \ també pot correspondre a un contribuent que ja havia presentat M303 anteriors\
+          \ si l'últim M303 no va deixar compensació pendent.\n\n  --amount X   Traspàs:\
+          \ el contribuent ha presentat M303 anteriors amb una altra eina o directament\
+          \ a l'AEAT. X és la compensació pendent de períodes posteriors de l'última\
+          \ declaració presentada.\n\nEl cas automàtic first_period_zero és independent\
+          \ de l'ordre seed: durant el càlcul i la conciliació es prova amb les condicions\
+          \ d'inici d'activitat i del registre que és el primer període IVA; aleshores\
+          \ la casella AEAT 110 és zero segons LIVA art. 99.5 (Llei 37/1992) i no\
+          \ bloqueja."
         seed_invalid_amount: L'import inicial ha de ser un decimal vàlid i no negatiu.
         seed_period_help: 'Periode de la presentacio del Model 303: trimestres 1T-4T
           (p. ex. 4T).'
@@ -1899,7 +1917,11 @@ cli:
           no esta suportat per crear unitats de treball en aquest CLI. Base legal:
           Llei 19/1991 art. 28 i Ordre HAC/1023/2021. Presenta la declaracio a la
           Seu de l AEAT.'
-        create_stub_modelo_refused: 'El model %{modelo} (declaració informativa sobre monedes virtuals situades a l estranger) no està suportat per crear unitats de treball en aquest CLI. Autoritat legal: Ordre HFP/886/2023 i RD 1065/2007 art. 42 quàter; el llindar informatiu és de 50.000 EUR a 31 de desembre. Presenta la declaració a la Seu de l AEAT quan hi hagi obligació legal.'
+        create_stub_modelo_refused: 'El model %{modelo} (declaració informativa sobre
+          monedes virtuals situades a l estranger) no està suportat per crear unitats
+          de treball en aquest CLI. Autoritat legal: Ordre HFP/886/2023 i RD 1065/2007
+          art. 42 quàter; el llindar informatiu és de 50.000 EUR a 31 de desembre.
+          Presenta la declaració a la Seu de l AEAT quan hi hagi obligació legal.'
         dependencies_help: Mostra dependencies d'historial de presentacions entre
           models i els bloquejos clean-state actuals per a una presentacio objectiu
         discard_help: Marcar una unitat de treball com descartada (transició d'estat
@@ -2089,10 +2111,19 @@ cli:
         runs_help: Llistar les execucions de flux persistides amb els seus ids d'execució,
           de la més recent a la més antiga. Usa un id d'execució amb `aeat app modelo
           work resume`. Només local; mai contacta amb AEAT.
-        sal_beneficio_neto_help: 'Benefici net de l''exercici de la Societat Laboral (SAL/SLL, Llei 44/2015 art. 14). S''aplica el 10% per calcular la dotació obligatòria a la reserva especial, limitada al primer cèntim per sobre del doble del capital social. Fes-lo servir amb --sal-reserva-dotada i --sal-capital-social.'
-        sal_capital_social_help: 'Capital social de la Societat Laboral (Llei 44/2015 art. 14). Base del llindar estricte: la dotació s''anul·la quan la reserva acumulada arriba al primer cèntim per sobre del doble del capital social. Necessari amb --sal-beneficio-neto i --sal-reserva-dotada.'
+        sal_beneficio_neto_help: Benefici net de l'exercici de la Societat Laboral
+          (SAL/SLL, Llei 44/2015 art. 14). S'aplica el 10% per calcular la dotació
+          obligatòria a la reserva especial, limitada al primer cèntim per sobre del
+          doble del capital social. Fes-lo servir amb --sal-reserva-dotada i --sal-capital-social.
+        sal_capital_social_help: 'Capital social de la Societat Laboral (Llei 44/2015
+          art. 14). Base del llindar estricte: la dotació s''anul·la quan la reserva
+          acumulada arriba al primer cèntim per sobre del doble del capital social.
+          Necessari amb --sal-beneficio-neto i --sal-reserva-dotada.'
         sal_computation_error: 'Error de càlcul SAL: %{message}'
-        sal_reserva_dotada_help: 'Reserva especial acumulada en exercicis anteriors (Llei 44/2015 art. 14). S''utilitza per comprovar si la reserva ja arriba al primer cèntim per sobre del doble del capital social. Necessari amb --sal-beneficio-neto i --sal-capital-social.'
+        sal_reserva_dotada_help: Reserva especial acumulada en exercicis anteriors
+          (Llei 44/2015 art. 14). S'utilitza per comprovar si la reserva ja arriba
+          al primer cèntim per sobre del doble del capital social. Necessari amb --sal-beneficio-neto
+          i --sal-capital-social.
         sal_reserva_not_decimal: Els valors --sal-* han de ser imports decimals.
         selector_ambiguous: Mes d una unitat de treball activa coincideix amb aquest
           modelo/any/periode. Trieu una revisio del registre o passeu un id explicit
@@ -2614,6 +2645,13 @@ cli:
       help: Verificar que una clau de recuperacio obre l'embolcall de recuperacio
         persistit.
     workflow_help: Mostrar ajuda del flux de configuració
+  contract:
+    app_help: 'Emet el manifest de capacitats de l''operador: arrels, families d''ordres, cicle de vida i esquemes de resultat.'
+    summary_commands: 'Ordres registrades: {count}'
+    summary_families: 'Families d''ordres: {count}'
+    summary_heading: 'Manifest de la superficie de l''operador'
+    summary_lifecycle: 'Cicle de vida del model: {steps}'
+    summary_roots: 'Arrels: {roots}'
   diagnostics:
     browser:
       http_status_label: Estat HTTP
@@ -3891,12 +3929,20 @@ errors:
     lookup_dispatch_arg_count: L''operador {op} de la fórmula espera {expected} arguments.
     lookup_dispatch_arg_kind: L''operador {op} de la fórmula requereix que {position}
       sigui una fulla de tipus {expected_kind}.
-    m210_gastos_deducibles_negative: 'Les gastos_deducibles M210 %{casilla_id} no poden ser negatives; valor rebut %{value}.'
-    m210_gastos_deducibles_not_allowed: 'Les gastos_deducibles M210 %{casilla_id} nomes s''admeten en la via UE/EEE de l''article 24.6; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.'
-    m210_imputation_coefficient_invalid: 'El coeficient d''imputacio immobiliaria M210 %{casilla_id} ha de ser un dels tipus de l''art. 85 declarats al registre (%{allowed_values}); valor rebut %{value}.'
-    m210_imputation_days_invalid: 'Els dies d''imputacio M210 %{casilla_id} han de ser un enter entre 1 i %{max_days}; valor rebut %{value}.'
-    m210_imputation_no_catastral_value_missing: 'La imputacio immobiliaria M210 sense valor cadastral requereix un valor d''adquisicio o valor comprovat per l''Administracio positiu (%{acquisition_casilla_id}, %{administrative_casilla_id}).'
-    m210_imputation_no_filing_year: 'La imputacio immobiliaria M210 requereix un exercici de declaracio no nul.'
+    m210_gastos_deducibles_negative: Les gastos_deducibles M210 %{casilla_id} no poden
+      ser negatives; valor rebut %{value}.
+    m210_gastos_deducibles_not_allowed: Les gastos_deducibles M210 %{casilla_id} nomes
+      s'admeten en la via UE/EEE de l'article 24.6; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.
+    m210_imputation_coefficient_invalid: El coeficient d'imputacio immobiliaria M210
+      %{casilla_id} ha de ser un dels tipus de l'art. 85 declarats al registre (%{allowed_values});
+      valor rebut %{value}.
+    m210_imputation_days_invalid: Els dies d'imputacio M210 %{casilla_id} han de ser
+      un enter entre 1 i %{max_days}; valor rebut %{value}.
+    m210_imputation_no_catastral_value_missing: La imputacio immobiliaria M210 sense
+      valor cadastral requereix un valor d'adquisicio o valor comprovat per l'Administracio
+      positiu (%{acquisition_casilla_id}, %{administrative_casilla_id}).
+    m210_imputation_no_filing_year: La imputacio immobiliaria M210 requereix un exercici
+      de declaracio no nul.
     parameter_unknown: El paràmetre {parameter_id} no està registrat.
     relation_value_missing: La relació {relation_id} no té cap valor assignat.
     text_input_non_text_casillas: 'Entrada de text subministrada per a caselles no
@@ -5180,6 +5226,10 @@ wizard:
           del titol II de la Llei 49/2002.
       llm-vision:
         help: Activar la visió LLM local per llegir factures.
+      modelo-111-no-retenciones-periods:
+        help: Periodes Modelo 111 sense obligacio, separats per comes, format AAAA:PERIODE
+          (per exemple 2025:2T,2025:3T). Useu-ho només quan no es van pagar rendes
+          subjectes.
       monedas-virtuales-extranjero-above-threshold:
         help: Monedes virtuals a l'estranger superen el llindar del Modelo 721
       name:
@@ -5194,10 +5244,6 @@ wizard:
         help: Idioma de sortida de la CLI per a aquest perfil
       pays-capital-income-with-retencion:
         help: Paga rendes de capital amb retenció
-      modelo-111-no-retenciones-periods:
-        help: 'Periodes Modelo 111 sense obligacio, separats per comes, format
-          AAAA:PERIODE (per exemple 2025:2T,2025:3T). Useu-ho només quan no es
-          van pagar rendes subjectes.'
       pays-professionals-with-retencion:
         help: Paga a professionals amb retenció
       pays-rent-with-retencion:
@@ -5335,14 +5381,14 @@ wizard:
         help: Data en què el treballador va optar pel règim d'impatriats (RIRPF Art.
           116). El règim expira en acabar el 6è any natural.
         prompt: Data d'inici del règim especial (AAAA-MM-DD)
+      modelo-111-no-retenciones-periods:
+        help: Periodes AAAA:PERIODE en què no es van pagar rendes subjectes a retenció
+          o ingrés a compte, de manera que no es presenta un Modelo 111 en blanc.
+        prompt: Periodes Modelo 111 sense retencions
       monedas-virtuales-extranjero-above-threshold:
         prompt: Monedes virtuals a l'estranger superen el llindar del Modelo 721
       pays-capital-income-with-retencion:
         prompt: Paga rendes de capital amb retenció
-      modelo-111-no-retenciones-periods:
-        help: 'Periodes AAAA:PERIODE en què no es van pagar rendes subjectes a retenció
-          o ingrés a compte, de manera que no es presenta un Modelo 111 en blanc.'
-        prompt: Periodes Modelo 111 sense retencions
       pays-professionals-with-retencion:
         prompt: Paga a professionals amb retenció
       pays-rent-with-retencion:

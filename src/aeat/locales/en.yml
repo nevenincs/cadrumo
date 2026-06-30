@@ -1113,7 +1113,9 @@ application:
       registry_policy_invalid: Registry verification policy could not be loaded.
       registry_snapshot_invalid: The registry snapshot could not be loaded for declaration
         verification.
-      registry_snapshot_ref_mismatch: 'Registry snapshot for modelo %{modelo} %{period} does not match the stamped declaration reference: observed %{observed_ref}, resolved %{resolved_ref}.'
+      registry_snapshot_ref_mismatch: 'Registry snapshot for modelo %{modelo} %{period}
+        does not match the stamped declaration reference: observed %{observed_ref},
+        resolved %{resolved_ref}.'
   wizard:
     errors:
       create_missing_filing_baseline: 'Profile creation is missing filing identity
@@ -1526,7 +1528,10 @@ cli:
         actor_help: Operator label recorded into the MODELO_EXPORTED event.
         errors:
           output_required: Supply --output PATH for the fichero-BOE artefact.
-        help: 'Export a verified-complete or filed modelo revision to a local AEAT-compatible fichero-BOE file. Local-only; never contacts AEAT, and the generated file is not official AEAT filing evidence. Use AEAT justificante, declaration consultation, or CSV cotejo evidence after filing.'
+        help: Export a verified-complete or filed modelo revision to a local AEAT-compatible
+          fichero-BOE file. Local-only; never contacts AEAT, and the generated file
+          is not official AEAT filing evidence. Use AEAT justificante, declaration
+          consultation, or CSV cotejo evidence after filing.
         output_help: Path to write the fichero-BOE artefact to.
         revision_help: Calculation revision id to export; defaults to the work unit's
           most recent verified-complete or filed revision.
@@ -1802,7 +1807,11 @@ cli:
         create_stub_modelo_714_refused: 'Modelo %{modelo} (Wealth Tax) is not supported
           for work-unit creation in this CLI. Legal basis: Ley 19/1991 Art. 28 and
           Orden HAC/1023/2021. File the return at AEAT Sede.'
-        create_stub_modelo_refused: 'Modelo %{modelo} (informative declaration of virtual currencies held abroad) is not supported for work-unit creation in this CLI. Legal authority: Orden HFP/886/2023 and RD 1065/2007 Art. 42 quater; the reporting threshold is 50,000 EUR at 31 December. File through AEAT Sede when legally required.'
+        create_stub_modelo_refused: 'Modelo %{modelo} (informative declaration of
+          virtual currencies held abroad) is not supported for work-unit creation
+          in this CLI. Legal authority: Orden HFP/886/2023 and RD 1065/2007 Art. 42
+          quater; the reporting threshold is 50,000 EUR at 31 December. File through
+          AEAT Sede when legally required.'
         dependencies_help: Show cross-period filing-history dependencies and current
           clean-state blockers for a target filing
         discard_help: Mark a work unit as discarded (auditable state transition)
@@ -1979,10 +1988,19 @@ cli:
         runs_help: List persisted workflow runs with their run ids, newest first.
           Use a run id with `aeat app modelo work resume`. Local-only; never contacts
           AEAT.
-        sal_beneficio_neto_help: 'Net profit for the fiscal year of the worker-owned company (SAL/SLL, Law 44/2015 Art. 14). The assistant applies 10% to calculate the mandatory special reserve allocation, capped at the first euro cent above twice share capital. Use it with --sal-reserva-dotada and --sal-capital-social.'
-        sal_capital_social_help: 'Share capital of the worker-owned company (Law 44/2015 Art. 14). Basis for the strict threshold: the allocation is zero once accumulated reserve reaches the first euro cent above twice share capital. Required with --sal-beneficio-neto and --sal-reserva-dotada.'
+        sal_beneficio_neto_help: Net profit for the fiscal year of the worker-owned
+          company (SAL/SLL, Law 44/2015 Art. 14). The assistant applies 10% to calculate
+          the mandatory special reserve allocation, capped at the first euro cent
+          above twice share capital. Use it with --sal-reserva-dotada and --sal-capital-social.
+        sal_capital_social_help: 'Share capital of the worker-owned company (Law 44/2015
+          Art. 14). Basis for the strict threshold: the allocation is zero once accumulated
+          reserve reaches the first euro cent above twice share capital. Required
+          with --sal-beneficio-neto and --sal-reserva-dotada.'
         sal_computation_error: 'SAL computation error: %{message}'
-        sal_reserva_dotada_help: 'Special reserve accumulated in previous fiscal years (Law 44/2015 Art. 14). Used to check whether the reserve has reached the first euro cent above twice share capital. Required with --sal-beneficio-neto and --sal-capital-social.'
+        sal_reserva_dotada_help: Special reserve accumulated in previous fiscal years
+          (Law 44/2015 Art. 14). Used to check whether the reserve has reached the
+          first euro cent above twice share capital. Required with --sal-beneficio-neto
+          and --sal-capital-social.
         sal_reserva_not_decimal: --sal-* values must be decimal amounts.
         selector_ambiguous: More than one active work unit matches this modelo/year/period.
           Choose a registry revision or pass an explicit work-unit id. {candidates}
@@ -2468,6 +2486,13 @@ cli:
     verify_recovery:
       help: Verify that a recovery key opens the persisted recovery wrapper.
     workflow_help: Show config workflow help
+  contract:
+    app_help: 'Emit the operator capability manifest: roots, command families, lifecycle, and result schemas.'
+    summary_commands: 'Registered commands: {count}'
+    summary_families: 'Command families: {count}'
+    summary_heading: 'Operator surface manifest'
+    summary_lifecycle: 'Modelo lifecycle: {steps}'
+    summary_roots: 'Roots: {roots}'
   diagnostics:
     browser:
       http_status_label: HTTP status
@@ -3704,12 +3729,20 @@ errors:
     lookup_dispatch_arg_count: Formula op {op} expects {expected} arguments.
     lookup_dispatch_arg_kind: Formula op {op} requires {position} to be a {expected_kind}
       leaf.
-    m210_gastos_deducibles_negative: 'M210 gastos_deducibles %{casilla_id} must be non-negative; got %{value}.'
-    m210_gastos_deducibles_not_allowed: 'M210 gastos_deducibles %{casilla_id} is only allowed for the EU/EEA Art. 24.6 path; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.'
-    m210_imputation_coefficient_invalid: 'M210 imputed real-estate coefficient %{casilla_id} must be one of the registry-authored Art. 85 rates (%{allowed_values}); got %{value}.'
-    m210_imputation_days_invalid: 'M210 imputation days %{casilla_id} must be an integer from 1 to %{max_days}; got %{value}.'
-    m210_imputation_no_catastral_value_missing: 'M210 imputed real-estate without cadastral value requires a positive acquisition value or administrative checked value (%{acquisition_casilla_id}, %{administrative_casilla_id}).'
-    m210_imputation_no_filing_year: 'M210 imputed real-estate calculation requires a non-zero filing year.'
+    m210_gastos_deducibles_negative: M210 gastos_deducibles %{casilla_id} must be
+      non-negative; got %{value}.
+    m210_gastos_deducibles_not_allowed: M210 gastos_deducibles %{casilla_id} is only
+      allowed for the EU/EEA Art. 24.6 path; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.
+    m210_imputation_coefficient_invalid: M210 imputed real-estate coefficient %{casilla_id}
+      must be one of the registry-authored Art. 85 rates (%{allowed_values}); got
+      %{value}.
+    m210_imputation_days_invalid: M210 imputation days %{casilla_id} must be an integer
+      from 1 to %{max_days}; got %{value}.
+    m210_imputation_no_catastral_value_missing: M210 imputed real-estate without cadastral
+      value requires a positive acquisition value or administrative checked value
+      (%{acquisition_casilla_id}, %{administrative_casilla_id}).
+    m210_imputation_no_filing_year: M210 imputed real-estate calculation requires
+      a non-zero filing year.
     parameter_unknown: Parameter {parameter_id} is not registered.
     relation_value_missing: Relation {relation_id} has no supplied value.
     text_input_non_text_casillas: 'Text input supplied for non-text fields: %{casilla_ids}.'
@@ -4913,6 +4946,9 @@ wizard:
           49/2002 Title II regime.
       llm-vision:
         help: Enable on-host LLM vision for reading invoices.
+      modelo-111-no-retenciones-periods:
+        help: Comma-separated Modelo 111 no-obligation periods, format YYYY:PERIOD
+          (for example 2025:2T,2025:3T). Use only when no subject payments were made.
       monedas-virtuales-extranjero-above-threshold:
         help: Virtual currencies held abroad above Modelo 721 threshold
       name:
@@ -4927,10 +4963,6 @@ wizard:
         help: CLI output language for this profile
       pays-capital-income-with-retencion:
         help: Pays capital income with retención
-      modelo-111-no-retenciones-periods:
-        help: 'Comma-separated Modelo 111 no-obligation periods, format YYYY:PERIOD
-          (for example 2025:2T,2025:3T). Use only when no subject payments were
-          made.'
       pays-professionals-with-retencion:
         help: Pays professionals with retención
       pays-rent-with-retencion:
@@ -5064,14 +5096,14 @@ wizard:
         help: Date the worker opted into the inpatriate regime (RIRPF Art. 116). The
           regime expires at the end of the 6th calendar year.
         prompt: Special regime election date (YYYY-MM-DD)
+      modelo-111-no-retenciones-periods:
+        help: Comma-separated YYYY:PERIOD periods where no rentas subject to retención
+          or ingreso a cuenta were paid, so no all-blank Modelo 111 is filed.
+        prompt: Modelo 111 no-retenciones periods
       monedas-virtuales-extranjero-above-threshold:
         prompt: Virtual currencies held abroad above Modelo 721 threshold
       pays-capital-income-with-retencion:
         prompt: Pays capital income with retención
-      modelo-111-no-retenciones-periods:
-        help: 'Comma-separated YYYY:PERIOD periods where no rentas subject to retención
-          or ingreso a cuenta were paid, so no all-blank Modelo 111 is filed.'
-        prompt: Modelo 111 no-retenciones periods
       pays-professionals-with-retencion:
         prompt: Pays professionals with retención
       pays-rent-with-retencion:

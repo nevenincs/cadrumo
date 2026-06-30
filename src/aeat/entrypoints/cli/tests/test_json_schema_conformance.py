@@ -208,6 +208,10 @@ _GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset(
         "root.status",
         "root.app",
         "ledger.participation",
+        # ``aeat app contract`` is an ``invoke_without_command`` group whose
+        # callback emits the operator capability manifest under ``contract``.
+        # It registers no leaf subcommand, so the leaf walker cannot reach it.
+        "contract",
     },
 )
 
