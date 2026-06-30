@@ -4,7 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.identity import IdentityError, validate_spanish_tax_id
+from ....core.identity import (
+    NIF_IVA_FORMATS,
+    IdentityError,
+    nif_iva_prefix_for_country,
+    validate_spanish_tax_id,
+)
+from ...iva import EUMemberState
 from .._validators import validate_country_code, validate_iva_number
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -211,3 +217,87 @@ def test_validate_country_code_rejects_invalid_shapes(value: str) -> None:
     """Non-2-letter or non-alphabetic country codes are rejected."""
     with pytest.raises(ValueError, match=r"country code must be an ISO-3166 alpha-2 value"):
         validate_country_code(value)
+
+
+@pytest.mark.parametrize(
+    ("value", "country", "expected"),
+    [
+        ("DE123456789", "DE", "DE123456789"),
+        ("FR12345678901", "FR", "FR12345678901"),
+        ("IT12345678901", "IT", "IT12345678901"),
+        ("NL123456789B01", "NL", "NL123456789B01"),
+        ("AT U12345678", "AT", "ATU12345678"),
+        ("IE 1234567T", "IE", "IE1234567T"),
+        ("EL123456789", "GR", "EL123456789"),
+        ("XI123456789", "XI", "XI123456789"),
+    ],
+)
+def test_validate_iva_number_accepts_wellformed_per_country(value: str, country: str, expected: str) -> None:
+    """A NIF-IVA matching its Member State's published structure is accepted.
+
+    The Greek case proves the ISO/VAT-prefix mismatch is handled: country
+    ``GR`` accepts an ``EL``-prefixed number.
+    """
+    assert validate_iva_number(value, country) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "country", "country_name"),
+    [
+        ("DE12345678", "DE", "Germany"),  # 8 digits, needs 9 — the round-18 defect case
+        ("IT1234567890", "IT", "Italy"),  # 10 digits, needs 11
+        ("NL123456789012", "NL", "Netherlands"),  # missing mandatory B block
+        ("FR1234567890", "FR", "France"),  # body too short
+        ("EL12345678", "GR", "Greece"),  # 8 digits, needs 9
+        ("BE9123456789", "BE", "Belgium"),  # first digit must be 0 or 1
+    ],
+)
+def test_validate_iva_number_rejects_malformed_eu_with_instructive_message(
+    value: str, country: str, country_name: str
+) -> None:
+    """A structurally malformed EU NIF-IVA is refused naming the country and format."""
+    with pytest.raises(ValueError) as excinfo:
+        validate_iva_number(value, country)
+    message = str(excinfo.value)
+    assert "IVA number" in message
+    assert country_name in message
+    # The refusal must name the expected structure, not a bare "invalid".
+    assert "expected" in message
+
+
+@pytest.mark.parametrize(
+    ("value", "country", "expected"),
+    [
+        ("US123456789", "US", "US123456789"),  # non-EU: generic prefix + body check
+        ("CH-12345678", "CH", "CH12345678"),  # Switzerland, non-EU
+        ("GB123456789", "GB", "GB123456789"),  # post-Brexit GB has no EU NIF-IVA pattern
+    ],
+)
+def test_validate_iva_number_non_eu_falls_back_to_generic_shape(value: str, country: str, expected: str) -> None:
+    """Non-EU counterparties carry no published NIF-IVA pattern and use the generic check."""
+    assert validate_iva_number(value, country) == expected
+
+
+def test_validate_iva_number_non_eu_generic_still_rejects_bad_shape() -> None:
+    """The generic non-EU fallback still rejects a missing prefix or an out-of-range body."""
+    with pytest.raises(ValueError, match=r"IVA number"):
+        validate_iva_number("123456789", "US")  # no US prefix
+    with pytest.raises(ValueError, match=r"IVA number"):
+        validate_iva_number("USxx", "US")  # body too short
+
+
+def test_every_eu_member_state_except_spain_has_a_nif_iva_format() -> None:
+    """The format table covers every EU Member State (Greece via EL), excluding Spain.
+
+    Anchored to :class:`aeat.domain.iva.EUMemberState` so a future Member State
+    addition or withdrawal fails this gate until the central table is updated.
+    Spain is intentionally absent — Spanish identifiers use the checksum
+    validator, not a structural pattern.
+    """
+    for member in EUMemberState:
+        if member is EUMemberState.ES:
+            assert nif_iva_prefix_for_country(member.value) is None
+            continue
+        prefix = nif_iva_prefix_for_country(member.value.upper())
+        assert prefix is not None, f"no NIF-IVA prefix resolves for EU member {member.value}"
+        assert prefix in NIF_IVA_FORMATS, f"no NIF-IVA format declared for {prefix}"

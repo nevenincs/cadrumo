@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import re
 
+from ...core.identity import nif_iva_format_for_country, normalise_nif_iva
 from ..iva import EUMemberState
 from ._errors import InvoiceValidationError
 
@@ -102,11 +103,17 @@ def assert_eu_member_state_code(value: str) -> str:
 
 
 def validate_iva_number(value: str, country: str) -> str:
-    """Validate a non-ES EU IVA number shape against its country prefix.
+    """Validate a non-ES IVA number shape against its country format.
 
-    Full per-country checksum validation is out of scope; the helper
-    enforces only the leading ISO-2 country prefix plus a 4-20 character
-    alphanumeric body.
+    For an EU Member State (and Northern Ireland ``XI``) the number is matched
+    against the country's published NIF-IVA structural pattern, sourced from the
+    central :data:`aeat.core.identity.NIF_IVA_FORMATS` authority: a malformed
+    intra-community VAT number is bounced by AEAT's Modelo 349 validator, so the
+    refusal names the country and the expected format. Live VIES existence is not
+    checked — only the structure. For a non-EU counterparty (no published
+    pattern) the helper falls back to a generic leading-prefix plus 4-20
+    character alphanumeric body check, so non-EU counterparties remain
+    acceptable.
 
     Args:
         value: Raw IVA identifier to validate.
@@ -116,12 +123,22 @@ def validate_iva_number(value: str, country: str) -> str:
         The uppercased, whitespace-trimmed IVA identifier.
 
     Raises:
-        InvoiceValidationError: If the value is malformed or the prefix does not match
-            ``country``.
+        InvoiceValidationError: If the value is malformed, the prefix does not
+            match ``country``, or the EU NIF-IVA format does not match.
     """
-    normalized = value.strip().upper().replace(" ", "").replace("-", "").replace(".", "")
+    normalized = normalise_nif_iva(value)
     if not normalized:
         raise InvoiceValidationError("IVA number must not be blank")
+
+    spec = nif_iva_format_for_country(country)
+    if spec is not None:
+        if not spec.pattern.match(normalized):
+            raise InvoiceValidationError(
+                f"IVA number {normalized!r} is not a valid {spec.country_name} NIF-IVA: "
+                f"expected {spec.description} (e.g. {spec.example})",
+            )
+        return normalized
+
     country_upper = country.strip().upper()
     if not normalized.startswith(country_upper):
         raise InvoiceValidationError("IVA number must start with the counterparty country ISO-2 prefix")
