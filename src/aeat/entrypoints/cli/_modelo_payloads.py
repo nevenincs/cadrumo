@@ -788,7 +788,14 @@ class FilingRecordImportResult(OutputSchema):
 
 @register_schema("modelo.filing_record.observe_local")
 class FilingRecordLocalObservationResult(OutputSchema):
-    """Local operator-supplied observation recorded for calculation prefill."""
+    """Result emitted by ``aeat app modelo filing-record observe-local``.
+
+    The payload mirrors
+    :class:`aeat.application.modelo._local_observation_actions.ModeloLocalObservationResult`:
+    values are stored in the calculation-observation repository for prefill, while
+    ``official_evidence``, ``filing_record_created``, and ``aeat_accepted`` remain
+    false so consumers cannot mistake operator-entered values for AEAT evidence.
+    """
 
     operation: str = "modelo.filing_record.observe_local"
     modelo: str
