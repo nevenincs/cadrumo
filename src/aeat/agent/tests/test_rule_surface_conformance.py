@@ -21,11 +21,15 @@ from ...application.operator_surface import (
     build_operator_surface_manifest,
 )
 from ...core.json_contract import ENVELOPE_SCHEMA_VERSION, Notice, SchemaEnvelope
-from .. import iter_operator_rules
+from .. import iter_operator_rules, iter_personas, iter_skill_documents
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BACKTICK = re.compile(r"`([^`]+)`")
+# A subcommand token: lowercase, digits, and hyphens only. Flags (``--x``),
+# placeholders (``<id>``), and argument values (``130``, ``1T``) do not match and
+# stop command-path collection.
+_SUBCOMMAND = re.compile(r"^[a-z][a-z0-9-]*$")
 # Envelope-spine / notice field names a rule may cite in backticks. Each must be a
 # real field on the model named here, or the rule is teaching a phantom field.
 _ENVELOPE_FIELDS = frozenset(SchemaEnvelope.model_fields)
@@ -66,16 +70,17 @@ def _command_schema_refs_via_cli() -> tuple[CommandSchemaRef, ...]:
 def _command_path_from_invocation(invocation: str) -> str | None:
     """Project an ``aeat ...`` backtick span onto a dotted command path.
 
-    Returns ``None`` for spans that are not an ``aeat`` command invocation. Flags
-    and their values are dropped: command tokens are those before the first token
-    starting with ``-``.
+    Returns ``None`` for spans that are not an ``aeat`` command invocation. Command
+    tokens are the leading subcommand-shaped tokens after ``aeat``; collection stops
+    at the first flag (``--x``), placeholder (``<id>``), or argument value (``130``,
+    ``1T``), which are not subcommand-shaped.
     """
     tokens = invocation.split()
     if not tokens or tokens[0] != "aeat":
         return None
     command_tokens: list[str] = []
     for token in tokens[1:]:
-        if token.startswith("-"):
+        if not _SUBCOMMAND.match(token):
             break
         command_tokens.append(token)
     return ".".join(command_tokens)
@@ -83,6 +88,20 @@ def _command_path_from_invocation(invocation: str) -> str | None:
 
 def _rule_documents() -> list[tuple[str, str]]:
     return [(rule.name, rule.read_text(encoding="utf-8")) for rule in iter_operator_rules()]
+
+
+def _all_operator_documents() -> list[tuple[str, str]]:
+    """Every operator-facing harness document: rules, personas, and skills.
+
+    All of them cite CLI verbs the operator is told to run, so all of them must
+    be kept honest by the verb-resolution gate.
+    """
+    documents: list[tuple[str, str]] = list(_rule_documents())
+    for persona in iter_personas():
+        documents.append((f"personas/{persona.name}", persona.read_text(encoding="utf-8")))
+    for skill in iter_skill_documents():
+        documents.append((f"skills/{skill.name}", skill.read_text(encoding="utf-8")))
+    return documents
 
 
 def test_operator_rules_exist() -> None:
@@ -95,7 +114,7 @@ def test_operator_rules_exist() -> None:
 def test_every_cited_verb_resolves() -> None:
     valid = _valid_command_paths()
     failures: list[str] = []
-    for name, text in _rule_documents():
+    for name, text in _all_operator_documents():
         for span in _BACKTICK.findall(text):
             path = _command_path_from_invocation(span)
             if path is None:
