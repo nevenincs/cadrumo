@@ -32,7 +32,16 @@ from .._sessions import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-_BUCKET_ID = "operator"
+_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
+_PROFILE_LABEL = "operator"
+
+
+def _register_operator_profile():
+    return lambda state: register_minimal_profile(
+        state,
+        profile_id=_BUCKET_ID,
+        display_name=_PROFILE_LABEL,
+    )
 
 
 def test_test_operator_auth_reports_the_active_profile() -> None:
@@ -40,13 +49,11 @@ def test_test_operator_auth_reports_the_active_profile() -> None:
     resolve the active profile so the report tells the user whether auth is
     ready *for their profile* - not return empty profile fields."""
 
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
-    )
+    workflow_state_repository().update(_register_operator_profile())
 
     result = run_operator_auth_test("certificate")
 
-    assert result.active_profile == "operator"
+    assert result.active_profile == _BUCKET_ID
     assert result.active_profile_registered is True
     assert result.active_profile_record_present is True
     assert result.active_profile_status
@@ -60,9 +67,7 @@ def test_auth_status_is_not_blocked_by_unreadable_workspace_drafts() -> None:
     auth provider is configured for the active profile.
     """
 
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
-    )
+    workflow_state_repository().update(_register_operator_profile())
     configure_operator_auth("certificate")
     now = datetime.now(UTC)
 
@@ -100,7 +105,7 @@ def test_auth_status_is_not_blocked_by_unreadable_workspace_drafts() -> None:
     result = inspect_operator_auth("certificate")
 
     assert result.provider == "certificate"
-    assert result.active_profile == "operator"
+    assert result.active_profile == _BUCKET_ID
     assert result.active_profile_registered is True
 
 
@@ -120,9 +125,7 @@ def test_configure_operator_auth_emits_auth_provider_configured_event() -> None:
     The certificate path is not supplied in this scenario, so the
     payload must not carry one."""
 
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
-    )
+    workflow_state_repository().update(_register_operator_profile())
 
     configure_operator_auth("certificate")
 
@@ -147,9 +150,7 @@ def test_configure_operator_auth_event_payload_records_certificate_path(tmp_path
     the filesystem reference. Passwords and key material remain outside
     the payload by construction."""
 
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
-    )
+    workflow_state_repository().update(_register_operator_profile())
     cert_path = tmp_path / "operator.p12"
     cert_path.write_bytes(b"binary certificate payload")
 
@@ -199,9 +200,7 @@ def test_configure_operator_auth_reserved_provider_emits_no_event() -> None:
 
     from .._operator import AuthProviderReservedError
 
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
-    )
+    workflow_state_repository().update(_register_operator_profile())
     state_before = workflow_state_repository().load()
     auth_provider_before = state_before.auth.provider
 
@@ -232,9 +231,7 @@ def test_inspect_operator_auth_configured_is_false_without_certificate_path() ->
     in workflow state.
     """
 
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
-    )
+    workflow_state_repository().update(_register_operator_profile())
 
     configure_operator_auth("certificate")  # no certificate_path argument
 
@@ -264,7 +261,7 @@ def test_inspect_operator_auth_configured_is_true_with_certificate_path(
     """
 
     workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
+        _register_operator_profile()
     )
     cert_path = tmp_path / "operator.p12"
     cert_path.write_bytes(b"placeholder cert")
@@ -300,7 +297,7 @@ def test_inspect_operator_auth_configured_true_when_path_persisted_to_workflow_s
     """
 
     workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
+        _register_operator_profile()
     )
     cert_path = tmp_path / "operator.p12"
     cert_path.write_bytes(b"placeholder cert")
@@ -337,7 +334,7 @@ def test_inspect_operator_auth_distinguishes_no_path_set_from_file_missing(
     """
 
     workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
+        _register_operator_profile()
     )
 
     # 1) no path set
@@ -373,7 +370,7 @@ def test_configure_operator_auth_certificate_without_file_is_incomplete() -> Non
     """
 
     workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
+        _register_operator_profile()
     )
 
     result = configure_operator_auth("certificate")  # no certificate_path
@@ -394,7 +391,7 @@ def test_configure_operator_auth_certificate_with_file_is_complete(tmp_path: Pat
     resolvable ``--file`` reports a complete configuration."""
 
     workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
+        _register_operator_profile()
     )
     cert_path = tmp_path / "operator.p12"
     cert_path.write_bytes(b"placeholder cert")
@@ -412,7 +409,7 @@ def test_configure_operator_auth_certificate_with_unresolved_file_is_incomplete(
     incomplete configuration, not plain success."""
 
     workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
+        _register_operator_profile()
     )
     ghost = tmp_path / "missing.p12"
 
@@ -438,7 +435,7 @@ def test_auth_status_and_test_agree_when_no_provider_configured() -> None:
     """
 
     workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
+        _register_operator_profile()
     )
 
     status = inspect_operator_auth()
@@ -461,7 +458,7 @@ def test_auth_test_probes_the_provider_when_one_is_configured() -> None:
     default when nothing is configured and nothing is requested."""
 
     workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
+        _register_operator_profile()
     )
     configure_operator_auth("certificate")
 
@@ -475,7 +472,7 @@ def test_auth_test_probes_explicitly_requested_provider() -> None:
     provider even when nothing is configured in workflow state."""
 
     workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
+        _register_operator_profile()
     )
 
     probe = run_operator_auth_test("clave_movil")
@@ -489,7 +486,8 @@ def test_live_auth_preflight_reports_redacted_clave_profile_alignment() -> None:
     workflow_state_repository().update(
         lambda state: register_minimal_profile(
             state,
-            profile_id="11111111-1111-4111-8111-111111111111",
+            profile_id=_BUCKET_ID,
+            display_name=_PROFILE_LABEL,
             overrides={"identity.tax_id": "12345678Z"},
         ),
     )
@@ -503,7 +501,7 @@ def test_live_auth_preflight_reports_redacted_clave_profile_alignment() -> None:
     report = build_live_auth_preflight_report("clave_movil", settings=settings)
 
     assert report.provider == "clave_movil"
-    assert report.active_profile == "operator"
+    assert report.active_profile == _BUCKET_ID
     assert report.profile_tax_id_present is True
     assert report.provider_identity_present is True
     assert report.identity_alignment == "matches"
@@ -523,7 +521,8 @@ def test_live_auth_preflight_reports_expired_persisted_session_state() -> None:
     workflow_state_repository().update(
         lambda state: register_minimal_profile(
             state,
-            profile_id="11111111-1111-4111-8111-111111111111",
+            profile_id=_BUCKET_ID,
+            display_name=_PROFILE_LABEL,
             overrides={"identity.tax_id": "12345678Z"},
         ),
     )
@@ -552,7 +551,7 @@ def test_live_auth_preflight_reports_expired_persisted_session_state() -> None:
 
 def test_live_auth_preflight_uses_explicit_certificate_settings(tmp_path: Path) -> None:
     workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
+        _register_operator_profile()
     )
     configure_operator_auth("certificate")
     cert_path = tmp_path / "operator.p12"
@@ -588,7 +587,7 @@ def test_auth_test_carries_a_local_session_probe_status_does_not() -> None:
     """
 
     workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
+        _register_operator_profile()
     )
     configure_operator_auth("certificate")
 
@@ -627,7 +626,8 @@ def test_configure_clave_movil_mismatch_carries_an_explanatory_detail() -> None:
     workflow_state_repository().update(
         lambda state: register_minimal_profile(
             state,
-            profile_id="11111111-1111-4111-8111-111111111111",
+            profile_id=_BUCKET_ID,
+            display_name=_PROFILE_LABEL,
             overrides={"identity.tax_id": "00000000T"},
         ),
     )
@@ -650,7 +650,8 @@ def test_configure_clave_movil_match_carries_no_alignment_detail() -> None:
     workflow_state_repository().update(
         lambda state: register_minimal_profile(
             state,
-            profile_id="11111111-1111-4111-8111-111111111111",
+            profile_id=_BUCKET_ID,
+            display_name=_PROFILE_LABEL,
             overrides={"identity.tax_id": "12345678Z"},
         ),
     )
@@ -667,7 +668,8 @@ def test_operator_auth_test_reports_profile_scoped_clave_session() -> None:
     workflow_state_repository().update(
         lambda state: register_minimal_profile(
             state,
-            profile_id="11111111-1111-4111-8111-111111111111",
+            profile_id=_BUCKET_ID,
+            display_name=_PROFILE_LABEL,
             overrides={"identity.tax_id": "TEST-IDENTITY"},
         ),
     )
@@ -699,7 +701,8 @@ def test_clave_live_auth_guard_accepts_matching_active_profile_identity() -> Non
     workflow_state_repository().update(
         lambda state: register_minimal_profile(
             state,
-            profile_id="11111111-1111-4111-8111-111111111111",
+            profile_id=_BUCKET_ID,
+            display_name=_PROFILE_LABEL,
             overrides={"identity.tax_id": "12345678Z"},
         ),
     )
@@ -713,7 +716,8 @@ def test_clave_live_auth_guard_rejects_mismatched_active_profile_identity() -> N
     workflow_state_repository().update(
         lambda state: register_minimal_profile(
             state,
-            profile_id="11111111-1111-4111-8111-111111111111",
+            profile_id=_BUCKET_ID,
+            display_name=_PROFILE_LABEL,
             overrides={"identity.tax_id": "00000000T"},
         ),
     )
@@ -736,7 +740,7 @@ def test_configure_operator_auth_repeated_calls_append_distinct_events() -> None
         digest."""
 
     workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
+        _register_operator_profile()
     )
 
     configure_operator_auth("certificate")
