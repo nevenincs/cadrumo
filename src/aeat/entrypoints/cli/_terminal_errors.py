@@ -1,6 +1,6 @@
 """Terminal exception handling for the root ``aeat`` dispatch.
 
-Typer's standalone ``main`` renders every :class:`click.ClickException` (usage
+Typer's standalone ``main`` renders every :class:`~click.ClickException` (usage
 errors, bad parameters, unknown options) as Rich text and lets unexpected
 exceptions escape as raw Python tracebacks. Under ``--format json`` that
 meant the shared-spine error document (``schema_version`` / ``command`` /
