@@ -196,7 +196,7 @@ autodoc_mock_imports = [
     "pikepdf",
     "pdfplumber",
     "pikepdf._core",
-    "ofxparse",
+    "ofxtools",
     "openpyxl",
     "reportlab",
     "argon2",
@@ -492,7 +492,7 @@ nitpick_ignore_regex = [
     (
         r"py:.*",
         r"^(tree_sitter|tree_sitter_language_pack|qdrant_client|playwright|"
-        r"playwright_stealth|pikepdf|pdfplumber|ofxparse|openpyxl|reportlab|"
+        r"playwright_stealth|pikepdf|pdfplumber|ofxtools|openpyxl|reportlab|"
         r"argon2|keyring|anthropic)(\..*)?$",
     ),
     # pydantic constrained-type aliases render as a whole
