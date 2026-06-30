@@ -38,6 +38,9 @@ from ._iva_compensation_history_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_FIFO_BUCKET_ID = "39039000-0000-4000-8000-000000000097"
+_HISTORY_BUCKET_ID = "39039000-0000-4000-8000-000000000390"
+
 
 def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pending(tmp_path: Path) -> None:
     """End-to-end: the M390 box-97 / box-662 BINDING values come from the FIFO partition.
@@ -56,7 +59,7 @@ def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pend
         ("3T", Decimal("0.00"), Decimal("0.00"), Decimal("70.00")),
         ("4T", Decimal("50.00"), Decimal("0.00"), Decimal("120.00")),
     ]
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="m390-fifo-carry"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_FIFO_BUCKET_ID):
         observation_repo = CalculationObservationRepository()
         for period, generada, aplicada, disponible in quarter_chain:
             observation_repo.save_observation(
@@ -80,7 +83,7 @@ def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pend
             registry_snapshot=snapshot,
         ).resolve(
             CalculationSourceContext(
-                bucket_id="m390-fifo-carry",
+                bucket_id=_FIFO_BUCKET_ID,
                 modelo="390",
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "0A"),
@@ -111,7 +114,7 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
         ("3T", Decimal("120.00"), Decimal("50.00"), Decimal("70.00"), Decimal("20.00")),
         ("4T", Decimal("90.00"), Decimal("60.00"), Decimal("30.00"), Decimal("100.00")),
     ]
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="m390-compensation-history"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HISTORY_BUCKET_ID):
         observation_repo = CalculationObservationRepository()
         for period, devengada, deducible, regimen_general, compensacion in quarter_data:
             observation_repo.save_observation(
@@ -141,7 +144,7 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
             registry_snapshot=snapshot,
         ).resolve(
             CalculationSourceContext(
-                bucket_id="m390-compensation-history",
+                bucket_id=_HISTORY_BUCKET_ID,
                 modelo="390",
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "0A"),
