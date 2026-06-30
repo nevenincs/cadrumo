@@ -478,4 +478,3 @@ def test_export_ledger_transactions_excludes_inactive_rows_by_default(secure_obj
     )
     assert with_inactive.rows[1].lifecycle_state == "STASHED"
 
-
