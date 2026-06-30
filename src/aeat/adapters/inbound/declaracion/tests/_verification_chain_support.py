@@ -29,6 +29,7 @@ from .....domain.calculations.registry import (
     resolve_relation_values_from_observations as resolve_relation_values_from_observations,
 )
 from .....tests import FIXTURES_DIR
+from .....tests.registry_observations import registry_grounded_observations
 from .. import DeclaracionParseError, parse_declaracion
 
 pytestmark = [
@@ -87,6 +88,28 @@ def _assert_decimal_casilla(
     value = extracted[casilla_id]
     assert isinstance(value, Decimal), (
         f"PARSER-GAP [{label}]: {casilla_id!r} not Decimal: {type(value).__name__!r}"
+    )
+
+
+def _registry_modelo_observations_from_values(
+    *,
+    modelo: str,
+    filing_year: int,
+    period_values: Mapping[str, Mapping[CasillaId, Decimal]],
+) -> tuple[RegistryModeloObservation, ...]:
+    return tuple(
+        RegistryModeloObservation(
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            observations=registry_grounded_observations(
+                modelo=modelo,
+                filing_year=filing_year,
+                period=period,
+                casilla_values=casilla_values,
+            ),
+        )
+        for period, casilla_values in sorted(period_values.items())
     )
 
 

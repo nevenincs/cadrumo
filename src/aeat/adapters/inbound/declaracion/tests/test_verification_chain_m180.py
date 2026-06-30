@@ -2,16 +2,15 @@ from __future__ import annotations
 
 import pytest
 
-from .....tests.registry_observations import registry_grounded_observations
 from ._verification_chain_support import (
     FIXTURES_DIR,
     BindingId,
     CasillaId,
     Decimal,
     DeclaracionParseError,
-    RegistryModeloObservation,
     RegistryValidationError,
     _casilla_id,
+    _registry_modelo_observations_from_values,
     _registry_snapshot,
     calculate_registry_snapshot,
     date,
@@ -104,19 +103,10 @@ def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_re
             _M115_RETENCIONES_CASILLA: Decimal("570.00"),
         },
     }
-    observations = tuple(
-        RegistryModeloObservation(
-            modelo="115",
-            filing_year=2024,
-            period=period,
-            observations=registry_grounded_observations(
-                modelo="115",
-                filing_year=2024,
-                period=period,
-                casilla_values=casilla_values,
-            ),
-        )
-        for period, casilla_values in sorted(_m115_quarterly.items())
+    observations = _registry_modelo_observations_from_values(
+        modelo="115",
+        filing_year=2024,
+        period_values=_m115_quarterly,
     )
 
     snapshot = _registry_snapshot("180", 2024, "0A")
