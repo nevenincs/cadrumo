@@ -6,6 +6,12 @@ revision, the :class:`ExtractionWarning` advisory record, and the
 top-level :class:`DeclaracionObservation` aggregate. All models are
 frozen and ``extra="forbid"`` so accidental field drift surfaces at
 validation time.
+
+These records carry observations, not calculation authority. The parser stamps
+current observations with a
+:class:`~aeat.domain.calculations.registry.RegistrySnapshotRef` so downstream
+flows can re-resolve the registry coordinate that supplied the extraction
+profile.
 """
 
 from __future__ import annotations
@@ -25,9 +31,9 @@ from ..pdf._shared import ExtractedCasilla
 class TemplateRevision(BaseModel):
     """Detected or caller-resolved declaration template identity.
 
-    Identifies modelo, ejercicio, and revision tag discovered during
-    detection. Registry snapshots decide whether that template is usable
-    for extraction and verification.
+    Identifies modelo, ejercicio, and revision tag discovered during detection.
+    :class:`~aeat.domain.calculations.registry.RegistrySnapshot` instances
+    decide whether that template is usable for extraction and verification.
 
     Attributes:
         modelo: Stable modelo identifier.
@@ -84,6 +90,8 @@ class DeclaracionObservation(BaseModel):
         ejercicio: Four-digit tax year as printed on the receipt.
         tax_id: NIF / NIE of the filer (as printed).
         template_revision: Which AEAT template the PDF matches.
+        registry_snapshot_ref: Four-axis registry coordinate that supplied the
+            extraction profile, or ``None`` for legacy observations.
         values: Tuple of observed :class:`ExtractedCasilla` records.
         warnings: Tuple of advisories — unresolved casillas, ambiguous
             labels, bbox fallbacks, etc.
