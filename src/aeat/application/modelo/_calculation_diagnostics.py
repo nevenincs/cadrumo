@@ -3,7 +3,8 @@
 The bucket aggregation calculate path first resolves source-backed values,
 executes the registry formula engine, and persists the calculated revision. This
 module then fans out advisory-only checks over the loaded
-:class:`ModeloRevision` and the computed :class:`CasillaId` value map, returning
+:class:`aeat.domain.calculations.registry.ModeloRevision` and the computed
+:class:`aeat.domain.calculations.registry.CasillaId` value map, returning
 non-blocking
 :class:`aeat.application.aggregation.CalculationSourceDiagnostic` rows for the
 caller to append to source mesh diagnostics. It does not compute, override, or
@@ -18,7 +19,7 @@ source mesh's no-silent-under-declaration diagnostics with checks whose evidence
 only exists after the revision has been calculated.
 
 See Also:
-    :func:`aeat.application.modelo._calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+    :func:`aeat.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
         Calls this coordinator after the calculation revision has been created.
     :func:`aeat.application.modelo._official_box_advisory.collect_official_box_unpopulated_diagnostics`:
         Mirrors registry-authored ADVISORY predicates as calculate diagnostics.
@@ -65,9 +66,10 @@ def collect_bucket_aggregation_advisory_diagnostics(
     sequence.
 
     Args:
-        revision: The :class:`ModeloRevision` whose predicates, casillas, and
-            formulas are inspected.
-        casilla_values: Computed engine values keyed by :class:`CasillaId`.
+        revision: The :class:`aeat.domain.calculations.registry.ModeloRevision`
+            whose predicates, casillas, and formulas are inspected.
+        casilla_values: Computed engine values keyed by
+            :class:`aeat.domain.calculations.registry.CasillaId`.
         modelo: Target modelo identifier used by modelo-specific advisory
             collectors.
         period_token: Bare registry period token for the filing being
