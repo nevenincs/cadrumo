@@ -1,10 +1,15 @@
 """pdfplumber-backed text extraction for justificante PDFs.
 
-Implements the :data:`aeat.domain.justificante._schema.JustificanteParserBackend.PDFPLUMBER`
-branch of the parser dispatch in
-:mod:`aeat.adapters.inbound.justificante._parsers`. Concatenates the
-``page.extract_text()`` output of every non-empty page; layout-sensitive
-parsing is left to the regex extractor downstream.
+Implements the ``PDFPLUMBER`` branch of
+:class:`~aeat.domain.justificante.JustificanteParserBackend` for the
+:mod:`aeat.adapters.inbound.justificante._parsers` dispatch layer.
+Concatenates the ``page.extract_text()`` output of every non-empty page;
+layout-sensitive parsing is left to the regex extractor downstream.
+
+Both path and bytes helpers translate extraction failures into
+:class:`~aeat.domain.justificante.JustificanteParseError`. The bytes helper
+uses the shared inbound PDF bytes primitive so secure-storage captures can be
+parsed without plaintext temporary files.
 """
 
 from __future__ import annotations
@@ -24,12 +29,19 @@ def extract_text_pdfplumber(pdf_path: Path) -> str:
     Returns:
         A single string with every page's ``extract_text`` result joined by
         newlines. Empty pages are skipped.
+
+    Raises:
+        JustificanteParseError: If pdfplumber cannot read any text.
     """
     return extract_pages_text_concatenated(pdf_path, error_class=JustificanteParseError)
 
 
 def extract_text_pdfplumber_bytes(pdf_bytes: bytes) -> str:
-    """Return concatenated text from in-memory PDF bytes using pdfplumber."""
+    """Return concatenated text from in-memory PDF bytes using pdfplumber.
+
+    Raises:
+        JustificanteParseError: If pdfplumber cannot read any text.
+    """
     return "\n".join(
         extract_pages_text_from_bytes(
             pdf_bytes,
