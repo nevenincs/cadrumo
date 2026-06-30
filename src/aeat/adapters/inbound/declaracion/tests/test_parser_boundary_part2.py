@@ -17,13 +17,13 @@ from ._parser_boundary_part2_support import (
     _M303_COMPENSACION_POSTERIORES_CASILLA,
     _M303_RESULTADO_CASILLA,
     _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
-    _expected_casilla_values,
 )
 from ._parser_boundary_support import (
     FIXTURES_DIR,
     CasillaId,
     Decimal,
     _casilla_id,
+    _expected_casilla_values,
     _expected_period,
     parse_declaracion,
 )
