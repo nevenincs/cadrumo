@@ -47,11 +47,13 @@ def _period(year: int, code: str) -> Period:
 
 _Q2_2023 = _period(2023, "2T")
 _Q2_2026 = _period(2026, "2T")
+_BUCKET_ID = "14141414-1414-4414-8414-141414141414"
+_OTHER_BUCKET_ID = "15151515-1515-4515-8515-151515151515"
 
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile.repository
 
 
@@ -432,10 +434,10 @@ def test_repository_backed_projection_rejects_bucket_mismatch_before_loading(
 ) -> None:
     with pytest.raises(AggregationValidationError, match="bucket_mismatch"):
         aggregate_iva_ledger_observations_from_repositories(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             period=_Q2_2026,
             transaction_repository=TransactionCatalogueRepository(
-                bucket_id="bucket-b",
+                bucket_id=_OTHER_BUCKET_ID,
                 objects=secure_objects,
             ),
         )
@@ -444,16 +446,16 @@ def test_repository_backed_projection_rejects_bucket_mismatch_before_loading(
 def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_objects: SecureObjectRepository) -> None:
     transaction = _transaction("row-repository")
     repository = TransactionCatalogueRepository(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         objects=secure_objects,
     )
     repository.save(TransactionCatalogue.from_transactions((transaction,)))
 
     result = aggregate_iva_ledger_observations_from_repositories(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transaction_repository=TransactionCatalogueRepository(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             objects=secure_objects,
         ),
     )
