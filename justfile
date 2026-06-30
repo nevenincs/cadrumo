@@ -297,7 +297,7 @@ pytest_workers := env_var_or_default("AEAT_PYTEST_WORKERS", "auto")
 
 # Run the fast test-framework ratchets for discovery, markers, skip/xfail, mock/test-double, monkeypatch, broad raises, bare except, and tautology drift.
 test-ratchets:
-    @uv run --no-sync pytest -q -p no:cacheprovider -rs src/aeat/tests/test_test_inventory.py src/aeat/tests/test_marker_integrity.py src/aeat/tests/test_no_skip_xfail.py src/aeat/tests/test_mock_inventory.py src/aeat/tests/test_monkeypatch_inventory.py src/aeat/tests/test_no_broad_exception_raises.py src/aeat/tests/test_no_bare_except.py src/aeat/tests/test_no_tautology.py --tb=short
+    @uv run --no-sync pytest -q -p no:cacheprovider -rs src/aeat/tests/test_test_inventory.py src/aeat/tests/test_marker_integrity.py src/aeat/tests/test_relative_imports_only.py src/aeat/tests/test_no_skip_xfail.py src/aeat/tests/test_mock_inventory.py src/aeat/tests/test_monkeypatch_inventory.py src/aeat/tests/test_no_broad_exception_raises.py src/aeat/tests/test_no_bare_except.py src/aeat/tests/test_no_tautology.py --tb=short
 
 # Run the unit test suite in parallel, ignoring workbook parity tests. Quiet progress; failures shown.
 test-unit:
