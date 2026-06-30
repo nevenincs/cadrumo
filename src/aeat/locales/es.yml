@@ -654,6 +654,7 @@ application:
         evidencia de compra o identificadores de adjunto.
       purchase_evidence_already_set: La transacción del libro mayor ya tiene un purchase_invoice_evidence_id;
         elimine o reemplace a través del flujo de adjuntos.
+      idempotency_key_conflict: 'La clave de idempotencia ya identifica una transacción almacenada con datos distintos. Use una clave de idempotencia nueva para un movimiento diferente, u omita la clave para añadir un duplicado deliberado.'
   live:
     expedientes:
       errors:
@@ -1573,14 +1574,6 @@ cli:
           (AAAA-MM-DD)
         list_help: Listar los bindings requeridos y disponibles para un modelo / ejercicio
           / periodo
-        m200_m202_relation_channel: "%{relation_id}\tM202 %{modality} casilla %{casilla}\t\
-          usar --relation %{relation_id}=VALUE\tbinding destino asociado %{binding_id}"
-        m200_m202_relation_guidance: Los pagos fraccionados M202 del Modelo 200 alimentan
-          DP200014B:00611 mediante valores --relation, no mediante ids de binding
-          destino en --binding. Los canales M202 40.3 casilla 34 y 40.2 casilla 03
-          son mutuamente exclusivos por declaracion; al introducir valores manuales
-          de relacion, pon la suma anual en la modalidad elegida y 0 en la modalidad
-          no usada.
         missing_help: 'Filtrar a los bindings aún pendientes: descarta los de valor
           constante y los que el perfil activo ya resuelve. Sin perfil activo se muestran
           todos los bindings no constantes (la respuesta conservadora).'
@@ -1594,6 +1587,8 @@ cli:
         unknown_keys: 'Clave(s) de --binding desconocida(s) {keys}; vinculaciones
           conocidas para {code}@{revision} ({period}): {suggestion}.'
         year_help: Ejercicio fiscal del modelo (p. ej. 2026)
+        relation_input_guidance: 'Algunas vinculaciones siguientes se alimentan de relaciones del registro (agregaciones entre modelos o entre periodos), no de valores --binding directos. Indique cada una con --relation RELATION_ID=VALUE antes de calcular.'
+        relation_input_channel: "%{binding_id}\talimentada por la relación %{relation_id}\tuse --relation %{relation_id}=VALUE"
       casillas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
@@ -2933,7 +2928,7 @@ cli:
         pasa al clasificador.
       reaffirm_help: Reafirmar la clasificación de una transacción ya clasificada.
       reaffirmed: Clasificación reafirmada.
-      reason_help: Motivo en texto libre que se registra con una decisión --reject.
+      reason_help: 'Motivo en texto libre que se registra como notas de la transacción en una clasificación manual, o con una decisión --reject.'
       reject_apply_exclusive: '--reject no se puede combinar con --apply: reject registra
         una sugerencia rechazada, apply una aceptada.'
       reject_help: Registra un rechazo explícito de la sugerencia del modelo como
@@ -2953,6 +2948,7 @@ cli:
       vision_model_help: Sustituye el modelo de visión local de Ollama para leer una
         factura escaneada o en imagen (p. ej. qwen2.5vl:7b); por defecto usa el modelo
         configurado.
+      reason_empty: 'Rechazado. --reason debe registrar por qué clasificas esta transacción. Indica un motivo no vacío, u omite --reason.'
     doclink:
       actor_help: Etiqueta del operador.
       help: Descarga un enlace de documento de Drive y guarda sus bytes como evidencia
