@@ -1,9 +1,18 @@
 """Encrypted SQL persistence for actividad economica asset and amortizacion ledgers.
 
-:class:`aeat.domain.contribuyente.assets.AssetRecord` and
-:class:`aeat.domain.contribuyente.assets.AmortizacionLedger` payloads are stored
-as :class:`SensitivityClass` FINANCIAL secure objects in the primary database
-through :class:`SecureObjectRepository`.
+:class:`AssetRecord`, :class:`AssetsLedgerDocument`, and
+:class:`AmortizacionLedger` payloads are stored as
+:class:`SensitivityClass` FINANCIAL secure objects in the primary database
+through :class:`SecureObjectRepository`. The singleton namespace, object-key,
+schema-version, and custody contracts come from
+:data:`aeat.adapters.persistence.storage.PROFILE_ASSETS_LEDGER_NAMESPACE` and
+:data:`aeat.adapters.persistence.storage.PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE`.
+
+See Also:
+    :mod:`aeat.domain.contribuyente.assets`
+        Typed asset and amortizacion payload models persisted here.
+    :mod:`aeat.adapters.persistence.profile.inventory`
+        Sibling profile-local secure-object adapter for stock valuation ledgers.
 """
 
 from __future__ import annotations
@@ -104,7 +113,7 @@ def save_amortizacion_ledger(ledger: AmortizacionLedger) -> Path:
 
 
 class AssetsLedgerRepository:
-    """Governed repository for the encrypted assets ledger."""
+    """Governed repository for the encrypted :class:`AssetsLedgerDocument` singleton."""
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
         """Initialise the repository, defaulting to the active-bucket secure object store."""
@@ -206,10 +215,10 @@ class AssetsLedgerRepository:
 
 
 class AmortizacionLedgerRepository:
-    """Governed repository for the encrypted amortizacion ledger.
+    """Governed repository for the encrypted :class:`AmortizacionLedger` singleton.
 
     Mirrors :class:`AssetsLedgerRepository` for amortizacion entries; the
-    payload type is :class:`aeat.domain.contribuyente.assets.AmortizacionLedger`.
+    payload type is :class:`AmortizacionLedger`.
     """
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:

@@ -1,7 +1,19 @@
 """Encrypted SQL persistence for actividad economica inventory ledgers.
 
-:class:`aeat.domain.contribuyente.inventory.InventoryLedger` payloads are stored
-as FINANCIAL-class secure objects in the primary database.
+:class:`InventoryLedger` payloads are grouped in
+:class:`InventoryLedgerDocument` and stored as :class:`SensitivityClass`
+FINANCIAL secure objects in the primary database through
+:class:`SecureObjectRepository`. The singleton namespace, object-key,
+schema-version, and custody contract come from
+:data:`aeat.adapters.persistence.storage.PROFILE_INVENTORY_LEDGER_NAMESPACE`.
+
+See Also:
+    :mod:`aeat.domain.contribuyente.inventory`
+        Typed inventory ledger, movement, and valuation payload models persisted
+        here.
+    :mod:`aeat.application.inventory`
+        Application service layer that validates inventory commands before this
+        adapter writes the encrypted secure object.
 """
 
 from __future__ import annotations
@@ -94,7 +106,7 @@ def record_movement(
 
 
 class InventoryLedgerRepository:
-    """Governed repository for the encrypted inventory ledger."""
+    """Governed repository for the encrypted :class:`InventoryLedgerDocument` singleton."""
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
         """Construct the repository.
