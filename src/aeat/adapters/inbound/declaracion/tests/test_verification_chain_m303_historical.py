@@ -6,14 +6,11 @@ from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M303,
     _DR303_PROJECTION_CASILLAS,
     _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
-    _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
-    _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
     _M303_ENGINE_REQUIRED_CASILLAS,
-    _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
     BindingId,
     Decimal,
     RegistryValidationError,
-    _assert_m303_engine_matches_extracted_decimal,
+    _assert_m303_resultado_regimen_general_consistency,
     _decimal_inputs_from_extracted_values,
     _parse_extracted_declaracion_values,
     _registry_snapshot,
@@ -94,26 +91,8 @@ def test_verification_chain_m303_historical_engine_recomputes_resultado_regimen_
         )
 
     engine_values = dict(result.values)
-
-    engine_resultado = _assert_m303_engine_matches_extracted_decimal(
+    _assert_m303_resultado_regimen_general_consistency(
         pdf_stem=pdf_stem,
         engine_values=engine_values,
         extracted=extracted,
-        casilla_id=_M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
-        label="box 46 (resultado regimen general)",
-        formula_context="box 46 = box 27 - box 45, Orden EHA/3786/2008 art. 1",
-    )
-    engine_27 = engine_values.get(_M303_CUOTA_DEVENGADA_TOTAL_CASILLA)
-    engine_45 = engine_values.get(_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA)
-    assert isinstance(engine_27, Decimal), (
-        f"VERIFIED-FAIL [{pdf_stem}]: engine-computed box 27 missing or non-Decimal: {engine_27!r}"
-    )
-    assert isinstance(engine_45, Decimal), (
-        f"VERIFIED-FAIL [{pdf_stem}]: engine-computed box 45 missing or non-Decimal: {engine_45!r}"
-    )
-    expected_resultado = engine_27 - engine_45
-    assert engine_resultado == expected_resultado, (
-        f"VERIFIED-FAIL [{pdf_stem}]: engine resultado-regimen-general "
-        f"{engine_resultado!r} != box27({engine_27!r}) - box45({engine_45!r}) = {expected_resultado!r}\n"
-        f"  (internal formula consistency broken - registry formula defect)"
     )
