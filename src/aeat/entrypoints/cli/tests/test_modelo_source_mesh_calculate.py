@@ -11,6 +11,9 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
+from ....domain.calculations.registry import RegistryModeloObservation
+from ....domain.categories import SpendingCategory
+from ....domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
 from ....domain.iva import EUMemberState, IvaCategory
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.transactions import (
@@ -23,7 +26,10 @@ from ....domain.transactions import (
     TransactionCatalogueRepository,
     TransactionDirection,
 )
+from ....domain.usage_ratios import UsageRatioProfile, save_usage_ratios
+from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from .envelope_helpers import unwrap_envelope_notices
 from .envelope_helpers import unwrap_schema_envelope as _payload
@@ -232,6 +238,124 @@ def _classified_rent_transaction() -> Transaction:
     )
 
 
+def _m100_activity_income_transaction() -> Transaction:
+    return Transaction.model_validate(
+        {
+            "raw": _raw_transaction(
+                "m100-activity-income",
+                booked_date=date(2024, 3, 15),
+                amount=Decimal("12000.00"),
+            ),
+            "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "business_classification": BusinessClassification.BUSINESS,
+            "source_jurisdiction": "ES",
+            "taxable_base": Decimal("12000.00"),
+            "iva_rate": Decimal("0"),
+            "iva_amount": Decimal("0"),
+            "classified_at": datetime(2024, 3, 15, 12, 0, tzinfo=UTC),
+            "classified_by": "manual",
+        },
+    )
+
+
+def _m100_activity_expense_transaction(
+    transaction_id: str,
+    *,
+    value_date: date,
+    category: SpendingCategory,
+    taxable_base: Decimal,
+) -> Transaction:
+    iva_amount = (taxable_base * Decimal("0.21")).quantize(Decimal("0.01"))
+    gross_amount = taxable_base + iva_amount
+    return Transaction.model_validate(
+        {
+            "raw": _raw_transaction(
+                transaction_id,
+                booked_date=value_date,
+                amount=gross_amount,
+            ),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "business_classification": BusinessClassification.BUSINESS,
+            "source_jurisdiction": "ES",
+            "category_id": category.value,
+            "taxable_base": taxable_base,
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": iva_amount,
+            "classified_at": datetime(2024, 3, 15, 12, 0, tzinfo=UTC),
+            "classified_by": "manual",
+        },
+    )
+
+
+def _seed_m100_profile_facts(bucket_id: str) -> None:
+    from ....application.user_profile import UserProfileLifecycleRepository
+
+    repository = UserProfileLifecycleRepository(bucket_id=bucket_id)
+    record = repository.load(bucket_id)
+    additions = (
+        UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+        UserProfileFact(path="iva.regime", value="GENERAL"),
+        UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+        UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+        UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+        UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+        UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
+        UserProfileFact(path="renta_taxpayer.sex", value="H"),
+        UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+        UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
+        UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
+        UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
+        UserProfileFact(path="filing_export.declaration_type", value="1"),
+        UserProfileFact(path="renta_family.minor_children_in_unit", value=Decimal("0")),
+        UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
+        UserProfileFact(path="renta_family.descendientes_minimos_aggregate_2024", value=Decimal("0")),
+        UserProfileFact(path="renta_family.gastos_guarderia_reales_2024", value=Decimal("0")),
+        UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),
+        UserProfileFact(path="renta_family.descendientes_menores_3_2024", value=Decimal("0")),
+        UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=Decimal("0")),
+    )
+    facts_by_path = {fact.path: fact for fact in record.facts}
+    facts_by_path.update({fact.path: fact for fact in additions})
+    repository.save(
+        record.model_copy(
+            update={
+                "facts": tuple(facts_by_path[path] for path in sorted(facts_by_path)),
+                "updated_at": datetime.now(UTC),
+            },
+        ),
+    )
+
+
+def _seed_prior_m100_zero_carry() -> None:
+    from ....application.calculations._observations_repository import CalculationObservationRepository
+
+    CalculationObservationRepository().save_observation(
+        RegistryModeloObservation(
+            modelo="100",
+            filing_year=2023,
+            period="0A",
+            observations=registry_grounded_observations(
+                modelo="100",
+                filing_year=2023,
+                period="0A",
+                casilla_values={
+                    "0224": Decimal("0"),
+                    "1388": Decimal("0"),
+                    "1391": Decimal("0"),
+                    "1479": Decimal("0"),
+                    "1553": Decimal("0"),
+                    "1577": Decimal("0"),
+                },
+            ),
+        ),
+        source_kind="app_filing",
+        captured_at=datetime(2024, 6, 30, 12, 0, tzinfo=UTC),
+    )
+
+
 def test_work_calculate_modelo_115_uses_retenciones_aggregation_observation() -> None:
     """M115 CLI calculation consumes persisted URBAN_RENTAL retención evidence."""
 
@@ -289,6 +413,95 @@ def test_work_calculate_modelo_115_uses_retenciones_aggregation_observation() ->
     assert Decimal(casilla_values["02"]) == Decimal("2700.00")
     assert Decimal(casilla_values["03"]) == Decimal("513.00")
     assert Decimal(casilla_values["05"]) == Decimal("513.00")
+
+
+def test_work_calculate_modelo_100_routes_marta_auto_ledger_expenses() -> None:
+    """Marta's public CLI M100 path carries 2024 ledger expenses into 0218/0220/0224."""
+    from ....application.user_profile._orchestration import profile_storage_session
+    from ....core import resolve_active_bucket_id
+
+    _create_profile()
+    work_unit = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "100",
+            "--year",
+            "2024",
+            "--period",
+            "0A",
+            "--revision",
+            "2024",
+        ],
+    )
+    assert work_unit.exit_code == 0, work_unit.output
+    work_unit_payload = _payload(work_unit.output)
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None, "profile create must install an active-profile pointer"
+
+    expense_rows = (
+        _m100_activity_expense_transaction(
+            "m100-expense-office",
+            value_date=date(2024, 2, 20),
+            category=SpendingCategory.MATERIAL_OFICINA,
+            taxable_base=Decimal("500.00"),
+        ),
+        _m100_activity_expense_transaction(
+            "m100-expense-software",
+            value_date=date(2024, 5, 22),
+            category=SpendingCategory.SOFTWARE_SUSCRIPCION,
+            taxable_base=Decimal("700.00"),
+        ),
+        _m100_activity_expense_transaction(
+            "m100-expense-phone",
+            value_date=date(2024, 8, 12),
+            category=SpendingCategory.TELEFONIA_MOVIL,
+            taxable_base=Decimal("300.00"),
+        ),
+        _m100_activity_expense_transaction(
+            "m100-expense-advisory",
+            value_date=date(2024, 11, 8),
+            category=SpendingCategory.ASESORIA_FISCAL,
+            taxable_base=Decimal("900.00"),
+        ),
+    )
+    with profile_storage_session(bucket_id):
+        _seed_m100_profile_facts(bucket_id)
+        _seed_prior_m100_zero_carry()
+        TransactionCatalogueRepository(bucket_id=bucket_id).save(
+            TransactionCatalogue.from_transactions((_m100_activity_income_transaction(), *expense_rows)),
+        )
+        InvoiceCatalogueRepository(bucket_id=bucket_id).save(InvoiceCatalogue())
+        save_usage_ratios(
+            UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("1")}),
+            bucket_id=bucket_id,
+        )
+
+    calculated = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            str(work_unit_payload["work_unit_id"]),
+            "--binding",
+            "renta-2024-modelo-100-estimacion-directa-es-normal=1",
+        ],
+    )
+    assert calculated.exit_code == 0, calculated.output
+    casilla_values = _payload(calculated.output)["casilla_values"]
+
+    assert Decimal(casilla_values["0171"]) == Decimal("12000.00")
+    assert Decimal(casilla_values["0218"]) == Decimal("2400.00")
+    assert Decimal(casilla_values["0220"]) == Decimal("2400.00")
+    assert Decimal(casilla_values["0224"]) == Decimal("9600.00")
 
 
 def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestation_path() -> None:
