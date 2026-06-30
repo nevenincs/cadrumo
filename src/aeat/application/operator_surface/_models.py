@@ -76,12 +76,14 @@ class MountedCommandDomain(StrEnum):
     BUCKET = "bucket"
     AUTH = "auth"
     DIAGNOSTICS = "diagnostics"
+    GOOGLE = "google"
     OVERVIEW = "overview"
     LEDGER = "ledger"
     LIVE = "live"
     MODELO = "modelo"
     REVIEW = "review"
     REGISTRY = "registry"
+    CONTRACT = "contract"
 
 
 class RootSurface(BaseModel):
