@@ -1,4 +1,80 @@
 [[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-130-2024-1t"
+filing_year = 2024
+period = "2024 1T"
+period_kind = "quarterly"
+opens_on = 2024-04-01
+closes_on = 2024-04-22
+payment_cutoff_on = 2024-04-17
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "professional_income_withholding_ge_70pct"
+op = "equals"
+value = false
+explanation = "Autonomo en estimacion directa salvo la excepcion de ingresos profesionales ya retenidos."
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-130-2024-2t"
+filing_year = 2024
+period = "2024 2T"
+period_kind = "quarterly"
+opens_on = 2024-07-01
+closes_on = 2024-07-22
+payment_cutoff_on = 2024-07-17
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "professional_income_withholding_ge_70pct"
+op = "equals"
+value = false
+explanation = "Autonomo en estimacion directa salvo la excepcion de ingresos profesionales ya retenidos."
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-130-2024-3t"
+filing_year = 2024
+period = "2024 3T"
+period_kind = "quarterly"
+opens_on = 2024-10-01
+closes_on = 2024-10-21
+payment_cutoff_on = 2024-10-16
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "professional_income_withholding_ge_70pct"
+op = "equals"
+value = false
+explanation = "Autonomo en estimacion directa salvo la excepcion de ingresos profesionales ya retenidos."
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-130-2024-4t"
+filing_year = 2024
+period = "2024 4T"
+period_kind = "quarterly"
+opens_on = 2025-01-01
+closes_on = 2025-01-30
+payment_cutoff_on = 2025-01-27
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "professional_income_withholding_ge_70pct"
+op = "equals"
+value = false
+explanation = "Autonomo en estimacion directa salvo la excepcion de ingresos profesionales ya retenidos."
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2025-1t"
 filing_year = 2025
 period = "2025 1T"
