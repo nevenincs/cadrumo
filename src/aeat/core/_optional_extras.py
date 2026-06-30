@@ -14,6 +14,10 @@ is the seam every feature boundary calls before its lazy import so a missing
 extra becomes one instructive :class:`MissingOptionalExtraError` naming
 ``pip install aeat[<extra>]`` instead of a raw deep-stack
 ``ModuleNotFoundError``.
+
+These records describe package availability only. They do not decide whether an
+operator has opted into Google export, browser automation, or hosted LLM usage;
+that consent surface is represented separately by :class:`~aeat.core.ServiceCapability`.
 """
 
 from __future__ import annotations
@@ -54,7 +58,11 @@ class OptionalExtra(BaseModel):
 
     @property
     def install_hint(self) -> str:
-        """The exact command that installs this extra."""
+        """Return the exact package-install command for this extra.
+
+        This is a dependency remediation hint, not a runtime provisioning command
+        such as ``playwright install chromium``.
+        """
         return f"pip install aeat[{self.extra}]"
 
 
@@ -77,6 +85,10 @@ class MissingOptionalExtraError(CoreError, ImportError):
     working. Application probes report the same missing package as a
     :class:`aeat.application.provisioning.DependencyStatus`; feature guards raise
     this exception only when the operator reaches the guarded boundary.
+
+    Attributes:
+        extra: Optional-extra registry record that failed the spec-only probe.
+        install_hint: Exact ``pip install aeat[<extra>]`` remediation command.
     """
 
     def __init__(self, extra: OptionalExtra) -> None:
@@ -97,7 +109,9 @@ def optional_extra_available(extra: OptionalExtra) -> bool:
 
     A spec-only check (:func:`importlib.util.find_spec`) — no side effects, no
     heavy module load. Never raises: a missing parent package resolves to
-    ``False``.
+    ``False``. This helper intentionally does not call
+    :func:`require_optional_extra`; probes should report dependency status, not
+    raise feature-boundary refusals.
 
     Args:
         extra: The :class:`OptionalExtra` registry record to probe.
