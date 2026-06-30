@@ -6,8 +6,8 @@ from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M123_2019,
     _COMPUTED_CASILLAS_M123_2024,
     CasillaId,
-    Decimal,
     RegistryValidationError,
+    _assert_engine_closure_matches_extracted_decimal,
     _casilla_id,
     _decimal_inputs_from_extracted_values,
     _parse_extracted_declaracion_values,
@@ -96,15 +96,10 @@ def test_verification_chain_m123_engine_recomputes_closure_casillas(
     for closure_id in closure_ids:
         if closure_id not in extracted:
             continue
-        extracted_val = extracted[closure_id]
-        assert isinstance(extracted_val, Decimal), (
-            f"PARSER-GAP [M123/{pdf_stem}]: casilla {closure_id!r} is not Decimal: {type(extracted_val).__name__!r}"
-        )
-        engine_val = engine_values.get(closure_id)
-        assert engine_val is not None, (
-            f"FORMULA-MISMATCH [M123/{pdf_stem}]: casilla {closure_id!r} absent from engine result."
-        )
-        assert engine_val == extracted_val, (
-            f"FORMULA-MISMATCH [M123/{pdf_stem}]: engine casilla {closure_id!r} = {engine_val!r}, "
-            f"AEAT-printed = {extracted_val!r}.\n  inputs: {inputs}"
+        _assert_engine_closure_matches_extracted_decimal(
+            label=f"M123/{pdf_stem}",
+            engine_values=engine_values,
+            extracted=extracted,
+            casilla_id=closure_id,
+            inputs=inputs,
         )

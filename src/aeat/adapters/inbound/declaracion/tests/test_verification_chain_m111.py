@@ -7,8 +7,8 @@ import pytest
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M111,
     CasillaId,
-    Decimal,
     RegistryValidationError,
+    _assert_engine_closure_matches_extracted_decimal,
     _casilla_id,
     _casilla_ids,
     _decimal_inputs_from_extracted_values,
@@ -78,25 +78,19 @@ def test_verification_chain_m111_engine_recomputes_closure_casillas_28_and_30(
     has_leaf_inputs = bool(inputs.keys() & _M111_RETENCIONES_TOTAL_LEAVES)
 
     if _M111_RETENCIONES_TOTAL_CASILLA in extracted and has_leaf_inputs:
-        extracted_28 = extracted[_M111_RETENCIONES_TOTAL_CASILLA]
-        assert isinstance(extracted_28, Decimal)
-        engine_28 = engine_values.get(_M111_RETENCIONES_TOTAL_CASILLA)
-        assert engine_28 is not None, f"FORMULA-MISMATCH [{pdf_stem}]: casilla '28' absent from engine result."
-        assert engine_28 == extracted_28, (
-            f"FORMULA-MISMATCH [{pdf_stem}]: engine casilla '28' = {engine_28!r}, "
-            f"AEAT-printed = {extracted_28!r}.\n"
-            f"  diff: {engine_28 - extracted_28!r}\n"
-            f"  inputs: {inputs}"
+        _assert_engine_closure_matches_extracted_decimal(
+            label=pdf_stem,
+            engine_values=engine_values,
+            extracted=extracted,
+            casilla_id=_M111_RETENCIONES_TOTAL_CASILLA,
+            inputs=inputs,
         )
 
     if _M111_RESULTADO_CASILLA in extracted and has_leaf_inputs:
-        extracted_30 = extracted[_M111_RESULTADO_CASILLA]
-        assert isinstance(extracted_30, Decimal)
-        engine_30 = engine_values.get(_M111_RESULTADO_CASILLA)
-        assert engine_30 is not None, f"FORMULA-MISMATCH [{pdf_stem}]: casilla '30' absent from engine result."
-        assert engine_30 == extracted_30, (
-            f"FORMULA-MISMATCH [{pdf_stem}]: engine casilla '30' = {engine_30!r}, "
-            f"AEAT-printed = {extracted_30!r}.\n"
-            f"  diff: {engine_30 - extracted_30!r}\n"
-            f"  inputs: {inputs}"
+        _assert_engine_closure_matches_extracted_decimal(
+            label=pdf_stem,
+            engine_values=engine_values,
+            extracted=extracted,
+            casilla_id=_M111_RESULTADO_CASILLA,
+            inputs=inputs,
         )
