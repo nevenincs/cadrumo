@@ -24,9 +24,9 @@ Declare a per-namespace custody disposition in the canonical storage namespace r
 
 Bump the bundle and archive schema versions, delete the old shapes, and extend the portable-export model with the generic carried-object set and coverage manifest.
 
-- [ ] `P02.S04` - Add typed CarriedSecureObject and CoverageManifest models; `src/aeat/domain/user_profile/_portable_export.py`.
-- [ ] `P02.S05` - Bump bundle_schema_version to 3 and add carried_objects and coverage_manifest fields to UserProfilePortableExport; `src/aeat/domain/user_profile/_portable_export.py`.
-- [ ] `P02.S06` - Bump _ARCHIVE_SCHEMA_VERSION to 2 and narrow SUPPORTED_BUNDLE_SCHEMA_VERSIONS to the single current version, deleting old-shape tolerance; `src/aeat/application/bucket_maintenance/_service.py`.
+- [x] `P02.S04` - Add typed CarriedSecureObject and CoverageManifest models; `src/aeat/domain/user_profile/_portable_export.py`.
+- [x] `P02.S05` - Bump bundle_schema_version to 3 and add carried_objects and coverage_manifest fields to UserProfilePortableExport; `src/aeat/domain/user_profile/_portable_export.py`.
+- [x] `P02.S06` - Bump _ARCHIVE_SCHEMA_VERSION to 2 and narrow SUPPORTED_BUNDLE_SCHEMA_VERSIONS to the single current version, deleting old-shape tolerance; `src/aeat/application/bucket_maintenance/_service.py`.
 
 ### Phase `P03` - transport-aware serialise
 

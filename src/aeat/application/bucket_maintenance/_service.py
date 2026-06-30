@@ -35,17 +35,21 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ..user_profile import (
-    delete_profile_with_lifecycle_span,
+from ..user_profile._bundle import (
+    SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
     deserialize_profile_bundle,
-    missing_filing_baseline_flags,
-    profile_create_storage_span,
-    profile_storage_session,
-    record_to_path_values,
-    remove_profile_bucket_directory,
-    rename_profile,
     serialize_profile_bundle,
 )
+from ..user_profile._filing_baseline import missing_filing_baseline_flags
+from ..user_profile._orchestration import (
+    delete_profile_with_lifecycle_span,
+    profile_create_storage_span,
+    profile_storage_session,
+    register_active_profile,
+    remove_profile_bucket_directory,
+    rename_profile,
+)
+from ..user_profile._projections import record_to_path_values
 from ..workflow import read_profile_bucket_by_id
 from ._contracts import (
     BrowseBucketCommand,
@@ -66,14 +70,14 @@ if TYPE_CHECKING:  # pragma: no cover - import-cycle guard
     from datetime import datetime
 
     from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-    from ...domain.user_profile import UserProfilePortableExport
+    from ...domain.user_profile._portable_export import UserProfilePortableExport
 
 
 _RENAME_PAYLOAD_VERSION = 1
 _DELETE_PAYLOAD_VERSION = 1
 _EXPORT_PAYLOAD_VERSION = 1
 _IMPORT_PAYLOAD_VERSION = 1
-_ARCHIVE_SCHEMA_VERSION = 1
+_ARCHIVE_SCHEMA_VERSION = 2
 _RECOVERY_WRAP_SALT_BYTES = 16
 
 
@@ -138,7 +142,7 @@ class BucketMaintenanceService:
         """
         pointer = read_profile_bucket_by_id(command.bucket_id)
         if pointer is None:
-            from ...domain.user_profile import ProfileNotFoundError
+            from ...domain.user_profile._errors import ProfileNotFoundError
 
             raise ProfileNotFoundError(
                 translated_message="application.user_profile.errors.no_active_profile_selected",
@@ -213,7 +217,7 @@ class BucketMaintenanceService:
             )
         pointer = read_profile_bucket_by_id(command.bucket_id)
         if pointer is None:
-            from ...domain.user_profile import ProfileNotFoundError
+            from ...domain.user_profile._errors import ProfileNotFoundError
 
             raise ProfileNotFoundError(
                 translated_message="application.user_profile.errors.no_active_profile_selected",
@@ -314,7 +318,7 @@ class BucketMaintenanceService:
 
         pointer = read_profile_bucket_by_id(command.bucket_id)
         if pointer is None:
-            from ...domain.user_profile import ProfileNotFoundError
+            from ...domain.user_profile._errors import ProfileNotFoundError
 
             raise ProfileNotFoundError(
                 translated_message="application.user_profile.errors.no_active_profile_selected",
@@ -410,7 +414,7 @@ class BucketMaintenanceService:
         from ...adapters.persistence.storage.bucket import read_sealed_archive
         from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record
         from ...adapters.persistence.storage.master_key import derive_kek_with_params
-        from ...domain.user_profile import UserProfilePortableExport
+        from ...domain.user_profile._portable_export import UserProfilePortableExport
 
         contents = read_sealed_archive(command.source_path)
         header = contents.header
@@ -459,6 +463,17 @@ class BucketMaintenanceService:
                 translated_message="application.bucket_maintenance.errors.import_payload_invalid",
                 context={"bucket_id": header.bucket_id},
             ) from exc
+
+        if bundle.bundle_schema_version not in SUPPORTED_BUNDLE_SCHEMA_VERSIONS:
+            raise BucketImportError(
+                translated_message="application.user_profile.errors.unsupported_bundle_schema_version",
+                context={
+                    "bundle_schema_version": str(bundle.bundle_schema_version),
+                    "supported_versions": ",".join(
+                        str(version) for version in sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)
+                    ),
+                },
+            )
 
         self._validate_imported_profile_filing_baseline(bundle)
         if existing is None:
@@ -530,7 +545,6 @@ class BucketMaintenanceService:
 
     @staticmethod
     def _provision_imported_bucket(bundle: UserProfilePortableExport) -> None:
-        from ..user_profile import register_active_profile
         from ..workflow import workflow_state_repository
 
         profile_id = bundle.profile.profile_id
@@ -553,7 +567,7 @@ def recovery_wrap_passphrase_present(command: ExportBucketCommand) -> bool:
 
 
 def _archive_associated_data(bucket_id: str, manifest_digest: str) -> bytes:
-    return f"aeat.bucket-maintenance.archive.v1:{bucket_id}:{manifest_digest}".encode()
+    return f"aeat.bucket-maintenance.archive.v2:{bucket_id}:{manifest_digest}".encode()
 
 
 def _format_missing_flags(missing_flags: tuple[str, ...]) -> str:
