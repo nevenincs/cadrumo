@@ -30,7 +30,7 @@ from ._runtime_graph import formula_evaluation_order
 from ._schema import FormulaExpression, ParameterDefinition, RegistrySnapshot
 
 _ZERO = Decimal("0")
-read_parameter = _ops.read_parameter
+read_parameter, _resolve_bracket = _ops.read_parameter, _ops.resolve_bracket
 
 # M210 IRNR sentinel rate values. Emitted by
 # ``m210_resolve_rate`` when a deterministic rate cannot be resolved
