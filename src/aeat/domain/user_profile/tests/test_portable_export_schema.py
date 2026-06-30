@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _INSTANT = datetime(2026, 6, 30, 10, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "88888888-8888-4888-8888-888888888888"
-_HASHED_OBJECT_KEY_B64 = base64.b64encode(b"k" * 32).decode("ascii")
+_OBJECT_KEY = "catalogue"
 _BINARY_PAYLOAD = b"\x00not-json\xffattachment-bytes"
 _BINARY_PAYLOAD_B64 = base64.b64encode(_BINARY_PAYLOAD).decode("ascii")
 
@@ -49,7 +49,7 @@ def test_portable_export_v3_defaults_keep_empty_custody_fields_json_valid() -> N
 def test_carried_secure_object_and_coverage_manifest_round_trip_binary_payload() -> None:
     carried = CarriedSecureObject(
         namespace="aeat.domain.buckets.event_history",
-        hashed_object_key_b64=_HASHED_OBJECT_KEY_B64,
+        object_key=_OBJECT_KEY,
         classification=SensitivityClass.FINANCIAL,
         schema_version=1,
         written_at=_INSTANT,
@@ -71,7 +71,7 @@ def test_carried_secure_object_and_coverage_manifest_round_trip_binary_payload()
     reloaded = UserProfilePortableExport.model_validate_json(bundle.model_dump_json())
 
     assert reloaded.carried_objects == (carried,)
-    assert reloaded.carried_objects[0].hashed_object_key == b"k" * 32
+    assert reloaded.carried_objects[0].object_key == _OBJECT_KEY
     assert reloaded.carried_objects[0].payload == _BINARY_PAYLOAD
     assert reloaded.coverage_manifest.custody_profile == "full"
     assert reloaded.coverage_manifest.carried_namespaces == ("aeat.domain.buckets.event_history",)
@@ -96,7 +96,7 @@ def test_carried_secure_object_rejects_invalid_base64_payload() -> None:
     with pytest.raises(ValidationError, match="payload_b64 must be canonical base64"):
         CarriedSecureObject(
             namespace="aeat.domain.buckets.event_history",
-            hashed_object_key_b64=_HASHED_OBJECT_KEY_B64,
+            object_key=_OBJECT_KEY,
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
             written_at=_INSTANT,
@@ -104,11 +104,11 @@ def test_carried_secure_object_rejects_invalid_base64_payload() -> None:
         )
 
 
-def test_carried_secure_object_rejects_non_hmac_key_length() -> None:
-    with pytest.raises(ValidationError, match="hashed_object_key_b64 must decode to 32 bytes"):
+def test_carried_secure_object_rejects_blank_object_key() -> None:
+    with pytest.raises(ValidationError):
         CarriedSecureObject(
             namespace="aeat.domain.buckets.event_history",
-            hashed_object_key_b64=base64.b64encode(b"short").decode("ascii"),
+            object_key="   ",
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
             written_at=_INSTANT,
