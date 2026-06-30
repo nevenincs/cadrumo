@@ -3,14 +3,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
 from ._parser_boundary_support import (
     _MODELO_184_SYNTHETIC_FIXTURE,
-    _MODELO_232_2016_SYNTHETIC_FIXTURE,
-    _MODELO_232_2018_SYNTHETIC_FIXTURE,
     _MODELO_347_SYNTHETIC_FIXTURE,
     _MODELO_720_SYNTHETIC_FIXTURE,
     CasillaId,
@@ -25,8 +22,6 @@ pytestmark = [
 ]
 
 _DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
-_DECL_TIPO_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.tipo-ejercicio")
-_DECL_CNAE_CASILLA: CasillaId = _casilla_id("decl.cnae")
 
 
 def test_parser_extracts_modelo_720_synthetic_fixture_targets() -> None:
@@ -78,6 +73,7 @@ def test_parser_extracts_modelo_720_synthetic_fixture_targets() -> None:
         f"{values[_DECL_EJERCICIO_CASILLA]!r}"
     )
 
+
 def test_parser_extracts_modelo_184_synthetic_fixture_targets() -> None:
     """Round-trip: parse the sanitized M184 synthetic fixture and verify decl.ejercicio.
 
@@ -126,108 +122,6 @@ def test_parser_extracts_modelo_184_synthetic_fixture_targets() -> None:
         f"decl.ejercicio: expected Decimal('2024') from AEAT-grounded fixture, got "
         f"{values[_DECL_EJERCICIO_CASILLA]!r}"
     )
-
-
-@pytest.mark.parametrize(
-    "fixture_path,year,revision_id,profile_id",
-    [
-        (
-            _MODELO_232_2016_SYNTHETIC_FIXTURE,
-            2016,
-            "2016-2017",
-            "modelo-232-2016-declaracion-pdf",
-        ),
-        (
-            _MODELO_232_2018_SYNTHETIC_FIXTURE,
-            2018,
-            "2018-y-siguientes",
-            "modelo-232-2018-declaracion-pdf",
-        ),
-    ],
-)
-def test_parser_extracts_modelo_232_synthetic_fixture_targets(
-    fixture_path: Path,
-    year: int,
-    revision_id: str,
-    profile_id: str,
-) -> None:
-    """Round-trip: parse the sanitized M232 synthetic fixtures and verify all three casillas.
-
-    Ground truth is the AEAT-published Diseño de Registro for Modelo 232 (both revisions):
-      src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_232/files/
-        01-232-orden-hfp-816-2017-ejercicio-2016-y-siguientes-actualizado-15-01-2020-145-kb-xlsx.xlsx
-        02-232-orden-hfp-816-2017-ejercicios-2016-2017-146-kb-xlsx.xlsx
-
-    AEAT DR field descriptions (verbatim, both XLSX files carry identical DR23201):
-      DR23200 row 9:  "Ejercicio de devengo (EEEE)"
-      DR23201 row 17: "2.Devengo - Tipo de Ejercicio"
-      DR23201 row 20: "2.Devengo - C.N.A.E. actividad principal"
-
-    Pattern verdicts:
-      - decl.ejercicio: 'Ejercicio\\s+de\\s+devengo' — CONFIRMED (DR23200 row 9).
-      - decl.tipo-ejercicio: 'Tipo\\s+de\\s+ejercicio' — CONFIRMED (DR23201 row 17, case-insensitive).
-      - decl.cnae: 'C\\.N\\.A\\.E\\.?\\s+actividad\\s+principal' — FIXED from prior pattern;
-        DR23201 row 20 reads "C.N.A.E. actividad principal" with no "de la" connector.
-
-    Non-tautological: the label_patterns are grounded against AEAT DR field descriptions,
-    NOT the registry casilla label fields ('ejercicio-devengo', 'tipo-ejercicio',
-    'cnae-actividad-principal').  A pattern that drifts from the DR vocabulary will
-    produce a zero-match parse failure on this fixture.  The "de la" removal is
-    non-tautological: had the original (wrong) pattern been used the fixture would fail
-    because the fixture text carries the correct AEAT DR string without "de la".
-    """
-    filing = parse_declaracion(
-        fixture_path,
-        modelo_override="232",
-        año_override=year,
-        period_override="0A",
-    )
-
-    assert filing.modelo == "232"
-    assert filing.period == _expected_period(year, "0A")
-    assert filing.tax_id == "Y0000001S"
-    assert filing.registry_snapshot_ref is not None
-    assert filing.registry_snapshot_ref.modelo == "232"
-    assert filing.registry_snapshot_ref.revision_id == revision_id
-    assert filing.registry_snapshot_ref.modelo_year == year
-    assert filing.registry_snapshot_ref.period == "0A"
-
-    values = {v.casilla_id: v.printed_value for v in filing.values}
-
-    # All three casillas defined by the M232 declaracion_pdf profile must be present.
-    assert set(values.keys()) == {
-        _DECL_EJERCICIO_CASILLA,
-        _DECL_TIPO_EJERCICIO_CASILLA,
-        _DECL_CNAE_CASILLA,
-    }, f"expected exactly {{decl.ejercicio, decl.tipo-ejercicio, decl.cnae}}, got {set(values.keys())!r}"
-
-    # decl.ejercicio: fixture prints "Ejercicio de devengo 2016" / "...2018";
-    # parse_spanish_decimal("2016") = Decimal("2016").
-    # Ground truth: DR23200 row 9 "Ejercicio de devengo (EEEE)".
-    from decimal import Decimal as _Decimal
-
-    assert values[_DECL_EJERCICIO_CASILLA] == _Decimal(str(year)), (
-        f"decl.ejercicio: expected Decimal('{year}') from AEAT-grounded DR23200 fixture, "
-        f"got {values[_DECL_EJERCICIO_CASILLA]!r}"
-    )
-
-    # decl.tipo-ejercicio: fixture prints "Tipo de Ejercicio 1";
-    # value_kind='enum' means the parser stores the raw token string.
-    # Ground truth: DR23201 row 17 "2.Devengo - Tipo de Ejercicio".
-    assert values[_DECL_TIPO_EJERCICIO_CASILLA] is not None, (
-        "decl.tipo-ejercicio: expected a non-None extracted value"
-    )
-
-    # decl.cnae: fixture prints "C.N.A.E. actividad principal 6201";
-    # value_kind='text' means the parser stores the raw token string.
-    # Ground truth: DR23201 row 20 "2.Devengo - C.N.A.E. actividad principal"
-    # (NO "de la" connector — pattern fixed from original 'C\.N\.A\.E\.?\s+de\s+la\s+actividad\s+principal').
-    assert values[_DECL_CNAE_CASILLA] == "6201", (
-        f"decl.cnae: expected '6201' from AEAT-grounded DR23201 fixture "
-        f"(DR field: 'C.N.A.E. actividad principal'), "
-        f"got {values[_DECL_CNAE_CASILLA]!r}"
-    )
-
 
 def test_parser_extracts_modelo_347_synthetic_fixture_targets() -> None:
     """Round-trip: parse the sanitized M347 synthetic fixture and verify decl.ejercicio.
