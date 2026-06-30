@@ -132,7 +132,7 @@ def _validate_revision_surface_sections(
         failures,
         prefix=prefix,
         revision=revision,
-        providers=context.providers,
+        provider_by_id=context.provider_by_id,
         casillas=context.casillas,
         resolvable_values=context.resolvable_values,
         parameters=context.parameters,
