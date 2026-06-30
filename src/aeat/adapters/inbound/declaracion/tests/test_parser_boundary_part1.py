@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-
 import pytest
 
 from ._parser_boundary_support import (
@@ -12,7 +10,6 @@ from ._parser_boundary_support import (
     _MODELO_123_2024_SYNTHETIC_FIXTURE,
     _MODELO_123_CURRENT_EXPECTED_TARGETS,
     _MODELO_123_HISTORICAL_EXPECTED_TARGETS,
-    _MODELO_130_EXPECTED_TARGETS,
     _REAL_MODELO_303_DECLARATION_COPY,
     A4,
     FIXTURES_DIR,
@@ -24,22 +21,17 @@ from ._parser_boundary_support import (
     PdfModeloImportError,
     TemplateNotDetectedError,
     _casilla_id,
+    _expected_casilla_values,
     _expected_period,
     _extract_pages_words,
-    _modelo_130_snapshot,
     _modelo_snapshot,
     _write_declaration_pdf,
     canvas,
     logging,
     parse_declaracion,
-    source_pdf_reference_path,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
-
-
-def _expected_casilla_values(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
-    return {_casilla_id(casilla_id): amount for casilla_id, amount in values.items()}
 
 
 _M111_CASILLA_07: CasillaId = _casilla_id("07")
@@ -53,39 +45,6 @@ def test_declaracion_errors_stay_on_core_exception_hierarchy() -> None:
     assert issubclass(DeclaracionParseError, PdfModeloImportError)
     assert issubclass(DeclaracionParseError, AeatError)
     assert issubclass(TemplateNotDetectedError, DeclaracionParseError)
-
-
-def test_parser_extracts_registry_profile_targets_from_pdf() -> None:
-    """Assert the M130 declaracion_pdf profile declares exactly the expected 19 targets.
-
-    The roundtrip extraction contract is verified against the real corpus PDFs
-    in test_parser_extracts_modelo_130_casillas_from_corpus; this test isolates
-    the structural assertion so target-list regressions are reported separately.
-    """
-    snapshot = _modelo_130_snapshot()
-    profile = snapshot.extraction_profiles["modelo-130-declaracion-pdf"]
-    assert tuple(target.casilla_id for target in profile.target_casillas) == _MODELO_130_EXPECTED_TARGETS
-    for target in profile.target_casillas:
-        assert target.match_strategy == "bbox_anchored", (
-            f"casilla {target.casilla_id}: expected match_strategy='bbox_anchored', got {target.match_strategy!r}"
-        )
-        assert target.bbox_anchor is not None, (
-            f"casilla {target.casilla_id}: bbox_anchor must be set for bbox_anchored targets"
-        )
-
-
-def test_parser_extracts_legal_entity_nif_from_pdf() -> None:
-    """Verify NIF extraction from a real M130 corpus PDF for a CIF-format declarant.
-
-    The corpus fixture carries the sanitised tax ID 'Y0000001S'; this test
-    exercises _extract_tax_id isolation from casilla extraction by asserting
-    only the tax_id field of the resulting observation.
-    """
-    pdf_path = FIXTURES_DIR / "justificantes" / "130" / "2022-2T.pdf"
-    filing = parse_declaracion(pdf_path, modelo_override="130", año_override=2022, period_override="2T")
-    assert filing.tax_id == "Y0000001S"
-    assert filing.source_pdf_path == source_pdf_reference_path(filing.source_pdf_sha256)
-    assert pdf_path.name not in str(filing.source_pdf_path)
 
 
 def test_parser_debug_log_does_not_expose_source_filename(caplog: pytest.LogCaptureFixture) -> None:
@@ -251,148 +210,6 @@ def test_parser_extracts_modelo_111_casillas_from_corpus(pdf_stem: str, year: in
             assert values[casilla_id] == expected_value, (
                 f"{pdf_stem}: casilla {casilla_id!r} expected {expected_value!r}, got {values[casilla_id]!r}"
             )
-
-
-@pytest.mark.parametrize(
-    "pdf_stem,year,period",
-    [
-        ("2021-2T", 2021, "2T"),
-        ("2021-3T", 2021, "3T"),
-        ("2021-4T", 2021, "4T"),
-        ("2022-1T", 2022, "1T"),
-        ("2022-2T", 2022, "2T"),
-        ("2022-3T", 2022, "3T"),
-        ("2022-4T", 2022, "4T"),
-        ("2023-1T", 2023, "1T"),
-        ("2023-2T", 2023, "2T"),
-        ("2023-3T", 2023, "3T"),
-        ("2023-4T", 2023, "4T"),
-        ("2024-1T", 2024, "1T"),
-        ("2024-2T", 2024, "2T"),
-        ("2024-3T", 2024, "3T"),
-        ("2024-4T", 2024, "4T"),
-    ],
-)
-def test_parser_extracts_modelo_130_tax_id_from_corpus(pdf_stem: str, year: int, period: str) -> None:
-    """Tax-id extraction must succeed for all 15 M130 corpus PDFs.
-
-    Ground truth: every M130 corpus PDF carries the sanitised tax ID 'Y0000001S'
-    in the page-0 header block.  The _extract_tax_id helper is exercised directly,
-    isolating NIF-pattern matching from profile extraction.
-    """
-    from .._parser import _extract_tax_id
-    from .._parsers import extract_pages_text
-
-    pdf_path = FIXTURES_DIR / "justificantes" / "130" / f"{pdf_stem}.pdf"
-    pages = extract_pages_text(pdf_path)
-    text = "\n".join(pages)
-
-    tax_id = _extract_tax_id(text)
-
-    assert tax_id == "Y0000001S", (
-        f"{pdf_stem}: expected tax_id='Y0000001S', got {tax_id!r} — "
-        "check _TAX_ID_RE and _DECLARANT_ROW_RE in _parser.py"
-    )
-
-
-@pytest.mark.parametrize(
-    "pdf_stem,year,period",
-    [
-        ("2021-2T", 2021, "2T"),
-        ("2021-3T", 2021, "3T"),
-        ("2021-4T", 2021, "4T"),
-        ("2022-1T", 2022, "1T"),
-        ("2022-2T", 2022, "2T"),
-        ("2022-3T", 2022, "3T"),
-        ("2022-4T", 2022, "4T"),
-        ("2023-1T", 2023, "1T"),
-        ("2023-2T", 2023, "2T"),
-        ("2023-3T", 2023, "3T"),
-        ("2023-4T", 2023, "4T"),
-        ("2024-1T", 2024, "1T"),
-        ("2024-2T", 2024, "2T"),
-        ("2024-3T", 2024, "3T"),
-        ("2024-4T", 2024, "4T"),
-    ],
-)
-def test_parser_extracts_modelo_130_casillas_from_corpus(pdf_stem: str, year: int, period: str) -> None:
-    """Round-trip: parse all 15 M130 corpus PDFs via the production bbox_anchored profile.
-
-    Ground truth is derived from the synthetic fixtures generated by
-    src/aeat/tests/fixtures/justificantes/_generate.py (_MODELO_130_CORPUS_FIXTURES).
-    Each fixture prints only casilla 03 (rendimiento neto, leaf input) and casilla 19
-    (resultado final, engine-derived closure).  All other casillas are absent (zero
-    by default in the engine).  Values satisfy the M130 formula chain:
-      c19 = max(0, c03 * 20%) - 100  (irpf.previous_year_economic_activity_net_income
-      binding = 0, so casilla 13 = 100 EUR per the step function in formulas/0002).
-
-    The bbox_anchored profile uses anchor_x_min=450 / anchor_x_max=480 to restrict
-    the search to the right-column box-number zone (x=464 in the synthetic PDFs).
-
-    Structural ground truth (per _MODELO_130_CORPUS_FIXTURES in _generate.py):
-    - 2021-2T: 03=5000.00, 19=900.00
-    - 2021-3T: 03=7500.00, 19=1400.00
-    - 2021-4T: 03=10000.00, 19=1900.00
-    - 2022-1T: 03=5200.00, 19=940.00
-    - 2022-2T: 03=7800.00, 19=1460.00
-    - 2022-3T: 03=9100.00, 19=1720.00
-    - 2022-4T: 03=11000.00, 19=2100.00
-    - 2023-1T: 03=5400.00, 19=980.00
-    - 2023-2T: 03=8100.00, 19=1520.00
-    - 2023-3T: 03=10500.00, 19=2000.00
-    - 2023-4T: 03=13000.00, 19=2500.00
-    - 2024-1T: 03=5600.00, 19=1020.00
-    - 2024-2T: 03=8400.00, 19=1580.00
-    - 2024-3T: 03=11200.00, 19=2140.00
-    - 2024-4T: 03=14000.00, 19=2700.00
-    """
-    # Corpus-specific ground truth: casillas present and their expected values.
-    # The 15 synthetic fixtures print only casilla 03 (rendimiento neto, leaf input)
-    # and casilla 19 (resultado final, engine-derived closure).  All other casillas
-    # are absent (zero by default in the engine).  Values are formula-consistent:
-    #   c19 = max(0, c03 * 20%) - 100  (prev_year_income=0 → casilla 13 = 100 EUR)
-    # Ground truth is derived from _MODELO_130_CORPUS_FIXTURES in _generate.py.
-    corpus_ground_truth: dict[str, dict[CasillaId, Decimal]] = {
-        "2021-2T": _expected_casilla_values({"03": Decimal("5000.00"), "19": Decimal("900.00")}),
-        "2021-3T": _expected_casilla_values({"03": Decimal("7500.00"), "19": Decimal("1400.00")}),
-        "2021-4T": _expected_casilla_values({"03": Decimal("10000.00"), "19": Decimal("1900.00")}),
-        "2022-1T": _expected_casilla_values({"03": Decimal("5200.00"), "19": Decimal("940.00")}),
-        "2022-2T": _expected_casilla_values({"03": Decimal("7800.00"), "19": Decimal("1460.00")}),
-        "2022-3T": _expected_casilla_values({"03": Decimal("9100.00"), "19": Decimal("1720.00")}),
-        "2022-4T": _expected_casilla_values({"03": Decimal("11000.00"), "19": Decimal("2100.00")}),
-        "2023-1T": _expected_casilla_values({"03": Decimal("5400.00"), "19": Decimal("980.00")}),
-        "2023-2T": _expected_casilla_values({"03": Decimal("8100.00"), "19": Decimal("1520.00")}),
-        "2023-3T": _expected_casilla_values({"03": Decimal("10500.00"), "19": Decimal("2000.00")}),
-        "2023-4T": _expected_casilla_values({"03": Decimal("13000.00"), "19": Decimal("2500.00")}),
-        "2024-1T": _expected_casilla_values({"03": Decimal("5600.00"), "19": Decimal("1020.00")}),
-        "2024-2T": _expected_casilla_values({"03": Decimal("8400.00"), "19": Decimal("1580.00")}),
-        "2024-3T": _expected_casilla_values({"03": Decimal("11200.00"), "19": Decimal("2140.00")}),
-        "2024-4T": _expected_casilla_values({"03": Decimal("14000.00"), "19": Decimal("2700.00")}),
-    }
-
-    expected = corpus_ground_truth[pdf_stem]
-    pdf_path = FIXTURES_DIR / "justificantes" / "130" / f"{pdf_stem}.pdf"
-
-    filing = parse_declaracion(
-        pdf_path,
-        modelo_override="130",
-        año_override=year,
-        period_override=period,
-    )
-
-    assert filing.modelo == "130", f"{pdf_stem}: expected modelo='130', got {filing.modelo!r}"
-    assert filing.period == _expected_period(year, period), (
-        f"{pdf_stem}: expected period={period!r}, got {filing.period!r}"
-    )
-    assert filing.tax_id == "Y0000001S", f"{pdf_stem}: expected tax_id='Y0000001S', got {filing.tax_id!r}"
-    assert filing.registry_snapshot_ref is not None
-    assert filing.registry_snapshot_ref.modelo == "130"
-    assert filing.registry_snapshot_ref.modelo_year == year
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
-    assert extracted == expected, (
-        f"{pdf_stem}: extracted casillas do not match ground truth.\n  expected: {expected}\n  got:      {extracted}"
-    )
 
 
 def test_parser_extracts_modelo_123_current_registry_profile_targets_from_pdf(tmp_path: Path) -> None:

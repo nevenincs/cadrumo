@@ -2,14 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-
-from ._parser_boundary_support import CasillaId, Decimal, _casilla_id
-
-
-def _expected_casilla_values(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
-    return {_casilla_id(casilla_id): amount for casilla_id, amount in values.items()}
-
+from ._parser_boundary_support import CasillaId, _casilla_id
 
 _M303_CASILLA_27: CasillaId = _casilla_id("27")
 _M303_CASILLA_29: CasillaId = _casilla_id("29")

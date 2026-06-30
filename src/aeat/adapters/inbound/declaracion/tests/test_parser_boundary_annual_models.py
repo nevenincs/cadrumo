@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from ._parser_boundary_part2_support import _expected_casilla_values
 from ._parser_boundary_support import (
     _REAL_MODELO_190_DECLARATION_COPY,
     FIXTURES_DIR,
     CasillaId,
     Decimal,
+    _expected_casilla_values,
     _expected_period,
     parse_declaracion,
 )
