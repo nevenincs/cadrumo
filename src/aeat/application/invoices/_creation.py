@@ -26,7 +26,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core.aggregation import IntracomOperationType
+from ...core import IntracomOperationType
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,

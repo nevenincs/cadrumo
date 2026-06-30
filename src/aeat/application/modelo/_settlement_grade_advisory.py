@@ -13,8 +13,8 @@ case.
 
 This module surfaces that STRUCTURAL gap on the calculate path as a non-blocking
 :class:`aeat.application.aggregation.CalculationSourceDiagnostic`, grounded in
-the loaded :class:`aeat.domain.calculations.registry.ModeloRevision` casilla
-``input_kind`` and its :class:`aeat.domain.calculations.registry.InputKind`
+the loaded :class:`ModeloRevision` casilla ``input_kind`` and its
+:class:`aeat.domain.calculations.registry.InputKind`
 value (format-agnostic: inline and fragmented registry content have already
 been merged) -- never the formula output, so it is non-tautological. It is the
 structural complement to the value-level settlement-completeness ADVISORY predicate
@@ -75,9 +75,8 @@ def collect_settlement_not_computed_diagnostics(
     chain yields no advisory (not a partial-settlement calc surface).
 
     Args:
-        revision: The :class:`aeat.domain.calculations.registry.ModeloRevision`
-            whose settlement casillas are inspected (from the loaded,
-            format-agnostic snapshot).
+        revision: The :class:`ModeloRevision` whose settlement casillas are
+            inspected (from the loaded, format-agnostic snapshot).
 
     Returns:
         Tuple of

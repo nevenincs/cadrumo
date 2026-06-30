@@ -1,7 +1,7 @@
 """Calculate-path collector for registry-authored official-box advisories.
 
 The collector is intentionally revision-driven: it scans the
-:class:`aeat.domain.calculations.registry.ModeloRevision` for ADVISORY ``implies_any_nonzero`` verification
+:class:`ModeloRevision` for ADVISORY ``implies_any_nonzero`` verification
 predicates and mirrors the same predicate shape as a non-blocking
 :class:`aeat.application.aggregation.CalculationSourceDiagnostic` on the
 calculate path. The verification predicate remains the single source of truth
@@ -49,12 +49,11 @@ def collect_official_box_unpopulated_diagnostics(
     can instruct the transcription.
 
     Args:
-        revision: The :class:`aeat.domain.calculations.registry.ModeloRevision`
-            whose ADVISORY ``implies_any_nonzero`` predicates are evaluated. If
-            the revision has retired those predicates, no diagnostic is emitted.
-        casilla_values: The computed engine values keyed by
-            :class:`aeat.domain.calculations.registry.CasillaId` and used to
-            test the predicates, so both the semantic antecedent (e.g.
+        revision: The :class:`ModeloRevision` whose ADVISORY
+            ``implies_any_nonzero`` predicates are evaluated. If the revision
+            has retired those predicates, no diagnostic is emitted.
+        casilla_values: The computed engine values keyed by ``CasillaId`` and
+            used to test the predicates, so both the semantic antecedent (e.g.
             ``iva.cuota-devengada-total``) and the official box ids (e.g.
             ``09``) resolve.
 

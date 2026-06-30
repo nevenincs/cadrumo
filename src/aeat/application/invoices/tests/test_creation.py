@@ -15,8 +15,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
-from ....core.aggregation import IntracomOperationType
+from ....core import IntracomOperationType, Period
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import load_modelo_path
 from ....domain.invoices import (

@@ -10,13 +10,16 @@ registry-known numeric forms. Applicability checks derive a profile projection
 from the active workflow state, then ask the registry-owned applicability rules
 whether the requested modelo is excluded. The foral check delegates to the
 canonical tax-region parser so the CLI renders the same refusal text as profile
-setup.
+setup. Once these CLI policy guards pass,
+:func:`aeat.application.modelo.create_work_unit` performs the application
+readiness and registry revision checks before inserting the
+:class:`aeat.domain.modelos.WorkUnit`.
 
 See Also:
     :mod:`aeat.entrypoints.cli._modelo_work_lifecycle_cli`:
         Calls these guards from ``app modelo work create``.
-    :mod:`aeat.domain.calculations.registry.applicability`:
-        Public bridge for registry-owned modelo applicability rules.
+    :func:`aeat.domain.calculations.registry.derive_modelo_applicability`:
+        Registry-owned modelo applicability classifier used by this guard.
     :func:`aeat.domain.contribuyente.parse_tax_region`:
         Canonical CCAA parser that raises foral-regime refusals.
 """
@@ -64,7 +67,7 @@ def modelo_work_create_refusal_locale_key(modelo: str) -> str | None:
     refused by this policy surface.
 
     See Also:
-        :class:`Modelo`:
+        :class:`aeat.core.Modelo`:
             Closed modelo enum used for the core stub-only entries.
         :mod:`aeat.entrypoints.cli._modelo_work_lifecycle_cli`:
             Converts the locale key into a typed CLI refusal.
@@ -87,9 +90,9 @@ def modelo_work_create_applicability_refusal(
     When ``allow_not_applicable`` is true, the guard deliberately returns
     ``None`` so the CLI can provision the work unit and record that the operator
     bypassed the applicability guard. Otherwise the active profile record is
-    projected into taxpayer facts and checked against the registry-owned
-    applicability rules. Only ``NOT_APPLICABLE`` and
-    ``ATTRIBUTION_PASS_THROUGH`` verdicts block creation.
+    projected into :class:`aeat.domain.deadlines.TaxpayerProfile` facts and
+    checked against the registry-owned applicability rules. Only
+    ``NOT_APPLICABLE`` and ``ATTRIBUTION_PASS_THROUGH`` verdicts block creation.
 
     Returns:
         A :class:`ModeloWorkCreateApplicabilityRefusal` for a blocking verdict,
@@ -97,7 +100,7 @@ def modelo_work_create_applicability_refusal(
         rule, or deliberately bypassed.
 
     See Also:
-        :func:`aeat.domain.calculations.registry.applicability.derive_modelo_applicability`:
+        :func:`aeat.domain.calculations.registry.derive_modelo_applicability`:
             Registry-owned applicability classifier used by this guard.
         :func:`aeat.application.user_profile.projection_for_taxpayer`:
             Builds the taxpayer profile consumed by the classifier.

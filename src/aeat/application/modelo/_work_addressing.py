@@ -3,8 +3,7 @@
 The address facade converts visible modelo/year/period filing targets and exact
 work-unit ids into :class:`ModeloWorkAddress` values, resolves them through the
 central selector contract, and returns the matching
-:class:`~aeat.domain.modelos._work_unit.WorkUnit` or
-:class:`~aeat.domain.modelos._calculation_revision.CalculationRevision`.
+:class:`aeat.domain.modelos.WorkUnit` or :class:`CalculationRevision`.
 
 This module is the application facade over the accepted addressing policy:
 operators address the active bucket/profile plus modelo, filing year, and period;
@@ -14,10 +13,10 @@ matches are handled by :mod:`aeat.application.modelo._selectors` rather than by
 CLI-local string logic.
 
 Creation flows validate the law-determined registry revision before delegating
-to :func:`~aeat.application.modelo._work_lifecycle.create_work_unit`; an explicit
+to :func:`aeat.application.modelo.create_work_unit`; an explicit
 ``--revision`` is an assertion of the selected legal revision, not a free
 override. Revision flows apply
-:class:`~aeat.application.modelo._selectors.ModeloCalculationRevisionSelector`
+:class:`aeat.application.modelo.ModeloCalculationRevisionSelector`
 defaults so verify, file, and export commands consume only the lifecycle states
 they are allowed to handle.
 
@@ -93,9 +92,8 @@ class ModeloVisibleFilingTarget:
 class ModeloExactWorkUnitTarget:
     """Advanced exact-addressing target for one content-addressed work unit.
 
-    Use this only when the caller already has an authoritative
-    :class:`~aeat.domain.modelos._ids.WorkUnitId`; visible filing targets remain
-    the default operator path.
+    Use this only when the caller already has an authoritative ``WorkUnitId``;
+    visible filing targets remain the default operator path.
     """
 
     work_unit_id: WorkUnitId
@@ -167,7 +165,7 @@ class ModeloResolvedWorkProjection:
 
     @classmethod
     def from_work_unit(cls, work_unit: WorkUnit) -> ModeloResolvedWorkProjection:
-        """Project an internal :class:`WorkUnit` into a :class:`ModeloResolvedWorkProjection`."""
+        """Project an internal :class:`aeat.domain.modelos.WorkUnit` into a :class:`ModeloResolvedWorkProjection`."""
         return cls(
             work_unit_id=work_unit.work_unit_id,
             short_work_unit_id=work_unit.work_unit_id[-12:],
@@ -371,7 +369,7 @@ def resolve_modelo_work_unit_for_operator_target(
     registry_revision_id: str | None = None,
     bucket_id: str | None = None,
 ) -> WorkUnit:
-    """Resolve exact or visible operator input to one active :class:`WorkUnit`.
+    """Resolve exact or visible operator input to one active :class:`aeat.domain.modelos.WorkUnit`.
 
     The result comes from the shared selector boundary, so ambiguity and
     exact-id/natural-key contradictions surface as typed selector errors.
@@ -491,7 +489,7 @@ def resolve_registry_revision_for_work_target(
     ``(modelo, filing_year, period)`` is returned unconditionally.
 
     When ``registry_revision_id`` is supplied it is treated as an
-    *assertion parameter* (per :class:`select_revision`'s structural property):
+    *assertion parameter* (per :func:`aeat.domain.calculations.registry._temporal.select_revision`):
     an explicit ``--revision`` is accepted only when it names exactly the revision
     that ``select_revision`` would pick from ``(filing_year, period)`` alone.  If
     the supplied id diverges from the law-determined revision the call refuses with
@@ -628,7 +626,7 @@ def resolve_optional_modelo_work_address(address: ModeloWorkAddress) -> ModeloWo
 
 
 def resolve_modelo_work_address_unit(address: ModeloWorkAddress) -> WorkUnit:
-    """Resolve an operator-facing modelo work address to one :class:`WorkUnit`."""
+    """Resolve an operator-facing modelo work address to one :class:`aeat.domain.modelos.WorkUnit`."""
     resolution = resolve_modelo_work_address(address)
     assert resolution.work_unit is not None
     return resolution.work_unit

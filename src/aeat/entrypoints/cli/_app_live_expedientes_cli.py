@@ -202,7 +202,13 @@ def expedientes_pull(
     ),
 )
 def expedientes_list(ctx: typer.Context) -> None:
-    """List persisted expedientes snapshots for the active bucket."""
+    """List persisted expedientes snapshots for the active bucket.
+
+    The command reads
+    :class:`~aeat.application.live.ExpedientesService` storage and emits
+    :class:`~aeat.entrypoints.cli._app_live_payloads.ExpedientesListResult`
+    summary rows; per-declaration fields remain on the view command.
+    """
     from ...application.live import ExpedientesService
     from ._app_live_payloads import ExpedientesListResult, ExpedienteSnapshotSummaryPayload
 
@@ -238,7 +244,13 @@ def expedientes_show(
         ),
     ],
 ) -> None:
-    """Show one expedientes snapshot with all its declaration rows."""
+    """Show one expedientes snapshot with all its declaration rows.
+
+    The id is resolved by :class:`~aeat.application.live.ExpedientesService` and
+    projected as
+    :class:`~aeat.entrypoints.cli._app_live_payloads.ExpedientesViewResult`,
+    preserving the read-only live-observation boundary.
+    """
     from ...application.live import ExpedientesService
     from ._app_live_payloads import ExpedienteDeclarationPayload, ExpedientesViewResult
 
@@ -294,7 +306,12 @@ def expedientes_show(
     ),
 )
 def expedientes_latest(ctx: typer.Context) -> None:
-    """Show the most recent expedientes snapshot for the active bucket, or report none."""
+    """Show the most recent expedientes snapshot, or report none.
+
+    A bucket with no captured expedientes emits
+    :class:`~aeat.entrypoints.cli._app_live_payloads.ExpedientesLatestResult`
+    with ``snapshot_id=None`` rather than attempting a live pull.
+    """
     from ...application.live import ExpedientesService
     from ._app_live_payloads import ExpedientesLatestResult
 

@@ -52,7 +52,7 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
-_BUCKET = "bucket-a"
+_BUCKET = "17171717-1717-4717-8717-171717171717"
 
 
 class _FixedSaturatingClassifier:
@@ -121,7 +121,9 @@ def _seed_unclassified(repository: TransactionCatalogueRepository, *, amount: De
         ),
         raw_fields={"Concepto": "client lunch"},
     )
-    tx = Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
+    tx = Transaction.model_validate(
+        {"raw": raw, "direction": TransactionDirection.OUTGOING, "group_label": None, "source_jurisdiction": "ES"},
+    )
     repository.save(TransactionCatalogue.from_transactions([tx]))
     return tx.transaction_id
 
@@ -155,7 +157,9 @@ def _seed_business(
         {
             "raw": raw,
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
             "business_classification": BusinessClassification.BUSINESS,
+            "source_jurisdiction": "ES",
             "category_id": category.value,
         },
     )

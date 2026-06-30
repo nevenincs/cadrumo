@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Self, override
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.aggregation import IntracomOperationType
+from ...core import IntracomOperationType
 from ...core.decimal import coerce_decimal
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, validate_spanish_tax_id

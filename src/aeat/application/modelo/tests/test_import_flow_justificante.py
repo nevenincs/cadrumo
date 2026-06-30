@@ -1,0 +1,145 @@
+"""Justificante and CSV enrollment checks for external Modelo filing imports."""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from pathlib import Path
+
+import pytest
+
+from ....domain.modelos._filing_record import ExternalEvidenceKind
+from .. import ExternalModeloImportError
+from ._import_flow_support import (
+    _T1,
+    _TAX_ID,
+    _import_external_filing,
+    _persist_matching_justificante,
+    _Repos,
+    _repos,
+    _seed_work_unit,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture
+def repos(tmp_path: Path) -> Iterator[_Repos]:
+    yield from _repos(tmp_path)
+
+
+def test_import_refuses_justificante_evidence_without_persisted_artifact(repos: _Repos) -> None:
+    wu_repo, _, _, _, _ = repos
+    work_unit = _seed_work_unit(wu_repo)
+
+    with pytest.raises(ExternalModeloImportError) as raised:
+        _import_external_filing(
+            repos,
+            work_unit,
+            evidence_reference_id="JUST-MISSING",
+            expected_tax_id=_TAX_ID,
+            clock=_T1,
+        )
+
+    assert raised.value.translated_message == "application.modelo.errors.external_import_justificante_missing"
+
+
+def test_import_refuses_justificante_evidence_without_expected_tax_id(repos: _Repos) -> None:
+    wu_repo, _, _, _, _ = repos
+    work_unit = _seed_work_unit(wu_repo)
+    _persist_matching_justificante(
+        "JUST-NO-TAX-ID",
+        work_unit,
+        captured_at=_T1,
+    )
+
+    with pytest.raises(ExternalModeloImportError) as raised:
+        _import_external_filing(
+            repos,
+            work_unit,
+            evidence_reference_id="JUST-NO-TAX-ID",
+            clock=_T1,
+        )
+
+    assert raised.value.translated_message == "application.modelo.errors.external_import_tax_id_missing"
+
+
+def test_import_refuses_justificante_evidence_for_different_period(repos: _Repos) -> None:
+    wu_repo, _, _, _, _ = repos
+    work_unit = _seed_work_unit(wu_repo)
+    _persist_matching_justificante(
+        "JUST-MISMATCH",
+        work_unit,
+        period="2T",
+        captured_at=_T1,
+    )
+
+    with pytest.raises(ExternalModeloImportError) as raised:
+        _import_external_filing(
+            repos,
+            work_unit,
+            evidence_reference_id="JUST-MISMATCH",
+            expected_tax_id=_TAX_ID,
+            clock=_T1,
+        )
+
+    assert raised.value.translated_message == "application.modelo.errors.external_import_justificante_mismatch"
+
+
+def test_import_refuses_justificante_evidence_for_different_taxpayer(repos: _Repos) -> None:
+    wu_repo, _, _, _, _ = repos
+    work_unit = _seed_work_unit(wu_repo)
+    _persist_matching_justificante(
+        "JUST-WRONG-TAXPAYER",
+        work_unit,
+        captured_at=_T1,
+    )
+
+    with pytest.raises(ExternalModeloImportError) as raised:
+        _import_external_filing(
+            repos,
+            work_unit,
+            evidence_reference_id="JUST-WRONG-TAXPAYER",
+            expected_tax_id="B12345678",
+            clock=_T1,
+        )
+
+    assert raised.value.translated_message == "application.modelo.errors.external_import_justificante_mismatch"
+
+
+def test_import_justificante_taxpayer_match_is_case_insensitive(repos: _Repos) -> None:
+    wu_repo, _, _, _, _ = repos
+    work_unit = _seed_work_unit(wu_repo)
+    _persist_matching_justificante(
+        "JUST-CASE-TAXPAYER",
+        work_unit,
+        captured_at=_T1,
+        tax_id="X1234567L",
+    )
+
+    filing = _import_external_filing(
+        repos,
+        work_unit,
+        evidence_reference_id="JUST-CASE-TAXPAYER",
+        expected_tax_id="x1234567l",
+        clock=_T1,
+    )
+
+    assert filing.aeat_accepted is True
+    assert filing.external_evidence is not None
+    assert filing.external_evidence.reference_id == "JUST-CASE-TAXPAYER"
+
+
+def test_import_csv_register_refuses_without_enrolled_justificante(repos: _Repos) -> None:
+    wu_repo, _, _, _, _ = repos
+    work_unit = _seed_work_unit(wu_repo)
+
+    with pytest.raises(ExternalModeloImportError) as exc_info:
+        _import_external_filing(
+            repos,
+            work_unit,
+            evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
+            evidence_reference_id="CSV-MISSING-JUSTIFICANTE",
+            expected_tax_id=_TAX_ID,
+            clock=_T1,
+        )
+    assert exc_info.value.translated_message == "application.modelo.errors.external_import_justificante_missing"

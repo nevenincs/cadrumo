@@ -27,7 +27,7 @@ from ...application.ledger import (
     PayableInvoiceService,
     validate_eu_iva_id,
 )
-from ...core.aggregation import IntracomOperationType
+from ...core import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...domain.iva import InvoiceKind, IvaCategory

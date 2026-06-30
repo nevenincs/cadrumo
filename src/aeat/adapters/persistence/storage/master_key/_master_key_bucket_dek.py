@@ -27,7 +27,7 @@ def master_key_unavailable_error(message: str) -> MasterKeyUnavailableError:
 def bucket_dek_path(*, storage_root: Path, bucket_id: str) -> Path:
     """Return the separated keystore path for one bucket's wrapped DEK."""
     from .._namespace_registry import BUCKET_DEK_FILENAME
-    from ..bucket._keystore_paths import keystore_path, validate_keystore_separation
+    from ..bucket import keystore_path, validate_keystore_separation
 
     validate_keystore_separation(storage_root, bucket_id)
     return keystore_path(storage_root, bucket_id) / BUCKET_DEK_FILENAME
@@ -35,8 +35,7 @@ def bucket_dek_path(*, storage_root: Path, bucket_id: str) -> Path:
 
 def bucket_key_schedule(*, storage_root: Path, bucket_id: str):
     """Return the bucket's key schedule, or ``None`` when no manifest exists."""
-    from ..bucket._layout import bucket_paths
-    from ..bucket._manifest_io import MISSING_BUCKET_MANIFEST_MESSAGE, read_manifest
+    from ..bucket import MISSING_BUCKET_MANIFEST_MESSAGE, bucket_paths, read_manifest
     from ..errors import StorageValidationError
 
     try:
@@ -49,8 +48,7 @@ def bucket_key_schedule(*, storage_root: Path, bucket_id: str):
 
 def idle_minutes_for_bucket(*, storage_root: Path, bucket_id: str, default_minutes: int) -> int:
     """Resolve the idle window from the bucket manifest, falling back to settings."""
-    from ..bucket._layout import bucket_paths
-    from ..bucket._manifest_io import MISSING_BUCKET_MANIFEST_MESSAGE, read_manifest
+    from ..bucket import MISSING_BUCKET_MANIFEST_MESSAGE, bucket_paths, read_manifest
     from ..errors import StorageValidationError
 
     try:
@@ -71,7 +69,7 @@ def load_or_mint_bucket_dek(
     allow_bootstrap_mint: bool,
 ) -> bytes:
     """Unwrap the per-bucket DEK, or mint it for a not-yet-registered bucket."""
-    from ..bucket._manifest import BucketKeySchedule
+    from ..bucket import BucketKeySchedule
     from ._dek_wrap import unwrap_dek, wrap_dek
 
     path = bucket_dek_path(storage_root=storage_root, bucket_id=bucket_id)

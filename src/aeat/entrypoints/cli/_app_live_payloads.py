@@ -286,7 +286,13 @@ class NotificationRowPayload(OutputSchema):
 
 
 class NotificationSnapshotListingPayload(OutputSchema):
-    """One snapshot summary in the notifications list result."""
+    """Summary row for one persisted DEHu notification snapshot.
+
+    Used by :class:`NotificationsListResult` to expose the bucket snapshot id,
+    capture timestamp, and row count returned by
+    :class:`~aeat.application.live.NotificationsService` without expanding the
+    underlying notification rows.
+    """
 
     snapshot_id: str
     captured_at: str
@@ -295,7 +301,13 @@ class NotificationSnapshotListingPayload(OutputSchema):
 
 @register_schema("app.live.notifications.pull")
 class NotificationsCaptureResult(OutputSchema):
-    """Payload for ``aeat app live notifications pull``."""
+    """Typed result for a persisted DEHu notification pull.
+
+    The pull command performs the live read before this schema is built; the
+    payload records the bucket-scoped snapshot written by
+    :class:`~aeat.application.live.NotificationsService`, not an AEAT-side write
+    or acknowledgement.
+    """
 
     bucket_id: str
     snapshot_id: str
@@ -307,7 +319,12 @@ class NotificationsCaptureResult(OutputSchema):
 
 @register_schema("app.live.notifications.list")
 class NotificationsListResult(OutputSchema):
-    """Payload for ``aeat app live notifications list``."""
+    """Typed listing of persisted DEHu notification snapshots.
+
+    ``rows`` contains :class:`NotificationSnapshotListingPayload` summaries
+    returned by :class:`~aeat.application.live.NotificationsService`
+    ``list_snapshots``; message detail stays on the view payload.
+    """
 
     bucket_id: str
     count: int
@@ -316,7 +333,13 @@ class NotificationsListResult(OutputSchema):
 
 @register_schema("app.live.notifications.view")
 class NotificationsViewResult(OutputSchema):
-    """Payload for ``aeat app live notifications view``."""
+    """Typed detail view for one persisted DEHu notification snapshot.
+
+    The command resolves a stored snapshot through
+    :class:`~aeat.application.live.NotificationsService` ``show`` and expands
+    its rows as :class:`NotificationRowPayload` records. It is a bucket read,
+    not a remote notification-state mutation.
+    """
 
     bucket_id: str
     snapshot_id: str
@@ -328,7 +351,12 @@ class NotificationsViewResult(OutputSchema):
 
 @register_schema("app.live.notifications.latest")
 class NotificationsLatestResult(OutputSchema):
-    """Payload for ``aeat app live notifications latest``."""
+    """Typed newest-snapshot response for DEHu notifications.
+
+    ``snapshot_id`` is ``None`` when the bucket has no captured notification
+    snapshot; in that empty case every snapshot-derived field is also ``None``
+    so JSON clients can keep one stable schema for present and absent data.
+    """
 
     bucket_id: str
     snapshot_id: str | None
@@ -395,7 +423,12 @@ class ExpedienteDeclarationPayload(OutputSchema):
 
 
 class ExpedienteSnapshotSummaryPayload(OutputSchema):
-    """One expedientes snapshot summary row in a listing or latest payload."""
+    """Summary row for one persisted expedientes snapshot.
+
+    Used by :class:`ExpedientesListResult` for rows returned from
+    :class:`~aeat.application.live.ExpedientesService`; full declaration detail
+    remains on :class:`ExpedientesViewResult`.
+    """
 
     snapshot_id: str
     captured_at: str
@@ -414,7 +447,14 @@ class ExpedientesCaptureFailurePayload(OutputSchema):
 
 @register_schema("app.live.expedientes.pull")
 class ExpedientesCaptureResult(OutputSchema):
-    """Payload for ``aeat app live expedientes pull``."""
+    """Typed result for one or more persisted expedientes pulls.
+
+    ``mode`` distinguishes a single-modelo capture from a bulk year-range
+    capture. Successful snapshots are persisted by
+    :class:`~aeat.application.live.ExpedientesService`; failed modelo/year pairs
+    are reported as :class:`ExpedientesCaptureFailurePayload` rows without
+    inventing declaration data.
+    """
 
     mode: Literal["single", "bulk"] = "single"
     bucket_id: str
@@ -434,7 +474,12 @@ class ExpedientesCaptureResult(OutputSchema):
 
 @register_schema("app.live.expedientes.list")
 class ExpedientesListResult(OutputSchema):
-    """Payload for ``aeat app live expedientes list``."""
+    """Typed listing of persisted expedientes snapshots.
+
+    ``rows`` is the compact :class:`ExpedienteSnapshotSummaryPayload`
+    projection returned by :class:`~aeat.application.live.ExpedientesService`
+    ``list_snapshots``; use the view schema for per-declaration detail.
+    """
 
     bucket_id: str
     count: int
@@ -443,7 +488,12 @@ class ExpedientesListResult(OutputSchema):
 
 @register_schema("app.live.expedientes.view")
 class ExpedientesViewResult(OutputSchema):
-    """Payload for ``aeat app live expedientes view``."""
+    """Typed detail view for one persisted expedientes snapshot.
+
+    The command resolves a stored snapshot through
+    :class:`~aeat.application.live.ExpedientesService` and projects each
+    declaration into :class:`ExpedienteDeclarationPayload`.
+    """
 
     bucket_id: str
     snapshot_id: str
@@ -455,11 +505,11 @@ class ExpedientesViewResult(OutputSchema):
 
 @register_schema("app.live.expedientes.latest")
 class ExpedientesLatestResult(OutputSchema):
-    """Payload for ``aeat app live expedientes latest``.
+    """Typed newest-snapshot response for expedientes.
 
-    ``snapshot_id`` is ``None`` when the bucket has no captured
-    expedientes snapshot; in that case every snapshot-derived field is
-    also ``None`` to keep the payload shape stable.
+    ``snapshot_id`` is ``None`` when the bucket has no captured expedientes
+    snapshot; in that case every snapshot-derived field is also ``None`` to
+    keep the payload shape stable for JSON clients.
     """
 
     bucket_id: str

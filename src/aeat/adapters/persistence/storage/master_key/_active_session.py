@@ -37,7 +37,7 @@ from typing import override
 from .....core.errors import resolve_error_message
 from .....core.logging import get_logger
 from .....core.time import now
-from ..bucket._errors import BucketLockedError
+from ..bucket import BucketLockedError
 from ..errors import SecretStoreError
 from ._bucket_session import BucketSession
 

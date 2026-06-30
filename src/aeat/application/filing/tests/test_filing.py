@@ -211,6 +211,8 @@ def _transaction(
         {
             "raw": raw,
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
         },
     )
 

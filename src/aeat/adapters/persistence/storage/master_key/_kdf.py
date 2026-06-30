@@ -18,7 +18,7 @@ from __future__ import annotations
 from argon2.exceptions import Argon2Error
 from argon2.low_level import Type, hash_secret_raw
 
-from ..bucket._manifest import ManifestKdfParams
+from ..bucket import ManifestKdfParams
 from ..errors import KeyDerivationError
 
 _OUTPUT_BYTES = 32

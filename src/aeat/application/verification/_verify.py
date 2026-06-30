@@ -108,6 +108,7 @@ def verify_declaracion(
     """
     period = _parse_period(declaracion.period, declaracion.ejercicio)
     snapshot = _load_snapshot(declaracion, period=period, registry_root=registry_root)
+    _assert_snapshot_ref_matches(declaracion, snapshot, period=period)
     try:
         policy = snapshot.verification_policy()
     except RegistryValidationError as exc:
@@ -228,6 +229,34 @@ def _load_snapshot(
                 "error_type": type(exc).__name__,
             },
         ) from exc
+
+
+def _assert_snapshot_ref_matches(
+    declaracion: DeclaracionObservation,
+    snapshot: RegistrySnapshot,
+    *,
+    period: Period,
+) -> None:
+    """Assert the observation's stamped ref matches law-determined resolution."""
+    ref = declaracion.registry_snapshot_ref
+    observed = (ref.modelo, ref.revision_id, ref.modelo_year, ref.period)
+    resolved = (snapshot.modelo.id, snapshot.revision.id, snapshot.filing_year, snapshot.period)
+    if observed == resolved:
+        return
+    raise VerificationError(
+        translated_message="application.verification.errors.registry_snapshot_ref_mismatch",
+        context={
+            "modelo": declaracion.modelo,
+            "period": _period_context(period),
+            "observed_ref": _snapshot_ref_context(*observed),
+            "resolved_ref": _snapshot_ref_context(*resolved),
+        },
+    )
+
+
+def _snapshot_ref_context(modelo: str, revision_id: str, modelo_year: int, period: str) -> str:
+    """Return an operator-facing registry snapshot coordinate."""
+    return f"registry:{modelo}:{revision_id}:{modelo_year}:{period}"
 
 
 def _decimal_extracted_values(declaracion: DeclaracionObservation) -> dict[CasillaId, Decimal]:

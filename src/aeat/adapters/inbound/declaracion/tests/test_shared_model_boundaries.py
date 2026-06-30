@@ -23,4 +23,5 @@ def test_declaracion_observation_reuses_shared_pdf_and_registry_models() -> None
     snapshot_field = DeclaracionObservation.model_fields["registry_snapshot_ref"]
 
     assert values_field.annotation == tuple[ExtractedCasilla, ...]
-    assert snapshot_field.annotation == RegistrySnapshotRef | None
+    assert snapshot_field.annotation == RegistrySnapshotRef
+    assert snapshot_field.is_required()

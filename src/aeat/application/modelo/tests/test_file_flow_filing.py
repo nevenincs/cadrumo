@@ -41,6 +41,8 @@ from ._file_flow_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_FILING_BUCKET_ID = "12121212-1212-4212-8212-121212121212"
+
 
 def test_file_requires_verificado_completo_state(repos: Repos) -> None:
     """A borrador revision cannot be filed; only verificado-completo
@@ -629,7 +631,7 @@ def test_list_filing_records_orders_multiple_periods_without_period_comparison(r
         ),
         work_unit_id="1" * 64,
         calculation_revision_id="2" * 64,
-        bucket_id="bucket-a",
+        bucket_id=_FILING_BUCKET_ID,
         modelo=ModeloCode("130"),
         filing_year=2025,
         period=q1,
@@ -645,7 +647,7 @@ def test_list_filing_records_orders_multiple_periods_without_period_comparison(r
         ),
         work_unit_id="3" * 64,
         calculation_revision_id="4" * 64,
-        bucket_id="bucket-a",
+        bucket_id=_FILING_BUCKET_ID,
         modelo=ModeloCode("130"),
         filing_year=2025,
         period=q2,
@@ -680,7 +682,7 @@ def test_list_filing_records_filters_by_modelo(repos: Repos) -> None:
         ),
         work_unit_id="1" * 64,
         calculation_revision_id="2" * 64,
-        bucket_id="bucket-a",
+        bucket_id=_FILING_BUCKET_ID,
         modelo=ModeloCode("100"),
         filing_year=2025,
         period=period,
@@ -696,7 +698,7 @@ def test_list_filing_records_filters_by_modelo(repos: Repos) -> None:
         ),
         work_unit_id="3" * 64,
         calculation_revision_id="4" * 64,
-        bucket_id="bucket-a",
+        bucket_id=_FILING_BUCKET_ID,
         modelo=ModeloCode("130"),
         filing_year=2025,
         period=period,

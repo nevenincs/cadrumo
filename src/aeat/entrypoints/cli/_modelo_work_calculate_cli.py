@@ -1,7 +1,19 @@
 """Typer registration for modelo work calculation commands.
 
-Renders the operator-facing confirmation for a persisted
-:class:`CalculationRevision` once a work unit's calculation is saved.
+This CLI module is a transport boundary around
+:func:`aeat.application.modelo.calculate_modelo_work_revision`. It resolves the
+operator target, builds a public
+:class:`aeat.application.modelo.WorkCalculateInputBundle`, calls the application
+service, and serializes the resulting
+:class:`aeat.application.modelo.ModeloWorkCalculationServiceResult` into a
+:class:`aeat.entrypoints.cli._modelo_payloads.WorkCalculateResult` envelope.
+
+The emitted confirmation is centered on the persisted
+:class:`CalculationRevision` and parent :class:`aeat.domain.modelos.WorkUnit`;
+advisory material such as backend authorization and non-blocking source
+diagnostics is carried on the uniform
+:class:`aeat.core.json_contract.Notice` channel instead of bespoke payload
+fields.
 """
 
 from __future__ import annotations
@@ -246,7 +258,12 @@ def register_work_calculate_commands(
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
     missing_binding_guidance: Callable[[RegistryValidationError, str], str],
 ) -> None:
-    """Register work calculation commands on the modelo work app."""
+    """Register work calculation commands on the modelo work app.
+
+    The registered command owns CLI parsing and output formatting only; work-unit
+    resolution, input-bundle construction, calculation persistence, and registry
+    validation remain delegated to application services.
+    """
     deps = _CalculateDeps(
         activate_output_language=activate_output_language,
         require_active_profile=require_active_profile,
@@ -283,7 +300,7 @@ def register_work_calculate_commands(
         autoconsumo_promotor_base: _AutoconsumoPromotorOpt = None,
         output_language: OutputLanguageOpt = None,
     ) -> None:
-        """Persist a new draft calculation revision for the work unit."""
+        """Persist a new draft :class:`CalculationRevision` for the resolved work unit."""
         _run_work_calculate(
             deps=deps,
             ctx=ctx,
@@ -465,8 +482,9 @@ def _work_calculate_authorization_output(
 
     ``authorization_state`` remains structured result data (the backend's
     authorization lifecycle state); the advisory prose moves onto the
-    uniform notices channel so it is no longer a bespoke
-    ``authorization_advisory`` payload field. The text lines are unchanged.
+    uniform :class:`aeat.core.json_contract.Notice` channel so it is no longer a
+    bespoke ``authorization_advisory`` payload field. The text lines are
+    unchanged.
     """
     advisory = calculation_result.authorization_advisory
     if advisory is None:
@@ -501,12 +519,12 @@ def _work_calculate_source_advisory_output(
 
     Each diagnostic the source mesh raised while resolving the bucket ledger
     (notably the unconsumed-declarable-IVA advisory) becomes one
-    warning-severity :class:`Notice` on the envelope ``notices`` channel and
-    one human-facing ADVISORY line. The structured provenance (``reason`` /
-    ``source_kind`` / ``resolver_id``) rides on the notice ``context`` so no
-    machine-queryable field is lost relative to the former bespoke
-    ``source_advisories`` payload list. The calculation succeeded; these
-    advisories keep an unrouted declarable observation from being silently
+    warning-severity :class:`aeat.core.json_contract.Notice` on the envelope
+    ``notices`` channel and one human-facing ADVISORY line. The structured
+    provenance (``reason`` / ``source_kind`` / ``resolver_id``) rides on the
+    notice ``context`` so no machine-queryable field is lost relative to the
+    former bespoke ``source_advisories`` payload list. The calculation succeeded;
+    these advisories keep an unrouted declarable observation from being silently
     under-declared (no-silent-under-declaration). The diagnostic ``message``
     already carries the observation's category / rate / flow provenance.
     """

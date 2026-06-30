@@ -35,8 +35,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 from ...adapters.persistence.storage import LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE
 from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ...core import STRICT_FROZEN_CONFIG
-from ...core.aggregation import IntracomOperationType
+from ...core import STRICT_FROZEN_CONFIG, IntracomOperationType
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ...core.external_constants import DEFAULT_CURRENCY
@@ -148,8 +147,9 @@ class BusinessOperationInvoice(BaseModel):
 
     Intracom fields (``country_code``, ``eu_iva_id``, ``operation_type``)
     are ``None`` for domestic invoices and are set for EU intracomunitaria
-    operations that feed M349 aggregation. Existing records without these
-    fields grandfather in as ``None`` (schema migration per spec §5).
+    operations that feed M349 aggregation. The current persisted shape always
+    carries the three keys; domestic invoices record them explicitly as
+    ``None``.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -168,9 +168,9 @@ class BusinessOperationInvoice(BaseModel):
     total_amount: Decimal = Field(default=Decimal("0"))
     notes: str = Field(default="", max_length=2000)
     # Intracom EU fields — None for domestic invoices.
-    country_code: str | None = Field(default=None, min_length=2, max_length=2)
-    eu_iva_id: str | None = Field(default=None, max_length=20)
-    operation_type: IntracomOperationType | None = Field(default=None)
+    country_code: str | None = Field(min_length=2, max_length=2)
+    eu_iva_id: str | None = Field(max_length=20)
+    operation_type: IntracomOperationType | None
     created_at: datetime
     updated_at: datetime
 
@@ -516,7 +516,6 @@ __all__ = [
     "BusinessOperationInvoiceRepository",
     "BusinessOperationInvoiceResult",
     "CollectibleInvoiceService",
-    "IntracomOperationType",
     "PayableInvoiceService",
     "validate_eu_iva_id",
 ]

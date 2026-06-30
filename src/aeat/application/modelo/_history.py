@@ -6,28 +6,30 @@ verifications, filings, supersessions, amendments, and discards.
 
 The catalogue substrate is the bucket-scoped append-only event log loaded from
 :class:`BucketEventHistoryRepository`. Events scoped to a work unit land under
-four object types — ``WORK_UNIT``, ``CALCULATION_REVISION``,
-``VERIFICATION_REPORT``, and ``FILING_RECORD`` — so the assembler walks each
-related object id and merges the emitted :class:`BucketEvent` streams in
+four :class:`aeat.domain.buckets.BucketEventObjectType` values:
+``WORK_UNIT``, ``CALCULATION_REVISION``, ``VERIFICATION_REPORT``, and
+``FILING_RECORD``. The assembler walks each related object id and merges the
+emitted :class:`aeat.domain.buckets.BucketEvent` streams in
 chronological order.
 
 The normalized records remain the source of relational truth:
-:class:`WorkUnit` selects the lifecycle root, :class:`CalculationRevision`
-identifies calculation attempts under it, :class:`VerificationReport` identifies
-verification outcomes for those revisions, and :class:`ModeloRecord` identifies
-local filing records. The event history explains how those records changed; it
-does not replace their catalogues.
+:class:`aeat.domain.modelos.WorkUnit` selects the lifecycle root,
+:class:`CalculationRevision` identifies calculation attempts under it,
+:class:`aeat.domain.modelos.VerificationReport` identifies verification outcomes
+for those revisions, and :class:`ModeloRecord` identifies local filing records.
+The event history explains how those records changed; it does not replace their
+catalogues.
 
 The assembler is pure read: no mutation, no remote contact.
 
 See Also:
-    :mod:`aeat.application.modelo._work_lifecycle`:
+    :func:`aeat.application.modelo.create_work_unit`:
         Emits work-unit create, rename, and discard events.
-    :mod:`aeat.application.modelo._calculation_actions`:
+    :func:`aeat.application.modelo.calculate_modelo_work_revision`:
         Persists calculation revisions and ``MODELO_CALCULATION_CREATED`` events.
-    :mod:`aeat.application.modelo._verification_actions`:
+    :func:`aeat.application.modelo.verify_modelo_revision`:
         Persists verification reports and verification pass/refusal events.
-    :mod:`aeat.application.modelo._filing_actions`:
+    :func:`aeat.application.modelo.file_modelo_revision`:
         Persists local filing records and filing/supersession events.
 """
 
@@ -59,7 +61,7 @@ from ._action_errors import WorkUnitNotFoundError
 
 
 class WorkUnitHistoryEvent(BaseModel):
-    """One projected :class:`BucketEvent` row in a work-unit history stream."""
+    """One projected :class:`aeat.domain.buckets.BucketEvent` row in a work-unit history stream."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -73,7 +75,7 @@ class WorkUnitHistoryEvent(BaseModel):
 
 
 class WorkUnitHistory(BaseModel):
-    """Chronologically ordered event timeline for one :class:`WorkUnit`."""
+    """Chronologically ordered event timeline for one :class:`aeat.domain.modelos.WorkUnit`."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -93,11 +95,12 @@ def assemble_work_unit_history(
 ) -> WorkUnitHistory:
     """Return a :class:`WorkUnitHistory` covering every bucket event scoped to ``work_unit_id``.
 
-    Events are merged from object-scoped :class:`BucketEvent` streams and ordered
-    by ``occurred_at`` ascending. The work unit itself is loaded to confirm it
+    Events are merged from object-scoped
+    :class:`aeat.domain.buckets.BucketEvent` streams and ordered by
+    ``occurred_at`` ascending. The work unit itself is loaded to confirm it
     exists (raising :class:`WorkUnitNotFoundError` if not) and to discover every
-    :class:`CalculationRevision`, :class:`VerificationReport`, and
-    :class:`ModeloRecord` id that belongs to its lifecycle.
+    :class:`CalculationRevision`, :class:`aeat.domain.modelos.VerificationReport`,
+    and :class:`ModeloRecord` id that belongs to its lifecycle.
 
     The returned :class:`WorkUnitHistoryEvent` rows copy event payloads into a
     read model for ``aeat app modelo work history``. The function never writes to
@@ -105,7 +108,7 @@ def assemble_work_unit_history(
     the lifecycle services that produce the underlying records.
 
     See Also:
-        :meth:`BucketEventHistoryCatalogue.for_object`:
+        :meth:`aeat.domain.buckets.BucketEventHistoryCatalogue.for_object`:
             Supplies each object-scoped event stream merged here.
         :class:`WorkUnitHistory`:
             The immutable read model returned to callers.

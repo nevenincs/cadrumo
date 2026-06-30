@@ -17,6 +17,7 @@ from ....adapters.inbound.declaracion import (
 from ....adapters.inbound.pdf._shared import ExtractedCasilla
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.errors import render_error_json, render_error_text
+from ....domain.calculations.registry import RegistrySnapshotRef
 from .. import (
     VerificationError,
     VerificationStatus,
@@ -42,6 +43,7 @@ def _build_filing(
     modelo: str = "130",
     period: str = "1T",
     ejercicio: str = "2025",
+    registry_revision_id: str = "2019-y-siguientes",
 ) -> DeclaracionObservation:
     """Build a parsed declaration boundary object for verification."""
     extracted = tuple(
@@ -63,6 +65,12 @@ def _build_filing(
             modelo=modelo,
             año=int(ejercicio),
             revision=f"{ejercicio}.01",
+        ),
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=modelo,
+            revision_id=registry_revision_id,
+            modelo_year=int(ejercicio),
+            period=period,
         ),
         values=extracted,
         warnings=warnings,
@@ -101,8 +109,11 @@ def test_verify_declaracion_uses_modelo_130_registry_snapshot() -> None:
         filing,
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "modelo-130-actividad-economica-ingresos-cumulative": Decimal("10000"),
             "modelo-130-actividad-economica-ingresos-taxable-base-cumulative": Decimal("0"),
             "modelo-130-actividad-economica-rendimiento-neto-cumulative": Decimal("0"),
+            "modelo-130-actividad-economica-retenciones-cumulative": Decimal("0"),
+            "modelo-130-actividad-economica-gastos-cumulative": Decimal("4000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
             "modelo-130-pagos-fraccionados-anteriores": Decimal("250"),
         },
@@ -128,8 +139,11 @@ def test_verify_declaracion_classifies_registry_divergence() -> None:
         filing,
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "modelo-130-actividad-economica-ingresos-cumulative": Decimal("10000"),
             "modelo-130-actividad-economica-ingresos-taxable-base-cumulative": Decimal("0"),
             "modelo-130-actividad-economica-rendimiento-neto-cumulative": Decimal("0"),
+            "modelo-130-actividad-economica-retenciones-cumulative": Decimal("0"),
+            "modelo-130-actividad-economica-gastos-cumulative": Decimal("4000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
     )
@@ -166,6 +180,7 @@ def test_verify_declaracion_uses_modelo_123_current_registry_snapshot() -> None:
         modelo="123",
         period="1T",
         ejercicio="2026",
+        registry_revision_id="2024-y-siguientes",
         values=(
             ("01", Decimal("2")),
             ("02", Decimal("3")),
@@ -198,6 +213,7 @@ def test_verify_declaracion_uses_modelo_123_historical_registry_snapshot() -> No
         modelo="123",
         period="1T",
         ejercicio="2023",
+        registry_revision_id="2019-2023",
         values=(
             ("01", Decimal("2")),
             ("02", Decimal("1000.25")),
@@ -217,6 +233,25 @@ def test_verify_declaracion_uses_modelo_123_historical_registry_snapshot() -> No
     assert verdict.status is VerificationStatus.VERIFIED
     assert verdict.coverage == 1.0
     assert verdict.discrepancies == ()
+
+
+def test_verify_declaracion_refuses_snapshot_ref_revision_divergence() -> None:
+    filing = _build_filing(
+        values=(("01", Decimal("10000")),),
+        registry_revision_id="wrong-revision",
+    )
+
+    with pytest.raises(VerificationError) as raised:
+        verify_declaracion(filing)
+
+    error = raised.value
+    assert error.translated_message == "application.verification.errors.registry_snapshot_ref_mismatch"
+    assert error.context == {
+        "modelo": "130",
+        "period": "2025 1T",
+        "observed_ref": "registry:130:wrong-revision:2025:1T",
+        "resolved_ref": "registry:130:2019-y-siguientes:2025:1T",
+    }
 
 
 def test_verify_declaracion_fails_without_registry_snapshot() -> None:
@@ -254,8 +289,10 @@ def test_verify_declaracion_reports_missing_registry_bindings_as_locale_error() 
             "irpf.previous_year_economic_activity_net_income",
             "modelo-130-actividad-economica-ingresos-taxable-base-cumulative",
             "modelo-130-actividad-economica-rendimiento-neto-cumulative",
+            "modelo-130-actividad-economica-retenciones-cumulative",
+            "modelo-130-resultados-negativos-anteriores",
         ),
-        "count": 3,
+        "count": 5,
         "modelo": "130",
         "period": "2025 1T",
     }

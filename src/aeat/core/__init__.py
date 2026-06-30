@@ -103,7 +103,7 @@ if TYPE_CHECKING:
         resolve_repository_bucket_id,
         write_pointer,
     )
-    from .aggregation import BindingSourceKind
+    from .aggregation import BindingSourceKind, IntracomOperationType
 
 __all__: list[str] = [
     "ANTHROPIC_EXTRA",
@@ -116,6 +116,7 @@ __all__: list[str] = [
     "BindingSourceKind",
     "BucketPointer",
     "CasillaId",
+    "IntracomOperationType",
     "LedgerSortField",
     "LedgerSortOrder",
     "MissingOptionalExtraError",
@@ -160,6 +161,10 @@ def __getattr__(name: str) -> object:
         from .aggregation import BindingSourceKind
 
         return BindingSourceKind
+    if name == "IntracomOperationType":
+        from .aggregation import IntracomOperationType
+
+        return IntracomOperationType
     if name == "BucketPointer":
         from ._bucket_pointer import BucketPointer
 

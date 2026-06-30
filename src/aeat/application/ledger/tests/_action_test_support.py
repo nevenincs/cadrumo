@@ -93,6 +93,8 @@ def _casilla_id(value: object) -> CasillaId:
 
 
 _REVISION_CASILLA: CasillaId = _casilla_id("01")
+_BUCKET_ID = "26262626-2626-4626-8626-262626262626"
+_OTHER_BUCKET_ID = "27272727-2727-4727-8727-272727272727"
 
 __all__ = [
     "POST_UPDATE_EVENT_PAYLOADS",
@@ -101,6 +103,8 @@ __all__ = [
     "TAXABLE_IVA_EXPECTATIONS",
     "UPDATED_FIELD_EXPECTATIONS",
     "UTC",
+    "_BUCKET_ID",
+    "_OTHER_BUCKET_ID",
     "Attachment",
     "AttachmentKind",
     "AttachmentSource",
@@ -132,6 +136,7 @@ __all__ = [
     "TransactionLifecycleState",
     "TransactionValidationError",
     "UsageRatioProfile",
+    "_create_manual_row",
     "_repositories",
     "archive_manual_transaction",
     "attach_manual_transaction_evidence",
@@ -159,15 +164,44 @@ __all__ = [
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile.repository
 
 
-def _repositories(objects: SecureObjectRepository, *, bucket_id: str = "bucket-a"):
+def _repositories(objects: SecureObjectRepository, *, bucket_id: str = _BUCKET_ID):
     return (
         TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects),
         BucketEventHistoryRepository(objects=objects),
     )
+
+
+def _create_manual_row(
+    secure_objects: SecureObjectRepository,
+    *,
+    description: str,
+    idempotency_key: str,
+    amount: Decimal | None = None,
+    booked_date: date | None = None,
+    occurred_at: datetime | None = None,
+) -> tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, ManualLedgerTransactionResult]:
+    transaction_repository, event_repository = _repositories(secure_objects)
+    resolved_booked_date = booked_date if booked_date is not None else date(2026, 5, 2)
+    resolved_amount = amount if amount is not None else Decimal("25.00")
+    resolved_occurred_at = occurred_at if occurred_at is not None else datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
+    created = create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            bucket_id=_BUCKET_ID,
+            booked_date=resolved_booked_date,
+            amount=resolved_amount,
+            direction=TransactionDirection.OUTGOING,
+            description=description,
+            idempotency_key=idempotency_key,
+        ),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        occurred_at=resolved_occurred_at,
+    )
+    return transaction_repository, event_repository, created
 
 
 def _purchase_invoice() -> Invoice:
@@ -182,7 +216,7 @@ def _purchase_invoice() -> Invoice:
     return Invoice.model_validate(
         {
             "kind": InvoiceKind.RECEIVED,
-            "bucket_id": "bucket-a",
+            "bucket_id": _BUCKET_ID,
             "invoice_number": "P-2026-001",
             "issued_at": date(2026, 5, 2),
             "counterparty_name": "Proveedor SL",
@@ -258,7 +292,7 @@ def _persist_verified_revision_citing_transaction(
     *,
     transaction_id: str,
     additional_transaction_ids: Iterable[str] = (),
-    bucket_id: str = "bucket-a",
+    bucket_id: str = _BUCKET_ID,
 ) -> None:
     source_transaction_ids = (transaction_id, *tuple(additional_transaction_ids))
     period = Period.from_year_and_code(2026, "1T")
@@ -322,7 +356,7 @@ def persist_verified_revision_citing_transaction(
     *,
     transaction_id: str,
     additional_transaction_ids: Iterable[str] = (),
-    bucket_id: str = "bucket-a",
+    bucket_id: str = _BUCKET_ID,
 ) -> None:
     _persist_verified_revision_citing_transaction(
         objects,
@@ -366,7 +400,7 @@ def _drive_create_manual_transaction(secure_objects: SecureObjectRepository) -> 
     purchase_evidence = _purchase_invoice()
     invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
     command = ManualLedgerTransactionCommand(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         booked_date=date(2026, 5, 2),
         value_date=date(2026, 5, 3),
         amount=Decimal("121.00"),
@@ -395,7 +429,7 @@ def _drive_create_manual_transaction(secure_objects: SecureObjectRepository) -> 
     persisted = reloaded.get(result.ref.transaction_id)
     assert persisted is not None
     assert tuple(reloaded.transactions) == (result.ref.transaction_id,)
-    events = event_repository.load().for_bucket("bucket-a")
+    events = event_repository.load().for_bucket(_BUCKET_ID)
     return _CreateManualOutcome(
         result=result,
         persisted=persisted,

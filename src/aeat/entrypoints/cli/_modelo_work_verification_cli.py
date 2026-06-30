@@ -1,4 +1,13 @@
-"""Typer registration for modelo work verify and file commands."""
+"""Typer registration for modelo work verification and internal filing.
+
+This transport module resolves operator revision targets, calls
+:func:`aeat.application.modelo.verify_modelo_revision` or
+:func:`aeat.application.modelo.file_modelo_revision`, and serializes the
+resulting :class:`aeat.domain.modelos.VerificationReport` or
+:class:`aeat.domain.modelos.ModeloRecord` into :class:`WorkVerifyResult` and
+:class:`WorkFileResult` envelopes. Cross-period dependency inspection is read
+only and emits :class:`WorkDependenciesResult`.
+"""
 
 from __future__ import annotations
 
@@ -71,7 +80,7 @@ def register_work_verification_commands(
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
     calculation_revision_not_found_bad_parameter: Callable[[str, BaseException], typer.BadParameter],
 ) -> None:
-    """Register state-changing revision verification commands."""
+    """Register revision verification, dependency, and internal filing commands."""
     _register_work_verify_command(
         work_app,
         activate_output_language=activate_output_language,
@@ -160,7 +169,7 @@ def _register_work_verify_command(
             help=tr("cli.config.auth.output_language_help"),
         ),
     ) -> None:
-        """Verify a draft calculation revision against the verified-complete contract."""
+        """Persist a :class:`aeat.domain.modelos.VerificationReport` for the selected draft revision."""
         activate_output_language(ctx, output_language)
         require_active_profile()
         try:
@@ -230,7 +239,7 @@ def _register_work_dependencies_command(
             help=tr("cli.config.auth.output_language_help"),
         ),
     ) -> None:
-        """Show registry cross-period dependencies and current clean-state blockers."""
+        """Show cross-period dependency inventory and clean-state blockers."""
         activate_output_language(ctx, output_language)
         require_active_profile()
         if period is not None and modelo is None:
@@ -476,7 +485,7 @@ def _register_work_file_command(
             help=tr("cli.config.auth.output_language_help"),
         ),
     ) -> None:
-        """Mark a verified modelo revision as internally filed. Does NOT submit to AEAT."""
+        """Create an internal :class:`aeat.domain.modelos.ModeloRecord` for a verified revision."""
         activate_output_language(ctx, output_language)
         require_active_profile()
         try:

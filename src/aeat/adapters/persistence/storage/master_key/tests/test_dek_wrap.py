@@ -32,13 +32,15 @@ _REFERENCE_DEK = bytes.fromhex(
     "a0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebf",
 )
 _REFERENCE_NONCE = bytes.fromhex("0123456789abcdef01234567")
-_REFERENCE_BUCKET = "bucket-a"
+_REFERENCE_BUCKET = "88888888-8888-4888-8888-888888888888"
+_ROUNDTRIP_BUCKET = "99999999-9999-4999-8999-999999999999"
+_OTHER_BUCKET = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
 # Captured via:
 #   from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 #   AESGCM(_REFERENCE_KEK).encrypt(_REFERENCE_NONCE, _REFERENCE_DEK,
-#       b"aeat.dek-wrap.v1:bucket-a")
+#       b"aeat.dek-wrap.v1:88888888-8888-4888-8888-888888888888")
 _REFERENCE_CIPHERTEXT_WITH_TAG = bytes.fromhex(
-    "544545e66d237ace67966d425b8df6ee9c83200606732831f8a2fc5fa41c5a0cae235f7967e573c9a93eee2e98ab458d",
+    "544545e66d237ace67966d425b8df6ee9c83200606732831f8a2fc5fa41c5a0cd309569bc535f9ab64048130b5b2a025",
 )
 _REFERENCE_CIPHERTEXT = _REFERENCE_CIPHERTEXT_WITH_TAG[:32]
 _REFERENCE_TAG = _REFERENCE_CIPHERTEXT_WITH_TAG[32:]
@@ -65,52 +67,52 @@ def test_unwrap_dek_matches_upstream_reference_vector() -> None:
 def test_wrap_then_unwrap_round_trip_returns_dek() -> None:
     """Property: `unwrap_dek(wrap_dek(dek)) == dek` for random nonces."""
 
-    wrapped = wrap_dek(kek=_REFERENCE_KEK, dek=_REFERENCE_DEK, bucket_id="bucket-x")
+    wrapped = wrap_dek(kek=_REFERENCE_KEK, dek=_REFERENCE_DEK, bucket_id=_ROUNDTRIP_BUCKET)
 
     assert len(wrapped.nonce) == 12
     assert len(wrapped.ciphertext) == 32
     assert len(wrapped.tag) == 16
 
-    recovered = unwrap_dek(kek=_REFERENCE_KEK, wrapped=wrapped, bucket_id="bucket-x")
+    recovered = unwrap_dek(kek=_REFERENCE_KEK, wrapped=wrapped, bucket_id=_ROUNDTRIP_BUCKET)
     assert recovered == _REFERENCE_DEK
 
 
 def test_wrap_uses_fresh_nonce_per_call() -> None:
     """The substrate must never re-use a nonce under the same KEK."""
 
-    a = wrap_dek(kek=_REFERENCE_KEK, dek=_REFERENCE_DEK, bucket_id="bucket-x")
-    b = wrap_dek(kek=_REFERENCE_KEK, dek=_REFERENCE_DEK, bucket_id="bucket-x")
+    a = wrap_dek(kek=_REFERENCE_KEK, dek=_REFERENCE_DEK, bucket_id=_ROUNDTRIP_BUCKET)
+    b = wrap_dek(kek=_REFERENCE_KEK, dek=_REFERENCE_DEK, bucket_id=_ROUNDTRIP_BUCKET)
 
     assert a.nonce != b.nonce
     assert a.ciphertext != b.ciphertext
 
 
 def test_unwrap_fails_when_kek_differs() -> None:
-    wrapped = wrap_dek(kek=_REFERENCE_KEK, dek=_REFERENCE_DEK, bucket_id="bucket-x")
+    wrapped = wrap_dek(kek=_REFERENCE_KEK, dek=_REFERENCE_DEK, bucket_id=_ROUNDTRIP_BUCKET)
     wrong_kek = bytes(32)
 
     with pytest.raises(DecryptionError) as exc_info:
-        unwrap_dek(kek=wrong_kek, wrapped=wrapped, bucket_id="bucket-x")
+        unwrap_dek(kek=wrong_kek, wrapped=wrapped, bucket_id=_ROUNDTRIP_BUCKET)
     assert isinstance(exc_info.value.__cause__, InvalidTag)
     assert exc_info.value.translated_message == "errors.integrity.integrity_storage_decryption"
-    assert "bucket-x" not in str(exc_info.value)
+    assert _ROUNDTRIP_BUCKET not in str(exc_info.value)
     envelope = build_error_envelope(exc_info.value)
     assert envelope.message
-    assert "bucket-x" not in envelope.model_dump_json()
+    assert _ROUNDTRIP_BUCKET not in envelope.model_dump_json()
 
 
 def test_unwrap_fails_when_bucket_id_differs() -> None:
     """AEAD AAD binds the wrap to one bucket; a mismatched id fails closed."""
 
-    wrapped = wrap_dek(kek=_REFERENCE_KEK, dek=_REFERENCE_DEK, bucket_id="bucket-x")
+    wrapped = wrap_dek(kek=_REFERENCE_KEK, dek=_REFERENCE_DEK, bucket_id=_ROUNDTRIP_BUCKET)
 
     with pytest.raises(DecryptionError) as exc_info:
-        unwrap_dek(kek=_REFERENCE_KEK, wrapped=wrapped, bucket_id="bucket-y")
+        unwrap_dek(kek=_REFERENCE_KEK, wrapped=wrapped, bucket_id=_OTHER_BUCKET)
     assert exc_info.value.translated_message == "errors.integrity.integrity_storage_decryption"
 
 
 def test_unwrap_fails_when_tag_is_tampered() -> None:
-    wrapped = wrap_dek(kek=_REFERENCE_KEK, dek=_REFERENCE_DEK, bucket_id="bucket-x")
+    wrapped = wrap_dek(kek=_REFERENCE_KEK, dek=_REFERENCE_DEK, bucket_id=_ROUNDTRIP_BUCKET)
     tampered = WrappedDek(
         nonce=wrapped.nonce,
         ciphertext=wrapped.ciphertext,
@@ -118,12 +120,12 @@ def test_unwrap_fails_when_tag_is_tampered() -> None:
     )
 
     with pytest.raises(DecryptionError) as exc_info:
-        unwrap_dek(kek=_REFERENCE_KEK, wrapped=tampered, bucket_id="bucket-x")
+        unwrap_dek(kek=_REFERENCE_KEK, wrapped=tampered, bucket_id=_ROUNDTRIP_BUCKET)
     assert exc_info.value.translated_message == "errors.integrity.integrity_storage_decryption"
 
 
 def test_unwrap_fails_when_ciphertext_is_tampered() -> None:
-    wrapped = wrap_dek(kek=_REFERENCE_KEK, dek=_REFERENCE_DEK, bucket_id="bucket-x")
+    wrapped = wrap_dek(kek=_REFERENCE_KEK, dek=_REFERENCE_DEK, bucket_id=_ROUNDTRIP_BUCKET)
     tampered = WrappedDek(
         nonce=wrapped.nonce,
         ciphertext=bytes([wrapped.ciphertext[0] ^ 0x01]) + wrapped.ciphertext[1:],
@@ -131,19 +133,19 @@ def test_unwrap_fails_when_ciphertext_is_tampered() -> None:
     )
 
     with pytest.raises(DecryptionError) as exc_info:
-        unwrap_dek(kek=_REFERENCE_KEK, wrapped=tampered, bucket_id="bucket-x")
+        unwrap_dek(kek=_REFERENCE_KEK, wrapped=tampered, bucket_id=_ROUNDTRIP_BUCKET)
     assert exc_info.value.translated_message == "errors.integrity.integrity_storage_decryption"
 
 
 def test_wrap_rejects_wrong_size_kek() -> None:
     with pytest.raises(EncryptionError, match="kek must be exactly 32 bytes") as exc_info:
-        wrap_dek(kek=b"x" * 16, dek=_REFERENCE_DEK, bucket_id="bucket-x")
+        wrap_dek(kek=b"x" * 16, dek=_REFERENCE_DEK, bucket_id=_ROUNDTRIP_BUCKET)
     assert exc_info.value.translated_message == "errors.integrity.integrity_storage_encryption"
 
 
 def test_wrap_rejects_wrong_size_dek() -> None:
     with pytest.raises(EncryptionError, match="dek must be exactly 32 bytes") as exc_info:
-        wrap_dek(kek=_REFERENCE_KEK, dek=b"x" * 16, bucket_id="bucket-x")
+        wrap_dek(kek=_REFERENCE_KEK, dek=b"x" * 16, bucket_id=_ROUNDTRIP_BUCKET)
     assert exc_info.value.translated_message == "errors.integrity.integrity_storage_encryption"
 
 

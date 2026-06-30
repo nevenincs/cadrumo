@@ -451,7 +451,7 @@ def test_borrador_snapshot_not_found_error_inherits_shared_base() -> None:
 def test_borrador_snapshot_not_found_error_accepts_structured_kwargs() -> None:
     # AeatError-first MRO means suggestion= is accepted (KeyError.__init__ rejects kwargs).
     error = BorradorSnapshotNotFoundError(
-        "borrador snapshot 'abc' not found in bucket 'b1'",
+        f"borrador snapshot 'abc' not found in bucket {_BUCKET_ID!r}",
         suggestion="aeat app live borrador 100 list",
     )
     assert error.suggestion == "aeat app live borrador 100 list"
@@ -467,7 +467,7 @@ def test_censo_snapshot_not_found_error_inherits_shared_base() -> None:
 
 def test_censo_snapshot_not_found_error_accepts_structured_kwargs() -> None:
     error = CensoSnapshotNotFoundError(
-        "censo snapshot 'abc' not found in bucket 'b1'",
+        f"censo snapshot 'abc' not found in bucket {_BUCKET_ID!r}",
         suggestion="aeat config profile censo pull",
     )
     assert error.suggestion == "aeat config profile censo pull"

@@ -29,8 +29,7 @@ from ...adapters.persistence.storage.errors import (
     EnvelopeVersionError,
     StorageValidationError,
 )
-from ...core import BindingSourceKind, Period
-from ...core.aggregation import IntracomOperationType
+from ...core import BindingSourceKind, IntracomOperationType, Period
 from ...core.hashing import sha256_hex
 from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import (

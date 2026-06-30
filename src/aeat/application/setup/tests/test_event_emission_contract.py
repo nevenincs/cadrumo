@@ -72,7 +72,6 @@ def test_required_setup_event_has_emission_site(event_type: BucketEventType, mod
 # future change does not add a duplicate PROFILE_CREATED slot.
 _RESERVED_EVENTS_WITHOUT_OPERATOR_PATHS: tuple[BucketEventType, ...] = (
     BucketEventType.CONFIG_ENV_UPDATED,
-    BucketEventType.SETUP_STATE_MIGRATED,
 )
 
 

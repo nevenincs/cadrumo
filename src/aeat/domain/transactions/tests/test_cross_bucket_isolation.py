@@ -67,6 +67,8 @@ def _tx(
         {
             "raw": raw,
             "direction": direction,
+            "group_label": None,
+            "source_jurisdiction": "ES",
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
         },
     )

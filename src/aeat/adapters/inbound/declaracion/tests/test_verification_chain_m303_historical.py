@@ -9,13 +9,10 @@ from ._verification_chain_support import (
     _M303_ENGINE_REQUIRED_CASILLAS,
     BindingId,
     Decimal,
-    RegistryValidationError,
     _assert_m303_resultado_regimen_general_consistency,
+    _calculate_m303_engine_values_from_inputs,
     _decimal_inputs_from_extracted_values,
     _parse_extracted_declaracion_values,
-    _registry_snapshot,
-    calculate_registry_snapshot,
-    date,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -70,27 +67,13 @@ def test_verification_chain_m303_historical_engine_recomputes_resultado_regimen_
     binding_values: dict[BindingId, Decimal] = {
         "modelo-303-compensacion-pendiente-anteriores": _comp,
     }
-
-    _period_month = {"1T": 1, "2T": 4, "3T": 7, "4T": 10}[period]
-    snapshot = _registry_snapshot("303", year, period)
-
-    try:
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=inputs,
-            date_context={"filing_period": date(year, _period_month, 1)},
-            binding_values=binding_values,
-        )
-    except RegistryValidationError as exc:
-        pytest.fail(
-            f"BINDING-GAP [{pdf_stem}]: calculate_registry_snapshot raised "
-            f"RegistryValidationError - a required binding is missing.\n"
-            f"  error: {exc}\n"
-            f"  inputs supplied: {sorted(inputs)}\n"
-            f"  binding_values supplied: {sorted(binding_values)}",
-        )
-
-    engine_values = dict(result.values)
+    engine_values = _calculate_m303_engine_values_from_inputs(
+        inputs=inputs,
+        year=year,
+        period=period,
+        binding_values=binding_values,
+        label=pdf_stem,
+    )
     _assert_m303_resultado_regimen_general_consistency(
         pdf_stem=pdf_stem,
         engine_values=engine_values,

@@ -2,7 +2,9 @@
 
 The registered commands list stored calculation revisions, show one persisted
 revision, and render its typed casilla observations without mutating modelo
-state.
+state. Selection stays in the injected application-facing resolvers; this
+transport module serializes results into :class:`WorkRevisionsResult`,
+:class:`WorkRevisionResult`, and :class:`WorkObservationsResult` envelopes.
 """
 
 from __future__ import annotations
@@ -37,7 +39,7 @@ from ._modelo_rendering import (
 
 @dataclass(frozen=True)
 class _WorkRevisionCommandDeps:
-    """Injected CLI dependencies shared by work revision command handlers."""
+    """Injected application and rendering dependencies for revision read handlers."""
 
     activate_output_language: Callable[[typer.Context, OutputLanguage | None], None]
     require_active_profile: Callable[[], None]
@@ -59,6 +61,7 @@ def _resolve_selected_revision(
     bucket_id: str | None,
     selector: str,
 ) -> CalculationRevision:
+    """Resolve the selected :class:`CalculationRevision` for read-only commands."""
     try:
         return deps.resolve_revision_for_cli(
             calculation_revision_id=calculation_revision_id,
@@ -106,7 +109,7 @@ def _register_work_revisions_command(work_app: typer.Typer, deps: _WorkRevisionC
         ] = None,
         output_language: OutputLanguageOpt = None,
     ) -> None:
-        """List calculation revisions, optionally filtered to one work unit."""
+        """List persisted :class:`CalculationRevision` rows for an optional :class:`WorkUnit`."""
         deps.activate_output_language(ctx, output_language)
         deps.require_active_profile()
         resolved_work_unit_id = work_unit_id
@@ -192,7 +195,7 @@ def _register_work_revision_command(work_app: typer.Typer, deps: _WorkRevisionCo
         ] = None,
         output_language: OutputLanguageOpt = None,
     ) -> None:
-        """Show one stored calculation revision's persisted casilla values."""
+        """Show one selected :class:`CalculationRevision` as a :class:`WorkRevisionResult`."""
         deps.activate_output_language(ctx, output_language)
         deps.require_active_profile()
         selected_revision = _resolve_selected_revision(
@@ -279,7 +282,7 @@ def _register_work_observations_command(work_app: typer.Typer, deps: _WorkRevisi
         ] = None,
         output_language: OutputLanguageOpt = None,
     ) -> None:
-        """Show typed casilla observations for one stored calculation revision."""
+        """Show :class:`ObservationPayload` provenance for one stored :class:`CalculationRevision`."""
         deps.activate_output_language(ctx, output_language)
         deps.require_active_profile()
         selected_revision = _resolve_selected_revision(

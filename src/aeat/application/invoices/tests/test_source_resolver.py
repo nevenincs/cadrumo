@@ -14,10 +14,9 @@ from ....application.ledger import (
     BusinessOperationInvoiceDirection,
     BusinessOperationInvoiceRepository,
     CollectibleInvoiceService,
-    IntracomOperationType,
     PayableInvoiceService,
 )
-from ....core import Period
+from ....core import IntracomOperationType, Period
 from ....core.errors import AeatError, get_registered_error_code, resolve_error_message
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistryValidationError

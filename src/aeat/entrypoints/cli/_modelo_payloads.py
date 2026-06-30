@@ -103,7 +103,14 @@ class WorkPlazoDeadlinePayload(OutputSchema):
 
 
 class CalculationRevisionPayload(OutputSchema):
-    """Calculation revision fields surfaced by calculate / revisions commands."""
+    """Shared JSON projection of a persisted :class:`CalculationRevision`.
+
+    ``casilla_values`` is the flat convenience table keyed by casilla id, while
+    ``observations`` carries the joinable :class:`ObservationPayload` rows with
+    formula, operand, legal-reference, and source-reference provenance. The
+    binding and relation override maps preserve the operator inputs that shaped
+    the draft revision.
+    """
 
     calculation_revision_id: CalculationRevisionId
     work_unit_id: WorkUnitId
@@ -191,7 +198,12 @@ class CrossPeriodCleanStatePayload(OutputSchema):
 
 
 class VerificationReportPayload(OutputSchema):
-    """Verification report fields returned by verify / verification-report commands."""
+    """Shared projection of a :class:`aeat.domain.modelos.VerificationReport`.
+
+    ``findings`` carries the blocking or advisory
+    :class:`FindingPayload` rows that explain whether the selected
+    :class:`CalculationRevision` earned the verified-complete transition.
+    """
 
     verification_report_id: VerificationReportId
     calculation_revision_id: CalculationRevisionId
@@ -205,7 +217,12 @@ class VerificationReportPayload(OutputSchema):
 
 
 class ExternalEvidencePayload(OutputSchema):
-    """External-evidence reference embedded in a filing record."""
+    """JSON projection of :class:`aeat.domain.modelos.ExternalEvidence`.
+
+    The evidence reference records the official AEAT source used to import a
+    filing baseline; it is data observed from outside the application, not proof
+    that this CLI submitted the return.
+    """
 
     kind: str
     reference_id: str
@@ -213,7 +230,12 @@ class ExternalEvidencePayload(OutputSchema):
 
 
 class ModeloRecordPayload(OutputSchema):
-    """Filing record fields returned by file / filing-record commands."""
+    """Shared projection of a :class:`aeat.domain.modelos.ModeloRecord`.
+
+    The payload represents local filing state for a verified
+    :class:`CalculationRevision`; it is not a live AEAT submission. Live or
+    imported evidence appears only through ``external_evidence``.
+    """
 
     filing_record_id: FilingRecordId
     work_unit_id: WorkUnitId
@@ -377,6 +399,18 @@ class WorkDiscardResult(OutputSchema):
 
 @register_schema("modelo.work.calculate")
 class WorkCalculateResult(OutputSchema):
+    """Successful ``modelo work calculate`` result payload.
+
+    The calculate CLI flattens the persisted :class:`CalculationRevision` fields
+    from :class:`CalculationRevisionPayload`, then adds the presentation-only
+    values carried by
+    :class:`aeat.application.modelo.ModeloWorkCalculationServiceResult`: Modelo
+    202 modality, backend authorization state, and optional
+    :class:`WorkPlazoDeadlinePayload`. Non-blocking authorization and source
+    diagnostics are projected into the envelope's
+    :class:`aeat.core.json_contract.Notice` rows, not bespoke result fields.
+    """
+
     operation: str = "modelo.work.calculate"
     saved: bool = True
     saved_confirmation: str
@@ -420,9 +454,13 @@ class WorkRevisionsResult(OutputSchema):
 class WorkVerifyResult(OutputSchema):
     """Verification report returned by ``aeat app modelo work verify``.
 
-    On a successful verificado-completo verdict the revision transitions to
-    ``verificado_completo``; on a refused verdict the revision is unchanged
-    and ``findings`` names every blocking or advisory issue.
+    The command delegates to
+    :func:`aeat.application.modelo.verify_modelo_revision` and returns the
+    resulting :class:`VerificationReportPayload`. On a successful
+    verificado-completo verdict the revision transitions to
+    ``verificado_completo``; on a refused verdict the revision is unchanged and
+    ``findings`` names every blocking or advisory issue. Advisory findings also
+    ride the envelope's :class:`aeat.core.json_contract.Notice` channel.
     """
 
     operation: str = "modelo.work.verify"
@@ -456,8 +494,11 @@ class WorkDependenciesResult(OutputSchema):
 class WorkFileResult(OutputSchema):
     """Internal-filing confirmation returned by ``aeat app modelo work file``.
 
-    Records that the revision was marked as internally filed. Does NOT
-    represent an AEAT submission; ``live_submission`` is always ``False``.
+    The command delegates to
+    :func:`aeat.application.modelo.file_modelo_revision` and returns the
+    resulting :class:`ModeloRecordPayload`. It records that the verified
+    revision was marked as internally filed. It does not represent an AEAT
+    submission; ``live_submission`` is always ``False``.
     """
 
     operation: str = "modelo.work.file"
@@ -485,9 +526,13 @@ class WorkFileResult(OutputSchema):
 class WorkAmendResult(OutputSchema):
     """Amendment filing confirmation returned by ``aeat app modelo work amend``.
 
-    Carries the amendment-specific pair (``amendment_kind``,
-    ``amends_filing_record_id``) above the standard filing-record body.
-    ``live_submission`` is always ``False``; does NOT submit to AEAT.
+    The command delegates to
+    :func:`aeat.application.modelo.amend_modelo_revision` and returns the
+    resulting :class:`ModeloRecordPayload` with the amendment-specific pair
+    (``amendment_kind``, ``amends_filing_record_id``). The source filing record
+    must be an externally evidenced baseline; the new filing record clears
+    ``external_evidence`` and remains local, so ``live_submission`` is always
+    ``False``.
     """
 
     operation: str = "modelo.work.amend"
@@ -551,7 +596,12 @@ class ModeloRecordShowResult(OutputSchema):
 
 @register_schema("modelo.verification_report.list")
 class VerificationReportListResult(OutputSchema):
-    """Verification-report listing returned by ``aeat app modelo verification-report list``."""
+    """Typed listing of persisted verification reports.
+
+    ``reports`` contains shared :class:`VerificationReportPayload` projections;
+    filtering only constrains ``calculation_revision_id_filter`` and leaves each
+    report's finding, missing-casilla, and verificado-completo fields intact.
+    """
 
     operation: str = "modelo.verification_report.list"
     calculation_revision_id_filter: str | None = None
@@ -561,7 +611,14 @@ class VerificationReportListResult(OutputSchema):
 
 @register_schema("modelo.verification_report.view")
 class VerificationReportShowResult(OutputSchema):
-    """Verification-report detail returned by ``aeat app modelo verification-report view``."""
+    """Typed detail view for one persisted verification report.
+
+    This schema mirrors :class:`WorkVerifyResult` verification fields so
+    operators can re-read a saved
+    :class:`aeat.domain.modelos.VerificationReport` with the same
+    :class:`FindingPayload` legal/source-reference detail emitted by
+    ``aeat app modelo work verify``.
+    """
 
     operation: str = "modelo.verification_report.show"
     verification_report_id: VerificationReportId
@@ -683,7 +740,7 @@ class WorkHistoryResult(OutputSchema):
 
 
 class WorkflowRunPayload(OutputSchema):
-    """One workflow run row in the runs listing."""
+    """One :class:`aeat.application.workflow.WorkflowResult` row in the runs listing."""
 
     run_id: str
     modelo: str | None
@@ -695,7 +752,11 @@ class WorkflowRunPayload(OutputSchema):
 
 @register_schema("modelo.work.runs")
 class WorkRunsResult(OutputSchema):
-    """Workflow runs listing result."""
+    """Workflow run listing returned by ``aeat app modelo work runs``.
+
+    Rows mirror persisted :class:`aeat.application.workflow.WorkflowResult`
+    records discovered through :func:`aeat.application.workflow.list_runs`.
+    """
 
     operation: str = "modelo.work.runs"
     run_count: int
@@ -704,7 +765,15 @@ class WorkRunsResult(OutputSchema):
 
 @register_schema("modelo.filing_record.import")
 class FilingRecordImportResult(OutputSchema):
-    """Filing record created by importing external AEAT evidence."""
+    """Result emitted by ``aeat app modelo filing-record import``.
+
+    The command delegates to
+    :func:`aeat.application.modelo.import_external_filing_evidence` and returns
+    the resulting evidence-bearing :class:`ModeloRecordPayload` with the
+    requested ``evidence_kind`` and ``evidence_reference_id``. Imported records
+    are the baseline consumed by ``modelo work amend`` and remain distinct from a
+    live AEAT submission by this application.
+    """
 
     operation: str = "modelo.filing_record.import"
     evidence_kind: str
@@ -731,7 +800,14 @@ class FilingRecordImportResult(OutputSchema):
 
 @register_schema("modelo.filing_record.observe_local")
 class FilingRecordLocalObservationResult(OutputSchema):
-    """Local operator-supplied observation recorded for calculation prefill."""
+    """Result emitted by ``aeat app modelo filing-record observe-local``.
+
+    The payload mirrors
+    :class:`aeat.application.modelo._local_observation_actions.ModeloLocalObservationResult`:
+    values are stored in the calculation-observation repository for prefill, while
+    ``official_evidence``, ``filing_record_created``, and ``aeat_accepted`` remain
+    false so consumers cannot mistake operator-entered values for AEAT evidence.
+    """
 
     operation: str = "modelo.filing_record.observe_local"
     modelo: str
@@ -1171,7 +1247,16 @@ class IvaWalletOverrideResult(OutputSchema):
 
 @register_schema("modelo.work.resume")
 class WorkResumeResult(OutputSchema):
-    """Workflow resume precondition and context result."""
+    """Workflow resume precondition and context result.
+
+    Combines the resumable
+    :class:`aeat.application.workflow.WorkflowResumeContext` with selector
+    metadata from
+    :class:`aeat.application.workflow.WorkflowResumeTargetResolution`. The
+    ``obligation`` payload is the serialized
+    :class:`aeat.domain.deadlines.ModeloDeadline` the workflow engine would use
+    for a fresh attempt.
+    """
 
     operation: str = "modelo.work.resume"
     prior_workflow_run_id: str

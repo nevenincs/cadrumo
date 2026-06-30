@@ -414,6 +414,33 @@ _M303_2023_ONWARDS_PARAMS = [
 ]
 
 
+def _calculate_m303_engine_values_from_inputs(
+    *,
+    inputs: Mapping[CasillaId, Decimal],
+    year: int,
+    period: str,
+    binding_values: Mapping[BindingId, Decimal],
+    label: str,
+) -> dict[CasillaId, object]:
+    _period_month = {"1T": 1, "2T": 4, "3T": 7, "4T": 10}[period]
+    snapshot = _registry_snapshot("303", year, period)
+    try:
+        result = calculate_registry_snapshot(
+            snapshot,
+            inputs=inputs,
+            date_context={"filing_period": date(year, _period_month, 1)},
+            binding_values=binding_values,
+        )
+    except RegistryValidationError as exc:
+        pytest.fail(
+            f"BINDING-GAP [{label}]: calculate_registry_snapshot raised RegistryValidationError.\n"
+            f"  error: {exc}\n"
+            f"  inputs supplied: {sorted(inputs)}\n"
+            f"  binding_values supplied: {sorted(binding_values)}",
+        )
+    return dict(result.values)
+
+
 def _build_m303_engine_result(pdf_stem: str, year: int, period: str):  # type: ignore[return]
     """Parse the corpus PDF and run the registry engine.  Returns (extracted, engine_values)."""
     extracted = _parse_extracted_declaracion_values(modelo="303", fixture_stem=pdf_stem, year=year, period=period)
@@ -443,24 +470,14 @@ def _build_m303_engine_result(pdf_stem: str, year: int, period: str):  # type: i
         "modelo-303-compensacion-pendiente-anteriores": _comp,
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
     }
-
-    _period_month = {"1T": 1, "2T": 4, "3T": 7, "4T": 10}[period]
-    snapshot = _registry_snapshot("303", year, period)
-    try:
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=inputs,
-            date_context={"filing_period": date(year, _period_month, 1)},
-            binding_values=binding_values,
-        )
-    except RegistryValidationError as exc:
-        pytest.fail(
-            f"BINDING-GAP [{pdf_stem}]: calculate_registry_snapshot raised RegistryValidationError.\n"
-            f"  error: {exc}\n"
-            f"  inputs supplied: {sorted(inputs)}\n"
-            f"  binding_values supplied: {sorted(binding_values)}",
-        )
-    return extracted, dict(result.values), inputs
+    engine_values = _calculate_m303_engine_values_from_inputs(
+        inputs=inputs,
+        year=year,
+        period=period,
+        binding_values=binding_values,
+        label=pdf_stem,
+    )
+    return extracted, engine_values, inputs
 
 
 def _assert_m303_engine_matches_extracted_decimal(

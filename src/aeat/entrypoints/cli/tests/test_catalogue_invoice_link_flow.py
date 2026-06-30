@@ -35,7 +35,7 @@ from ....application.invoices import build_catalogue_invoice
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
-from ....core.aggregation import IntracomOperationType
+from ....core import IntracomOperationType
 from ....domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....tests.cli_runner import invoke_cached_cli

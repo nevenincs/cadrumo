@@ -20,10 +20,12 @@ from .._evidence import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_BUCKET_ID = "29292929-2929-4929-8929-292929292929"
+
 
 @pytest.fixture
 def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-001") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile
 
 
@@ -66,13 +68,13 @@ class TestEvidenceEventEmission:
         pdf_file: Path,
     ) -> None:
         svc = _make_svc(isolated_settings, secure_objects)
-        result = svc.add(bucket_id="bucket-001", source_path=pdf_file)
+        result = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_file)
         assert len(result.bucket_event_ids) == 1
         catalogue = _event_repo(secure_objects).load()
         event = catalogue.events[result.bucket_event_ids[0]]
         assert event.event_type is BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED
         assert event.object_id == result.record.evidence_id
-        assert event.bucket_id == "bucket-001"
+        assert event.bucket_id == _BUCKET_ID
 
     def test_default_event_repository_uses_active_runtime_bucket(
         self,
@@ -82,12 +84,12 @@ class TestEvidenceEventEmission:
     ) -> None:
         svc = PurchaseInvoiceEvidenceService(settings=isolated_settings)
 
-        result = svc.add(bucket_id="bucket-001", source_path=pdf_file)
+        result = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_file)
 
         catalogue = _event_repo(secure_objects).load()
         event = catalogue.events[result.bucket_event_ids[0]]
         assert event.event_type is BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED
-        assert event.bucket_id == "bucket-001"
+        assert event.bucket_id == _BUCKET_ID
 
     def test_update_emits_purchase_invoice_evidence_replaced(
         self,
@@ -96,9 +98,9 @@ class TestEvidenceEventEmission:
         pdf_file: Path,
     ) -> None:
         svc = _make_svc(isolated_settings, secure_objects)
-        add_result = svc.add(bucket_id="bucket-001", source_path=pdf_file)
+        add_result = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_file)
         update_result = svc.update(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             evidence_id=add_result.record.evidence_id,
             patch=PurchaseInvoiceEvidencePatch(notes="updated"),
         )
@@ -115,9 +117,9 @@ class TestEvidenceEventEmission:
         pdf_file: Path,
     ) -> None:
         svc = _make_svc(isolated_settings, secure_objects)
-        add_result = svc.add(bucket_id="bucket-001", source_path=pdf_file)
+        add_result = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_file)
         remove_result = svc.remove(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             evidence_id=add_result.record.evidence_id,
         )
         assert len(remove_result.bucket_event_ids) == 1
@@ -133,7 +135,7 @@ class TestEvidenceEventEmission:
     ) -> None:
         svc = _make_svc(isolated_settings, secure_objects)
         result = svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             source_path=pdf_file,
             supplier="Acme S.L.",
             invoice_number="INV-001",
@@ -149,13 +151,13 @@ class TestEvidenceEventEmission:
         pdf_file: Path,
     ) -> None:
         svc = _make_svc(isolated_settings, secure_objects)
-        add_result = svc.add(bucket_id="bucket-001", source_path=pdf_file)
+        add_result = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_file)
         remove_result = svc.remove(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             evidence_id=add_result.record.evidence_id,
         )
         assert remove_result.record == add_result.record
-        assert svc.list_all(bucket_id="bucket-001") == ()
+        assert svc.list_all(bucket_id=_BUCKET_ID) == ()
 
 
 class TestEvidenceSecureStorage:
@@ -167,11 +169,11 @@ class TestEvidenceSecureStorage:
     ) -> None:
         svc = _make_svc(isolated_settings, secure_objects)
 
-        result = svc.add(bucket_id="bucket-001", source_path=pdf_file, supplier="Acme S.L.")
-        records = svc.list_all(bucket_id="bucket-001")
+        result = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_file, supplier="Acme S.L.")
+        records = svc.list_all(bucket_id=_BUCKET_ID)
 
         assert records == (result.record,)
-        assert not (isolated_settings.aeat_purchase_invoice_evidence_dir / "bucket-001.jsonl").exists()
+        assert not (isolated_settings.aeat_purchase_invoice_evidence_dir / f"{_BUCKET_ID}.jsonl").exists()
         raw_records = tuple(secure_objects.iter_all_records_raw())
         assert any(row.namespace == "aeat.application.ledger.purchase_invoice_evidence" for row in raw_records)
 
@@ -185,7 +187,7 @@ class TestEvidenceErrorPaths:
     ) -> None:
         svc = _make_svc(isolated_settings, secure_objects)
         with pytest.raises(PurchaseInvoiceEvidenceInputError, match="does not resolve to a readable file") as exc_info:
-            svc.add(bucket_id="b1", source_path=tmp_path / "ghost.pdf")
+            svc.add(bucket_id=_BUCKET_ID, source_path=tmp_path / "ghost.pdf")
         # The refusal addresses the path, not the irrelevant 'evidence list' verb.
         assert exc_info.value.suggestion is not None
         assert "evidence list" not in exc_info.value.suggestion
@@ -201,7 +203,7 @@ class TestEvidenceErrorPaths:
         txt_file.write_text("hello")
         svc = _make_svc(isolated_settings, secure_objects)
         with pytest.raises(PurchaseInvoiceEvidenceInputError, match="unsupported extension"):
-            svc.add(bucket_id="b1", source_path=txt_file)
+            svc.add(bucket_id=_BUCKET_ID, source_path=txt_file)
 
     def test_update_raises_on_missing_id(
         self,
@@ -211,7 +213,7 @@ class TestEvidenceErrorPaths:
         svc = _make_svc(isolated_settings, secure_objects)
         with pytest.raises(PurchaseInvoiceEvidenceNotFoundError):
             svc.update(
-                bucket_id="bucket-001",
+                bucket_id=_BUCKET_ID,
                 evidence_id="doesnotexist",
                 patch=PurchaseInvoiceEvidencePatch(notes="x"),
             )
@@ -223,4 +225,4 @@ class TestEvidenceErrorPaths:
     ) -> None:
         svc = _make_svc(isolated_settings, secure_objects)
         with pytest.raises(PurchaseInvoiceEvidenceNotFoundError):
-            svc.remove(bucket_id="bucket-001", evidence_id="doesnotexist")
+            svc.remove(bucket_id=_BUCKET_ID, evidence_id="doesnotexist")

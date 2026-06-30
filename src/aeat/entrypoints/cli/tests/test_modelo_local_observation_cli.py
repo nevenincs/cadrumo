@@ -21,6 +21,8 @@ from .envelope_helpers import unwrap_envelope_notices, unwrap_schema_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_LOCAL_OBSERVATION_PROFILE_ID = "24242424-2424-4424-8424-242424242424"
+
 
 @pytest.fixture
 def runtime_profile(tmp_path: Path) -> TestRuntimeProfile:
@@ -28,7 +30,7 @@ def runtime_profile(tmp_path: Path) -> TestRuntimeProfile:
 
     with isolated_cli_runtime_profile(
         tmp_path=tmp_path,
-        bucket_id="local-observation-cli",
+        bucket_id=_LOCAL_OBSERVATION_PROFILE_ID,
         label="Local observation CLI test",
     ) as profile:
         yield profile
