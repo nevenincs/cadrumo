@@ -17,27 +17,22 @@ def test_cent_constant_is_two_decimal_places() -> None:
     assert CENT.as_tuple().exponent == -2
 
 
-def test_round_to_cents_truncates_below_half() -> None:
-    """A residual under 0.5 cent rounds down."""
-    assert round_to_cents(Decimal("1.234")) == Decimal("1.23")
-    assert round_to_cents(Decimal("0.004")) == Decimal("0.00")
-
-
-def test_round_to_cents_rounds_half_away_from_zero() -> None:
-    """A residual of exactly 0.5 cent rounds AWAY from zero (HALF_UP, AEAT convention).
-
-    Banker's rounding (HALF_EVEN) would round 1.005 to 1.00 and 1.015 to
-    1.02; AEAT's published convention rounds both up by one cent.
-    """
-    assert round_to_cents(Decimal("1.005")) == Decimal("1.01")
-    assert round_to_cents(Decimal("1.015")) == Decimal("1.02")
-    assert round_to_cents(Decimal("2.345")) == Decimal("2.35")
-
-
-def test_round_to_cents_handles_negative_amounts_symmetrically() -> None:
-    """Negative residuals round away from zero too (away = more negative)."""
-    assert round_to_cents(Decimal("-1.005")) == Decimal("-1.01")
-    assert round_to_cents(Decimal("-1.234")) == Decimal("-1.23")
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    (
+        pytest.param("1.234", "1.23", id="below-half-down"),
+        pytest.param("0.004", "0.00", id="below-half-to-zero"),
+        pytest.param("1.005", "1.01", id="half-up-1005"),
+        pytest.param("1.015", "1.02", id="half-up-1015"),
+        pytest.param("2.345", "2.35", id="half-up-2345"),
+        pytest.param("-1.005", "-1.01", id="negative-half-away-from-zero"),
+        pytest.param("-1.234", "-1.23", id="negative-below-half"),
+        pytest.param("3.14159265", "3.14", id="high-precision-down"),
+        pytest.param("3.14999", "3.15", id="high-precision-up"),
+    ),
+)
+def test_round_to_cents_quantizes_examples(raw: str, expected: str) -> None:
+    assert round_to_cents(Decimal(raw)) == Decimal(expected)
 
 
 def test_round_to_cents_returns_decimal_with_two_digit_exponent() -> None:
@@ -52,8 +47,3 @@ def test_round_to_cents_is_idempotent_on_already_quantised_values() -> None:
     already = Decimal("100.99")
     assert round_to_cents(already) == already
 
-
-def test_round_to_cents_preserves_high_precision_inputs() -> None:
-    """Inputs with many fractional digits are quantised, not truncated mid-way."""
-    assert round_to_cents(Decimal("3.14159265")) == Decimal("3.14")
-    assert round_to_cents(Decimal("3.14999")) == Decimal("3.15")
