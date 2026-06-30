@@ -7,8 +7,14 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....adapters.persistence.storage import (
+    STORAGE_NAMESPACE_REGISTRY,
+    SecureObjectRepository,
+    dispose_engine,
+    get_engine,
+)
 from ....core import Period
+from ....core.config import Settings
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._calculation_revision import CalculationRevisionState
 from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
@@ -26,11 +32,19 @@ from ._export_modelo_303_support import (
     _blocked_wallet_decision,
     _filed_history_only_wallet_decision,
     _seed_modelo_303_1t_clean_state,
-    _wallet_decision_repository_at,
 )
 from ._export_test_support import _profile, _seed_profile, _seed_revision, isolated_backend_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _wallet_decision_repository_at(sidecar_db: Path) -> tuple[IvaWalletDecisionRepository, Settings]:
+    settings = Settings(aeat_database_url=f"sqlite:///{sidecar_db.as_posix()}")
+    objects = SecureObjectRepository(
+        engine=get_engine(settings),
+        namespace_registry=STORAGE_NAMESPACE_REGISTRY,
+    )
+    return IvaWalletDecisionRepository(objects=objects), settings
 
 
 @pytest.fixture
