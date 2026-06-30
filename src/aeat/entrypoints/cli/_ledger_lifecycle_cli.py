@@ -199,13 +199,13 @@ def ledger_doclink(
     """Fetch a document link and store its bytes as encrypted evidence on a ledger row.
 
     The reference is resolved through
-    :func:`aeat.adapters.outbound.google.resolve_document_link`, which fetches
+    :func:`~aeat.adapters.outbound.google.resolve_document_link`, which fetches
     Drive files reachable under the granted ``drive.file`` scope. The fetched
     bytes are stored through the byte-bearing
-    :func:`aeat.domain.attachments.add_attachment_bytes` path (real ``sha256``
-    and ``mime_type``), and the original link is kept as manifest provenance.
-    Gmail links, arbitrary URLs, and out-of-scope Drive files are **refused** —
-    a link is never stored as evidence.
+    :func:`~aeat.domain.attachments.add_attachment_bytes` path (real
+    ``sha256`` and ``mime_type``), and the original link is kept as manifest
+    provenance. Gmail links, arbitrary URLs, and out-of-scope Drive files are
+    **refused** — a link is never stored as evidence.
     """
     from ...adapters.outbound.google import resolve_document_link
     from ...adapters.outbound.google._active_profile import resolve_active_profile
@@ -612,8 +612,9 @@ def _split_classification_dropped_notices(
     Split children deliberately default to ``NOT_YET_PROCESSED`` to force
     conscious per-row tax treatment; the parent's classification is not cloned.
     When the parent carried a real classified outcome (BUSINESS / PERSONAL /
-    MIXED), that drop is surfaced as an ``info`` :class:`Notice` so it is not
-    silent — the operator is told the children need re-classification.
+    MIXED), that drop is surfaced as an ``info``
+    :class:`~aeat.core.json_contract.Notice` so it is not silent — the operator
+    is told the children need re-classification.
     """
     if not is_classified(parent_classification):
         return []
@@ -651,10 +652,11 @@ def _ledger_split_llm(
     Without ``--apply`` the proposed children (derived amounts, model-selected
     categories, registry-derived IVA) are previewed and nothing is persisted.
     With ``--apply`` (and ``--yes``) the reviewed proposal drives
-    :func:`apply_evidence_split`: the single-writer split plus per-child
-    classification, registry-derived numbers, parent-invoice evidence link, and
-    ``llm:<model>`` provenance. The manual ``--child-amount`` / ``--child-description``
-    flags are the explicit operator override and cannot be combined with ``--llm``.
+    :func:`~aeat.application.ledger.apply_evidence_split`: the single-writer
+    split plus per-child classification, registry-derived numbers,
+    parent-invoice evidence link, and ``llm:<model>`` provenance. The manual
+    ``--child-amount`` / ``--child-description`` flags are the explicit operator
+    override and cannot be combined with ``--llm``.
     """
     from ._ledger_payloads import LedgerSplitChildProposalPayload, LedgerSplitResult
 
