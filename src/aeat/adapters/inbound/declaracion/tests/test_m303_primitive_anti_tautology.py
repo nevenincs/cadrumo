@@ -32,13 +32,10 @@ from ._verification_chain_support import (
     BindingId,
     CasillaId,
     Decimal,
-    RegistryValidationError,
+    _calculate_m303_engine_values_from_inputs,
     _casilla_id,
     _decimal_inputs_from_extracted_values,
     _parse_extracted_declaracion_values,
-    _registry_snapshot,
-    calculate_registry_snapshot,
-    date,
 )
 
 pytestmark = [
@@ -51,26 +48,17 @@ _IVA_REPERCUTIDO_GENERAL_CASILLA: CasillaId = _casilla_id("iva.repercutido.gener
 
 def _run_engine(inputs: dict[CasillaId, Decimal], year: int, period: str) -> dict[CasillaId, Decimal]:
     """Calculate the registry snapshot with ``inputs`` and return engine values."""
-    _period_month = {"1T": 1, "2T": 4, "3T": 7, "4T": 10}[period]
-    snapshot = _registry_snapshot("303", year, period)
     binding_values: dict[BindingId, Decimal] = {
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
     }
-    try:
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=inputs,
-            date_context={"filing_period": date(year, _period_month, 1)},
-            binding_values=binding_values,
-        )
-    except RegistryValidationError as exc:  # pragma: no cover - diagnostic
-        pytest.fail(
-            "BINDING-GAP: calculate_registry_snapshot raised RegistryValidationError.\n"
-            f"  error: {exc}\n"
-            f"  inputs supplied: {sorted(inputs)}",
-        )
-    return dict(result.values)
+    return _calculate_m303_engine_values_from_inputs(
+        inputs=inputs,
+        year=year,
+        period=period,
+        binding_values=binding_values,
+        label="M303 anti-tautology",
+    )
 
 
 def test_m303_engine_sums_extracted_primitives_not_printed_total() -> None:
