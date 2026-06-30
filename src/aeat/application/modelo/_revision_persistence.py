@@ -2,16 +2,21 @@
 
 The calculate path stores draft :class:`CalculationRevision` rows with their
 provenance-bearing :class:`CasillaObservation` entries, advances the parent
-:class:`WorkUnit` pointer, and emits ``modelo.calculation.created`` through the
-bucket-event catalogue.
+:class:`aeat.domain.modelos.WorkUnit` pointer, and emits
+``modelo.calculation.created`` through the
+:class:`BucketEventHistoryRepository` catalogue. The event is a lightweight join
+record; full legal/source provenance remains on the persisted calculation
+revision's observations, with ``has_provenance`` signalling that the join is
+grounded.
 
 The filing path runs here only after its caller has passed readiness, workflow,
 and clean-state gates. It records the local/internal filing transition: create a
 current :class:`ModeloRecord`, supersede any prior current filing for the work
 target, move calculation revisions into ``PRESENTADO`` states, and co-emit
-participation-index plus cross-period observation projections. It never submits
-to AEAT and never turns the non-official ``app_filing`` carry projection into
-filing-grade external evidence.
+the :class:`aeat.domain.modelos.TransactionRevisionParticipationIndex` writes
+plus cross-period observation projections. It never submits to AEAT and never
+turns the non-official ``app_filing`` carry projection into filing-grade
+external evidence.
 
 See Also:
     :func:`aeat.application.modelo.file_modelo_revision`:
@@ -81,7 +86,13 @@ def emit_bucket_event(
     object_id: str,
     payload: Mapping[str, str],
 ) -> BucketEvent:
-    """Append one event to the bucket-event-history catalogue and return the persisted :class:`BucketEvent`."""
+    """Append one :class:`BucketEvent` to the bucket-event-history catalogue.
+
+    The returned event is the durable bucket-scoped audit pointer for the domain
+    mutation. Payloads stay compact and reference the owning calculation
+    revision, filing record, or work unit instead of duplicating their full
+    catalogued state.
+    """
     event_id = derive_bucket_event_id(
         bucket_id=bucket_id,
         event_type=event_type,
@@ -136,6 +147,12 @@ def persist_calculation_revision(
     detail rows, and calculated casilla values. The supplied
     :class:`CasillaObservation` rows carry the legal and source provenance
     persisted with a new calculation revision.
+
+    The emitted :class:`BucketEvent` uses the revision id as ``object_id`` and
+    includes a ``has_provenance`` payload flag. Audit readers can therefore use
+    the event as a compact pointer back to the persisted
+    :class:`CalculationRevision` instead of treating bucket history as the
+    standalone provenance store.
     """
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -236,10 +253,12 @@ def _build_filed_participation_writes(
     """Build the per-transaction participation writes for a filed revision.
 
     For each ``source_transaction_id`` of the filed revision, load that
-    transaction's participation index, upsert the ``PRESENTADO`` participation
-    carrying the ``filing_record_id`` (replacing the prior verified entry for the
-    same revision in place), and return the resulting ``SecureObjectWrite`` so
-    the caller co-emits them in the same atomic unit of work as the filing save.
+    transaction's
+    :class:`aeat.domain.modelos.TransactionRevisionParticipationIndex`, upsert
+    the ``PRESENTADO`` participation carrying the ``filing_record_id``
+    (replacing the prior verified entry for the same revision in place), and
+    return the resulting ``SecureObjectWrite`` so the caller co-emits them in
+    the same atomic unit of work as the filing save.
     """
     writes: list[SecureObjectWrite] = []
     for transaction_id in filed_target.source_transaction_ids:
@@ -280,16 +299,19 @@ def persist_filed_revision(
     The caller has already run verification/workflow/readiness gates. The
     ``target`` :class:`CalculationRevision` is the verified-complete source
     revision that becomes ``PRESENTADO`` when this transition succeeds.
+    The parent :class:`aeat.domain.modelos.WorkUnit` is advanced to the new
+    current filing record after the calculation and filing catalogues are saved.
 
     When ``calculation_observation_repository`` is supplied the filed revision's
-    casilla observations are additionally persisted into the cross-period
-    observation store (via :func:`persist_filed_revision_observation`,
-    co-emitted with the ``MODELO_FILED`` event) so a later period's
-    ``calculate`` can carry the filed values forward automatically through the
-    ``previous_filing`` resolver. The record is stamped with the NON-official
-    ``app_filing`` source_kind and therefore never satisfies the cross-period
-    clean-state filing gate. This is a second projection of the single-writer
-    filing transition, not a parallel write path.
+    casilla observations are additionally persisted into the
+    :class:`aeat.application.calculations.CalculationObservationRepository` via
+    :func:`persist_filed_revision_observation`, co-emitted with the
+    ``MODELO_FILED`` event. A later period's ``calculate`` can then carry the
+    filed values forward automatically through the ``previous_filing`` resolver.
+    The record is stamped with the NON-official ``app_filing`` source_kind and
+    therefore never satisfies the cross-period clean-state filing gate. This is
+    a second projection of the single-writer filing transition, not a parallel
+    write path.
 
     ``refunded`` is the disposition-determined fact (resolved once at the
     calculate/file boundary by ``resolve_modelo_result_disposition``): when the
