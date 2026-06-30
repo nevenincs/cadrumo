@@ -5,6 +5,9 @@
 via :class:`SecureObjectRepository` at :class:`SensitivityClass` FINANCIAL using
 an :class:`Envelope` wrapper; no plaintext invoice row, JSON catalogue, or
 envelope file lands on disk.
+The storage contract is declared by
+:data:`aeat.adapters.persistence.storage.INVOICE_CATALOGUE_NAMESPACE`; its
+default object key is the singleton ``catalogue`` row.
 """
 
 from __future__ import annotations
@@ -51,8 +54,15 @@ def _resolve_invoice_bucket_id(bucket_id: str | None) -> str:
 class InvoiceCatalogueRepository:
     """Repository over encrypted SQL-backed :class:`InvoiceCatalogue` storage.
 
-    The repository wraps a :class:`SecureObjectRepository` and exposes the
-    concrete load/save implementation behind
+    :data:`aeat.adapters.persistence.storage.INVOICE_CATALOGUE_NAMESPACE` is
+    the central profile-local namespace, schema-version, sensitivity, and
+    singleton-key contract for the encrypted invoice catalogue row. The
+    :class:`InvoiceCatalogue` payload is wrapped in
+    :class:`~aeat.adapters.persistence.storage.Envelope` before
+    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    persists it, and :meth:`to_secure_object_write` exposes the same write for
+    transaction/event co-commit paths. This class exposes the concrete load/save
+    implementation behind
     :class:`~aeat.domain.invoices.InvoiceCatalogueRepositoryProtocol`.
     """
 
