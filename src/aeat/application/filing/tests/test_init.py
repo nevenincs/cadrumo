@@ -4,17 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.resources import bundled_path as _bundled_path
+from ....core.resources import resources
 from ....domain.calculations.registry import InputKind
-from ....domain.calculations.registry._authority import ValidatedRegistryAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_REGISTRY_ROOT = _bundled_path("registry", "aeat")
 
-
-def _authority() -> ValidatedRegistryAuthority:
-    return ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=_bundled_path())
+def _authority():
+    return resources().modelos.authority
 
 
 def test_formula_backed_casillas_are_computed_inputs() -> None:
