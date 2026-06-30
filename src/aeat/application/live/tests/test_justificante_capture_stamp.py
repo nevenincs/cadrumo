@@ -66,8 +66,14 @@ def test_stamp_registers_justificante_and_marks_filing_live_captured() -> None:
         .for_bucket(bucket_id, event_types=(BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED,))
     )
     assert len(events) == 1
+    assert events[0].payload_version == 2
     assert events[0].payload["evidence_kind"] == "aeat_live_capture"
     assert events[0].payload["evidence_reference_id"] == "ABCD1234EFGH5678"
+    assert events[0].payload["snapshot_id"] == snapshot.snapshot_id
+    assert events[0].payload["source_kind"] == "aeat_sede_live_capture"
+    assert events[0].payload["pdf_sha256"] == snapshot.pdf_sha256
+    assert events[0].payload["captured_at"] == "2026-04-18T10:00:00+00:00"
+    assert events[0].payload["expediente_id"] == "202613000010001A"
 
 
 def test_stamp_keeps_existing_matching_aeat_evidence_without_rewriting_event() -> None:

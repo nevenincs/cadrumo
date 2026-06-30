@@ -131,15 +131,14 @@ def derive_303_compensation_available(
     ``max(0, -iva.resultado)`` (AEAT box 69). A negative result (a quota a
     compensar) generates new carry-forward; a positive result generates none.
 
-    When ``refunded`` is ``True`` the period's negative result is filed as a
-    refund (devolución, fichero "Tipo de declaración" ``D``) rather than carried
-    forward: the credit is returned by AEAT, not rolled into the next period, so
-    the GENERATED component is zero and ``available = posterior`` only (for a full
-    monthly/annual refund the posterior is also zero, so the refunded period
-    carries nothing). The default ``False`` keeps the standard compensación
-    (``C``) behaviour, where the negative result generates the carry. Legal basis:
-    RD 1624/1992 art. 30 / Ley 37/1992 art. 116 — a refunded credit is returned,
-    not carried.
+    When ``refunded`` is ``True`` the period's negative result is requested as
+    devolución (fichero "Tipo de declaración" ``D``) rather than carried forward:
+    the generated credit is excluded from compensación carry, so the GENERATED
+    component is zero and ``available = posterior`` only (for a full monthly/annual
+    devolución request the posterior is also zero, so the period carries nothing).
+    The default ``False`` keeps the standard compensación (``C``) behaviour, where
+    the negative result generates the carry. Legal basis: RD 1624/1992 art. 30 /
+    Ley 37/1992 art. 116 — a devolución-requested credit is not carried.
     """
     generated = _ZERO if refunded else max(_ZERO, -resultado)
     return posterior + generated

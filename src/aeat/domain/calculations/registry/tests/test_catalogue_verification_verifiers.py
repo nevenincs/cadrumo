@@ -32,7 +32,7 @@ def _legal_reference(
     *,
     ref_id: str = "rd-439-2007:art-110",
     kind: str = "real_decreto",
-    article: str = "110",
+    article: str | None = "110",
     notes: str | None = None,
 ) -> LegalReference:
     reference = next(iter(_catalogues().legal.values()))
@@ -159,6 +159,44 @@ def test_verify_legal_catalogue_checks_required_local_corpus_text(tmp_path: Path
         update={
             "corpus_ref": "corpus/normatives/html/rd-439-2007-art-110.html#a110",
             "required_text": ("20 por ciento del rendimiento neto",),
+        },
+    )
+
+    with pytest.raises(RegistryValidationError, match="corpus text missing required text"):
+        verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
+
+
+def test_verify_legal_catalogue_checks_required_text_when_article_is_absent(tmp_path: Path) -> None:
+    corpus_path = tmp_path / "corpus" / "normatives" / "html" / "orden-hfp-1359-2023-da-5.html"
+    corpus_path.parent.mkdir(parents=True)
+    corpus_path.write_text("<p>official text without the disposition phrase</p>", encoding="utf-8")
+    reference = _legal_reference(
+        ref_id="orden-hfp-1359-2023:da-5",
+        kind="orden",
+        article=None,
+    ).model_copy(
+        update={
+            "corpus_ref": "corpus/normatives/html/orden-hfp-1359-2023-da-5.html#da5",
+            "required_text": ("Disposicion adicional quinta",),
+        },
+    )
+
+    with pytest.raises(RegistryValidationError, match="corpus text missing required text"):
+        verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
+
+
+def test_verify_legal_catalogue_checks_required_text_for_treaty_refs(tmp_path: Path) -> None:
+    corpus_path = tmp_path / "corpus" / "normatives" / "html" / "convenio-es-gb-2013-art-6.html"
+    corpus_path.parent.mkdir(parents=True)
+    corpus_path.write_text("<p>official treaty text without the property-income phrase</p>", encoding="utf-8")
+    reference = _legal_reference(
+        ref_id="convenio-es-gb-2013:art-6",
+        kind="acuerdo_internacional",
+        article="6",
+    ).model_copy(
+        update={
+            "corpus_ref": "corpus/normatives/html/convenio-es-gb-2013-art-6.html#art-6",
+            "required_text": ("Rentas inmobiliarias",),
         },
     )
 

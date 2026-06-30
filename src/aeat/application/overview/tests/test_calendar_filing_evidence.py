@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.sede import Declaracion
 from ....core import Period
+from ....core.hashing import sha256_hex
 from ....domain.calculations.registry import (
     ApplicabilityVerdict,
 )
@@ -79,7 +80,7 @@ def _justificante_capture_snapshot(
         period=period,
         expediente_id=expediente_id,
         csv=csv,
-        pdf_sha256="a" * 64,
+        pdf_sha256=sha256_hex(pdf_bytes),
         pdf_base64=base64.b64encode(pdf_bytes).decode("ascii"),
         captured_at=datetime(filing_year, 4, 16, 12, 0, tzinfo=UTC),
         state=state,

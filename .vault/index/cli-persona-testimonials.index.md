@@ -36,6 +36,12 @@ related:
   - '[[2026-06-30-cli-persona-testimonials-W03-P07-S18]]'
   - '[[2026-06-30-cli-persona-testimonials-W03-P07-S19]]'
   - '[[2026-06-30-cli-persona-testimonials-W03-P07-S20]]'
+  - '[[2026-06-30-cli-persona-testimonials-W04-P08-S21]]'
+  - '[[2026-06-30-cli-persona-testimonials-W04-P08-S22]]'
+  - '[[2026-06-30-cli-persona-testimonials-W04-P08-S23]]'
+  - '[[2026-06-30-cli-persona-testimonials-W04-P09-S24]]'
+  - '[[2026-06-30-cli-persona-testimonials-W04-P09-S25]]'
+  - '[[2026-06-30-cli-persona-testimonials-W04-P09-S26]]'
   - '[[2026-06-30-cli-persona-testimonials-audit]]'
   - '[[2026-06-30-cli-persona-testimonials-plan]]'
 ---
@@ -83,6 +89,12 @@ Auto-generated index of all documents tagged with `#cli-persona-testimonials`.
 - `2026-06-30-cli-persona-testimonials-W03-P07-S18` - Harden Modelo 100 borrador observation binding and parser coverage
 - `2026-06-30-cli-persona-testimonials-W03-P07-S19` - Verify Modelo 100 calculation and export closure from annual Renta journeys
 - `2026-06-30-cli-persona-testimonials-W03-P07-S20` - Harden local export evidence receipts and no-official-evidence messaging
+- `2026-06-30-cli-persona-testimonials-W04-P08-S21` - W04.P08.S21 Live-Read Command Tree Mutation Guard
+- `2026-06-30-cli-persona-testimonials-W04-P08-S22` - W04.P08.S22 Justificante Capture Matching And Evidence Stamping
+- `2026-06-30-cli-persona-testimonials-W04-P08-S23` - W04.P08.S23 Filed Observation Registry Enrollment Provenance
+- `2026-06-30-cli-persona-testimonials-W04-P09-S24` - W04.P09.S24 Modelo 303 Compensation And Devolucion Legal Wording
+- `2026-06-30-cli-persona-testimonials-W04-P09-S25` - W04.P09.S25 EU VAT Advisory And Foreign-Currency IVA Diagnostics
+- `2026-06-30-cli-persona-testimonials-W04-P09-S26` - W04.P09.S26 Calculation Registry Legal-Source Bundle Verification
 
 ### plan
 

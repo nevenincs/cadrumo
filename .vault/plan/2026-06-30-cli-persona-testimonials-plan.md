@@ -99,17 +99,17 @@ Ground remaining ambiguity in official sources and harden read-only live AEAT, b
 
 Verify live-read gates, justificante capture, filed-observation capture, and portal/borrador commands remain read-only and evidence-backed.
 
-- [ ] `W04.P08.S21` - Verify live-read command tree has no submit or mutation verbs; `src/aeat/entrypoints/cli/tests/test_live_read_subgroups.py`.
-- [ ] `W04.P08.S22` - Harden justificante capture matching and evidence stamping; `src/aeat/application/live/_justificante.py`.
-- [ ] `W04.P08.S23` - Harden filed observation capture and registry enrollment provenance; `src/aeat/application/live/_filed_data_capture.py`.
+- [x] `W04.P08.S21` - Verify live-read command tree has no submit or mutation verbs; `src/aeat/entrypoints/cli/tests/test_live_read_subgroups.py`.
+- [x] `W04.P08.S22` - Harden justificante capture matching and evidence stamping; `src/aeat/application/live/_justificante.py`.
+- [x] `W04.P08.S23` - Harden filed observation capture and registry enrollment provenance; `src/aeat/application/live/_filed_data_capture.py`.
 
 ### Phase `W04.P09` - legal grounding and EU VAT UX
 
 Resolve remaining legal ambiguity against official sources and harden EU/non-domestic VAT messaging where calculation evidence is advisory or unsupported.
 
-- [ ] `W04.P09.S24` - Ground remaining M303 compensation and carryover legal text in official sources; `.vault/reference`.
-- [ ] `W04.P09.S25` - Harden EU VAT and unsupported-currency operator diagnostics; `src/aeat/domain/iva`.
-- [ ] `W04.P09.S26` - Verify legal-source bundles used by calculation tests are authoritative; `src/aeat/domain/calculations/registry`.
+- [x] `W04.P09.S24` - Ground remaining M303 compensation and carryover legal text in official sources; `.vault/reference`.
+- [x] `W04.P09.S25` - Harden EU VAT and unsupported-currency operator diagnostics; `src/aeat/domain/iva`.
+- [x] `W04.P09.S26` - Verify legal-source bundles used by calculation tests are authoritative; `src/aeat/domain/calculations/registry`.
 
 ## Wave `W05` - certification and campaign closure
 
