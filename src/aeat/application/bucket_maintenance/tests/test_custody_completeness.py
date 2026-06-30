@@ -1,0 +1,194 @@
+"""Full-custody completeness for the sealed bucket recovery archive.
+
+These tests drive the real recovery transport end to end: seed the
+previously-dropped per-bucket stores, export a sealed archive under a recovery
+passphrase, import it into a *fresh storage root* (a distinct recipient DEK),
+and assert the evidence bytes and audit trail survive. They are the
+persistence-boundary proof for ``aeat-roundtrip-discipline`` applied to the
+generic custody carry, plus an anti-tautology proof and a fail-closed
+coverage-gate check.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from datetime import UTC, datetime
+from pathlib import Path
+
+import pytest
+
+from ....adapters.persistence.storage.attachment import AttachmentStore
+from ....core.resources import resources
+from ....domain.buckets import (
+    BucketEvent,
+    BucketEventHistoryCatalogue,
+    BucketEventHistoryRepository,
+    BucketEventObjectType,
+    BucketEventType,
+    derive_bucket_event_id,
+)
+from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
+from ....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root, isolated_runtime_profile
+from ...user_profile import RegisterProfileCommand, profile_storage_session
+from ...workflow import read_profile_bucket_by_id
+from .. import BucketMaintenanceService, ExportBucketCommand, ImportBucketCommand
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_BUCKET_ID = "5a5a5a5a-5a5a-45a5-85a5-5a5a5a5a5a5a"
+_LABEL = "Custody complete"
+_RECOVERY = "correct horse battery staple custody"
+_EVIDENCE = b"%PDF-1.7 sealed-archive evidence \x00\xff bytes"
+_INSTANT = datetime(2026, 6, 30, 8, 0, 0, tzinfo=UTC)
+
+
+@pytest.fixture
+def runtime(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_LABEL) as profile:
+        yield profile
+
+
+def _required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, ...]:
+    facts: dict[str, UserProfileFact] = {}
+    for section in schema.sections:
+        if section.repeatable:
+            continue
+        for field in section.fields:
+            if field.required:
+                path = f"{section.key}.{field.key}"
+                facts[path] = UserProfileFact(path=path, value="placeholder")
+    facts.update(
+        {
+            "taxpayer_type.entity_type": UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            "identity.name": UserProfileFact(path="identity.name", value="Custody"),
+            "identity.surnames": UserProfileFact(path="identity.surnames", value="Complete"),
+            "identity.tax_id": UserProfileFact(path="identity.tax_id", value="12345678Z"),
+        },
+    )
+    return tuple(facts.values())
+
+
+@pytest.fixture
+def seeded_bucket(runtime: TestRuntimeProfile) -> str:
+    """Register a profile and seed the previously-dropped stores."""
+    from ...user_profile import (
+        ProfileLifecycleService,
+        ProfileValidationService,
+        UserProfileLifecycleRepository,
+    )
+
+    schema = resources().user_profile_schema.singleton
+    assert isinstance(schema, ProfileSchemaDefinition)
+    ProfileLifecycleService(
+        repository=UserProfileLifecycleRepository(bucket_id=runtime.bucket_id, objects=runtime.repository),
+        validator=ProfileValidationService(schema=schema),
+        events=BucketEventHistoryRepository(objects=runtime.repository),
+    ).register(
+        RegisterProfileCommand(
+            profile_id=runtime.bucket_id,
+            display_name=_LABEL,
+            facts=_required_facts(schema),
+        ),
+    )
+
+    AttachmentStore().put_bytes(_EVIDENCE)
+    event_id = derive_bucket_event_id(
+        bucket_id=runtime.bucket_id,
+        event_type=BucketEventType.PROFILE_RENAMED,
+        occurred_at=_INSTANT,
+        actor="operator",
+        object_type=BucketEventObjectType.PROFILE,
+        object_id=runtime.bucket_id,
+        payload={"display_name": "Audited"},
+    )
+    repo = BucketEventHistoryRepository()
+    catalogue = repo.load()
+    repo.save(
+        BucketEventHistoryCatalogue(
+            events={
+                **catalogue.events,
+                event_id: BucketEvent(
+                    event_id=event_id,
+                    bucket_id=runtime.bucket_id,
+                    event_type=BucketEventType.PROFILE_RENAMED,
+                    occurred_at=_INSTANT,
+                    actor="operator",
+                    object_type=BucketEventObjectType.PROFILE,
+                    object_id=runtime.bucket_id,
+                    payload_version=1,
+                    payload={"display_name": "Audited"},
+                ),
+            },
+        ),
+    )
+    return event_id
+
+
+def test_sealed_archive_restores_evidence_and_audit_trail_in_fresh_root(
+    runtime: TestRuntimeProfile,
+    seeded_bucket: str,
+    tmp_path: Path,
+) -> None:
+    seeded_event_id = seeded_bucket
+    sha = AttachmentStore().put_bytes(_EVIDENCE)  # idempotent: returns the digest
+    archive = tmp_path / "exports" / "bucket.aeat-bucket.tar.gz"
+
+    BucketMaintenanceService().export(
+        ExportBucketCommand(bucket_id=runtime.bucket_id, output_path=archive, recovery_wrap_passphrase=_RECOVERY),
+    )
+
+    with isolated_profile_storage_root(tmp_path=tmp_path / "recipient"):
+        imported = BucketMaintenanceService().import_(
+            ImportBucketCommand(source_path=archive, recovery_wrap_passphrase=_RECOVERY),
+        )
+        assert imported.bucket_id == runtime.bucket_id
+        assert read_profile_bucket_by_id(runtime.bucket_id) is not None
+
+        with profile_storage_session(runtime.bucket_id):
+            # Evidence bytes resolve under the recipient bucket DEK.
+            assert AttachmentStore().read_bytes(sha) == _EVIDENCE
+            # The seeded audit event survives with its content-addressed id.
+            restored = BucketEventHistoryRepository().load()
+            assert seeded_event_id in restored.events
+            assert BucketEventType.BUCKET_IMPORTED in {e.event_type for e in restored.events.values()}
+
+
+def test_carried_evidence_carry_is_not_tautological(tmp_path: Path) -> None:
+    """Tampering a carried evidence payload must not silently restore clean bytes."""
+    import base64
+
+    from ....adapters.persistence.storage._namespace_registry import StorageCustodyProfile
+    from ....tests.secure_sql import isolated_two_bucket_runtime
+    from ...user_profile._custody_carry import restore_carried_objects, serialize_carried_objects
+
+    with isolated_two_bucket_runtime(tmp_path=tmp_path) as multi:
+        sha = AttachmentStore().put_bytes(_EVIDENCE)
+        carried = serialize_carried_objects(
+            bucket_id=multi.primary.bucket_id,
+            profile=StorageCustodyProfile.FULL,
+        )
+        blob = next(o for o in carried if o.namespace == "aeat.domain.attachments.blobs")
+        tampered = blob.model_copy(
+            update={"payload_b64": base64.b64encode(b"tampered-not-the-evidence").decode("ascii")},
+        )
+        others = tuple(o for o in carried if o is not blob)
+
+        with multi.switch_to_secondary():
+            restore_carried_objects((tampered, *others), target_bucket_id=multi.secondary.bucket_id)
+            # The original sha now indexes tampered bytes, so a digest re-hash of
+            # the restored blob no longer matches its content address.
+            store = AttachmentStore()
+            with pytest.raises(Exception):  # noqa: B017 - AttachmentValidationError (digest drift)
+                store.verify_blob(sha)
+
+
+def test_full_custody_coverage_gate_refuses_uncovered_namespace() -> None:
+    """A populated namespace outside the covered set fails the full-custody export."""
+    from ...user_profile._bundle import _assert_full_custody_coverage
+
+    with pytest.raises(Exception) as excinfo:
+        _assert_full_custody_coverage(
+            populated_namespaces=("aeat.domain.buckets.event_history", "aeat.surprise.new_store"),
+            covered_namespaces=frozenset({"aeat.domain.buckets.event_history"}),
+        )
+    assert "aeat.surprise.new_store" in str(excinfo.value.context["missing_namespaces"])
