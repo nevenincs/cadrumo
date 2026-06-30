@@ -252,12 +252,11 @@ class TestCifKindLetterSplit:
     silently collapsing the two sets.
     """
 
-    def test_k_l_m_absent_from_cif_kind_letters(self) -> None:
+    @pytest.mark.parametrize("legacy_kind", ("K", "L", "M"))
+    def test_legacy_kind_absent_from_cif_kind_letters(self, legacy_kind: str) -> None:
         from .._documents import _CIF_KIND_LETTERS
 
-        assert "K" not in _CIF_KIND_LETTERS
-        assert "L" not in _CIF_KIND_LETTERS
-        assert "M" not in _CIF_KIND_LETTERS
+        assert legacy_kind not in _CIF_KIND_LETTERS
 
     def test_validate_spanish_tax_id_accepts_k_led_cif(self) -> None:
         # Synthetic K-led CIF: K + 1234567 + check character.
