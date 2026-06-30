@@ -96,6 +96,20 @@ and an anti-tautology rejection of an ungrounded casilla id (step `W03.P07.S57`,
 done). The numeric figure oracle is re-scoped accordingly and carried forward as
 the open cross-campaign step `W03.P07.S56`.
 
+### flag-drift-gate-added | medium | flag validation closed finding #7's flag half and caught a real dead instruction
+
+Finding `drift-gate-checks-verbs-not-flags` is now resolved for the flag half: the
+rule-surface drift gate gained `test_every_cited_flag_resolves`, which walks the
+live Click tree and asserts every flag a rule/persona/skill cites on an `aeat ...`
+command is a real option of that resolved command (or a root-global flag). On its
+first run it caught a genuine dead instruction: the modelo-130/303 skills and the
+casilla reference cited `aeat app modelo describe --modelo 130` /
+`aeat app modelo casillas --modelo 130`, but those verbs take the modelo as a
+POSITIONAL argument (`describe 130`); only `modelo work create` uses `--modelo`.
+Fixed (commit `65f004e8d`). The remaining sub-part - scanning the documents for
+envelope-field references rather than hardcoding the spine list - is a minor future
+improvement and is not yet implemented.
+
 ## Recommendations
 
 The two blocking and the workspace findings are resolved in commit `e98e5e877`.
