@@ -9,11 +9,12 @@ data) and computes no value.
 
 from __future__ import annotations
 
+from importlib.resources.abc import Traversable
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from . import iter_operator_rules, iter_personas, iter_skill_documents
+from . import harness_root, iter_operator_rules, iter_personas
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -53,10 +54,12 @@ def materialise_workspace(output_dir: Path) -> WorkspaceManifest:
         personas += 1
 
     skills = 0
-    for skill in iter_skill_documents():
-        skill_name = _skill_name(skill)
-        _write(output_dir / "skills" / skill_name, "SKILL.md", skill.read_text(encoding="utf-8"))
-        skills += 1
+    skills_root = harness_root().joinpath("skills")
+    if skills_root.is_dir():
+        for skill_dir in sorted(skills_root.iterdir(), key=lambda item: item.name):
+            if skill_dir.is_dir() and skill_dir.joinpath("SKILL.md").is_file():
+                _copy_skill(skill_dir, output_dir / "skills" / skill_dir.name)
+                skills += 1
 
     return WorkspaceManifest(
         output_path=str(output_dir),
@@ -66,7 +69,16 @@ def materialise_workspace(output_dir: Path) -> WorkspaceManifest:
     )
 
 
-def _skill_name(skill: object) -> str:
-    # The skill directory name is the path segment that owns SKILL.md.
-    parts = str(skill).replace("\\", "/").split("/")
-    return parts[-2] if len(parts) >= 2 else "skill"
+def _copy_skill(skill_dir: Traversable, dest_dir: Path) -> None:
+    """Copy a skill's whole subtree (``SKILL.md`` plus the ``reference/`` material).
+
+    The progressive-disclosure reference a SKILL.md cites must travel with it, or a
+    materialised workspace loses the deeper material the operator is told to read.
+    """
+    for child in skill_dir.iterdir():
+        if child.is_file():
+            _write(dest_dir, child.name, child.read_text(encoding="utf-8"))
+        elif child.is_dir():
+            for leaf in child.iterdir():
+                if leaf.is_file():
+                    _write(dest_dir / child.name, leaf.name, leaf.read_text(encoding="utf-8"))

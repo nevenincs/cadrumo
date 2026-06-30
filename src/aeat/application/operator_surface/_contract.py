@@ -62,7 +62,7 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
         purpose="operational tax workflow over the active profile bucket",
         owns_storage_maintenance=False,
         owns_operational_workflow=True,
-        required_children=("overview", "ledger", "live", "modelo", "registry", "review", "contract"),
+        required_children=("overview", "ledger", "live", "modelo", "registry", "review", "contract", "agent"),
     ),
 )
 
@@ -338,6 +338,15 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         service_owner="aeat.application.operator_surface",
         commands=("contract",),
         mutability=OperatorMutability.READ_ONLY,
+    ),
+    MountedCommandFamily(
+        domain=MountedCommandDomain.AGENT,
+        root=RootSurfaceName.APP,
+        child="agent",
+        operator_question="materialise the shipped operator agent harness (rules, personas, skills) for a runtime",
+        service_owner="aeat.application.operator_surface",
+        commands=("agent",),
+        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
 )
 

@@ -4,9 +4,11 @@
 # workflow and the provenance the result must carry. The runner asserts the
 # trajectory resolves against the live CLI surface, follows the modelo lifecycle
 # order, is consistent with the shipped `preparar-modelo-130` skill, and that the
-# resolved revision's casillas carry their registry legal grounding. No casilla
-# value is hand-asserted here (that would be a tautological calculation test);
-# the value-oracle dimension against an AEAT worked example is a follow-up.
+# resolved revision's casillas carry their registry legal grounding. This
+# scenario does not yet assert computed casilla values: the value-oracle dimension
+# - asserting a computed casilla against an AEAT worked-example figure (a
+# sanctioned, NON-tautological oracle under `no-tautological-calculation-tests`) -
+# needs a seeded-calculation fixture and is a tracked follow-up (plan W03.P07.S56).
 
 name = "modelo-130-direct-estimation"
 modelo = "130"

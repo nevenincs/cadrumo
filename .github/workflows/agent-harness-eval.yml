@@ -61,5 +61,7 @@ jobs:
           src/aeat/entrypoints/mcp/tests
           src/aeat/entrypoints/cli/tests/test_app_contract.py
           src/aeat/entrypoints/cli/tests/test_app_agent_workspace.py
+          src/aeat/entrypoints/cli/tests/test_operator_surface_contract_drift.py
+          src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py
           -m "integration or not integration"
           -q --no-header

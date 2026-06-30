@@ -20,6 +20,8 @@ def test_materialise_writes_rules_personas_and_skills(tmp_path: Path) -> None:
     assert (tmp_path / "rules" / "operator-operating-rules.md").is_file()
     assert (tmp_path / "personas" / "coordinator.md").is_file()
     assert (tmp_path / "skills" / "preparar-modelo-130" / "SKILL.md").is_file()
+    # The progressive-disclosure reference a SKILL cites must travel with it.
+    assert (tmp_path / "skills" / "preparar-modelo-130" / "reference" / "casillas.md").is_file()
 
 
 def test_materialised_content_matches_the_shipped_rules(tmp_path: Path) -> None:
