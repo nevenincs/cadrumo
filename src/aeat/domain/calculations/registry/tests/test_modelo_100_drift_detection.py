@@ -17,7 +17,7 @@ elements) but catch:
 from __future__ import annotations
 
 import ast
-from functools import lru_cache
+from functools import cache
 
 import pytest
 
@@ -376,7 +376,7 @@ def test_every_formula_parameter_reference_resolves_to_a_declared_parameter() ->
     assert not offences, "formulas referencing undeclared parameters:\n  " + "\n  ".join(offences)
 
 
-@lru_cache(maxsize=8)
+@cache
 def _read_parameter_refs_for_modelo(modelo_id: str) -> frozenset[str]:
     """Return every parameter id consumed via ``read_parameter`` for ``modelo_id``.
 
