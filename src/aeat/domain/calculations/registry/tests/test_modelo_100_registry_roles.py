@@ -656,6 +656,31 @@ def test_modelo_100_premios_0303_splits_historical_emancipation_grant_from_renta
     )
 
 
+def test_modelo_100_2020_0356_is_gp_otros_ordinal_element_number() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    revision_2020 = modelo.revisions["2020"]
+    casilla = next(casilla for casilla in revision_2020.casillas if casilla.id == _casilla_id("0356"))
+
+    assert casilla.label == "Número de orden del elemento"
+    assert tuple(casilla.section) == ("toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial")
+    assert casilla.data_type == "integer"
+    assert casilla.semantic_role == "irpf_gp_elemento_numero_orden"
+    assert tuple(casilla.legal_refs) == ("ley-35-2006:art-33", "ley-35-2006:art-34")
+    assert {"aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-xsd"}.issubset(casilla.source_refs)
+
+    later_revision_roles = {
+        filing_year: next(
+            casilla.semantic_role
+            for casilla in modelo.revisions[str(filing_year)].casillas
+            if casilla.id == _casilla_id("0356")
+        )
+        for filing_year in range(2022, 2026)
+    }
+
+    assert set(later_revision_roles.values()) == {"irpf_ganancia_premios_ayuda_200_euros"}
+
+
 def test_modelo_100_retrib_especie_no_exenta_total_role_names_aggregate() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
