@@ -18,14 +18,13 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Period, TaxDomain
-from ....core.resources import bundled_path, resources
+from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
     FormulaId,
     ModeloDefinition,
     ModeloRevision,
     RegistrySnapshot,
-    ValidatedRegistryAuthority,
     revision_reference_identity_failures,
     validated_casilla_id,
 )
@@ -399,7 +398,7 @@ def _revision_validation_years(revision: ModeloRevision) -> tuple[int, ...]:
 
 
 def test_runtime_projection_rejects_ambiguous_casilla_refs_for_every_bundled_schema_coordinate() -> None:
-    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
+    authority = resources().modelos.authority
     expected: list[str] = []
     projected: list[str] = []
     offences: list[str] = []
