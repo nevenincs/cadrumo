@@ -13,6 +13,7 @@ related:
   - '[[2026-06-30-agent-harness-W02-P04-summary]]'
   - '[[2026-06-30-agent-harness-W03-P05-summary]]'
   - '[[2026-06-30-agent-harness-W03-P06-summary]]'
+  - '[[2026-06-30-agent-harness-W03-P07-S58]]'
   - '[[2026-06-30-agent-harness-W03-P07-summary]]'
   - '[[2026-06-30-agent-harness-W04-P08-summary]]'
   - '[[2026-06-30-agent-harness-W04-P09-summary]]'
@@ -49,6 +50,7 @@ Auto-generated index of all documents tagged with `#agent-harness`.
 - `2026-06-30-agent-harness-W02-P04-summary` - `agent-harness` `W02.P04` summary
 - `2026-06-30-agent-harness-W03-P05-summary` - `agent-harness` `W03.P05` summary
 - `2026-06-30-agent-harness-W03-P06-summary` - `agent-harness` `W03.P06` summary
+- `2026-06-30-agent-harness-W03-P07-S58` - Ship the figure-level numeric value-oracle gate for modelo 130 (casilla 07 vs the AEAT DR 130 worked example) computed through the registry engine with no new bundled corpus, delivering S56's value-correctness intent and the zero-tax-on-positive-income invariant
 - `2026-06-30-agent-harness-W03-P07-summary` - `agent-harness` `W03.P07` summary
 - `2026-06-30-agent-harness-W04-P08-summary` - `agent-harness` `W04.P08` summary
 - `2026-06-30-agent-harness-W04-P09-summary` - `agent-harness` `W04.P09` summary

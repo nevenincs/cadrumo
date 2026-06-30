@@ -10,6 +10,16 @@ related:
   - '[[2026-06-30-agent-harness-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `agent-harness` plan
 
 ## Wave `W01` - Layer 0: capability manifest exposure
@@ -86,8 +96,9 @@ Stand up the operator golden-task runner and the modelo-130 AEAT-worked-example 
 - [x] `W03.P07.S25` - Author the modelo-130 golden scenario from an AEAT worked example; `src/aeat/agent/eval/scenarios/modelo_130.toml`.
 - [x] `W03.P07.S26` - Implement the golden-task runner asserting trajectory, value, and provenance; `src/aeat/agent/eval/_runner.py`.
 - [x] `W03.P07.S27` - Wire the modelo-130 golden eval into the test surface; `src/aeat/agent/eval/tests/test_modelo_130_golden.py`.
-- [ ] `W03.P07.S56` - Source and bundle an AEAT numeric worked example (inputs and expected casilla figures) and add a numeric value-oracle dimension that seeds a calculation and asserts a computed casilla against the published AEAT figure. CROSS-CAMPAIGN: the registry currently bundles no numeric worked examples (zero runner_required fixtures); figure-level correctness is grounded by the calc engine via live-oracle reconciliation, so this needs a separate AEAT-corpus sourcing campaign before the operator golden eval can consume it; `src/aeat/_data/registry`.
+- [ ] `W03.P07.S56` - Source and bundle an AEAT numeric worked example (inputs and expected casilla figures) and add a numeric value-oracle dimension that seeds a calculation and asserts a computed casilla against the published AEAT figure. CROSS-CAMPAIGN: the registry currently bundles no numeric worked examples (zero runner_required fixtures); `figure-level correctness is grounded by the calc engine via live-oracle reconciliation, so this needs a separate AEAT-corpus sourcing campaign before the operator golden eval can consume it; `src/aeat/_data/registry`.
 - [x] `W03.P07.S57` - Add the AEAT-grounded verification-contract dimension to the golden runner: assert each revision declares verification_expectations (computed_casilla_ids with AEAT source_refs) and that the scenario expected_computed_casillas are within that grounded set; `anti-tautology proof rejects an ungrounded casilla id; `src/aeat/agent/eval/_runner.py`.
+- [x] `W03.P07.S58` - Ship the figure-level numeric value-oracle gate for modelo 130 (casilla 07 vs the AEAT DR 130 worked example) computed through the registry engine with no new bundled corpus, delivering S56's value-correctness intent and the zero-tax-on-positive-income invariant; `src/aeat/agent/eval/tests/test_modelo_130_value_oracle.py`.
 
 ## Wave `W04` - MCP server, HITL tiers, and faithfulness hooks
 
