@@ -18,8 +18,9 @@ source of truth.
 
 Informational-declaration row models also live here:
 :class:`Modelo184MemberRow`, :class:`Modelo232VinculadaRow`,
-:class:`Modelo347ContraparteRow`, :class:`Modelo349OperadorRow`, and
-``ModeloDetailRow``, plus the Modelo 349 NIF and country-prefix validators.
+:class:`Modelo347ContraparteRow`, :class:`Modelo349OperadorRow`,
+:class:`Modelo349RectificacionRow`, and ``ModeloDetailRow``, plus the
+Modelo 349 NIF and country-prefix validators.
 Regulatory constants such as the Modelo 347 declarability threshold remain in
 :mod:`aeat.core.external_constants`.
 
@@ -84,6 +85,7 @@ from ._row_models import (
     Modelo347ContraparteRow,
     Modelo349CountryPrefixContextError,
     Modelo349OperadorRow,
+    Modelo349RectificacionRow,
     ModeloDetailRow,
     validate_m349_country_prefix_context,
     validate_m349_nif_format,
@@ -116,6 +118,7 @@ __all__ = (
     "Modelo347ContraparteRow",
     "Modelo349CountryPrefixContextError",
     "Modelo349OperadorRow",
+    "Modelo349RectificacionRow",
     "ModeloCode",
     "ModeloDetailRow",
     "ModeloRecord",

@@ -24,6 +24,7 @@ from ...application.modelo import (
     Modelo347ContraparteRow,
     Modelo349CountryPrefixContextError,
     Modelo349OperadorRow,
+    Modelo349RectificacionRow,
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
     ModeloDetailRow,
@@ -67,9 +68,18 @@ _BINDING_MAX_LEN = 128
 _CASILLA_MAX_LEN = 64
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
 _RELATION_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(RelationId)
-_ROW_TYPES_SUPPORTED: frozenset[str] = frozenset({"miembro", "vinculada", "operador", "contraparte"})
+_ROW_TYPES_SUPPORTED: frozenset[str] = frozenset({"miembro", "vinculada", "operador", "rectificacion", "contraparte"})
 _ROW_DECIMAL_FIELDS: frozenset[str] = frozenset(
-    {"porcentaje", "importe", "importe_Q1", "importe_Q2", "importe_Q3", "importe_Q4"},
+    {
+        "porcentaje",
+        "importe",
+        "importe_Q1",
+        "importe_Q2",
+        "importe_Q3",
+        "importe_Q4",
+        "base_rectificada",
+        "base_anterior",
+    },
 )
 
 
@@ -357,6 +367,24 @@ def parse_row_spec(spec: str) -> ModeloDetailRow:
                     ),
                 )
             return row_m349
+        if row_type == "rectificacion":
+            row_m349_rect = Modelo349RectificacionRow.model_validate({"row_type": "rectificacion", **kv_pairs})
+            nif = str(kv_pairs.get("nif_comunitario", ""))
+            pais = str(kv_pairs.get("codigo_pais", ""))
+            if nif and pais and not validate_m349_nif_format(nif, pais):
+                raise typer.BadParameter(
+                    tr(
+                        "cli.app.modelo.work.row_m349_invalid_nif",
+                        default=(
+                            f"--row rectificacion: nif_comunitario {nif!r} does not match "
+                            f"the expected NIF-IVA format for country {pais!r} "
+                            f"(Council Directive 2006/112/EC Annex XI)"
+                        ),
+                        nif=nif,
+                        pais=pais,
+                    ),
+                )
+            return row_m349_rect
         return Modelo347ContraparteRow.model_validate({"row_type": "contraparte", **kv_pairs})
     except typer.BadParameter:
         raise
@@ -507,7 +535,8 @@ def work_calculate_input_bundle_from_cli(
 
 def _validate_m349_detail_rows_for_work_unit(work_unit_id: str, rows: tuple[ModeloDetailRow, ...]) -> None:
     operador_rows = tuple(row for row in rows if isinstance(row, Modelo349OperadorRow))
-    if not operador_rows:
+    rectification_rows = tuple(row for row in rows if isinstance(row, Modelo349RectificacionRow))
+    if not operador_rows and not rectification_rows:
         return
     unit = get_work_unit(work_unit_id)
     if str(unit.modelo) != Modelo.M349.value:
@@ -519,6 +548,19 @@ def _validate_m349_detail_rows_for_work_unit(work_unit_id: str, rows: tuple[Mode
                 clave_operacion=row.clave_operacion,
                 filing_year=unit.filing_year,
                 period=unit.period.registry_token,
+            )
+        except Modelo349CountryPrefixContextError as exc:
+            raise bad_parameter_from_error(exc) from exc
+    for row in rectification_rows:
+        try:
+            validate_m349_country_prefix_context(
+                country_code=row.codigo_pais,
+                clave_operacion=row.clave_operacion,
+                filing_year=unit.filing_year,
+                period=unit.period.registry_token,
+                is_rectification=True,
+                rectified_year=int(row.ejercicio),
+                rectified_period=row.periodo,
             )
         except Modelo349CountryPrefixContextError as exc:
             raise bad_parameter_from_error(exc) from exc

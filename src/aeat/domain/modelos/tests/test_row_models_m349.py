@@ -12,6 +12,7 @@ from ....core.errors import AeatError, get_registered_error_code, resolve_error_
 from .._row_models import (
     Modelo349CountryPrefixContextError,
     Modelo349OperadorRow,
+    Modelo349RectificacionRow,
     m349_nif_number_for_export,
     validate_m349_country_prefix_context,
     validate_m349_nif_format,
@@ -80,6 +81,66 @@ _M349_INVALID_ROW_CASES = (
                 "razon_social": "Entidad DE",
                 "clave_operacion": "Z",
                 "importe": Decimal("1"),
+            },
+        ),
+    ),
+)
+
+_M349_INVALID_RECTIFICATION_ROW_CASES = (
+    _ValidationErrorCase(
+        "negative-base-rectificada",
+        lambda: Modelo349RectificacionRow(
+            codigo_pais="DE",
+            nif_comunitario="DE123456789",
+            razon_social="Entidad DE",
+            clave_operacion="E",
+            ejercicio="2025",
+            periodo="2T",
+            base_rectificada=Decimal("-1"),
+            base_anterior=Decimal("1000"),
+        ),
+        "non-negative",
+    ),
+    _ValidationErrorCase(
+        "negative-base-anterior",
+        lambda: Modelo349RectificacionRow(
+            codigo_pais="DE",
+            nif_comunitario="DE123456789",
+            razon_social="Entidad DE",
+            clave_operacion="E",
+            ejercicio="2025",
+            periodo="2T",
+            base_rectificada=Decimal("1100"),
+            base_anterior=Decimal("-1"),
+        ),
+        "non-negative",
+    ),
+    _ValidationErrorCase(
+        "invalid-ejercicio",
+        lambda: Modelo349RectificacionRow(
+            codigo_pais="DE",
+            nif_comunitario="DE123456789",
+            razon_social="Entidad DE",
+            clave_operacion="E",
+            ejercicio="20A5",
+            periodo="2T",
+            base_rectificada=Decimal("1100"),
+            base_anterior=Decimal("1000"),
+        ),
+        "four-digit year",
+    ),
+    _ValidationErrorCase(
+        "invalid-periodo",
+        lambda: Modelo349RectificacionRow.model_validate(
+            {
+                "codigo_pais": "DE",
+                "nif_comunitario": "DE123456789",
+                "razon_social": "Entidad DE",
+                "clave_operacion": "E",
+                "ejercicio": "2025",
+                "periodo": "13",
+                "base_rectificada": Decimal("1100"),
+                "base_anterior": Decimal("1000"),
             },
         ),
     ),
@@ -245,6 +306,63 @@ class TestModelo349OperadorRow:
         )
         assert row1_modified.importe == Decimal("75000")
         assert row2.importe == Decimal("30000")
+
+
+class TestModelo349RectificacionRow:
+    def test_valid_rectification_row_round_trips(self) -> None:
+        row = Modelo349RectificacionRow(
+            codigo_pais="DE",
+            nif_comunitario="DE123456789",
+            razon_social="Deutschland GmbH",
+            clave_operacion="E",
+            ejercicio="2025",
+            periodo="2T",
+            base_rectificada=Decimal("1100.00"),
+            base_anterior=Decimal("1000.00"),
+        )
+
+        assert row.row_type == "rectificacion"
+        assert row.codigo_pais == "DE"
+        assert row.nif_comunitario == "DE123456789"
+        assert row.razon_social == "Deutschland GmbH"
+        assert row.clave_operacion == "E"
+        assert row.ejercicio == "2025"
+        assert row.periodo == "2T"
+        assert row.base_rectificada == Decimal("1100.00")
+        assert row.base_anterior == Decimal("1000.00")
+
+    def test_periodo_is_uppercased_before_closed_set_validation(self) -> None:
+        row = Modelo349RectificacionRow(
+            codigo_pais="DE",
+            nif_comunitario="DE123456789",
+            razon_social="Deutschland GmbH",
+            clave_operacion="E",
+            ejercicio="2025",
+            periodo="2t",
+            base_rectificada=Decimal("1100.00"),
+            base_anterior=Decimal("1000.00"),
+        )
+
+        assert row.periodo == "2T"
+
+    @pytest.mark.parametrize("operation_type", tuple(IntracomOperationType), ids=lambda member: member.value)
+    def test_current_intracom_operation_claves_are_accepted(self, operation_type: IntracomOperationType) -> None:
+        row = Modelo349RectificacionRow(
+            codigo_pais="DE",
+            nif_comunitario="DE123456789",
+            razon_social="Deutschland GmbH",
+            clave_operacion=operation_type.value,
+            ejercicio="2025",
+            periodo="2T",
+            base_rectificada=Decimal("1100.00"),
+            base_anterior=Decimal("1000.00"),
+        )
+
+        assert row.clave_operacion == operation_type.value
+
+    @pytest.mark.parametrize("case", _M349_INVALID_RECTIFICATION_ROW_CASES, ids=lambda case: case.case_id)
+    def test_invalid_rectification_rows_rejected(self, case: _ValidationErrorCase) -> None:
+        _assert_validation_error(case)
 
 
 class TestValidateM349NifFormat:
