@@ -75,8 +75,8 @@ Prove the retry-safety and genuine-duplicate-preservation contracts against real
 - [ ] `P05.S14` - Add a test proving a same-key add with differing content raises the instructive conflict error; `src/aeat/application/ledger/tests/`.
 - [ ] `P05.S15` - Add a test proving a deliberate duplicate stays possible via the keyless path and via a distinct idempotency key, both yielding two distinct rows; `src/aeat/application/ledger/tests/`.
 - [ ] `P05.S16` - Add a strict Transaction save-load-equality roundtrip plus anti-tautology proof with the content fingerprint stamp populated non-default; `src/aeat/application/ledger/tests/`.
-- [ ] `P05.S17` - Add a test proving two non-granting verify retries with identical findings collapse to one report while a changed-finding re-verify produces a distinct report; `src/aeat/application/modelo/tests/`.
-- [ ] `P05.S18` - Add a strict VerificationReport save-load-equality roundtrip plus anti-tautology proof with run_at populated non-default and the outcome-pinned id enforced; `src/aeat/domain/modelos/tests/`.
+- [x] `P05.S17` - Add a test proving two non-granting verify retries with identical findings collapse to one report while a changed-finding re-verify produces a distinct report; `src/aeat/application/modelo/tests/`.
+- [x] `P05.S18` - Add a strict VerificationReport save-load-equality roundtrip plus anti-tautology proof with run_at populated non-default and the outcome-pinned id enforced; `src/aeat/domain/modelos/tests/`.
 - [ ] `P05.S19` - Run the focused gates clean: pytest collect-only, the ledger and modelo-verify suites, JSON schema and notice conformance, documented-command and harness-surface conformance, plus lint and type checks; `src/aeat/`.
 
 ### Phase `P06` - Filing-record idempotent re-file
