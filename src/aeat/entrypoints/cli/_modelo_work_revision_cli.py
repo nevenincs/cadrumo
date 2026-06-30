@@ -198,12 +198,25 @@ def _register_work_revision_command(work_app: typer.Typer, deps: _WorkRevisionCo
             str | None,
             typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
         ] = None,
+        verbose: Annotated[
+            bool,
+            typer.Option(
+                "--verbose",
+                help=tr(
+                    "cli.app.modelo.work.revision_verbose_help",
+                    default="Expose the full per-casilla formula trace (op, formula_id, operand refs and values).",
+                ),
+            ),
+        ] = False,
         output_language: OutputLanguageOpt = None,
     ) -> None:
         """Show one selected :class:`CalculationRevision` as a work-revision result.
 
         The JSON branch emits
         :class:`~aeat.entrypoints.cli._modelo_work_revision_payloads.WorkRevisionResult`.
+        Each computed casilla renders its formula trace inline as
+        ``op(refs) = op(values) = value``; ``--verbose`` additionally surfaces
+        the full operand lineage line beneath each computed row.
         """
         deps.activate_output_language(ctx, output_language)
         deps.require_active_profile()
@@ -238,7 +251,7 @@ def _register_work_revision_command(work_app: typer.Typer, deps: _WorkRevisionCo
         )
         lines = [
             "operation\tmodelo.work.revision",
-            *calculation_revision_lines(selected_revision),
+            *calculation_revision_lines(selected_revision, verbose=verbose),
             *modality_lines,
         ]
         _emit_envelope(ctx, command="modelo.work.revision", result=result, lines=lines)

@@ -52,11 +52,12 @@ def _make_draft(*, period: Period = _P_Q1, ingresos: int = 12500) -> ModeloDraft
             source="test input",
         ),
     )
+    snapshot_ref = _snapshot_ref(modelo="130", period=period, schema_version="test-schema-v1")
     draft_id = compute_modelo_draft_id(
         modelo="130",
         period=period,
         profile_tax_id="00000000T",
-        schema_version="test-schema-v1",
+        snapshot_ref=snapshot_ref,
         values=values,
     )
     return ModeloDraft(
@@ -65,7 +66,7 @@ def _make_draft(*, period: Period = _P_Q1, ingresos: int = 12500) -> ModeloDraft
         period=period,
         profile_tax_id="00000000T",
         subject_tax_id="00000000T",
-        snapshot_ref=_snapshot_ref(modelo="130", period=period, schema_version="test-schema-v1"),
+        snapshot_ref=snapshot_ref,
         status=ModeloDraftStatus.VALIDADO,
         values=values,
         created_at=now,

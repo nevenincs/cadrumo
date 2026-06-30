@@ -60,6 +60,31 @@ def _seed_bucket_event(bucket_id: str) -> str:
     return event_id
 
 
+def test_structured_profile_excludes_attachment_evidence_bytes(tmp_path: Path) -> None:
+    """The cleartext (structured) profile must not carry FINANCIAL attachment bytes."""
+    from ....adapters.persistence.storage._namespace_registry import StorageCustodyProfile
+
+    with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
+        AttachmentStore().put_bytes(_EVIDENCE_BYTES)
+        _seed_bucket_event(runtime.primary.bucket_id)
+
+        structured = serialize_carried_objects(
+            bucket_id=runtime.primary.bucket_id,
+            profile=StorageCustodyProfile.STRUCTURED,
+        )
+        full = serialize_carried_objects(
+            bucket_id=runtime.primary.bucket_id,
+            profile=StorageCustodyProfile.FULL,
+        )
+
+        structured_namespaces = {o.namespace for o in structured}
+        full_namespaces = {o.namespace for o in full}
+        # The full-custody-only FINANCIAL byte store is carried by the sealed
+        # profile but never by the cleartext structured profile.
+        assert "aeat.domain.attachments.blobs" in full_namespaces
+        assert "aeat.domain.attachments.blobs" not in structured_namespaces
+
+
 def _seed_justificante() -> str:
     from decimal import Decimal
 

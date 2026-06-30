@@ -13,6 +13,7 @@ from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
     CasillaId,
     RegistrySnapshot,
+    RegistrySnapshotRef,
     calculate_registry_snapshot,
     load_modelo_path,
     resolve_bound_inputs_by_casilla_id,
@@ -231,11 +232,17 @@ def _approved_draft(
         for casilla in sorted(snapshot.revision.casillas, key=lambda item: item.id)
     )
     schema_version = f"registry:{snapshot.modelo.id}:{snapshot.revision.id}"
+    snapshot_ref = RegistrySnapshotRef(
+        modelo="349",
+        revision_id=snapshot.revision.id,
+        modelo_year=2026,
+        period=work_unit.period.registry_token,
+    )
     draft_id = compute_modelo_draft_id(
         modelo="349",
         period=work_unit.period,
         profile_tax_id=_PROFILE_TAX_ID,
-        schema_version=schema_version,
+        snapshot_ref=snapshot_ref,
         values=values,
         binding_values=binding_values,
     )
@@ -245,12 +252,7 @@ def _approved_draft(
         period=work_unit.period,
         profile_tax_id=_PROFILE_TAX_ID,
         subject_tax_id=_PROFILE_TAX_ID,
-        snapshot_ref={
-            "modelo": "349",
-            "revision_id": snapshot.revision.id,
-            "modelo_year": 2026,
-            "period": work_unit.period.registry_token,
-        },
+        snapshot_ref=snapshot_ref,
         status=ModeloDraftStatus.APROBADO,
         values=values,
         binding_values=binding_values,

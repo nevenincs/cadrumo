@@ -348,7 +348,7 @@ def build_draft(
             modelo=modelo,
             period=period,
             profile_tax_id=profile.tax_id,
-            schema_version=collection.schema_version,
+            snapshot_ref=snapshot_ref,
             values=value_tuple,
             binding_values=binding_value_tuple,
         ),

@@ -530,7 +530,16 @@ def test_modelo_100_withholding_imports_use_formal_withholding_article() -> None
         if _FORMAL_WITHHOLDING_ARTICLE_REF not in text:
             missing_formal_article.append(rel_path)
 
-    assert len(checked) == 72
+    # 51 = the M100 withholding-import (bindings/relations/dependency_classifications) TOMLs
+    # that fold a formal retención source into the renta declaration, per surviving revision:
+    #   2020-2023: sources {111, 123} -> 7 files each (28)
+    #   2024:      sources {111, 123, 193} -> 10
+    #   2025:      sources {111, 123, 190, 193} -> 13
+    # The earlier count of 72 included the modelo-115 (and 2025 modelo-180) rental-retention
+    # fold-in across every revision; those were retired as dormant relation targets consumed by
+    # no casilla binding and no formula in `ff3e6b166` (fix(registry): retire dormant M100 rental
+    # retention sources), which added the consumed-target drift gate in test_modelo_100_drift_detection.
+    assert len(checked) == 51
     assert offenders == []
     assert missing_formal_article == []
 
