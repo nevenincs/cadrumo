@@ -120,6 +120,20 @@ def test_modelo_100_cadastral_construction_ratios_are_decimal_roles() -> None:
     )
 
 
+def test_modelo_100_business_lease_marker_is_boolean_flag() -> None:
+    modelos_by_id, _catalogues = _loaded_registry()
+    modelo = modelos_by_id["100"]
+
+    for year in range(2020, 2026):
+        revision = modelo.revisions[str(year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == "0082")
+
+        assert tuple(casilla.section) == ("toma_datos_ampliada", "inmuebles", "inmueble")
+        assert casilla.data_type == "boolean"
+        assert casilla.semantic_role == "irpf_inmueble_arrendamiento_negocio_flag"
+        assert casilla.label == "Bien inmueble objeto de arrendamiento de negocio"
+
+
 def test_modelo_100_regularization_refunds_use_noun_role() -> None:
     modelos_by_id, _catalogues = _loaded_registry()
     modelo = modelos_by_id["100"]
