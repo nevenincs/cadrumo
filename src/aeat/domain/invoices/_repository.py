@@ -2,9 +2,10 @@
 
 :class:`InvoiceCatalogueRepository` is the sanctioned read/write path for the
 :class:`InvoiceCatalogue`. It stores the catalogue as an encrypted byte object
-via :class:`SecureObjectRepository` at :class:`SensitivityClass` FINANCIAL using
-an :class:`Envelope` wrapper; no plaintext invoice row, JSON catalogue, or
-envelope file lands on disk.
+via :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository` at
+:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``FINANCIAL`` using
+an :class:`~aeat.adapters.persistence.storage.Envelope` wrapper; no plaintext
+invoice row, JSON catalogue, or envelope file lands on disk.
 The storage contract is declared by
 :data:`aeat.adapters.persistence.storage.INVOICE_CATALOGUE_NAMESPACE`; its
 default object key is the singleton ``catalogue`` row.
@@ -136,9 +137,12 @@ class InvoiceCatalogueRepository:
     def save(self, catalogue: InvoiceCatalogue) -> None:
         """Persist ``catalogue`` atomically under the file lock.
 
-        The on-disk database value is an encrypted :class:`Envelope` BLOB at the
-        :class:`SensitivityClass` FINANCIAL classification. No plaintext invoice
-        row lands on disk.
+        The on-disk database value is an encrypted
+        :class:`~aeat.adapters.persistence.storage.Envelope` BLOB at the
+        :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+        ``FINANCIAL`` classification declared by
+        :data:`aeat.adapters.persistence.storage.INVOICE_CATALOGUE_NAMESPACE`.
+        No plaintext invoice row lands on disk.
 
         Args:
             catalogue: The :class:`InvoiceCatalogue` to persist.
@@ -168,7 +172,8 @@ class InvoiceCatalogueRepository:
         """Return the secure-object upsert for ``catalogue`` without committing it.
 
         The returned :class:`~aeat.adapters.persistence.storage.SecureObjectWrite`
-        carries the same :class:`Envelope` and :class:`SensitivityClass`
+        carries the same :class:`~aeat.adapters.persistence.storage.Envelope`
+        and :class:`~aeat.adapters.persistence.storage.SensitivityClass`
         classification that :meth:`save` would persist directly.
 
         Args:
