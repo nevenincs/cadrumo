@@ -30,8 +30,6 @@ from ..modelos._work_unit import WorkUnit as _WorkUnit
 from ..transactions._models import Transaction as _Transaction
 from ._values import UserProfileRecord
 
-_SECURE_OBJECT_KEY_BYTES = 32
-
 
 def _clean_required_text(value: str, *, field_name: str) -> str:
     stripped = value.strip()
@@ -54,44 +52,41 @@ def _decode_canonical_base64(value: str, *, field_name: str) -> bytes:
 class CarriedSecureObject(BaseModel):
     """One decrypted secure-object row carried by a v3 bundle.
 
-    The generic custody path addresses rows by the stored HMAC lookup digest
-    because natural object keys are not recoverable from the substrate index.
-    Payload bytes are base64 encoded so full-custody rows can carry arbitrary
-    decrypted bytes, including attachment blobs that are not JSON.
+    A bundle addresses each carried row by its **natural** object key (the
+    store-derived identifier), never by the stored HMAC lookup digest: the
+    digest is keyed by the per-bucket data-encryption key, so a source-bucket
+    digest is unreadable in the recipient bucket (proven by the custody
+    roundtrip tests). On import the carried payload is re-saved through the
+    owning store's save path, which re-derives the natural key under the
+    recipient DEK and re-encrypts. The natural ``object_key`` is carried for
+    coverage auditing and for the bespoke stores that re-save through the raw
+    secure-object substrate.
+
+    ``payload_b64`` is the canonical adapter-serialised form: for typed stores
+    it is the ``Envelope[T]`` JSON bytes the store persists, and for the
+    attachment-blob store it is the raw decrypted blob bytes (which are not
+    JSON). The owning store adapter is the sole interpreter of these bytes.
     """
 
     model_config = _STRICT_FROZEN
 
     namespace: str = Field(min_length=1)
-    hashed_object_key_b64: str = Field(min_length=1)
+    object_key: str = Field(min_length=1)
     classification: SensitivityClass
     schema_version: int = Field(ge=1)
     written_at: datetime
     payload_b64: str = Field(min_length=1)
 
-    @field_validator("namespace")
+    @field_validator("namespace", "object_key")
     @classmethod
     def _required_text_has_content(cls, value: str) -> str:
-        return _clean_required_text(value, field_name="namespace")
-
-    @field_validator("hashed_object_key_b64")
-    @classmethod
-    def _hashed_object_key_is_32_bytes(cls, value: str) -> str:
-        decoded = _decode_canonical_base64(value, field_name="hashed_object_key_b64")
-        if len(decoded) != _SECURE_OBJECT_KEY_BYTES:
-            raise ValueError("hashed_object_key_b64 must decode to 32 bytes")
-        return value
+        return _clean_required_text(value, field_name="value")
 
     @field_validator("payload_b64")
     @classmethod
     def _payload_is_canonical_base64(cls, value: str) -> str:
         _decode_canonical_base64(value, field_name="payload_b64")
         return value
-
-    @property
-    def hashed_object_key(self) -> bytes:
-        """Return the stored secure-object lookup digest."""
-        return _decode_canonical_base64(self.hashed_object_key_b64, field_name="hashed_object_key_b64")
 
     @property
     def payload(self) -> bytes:

@@ -29,10 +29,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ...adapters.persistence.storage._namespace_registry import StorageCustodyProfile
 from ...core.errors import AeatError
 
 if TYPE_CHECKING:
-    from ...domain.user_profile._portable_export import UserProfilePortableExport
+    from ...domain.user_profile._portable_export import CarriedSecureObject, CoverageManifest, UserProfilePortableExport
 
 
 #: Versions the import path will accept.  This is a pre-beta project with no
@@ -47,7 +48,11 @@ SUPPORTED_BUNDLE_SCHEMA_VERSIONS: frozenset[int] = frozenset({3})
 # ---------------------------------------------------------------------------
 
 
-def serialize_profile_bundle(*, bucket_id: str) -> UserProfilePortableExport:
+def serialize_profile_bundle(
+    *,
+    bucket_id: str,
+    custody_profile: StorageCustodyProfile | str = StorageCustodyProfile.STRUCTURED,
+) -> UserProfilePortableExport:
     """Build a v3 :class:`~aeat.domain.user_profile.UserProfilePortableExport`.
 
     Reads the profile record and all four financial-history categories
@@ -81,12 +86,108 @@ def serialize_profile_bundle(*, bucket_id: str) -> UserProfilePortableExport:
     filing_catalogue = ModeloRecordCatalogueRepository(bucket_id=bucket_id).load()
     filing_records = tuple(filing_catalogue)
 
+    carried_objects, coverage_manifest = _build_secure_object_custody_payload(
+        bucket_id=bucket_id,
+        custody_profile=_normalize_custody_profile(custody_profile),
+    )
+
     return UserProfilePortableExport(
         profile=record,
         work_units=work_units,
         ledger_transactions=ledger_transactions,
         calculation_revisions=calculation_revisions,
         filing_records=filing_records,
+        carried_objects=carried_objects,
+        coverage_manifest=coverage_manifest,
+    )
+
+
+def _normalize_custody_profile(custody_profile: StorageCustodyProfile | str) -> StorageCustodyProfile:
+    if isinstance(custody_profile, StorageCustodyProfile):
+        return custody_profile
+    try:
+        return StorageCustodyProfile(custody_profile)
+    except ValueError as exc:
+        from ...domain.user_profile._errors import ProfileExportError
+
+        raise ProfileExportError(
+            f"unsupported custody_profile {custody_profile!r}; expected one of "
+            f"{tuple(profile.value for profile in StorageCustodyProfile)}",
+            context={"custody_profile": custody_profile},
+        ) from exc
+
+
+#: Namespaces carried by the typed bundle fields; they count as covered for the
+#: full-custody coverage assertion even though the generic carry skips them.
+_TYPED_CATEGORY_NAMESPACES: frozenset[str] = frozenset(
+    {
+        "aeat.application.user_profile.value",
+        "aeat.domain.transactions.bucket",
+        "aeat.domain.modelos.work_units",
+        "aeat.domain.modelos.calculation_revisions",
+        "aeat.domain.modelos.filing_records",
+    },
+)
+
+
+def _build_secure_object_custody_payload(
+    *,
+    bucket_id: str,
+    custody_profile: StorageCustodyProfile,
+) -> tuple[tuple[CarriedSecureObject, ...], CoverageManifest]:
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ...domain.user_profile._portable_export import CoverageManifest
+    from ._custody_carry import carried_namespace_definitions, serialize_carried_objects
+
+    repository = secure_object_repository_for_bucket(bucket_id)
+    populated_namespaces = tuple(repository.list_namespaces())
+    row_counts_by_namespace = {
+        namespace: len(repository.list_keys(namespace)) for namespace in populated_namespaces
+    }
+
+    carried_namespace_set = frozenset(
+        definition.namespace for definition in carried_namespace_definitions(custody_profile)
+    )
+    covered_namespaces = carried_namespace_set | _TYPED_CATEGORY_NAMESPACES
+    excluded_namespaces = tuple(
+        namespace for namespace in populated_namespaces if namespace not in covered_namespaces
+    )
+
+    if custody_profile is StorageCustodyProfile.FULL:
+        _assert_full_custody_coverage(
+            populated_namespaces=populated_namespaces,
+            covered_namespaces=covered_namespaces,
+        )
+
+    carried_objects = serialize_carried_objects(bucket_id=bucket_id, profile=custody_profile)
+    carried_namespaces = tuple(
+        namespace
+        for namespace in (definition.namespace for definition in carried_namespace_definitions(custody_profile))
+        if row_counts_by_namespace.get(namespace, 0) > 0
+    )
+
+    coverage_manifest = CoverageManifest(
+        custody_profile=custody_profile.value,
+        carried_namespaces=carried_namespaces,
+        excluded_namespaces=excluded_namespaces,
+        row_counts_by_namespace=row_counts_by_namespace,
+    )
+    return carried_objects, coverage_manifest
+
+
+def _assert_full_custody_coverage(
+    *,
+    populated_namespaces: tuple[str, ...],
+    covered_namespaces: frozenset[str],
+) -> None:
+    missing = tuple(namespace for namespace in populated_namespaces if namespace not in covered_namespaces)
+    if not missing:
+        return
+    from ...domain.user_profile._errors import ProfileExportError
+
+    raise ProfileExportError(
+        "full custody profile does not cover every populated secure-object namespace",
+        context={"missing_namespaces": missing, "custody_profile": StorageCustodyProfile.FULL.value},
     )
 
 
@@ -129,12 +230,31 @@ def deserialize_profile_bundle(bundle: UserProfilePortableExport, *, target_buck
             f"supported versions: {sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)}",
         )
 
-    # v3 keeps the existing financial-history import path; secure-object carry
-    # population lands in the later custody deserialise phase.
+    # The five typed financial-history categories restore through their typed
+    # catalogue save paths; every other durable secure-object store restores
+    # generically through the raw substrate, re-keyed and re-encrypted under the
+    # recipient bucket DEK.
     _import_work_units(bundle, target_bucket_id=target_bucket_id)
     _import_ledger_transactions(bundle, target_bucket_id=target_bucket_id)
     _import_calculation_revisions(bundle, target_bucket_id=target_bucket_id)
     _import_filing_records(bundle, target_bucket_id=target_bucket_id)
+
+    from ._custody_carry import restore_carried_objects
+
+    restore_carried_objects(bundle.carried_objects, target_bucket_id=target_bucket_id)
+    _rebuild_participation_index(target_bucket_id=target_bucket_id)
+
+
+def _rebuild_participation_index(*, target_bucket_id: str) -> None:
+    """Rebuild the derived transaction-revision participation index after import.
+
+    The index is a derived, rebuildable read-cache (excluded from the carry per
+    ``ledger-participation-index-is-derived-rebuildable``); it is regenerated from
+    the restored revision, work-unit, and filing catalogues.
+    """
+    from ..modelo import rebuild_participation_index
+
+    rebuild_participation_index(bucket_id=target_bucket_id)
 
 
 def _import_work_units(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
