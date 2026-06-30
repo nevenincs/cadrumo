@@ -16,6 +16,7 @@ from datetime import date
 from decimal import Decimal
 
 from ...core import Modelo
+from ...core.decimal import coerce_decimal_strict
 from ...core.i18n import tr
 from ...domain.calculations.registry import (
     ApplicabilityVerdict,
@@ -298,7 +299,7 @@ def _zero_value_previous_filing_binding_ids(target: CalculationRevision | None) 
         if not _M100_ZERO_VALUE_PREVIOUS_FILING_BINDING_RE.fullmatch(str(binding_id)):
             continue
         try:
-            value = Decimal(str(raw_value).strip())
+            value = coerce_decimal_strict(raw_value if isinstance(raw_value, Decimal) else str(raw_value).strip())
         except (_decimal.DecimalException, ValueError):
             continue
         if value == 0:

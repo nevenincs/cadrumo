@@ -277,6 +277,14 @@ def _build_filed_participation_writes(
     return tuple(writes)
 
 
+def _participation_index_repository(
+    repository: TransactionParticipationIndexRepository | None,
+    *,
+    bucket_id: str,
+) -> TransactionParticipationIndexRepository:
+    return repository or TransactionParticipationIndexRepository(bucket_id=bucket_id)
+
+
 def persist_filed_revision(
     *,
     target: CalculationRevision,
@@ -387,9 +395,7 @@ def persist_filed_revision(
     )
     revisions = upsert_calculation_revision(revisions, filed_target)
 
-    participation_repo = participation_index_repository or TransactionParticipationIndexRepository(
-        bucket_id=work_unit.bucket_id,
-    )
+    participation_repo = _participation_index_repository(participation_index_repository, bucket_id=work_unit.bucket_id)
     participation_writes = _build_filed_participation_writes(
         filed_target=filed_target,
         work_unit=work_unit,

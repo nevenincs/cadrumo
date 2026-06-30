@@ -14,7 +14,10 @@ rows, then register strict
 The application/modelo facade remains authoritative for revision lookup,
 selection, and Modelo 202 modality resolution; these classes only document the
 JSON transport shape that enters
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope`.
+:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:func:`~aeat.entrypoints.cli._common._emit_envelope`. The parent
+:mod:`aeat.entrypoints.cli._modelo_payloads` module re-exports these split
+schemas so modelo work emitters keep one payload import surface.
 """
 
 from __future__ import annotations

@@ -19,6 +19,7 @@ from ...application.modelo import (
     ModeloExportCrossBucketRefusedError,
     ModeloExportNoActiveBucketError,
     ModeloExportOutputPathError,
+    ModeloExportResult,
     ModeloIvaWalletReconciliationBlocked,
     ModeloRefundElectionNotEligibleError,
     ModeloWorkAddressNotFoundError,
@@ -30,6 +31,7 @@ from ...application.modelo import (
 from ...application.workflow import workflow_state_repository
 from ...core import Period, RefundElection
 from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ._common import _emit_envelope, _profile_to_taxpayer
 from ._modelo_cli_support import (
     parse_revision_selector,
@@ -37,6 +39,41 @@ from ._modelo_cli_support import (
     validate_work_unit_id,
 )
 from ._modelo_payloads import ModeloExportPayload
+
+
+def _local_export_evidence_notice(result: ModeloExportResult) -> Notice:
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="modelo.export.local_export_not_official_evidence",
+        message=result.official_evidence_message,
+        suggestion=result.official_evidence_next_action,
+        context={
+            "evidence_status": result.local_evidence_status,
+            "modelo": str(result.modelo),
+            "filing_year": str(result.filing_year),
+            "period": result.period.registry_token,
+        },
+    )
+
+
+def _export_text_lines(result: ModeloExportResult) -> list[str]:
+    return [
+        "operation\tmodelo.export",
+        f"work_unit_id\t{result.work_unit_id}",
+        f"calculation_revision_id\t{result.calculation_revision_id}",
+        f"bucket\t{result.bucket_id}",
+        f"modelo\t{result.modelo}",
+        f"filing_year\t{result.filing_year}",
+        f"period\t{result.period}",
+        f"output_path\t{result.output_path}",
+        f"byte_size\t{result.byte_size}",
+        f"file_sha256\t{result.file_sha256}",
+        f"format\t{result.format}",
+        f"bucket_event_id\t{result.bucket_event_id}",
+        f"evidence_status\t{result.local_evidence_status}",
+        f"evidence_notice\t{result.official_evidence_message}",
+        f"next_action\t{result.official_evidence_next_action}",
+    ]
 
 
 def register_export_commands(
@@ -199,21 +236,13 @@ def register_export_commands(
             raise bad_parameter_from_error(exc) from exc
 
         export_result = ModeloExportPayload.from_result(result)
-        lines = [
-            "operation\tmodelo.export",
-            f"work_unit_id\t{result.work_unit_id}",
-            f"calculation_revision_id\t{result.calculation_revision_id}",
-            f"bucket\t{result.bucket_id}",
-            f"modelo\t{result.modelo}",
-            f"filing_year\t{result.filing_year}",
-            f"period\t{result.period}",
-            f"output_path\t{result.output_path}",
-            f"byte_size\t{result.byte_size}",
-            f"file_sha256\t{result.file_sha256}",
-            f"format\t{result.format}",
-            f"bucket_event_id\t{result.bucket_event_id}",
-        ]
-        _emit_envelope(ctx, command="modelo.export", result=export_result, lines=lines)
+        _emit_envelope(
+            ctx,
+            command="modelo.export",
+            result=export_result,
+            lines=_export_text_lines(result),
+            notices=[_local_export_evidence_notice(result)],
+        )
 
 
 __all__ = ["register_export_commands"]

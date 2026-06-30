@@ -119,6 +119,10 @@ def resolve_profile_source_tier(
             Source resolver that reads the stored user profile facts.
         :func:`aeat.application.modelo._calculation_resolution.resolve_calculation_binding_channels`:
             Places this profile tier below backend, borrador, and caller tiers.
+
+    Returns:
+        A :class:`CalculationSourceResolution` carrying the profile-owned
+        bindings not already claimed by higher-precedence tiers.
     """
     from ..aggregation import CalculationSourceContext, ProfileSourceResolver
 

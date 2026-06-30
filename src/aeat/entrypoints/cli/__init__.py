@@ -178,7 +178,8 @@ def _root(
         from ._bootstrap_exempt import is_bootstrap_exempt
 
         verb_path = _full_invocation_verb_path() or _verb_path_from_context(ctx)
-        if not is_bootstrap_exempt(verb_path):
+        explicit_profile_show = _is_explicit_profile_show_invocation(ctx, verb_path)
+        if not is_bootstrap_exempt(verb_path) and not explicit_profile_show:
             _normalize_active_profile_label_to_uuid(ctx)
     if ctx.invoked_subcommand is None:
         # The landing surface needs the application operator_surface
@@ -290,11 +291,12 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
     application-layer resolver and pin the override to the UUID, so the core
     route resolver (which stays UUID-only) receives the identifier it expects.
 
-    No-ops when no active profile resolves, when the value already resolves as a
-    UUID bucket directly (the fast path — zero change for UUID-valued input), or
-    when the label does not match any live profile (the per-command active-profile
-    guard surfaces that). An ambiguous label (more than one live match) raises a
-    clear refusal rather than an arbitrary pick.
+    No-ops when no active profile resolves or when the label does not match any
+    live profile (the per-command active-profile guard surfaces that). A live
+    UUID-valued input is pinned to the same UUID; a tombstoned UUID-valued input
+    is refused instead of bypassing the label resolver's lifecycle filter. An
+    ambiguous label (more than one live match) raises a clear refusal rather than
+    an arbitrary pick.
     """
     from ...application.workflow import (
         ProfileLabelAmbiguousError,
@@ -308,14 +310,6 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
 
     active = resolve_active_bucket_id()
     if active is None:
-        return
-    try:
-        active_bucket = read_profile_bucket_by_id(active)
-    except AeatError:
-        return
-    if active_bucket is not None:
-        # Already a UUID bucket directory — the canonical fast path. Leave the
-        # active-profile value byte-identical so the UUID path is unchanged.
         return
     try:
         pointer = resolve_profile_bucket(active)
@@ -333,6 +327,15 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
     except AeatError:
         return
     if pointer is None:
+        try:
+            inactive_bucket = read_profile_bucket_by_id(active)
+        except AeatError:
+            return
+        if inactive_bucket is not None:
+            raise CliRefusedBoundaryError(
+                translated_message="cli.config.profile.unknown_profile",
+                context={"name": active},
+            )
         # Not a live label either; leave resolution to the per-command active
         # profile guard, which emits the canonical no-active-profile refusal.
         return
@@ -378,6 +381,7 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
 
     verb_path = _full_invocation_verb_path() or _verb_path_from_context(ctx)
     exempt = is_bootstrap_exempt(verb_path)
+    explicit_profile_show = _is_explicit_profile_show_invocation(ctx, verb_path)
     argv_tokens = _full_invocation_tokens() or tuple(
         str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ())
     )
@@ -396,6 +400,8 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
         # database and keeps the bare-invocation landing card path
         # (handled by the caller) intact. Bootstrap-exempt verbs also
         # return — they run cleanly with no profile by design.
+        return
+    if explicit_profile_show:
         return
     if _is_unregistered_profile_status_probe(verb_path, active_bucket_id):
         return
@@ -424,6 +430,56 @@ def _is_unregistered_profile_status_probe(verb_path: str | None, active_bucket_i
     from ...application.workflow import read_profile_bucket_by_id
 
     return read_profile_bucket_by_id(active_bucket_id) is None
+
+
+def _is_explicit_profile_show_invocation(ctx: typer.Context, verb_path: str | None) -> bool:
+    """Return whether the operator targeted ``config profile show <name>``.
+
+    Explicit profile inspection resolves its own label/UUID target and must stay
+    reachable when the unrelated active-profile pointer is stale. The no-arg
+    ``config profile show`` form still depends on the active profile and remains
+    active-profile guarded.
+    """
+    from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
+
+    raw_tokens = _full_invocation_tokens() or tuple(
+        str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ())
+    )
+    if raw_tokens:
+        command_start = _profile_show_command_start(raw_tokens)
+        if command_start is None:
+            return False
+        return _has_explicit_profile_show_target(raw_tokens[command_start + 3 :])
+
+    if verb_path is None:
+        return False
+    verb_tokens = tuple(verb_path.split())
+    if verb_tokens[:3] != ("config", "profile", "show"):
+        return False
+    return _has_explicit_profile_show_target(verb_tokens[3:])
+
+
+def _profile_show_command_start(tokens: tuple[str, ...]) -> int | None:
+    for index in range(0, max(len(tokens) - 2, 0)):
+        if tokens[index : index + 3] == ("config", "profile", "show"):
+            return index
+    return None
+
+
+def _has_explicit_profile_show_target(tokens: tuple[str, ...]) -> bool:
+    value_options = {"--format", "--language", "--lang", "--output-language", "--profile"}
+    skip_next = False
+    for token in tokens:
+        if skip_next:
+            skip_next = False
+            continue
+        if token.startswith("-"):
+            option = token.split("=", 1)[0]
+            if "=" not in token and option in value_options:
+                skip_next = True
+            continue
+        return True
+    return False
 
 
 def _register_wizard_catalogue_for_profile_keys() -> None:
@@ -567,7 +623,7 @@ def _full_invocation_verb_path() -> str | None:
             skip_next = False
             continue
         if token.startswith("-"):
-            if token in ("--language", "--lang", "--format", "--profile") and "=" not in token:
+            if token in ("--language", "--lang", "--format", "--profile", "--output-language") and "=" not in token:
                 skip_next = True
             continue
         verb_tokens.append(token)

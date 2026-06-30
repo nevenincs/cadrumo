@@ -102,6 +102,8 @@ class Modelo100ObservedV2025Extractor:
         csv_value = csv_match.group(1).upper() if csv_match else None
         if artefact_kind is ArtefactKind.DECLARACION and csv_value is None:
             raise BorradorParseError("DECLARACION artefact must carry a CSV stamp but none was found")
+        if artefact_kind is not ArtefactKind.DECLARACION:
+            csv_value = None
 
         observed, warnings = _observed_values(text)
         target_casilla_ids = {t.casilla_id for t in extraction_profile.target_casillas} if extraction_profile else None

@@ -20,7 +20,8 @@ repair semantics: :mod:`aeat.application.user_profile`,
 :mod:`aeat.application.auth`, :mod:`aeat.application.diagnostics`,
 :mod:`aeat.application.repair_integrity`, and :mod:`aeat.application.workflow`.
 These payload classes document and validate only the CLI transport shapes that
-enter :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope`.
+enter :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:func:`~aeat.entrypoints.cli._common._emit_envelope`.
 """
 
 from __future__ import annotations

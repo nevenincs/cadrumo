@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
@@ -32,19 +31,19 @@ def test_export_each_format(tmp_path: Path, fmt: str) -> None:
     assert out.exists() and out.stat().st_size > 0
 
 
-def test_export_csv_roundtrips_back_through_import(tmp_path: Path) -> None:
-    """Exported CSV re-imports cleanly (operator hand-off / backup fidelity)."""
+def test_export_csv_is_refused_by_raw_bank_import_provider(tmp_path: Path) -> None:
+    """Canonical ledger CSV exports are not raw bank statements."""
     _import_corpus()
     before = len(_list_rows())
     out = tmp_path / "ledger-export.csv"
     exported = _invoke(["app", "ledger", "export", "--output", str(out), "--export-format", "csv"])
     assert exported.exit_code == 0, exported.output
-    # Re-importing the canonical CSV export must dedup to zero new rows.
-    reimported = _invoke(["--format", "json", "app", "ledger", "import", str(out), "--provider", "csv"])
-    assert reimported.exit_code == 0, reimported.output
-    payload = json.loads(reimported.output)["result"]
-    assert payload["imported"] == 0, payload
-    assert payload["skipped"] == before, payload
+    # A canonical ledger export is a rich local ledger artifact, not a bank CSV
+    # statement. The raw bank provider must refuse it instead of creating
+    # phantom rows or offering a restore path here.
+    reimported = _invoke(["app", "ledger", "import", str(out), "--provider", "csv"])
+    assert reimported.exit_code != 0, reimported.output
+    assert "raw bank CSV provider" in reimported.output
     assert len(_list_rows()) == before, reimported.output
 
 

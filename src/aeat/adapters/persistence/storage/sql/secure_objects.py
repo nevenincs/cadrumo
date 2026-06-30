@@ -103,20 +103,9 @@ class SecureObjectRepository:
         assert isinstance(local_table, _Table)
         local_table.create(self._engine, checkfirst=True)
 
-    @staticmethod
-    def _coerce_raw_bytes(value: object) -> bytes:
-        return coerce_raw_bytes(value)
-
-    @staticmethod
-    def _parse_revision_ancestor_ids(raw_value: object) -> tuple[str, ...]:
-        return parse_revision_ancestor_ids(raw_value)
-
-    @staticmethod
-    def _build_revision_ancestor_ids(
-        previous_revision_id: str | None,
-        previous_revision_ancestor_ids: tuple[str, ...],
-    ) -> tuple[str, ...]:
-        return build_revision_ancestor_ids(previous_revision_id, previous_revision_ancestor_ids)
+    _coerce_raw_bytes = staticmethod(coerce_raw_bytes)
+    _parse_revision_ancestor_ids = staticmethod(parse_revision_ancestor_ids)
+    _build_revision_ancestor_ids = staticmethod(build_revision_ancestor_ids)
 
     def _ensure_quarantine_table(self) -> None:
         """Create the quarantine archive table with the secure-object metadata shape."""

@@ -166,23 +166,7 @@ N26_LAYOUT = CsvBankLayout(
     day_first_dates=False,
     decimal_separator=".",
 )
-AEAT_LEDGER_EXPORT_LAYOUT = CsvBankLayout(
-    bank_name="AEAT ledger export",
-    columns=CsvColumnMap(
-        booked_date=("booked_date",),
-        value_date=("value_date",),
-        amount=("amount",),
-        direction=("direction",),
-        currency=("currency",),
-        description=("description",),
-        counterparty=("counterparty",),
-        external_id=("transaction_id",),
-    ),
-    day_first_dates=False,
-    decimal_separator=".",
-)
 CSV_LAYOUTS: tuple[CsvBankLayout, ...] = (
-    AEAT_LEDGER_EXPORT_LAYOUT,
     N26_LAYOUT,
     BBVA_LAYOUT,
     SANTANDER_LAYOUT,
@@ -190,6 +174,21 @@ CSV_LAYOUTS: tuple[CsvBankLayout, ...] = (
     REVOLUT_LAYOUT,
 )
 """Ordered tuple of bank layouts the CSV provider will try to match."""
+
+_AEAT_LEDGER_EXPORT_HEADERS = frozenset(
+    {
+        "bucket_id",
+        "transaction_id",
+        "lifecycle_state",
+        "booked_date",
+        "effective_date",
+        "amount",
+        "currency",
+        "direction",
+        "business_classification",
+    },
+)
+_AEAT_LEDGER_EXPORT_REFUSAL = "AEAT ledger CSV exports cannot be imported through the raw bank CSV provider"
 
 
 @dataclass(frozen=True, slots=True)
@@ -250,6 +249,13 @@ class CsvProvider(FinancialProvider):
                 detected_encoding=encoding,
                 detected_dialect=describe_dialect(dialect),
             )
+        if _has_aeat_ledger_export_header(rows):
+            return ProviderValidation(
+                is_valid=False,
+                warnings=(_AEAT_LEDGER_EXPORT_REFUSAL,),
+                detected_encoding=encoding,
+                detected_dialect=describe_dialect(dialect),
+            )
         header_index, layout, _, _ = self._locate_header(rows)
         if layout is None:
             return ProviderValidation(
@@ -284,6 +290,8 @@ class CsvProvider(FinancialProvider):
         """Yield :class:`ParsedLedgerRow` records (magnitude + direction) from the CSV source."""
         _logger.debug("csv_provider ingest: loading %s", path.name)
         rows, source_sha256, _, _ = self._load_rows(path)
+        if _has_aeat_ledger_export_header(rows):
+            raise InvalidFinancialSourceError(_AEAT_LEDGER_EXPORT_REFUSAL)
         header_index, layout, headers, lookup = self._locate_header(rows)
         if layout is None or headers is None or lookup is None:
             raise InvalidFinancialSourceError("CSV headers do not match any supported bank layout")
@@ -427,6 +435,11 @@ def _layout_score(lookup: Mapping[str, str], layout: CsvBankLayout) -> int:
         if aliases and _find_column(lookup, aliases):
             score += 1
     return score
+
+
+def _has_aeat_ledger_export_header(rows: list[list[str]]) -> bool:
+    """Return whether the CSV contains the canonical ledger export header."""
+    return any(set(_header_lookup(row)) >= _AEAT_LEDGER_EXPORT_HEADERS for row in rows[:10] if any(row))
 
 
 def _find_column(lookup: Mapping[str, str], aliases: tuple[str, ...]) -> str | None:

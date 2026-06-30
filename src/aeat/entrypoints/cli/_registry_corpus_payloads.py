@@ -15,7 +15,8 @@ lists to tuples on re-validation.
 The application reports in :mod:`aeat.application.registry` remain the
 authority for legal-citation and manual-corpus semantics. These payload classes
 validate the CLI transport shape that enters
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope`.
+:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:func:`~aeat.entrypoints.cli._common._emit_envelope`.
 """
 
 from __future__ import annotations
@@ -151,8 +152,9 @@ class ManualRulesListResult(OutputSchema):
     Mirrors :class:`~aeat.application.registry.RegistryManualRulesReport`.
     ``rules`` contains
     :class:`~aeat.application.registry.RegistryManualRuleProjection` rows whose
-    manual casilla references are checked against the validated registry
-    authority by the application service.
+    manual casilla references are checked against
+    :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority` by
+    the application service.
     """
 
     operation: str = "registry.manuals.rules"
@@ -175,9 +177,10 @@ class ManualVerifyResult(OutputSchema):
     """JSON envelope for ``aeat app registry manuals verify``.
 
     Mirrors :class:`~aeat.application.registry.RegistryManualVerificationReport`
-    after manual-corpus validation and registry-casilla cross-reference checks.
-    Counts split total issues into error and warning severities; ``passed``
-    controls the command exit status.
+    after manual-corpus validation and
+    :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority`
+    casilla cross-reference checks. Counts split total issues into error and
+    warning severities; ``passed`` controls the command exit status.
     """
 
     operation: str = "registry.manuals.verify"

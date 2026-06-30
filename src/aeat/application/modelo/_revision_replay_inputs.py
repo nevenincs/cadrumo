@@ -128,13 +128,16 @@ def _informational_casilla_replay_inputs(
     revision: CalculationRevision,
     snapshot: RegistrySnapshot | None,
 ) -> dict[str, str]:
-    """Return calculated informational casillas that the filing renderer needs as inputs."""
+    """Return non-formula informational casillas that the filing renderer needs as inputs."""
     if snapshot is None:
         return {}
+    formula_targets = frozenset(formula.target_casilla_id for formula in snapshot.revision.formulas)
     return {
         casilla.id: canonical_decimal_string(revision.casilla_values[casilla.id])
         for casilla in snapshot.revision.casillas
-        if casilla.input_kind == InputKind.INFORMATIONAL and casilla.id in revision.casilla_values
+        if casilla.input_kind == InputKind.INFORMATIONAL
+        and casilla.id not in formula_targets
+        and casilla.id in revision.casilla_values
     }
 
 

@@ -20,6 +20,7 @@ from ....application.operator_surface import render_help_text as _render_help_te
 from ....application.wizard import build_wizard_command as _build_wizard_command
 from ....application.workflow import ProfileLabelAmbiguousError as _ProfileLabelAmbiguousError
 from ....application.workflow import read_profile_bucket as _read_profile_bucket
+from ....application.workflow import resolve_profile_bucket as _resolve_profile_bucket
 from ....core import Period as _Period
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.errors import AeatError as _AeatError
@@ -270,7 +271,7 @@ def config_profile_show(
         # read the retained record. The verb renders the tombstoned
         # status; it never reports the profile as a live ``ready`` one.
         try:
-            pointer = _read_profile_bucket(name, include_tombstoned=True)
+            pointer = _resolve_profile_bucket(name, include_tombstoned=True)
         except _ProfileLabelAmbiguousError as exc:
             # ``ProfileLabelAmbiguousError`` is a ``WorkflowError``, NOT a
             # ``ValueError``; refuse clearly with the dedicated ambiguity

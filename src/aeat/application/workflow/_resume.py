@@ -512,6 +512,9 @@ def resolve_modelo_visible_workflow_run_for_resume(
     The selector is represented as a
     :class:`aeat.application.modelo.ModeloVisibleFilingTarget` before delegation
     to the shared modelo addressing facade.
+
+    Returns:
+        A :class:`WorkflowResumeTargetResolution` for the visible filing target.
     """
     from ..modelo import ModeloVisibleFilingTarget
 
@@ -536,6 +539,9 @@ def resolve_modelo_exact_workflow_run_for_resume(
     Exact work-unit ids are represented as
     :class:`aeat.application.modelo.ModeloExactWorkUnitTarget` values before
     workflow run lookup.
+
+    Returns:
+        A :class:`WorkflowResumeTargetResolution` for the exact work-unit id.
     """
     from ..modelo import ModeloExactWorkUnitTarget
 

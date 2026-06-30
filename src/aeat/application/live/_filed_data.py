@@ -98,7 +98,12 @@ def select_declarations_for_capture(
 
 
 def filed_data_listing_row(declaration: Declaracion) -> FiledDataListingRow:
-    """Return link-availability metadata for one AEAT declaration register item."""
+    """Return link-availability metadata for one AEAT declaration register item.
+
+    Returns:
+        A :class:`FiledDataListingRow` with archive, declaration-copy, and
+        justificante link-availability flags for the declaration.
+    """
     return FiledDataListingRow(
         modelo=declaration.modelo,
         year=declaration.ejercicio,

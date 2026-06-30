@@ -43,7 +43,7 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ....domain.transactions._models import derive_transaction_id
+from ....domain.transactions._models import derive_import_fingerprint, derive_transaction_id
 from .._diagnostics import (
     LedgerImportDiagnosticKind,
 )
@@ -185,6 +185,37 @@ def test_import_duplicate_against_catalogue_emits_duplicate_info() -> None:
         source_path=_SOURCE_PATH,
         raw_transactions=(raw,),
         existing_catalogue=catalogue,
+    )
+
+    assert result.imported_count == 0
+    assert result.skipped_count == 1
+    duplicate_diagnostics = [d for d in result.diagnostics if d.kind is LedgerImportDiagnosticKind.DUPLICATE]
+    assert len(duplicate_diagnostics) == 1
+    assert duplicate_diagnostics[0].severity is BaseSeverity.INFO
+
+
+def test_import_duplicate_against_catalogue_uses_supplied_direction_fingerprint() -> None:
+    """Verified re-import diagnostics consume the parsed-row fingerprint
+    supplied by the ledger import layer, preserving the direction
+    discriminator after the raw row's source sign has been discarded."""
+    raw = _raw_transaction("tx-1")
+    fingerprint = derive_import_fingerprint(raw, direction=TransactionDirection.OUTGOING)
+    transaction = Transaction.model_validate(
+        {
+            "raw": raw,
+            "direction": TransactionDirection.OUTGOING,
+            "import_fingerprint": fingerprint,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+        },
+    )
+    catalogue = TransactionCatalogue.model_validate({transaction.transaction_id: transaction})
+
+    result = import_ledger_with_diagnostics(
+        source_path=_SOURCE_PATH,
+        raw_transactions=(raw,),
+        existing_catalogue=catalogue,
+        import_fingerprints=(fingerprint,),
     )
 
     assert result.imported_count == 0

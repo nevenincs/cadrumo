@@ -372,9 +372,6 @@ _MADRID_VIVIENDA_MUNICIPIO_RIESGO_ROLE = "irpf_deduccion_madrid_vivienda_municip
 _MADRID_VIVIENDA_MUNICIPIO_RIESGO_ANIO_ROLE = "irpf_deduccion_madrid_vivienda_municipio_riesgo_anio"
 _MADRID_VIVIENDA_MUNICIPIO_RIESGO_PRECIO_ROLE = "irpf_deduccion_madrid_vivienda_municipio_riesgo_precio"
 _ANEXO_B_INST_AUTO_IMPORTE_PENDIENTE_ANTERIOR_ROLE = "irpf_anexo_b_inst_auto_importe_pendiente_anterior"
-_C_VALENCIANA_APLICADO_EJERCICIO_ROLE = "irpf_deduccion_c_valenciana_aplicado_ejercicio"
-_C_VALENCIANA_GENERADO_2024_PENDIENTE_3_ROLE = "irpf_deduccion_c_valenciana_generado_2024_pendiente_3"
-_C_VALENCIANA_GENERADO_2024_PENDIENTE_4_ROLE = "irpf_deduccion_c_valenciana_generado_2024_pendiente_4"
 _LEGACY_ANEXO_B_ARRENDAMIENTO_IMPORTE_APLICADO_ROLE = "irpf_anexo_b_arrendamiento_importe_aplicado"
 _LEGACY_ANEXO_B_ARRENDAMIENTO_IMPORTE_PENDIENTE_ROLE = "irpf_anexo_b_arrendamiento_importe_pendiente"
 _LEGACY_ANEXO_B_NACIMIENTO_VIVIENDA_IMPORTE_APLICADO_ROLE = "irpf_anexo_b_nacimiento_vivienda_importe_aplicado"
@@ -534,30 +531,6 @@ _CARRY_FORWARD_REMAINING_INST_AUTO_ROWS = {
     },
     2025: {
         "1709": "Importe satisfecho en 2022 pendiente de aplicación en ejercicios futuros",
-    },
-}
-_CARRY_FORWARD_REMAINING_REGIONAL_ROWS = {
-    2022: {
-        "1117": (
-            "Importe aplicado en el ejercicio",
-            _C_VALENCIANA_APLICADO_EJERCICIO_ROLE,
-        ),
-    },
-    2024: {
-        "1186": (
-            "Importe generado en 2023 pendiente de aplicación",
-            _C_VALENCIANA_GENERADO_2024_PENDIENTE_4_ROLE,
-        ),
-    },
-    2025: {
-        "1185": (
-            "Importe generado en 2024 pendiente de aplicación",
-            _C_VALENCIANA_GENERADO_2024_PENDIENTE_3_ROLE,
-        ),
-        "1186": (
-            "Importe generado en 2024 pendiente de aplicación",
-            _C_VALENCIANA_GENERADO_2024_PENDIENTE_4_ROLE,
-        ),
     },
 }
 _LEGACY_CARRY_FORWARD_PENDING_OUTLIER_ROLES = frozenset(

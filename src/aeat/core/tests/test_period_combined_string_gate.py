@@ -92,10 +92,13 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         path=_path(
             r"^src/aeat/adapters/inbound/declaracion/tests/(?:"
             r"_parser_boundary_support|_verification_chain_support|"
+            r"_parser_boundary_m\d+_support|_parser_boundary_m\d+_current_expected|"
             r"test_m303_primitive_anti_tautology|test_parser_boundary_part1|"
-            r"test_parser_boundary_part2|test_parser_boundary_part3|test_parser_boundary_synthetic_models|"
+            r"test_parser_boundary_part2|test_parser_boundary_part3|test_parser_boundary_m\d+|"
+            r"test_parser_boundary_synthetic_models|test_parser_privacy_redaction|"
             r"test_parser_synthetic_fixtures|test_verification_chain_part1|"
-            r"test_verification_chain_part2|test_verification_chain_part3"
+            r"test_verification_chain_part2|test_verification_chain_part3|"
+            r"test_verification_chain_m\d+(?:_historical)?"
             r")\.py$"
         ),
         reason="declaracion parser corpus tests pin external justificante fixture filenames and source labels",
@@ -178,7 +181,7 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
     ),
     AllowlistRule(
         path=_path(
-            r"^src/aeat/application/modelo/tests/test_(?:export|history|iva_wallet_engine_integration|justificante_reconcile_from_persisted|participation_co_emission|reconcile|reconciliation_history|revision_id_d1_contract|simplificado_ledger_bypass)\.py$"
+            r"^src/aeat/application/modelo/tests/test_(?:export|history|iva_wallet_engine_integration|iva_wallet_engine_overrides|justificante_reconcile_from_persisted|participation_co_emission|reconcile|reconciliation_history|revision_id_d1_contract|simplificado_ledger_bypass)\.py$"
         ),
         reason="modelo workflow tests preserve external work-unit, justificante, and review labels",
     ),
@@ -277,7 +280,7 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
     ),
     AllowlistRule(
         path=_path(
-            r"^src/aeat/entrypoints/cli/tests/test_(?:cli_surface|ledger_corpus_journeys|ledger_persona_yearend_m100|modelo_reconcile_verb|overview_calendar_verb)\.py$"
+            r"^src/aeat/entrypoints/cli/tests/test_(?:cli_surface|ledger_corpus_journeys|ledger_persona_yearend_m100|modelo_export_verb|modelo_reconcile_verb|overview_calendar_verb)\.py$"
         ),
         reason="CLI journey tests preserve existing filter-output and external work/evidence labels",
     ),

@@ -62,6 +62,7 @@ from ...domain.invoices import (
 )
 from ...domain.renta import RentaDeductibleExpenseObservation
 from ...domain.transactions import TransactionCatalogueRepositoryProtocol, TransactionPersistenceError
+from ...domain.usage_ratios import UsageRatioPersistenceError, load_usage_ratios
 from ._errors import AggregationValidationError, t
 from ._iva_ledger import IvaLedgerAggregationIssueReason, aggregate_iva_ledger_observations_from_repositories
 from ._renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
@@ -92,6 +93,7 @@ _STORAGE_DEGRADATION_ERRORS = (
     InvoicePersistenceError,
     StorageValidationError,
     TransactionPersistenceError,
+    UsageRatioPersistenceError,
 )
 _IVA_SOURCE_DIAGNOSTIC_SUPPRESSED_REASONS = frozenset(
     {
@@ -257,6 +259,7 @@ class LedgerRentaExpenseAggregationSourceResolver:
                 transaction_repository=self._transaction_repository,
                 invoice_repository=self._invoice_repository,
                 profile_year=context.filing_year,
+                usage_ratios=load_usage_ratios(bucket_id=context.bucket_id).ratios,
                 modelo=context.modelo,
             )
         except _STORAGE_DEGRADATION_ERRORS as exc:

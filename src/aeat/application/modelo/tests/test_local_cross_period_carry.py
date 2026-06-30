@@ -388,9 +388,18 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) 
     from ...calculations._cross_period_clean_state import CrossPeriodCleanStateBlocker
     from .._verification_actions import _cross_period_clean_state_verdict_for_work_unit
 
-    wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
+    wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
     _seed_first_year_activity_profile(repos)
     _file_1t_with_negative_result(repos)
+    local_filing = fr_repo.load().current_for(
+        bucket_id=_BUCKET_ID,
+        modelo="130",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+    )
+    assert local_filing is not None
+    assert local_filing.aeat_accepted is False
+    assert local_filing.external_evidence is None
     # Confirm the carry observation was persisted under the non-official source_kind.
     stored = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
     assert stored is not None

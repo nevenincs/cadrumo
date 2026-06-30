@@ -17,7 +17,8 @@ bucket-scoped encrypted snapshot persistence, filed-declaration observations,
 IVA wallet acquisition, justificante capture, notifications, expedientes,
 verification observations, and Borrador 100 snapshots. These classes document
 only the CLI transport shape that enters
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope`; they do not define a
+:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:func:`~aeat.entrypoints.cli._common._emit_envelope`; they do not define a
 live-write surface or a second persistence contract.
 """
 

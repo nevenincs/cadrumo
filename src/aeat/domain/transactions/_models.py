@@ -115,25 +115,36 @@ def normalise_movement_reference(value: str) -> str:
     return _REFERENCE_NOISE.sub("", stripped.lower())
 
 
-def derive_import_fingerprint(raw: RawTransaction) -> str:
+def derive_import_fingerprint(raw: RawTransaction, *, direction: TransactionDirection | str | None = None) -> str:
     """Return the stable cross-format import-dedup fingerprint for a raw row.
 
     Unlike :func:`derive_transaction_id` — which keys on the provider
     identifier and the verbatim narrative and therefore changes when a
     transaction is edited or re-exported in a different file format —
     this fingerprint keys only on the *movement identity* an operator
-    would recognise: the effective date, the amount magnitude, and the
-    normalised narrative (see :func:`normalise_movement_reference`).
+    would recognise: the effective date, amount magnitude, currency,
+    direction, and the normalised narrative (see
+    :func:`normalise_movement_reference`).
 
     The fingerprint is stamped onto :class:`Transaction` at import time
     and carried verbatim through every later edit, so re-importing the
     same statement (or the same movements exported as a different file
-    format) recognises the row as already present.
+    format) recognises the row as already present. Import callers that
+    have parsed flow direction must pass it; callers without a parse-boundary
+    direction receive an explicit ``UNSPECIFIED`` discriminator.
     """
     effective_value_date = raw.value_date or raw.booked_date
+    if isinstance(direction, TransactionDirection):
+        direction_value = direction.value
+    elif direction is None:
+        direction_value = "UNSPECIFIED"
+    else:
+        direction_value = direction
     return content_hash_hex(
         {
             "amount": canonical_decimal_string(raw.amount),
+            "currency": raw.currency,
+            "direction": direction_value,
             "reference": normalise_movement_reference(raw.description),
             "value_date": effective_value_date.isoformat(),
         }
@@ -252,6 +263,23 @@ def _normalize_identifier_tuple(value: tuple[str, ...]) -> tuple[str, ...]:
     if len(set(normalized)) != len(normalized):
         raise TransactionValidationError("identifier fields must not contain duplicates")
     return normalized
+
+
+def _trim_lineage_text(value: str | None) -> str | None:
+    if value is None:
+        return None
+    trimmed = value.strip()
+    if not trimmed:
+        raise TransactionValidationError("lineage text fields must not be blank")
+    return trimmed
+
+
+def _parse_required_aware_datetime(value: object, *, field_name: str) -> datetime:
+    if isinstance(value, str):
+        value = _parse_datetime(value)
+    if not isinstance(value, datetime):
+        raise TransactionValidationError(f"{field_name} must be a datetime")
+    return _require_aware_datetime(value)
 
 
 _NON_NEGATIVE_DECIMAL_HINTS = {
@@ -486,21 +514,12 @@ class TransactionEvidenceProvenanceEntry(BaseModel):
     @field_validator("evidence_id", "actor", "source_command", "bucket_event_id")
     @classmethod
     def _trim_optional_text(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        trimmed = value.strip()
-        if not trimmed:
-            raise TransactionValidationError("lineage text fields must not be blank")
-        return trimmed
+        return _trim_lineage_text(value)
 
     @field_validator("linked_at", mode="before")
     @classmethod
     def _parse_linked_at(cls, value: object) -> datetime:
-        if isinstance(value, str):
-            value = _parse_datetime(value)
-        if not isinstance(value, datetime):
-            raise TransactionValidationError("linked_at must be a datetime")
-        return _require_aware_datetime(value)
+        return _parse_required_aware_datetime(value, field_name="linked_at")
 
 
 class TransactionEditLineageEntry(BaseModel):
@@ -517,21 +536,12 @@ class TransactionEditLineageEntry(BaseModel):
     @field_validator("previous_transaction_id", "actor", "source_command", "bucket_event_id")
     @classmethod
     def _trim_optional_text(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        trimmed = value.strip()
-        if not trimmed:
-            raise TransactionValidationError("lineage text fields must not be blank")
-        return trimmed
+        return _trim_lineage_text(value)
 
     @field_validator("edited_at", mode="before")
     @classmethod
     def _parse_edited_at(cls, value: object) -> datetime:
-        if isinstance(value, str):
-            value = _parse_datetime(value)
-        if not isinstance(value, datetime):
-            raise TransactionValidationError("edited_at must be a datetime")
-        return _require_aware_datetime(value)
+        return _parse_required_aware_datetime(value, field_name="edited_at")
 
 
 class TransactionLifecycleLineageEntry(BaseModel):
@@ -561,12 +571,7 @@ class TransactionLifecycleLineageEntry(BaseModel):
     @field_validator("actor", "source_command", "bucket_event_id")
     @classmethod
     def _trim_optional_text(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        trimmed = value.strip()
-        if not trimmed:
-            raise TransactionValidationError("lineage text fields must not be blank")
-        return trimmed
+        return _trim_lineage_text(value)
 
     @field_validator("reason")
     @classmethod
@@ -576,11 +581,7 @@ class TransactionLifecycleLineageEntry(BaseModel):
     @field_validator("changed_at", mode="before")
     @classmethod
     def _parse_changed_at(cls, value: object) -> datetime:
-        if isinstance(value, str):
-            value = _parse_datetime(value)
-        if not isinstance(value, datetime):
-            raise TransactionValidationError("changed_at must be a datetime")
-        return _require_aware_datetime(value)
+        return _parse_required_aware_datetime(value, field_name="changed_at")
 
     @model_validator(mode="after")
     def _reject_noop_transition(self) -> Self:

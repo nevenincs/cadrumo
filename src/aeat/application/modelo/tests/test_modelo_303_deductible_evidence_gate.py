@@ -20,7 +20,11 @@ from ....domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
 )
-from ....domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
+from ....domain.modelos._calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
 from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.modelos._verification_report import (
@@ -29,6 +33,7 @@ from ....domain.modelos._verification_report import (
     VerificationCompletenessStatus,
 )
 from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
+from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -55,6 +60,7 @@ from .. import (
 )
 from .._export import ModeloExportCommand, ModeloExportEvidenceMissingError, export_modelo_revision
 from .._filing_actions import ModeloFilingEvidenceMissingError
+from .._verification_actions import _missing_evidence_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -335,12 +341,82 @@ def test_modelo_303_verify_blocks_deductible_vat_missing_evidence_but_warns_outp
         finding.kind is ModeloVerificationFindingKind.ADVISORY
         and sale.transaction_id in finding.message
         and "output VAT" in finding.message
+        and finding.next_action is not None
+        and "Advisory only" in finding.next_action
+        and "no dedicated public CLI path" in finding.next_action
+        and f"aeat app ledger attach {sale.transaction_id} --attachment-id" in finding.next_action
         for finding in warning
     )
     stored = cr_repo.load().get(revision.calculation_revision_id)
     assert stored is not None
     assert stored.state is CalculationRevisionState.BORRADOR
     assert stored.ledger_filing_evidence is None
+
+
+def _work_unit() -> WorkUnit:
+    period = Period.from_year_and_code(_YEAR, _PERIOD)
+    revision_id = "2023-y-siguientes"
+    return WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=_YEAR,
+            period=period,
+            revision_id=revision_id,
+        ),
+        bucket_id=_BUCKET_ID,
+        modelo="303",
+        filing_year=_YEAR,
+        period=period,
+        revision_id=revision_id,
+        name="303 evidence gate",
+        created_at=_T0,
+        updated_at=_T0,
+    )
+
+
+def test_output_vat_evidence_hint_is_advisory_and_names_current_cli_limit(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    sale = _iva_transaction(
+        "irene-sale-no-evidence",
+        direction=TransactionDirection.INCOMING,
+        taxable_base=Decimal("1000.00"),
+    )
+    tx_repo.save(TransactionCatalogue.from_transactions((sale,)))
+    work_unit = _work_unit()
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit.work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        relation_overrides={},
+        casilla_values={},
+        source_transaction_ids=(sale.transaction_id,),
+    )
+    revision = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit.work_unit_id,
+        state=CalculationRevisionState.BORRADOR,
+        source_transaction_ids=(sale.transaction_id,),
+        created_at=_T0,
+        updated_at=_T0,
+    )
+
+    findings = _missing_evidence_findings(
+        target=revision,
+        work_unit=work_unit,
+        transaction_repository=tx_repo,
+    )
+
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.kind is ModeloVerificationFindingKind.ADVISORY
+    assert finding.severity is ModeloVerificationFindingSeverity.WARNING
+    assert finding.next_action is not None
+    assert "Advisory only" in finding.next_action
+    assert "no dedicated public CLI path" in finding.next_action
+    assert f"aeat app ledger attach {sale.transaction_id} --attachment-id" in finding.next_action
 
 
 def test_modelo_303_export_refuses_legacy_verified_deductible_vat_missing_evidence(

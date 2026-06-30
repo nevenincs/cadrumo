@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import BindingSourceKind, Period
 from ....core.config import Settings
 from ....domain.categories import SpendingCategory
 from ....domain.transactions import (
@@ -70,7 +70,7 @@ def _raw_transaction(
             ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
-        raw_fields={"source_kind": "ledger_transaction"},
+        raw_fields={"source_kind": BindingSourceKind.LEDGER_TRANSACTION.value},
     )
 
 

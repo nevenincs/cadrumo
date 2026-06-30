@@ -738,7 +738,14 @@ def _missing_evidence_findings(
                     f"`aeat app ledger attach {diagnostic.binding_id} --purchase-invoice-evidence-id EVIDENCE_ID`, "
                     "then rerun verification."
                     if is_deductible_gap
-                    else f"Attach supporting evidence to ledger row {diagnostic.binding_id}, then rerun verification."
+                    else (
+                        f"Advisory only: keep issued/sales invoice support for ledger row {diagnostic.binding_id}. "
+                        "There is currently no dedicated public CLI path that mints issued-invoice evidence like "
+                        "`aeat app ledger evidence add` does for purchase invoices. If you already have a secure "
+                        "attachment id, link it with "
+                        f"`aeat app ledger attach {diagnostic.binding_id} --attachment-id ATTACHMENT_ID`, then rerun "
+                        "verification."
+                    )
                 ),
                 legal_refs=_MISSING_EVIDENCE_LEGAL_REFS,
                 source_refs=(diagnostic.source_kind,),
