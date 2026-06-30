@@ -30,6 +30,7 @@ from ._export_test_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CLOCK = datetime(2026, 1, 1, 0, 0, 0, tzinfo=UTC)
+_BUCKET_ID = "6e84e19e-58f8-4241-b2d1-6ab9bcc3dd7b"
 
 
 def _result_disposition_work_unit(*, modelo: str, period: Period) -> WorkUnit:
@@ -39,7 +40,7 @@ def _result_disposition_work_unit(*, modelo: str, period: Period) -> WorkUnit:
         period=period.registry_token,
     )
     work_unit_id = derive_work_unit_id(
-        bucket_id="operator",
+        bucket_id=_BUCKET_ID,
         modelo=modelo,
         filing_year=period.filing_year,
         period=period,
@@ -47,7 +48,7 @@ def _result_disposition_work_unit(*, modelo: str, period: Period) -> WorkUnit:
     )
     return WorkUnit(
         work_unit_id=work_unit_id,
-        bucket_id="operator",
+        bucket_id=_BUCKET_ID,
         modelo=ModeloCode(modelo),
         filing_year=period.filing_year,
         period=period,
