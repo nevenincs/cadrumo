@@ -664,7 +664,14 @@ class VerifyTgviResult(VerifyObservationPayload):
 
 
 class Borrador100SnapshotSummaryPayload(OutputSchema):
-    """One borrador-100 snapshot summary row."""
+    """Summary row for one persisted Modelo 100 borrador snapshot.
+
+    ``state`` is the
+    :class:`~aeat.application.live.SnapshotLifecycleState` value that controls
+    whether :class:`~aeat.application.live.Borrador100SnapshotService` exposes
+    the snapshot as active, superseded, discarded, or only through an explicit
+    ``--state all`` listing.
+    """
 
     snapshot_id: str
     filing_year: int
@@ -677,7 +684,12 @@ class Borrador100SnapshotSummaryPayload(OutputSchema):
 
 @register_schema("app.live.borrador.100.list")
 class Borrador100ListResult(OutputSchema):
-    """Payload for ``aeat app live borrador 100 list``."""
+    """Typed listing of bucket-scoped Modelo 100 borrador snapshots.
+
+    ``rows`` contains :class:`Borrador100SnapshotSummaryPayload` projections of
+    :class:`~aeat.application.live.Borrador100Snapshot` records returned by
+    :class:`~aeat.application.live.Borrador100SnapshotService`.
+    """
 
     bucket_id: str
     count: int
@@ -686,12 +698,13 @@ class Borrador100ListResult(OutputSchema):
 
 @register_schema("app.live.borrador.100.view")
 class Borrador100ViewResult(OutputSchema):
-    """Payload for ``aeat app live borrador 100 view``.
+    """Typed detail view for one Modelo 100 borrador snapshot.
 
-    ``binding_values`` is a ``{BindingId: string_value}`` mapping;
-    Decimal values are rendered as their canonical string form before
-    they reach the envelope so the strict :class:`OutputSchema` never
-    encounters a non-JSON-native scalar at validation time.
+    ``binding_values`` is a ``{BindingId: string_value}`` mapping from the
+    persisted :class:`~aeat.application.live.Borrador100Snapshot`. Decimal values
+    are rendered as their canonical string form before they reach the envelope
+    so the strict :class:`OutputSchema` never encounters a non-JSON-native
+    scalar at validation time.
     """
 
     bucket_id: str
@@ -707,11 +720,12 @@ class Borrador100ViewResult(OutputSchema):
 
 @register_schema("app.live.borrador.100.latest")
 class Borrador100LatestResult(OutputSchema):
-    """Payload for ``aeat app live borrador 100 latest``.
+    """Typed newest-active response for Modelo 100 borrador snapshots.
 
-    ``snapshot_id`` is ``None`` when no active snapshot exists for the
-    requested filing year; in that case every snapshot-derived field is
-    also ``None`` to keep the payload shape stable.
+    ``snapshot_id`` is ``None`` when no active snapshot exists for the requested
+    filing year; in that case every snapshot-derived field is also ``None`` to
+    keep the payload shape stable while still identifying the queried
+    ``filing_year``.
     """
 
     bucket_id: str
