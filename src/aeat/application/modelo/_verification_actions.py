@@ -1271,6 +1271,8 @@ def _detail_row_template_casilla_is_satisfied(
         return any(getattr(row, "row_type", None) == "operador" for row in target.detail_rows)
     if section != "rectificacion":
         return False
+    if any(getattr(row, "row_type", None) == "rectificacion" for row in target.detail_rows):
+        return True
     return target.casilla_values.get(_M349_NUMERO_RECTIFICACIONES_CASILLA, Decimal("0")) == Decimal(
         "0"
     ) and target.casilla_values.get(_M349_IMPORTE_RECTIFICACIONES_CASILLA, Decimal("0")) == Decimal("0")
