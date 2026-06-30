@@ -10,16 +10,6 @@ related:
   - '[[2026-06-30-agent-harness-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `agent-harness` plan
 
 ## Wave `W01` - Layer 0: capability manifest exposure
@@ -77,25 +67,25 @@ Prove the harness end-to-end on one modelo workflow (130) over raw 'aeat --forma
 
 Author the coordinator and the two lifecycle personas the one-modelo slice needs, each with role-scoped tool access.
 
-- [ ] `W03.P05.S19` - Author the coordinator persona; `src/aeat/_data/agent/personas/coordinator.md`.
-- [ ] `W03.P05.S20` - Author the modelo-preparer persona with role-scoped tool access; `src/aeat/_data/agent/personas/modelo-preparer.md`.
-- [ ] `W03.P05.S21` - Author the verifier persona running in isolated context; `src/aeat/_data/agent/personas/verifier.md`.
+- [x] `W03.P05.S19` - Author the coordinator persona; `src/aeat/_data/agent/personas/coordinator.md`.
+- [x] `W03.P05.S20` - Author the modelo-preparer persona with role-scoped tool access; `src/aeat/_data/agent/personas/modelo-preparer.md`.
+- [x] `W03.P05.S21` - Author the verifier persona running in isolated context; `src/aeat/_data/agent/personas/verifier.md`.
 
 ### Phase `W03.P06` - modelo-130 workflow skill
 
 Author the modelo-130 preparation skill as an executable playbook with progressive-disclosure reference material.
 
-- [ ] `W03.P06.S22` - Author the modelo-130 preparation skill playbook; `src/aeat/_data/agent/skills/preparar-modelo-130/SKILL.md`.
-- [ ] `W03.P06.S23` - Author the modelo-130 progressive-disclosure casilla reference; `src/aeat/_data/agent/skills/preparar-modelo-130/reference/casillas.md`.
+- [x] `W03.P06.S22` - Author the modelo-130 preparation skill playbook; `src/aeat/_data/agent/skills/preparar-modelo-130/SKILL.md`.
+- [x] `W03.P06.S23` - Author the modelo-130 progressive-disclosure casilla reference; `src/aeat/_data/agent/skills/preparar-modelo-130/reference/casillas.md`.
 
 ### Phase `W03.P07` - golden eval substrate for the slice
 
 Stand up the operator golden-task runner and the modelo-130 AEAT-worked-example scenario that proves the slice.
 
-- [ ] `W03.P07.S24` - Define the golden-task scenario schema for trajectory, casilla values, and provenance; `src/aeat/agent/eval/_models.py`.
-- [ ] `W03.P07.S25` - Author the modelo-130 golden scenario from an AEAT worked example; `src/aeat/agent/eval/scenarios/modelo_130.toml`.
-- [ ] `W03.P07.S26` - Implement the golden-task runner asserting trajectory, value, and provenance; `src/aeat/agent/eval/_runner.py`.
-- [ ] `W03.P07.S27` - Wire the modelo-130 golden eval into the test surface; `src/aeat/agent/eval/tests/test_modelo_130_golden.py`.
+- [x] `W03.P07.S24` - Define the golden-task scenario schema for trajectory, casilla values, and provenance; `src/aeat/agent/eval/_models.py`.
+- [x] `W03.P07.S25` - Author the modelo-130 golden scenario from an AEAT worked example; `src/aeat/agent/eval/scenarios/modelo_130.toml`.
+- [x] `W03.P07.S26` - Implement the golden-task runner asserting trajectory, value, and provenance; `src/aeat/agent/eval/_runner.py`.
+- [x] `W03.P07.S27` - Wire the modelo-130 golden eval into the test surface; `src/aeat/agent/eval/tests/test_modelo_130_golden.py`.
 
 ## Wave `W04` - MCP server, HITL tiers, and faithfulness hooks
 
