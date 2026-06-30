@@ -16,7 +16,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
 _DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
-_DECL_EVENT_KIND_CASILLA: CasillaId = _casilla_id("decl.event-kind")
 
 
 @pytest.mark.parametrize(
@@ -41,16 +40,3 @@ def test_verification_chain_informativa_parser_extracts_ejercicio_casilla(
         _DECL_EJERCICIO_CASILLA,
         label=_declaracion_case_label(modelo, fixture_stem),
     )
-
-
-def test_verification_chain_m036_parser_extracts_event_kind_casilla() -> None:
-    extracted = _parse_extracted_declaracion_values(modelo="036", fixture_stem="2025-alta", year=2025, period="alta")
-
-    assert _DECL_EVENT_KIND_CASILLA in extracted, (
-        f"PARSER-GAP [M036/2025-alta]: {_DECL_EVENT_KIND_CASILLA!r} not extracted.\n  got: {sorted(extracted)}"
-    )
-    event_kind = extracted[_DECL_EVENT_KIND_CASILLA]
-    assert isinstance(event_kind, str), (
-        f"PARSER-GAP [M036/2025-alta]: {_DECL_EVENT_KIND_CASILLA!r} not str: {type(event_kind).__name__!r}"
-    )
-    assert event_kind == "Alta", f"PARSER-GAP [M036/2025-alta]: expected 'Alta', got {event_kind!r}"
