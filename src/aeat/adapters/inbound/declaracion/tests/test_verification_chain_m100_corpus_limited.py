@@ -14,9 +14,9 @@ from ._verification_chain_m100_support import (
     _parse_m100_corpus,
 )
 from ._verification_chain_support import (
-    CasillaId,
     Decimal,
     RegistryValidationError,
+    _decimal_inputs_from_extracted_values,
     _registry_snapshot,
     calculate_registry_snapshot,
     date,
@@ -56,9 +56,7 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
     year = 2021
     extracted = _parse_m100_corpus(year, f"M100/{year}-0A corpus-limited")
 
-    inputs: dict[CasillaId, Decimal] = {
-        cid: val for cid, val in extracted.items() if cid not in _M100_COMPUTED_CASILLAS and isinstance(val, Decimal)
-    }
+    inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_M100_COMPUTED_CASILLAS)
 
     snapshot = _registry_snapshot("100", year, "0A")
 
