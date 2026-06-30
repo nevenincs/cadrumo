@@ -41,6 +41,9 @@ See Also:
         result for one modelo workflow run.
     :func:`aeat.application.workflow.resume_modelo_workflow`: Build the
         resume context for a persisted aborted workflow run.
+    :func:`aeat.application.workflow.resolve_modelo_workflow_resume_target`:
+        Resolve exact run ids, exact work-unit ids, calculation revisions, or
+        visible modelo selectors to one resumable workflow run target.
     :func:`aeat.application.workflow.list_profile_buckets`: Enumerate live
         manifest-backed profile buckets without opening secure storage.
     :func:`aeat.application.workflow.assess_active_profile_health`: Produce
