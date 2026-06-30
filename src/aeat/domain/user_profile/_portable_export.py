@@ -63,9 +63,11 @@ class CarriedSecureObject(BaseModel):
     secure-object substrate.
 
     ``payload_b64`` is the canonical adapter-serialised form: for typed stores
-    it is the ``Envelope[T]`` JSON bytes the store persists, and for the
+    it is the :class:`Envelope` JSON bytes the store persists, and for the
     attachment-blob store it is the raw decrypted blob bytes (which are not
     JSON). The owning store adapter is the sole interpreter of these bytes.
+    ``classification`` carries the row's :class:`SensitivityClass` so import
+    replays the same namespace sensitivity contract.
     """
 
     model_config = _STRICT_FROZEN
