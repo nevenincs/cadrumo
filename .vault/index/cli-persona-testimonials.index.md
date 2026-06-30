@@ -21,6 +21,7 @@ related:
   - '[[2026-06-30-cli-persona-testimonials-W01-P01-S03]]'
   - '[[2026-06-30-cli-persona-testimonials-W01-P02-S04]]'
   - '[[2026-06-30-cli-persona-testimonials-W01-P02-S05]]'
+  - '[[2026-06-30-cli-persona-testimonials-audit]]'
   - '[[2026-06-30-cli-persona-testimonials-plan]]'
 ---
 
@@ -38,6 +39,7 @@ Auto-generated index of all documents tagged with `#cli-persona-testimonials`.
 
 - `2026-05-20-cli-persona-testimonials-audit` - `cli-persona-testimonials` audit: `cli-operator-persona-testimonial-audit`
 - `2026-05-21-cli-persona-testimonials-audit` - `cli-persona-testimonials` audit: `errorcode-message-key-translation-gap`
+- `2026-06-30-cli-persona-testimonials-audit` - `cli-persona-testimonials` audit: `W02 worker code review`
 
 ### exec
 
