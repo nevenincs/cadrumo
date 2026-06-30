@@ -164,6 +164,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 __all__ = [
     "LLM_USAGE_NAMESPACE",
+    "_BUCKET_A_ATTACHMENT_PAYLOAD",
+    "_BUCKET_A_ID",
+    "_BUCKET_B_ATTACHMENT_PAYLOAD",
+    "_BUCKET_B_ID",
+    "_WALLET_SUBJECT_ID",
     "AmortizacionLedger",
     "ApoderadoService",
     "AttachmentNotFoundError",
@@ -227,6 +232,11 @@ _DEK = b"d" * 32
 _MASTER_KEY = b"m" * 32
 
 _GOOGLE_OAUTH_ENDPOINT = "https://oauth2.googleapis.com/token"
+_BUCKET_A_ID = "0f60a84e-d1ac-4c0e-9e91-c094a33df00a"
+_BUCKET_B_ID = "9b22bbfd-d870-4207-a1a7-30a2b4b3600b"
+_WALLET_SUBJECT_ID = "ES12345678Z"
+_BUCKET_A_ATTACHMENT_PAYLOAD = f"{_BUCKET_A_ID} attachment payload".encode("ascii")
+_BUCKET_B_ATTACHMENT_PAYLOAD = f"{_BUCKET_B_ID} attachment payload".encode("ascii")
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -569,7 +579,7 @@ def _calculation_catalogue(label: str) -> CalculationRevisionCatalogue:
                 casilla_id=_CALCULATION_OUTPUT_CASILLA,
                 value=Decimal("100.00"),
                 legal_refs=("ley-58-2003:art-93",),
-                source_refs=("runtime-migrated-repository-test",),
+                source_refs=("runtime-attached-repository-test",),
             ),
         ),
         created_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
@@ -801,7 +811,7 @@ def _repair_decision(label: str) -> RepairRemediationDecision:
 
 def _iva_wallet_decision(label: str, *, target_period: str = "2T") -> IvaCompensationReconciliationDecision:
     return IvaCompensationReconciliationDecision(
-        taxpayer_nif=f"ES{label.upper()}",
+        taxpayer_nif=_WALLET_SUBJECT_ID,
         target_year=2026,
         target_period=_Period.from_year_and_code(2026, target_period),
         selected_authority="aeat_wallet",
