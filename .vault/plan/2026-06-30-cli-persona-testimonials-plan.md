@@ -12,6 +12,16 @@ related:
   - '[[2026-06-02-ledger-operator-hardening-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `cli-persona-testimonials` plan
 
 ## Wave `W01` - campaign intake and evidence authority
@@ -69,9 +79,9 @@ Re-run the weak persona/export roots as concrete operator journeys and close the
 
 Replay the known weak persona roots as real operator journeys and turn any reproduced defect into a bounded fix step.
 
-- [ ] `W03.P06.S15` - Replay weak IVA cross-period company and pos-chain persona roots; `tmp/personas`.
-- [ ] `W03.P06.S16` - Replay mixed-income autonomo and employee persona roots; `tmp/personas`.
-- [ ] `W03.P06.S17` - Replay raw Ana and Taller transcript roots through the current CLI; `tmp/personas`.
+- [x] `W03.P06.S15` - Replay weak IVA cross-period company and pos-chain persona roots; `tmp/personas`.
+- [x] `W03.P06.S16` - Replay mixed-income autonomo and employee persona roots; `tmp/personas`.
+- [x] `W03.P06.S17` - Replay raw Ana and Taller transcript roots through the current CLI; `tmp/personas`.
 
 ### Phase `W03.P07` - annual Renta and local export evidence
 
