@@ -362,6 +362,36 @@ def _qualifies_for_first_year_fractional_suppression(
     return activity_start_date.year >= target_filing_year
 
 
+def _non_filer_modelos(
+    snapshot: RegistrySnapshot,
+    *,
+    taxpayer_files_economic_activity: bool | None,
+    not_applicable_source_modelos: frozenset[str] | None,
+) -> frozenset[str]:
+    return frozenset(
+        classification.source_modelo
+        for classification in snapshot.revision.dependency_classifications
+        if (not classification.taxpayer_files_source)
+        or (classification.conditional_on_economic_activity and taxpayer_files_economic_activity is False)
+        or (
+            classification.conditional_on_economic_activity
+            and not_applicable_source_modelos is not None
+            and classification.source_modelo in not_applicable_source_modelos
+        )
+    )
+
+
+def _not_applicable_dependencies(
+    all_requirements: tuple[CrossPeriodDependencyRequirement, ...],
+    non_filer_modelos: frozenset[str],
+) -> tuple[CrossPeriodDependencyEvidence, ...]:
+    return tuple(
+        _suppressed_modelo_not_applicable_evidence(requirement)
+        for requirement in all_requirements
+        if requirement.source_modelo in non_filer_modelos
+    )
+
+
 def evaluate_cross_period_clean_state(
     snapshot: RegistrySnapshot,
     *,
@@ -436,23 +466,13 @@ def evaluate_cross_period_clean_state(
     verification_catalogue = verification_repository.load()
     resolved_justificante_repository = justificante_repository or JustificanteRepository()
     expected_member_sets_by_key = _expected_member_sets_by_key(expected_member_sets)
-    non_filer_modelos = frozenset(
-        classification.source_modelo
-        for classification in snapshot.revision.dependency_classifications
-        if (not classification.taxpayer_files_source)
-        or (classification.conditional_on_economic_activity and taxpayer_files_economic_activity is False)
-        or (
-            classification.conditional_on_economic_activity
-            and not_applicable_source_modelos is not None
-            and classification.source_modelo in not_applicable_source_modelos
-        )
+    non_filer_modelos = _non_filer_modelos(
+        snapshot,
+        taxpayer_files_economic_activity=taxpayer_files_economic_activity,
+        not_applicable_source_modelos=not_applicable_source_modelos,
     )
     all_requirements = cross_period_dependency_requirements(snapshot)
-    not_applicable_dependencies = tuple(
-        _suppressed_modelo_not_applicable_evidence(requirement)
-        for requirement in all_requirements
-        if requirement.source_modelo in non_filer_modelos
-    )
+    not_applicable_dependencies = _not_applicable_dependencies(all_requirements, non_filer_modelos)
     partition = partition_cross_period_requirements_by_activity_start(
         tuple(r for r in all_requirements if r.source_modelo not in non_filer_modelos),
         activity_start_date=activity_start_date,
