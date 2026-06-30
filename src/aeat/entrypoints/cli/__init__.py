@@ -290,11 +290,12 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
     application-layer resolver and pin the override to the UUID, so the core
     route resolver (which stays UUID-only) receives the identifier it expects.
 
-    No-ops when no active profile resolves, when the value already resolves as a
-    UUID bucket directly (the fast path — zero change for UUID-valued input), or
-    when the label does not match any live profile (the per-command active-profile
-    guard surfaces that). An ambiguous label (more than one live match) raises a
-    clear refusal rather than an arbitrary pick.
+    No-ops when no active profile resolves or when the label does not match any
+    live profile (the per-command active-profile guard surfaces that). A live
+    UUID-valued input is pinned to the same UUID; a tombstoned UUID-valued input
+    is refused instead of bypassing the label resolver's lifecycle filter. An
+    ambiguous label (more than one live match) raises a clear refusal rather than
+    an arbitrary pick.
     """
     from ...application.workflow import (
         ProfileLabelAmbiguousError,
@@ -308,14 +309,6 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
 
     active = resolve_active_bucket_id()
     if active is None:
-        return
-    try:
-        active_bucket = read_profile_bucket_by_id(active)
-    except AeatError:
-        return
-    if active_bucket is not None:
-        # Already a UUID bucket directory — the canonical fast path. Leave the
-        # active-profile value byte-identical so the UUID path is unchanged.
         return
     try:
         pointer = resolve_profile_bucket(active)
@@ -333,6 +326,15 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
     except AeatError:
         return
     if pointer is None:
+        try:
+            inactive_bucket = read_profile_bucket_by_id(active)
+        except AeatError:
+            return
+        if inactive_bucket is not None:
+            raise CliRefusedBoundaryError(
+                translated_message="cli.config.profile.unknown_profile",
+                context={"name": active},
+            )
         # Not a live label either; leave resolution to the per-command active
         # profile guard, which emits the canonical no-active-profile refusal.
         return

@@ -242,24 +242,27 @@ def test_config_switch_emits_profile_activated_event() -> None:
     """
 
     from ....application.user_profile._orchestration import profile_storage_session
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket
     from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 
     seed("operator")
+    pointer = read_profile_bucket("operator")
+    assert pointer is not None
     result = _invoke_config(("switch", "operator"))
     assert result.exit_code == 0, result.output
 
     # The bucket-event-history catalogue is encrypted; reading it requires an
-    # active session for the "operator" bucket.
-    with profile_storage_session("operator"):
+    # active session for the operator profile's UUID bucket.
+    with profile_storage_session(pointer.bucket_id):
         catalogue = BucketEventHistoryRepository().load()
     matching = [
         event
         for event in catalogue.events.values()
-        if event.event_type is BucketEventType.PROFILE_ACTIVATED and event.object_id == "operator"
+        if event.event_type is BucketEventType.PROFILE_ACTIVATED and event.object_id == pointer.bucket_id
     ]
     assert matching, [event.event_type for event in catalogue.events.values()]
-    assert matching[-1].payload["profile_id"] == "operator"
-    assert matching[-1].payload["active_profile"] == "operator"
+    assert matching[-1].payload["profile_id"] == pointer.bucket_id
+    assert matching[-1].payload["active_profile"] == pointer.bucket_id
 
 
 def test_config_profile_show_emits_active_profile_facts() -> None:
@@ -353,6 +356,27 @@ def test_config_profile_show_reports_a_tombstoned_profile_as_tombstoned() -> Non
     assert "status\ttombstoned" in result.output
     assert "record_validity\ttombstoned" in result.output
     assert "record_validity\tvalid" not in result.output
+
+
+def test_config_profile_show_inspects_a_tombstoned_profile_by_label_and_uuid() -> None:
+    """``show`` preserves tombstoned inspect behavior for label and UUID targets."""
+
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+
+    seed("operator")
+    pointer = read_profile_bucket("operator")
+    assert pointer is not None
+    tombstoned_uuid = pointer.bucket_id
+
+    assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
+    by_label = _invoke_profile(("show", "operator"))
+    by_uuid = _invoke_profile(("show", tombstoned_uuid))
+
+    for result in (by_label, by_uuid):
+        assert result.exit_code == 0, result.output
+        assert "status\ttombstoned" in result.output
+        assert "record_validity\ttombstoned" in result.output
+        assert "Unknown profile" not in result.output
 
 
 def test_config_profile_duplicate_copies_to_new_id() -> None:

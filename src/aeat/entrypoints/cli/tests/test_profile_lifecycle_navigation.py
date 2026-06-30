@@ -583,3 +583,40 @@ def test_profile_flag_refuses_tombstoned_uuid_like_tombstoned_label(
     assert "Unknown profile" in by_uuid.output
     assert "rows" not in by_uuid.output
     assert resolve_active_bucket_id() is None
+
+
+def test_active_profile_env_and_pointer_refuse_tombstoned_uuid(
+    _per_bucket_backend: Path,
+) -> None:
+    """A tombstoned UUID cannot activate app commands via env or pointer routing."""
+
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....core import BucketPointer, write_pointer
+    from ....core.config import load_settings, override_settings
+
+    seed("alpha")
+    pointer = read_profile_bucket("alpha")
+    assert pointer is not None
+    tombstoned_uuid = pointer.bucket_id
+
+    dispose_engine()
+    deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
+    assert deleted.exit_code == 0, deleted.output
+
+    dispose_engine()
+    with override_settings(aeat_active_profile=tombstoned_uuid):
+        by_env = _invoke(("--language", "en", "app", "ledger", "list"))
+
+    write_pointer(
+        load_settings().aeat_local_storage_root,
+        BucketPointer(bucket_id=tombstoned_uuid, schema_version=1),
+    )
+    dispose_engine()
+    with override_settings(aeat_active_profile=None):
+        by_pointer = _invoke(("--language", "en", "app", "ledger", "list"))
+
+    for result in (by_env, by_pointer):
+        assert result.exit_code != 0, result.output
+        assert "Unknown profile" in result.output
+        assert "rows" not in result.output
