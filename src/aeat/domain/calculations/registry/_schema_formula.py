@@ -202,7 +202,7 @@ class ConvenioRateRow(RegistryModel):
     tipo_renta: str = Field(min_length=1, max_length=64)
     rate: str = Field(min_length=1, max_length=32)
     legal_ref_anchor: LegalRefId
-    legal_refs: tuple[LegalRefId, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     notes: str | None = Field(default=None, max_length=512)
     valid_from: date
     valid_to: date | None = None
