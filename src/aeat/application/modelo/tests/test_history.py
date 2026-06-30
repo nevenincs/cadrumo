@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -41,11 +42,13 @@ _Repos = tuple[
     BucketEventHistoryRepository,
 ]
 
+_BUCKET_ID = "17171717-1717-4171-8171-171717171717"
 
-def _seed_ready_profile(objects: object) -> None:
-    UserProfileLifecycleRepository(bucket_id="default", objects=objects).save(
+
+def _seed_ready_profile() -> None:
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
         UserProfileRecord(
-            profile_id="00000000-0000-4000-8000-000000000000",
+            profile_id=_BUCKET_ID,
             display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -63,11 +66,32 @@ def _seed_ready_profile(objects: object) -> None:
     )
 
 
+def _seed_sociedad_profile() -> None:
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
+        UserProfileRecord(
+            profile_id=_BUCKET_ID,
+            display_name="Test runtime profile",
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="B12345678"),
+                UserProfileFact(path="identity.legal_name", value="History Test Sociedad Limitada"),
+                UserProfileFact(path="activities.description", value="corporate tax activity"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
+                UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
+                UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
+                UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
+            ),
+        ),
+    )
+
+
 @pytest.fixture
 def repos(tmp_path: Path) -> Iterator[_Repos]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        _seed_ready_profile(objects)
+        _seed_ready_profile()
         yield (
             WorkUnitCatalogueRepository(objects=objects),
             CalculationRevisionCatalogueRepository(objects=objects),
@@ -87,9 +111,10 @@ def test_create_rejects_unknown_period_for_modelo_revision(repos: _Repos) -> Non
     create-time with the declared-period listing (``1P``, ``2P``, ``3P``).
     """
     wu_repo, _, _, _, bv_repo = repos
+    _seed_sociedad_profile()
     with pytest.raises(ModeloError) as exc:
         create_work_unit(
-            bucket_id="default",
+            bucket_id=_BUCKET_ID,
             modelo="202",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
@@ -117,7 +142,7 @@ def test_create_rejects_unknown_revision_with_helpful_list(repos: _Repos) -> Non
     wu_repo, _, _, _, bv_repo = repos
     with pytest.raises(ModeloError) as exc:
         create_work_unit(
-            bucket_id="default",
+            bucket_id=_BUCKET_ID,
             modelo="130",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
@@ -154,7 +179,7 @@ def test_history_records_creation_event(repos: _Repos) -> None:
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     t0 = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
     work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
@@ -174,7 +199,7 @@ def test_history_records_creation_event(repos: _Repos) -> None:
         bucket_event_repository=bv_repo,
     )
 
-    assert history.bucket_id == "default"
+    assert history.bucket_id == _BUCKET_ID
     assert history.work_unit_id == work_unit.work_unit_id
     assert len(history.events) == 1
     event = history.events[0]
@@ -200,7 +225,7 @@ def test_history_idempotent_create_does_not_duplicate_creation_event(repos: _Rep
     t0 = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
     t1 = datetime(2026, 1, 15, 13, 0, tzinfo=UTC)
     first = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
@@ -210,7 +235,7 @@ def test_history_idempotent_create_does_not_duplicate_creation_event(repos: _Rep
         clock=t0,
     )
     reloaded = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
@@ -239,7 +264,7 @@ def test_history_records_discard_event(repos: _Repos) -> None:
     t1 = datetime(2026, 1, 15, 13, 0, tzinfo=UTC)
 
     work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
@@ -284,7 +309,7 @@ def test_history_excludes_events_from_other_work_units(repos: _Repos) -> None:
     t1 = datetime(2026, 1, 15, 13, 0, tzinfo=UTC)
 
     target = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
@@ -294,7 +319,7 @@ def test_history_excludes_events_from_other_work_units(repos: _Repos) -> None:
         clock=t0,
     )
     other = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "2T"),
