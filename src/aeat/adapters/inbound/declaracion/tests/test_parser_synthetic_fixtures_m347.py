@@ -1,4 +1,4 @@
-"""Synthetic declaration parser fixture tests split from the boundary suite."""
+"""Modelo 347 synthetic declaration parser fixture tests."""
 
 from __future__ import annotations
 
