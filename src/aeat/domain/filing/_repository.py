@@ -2,8 +2,20 @@
 
 :class:`ModeloDraft` records carry exact casilla arithmetic and tax due
 values. They are stored as encrypted byte objects via
-:class:`SecureObjectRepository` at :class:`SensitivityClass` FINANCIAL;
+:class:`SecureObjectRepository` at :class:`SensitivityClass` FINANCIAL and
+serialised through an :class:`Envelope` by :class:`SecureBoundRepository`;
 no plaintext draft JSON or envelope file lands on disk.
+
+See Also:
+    :class:`ModeloDraft`
+        Strict filing payload persisted by this repository.
+    :class:`SecureBoundRepository`
+        Generic encrypted-envelope repository base used for the draft store.
+    :data:`aeat.adapters.persistence.storage.FILING_DRAFTS_NAMESPACE`
+        Namespace, sensitivity, schema-version, object-key, and custody
+        contract for draft secure objects.
+    :mod:`aeat.application.filing._review`
+        Application review flow that reads and updates persisted drafts.
 """
 
 from __future__ import annotations
@@ -20,7 +32,7 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
 
 
 class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
-    """Repository over encrypted SQL-backed filing drafts."""
+    """Repository over encrypted SQL-backed :class:`ModeloDraft` payloads."""
 
     namespace: ClassVar[str] = "aeat.domain.filing.drafts"
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.FINANCIAL

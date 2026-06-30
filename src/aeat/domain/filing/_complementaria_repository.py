@@ -6,6 +6,20 @@ submission references. They are stored as encrypted byte objects via
 ``AUDIT`` sensitivity; no plaintext amendment JSON or envelope file
 lands on disk. Each record is wrapped in an :class:`Envelope` before
 serialisation.
+
+See Also:
+    :class:`BaseAmendment`
+        Shared typed payload shape saved by this repository.
+    :class:`ModeloComplementaria`
+        LGT Art. 122.2 amendment variant for additional self-assessment.
+    :class:`ModeloSustitutiva`
+        LGT Art. 122.1 amendment variant for full replacement.
+    :data:`aeat.adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`
+        Namespace, sensitivity, schema-version, object-key, and custody
+        contract for amendment secure objects.
+    :func:`aeat.application.filing.build_complementaria`
+        Application orchestration entry point that can produce and persist an
+        amendment.
 """
 
 from __future__ import annotations
@@ -35,7 +49,7 @@ _AMENDMENT_NAMESPACE = "aeat.domain.filing.amendments"
 
 
 class ModeloAmendmentRepository:
-    """Repository over encrypted SQL-backed filing amendments."""
+    """Repository over encrypted SQL-backed :class:`BaseAmendment` payloads."""
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
