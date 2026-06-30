@@ -9,6 +9,8 @@ from ._modelo_100_registry_support import (
     _ANEXO_B_AAV_SECTION,
     _ANEXO_B_ACCOUNT_ROWS,
     _ANEXO_B_ACCOUNT_SECTION,
+    _ANEXO_B_BALEARES_NACIMIENTO_ROWS,
+    _ANEXO_B_BALEARES_NACIMIENTO_SECTION,
     _ANEXO_B_CANTIDADES_DEDUCIBLES_LABEL,
     _ANEXO_B_CANTIDADES_DEDUCIBLES_ROLE,
     _ANEXO_B_CONTRIBUYENTE_DERECHO_CLAVE_ROLE,
@@ -40,6 +42,7 @@ from ._modelo_100_registry_support import (
     _LEGACY_ANEXO_B_AAV_AMOUNT_CURRENT_ROLE,
     _LEGACY_ANEXO_B_AAV_AMOUNT_PENDING_ROLE,
     _LEGACY_ANEXO_B_ACCOUNT_HOLDER_KEY_ROLE,
+    _LEGACY_ANEXO_B_BIRTH_ADVANCE_REGULARIZE_ROLE,
     _LEGACY_ANEXO_B_CONTRIBUTOR_KEY_ROLE,
     _LEGACY_ANEXO_B_INSURANCE_PREMIUM_ROLE,
     _LEGACY_ANEXO_B_INSURANCE_PREMIUM_TOTAL_ROLE,
@@ -175,6 +178,34 @@ def test_modelo_100_anexo_b_account_holder_role_is_cm_vivienda_habitual() -> Non
         casilla = casillas_by_id[casilla_id]
         assert casilla.label == expected_label
         assert tuple(casilla.section) == ("resultados", "datos_adicionales_anexo_b", _ANEXO_B_ACCOUNT_SECTION)
+        assert casilla.semantic_role == expected_role
+        assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+
+
+@pytest.mark.parametrize("filing_year", [2023, 2024, 2025])
+def test_modelo_100_anexo_b_baleares_birth_roles_are_spanish_and_label_grounded(
+    filing_year: int,
+) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    legacy_roles = [
+        casilla.id
+        for casilla in revision.casillas
+        if casilla.semantic_role == _LEGACY_ANEXO_B_BIRTH_ADVANCE_REGULARIZE_ROLE
+    ]
+    casillas_by_id = {
+        casilla.id: casilla for casilla in revision.casillas if casilla.id in _ANEXO_B_BALEARES_NACIMIENTO_ROWS
+    }
+
+    assert not legacy_roles
+    assert set(casillas_by_id) == set(_ANEXO_B_BALEARES_NACIMIENTO_ROWS)
+    for casilla_id, (expected_label, expected_role) in _ANEXO_B_BALEARES_NACIMIENTO_ROWS.items():
+        casilla = casillas_by_id[casilla_id]
+        assert casilla.label == expected_label
+        assert tuple(casilla.section) == (
+            "resultados",
+            "datos_adicionales_anexo_b",
+            _ANEXO_B_BALEARES_NACIMIENTO_SECTION,
+        )
         assert casilla.semantic_role == expected_role
         assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
 
