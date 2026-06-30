@@ -253,30 +253,24 @@ class TestPeriodConstruction:
 
         assert Period.from_string(str(period)) == period
 
+    @pytest.mark.parametrize(
+        ("display", "expected"),
+        [
+            ("2026 1T", Period.from_year_and_code(2026, "1T")),
+            ("2026 03", Period.from_year_and_code(2026, "03")),
+            ("2026 1P", Period.from_year_and_code(2026, "1P")),
+            ("2026 EXT-1T", Period.from_year_and_code(2026, "EXT-1T")),
+            ("2026 AD-HOC", Period.from_year_and_code(2026, "AD-HOC")),
+            ("2026 EVENT-1", Period.from_year_and_code(2026, "EVENT-1")),
+        ],
+    )
+    def test_from_string_accepts_current_display_forms(self, display: str, expected: Period) -> None:
+        assert Period.from_string(display) == expected
+
     @pytest.mark.parametrize("combined", ["2026Q1", "2026-1T", "2026", "2026-03", "2026A"])
     def test_from_string_refuses_combined_calendar_strings(self, combined: str) -> None:
         with pytest.raises(PeriodError, match="expected 'YYYY <period-code>'"):
             Period.from_string(combined)
-
-    @pytest.mark.parametrize(
-        ("authored", "expected"),
-        [
-            ("2026 1T", Period.from_year_and_code(2026, "1T")),
-            ("2026Q1", Period.from_year_and_code(2026, "1T")),
-            ("2026-1T", Period.from_year_and_code(2026, "1T")),
-            ("2026-0A", Period.from_year_and_code(2026, "0A")),
-            ("2026-03", Period.from_year_and_code(2026, "03")),
-            ("2026-1P", Period.from_year_and_code(2026, "1P")),
-            ("2026-EXT-1T", Period.from_year_and_code(2026, "EXT-1T")),
-            ("2026", Period.from_year_and_code(2026, "0A")),
-        ],
-    )
-    def test_registry_authoring_parser_covers_deadline_window_toml_dialects(
-        self,
-        authored: str,
-        expected: Period,
-    ) -> None:
-        assert Period.from_registry_authoring_string(authored) == expected
 
 
 class TestPeriodAccessors:

@@ -1,31 +1,38 @@
 """The single canonical operator-facing state read-projection.
 
-Every operator-facing surface that reports "the truth" about the
-active profile — ``overview status``, ``auth status``, ``auth test``,
-and ``modelo readiness`` — consumes this one projection. None of them
-re-derives state from a private subset of the stores.
+Every operator-facing state or readiness surface that reports "the
+truth" about the active profile - ``overview status``, ``auth status``,
+``auth test``, and ``modelo readiness`` - consumes this one projection.
+None of them re-derives state from a private subset of the stores.
 
 The :class:`OperatorStateProjection` is a typed, frozen pydantic model
 built by exactly one producer, :func:`build_operator_state_projection`.
 The producer loads the profile aggregate, the workspace catalogues
 (transactions via :class:`TransactionCatalogueRepository`, invoices via
-:class:`InvoiceCatalogueRepository`, modelo drafts, modelo work units,
-calculation revisions), the auth state, the active-profile health, and the
-deadline obligations computed from :class:`Schedule`, and computes each
-readiness value exactly once.
+:class:`InvoiceCatalogueRepository`, declaration drafts via
+:class:`~aeat.domain.filing.ModeloDraftRepository`, modelo work units via
+:class:`~aeat.domain.modelos.WorkUnitCatalogueRepository`, and calculation
+revisions via
+:class:`~aeat.domain.modelos.CalculationRevisionCatalogueRepository`), the
+auth state, the active-profile health, and the deadline obligations computed
+from :class:`Schedule`, and computes each readiness value exactly once.
 Modelo readiness resolves a :class:`RegistrySnapshot` only to evaluate
-registry-declared preflight requirements for the requested work surface.
+registry-declared profile, binding, and ledger preflight requirements for the
+requested :class:`ModeloReadinessRequest`.
 
 The projection is pure read: building it mutates no store.
 
 Background: ``overview status`` once reconstructed workspace
-counters from a different store subset than ``modelo work`` writes —
-it read the ``ModeloDraft`` store but never the ``WorkUnitCatalogue``
-or ``CalculationRevisionCatalogue`` stores — so an operator who used
+counters from a different store subset than ``modelo work`` writes:
+it read the :class:`~aeat.domain.filing.ModeloDraft` store but never the
+:class:`~aeat.domain.modelos.WorkUnitCatalogue` or
+:class:`~aeat.domain.modelos.CalculationRevisionCatalogue` stores, so an
+operator who used
 ``modelo work create`` / ``calculate`` saw ``drafts: 0``. This
-projection carries ``drafts`` (the declaration-draft ``ModeloDraft`` store) and
-``work_units`` (the ``WorkUnitCatalogue`` store) as distinct counters,
-so neither is silently zero.
+projection carries ``drafts`` (the declaration-draft
+:class:`~aeat.domain.filing.ModeloDraft` store) and ``work_units`` (the
+:class:`~aeat.domain.modelos.WorkUnitCatalogue` store) as distinct counters, so
+neither is silently zero.
 
 See Also:
     :class:`~aeat.application.overview.OverviewStatusReport`
@@ -34,12 +41,18 @@ See Also:
     :class:`~aeat.application.auth.AuthStatusResult`
         Auth emit shape that reads the same canonical configured/authenticated
         readiness values carried here.
-    :class:`~aeat.application.workflow.WorkflowEngine`
-        Filing workflow gate that shares the pending-obligation schedule
-        producer with this projection.
+    :class:`ProjectionWorkspaceSummary`
+        Per-store counter record that keeps declaration drafts, work units, and
+        calculation revisions distinct.
+    :class:`ProjectionModeloReadiness`
+        Per-target readiness record built from profile facts, registry
+        snapshots, binding availability, and ledger preflight.
+    :func:`~aeat.application.workflow._deadline_stage.resolve_deadline_stage_obligation`
+        Filing workflow selector that filters a schedule for the workflow gate;
+        it does not consume ``pending_obligations`` directly.
     :func:`~aeat.domain.deadlines.compute_obligation_schedule`
         Single deadline schedule producer used for projection obligations and
-        workflow ``NO_PENDING_OBLIGATION`` checks.
+        workflow deadline-stage checks.
     :class:`~aeat.domain.calculations.registry.RegistrySnapshot`
         Registry authority snapshot used to resolve modelo-readiness preflight
         requirements.
@@ -91,6 +104,11 @@ _AUTH_PROVIDER_VALUES = frozenset(kind.value for kind in AuthProviderKind)
 class ProjectionActiveProfile(BaseModel):
     """Active-profile identity and health, computed once for every surface.
 
+    This record is the projection-side form of
+    :class:`~aeat.application.workflow.ActiveProfileHealth`. Auth and overview
+    surfaces read these fields instead of re-running profile pointer or bucket
+    manifest checks.
+
     Attributes:
         profile_id: Immutable bucket UUID of the active profile, or
             ``None`` when no profile is active.
@@ -104,7 +122,7 @@ class ProjectionActiveProfile(BaseModel):
             to a registered bucket.
         record_present: Whether the encrypted profile record loaded.
         next_action: The operator-facing next-step command carried from
-            the profile-health assessment.
+            :func:`~aeat.application.workflow.assess_active_profile_health`.
     """
 
     model_config = _STRICT_FROZEN
@@ -119,6 +137,11 @@ class ProjectionActiveProfile(BaseModel):
 
 class ProjectionAuthReadiness(BaseModel):
     """Auth operational readiness, computed once for every surface.
+
+    The record narrows :class:`~aeat.application.workflow.WorkflowState` and
+    provider backend health into the fields consumed by
+    :class:`~aeat.application.auth.AuthStatusResult` and
+    :class:`~aeat.application.auth.AuthTestResult`.
 
     ``configured`` is the single canonical definition of "auth is
     operationally ready": a provider is selected in workflow state and,
@@ -162,24 +185,30 @@ class ProjectionWorkspaceSummary(BaseModel):
     """Counters for every workspace store, so none is silently zero.
 
     ``drafts`` and ``work_units`` are deliberately distinct counters:
-    ``modelo file`` writes the declaration-draft :class:`ModeloDraft` store while
+    ``modelo file`` writes the declaration-draft
+    :class:`~aeat.domain.filing.ModeloDraft` store while
     ``modelo work create`` / ``calculate`` write the
-    :class:`WorkUnitCatalogue` store. A single ``drafts`` counter that
-    read only the first store reported ``0`` for an operator who used
-    the ``modelo work`` flow.
+    :class:`~aeat.domain.modelos.WorkUnitCatalogue` store. Calculation output is
+    counted separately through
+    :class:`~aeat.domain.modelos.CalculationRevisionCatalogue`. A single
+    ``drafts`` counter that read only the first store reported ``0`` for an
+    operator who used the ``modelo work`` flow.
 
     Attributes:
         transactions: Count of imported transactions.
         invoices: Count of imported invoices.
-        drafts: Count of declaration-draft ``ModeloDraft`` entries.
-        work_units: Count of *active* (``BORRADOR``) ``WorkUnitCatalogue``
-            entries written by ``modelo work create``. Discarded units
-            are excluded so the counter is never inflated by units the
-            operator has abandoned.
-        discarded_work_units: Count of ``DESCARTADO`` ``WorkUnitCatalogue``
-            entries — carried distinctly so a surface can state the
-            active / discarded split rather than a misleading total.
-        calculation_revisions: Count of ``CalculationRevisionCatalogue``
+        drafts: Count of declaration-draft :class:`~aeat.domain.filing.ModeloDraft`
+            entries.
+        work_units: Count of *active* (``BORRADOR``)
+            :class:`~aeat.domain.modelos.WorkUnitCatalogue` entries written by
+            ``modelo work create``. Discarded units are excluded so the counter
+            is never inflated by units the operator has abandoned.
+        discarded_work_units: Count of ``DESCARTADO``
+            :class:`~aeat.domain.modelos.WorkUnitCatalogue` entries, carried
+            distinctly so a surface can state the active / discarded split
+            rather than a misleading total.
+        calculation_revisions: Count of
+            :class:`~aeat.domain.modelos.CalculationRevisionCatalogue`
             entries written by ``modelo work calculate``.
         unreadable_rows: Count of secure-object rows that failed to
             decrypt — an integrity warning.
@@ -198,6 +227,12 @@ class ProjectionWorkspaceSummary(BaseModel):
 
 class ProjectionObligation(BaseModel):
     """One pending filing obligation carried in the projection.
+
+    Rows are copied from the :class:`~aeat.domain.deadlines.Schedule`
+    obligations produced for the active :class:`TaxpayerProfile`. Workflow
+    filing gates later select a narrower
+    :class:`~aeat.domain.deadlines.ModeloDeadline` from the same schedule
+    producer.
 
     Attributes:
         modelo: Modelo identifier.
@@ -234,14 +269,13 @@ class OperatorStateProjection(BaseModel):
             caller asked for. Empty when no modelo target was supplied.
         pending_obligations: The full, unfiltered deadline obligations
             for the active profile's current year, as
-            :class:`ProjectionObligation` records. Computed through
-            :func:`~aeat.domain.deadlines.compute_obligation_schedule`,
-            the single producer shared with
-            :class:`~aeat.application.workflow.WorkflowEngine`
-            ``NO_PENDING_OBLIGATION`` gate. The gate filters the same
-            schedule down to its narrow ``next_deadline`` /
-            ``(modelo, period)`` target; this field carries every
-            obligation so a surface can render the whole upcoming set.
+            :class:`ProjectionObligation` records. They are computed through
+            :func:`~aeat.domain.deadlines.compute_obligation_schedule`, the
+            same schedule producer that the workflow deadline stage filters
+            through
+            :func:`~aeat.application.workflow._deadline_stage.resolve_deadline_stage_obligation`.
+            The workflow does not consume this tuple directly; the shared
+            invariant is producer-level schedule agreement.
     """
 
     model_config = _STRICT_FROZEN
@@ -487,8 +521,10 @@ def _build_workspace_summary(*, bucket_id: str | None) -> ProjectionWorkspaceSum
 def _taxpayer_profile_from_state(state: WorkflowState) -> TaxpayerProfile:
     """Project the active profile record into an :class:`TaxpayerProfile`.
 
-    Mirrors the CLI ``_profile_to_taxpayer`` helper so the deadline
-    engine receives the same profile shape every surface would compute.
+    Mirrors the CLI ``_profile_to_taxpayer`` helper from the
+    :class:`~aeat.application.workflow.WorkflowState` active record so the
+    deadline engine receives the same profile shape every surface would
+    compute.
     """
     from ..domain.deadlines import taxpayer_profile_from_mapping
     from .user_profile._projections import record_to_values
@@ -506,11 +542,12 @@ def build_pending_obligations(
     """Compute the deadline obligations for the active profile.
 
     Routes through :func:`~aeat.domain.deadlines.compute_obligation_schedule`,
-    the single producer of the pending-obligation datum shared with the
-    :class:`~aeat.application.workflow.WorkflowEngine`
-    ``NO_PENDING_OBLIGATION`` gate, so the gate and
-    the projection cannot draw a divergent obligation set. A failure to
-    compute the schedule is logged and degrades to an empty tuple
+    the single producer of the pending-obligation datum also used by the
+    workflow deadline stage. This function projects the full
+    :class:`~aeat.domain.deadlines.Schedule`; the workflow gate separately
+    filters its target :class:`~aeat.domain.deadlines.ModeloDeadline` through
+    :func:`~aeat.application.workflow._deadline_stage.resolve_deadline_stage_obligation`.
+    A failure to compute the schedule is logged and degrades to an empty tuple
     rather than failing the whole projection.
 
     Args:
@@ -572,7 +609,8 @@ class ProjectionModeloBindingRequirement(BaseModel):
     These are non-constant binding declarations from the resolved
     :class:`~aeat.domain.calculations.registry.RegistrySnapshot` that are not
     supplied by profile binding resolution, enum/date helpers, or a successful
-    ledger preflight.
+    ledger preflight. The parent :class:`ProjectionModeloReadiness` carries
+    these rows as operator-facing missing input requirements.
     """
 
     model_config = _STRICT_FROZEN
@@ -587,9 +625,18 @@ class ProjectionModeloReadiness(BaseModel):
 
     The projection combines profile requirements, registry-snapshot
     availability, calculation binding resolution, and ledger preflight
-    into one emit shape. ``ready`` is true only when every axis is ready.
+    into one emit shape. ``ready`` is true only when every axis is ready; a
+    :class:`~aeat.application.ledger.LedgerPreflightIssue` blocks readiness
+    only when the resolved :class:`RegistrySnapshot` declares ledger-backed
+    bindings.
 
     Attributes:
+        profile_id: Active :data:`~aeat.core.identity.ProfileId` used for the
+            readiness report.
+        modelo: Modelo identifier from the :class:`ModeloReadinessRequest`.
+        revision_id: Registry revision requested or resolved for this target.
+        filing_year: Filing year used to resolve registry and profile
+            requirements.
         missing: Profile fields still required by the
             :class:`~aeat.application.user_profile.ProfilePreflightReport`.
         profile_refusal: Operator-facing refusal when profile facts are
@@ -763,7 +810,9 @@ def modelo_requires_ledger_preflight(request: ModeloReadinessRequest) -> bool:
 
     An unresolved registry snapshot is treated as "not required" for this
     predicate and logged at DEBUG; the full readiness projection reports
-    the registry refusal through :attr:`ProjectionModeloReadiness.registry_refusal`.
+    the registry refusal through
+    :attr:`ProjectionModeloReadiness.registry_refusal` after resolving the same
+    :class:`~aeat.domain.calculations.registry.RegistrySnapshot`.
     """
     readiness_period = _ledger_period_for_modelo_readiness(request)
     resolution = _resolve_modelo_readiness_registry(request, period=readiness_period)
@@ -878,10 +927,11 @@ def _missing_calculation_bindings_for_readiness(
 ) -> tuple[ProjectionModeloBindingRequirement, ...]:
     """Return non-constant registry bindings not available to calculation readiness.
 
-    Ledger aggregation bindings are available only through the ledger preflight
-    path. Once that preflight passes, the calculation mesh can resolve them from
-    the bucket ledger and readiness must not report them as missing operator
-    inputs.
+    Ledger aggregation bindings are the source kinds declared by
+    :data:`~aeat.domain.calculations.registry.LEDGER_BINDING_SOURCE_KINDS`;
+    they are available only through the ledger preflight path. Once that
+    preflight passes, the calculation mesh can resolve them from the bucket
+    ledger and readiness must not report them as missing operator inputs.
     """
     from ..domain.calculations.registry import (
         enum_consumed_binding_ids,

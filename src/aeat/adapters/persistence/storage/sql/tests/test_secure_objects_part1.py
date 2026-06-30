@@ -381,6 +381,37 @@ def test_secure_object_record_schema_version_mutation_breaks_roundtrip(tmp_path:
         assert str(stored_lookup_digest).lower() not in rendered.lower()
 
 
+def test_secure_object_record_older_schema_version_is_refused(tmp_path: Path) -> None:
+    """A row below the consumer's current schema version is refused."""
+
+    with _ephemeral_secure_repo(tmp_path, "record-older-schema.db") as (_db_path, _engine, repo):
+        namespace = "aeat.test.record.older-schema"
+        natural_key = "record-key"
+        repo.save(
+            namespace=namespace,
+            object_key=natural_key,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=2,
+            written_at=datetime(2026, 5, 21, 10, 40, 0, tzinfo=UTC),
+            payload=b"older-schema-sentinel-payload",
+        )
+
+        with pytest.raises(EnvelopeVersionError) as raised:
+            repo.load(
+                namespace,
+                natural_key,
+                expected_class=SensitivityClass.FINANCIAL,
+                max_supported_version=3,
+            )
+
+        assert raised.value.translated_message == "errors.storage.namespace.schema_mismatch"
+        assert raised.value.context == {
+            "namespace": namespace,
+            "schema_version": 2,
+            "expected": 3,
+        }
+
+
 def test_secure_object_load_classification_error_is_localized_and_redacted(tmp_path: Path) -> None:
     """Load-time classification failures do not expose natural or lookup keys."""
 

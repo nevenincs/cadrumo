@@ -481,7 +481,6 @@ def verify_registry_citations(
         verify_legal_catalogue(
             authority.catalogues.legal,
             source_root=authority.source_root,
-            corpus_strict=True,
         )
     except RegistryValidationError as exc:
         _LOGGER.warning(

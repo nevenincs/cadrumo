@@ -61,7 +61,7 @@ def test_empty_state_yields_no_active_profile_report() -> None:
 def test_active_profile_with_identity_and_iva_regime_is_profile_ready() -> None:
     state = _register_profile_state(
         WorkflowState(),
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         overrides={"activities.description": "design"},
     )
     with profile_storage_session("operator"):
@@ -111,7 +111,7 @@ def test_load_active_taxpayer_profile_raises_wizard_status_error_when_no_profile
 def test_load_active_taxpayer_profile_returns_taxpayer_record_for_minimal_profile() -> None:
     state = _register_profile_state(
         WorkflowState(),
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         overrides={"activities.description": "design", "identity.tax_id": "00000000T"},
     )
     with profile_storage_session("operator"):

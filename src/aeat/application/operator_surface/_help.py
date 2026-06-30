@@ -80,7 +80,7 @@ def render_help_text(document: HelpDocument) -> str:
 
 
 def render_root_landing_text(report: RootLandingReport) -> str:
-    """Render the legacy single-line view of a :class:`RootLandingReport`.
+    """Render the compact single-line view of a :class:`RootLandingReport`.
 
     New root CLI output uses a multi-line entrypoint renderer for the text half
     of the ``root.status`` envelope. This helper remains the application-level

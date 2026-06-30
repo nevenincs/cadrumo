@@ -1,7 +1,7 @@
 """Canonical AEAT modelo identifier enumeration.
 
 This module exposes the closed set of AEAT modelo *identifiers* the codebase
-references.  Almost every member has a directory under
+references. Almost every member has a directory under
 ``src/aeat/_data/registry/aeat/modelos/`` and is therefore registry-loadable;
 the enum value is the bare three-digit code string (``"036"``, ``"100"``, …) so
 it is directly substitutable for the existing bare-string usage throughout the
@@ -12,19 +12,24 @@ identifiers but which have **no registry definition by design** — currently th
 retired :data:`Modelo.M037` (censo simplificada, suppressed by
 Orden HAC/1526/2024).  These are enumerated in :data:`NON_REGISTRY_MODELOS`.
 They are real codes with implementation support (lifecycle routing, portal
-entries), but ``ValidatedRegistryAuthority.validate_modelo`` raises for them and
-no registry TOML exists or may be created for them.
+entries), but
+:meth:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority.validate_modelo`
+raises for them and no registry TOML exists or may be created for them.
 
 Filing-grade authority — deadline windows, period restrictions, and casilla
 definitions — remains the :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority`
 and the typed :class:`~aeat.domain.calculations.registry.RegistrySnapshot` it
-produces.  This enum is the closed-set *identifier* type: it tells you which
+produces. This enum is the closed-set *identifier* type: it tells you which
 modelos exist; the registry tells you what (if anything) they contain.
+Modelo-specific support such as filing, export, extraction, and verification is
+declared on registry data such as
+:attr:`~aeat.domain.calculations.registry.ModeloDefinition.capabilities`, not by
+branching on this enum.
 
 A gate test in ``src/aeat/core/tests/test_modelo.py`` binds the registry-backed
-members to ``registry_modelo_codes()`` (enum minus :data:`NON_REGISTRY_MODELOS`)
-so the two cannot drift silently, and pins every non-registry member to its
-deliberately-absent registry definition.
+members to :func:`aeat.application.modelo.registry_modelo_codes` (enum minus
+:data:`NON_REGISTRY_MODELOS`) so the two cannot drift silently, and pins every
+non-registry member to its deliberately-absent registry definition.
 """
 
 from __future__ import annotations
@@ -45,10 +50,16 @@ class Modelo(StrEnum):
         Modelo.M303 == "303"   # True
         Modelo.M303 == Modelo.M303   # True
 
-    The registry-backed members are bound to the registry directory listing by a
-    gate test; adding a new modelo to the registry without updating this enum
-    will fail that test.  Members in :data:`NON_REGISTRY_MODELOS` (the retired
-    :data:`M037`) are known identifiers with no registry definition by design.
+    The registry-backed members are bound to the registry directory listing by
+    :func:`aeat.application.modelo.registry_modelo_codes`; adding a new modelo
+    to the registry without updating this enum will fail the core parity test.
+    Members in :data:`NON_REGISTRY_MODELOS` (the retired :data:`M037`) are known
+    identifiers with no registry definition by design.
+
+    Use this enum at code boundaries that carry a modelo identifier. Operator
+    input and registry TOML still enter as strings; callers may coerce with
+    ``Modelo(value)`` when they need the closed enum contract, while registry
+    consumers validate loadable support through the registry authority.
     """
 
     M036 = "036"
@@ -87,9 +98,10 @@ class Modelo(StrEnum):
 #: Known modelo identifiers that intentionally have **no registry definition**.
 #: These are real, code-referenced modelos for which
 #: :meth:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority.validate_modelo`
-#: raises and no registry TOML exists or may be created.  Currently only the
+#: raises and no registry TOML exists or may be created. Currently only the
 #: retired :data:`Modelo.M037` (censo simplificada, suppressed by
-#: Orden HAC/1526/2024; superseded by :data:`Modelo.M036`).  The registry-parity
-#: gate excludes these so the enum can carry retired-but-supported codes without
-#: implying the registry can load them.
+#: Orden HAC/1526/2024; superseded by :data:`Modelo.M036`). The parity gate
+#: compares the remaining members to
+#: :func:`aeat.application.modelo.registry_modelo_codes`, so the enum can carry
+#: retired-but-supported codes without implying the registry can load them.
 NON_REGISTRY_MODELOS: frozenset[Modelo] = frozenset({Modelo.M037})

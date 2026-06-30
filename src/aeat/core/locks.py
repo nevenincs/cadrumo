@@ -19,6 +19,12 @@ context. The lock file itself is left on disk after release; cleanup
 of stale lock files is the consumer's responsibility because deleting
 the file while another process is racing to acquire it would create
 a TOCTOU window.
+
+This primitive is deliberately metadata-free. It does not write a PID,
+hostname, profile id, timeout stamp, or secure-storage custody state into
+the sidecar file, and it does not perform stale-lock recovery. Consumers
+that need recoverable lock records, bucket ownership, or auth-acquisition
+TTL semantics own those protocols above this OS-lock layer.
 """
 
 from __future__ import annotations
@@ -45,6 +51,9 @@ def _default_lock_timeout() -> float:
     :func:`override_settings` block (test scope) is honoured. Replaces a
     module-level constant that snapshotted ``Settings()`` at import time
     and could not be overridden after the module had loaded.
+
+    The setting is only a local wait budget. It is not a lease, TTL, or
+    stale-lock age; the OS lock is released by descriptor teardown.
     """
     return _load_settings().aeat_file_lock_timeout_s
 
@@ -92,6 +101,11 @@ def fsync_parent_dir(target: Path) -> None:
     a sandboxed-/read-only-/non-directory FD path should not see a
     spurious failure on top of an otherwise-successful atomic
     replace.
+
+    This helper hardens file-system durability after callers perform
+    their own atomic write/replace sequence. It does not acquire a lock,
+    validate payload contents, or convert a plaintext file into secure
+    storage.
     """
     if not hasattr(os, "O_DIRECTORY"):
         return
@@ -172,6 +186,12 @@ def exclusive_file_lock(
     readers that do not also acquire the lock can still observe the
     protected resource mid-write. Callers MUST treat the lock as advisory
     across the whole file regardless of the underlying primitive.
+
+    The sidecar carries no ownership metadata and is not deleted on
+    release. This is a generic local coordination primitive for atomic
+    file updates; higher-level bucket lockfiles, auth acquisition locks,
+    and secure-object sessions provide their own holder records, TTLs,
+    custody checks, and recovery rules.
 
     Args:
         target: Path to the resource being protected. The lock sidecar

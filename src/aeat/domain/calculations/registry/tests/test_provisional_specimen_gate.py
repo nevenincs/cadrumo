@@ -50,7 +50,6 @@ def _validator(
         catalogues,
         source_root=_DATA_ROOT,
         justificante_corpus_root=justificante_corpus_root,
-        catalogue_corpus_strict=False,
     )
 
 

@@ -399,8 +399,32 @@ def test_modelo_readiness_refuses_period_without_registry_coverage() -> None:
     assert "aeat app modelo describe 210" in flat
 
 
-def test_describe_m210_accepts_declared_event_token_with_year_scope() -> None:
-    """M210 describe accepts the registry-declared ``evento`` period token."""
+def test_describe_m210_accepts_numbered_event_token_with_year_scope() -> None:
+    """M210 describe accepts concrete EVENT-N period instances."""
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "describe",
+            "210",
+            "--year",
+            "2026",
+            "--period",
+            "EVENT-1",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "Invalid value" not in result.output
+    assert "Modelo\t210" in result.output
+    assert "Revision\t2025" in result.output
+    assert "Periods\tEVENT-N" in result.output
+    assert "evento" not in result.output
+
+
+def test_describe_m210_rejects_legacy_evento_token_with_year_scope() -> None:
+    """M210 describe refuses the retired ``evento`` token."""
 
     result = invoke_cached_cli(
         [
@@ -415,38 +439,15 @@ def test_describe_m210_accepts_declared_event_token_with_year_scope() -> None:
         ],
     )
 
-    assert result.exit_code == 0, result.output
-    assert "Invalid value" not in result.output
-    assert "Modelo\t210" in result.output
-    assert "Revision\t2025" in result.output
-    assert "Periods\tevento" in result.output
-
-
-def test_describe_m210_still_rejects_undeclared_event_token_with_year_scope() -> None:
-    """M210 describe still refuses tokens the registry does not declare."""
-
-    result = invoke_cached_cli(
-        [
-            "app",
-            "modelo",
-            "describe",
-            "210",
-            "--year",
-            "2026",
-            "--period",
-            "not-evento",
-        ],
-    )
-
     assert result.exit_code != 0, result.output
     flat = result.output.replace("\n", " ")
     assert "Traceback" not in flat
-    assert "evento" in flat
-    assert "not-evento" in flat
+    assert "EVENT-N" in flat
+    assert "Valid tokens: evento" not in flat
 
 
-def test_bindings_list_m210_event_token_refuses_as_unsupported_local_work() -> None:
-    """M210's registry ``evento`` token must not produce contradictory period guidance."""
+def test_bindings_list_m210_legacy_event_token_reports_current_guidance() -> None:
+    """The retired M210 ``evento`` token must not be advertised as valid."""
 
     result = invoke_cached_cli(
         [
@@ -468,18 +469,13 @@ def test_bindings_list_m210_event_token_refuses_as_unsupported_local_work() -> N
 
     assert result.exit_code != 0, result.output
     flat = result.output.replace("\n", " ")
-    assert "REFUSED_CLI_BOUNDARY" in flat
-    assert "Modelo 210" in flat
-    assert "IRNR" in flat
-    assert "G320" in flat
+    assert "EVENT-N" in flat
     assert "Valid tokens: evento" not in flat
-    assert "is not a valid period token" not in flat
-    assert "INTEGRITY_PERIOD" not in flat
     assert "Traceback" not in flat
 
 
-def test_modelo_readiness_m210_event_token_refuses_as_unsupported_local_work() -> None:
-    """Readiness must reuse the M210 unsupported-work refusal for ``evento``."""
+def test_modelo_readiness_m210_legacy_event_token_reports_current_guidance() -> None:
+    """Readiness must not route retired ``evento`` through the M210 work boundary."""
 
     result = invoke_cached_cli(
         [
@@ -501,12 +497,9 @@ def test_modelo_readiness_m210_event_token_refuses_as_unsupported_local_work() -
 
     assert result.exit_code != 0, result.output
     flat = result.output.replace("\n", " ")
-    assert "REFUSED_CLI_BOUNDARY" in flat
-    assert "Modelo 210" in flat
-    assert "IRNR" in flat
-    assert "G320" in flat
-    assert "INTEGRITY_PERIOD" not in flat
-    assert "cannot build a period" not in flat
+    assert "EVENT-N" in flat
+    assert "Valid tokens: evento" not in flat
+    assert "REFUSED_CLI_BOUNDARY" not in flat
     assert "Traceback" not in flat
 
 

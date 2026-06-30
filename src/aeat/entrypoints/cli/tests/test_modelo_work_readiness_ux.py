@@ -10,6 +10,7 @@ from ....core import Modelo
 from ._modelo_work_ux_support import (
     _PROFILE_ID,
     _attempt_incomplete_profile_create,
+    _create_attribution_entity_intracom_profile,
     _create_de_nonresident_legal_entity_profile,
     _create_profile,
     _invoke,
@@ -138,6 +139,51 @@ def test_modelo_readiness_reports_pre_activity_m303_before_work_create() -> None
     assert _payload(listed.output)["work_unit_count"] == 0
 
 
+def test_modelo_349_readiness_refuses_attribution_entity_before_work_create() -> None:
+    _create_attribution_entity_intracom_profile()
+
+    readiness = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "readiness",
+            "--modelo", "349",
+            "--revision-id", "2020-y-siguientes",
+            "--year", "2026",
+            "--period", "1T",
+        ],
+    )  # fmt: skip
+
+    assert readiness.exit_code == 0, readiness.output
+    readiness_payload = _payload(readiness.output)
+    assert readiness_payload["registry_ready"] is True
+    assert readiness_payload["ready"] is False
+    assert readiness_payload["profile_ready"] is False
+    assert "Modelo 349 is not applicable to the active profile" in readiness_payload["profile_refusal"]
+    assert "Modelo 349 no aplica" in readiness_payload["profile_refusal"]
+
+    create = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "349",
+            "--year", "2026",
+            "--period", "1T",
+            "--revision", "2020-y-siguientes",
+        ],
+    )  # fmt: skip
+
+    assert create.exit_code != 0, create.output
+    create_payload = json.loads(create.output)
+    assert create_payload["status"] == "error"
+    assert create_payload["error"]["code"] == "REFUSED_CLI_BOUNDARY"
+    assert "Modelo 349" in create_payload["error"]["message"]
+    assert "Traceback" not in create.output
+
+    listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    assert listed.exit_code == 0, listed.output
+    assert _payload(listed.output)["work_unit_count"] == 0
+
+
 def test_nonresident_legal_entity_m200_readiness_and_create_refuse_wrong_path() -> None:
     _create_de_nonresident_legal_entity_profile()
 
@@ -190,15 +236,15 @@ def test_nonresident_legal_entity_m200_readiness_and_create_refuse_wrong_path() 
         ],
     )  # fmt: skip
 
-    assert bypass.exit_code != 0, bypass.output
-    bypass_payload = json.loads(bypass.output)
-    assert bypass_payload["status"] == "error"
-    assert bypass_payload["error"]["code"] == "REFUSED_MODELO_PROFILE_READINESS"
-    assert "NON_RESIDENT_IRNR" in bypass_payload["error"]["message"]
+    assert bypass.exit_code == 0, bypass.output
+    bypass_payload = _payload(bypass.output)
+    assert bypass_payload["status"] == "created"
+    assert bypass_payload["modelo"] == "200"
+    assert bypass_payload["applicability_guard_bypassed"] is True
 
     listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 0
+    assert _payload(listed.output)["work_unit_count"] == 1
 
 
 def test_work_create_refuses_pre_activity_m130_and_creates_no_unit() -> None:

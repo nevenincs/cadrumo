@@ -157,11 +157,11 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
             ),
         )
 
-    with profile_create_storage_span("second"):
+    with profile_create_storage_span("22222222-2222-4222-8222-222222222222"):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
                 state,
-                profile_id="second",
+                profile_id="22222222-2222-4222-8222-222222222222",
                 display_name="Second Operator",
                 enforce_unique_tax_id=False,
             ),

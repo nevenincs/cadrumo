@@ -229,7 +229,10 @@ def _non_borrador_decimal_binding_values() -> dict[BindingId, Decimal]:
     date/enum/profile bindings unset so :func:`resolve_profile_sourced_bindings`
     can populate them from the seeded :class:`UserProfileRecord`."""
     snapshot = _modelo_100_registry_snapshot()
-    exclusions = {_DECIMAL_BINDING, _ENUM_BINDING}
+    alternate_binding_ids = {
+        binding_id for casilla in snapshot.revision.casillas for binding_id in casilla.alternate_bindings
+    }
+    exclusions = {_DECIMAL_BINDING, _ENUM_BINDING, *alternate_binding_ids}
     return {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
@@ -265,7 +268,7 @@ def _seed_profile_with_birth_date(objects: SecureObjectRepository) -> None:
             UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
             UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="soltero"),
+            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
             # Seed derived marriage facts directly (unmarried -> all zero) so the
             # formula-consumed bindings resolve without a renta_taxpayer.marriage_date.
             UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),

@@ -185,13 +185,8 @@ def test_verify_legal_catalogue_accepts_required_local_corpus_text(tmp_path: Pat
     assert result is None
 
 
-def test_verify_legal_catalogue_corpus_strict_false_skips_required_text(tmp_path: Path) -> None:
-    """Production authority (corpus_strict=False) must not abort on a pending required_text annotation.
-
-    This guards the forward contract: adding a required_text to any legal reference
-    must not block bindings list, work calculate, or any other user-facing verb until
-    verify_registry_tree (corpus_strict=True) is run explicitly.
-    """
+def test_verify_legal_catalogue_rejects_missing_required_text_on_single_path(tmp_path: Path) -> None:
+    """Legal catalogue verification always enforces required_text against corpus."""
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
     corpus_path.parent.mkdir(parents=True)
     corpus_path.write_text(
@@ -207,13 +202,11 @@ def test_verify_legal_catalogue_corpus_strict_false_skips_required_text(tmp_path
 
     assert reference.required_text, "reference must declare required_text for the check to be meaningful"
     with pytest.raises(RegistryValidationError, match="corpus text missing required text"):
-        verify_legal_catalogue({reference.id: reference}, source_root=tmp_path, corpus_strict=True)
-    result = verify_legal_catalogue({reference.id: reference}, source_root=tmp_path, corpus_strict=False)
-    assert result is None
+        verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
 
 
-def test_registry_validator_corpus_strict_false_does_not_abort(tmp_path: Path) -> None:
-    """RegistryValidator(catalogue_corpus_strict=False) must not abort on a pending required_text."""
+def test_registry_validator_rejects_missing_required_text(tmp_path: Path) -> None:
+    """RegistryValidator must not admit a legal reference whose required_text is absent."""
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
     corpus_path.parent.mkdir(parents=True)
     corpus_path.write_text(
@@ -231,12 +224,8 @@ def test_registry_validator_corpus_strict_false_does_not_abort(tmp_path: Path) -
         sources={},
     )
 
-    strict = RegistryValidator(minimal_catalogues, source_root=tmp_path, catalogue_corpus_strict=True)
     with pytest.raises(RegistryValidationError, match="corpus text missing required text"):
-        strict.validate_registry(())
-
-    non_strict = RegistryValidator(minimal_catalogues, source_root=tmp_path, catalogue_corpus_strict=False)
-    assert non_strict.validate_registry(()) is None
+        RegistryValidator(minimal_catalogues, source_root=tmp_path).validate_registry(())
 
 
 def test_verify_source_file_checks_manual_structure(tmp_path: Path) -> None:

@@ -239,11 +239,7 @@ def _load_authority(
         modelos=modelos,
         catalogues=catalogues,
         _modelos_by_id={modelo.id: modelo for modelo in modelos},
-        # Production authority skips required_text corpus checks so that
-        # a pending corpus annotation never aborts a user-facing workflow
-        # (bindings list, work calculate, etc.).  Strict corpus checks are
-        # performed by verify_registry_tree via a dedicated strict validator.
-        _validator=RegistryValidator(catalogues, source_root=source_root, catalogue_corpus_strict=False),
+        _validator=RegistryValidator(catalogues, source_root=source_root),
         _registry_validated=False,
         _validated_modelos=set(),
         _snapshots={},

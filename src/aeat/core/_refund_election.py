@@ -15,6 +15,15 @@ result-disposition codes): the election is what the operator *chooses*, while
 :func:`~aeat.application.modelo.resolve_modelo_result_disposition` derives the
 filed disposition from that choice plus the
 :func:`~aeat.domain.iva.refund_disposition_available` eligibility gate.
+
+The enum is threaded by :class:`~aeat.application.modelo.ModeloExportCommand`
+and :func:`~aeat.application.modelo.file_modelo_revision` into the same
+disposition resolver that
+:func:`aeat.application.modelo._result_disposition_resolution.revision_is_refund_disposition`
+uses for cross-period carry. It is not the refund account itself: the
+cuenta-devolución data lives in :class:`~aeat.domain.deadlines.RefundAccount`,
+and a refund disposition without that account is refused downstream by the
+export path.
 """
 
 from __future__ import annotations
@@ -36,6 +45,15 @@ class RefundElection(StrEnum):
     REDEME inscription is the *standing* refund election (every period); this
     per-filing election is the separate, explicit opt-in a non-REDEME taxpayer
     makes for the annual liquidación.
+
+    Attributes:
+        COMPENSAR: Keep the negative result as compensación (``C``), the default
+            carry-forward disposition.
+        DEVOLVER: Request devolución (``D``) through the shared Modelo 303
+            resolver. The resolver honours it only when
+            :func:`aeat.domain.iva.refund_disposition_available` says the period
+            can lawfully refund; otherwise it raises the application-level
+            refund-election refusal.
     """
 
     COMPENSAR = "compensar"

@@ -17,6 +17,7 @@ _ENROLLED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
         BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
         BindingSourceKind.LEDGER_OSS_AGGREGATION,
         BindingSourceKind.RETENCIONES_AGGREGATION,
+        BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
         BindingSourceKind.WITHHOLDING,
         BindingSourceKind.COLLECTIBLE_INVOICE,
         BindingSourceKind.PAYABLE_INVOICE,
@@ -54,7 +55,11 @@ BUCKET_AGGREGATION_LOCK_SOURCES: frozenset[BindingSourceKind] = frozenset(
 )
 
 CALLER_OVERRIDABLE_CARRY_SOURCES: frozenset[BindingSourceKind] = frozenset(
-    {BindingSourceKind.PREVIOUS_FILING, BindingSourceKind.RELATION_PREFILL},
+    {
+        BindingSourceKind.PREVIOUS_FILING,
+        BindingSourceKind.RELATION_PREFILL,
+        BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
+    },
 )
 
 ACCEPTED_BUCKET_AGGREGATION_SOURCE_KINDS = BUCKET_AGGREGATION_OWNED_SOURCES | DEFERRED_SOURCE_KINDS

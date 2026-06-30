@@ -118,6 +118,34 @@ def test_iter_records_with_failures_returns_empty_on_empty_namespace(
         assert items == []
 
 
+def test_iter_records_with_failures_yields_older_schema_drift(tmp_path: Path) -> None:
+    """Rows below the consumer's current schema version are unreadable."""
+
+    with _ephemeral_secure_repo(tmp_path, "older-schema-drift.db") as (_, _, repo):
+        namespace = "aeat.test.older.schema"
+        repo.save(
+            namespace=namespace,
+            object_key="older-row",
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=1,
+            written_at=datetime.now(UTC),
+            payload=b"older-row",
+        )
+
+        outcomes = list(
+            repo.iter_records_with_failures(
+                namespace,
+                expected_class=SensitivityClass.FINANCIAL,
+                max_supported_version=2,
+            ),
+        )
+
+        assert len(outcomes) == 1
+        assert isinstance(outcomes[0], SecureObjectUnreadable)
+        assert outcomes[0].schema_version == 1
+        assert "does not match expected" in outcomes[0].reason
+
+
 def test_iter_records_with_failures_applies_bounded_batch_execution(tmp_path: Path) -> None:
     """The explicit diagnostic iterator executes its row scan with a bounded batch size."""
 

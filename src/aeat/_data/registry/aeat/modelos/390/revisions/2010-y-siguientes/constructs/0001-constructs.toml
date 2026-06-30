@@ -62,8 +62,6 @@ relations = [
     "modelo-390-rel-303-cuota-devengada-total",
     "modelo-390-rel-303-cuota-deducible-total",
     "modelo-390-rel-303-resultado-regimen-general",
-    "modelo-390-rel-303-compensacion-ultimo-periodo",
-    "modelo-390-rel-303-compensacion-generada-ejercicio-no-97",
 ]
 dependency_classifications = ["modelo-390-dep-303"]
 workbook_parity_refs = ["modelo-390-dr-2025"]

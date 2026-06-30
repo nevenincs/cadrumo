@@ -231,6 +231,7 @@ def _minimal_revision(
         period_selector=PeriodSelector(year_from=2024, periods=("0A",)),
         legal_refs=(_REFERENCE_LEGAL_ID,),
         source_refs=(_REFERENCE_SOURCE_ID,),
+        orden_aplicabilidad=(_REFERENCE_LEGAL_ID,),
         casillas=casillas,
         workbook_parity_refs=(workbook_ref,),
         application_links=app_links,

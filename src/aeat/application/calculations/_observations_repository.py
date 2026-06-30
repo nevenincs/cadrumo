@@ -64,15 +64,9 @@ class _ObservationEnvelopePayload(BaseModel):
     adding persistence concerns to the inner registry record.
 
     The ``stamped_revision_id`` field is the registry revision id the
-    source filing resolved to at capture time (ADR
-    ``2026-06-10-period-revision-resolution-adr``, Ruling 3 / R2).
-    It is ``None`` for records persisted without a stamp; carry-read code
-    MUST treat a missing stamp as a non-blocking advisory rather than a
-    blocker so historical data
-    degrades loudly rather than being silently refused or silently
-    accepted. New records MUST stamp the revision id from the
-    :class:`~aeat.domain.calculations.registry.RegistrySnapshot` the producer
-    already holds at write time.
+    source filing resolved to at capture time. It is mandatory in the stored
+    envelope so every carry-read can re-confirm the source value against the
+    law-determined registry revision before trusting it.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -96,15 +90,13 @@ class _ObservationEnvelopePayload(BaseModel):
             "single-filer (modelo, filing_year, period) key bit-for-bit."
         ),
     )
-    stamped_revision_id: str | None = Field(
-        default=None,
+    stamped_revision_id: str = Field(
         min_length=1,
         max_length=128,
         description=(
             "Registry revision id the source filing resolved to at capture time "
-            "(ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2). "
-            "None for unstamped records — carry-read must surface a non-blocking "
-            "advisory rather than blocking or silently accepting unstamped records."
+            "so carry-read code can re-confirm the value against the law-determined "
+            "registry revision."
         ),
     )
     source_metadata: dict[str, str] = Field(
@@ -237,14 +229,12 @@ def iva_wallet_decision_event_key(decision: IvaCompensationReconciliationDecisio
     return f"iva-wallet-decision-event:{digest}"
 
 
-def _validate_observation_casilla_ids(observation: RegistryModeloObservation) -> None:
+def _validate_observation_casilla_ids(observation: RegistryModeloObservation) -> str:
     observed_casilla_ids = frozenset(observation.casilla_values)
     operand_casilla_refs = frozenset(
         operand_ref for item in observation.observations for operand_ref in item.operand_casilla_refs
     )
     referenced_casilla_ids = observed_casilla_ids | operand_casilla_refs
-    if not referenced_casilla_ids:
-        return
     try:
         snapshot = resources().modelos.authority.snapshot(
             observation.modelo,
@@ -261,9 +251,9 @@ def _validate_observation_casilla_ids(observation: RegistryModeloObservation) ->
             },
         ) from exc
 
-    invalid = undeclared_casilla_ids(snapshot.revision, referenced_casilla_ids)
+    invalid = undeclared_casilla_ids(snapshot.revision, referenced_casilla_ids) if referenced_casilla_ids else ()
     if not invalid:
-        return
+        return str(snapshot.revision.id)
     raise ObservationCasillaReferenceError(
         "calculation observations must use canonical casilla.id values declared by the registry snapshot",
         context={
@@ -341,12 +331,11 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
         aggregation enumerates. When ``None`` the single-filer key is unchanged.
 
         ``stamped_revision_id`` is the registry revision id the source filing
-        resolved to at capture time (ADR 2026-06-10-period-revision-resolution-adr,
-        Ruling 3 / R2). Producers that hold a
+        resolved to at capture time. Producers that hold a
         :class:`~aeat.domain.calculations.registry.RegistrySnapshot` MUST pass
-        ``snapshot.revision.id`` here. Callers that cannot provide a revision id
-        leave this ``None``; the carry-read gate will surface a non-blocking
-        advisory rather than blocking silently.
+        ``snapshot.revision.id`` here. If omitted, the repository resolves the
+        law-determined revision from the observation's ``(modelo, filing_year,
+        period)`` before persisting.
 
         ``source_metadata`` is source-specific encrypted provenance. It is never
         part of repository keys and must only contain data that belongs inside
@@ -354,14 +343,14 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
         status, expediente identity, and authenticated taxpayer/member identity
         consumed by the cross-period clean-state proof.
         """
-        _validate_observation_casilla_ids(observation)
+        law_revision_id = _validate_observation_casilla_ids(observation)
         when = captured_at if captured_at is not None else now()
         payload = _ObservationEnvelopePayload(
             observation=observation,
             captured_at=when,
             source_kind=source_kind,
             member_nif=member_nif,
-            stamped_revision_id=stamped_revision_id,
+            stamped_revision_id=law_revision_id if stamped_revision_id is None else stamped_revision_id,
             source_metadata=dict(source_metadata or {}),
         )
         self.save(payload)

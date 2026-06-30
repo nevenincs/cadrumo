@@ -16,6 +16,12 @@ The helper is shared between
 :mod:`aeat.adapters.outbound.aeat.auth._clave_movil` so the Windows-ACL
 discipline cannot diverge between the two session writers.
 
+This module is a compatibility/public hardening primitive for plaintext files;
+the active AEAT browser-session persistence backend stores session state through
+secure objects. The Windows branch reads ``SYSTEMROOT`` and ``USERDOMAIN`` as OS
+ambient context only. It does not read AEAT-prefixed configuration or make
+permission tightening an authorization decision.
+
 The public :func:`restrict_file_permissions` entry point accepts a
 :class:`~pathlib.Path` target and deliberately returns ``None`` even when the
 best-effort hardening step cannot be applied.
@@ -57,7 +63,9 @@ def restrict_file_permissions(path: Path) -> None:
 
     Best-effort: every error is swallowed so the auth flow never aborts
     on a hardening side-effect. Worst case is a slightly more permissive
-    ACL than intended, surfaced via the warning log.
+    ACL than intended, surfaced via the warning log. Callers that need a
+    confidentiality boundary should use the secure-object storage path rather
+    than relying on this post-write permission adjustment.
 
     Args:
         path: Path to the file whose permissions must be tightened.

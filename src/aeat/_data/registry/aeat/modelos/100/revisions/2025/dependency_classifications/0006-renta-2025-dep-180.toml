@@ -1,7 +1,7 @@
 [[revisions."2025".dependency_classifications]]
 id = "renta-2025-dep-180"
 source_modelo = "180"
-treatment = "direct_annual_settlement"
+treatment = "factual_evidence"
 taxpayer_files_source = false
 target_constructs = ["renta-dependent-modelos", "renta-payments-retentions", "renta-real-estate-capital"]
 relation_refs = ["renta-2025-rel-180-retenciones-anuales"]

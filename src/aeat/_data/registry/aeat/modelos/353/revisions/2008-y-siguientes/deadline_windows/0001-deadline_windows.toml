@@ -1,7 +1,7 @@
 [[revisions."2008-y-siguientes".deadline_windows]]
 id = "modelo-353-2025-01"
 filing_year = 2025
-period = "2025-01"
+period = "2025 01"
 period_kind = "monthly"
 opens_on = 2025-02-01
 closes_on = 2025-02-28
@@ -11,7 +11,7 @@ source_refs = ["boe-modelo-353-2007-form"]
 [[revisions."2008-y-siguientes".deadline_windows]]
 id = "modelo-353-2025-06"
 filing_year = 2025
-period = "2025-06"
+period = "2025 06"
 period_kind = "monthly"
 opens_on = 2025-07-01
 closes_on = 2025-07-30
@@ -21,7 +21,7 @@ source_refs = ["boe-modelo-353-2007-form"]
 [[revisions."2008-y-siguientes".deadline_windows]]
 id = "modelo-353-2025-12"
 filing_year = 2025
-period = "2025-12"
+period = "2025 12"
 period_kind = "monthly"
 opens_on = 2026-01-01
 closes_on = 2026-01-30
@@ -31,7 +31,7 @@ source_refs = ["boe-modelo-353-2007-form"]
 [[revisions."2008-y-siguientes".deadline_windows]]
 id = "modelo-353-2026-01"
 filing_year = 2026
-period = "2026-01"
+period = "2026 01"
 period_kind = "monthly"
 opens_on = 2026-02-01
 closes_on = 2026-03-02

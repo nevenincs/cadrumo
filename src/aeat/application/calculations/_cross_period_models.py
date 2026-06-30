@@ -292,13 +292,12 @@ class CrossPeriodDependencyEvidence(BaseModel):
     unexpected_member_nifs: tuple[str, ...] = ()
     blockers: tuple[CrossPeriodCleanStateBlocker, ...] = ()
     unstamped_revision_advisory: bool = False
-    """Non-blocking advisory: the source observation has no revision stamp.
+    """Non-blocking advisory: the source revision stamp could not be re-confirmed.
 
-    The carry proceeds but this flag is ``True`` when the persisted observation
-    lacks a revision-provenance field (ADR 2026-06-10-period-revision-resolution-adr,
-    Ruling 3 / R2). Operators should re-file the source period to obtain a
-    stamped record. A divergent stamp produces ``REGISTRY_REVISION_DIVERGENCE``
-    in :attr:`blockers` instead.
+    The carry proceeds but this flag is ``True`` when the source context cannot
+    be resolved for stamp re-confirmation. Operators should re-pull the source
+    period to obtain a currently verifiable record. A divergent stamp produces
+    ``REGISTRY_REVISION_DIVERGENCE`` in :attr:`blockers` instead.
     """
     no_prior_obligation: NoPriorObligationProvenance | None = None
     """Typed marker that this dependency was scoped out as no-prior-obligation.
@@ -413,7 +412,7 @@ class CrossPeriodCleanStateVerdict(BaseModel):
 
     @property
     def has_unstamped_revision_advisory(self) -> bool:
-        """True when any dependency carries an unstamped-revision advisory."""
+        """True when any dependency carries a revision re-confirmation advisory."""
         return any(item.unstamped_revision_advisory for item in self.dependencies)
 
     @property

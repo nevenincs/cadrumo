@@ -22,7 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def isolated_workflow_backend(tmp_path: Path):
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("operator"),
+        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
     ):
         try:
             yield
@@ -37,7 +37,7 @@ def test_root_contract_service_accepts_canonical_roots() -> None:
 
 def test_auth_bucket_events_survive_workflow_repository_reload() -> None:
     repository = workflow_state_repository()
-    repository.update(lambda state: register_minimal_profile(state, profile_id="operator"))
+    repository.update(lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111"))
 
     configured = configure_operator_auth("certificate")
     cleared = clear_operator_auth(provider="certificate")

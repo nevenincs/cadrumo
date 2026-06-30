@@ -56,7 +56,7 @@ def _irnr_profile(country_code: str) -> TaxpayerProfile:
     """Build a NON_RESIDENT_IRNR profile for a non-EU/EEA country.
 
     GB / MA / AR / ZW are all outside the EU/EEA, so each profile
-    needs a fiscal representative per Art. 47 LGT + Art. 10 TRLIRNR.
+    needs a fiscal representative per TRLIRNR Art. 10.
     """
 
     return TaxpayerProfile(
@@ -112,9 +112,9 @@ def _snapshot_with_mutated_convenio_row(
 
 @pytest.fixture(scope="module")
 def m210_snapshot() -> RegistrySnapshot:
-    """Authority-resolved M210 / 2025 / evento snapshot."""
+    """Authority-resolved M210 / 2025 / EVENT-1 snapshot."""
 
-    return resources().modelos.authority.snapshot("210", filing_year=2025, period="evento")
+    return resources().modelos.authority.snapshot("210", filing_year=2025, period="EVENT-1")
 
 
 def test_committed_convenio_rows_resolve_corrected_legal_anchors(

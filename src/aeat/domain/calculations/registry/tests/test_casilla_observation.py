@@ -140,9 +140,9 @@ def test_casilla_observation_absent_by_design_defaults_to_false() -> None:
 
     The flag distinguishes structural zeros
     (binding had no anchor for the target period) from value-bearing
-    observations. Default False so legacy persisted observations
-    deserialise as "value-bearing" — the historical contract — until
-    the campaign-level migration is run.
+    observations. The default is False so ordinary value-bearing
+    observations can omit the marker; absent-by-design zeros must set
+    it explicitly.
     """
     obs = CasillaObservation(
         casilla_id=_ABSENT_BY_DESIGN_CASILLA,
@@ -181,10 +181,9 @@ def test_casilla_observation_absent_by_design_roundtrips_through_json() -> None:
 def test_casilla_observation_absent_by_design_default_roundtrips_through_json() -> None:
     """The False default also survives the JSON roundtrip.
 
-    Migration concern: legacy persisted observations deserialise
-    with the default False. This test pins that the default ALSO
-    roundtrips cleanly — so an observation persisted today with
-    the field implicit will load back identically.
+    This pins the current value-bearing contract: an observation that
+    omits the marker serialises and reloads identically with
+    absent_by_design still false.
     """
     original = CasillaObservation(
         casilla_id=_ROUNDTRIP_CASILLA,

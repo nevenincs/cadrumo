@@ -1,8 +1,17 @@
 """Browser-automation and live-IVA timeout settings.
 
 Split from :mod:`aeat.core.config` to keep that module within the line budget.
-:class:`Settings` inherits these fields, so every timeout still reads the same
-``AEAT_*`` environment variable by field name and is unchanged at runtime.
+:class:`~aeat.core.config.Settings` inherits these fields, so every timeout
+still reads the same ``AEAT_*`` environment variable by field name and is
+unchanged at runtime.
+
+The browser cleanup and Cl@ve approval budgets are consumed by
+:class:`~aeat.adapters.outbound.aeat.auth._clave_movil.ClaveMovilAuthProvider`.
+The live IVA surface, filed-register, cancellation-drain, and CLI watchdog
+budgets are consumed by :mod:`aeat.application.live._iva_remote_state`,
+:mod:`aeat.application.live._filed_data_capture`, and the
+:func:`~aeat.entrypoints.cli._app_live._run_live_iva_evidence_pull_command`
+watchdog.
 """
 
 from __future__ import annotations
@@ -12,7 +21,12 @@ from pydantic_settings import BaseSettings
 
 
 class AeatTimeoutSettings(BaseSettings):
-    """Playwright browser-stage and live-IVA surface timeout fields."""
+    """Playwright browser-stage and live-IVA surface timeout fields.
+
+    :class:`~aeat.core.config.Settings` mixes in this base class so these fields
+    remain part of the central environment authority while the timeout catalogue
+    stays separated from the rest of the settings facade.
+    """
 
     aeat_browser_navigation_timeout_ms: int = Field(
         default=30_000,

@@ -133,10 +133,10 @@ def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
     # REAGP token so the regime axis is exercised non-default.
     facts = tuple(UserProfileFact(path="iva.regime", value="REAGP") if f.path == "iva.regime" else f for f in facts)
 
-    with profile_create_storage_span("taxpayer-axes-roundtrip") as routing_profile_id:
+    with profile_create_storage_span("dddddddd-dddd-4ddd-8ddd-dddddddddddd") as routing_profile_id:
         state = register_active_profile(
             WorkflowState(),
-            profile_id="taxpayer-axes-roundtrip",
+            profile_id="dddddddd-dddd-4ddd-8ddd-dddddddddddd",
             display_name="Taxpayer axes operator",
             facts=facts,
             schema=schema,
@@ -145,7 +145,7 @@ def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
 
         record = read_active_profile(state, schema=schema)
     assert record is not None
-    assert record.profile_id == "taxpayer-axes-roundtrip"
+    assert record.profile_id == "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
 
     # Every taxpayer-axis fact survives the encrypted boundary with its
     # exact persisted value — boolean facts included.
@@ -198,10 +198,10 @@ def test_v1_shaped_record_without_taxpayer_axes_loads_under_v2_schema(
         for f in _required_facts(schema)
     )
 
-    with profile_create_storage_span("v1-shaped-record") as routing_profile_id:
+    with profile_create_storage_span("eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee") as routing_profile_id:
         state = register_active_profile(
             WorkflowState(),
-            profile_id="v1-shaped-record",
+            profile_id="eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
             display_name="Pre-existing operator",
             facts=v1_shaped_facts,
             schema=schema,
@@ -210,7 +210,7 @@ def test_v1_shaped_record_without_taxpayer_axes_loads_under_v2_schema(
 
         record = read_active_profile(state, schema=schema)
     assert record is not None
-    assert record.profile_id == "v1-shaped-record"
+    assert record.profile_id == "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"
     # No taxpayer-axis facts crossed the boundary.
     taxpayer_axis_paths = {
         "taxpayer_type.entity_type",
@@ -258,10 +258,10 @@ def test_activity_start_date_fact_survives_encrypted_sql_roundtrip(
         UserProfileFact(path="censo.activity_start_date", value=alta.isoformat()),
     )
 
-    with profile_create_storage_span("activity-start-date-roundtrip") as routing_profile_id:
+    with profile_create_storage_span("ffffffff-ffff-4fff-8fff-ffffffffffff") as routing_profile_id:
         state = register_active_profile(
             WorkflowState(),
-            profile_id="activity-start-date-roundtrip",
+            profile_id="ffffffff-ffff-4fff-8fff-ffffffffffff",
             display_name="2026 registrant",
             facts=facts,
             schema=schema,
@@ -270,7 +270,7 @@ def test_activity_start_date_fact_survives_encrypted_sql_roundtrip(
 
         record = read_active_profile(state, schema=schema)
     assert record is not None
-    assert record.profile_id == "activity-start-date-roundtrip"
+    assert record.profile_id == "ffffffff-ffff-4fff-8fff-ffffffffffff"
     # The fact survives the encrypted boundary with its exact value;
     # the schema declares the field ``type = "date"``, so the persisted
     # fact reloads as a typed ``date``, not a string.

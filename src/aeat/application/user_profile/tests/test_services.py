@@ -27,14 +27,16 @@ def schema() -> ProfileSchemaDefinition:
 
 def test_validation_rejects_unknown_field_path(schema: ProfileSchemaDefinition) -> None:
     svc = ProfileValidationService(schema=schema)
-    report = svc.validate_facts("operator", [UserProfileFact(path="identity.does_not_exist", value="x")])
+    report = svc.validate_facts(
+        "11111111-1111-4111-8111-111111111111", [UserProfileFact(path="identity.does_not_exist", value="x")]
+    )
     codes = {issue.code for issue in report.issues}
     assert "unknown_field" in codes
 
 
 def test_validation_reports_missing_required_fields(schema: ProfileSchemaDefinition) -> None:
     svc = ProfileValidationService(schema=schema)
-    report = svc.validate_facts("operator", [])
+    report = svc.validate_facts("11111111-1111-4111-8111-111111111111", [])
     required_misses = [
         issue
         for issue in report.issues
@@ -45,7 +47,9 @@ def test_validation_reports_missing_required_fields(schema: ProfileSchemaDefinit
 
 def test_validation_accepts_known_field(schema: ProfileSchemaDefinition) -> None:
     svc = ProfileValidationService(schema=schema)
-    report = svc.validate_facts("operator", [UserProfileFact(path="identity.tax_id", value="12345678Z")])
+    report = svc.validate_facts(
+        "11111111-1111-4111-8111-111111111111", [UserProfileFact(path="identity.tax_id", value="12345678Z")]
+    )
     assert not any(issue.code == "unknown_field" for issue in report.issues)
 
 
@@ -63,7 +67,7 @@ def test_validation_accepts_known_field(schema: ProfileSchemaDefinition) -> None
 def test_validation_rejects_non_iso_date_value(schema: ProfileSchemaDefinition, garbage: str) -> None:
     svc = ProfileValidationService(schema=schema)
     report = svc.validate_facts(
-        "operator",
+        "11111111-1111-4111-8111-111111111111",
         [UserProfileFact(path="renta_taxpayer.birth_date", value=garbage)],
     )
     date_errors = [
@@ -77,7 +81,7 @@ def test_validation_rejects_non_iso_date_value(schema: ProfileSchemaDefinition, 
 def test_validation_accepts_valid_iso_date_value(schema: ProfileSchemaDefinition) -> None:
     svc = ProfileValidationService(schema=schema)
     report = svc.validate_facts(
-        "operator",
+        "11111111-1111-4111-8111-111111111111",
         [UserProfileFact(path="renta_taxpayer.birth_date", value="1978-03-15")],
     )
     assert not any(issue.code == "invalid_date_value" for issue in report.issues)
@@ -95,7 +99,9 @@ def test_validation_covers_every_date_typed_field(schema: ProfileSchemaDefinitio
     assert date_paths  # the schema declares at least one date field
     svc = ProfileValidationService(schema=schema)
     for path in date_paths:
-        report = svc.validate_facts("operator", [UserProfileFact(path=path, value="2024-13-99")])
+        report = svc.validate_facts(
+            "11111111-1111-4111-8111-111111111111", [UserProfileFact(path=path, value="2024-13-99")]
+        )
         assert any(issue.code == "invalid_date_value" and issue.path == path for issue in report.issues), (
             f"date field {path!r} did not reject a garbage value"
         )
@@ -104,7 +110,7 @@ def test_validation_covers_every_date_typed_field(schema: ProfileSchemaDefinitio
 def test_preflight_returns_ready_when_no_modelo_selectors_match(schema: ProfileSchemaDefinition) -> None:
     svc = ProfilePreflightService(schema=schema)
     record = UserProfileRecord(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         display_name="Operator",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
@@ -122,7 +128,7 @@ def test_preflight_accepts_legal_entity_legal_name_for_export_headers(schema: Pr
     period = Period.from_year_and_code(2026, "1P")
     snapshot = resources().modelos.authority.snapshot("202", filing_year=2026, period=period.registry_token)
     record = UserProfileRecord(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         display_name="Rocio Ferrer Administracion Sociedad Limitada",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),
@@ -159,7 +165,7 @@ def test_preflight_rejects_legal_entity_export_identity_fragments(
     period = Period.from_year_and_code(2026, "1P")
     snapshot = resources().modelos.authority.snapshot("202", filing_year=2026, period=period.registry_token)
     record = UserProfileRecord(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         display_name="Incomplete legal entity",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),
@@ -184,14 +190,14 @@ def test_preflight_rejects_legal_entity_export_identity_fragments(
 def test_preflight_carries_request_fields_through(schema: ProfileSchemaDefinition) -> None:
     svc = ProfileValidationService(schema=schema)  # warm domain
     pre = ProfilePreflightService(schema=schema)
-    record = UserProfileRecord(profile_id="operator", display_name="Operator", facts=())
+    record = UserProfileRecord(profile_id="11111111-1111-4111-8111-111111111111", display_name="Operator", facts=())
     report = pre.report(
         record=record,
         modelo="303",
         revision_id="rev-2024",
         period=Period.from_year_and_code(2024, "1T"),
     )
-    assert report.profile_id == "operator"
+    assert report.profile_id == "11111111-1111-4111-8111-111111111111"
     assert report.modelo == "303"
     assert report.revision_id == "rev-2024"
     assert report.filing_year == 2024

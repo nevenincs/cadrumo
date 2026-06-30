@@ -82,7 +82,7 @@ def _save_source_observation(
     repository: CalculationObservationRepository,
     *,
     source_casilla_ids: tuple[CasillaId, ...],
-    stamped_revision_id: str | None,
+    stamped_revision_id: str,
 ) -> None:
     repository.save_observation(
         registry_grounded_modelo_observation(
@@ -125,7 +125,7 @@ def _cross_period_outcome(
 
 def _public_carry_outcomes(
     tmp_path: Path,
-    stamped_revision_id: str | None,
+    stamped_revision_id: str,
 ) -> tuple[tuple[bool, bool], tuple[bool, bool]]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         repository = CalculationObservationRepository()
@@ -162,18 +162,15 @@ def _public_carry_outcomes(
         return binding_outcome, _cross_period_outcome(cross_verdict, requirement_keys=requirement_keys)
 
 
-@pytest.mark.parametrize("case", ["matching", "divergent", "missing"])
+@pytest.mark.parametrize("case", ["matching", "divergent"])
 def test_public_carry_reads_match_shared_gate_for_resolvable_source(tmp_path: Path, case: str) -> None:
     """Binding-prefill and cross-period readers expose the shared R2 decision."""
     if case == "matching":
-        stamp: str | None = _law_revision_id()
+        stamp = _law_revision_id()
         expected = (False, False)
-    elif case == "divergent":
+    else:
         stamp = _DIVERGENT_REVISION_ID
         expected = (True, False)
-    else:
-        stamp = None
-        expected = (False, True)
 
     shared = revision_carry_outcome(
         stamp,

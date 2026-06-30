@@ -34,7 +34,7 @@ def isolated_language_state(tmp_path: Path) -> Iterator[None]:
     with (
         override_settings(aeat_output_language=""),
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("default"),
+        profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
     ):
         yield
 
@@ -46,7 +46,7 @@ def _seed_profile_language(language: str) -> None:
     from ..domain.user_profile import UserProfileFact
 
     repository = workflow_state_repository()
-    repository.update(lambda state: register_minimal_profile(state, profile_id="default"))
+    repository.update(lambda state: register_minimal_profile(state, profile_id="00000000-0000-4000-8000-000000000000"))
     repository.update(
         lambda state: set_active_field(state, UserProfileFact(path="preferences.output_language", value=language)),
     )

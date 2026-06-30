@@ -42,7 +42,7 @@ def _command(
     note: str | None = None,
 ) -> M036DeclarationCommand:
     return M036DeclarationCommand(
-        profile_id="profile-m036-readback",
+        profile_id="30303030-3030-4030-8030-303030303030",
         event_kind=event_kind,
         declared_on=declared_on,
         sede_justificante=justificante,
@@ -184,7 +184,7 @@ def test_anti_tautology_unrecorded_declaration_absent_from_list(tmp_path: Path) 
             bucket_id=runtime.bucket_id,
         )
         never_recorded_id = derive_m036_declaration_id(
-            profile_id="profile-m036-readback",
+            profile_id="30303030-3030-4030-8030-303030303030",
             event_kind=CensoModeloEventKind.BAJA,
             declared_on=date(2027, 1, 1),
             sede_justificante="ACUSE-NEVER",

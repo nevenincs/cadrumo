@@ -6,5 +6,21 @@ tax_domain = "is"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"
 output_sensitivity = "financial"
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
-source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]
+legal_refs = [
+    "ley-27-2014:art-40",
+    "ley-27-2014:art-29",
+    "ley-27-2014:art-30",
+    "ley-27-2014:art-105",
+    "orden-hfp-227-2017:art-1",
+    "orden-hac-941-2018:art-primero-5-anexo-i",
+    "orden-hfp-312-2023:art-unico-1-anexo-i",
+    "orden-hac-262-2025:art-unico-1-anexo-i",
+]
+source_refs = [
+    "aeat-dr-202-2025",
+    "aeat-modelo-202-instructions",
+    "boe-modelo-202-base-order",
+    "boe-modelo-202-2018-amendment",
+    "boe-modelo-202-2023-amendment",
+    "boe-modelo-202-2025-amendment",
+]

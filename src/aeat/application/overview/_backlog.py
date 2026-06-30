@@ -1,11 +1,13 @@
 """Overview backlog: past-due / triage cohort listing.
 
 :func:`build_overview_backlog` is the application service backing
-``aeat app overview backlog``. It accepts a :class:`TaxpayerProfile`,
-composes :func:`build_overview_calendar` over an operator-supplied date
-window (defaulting to the last 365 days through today), and enumerates
-every obligation whose ``adjusted_closes_on`` precedes today AND whose
-``user_state`` indicates it has not yet been filed.
+``aeat app overview backlog``. It accepts a
+:class:`~aeat.domain.deadlines.TaxpayerProfile`, composes
+:func:`aeat.application.overview.build_overview_calendar` over an
+operator-supplied date window (defaulting to the last 365 days through today),
+and enumerates every :class:`OverviewCalendarEntry` whose
+``adjusted_closes_on`` precedes today and whose ``user_state`` indicates it has
+not yet been filed.
 
 The verb is a read model only: it never mutates state and never
 contacts AEAT. Lifecycle continuation is owned by
@@ -37,6 +39,12 @@ _DEFAULT_LOOKBACK_DAYS = 365
 
 class OverviewBacklog(BaseModel):
     """Outcome of ``build_overview_backlog``.
+
+    The model is the backlog-shaped projection of
+    :class:`aeat.application.overview.OverviewCalendar`. Items retain the
+    original :class:`OverviewCalendarEntry` rows, warnings remain
+    :class:`CalendarWarning` rows from the calendar build, and completeness is
+    the inherited :class:`CalendarCompleteness` report.
 
     Attributes:
         range: Calendar window the backlog was scoped to.
@@ -85,11 +93,13 @@ def build_overview_backlog(
     """Enumerate the operator's past-due obligations.
 
     Args:
-        profile: The :class:`TaxpayerProfile` whose filing obligations are evaluated.
+        profile: The :class:`~aeat.domain.deadlines.TaxpayerProfile` whose
+            filing obligations are evaluated.
         from_date: Start of the calendar window; defaults to 365 days before ``as_of``.
         to_date: End of the calendar window; defaults to ``as_of``.
         as_of: Reference date for past-due classification; defaults to today.
-        engine: Optional deadline engine override.
+        engine: Optional :class:`~aeat.domain.deadlines.DeadlineEngine`
+            override.
         raw_values: Optional raw profile values passed through to the engine.
 
     The default window is the 365 days preceding ``as_of`` (today
@@ -97,8 +107,9 @@ def build_overview_backlog(
     item that survived a full annual filing cycle without overflowing
     the underlying deadline-engine schedule.
 
-    Past-due classification uses the 4-state ``OverviewPeriodState``
-    taxonomy: an obligation is in the backlog iff its
+    Past-due classification uses the
+    :class:`aeat.application.overview.OverviewPeriodState` taxonomy: an
+    obligation is in the backlog iff its
     ``adjusted_closes_on`` precedes ``as_of`` AND its ``user_state``
     is ``LATE``. Filed obligations are excluded by the state mapping;
     the engine surfaces them as ``FILED`` rather than ``OVERDUE``.

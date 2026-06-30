@@ -70,6 +70,7 @@ def _create_legal_entity() -> None:
             "--quiet", "--accept-defaults",
             "--tax-id", "B12345674",
             "--name", "Company",
+            "--legal-name", "Company SL",
             "--activity", "consulting",
             "--entity-type", "legal_entity",
             "--legal-entity-form", "sl",

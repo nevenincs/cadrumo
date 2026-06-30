@@ -6,7 +6,7 @@ justificantes, observations, assets, inventory) all share the same
 boilerplate: namespace + sensitivity + schema-version + Pydantic payload
 type + a function that extracts the natural id from the payload.
 
-This module introduces :class:`SecureBoundRepository`, a generic base
+This module provides :class:`SecureBoundRepository`, a generic base
 class that captures that shared shape exactly once. Concrete subclasses
 override the four class-level descriptors (`namespace`, `payload_type`,
 `sensitivity`, `schema_version`) and implement `extract_identifier`;
@@ -14,8 +14,7 @@ they inherit `envelope_path_for`, `lock_target_for`, `load`, `save`,
 `delete`, `iter_ids`, and `iter_records` for free.
 
 The base class does NOT replace :class:`SecureObjectRepository`; it
-composes one. The 8 concrete repositories are migrated to this base
-under separate steps.
+composes one.
 """
 
 from __future__ import annotations
@@ -69,8 +68,8 @@ class SecureBoundRepository[T: BaseModel]:
     - :attr:`sensitivity`: the :class:`SensitivityClass` that every row
       in this namespace MUST carry; mismatches raise
       :class:`ClassificationError`.
-    - :attr:`schema_version`: the highest envelope schema version this
-      consumer supports; rows whose version exceeds it raise
+    - :attr:`schema_version`: the current envelope schema version this
+      consumer expects; rows whose version differs from it raise
       :class:`EnvelopeVersionError`.
 
     Subclasses MUST implement :meth:`extract_identifier` so that
@@ -180,10 +179,10 @@ class SecureBoundRepository[T: BaseModel]:
                 f"{self.namespace}/{identifier} has classification "
                 f"{envelope.classification}; consumer expected {self.sensitivity}",
             )
-        if envelope.schema_version > self.schema_version:
+        if envelope.schema_version != self.schema_version:
             raise EnvelopeVersionError(
                 f"{self.namespace}/{identifier} is at version "
-                f"{envelope.schema_version}; consumer supports up to "
+                f"{envelope.schema_version}; consumer expects "
                 f"{self.schema_version}",
             )
         # Safe: _envelope_cls() returns Envelope[self.payload_model()] which equals
@@ -256,6 +255,16 @@ class SecureBoundRepository[T: BaseModel]:
             max_supported_version=self.schema_version,
         ):
             envelope = envelope_cls.model_validate_json(record.payload.decode("utf-8"))
+            if envelope.classification is not self.sensitivity:
+                raise ClassificationError(
+                    f"{self.namespace} iterator row has classification "
+                    f"{envelope.classification}; consumer expected {self.sensitivity}",
+                )
+            if envelope.schema_version != self.schema_version:
+                raise EnvelopeVersionError(
+                    f"{self.namespace} iterator row is at version "
+                    f"{envelope.schema_version}; consumer expects {self.schema_version}",
+                )
             # Safe: same rationale as the load() path — envelope was validated by
             # model_validate_json against Envelope[self.payload_type] == Envelope[T].
             # Future improvement: eliminate via generic ClassVar alias
@@ -292,6 +301,16 @@ class SecureBoundRepository[T: BaseModel]:
             max_supported_version=self.schema_version,
         ):
             envelope = envelope_cls.model_validate_json(record.payload.decode("utf-8"))
+            if envelope.classification is not self.sensitivity:
+                raise ClassificationError(
+                    f"{self.namespace} iterator row has classification "
+                    f"{envelope.classification}; consumer expected {self.sensitivity}",
+                )
+            if envelope.schema_version != self.schema_version:
+                raise EnvelopeVersionError(
+                    f"{self.namespace} iterator row is at version "
+                    f"{envelope.schema_version}; consumer expects {self.schema_version}",
+                )
             yield cast(T, envelope.payload)  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
 
     # ------------------------------------------------------------------

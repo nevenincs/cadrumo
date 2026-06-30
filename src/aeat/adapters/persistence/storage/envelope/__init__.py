@@ -4,8 +4,7 @@ Public surface for the schema-versioned envelope contract used by
 file-backed persistence consumers. Re-exports the typed
 :class:`Envelope` and :class:`CipherEnvelope` records, the
 :class:`AeadAlgorithm` catalogue, the :class:`EncryptionMetadata`
-record, the :class:`EnvelopeMigrator` extension protocol, and the
-plaintext / ciphertext save/load helpers (:func:`save_envelope`,
+record, the plaintext / ciphertext save/load helpers (:func:`save_envelope`,
 :func:`load_envelope`, :func:`save_encrypted_envelope`,
 :func:`load_encrypted_envelope`, :func:`reencrypt_envelope_file`),
 and the :class:`SecureBoundRepository` generic base that domain
@@ -19,7 +18,6 @@ from ._envelope import (
     CipherEnvelope,
     EncryptionMetadata,
     Envelope,
-    EnvelopeMigrator,
     load_encrypted_envelope,
     load_envelope,
     reencrypt_envelope_file,
@@ -33,7 +31,6 @@ __all__ = [
     "CipherEnvelope",
     "EncryptionMetadata",
     "Envelope",
-    "EnvelopeMigrator",
     "SecureBoundRepository",
     "load_encrypted_envelope",
     "load_envelope",

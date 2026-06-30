@@ -628,11 +628,11 @@ def test_all_profiles_flag_iterates_every_registered_profile() -> None:
     --allow-incomplete is required to get any output at all.
     """
 
-    with profile_create_storage_span("second"):
+    with profile_create_storage_span("22222222-2222-4222-8222-222222222222"):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
                 state,
-                profile_id="second",
+                profile_id="22222222-2222-4222-8222-222222222222",
                 display_name="Second Operator",
                 enforce_unique_tax_id=False,
             ),

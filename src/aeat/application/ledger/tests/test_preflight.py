@@ -11,6 +11,7 @@ import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
+from ....core.config import Settings
 from ....domain.categories import SpendingCategory
 from ....domain.transactions import (
     BusinessClassification,
@@ -32,6 +33,9 @@ from ...user_profile import CensoSyncService, UserProfileLifecycleRepository
 from .. import LedgerPreflightIssueReason, preflight_ledger_tax_readiness, preflight_transaction_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_SEDE_ORIGIN = Settings.external_constants().aeat.domains.sede
+_HOME_OFFICE_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
 
 def _period(year: int, code: str) -> Period:
@@ -128,7 +132,7 @@ def _apply_home_office_censo(bucket_id: str) -> None:
     )
     service.refresh_censo(
         profile_id=bucket_id,
-        source_url="https://sede.agenciatributaria.gob.es/",
+        source_url=f"{_SEDE_ORIGIN}/",
         fact_source=_home_office_censo_facts,
     )
     service.apply_censo_to_profile(profile_id=bucket_id)
@@ -483,7 +487,7 @@ def test_preflight_flags_home_office_ratio_without_applied_censo(tmp_path: Path)
 
 
 def test_preflight_accepts_home_office_ratio_after_matching_censo_apply(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HOME_OFFICE_PROFILE_ID) as profile:
         _apply_home_office_censo(profile.bucket_id)
         category = SpendingCategory.SUMINISTROS_HOME_OFFICE_INTERNET
         repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -513,7 +517,7 @@ def test_preflight_accepts_home_office_ratio_after_matching_censo_apply(tmp_path
 
 
 def test_preflight_flags_home_office_ratio_that_disagrees_with_applied_censo(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HOME_OFFICE_PROFILE_ID) as profile:
         _apply_home_office_censo(profile.bucket_id)
         category = SpendingCategory.SUMINISTROS_HOME_OFFICE_INTERNET
         save_usage_ratios(

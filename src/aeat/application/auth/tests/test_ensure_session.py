@@ -121,11 +121,11 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
         aeat_secret_passphrase=SecretStr(dev_test_database_password()),
     ):
         dispose_engine()
-        with profile_create_storage_span("operator"):
+        with profile_create_storage_span("11111111-1111-4111-8111-111111111111"):
             workflow_state_repository().update(
                 lambda state: register_minimal_profile(
                     state,
-                    profile_id="operator",
+                    profile_id="11111111-1111-4111-8111-111111111111",
                     overrides={"identity.tax_id": "12345678Z"},
                 ),
             )

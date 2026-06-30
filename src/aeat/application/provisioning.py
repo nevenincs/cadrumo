@@ -10,8 +10,11 @@ ADR, not an exception path.
 The vision read consults :func:`probe_ollama_vision` before expensive inference,
 so a down server or an unpulled model becomes an instructive refusal instead of
 a raw stack trace. The ``aeat config check`` command renders this module's
-statuses beside the active profile's capability posture. Optional-extra probes
-walk the core :data:`~aeat.core.OPTIONAL_EXTRAS` catalogue of
+statuses as
+:class:`~aeat.entrypoints.cli._config._check_payloads.CheckDependencyPayload`
+rows beside the active profile's capability posture from
+:func:`~aeat.application.user_profile.resolve_active_capability`. Optional-extra
+probes walk the core :data:`~aeat.core.OPTIONAL_EXTRAS` catalogue of
 :class:`~aeat.core.OptionalExtra` records, so CLI diagnostics and adapter import
 guards share one registry.
 """
@@ -50,7 +53,8 @@ class DependencyStatus(BaseModel):
     operator can run when ``available`` is false. The model is intentionally
     generic so Ollama, subprocess CLIs, Playwright browser binaries, and
     :class:`~aeat.core.OptionalExtra` package extras all render through the same
-    payload shape.
+    payload shape and can be validated into
+    :class:`~aeat.entrypoints.cli._config._check_payloads.CheckDependencyPayload`.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -74,7 +78,10 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
     :class:`~aeat.core.config.Settings`, then performs a short-timeout
     ``GET /api/tags``. The probe never runs inference and returns unavailable
     when the server is unreachable (``ollama serve``) or the configured model is
-    not pulled (``ollama pull <model>``).
+    not pulled (``ollama pull <model>``). Ledger evidence reading uses this
+    result before local-vision inference so
+    :class:`~aeat.domain.transactions.LLMClassifierError` can carry the exact
+    remediation.
     """
     resolved = settings if settings is not None else load_settings()
     model = resolved.aeat_llm_ollama_vision_model
@@ -115,6 +122,9 @@ def probe_subprocess_providers() -> tuple[DependencyStatus, ...]:
     Delegates provider discovery to the ledger classification surface and adapts
     each availability row into the common :class:`DependencyStatus` shape. The
     probe resolves binaries only; it does not spawn provider processes.
+    ``aeat config check`` combines these rows with
+    :class:`~aeat.core.ServiceCapability` decisions to flag opted-in cloud
+    evidence uploads that lack a provider CLI.
     """
     from .ledger import available_llm_providers
 
@@ -164,7 +174,9 @@ def probe_playwright_browser(cache_root: Path | None = None) -> DependencyStatus
     process, so this probe deliberately never launches it. Missing, unreadable, or
     empty cache roots return unavailable with the ``playwright install chromium``
     remediation. ``cache_root`` is a testable override for the browser cache
-    directory.
+    directory. The row complements the browser health probe in
+    :mod:`aeat.application.diagnostics`; it checks workstation provisioning, not
+    AEAT site reachability.
     """
     root = _playwright_browsers_root(cache_root)
     try:
@@ -192,7 +204,9 @@ def probe_optional_extra(extra: OptionalExtra) -> DependencyStatus:
     :class:`~aeat.core.OptionalExtra` (no import, no side effects) in the doctor's
     :class:`DependencyStatus`, naming the extra's ``install_hint`` as remediation
     when absent. The feature-boundary guard is the sibling core
-    :func:`~aeat.core.require_optional_extra`.
+    :func:`~aeat.core.require_optional_extra`, which raises the typed
+    :class:`~aeat.core.MissingOptionalExtraError` when a command actually
+    requires the feature.
     """
     if not optional_extra_available(extra):
         return DependencyStatus(
@@ -209,5 +223,10 @@ def probe_optional_extra(extra: OptionalExtra) -> DependencyStatus:
 
 
 def probe_optional_extras() -> tuple[DependencyStatus, ...]:
-    """Probe every capability-gated :class:`~aeat.core.OptionalExtra` into :class:`DependencyStatus` rows."""
+    """Probe every capability-gated :class:`~aeat.core.OptionalExtra` into :class:`DependencyStatus` rows.
+
+    The result set is keyed by the same :data:`~aeat.core.OPTIONAL_EXTRAS`
+    catalogue used by :func:`~aeat.core.require_optional_extra`, keeping
+    ``aeat config check`` and runtime feature guards aligned.
+    """
     return tuple(probe_optional_extra(extra) for extra in OPTIONAL_EXTRAS)

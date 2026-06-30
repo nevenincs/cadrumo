@@ -58,12 +58,11 @@ def _validator_with_corpus(corpus_root: Path, catalogues: RegistryCatalogues) ->
         catalogues,
         source_root=bundled_path(),
         justificante_corpus_root=corpus_root,
-        catalogue_corpus_strict=False,
     )
 
 
 def _validator_from_data_root(catalogues: RegistryCatalogues) -> RegistryValidator:
-    return RegistryValidator(catalogues, source_root=_DATA_ROOT, catalogue_corpus_strict=False)
+    return RegistryValidator(catalogues, source_root=_DATA_ROOT)
 
 
 def _build_mutated_modelo(

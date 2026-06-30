@@ -1,12 +1,12 @@
 """Overview explain: per-(modelo, year) applicability decomposition.
 
-`build_overview_explain` is the application service backing
+:func:`build_overview_explain` is the application service backing
 ``aeat app overview explain MODELO [--year YYYY]``. The ``applicable``
 verdict is DERIVED from the three-axis
 :class:`~aeat.domain.deadlines.TaxpayerProfile` taxpayer model through
-the registry-grounded rule table in
-:mod:`aeat.domain.calculations.registry.applicability`, never assumed
-from an autónomo default. An undeclared taxpayer
+the registry-grounded
+:func:`~aeat.domain.calculations.registry.applicability.derive_modelo_applicability`
+rule table, never assumed from an autónomo default. An undeclared taxpayer
 model yields an explicit ``incomplete`` verdict: the service
 reports "declare your taxpayer type first" rather than a confident
 wrong obligation.
@@ -52,11 +52,18 @@ remains a typed surface rather than a ``dict[str, Any]`` escape hatch.
 
 
 class DeadlineExplanationEngine(Protocol):
+    """Protocol for the deadline engine's scheduling-rationale method."""
+
     def explain(self, profile: TaxpayerProfile, modelo: str, *, year: int | None = None) -> str: ...
 
 
 class OverviewExplain(BaseModel):
     """Outcome of ``build_overview_explain``.
+
+    The model separates the registry-applicability verdict from the optional
+    deadline-engine scheduling rationale. That keeps
+    :class:`ApplicabilityVerdict` authoritative even when a known modelo has no
+    registered filing window for the requested year.
 
     Attributes:
         modelo: AEAT modelo identifier the explanation is for.
@@ -80,9 +87,10 @@ class OverviewExplain(BaseModel):
             registered for the year. ``None`` when no deadline-window
             data exists (registry-track gap R1) — the applicability
             ``verdict`` is independent of it.
-        profile_facts: Subset of the operator's :class:`TaxpayerProfile`
-            fields the answer depends on. Keys are stable field names;
-            values are JSON-serialisable scalars.
+        profile_facts: Subset of the operator's
+            :class:`~aeat.domain.deadlines.TaxpayerProfile` fields the answer
+            depends on. Keys are stable field names; values are
+            JSON-serialisable scalars.
         generated_at: UTC timestamp of when the aggregator ran.
     """
 
@@ -178,7 +186,8 @@ def build_overview_explain(
     """Decompose a modelo's applicability against the operator's profile.
 
     The ``applicable`` flag and the ``verdict`` are DERIVED from the
-    three-axis taxpayer model through :func:`derive_modelo_applicability`
+    three-axis taxpayer model through
+    :func:`~aeat.domain.calculations.registry.applicability.derive_modelo_applicability`
     — never from an autónomo default. An undeclared taxpayer
     model yields an ``INCOMPLETE`` verdict: the service
     reports "declare your taxpayer type first" instead of a confident
@@ -193,15 +202,15 @@ def build_overview_explain(
     :class:`OverviewExplainError`.
 
     Args:
-        profile: The :class:`TaxpayerProfile` whose attributes determine
-            applicability.
+        profile: The :class:`~aeat.domain.deadlines.TaxpayerProfile` whose
+            attributes determine applicability.
         modelo: Modelo identifier to explain (e.g. ``"130"``).
         year: Optional calendar year. Defaults to the current year.
-        engine: Optional deadline engine override.
+        engine: Optional :class:`DeadlineExplanationEngine` override.
 
     Returns:
         An :class:`OverviewExplain` carrying the applicability verdict,
-        optional scheduling rationale, and applicable obligation windows.
+        optional scheduling rationale, and profile facts used by the verdict.
 
     Raises:
         OverviewExplainError: When the modelo identifier is blank or
@@ -260,7 +269,9 @@ def _scheduling_rationale(
     ``None`` is returned when the registry has no deadline windows for
     the modelo/year (registry-track gap R1) — a data gap the CLI
     degrades gracefully around. A genuinely unknown modelo identifier
-    is left for :func:`build_overview_explain` to refuse.
+    is left for :func:`build_overview_explain` to refuse. Other
+    :class:`~aeat.domain.deadlines.DeadlineValidationError` failures remain
+    typed :class:`OverviewExplainError` refusals.
     """
     deadline_engine = engine or DeadlineEngine()
     try:

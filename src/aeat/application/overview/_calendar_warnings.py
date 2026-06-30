@@ -5,6 +5,11 @@ These helpers inspect already-built :class:`OverviewCalendarEntry` and
 and :class:`CalendarCompleteness` payloads. They do not read remote state;
 warnings about censo provenance, missing justificante verification, and
 conflicting AEAT evidence only describe gaps in the local projection.
+
+:func:`aeat.application.overview.build_overview_calendar` appends these warnings
+after legal deadline rows and additive events have already been projected. The
+fix commands point operators at existing profile-edit, censo-read, or
+filed-history pull surfaces; this module never starts those operations.
 """
 
 from __future__ import annotations
@@ -135,12 +140,22 @@ _AEAT_EVIDENCE_CONFLICT_FIX_COMMAND = "aeat app live filed pull --modelo MODELO 
 
 
 def calendar_censo_enrolment_profile_keys() -> tuple[str, ...]:
-    """Return profile paths whose censo provenance can witness Modelo enrolment."""
+    """Return profile paths whose censo provenance can witness enrolment.
+
+    The paths are compared with live Modelo 036 / censo-stamped profile facts
+    before :class:`OverviewCensoEnrolmentState` and
+    :class:`CalendarWarning` values are produced.
+    """
     return tuple(sorted(_CENSO_ENROLMENT_PROFILE_KEYS))
 
 
 def calendar_applicability_profile_keys_for_modelo(modelo: str) -> tuple[str, ...]:
-    """Return profile keys that can influence calendar applicability for ``modelo``."""
+    """Return profile keys that can influence calendar applicability for ``modelo``.
+
+    The result combines registry applicability rules, IVA-regime coverage, and
+    corporate censo axes so calendar provenance warnings use the same profile
+    facts that determine legal obligation rows.
+    """
     keys: set[str] = set()
     for rule in _iter_modelo_applicability_rules():
         if rule.modelo != modelo:
@@ -168,6 +183,7 @@ def _calendar_censo_reconciliation_warnings(
     entries: tuple[OverviewCalendarEntry, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
 ) -> tuple[CalendarWarning, ...]:
+    """Return censo-enrolment warnings for unverified active obligations."""
     if live_censo_verified_profile_keys is None or not entries:
         return ()
     affected_modelos: set[str] = set()
@@ -191,6 +207,7 @@ def _calendar_censo_enrolment_state(
     modelo: str,
     live_censo_verified_profile_keys: tuple[str, ...] | None,
 ) -> OverviewCensoEnrolmentState:
+    """Classify whether censo-stamped profile paths witness ``modelo`` enrolment."""
     if live_censo_verified_profile_keys is None:
         return OverviewCensoEnrolmentState.NOT_CHECKED
     required = set(calendar_applicability_profile_keys_for_modelo(modelo)) & _CENSO_ENROLMENT_PROFILE_KEYS
@@ -209,6 +226,13 @@ def _calendar_unverified_justificante_warnings(
     entries: tuple[OverviewCalendarEntry, ...],
     events: tuple[OverviewCalendarEvent, ...],
 ) -> tuple[CalendarWarning, ...]:
+    """Return warnings for AEAT-observed filings lacking justificante proof.
+
+    Both entry-level ``OverviewCalendarEntry.filing_evidence`` rows and filing
+    :class:`OverviewCalendarEvent` rows are scanned. Period-specific
+    remediation is used only when all affected rows collapse to one
+    ``aeat app live filed pull`` command.
+    """
     affected_modelos: set[str] = set()
     fix_commands: set[str] = set()
     unresolved_states = {
@@ -256,6 +280,7 @@ def _calendar_aeat_evidence_conflict_warnings(
     *,
     entries: tuple[OverviewCalendarEntry, ...],
 ) -> tuple[CalendarWarning, ...]:
+    """Return warnings for conflicting AEAT references on calendar entries."""
     affected_modelos: set[str] = set()
     fix_commands: set[str] = set()
     for entry in entries:
@@ -289,12 +314,14 @@ def _filed_pull_command(
     period: _Period | None,
     fallback: str,
 ) -> str:
+    """Return the period-specific filed-history pull command when possible."""
     if filing_year is None or period is None:
         return fallback
     return f"aeat app live filed pull --modelo {modelo} --year {filing_year} --period {period.registry_token}"
 
 
 def _single_fix_command_or_fallback(commands: set[str], *, fallback: str) -> str:
+    """Return one concrete remediation command, otherwise the generic fallback."""
     commands.discard(fallback)
     if len(commands) == 1:
         return next(iter(commands))
@@ -305,6 +332,12 @@ def _build_completeness_and_warnings(
     raw_values: Mapping[str, object] | None,
     entries: tuple[OverviewCalendarEntry, ...],
 ) -> tuple[CalendarCompleteness, tuple[CalendarWarning, ...]]:
+    """Build explicit/defaulted profile completeness and related warnings.
+
+    Missing profile values produce :class:`CalendarWarning` rows and populate
+    ``CalendarCompleteness.defaulted_modelos`` only for modelos that also appear
+    in the already-computed :class:`OverviewCalendarEntry` rows.
+    """
     if raw_values is None:
         return CalendarCompleteness(), ()
     explicitly_set: list[str] = []

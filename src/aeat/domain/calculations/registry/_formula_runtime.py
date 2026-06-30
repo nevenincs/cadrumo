@@ -17,6 +17,7 @@ from decimal import Decimal, localcontext
 from pydantic import BaseModel, Field, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
+from ...contribuyente import UE_EEA_COUNTRY_CODES
 from ._bindings import CasillaObservation
 from ._casilla_membership import casillas_by_id as _casillas_by_id
 from ._errors import CasillaConstraintViolationError, RegistrySnapshotError, RegistryValidationError
@@ -99,6 +100,8 @@ class _M210ResolveRateArgs:
 class _M210ResolveBaseArgs:
     tipo_casilla_id: CasillaId
     gross_casilla_id: CasillaId
+    deductible_expenses_casilla_id: CasillaId
+    country_binding: BindingId
     catastral_value_casilla_id: CasillaId
     imputation_coefficient_casilla_id: CasillaId
     imputation_days_casilla_id: CasillaId
@@ -836,19 +839,53 @@ def _m210_effective_rate_from_tariff(
 
 
 def _evaluate_m210_resolve_base_imponible(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
-    """Resolve M210 base imponible, including the Art. 13.1.h imputed-real-estate branch.
+    """Resolve M210 base imponible, including Art. 24.6 and Art. 13.1.h branches.
 
-    Non-``inmobiliaria`` tipos keep the existing Art. 24 identity path:
-    ``base_imponible = rendimientos_integros``. For ``inmobiliaria``, the
+    Non-imputed Art. 24.1 tipos start from ``rendimientos_integros``. Art.
+    24.6 permits deducting linked expenses when the filer is in the EU/EEA
+    path, represented by ``tipo_renta='ue_residente'`` or an EU/EEA
+    ``country_of_fiscal_residence`` binding. For ``inmobiliaria``, the
     operator applies the LIRPF Art. 85 imputation mechanics reached through
-    TRLIRNR Arts. 13.1.h and 24.5.
+    TRLIRNR Arts. 13.1.h and 24.5; own-use imputation admits no expenses.
     """
     args = _m210_resolve_base_args(expression)
     tipo_renta = ctx.text_values.get(args.tipo_casilla_id, "")
     ctx.operand_refs.append(args.tipo_casilla_id)
     ctx.operand_casilla_refs.append(args.tipo_casilla_id)
+    country = (ctx.enum_binding_values.get(args.country_binding) or "").upper()
+    ctx.operand_refs.append(args.country_binding)
+    deductible_expenses = _m210_numeric_casilla_value(args.deductible_expenses_casilla_id, ctx)
+    if deductible_expenses < _ZERO:
+        raise RegistryValidationError(
+            "M210 gastos_deducibles must be non-negative",
+            translated_message="errors.calc.m210_gastos_deducibles_negative",
+            context={"casilla_id": args.deductible_expenses_casilla_id, "value": str(deductible_expenses)},
+        )
     if tipo_renta != "inmobiliaria":
-        return _m210_numeric_casilla_value(args.gross_casilla_id, ctx)
+        gross = _m210_numeric_casilla_value(args.gross_casilla_id, ctx)
+        if deductible_expenses == _ZERO:
+            return gross
+        if not _m210_allows_art_24_6_expenses(tipo_renta=tipo_renta, country_code=country):
+            raise RegistryValidationError(
+                "M210 gastos_deducibles require the EU/EEA Art. 24.6 path",
+                translated_message="errors.calc.m210_gastos_deducibles_not_allowed",
+                context={
+                    "casilla_id": args.deductible_expenses_casilla_id,
+                    "tipo_renta": tipo_renta,
+                    "country_of_fiscal_residence": country,
+                },
+            )
+        return gross - deductible_expenses
+    if deductible_expenses != _ZERO:
+        raise RegistryValidationError(
+            "M210 imputed real-estate own-use base cannot deduct gastos_deducibles",
+            translated_message="errors.calc.m210_gastos_deducibles_not_allowed",
+            context={
+                "casilla_id": args.deductible_expenses_casilla_id,
+                "tipo_renta": tipo_renta,
+                "country_of_fiscal_residence": country,
+            },
+        )
 
     days = _m210_imputation_days(args.imputation_days_casilla_id, ctx)
     days_fraction = days / Decimal(_m210_days_in_filing_year(ctx.filing_year))
@@ -889,11 +926,13 @@ def _evaluate_m210_resolve_base_imponible(expression: FormulaExpression, ctx: _E
 
 def _m210_resolve_base_args(expression: FormulaExpression) -> _M210ResolveBaseArgs:
     op = "m210_resolve_base_imponible"
-    if len(expression.args) != 10:
-        raise RegistryValidationError(f"formula op {op!r} expects 10 args, got {len(expression.args)}")
+    if len(expression.args) != 12:
+        raise RegistryValidationError(f"formula op {op!r} expects 12 args, got {len(expression.args)}")
     (
         tipo_arg,
         gross_arg,
+        deductible_expenses_arg,
+        country_arg,
         catastral_value_arg,
         imputation_coefficient_arg,
         imputation_days_arg,
@@ -907,25 +946,31 @@ def _m210_resolve_base_args(expression: FormulaExpression) -> _M210ResolveBaseAr
         raise RegistryValidationError(f"formula op {op!r} requires args[0] to be a casilla leaf")
     if gross_arg.casilla_id is None:
         raise RegistryValidationError(f"formula op {op!r} requires args[1] to be a casilla leaf")
-    if catastral_value_arg.casilla_id is None:
+    if deductible_expenses_arg.casilla_id is None:
         raise RegistryValidationError(f"formula op {op!r} requires args[2] to be a casilla leaf")
-    if imputation_coefficient_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[3] to be a casilla leaf")
-    if imputation_days_arg.casilla_id is None:
+    if country_arg.binding is None:
+        raise RegistryValidationError(f"formula op {op!r} requires args[3] to be a binding leaf")
+    if catastral_value_arg.casilla_id is None:
         raise RegistryValidationError(f"formula op {op!r} requires args[4] to be a casilla leaf")
-    if acquisition_value_arg.casilla_id is None:
+    if imputation_coefficient_arg.casilla_id is None:
         raise RegistryValidationError(f"formula op {op!r} requires args[5] to be a casilla leaf")
-    if administrative_value_arg.casilla_id is None:
+    if imputation_days_arg.casilla_id is None:
         raise RegistryValidationError(f"formula op {op!r} requires args[6] to be a casilla leaf")
+    if acquisition_value_arg.casilla_id is None:
+        raise RegistryValidationError(f"formula op {op!r} requires args[7] to be a casilla leaf")
+    if administrative_value_arg.casilla_id is None:
+        raise RegistryValidationError(f"formula op {op!r} requires args[8] to be a casilla leaf")
     if recent_rate_arg.parameter is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[7] to be a parameter leaf")
-    if old_rate_arg.parameter is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[8] to be a parameter leaf")
-    if no_catastral_fraction_arg.parameter is None:
         raise RegistryValidationError(f"formula op {op!r} requires args[9] to be a parameter leaf")
+    if old_rate_arg.parameter is None:
+        raise RegistryValidationError(f"formula op {op!r} requires args[10] to be a parameter leaf")
+    if no_catastral_fraction_arg.parameter is None:
+        raise RegistryValidationError(f"formula op {op!r} requires args[11] to be a parameter leaf")
     return _M210ResolveBaseArgs(
         tipo_casilla_id=tipo_arg.casilla_id,
         gross_casilla_id=gross_arg.casilla_id,
+        deductible_expenses_casilla_id=deductible_expenses_arg.casilla_id,
+        country_binding=country_arg.binding,
         catastral_value_casilla_id=catastral_value_arg.casilla_id,
         imputation_coefficient_casilla_id=imputation_coefficient_arg.casilla_id,
         imputation_days_casilla_id=imputation_days_arg.casilla_id,
@@ -935,6 +980,10 @@ def _m210_resolve_base_args(expression: FormulaExpression) -> _M210ResolveBaseAr
         old_rate_parameter=old_rate_arg.parameter,
         no_catastral_fraction_parameter=no_catastral_fraction_arg.parameter,
     )
+
+
+def _m210_allows_art_24_6_expenses(*, tipo_renta: str, country_code: str) -> bool:
+    return tipo_renta == "ue_residente" or country_code in UE_EEA_COUNTRY_CODES
 
 
 def _m210_numeric_casilla_value(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:

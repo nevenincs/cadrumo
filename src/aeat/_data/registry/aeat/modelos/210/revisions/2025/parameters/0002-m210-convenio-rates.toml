@@ -1,4 +1,4 @@
-# M210 IRNR Convenio doble imposición rate overrides (Phase 1 seed).
+# M210 IRNR Convenio doble imposición rate overrides.
 #
 # Convenio-rate-table parameter mapping (country_code, tipo_renta) to a
 # treaty rate that REPLACES the TRLIRNR Art 25 baseline, or to the

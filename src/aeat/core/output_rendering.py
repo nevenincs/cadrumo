@@ -12,6 +12,11 @@ Envelope-aware commands bypass this bare renderer in JSON mode through
 :func:`reveal_cli_identifiers_opt_in` so profile and bucket identifier redaction
 cannot drift between direct payload rendering and the
 :class:`~aeat.core.json_contract.SchemaEnvelope` path.
+
+This module returns rendered text only; CLI transports own stdout/stderr writes
+and exit-code handling. It also owns success-output redaction only. Error
+envelopes, log records, and observability sinks use their own redaction
+boundaries.
 """
 
 from __future__ import annotations
@@ -31,7 +36,12 @@ from .redaction import redact_for_cli_output, redact_structured_for_cli_output
 
 
 class OutputRenderingError(AeatError):
-    """Raised when command output cannot be rendered safely."""
+    """Raised when command output cannot be rendered safely.
+
+    Used after payload normalization when a value still cannot be serialized as
+    CLI success output. It is not the invalid-format error; unsupported format
+    strings raise :class:`OutputFormatRefusedError` before rendering starts.
+    """
 
 
 class OutputFormatRefusedError(AeatError):
@@ -46,7 +56,12 @@ class OutputFormat(StrEnum):
 
 
 class RenderedCommandOutput(BaseModel):
-    """Rendered, already-redacted output document returned to CLI transports."""
+    """Rendered, already-redacted output document returned to CLI transports.
+
+    ``text`` is the complete body to emit. The original payload is deliberately
+    not retained so downstream transports cannot accidentally bypass the central
+    success-output redaction pass.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -66,6 +81,11 @@ def render_command_output(
     and applies structured CLI redaction before serialization. Text output
     ignores ``payload`` and joins the supplied ``lines`` after applying
     line-oriented CLI redaction.
+
+    The helper does not write to stdout, translate messages, choose exit codes,
+    or register JSON schemas. Callers supply localized text lines or typed
+    payloads, then emit the returned :class:`RenderedCommandOutput` through the
+    CLI transport layer.
 
     Returns:
         A :class:`RenderedCommandOutput` containing the format and the
@@ -109,6 +129,10 @@ def reveal_cli_identifiers_opt_in() -> bool:
     Both success-output emitters — :func:`render_command_output` and the JSON
     envelope :func:`aeat.core.json_contract.emit_json_success` — consult this
     one resolver so the two transports cannot diverge.
+
+    The opt-in reveals only opaque profile and bucket identifiers. Tax
+    identities, URLs, tokens, and secure-object keys remain redacted by the
+    CLI redaction profile.
     """
     from .config import load_settings
 
@@ -116,6 +140,13 @@ def reveal_cli_identifiers_opt_in() -> bool:
 
 
 def _json_default(value: object) -> object:
+    """Serialize residual safe scalar types or raise a typed rendering error.
+
+    Most project payloads are normalized by :func:`jsonable_output_payload`
+    before ``json.dumps`` reaches this hook. Reaching this function with an
+    unknown object means the command result escaped its declared JSON shape, so
+    the renderer fails closed with :class:`OutputRenderingError`.
+    """
     if isinstance(value, Path):
         return value.as_posix()
     if isinstance(value, date | datetime):
@@ -141,6 +172,11 @@ def jsonable_output_payload(payload: object) -> object:
     coerces list -> tuple when it owns the JSON parse, but not when
     handed a pre-parsed dict. The roundtrip tests in
     :mod:`aeat.core.tests.test_json_envelope_roundtrip` pin the correct usage.
+
+    This is a transport normalization helper, not a domain contract authority.
+    Command-specific payload classes own field semantics, ordering, and
+    backwards-compatibility; this helper only prepares already-selected output
+    values for redaction and JSON serialization.
     """
     if isinstance(payload, BaseModel):
         return jsonable_output_payload(payload.model_dump(mode="python"))

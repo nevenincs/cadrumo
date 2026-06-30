@@ -144,12 +144,12 @@ def test_default_lifecycle_repository_requires_ready_runtime(tmp_path: Path) -> 
 def test_lifecycle_load_missing_raises_profile_not_found(secure_objects: SecureObjectRepository) -> None:
     repo = UserProfileLifecycleRepository(bucket_id="bucket-a", objects=secure_objects)
     with pytest.raises(ProfileNotFoundError) as excinfo:
-        repo.load("operator")
+        repo.load("11111111-1111-4111-8111-111111111111")
     assert str(excinfo.value) == "profile record not found in secure storage"
     assert excinfo.value.translated_message == "application.user_profile.errors.repository_profile_record_missing"
     assert tr(excinfo.value.translated_message, locale="en") != excinfo.value.translated_message
-    assert excinfo.value.context == {"profile_id": "operator", "bucket_id": "bucket-a"}
-    assert "operator" not in str(excinfo.value)
+    assert excinfo.value.context == {"profile_id": "11111111-1111-4111-8111-111111111111", "bucket_id": "bucket-a"}
+    assert "11111111-1111-4111-8111-111111111111" not in str(excinfo.value)
 
 
 def test_lifecycle_load_rejects_inner_classification_without_identifier_leak(
@@ -234,11 +234,11 @@ def test_lifecycle_load_rejects_inner_version_without_identifier_leak(
 
 def test_snapshot_round_trip_carries_canonical_hash(secure_objects: SecureObjectRepository) -> None:
     profile = UserProfileRecord(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         display_name="Operator",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
-    snapshot_id = new_profile_snapshot_id("operator")
+    snapshot_id = new_profile_snapshot_id("11111111-1111-4111-8111-111111111111")
     snapshot = UserProfileSnapshot.from_profile(profile, snapshot_id=snapshot_id)
     repo = UserProfileSnapshotRepository(bucket_id="bucket-a", objects=secure_objects)
 

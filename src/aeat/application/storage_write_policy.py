@@ -56,7 +56,9 @@ class StorageWritePolicyCode(StrEnum):
 
     The values distinguish allowed active-bucket writes, read-only or
     bootstrap-exempt paths, leaf-owned refusals, and the two route-level
-    denials the CLI root must stop before opening profile storage.
+    denials the CLI root must stop before opening profile storage. Each value
+    is carried in the ``code`` field of :class:`StorageWritePolicyDecision`,
+    returned from :func:`inspect_storage_write_policy`.
     """
 
     ALLOWED_ACTIVE_BUCKET = "allowed_active_bucket"
@@ -70,6 +72,11 @@ class StorageWritePolicyCode(StrEnum):
 
 class StorageWritePolicyDecision(BaseModel):
     """Decision returned by the backend storage write-policy query.
+
+    The CLI root converts refusing decisions into
+    :class:`~aeat.entrypoints.cli._errors.CliRefusedBoundaryError` instances;
+    allowed decisions let dispatch continue toward the active-bucket session
+    opener.
 
     Attributes:
         allowed: Whether root dispatch may continue.
@@ -98,7 +105,7 @@ class StorageWritePolicyDecision(BaseModel):
     recovery_hint: str = ""
 
     def render_refusal_message(self, *, locale: str | None = None) -> str:
-        """Render the translated user-facing refusal message."""
+        """Render the translated user-facing refusal message through :func:`~aeat.core.i18n.tr`."""
         if self.allowed or not self.message_key:
             return ""
         if self.detail_message_key:
@@ -106,7 +113,7 @@ class StorageWritePolicyDecision(BaseModel):
         return tr(self.message_key, locale=locale)
 
     def refusal_context(self) -> dict[str, str] | None:
-        """Return structured context for the CLI error boundary."""
+        """Return structured context for :class:`~aeat.entrypoints.cli._errors.CliRefusedBoundaryError`."""
         if not self.recovery_hint:
             return None
         return {"recovery": self.recovery_hint}
@@ -179,6 +186,15 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     "config profile censo apply",
     "config reset",
 )
+"""Profile-bound mutation verb prefixes guarded by the root write policy.
+
+:func:`is_profile_bound_write_verb_path` matches this catalog by prefix after
+the CLI root reconstructs the Typer verb path. The catalog is separate from
+:data:`~aeat.entrypoints.cli._bootstrap_exempt.BOOTSTRAP_EXEMPT_VERB_PATHS`:
+bootstrap-exempt verbs skip the active-session gate, while these prefixes
+identify commands that must be routed through an active profile bucket before
+they can mutate profile-bound storage.
+"""
 
 
 def inspect_storage_write_policy(
@@ -197,6 +213,14 @@ def inspect_storage_write_policy(
     the CLI opens a bucket session. The effective route comes from
     :class:`~aeat.core.config.StorageRouteClassification` so root dispatch does
     not duplicate storage-routing logic.
+
+    See Also:
+        :data:`PROFILE_BOUND_WRITE_VERB_PATHS`
+            Guarded mutation catalog consulted by this policy query.
+        :func:`~aeat.entrypoints.cli._bootstrap_exempt.is_bootstrap_exempt`
+            Source of the ``bootstrap_exempt`` input from the CLI root.
+        :func:`is_profile_bound_write_verb_path`
+            Prefix matcher used before route classification.
     """
     if bootstrap_exempt:
         return StorageWritePolicyDecision(

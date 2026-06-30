@@ -60,7 +60,7 @@ def _seed_taxpayer_profile(objects: SecureObjectRepository) -> None:
     reconciliation gate added to ``calculate_modelo_revision`` resolves
     the work-unit taxpayer identity."""
     record = UserProfileRecord(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value=_TAXPAYER_NIF),
@@ -235,6 +235,5 @@ def test_modelo_303_declaration_year_distinguishes_two_filing_years(tmp_path: Pa
     assert revision_2024.casilla_values[_DECL_EJERCICIO_CASILLA] == Decimal("2024")
     assert revision_2026.casilla_values[_DECL_EJERCICIO_CASILLA] == Decimal("2026")
     assert (
-        revision_2024.casilla_values[_DECL_EJERCICIO_CASILLA]
-        != revision_2026.casilla_values[_DECL_EJERCICIO_CASILLA]
+        revision_2024.casilla_values[_DECL_EJERCICIO_CASILLA] != revision_2026.casilla_values[_DECL_EJERCICIO_CASILLA]
     )

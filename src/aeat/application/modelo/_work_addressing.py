@@ -551,6 +551,7 @@ def ensure_modelo_work_unit_for_visible_target(
     name: str | None = None,
     actor: str = "operator",
     causante_ccaa: CCAA | None = None,
+    enforce_applicability: bool = True,
 ) -> ModeloWorkEnsureResult:
     """Resume or create the active work unit for one visible filing target.
 
@@ -576,7 +577,7 @@ def ensure_modelo_work_unit_for_visible_target(
         unit = resolution.work_unit
         from ._profile_readiness_gate import require_profile_ready_for_work_unit
 
-        require_profile_ready_for_work_unit(unit)
+        require_profile_ready_for_work_unit(unit, enforce_applicability=enforce_applicability)
         name_applied: str | None = None
         if name is not None and name.strip() and name.strip() != unit.name:
             unit = rename_work_unit(unit.work_unit_id, name, actor=actor)
@@ -598,6 +599,7 @@ def ensure_modelo_work_unit_for_visible_target(
         name=name,
         actor=actor,
         causante_ccaa=causante_ccaa,
+        enforce_applicability=enforce_applicability,
     )
     return ModeloWorkEnsureResult(work_unit=unit, reused=False)
 

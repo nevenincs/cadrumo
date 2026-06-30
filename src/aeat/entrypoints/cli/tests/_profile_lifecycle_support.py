@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import hashlib
 from datetime import UTC, datetime
+from uuid import UUID
 
 from ....adapters.persistence.storage.bucket._layout import provision_bucket_directory
 from ....adapters.persistence.storage.bucket._manifest import (
@@ -28,6 +29,13 @@ from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import load_settings
 from ....core.identity import nif_check_letter
 from ....tests.cli_runner import invoke_cached_cli
+
+
+def _profile_id_for_label(label: str) -> str:
+    digest = bytearray(hashlib.sha256(label.encode("utf-8")).digest()[:16])
+    digest[6] = (digest[6] & 0x0F) | 0x40
+    digest[8] = (digest[8] & 0x3F) | 0x80
+    return str(UUID(bytes=bytes(digest)))
 
 
 def stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
@@ -97,11 +105,13 @@ def seed(name: str = "default", *, tax_id: str | None = None) -> None:
     # its own SQLite file, so loading another bucket's record while a
     # different session is active would fail. Matches the CLI path.
     overrides = {"identity.tax_id": tax_id} if tax_id is not None else None
-    with profile_create_storage_span(name):
+    profile_id = _profile_id_for_label(name)
+    with profile_create_storage_span(profile_id):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
                 state,
-                profile_id=name,
+                profile_id=profile_id,
+                display_name=name,
                 overrides=overrides,
                 enforce_unique_tax_id=False,
             ),

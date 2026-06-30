@@ -8,6 +8,9 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.classification import SensitivityClass
+from ....core.resources import bundled_path
+from ...calculations.registry import load_registry_tree
+from ...calculations.registry._legal import verify_legal_catalogue
 from .. import (
     ProfileFieldDefinition,
     ProfileFieldType,
@@ -103,6 +106,23 @@ def test_committed_user_profile_schema_exposes_profile_lookup_metadata() -> None
     situacion = schema.field("renta_family.situacion_familiar")
     assert situacion.type is ProfileFieldType.ENUM
     assert "soltero" in situacion.enum_values
+
+
+def test_committed_user_profile_schema_legal_refs_resolve_against_catalogue_and_corpus() -> None:
+    schema = load_user_profile_schema()
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    refs_by_field = {
+        f"{section.key}.{field.key}": field.legal_refs
+        for section in schema.sections
+        for field in section.fields
+        if field.legal_refs
+    }
+    refs = sorted({ref for field_refs in refs_by_field.values() for ref in field_refs})
+
+    assert refs_by_field, "committed user-profile schema carries no field legal_refs"
+    missing = sorted(ref for ref in refs if ref not in catalogues.legal)
+    assert not missing, f"user-profile schema legal_refs absent from registry legal catalogue: {missing}"
+    verify_legal_catalogue({ref: catalogues.legal[ref] for ref in refs}, source_root=bundled_path())
 
 
 def test_user_profile_schema_models_are_strict_frozen_and_forbid_extras() -> None:

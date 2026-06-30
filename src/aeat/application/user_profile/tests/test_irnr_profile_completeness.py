@@ -68,7 +68,7 @@ def test_lifecycle_validation_reports_conditional_irnr_profile_errors() -> None:
         UserProfileFact(path="taxpayer_type.country_of_fiscal_residence", value="GB"),
     )
 
-    report = ProfileValidationService(schema=schema).validate_facts("gb-nonresident", facts)
+    report = ProfileValidationService(schema=schema).validate_facts("77777777-7777-4777-8777-777777777777", facts)
 
     error_paths = {issue.path for issue in report.issues if issue.severity.value == "error"}
     assert "taxpayer_type.representante_fiscal_nif" in error_paths
@@ -78,7 +78,7 @@ def test_lifecycle_validation_reports_conditional_irnr_profile_errors() -> None:
 def test_profile_preflight_reports_irnr_country_as_missing_before_modelo_work() -> None:
     schema = resources().user_profile_schema.singleton
     record = UserProfileRecord(
-        profile_id="irnr-no-country",
+        profile_id="88888888-8888-4888-8888-888888888888",
         display_name="IRNR no country",
         facts=(
             UserProfileFact(path="identity.tax_id", value="X1234567L"),

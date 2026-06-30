@@ -3,7 +3,8 @@
 Overview services are local application projections. These exceptions
 cover failures to assemble status, calendar, agenda, backlog, or explain
 payloads from already-loaded inputs rather than transport or AEAT live
-read failures.
+read failures. They inherit from :class:`~aeat.core.errors.AeatError` so the
+central error registry can map overview failures to stable CLI envelopes.
 """
 
 from __future__ import annotations
@@ -12,20 +13,20 @@ from ...core.errors import AeatError
 
 
 class OverviewError(AeatError):
-    """Base error for overview calendar / agenda / backlog / explain failures."""
+    """Base error for overview status, calendar, agenda, backlog, and explain failures."""
 
 
 class OverviewCalendarError(OverviewError):
-    """Raised when the overview calendar cannot be assembled for the requested window."""
+    """Raised when :func:`aeat.application.overview.build_overview_calendar` fails."""
 
 
 class OverviewAgendaError(OverviewError):
-    """Raised when the overview agenda cannot enumerate next-due actions."""
+    """Raised when :func:`aeat.application.overview.build_overview_agenda` fails."""
 
 
 class OverviewBacklogError(OverviewError):
-    """Raised when the overview backlog cannot classify past-due obligations."""
+    """Raised when :func:`aeat.application.overview.build_overview_backlog` fails."""
 
 
 class OverviewExplainError(OverviewError):
-    """Raised when the overview-explain decomposition fails for the requested obligation."""
+    """Raised when :func:`aeat.application.overview.build_overview_explain` fails."""

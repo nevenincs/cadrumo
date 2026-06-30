@@ -3864,6 +3864,19 @@ applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2024/ManualRenta2024Tomo1_es_es.pdf"
 review_status = "reviewed"
 
+[sources."aeat-renta-2024-manual-deducciones-autonomicas"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/renta/2024/part2-deducciones-autonomicas/source.pdf"
+sha256 = "da4f56d3695d2afab7dbd5107d7a74673b543aca0c2ad9234c60135319eb9daa"
+bytes = 3404339
+retrieved_at = 2026-06-30
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2024-Deducciones-autonomicas/ManualRenta2024Tomo2_es_es.pdf"
+review_status = "reviewed"
+
 [sources."aeat-renta-2025-manual-parte1"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"

@@ -38,6 +38,7 @@ from ._marriage_facts import (
 )
 from ._normalise import normalise_key
 from ._renta_codes import (
+    UE_EEA_COUNTRY_CODES,
     RentaDeclaracionType,
     RentaDisabilityGrade,
     RentaMaritalStatus,
@@ -166,6 +167,7 @@ def _normalize_region_token(raw: str) -> str:
 __all__ = [
     "CCAA",
     "PROFILE_KEYS",
+    "UE_EEA_COUNTRY_CODES",
     "DescendantInfo",
     "ForalRegimeError",
     "ProfileKey",

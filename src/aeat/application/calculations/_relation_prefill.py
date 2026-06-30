@@ -61,29 +61,18 @@ from typing import TYPE_CHECKING, Final
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...application.storage.calc_sheets._records import RelationValue, RelationValues
 from ...core import BindingSourceKind, Modelo, Period
-from ...core.aggregation import RelationAggregationOp
 from ...core.logging import get_logger
 from ...core.parsing import parse_iso8601_date
 from ...core.time import now
 from ...domain.calculations.registry import (
-    BindingId,
-    CasillaId,
     RegistryFoldRequirement,
     RegistryModeloObservation,
     RegistrySnapshot,
     RegistryValidationError,
     RelationId,
     materialize_relation_binding_values,
-    relation_aggregation_op,
     relation_source_requirements,
     resolve_observed_requirement_value,
-    undeclared_casilla_ids,
-    validated_casilla_id,
-)
-from ...domain.iva_compensation import (
-    IvaCompensationPeriodState,
-    build_iva_compensation_carry_forward_report,
-    derive_iva_compensation_year_end_carry_partition,
 )
 from ..aggregation._source_mesh import (
     CalculationSourceContext,
@@ -101,26 +90,6 @@ if TYPE_CHECKING:
 _LOCAL_FILING_PROVENANCE: Final = "local_filing"
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 _log = get_logger(__name__)
-
-
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="relation-prefill casilla constant")
-    except ValueError as exc:
-        raise RuntimeError(f"relation-prefill casilla constant {value!r} is not a CasillaId") from exc
-
-
-#: The shared Modelo 303 source casilla id the two Modelo 390 year-end carry boxes
-#: (97 / 662) fold. The two relations sum/copy this per-period casilla, but the
-#: 97-vs-662 split is a FIFO partition of the year's pending credit, not a
-#: per-period sum, so the relation path is OVERRIDDEN by the FIFO projection for
-#: these two bindings (ADR 2026-06-21-m390-iva-carry-boxes).
-_M303_COMPENSACION_GENERADA_SOURCE: Final[CasillaId] = _casilla_id("iva.compensacion-generada-periodo")
-_303_GENERADA_ID: Final[CasillaId] = _casilla_id("iva.compensacion-generada-periodo")
-_303_APLICADA_ID: Final[CasillaId] = _casilla_id("iva.compensacion-aplicada-periodo")
-_303_DISPONIBLE_ID: Final[CasillaId] = _casilla_id("iva.compensacion-disponible-fin-periodo")
-_303_POSTERIOR_ID: Final[CasillaId] = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
-_ZERO: Final = Decimal("0")
 
 
 def _gather_observations_for_snapshot(
@@ -556,128 +525,6 @@ def _unresolved_relation_diagnostics(
     return tuple(diagnostics)
 
 
-def _observed_value(values: Mapping[CasillaId, Decimal], casilla_id: CasillaId) -> Decimal | None:
-    return values.get(casilla_id)
-
-
-def _validate_303_observation_casilla_ids(observation: RegistryModeloObservation) -> None:
-    from ...core.resources import resources
-
-    snapshot = resources().modelos.authority.snapshot(
-        observation.modelo,
-        filing_year=observation.filing_year,
-        period=observation.period,
-    )
-    invalid = undeclared_casilla_ids(snapshot.revision, observation.casilla_values)
-    if invalid:
-        raise RegistryValidationError(
-            "Modelo 303 compensation observations must use canonical casilla.id values declared by "
-            f"revision {snapshot.revision.id}; got noncanonical references {invalid!r}",
-        )
-
-
-def _period_state_from_303_observation(observation: RegistryModeloObservation) -> IvaCompensationPeriodState:
-    """Reconstruct one filed Modelo 303 period's FIFO compensation state.
-
-    Reads the compensación casillas the 303 calculation already produces
-    (generated / applied / disponible / posterior). The disponible
-    (``available_end_amount``) is the saldo the period carries forward — when
-    absent (an observation that only carries the per-period generada casilla,
-    with no carry chain) it falls back to ``posterior + generated``, which for a
-    stand-alone period equals its own generated credit.
-    """
-    _validate_303_observation_casilla_ids(observation)
-    values = observation.casilla_values
-    generated = _observed_value(values, _303_GENERADA_ID) or _ZERO
-    applied = _observed_value(values, _303_APLICADA_ID) or _ZERO
-    posterior = _observed_value(values, _303_POSTERIOR_ID)
-    available = _observed_value(values, _303_DISPONIBLE_ID)
-    if available is None:
-        available = (posterior or _ZERO) + generated
-    period = Period.from_year_and_code(observation.filing_year, observation.period)
-    return IvaCompensationPeriodState(
-        taxpayer_nif="relation-prefill",
-        filing_year=observation.filing_year,
-        period=period,
-        expediente_id=f"obs-{observation.filing_year}-{observation.period}",
-        status="filed",
-        presented_at=now(),
-        prior_pending_amount=None,
-        applied_amount=applied,
-        pending_for_later_amount=posterior,
-        period_result_amount=None,
-        final_result_amount=None,
-        generated_amount=generated,
-        available_end_amount=available,
-        source_observation_key=f"303:{observation.filing_year}:{observation.period}:relation-prefill",
-    )
-
-
-def _compensation_carry_binding_ids(snapshot: RegistrySnapshot) -> tuple[BindingId | None, BindingId | None]:
-    """Identify the annual carry binding ids for the FIFO partition.
-
-    Resolved structurally from the revision's relations: both fold the shared
-    303 ``iva.compensacion-generada-periodo`` source casilla id;
-    ``iva.anual.compensacion-ultimo-periodo-97`` is the ``copy`` of the last
-    period (its ``source_periods`` does not span the early quarters), and
-    ``iva.anual.compensacion-generada-ejercicio-no-97`` is the ``sum`` of the
-    non-last periods. Either binding id is ``None`` when the revision declares
-    no such relation (every non-390 revision).
-    """
-    last_period_binding_id: BindingId | None = None
-    generated_not_in_last_binding_id: BindingId | None = None
-    for relation in snapshot.revision.relations:
-        if relation.source_casilla_id != _M303_COMPENSACION_GENERADA_SOURCE:
-            continue
-        # The typed relation op self-documents the FIFO partition: the COPY of the
-        # last period is box 97, the SUM of the non-last periods is box 662
-        # (m390-iva-carry-boxes / #25). Both carry-box relations declare an explicit
-        # op, so the COPY default is never relied on here.
-        if relation_aggregation_op(relation) == RelationAggregationOp.COPY:
-            last_period_binding_id = relation.target_binding
-        else:
-            generated_not_in_last_binding_id = relation.target_binding
-    return last_period_binding_id, generated_not_in_last_binding_id
-
-
-def _fifo_compensation_carry_binding_values(
-    snapshot: RegistrySnapshot,
-    observations: tuple[RegistryModeloObservation, ...],
-) -> dict[BindingId, Decimal]:
-    """Derive Modelo 390 annual carry binding values from the FIFO partition.
-
-    The two Modelo 390 year-end carry boxes are ONE FIFO partition of the year's
-    pending compensation credit (no double-count, no drop, the AEAT identity
-    ``[97] + [662] = year pending``), so they are computed together from the
-    single :func:`build_iva_compensation_carry_forward_report` projection over
-    the year's filed 303 period states — never as two independent per-period
-    303-casilla sums. Returns the slot values for whichever of the two bindings
-    the revision declares; empty when the revision has no carry boxes.
-    """
-    last_period_binding_id, generated_not_in_last_binding_id = _compensation_carry_binding_ids(snapshot)
-    if last_period_binding_id is None and generated_not_in_last_binding_id is None:
-        return {}
-    states = tuple(
-        _period_state_from_303_observation(observation)
-        for observation in observations
-        if observation.modelo == Modelo.M303.value and observation.filing_year == snapshot.filing_year
-    )
-    if not states:
-        return {}
-    report = build_iva_compensation_carry_forward_report(states, as_of_year=snapshot.filing_year)
-    partition = derive_iva_compensation_year_end_carry_partition(
-        report,
-        states,
-        filing_year=snapshot.filing_year,
-    )
-    overrides: dict[BindingId, Decimal] = {}
-    if last_period_binding_id is not None:
-        overrides[last_period_binding_id] = partition.last_period_amount
-    if generated_not_in_last_binding_id is not None:
-        overrides[generated_not_in_last_binding_id] = partition.generated_not_in_last_amount
-    return overrides
-
-
 class RelationPrefillSourceResolver:
     """Source-mesh adapter for local ``relation_prefill`` values.
 
@@ -787,21 +634,6 @@ class RelationPrefillSourceResolver:
             resolved_relation_values,
             period=context.period.registry_token,
         )
-        # Modelo 390 year-end carry boxes 97 / 662 are ONE FIFO partition of the
-        # year's pending compensation credit, not two independent per-period 303
-        # sums. The per-period relation values materialised above double-count or
-        # drop the carried pending; override the two slots with the values
-        # derived TOGETHER from the FIFO carry projection so they partition the
-        # year's pending with no double-count and no drop (the AEAT identity).
-        # Only the slots the per-period relation already materialised are
-        # replaced — the box stays owned by this single resolver, so the mesh
-        # exclusive-ownership guard is unaffected.
-        if binding_values:
-            repo = self._repository if self._repository is not None else CalculationObservationRepository()
-            observations = _gather_observations_for_snapshot(snapshot, repository=repo)
-            for binding_id, fifo_value in _fifo_compensation_carry_binding_values(snapshot, observations).items():
-                if binding_id in binding_values:
-                    binding_values[binding_id] = fifo_value
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,

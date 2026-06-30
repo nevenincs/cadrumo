@@ -1,4 +1,4 @@
-# M210 IRNR Phase 1 profile-axis bindings (W09.P41.S402).
+# M210 IRNR profile-axis bindings.
 #
 # Exposes the operator profile's country_of_fiscal_residence field
 # to the formula runtime so the m210_resolve_rate op (S400) can read
@@ -18,6 +18,8 @@ selector = { profile_model = "taxpayer", field = "country_of_fiscal_residence" }
 aggregation = { op = "copy" }
 legal_refs = [
     "trlirnr-rdleg-5-2004:art-2",
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
     "trlirnr-rdleg-5-2004:art-25.1.f",
 ]
 source_refs = ["aeat-modelo-210-procedure"]

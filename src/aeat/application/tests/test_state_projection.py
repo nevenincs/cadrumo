@@ -98,7 +98,7 @@ def _ensure_operator_storage_span() -> None:
         raise RuntimeError("state projection test storage span is not active")
     from ..user_profile._orchestration import profile_create_storage_span
 
-    _ACTIVE_STORAGE_STACK.enter_context(profile_create_storage_span("operator"))
+    _ACTIVE_STORAGE_STACK.enter_context(profile_create_storage_span("11111111-1111-4111-8111-111111111111"))
     _PROFILE_SPAN_OPEN = True
 
 
@@ -107,7 +107,9 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
 
     _ensure_operator_storage_span()
     workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="operator", overrides=overrides),
+        lambda state: register_minimal_profile(
+            state, profile_id="11111111-1111-4111-8111-111111111111", overrides=overrides
+        ),
     )
     bucket_id = workflow_state_repository().load().active_profile_bucket_id()
     assert bucket_id is not None
@@ -341,6 +343,38 @@ def test_modelo_303_readiness_reports_pre_activity_period_refusal() -> None:
     assert "Modelo 303 2026 1T is before the profile activity-start date 2026-05-01" in readiness.profile_refusal
     assert "filing period ends on 2026-03-31" in readiness.profile_refusal
     assert "pre-activity period" in readiness.profile_refusal
+    assert projection.workspace.work_units == 0
+
+
+def test_modelo_349_readiness_uses_applicability_for_attribution_entity() -> None:
+    bucket_id = _register_active_profile(
+        overrides={
+            "identity.tax_id": "E12345674",
+            "taxpayer_type.entity_type": "attribution_entity",
+            "taxpayer_type.irpf_income_categories": "",
+            "irpf.estimation_regime": "",
+            "iva.does_intracomunitario": "true",
+        },
+    )
+
+    projection = build_operator_state_projection(
+        modelo_readiness_requests=(
+            ModeloReadinessRequest(
+                modelo="349",
+                revision_id="2020-y-siguientes",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+            ),
+        ),
+    )
+
+    readiness = projection.modelo_readiness[0]
+    assert readiness.profile_id == bucket_id
+    assert readiness.registry_ready is True
+    assert readiness.profile_ready is False
+    assert readiness.ready is False
+    assert "Modelo 349 is not applicable to the active profile" in readiness.profile_refusal
+    assert "Modelo 349 no aplica" in readiness.profile_refusal
     assert projection.workspace.work_units == 0
 
 

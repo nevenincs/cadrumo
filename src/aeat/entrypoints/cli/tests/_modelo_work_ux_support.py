@@ -105,6 +105,21 @@ def _create_de_nonresident_legal_entity_profile() -> None:
     assert result.exit_code == 0, result.output
 
 
+def _create_attribution_entity_intracom_profile() -> None:
+    result = _invoke(
+        [
+            "config", "profile", "create", "operator",
+            "--quiet", "--accept-defaults",
+            "--entity-type", "attribution_entity",
+            "--tax-id", "E12345674",
+            "--name", "M349 Readiness CB",
+            "--activity", "intracommunity operations",
+            "--does-intracomunitario",
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+
+
 def _attempt_incomplete_profile_create():
     return _invoke(
         [

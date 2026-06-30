@@ -15,8 +15,10 @@ from ......core.classification import SensitivityClass
 from ......core.config import override_settings
 from ......core.errors import build_error_envelope, resolve_error_message
 from ......core.external_constants import UTF_8_ENCODING
+from ..._namespace_registry import BLOB_MANIFEST_SCHEMA_VERSION
 from ...crypto import KEY_SIZE
-from ...errors import BlobIntegrityError, BlobNotFoundError, DecryptionError
+from ...envelope import Envelope
+from ...errors import BlobIntegrityError, BlobNotFoundError, DecryptionError, EnvelopeVersionError
 from ...master_key import EphemeralMasterKeyProvider
 from ...master_key._active_session import NoActiveBucketSessionError, activate_session
 from ...master_key._bucket_session import BucketSession
@@ -249,6 +251,18 @@ class TestIterate:
         }
         assert str(manifest_path) not in caplog.text
         assert ref.sha256_plaintext_hex not in str(excinfo.value)
+
+    def test_manifest_schema_drift_is_refused(self, store: EncryptedBlobStore) -> None:
+        ref = store.put(b"schema-drift-manifest-proof", classification=SensitivityClass.CORPUS)
+        manifest_path = (
+            store.root_dir / "blobs" / ref.sha256_plaintext_hex[:2] / (f"{ref.sha256_plaintext_hex}.manifest.json")
+        )
+        envelope = Envelope[BlobManifest].model_validate_json(manifest_path.read_text(encoding=UTF_8_ENCODING))
+        drifted = envelope.model_copy(update={"schema_version": BLOB_MANIFEST_SCHEMA_VERSION + 1})
+        manifest_path.write_text(drifted.model_dump_json(), encoding=UTF_8_ENCODING)
+
+        with pytest.raises(EnvelopeVersionError):
+            list(store.iter_manifests())
 
 
 class TestMasterKeyIsolation:

@@ -51,7 +51,7 @@ def _validate_revision_closure_sections(
     failures.extend(validate_application_link_closure(prefix, revision, modelo_id=modelo_id))
     failures.extend(validate_reconciliation_total_closure(prefix, revision))
     failures.extend(validate_bracket_table_temporal_coverage(prefix, revision))
-    # D3 / S05: orden_aplicabilidad ratchet gate (hard, load-blocking failures only).
+    # D3 / S05: orden_aplicabilidad gate.
     failures.extend(orden_aplicabilidad_hard_failures(prefix, modelo_id, revision, legal_refs))
     failures.extend(
         validate_construct_closure(

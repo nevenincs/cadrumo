@@ -1,4 +1,4 @@
-"""M390 annual folds M303 1T-4T quarters via cross_model_output relations (LIVE path).
+"""M390 annual folds M303 quarters through relations plus the IVA partition source.
 
 The annual IVA resumen (Modelo 390) casillas
 ``iva.anual.reconciliacion.devengada-303``,
@@ -8,28 +8,29 @@ The annual IVA resumen (Modelo 390) casillas
 (``source_periods=('1T','2T','3T','4T')``), while
 ``iva.anual.compensacion-ultimo-periodo-97`` (casilla 97) and
 ``iva.anual.compensacion-generada-ejercicio-no-97`` (casilla 662) are bound
-by the single-period copy (4T only) and the three-quarter sum (1T-3T)
-compensación relations respectively.
+by ``iva_compensation_annual_partition`` from the filed M303 compensation FIFO
+carry projection.
 
-These five bindings were migrated from the now-retired ``previous_filing``
-path to the canonical ``relation_prefill`` + ``cross_model_output`` relation
-pattern (calculation-aggregation-taxonomy decision, ruling 3).  This
-module proves the wiring works end-to-end on the LIVE operator calculate path
+The ordinary annual-total bindings migrated from the now-retired
+``previous_filing`` path to the canonical ``relation_prefill`` +
+``cross_model_output`` relation pattern (calculation-aggregation-taxonomy
+decision, ruling 3). The compensation boxes are not independent copy/sum folds;
+they are one annual FIFO partition. This module proves both wiring paths work
+end-to-end on the LIVE operator calculate path
 (:func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`):
 four M303 quarterly filings fold into the M390/0A annual reconciliation casillas.
 
 Real-behaviour, real-adapter (real encrypted-SQLite observation store via
 :class:`SecureObjectRepository` + :class:`EphemeralMasterKeyProvider`, real
-registry authority, real calculation engine, real relation resolver, real source
-mesh — no mocks, stubs, skips, or xfail).
+registry authority, real calculation engine, real relation / annual-partition
+resolvers, real source mesh — no mocks, stubs, skips, or xfail).
 
 Value-parity assertion (non-tautological):
-- The five seeded M303 casilla values are DISTINCT non-equal known Decimals so
+- The seeded M303 casilla values are DISTINCT non-equal known Decimals so
   an off-by-one-quarter or coincidental sum cannot satisfy the assertions.
 - The expected casilla values are derived from the seeded observations via the
-  declared aggregation ops (sum / copy), never by re-evaluating the registry
-  formula.  A change in the relation's ``aggregation``, ``source_periods``, or
-  ``source_casilla_id`` would cause the test to fail.
+  declared relation aggregation ops for the ordinary totals and the FIFO
+  partition for boxes 97 / 662, never by re-evaluating the registry formula.
 
 The calculation itself still takes its relation values from filed M303
 observations, but the current work-unit readiness gate requires a ready profile
@@ -93,7 +94,8 @@ def _casilla_id(value: object) -> CasillaId:
     except ValueError as exc:
         raise AssertionError(f"M390 fold-in fixture casilla key {value!r} is not a CasillaId") from exc
 
-# Five seeded M303 casilla ids that the five M390←M303 relations consume.
+# Seeded M303 casilla ids consumed by the three M390←M303 relations and the
+# annual compensation partition source.
 _DEVENGADA: CasillaId = _casilla_id("iva.cuota-devengada-total")
 _DEDUCIBLE: CasillaId = _casilla_id("iva.cuota-deducible-total")
 _RESULTADO: CasillaId = _casilla_id("iva.resultado-regimen-general")
@@ -121,7 +123,7 @@ _M303_BY_PERIOD: dict[str, dict[CasillaId, Decimal]] = {
         _DEVENGADA: Decimal("100.00"),
         _DEDUCIBLE: Decimal("40.00"),
         _RESULTADO: Decimal("60.00"),
-        _COMPENSACION: Decimal("10.00"),  # 1T compensacion (sum 1T-3T, not 4T)
+        _COMPENSACION: Decimal("10.00"),  # 1T compensacion
     },
     "2T": {
         _DEVENGADA: Decimal("250.00"),
@@ -139,7 +141,7 @@ _M303_BY_PERIOD: dict[str, dict[CasillaId, Decimal]] = {
         _DEVENGADA: Decimal("90.00"),
         _DEDUCIBLE: Decimal("30.00"),
         _RESULTADO: Decimal("60.00"),
-        _COMPENSACION: Decimal("300.00"),  # 4T compensacion (copy → casilla 97)
+        _COMPENSACION: Decimal("300.00"),  # 4T compensacion
     },
 }
 
@@ -148,12 +150,14 @@ _M303_BY_PERIOD: dict[str, dict[CasillaId, Decimal]] = {
 _EXPECTED_DEVENGADA_TOTAL = sum(v[_DEVENGADA] for v in _M303_BY_PERIOD.values())  # 620.00
 _EXPECTED_DEDUCIBLE_TOTAL = sum(v[_DEDUCIBLE] for v in _M303_BY_PERIOD.values())  # 210.00
 _EXPECTED_RESULTADO_TOTAL = sum(v[_RESULTADO] for v in _M303_BY_PERIOD.values())  # 410.00
-# compensacion-ultimo-periodo: copy of 4T
+# In this degenerate no-carried-pending fixture, the FIFO partition coincides
+# numerically with the historical copy/sum split: 4T carries 300.00 and the
+# 1T-3T generated amounts remain outside the last period.
 _EXPECTED_COMPENSACION_ULTIMO = _M303_BY_PERIOD["4T"][_COMPENSACION]  # 300.00
-# compensacion-generada-ejercicio-no-97: sum of 1T+2T+3T
 _EXPECTED_COMPENSACION_NO97 = sum(_M303_BY_PERIOD[p][_COMPENSACION] for p in ("1T", "2T", "3T"))  # 45.00
 
 _RELATION_PREFILL_SOURCE = "relation_prefill"
+_ANNUAL_PARTITION_SOURCE = "iva_compensation_annual_partition"
 
 
 @pytest.fixture
@@ -216,12 +220,13 @@ def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
 def _calculate_m390_annual(secure_objects: SecureObjectRepository):
     """Run the live M390/2025/0A calculate over the seeded bucket.
 
-    The five ``relation_prefill`` bindings are deliberately left UNSET so the
-    enrolled :class:`RelationPrefillSourceResolver` folds them from the seeded
-    M303 observation store.  The five ``ledger_iva_aggregation`` bindings also
-    go unset (empty IVA transaction ledger → zero for all ledger casillas).
-    A ready profile is pre-seeded for the work-unit readiness gate; relation
-    assertions still come solely from the seeded M303 observation store.
+    The three ``relation_prefill`` bindings and the two
+    ``iva_compensation_annual_partition`` bindings are deliberately left UNSET
+    so enrolled source resolvers derive them from the seeded M303 observation
+    store. The five ``ledger_iva_aggregation`` bindings also go unset (empty IVA
+    transaction ledger -> zero for all ledger casillas). A ready profile is
+    pre-seeded for the work-unit readiness gate; assertions still come solely
+    from the seeded M303 observation store.
     """
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
@@ -248,21 +253,24 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository):
     )
 
 
-def test_m390_folds_five_m303_relations_on_live_calculate(secure_objects: SecureObjectRepository) -> None:
-    """E2E: the four filed M303 quarters fold into the five M390 annual reconciliation casillas.
+def test_m390_folds_m303_relations_and_compensation_partition_on_live_calculate(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """E2E: filed M303 quarters feed M390 annual relations and compensation partition.
 
-    With four M303/2025 quarterly observations seeded (each carrying the five
+    With four M303/2025 quarterly observations seeded (each carrying the
     fold casillas with DISTINCT values), a live calculate of the M390/2025 annual
-    draws all five ``cross_model_output`` relations through the enrolled
-    :class:`RelationPrefillSourceResolver`:
+    draws three ``cross_model_output`` relations through the enrolled
+    :class:`RelationPrefillSourceResolver` and the two compensation boxes through
+    ``IvaCompensationAnnualPartitionSourceResolver``:
 
     - ``iva.anual.reconciliacion.devengada-303`` == sum(1T-4T devengada)
     - ``iva.anual.reconciliacion.deducible-303`` == sum(1T-4T deducible)
     - ``iva.anual.reconciliacion.resultado-303`` == sum(1T-4T resultado)
-    - ``iva.anual.compensacion-ultimo-periodo-97`` (casilla 97) == copy(4T compensacion)
-    - ``iva.anual.compensacion-generada-ejercicio-no-97`` (casilla 662) == sum(1T-3T compensacion)
+    - ``iva.anual.compensacion-ultimo-periodo-97`` (casilla 97) == FIFO last-period partition
+    - ``iva.anual.compensacion-generada-ejercicio-no-97`` (casilla 662) == FIFO remainder partition
 
-    The asserted values derive from the seeded observations via the declared aggregation ops,
+    The asserted values derive from the seeded observations via the declared source mechanisms,
     never from the registry formula (non-tautological).
     """
     _store_ready_profile(secure_objects)
@@ -293,19 +301,19 @@ def test_m390_folds_five_m303_relations_on_live_calculate(secure_objects: Secure
         f"got {casilla_values[_M390_RECONCILIACION_RESULTADO_303_CASILLA]!r}"
     )
 
-    # Compensacion casillas (copy of 4T and sum of 1T-3T).
+    # Compensacion casillas (FIFO annual partition).
     # casilla_values is keyed by casilla id (not AEAT casilla number).
     # id="iva.anual.compensacion-ultimo-periodo-97" (AEAT number 97)
     # id="iva.anual.compensacion-generada-ejercicio-no-97" (AEAT number 662)
     assert Decimal(casilla_values[_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA]) == _EXPECTED_COMPENSACION_ULTIMO, (
-        f"M390 compensacion-ultimo-periodo-97 (AEAT casilla 97) must copy 4T compensacion "
+        f"M390 compensacion-ultimo-periodo-97 (AEAT casilla 97) must carry the FIFO last-period partition "
         f"{_EXPECTED_COMPENSACION_ULTIMO!r}; got {casilla_values[_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA]!r}"
     )
     assert (
         Decimal(casilla_values[_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA])
         == _EXPECTED_COMPENSACION_NO97
     ), (
-        f"M390 compensacion-generada-ejercicio-no-97 (AEAT casilla 662) must sum 1T-3T compensacion "
+        f"M390 compensacion-generada-ejercicio-no-97 (AEAT casilla 662) must carry the FIFO remainder partition "
         f"{_EXPECTED_COMPENSACION_NO97!r}; "
         f"got {casilla_values[_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA]!r}"
     )
@@ -317,4 +325,10 @@ def test_m390_folds_five_m303_relations_on_live_calculate(secure_objects: Secure
     )
     assert relation_prefill_diags == (), (
         f"relation_prefill must be a claimed source with no diagnostics; got {relation_prefill_diags}"
+    )
+    annual_partition_diags = tuple(
+        diag for diag in result.source_diagnostics if diag.source_kind == _ANNUAL_PARTITION_SOURCE
+    )
+    assert annual_partition_diags == (), (
+        f"iva_compensation_annual_partition must be a claimed source with no diagnostics; got {annual_partition_diags}"
     )

@@ -24,9 +24,11 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("default"),
+        profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
     ):
-        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="default"))
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(state, profile_id="00000000-0000-4000-8000-000000000000")
+        )
         yield
 
 
@@ -669,9 +671,7 @@ def test_classify_from_csv_surplus_cells_are_row_failure(tmp_path: Path) -> None
     tx1, tx2 = _import_two_transactions(tmp_path)
     csv_file = tmp_path / "surplus_cells.csv"
     csv_file.write_text(
-        "transaction_id,classification\n"
-        f"{tx1},BUSINESS,unexpected-extra-cell\n"
-        f"{tx2},BUSINESS\n",
+        f"transaction_id,classification\n{tx1},BUSINESS,unexpected-extra-cell\n{tx2},BUSINESS\n",
         encoding="utf-8",
     )
 

@@ -70,6 +70,19 @@ from ._models import CasillaAggregation, CasillaProvenance
 _LEDGER_CATALOGUE_ID = "ledger"
 
 
+def _first_slice_supported_mappings() -> str:
+    grouped: dict[CasillaId, list[str]] = {}
+    for category, casilla_id in sorted(
+        RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS.items(),
+        key=lambda item: (str(item[1]), item[0].value),
+    ):
+        grouped.setdefault(casilla_id, []).append(category.value)
+    return "; ".join(
+        f"{casilla_id}={', '.join(categories)}"
+        for casilla_id, categories in grouped.items()
+    )
+
+
 class RentaLedgerAggregationIssueReason(StrEnum):
     """Machine-readable reasons why a ledger row did not produce an observation.
 
@@ -378,7 +391,10 @@ def _classify_renta_transaction(
             purchase_invoice_evidence_id=purchase_invoice_evidence_id,
             category_id=category_id,
             reason=RentaLedgerAggregationIssueReason.CATEGORY_OUTSIDE_FIRST_SLICE,
-            detail=f"category {category.value!r} has no first-slice Modelo 100 casilla mapping",
+            detail=(
+                f"category {category.value!r} has no first-slice Modelo 100 casilla mapping; "
+                f"current supported mappings: {_first_slice_supported_mappings()}"
+            ),
         )
     profile = profiles.get(category)
     if profile is None:

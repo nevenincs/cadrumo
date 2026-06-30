@@ -26,7 +26,7 @@ def test_unwrap_returns_result_mapping_when_envelope_present() -> None:
 
 
 def test_unwrap_passes_through_when_envelope_absent() -> None:
-    """Pre-migration bare payloads (no ``schema_version``) pass through unchanged."""
+    """Documented bare payloads (no ``schema_version``) pass through unchanged."""
     payload = json.dumps({"key": "value"})
     assert unwrap_schema_envelope(payload) == {"key": "value"}
 

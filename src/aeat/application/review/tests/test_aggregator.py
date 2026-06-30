@@ -16,7 +16,7 @@ from ....core import Period
 from ....core.config import Settings
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
 from ....domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -51,6 +51,7 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _REVIEW_FINDING_CASILLA: CasillaId = validated_casilla_id("03", surface="_REVIEW_FINDING_CASILLA")
+_PROFILE_ID = "23232323-2323-4232-8232-232323232323"
 
 
 def _summary(text: str = "demo") -> tr:
@@ -75,11 +76,11 @@ def _build_settings(tmp_path: Path) -> Settings:
 def _seed_all_sources(tmp_path: Path) -> Settings:
     """Materialise one pending item in every source under tmp_path."""
     settings = _build_settings(tmp_path)
-    with profile_create_storage_span("test"):
+    with profile_create_storage_span(_PROFILE_ID):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
                 state,
-                profile_id="test",
+                profile_id=_PROFILE_ID,
                 overrides={"identity.tax_id": "00000000T"},
             ),
         )
@@ -104,7 +105,7 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
         )
         transaction = Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
         catalogue = TransactionCatalogue.from_transactions((transaction,))
-        TransactionCatalogueRepository(bucket_id="test").save(catalogue)
+        TransactionCatalogueRepository(bucket_id=_PROFILE_ID).save(catalogue)
 
         line = InvoiceLine(
             description="Consultoría",
@@ -139,11 +140,19 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
             code="casilla-out-of-range",
             message=_summary("range"),
         )
+        period = Period.from_year_and_code(2026, "1T")
         draft = ModeloDraft(
             draft_id="d1",
             modelo="130",
-            period=Period.from_year_and_code(2026, "1T"),
+            period=period,
             profile_tax_id="00000000T",
+            subject_tax_id="00000000T",
+            snapshot_ref=RegistrySnapshotRef(
+                modelo="130",
+                revision_id=_schema_version(),
+                modelo_year=period.year,
+                period=period.registry_token,
+            ),
             status=ModeloDraftStatus.BORRADOR,
             values=(
                 ModeloValue(
@@ -166,8 +175,8 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
 
 
 def _collect(settings: Settings, **kwargs: Any) -> tuple[Any, ...]:
-    with profile_storage_session("test"):
-        return ReviewQueue.collect(settings, bucket_id="test", **kwargs)
+    with profile_storage_session(_PROFILE_ID):
+        return ReviewQueue.collect(settings, bucket_id=_PROFILE_ID, **kwargs)
 
 
 def test_collect_returns_one_item_per_source(tmp_path: Path) -> None:
@@ -215,5 +224,5 @@ def test_collect_state_all_matches_pending_today(tmp_path: Path) -> None:
 
 def test_collect_returns_empty_tuple_when_no_sources_present(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
-    with profile_create_storage_span("test"):
-        assert ReviewQueue.collect(settings, bucket_id="test") == ()
+    with profile_create_storage_span(_PROFILE_ID):
+        assert ReviewQueue.collect(settings, bucket_id=_PROFILE_ID) == ()

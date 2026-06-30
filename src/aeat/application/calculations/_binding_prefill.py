@@ -158,7 +158,7 @@ class _GatheredObservation(BaseModel):
     source_kind: str
     casilla_source_kinds: Mapping[CasillaId, str]
     unstamped_revision_advisory: bool = False
-    """Non-blocking advisory: source observation has no revision stamp."""
+    """Non-blocking advisory: the source revision stamp could not be re-confirmed."""
 
 
 def _gathered_observation(
@@ -228,11 +228,11 @@ class PrefilledBinding(BaseModel):
     source_periods: tuple[str, ...]
     resolved_at: datetime
     unstamped_revision_advisory: bool = False
-    """Non-blocking advisory: source observation has no revision stamp.
+    """Non-blocking advisory: the source revision stamp could not be re-confirmed.
 
-    True when the carry proceeded from an unstamped observation without a revision
-    provenance stamp (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2).
-    Operators should re-file the source period to obtain a stamped record.
+    True when the carry proceeded after the source context could not be resolved
+    for stamp re-confirmation. Operators should re-pull the source period to
+    obtain a currently verifiable record.
     """
 
 
@@ -253,7 +253,7 @@ class BindingPrefillReport(BaseModel):
 
     @property
     def has_unstamped_revision_advisory(self) -> bool:
-        """True when any prefilled binding carries an unstamped-revision advisory."""
+        """True when any prefilled binding carries a revision re-confirmation advisory."""
         return any(item.unstamped_revision_advisory for item in self.prefilled)
 
 
@@ -296,7 +296,7 @@ def _gather_grouped_member_observations(
         obs = payload.observation
         if (obs.modelo, obs.filing_year, obs.period) != req_key:
             continue
-        # R2 carry gate: divergent stamp → skip; missing/indeterminate stamp → advisory.
+        # R2 carry gate: divergent stamp -> skip; indeterminate source context -> advisory.
         diverges, advisory = _revision_carry_outcome(payload)
         if diverges:
             continue
@@ -312,8 +312,8 @@ def _gather_grouped_member_observations(
 def _gathered_from_payload(payload: _ObservationEnvelopePayload | None) -> _GatheredObservation | None:
     """Apply the R2 carry gate to a single-key payload.
 
-    Divergent stamp → refuse the carry (return ``None``); missing/indeterminate
-    stamp → carry with the non-blocking advisory set.
+    Divergent stamp refuses the carry; an indeterminate source context carries
+    with the non-blocking advisory set.
     """
     if payload is None:
         return None
@@ -648,10 +648,9 @@ def _advisory_for_binding(
     source_filing_year: int,
     source_periods: tuple[str, ...],
 ) -> bool:
-    """Return True when any gathered observation matching this binding's source carries the unstamped advisory.
+    """Return True when any gathered observation matching this binding's source carries the advisory.
 
-    ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2:
-    propagates the unstamped-record non-blocking advisory from the source observation
+    Propagates the revision re-confirmation advisory from the source observation
     through to the :class:`PrefilledBinding` so callers can surface it to operators.
     """
     required_periods = set(source_periods)
@@ -795,9 +794,8 @@ def resolve_bindings_from_local_store(
             ),
         )
         source_casilla_ids = binding_source_casilla_ids(binding)
-        # Propagate the unstamped-revision advisory from the gathered source observation
+        # Propagate the revision re-confirmation advisory from the gathered source observation
         # for this binding's (modelo, filing_year, periods) to the prefilled record
-        # (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2).
         unstamped_advisory = _advisory_for_binding(
             observations,
             source_modelo=source_modelo,

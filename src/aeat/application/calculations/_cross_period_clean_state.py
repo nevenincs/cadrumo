@@ -608,21 +608,21 @@ class _MemberHistory(NamedTuple):
 
 
 def _revision_carry_check(
-    stamped_revision_id: str | None,
+    stamped_revision_id: str,
     source_modelo: str,
     source_filing_year: int,
     source_period: Period,
 ) -> tuple[list[CrossPeriodCleanStateBlocker], bool]:
-    """Return (blockers, unstamped_advisory) for a carry-read revision check.
+    """Return (blockers, advisory) for a carry-read revision check.
 
     Thin adapter over the single shared
     :func:`~aeat.application.calculations._revision_carry_gate.revision_carry_outcome`
-    gate (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2): it maps
+    gate: it maps
     the shared ``(diverges, advisory)`` decision onto this site's blocker shape —
     a divergent stamp becomes a ``REGISTRY_REVISION_DIVERGENCE`` blocker, an
-    absent/unverifiable stamp a non-blocking advisory — so the cross-period
-    clean-state, binding-prefill, and relation-prefill carry reads share one
-    law-determined re-confirmation.
+    indeterminate source context becomes a non-blocking advisory — so the
+    cross-period clean-state, binding-prefill, and relation-prefill carry reads
+    share one law-determined re-confirmation.
     """
     diverges, advisory = revision_carry_outcome(
         stamped_revision_id,

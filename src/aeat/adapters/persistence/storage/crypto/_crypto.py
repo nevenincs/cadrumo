@@ -11,8 +11,8 @@ The on-wire shape of :class:`EncryptedBlob` is deliberately minimal —
 ``nonce || ciphertext_with_tag``. The AEAD identifier and any version
 metadata live in the envelope record (see :mod:`aeat.adapters.persistence.storage`'s
 :class:`EncryptionMetadata`), so a future swap to e.g. ChaCha20-Poly1305
-or an Argon2id-derived KEK is a forward-migrator addition rather than a
-wire-format break.
+or an Argon2id-derived KEK can define a new current envelope contract
+without changing this primitive blob shape.
 """
 
 from __future__ import annotations

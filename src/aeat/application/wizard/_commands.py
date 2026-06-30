@@ -517,13 +517,12 @@ def _format_missing_flags(missing: tuple[str, ...]) -> str:
 
 
 def _missing_filing_baseline_flags(flow: WizardFlow, answers: BaseModel) -> tuple[str, ...]:
-    """Return create-time profile facts that must exist before persistence.
+    """Return filing identity facts that must exist before persistence.
 
-    The schema keeps filing identity facts optional so old records can still be
-    loaded and projected. New non-interactive profile creation and edits are
-    stricter: they must leave a taxpayer-type axis and a filing identity,
-    otherwise modelo work will refuse later and the user has to diagnose a
-    broken persisted profile.
+    Wizard answer models can carry partial values while prompts are being
+    collected or projected. Persisted create and edit operations are stricter:
+    they must leave a taxpayer-type axis and a filing identity, otherwise
+    modelo work would fail later against an already-committed profile.
     """
     from ..user_profile import missing_filing_baseline_flags as _missing_profile_filing_baseline_flags
     from ._persistence import serialise_answers

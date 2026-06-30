@@ -107,7 +107,7 @@ def _store_operator_profile(*, created_at: datetime) -> None:
     activity_start_date = _activity_start_date_for_period(_LAST_PERIOD if created_at.month == 12 else _MID_PERIOD)
     UserProfileLifecycleRepository(bucket_id="operator").save(
         UserProfileRecord(
-            profile_id="operator",
+            profile_id="11111111-1111-4111-8111-111111111111",
             display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_TAX_ID),

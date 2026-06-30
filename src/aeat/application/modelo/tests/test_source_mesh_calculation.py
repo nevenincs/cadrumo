@@ -53,8 +53,8 @@ _READY_PROFILE_FACTS = (
     UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
     UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
     UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-    UserProfileFact(path="renta_taxpayer.sex", value="varon"),
-    UserProfileFact(path="renta_taxpayer.marital_status", value="soltero"),
+    UserProfileFact(path="renta_taxpayer.sex", value="H"),
+    UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
     UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
     UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
     UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
@@ -70,7 +70,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
         UserProfileLifecycleRepository(bucket_id="bucket-a", objects=profile.repository).save(
             UserProfileRecord(
-                profile_id="bucket-a",
+                profile_id="26262626-2626-4262-8262-262626262626",
                 display_name="Source mesh ready profile",
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,

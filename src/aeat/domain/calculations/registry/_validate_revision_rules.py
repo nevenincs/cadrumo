@@ -4,7 +4,7 @@ Validates temporal window overlap, informative-class invariants, bracket-table
 coverage, and reconciliation-total closure for a :class:`ModeloRevision` within
 its :class:`ModeloDefinition`.
 
-The D3 ``orden_aplicabilidad`` ratchet gate lives in its sibling module
+The D3 ``orden_aplicabilidad`` gate lives in its sibling module
 :mod:`aeat.domain.calculations.registry._validate_orden_aplicabilidad`.
 """
 

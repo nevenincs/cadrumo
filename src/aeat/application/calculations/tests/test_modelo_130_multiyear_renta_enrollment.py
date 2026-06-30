@@ -142,7 +142,7 @@ _Q1_INPUTS: dict[CasillaId, Decimal] = {
 def _seed_ready_profile(objects: object) -> None:
     UserProfileLifecycleRepository(bucket_id="default", objects=objects).save(
         UserProfileRecord(
-            profile_id="default",
+            profile_id="00000000-0000-4000-8000-000000000000",
             display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),

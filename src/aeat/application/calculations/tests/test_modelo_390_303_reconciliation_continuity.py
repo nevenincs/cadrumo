@@ -49,6 +49,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
@@ -63,6 +64,8 @@ from ....domain.calculations.registry import (
 )
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from ....tests.secure_sql import isolated_runtime_profile
+from ...aggregation import CalculationSourceContext
+from .._iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import resolve_relations_from_local_store
@@ -231,9 +234,22 @@ def _calculate_390_annual(
     relation_vals = resolve_relations_from_local_store(snapshot, repository=repository)
     relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values_map, period="0A")
+    annual_partition = IvaCompensationAnnualPartitionSourceResolver(
+        repository=repository,
+        registry_snapshot=snapshot,
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id="m390-reconciliation-continuity",
+            modelo=_MODELO,
+            filing_year=filing_year,
+            period=Period.from_year_and_code(filing_year, "0A"),
+            revision=snapshot.revision,
+        ),
+    )
     binding_values = {
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, annual_ledger),
         **relation_binding_values,
+        **annual_partition.binding_values,
     }
     inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(

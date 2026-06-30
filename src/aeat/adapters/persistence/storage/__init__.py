@@ -1,4 +1,4 @@
-"""Persistence layer and migrations entry point.
+"""Persistence layer public API.
 
 Public API of the storage subpackage. Callers outside
 :mod:`aeat.adapters.persistence.storage` must import only from here; internal
@@ -201,7 +201,6 @@ from .envelope._envelope import (
     CipherEnvelope,
     EncryptionMetadata,
     Envelope,
-    EnvelopeMigrator,
     load_encrypted_envelope,
     load_envelope,
     reencrypt_envelope_file,
@@ -400,7 +399,6 @@ __all__ = [
     "EncryptionError",
     "EncryptionMetadata",
     "Envelope",
-    "EnvelopeMigrator",
     "EnvelopeVersionError",
     "EphemeralMasterKeyProvider",
     "FileFallbackMasterKeyProvider",

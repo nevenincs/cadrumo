@@ -38,7 +38,7 @@ def _invoke_profile(args: Sequence[str]) -> Result:
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("default"),
+        profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
     ):
         yield
 
@@ -60,7 +60,7 @@ def _seed_active_profile(*, without_taxpayer_axes: bool = False) -> None:
     repo.update(
         lambda state: register_minimal_profile(
             state,
-            profile_id="default",
+            profile_id="00000000-0000-4000-8000-000000000000",
             overrides=overrides,
         ),
     )
@@ -286,7 +286,7 @@ def test_compare_emits_json_payload_with_typed_rows() -> None:
 
     raw = json.loads(result.output)
     # Every CLI verb now emits the centralised {schema_version, command,
-    # result, warnings} envelope; the operator-visible payload lives
+    # status, result, notices} envelope; the operator-visible payload lives
     # under ``result``.
     payload = raw["result"] if isinstance(raw, dict) and "schema_version" in raw else raw
     assert payload["snapshot_id"]

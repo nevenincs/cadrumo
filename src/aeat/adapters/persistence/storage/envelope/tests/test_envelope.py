@@ -14,7 +14,7 @@ from ......core.classification import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
 from ...errors import ClassificationError, DecryptionError, EnvelopeVersionError, StorageValidationError
 from .. import EncryptionMetadata, Envelope
-from .._envelope import EnvelopeMigrator, load_envelope, save_envelope
+from .._envelope import load_envelope, save_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -194,7 +194,7 @@ class TestClassificationGate:
 
 
 class TestVersionGate:
-    """Future-version envelopes are refused; older versions migrate forward."""
+    """Envelope versions must match the consumer's current contract."""
 
     def test_future_version_raises(self, tmp_path: Path) -> None:
         env = Envelope[_DemoPayloadV1](
@@ -213,7 +213,7 @@ class TestVersionGate:
                 max_supported_version=1,
             )
 
-    def test_no_migrator_chain_raises(self, tmp_path: Path) -> None:
+    def test_older_version_raises(self, tmp_path: Path) -> None:
         env = Envelope[_DemoPayloadV1](
             schema_version=1,
             written_at=_now_utc(),
@@ -229,39 +229,6 @@ class TestVersionGate:
                 expected_class=SensitivityClass.OPERATIONAL,
                 max_supported_version=2,
             )
-
-    def test_migrator_chain_advances_version(self, tmp_path: Path) -> None:
-        env = Envelope[_DemoPayloadV1](
-            schema_version=1,
-            written_at=_now_utc(),
-            classification=SensitivityClass.OPERATIONAL,
-            payload=_DemoPayloadV1(name="x", count=1),
-        )
-        target = tmp_path / "env.json"
-        save_envelope(env, target)
-
-        class _OneToTwo:
-            source_version = 1
-            target_version = 2
-
-            def migrate(self, envelope):
-                return Envelope[_DemoPayloadV1](
-                    schema_version=2,
-                    written_at=envelope.written_at,
-                    classification=envelope.classification,
-                    payload=envelope.payload,
-                    encryption=envelope.encryption,
-                )
-
-        migrator: EnvelopeMigrator[_DemoPayloadV1] = _OneToTwo()
-        loaded = load_envelope(
-            target,
-            Envelope[_DemoPayloadV1],
-            expected_class=SensitivityClass.OPERATIONAL,
-            max_supported_version=2,
-            migrators=(migrator,),
-        )
-        assert loaded.schema_version == 2
 
 
 class TestEncryptionMetadata:

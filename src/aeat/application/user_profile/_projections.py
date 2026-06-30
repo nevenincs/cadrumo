@@ -141,6 +141,12 @@ def projection_for_taxpayer(
     The single coercion path goes through :func:`taxpayer_profile_from_mapping`
     so canonical-token semantics stay in lockstep with the wizard descriptor.
     """
+    # The deadline-domain projection reads core registration slots populated by
+    # the application wizard layer. Import the concrete modules here so service
+    # callers outside the CLI startup path get the same canonical projection.
+    from ..wizard import _catalogue as _wizard_catalogue  # noqa: F401
+    from ..wizard import _persistence as _wizard_persistence  # noqa: F401
+
     if isinstance(facts, UserProfileRecord | UserProfileSnapshot):
         mapping = record_to_path_values(facts)
     else:
