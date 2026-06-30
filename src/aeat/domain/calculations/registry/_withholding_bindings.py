@@ -14,7 +14,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG
-from ....core.aggregation import BindingAggregationOp, RetencionClave, RowSetGroupingKind
+from ....core.aggregation import BindingAggregationOp, BindingSourceKind, RetencionClave
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._binding_selector_utils import unique_tuple, uppercase_alpha_code
@@ -193,7 +193,7 @@ def withholding_binding_requirements(
     """
     grouped: dict[tuple[str, ...], set[BindingId]] = {}
     for binding in revision.bindings:
-        if binding.source != RowSetGroupingKind.WITHHOLDING:
+        if binding.source != BindingSourceKind.WITHHOLDING:
             continue
         selector = _validated_withholding_selector(binding)
         key = tuple(sorted(selector.claves))
@@ -230,7 +230,7 @@ def resolve_withholding_binding_values(
     available = tuple(observations)
     resolved: dict[BindingId, Decimal] = {}
     for binding in revision.bindings:
-        if binding.source != RowSetGroupingKind.WITHHOLDING:
+        if binding.source != BindingSourceKind.WITHHOLDING:
             continue
         selector = _validated_withholding_selector(binding)
         if selector.fact == "row_field":
@@ -277,7 +277,7 @@ def resolve_withholding_binding_row_values(
         list[tuple[DataBindingDefinition, _WithholdingSelector]],
     ] = {}
     for binding in revision.bindings:
-        if binding.source != RowSetGroupingKind.WITHHOLDING:
+        if binding.source != BindingSourceKind.WITHHOLDING:
             continue
         selector = _validated_withholding_selector(binding)
         if selector.fact != "row_field":
