@@ -25,7 +25,6 @@ from collections.abc import Iterator
 
 import pytest
 
-from .....core.resources import resources
 from .._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from .._groi_oracle import GROI_ORACLE_ID, GroiOracle
 from .._live_parity import (
@@ -37,6 +36,7 @@ from .._live_parity import (
 )
 from .._renta_web_open_oracle import RentaWebOpenOracle
 from .._schema import ModeloDefinition
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -49,7 +49,8 @@ RENTA_WEB_OPEN_ORACLE_ID = "modelo-100-renta-web-open"
 
 
 def _committed_modelos() -> tuple[ModeloDefinition, ...]:
-    return tuple(resources().modelos.all())
+    modelos, _catalogues = _committed_registry_tree()
+    return modelos
 
 
 def _full_production_catalogue() -> LiveParityCatalogue:

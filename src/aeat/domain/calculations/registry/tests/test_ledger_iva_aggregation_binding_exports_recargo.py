@@ -28,8 +28,14 @@ from ._ledger_iva_aggregation_support import (
     _calculate_303_from_observations,
     _observation,
 )
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _m303_revision(revision_id: str):
+    modelo, _catalogues = _committed_modelo("303")
+    return modelo.revisions[revision_id]
 
 
 def test_box_59_carries_substantive_intra_community_supply_grounding() -> None:
@@ -42,7 +48,7 @@ def test_box_59_carries_substantive_intra_community_supply_grounding() -> None:
     registry revision, both 2009 and 2023.
     """
     for revision_id in ("2009-y-siguientes", "2023-y-siguientes"):
-        revision = resources().modelos.get("303").revisions[revision_id]
+        revision = _m303_revision(revision_id)
         casilla_59 = next(casilla for casilla in revision.casillas if casilla.number == "59")
         refs = tuple(casilla_59.legal_refs)
         assert "ley-37-1992:art-25" in refs, f"{revision_id}: box 59 must cite art-25"
@@ -61,7 +67,7 @@ def test_box_60_carries_substantive_export_grounding() -> None:
     and 2023.
     """
     for revision_id in ("2009-y-siguientes", "2023-y-siguientes"):
-        revision = resources().modelos.get("303").revisions[revision_id]
+        revision = _m303_revision(revision_id)
         casilla_60 = next(casilla for casilla in revision.casillas if casilla.number == "60")
         refs = tuple(casilla_60.legal_refs)
         assert "ley-37-1992:art-21" in refs, f"{revision_id}: box 60 must cite art-21"
@@ -75,7 +81,7 @@ def test_box_60_binding_selects_export_and_assimilated_export_categories() -> No
         IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
     }
     for revision_id in ("2009-y-siguientes", "2023-y-siguientes"):
-        revision = resources().modelos.get("303").revisions[revision_id]
+        revision = _m303_revision(revision_id)
         binding = next(item for item in revision.bindings if item.id == "modelo-303-casilla-60-exportaciones-base")
         assert set(selector_as_dict(binding)["categories"]) == expected
         assert "ley-37-1992:art-21" in binding.legal_refs, f"{revision_id}: binding must cite art-21"
@@ -196,7 +202,7 @@ def test_recargo_equivalencia_cuota_aggregates_by_tier_from_recargo_amount() -> 
     routed by category to the matching tier binding — not from re-running the sum
     under test. Proves the recargo_amount_sum fact closes the recargo silent zero.
     """
-    revision = resources().modelos.get("303").revisions["2023-y-siguientes"]
+    revision = _m303_revision("2023-y-siguientes")
     general = _observation(
         ledger_id="rec-general",
         category=IvaCategory.DOMESTIC_GENERAL_21,
