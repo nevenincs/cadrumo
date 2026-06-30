@@ -261,7 +261,6 @@ _ANEXO_C_ENERGY_EXCESS_ROLES = frozenset(
     }
 )
 _ANEXO_B_IMPORTE_SATISFECHO_ROLE = "irpf_anexo_b_importe_satisfecho"
-_LEGACY_ANEXO_B_RENTAL_AMOUNT_ROLE = "irpf_anexo_b_rental_amount"
 _ANEXO_B_IMPORTE_SATISFECHO_LABEL = "Cantidades satisfechas"
 _ANEXO_B_IMPORTE_SATISFECHO_SECTIONS = frozenset(
     {
@@ -272,7 +271,6 @@ _ANEXO_B_IMPORTE_SATISFECHO_SECTIONS = frozenset(
     }
 )
 _ANEXO_B_IMPORTE_ANUAL_SATISFECHO_ROLE = "irpf_anexo_b_importe_anual_satisfecho"
-_LEGACY_ANEXO_B_SERVICE_AMOUNT_ROLE = "irpf_anexo_b_service_amount"
 _ANEXO_B_IMPORTE_ANUAL_SATISFECHO_LABEL = "Importe anual satisfecho"
 _ANEXO_B_IMPORTE_ANUAL_SATISFECHO_SECTIONS = frozenset(
     {
@@ -283,7 +281,6 @@ _ANEXO_B_IMPORTE_ANUAL_SATISFECHO_SECTIONS = frozenset(
     }
 )
 _ANEXO_B_OTROS_GASTOS_IMPORTE_ANUAL_ROLE = "irpf_anexo_b_otros_gastos_importe_anual"
-_LEGACY_ANEXO_B_OTHER_SERVICE_AMOUNT_ROLE = "irpf_anexo_b_other_service_amount"
 _ANEXO_B_OTROS_GASTOS_SECTION = "an_b_inf_adc_aia"
 _ANEXO_B_OTROS_GASTOS_LABELS = {
     2024: "Importe anual satisfecho",
@@ -291,11 +288,8 @@ _ANEXO_B_OTROS_GASTOS_LABELS = {
 }
 _ANEXO_B_AAV_SECTION = "an_b_inf_adc_aav"
 _ANEXO_B_AAV_IMPORTE_SATISFECHO_ROLE = "irpf_anexo_b_aav_importe_satisfecho"
-_LEGACY_ANEXO_B_AAV_AMOUNT_CURRENT_ROLE = "irpf_anexo_b_aav_amount_current"
 _ANEXO_B_AAV_IMPORTE_APLICADO_ROLE = "irpf_anexo_b_aav_importe_aplicado"
-_LEGACY_ANEXO_B_AAV_AMOUNT_APPLIED_ROLE = "irpf_anexo_b_aav_amount_applied"
 _ANEXO_B_AAV_IMPORTE_PENDIENTE_ROLE = "irpf_anexo_b_aav_importe_pendiente"
-_LEGACY_ANEXO_B_AAV_AMOUNT_PENDING_ROLE = "irpf_anexo_b_aav_amount_pending"
 _ANEXO_B_AAV_AMOUNT_ROWS = {
     "2202": ("Importe total satisfecho en 2025", _ANEXO_B_AAV_IMPORTE_SATISFECHO_ROLE),
     "2203": ("Importe satisfecho que se aplica en el ejercicio", _ANEXO_B_AAV_IMPORTE_APLICADO_ROLE),
@@ -323,10 +317,8 @@ _ANEXO_B_BALEARES_NACIMIENTO_ROWS = {
         "irpf_anexo_b_deduccion_nacimiento_cobro_anticipado_regularizar",
     ),
 }
-_LEGACY_ANEXO_B_BIRTH_ADVANCE_REGULARIZE_ROLE = "irpf_anexo_b_birth_advance_regularize"
 _ANEXO_B_ACCOUNT_SECTION = "an_b_inf_ad_cm_viv_hab"
 _ANEXO_B_CM_VIV_HAB_TITULAR_CUENTA_ROLE = "irpf_anexo_b_cm_viv_hab_titular_cuenta"
-_LEGACY_ANEXO_B_ACCOUNT_HOLDER_KEY_ROLE = "irpf_anexo_b_account_holder_key"
 _ANEXO_B_ACCOUNT_OPENING_DATE_ROLE = "irpf_anexo_b_account_opening_date"
 _ANEXO_B_ACCOUNT_IDENTIFIER_ROLE = "irpf_anexo_b_account_identifier"
 _ANEXO_B_ACCOUNT_FOREIGN_FLAG_ROLE = "irpf_anexo_b_account_foreign_flag"
@@ -560,7 +552,6 @@ _LEGACY_MADRID_REUSED_ID_ROLES = frozenset(
     }
 )
 _ANEXO_B_TOTAL_CANTIDADES_INVERTIDAS_ROLE = "irpf_anexo_b_total_cantidades_invertidas_deduccion"
-_LEGACY_ANEXO_B_SERVICE_AMOUNT_TOTAL_ROLE = "irpf_anexo_b_service_amount_total"
 _ANEXO_B_TOTAL_CANTIDADES_INVERTIDAS_LABEL = "Importe total de las cantidades invertidas con derecho a deducción"
 _ANEXO_B_TOTAL_CANTIDADES_INVERTIDAS_SERVICE_SECTIONS = frozenset(
     {
@@ -570,13 +561,10 @@ _ANEXO_B_TOTAL_CANTIDADES_INVERTIDAS_SERVICE_SECTIONS = frozenset(
     }
 )
 _ANEXO_B_CONTRIBUYENTE_DERECHO_CLAVE_ROLE = "irpf_anexo_b_contribuyente_con_derecho_clave"
-_LEGACY_ANEXO_B_CONTRIBUTOR_KEY_ROLE = "irpf_anexo_b_contributor_key"
 _ANEXO_B_CONTRIBUYENTE_DERECHO_LABEL = "Contribuyente con derecho a deducción"
 _ANEXO_B_INVERSION_TOTAL_ROLE = "irpf_anexo_b_importe_total_deduccion_por_tipo"
-_LEGACY_ANEXO_B_INVESTMENT_AMOUNT_TOTAL_ROLE = "irpf_anexo_b_investment_amount_total"
 _ANEXO_B_INVERSION_TOTAL_LABEL_PREFIX = "Importe total de las cantidades"
 _ANEXO_B_INVERSION_IMPORTE_ROLE = "irpf_anexo_b_deduccion_inversion_importe"
-_LEGACY_ANEXO_B_INVESTMENT_AMOUNT_ROLE = "irpf_anexo_b_investment_amount"
 _ANEXO_B_INVERSION_IMPORTE_LABEL = "Importe de la inversión con derecho a deducción"
 _ANEXO_B_INVERSION_TOTAL_SECTIONS = frozenset(
     {
@@ -594,14 +582,10 @@ _ANEXO_B_INVERSION_TOTAL_SECTIONS = frozenset(
 )
 _ANEXO_B_EPS_SECTION = "an_b_inf_adc_eps"
 _ANEXO_B_PRIMA_SEGURO_CREDITO_ROLE = "irpf_anexo_b_prima_seguro_credito_arrendamiento"
-_LEGACY_ANEXO_B_INSURANCE_PREMIUM_ROLE = "irpf_anexo_b_insurance_premium"
 _ANEXO_B_PRIMA_SEGURO_LABEL = "Primas satisfechas"
 _ANEXO_B_PRIMAS_SEGURO_TOTAL_ROLE = "irpf_eps_primas_seguro_deducibles_total"
-_LEGACY_ANEXO_B_INSURANCE_PREMIUM_TOTAL_ROLE = "irpf_anexo_b_insurance_premium_total"
 _ANEXO_B_TOTAL_SATISFECHO_ROLE = "irpf_anexo_b_importe_total_satisfecho"
-_LEGACY_ANEXO_B_RENTAL_TOTAL_ROLE = "irpf_anexo_b_rental_amount_total"
 _ANEXO_B_CANTIDADES_DEDUCIBLES_ROLE = "irpf_anexo_b_cantidades_deducibles_satisfechas"
-_LEGACY_ANEXO_B_RENTAL_DEDUCTION_ELIGIBILITY_ROLE = "irpf_anexo_b_rental_deduccion_eligibility"
 _ANEXO_B_CANTIDADES_DEDUCIBLES_LABEL = "Cantidades satisfechas con derecho a deducción"
 _ANEXO_B_TOTAL_SATISFECHO_SECTIONS = frozenset(
     {
