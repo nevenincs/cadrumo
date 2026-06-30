@@ -141,7 +141,7 @@ Reconcile newly arrived persona artifacts and evidence gaps while keeping artifa
 
 - [x] `W06.P12.S33` - Inventory newly arrived persona roots and transcript summary evidence since the W05 checkpoint; `tmp/personas`.
 - [x] `W06.P12.S34` - Repair or document persona artifact evidence gaps for roots lacking local transcript BOE export or approval proof; `tmp/personas`.
-- [ ] `W06.P12.S35` - Keep the ignored closeout ledger and vault audit in sync without promoting scratch roots to product truth; `tmp/personas/_cpdefix-closeout-ledger.md`.
+- [x] `W06.P12.S35` - Keep the ignored closeout ledger and vault audit in sync without promoting scratch roots to product truth; `tmp/personas/_cpdefix-closeout-ledger.md`.
 
 ### Phase `W06.P13` - next behavior defect dispatch
 
