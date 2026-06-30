@@ -56,9 +56,9 @@ Keep the keyless path append-only so two genuine identical same-day movements bo
 
 Pin the verification report id to the verification outcome and drop run_at from identity so non-granting retries upsert in place instead of accumulating.
 
-- [ ] `P03.S08` - Change derive_verification_report_id to fold the verification outcome of calculation_revision_id, completeness_status, the findings tuple, and verified_by, and drop run_at from the identity; `src/aeat/domain/modelos/_verification_report.py`.
-- [ ] `P03.S09` - Update the VerificationReport model validator to re-check the new outcome-pinned id derivation and retain run_at as a non-identity last-seen body field; `src/aeat/domain/modelos/_verification_report.py`.
-- [ ] `P03.S10` - Confirm verify_modelo_revision upserts the outcome-pinned report in place so a non-granting retry collapses to one report while the granting path stays self-limiting; `src/aeat/application/modelo/_verification_actions.py`.
+- [x] `P03.S08` - Change derive_verification_report_id to fold the verification outcome of calculation_revision_id, completeness_status, the findings tuple, and verified_by, and drop run_at from the identity; `src/aeat/domain/modelos/_verification_report.py`.
+- [x] `P03.S09` - Update the VerificationReport model validator to re-check the new outcome-pinned id derivation and retain run_at as a non-identity last-seen body field; `src/aeat/domain/modelos/_verification_report.py`.
+- [x] `P03.S10` - Confirm verify_modelo_revision upserts the outcome-pinned report in place so a non-granting retry collapses to one report while the granting path stays self-limiting; `src/aeat/application/modelo/_verification_actions.py`.
 
 ### Phase `P04` - Agent-harness and CLI idempotency-key contract
 
