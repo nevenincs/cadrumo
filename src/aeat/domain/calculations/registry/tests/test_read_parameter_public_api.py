@@ -14,12 +14,9 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.resources import bundled_path
 from .. import RegistryValidationError, read_parameter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def test_read_parameter_returns_a_decimal_for_a_registered_modelo_100_parameter() -> None:
@@ -34,7 +31,6 @@ def test_read_parameter_returns_a_decimal_for_a_registered_modelo_100_parameter(
         "2025",
         "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
         date_context={"filing_period": date(2025, 12, 31)},
-        registry_root=_REGISTRY_ROOT,
     )
     assert isinstance(value, Decimal)
     # The registry stores the raw percent figure (5); the `percent` formula op divides by 100.
@@ -57,7 +53,6 @@ def test_read_parameter_returns_2023_temporary_da56_rate() -> None:
         "2023",
         "renta-2023-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
         date_context={"filing_period": date(2023, 12, 31)},
-        registry_root=_REGISTRY_ROOT,
     )
     assert isinstance(value, Decimal)
     assert value == Decimal("7"), (
@@ -83,7 +78,6 @@ def test_read_parameter_raises_for_unknown_modelo() -> None:
             "2025",
             "any-parameter-id",
             date_context={"filing_period": date(2025, 12, 31)},
-            registry_root=_REGISTRY_ROOT,
         )
 
 
@@ -94,7 +88,6 @@ def test_read_parameter_raises_for_unknown_revision() -> None:
             "1999",
             "any-parameter-id",
             date_context={"filing_period": date(1999, 12, 31)},
-            registry_root=_REGISTRY_ROOT,
         )
 
 
@@ -105,5 +98,4 @@ def test_read_parameter_raises_for_unknown_parameter_id() -> None:
             "2025",
             "does-not-exist",
             date_context={"filing_period": date(2025, 12, 31)},
-            registry_root=_REGISTRY_ROOT,
         )
