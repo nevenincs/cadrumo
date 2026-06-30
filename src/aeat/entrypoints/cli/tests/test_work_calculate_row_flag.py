@@ -236,6 +236,16 @@ class TestParseRowSpecM349:
         )
         assert isinstance(result, Modelo349OperadorRow)
 
+    @pytest.mark.parametrize("clave_operacion", ("H", "D", "C"))
+    def test_parse_operador_accepts_current_consignment_and_import_claves(self, clave_operacion: str) -> None:
+        result = _parse_row_spec(
+            "operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=EntidadDE "
+            f"clave_operacion={clave_operacion} importe=1000",
+        )
+
+        assert isinstance(result, Modelo349OperadorRow)
+        assert result.clave_operacion == clave_operacion
+
     def test_parse_operador_invalid_nif_format_raises(self) -> None:
         """operador with NIF not matching the country pattern raises BadParameter."""
         with pytest.raises(typer.BadParameter, match="NIF-IVA"):
