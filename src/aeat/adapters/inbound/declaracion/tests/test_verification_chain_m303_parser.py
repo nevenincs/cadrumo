@@ -4,12 +4,10 @@ import pytest
 
 from ._verification_chain_support import (
     _M303_2023_ONWARDS_PARAMS,
-    FIXTURES_DIR,
     CasillaId,
     Decimal,
-    DeclaracionParseError,
     _casilla_ids,
-    parse_declaracion,
+    _parse_extracted_declaracion_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -40,21 +38,7 @@ _M303_2023_PROFILE_CASILLAS: frozenset[CasillaId] = _casilla_ids(
 @pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_ONWARDS_PARAMS)
 def test_verification_chain_m303_parser_extracts_all_profile_casillas(pdf_stem: str, year: int, period: str) -> None:
     """Parser extracts all M303 2023+ profile casillas from corpus PDFs."""
-    pdf_path = FIXTURES_DIR / "justificantes" / "303" / f"{pdf_stem}.pdf"
-
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override="303",
-            año_override=year,
-            period_override=period,
-        )
-    except DeclaracionParseError as exc:
-        pytest.fail(
-            f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised - M303 2023+ extraction failed.\n  error: {exc}",
-        )
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+    extracted = _parse_extracted_declaracion_values(modelo="303", fixture_stem=pdf_stem, year=year, period=period)
 
     assert set(extracted.keys()) == _M303_2023_PROFILE_CASILLAS, (
         f"PARSER-GAP [{pdf_stem}]: M303 2023+ profile extraction did not produce "
