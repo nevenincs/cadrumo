@@ -556,3 +556,34 @@ def test_modelo_100_anexo_c_energy_excess_roles_are_spelled_and_grounded(filing_
     assert not offences, "misspelled Anexo C energy-efficiency roles remain:\n  " + "\n  ".join(offences)
     assert _ANEXO_C_ENERGY_EXCESS_ROLES.issubset(set(roles_by_casilla.values()))
     assert not missing_da50
+
+
+def test_modelo_100_retrib_especie_no_exenta_total_role_names_aggregate() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_role = "irpf_retrib_especie_no_exenta_importe_integro_pendiente_imputacion"
+    expected_legal_refs = {
+        "ley-35-2006:art-17",
+        "ley-35-2006:art-42.3.f",
+        "ley-35-2006:art-14.2.m",
+    }
+
+    for filing_year in range(2023, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("1971"))
+
+        assert tuple(casilla.section) == ("toma_datos_ampliada", "rdto_trabajo", "retrib_especie_anexo_c")
+        assert casilla.semantic_role == expected_role
+        assert "42.3.f" in casilla.label
+        assert "14.2.m" in casilla.label
+        assert casilla.label.endswith("Impo...")
+        assert expected_legal_refs.issubset(casilla.legal_refs)
+        assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+            casilla.source_refs,
+        )
+
+    assert all(
+        casilla.semantic_role != "irpf_retrib_especie_importe_no_exenta_4"
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    )
