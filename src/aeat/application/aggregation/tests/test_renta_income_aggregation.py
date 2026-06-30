@@ -149,6 +149,7 @@ def test_outgoing_business_expense_is_skipped_silently_by_income_pipeline() -> N
                 amount=Decimal("121"),
             ),
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
             "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "business_pct": None,
@@ -178,6 +179,7 @@ def test_outgoing_personal_transaction_is_skipped_silently_by_income_pipeline() 
         {
             "raw": _raw_transaction("out", booked_date=date(2024, 3, 1), value_date=date(2024, 3, 1)),
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
             "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.PERSONAL,
             "business_pct": None,

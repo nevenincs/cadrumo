@@ -59,6 +59,7 @@ def _tx(
         "direction": direction,
         "business_classification": BusinessClassification.BUSINESS,
         "source_jurisdiction": "ES",
+        "group_label": None,
         "category_id": "material_oficina",
         "taxable_base": taxable_base,
         "iva_rate": iva_rate,

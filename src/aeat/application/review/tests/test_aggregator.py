@@ -104,7 +104,7 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
             raw_fields={"Concepto": "Bank fee"},
         )
         transaction = Transaction.model_validate(
-            {"raw": raw, "direction": TransactionDirection.OUTGOING, "source_jurisdiction": "ES"},
+            {"raw": raw, "direction": TransactionDirection.OUTGOING, "group_label": None, "source_jurisdiction": "ES"},
         )
         catalogue = TransactionCatalogue.from_transactions((transaction,))
         TransactionCatalogueRepository(bucket_id=_PROFILE_ID).save(catalogue)

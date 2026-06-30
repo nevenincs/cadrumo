@@ -177,7 +177,7 @@ def test_import_duplicate_against_catalogue_emits_duplicate_info() -> None:
     duplicate."""
     raw = _raw_transaction("tx-1")
     transaction = Transaction.model_validate(
-        {"raw": raw, "direction": TransactionDirection.OUTGOING, "source_jurisdiction": "ES"},
+        {"raw": raw, "direction": TransactionDirection.OUTGOING, "group_label": None, "source_jurisdiction": "ES"},
     )
     catalogue = TransactionCatalogue.model_validate({transaction.transaction_id: transaction})
 

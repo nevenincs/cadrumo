@@ -81,6 +81,7 @@ def _tx(
         {
             "raw": raw,
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
             "source_jurisdiction": "ES",
             "business_classification": business_classification,
             "taxable_base": taxable_base,

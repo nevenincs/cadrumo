@@ -67,6 +67,7 @@ def _transaction(
         "direction": TransactionDirection.OUTGOING,
         "business_classification": BusinessClassification.NOT_YET_PROCESSED,
         "source_jurisdiction": "ES",
+        "group_label": None,
     }
     payload["created_at"] = created_at
     payload["modified_at"] = created_at

@@ -137,6 +137,7 @@ def _transaction(
                 amount=amount,
             ),
             "direction": direction,
+            "group_label": None,
             "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "category_id": "m200_accounting_reviewed",

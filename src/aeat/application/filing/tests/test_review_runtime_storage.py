@@ -145,5 +145,5 @@ def _transaction(label: str) -> Transaction:
         raw_fields={"Concepto": f"filing review runtime storage {label}"},
     )
     return Transaction.model_validate(
-        {"raw": raw, "direction": TransactionDirection.OUTGOING, "source_jurisdiction": "ES"},
+        {"raw": raw, "direction": TransactionDirection.OUTGOING, "group_label": None, "source_jurisdiction": "ES"},
     )

@@ -102,6 +102,7 @@ def _transaction(
         {
             "raw": _raw_transaction(provider_id, booked_date=booked_date, amount=amount, currency=currency),
             "direction": direction,
+            "group_label": None,
             "business_classification": business_classification,
             "source_jurisdiction": "ES",
             "business_pct": business_pct,
@@ -274,6 +275,7 @@ def test_preflight_flags_missing_category_on_income_refund_with_purchase_evidenc
         {
             "raw": _raw_transaction("row-refund", amount=Decimal("45.00")),
             "direction": TransactionDirection.INCOMING,
+            "group_label": None,
             "business_classification": BusinessClassification.BUSINESS,
             "source_jurisdiction": "ES",
             "business_pct": None,

@@ -89,6 +89,7 @@ def _txn() -> Transaction:
         {
             "raw": raw,
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
             "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "taxable_base": Decimal("100.00"),

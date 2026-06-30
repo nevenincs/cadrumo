@@ -74,6 +74,7 @@ def _transaction() -> Transaction:
         {
             "raw": _raw(),
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
             "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.NOT_YET_PROCESSED,
         },

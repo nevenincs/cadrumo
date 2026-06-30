@@ -144,6 +144,7 @@ def _transaction(
         {
             "raw": _raw(source_row_index=source_row_index, description=description),
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
             "source_jurisdiction": "ES",
             "business_classification": classification,
         },

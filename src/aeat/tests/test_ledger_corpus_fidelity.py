@@ -142,6 +142,7 @@ def _build_transactions() -> list[tuple[Transaction, dict[str, Any], str]]:
                 ),
                 "irpf_category": rule.get("irpf_category"),
                 "source_jurisdiction": "ES",
+                "group_label": None,
                 "fx_rate": fx_rate,
                 "value_in_eur": value_in_eur,
                 "lifecycle_state": TransactionLifecycleState.ACTIVE,

@@ -128,6 +128,7 @@ def _transaction(
         {
             "raw": _raw(provider_id=provider_id, amount=amount, description=description),
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
             "source_jurisdiction": "ES",
             "edit_lineage": edit_lineage,
         },
