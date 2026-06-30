@@ -525,7 +525,14 @@ class ExpedientesLatestResult(OutputSchema):
 
 
 class VerifyObservationPayload(OutputSchema):
-    """One persisted verify observation row."""
+    """Shared JSON projection of one persisted verify observation.
+
+    Mirrors :class:`aeat.application.live._verify.VerifyObservation` while
+    keeping ``bucket_id`` on detail and capture responses. ``surface`` is the
+    :class:`~aeat.application.live.VerifySurface` value, and
+    ``matched_expectation`` records whether the optional operator expectation
+    matched the live verdict.
+    """
 
     bucket_id: str
     observation_id: str
@@ -603,7 +610,12 @@ class JustificanteViewResult(OutputSchema):
 
 
 class VerifyObservationSummaryPayload(OutputSchema):
-    """One row in the verify-list result (no bucket_id field per row)."""
+    """Compact verify-observation row for list output.
+
+    The list command already carries ``bucket_id`` at the envelope result level,
+    so each row keeps only the observation identity, surface, NIF, verdict, and
+    expectation-match status.
+    """
 
     observation_id: str
     surface: str
@@ -616,7 +628,12 @@ class VerifyObservationSummaryPayload(OutputSchema):
 
 @register_schema("app.live.verify.list")
 class VerifyListResult(OutputSchema):
-    """Payload for ``aeat app live verify list``."""
+    """Typed listing of persisted NIF verification observations.
+
+    ``rows`` contains :class:`VerifyObservationSummaryPayload` projections read
+    through :class:`~aeat.application.live.VerifyService`; the command does not
+    contact AEAT.
+    """
 
     bucket_id: str
     count: int
@@ -625,12 +642,12 @@ class VerifyListResult(OutputSchema):
 
 @register_schema("app.live.verify.view")
 class VerifyViewResult(VerifyObservationPayload):
-    """Payload for ``aeat app live verify view``."""
+    """Typed detail view for one persisted verify observation."""
 
 
 @register_schema("app.live.verify.latest")
 class VerifyLatestResult(OutputSchema):
-    """Payload for ``aeat app live verify latest``.
+    """Typed newest-observation response for one surface/NIF pair.
 
     ``observation_id`` is ``None`` when no observation matches the
     requested (surface, NIF) pair; ``surface`` and ``nif`` are still
@@ -650,12 +667,20 @@ class VerifyLatestResult(OutputSchema):
 
 @register_schema("app.live.verify.nif_iva")
 class VerifyNifIvaResult(VerifyObservationPayload):
-    """Payload for ``aeat app live verify nif-iva``."""
+    """Typed result for an IXVI NIF-IVA live-read observation.
+
+    The command persists the read-only AEAT verdict through
+    :class:`~aeat.application.live.VerifyService` before emitting this payload.
+    """
 
 
 @register_schema("app.live.verify.tgvi")
 class VerifyTgviResult(VerifyObservationPayload):
-    """Payload for ``aeat app live verify tgvi``."""
+    """Typed result for a TGVI/GROI live-read observation.
+
+    The command persists the read-only AEAT verdict through
+    :class:`~aeat.application.live.VerifyService` before emitting this payload.
+    """
 
 
 # ---------------------------------------------------------------------------
