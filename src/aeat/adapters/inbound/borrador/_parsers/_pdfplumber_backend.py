@@ -4,6 +4,11 @@ Implements the single :func:`extract_pages_text` primitive that the
 borrador extractors consume. The function isolates the pdfplumber
 dependency so other backends (e.g. pdfminer, OCR) can be swapped in
 without touching extractor code.
+
+The backend delegates to
+:func:`~aeat.adapters.inbound.pdf._pdfplumber.extract_pages_text_from_path` and
+wraps failures in :class:`~aeat.adapters.inbound.borrador.BorradorParseError`
+so callers stay inside the borrador parse-error family.
 """
 
 from __future__ import annotations
@@ -15,13 +20,17 @@ from .._errors import BorradorParseError
 
 
 def extract_pages_text(pdf_path: Path) -> tuple[str, ...]:
-    """Extract the text of each page in order.
+    """Extract stripped text from each Modelo 100 PDF page in order.
 
     Args:
         pdf_path: Path to the PDF whose pages will be read.
 
     Returns:
         A tuple of stripped per-page text strings, in page order.
+
+    Raises:
+        BorradorParseError: When the source path is missing or the PDF backend
+            cannot extract page text.
     """
     return extract_pages_text_from_path(
         pdf_path,

@@ -2,13 +2,24 @@
 
 Registers the concrete extractor classes (one per tax year) and exposes
 :func:`get_extractor` for the public
-:func:`aeat.adapters.inbound.borrador.parse_borrador` entry point.
+:func:`~aeat.adapters.inbound.borrador.parse_borrador` entry point.
 
 The observed-value extraction logic is year-agnostic: the AEAT Renta Web Open
 borrador prints casilla rows with the same ``NNNN label amount`` format across
 all years from 2021 onward.  A single concrete class covers all supported
 years; per-year entries in the registry signal which years are in scope without
 requiring distinct class implementations for each.
+
+This registry is an adapter dispatch table, not a registry-authority lookup.
+Callers that need target-casilla coverage still provide a
+:class:`~aeat.adapters.inbound.borrador._schema.BorradorExtractionProfile` to
+the public parser.
+
+See Also:
+    :class:`~aeat.adapters.inbound.borrador._extractors.modelo_100_summary_v2025.Modelo100ObservedV2025Extractor`
+        Current year-stable implementation used by every registered year.
+    :class:`~aeat.adapters.inbound.borrador._schema.BorradorParseMode`
+        Caller-selected observed versus registry-profile validation mode.
 """
 
 from __future__ import annotations
