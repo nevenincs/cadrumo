@@ -9,9 +9,6 @@ related:
   - "[[2026-06-24-retenciones-perceptor-count-plan]]"
 ---
 
-
-
-
 # Enroll the resolver in merge_source_resolutions and add the source kind to _BUCKET_AGGREGATION_OWNED_SOURCES so no source is dormant
 
 ## Scope

@@ -3,9 +3,10 @@ tags:
   - '#adr'
   - '#retenciones-perceptor-count'
 date: '2026-06-24'
-modified: '2026-06-24'
+modified: '2026-06-30'
 related:
   - '[[2026-06-21-eoy-final-calculation-audit]]'
+  - '[[2026-06-30-retenciones-perceptor-count-research]]'
 ---
 
 # `retenciones-perceptor-count` adr: `Retenciones perceptor count must derive from one repository-backed distinct-NIF source in the calc mesh` | (**status:** `accepted`)

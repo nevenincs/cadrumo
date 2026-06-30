@@ -9,9 +9,6 @@ related:
   - "[[2026-06-24-retenciones-perceptor-count-plan]]"
 ---
 
-
-
-
 # Persist records in a bucket-scoped encrypted secure-object namespace via SecureObjectRepository, populated from the same input path that feeds the pull aggregate_per_modelo observations
 
 ## Scope
