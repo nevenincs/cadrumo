@@ -36,7 +36,7 @@ from .. import BucketMaintenanceService, RenameBucketCommand
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-_BUCKET_ID = "bucket-maintenance-rename-test"
+_BUCKET_ID = "55555555-5555-4555-8555-555555555555"
 _ORIGINAL_LABEL = "Original label"
 _NEW_LABEL = "Renamed label"
 
