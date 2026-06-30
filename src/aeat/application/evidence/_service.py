@@ -4,9 +4,11 @@
 :class:`EvidenceBundleRepository` and reports integrity checks as an
 :class:`EvidenceBundleVerificationReport`.
 
-The repository is a :class:`SecureBoundRepository` namespace for
-encrypted bucket-local manifests, with the namespace, schema version,
-object-key grammar, and custody disposition declared by
+The repository is a
+:class:`~aeat.adapters.persistence.storage.SecureBoundRepository` namespace for
+encrypted :class:`~aeat.adapters.persistence.storage.Envelope`-wrapped
+bucket-local manifests, with the namespace, schema version, object-key grammar,
+and custody disposition declared by
 :data:`aeat.adapters.persistence.storage.APPLICATION_EVIDENCE_BUNDLE_NAMESPACE`.
 :meth:`EvidenceBundleService.export` is the narrow operator-directed plaintext
 exception: it verifies first, writes record bytes to the requested archive path before
@@ -62,11 +64,14 @@ class EvidenceBundleRepository(SecureBoundRepository[EvidenceBundle]):
     :data:`aeat.adapters.persistence.storage.APPLICATION_EVIDENCE_BUNDLE_NAMESPACE`
     so evidence bundles use the same secure-object envelope contract as other
     sensitive bucket-local application state.
+    The :class:`~aeat.adapters.persistence.storage.SecureBoundRepository` base
+    wraps each :class:`EvidenceBundle` in a
+    :class:`~aeat.adapters.persistence.storage.Envelope` before writing it.
 
     See Also:
         :class:`EvidenceBundleService`
             Service layer that builds, verifies, exports, and replays bundles.
-        :class:`SecureBoundRepository`
+        :class:`~aeat.adapters.persistence.storage.SecureBoundRepository`
             Generic encrypted-envelope repository base used by this store.
     """
 
