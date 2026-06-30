@@ -40,11 +40,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _WIZARD_REGISTRATION_MODULES = (_wizard_catalogue,)
 
 _G313 = aeat_url("sede", configured_path("sede_paths", "censo_g313_launcher"))
+_BUCKET_ID = "35353535-3535-4535-8535-353535353535"
 
 
 @pytest.fixture
 def secure_store(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="b1") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile.repository
 
 
@@ -59,18 +60,18 @@ def _facts() -> dict[str, str]:
 
 
 def _service(secure_objects: SecureObjectRepository) -> CensoSyncService:
-    snapshots = CensoSnapshotService(bucket_id="b1")
-    profiles = UserProfileLifecycleRepository(bucket_id="b1", objects=secure_objects)
+    snapshots = CensoSnapshotService(bucket_id=_BUCKET_ID)
+    profiles = UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     return CensoSyncService(
-        bucket_id="b1",
+        bucket_id=_BUCKET_ID,
         snapshots=snapshots,
         profiles=profiles,
     )
 
 
 def test_service_refuses_blank_bucket_id_with_translated_error(secure_store: SecureObjectRepository) -> None:
-    profiles = UserProfileLifecycleRepository(bucket_id="b1", objects=secure_store)
-    snapshots = CensoSnapshotService(bucket_id="b1")
+    profiles = UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_store)
+    snapshots = CensoSnapshotService(bucket_id=_BUCKET_ID)
 
     with pytest.raises(CensoSyncError) as exc_info:
         CensoSyncService(bucket_id=" ", snapshots=snapshots, profiles=profiles)
@@ -94,9 +95,9 @@ def test_refresh_captures_active_snapshot(secure_store: SecureObjectRepository) 
 def test_refresh_with_production_factory_enrolls_censo_event(secure_store: SecureObjectRepository) -> None:
 
     service = CensoSyncService(
-        bucket_id="b1",
-        snapshots=CensoSnapshotService(bucket_id="b1"),
-        profiles=UserProfileLifecycleRepository(bucket_id="b1", objects=secure_store),
+        bucket_id=_BUCKET_ID,
+        snapshots=CensoSnapshotService(bucket_id=_BUCKET_ID),
+        profiles=UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_store),
         events=BucketEventHistoryRepository(objects=secure_store),
     )
 
@@ -107,9 +108,9 @@ def test_refresh_with_production_factory_enrolls_censo_event(secure_store: Secur
     )
 
     catalogue = BucketEventHistoryRepository(objects=secure_store).load()
-    events = catalogue.for_bucket("b1", event_types=(BucketEventType.CENSO_REFRESHED,))
+    events = catalogue.for_bucket(_BUCKET_ID, event_types=(BucketEventType.CENSO_REFRESHED,))
     assert len(events) == 1
-    assert events[0].bucket_id == "b1"
+    assert events[0].bucket_id == _BUCKET_ID
     assert events[0].object_id == "11111111-1111-4111-8111-111111111111"
     assert events[0].payload["snapshot_id"] == snapshot.snapshot_id
 
@@ -156,7 +157,7 @@ def test_show_refuses_when_no_snapshot_exists(secure_store: SecureObjectReposito
 
 
 def test_compare_diffs_per_field_against_profile(secure_store: SecureObjectRepository) -> None:
-    profiles = UserProfileLifecycleRepository(bucket_id="b1", objects=secure_store)
+    profiles = UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_store)
     profiles.save(
         UserProfileRecord(
             profile_id="11111111-1111-4111-8111-111111111111",
@@ -169,8 +170,8 @@ def test_compare_diffs_per_field_against_profile(secure_store: SecureObjectRepos
         ),
     )
     service = CensoSyncService(
-        bucket_id="b1",
-        snapshots=CensoSnapshotService(bucket_id="b1"),
+        bucket_id=_BUCKET_ID,
+        snapshots=CensoSnapshotService(bucket_id=_BUCKET_ID),
         profiles=profiles,
     )
     service.refresh_censo(profile_id="11111111-1111-4111-8111-111111111111", source_url=_G313, fact_source=_facts)
@@ -185,7 +186,7 @@ def test_compare_diffs_per_field_against_profile(secure_store: SecureObjectRepos
 
 
 def test_apply_stamps_censo_facts_with_provenance_tag(secure_store: SecureObjectRepository) -> None:
-    profiles = UserProfileLifecycleRepository(bucket_id="b1", objects=secure_store)
+    profiles = UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_store)
     profiles.save(
         UserProfileRecord(
             profile_id="11111111-1111-4111-8111-111111111111",
@@ -197,8 +198,8 @@ def test_apply_stamps_censo_facts_with_provenance_tag(secure_store: SecureObject
         ),
     )
     service = CensoSyncService(
-        bucket_id="b1",
-        snapshots=CensoSnapshotService(bucket_id="b1"),
+        bucket_id=_BUCKET_ID,
+        snapshots=CensoSnapshotService(bucket_id=_BUCKET_ID),
         profiles=profiles,
     )
     service.refresh_censo(profile_id="11111111-1111-4111-8111-111111111111", source_url=_G313, fact_source=_facts)
@@ -215,7 +216,7 @@ def test_apply_stamps_censo_facts_with_provenance_tag(secure_store: SecureObject
 
 
 def test_apply_derives_taxpayer_axes_from_nie_and_iae_for_calendar(secure_store: SecureObjectRepository) -> None:
-    profiles = UserProfileLifecycleRepository(bucket_id="b1", objects=secure_store)
+    profiles = UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_store)
     profiles.save(
         UserProfileRecord(
             profile_id="11111111-1111-4111-8111-111111111111",
@@ -232,8 +233,8 @@ def test_apply_derives_taxpayer_axes_from_nie_and_iae_for_calendar(secure_store:
         ),
     )
     service = CensoSyncService(
-        bucket_id="b1",
-        snapshots=CensoSnapshotService(bucket_id="b1"),
+        bucket_id=_BUCKET_ID,
+        snapshots=CensoSnapshotService(bucket_id=_BUCKET_ID),
         profiles=profiles,
     )
     service.refresh_censo(
@@ -270,7 +271,7 @@ def test_apply_derives_taxpayer_axes_from_nie_and_iae_for_calendar(secure_store:
 
 
 def test_apply_does_not_infer_income_category_without_iae(secure_store: SecureObjectRepository) -> None:
-    profiles = UserProfileLifecycleRepository(bucket_id="b1", objects=secure_store)
+    profiles = UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_store)
     profiles.save(
         UserProfileRecord(
             profile_id="11111111-1111-4111-8111-111111111111",
@@ -284,8 +285,8 @@ def test_apply_does_not_infer_income_category_without_iae(secure_store: SecureOb
         ),
     )
     service = CensoSyncService(
-        bucket_id="b1",
-        snapshots=CensoSnapshotService(bucket_id="b1"),
+        bucket_id=_BUCKET_ID,
+        snapshots=CensoSnapshotService(bucket_id=_BUCKET_ID),
         profiles=profiles,
     )
     service.refresh_censo(
@@ -314,7 +315,7 @@ def test_apply_does_not_infer_income_category_without_iae(secure_store: SecureOb
 def test_apply_does_not_infer_income_category_without_natural_person_identity(
     secure_store: SecureObjectRepository,
 ) -> None:
-    profiles = UserProfileLifecycleRepository(bucket_id="b1", objects=secure_store)
+    profiles = UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_store)
     profiles.save(
         UserProfileRecord(
             profile_id="11111111-1111-4111-8111-111111111111",
@@ -331,8 +332,8 @@ def test_apply_does_not_infer_income_category_without_natural_person_identity(
         ),
     )
     service = CensoSyncService(
-        bucket_id="b1",
-        snapshots=CensoSnapshotService(bucket_id="b1"),
+        bucket_id=_BUCKET_ID,
+        snapshots=CensoSnapshotService(bucket_id=_BUCKET_ID),
         profiles=profiles,
     )
     service.refresh_censo(
@@ -394,13 +395,13 @@ def test_apply_seeds_home_office_usage_ratios_from_censo(
     from ....domain.categories import SpendingCategory
     from ....domain.usage_ratios import load_usage_ratios
 
-    profiles = UserProfileLifecycleRepository(bucket_id="b1", objects=secure_store)
+    profiles = UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_store)
     profiles.save(
         UserProfileRecord(profile_id="11111111-1111-4111-8111-111111111111", display_name="Operator"),
     )
     service = CensoSyncService(
-        bucket_id="b1",
-        snapshots=CensoSnapshotService(bucket_id="b1"),
+        bucket_id=_BUCKET_ID,
+        snapshots=CensoSnapshotService(bucket_id=_BUCKET_ID),
         profiles=profiles,
     )
     service.refresh_censo(
@@ -413,7 +414,7 @@ def test_apply_seeds_home_office_usage_ratios_from_censo(
 
     assert "suministros_home_office_luz" in result.seeded_home_office_categories
     assert "amortizacion_vivienda_afecto" in result.seeded_home_office_categories
-    ratios_profile = load_usage_ratios(bucket_id="b1")
+    ratios_profile = load_usage_ratios(bucket_id=_BUCKET_ID)
     assert ratios_profile.ratios[SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ] == Decimal("0.060")
     assert ratios_profile.ratios[SpendingCategory.AMORTIZACION_VIVIENDA_AFECTO] == Decimal("0.20")
 
@@ -423,11 +424,11 @@ def test_apply_seeding_idempotent_on_repeat(secure_store: SecureObjectRepository
     the merge skips paths whose persisted value already matches the
     derived value."""
 
-    profiles = UserProfileLifecycleRepository(bucket_id="b1", objects=secure_store)
+    profiles = UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_store)
     profiles.save(UserProfileRecord(profile_id="11111111-1111-4111-8111-111111111111", display_name="Operator"))
     service = CensoSyncService(
-        bucket_id="b1",
-        snapshots=CensoSnapshotService(bucket_id="b1"),
+        bucket_id=_BUCKET_ID,
+        snapshots=CensoSnapshotService(bucket_id=_BUCKET_ID),
         profiles=profiles,
     )
     service.refresh_censo(
@@ -475,7 +476,7 @@ def test_apply_preserves_windowed_manual_facts(secure_store: SecureObjectReposit
 
     valid_from = date(2024, 1, 1)
     valid_to = date(2024, 12, 31)
-    profiles = UserProfileLifecycleRepository(bucket_id="b1", objects=secure_store)
+    profiles = UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_store)
     profiles.save(
         UserProfileRecord(
             profile_id="11111111-1111-4111-8111-111111111111",
@@ -492,8 +493,8 @@ def test_apply_preserves_windowed_manual_facts(secure_store: SecureObjectReposit
         ),
     )
     service = CensoSyncService(
-        bucket_id="b1",
-        snapshots=CensoSnapshotService(bucket_id="b1"),
+        bucket_id=_BUCKET_ID,
+        snapshots=CensoSnapshotService(bucket_id=_BUCKET_ID),
         profiles=profiles,
     )
     service.refresh_censo(profile_id="11111111-1111-4111-8111-111111111111", source_url=_G313, fact_source=_facts)
