@@ -1,8 +1,9 @@
 """Encrypted SQL repository for the bucket-event-history catalogue.
 
-Persistence is delegated to :class:`SecureObjectRepository`, which handles
-encrypted BLOB storage and key management for the active profile bucket.
-Each stored record is wrapped in an :class:`Envelope` at
+:class:`BucketEventHistoryRepository` persists
+:class:`BucketEventHistoryCatalogue` through :class:`SecureObjectRepository`,
+which handles encrypted BLOB storage and key management for the active profile
+bucket. Each stored record is wrapped in an :class:`Envelope` at
 :class:`SensitivityClass` ``FINANCIAL``.
 """
 
@@ -27,11 +28,21 @@ _CATALOGUE_VERSION = 1
 
 
 class BucketEventHistoryPersistenceError(BucketsError):
-    """Raised when the bucket-event-history catalogue cannot be persisted or loaded."""
+    """Raised when the bucket-event-history catalogue cannot be persisted or loaded.
+
+    This wraps storage-boundary failures from
+    :class:`BucketEventHistoryRepository` while preserving translated recovery
+    context for callers.
+    """
 
 
 class BucketEventHistoryRepository:
-    """Read / write the bucket-event-history catalogue."""
+    """Repository over encrypted SQL-backed event-history catalogue storage.
+
+    The repository wraps a :class:`SecureObjectRepository` and exposes the
+    concrete load/save implementation behind
+    :class:`~aeat.domain.buckets._protocols.BucketEventHistoryRepositoryProtocol`.
+    """
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
         if objects is not None:
@@ -51,9 +62,20 @@ class BucketEventHistoryRepository:
         return self._objects
 
     def exists(self) -> bool:
+        """Return whether a bucket-event-history catalogue has been persisted."""
         return self._objects.exists(_NAMESPACE, _OBJECT_KEY)
 
     def load(self) -> BucketEventHistoryCatalogue:
+        """Return the persisted catalogue or an empty catalogue if absent.
+
+        Returns:
+            The deserialised :class:`BucketEventHistoryCatalogue`, or a fresh
+            empty instance when no database object is present.
+
+        Raises:
+            :class:`BucketEventHistoryPersistenceError`: If secure-object
+                classification, envelope version, or payload validation fails.
+        """
         from ...adapters.persistence.storage import Envelope, SensitivityClass
         from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 
@@ -113,10 +135,20 @@ class BucketEventHistoryRepository:
         return envelope.payload
 
     def save(self, catalogue: BucketEventHistoryCatalogue) -> None:
+        """Persist ``catalogue`` atomically through the secure-object repository.
+
+        Args:
+            catalogue: The :class:`BucketEventHistoryCatalogue` to persist.
+        """
         self._objects.save_many((self.to_secure_object_write(catalogue),))
 
     def to_secure_object_write(self, catalogue: BucketEventHistoryCatalogue) -> SecureObjectWrite:
-        """Return the :class:`SecureObjectWrite` upsert for ``catalogue`` without committing it."""
+        """Return the secure-object upsert for ``catalogue`` without committing it.
+
+        The returned :class:`~aeat.adapters.persistence.storage.SecureObjectWrite`
+        carries the same :class:`Envelope` and :class:`SensitivityClass`
+        classification that :meth:`save` would persist directly.
+        """
         from ...adapters.persistence.storage import Envelope, SecureObjectWrite, SensitivityClass
 
         envelope = Envelope[BucketEventHistoryCatalogue](
@@ -138,7 +170,7 @@ class BucketEventHistoryRepository:
 def append_bucket_event(catalogue: BucketEventHistoryCatalogue, event: BucketEvent) -> BucketEventHistoryCatalogue:
     """Return a new :class:`BucketEventHistoryCatalogue` with ``event`` inserted.
 
-    Content-addressed: a re-emission with identical content collapses
+    Content-addressed: a re-emission of the same :class:`BucketEvent` collapses
     to the same ``event_id`` and the existing entry is left in place.
     """
     mapping = dict(catalogue.events)
