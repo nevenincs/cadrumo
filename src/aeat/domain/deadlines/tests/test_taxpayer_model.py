@@ -29,6 +29,7 @@ from .. import (
     ModeloIVAProfile,
     TaxpayerProfile,
     evaluate_multiple_pagadores_obligation,
+    resolve_multiple_pagadores_reduced_limit,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -634,21 +635,161 @@ class TestMultiplePagadoresObligation:
         assert evaluate_multiple_pagadores_obligation(None, None) is False
 
     def test_taxpayer_profile_roundtrip_pagadores_fields(self) -> None:
-        # TaxpayerProfile must carry the two new fields through construction unchanged.
+        # TaxpayerProfile must carry the pagadores axes through construction unchanged.
         profile = TaxpayerProfile(
             tax_id="12345678Z",
             iva_regime=IVARegime.GENERAL,
             irpf_pagadores_count=3,
             irpf_pagadores_secondary_income=Decimal("2000"),
+            irpf_pagadores_total_work_income=Decimal("19000"),
         )
         assert profile.irpf_pagadores_count == 3
         assert profile.irpf_pagadores_secondary_income == Decimal("2000")
+        assert profile.irpf_pagadores_total_work_income == Decimal("19000")
 
     def test_taxpayer_profile_pagadores_fields_default_none(self) -> None:
         # Existing profiles without pagadores fields must load cleanly.
         profile = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL)
         assert profile.irpf_pagadores_count is None
         assert profile.irpf_pagadores_secondary_income is None
+        assert profile.irpf_pagadores_total_work_income is None
+
+
+class TestMultiplePagadoresReducedLimitSchedule:
+    """Art. 96.3 LIRPF per-year reduced work-income exemption limit.
+
+    Expected values derive from the dated statutory schedule, not hand
+    computation: 14.000 EUR base (Art. 96.3 LIRPF, post-Ley 26/2014),
+    raised to 15.000 EUR for 2023 (Ley 31/2022 PGE-2023, BOE-A-2022-22128)
+    and to 15.876 EUR for 2024 onward (RD-Ley 4/2024, BOE-A-2024-13066;
+    confirmed by the bundled consolidated LIRPF art-96 corpus, "15.876
+    euros").
+    """
+
+    def test_2022_reduced_limit_is_14000(self) -> None:
+        assert resolve_multiple_pagadores_reduced_limit(2022) == Decimal("14000")
+
+    def test_2023_reduced_limit_is_15000(self) -> None:
+        assert resolve_multiple_pagadores_reduced_limit(2023) == Decimal("15000")
+
+    def test_2024_reduced_limit_is_15876(self) -> None:
+        assert resolve_multiple_pagadores_reduced_limit(2024) == Decimal("15876")
+
+    def test_2025_reduced_limit_is_15876(self) -> None:
+        assert resolve_multiple_pagadores_reduced_limit(2025) == Decimal("15876")
+
+    def test_year_before_schedule_resolves_to_earliest(self) -> None:
+        # A year before the tabulated range uses the earliest known amount.
+        assert resolve_multiple_pagadores_reduced_limit(2015) == Decimal("14000")
+
+    def test_year_after_schedule_resolves_to_latest(self) -> None:
+        # Forward-compatible: a future year uses the latest known amount.
+        assert resolve_multiple_pagadores_reduced_limit(2099) == Decimal("15876")
+
+    def test_none_year_resolves_to_latest(self) -> None:
+        # Year-agnostic surface uses the current (latest) reduced limit.
+        assert resolve_multiple_pagadores_reduced_limit(None) == Decimal("15876")
+
+
+class TestMultiplePagadoresObligationWithTotalIncome:
+    """Art. 96.2.a)/96.3 LIRPF obligation: total income vs the applicable limit.
+
+    The multiple-pagadores situation never obliges a filing by itself — it
+    lowers the work-income exemption limit from the general 22.000 EUR to the
+    per-year reduced limit. The obligation arises only when total work income
+    exceeds the applicable reduced limit. Expected limits derive from the dated
+    statutory schedule (see TestMultiplePagadoresReducedLimitSchedule); no
+    threshold is hand-invented.
+    """
+
+    def test_multi_payer_over_reduced_limit_2024_obliged(self) -> None:
+        # 2 pagadores, secondary €1,600 > €1,500, total €18,000 > €15,876 (2024).
+        assert (
+            evaluate_multiple_pagadores_obligation(
+                2,
+                Decimal("1600"),
+                Decimal("18000"),
+                2024,
+            )
+            is True
+        )
+
+    def test_multi_payer_under_reduced_limit_2024_not_obliged(self) -> None:
+        # 2 pagadores, secondary €1,600, but total €10,000 < €15,876 — NOT obliged.
+        assert (
+            evaluate_multiple_pagadores_obligation(
+                2,
+                Decimal("1600"),
+                Decimal("10000"),
+                2024,
+            )
+            is False
+        )
+
+    def test_multi_payer_total_between_reduced_and_general_2024_obliged(self) -> None:
+        # Total €16,000 is below the general €22,000 but above the reduced
+        # €15,876 — exactly the case Art. 96.3 catches.
+        assert (
+            evaluate_multiple_pagadores_obligation(
+                2,
+                Decimal("1600"),
+                Decimal("16000"),
+                2024,
+            )
+            is True
+        )
+
+    def test_2023_reduced_limit_boundary(self) -> None:
+        # In 2023 the reduced limit was €15,000: €15,500 is over it → obliged.
+        assert (
+            evaluate_multiple_pagadores_obligation(
+                2,
+                Decimal("1600"),
+                Decimal("15500"),
+                2023,
+            )
+            is True
+        )
+        # The same €15,500 in 2024 (limit €15,876) is below it → not obliged.
+        assert (
+            evaluate_multiple_pagadores_obligation(
+                2,
+                Decimal("1600"),
+                Decimal("15500"),
+                2024,
+            )
+            is False
+        )
+
+    def test_single_payer_under_general_limit_not_obliged(self) -> None:
+        # 1 pagador, total €18,000 < general €22,000 — not a multiple-pagadores
+        # obligation regardless of total income.
+        assert (
+            evaluate_multiple_pagadores_obligation(
+                1,
+                Decimal("0"),
+                Decimal("18000"),
+                2024,
+            )
+            is False
+        )
+
+    def test_secondary_at_trigger_keeps_general_limit_not_obliged(self) -> None:
+        # Secondary exactly €1,500 keeps the €22,000 limit; €18,000 < €22,000.
+        assert (
+            evaluate_multiple_pagadores_obligation(
+                2,
+                Decimal("1500"),
+                Decimal("18000"),
+                2024,
+            )
+            is False
+        )
+
+    def test_total_income_undeclared_surfaces_conservatively(self) -> None:
+        # When total work income is undeclared, a triggered multiple-pagadores
+        # condition surfaces the advisory rather than granting a false clear.
+        assert evaluate_multiple_pagadores_obligation(2, Decimal("1600"), None, 2024) is True
 
 
 class TestResidencyBoundaryNear:

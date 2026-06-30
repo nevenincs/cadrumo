@@ -732,3 +732,51 @@ def test_no_bare_multiple_pagadores_threshold_literal_in_deadlines_models() -> N
         "Local pagadores threshold literals found; import MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR from core:\n"
         + "\n".join(offenders)
     )
+
+
+# ---------------------------------------------------------------------------
+# contract — Art. 96.2.a)/96.3 LIRPF work-income filing-exemption limits
+# ---------------------------------------------------------------------------
+
+
+def test_work_income_general_declaration_limit_eur_value() -> None:
+    """General work-income exemption ceiling is €22,000 per Art. 96.2.a) LIRPF."""
+
+    from decimal import Decimal
+
+    from ..external_constants import WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR
+
+    assert Decimal("22000") == WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR
+    assert isinstance(WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR, Decimal)
+
+
+def test_multiple_pagadores_reduced_limit_per_year_values() -> None:
+    """Reduced limit schedule matches the dated statutory amounts (Art. 96.3 LIRPF).
+
+    14.000 EUR base (post-Ley 26/2014), 15.000 EUR for 2023 (Ley 31/2022,
+    BOE-A-2022-22128), 15.876 EUR for 2024 onward (RD-Ley 4/2024,
+    BOE-A-2024-13066; confirmed by the bundled consolidated LIRPF art-96 corpus).
+    """
+
+    from decimal import Decimal
+
+    from ..external_constants import WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR
+
+    table = WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR
+    assert table[2022] == Decimal("14000")
+    assert table[2023] == Decimal("15000")
+    assert table[2024] == Decimal("15876")
+    assert table[2025] == Decimal("15876")
+    assert all(isinstance(v, Decimal) for v in table.values())
+
+
+def test_multiple_pagadores_reduced_limit_table_is_immutable() -> None:
+    """The per-year schedule is a read-only mapping; it cannot be mutated in place."""
+
+    from decimal import Decimal
+
+    from ..external_constants import WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR
+
+    table = WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR
+    with pytest.raises(TypeError):
+        table[2024] = Decimal("0")  # type: ignore[index]

@@ -143,6 +143,7 @@ def test_selected_irpf_and_irnr_profile_refs_resolve_against_catalogue(
     expected = {
         "irpf.pagadores_count": {"ley-35-2006:art-96"},
         "irpf.pagadores_secondary_income": {"ley-35-2006:art-96"},
+        "irpf.pagadores_total_work_income": {"ley-35-2006:art-96"},
         "irpf.special_regime": {"ley-35-2006:art-93", "rd-439-2007:art-113", "rd-439-2007:art-115"},
         "irpf.special_regime_start_date": {"rd-439-2007:art-116"},
         "taxpayer_type.fiscal_residency": {"ley-35-2006:art-9", "trlirnr-rdleg-5-2004:art-2"},

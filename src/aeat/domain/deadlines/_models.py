@@ -19,7 +19,10 @@ from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_v
 
 from ...core import IBAN_SHAPE_RE, Modelo, Period, iban_mod_97
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.external_constants import MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR
+from ...core.external_constants import (
+    MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR,
+    WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR,
+)
 from ..contribuyente._renta_codes import UE_EEA_COUNTRY_CODES, FiscalResidency
 from ._errors import DeadlineValidationError
 
@@ -532,9 +535,19 @@ class TaxpayerProfile(BaseModel):
     irpf_pagadores_secondary_income: Decimal | None = None
     """Sum of income received from the 2nd and subsequent pagadores.
 
-    Art. 96.3 LIRPF: declaración obligatoria when this value exceeds
-    €1,500. Only meaningful when ``irpf_pagadores_count >= 2``; ``None``
-    when not declared.
+    Art. 96.3 LIRPF: when ``irpf_pagadores_count >= 2`` and this value
+    exceeds €1,500, the work-income filing-exemption limit drops from the
+    general €22,000 to the per-year reduced limit. Only meaningful when
+    ``irpf_pagadores_count >= 2``; ``None`` when not declared.
+    """
+    irpf_pagadores_total_work_income: Decimal | None = None
+    """Total rendimientos íntegros del trabajo for the year (all pagadores).
+
+    Art. 96.2.a)/96.3 LIRPF: a Modelo 100 filing obligation arises when this
+    total exceeds the applicable exemption limit — the general €22,000, or the
+    per-year reduced limit (€15,876 for 2024 onward) when the multiple-pagadores
+    condition is met. ``None`` when not declared, in which case a triggered
+    multiple-pagadores condition surfaces a conservative advisory.
     """
     days_in_spain: dict[int, int] = Field(default_factory=dict)
     """Days of physical presence in Spain per calendar year.
@@ -752,32 +765,74 @@ class TaxpayerProfile(BaseModel):
 _MULTIPLE_PAGADORES_SECONDARY_THRESHOLD = MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR
 
 
+def resolve_multiple_pagadores_reduced_limit(filing_year: int | None) -> Decimal:
+    """Return the Art. 96.3 LIRPF reduced work-income exemption limit for *filing_year*.
+
+    The reduced limit is dated (14.000 € up to 2022, 15.000 € for 2023,
+    15.876 € for 2024 onward); the authoritative per-year schedule lives in
+    :data:`~aeat.core.external_constants.WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR`.
+    A year before the earliest tabulated entry resolves to the earliest known
+    amount; a year after the latest entry resolves to the latest known amount
+    (forward-compatible until a new law revalues it); ``None`` resolves to the
+    latest known amount so a year-agnostic operator surface uses the current
+    figure.
+
+    Args:
+        filing_year: The year the work income was obtained, or ``None``.
+
+    Returns:
+        The reduced exemption limit in euros as a :class:`~decimal.Decimal`.
+    """
+    table = WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR
+    if filing_year is None or filing_year >= max(table):
+        return table[max(table)]
+    if filing_year <= min(table):
+        return table[min(table)]
+    return table[filing_year]
+
+
 def evaluate_multiple_pagadores_obligation(
     pagadores_count: int | None,
     secondary_income: Decimal | None,
+    total_work_income: Decimal | None = None,
+    filing_year: int | None = None,
 ) -> bool:
     """Return True when Art. 96.3 LIRPF mandates Modelo 100 filing.
 
-    Art. 96.3 LIRPF (Ley 35/2006) establishes that a natural person whose
-    rendimientos del trabajo come from more than one pagador is obliged to
-    file if the aggregate income received from the 2nd and subsequent
-    pagadores exceeds €1,500. The rule applies independently of the general
-    income thresholds in Art. 96.2.
+    Art. 96.2.a) LIRPF (Ley 35/2006) exempts a natural person from filing when
+    their rendimientos íntegros del trabajo do not exceed the general 22.000 €
+    limit. Art. 96.3 LIRPF LOWERS that limit to a reduced, dated amount
+    (15.876 € for 2024 onward) when the work income comes from more than one
+    pagador AND the aggregate from the 2nd-and-subsequent pagadores strictly
+    exceeds 1.500 €. The multiple-pagadores situation never obliges a filing by
+    itself — it only drops the exemption limit — so the obligation arises only
+    when total work income exceeds the applicable reduced limit.
 
     Args:
         pagadores_count: Number of pagadores the taxpayer received work
             income from during the year. ``None`` means undeclared.
         secondary_income: Sum of income from the 2nd and subsequent
             pagadores. ``None`` means undeclared.
+        total_work_income: Total rendimientos íntegros del trabajo for the
+            year. ``None`` means undeclared; the obligation then cannot be
+            ruled out, so the rule surfaces conservatively rather than
+            granting a false clear (``no-silent-under-declaration``).
+        filing_year: The year the income was obtained, selecting the dated
+            reduced limit. ``None`` uses the latest known reduced limit.
 
     Returns:
-        ``True`` when both conditions are confirmed (count >= 2 AND
-        secondary_income > 1,500); ``False`` in every other case,
-        including when either value is undeclared.
+        ``True`` when the reduced-limit regime is active (count >= 2 AND
+        secondary_income > 1,500) and either total work income is undeclared
+        or it strictly exceeds the per-year reduced limit; ``False`` in every
+        other case, including when count or secondary income is undeclared.
     """
     if pagadores_count is None or secondary_income is None:
         return False
-    return pagadores_count >= 2 and secondary_income > _MULTIPLE_PAGADORES_SECONDARY_THRESHOLD
+    if not (pagadores_count >= 2 and secondary_income > _MULTIPLE_PAGADORES_SECONDARY_THRESHOLD):
+        return False
+    if total_work_income is None:
+        return True
+    return total_work_income > resolve_multiple_pagadores_reduced_limit(filing_year)
 
 
 # Static lookup: ISO 3166-1 alpha-2 → BOE reference for double-taxation treaties
