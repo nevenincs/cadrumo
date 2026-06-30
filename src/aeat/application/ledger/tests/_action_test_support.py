@@ -136,6 +136,7 @@ __all__ = [
     "TransactionLifecycleState",
     "TransactionValidationError",
     "UsageRatioProfile",
+    "_create_manual_row",
     "_repositories",
     "archive_manual_transaction",
     "attach_manual_transaction_evidence",
@@ -172,6 +173,35 @@ def _repositories(objects: SecureObjectRepository, *, bucket_id: str = _BUCKET_I
         TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects),
         BucketEventHistoryRepository(objects=objects),
     )
+
+
+def _create_manual_row(
+    secure_objects: SecureObjectRepository,
+    *,
+    description: str,
+    idempotency_key: str,
+    amount: Decimal | None = None,
+    booked_date: date | None = None,
+    occurred_at: datetime | None = None,
+) -> tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, ManualLedgerTransactionResult]:
+    transaction_repository, event_repository = _repositories(secure_objects)
+    resolved_booked_date = booked_date if booked_date is not None else date(2026, 5, 2)
+    resolved_amount = amount if amount is not None else Decimal("25.00")
+    resolved_occurred_at = occurred_at if occurred_at is not None else datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
+    created = create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            bucket_id=_BUCKET_ID,
+            booked_date=resolved_booked_date,
+            amount=resolved_amount,
+            direction=TransactionDirection.OUTGOING,
+            description=description,
+            idempotency_key=idempotency_key,
+        ),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        occurred_at=resolved_occurred_at,
+    )
+    return transaction_repository, event_repository, created
 
 
 def _purchase_invoice() -> Invoice:
