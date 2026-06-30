@@ -1,11 +1,16 @@
 """XLSX financial provider with header-row detection.
 
 Implements :class:`XlsxProvider`, an
-:class:`aeat.adapters.inbound.financial.providers._base.FinancialProvider`
+:class:`~aeat.adapters.inbound.financial.providers.FinancialProvider`
 backed by ``openpyxl``. Reuses the bank-layout catalogue and scoring
 helpers from :mod:`aeat.adapters.inbound.financial.providers._csv` so
 the same alias rules apply to spreadsheet exports as to the
 matching CSV downloads.
+
+The selected worksheet emits
+:class:`~aeat.adapters.inbound.financial.providers.ParsedLedgerRow` records
+with the same magnitude/direction split as the CSV provider, while preserving
+typed workbook cell values for dates and amounts until the parse boundary.
 """
 
 from __future__ import annotations
@@ -55,6 +60,10 @@ class XlsxProvider(FinancialProvider):
     cell types (rather than coerced through their printed strings)
     so locale-formatted ``Decimal`` and ``date`` parsing stays
     accurate.
+
+    Like :class:`~aeat.adapters.inbound.financial.providers.CsvProvider`, this
+    provider shares the tabular alias catalogue and stores every parsed row as
+    a raw transaction with explicit flow direction.
 
     Attributes:
         _last_sheet_name: Name of the worksheet selected by the most

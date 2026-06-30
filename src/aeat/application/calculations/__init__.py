@@ -8,6 +8,11 @@ typed proof records that produce those inputs from local filing history, IVA
 wallet reconciliation, relation prefill, row-set detail captures, and
 cross-period clean-state evidence.
 
+This facade is not the formula runtime. It owns persisted observations,
+source-proof assembly, carry-forward policy, and source resolvers that feed the
+registry engine; the registry remains the authority for casilla definitions,
+binding declarations, relation closure, and formula execution.
+
 Direct prior-filing bindings and registry relations are deliberately separate
 source owners. :class:`PreviousFilingSourceResolver` resolves
 :attr:`~aeat.core.BindingSourceKind.PREVIOUS_FILING` binding carries;

@@ -1,10 +1,13 @@
-"""Shared strict+frozen records consumed across PDF-import modules.
+"""Shared strict+frozen records for casilla-bearing PDF imports.
 
-:class:`ExtractedCasilla` is the boundary-crossing record every per-modelo
-extractor produces. It pairs a stable casilla identifier with the printed
-value the extractor read from the PDF plus provenance (page, bounding box,
-confidence) so downstream consumers can classify discrepancies and attach
-warnings without re-parsing the PDF.
+:class:`ExtractedCasilla` is the boundary-crossing record produced by
+declaracion and borrador extractors after they find a printed casilla value.
+It pairs the stable casilla identifier with the typed value and extraction
+provenance (page, optional bounding box, confidence) so downstream consumers
+can classify discrepancies and attach warnings without re-parsing the PDF.
+
+Justificante PDFs do not carry per-casilla values; that receipt surface shares
+the package's error and text/provenance helpers, but not this record.
 """
 
 from __future__ import annotations
@@ -26,7 +29,9 @@ class ExtractedCasilla(BaseModel):
             Aligned to the canonical :data:`CasillaId` constraint
             (max_length=64, pattern ``[A-Za-z0-9][A-Za-z0-9._:-]*``).
         printed_value: Typed value as printed on the PDF. ``None`` when
-            the casilla was located but blank on the page.
+            the casilla was located but blank on the page. Monetary values are
+            parsed into :class:`decimal.Decimal`; non-monetary casillas may
+            retain typed integers, strings, booleans, or dates.
         source_page: 1-based page number the value was read from.
         source_bbox: Optional ``(x0, y0, x1, y1)`` bounding box in
             pdfplumber coordinates. Populated by the bbox-anchored

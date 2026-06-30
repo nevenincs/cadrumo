@@ -1,11 +1,16 @@
 """CSV financial provider with bank-layout-aware parsing.
 
 Provides :class:`CsvProvider`, an implementation of
-:class:`aeat.adapters.inbound.financial.providers._base.FinancialProvider`
+:class:`~aeat.adapters.inbound.financial.providers.FinancialProvider`
 that ingests bank CSV exports for the BBVA, Santander, CaixaBank and
 Revolut layouts. Each layout is described by a frozen
 :class:`CsvBankLayout` carrying the header aliases, date-format
 hint, and decimal-separator hint the parser needs.
+
+Successful rows become :class:`~aeat.adapters.inbound.financial.providers.ParsedLedgerRow`
+objects: the stored :class:`~aeat.domain.transactions.RawTransaction` carries
+an absolute amount and provenance, while
+:class:`~aeat.domain.transactions.TransactionDirection` records the source flow.
 """
 
 from __future__ import annotations
@@ -194,6 +199,10 @@ class CsvProvider(FinancialProvider):
     decoder honours :attr:`aeat.core.config.Settings.financial_default_csv_encoding`
     as the preferred encoding before falling back to a fixed
     UTF-8 / CP-1252 / ISO-8859-1 sequence.
+
+    CSV layouts can provide either a source-signed amount or an explicit
+    ``direction`` column. The adapter resolves that flow once at the parse
+    boundary and emits magnitude-only raw transactions.
     """
 
     name = "CSV provider"
@@ -532,6 +541,7 @@ def _direction_from_aliases(
     lookup: Mapping[str, str],
     aliases: tuple[str, ...],
 ) -> TransactionDirection | None:
+    """Resolve an optional explicit transaction direction column."""
     header = _find_column(lookup, aliases)
     if header is None:
         return None

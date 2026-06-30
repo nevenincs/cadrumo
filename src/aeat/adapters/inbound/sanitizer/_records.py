@@ -7,6 +7,10 @@ inclusion does not leak the source value. Synthetic replacements
 are validated against the same checksum / shape rules the project
 applies to live values, so a sanitised fixture round-trips through
 production parsers unchanged.
+
+``SecretStr`` is a display/logging guard, not a storage policy. Operator
+mapping files that contain real values must remain outside git; committed audit
+records should contain only synthetic values, hashes, surface names, and counts.
 """
 
 from __future__ import annotations
@@ -214,7 +218,9 @@ class TokenMap(BaseModel):
     matching category. Empty tuples are permitted; a TokenMap with
     every category empty is structurally valid but produces a
     no-replacement sanitisation (the metadata + dynamic-surface
-    scrub still runs).
+    scrub still runs). The real values inside replacement entries are the
+    operator-supplied authority for the rewrite; the sanitizer does not run
+    probabilistic PII discovery.
 
     Attributes:
         nif: Replacements for NIF / NIE values.
@@ -323,7 +329,8 @@ class Replacement(BaseModel):
         real_sha256: SHA-256 of the cleartext PII the entry
             matched against. **Never** the cleartext itself —
             committing the cleartext into ``replacements_applied``
-            would defeat the entire sanitiser.
+            would defeat the entire sanitiser. Treat this hash as
+            fixture-review metadata, not as a production de-identification key.
         synthetic: The synthetic replacement text that landed in
             the output. Safe to log.
         encoding: Encoding form in which the operand was rewritten
@@ -401,7 +408,8 @@ class SanitizationResult(BaseModel):
 
     The ``output_bytes`` field carries the sanitised PDF; the CLI
     shell writes it to disk. The library function itself never
-    touches the filesystem.
+    touches the filesystem. The result is an audit record for fixture
+    preparation, not an application persistence model.
 
     Attributes:
         output_bytes: Byte-for-byte sanitised PDF.

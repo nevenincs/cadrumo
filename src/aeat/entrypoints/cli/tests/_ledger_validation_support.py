@@ -18,7 +18,8 @@ from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 
-_PROFILE_ID = "tester"
+_PROFILE_ID = "9e0f3a2b-5d1c-4a77-9b2d-27ed6d6c7f10"
+_PROFILE_LABEL = "tester"
 
 
 def _invoke(args: Sequence[str], *, env: Mapping[str, str] | None = None) -> Result:
@@ -33,7 +34,13 @@ def open_bucket_session(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span(_PROFILE_ID),
     ):
-        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=_PROFILE_ID))
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(
+                state,
+                profile_id=_PROFILE_ID,
+                display_name=_PROFILE_LABEL,
+            ),
+        )
         try:
             yield
         finally:

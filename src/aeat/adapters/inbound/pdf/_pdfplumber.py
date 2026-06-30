@@ -23,6 +23,10 @@ Three return-shape families are supported:
   the pypdfium2 path used by declaracion). The fast-path runs first; if
   it returns ``None`` the function falls back to pdfplumber.
 
+All path-based diagnostics use the redacted ``<input-pdf>`` label. The bytes
+entry point is for secure-storage flows that should never materialise source
+PDF bytes as a plaintext temporary file.
+
 The ``pdfminer`` logger level is governed centrally by
 ``aeat.core.logging.configure_logging()`` dictConfig (``WARNING``).
 """
@@ -95,7 +99,20 @@ def extract_pages_text_from_bytes(
     pdf_label: str,
     source_label: str = "in-memory PDF",
 ) -> tuple[str, ...]:
-    """Extract text from PDF bytes without materialising a plaintext file."""
+    """Extract text from PDF bytes without materialising a plaintext file.
+
+    Args:
+        pdf_bytes: In-memory source PDF bytes, typically read from secure
+            storage.
+        error_class: Format-specific exception class raised on pdfplumber
+            failure or an all-empty text layer.
+        pdf_label: Article-prefixed phrase for the empty-PDF diagnostic.
+        source_label: Redacted source phrase used in errors. Defaults to
+            ``"in-memory PDF"``.
+
+    Returns:
+        Tuple of stripped per-page text in page order.
+    """
     try:
         with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
             pages = tuple((page.extract_text() or "").strip() for page in pdf.pages)

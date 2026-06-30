@@ -4,11 +4,11 @@ Registers the concrete extractor classes (one per tax year) and exposes
 :func:`~aeat.adapters.inbound.borrador._extractors.get_extractor` for the public
 :func:`~aeat.adapters.inbound.borrador.parse_borrador` entry point.
 
-The observed-value extraction logic is year-agnostic: the AEAT Renta Web Open
-borrador prints casilla rows with the same ``NNNN label amount`` format across
-all years from 2021 onward.  A single concrete class covers all supported
-years; per-year entries in the registry signal which years are in scope without
-requiring distinct class implementations for each.
+The observed-value extraction logic is year-agnostic across the currently
+registered 2021-2025 extractor years: AEAT Renta Web Open borrador PDFs print
+casilla rows with the same ``NNNN label amount`` format. A single concrete class
+covers those supported years; per-year entries in the registry signal which
+years are in scope without requiring distinct class implementations for each.
 
 This registry is an adapter dispatch table, not a registry-authority lookup.
 Callers that need target-casilla coverage still provide a
@@ -28,9 +28,10 @@ from .._errors import BorradorParseError as _BorradorParseError
 from .._schema import ArtefactKind
 from .modelo_100_summary_v2025 import Modelo100ObservedV2025Extractor as _Modelo100ObservedV2025Extractor
 
-# The generic observed-value extraction algorithm is year-stable from 2021
-# onward: the borrador PDF format has not changed the casilla-row layout.
-# Separate entries allow callers to pass año_override=2021/2022/2023 without
+# The generic observed-value extraction algorithm is year-stable across the
+# supported 2021-2025 extractor registrations: the observed casilla-row grammar
+# is unchanged in the covered parser evidence.
+# Separate entries allow callers to pass año_override=2021..2025 without
 # BorradorParseError while reusing the same implementation.
 _REGISTRY_BY_AÑO: dict[int, type] = {
     2021: _Modelo100ObservedV2025Extractor,
@@ -48,7 +49,7 @@ def get_extractor(año: int) -> _Modelo100ObservedV2025Extractor:
         año: The four-digit tax year for which an extractor is required.
 
     Returns:
-        A freshly-instantiated extractor matching the requested ``año``.
+        A freshly instantiated extractor registered for the requested ``año``.
 
     Raises:
         _BorradorParseError: When no extractor is registered for ``año``.

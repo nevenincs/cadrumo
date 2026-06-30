@@ -20,6 +20,10 @@ Five text-show operators are handled (PDF 32000-2 §9.4.3):
 Each replacement is recorded as one :class:`Replacement` row in the
 result tuple so the audit log identifies every edit by surface,
 page index, instruction index, and SHA-256 of the cleartext.
+
+This module only rewrites exact cleartext tokens supplied by the operator. It
+does not discover missing PII; adversarial fixture tests and review of the
+TokenMap remain the leak-detection boundary.
 """
 
 from __future__ import annotations
@@ -69,7 +73,8 @@ def apply_token_map_to_pdf(pdf: Pdf, mapping: TokenMap) -> tuple[Replacement, ..
     Returns:
         A tuple of :class:`Replacement` rows recording every edit
         applied. Empty when the mapping was empty or no operand
-        contained any cleartext value.
+        contained any cleartext value; callers should use fixture verification
+        gates to decide whether an empty result is acceptable.
     """
     if mapping.is_empty():
         return ()

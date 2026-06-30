@@ -1,13 +1,15 @@
-"""Deterministic PII scrubbing for AEAT filing PDFs.
+"""Deterministic PII scrubbing for AEAT filing PDF fixtures.
 
 Real filings carry the operator's NIF, real amounts, their name, an
 AEAT-assigned CSV, and occasionally their IBAN / address. Committing
 any of that to a test corpus is a PII leak.
 
 This module deterministically rewrites a source PDF so the output
-carries synthetic but structurally-faithful replacements — same digit
-counts, same string lengths, same formatting — enough for the extractor
-to exercise its primitive stack without leaking personal data.
+carries synthetic but structurally faithful replacements -- matching the
+important digit counts, separators, and token shapes enough for extractor
+tests to exercise their primitive stack without leaking personal data. It is
+fixture hygiene for contributor-local corpus preparation, not a production
+anonymisation service.
 
 Scrub rules:
 
@@ -22,8 +24,10 @@ Scrub rules:
 - **Dates**: preserved (GDPR Art. 4 does not treat calendar dates as PII).
 - **Presentation IDs** (10+ char upper-alphanum): replaced with seeded synthetic.
 
-Each scrubbed file pairs with a :class:`ScrubSidecar` JSON sidecar
-recording provenance + consent.
+Each scrubbed file pairs with a :class:`ScrubSidecar` JSON sidecar recording
+the original and scrubbed digests, scrub-rule version, touched field kinds, and
+consent window. The sidecar is the provenance record reviewers inspect when a
+private L2 fixture is proposed.
 
 The library is **never invoked at runtime** from production code — only
 from contributor-local workflows (``just scrub-from-drive``) and
@@ -91,7 +95,13 @@ class ScrubError(PdfModeloImportError):
 
 
 class ScrubSidecar(BaseModel):
-    """Provenance + consent record for one scrubbed L2 fixture file."""
+    """Provenance + consent record for one scrubbed L2 fixture file.
+
+    The hashes identify the original and scrubbed bytes without storing the
+    cleartext source. ``scrub_version`` makes future rule changes auditable,
+    and ``consent_revocable_until`` records whether the contributor can later
+    request removal of the fixture.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -244,7 +254,11 @@ def compute_sidecar(
     fields_touched: tuple[str, ...],
     consent_revocable_until: datetime | None = None,
 ) -> ScrubSidecar:
-    """Build a :class:`ScrubSidecar` describing one scrub run."""
+    """Build a :class:`ScrubSidecar` describing one scrub run.
+
+    Both paths are hashed through the shared PDF provenance helper so sidecar
+    generation follows the same redacted-error discipline as runtime parsers.
+    """
     return ScrubSidecar(
         original_sha256=sha256_file(original_path),
         scrubbed_sha256=sha256_file(scrubbed_path),

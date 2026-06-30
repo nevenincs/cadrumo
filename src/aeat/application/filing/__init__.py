@@ -29,6 +29,11 @@ The facade deliberately separates local filing state from live submission.
 Remote AEAT submission is not exposed here; attempted live writes are refused
 by :class:`aeat.core.access_gate.LiveSubmitForbiddenError`.
 
+Imports from external PDFs stay evidence-scoped. A justificante import creates a
+local receipt baseline, while casilla-complete declaration and borrador parsing
+enter through the inbound adapter surfaces before application services decide
+how that evidence participates in a work-unit workflow.
+
 Work-unit filing records for calculation revisions live in
 :mod:`aeat.application.modelo` and :mod:`aeat.domain.modelos`. This package owns
 draft-level construction, review, export, verification, justificante import,

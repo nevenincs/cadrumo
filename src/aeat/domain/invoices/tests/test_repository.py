@@ -34,10 +34,12 @@ from .._repository import InvoiceCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_BUCKET_ID = "17171717-1717-4171-8171-171717171717"
+
 
 @pytest.fixture(autouse=True)
 def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="test") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile
 
 
@@ -142,21 +144,21 @@ class TestTransactionCatalogueRoundTrip:
     """Save ÔåÆ fresh repository ÔåÆ load must yield a value-equal catalogue."""
 
     def test_empty_catalogue_loads_when_nothing_persisted(self) -> None:
-        catalogue = TransactionCatalogueRepository(bucket_id="test").load()
+        catalogue = TransactionCatalogueRepository(bucket_id=_BUCKET_ID).load()
         assert len(catalogue) == 0
 
     def test_single_transaction_round_trip_preserves_model(self) -> None:
         transaction = _transaction()
         original = TransactionCatalogue.from_transactions([transaction])
-        TransactionCatalogueRepository(bucket_id="test").save(original)
+        TransactionCatalogueRepository(bucket_id=_BUCKET_ID).save(original)
 
-        reloaded = TransactionCatalogueRepository(bucket_id="test").load()
+        reloaded = TransactionCatalogueRepository(bucket_id=_BUCKET_ID).load()
         assert reloaded == original
 
     def test_multi_transaction_round_trip_preserves_values(self) -> None:
         transactions = [_transaction(provider_id=f"row-{i}") for i in range(3)]
         original = TransactionCatalogue.from_transactions(transactions)
-        TransactionCatalogueRepository(bucket_id="test").save(original)
+        TransactionCatalogueRepository(bucket_id=_BUCKET_ID).save(original)
 
-        reloaded = TransactionCatalogueRepository(bucket_id="test").load()
+        reloaded = TransactionCatalogueRepository(bucket_id=_BUCKET_ID).load()
         assert reloaded == original

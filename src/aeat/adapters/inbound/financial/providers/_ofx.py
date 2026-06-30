@@ -1,13 +1,19 @@
 """OFX financial provider backed by ``ofxparse``.
 
 Provides :class:`OfxProvider`, an
-:class:`aeat.adapters.inbound.financial.providers._base.FinancialProvider`
+:class:`~aeat.adapters.inbound.financial.providers.FinancialProvider`
 implementation that wraps ``ofxparse`` to ingest every account and
 statement block exposed by an OFX or QFX file. The
-:class:`_OfxAccountLike`, :class:`_OfxStatementLike` and
-:class:`_OfxTransactionLike` Protocol surfaces let the adapter type-
+``_OfxAccountLike``, ``_OfxStatementLike`` and
+``_OfxTransactionLike`` Protocol surfaces let the adapter type-
 check against the duck-typed objects ``ofxparse`` returns without
 introducing an extra dependency.
+
+Each OFX transaction is projected into a
+:class:`~aeat.adapters.inbound.financial.providers.ParsedLedgerRow`; the signed
+``TRNAMT`` value determines
+:class:`~aeat.domain.transactions.TransactionDirection` and the stored raw
+transaction keeps the absolute magnitude plus OFX-native raw fields.
 """
 
 from __future__ import annotations
@@ -74,6 +80,8 @@ class OfxProvider(FinancialProvider):
     transaction id and copies the OFX-native fields
     (``ACCTID``, ``TRNTYPE``, ``DTPOSTED``, ``TRNAMT``, ``FITID``,
     ``NAME``, ``MEMO``) into ``raw_fields`` for downstream auditing.
+    The provider remains format-level: application ledger import owns
+    persistence and bucket events.
     """
 
     name = "OFX provider"

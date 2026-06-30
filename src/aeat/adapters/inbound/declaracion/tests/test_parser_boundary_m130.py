@@ -4,11 +4,17 @@ from __future__ import annotations
 
 import pytest
 
+from ._parser_boundary_part2_support import (
+    _M130_RENDIMIENTO_NETO_CASILLA,
+    _M130_RESULTADO_CASILLA,
+)
 from ._parser_boundary_support import (
     _MODELO_130_EXPECTED_TARGETS,
+    _REAL_DECLARATION_COPY,
     FIXTURES_DIR,
     CasillaId,
     Decimal,
+    DeclaracionParseError,
     _expected_casilla_values,
     _expected_period,
     _modelo_130_snapshot,
@@ -76,6 +82,47 @@ def test_parser_extracts_modelo_130_legal_entity_nif_from_pdf() -> None:
     assert filing.tax_id == "Y0000001S"
     assert filing.source_pdf_path == source_pdf_reference_path(filing.source_pdf_sha256)
     assert pdf_path.name not in str(filing.source_pdf_path)
+
+
+def test_parser_fails_when_modelo_130_registry_profile_targets_are_missing() -> None:
+    """Parsing fails when the M130 profile coverage falls below the registry minimum."""
+    snap = _modelo_130_snapshot()
+    prod_profile = snap.extraction_profiles["modelo-130-declaracion-pdf"]
+    strict_profile = prod_profile.model_copy(update={"min_coverage": Decimal("1")})
+    profiles = dict(snap.extraction_profiles)
+    profiles[prod_profile.id] = strict_profile
+    strict_snap = snap.model_copy(update={"extraction_profiles": profiles})
+
+    pdf_path = FIXTURES_DIR / "justificantes" / "130" / "2022-1T.pdf"
+
+    with pytest.raises(DeclaracionParseError) as excinfo:
+        parse_declaracion(
+            pdf_path,
+            modelo_override="130",
+            año_override=2022,
+            period_override="1T",
+            registry_snapshot=strict_snap,
+        )
+    assert excinfo.value.translated_message == "adapters.inbound.declaracion.errors.extraction_failed"
+    assert excinfo.value.context is not None
+    details = excinfo.value.context.get("details", "")
+    assert isinstance(details, str) and "coverage" in details
+
+
+def test_real_redacted_modelo_130_declaration_copy_extracts_partial_casillas() -> None:
+    """The synthetic M130 2024-1T corpus PDF extracts casillas via bbox_anchored."""
+    filing = parse_declaracion(
+        _REAL_DECLARATION_COPY,
+        modelo_override="130",
+        año_override=2024,
+        period_override="1T",
+    )
+    extracted = {value.casilla_id: value.printed_value for value in filing.values}
+    assert set(extracted.keys()) == {_M130_RENDIMIENTO_NETO_CASILLA, _M130_RESULTADO_CASILLA}, (
+        f"2024-1T: expected casillas {{03, 19}}, got {set(extracted.keys())!r}"
+    )
+    assert isinstance(extracted[_M130_RESULTADO_CASILLA], Decimal)
+    assert isinstance(extracted[_M130_RENDIMIENTO_NETO_CASILLA], Decimal)
 
 
 @pytest.mark.parametrize("pdf_stem,year,period", _M130_CORPUS_PARAMS, ids=_M130_CORPUS_IDS)

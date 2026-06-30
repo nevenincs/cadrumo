@@ -14,7 +14,9 @@ adapter does not resolve :class:`~aeat.domain.calculations.registry.RegistrySnap
 objects or decide filing-grade completeness by itself. Completeness is enforced
 only when the caller supplies a
 :class:`~aeat.adapters.inbound.borrador._schema.BorradorExtractionProfile`
-projection and selects registry-profile parsing.
+projection and selects registry-profile parsing. Returned observations carry a
+privacy-preserving source reference derived from the PDF digest, not the
+operator's local source path.
 
 The public API surfaces :class:`BorradorObservation`,
 :class:`BorradorParseMode`, :class:`BorradorParseError`,

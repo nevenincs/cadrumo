@@ -1,11 +1,12 @@
 """Modelo 100 (IRPF / Renta) observed-value extractor implementation.
 
 The extractor reads printed casilla/value rows from a Renta artefact using the
-year-stable ``NNNN label amount`` grammar shared by current 2021-2025 fixtures.
-The class name records the original 2025 implementation point, but
-:mod:`aeat.adapters.inbound.borrador._extractors` deliberately maps every
-supported year to this implementation while the observed row grammar remains
-stable.
+year-stable ``NNNN label amount`` grammar used by the supported 2021-2025
+extractor registrations and exercised by the checked 2021-2023 fixture PDFs
+plus the generated 2025 parser tests. The class name records the original 2025
+implementation point, but :mod:`aeat.adapters.inbound.borrador._extractors`
+deliberately maps every supported year to this implementation while the observed
+row grammar remains stable.
 
 This is a read-only inbound adapter. It does not define Modelo 100
 completeness, resolve a
@@ -14,6 +15,10 @@ filing-grade authority decisions. When callers pass a
 :class:`~aeat.adapters.inbound.borrador._schema.BorradorExtractionProfile`, the
 extractor filters to that profile and fails hard if observed coverage is
 insufficient.
+
+Rows are extracted from the concatenated text stream, so
+:class:`~aeat.adapters.inbound.pdf.ExtractedCasilla` records preserve the
+printed value and confidence but do not capture per-row bounding boxes.
 """
 
 from __future__ import annotations
@@ -83,8 +88,9 @@ class Modelo100ObservedV2025Extractor:
             with observed casillas extracted.
 
         Raises:
-            BorradorParseError: When required header fields are missing, or when a
-                ``DECLARACION`` artefact lacks a CSV stamp.
+            BorradorParseError: When required header fields are missing, when a
+                ``DECLARACION`` artefact lacks a CSV stamp, or when a supplied
+                registry-profile projection does not meet its minimum coverage.
         """
         pages = extract_pages_text(pdf_path)
         text = "\n".join(pages)
@@ -146,6 +152,13 @@ class Modelo100ObservedV2025Extractor:
 
 
 def _observed_values(text: str) -> tuple[dict[CasillaId, Decimal], list[str]]:
+    """Extract first-seen four-digit casilla amount rows from ``text``.
+
+    Duplicate casilla IDs and unparseable values are advisory warnings, not
+    immediate parse failures. Coverage-sensitive callers get hard failures later
+    when the filtered observed set is compared with the supplied extraction
+    profile.
+    """
     observed: dict[CasillaId, Decimal] = {}
     warnings: list[str] = []
     for match in _CASILLA_VALUE_RE.finditer(text):

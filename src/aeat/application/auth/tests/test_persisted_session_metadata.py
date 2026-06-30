@@ -16,6 +16,8 @@ from .._sessions import load_persisted_session, storage_state_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_BUCKET_ID = "30303030-3030-4303-8303-303030303030"
+
 
 def test_load_persisted_session_accepts_provider_specific_clave_metadata(tmp_path: Path) -> None:
     """Application session reuse must accept the real Cl@ve metadata envelope.
@@ -26,7 +28,7 @@ def test_load_persisted_session_accepts_provider_specific_clave_metadata(tmp_pat
     fields instead of rejecting a valid encrypted session as corrupt.
     """
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="auth-session-metadata") as runtime:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
         settings = runtime.settings.model_copy(update={"aeat_auth_provider": AuthProviderKind.CLAVE_MOVIL})
         external = load_external_constants().aeat
         sede_domain = urlsplit(external.domains.sede).netloc

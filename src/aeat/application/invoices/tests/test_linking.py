@@ -32,6 +32,8 @@ from .. import link_invoice_transaction_catalogues, link_invoice_transaction_rep
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_BUCKET_ID = "21212121-2121-4212-8212-212121212121"
+
 
 def test_link_invoice_transaction_catalogues_roundtrips_bidirectional_link() -> None:
     invoice = _invoice()
@@ -70,7 +72,7 @@ def test_link_invoice_transaction_catalogues_reports_missing_transaction_context
 
 
 def test_link_invoice_transaction_repositories_binds_both_catalogues_to_requested_bucket(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="invoice-link-bucket") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         invoice = _invoice()
         transaction = _transaction()
         invoices = InvoiceCatalogueRepository(bucket_id=profile.bucket_id)

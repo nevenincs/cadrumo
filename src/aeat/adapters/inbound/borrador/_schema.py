@@ -1,6 +1,8 @@
 """Strict pydantic v2 records for the Renta / Modelo 100 parser.
 
-Defines the inbound data shapes that the borrador pipeline produces:
+Defines the inbound data shapes that the borrador pipeline produces. These
+records are observed-data contracts; registry authority stays with callers that
+project a profile into :class:`BorradorExtractionProfile`.
 
 - :class:`ArtefactKind` — three Modelo 100 PDF flavours.
 - :class:`BorradorParseMode` — observed rows versus caller-supplied
@@ -51,7 +53,8 @@ class BorradorParseMode(StrEnum):
             coverage enforcement.
         REGISTRY_PROFILE: Require a caller-supplied
             :class:`BorradorExtractionProfile`, filter to its target casillas,
-            and enforce its minimum coverage.
+            and enforce its minimum coverage without consulting a registry
+            snapshot inside the adapter.
     """
 
     OBSERVED = "observed"
@@ -63,6 +66,7 @@ class BorradorExtractionTarget(Protocol):
 
     This protocol is intentionally narrow so callers can project registry
     targets without making the inbound adapter depend on registry internals.
+    Only the stable casilla identifier is needed by the observed-value filter.
     """
 
     @property
@@ -100,14 +104,14 @@ class BorradorObservation(BaseModel):
         tax_id: NIF / NIE of the filer.
         artefact_kind: Which of the three PDF types was detected.
         values: Tuple of
-            :class:`~aeat.adapters.inbound.pdf._shared.ExtractedCasilla`
-            records observed in the PDF.
+            :class:`~aeat.adapters.inbound.pdf.ExtractedCasilla` records
+            observed in the PDF.
         registry_extraction_profile_id: Registry extraction profile applied
             to this parse, when the caller requested coverage validation.
         extraction_coverage: Observed target-casilla coverage when a
             registry extraction profile was supplied.
-        source_pdf_path: Privacy-preserving source reference derived from
-            the parsed PDF digest.
+        source_pdf_path: Privacy-preserving ``.secure-source/<sha256>.pdf``
+            reference derived from the parsed PDF digest.
         source_pdf_sha256: Lowercase hex SHA-256 of source bytes.
         parsed_at: UTC timestamp at parse completion.
         csv: AEAT CSV if the artefact is a ``DECLARACION``; ``None`` for

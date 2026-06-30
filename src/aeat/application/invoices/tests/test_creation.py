@@ -35,6 +35,8 @@ from .. import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
+_BUCKET_ID = "19191919-1919-4191-8191-191919191919"
+
 
 def _modelo_349_revision():
     return load_modelo_path(bundled_path("registry", "aeat", "modelos", "349")).revisions["2020-y-siguientes"]
@@ -49,7 +51,7 @@ def test_build_catalogue_invoice_derives_grounded_totals() -> None:
     ``link --invoice-id`` resolves.
     """
     invoice = build_catalogue_invoice(
-        bucket_id="bucket-x",
+        bucket_id=_BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         counterparty_name="Papeleria Sol SL",
         counterparty_tax_id="A58818501",
@@ -74,7 +76,7 @@ def test_build_catalogue_invoice_derives_grounded_totals() -> None:
 def test_build_catalogue_invoice_exempt_carries_zero_cuota() -> None:
     """An invoice with no IVA rate is EXEMPT and carries a zero cuota."""
     invoice = build_catalogue_invoice(
-        bucket_id="bucket-x",
+        bucket_id=_BUCKET_ID,
         kind=InvoiceKind.ISSUED,
         counterparty_name="Cliente SA",
         counterparty_tax_id="A58818501",
@@ -94,7 +96,7 @@ def test_build_catalogue_invoice_refuses_unsupported_rate() -> None:
     accepted set named — never a bare value-invalid."""
     with pytest.raises(InvoiceValidationError) as exc:
         build_catalogue_invoice(
-            bucket_id="bucket-x",
+            bucket_id=_BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             counterparty_name="Papeleria Sol SL",
             counterparty_tax_id="A58818501",
@@ -121,9 +123,9 @@ def test_create_catalogue_invoice_persists_and_refuses_duplicate(tmp_path) -> No
     reloadable by its derived id; a second create of the same logical identity
     is refused so an accidental re-create cannot clobber a linked record.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         result = create_catalogue_invoice(
-            bucket_id="operator",
+            bucket_id=_BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             counterparty_name="Papeleria Sol SL",
             counterparty_tax_id="A58818501",
@@ -135,12 +137,12 @@ def test_create_catalogue_invoice_persists_and_refuses_duplicate(tmp_path) -> No
             currency="EUR",
             payment_status=PaymentStatus.PENDING,
         )
-        reloaded = InvoiceCatalogueRepository(bucket_id="operator").load().get(result.invoice.invoice_id)
+        reloaded = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load().get(result.invoice.invoice_id)
         assert reloaded == result.invoice
 
         with pytest.raises(InvoiceValidationError):
             create_catalogue_invoice(
-                bucket_id="operator",
+                bucket_id=_BUCKET_ID,
                 kind=InvoiceKind.RECEIVED,
                 counterparty_name="Papeleria Sol SL",
                 counterparty_tax_id="A58818501",
@@ -161,7 +163,7 @@ def test_build_catalogue_invoice_carries_intra_community_category() -> None:
     domestic operation (``None``) that never reaches M349.
     """
     intra = build_catalogue_invoice(
-        bucket_id="bucket-x",
+        bucket_id=_BUCKET_ID,
         kind=InvoiceKind.ISSUED,
         counterparty_name="Kunde GmbH",
         counterparty_tax_id="DE345678901",
@@ -176,7 +178,7 @@ def test_build_catalogue_invoice_carries_intra_community_category() -> None:
     assert intra.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
 
     domestic = build_catalogue_invoice(
-        bucket_id="bucket-x",
+        bucket_id=_BUCKET_ID,
         kind=InvoiceKind.ISSUED,
         counterparty_name="Cliente SL",
         counterparty_tax_id="A58818501",
@@ -198,10 +200,10 @@ def test_create_catalogue_invoice_intra_community_feeds_modelo_349(tmp_path) -> 
     intra-community supply of 2000 must surface as one operator declaring
     2000 of operations for the period it was issued in.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator"):
-        repository = InvoiceCatalogueRepository(bucket_id="operator")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
         create_catalogue_invoice(
-            bucket_id="operator",
+            bucket_id=_BUCKET_ID,
             kind=InvoiceKind.ISSUED,
             counterparty_name="Kunde GmbH",
             counterparty_tax_id="DE345678901",
@@ -216,7 +218,7 @@ def test_create_catalogue_invoice_intra_community_feeds_modelo_349(tmp_path) -> 
         )
         resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
             CalculationSourceContext(
-                bucket_id="operator",
+                bucket_id=_BUCKET_ID,
                 modelo="349",
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
@@ -229,10 +231,10 @@ def test_create_catalogue_invoice_intra_community_feeds_modelo_349(tmp_path) -> 
 
 
 def test_create_catalogue_invoice_service_keys_feed_modelo_349(tmp_path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator"):
-        repository = InvoiceCatalogueRepository(bucket_id="operator")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
         issued = create_catalogue_invoice(
-            bucket_id="operator",
+            bucket_id=_BUCKET_ID,
             kind=InvoiceKind.ISSUED,
             counterparty_name="Service SARL",
             counterparty_tax_id="FR12345678901",
@@ -246,7 +248,7 @@ def test_create_catalogue_invoice_service_keys_feed_modelo_349(tmp_path) -> None
             repository=repository,
         ).invoice
         received = create_catalogue_invoice(
-            bucket_id="operator",
+            bucket_id=_BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             counterparty_name="Servizi SRL",
             counterparty_tax_id="IT12345678901",
@@ -261,7 +263,7 @@ def test_create_catalogue_invoice_service_keys_feed_modelo_349(tmp_path) -> None
         ).invoice
         resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
             CalculationSourceContext(
-                bucket_id="operator",
+                bucket_id=_BUCKET_ID,
                 modelo="349",
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),

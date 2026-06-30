@@ -38,6 +38,8 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
+
 
 def test_invoice_rows_filter_and_sort_by_backend_projection() -> None:
     later = _invoice(invoice_number="INV-B", issued_at=date(2026, 4, 2))
@@ -90,7 +92,7 @@ def test_consistency_query_reports_one_sided_transaction_link() -> None:
 
 
 def test_repository_consistency_query_binds_both_catalogues_to_requested_bucket(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="invoice-query-bucket") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         invoice = _invoice()
         transaction = _transaction()
         linked = link_invoice_transaction_catalogues(

@@ -6,6 +6,11 @@ is allowed to wire concrete persistence, inbound, and outbound adapters; domain
 and core code must not depend back on it, and entrypoint modules should stay
 thin transports over the public application facades.
 
+Regulatory formulas, schema authority, and legal classification stay in domain
+packages (especially :mod:`aeat.domain.calculations.registry`). Application
+services assemble inputs, persistence, readiness checks, and operator workflows
+around those authorities; they should not become parallel tax-law engines.
+
 Public subpackage boundaries such as :mod:`aeat.application.modelo` and
 :mod:`aeat.application.user_profile` are the preferred import surfaces for
 cross-package consumers. Import from those package facades, not private

@@ -16,7 +16,7 @@ from ....domain.justificante import PdfModeloImportError
 
 
 class BorradorParseError(PdfModeloImportError):
-    """Raised when a Modelo 100 PDF cannot be parsed into a filing record.
+    """Raised when a Modelo 100 PDF cannot be parsed into an observation record.
 
     Base class for every borrador-specific failure raised by the inbound
     parser. Subclasses, such as :class:`ArtefactNotRecognisedError`, refine the
@@ -48,7 +48,7 @@ class BorradorParseError(PdfModeloImportError):
         ambiguous: tuple[str, ...] = (),
         coverage: Decimal | None = None,
     ) -> None:
-        """Initialise with an optional human-readable message and structured coverage fields.
+        """Initialise with an optional message and structured coverage fields.
 
         Args:
             message: Optional human-readable description of the failure.

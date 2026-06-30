@@ -63,13 +63,13 @@ class TestInvoiceDirectionToSourceKind:
         }
 
 
-_BUCKET_ID = "bucket-invoices"
-_OTHER_BUCKET_ID = "bucket-other"
+_BUCKET_ID = "24242424-2424-4242-8242-242424242424"
+_OTHER_BUCKET_ID = "25252525-2525-4252-8252-252525252525"
 
 
 @pytest.fixture
 def secure_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile
 
 
@@ -394,8 +394,8 @@ def test_invoice_catalogue_source_resolver_fails_closed_when_context_bucket_is_n
 ) -> None:
     with isolated_two_bucket_runtime(
         tmp_path=tmp_path,
-        primary_bucket_id="invoice-source-primary",
-        secondary_bucket_id="invoice-source-secondary",
+        primary_bucket_id=_BUCKET_ID,
+        secondary_bucket_id=_OTHER_BUCKET_ID,
     ) as runtime:
         snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
 
