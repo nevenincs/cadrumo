@@ -1,4 +1,4 @@
-"""Focused adapter contract tests split from the original monolith."""
+"""Annual summary parser-verification-chain tests."""
 
 from __future__ import annotations
 
