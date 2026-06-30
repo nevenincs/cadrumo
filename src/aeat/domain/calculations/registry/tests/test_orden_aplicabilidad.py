@@ -19,20 +19,16 @@ No mocks, no skips, no xfail.
 from __future__ import annotations
 
 from datetime import date
-from functools import cache
 
 import pytest
 
-from .....core.resources import bundled_path
-from .._loader import load_registry_tree
 from .._schema import (
     LegalReference,
-    ModeloDefinition,
     ModeloRevision,
     PeriodSelector,
-    RegistryCatalogues,
 )
 from .._validate_orden_aplicabilidad import validate_orden_aplicabilidad
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -40,8 +36,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # ---------------------------------------------------------------------------
 # Shared helpers
 # ---------------------------------------------------------------------------
-
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 # Minimal synthetic legal catalogue entry for tests.
 _VALID_LEGAL_REF = LegalReference(
@@ -247,12 +241,6 @@ def test_s24_open_ended_revision_without_orden_is_hard_failure() -> None:
 # ---------------------------------------------------------------------------
 # Backfilled revisions in the committed registry load cleanly
 # ---------------------------------------------------------------------------
-
-
-@cache
-def _committed_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    return tuple(modelos), catalogues
 
 
 def test_committed_registry_has_no_unstamped_revisions() -> None:

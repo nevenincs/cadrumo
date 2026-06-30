@@ -25,6 +25,7 @@ from .._scenarios import (
     assert_registry_scenario_matches,
     run_registry_calculation_scenario,
 )
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -188,10 +189,7 @@ def test_minimo_personal_y_familiar_aggregates_all_four_components_estatal() -> 
     covered by the live Renta WEB Open replay parity tests.
     """
 
-    from .._loader import load_registry_tree
-
-    modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(m for m in modelos if m.id == "100")
+    modelo, _catalogues = _committed_modelo("100")
     revision = modelo.revisions["2025"]
     formula = next(f for f in revision.formulas if f.target_casilla_id == _C0519)
     expression = formula.expression.model_dump(exclude_none=True)
