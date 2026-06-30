@@ -15,7 +15,6 @@ Guards behaviour of two load-bearing helpers:
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -23,7 +22,6 @@ import pytest
 from .....application.storage.calc_sheets import registry_sha
 from .....core.decimal import coerce_decimal as _coerce_decimal
 from .....core.i18n import tr
-from .....core.resources import resources
 from ....outbound.storage._errors import OutboundStorageConflictError, OutboundStorageValidationError
 from .._calc_sheets_pull import (
     MetadataMatchState,
@@ -32,6 +30,7 @@ from .._calc_sheets_pull import (
     _merge_developer_metadata_entries,
     pull_operator_edits,
 )
+from ._calc_sheets_support import modelo_130_2025_1t_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -95,12 +94,8 @@ def test_coerce_decimal_parses_int_and_float() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _modelo_130_snapshot():
-    return resources().modelos.authority.snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
-
-
 def test_classify_metadata_returns_missing_for_empty_pairs() -> None:
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     verdict, metadata = _classify_metadata_match({}, snapshot)
     assert verdict is MetadataMatchState.MISSING
     # Missing metadata still returns a PullMetadata placeholder so callers can
@@ -114,7 +109,7 @@ def test_classify_metadata_returns_missing_for_empty_pairs() -> None:
 
 
 def test_classify_metadata_returns_matches_for_aligned_pairs() -> None:
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     pairs = {
         "aeat_modelo_id": "130",
         "aeat_revision_id": snapshot.revision.id,
@@ -132,7 +127,7 @@ def test_classify_metadata_returns_matches_for_aligned_pairs() -> None:
 
 
 def test_classify_metadata_returns_stale_for_mismatched_modelo() -> None:
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     pairs = {
         "aeat_modelo_id": "131",  # different modelo
         "aeat_revision_id": snapshot.revision.id,
@@ -144,7 +139,7 @@ def test_classify_metadata_returns_stale_for_mismatched_modelo() -> None:
 
 
 def test_classify_metadata_returns_stale_for_mismatched_period() -> None:
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     pairs = {
         "aeat_modelo_id": "130",
         "aeat_revision_id": snapshot.revision.id,
@@ -156,7 +151,7 @@ def test_classify_metadata_returns_stale_for_mismatched_period() -> None:
 
 
 def test_classify_metadata_returns_stale_for_mismatched_year() -> None:
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     pairs = {
         "aeat_modelo_id": "130",
         "aeat_revision_id": snapshot.revision.id,
@@ -169,7 +164,7 @@ def test_classify_metadata_returns_stale_for_mismatched_year() -> None:
 
 def test_classify_metadata_returns_stale_when_filing_year_is_garbage() -> None:
     """A malformed filing_year string defaults to 0 (which never matches)."""
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     pairs = {
         "aeat_modelo_id": "130",
         "aeat_revision_id": snapshot.revision.id,
@@ -198,7 +193,7 @@ def test_classify_metadata_returns_stale_for_drifted_registry_sha() -> None:
     calculation surface flowed silently into the local recompute.
     """
 
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     pairs = {
         "aeat_modelo_id": "130",
         "aeat_revision_id": snapshot.revision.id,
@@ -221,7 +216,7 @@ def test_classify_metadata_returns_stale_for_drifted_registry_sha() -> None:
 
 
 def test_pull_operator_edits_refuses_blank_spreadsheet_id_before_service_build() -> None:
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
 
     with pytest.raises(OutboundStorageValidationError) as raised:
         pull_operator_edits(snapshot=snapshot, spreadsheet_id="  ", credentials=object())
