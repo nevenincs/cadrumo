@@ -1,4 +1,4 @@
-"""Focused adapter contract tests split from the original monolith."""
+"""Modelo 369 parser boundary synthetic fixture tests."""
 
 from __future__ import annotations
 
@@ -17,6 +17,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 _DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
 _DECL_PERIODO_CASILLA: CasillaId = _casilla_id("decl.periodo")
+_M369_EXPECTED_VALUES: dict[CasillaId, Decimal | str] = {
+    _DECL_EJERCICIO_CASILLA: Decimal("2024"),
+    _DECL_PERIODO_CASILLA: "1T",
+}
 
 
 def test_parser_extracts_modelo_369_synthetic_fixture_targets() -> None:
@@ -63,27 +67,4 @@ def test_parser_extracts_modelo_369_synthetic_fixture_targets() -> None:
     assert filing.registry_snapshot_ref.modelo_year == 2024
     assert filing.registry_snapshot_ref.period == "1T"
 
-    values = {v.casilla_id: v.printed_value for v in filing.values}
-
-    # Both casillas defined by the M369 declaracion_pdf profile must be present.
-    assert set(values.keys()) == {
-        _DECL_EJERCICIO_CASILLA,
-        _DECL_PERIODO_CASILLA,
-    }, f"expected exactly {{decl.ejercicio, decl.periodo}}, got {set(values.keys())!r}"
-
-    # decl.ejercicio: fixture prints "Ejercicio: 2024";
-    # parse_spanish_decimal("2024") = Decimal("2024").
-    # Ground truth: DR369e21.xlsx row 14 "2. Ejercicio y período. Ejercicio" and
-    # AEAT manual section 2 heading "2. Ejercicio y periodo".
-    assert values[_DECL_EJERCICIO_CASILLA] == Decimal("2024"), (
-        f"decl.ejercicio: expected Decimal('2024') from AEAT-grounded fixture, got "
-        f"{values[_DECL_EJERCICIO_CASILLA]!r}"
-    )
-
-    # decl.periodo: fixture prints "Periodo: 1T";
-    # '1T' is not a valid Decimal so parse_spanish_decimal raises ValueError and
-    # the parser stores the raw token as a string for value_kind='text' casillas.
-    # Ground truth: DR369e21.xlsx row 16 "2. Ejercicio y período. Periodo".
-    assert values[_DECL_PERIODO_CASILLA] == "1T", (
-        f"decl.periodo: expected '1T' from AEAT-grounded fixture, got {values[_DECL_PERIODO_CASILLA]!r}"
-    )
+    assert {value.casilla_id: value.printed_value for value in filing.values} == _M369_EXPECTED_VALUES
