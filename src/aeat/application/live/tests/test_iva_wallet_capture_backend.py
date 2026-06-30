@@ -38,8 +38,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _TAXPAYER_REF = "synthetic-taxpayer"
 _CAPTURED_AT = datetime(2026, 5, 20, 10, 30, 0, tzinfo=UTC)
-_BUCKET_ID = "operator"
-_SESSION_BUCKET_ID = "ephemeral"
+_SESSION_BUCKET_ID = "38383838-3838-4383-8383-383838383838"
+_OTHER_SESSION_BUCKET_ID = "39393939-3939-4393-8393-393939393939"
 
 
 def _wallet_html(*, total: str, rows: str, target_year: int, target_period: str) -> str:
@@ -154,7 +154,7 @@ def test_wallet_reconciliation_uses_runtime_bound_repository_for_decision_persis
         assert report.divergence == "match"
         assert decision_repo.load_decision(_TAXPAYER_REF, Period.from_year_and_code(2026, "2T")) is not None
 
-    with isolated_runtime_profile(tmp_path=tmp_path / "other-profile", bucket_id="other-session"):
+    with isolated_runtime_profile(tmp_path=tmp_path / "other-profile", bucket_id=_OTHER_SESSION_BUCKET_ID):
         assert IvaWalletDecisionRepository().load_decision(_TAXPAYER_REF, Period.from_year_and_code(2026, "2T")) is None
 
 
