@@ -5,13 +5,14 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.resources import resources
-from ....domain.calculations.registry import resolve_ledger_renta_income_aggregation_binding_values
+from ....domain.calculations.registry import RegistrySnapshot, resolve_ledger_renta_income_aggregation_binding_values
 from ....domain.transactions import BusinessClassification, TransactionCatalogue, TransactionCatalogueRepository
 from .._modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from .._renta_income_ledger import RentaIncomeLedgerAggregationIssueReason, aggregate_renta_income_ledger
@@ -27,6 +28,11 @@ from ._renta_income_aggregation_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@cache
+def _m130_2026_q1_snapshot() -> RegistrySnapshot:
+    return resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
 
 
 @pytest.fixture
@@ -156,7 +162,7 @@ def test_net_paid_professional_invoice_derives_withheld_amount_for_m130() -> Non
     assert observation.taxable_base_amount == Decimal("2000.00")
     assert observation.withheld_amount == Decimal("300.00")
 
-    revision = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T").revision
+    revision = _m130_2026_q1_snapshot().revision
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
     assert aggregation.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == Decimal("2000.00")
     assert resolved[_M130_RETENCIONES_BINDING] == Decimal("300.00")
@@ -175,7 +181,7 @@ def test_income_source_resolver_projects_withheld_amount_to_m130_casilla_06(
     )
     tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((tx,)))
-    snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
+    snapshot = _m130_2026_q1_snapshot()
     context = CalculationSourceContext(
         bucket_id="test",
         modelo="130",
