@@ -31,6 +31,8 @@ from .. import reconcile_invoice_catalogues, reconcile_invoice_repositories
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_BUCKET_ID = "23232323-2323-4232-8232-232323232323"
+
 
 def test_reconcile_invoice_catalogues_without_apply_reports_suggestions_without_mutation() -> None:
     invoice = _invoice()
@@ -79,7 +81,7 @@ def test_reconcile_invoice_catalogues_apply_roundtrips_bidirectional_links() -> 
 
 
 def test_reconcile_invoice_repositories_binds_both_catalogues_to_requested_bucket(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="invoice-reconcile-bucket") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         invoice = _invoice()
         transaction = _transaction()
         InvoiceCatalogueRepository(bucket_id=profile.bucket_id).save(InvoiceCatalogue.from_invoices([invoice]))
