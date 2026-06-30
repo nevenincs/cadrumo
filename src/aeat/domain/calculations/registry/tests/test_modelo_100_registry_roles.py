@@ -896,6 +896,50 @@ def test_modelo_100_eo_module_units_are_decimal() -> None:
             )
 
 
+def test_modelo_100_eo_correction_indices_are_decimal() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_legal_refs = {
+        "ley-35-2006:art-27",
+        "ley-35-2006:art-28",
+        "ley-35-2006:art-30",
+        "ley-35-2006:art-31",
+        "ley-35-2006:art-32",
+    }
+    expected_roles = {
+        "1469": "irpf_eo_indice_corrector_especial",
+        "1470": "irpf_eo_indice_corrector_pequena_dimension",
+        "1471": "irpf_eo_indice_corrector_temporada",
+        "1472": "irpf_eo_indice_corrector_exceso",
+        "1473": "irpf_eo_indice_corrector_inicio",
+    }
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casillas_by_id = {
+            casilla.id: casilla
+            for casilla in revision.casillas
+            if casilla.id in {_casilla_id(casilla_id) for casilla_id in expected_roles}
+        }
+
+        assert set(casillas_by_id) == {_casilla_id(casilla_id) for casilla_id in expected_roles}
+        for casilla_id, expected_role in expected_roles.items():
+            casilla = casillas_by_id[_casilla_id(casilla_id)]
+
+            assert "Índice corrector" in casilla.label
+            assert tuple(casilla.section) == (
+                "toma_datos_ampliada",
+                "reg_estima_obj",
+                "actividad_est_obj",
+            )
+            assert casilla.data_type == "decimal"
+            assert casilla.semantic_role == expected_role
+            assert expected_legal_refs.issubset(casilla.legal_refs)
+            assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+                casilla.source_refs,
+            )
+
+
 def test_modelo_100_eo_agricultural_activity_key_is_integer() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
