@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from datetime import date
 from decimal import Decimal
 
@@ -111,6 +111,18 @@ def _registry_modelo_observations_from_values(
         )
         for period, casilla_values in sorted(period_values.items())
     )
+
+
+def _decimal_inputs_from_extracted_values(
+    extracted: Mapping[CasillaId, object],
+    *,
+    excluding: Collection[CasillaId],
+) -> dict[CasillaId, Decimal]:
+    return {
+        casilla_id: value
+        for casilla_id, value in extracted.items()
+        if casilla_id not in excluding and isinstance(value, Decimal)
+    }
 
 
 _M303_STATE_ATTRIBUTION_RATIO_CASILLA: CasillaId = _casilla_id("65")
