@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import bundled_path
-from .. import load_registry_tree
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -19,8 +18,7 @@ _MODELO_100_2025_FORM_ORDER_REF = "orden-hac-277-2026:art-3"
 
 
 def _modelo_100_revisions():
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(m for m in modelos if m.id == "100")
+    modelo, _catalogues = _committed_modelo("100")
     return modelo.revisions
 
 
