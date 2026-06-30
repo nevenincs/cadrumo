@@ -26,10 +26,12 @@ from .._business_operation_invoice import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_BUCKET_ID = "34343434-3434-4434-8434-343434343434"
+
 
 @pytest.fixture
 def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-001") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile
 
 
@@ -66,7 +68,7 @@ class TestPayableInvoiceCrud:
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         result = svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="B12345678",
             invoice_number="INV-2025-001",
             invoice_date="2025-03-15",
@@ -88,19 +90,19 @@ class TestPayableInvoiceCrud:
         payable_svc = _make_payable_svc(isolated_settings, secure_objects)
         collectible_svc = _make_collectible_svc(isolated_settings, secure_objects)
         payable_svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="B11111111",
             invoice_number="INV-1",
             invoice_date="2025-03-15",
         )
         collectible_svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="B22222222",
             invoice_number="INV-2",
             invoice_date="2025-03-16",
         )
-        payable_records = payable_svc.list_all(bucket_id="bucket-001")
-        collectible_records = collectible_svc.list_all(bucket_id="bucket-001")
+        payable_records = payable_svc.list_all(bucket_id=_BUCKET_ID)
+        collectible_records = collectible_svc.list_all(bucket_id=_BUCKET_ID)
         assert len(payable_records) == 1
         assert len(collectible_records) == 1
         assert payable_records[0].source_kind is BusinessOperationInvoiceDirection.PAYABLE_INVOICE
@@ -113,12 +115,12 @@ class TestPayableInvoiceCrud:
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         result = svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="B12345678",
             invoice_number="INV-2025-001",
             invoice_date="2025-03-15",
         )
-        viewed = svc.view(bucket_id="bucket-001", invoice_id=result.record.invoice_id)
+        viewed = svc.view(bucket_id=_BUCKET_ID, invoice_id=result.record.invoice_id)
         assert viewed == result.record
 
     def test_view_resolves_unambiguous_prefix(
@@ -128,13 +130,13 @@ class TestPayableInvoiceCrud:
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         result = svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="B12345678",
             invoice_number="INV-001",
             invoice_date="2025-03-15",
         )
         prefix = result.record.invoice_id[:8]
-        viewed = svc.view(bucket_id="bucket-001", invoice_id=prefix)
+        viewed = svc.view(bucket_id=_BUCKET_ID, invoice_id=prefix)
         assert viewed == result.record
 
     def test_view_refuses_on_unknown_id(
@@ -144,7 +146,7 @@ class TestPayableInvoiceCrud:
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         with pytest.raises(BusinessOperationInvoiceNotFoundError):
-            svc.view(bucket_id="bucket-001", invoice_id="nonexistent")
+            svc.view(bucket_id=_BUCKET_ID, invoice_id="nonexistent")
 
     def test_update_overwrites_only_provided_fields(
         self,
@@ -153,7 +155,7 @@ class TestPayableInvoiceCrud:
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         add_result = svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="B12345678",
             counterparty_name="Acme S.L.",
             invoice_number="INV-001",
@@ -164,7 +166,7 @@ class TestPayableInvoiceCrud:
             notes="updated notes",
             total_amount=Decimal("500.00"),
         )
-        update_result = svc.update(bucket_id="bucket-001", invoice_id=add_result.record.invoice_id, patch=patch)
+        update_result = svc.update(bucket_id=_BUCKET_ID, invoice_id=add_result.record.invoice_id, patch=patch)
         updated = update_result.record
         assert updated.notes == "updated notes"
         assert updated.total_amount == Decimal("500.00")
@@ -179,16 +181,16 @@ class TestPayableInvoiceCrud:
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         add_result = svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="B12345678",
             invoice_number="INV-001",
             invoice_date="2025-03-15",
         )
-        remove_result = svc.remove(bucket_id="bucket-001", invoice_id=add_result.record.invoice_id)
+        remove_result = svc.remove(bucket_id=_BUCKET_ID, invoice_id=add_result.record.invoice_id)
         assert remove_result.record == add_result.record
-        assert svc.list_all(bucket_id="bucket-001") == ()
+        assert svc.list_all(bucket_id=_BUCKET_ID) == ()
         with pytest.raises(BusinessOperationInvoiceNotFoundError):
-            svc.view(bucket_id="bucket-001", invoice_id=add_result.record.invoice_id)
+            svc.view(bucket_id=_BUCKET_ID, invoice_id=add_result.record.invoice_id)
 
 
 class TestPayableInvoiceEventEmission:
@@ -204,7 +206,7 @@ class TestPayableInvoiceEventEmission:
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         result = svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="B99999999",
             invoice_number="INV-EVENT-001",
             invoice_date="2025-04-01",
@@ -214,7 +216,7 @@ class TestPayableInvoiceEventEmission:
         event = catalogue.events[result.bucket_event_ids[0]]
         assert event.event_type is BucketEventType.PAYABLE_INVOICE_CREATED
         assert event.object_id == result.record.invoice_id
-        assert event.bucket_id == "bucket-001"
+        assert event.bucket_id == _BUCKET_ID
 
     def test_default_event_repository_uses_active_runtime_bucket(
         self,
@@ -224,7 +226,7 @@ class TestPayableInvoiceEventEmission:
         svc = PayableInvoiceService(settings=isolated_settings)
 
         result = svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="B99999999",
             invoice_number="INV-EVENT-DEFAULT",
             invoice_date="2025-04-01",
@@ -233,7 +235,7 @@ class TestPayableInvoiceEventEmission:
         catalogue = self._event_repo(secure_objects).load()
         event = catalogue.events[result.bucket_event_ids[0]]
         assert event.event_type is BucketEventType.PAYABLE_INVOICE_CREATED
-        assert event.bucket_id == "bucket-001"
+        assert event.bucket_id == _BUCKET_ID
 
     def test_update_emits_payable_invoice_updated(
         self,
@@ -242,13 +244,13 @@ class TestPayableInvoiceEventEmission:
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         add_result = svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="B99999999",
             invoice_number="INV-EVENT-002",
             invoice_date="2025-04-01",
         )
         update_result = svc.update(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             invoice_id=add_result.record.invoice_id,
             patch=BusinessOperationInvoicePatch(notes="event test"),
         )
@@ -264,13 +266,13 @@ class TestPayableInvoiceEventEmission:
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         add_result = svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="B99999999",
             invoice_number="INV-EVENT-003",
             invoice_date="2025-04-01",
         )
         remove_result = svc.remove(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             invoice_id=add_result.record.invoice_id,
         )
         assert len(remove_result.bucket_event_ids) == 1
@@ -292,7 +294,7 @@ class TestCollectibleInvoiceEventEmission:
     ) -> None:
         svc = _make_collectible_svc(isolated_settings, secure_objects)
         result = svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="C11111111",
             invoice_number="CINV-001",
             invoice_date="2025-05-01",
@@ -301,7 +303,7 @@ class TestCollectibleInvoiceEventEmission:
         catalogue = self._event_repo(secure_objects).load()
         event = catalogue.events[result.bucket_event_ids[0]]
         assert event.event_type is BucketEventType.COLLECTIBLE_INVOICE_CREATED
-        assert event.bucket_id == "bucket-001"
+        assert event.bucket_id == _BUCKET_ID
 
     def test_remove_emits_collectible_invoice_removed(
         self,
@@ -310,13 +312,13 @@ class TestCollectibleInvoiceEventEmission:
     ) -> None:
         svc = _make_collectible_svc(isolated_settings, secure_objects)
         add_result = svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="C11111111",
             invoice_number="CINV-002",
             invoice_date="2025-05-01",
         )
         remove_result = svc.remove(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             invoice_id=add_result.record.invoice_id,
         )
         assert len(remove_result.bucket_event_ids) == 1
@@ -341,7 +343,7 @@ class TestPrefixCollisionRefusal:
         minted: list[str] = []
         for index in range(17):
             result = svc.add(
-                bucket_id="bucket-001",
+                bucket_id=_BUCKET_ID,
                 counterparty_nif=f"B{index:02d}",
                 invoice_number=f"N{index:02d}",
                 invoice_date="2025-03-15",
@@ -359,7 +361,7 @@ class TestPrefixCollisionRefusal:
         assert shared_prefix is not None, "pigeonhole guarantee violated"
 
         with pytest.raises(BusinessOperationInvoiceInputError, match="ambiguous"):
-            svc.view(bucket_id="bucket-001", invoice_id=shared_prefix)
+            svc.view(bucket_id=_BUCKET_ID, invoice_id=shared_prefix)
 
 
 class TestSourceKindIsolation:
@@ -370,15 +372,15 @@ class TestSourceKindIsolation:
     ) -> None:
         payable_svc = _make_payable_svc(isolated_settings, secure_objects)
         collectible_svc = _make_collectible_svc(isolated_settings, secure_objects)
-        payable_svc.add(bucket_id="bucket-001", counterparty_nif="B1", invoice_number="N1", invoice_date="2025-03-15")
+        payable_svc.add(bucket_id=_BUCKET_ID, counterparty_nif="B1", invoice_number="N1", invoice_date="2025-03-15")
         collectible_svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="B2",
             invoice_number="N2",
             invoice_date="2025-03-15",
         )
-        payable_records = payable_svc.list_all(bucket_id="bucket-001")
-        collectible_records = collectible_svc.list_all(bucket_id="bucket-001")
+        payable_records = payable_svc.list_all(bucket_id=_BUCKET_ID)
+        collectible_records = collectible_svc.list_all(bucket_id=_BUCKET_ID)
         assert len(payable_records) == 1
         assert len(collectible_records) == 1
         assert payable_records[0].counterparty_nif == "B1"
@@ -399,7 +401,7 @@ class TestRecordImmutability:
     def test_record_is_frozen(self, isolated_settings: Settings, secure_objects: SecureObjectRepository) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         result = svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="B12345678",
             invoice_number="INV-001",
             invoice_date="2025-03-15",
@@ -418,7 +420,7 @@ class TestRoundTripPersistence:
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         add_result = svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="B12345678",
             invoice_number="INV-001",
             invoice_date="2025-03-15",
@@ -428,7 +430,7 @@ class TestRoundTripPersistence:
             total_amount=Decimal("1493.82"),
         )
         fresh_svc = _make_payable_svc(isolated_settings, secure_objects)
-        records = fresh_svc.list_all(bucket_id="bucket-001")
+        records = fresh_svc.list_all(bucket_id=_BUCKET_ID)
         assert len(records) == 1
         assert records[0].invoice_id == add_result.record.invoice_id
         assert records[0].taxable_base == Decimal("1234.56")
@@ -523,7 +525,7 @@ class TestIntracomFieldsPersistence:
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         result = svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="B12345678",
             invoice_number="INV-001",
             invoice_date="2025-03-15",
@@ -539,7 +541,7 @@ class TestIntracomFieldsPersistence:
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="B12345678",
             invoice_number="INV-001",
             invoice_date="2025-03-15",
@@ -548,7 +550,7 @@ class TestIntracomFieldsPersistence:
             operation_type=IntracomOperationType.E,
         )
         fresh_svc = _make_payable_svc(isolated_settings, secure_objects)
-        records = fresh_svc.list_all(bucket_id="bucket-001")
+        records = fresh_svc.list_all(bucket_id=_BUCKET_ID)
         assert len(records) == 1
         record = records[0]
         assert record.country_code == "DE"
@@ -563,15 +565,15 @@ class TestIntracomFieldsPersistence:
         svc = _make_payable_svc(isolated_settings, secure_objects)
 
         result = svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="B12345678",
             invoice_number="INV-SECURE-001",
             invoice_date="2025-03-15",
         )
-        records = svc.list_all(bucket_id="bucket-001")
+        records = svc.list_all(bucket_id=_BUCKET_ID)
 
         assert records == (result.record,)
-        assert not (isolated_settings.aeat_invoices_dir / "payable_invoice" / "bucket-001.jsonl").exists()
+        assert not (isolated_settings.aeat_invoices_dir / "payable_invoice" / f"{_BUCKET_ID}.jsonl").exists()
         raw_records = tuple(secure_objects.iter_all_records_raw())
         assert any(row.namespace == "aeat.application.ledger.business_operation_invoices" for row in raw_records)
 
@@ -584,7 +586,7 @@ class TestIntracomFieldsPersistence:
         # two records with different eu_iva_id must not be equal.
         svc = _make_payable_svc(isolated_settings, secure_objects)
         r1 = svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="B12345678",
             invoice_number="INV-A",
             invoice_date="2025-03-15",
@@ -593,7 +595,7 @@ class TestIntracomFieldsPersistence:
             operation_type=IntracomOperationType.E,
         ).record
         r2 = svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="B12345678",
             invoice_number="INV-B",
             invoice_date="2025-03-15",
@@ -616,7 +618,7 @@ class TestUnifiedInvoiceAddRoundtrip:
     ) -> None:
         svc = _make_collectible_svc(isolated_settings, secure_objects)
         added = svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="B87654321",
             invoice_number="ISS-2026-042",
             invoice_date="2026-02-14",
@@ -644,7 +646,7 @@ class TestUnifiedInvoiceAddRoundtrip:
         # Reload through a FRESH service against the same encrypted secure
         # objects and assert strict pydantic equality across the boundary.
         fresh_svc = _make_collectible_svc(isolated_settings, secure_objects)
-        reloaded = fresh_svc.view(bucket_id="bucket-001", invoice_id=added.invoice_id)
+        reloaded = fresh_svc.view(bucket_id=_BUCKET_ID, invoice_id=added.invoice_id)
         assert reloaded == added
 
     def test_invoice_roundtrip_antitautology(
@@ -666,7 +668,7 @@ class TestUnifiedInvoiceAddRoundtrip:
 
         svc = _make_collectible_svc(isolated_settings, secure_objects)
         original = svc.add(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             counterparty_nif="B87654321",
             invoice_number="ISS-ANTITAUT",
             invoice_date="2026-02-14",
@@ -676,20 +678,20 @@ class TestUnifiedInvoiceAddRoundtrip:
         ).record
 
         repository = BusinessOperationInvoiceRepository(objects=secure_objects)
-        key = f"bucket-001:{BusinessOperationInvoiceDirection.COLLECTIBLE_INVOICE.value}"
+        key = f"{_BUCKET_ID}:{BusinessOperationInvoiceDirection.COLLECTIBLE_INVOICE.value}"
         document = repository.load(key)
         assert document is not None
         tampered_record = original.model_copy(update={"eu_iva_id": None, "operation_type": None})
         repository.save(
             BusinessOperationInvoiceDocument(
-                bucket_id="bucket-001",
+                bucket_id=_BUCKET_ID,
                 source_kind=BusinessOperationInvoiceDirection.COLLECTIBLE_INVOICE,
                 records=(tampered_record,),
             ),
         )
 
         fresh_svc = _make_collectible_svc(isolated_settings, secure_objects)
-        reloaded = fresh_svc.view(bucket_id="bucket-001", invoice_id=original.invoice_id)
+        reloaded = fresh_svc.view(bucket_id=_BUCKET_ID, invoice_id=original.invoice_id)
         assert reloaded != original
         assert reloaded.eu_iva_id is None
         assert original.eu_iva_id == "DE345678901"
