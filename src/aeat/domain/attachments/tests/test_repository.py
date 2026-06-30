@@ -17,14 +17,16 @@ from .._models import Attachment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_BUCKET_ID = "8b159522-c2d5-490f-95f8-f1e936f45f7d"
+
 
 @pytest.fixture(autouse=True)
 def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="attachment-test") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile
 
 
-def _attachment(body: bytes, *, tx_id: str = "tx-001", bucket_id: str = "bucket-a") -> Attachment:
+def _attachment(body: bytes, *, tx_id: str = "tx-001", bucket_id: str = _BUCKET_ID) -> Attachment:
     digest = hashlib.sha256(body).hexdigest()
     return Attachment(
         attachment_id=digest,
@@ -60,7 +62,7 @@ def test_blob_and_manifest_round_trip_without_plaintext_files(
     assert loaded == attachment
     assert loaded.captured_by == "operator-A"
     assert loaded.source_command == "aeat app ledger attach"
-    assert loaded.bucket_id == "bucket-a"
+    assert loaded.bucket_id == _BUCKET_ID
     assert tuple(store.iter_manifests()) == (attachment,)
     store.verify_blob(digest)
 
