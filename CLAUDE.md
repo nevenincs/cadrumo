@@ -60,6 +60,7 @@ You MUST respect these rules at all times:
 @.claude/rules/no-silent-under-declaration.md
 @.claude/rules/no-tautological-calculation-tests.md
 @.claude/rules/one-aggregation-path-pull-equals-calculate.md
+@.claude/rules/operator-harness-cites-live-cli-surface.md
 @.claude/rules/period-filter-single-boundary-authority.md
 @.claude/rules/plan-closure-requires-exec-records.md
 @.claude/rules/registry-calculation-legal-grounding.md
