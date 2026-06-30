@@ -31,7 +31,14 @@ if TYPE_CHECKING:
 
 
 class QuarantineNamespacePayload(OutputSchema):
-    """One namespace row in a quarantine report."""
+    """One secure-object namespace row in a repair quarantine report.
+
+    Projects the per-namespace counts carried by
+    :class:`~aeat.application.diagnostics.SecureObjectIntegrityReport` and its
+    secure-object integrity rows.  It reports only namespace and
+    decryptability counts; object keys, ciphertext, plaintext payload bytes,
+    taxpayer identifiers, and bucket identifiers stay out of the CLI payload.
+    """
 
     namespace: str
     readable: int
@@ -39,7 +46,14 @@ class QuarantineNamespacePayload(OutputSchema):
 
 
 class WorkflowFingerprintPayload(OutputSchema):
-    """Serialised workflow-state fingerprint nested in repair.reset_progress."""
+    """Metadata fingerprint for encrypted workflow progress state.
+
+    Mirrors :class:`~aeat.application.workflow.WorkflowStateResetFingerprint`
+    for ``config repair reset-progress``.  The fingerprint identifies the
+    stored envelope's schema, write time, byte length, read-status reason, and
+    recoverable bucket context without serialising the
+    :class:`~aeat.application.workflow.WorkflowState` plaintext.
+    """
 
     schema_version: int | None = None
     written_at: str | None = None
@@ -90,7 +104,12 @@ class RepairQuarantineResult(OutputSchema):
     """JSON envelope for ``aeat config repair quarantine``.
 
     Covers the no-active-profile guard, the dry-run preview path, and
-    the live quarantine path. Optional fields accommodate each branch.
+    the confirmed quarantine path.  Dry-run rows come from
+    :func:`~aeat.application.diagnostics.preview_quarantine_unreadable_secure_objects`
+    and mutate nothing; confirmed rows come from
+    :func:`~aeat.application.diagnostics.quarantine_unreadable_secure_objects`.
+    Both branches expose aggregate :class:`QuarantineNamespacePayload` counts
+    rather than secure-object payload material.
     """
 
     dry_run: bool
@@ -112,7 +131,11 @@ class RepairResetProgressResult(OutputSchema):
     """JSON envelope for ``aeat config repair reset-progress``.
 
     Covers the no-active-profile guard, the dry-run preview path, and
-    the live reset path.
+    the confirmed reset path.  Dry-run calls
+    :func:`~aeat.application.workflow.fingerprint_workflow_state`; confirmed
+    reset calls :func:`~aeat.application.workflow.reset_workflow_state`.  The
+    optional :class:`WorkflowFingerprintPayload` is a metadata summary of the
+    encrypted progress envelope, not the saved workflow contents.
     """
 
     # No-active-profile branch
@@ -125,7 +148,14 @@ class RepairResetProgressResult(OutputSchema):
 
 @register_schema("config.repair.connectivity")
 class RepairConnectivityResult(OutputSchema):
-    """JSON envelope for ``aeat config repair connectivity``."""
+    """Read-only connectivity probe result for ``aeat config repair connectivity``.
+
+    Wraps the browser/Sede status produced by
+    :func:`~aeat.application.diagnostics.probe_browser_connectivity` for the
+    :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` surface.  The
+    command reports adapter health only; it does not authenticate, file, or
+    mutate local configuration.
+    """
 
     target: str
     status: dict[str, object]
