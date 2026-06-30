@@ -19,6 +19,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from click.testing import Result
 
 from ._ledger_validation_support import (
     _add_eligible_mixed_expense,
@@ -30,6 +31,13 @@ from ._ledger_validation_support import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def _assert_negative_amount_refusal(result: Result) -> None:
+    assert result.exit_code != 0, result.output
+    combined = result.output or ""
+    assert "non-negative magnitude" in combined, combined
+    assert "--direction" in combined, combined
 
 
 @pytest.fixture(autouse=True)
@@ -110,11 +118,8 @@ def test_ledger_add_rejects_negative_amount_with_instructive_error(tmp_path: Pat
             "office supplies",
         ],
     )
-    assert result.exit_code != 0, result.output
-    combined = result.output or ""
     # Instructive: names the accepted non-negative form and the --direction axis.
-    assert "non-negative magnitude" in combined, combined
-    assert "--direction" in combined, combined
+    _assert_negative_amount_refusal(result)
 
 
 def test_ledger_add_gross_mismatch_surfaces_clean_refusal_not_pydantic_repr(
@@ -538,10 +543,7 @@ def test_ledger_update_rejects_negative_amount_with_instructive_error(tmp_path: 
         ],
     )
 
-    assert result.exit_code != 0, result.output
-    combined = result.output or ""
-    assert "non-negative magnitude" in combined, combined
-    assert "--direction" in combined, combined
+    _assert_negative_amount_refusal(result)
 
 
 # ---------------------------------------------------------------------------
