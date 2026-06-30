@@ -366,7 +366,9 @@ class NotificationRowPayload(OutputSchema):
 class NotificationSnapshotListingPayload(OutputSchema):
     """Summary row for one persisted DEHu notification snapshot.
 
-    Used by :class:`NotificationsListResult` to expose the bucket snapshot id,
+    Used by
+    :class:`~aeat.entrypoints.cli._app_live_payloads.NotificationsListResult`
+    to expose the bucket snapshot id,
     capture timestamp, and row count returned by
     :class:`~aeat.application.live.NotificationsService` without expanding the
     underlying notification rows.
@@ -399,7 +401,9 @@ class NotificationsCaptureResult(OutputSchema):
 class NotificationsListResult(OutputSchema):
     """Typed listing of persisted DEHu notification snapshots.
 
-    ``rows`` contains :class:`NotificationSnapshotListingPayload` summaries
+    ``rows`` contains
+    :class:`~aeat.entrypoints.cli._app_live_payloads.NotificationSnapshotListingPayload`
+    summaries
     returned by :class:`~aeat.application.live.NotificationsService`
     ``list_snapshots``; message detail stays on the view payload.
     """
@@ -415,7 +419,9 @@ class NotificationsViewResult(OutputSchema):
 
     The command resolves a stored snapshot through
     :class:`~aeat.application.live.NotificationsService` ``show`` and expands
-    its rows as :class:`NotificationRowPayload` records. It is a bucket read,
+    its rows as
+    :class:`~aeat.entrypoints.cli._app_live_payloads.NotificationRowPayload`
+    records. It is a bucket read,
     not a remote notification-state mutation.
     """
 
@@ -491,7 +497,8 @@ class PortalsViewResult(PortalEntryPayload):
 
     The requested portal id resolves through
     :func:`~aeat.domain.portals.get_portal` and emits the same
-    :class:`PortalEntryPayload` projection as the list surface.
+    :class:`~aeat.entrypoints.cli._app_live_payloads.PortalEntryPayload`
+    projection as the list surface.
     """
 
 
@@ -531,9 +538,12 @@ class ExpedienteDeclarationPayload(OutputSchema):
 class ExpedienteSnapshotSummaryPayload(OutputSchema):
     """Summary row for one persisted expedientes snapshot.
 
-    Used by :class:`ExpedientesListResult` for rows returned from
+    Used by
+    :class:`~aeat.entrypoints.cli._app_live_payloads.ExpedientesListResult`
+    for rows returned from
     :class:`~aeat.application.live.ExpedientesService`; full declaration detail
-    remains on :class:`ExpedientesViewResult`.
+    remains on
+    :class:`~aeat.entrypoints.cli._app_live_payloads.ExpedientesViewResult`.
     """
 
     snapshot_id: str
@@ -565,7 +575,9 @@ class ExpedientesCaptureResult(OutputSchema):
     ``mode`` distinguishes a single-modelo capture from a bulk year-range
     capture. Successful snapshots are persisted by
     :class:`~aeat.application.live.ExpedientesService`; failed modelo/year pairs
-    are reported as :class:`ExpedientesCaptureFailurePayload` rows without
+    are reported as
+    :class:`~aeat.entrypoints.cli._app_live_payloads.ExpedientesCaptureFailurePayload`
+    rows without
     inventing declaration data.
     """
 
@@ -589,7 +601,8 @@ class ExpedientesCaptureResult(OutputSchema):
 class ExpedientesListResult(OutputSchema):
     """Typed listing of persisted expedientes snapshots.
 
-    ``rows`` is the compact :class:`ExpedienteSnapshotSummaryPayload`
+    ``rows`` is the compact
+    :class:`~aeat.entrypoints.cli._app_live_payloads.ExpedienteSnapshotSummaryPayload`
     projection returned by :class:`~aeat.application.live.ExpedientesService`
     ``list_snapshots``; use the view schema for per-declaration detail.
     """
@@ -605,7 +618,8 @@ class ExpedientesViewResult(OutputSchema):
 
     The command resolves a stored snapshot through
     :class:`~aeat.application.live.ExpedientesService` and projects each
-    declaration into :class:`ExpedienteDeclarationPayload`.
+    declaration into
+    :class:`~aeat.entrypoints.cli._app_live_payloads.ExpedienteDeclarationPayload`.
     """
 
     bucket_id: str
@@ -640,7 +654,7 @@ class ExpedientesLatestResult(OutputSchema):
 class VerifyObservationPayload(OutputSchema):
     """Shared JSON projection of one persisted verify observation.
 
-    Mirrors :class:`aeat.application.live._verify.VerifyObservation` while
+    Mirrors :class:`~aeat.application.live._verify.VerifyObservation` while
     keeping ``bucket_id`` on detail and capture responses. ``surface`` is the
     :class:`~aeat.application.live.VerifySurface` value, and
     ``matched_expectation`` records whether the optional operator expectation
@@ -762,7 +776,9 @@ class VerifyObservationSummaryPayload(OutputSchema):
 class VerifyListResult(OutputSchema):
     """Typed listing of persisted NIF verification observations.
 
-    ``rows`` contains :class:`VerifyObservationSummaryPayload` projections read
+    ``rows`` contains
+    :class:`~aeat.entrypoints.cli._app_live_payloads.VerifyObservationSummaryPayload`
+    projections read
     through :class:`~aeat.application.live.VerifyService`; the command does not
     contact AEAT.
     """
@@ -843,7 +859,9 @@ class Borrador100SnapshotSummaryPayload(OutputSchema):
 class Borrador100ListResult(OutputSchema):
     """Typed listing of bucket-scoped Modelo 100 borrador snapshots.
 
-    ``rows`` contains :class:`Borrador100SnapshotSummaryPayload` projections of
+    ``rows`` contains
+    :class:`~aeat.entrypoints.cli._app_live_payloads.Borrador100SnapshotSummaryPayload`
+    projections of
     :class:`~aeat.application.live.Borrador100Snapshot` records returned by
     :class:`~aeat.application.live.Borrador100SnapshotService`.
     """
@@ -860,7 +878,8 @@ class Borrador100ViewResult(OutputSchema):
     ``binding_values`` is a ``{BindingId: string_value}`` mapping from the
     persisted :class:`~aeat.application.live.Borrador100Snapshot`. Decimal values
     are rendered as their canonical string form before they reach the envelope
-    so the strict :class:`OutputSchema` never encounters a non-JSON-native
+    so the strict :class:`~aeat.entrypoints.cli._schemas.OutputSchema` never
+    encounters a non-JSON-native
     scalar at validation time.
     """
 
