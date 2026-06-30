@@ -626,7 +626,8 @@ def _verification_catalogue(label: str) -> VerificationReportCatalogue:
     revision_id = _hex(f"verification-revision-{label}")
     report_id = derive_verification_report_id(
         calculation_revision_id=revision_id,
-        run_at=run_at,
+        completeness_status=VerificationCompletenessStatus.COMPLETE,
+        findings=(),
         verified_by="aeat.cli.modelo.verify",
     )
     report = VerificationReport(

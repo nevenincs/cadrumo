@@ -31,22 +31,24 @@ def test_verification_report_lines_includes_next_action_when_refused() -> None:
 
     run_at = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
     calc_id = "a" * 64
+    findings = (
+        ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message="cross-casilla predicate failed",
+        ),
+    )
     report_id = derive_verification_report_id(
         calculation_revision_id=calc_id,
-        run_at=run_at,
+        completeness_status=VerificationCompletenessStatus.BLOCKED,
+        findings=findings,
         verified_by="test-actor",
     )
     report = VerificationReport(
         verification_report_id=report_id,
         calculation_revision_id=calc_id,
         completeness_status=VerificationCompletenessStatus.BLOCKED,
-        findings=(
-            ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-                severity=ModeloVerificationFindingSeverity.BLOCKING,
-                message="cross-casilla predicate failed",
-            ),
-        ),
+        findings=findings,
         run_at=run_at,
         verified_by="test-actor",
         granted_verificado_completo=False,
@@ -75,7 +77,8 @@ def test_verification_report_lines_omits_next_action_when_granted() -> None:
     calc_id = "b" * 64
     report_id = derive_verification_report_id(
         calculation_revision_id=calc_id,
-        run_at=run_at,
+        completeness_status=VerificationCompletenessStatus.COMPLETE,
+        findings=(),
         verified_by="test-actor",
     )
     report = VerificationReport(
@@ -122,27 +125,29 @@ def test_verification_report_view_exposes_finding_legal_and_source_refs() -> Non
 
     run_at = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
     calc_id = "c" * 64
-    report_id = derive_verification_report_id(
-        calculation_revision_id=calc_id,
-        run_at=run_at,
-        verified_by="test-actor",
-    )
     legal = ("ley-37-1992:art-88", "rd-1624-1992:art-71")
     sources = ("orden-eha-3786-2008:art-1",)
+    findings = (
+        ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            casilla_id=_VERIFICATION_FINDING_CASILLA,
+            message="cuota repercutida is under-declared",
+            legal_refs=legal,
+            source_refs=sources,
+        ),
+    )
+    report_id = derive_verification_report_id(
+        calculation_revision_id=calc_id,
+        completeness_status=VerificationCompletenessStatus.BLOCKED,
+        findings=findings,
+        verified_by="test-actor",
+    )
     report = VerificationReport(
         verification_report_id=report_id,
         calculation_revision_id=calc_id,
         completeness_status=VerificationCompletenessStatus.BLOCKED,
-        findings=(
-            ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-                severity=ModeloVerificationFindingSeverity.BLOCKING,
-                casilla_id=_VERIFICATION_FINDING_CASILLA,
-                message="cuota repercutida is under-declared",
-                legal_refs=legal,
-                source_refs=sources,
-            ),
-        ),
+        findings=findings,
         run_at=run_at,
         verified_by="test-actor",
         granted_verificado_completo=False,
@@ -195,7 +200,8 @@ def test_verification_report_view_lists_missing_required_casillas() -> None:
     calc_id = "d" * 64
     report_id = derive_verification_report_id(
         calculation_revision_id=calc_id,
-        run_at=run_at,
+        completeness_status=VerificationCompletenessStatus.INCOMPLETE,
+        findings=(),
         verified_by="test-actor",
     )
     missing = ("00501", "00552")

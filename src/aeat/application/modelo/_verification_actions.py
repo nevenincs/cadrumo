@@ -927,7 +927,8 @@ def verify_modelo_revision(
     now = clock or _utc_now()
     report_id = derive_verification_report_id(
         calculation_revision_id=calculation_revision_id,
-        run_at=now,
+        completeness_status=completeness,
+        findings=tuple(findings),
         verified_by=actor.strip(),
     )
     report = VerificationReport(

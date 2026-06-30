@@ -7,11 +7,13 @@ which blocking findings prevent that transition, which inputs are
 missing, which casilla ids are unresolved, which waivers were
 accepted, and what the operator should do next.
 
-The report is bucket-scoped and content-addressed by the parent
-calculation revision plus the run timestamp. Failed verification
-attempts produce a persisted report (so the audit trail explains
-why a transition was refused) without mutating the target
-revision.
+The report is bucket-scoped and content-addressed by the
+verification outcome (parent calculation revision, completeness
+status, findings, and actor); the run timestamp is a non-identity
+last-seen body field. Failed verification attempts produce a
+persisted report (so the audit trail explains why a transition was
+refused) without mutating the target revision, and an identical-outcome
+retry collapses onto the same report rather than accumulating.
 """
 
 from __future__ import annotations
@@ -50,6 +52,7 @@ _FindingMessage = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
 ]
+
 
 class VerificationCompletenessStatus(StrEnum):
     """Top-level verdict from one verification run.
@@ -117,13 +120,24 @@ class ModeloVerificationFinding(BaseModel):
 def derive_verification_report_id(
     *,
     calculation_revision_id: str,
-    run_at: datetime,
+    completeness_status: VerificationCompletenessStatus,
+    findings: tuple[ModeloVerificationFinding, ...],
     verified_by: str,
 ) -> str:
-    """Deterministic 64-char SHA-256 id for a verification report."""
+    """Deterministic 64-char SHA-256 id for a verification report.
+
+    Content-addressed by the verification *outcome* - the parent
+    ``calculation_revision_id``, the ``completeness_status``, the ordered
+    ``findings`` tuple, and the ``verified_by`` actor. ``run_at`` is
+    deliberately excluded from the identity so two retries of an
+    identical-outcome verify collapse to one report on upsert (the id is
+    clock-free); a re-verify whose findings change produces a new distinct
+    report, the audit-meaningful granularity.
+    """
     payload = {
         "calculation_revision_id": calculation_revision_id.strip(),
-        "run_at": run_at.isoformat(),
+        "completeness_status": completeness_status.value,
+        "findings": [finding.model_dump(mode="json") for finding in findings],
         "verified_by": verified_by.strip(),
     }
     return content_hash_hex(payload)
@@ -132,10 +146,12 @@ def derive_verification_report_id(
 class VerificationReport(BaseModel):
     """Decision record of one verification run against a calculation revision.
 
-    The id is content-addressed by ``calculation_revision_id``,
-    ``run_at``, and ``verified_by`` via :func:`derive_verification_report_id`.
-    A ``model_validator`` enforces the derivation on construction so
-    no :class:`VerificationReport` can carry an inconsistent id.
+    The id is content-addressed by the verification outcome
+    (``calculation_revision_id``, ``completeness_status``, ``findings``,
+    and ``verified_by``) via :func:`derive_verification_report_id`;
+    ``run_at`` is a non-identity last-seen timestamp. A ``model_validator``
+    enforces the derivation on construction so no
+    :class:`VerificationReport` can carry an inconsistent id.
 
     ``granted_verificado_completo`` is ``True`` if and only if
     ``completeness_status`` is ``COMPLETE`` and no blocking findings exist.
@@ -158,7 +174,8 @@ class VerificationReport(BaseModel):
     def _enforce_invariants(self) -> VerificationReport:
         derived = derive_verification_report_id(
             calculation_revision_id=self.calculation_revision_id,
-            run_at=self.run_at,
+            completeness_status=self.completeness_status,
+            findings=self.findings,
             verified_by=self.verified_by,
         )
         if derived != self.verification_report_id:

@@ -61,32 +61,34 @@ def _populated_report() -> VerificationReport:
     now = datetime.now(UTC).replace(microsecond=0)
     revision_id = "a" * 64
     verified_by = "cli/aeat"
+    findings = (
+        ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            casilla_id=_IVA_DEVENGADO_CASILLA,
+            message="iva.devengado is required but unresolved",
+            next_action="aeat app modelo work calculate <id> --casilla iva.devengado=...",
+        ),
+        ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.UNRESOLVED_BINDING,
+            severity=ModeloVerificationFindingSeverity.WARNING,
+            casilla_id=None,
+            expectation_id="iva-source-required",
+            message="prior-period source not yet pulled",
+        ),
+    )
     return VerificationReport(
         verification_report_id=derive_verification_report_id(
             calculation_revision_id=revision_id,
-            run_at=now,
+            # Non-default: BLOCKED rather than the easier COMPLETE state
+            # so the tuple-of-findings field is naturally exercised.
+            completeness_status=VerificationCompletenessStatus.BLOCKED,
+            findings=findings,
             verified_by=verified_by,
         ),
         calculation_revision_id=revision_id,
-        # Non-default: BLOCKED rather than the easier COMPLETE state
-        # so the tuple-of-findings field is naturally exercised.
         completeness_status=VerificationCompletenessStatus.BLOCKED,
-        findings=(
-            ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
-                severity=ModeloVerificationFindingSeverity.BLOCKING,
-                casilla_id=_IVA_DEVENGADO_CASILLA,
-                message="iva.devengado is required but unresolved",
-                next_action="aeat app modelo work calculate <id> --casilla iva.devengado=...",
-            ),
-            ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.UNRESOLVED_BINDING,
-                severity=ModeloVerificationFindingSeverity.WARNING,
-                casilla_id=None,
-                expectation_id="iva-source-required",
-                message="prior-period source not yet pulled",
-            ),
-        ),
+        findings=findings,
         resolved_casilla_ids=_IVA_RESOLVED_CASILLA_IDS,
         missing_required_casilla_ids=_IVA_MISSING_REQUIRED_CASILLA_IDS,
         run_at=now,
@@ -142,7 +144,8 @@ def test_verification_report_rejects_legacy_casilla_list_keys() -> None:
     verified_by = "cli/aeat"
     report_id = derive_verification_report_id(
         calculation_revision_id=revision_id,
-        run_at=now,
+        completeness_status=VerificationCompletenessStatus.BLOCKED,
+        findings=(),
         verified_by=verified_by,
     )
 
