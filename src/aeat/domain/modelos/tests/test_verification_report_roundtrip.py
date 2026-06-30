@@ -53,6 +53,7 @@ _IVA_DEDUCIBLE_CASILLA: CasillaId = _casilla_id("iva.deducible")
 _IVA_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
 _IVA_RESOLVED_CASILLA_IDS = (_IVA_DEDUCIBLE_CASILLA, _IVA_RESULTADO_CASILLA)
 _IVA_MISSING_REQUIRED_CASILLA_IDS = (_IVA_DEVENGADO_CASILLA,)
+_TEST_FINDING_LEGAL_REFS = ("ley-58-2003:art-119",)
 
 
 def _populated_report() -> VerificationReport:
@@ -68,6 +69,7 @@ def _populated_report() -> VerificationReport:
             casilla_id=_IVA_DEVENGADO_CASILLA,
             message="iva.devengado is required but unresolved",
             next_action="aeat app modelo work calculate <id> --casilla iva.devengado=...",
+            legal_refs=_TEST_FINDING_LEGAL_REFS,
         ),
         ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.UNRESOLVED_BINDING,
@@ -75,6 +77,7 @@ def _populated_report() -> VerificationReport:
             casilla_id=None,
             expectation_id="iva-source-required",
             message="prior-period source not yet pulled",
+            legal_refs=_TEST_FINDING_LEGAL_REFS,
         ),
     )
     return VerificationReport(
@@ -169,6 +172,19 @@ def test_verification_report_rejects_legacy_casilla_list_keys() -> None:
     assert "missing_required_casillas" in message
 
 
+def test_verification_finding_requires_legal_refs() -> None:
+    """A finding is invalid unless it carries its legal grounding."""
+
+    with pytest.raises(ValidationError) as raised:
+        ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message="cross-casilla predicate failed",
+        )
+
+    assert "legal_refs" in str(raised.value)
+
+
 def test_report_id_is_clock_free_for_an_identical_outcome() -> None:
     """Two reports with an identical outcome but different run_at share one id.
 
@@ -184,6 +200,7 @@ def test_report_id_is_clock_free_for_an_identical_outcome() -> None:
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,
             severity=ModeloVerificationFindingSeverity.BLOCKING,
             message="reconciliation total mismatch over tolerance",
+            legal_refs=_TEST_FINDING_LEGAL_REFS,
         ),
     )
     report_id = derive_verification_report_id(
@@ -227,12 +244,14 @@ def test_report_id_diverges_when_findings_change() -> None:
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         message="reconciliation total mismatch over tolerance",
+        legal_refs=_TEST_FINDING_LEGAL_REFS,
     )
     extra_finding = ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         casilla_id=_IVA_DEVENGADO_CASILLA,
         message="iva.devengado is required but unresolved",
+        legal_refs=_TEST_FINDING_LEGAL_REFS,
     )
     id_one = derive_verification_report_id(
         calculation_revision_id=revision_id,

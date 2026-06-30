@@ -116,6 +116,7 @@ from ..calculations import (
 )
 from ..workflow import WorkflowEngine, WorkflowPurpose, WorkflowRunRepository
 from ._action_errors import (
+    WORKFLOW_GATE_LEGAL_REFS,
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloApplicabilityFilterError,
@@ -1200,6 +1201,7 @@ def _collect_revision_verification_findings(
                     period=work_unit.period.registry_token,
                 ),
                 next_action="aeat app registry verify",
+                legal_refs=WORKFLOW_GATE_LEGAL_REFS,
             ),
         )
         return findings, resolved_casilla_ids, missing_required_casilla_ids

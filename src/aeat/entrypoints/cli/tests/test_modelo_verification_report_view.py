@@ -13,6 +13,7 @@ _VERIFICATION_FINDING_CASILLA: CasillaId = validated_casilla_id(
     "0100",
     surface="_VERIFICATION_FINDING_CASILLA",
 )
+_TEST_FINDING_LEGAL_REFS = ("ley-58-2003:art-119",)
 
 
 def test_verification_report_lines_includes_next_action_when_refused() -> None:
@@ -36,6 +37,7 @@ def test_verification_report_lines_includes_next_action_when_refused() -> None:
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,
             severity=ModeloVerificationFindingSeverity.BLOCKING,
             message="cross-casilla predicate failed",
+            legal_refs=_TEST_FINDING_LEGAL_REFS,
         ),
     )
     report_id = derive_verification_report_id(
