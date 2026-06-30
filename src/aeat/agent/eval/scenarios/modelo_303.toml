@@ -1,0 +1,25 @@
+# Golden scenario: prepare Modelo 303 (IVA autoliquidación).
+#
+# Expands the operator golden eval to a second modelo lifecycle. Same assertions
+# as the modelo-130 scenario: the trajectory resolves against the live CLI
+# surface, follows the create->calculate->verify->export lifecycle, is consistent
+# with the shipped `preparar-modelo-303` skill, and the resolved revision's
+# casillas carry registry legal grounding. No casilla value is hand-asserted.
+
+name = "modelo-303-iva-autoliquidacion"
+modelo = "303"
+filing_year = 2024
+period = "1T"
+skill_name = "preparar-modelo-303"
+provenance_required = true
+
+expected_trajectory = [
+  "modelo.describe",
+  "modelo.casillas",
+  "modelo.work.create",
+  "modelo.work.calculate",
+  "modelo.work.revision",
+  "modelo.work.verify",
+  "modelo.export",
+  "modelo.reconcile.pull",
+]

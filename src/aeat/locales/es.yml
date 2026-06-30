@@ -1294,6 +1294,11 @@ categories:
   test_profile:
     display_label_851219: Etiqueta de visualización 851219
 cli:
+  agent:
+    app_help: 'Materializa el harness del operador (reglas, personas, habilidades) para un runtime de agente.'
+    materialise:
+      output_help: 'Directorio donde escribir el espacio de trabajo del operador.'
+      summary: 'Espacio de trabajo del operador escrito en {path}: {rules} reglas, {personas} personas, {skills} habilidades.'
   app:
     ledger:
       evidence:
@@ -2675,10 +2680,11 @@ cli:
         persistido.
     workflow_help: Mostrar ayuda del flujo de configuración
   contract:
-    app_help: 'Emite el manifiesto de capacidades del operador: raices, familias de comandos, ciclo de vida y esquemas de resultado.'
+    app_help: 'Emite el manifiesto de capacidades del operador: raices, familias de
+      comandos, ciclo de vida y esquemas de resultado.'
     summary_commands: 'Comandos registrados: {count}'
     summary_families: 'Familias de comandos: {count}'
-    summary_heading: 'Manifiesto de la superficie del operador'
+    summary_heading: Manifiesto de la superficie del operador
     summary_lifecycle: 'Ciclo de vida del modelo: {steps}'
     summary_roots: 'Raices: {roots}'
   diagnostics:

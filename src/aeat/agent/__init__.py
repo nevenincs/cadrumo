@@ -75,9 +75,21 @@ def iter_skill_documents() -> Iterator[Traversable]:
 
 
 __all__ = [
+    "WorkspaceManifest",
     "harness_root",
     "iter_operator_rules",
     "iter_personas",
     "iter_skill_documents",
+    "materialise_workspace",
     "operator_rules_text",
 ]
+
+
+def __getattr__(name: str) -> object:
+    # Lazy re-export of the workspace materialiser to avoid an import cycle:
+    # _workspace imports the iterators from this package.
+    if name in {"WorkspaceManifest", "materialise_workspace"}:
+        from . import _workspace
+
+        return getattr(_workspace, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
