@@ -7,7 +7,6 @@ import pytest
 from ._action_test_support import (
     _BUCKET_ID,
     UTC,
-    BucketEventHistoryRepository,
     BucketEventType,
     BusinessClassification,
     CalculationRevisionCatalogueRepository,
@@ -15,14 +14,13 @@ from ._action_test_support import (
     InvoiceCatalogue,
     InvoiceCatalogueRepository,
     ManualLedgerTransactionCommand,
-    ManualLedgerTransactionResult,
     SecureObjectRepository,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
     TransactionLifecycleState,
     TransactionValidationError,
     WorkUnitCatalogueRepository,
+    _create_manual_row,
     _repositories,
     archive_manual_transaction,
     create_manual_transaction,
@@ -39,35 +37,6 @@ from ._action_test_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-def _create_manual_row(
-    secure_objects: SecureObjectRepository,
-    *,
-    description: str,
-    idempotency_key: str,
-    amount: Decimal | None = None,
-    booked_date: date | None = None,
-    occurred_at: datetime | None = None,
-) -> tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, ManualLedgerTransactionResult]:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    resolved_booked_date = booked_date if booked_date is not None else date(2026, 5, 2)
-    resolved_amount = amount if amount is not None else Decimal("25.00")
-    resolved_occurred_at = occurred_at if occurred_at is not None else datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=resolved_booked_date,
-            amount=resolved_amount,
-            direction=TransactionDirection.OUTGOING,
-            description=description,
-            idempotency_key=idempotency_key,
-        ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        occurred_at=resolved_occurred_at,
-    )
-    return transaction_repository, event_repository, created
 
 
 def test_archive_manual_transaction_records_lifecycle_lineage_and_event(secure_objects: SecureObjectRepository) -> None:
