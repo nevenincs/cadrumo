@@ -8,22 +8,15 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
-from .. import InputKind, RegistryValidator, build_snapshot, load_registry_tree, resolve_bound_inputs_by_casilla_id
+from .. import InputKind, RegistryValidator, build_snapshot, resolve_bound_inputs_by_casilla_id
 from .._formula_runtime import calculate_registry_snapshot
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
-
-
-def _load_modelo(modelo_id: str):
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == modelo_id)
-    return modelo, catalogues
-
 
 def test_modelo_115_validated_snapshot_owns_workflow_surfaces() -> None:
-    modelo, catalogues = _load_modelo("115")
+    modelo, catalogues = _committed_modelo("115")
 
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
     snapshot = build_snapshot(
@@ -58,8 +51,7 @@ def test_modelo_115_validated_snapshot_owns_workflow_surfaces() -> None:
 def test_modelo_115_binds_retenciones_aggregation_and_calculates_rent_withholding() -> None:
     """M115 count/base come from retenciones aggregation; retención remains the registry formula."""
 
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == "115")
+    modelo, catalogues = _committed_modelo("115")
     snapshot = build_snapshot(
         modelo,
         catalogues,

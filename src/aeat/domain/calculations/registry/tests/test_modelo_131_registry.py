@@ -7,12 +7,12 @@ from typing import Any
 import pytest
 
 from .....core.resources import bundled_path
-from .. import ModeloDefinition, RegistryCatalogues, build_snapshot, load_registry_tree
+from .. import ModeloDefinition, RegistryCatalogues, build_snapshot
 from .._text import normalise_corpus_text
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _COMMON_SURFACES = {
     "approval",
     "calculation",
@@ -38,12 +38,6 @@ _M131_REVISION_ORDER_REFS = {
     "2025": "orden-hac-1347-2024:art-4",
     "2026": "orden-hac-1425-2025:art-4",
 }
-
-
-def _load_modelo(modelo_id: str):
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == modelo_id)
-    return modelo, catalogues
 
 
 def _collect_legal_refs(value: object) -> set[str]:
@@ -72,7 +66,7 @@ def _refs_by_id(items: tuple[Any, ...]) -> dict[str, tuple[str, ...]]:
 
 @pytest.fixture(scope="module")
 def modelo_131_registry():
-    return _load_modelo("131")
+    return _committed_modelo("131")
 
 
 @pytest.mark.parametrize(
@@ -176,7 +170,7 @@ def test_modelo_131_current_workbook_parity_refs_carry_revision_order(
 
 
 def test_modelo_100_cross_modelo_131_refs_use_approval_article_3() -> None:
-    modelo_100, _ = _load_modelo("100")
+    modelo_100, _ = _committed_modelo("100")
 
     revision_2024 = modelo_100.revisions["2024"]
     binding_refs_2024 = _refs_by_id(revision_2024.bindings)
