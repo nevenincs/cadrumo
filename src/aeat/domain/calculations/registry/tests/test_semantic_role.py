@@ -33,6 +33,7 @@ from .._schema import (
     PeriodSelector,
 )
 from .._validate_registry_scope import validate_registry_scope
+from .._validate_semantic_role_axes import semantic_roles_are_axis_siblings
 from .._validate_semantic_role_typos import (
     _build_semantic_role_typo_index,
     _candidate_is_typo_twin,
@@ -300,6 +301,8 @@ class TestTypoTwinWarning:
             ("100", "2025", "2230", "irpf_ganancia_fondos_coti_ganancia"),
             ("100", "2025", "2231", "irpf_ganancia_fondos_coti_exenta_renta_vitalicia"),
             ("100", "2025", "2234", "irpf_perdida_fondos_coti_importe_computable"),
+            ("100", "2025", "0360", "irpf_ganancia_premios_juegos_valoracion_b"),
+            ("100", "2025", "0361", "irpf_ganancia_premios_juegos_pub_valoracion_b"),
             # M303 compensacion-pendiente roles appear in both 2009-y-siguientes and
             # 2023-y-siguientes revisions; the validator requires unique occurrence for
             # intentional_singleton, so they carry semantic_role_cardinality="shared".
@@ -355,6 +358,8 @@ class TestTypoTwinWarning:
             "irpf_ganancia_fondos_coti_ganancia",
             "irpf_ganancia_fondos_coti_exenta_renta_vitalicia",
             "irpf_perdida_fondos_coti_importe_computable",
+            "irpf_ganancia_premios_juegos_valoracion_b",
+            "irpf_ganancia_premios_juegos_pub_valoracion_b",
             "iva_oss_union_servicios_destino_de_cuota",
             "iva_oss_union_servicios_destino_fr_cuota",
         }
@@ -568,14 +573,14 @@ class TestTypoTwinWarning:
             _emit_semantic_role_typo_twin_warnings([m])
         assert any("irpf_ganancia_fondos_coti_ganancia" in str(item.message) for item in captured)
 
-    def test_multiple_optional_scope_axis_roles_do_not_warn_as_typos(self) -> None:
-        scoped = _casilla(cid="a", semantic_role="irpf_ganancia_premios_juegos_pub_valoracion_b")
-        general = _casilla(cid="b", semantic_role="irpf_ganancia_premios_juegos_valoracion")
-        m = _registry_modelo("100", "2025", [scoped, general])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
+    def test_public_source_marker_is_not_optional_axis_token(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "irpf_ganancia_premios_juegos_pub_valoracion",
+                "irpf_ganancia_premios_juegos_valoracion",
+            )
+            is False
+        )
 
     def test_optional_numeric_axis_roles_do_not_warn_as_typos(self) -> None:
         annual_line = _casilla(cid="a", semantic_role="irpf_deduccion_cantabria_obras_mejora_pendiente_1")
