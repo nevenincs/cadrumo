@@ -1,6 +1,17 @@
-"""Filed-declaration listing helpers for live AEAT workflows.
+"""Filed-declaration register listing helpers for live AEAT workflows.
 
-This module uses :class:`Declaracion` to list and select filed declarations.
+This module is the read-only selector boundary between the authenticated
+Sede declaration register and the heavier capture pipeline. It works only
+with :class:`~aeat.adapters.outbound.aeat.sede.Declaracion` register rows:
+listing reports expose which AEAT artefact links are available, and selector
+helpers narrow one in-memory register result by period, expediente id, and
+caller limit before any artefact is downloaded.
+
+The helpers do not authenticate, open browser sessions, persist observations,
+or stamp filing records. Those effects belong to
+:mod:`aeat.application.live._filed_data_capture` and
+:mod:`aeat.application.live._filed_observation_persistence` after the
+live-read gate and registry checks have run.
 """
 
 from __future__ import annotations
@@ -64,7 +75,12 @@ def select_declarations_for_capture(
     expediente_id: str | None = None,
     limit: int | None = None,
 ) -> tuple[Declaracion, ...]:
-    """Select :class:`Declaracion` rows for capture from one register query."""
+    """Select register :class:`~aeat.adapters.outbound.aeat.sede.Declaracion` rows.
+
+    Selection is an in-memory filter over one already-read register result. It
+    does not fetch AEAT artefacts or persist local evidence; the capture service
+    performs those steps after the live-read gate.
+    """
     selected = declarations
     if period is not None:
         selected = tuple(row for row in selected if row.period == period)
@@ -82,7 +98,7 @@ def select_declarations_for_capture(
 
 
 def filed_data_listing_row(declaration: Declaracion) -> FiledDataListingRow:
-    """Return a :class:`FiledDataListingRow` for one AEAT declaration register item."""
+    """Return link-availability metadata for one AEAT declaration register item."""
     return FiledDataListingRow(
         modelo=declaration.modelo,
         year=declaration.ejercicio,
