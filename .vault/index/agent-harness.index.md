@@ -6,6 +6,7 @@ tags:
 date: '2026-06-30'
 modified: '2026-06-30'
 related:
+  - '[[2026-06-30-agent-harness-W01-P01-S55]]'
   - '[[2026-06-30-agent-harness-W01-P01-summary]]'
   - '[[2026-06-30-agent-harness-W01-P02-summary]]'
   - '[[2026-06-30-agent-harness-W02-P03-summary]]'
@@ -27,6 +28,7 @@ Auto-generated index of all documents tagged with `#agent-harness`.
 
 ### exec
 
+- `2026-06-30-agent-harness-W01-P01-S55` - Complete the OperatorSurfaceContract to cover every mounted family and sub-verb, and add a live-Typer-tree drift gate so the agent manifest source can never silently drift
 - `2026-06-30-agent-harness-W01-P01-summary` - `agent-harness` `W01.P01` summary
 - `2026-06-30-agent-harness-W01-P02-summary` - `agent-harness` `W01.P02` summary
 - `2026-06-30-agent-harness-W02-P03-summary` - `agent-harness` `W02.P03` summary

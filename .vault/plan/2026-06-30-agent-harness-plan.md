@@ -10,6 +10,16 @@ related:
   - '[[2026-06-30-agent-harness-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `agent-harness` plan
 
 ## Wave `W01` - Layer 0: capability manifest exposure
@@ -25,6 +35,7 @@ Project the operator-surface contract and schema registry into a registered mani
 - [x] `W01.P01.S03` - Mount the read-only contract command emitting the manifest envelope; `src/aeat/entrypoints/cli/_app_contract.py`.
 - [x] `W01.P01.S04` - Wire the contract command into the app group and register its schema; `src/aeat/entrypoints/cli/__init__.py`.
 - [x] `W01.P01.S05` - Add localized help leaves for the contract command via the locales CLI; `src/aeat/locales/en.yml`.
+- [x] `W01.P01.S55` - Complete the OperatorSurfaceContract to cover every mounted family and sub-verb, and add a live-Typer-tree drift gate so the agent manifest source can never silently drift; `src/aeat/application/operator_surface/_contract.py`.
 
 ### Phase `W01.P02` - manifest conformance and reference
 
