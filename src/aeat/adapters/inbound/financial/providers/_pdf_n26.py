@@ -1,12 +1,19 @@
 """N26 PDF statement provider backed by ``pdfplumber``.
 
 Implements :class:`PdfN26Provider`, an
-:class:`aeat.adapters.inbound.financial.providers._base.FinancialProvider`
+:class:`~aeat.adapters.inbound.financial.providers.FinancialProvider`
 that parses German-language N26 monthly PDF statements. The parser
 is anchored on the ``Beschreibung Verbuchungsdatum Betrag`` table
 header and a regex matched against each line below it; continuation
 lines (value-date stamps, IBAN annotations, free-form remittance
 text) attach to the most recent header row.
+
+The PDF provider emits
+:class:`~aeat.adapters.inbound.financial.providers.ParsedLedgerRow` records
+with PDF-backed :class:`~aeat.domain.transactions.RawProvenance`. Its current
+fixture corpus is generated from sanitised, published N26 statement text; it
+proves this line-structure family but does not claim exhaustive coverage of
+every N26 current-account or FX statement variant.
 """
 
 from __future__ import annotations
@@ -98,6 +105,10 @@ class PdfN26Provider(FinancialProvider):
     flagged via :data:`_INTERNAL_NARRATIVES` so the
     :func:`_derive_counterparty_and_description` helper drops the
     counterparty for those rows.
+
+    The provider declares ``verification_source =
+    "synthetic_from_bank_published_text"`` and keeps the parser PDF-only; CSV,
+    OFX, and XLSX exports are handled by their sibling providers.
     """
 
     name = "n26-pdf"
