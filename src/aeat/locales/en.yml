@@ -1205,6 +1205,11 @@ categories:
   test_profile:
     display_label_851219: Display label 851219
 cli:
+  agent:
+    app_help: 'Materialise the operator agent harness (rules, personas, skills) for an agent runtime.'
+    materialise:
+      output_help: 'Directory to write the operator workspace into.'
+      summary: 'Wrote operator workspace to {path}: {rules} rules, {personas} personas, {skills} skills.'
   app:
     ledger:
       evidence:
@@ -2487,10 +2492,11 @@ cli:
       help: Verify that a recovery key opens the persisted recovery wrapper.
     workflow_help: Show config workflow help
   contract:
-    app_help: 'Emit the operator capability manifest: roots, command families, lifecycle, and result schemas.'
+    app_help: 'Emit the operator capability manifest: roots, command families, lifecycle,
+      and result schemas.'
     summary_commands: 'Registered commands: {count}'
     summary_families: 'Command families: {count}'
-    summary_heading: 'Operator surface manifest'
+    summary_heading: Operator surface manifest
     summary_lifecycle: 'Modelo lifecycle: {steps}'
     summary_roots: 'Roots: {roots}'
   diagnostics:

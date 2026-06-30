@@ -1282,6 +1282,11 @@ categories:
   test_profile:
     display_label_851219: Etiqueta de visualització 851219
 cli:
+  agent:
+    app_help: 'Materialitza el harness de l''operador (regles, persones, habilitats) per a un runtime d''agent.'
+    materialise:
+      output_help: 'Directori on escriure l''espai de treball de l''operador.'
+      summary: 'Espai de treball de l''operador escrit a {path}: {rules} regles, {personas} persones, {skills} habilitats.'
   app:
     ledger:
       evidence:
@@ -2646,10 +2651,11 @@ cli:
         persistit.
     workflow_help: Mostrar ajuda del flux de configuració
   contract:
-    app_help: 'Emet el manifest de capacitats de l''operador: arrels, families d''ordres, cicle de vida i esquemes de resultat.'
+    app_help: 'Emet el manifest de capacitats de l''operador: arrels, families d''ordres,
+      cicle de vida i esquemes de resultat.'
     summary_commands: 'Ordres registrades: {count}'
     summary_families: 'Families d''ordres: {count}'
-    summary_heading: 'Manifest de la superficie de l''operador'
+    summary_heading: Manifest de la superficie de l'operador
     summary_lifecycle: 'Cicle de vida del model: {steps}'
     summary_roots: 'Arrels: {roots}'
   diagnostics:

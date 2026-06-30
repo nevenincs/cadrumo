@@ -18,7 +18,9 @@ from .. import load_scenario, run_golden_scenario
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_SCENARIO = Path(__file__).resolve().parent.parent / "scenarios" / "modelo_130.toml"
+_SCENARIOS_DIR = Path(__file__).resolve().parent.parent / "scenarios"
+_SCENARIO = _SCENARIOS_DIR / "modelo_130.toml"
+_ALL_SCENARIOS = sorted(_SCENARIOS_DIR.glob("*.toml"))
 
 
 def _valid_commands() -> frozenset[str]:
@@ -27,13 +29,21 @@ def _valid_commands() -> frozenset[str]:
     return frozenset(ref.command for ref in _command_schema_refs())
 
 
-def test_modelo_130_scenario_passes_every_dimension() -> None:
-    result = run_golden_scenario(load_scenario(_SCENARIO), valid_commands=_valid_commands())
-    assert result.passed, f"failures: {result.failures}"
+@pytest.mark.parametrize("scenario_path", _ALL_SCENARIOS, ids=lambda p: p.stem)
+def test_every_golden_scenario_passes_all_dimensions(scenario_path: Path) -> None:
+    # Covers the full lifecycle for every shipped scenario (modelo 130 and 303);
+    # adding a scenario TOML auto-extends this gate.
+    result = run_golden_scenario(load_scenario(scenario_path), valid_commands=_valid_commands())
+    assert result.passed, f"{scenario_path.stem} failures: {result.failures}"
     assert result.trajectory_resolves
     assert result.lifecycle_ordered
     assert result.skill_consistent
     assert result.provenance_present
+
+
+def test_at_least_the_130_and_303_scenarios_are_shipped() -> None:
+    stems = {path.stem for path in _ALL_SCENARIOS}
+    assert {"modelo_130", "modelo_303"} <= stems
 
 
 def test_provenance_dimension_is_not_vacuous() -> None:

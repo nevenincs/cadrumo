@@ -1222,6 +1222,11 @@ categories:
   test_profile:
     display_label_851219: Megjelenítési felirat 851219
 cli:
+  agent:
+    app_help: 'Az operator agent-harness (szabalyok, personak, keszsegek) kiirasa agent-futtatokornyezethez.'
+    materialise:
+      output_help: 'A konyvtar, ahova az operator munkateruletet kiirja.'
+      summary: 'Operator munkaterulet kiirva: {path}: {rules} szabaly, {personas} persona, {skills} keszseg.'
   app:
     ledger:
       evidence:
@@ -2602,10 +2607,11 @@ cli:
         csomagot.
     workflow_help: Konfiguráció-munkafolyamat súgó megjelenítése.
   contract:
-    app_help: 'Kibocsatja az operator kepesseg-jegyzeket: gyokerek, parancscsaladok, eletciklus es eredmenysemak.'
+    app_help: 'Kibocsatja az operator kepesseg-jegyzeket: gyokerek, parancscsaladok,
+      eletciklus es eredmenysemak.'
     summary_commands: 'Regisztralt parancsok: {count}'
     summary_families: 'Parancscsaladok: {count}'
-    summary_heading: 'Operatorfelulet-jegyzek'
+    summary_heading: Operatorfelulet-jegyzek
     summary_lifecycle: 'Modelo eletciklus: {steps}'
     summary_roots: 'Gyokerek: {roots}'
   diagnostics:
