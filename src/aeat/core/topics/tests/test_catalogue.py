@@ -82,6 +82,7 @@ def test_every_topic_legal_ref_resolves_against_real_legal_catalogue() -> None:
     """Topic citation links must resolve through the committed legal catalogue."""
     catalogue = resources().topics.singleton
     legal_ids = set(resources().modelos.authority.catalogues.legal)
+    ungrounded = sorted(topic.slug for topic in catalogue.topics if not topic.legal_refs)
     missing = sorted(
         f"{topic.slug}: {legal_ref}"
         for topic in catalogue.topics
@@ -89,6 +90,7 @@ def test_every_topic_legal_ref_resolves_against_real_legal_catalogue() -> None:
         if legal_ref not in legal_ids
     )
 
+    assert ungrounded == []
     assert missing == []
 
 
