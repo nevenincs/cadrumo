@@ -288,6 +288,78 @@ class TestTypoTwinWarning:
             (
                 "200",
                 "2024-y-siguientes",
+                "02511",
+                "is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02512",
+                "is_correccion_operaciones_a_plazos_art11_4_temporaria_ejercicio_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02513",
+                "is_correccion_operaciones_a_plazos_art11_4_temporaria_anteriores_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02516",
+                "is_correccion_operaciones_a_plazos_art11_4_permanente_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02517",
+                "is_correccion_operaciones_a_plazos_art11_4_temporaria_ejercicio_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02518",
+                "is_correccion_operaciones_a_plazos_art11_4_temporaria_anteriores_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03321",
+                "is_correccion_operaciones_a_plazos_dt1_permanente_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03322",
+                "is_correccion_operaciones_a_plazos_dt1_temporaria_ejercicio_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03323",
+                "is_correccion_operaciones_a_plazos_dt1_temporaria_anteriores_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03326",
+                "is_correccion_operaciones_a_plazos_dt1_permanente_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03327",
+                "is_correccion_operaciones_a_plazos_dt1_temporaria_ejercicio_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03328",
+                "is_correccion_operaciones_a_plazos_dt1_temporaria_anteriores_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
                 "03396",
                 "is_correccion_otras_correcciones_resultado_permanente_disminucion",
             ),
@@ -534,6 +606,18 @@ class TestTypoTwinWarning:
             "irpf_anexo_c_exceso_sps_rg_aportaciones_aplicado",
             "is_deduccion_di_internacional_rdleg_pendiente",
             "is_deduccion_di_interna_rdleg_pendiente",
+            "is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
+            "is_correccion_operaciones_a_plazos_art11_4_temporaria_ejercicio_aumento",
+            "is_correccion_operaciones_a_plazos_art11_4_temporaria_anteriores_aumento",
+            "is_correccion_operaciones_a_plazos_art11_4_permanente_disminucion",
+            "is_correccion_operaciones_a_plazos_art11_4_temporaria_ejercicio_disminucion",
+            "is_correccion_operaciones_a_plazos_art11_4_temporaria_anteriores_disminucion",
+            "is_correccion_operaciones_a_plazos_dt1_permanente_aumento",
+            "is_correccion_operaciones_a_plazos_dt1_temporaria_ejercicio_aumento",
+            "is_correccion_operaciones_a_plazos_dt1_temporaria_anteriores_aumento",
+            "is_correccion_operaciones_a_plazos_dt1_permanente_disminucion",
+            "is_correccion_operaciones_a_plazos_dt1_temporaria_ejercicio_disminucion",
+            "is_correccion_operaciones_a_plazos_dt1_temporaria_anteriores_disminucion",
             "is_correccion_otras_correcciones_resultado_permanente_disminucion",
             "is_correccion_otras_correcciones_resultado_temporaria_ejercicio_disminucion",
             "is_liquidacion_i_importe",
@@ -730,35 +814,23 @@ class TestTypoTwinWarning:
             is False
         )
 
-    def test_legal_reference_axis_roles_do_not_warn_as_typos(self) -> None:
-        article = _casilla(
-            cid="a",
-            semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
+    def test_legal_reference_tokens_are_not_axis_tokens(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
+                "is_correccion_operaciones_a_plazos_dt1_permanente_aumento",
+            )
+            is False
         )
-        transitional = _casilla(
-            cid="b",
-            semantic_role="is_correccion_operaciones_a_plazos_dt1_permanente_aumento",
-        )
-        m = _registry_modelo("200", "2024-y-siguientes", [article, transitional])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
 
-    def test_optional_legal_regime_roles_do_not_warn_as_typos(self) -> None:
-        rdleg = _casilla(
-            cid="a",
-            semantic_role="is_deduccion_di_internacional_rdleg_pendiente",
+    def test_legal_regime_tokens_are_not_axis_tokens(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "is_deduccion_di_internacional_rdleg_pendiente",
+                "is_deduccion_di_internacional_pendiente",
+            )
+            is False
         )
-        current = _casilla(
-            cid="b",
-            semantic_role="is_deduccion_di_internacional_pendiente",
-        )
-        m = _registry_modelo("200", "2024-y-siguientes", [rdleg, current])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
 
     def test_numeric_window_tokens_are_not_axis_tokens(self) -> None:
         assert (
