@@ -17,6 +17,9 @@ _REF_RE = r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$"
 # are uppercase + underscore. Kept separate from _REF_RE so the
 # lowercase-only constraint on internal registry refs is preserved.
 _EXPORT_FIELD_RE = r"^[A-Za-z0-9][A-Za-z0-9._:_-]*$"
+# Live parity oracle identifiers are registry-bound adapter keys, not generic
+# registry refs: current bindings are kebab-case lowercase ASCII identifiers.
+_ORACLE_ID_RE = r"^[a-z](?:[a-z0-9-]{0,126}[a-z0-9])?$"
 
 type ModeloId = Annotated[str, Field(pattern=_MODELO_RE)]
 type RevisionId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
@@ -40,7 +43,7 @@ type RecordId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_
 type ExportFieldId = Annotated[str, Field(min_length=1, max_length=160, pattern=_EXPORT_FIELD_RE)]
 type WorkbookFixtureId = Annotated[str, Field(min_length=1, max_length=160, pattern=_REF_RE)]
 type WorkbookOutputId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
-type OracleId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
+type OracleId = Annotated[str, Field(min_length=1, max_length=128, pattern=_ORACLE_ID_RE)]
 
 
 def is_registry_id(value: str) -> bool:
