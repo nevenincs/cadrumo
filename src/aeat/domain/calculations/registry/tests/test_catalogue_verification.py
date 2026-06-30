@@ -7,11 +7,12 @@ from datetime import date
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from .....core.paths import PROJECT_ROOT
 from .....core.resources import bundled_path
 from .._corpus_catalogue import verify_source_catalogue, verify_source_file
-from .._coverage import audit_registry_model_law_coverage
+from .._coverage import EvidenceTierCoverageGate, audit_registry_model_law_coverage
 from .._legal import verify_legal_catalogue
 from .._validate import RegistryValidator
 from ._catalogue_verification_support import _catalogues, _registry_tree
@@ -44,6 +45,25 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
         assert gates["legal_authority"].status == "satisfied", ledger
         assert gates["official_source_guidance"].status == "satisfied", ledger
         assert gates["layout_authority"].status == "satisfied", ledger
+
+
+def test_coverage_gate_rejects_satisfied_without_evidence_refs() -> None:
+    with pytest.raises(ValidationError, match="cannot be satisfied without evidence refs"):
+        EvidenceTierCoverageGate(
+            tier="legal_authority",
+            status="satisfied",
+            detail="missing evidence",
+        )
+
+
+def test_coverage_gate_rejects_gap_with_evidence_refs() -> None:
+    with pytest.raises(ValidationError, match="coverage gap cannot carry evidence refs"):
+        EvidenceTierCoverageGate(
+            tier="legal_authority",
+            status="gap",
+            legal_refs=("ley-58-2003:art-119",),
+            detail="inconsistent gap",
+        )
 
 
 def test_committed_aeat_record_design_sources_match_corpus_manifests() -> None:
