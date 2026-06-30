@@ -38,6 +38,7 @@ from ...domain.modelos._protocols import (
 )
 from ...domain.transactions import (
     BusinessClassification,
+    derive_import_fingerprint,
     RawProvenance,
     RawTransaction,
     SourceFormat,
@@ -1007,7 +1008,15 @@ def _transaction_from_command(
         "edit_lineage": (
             (*existing_edit_lineage, edit_lineage_entry) if edit_lineage_entry is not None else existing_edit_lineage
         ),
-        "import_fingerprint": import_fingerprint,
+        # Stamp the content-only movement fingerprint on manual rows when the
+        # caller does not carry one forward (every create path). Edits pass the
+        # stored fingerprint verbatim. This lets a manually-entered movement
+        # participate in the import-path duplicate/likely-duplicate advisory.
+        "import_fingerprint": (
+            import_fingerprint
+            if import_fingerprint is not None
+            else derive_import_fingerprint(raw, direction=command.direction)
+        ),
         "notes": command.notes,
         "iva_category": command.iva_category,
         "counterparty_eu_member_state": command.counterparty_eu_member_state,
