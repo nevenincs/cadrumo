@@ -21,6 +21,9 @@ identity-bearing financial data, stored encrypted at rest through an
 encrypted payload; the object key carries the sha256 of the NIF (the
 iva-wallet-decision key convention), never the cleartext value
 (``sensitive-financial-data-secure-storage-only``).
+The namespace, schema version, object-key grammar, and custody disposition are
+declared by
+:data:`aeat.adapters.persistence.storage.WITHHOLDING_OBSERVATIONS_NAMESPACE`.
 
 ADR ``2026-06-25-modelo-190-percepciones-count-adr``. Producers (the
 pull/aggregate entrypoints) write here through one shared helper; the P03
@@ -117,7 +120,17 @@ def withholding_observation_key(
 
 
 class WithholdingObservationRepository(SecureBoundRepository[_WithholdingObservationEnvelopePayload]):
-    """Repository over encrypted SQL-backed per-perceptor-clave withholding observations."""
+    """Encrypted repository for per-perceptor-clave :class:`WithholdingObservation` payloads.
+
+    See Also:
+        :data:`aeat.adapters.persistence.storage.WITHHOLDING_OBSERVATIONS_NAMESPACE`
+            Secure-object namespace and hashed object-key contract.
+        :func:`withholding_observation_key`
+            Deterministic key builder that hashes the NIF and preserves
+            clave/subclave identity.
+        :func:`persist_withholding_observations`
+            Shared producer write path for pull and calculate parity.
+    """
 
     namespace: ClassVar[str] = WITHHOLDING_OBSERVATIONS_NAMESPACE.namespace
     sensitivity: ClassVar[SensitivityClass] = WITHHOLDING_OBSERVATIONS_NAMESPACE.sensitivity

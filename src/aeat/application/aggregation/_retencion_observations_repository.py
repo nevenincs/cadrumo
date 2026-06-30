@@ -18,6 +18,9 @@ identity-bearing financial data, stored encrypted at rest through an
 encrypted payload; the object key carries the sha256 of the NIF (the
 iva-wallet-decision key convention), never the cleartext value
 (``sensitive-financial-data-secure-storage-only``).
+The namespace, schema version, object-key grammar, and custody disposition are
+declared by
+:data:`aeat.adapters.persistence.storage.RETENCION_OBSERVATIONS_NAMESPACE`.
 
 ADR ``2026-06-24-retenciones-perceptor-count-adr``. Producers (the pull/aggregate
 entrypoints) write here through one shared helper; the P02 calc-mesh resolver
@@ -105,7 +108,17 @@ def retencion_observation_key(
 
 
 class RetencionObservationRepository(SecureBoundRepository[_RetencionObservationEnvelopePayload]):
-    """Repository over encrypted SQL-backed per-perceptor retención observations."""
+    """Encrypted repository for per-perceptor :class:`RetencionObservation` payloads.
+
+    See Also:
+        :data:`aeat.adapters.persistence.storage.RETENCION_OBSERVATIONS_NAMESPACE`
+            Secure-object namespace and hashed object-key contract.
+        :func:`retencion_observation_key`
+            Deterministic key builder that keeps the plaintext NIF out of
+            storage metadata.
+        :func:`persist_retencion_observations`
+            Shared producer write path for pull and calculate parity.
+    """
 
     namespace: ClassVar[str] = RETENCION_OBSERVATIONS_NAMESPACE.namespace
     sensitivity: ClassVar[SensitivityClass] = RETENCION_OBSERVATIONS_NAMESPACE.sensitivity
