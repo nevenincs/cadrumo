@@ -32,15 +32,13 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from functools import lru_cache
 
 import pytest
 
-from .....core.resources import bundled_path
-from .. import CasillaId, build_snapshot, validated_casilla_id
+from .. import CasillaId, validated_casilla_id
 from .._formula_runtime import calculate_registry_snapshot
 from .._schema import InputKind
-from ._registry_schema_support import _committed_modelo
+from ._registry_schema_support import _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -73,16 +71,8 @@ _M200_BASE_NIVELACION_CASILLA: CasillaId = validated_casilla_id(
 _M200_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id("DP200014:00562", surface="_M200_CUOTA_INTEGRA_CASILLA")
 
 
-@lru_cache(maxsize=1)
 def _snapshot_2024():
-    modelo, catalogues = _committed_modelo("200")
-    return build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2024,
-        period="0A",
-    )
+    return _committed_snapshot("200", 2024, "0A")
 
 
 def _calculate(inputs: dict[CasillaId, Decimal]):
