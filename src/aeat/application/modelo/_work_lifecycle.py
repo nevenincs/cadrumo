@@ -1,11 +1,11 @@
 """Lifecycle mutations for modelo work units.
 
 This module creates, lists, renames, and discards
-:class:`~aeat.domain.modelos._work_unit.WorkUnit` records in the
-:class:`~aeat.domain.modelos._repository.WorkUnitCatalogueRepository`.
+:class:`aeat.domain.modelos.WorkUnit` records in the
+:class:`aeat.domain.modelos.WorkUnitCatalogueRepository`.
 Each mutating action emits a typed event through
-:class:`~aeat.domain.buckets.BucketEventHistoryRepository`, giving
-:func:`~aeat.application.modelo._history.assemble_work_unit_history` a complete
+:class:`BucketEventHistoryRepository`, giving
+:func:`aeat.application.modelo.assemble_work_unit_history` a complete
 timeline from creation through discard.
 
 The lifecycle layer mutates the work-unit catalogue only. It does not choose
@@ -19,9 +19,9 @@ programmatic callers observe the same safety boundary as the CLI.
 See Also:
     :mod:`aeat.application.modelo._work_addressing`:
         Resolves natural or exact operator targets before lifecycle mutation.
-    :mod:`aeat.application.modelo._history`:
+    :func:`aeat.application.modelo.assemble_work_unit_history`:
         Reads the emitted bucket events into a chronological work-unit timeline.
-    :mod:`aeat.domain.modelos._calculation_revision`:
+    :class:`CalculationRevision`:
         Defines calculation attempts and current/filed pointers under a work unit.
 """
 
