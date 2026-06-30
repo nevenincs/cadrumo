@@ -953,7 +953,10 @@ def export_modelo_revision(
         revision,
         error_type=ModeloExportEvidenceMissingError,
         surface="export",
-        suggestion="aeat app ledger attach <transaction-id> --attachment-id <attachment-id>",
+        suggestion=(
+            "aeat app ledger evidence add PATH; "
+            "aeat app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID"
+        ),
     )
     work_unit = wu_repo.load().get(revision.work_unit_id)
     if work_unit is None:

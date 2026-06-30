@@ -734,7 +734,9 @@ def _missing_evidence_findings(
                 ),
                 message=diagnostic.message,
                 next_action=(
-                    f"Attach supplier evidence to ledger row {diagnostic.binding_id}, then rerun verification."
+                    f"Register the supplier invoice with `aeat app ledger evidence add PATH`, attach it with "
+                    f"`aeat app ledger attach {diagnostic.binding_id} --purchase-invoice-evidence-id EVIDENCE_ID`, "
+                    "then rerun verification."
                     if is_deductible_gap
                     else f"Attach supporting evidence to ledger row {diagnostic.binding_id}, then rerun verification."
                 ),
