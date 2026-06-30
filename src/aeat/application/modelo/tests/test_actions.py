@@ -17,13 +17,17 @@ import pytest
 
 from ....core import Period
 from ....core.aggregation import BindingSourceKind
-from ....core.resources import resources
+from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
     BindingId,
     CasillaDefinition,
     CasillaId,
     DataBindingDefinition,
     InputKind,
+    RegistryValidationError,
+    build_snapshot,
+    calculate_registry_snapshot,
+    load_registry_tree,
     validated_casilla_id,
 )
 from ....domain.calculations.registry._schema import ModeloRevision, PeriodSelector, VerificationPredicateDefinition
@@ -52,6 +56,7 @@ from .._iva_wallet_gate import (
 from .._iva_wallet_gate import (
     apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding,
 )
+from .._revision_replay_inputs import _informational_casilla_replay_inputs
 from .._verification_actions import (
     _art20_reduccion_advisory_finding,
     _collect_revision_verification_findings,
@@ -97,6 +102,8 @@ _ART20_REDUCCION_CASILLA: CasillaId = _casilla_id("0023")
 _M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
 _M130_GASTOS_CASILLA: CasillaId = _casilla_id("02")
 _SOURCE_BOUND_BINDING: BindingId = "ledger_iva_base"
+_M100_ACTIVIDAD_ECONOMICA_INCOME_CASILLA: CasillaId = _casilla_id("0171")
+_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = _casilla_id("0224")
 
 
 def _test_casilla_definition(
@@ -248,7 +255,12 @@ def _resident_profile() -> TaxpayerProfile:
     return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime.GENERAL)
 
 
-def _minimal_work_unit(modelo: str = "999", period: str = "0A", filing_year: int = 2026) -> WorkUnit:
+def _minimal_work_unit(
+    modelo: str = "999",
+    period: str = "0A",
+    filing_year: int = 2026,
+    revision_id: str = "r" + "0" * 63,
+) -> WorkUnit:
     bucket_id = "test-bucket"
     typed_period = Period.from_year_and_code(filing_year, period)
     return WorkUnit(
@@ -257,13 +269,13 @@ def _minimal_work_unit(modelo: str = "999", period: str = "0A", filing_year: int
             modelo=modelo,
             filing_year=filing_year,
             period=typed_period,
-            revision_id="r" + "0" * 63,
+            revision_id=revision_id,
         ),
         bucket_id=bucket_id,
         modelo=ModeloCode(modelo),
         filing_year=filing_year,
         period=typed_period,
-        revision_id="r" + "0" * 63,
+        revision_id=revision_id,
         name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
         created_at=_T0,
         updated_at=_T0,
@@ -714,6 +726,99 @@ class TestWorkflowInputMismatchError:
             assert code.code == "REFUSED_WORKFLOW_INPUT_MISMATCH"
         else:
             pytest.fail("WorkflowInputMismatchError was not raised")
+
+
+def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() -> None:
+    """Verify-time draft replay must not feed M100 0224 back as an operator input."""
+    work_unit = _minimal_work_unit(modelo="100", period="0A", filing_year=2024, revision_id="2024")
+    registry_root = bundled_path() / "registry" / "aeat"
+    modelos, catalogues = load_registry_tree(registry_root)
+    snapshot = build_snapshot(
+        {modelo.id: modelo for modelo in modelos}["100"],
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2024,
+        period="0A",
+    )
+    binding_values: dict[BindingId, Decimal] = {
+        "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
+        "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
+        "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
+        "renta-2024-profile-declaration-type": Decimal("1"),
+        "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
+        "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
+        "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
+        "renta-2024-profile-descendientes-menores-3": Decimal("0"),
+        "renta-2024-profile-marriage-full-year": Decimal("0"),
+        "renta-2024-profile-marriage-month-start": Decimal("0"),
+        "renta-2024-profile-marriage-month-end": Decimal("0"),
+        "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
+    }
+    relation_values = {
+        "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
+        "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
+        "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
+        "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
+        "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
+        "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
+    }
+    enum_binding_values = {"renta-2024-profile-tax-residence-ccaa": "madrid"}
+    date_binding_values = {"renta-2024-profile-taxpayer-birth-date": date(1975, 6, 15)}
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={_M100_ACTIVIDAD_ECONOMICA_INCOME_CASILLA: Decimal("10000")},
+        date_context={"filing_period": date(2024, 12, 31)},
+        binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
+        relation_values=relation_values,
+        date_binding_values=date_binding_values,
+    )
+    assert result.values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA] == Decimal("10000.00")
+    with pytest.raises(RegistryValidationError, match="computed registry casillas cannot be supplied as inputs"):
+        calculate_registry_snapshot(
+            snapshot,
+            inputs={_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: Decimal("10000")},
+            date_context={"filing_period": date(2024, 12, 31)},
+            binding_values=binding_values,
+            enum_binding_values=enum_binding_values,
+            relation_values=relation_values,
+            date_binding_values=date_binding_values,
+        )
+
+    binding_overrides = {
+        **{binding_id: str(value) for binding_id, value in binding_values.items()},
+        **enum_binding_values,
+        **{binding_id: value.isoformat() for binding_id, value in date_binding_values.items()},
+    }
+    relation_overrides = {relation_id: str(value) for relation_id, value in relation_values.items()}
+    input_values_by_casilla_id = {_M100_ACTIVIDAD_ECONOMICA_INCOME_CASILLA: "10000"}
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit.work_unit_id,
+        input_values_by_casilla_id=input_values_by_casilla_id,
+        binding_overrides=binding_overrides,
+        relation_overrides=relation_overrides,
+        casilla_values=result.values,
+    )
+    revision = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit.work_unit_id,
+        state=CalculationRevisionState.BORRADOR,
+        input_values_by_casilla_id=input_values_by_casilla_id,
+        binding_overrides=binding_overrides,
+        relation_overrides=relation_overrides,
+        casilla_values=result.values,
+        observations=result.observations,
+        created_at=_T0,
+        updated_at=_T0,
+    )
+
+    informational_replay_inputs = _informational_casilla_replay_inputs(
+        revision=revision,
+        snapshot=snapshot,
+    )
+
+    assert _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA not in informational_replay_inputs
 
 
 def test_iva_regime_enum_covers_all_wizard_choice_values() -> None:
