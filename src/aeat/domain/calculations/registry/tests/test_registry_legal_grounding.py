@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from .....core.resources import bundled_path
-from .. import RegistryValidator, load_registry_tree, verify_legal_catalogue
+from .....core.resources import bundled_path, resources
+from .. import RegistryValidator, verify_legal_catalogue
 from .._corpus_catalogue import verify_source_catalogue
 from .._schema import ModeloDefinition, RegistryCatalogues
 
@@ -25,9 +25,8 @@ _LEGAL_REF_LITERAL_RE = re.compile(
 
 @pytest.fixture(scope="module")
 def committed_registry() -> tuple[Path, tuple[ModeloDefinition, ...], RegistryCatalogues]:
-    registry_root = bundled_path("registry", "aeat")
-    modelos, catalogues = load_registry_tree(registry_root)
-    return registry_root, modelos, catalogues
+    authority = resources().modelos.authority
+    return authority.root, authority.modelos, authority.catalogues
 
 
 def test_committed_registry_legal_and_construct_references_validate_through_loader(
