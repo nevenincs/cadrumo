@@ -1,10 +1,9 @@
 """Shared file-extension constants for financial-provider detection.
 
 Single authoritative source for the extension sets that route
-:func:`_detection.provider_for_extension` and
-``_detection._ordered_candidates``, and for the
-:attr:`~_base.FinancialProvider.supported_extensions` declarations on
-each concrete provider class.
+``provider_for_extension`` and ``_ordered_candidates``, and for the
+``FinancialProvider.supported_extensions`` declarations on each concrete
+provider class.
 
 Keeping these constants in one place ensures that the detection
 router and the provider contract never drift: adding a new alias (e.g.

@@ -1,8 +1,14 @@
 """Public surface of the financial input adapter.
 
-This package owns file parsers for bank statement formats. The raw transaction
-records are part of :mod:`aeat.domain.transactions`; this adapter only detects
-providers and turns source files into those domain records.
+This package owns file parsers for bank statement formats. The provider layer
+detects source formats and turns source files into
+:class:`~aeat.domain.transactions.RawTransaction` records with
+:class:`~aeat.domain.transactions.RawProvenance`; application services own
+active-bucket routing, persistence, currency normalization, and ledger events.
+
+Each concrete :class:`FinancialProvider` declares a ``CorpusVerificationSource``
+and a provisional-specimen flag so bank-PDF and tabular imports carry the same
+corpus-honesty discipline as the other inbound PDF surfaces.
 
 See Also:
     :mod:`aeat.adapters.inbound.financial.providers`: concrete providers.
