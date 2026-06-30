@@ -2,10 +2,11 @@
 
 Filing amendments carry corrected casilla deltas and original
 submission references. They are stored as encrypted byte objects via
-:class:`SecureObjectRepository` at :class:`SensitivityClass`
-``AUDIT`` sensitivity; no plaintext amendment JSON or envelope file
-lands on disk. Each record is wrapped in an :class:`Envelope` before
-serialisation.
+:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository` at
+:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``AUDIT``
+sensitivity; no plaintext amendment JSON or envelope file lands on disk. Each
+record is wrapped in an
+:class:`~aeat.adapters.persistence.storage.Envelope` before serialisation.
 
 See Also:
     :class:`BaseAmendment`
@@ -58,7 +59,8 @@ class ModeloAmendmentRepository:
     :class:`~aeat.adapters.persistence.storage.Envelope` before writing through
     :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`; the
     amendment id is the natural key used for load, delete, and ordered
-    iteration.
+    iteration. The namespace definition supplies the AUDIT sensitivity, schema
+    version, object-key grammar, and custody contract.
     """
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
@@ -121,7 +123,11 @@ class ModeloAmendmentRepository:
         return envelope.payload
 
     def save(self, amendment: BaseAmendment) -> None:
-        """Persist ``amendment`` in the encrypted database object store."""
+        """Persist ``amendment`` in the encrypted database object store.
+
+        The row is stored under
+        :data:`aeat.adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`.
+        """
         from ...adapters.persistence.storage import Envelope, SensitivityClass, safe_repository_id
 
         safe_repository_id(amendment.amendment_id, context="amendment_id")
