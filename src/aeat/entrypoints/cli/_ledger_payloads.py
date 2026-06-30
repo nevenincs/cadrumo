@@ -132,7 +132,15 @@ class LedgerReviewRowPayload(OutputSchema):
 
 
 class LedgerRemovalBlockerPayload(OutputSchema):
-    """One modelo revision that blocks ledger transaction removal."""
+    """One modelo revision reference surfaced by ledger removal.
+
+    Mirrors :class:`~aeat.application.ledger.LedgerRemovalBlocker`.  In
+    ``blocking_modelo_references`` the row names a finalized revision that
+    prevents removal because it still cites the transaction through
+    ``source_transaction_ids``.  In ``stale_draft_revision_references`` the same
+    shape is a non-blocking draft advisory that tells the operator which
+    borradores should be recalculated after removal.
+    """
 
     work_unit_id: str
     calculation_revision_id: str
@@ -143,18 +151,26 @@ class LedgerRemovalBlockerPayload(OutputSchema):
 
 
 class LedgerPeriodPayload(OutputSchema):
-    """Nested filing period payload used by ledger preflight/check surfaces."""
+    """Nested filing-period projection used by ledger readiness surfaces.
+
+    Carries the JSON-safe filing year plus period code derived from
+    :class:`~aeat.core.Period`; preflight/check reports use this shape instead
+    of serialising the richer period object directly.
+    """
 
     filing_year: int
     code: str
 
 
 class LedgerTransactionParticipationEntryPayload(OutputSchema):
-    """One finalized-revision participation recorded against a ledger transaction (nested).
+    """One finalized-revision participation recorded against a ledger transaction.
 
     Surfaces the inverse of the forward ``source_transaction_ids`` link:
     a finalized modelo revision (and, where filed, its filing record and
-    justificante reference) that consumed the transaction.
+    justificante reference) that consumed the transaction.  The row mirrors
+    :class:`~aeat.domain.modelos.TransactionRevisionParticipation`, which lives
+    in the derived, rebuildable participation index rather than on the
+    content-addressed transaction itself.
     """
 
     calculation_revision_id: str
@@ -333,7 +349,10 @@ class LedgerRestoreResult(_LedgerMutationResult):
 class LedgerRemoveResult(OutputSchema):
     """JSON envelope for ``aeat app ledger remove``.
 
-    Mirrors ``LedgerTransactionRemovalReport.model_dump(mode='json')``.
+    Mirrors :class:`~aeat.application.ledger.LedgerTransactionRemovalReport`.
+    ``blocking_modelo_references`` is the hard finalized-revision guard;
+    ``stale_draft_revision_references`` is advisory evidence for borradores that
+    still cite the removed transaction and should be recalculated.
     """
 
     bucket_id: str
@@ -717,8 +736,11 @@ class LedgerImportPayload(OutputSchema):
 class LedgerTransactionParticipationPayload(OutputSchema):
     """JSON envelope for ``aeat app ledger participation <transaction-id>``.
 
-    Carries the full participation set for one ledger transaction: every
-    finalized modelo revision and filing that consumed it.
+    Carries the full
+    :class:`~aeat.domain.modelos.TransactionRevisionParticipationIndex` read for
+    one ledger transaction: every finalized modelo revision and filing that
+    consumed it.  An empty ``participations`` list is the auditable "not used in
+    any finalized declaration" answer, not a lookup failure.
     """
 
     transaction_id: str
@@ -729,8 +751,11 @@ class LedgerTransactionParticipationPayload(OutputSchema):
 class LedgerParticipationRebuildResult(OutputSchema):
     """JSON envelope for ``aeat app ledger participation rebuild``.
 
-    Reports the outcome of regenerating the transaction participation index from
-    the finalized-revision catalogue.
+    Reports the outcome of
+    :func:`~aeat.application.modelo.rebuild_participation_index`, which
+    regenerates the derived participation index from the authoritative finalized
+    calculation-revision catalogue.  The result is a repair summary for the
+    read-side cache, not a mutation of ledger transactions.
     """
 
     transaction_count: int
@@ -805,7 +830,9 @@ class LedgerTrackResult(OutputSchema):
 
     ``participated_in`` carries the finalized-revision participations that
     consumed this transaction (the inverse audit trail), or ``None`` when the
-    transaction appears in no finalized revision.
+    transaction appears in no finalized revision.  The field is read from the
+    rebuildable participation index and complements the transaction's own
+    evidence/edit/lifecycle lineage.
     """
 
     bucket_id: str
