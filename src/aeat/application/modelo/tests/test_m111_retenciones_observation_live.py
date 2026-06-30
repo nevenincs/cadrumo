@@ -42,6 +42,20 @@ def _professional_observation() -> RetencionObservation:
     )
 
 
+def _administrador_observation() -> RetencionObservation:
+    """An administrador/consejero retención at the LIRPF art. 101.2 fixed rate (35 %)."""
+    return RetencionObservation(
+        source_kind="ledger_transaction",
+        source_object_id="administrador-payment-001",
+        perceptor_nif="87654321X",
+        perceptor_name="Administrador Ejemplo",
+        scheme=RetencionScheme.WORK_INCOME_DIRECTOR,
+        taxable_base=Decimal("2000.00"),
+        retencion_amount=Decimal("700.00"),  # 2000.00 * 0.35 (art. 101.2 general rate)
+        accrued_on="2026-03-15",
+    )
+
+
 def _seed_ready_profile(objects: SecureObjectRepository) -> None:
     UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         UserProfileRecord(
@@ -106,4 +120,52 @@ def test_m111_professional_retencion_observation_calculates_activity_boxes(tmp_p
     assert values["09"] == Decimal("150.00")
     assert values["28"] == Decimal("150.00")
     assert values["30"] == Decimal("150.00")
+    assert result.source_diagnostics == ()
+
+
+def test_m111_administrador_retencion_observation_folds_into_trabajo_boxes(tmp_path: Path) -> None:
+    """An administrador (clave E, art. 101.2) retención drives the trabajo boxes 01/02/03 and totals 28/30.
+
+    Modelo 111 carries a single rendimientos-del-trabajo block, so the administrador/consejero
+    retención reports there alongside ordinary empleados (the clave A/E split is only on Modelo
+    190). The 700.00 withheld is the art. 101.2 fixed 35 % of the 2.000,00 base.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 retenciones") as profile:
+        objects: SecureObjectRepository = profile.repository
+        _seed_ready_profile(objects)
+        period = Period.from_year_and_code(2026, "1T")
+        RetencionObservationRepository().replace_observations(
+            modelo="111",
+            filing_year=2026,
+            period=period,
+            observations=[_administrador_observation()],
+            source_kind="aggregate_pull",
+        )
+        snapshot = resources().modelos.authority.snapshot("111", filing_year=2026, period="1T")
+        wu_repo = WorkUnitCatalogueRepository(objects=objects)
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="111",
+            filing_year=2026,
+            period=period,
+            revision_id=snapshot.revision.id,
+            repository=wu_repo,
+            clock=_T0,
+        )
+
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            work_unit_repository=wu_repo,
+            calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
+            invoice_repository=InvoiceCatalogueRepository(objects=objects),
+            clock=_T1,
+        )
+
+    values = result.revision.casilla_values
+    assert values["01"] == Decimal("1")
+    assert values["02"] == Decimal("2000.00")
+    assert values["03"] == Decimal("700.00")
+    assert values["28"] == Decimal("700.00")
+    assert values["30"] == Decimal("700.00")
     assert result.source_diagnostics == ()
