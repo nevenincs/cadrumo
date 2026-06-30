@@ -52,6 +52,7 @@ def _seed_event(
     modelo: str,
     year: str,
     period: str,
+    year_payload_key: str = "year",
     offset_seconds: int = 0,
 ) -> str:
     """Persist one modelo-lifecycle event through the real repository."""
@@ -63,7 +64,7 @@ def _seed_event(
         occurred_at = occurred_at.replace(second=(occurred_at.second + offset_seconds) % 60)
     object_id = "wu" + "0" * (64 - 2)
     actor = "cli/aeat"
-    payload = {"modelo": modelo, "year": year, "period": period}
+    payload = {"modelo": modelo, year_payload_key: year, "period": period}
     event_id = derive_bucket_event_id(
         bucket_id=bucket_id,
         event_type=event_type,
@@ -171,3 +172,44 @@ def test_history_year_and_period_filters_narrow_results() -> None:
     assert "count\t1" in result.output, result.output
     # Year+period filters narrow to exactly one event row.
     assert result.output.count("modelo.filed") == 1
+
+
+def test_history_year_filter_includes_real_lifecycle_filing_year_payloads() -> None:
+    """Real lifecycle services stamp ``filing_year``; model history must include them."""
+
+    bucket_id = _active_bucket_id()
+    _seed_event(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.MODELO_CALCULATION_CREATED,
+        modelo="303",
+        year="2026",
+        period="1T",
+        year_payload_key="filing_year",
+    )
+    _seed_event(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.MODELO_EXPORTED,
+        modelo="303",
+        year="2026",
+        period="1T",
+        year_payload_key="filing_year",
+        offset_seconds=1,
+    )
+    _seed_event(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.MODELO_EXPORTED,
+        modelo="303",
+        year="2025",
+        period="1T",
+        year_payload_key="filing_year",
+        offset_seconds=2,
+    )
+
+    result = invoke_cached_cli(
+        ["app", "modelo", "history", "--modelo", "303", "--year", "2026", "--period", "1T"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "count\t2" in result.output, result.output
+    assert result.output.count("modelo.calculation.created") == 1
+    assert result.output.count("modelo.exported") == 1

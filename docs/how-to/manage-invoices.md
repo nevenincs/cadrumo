@@ -133,16 +133,10 @@ aeat app ledger invoice catalogue create --kind issued \
 ```
 
 For an intra-community operation, pass `--operation-type` so the catalogue
-stamps the classification the Modelo 349 calculation reads. The catalogue feeds
-the three operation types the recapitulative calculation can represent today —
-`E` (goods supply), `A` (goods acquisition), and `T` (triangular). The service,
-rectification, and miscellany codes are refused here rather than silently
-dropped:
-
-```text
-Invalid value: --operation-type S cannot feed Modelo 349 from the catalogue
-yet; supported: E, A, T.
-```
+stamps the classification the Modelo 349 calculation reads. Use `E`, `H`, `M`,
+`S`, `T`, `R`, `D`, or `C` for issued catalogue invoices. Use `A`, `I`, or `T`
+for received catalogue invoices. In Modelo 349, `R` is the call-off-stock
+transfer key; rectification rows use separate rectified-period and base fields.
 
 List the catalogue copies:
 
@@ -192,8 +186,8 @@ reads invoices strictly by date, with no carry-forward from earlier periods.
 
 Catalogue invoices feed **Modelo 349** — the recapitulative declaration of
 intra-community operations — through the operation type you stamp on them
-(`E`/`A`/`T`). This is the modelo your issued and received invoices drive
-directly.
+when you create them. This is the modelo your issued and received invoices
+drive directly.
 
 Your **IVA returns do not read these invoice records**. Modelo 303 (quarterly
 IVA) and Modelo 390 (annual IVA summary) are computed from your classified

@@ -27,9 +27,10 @@ from .. import CalculationSourceContext, ProfileSourceResolver
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
-_BUCKET_ID = "operator"
+_PROFILE_ID = "10010010-0100-4100-8100-100100100100"
+_BUCKET_ID = _PROFILE_ID
 _CCAA_BINDING = "renta-2025-profile-tax-residence-ccaa"
-_PROFILE_FINGERPRINT = "sha256:df8074c27d781e6413d624ab561a331d6d8d453660636d69a63a2300ad39e35f"
+_PROFILE_FINGERPRINT = "sha256:e43c88edad4d98897cc610aad74834a0ef1711f53a635269846e54069237b207"
 
 
 @pytest.fixture
@@ -44,7 +45,7 @@ def _modelo_100_snapshot():
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
     return UserProfileRecord(
-        profile_id=_BUCKET_ID,
+        profile_id=_PROFILE_ID,
         display_name="Renta perfil Ñandú",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Ñ"),

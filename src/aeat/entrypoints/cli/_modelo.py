@@ -1128,12 +1128,16 @@ def modelo_history(
     """Stream the bucket-event history for one modelo across all lifecycle stages."""
     from ...domain.buckets import BucketEvent, BucketEventHistoryRepository, BucketEventType
 
+    def _event_filing_year(payload: dict[str, str]) -> str:
+        return (payload.get("filing_year") or payload.get("year") or "").strip()
+
     repo = BucketEventHistoryRepository()
     catalogue = repo.load()
     modelo_event_types = {
         BucketEventType.MODELO_CALCULATION_CREATED,
         BucketEventType.MODELO_VERIFICATION_PASSED,
         BucketEventType.MODELO_VERIFICATION_REFUSED,
+        BucketEventType.MODELO_EXPORTED,
         BucketEventType.MODELO_FILED,
         BucketEventType.MODELO_FILED_SUPERSEDED,
         BucketEventType.MODELO_AMENDED,
@@ -1149,7 +1153,7 @@ def modelo_history(
         payload_map = dict(event.payload)
         if payload_map.get("modelo", "") != modelo:
             continue
-        if year is not None and payload_map.get("year", "").strip() != str(year):
+        if year is not None and _event_filing_year(payload_map) != str(year):
             continue
         if period is not None and payload_map.get("period", "") != period:
             continue

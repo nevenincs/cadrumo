@@ -10,10 +10,11 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
+from ....domain.calculations.registry import BindingId, validated_casilla_id
 from ....domain.deadlines import TaxpayerProfile
 from ....domain.deadlines._models import EntityType, IVARegime, LegalEntityForm, ModeloIVAProfile, RefundAccount
 from ....domain.modelos._calculation_revision import CalculationRevisionState
-from .._export import ModeloExportError, compose_export_headers
+from .._export import ModeloExportCommand, ModeloExportError, compose_export_headers, export_modelo_revision
 from ._export_test_support import (
     _M303_RESULT_CASILLA,
     _SPANISH_IBAN,
@@ -26,6 +27,9 @@ from ._export_test_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_M202_CASILLA_01 = validated_casilla_id("01", surface="modelo 202 export snapshot test")
+_M202_2023_2024_PRIOR_PAYMENTS_BINDING: BindingId = "modelo-202-2023-2024-pagos-fraccionados-anteriores"
 
 
 @pytest.fixture
@@ -218,3 +222,99 @@ def test_modelo_202_legal_entity_export_requires_legal_name(isolated_backend: No
         )
 
     assert exc_info.value.context == {"missing": ["identity.legal_name"]}
+
+
+def test_modelo_111_legal_entity_uses_profile_identity_name_for_required_name_header(
+    isolated_backend: None,
+) -> None:
+    tax_id = "B12345674"
+    legal_name = "Emilio Consulting Sociedad Limitada"
+    display_name = "Emilio"
+    bucket_id = _seed_profile(
+        tax_id=tax_id,
+        profile_overrides={
+            "identity.legal_name": legal_name,
+            "identity.name": display_name,
+            "identity.surnames": "Ignored for legal entities",
+            "taxpayer_type.entity_type": "legal_entity",
+            "taxpayer_type.legal_entity_form": "sl",
+            "taxpayer_type.irpf_income_categories": "",
+            "irpf.estimation_regime": "",
+        },
+    )
+    work_unit_id, revision_id = _seed_revision(
+        bucket_id=bucket_id,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        modelo="111",
+        filing_year=2024,
+        period="1T",
+    )
+    work_unit, revision = _load_seeded_work_unit_and_revision(work_unit_id, revision_id)
+
+    headers = compose_export_headers(
+        work_unit=work_unit,
+        revision=revision,
+        workflow_profile=TaxpayerProfile(
+            tax_id=tax_id,
+            entity_type=EntityType.LEGAL_ENTITY,
+            legal_entity_form=LegalEntityForm.SL,
+            iva_regime=IVARegime.GENERAL,
+            has_employees=True,
+        ),
+        period=Period.from_year_and_code(2024, "1T"),
+    )
+
+    assert headers["surnames"] == legal_name
+    assert headers["name"] == display_name
+    assert headers["full_name"] == legal_name
+
+
+def test_modelo_202_2024_export_uses_2024_registry_snapshot_for_draft_write(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    tax_id = "B12345674"
+    bucket_id = _seed_profile(
+        tax_id=tax_id,
+        profile_overrides={
+            "identity.legal_name": "Emilio Consulting Sociedad Limitada",
+            "identity.name": "Emilio",
+            "taxpayer_type.entity_type": "legal_entity",
+            "taxpayer_type.legal_entity_form": "sl",
+            "taxpayer_type.incn_prior_12_months": "500000",
+            "taxpayer_type.irpf_income_categories": "",
+            "irpf.estimation_regime": "",
+        },
+    )
+    _, revision_id = _seed_revision(
+        bucket_id=bucket_id,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        modelo="202",
+        filing_year=2024,
+        period="1P",
+        input_values_by_casilla_id={_M202_CASILLA_01: "0"},
+        binding_overrides={_M202_2023_2024_PRIOR_PAYMENTS_BINDING: "0"},
+    )
+    output_path = tmp_path / "m202-2024-1p.boe"
+
+    result = export_modelo_revision(
+        ModeloExportCommand(
+            calculation_revision_id=revision_id,
+            output_path=output_path,
+            actor="Emilio",
+        ),
+        workflow_profile=TaxpayerProfile(
+            tax_id=tax_id,
+            entity_type=EntityType.LEGAL_ENTITY,
+            legal_entity_form=LegalEntityForm.SL,
+            iva_regime=IVARegime.GENERAL,
+            incn_prior_12_months=Decimal("500000"),
+            new_entity_first_two_profit_periods=False,
+        ),
+    )
+
+    assert result.modelo == "202"
+    assert result.filing_year == 2024
+    assert result.period == Period.from_year_and_code(2024, "1P")
+    assert output_path.exists()
+    assert result.byte_size == output_path.stat().st_size

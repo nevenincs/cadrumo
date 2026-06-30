@@ -60,7 +60,8 @@ from .._iva_wallet_gate import taxpayer_nif_for_bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "operator"
+_BUCKET_ID = "00000000-0000-4000-8000-000000000303"
+_BUCKET_LABEL = "operator"
 _SEED_YEAR = 2024
 _SEED_PERIOD = "4T"
 _SEED_FILING_PERIOD = Period.from_year_and_code(_SEED_YEAR, _SEED_PERIOD)
@@ -85,7 +86,11 @@ def _runtime(tmp_path: Path) -> Iterator[None]:
         profile_create_storage_span(_BUCKET_ID),
     ):
         workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID),
+            lambda state: register_minimal_profile(
+                state,
+                profile_id=_BUCKET_ID,
+                display_name=_BUCKET_LABEL,
+            ),
         )
         yield
 

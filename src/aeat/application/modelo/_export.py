@@ -133,6 +133,7 @@ _PROFILE_NAME_PATH = "identity.name"
 _PROFILE_LEGAL_NAME_PATH = "identity.legal_name"
 _PROFILE_ENTITY_TYPE_PATH = "taxpayer_type.entity_type"
 _LEGAL_ENTITY_TYPE = "legal_entity"
+_LEGAL_ENTITY_NAME_SLOT_MODELOS: frozenset[str] = frozenset({"111"})
 _LOGGER = get_logger(__name__)
 
 
@@ -392,24 +393,27 @@ def _load_revision_for_export(
     return revision
 
 
-def _operator_name_facts(bucket_id: str) -> tuple[str, str]:
-    """Return ``(surnames, name)`` export-header slots from the active profile.
+def _operator_name_facts(bucket_id: str, *, modelo: str) -> tuple[str, str, str]:
+    """Return identity export-header slots from the active profile.
 
     The operator's legal name is not carried on the deadline-engine
     :class:`TaxpayerProfile` (which holds only ``tax_id``); it lives in
     the schema-driven user-profile fact catalogue. Natural-person
     exports populate the individual ``surnames`` / ``name`` slots. Legal
-    entities populate the official 60-character ``surnames`` slot with
-    the company/legal name and leave the 20-character individual-name
-    slot blank.
+    entities populate the official 60-character ``surnames`` slot with the
+    company/legal name. Layouts that also require the 20-character
+    individual-name slot consume the explicit ``identity.name`` fact; layouts
+    that reserve that slot for individual filers leave it blank.
 
     Args:
         bucket_id: The active profile bucket id whose persisted profile
             facts are read for the operator name.
+        modelo: Modelo code whose export layout determines whether legal
+            entities need the individual ``name`` slot populated.
 
     Returns:
-        A ``(surnames, name)`` tuple for the export header. ``name`` may
-        be blank for legal entities whose official layout reserves that
+        A ``(surnames, name, full_name)`` tuple for the export header. ``name``
+        may be blank for legal entities whose official layout reserves that
         slot for individual filers.
 
     Raises:
@@ -439,7 +443,14 @@ def _operator_name_facts(bucket_id: str) -> tuple[str, str]:
                 translated_message="application.modelo.errors.export_operator_name_missing",
                 context={"missing": [_PROFILE_LEGAL_NAME_PATH]},
             )
-        return legal_name, ""
+        if modelo in _LEGAL_ENTITY_NAME_SLOT_MODELOS:
+            if not name:
+                raise ModeloExportError(
+                    translated_message="application.modelo.errors.export_operator_name_missing",
+                    context={"missing": [_PROFILE_NAME_PATH]},
+                )
+            return legal_name, name, legal_name
+        return legal_name, "", legal_name
 
     missing = [path for path, value in ((_PROFILE_SURNAMES_PATH, surnames), (_PROFILE_NAME_PATH, name)) if not value]
     if missing:
@@ -447,7 +458,7 @@ def _operator_name_facts(bucket_id: str) -> tuple[str, str]:
             translated_message="application.modelo.errors.export_operator_name_missing",
             context={"missing": missing},
         )
-    return surnames, name
+    return surnames, name, _compose_legal_full_name(surnames=surnames, name=name)
 
 
 def _ddmmaaaa(value: date) -> str:
@@ -537,7 +548,7 @@ def _compose_export_headers(
     ``required`` by the layout and missing, so over-supplying optional
     keys is safe — the renderer ignores headers a layout never reads.
     """
-    surnames, name = _operator_name_facts(work_unit.bucket_id)
+    surnames, name, full_name = _operator_name_facts(work_unit.bucket_id, modelo=str(work_unit.modelo))
     try:
         period_start = (
             period.start_date
@@ -586,7 +597,7 @@ def _compose_export_headers(
         "declaration_type": declaration_type,
         "surnames": surnames,
         "name": name,
-        "full_name": _compose_legal_full_name(surnames=surnames, name=name),
+        "full_name": full_name,
         "entity_type": workflow_profile.entity_type.value if workflow_profile.entity_type is not None else "",
         "fecha_inicio_periodo": _ddmmaaaa(period_start),
         "fecha_fin_periodo": _ddmmaaaa(period_end),
@@ -716,6 +727,7 @@ def _persist_exported_draft(
     exported_at: datetime,
     iva_wallet_provenance: ModeloIvaWalletDecisionProvenance | None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
+    schema_provider: RegistrySchemaAccessor,
 ) -> ModeloExportResult:
     headers = _compose_export_headers(
         work_unit=work_unit,
@@ -724,7 +736,7 @@ def _persist_exported_draft(
         period=period,
         refund_election=command.refund_election,
     )
-    receipt = _write_export_tmp(command=command, approved=approved, headers=headers)
+    receipt = _write_export_tmp(command=command, approved=approved, headers=headers, schema_provider=schema_provider)
     event = _emit_export_event(
         command=command,
         work_unit=work_unit,
@@ -774,6 +786,7 @@ def _write_export_tmp(
     command: ModeloExportCommand,
     approved: ModeloDraft,
     headers: dict[str, str],
+    schema_provider: RegistrySchemaAccessor,
 ) -> DeclaracionExportResult:
     # Atomic-rename: write the fichero-BOE artefact to a sibling .tmp
     # path, append the MODELO_EXPORTED event, and only rename into the
@@ -782,7 +795,7 @@ def _write_export_tmp(
     # .tmp file, which carries no provenance and is safe to discard.
     tmp_output = command.output_path.with_name(command.output_path.name + ".tmp")
     try:
-        return export_draft(approved, output_path=tmp_output, headers=headers)
+        return export_draft(approved, output_path=tmp_output, headers=headers, schema_provider=schema_provider)
     except filing_domain.FilingExportError as exc:
         _discard_tmp_output_after_failure(tmp_output, stage="draft-write")
         # Surface the underlying FilingExportError cause in the typed context
@@ -1010,6 +1023,7 @@ def export_modelo_revision(
         exported_at=now,
         iva_wallet_provenance=iva_wallet_provenance,
         bucket_event_repository=bv_repo,
+        schema_provider=schema_provider,
     )
 
 

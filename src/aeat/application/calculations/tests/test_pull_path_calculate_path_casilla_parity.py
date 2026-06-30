@@ -84,7 +84,8 @@ from .._relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-f5-parity"
+_PROFILE_ID = "18018018-0180-4180-8180-180180180180"
+_BUCKET_ID = _PROFILE_ID
 _YEAR = 2025
 _T0 = datetime(_YEAR, 1, 5, 10, 0, tzinfo=UTC)
 _T1 = datetime(_YEAR, 3, 31, 14, 0, tzinfo=UTC)
@@ -136,7 +137,7 @@ _QUARTERS_115: dict[str, dict[CasillaId, Decimal]] = {
 def _seed_ready_profile(objects: SecureObjectRepository) -> None:
     UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         UserProfileRecord(
-            profile_id=_BUCKET_ID,
+            profile_id=_PROFILE_ID,
             display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),

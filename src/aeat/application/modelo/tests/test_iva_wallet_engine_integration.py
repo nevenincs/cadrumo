@@ -46,6 +46,7 @@ from .. import (
 )
 from ._file_flow_support import seed_clean_cross_period_sources
 from ._iva_wallet_engine_support import (
+    _BUCKET_ID,
     _DECIDED_AT,
     _M303_COMPENSACION_APLICADA_CASILLA,
     _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
@@ -580,7 +581,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
         assert stored_work_unit.filed_calculation_revision_id == revision.calculation_revision_id
         assert (
             filing_repo.load().current_for(
-                bucket_id="operator",
+                bucket_id=_BUCKET_ID,
                 modelo="303",
                 filing_year=_TARGET_YEAR,
                 period=_period(_TARGET_YEAR, _TARGET_PERIOD),
@@ -775,7 +776,7 @@ def test_recorded_override_unblocks_carry_and_reduces_final_result(tmp_path: Pat
             _calculate()
 
         decision = record_iva_compensation_override_for_bucket(
-            bucket_id="operator",
+            bucket_id=_BUCKET_ID,
             period=_TARGET_PERIOD_VALUE,
             amount=Decimal("450.00"),
             reason="Operator asserts the prior-quarter cuota a compensar.",
@@ -833,7 +834,7 @@ def test_override_refused_when_sealed_303_consumed_the_basis(tmp_path: Path) -> 
 
         with pytest.raises(ModeloIvaWalletOverrideSealedError):
             record_iva_compensation_override_for_bucket(
-                bucket_id="operator",
+                bucket_id=_BUCKET_ID,
                 period=_TARGET_PERIOD_VALUE,
                 amount=Decimal("450.00"),
                 reason="x",
@@ -850,7 +851,7 @@ def test_override_refused_when_fresh_wallet_decision_exists(tmp_path: Path) -> N
 
         with pytest.raises(ModeloIvaWalletOverrideFreshWalletError):
             record_iva_compensation_override_for_bucket(
-                bucket_id="operator",
+                bucket_id=_BUCKET_ID,
                 period=_TARGET_PERIOD_VALUE,
                 amount=Decimal("999.00"),
                 reason="x",

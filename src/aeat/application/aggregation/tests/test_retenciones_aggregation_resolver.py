@@ -31,6 +31,8 @@ from .._source_mesh import CalculationSourceContext
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PERCEPTOR_BINDING_ID = "modelo-180-115-perceptores-anual"
+_M115_PERCEPTOR_BINDING_ID = "modelo-115-perceptores"
+_M115_BASE_BINDING_ID = "modelo-115-base-retenciones"
 
 
 def _observation(nif: str) -> RetencionObservation:
@@ -71,6 +73,16 @@ def _context(revision: ModeloRevision) -> CalculationSourceContext:
     )
 
 
+def _context_for(*, modelo: str, filing_year: int, period: str, revision: ModeloRevision) -> CalculationSourceContext:
+    return CalculationSourceContext(
+        bucket_id="operator",
+        modelo=modelo,
+        filing_year=filing_year,
+        period=Period.from_year_and_code(filing_year, period),
+        revision=revision,
+    )
+
+
 def test_resolver_materialises_distinct_perceptor_count(tmp_path: Path) -> None:
     """Two perceptors across three rows materialise a DISTINCT count of 2, not 3."""
     with isolated_runtime_profile(tmp_path=tmp_path):
@@ -94,6 +106,60 @@ def test_resolver_materialises_distinct_perceptor_count(tmp_path: Path) -> None:
             "perceptor:11111111H",
             "perceptor:22222222J",
         }
+
+
+def test_resolver_materialises_modelo_115_count_and_base_from_real_store(tmp_path: Path) -> None:
+    """M115 01/02 resolve from persisted URBAN_RENTAL per-perceptor observations."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        period = Period.from_year_and_code(2026, "1T")
+        RetencionObservationRepository().replace_observations(
+            modelo="115",
+            filing_year=2026,
+            period=period,
+            observations=[
+                RetencionObservation(
+                    source_kind="ledger_transaction",
+                    source_object_id="rent-ledger-row-001",
+                    perceptor_nif="B12345678",
+                    perceptor_name="Arrendador Ejemplo SL",
+                    scheme=RetencionScheme.URBAN_RENTAL,
+                    taxable_base=Decimal("2700.00"),
+                    retencion_amount=Decimal("513.00"),
+                    accrued_on="2026-03-15",
+                ),
+            ],
+            source_kind="aggregate_pull",
+        )
+        snapshot = resources().modelos.authority.snapshot("115", filing_year=2026, period="1T")
+
+        resolution = RetencionesAggregationSourceResolver().resolve(
+            _context_for(modelo="115", filing_year=2026, period="1T", revision=snapshot.revision),
+        )
+
+    assert resolution.binding_values == {
+        _M115_PERCEPTOR_BINDING_ID: Decimal("1"),
+        _M115_BASE_BINDING_ID: Decimal("2700.00"),
+    }
+    assert resolution.diagnostics == ()
+    assert {item.source_ref for item in resolution.provenance} == {"perceptor:B12345678"}
+
+
+def test_resolver_empty_modelo_115_store_fails_before_silent_zero(tmp_path: Path) -> None:
+    """A declaring M115 revision without per-perceptor evidence refuses zero materialisation."""
+    snapshot = resources().modelos.authority.snapshot("115", filing_year=2026, period="1T")
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path),
+        pytest.raises(AggregationValidationError) as exc_info,
+    ):
+        RetencionesAggregationSourceResolver().resolve(
+            _context_for(modelo="115", filing_year=2026, period="1T", revision=snapshot.revision),
+        )
+
+    assert exc_info.value.translated_message == "aggregation.retenciones.errors.perceptor_observations_missing"
+    context = exc_info.value.context or {}
+    assert context["modelo"] == "115"
+    assert context["period"] == "1T"
+    assert "--retencion-observation" in (exc_info.value.suggestion or "")
 
 
 def test_resolver_empty_store_fails_before_silent_zero(tmp_path: Path) -> None:

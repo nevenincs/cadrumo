@@ -73,12 +73,23 @@ def _casilla_values(*entries: tuple[CasillaId, str]) -> dict[CasillaId, Decimal]
     return {casilla_id: Decimal(value) for casilla_id, value in entries}
 
 
-def _seed_ready_profile(repository: UserProfileLifecycleRepository, *, bucket_id: str) -> None:
+def _seed_ready_profile(
+    repository: UserProfileLifecycleRepository,
+    *,
+    bucket_id: str,
+    irpf_estimation_regime: str = "directa_normal",
+) -> None:
+    facts = tuple(
+        UserProfileFact(path=fact.path, value=irpf_estimation_regime)
+        if fact.path == "irpf.estimation_regime"
+        else fact
+        for fact in _READY_PROFILE_FACTS
+    )
     repository.save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name="Test Operator",
-            facts=_READY_PROFILE_FACTS,
+            facts=facts,
             created_at=_T0,
             updated_at=_T0,
         ),

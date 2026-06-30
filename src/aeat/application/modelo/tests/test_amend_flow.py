@@ -50,7 +50,10 @@ from ....domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
 )
 from ....domain.modelos._work_unit import WorkUnit
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
+from ....tests.secure_sql import isolated_runtime_profile
+from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     AmendmentEvidenceMissingError,
     AmendmentOverrideCasillaError,
@@ -65,7 +68,6 @@ from .. import (
     verify_modelo_revision,
 )
 from ._file_flow_support import (
-    _repos,  # pyright: ignore[reportPrivateUsage]
     seed_clean_cross_period_sources,
     workflow_profile,
 )
@@ -85,6 +87,20 @@ _T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
 _T2 = datetime(2026, 1, 15, 14, 0, 0, tzinfo=UTC)
 _T3 = datetime(2026, 4, 15, 15, 0, 0, tzinfo=UTC)
 _T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
+_PROFILE_ID = "10000000-0000-4000-8000-000000000130"
+_PROFILE_LABEL = "Test runtime profile"
+_READY_PROFILE_FACTS = (
+    UserProfileFact(path="identity.tax_id", value="X1234567L"),
+    UserProfileFact(path="identity.name", value="Ready"),
+    UserProfileFact(path="identity.surnames", value="Operator"),
+    UserProfileFact(path="activities.description", value="file-flow"),
+    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+)
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -112,7 +128,24 @@ _M303_PRINTED_RESULT_TOKEN: CasillaId = _casilla_id("69")
 def repos(tmp_path: Path) -> Generator[_Repos]:
     """Yield the shared ready-profile repository bundle for amend-flow tests."""
 
-    yield from _repos(tmp_path)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID, label=_PROFILE_LABEL) as profile:
+        objects = profile.repository
+        UserProfileLifecycleRepository(bucket_id=_PROFILE_ID, objects=objects).save(
+            UserProfileRecord(
+                profile_id=_PROFILE_ID,
+                display_name=_PROFILE_LABEL,
+                facts=_READY_PROFILE_FACTS,
+                created_at=_T0,
+                updated_at=_T0,
+            ),
+        )
+        yield (
+            WorkUnitCatalogueRepository(objects=objects),
+            CalculationRevisionCatalogueRepository(objects=objects),
+            ModeloRecordCatalogueRepository(objects=objects),
+            VerificationReportCatalogueRepository(objects=objects),
+            BucketEventHistoryRepository(objects=objects),
+        )
 
 
 def _seed_work_unit(
@@ -127,7 +160,7 @@ def _seed_work_unit(
     in ``calculate_modelo_revision`` has a snapshot to operate on."""
 
     return create_work_unit(
-        bucket_id="default",
+        bucket_id=_PROFILE_ID,
         modelo=modelo,
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period_code),

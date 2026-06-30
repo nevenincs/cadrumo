@@ -53,6 +53,7 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import (
+    BindingId,
     CasillaId,
     RegistryCalculationResult,
     RegistryModeloObservation,
@@ -92,6 +93,12 @@ _M115_PERCEPTORES_CASILLA: CasillaId = _casilla_id("01")
 _M115_BASE_CASILLA: CasillaId = _casilla_id("02")
 _M115_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
 _M115_PREVIOUS_RESULT_CASILLA: CasillaId = _casilla_id("04")
+_M115_PERCEPTORES_BINDING: BindingId = "modelo-115-perceptores"
+_M115_BASE_RETENCIONES_BINDING: BindingId = "modelo-115-base-retenciones"
+_M115_BOUND_BINDINGS_BY_CASILLA: dict[CasillaId, BindingId] = {
+    _M115_PERCEPTORES_CASILLA: _M115_PERCEPTORES_BINDING,
+    _M115_BASE_CASILLA: _M115_BASE_RETENCIONES_BINDING,
+}
 _M180_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("decl.total-perceptores")
 _M180_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
 _M180_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
@@ -167,14 +174,22 @@ def _calculate_115(
 ) -> RegistryCalculationResult:
     """Run the REAL 115 quarterly calculation and return the engine result."""
     snapshot = resources().modelos.authority.snapshot(_MODELO_115, filing_year=filing_year, period=period)
+    binding_values = {
+        binding_id: casilla_inputs[casilla_id] for casilla_id, binding_id in _M115_BOUND_BINDINGS_BY_CASILLA.items()
+    }
+    manual_inputs = {
+        casilla_id: value
+        for casilla_id, value in casilla_inputs.items()
+        if casilla_id not in _M115_BOUND_BINDINGS_BY_CASILLA
+    }
     inputs = {
-        **resolve_bound_inputs_by_casilla_id(snapshot.revision, {}),
-        **casilla_inputs,
+        **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+        **manual_inputs,
     }
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
-        binding_values={},
+        binding_values=binding_values,
         date_context={"filing_period": date(filing_year, 12, 31)},
     )
 

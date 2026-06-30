@@ -40,6 +40,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
+_BUCKET = "44444444-4444-4444-8444-444444444444"
 _READY_PROFILE_FACTS = (
     UserProfileFact(path="identity.tax_id", value="12345678Z"),
     UserProfileFact(path="identity.name", value="Ready"),
@@ -67,10 +68,10 @@ _READY_PROFILE_FACTS = (
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
-        UserProfileLifecycleRepository(bucket_id="bucket-a", objects=profile.repository).save(
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
+        UserProfileLifecycleRepository(bucket_id=_BUCKET, objects=profile.repository).save(
             UserProfileRecord(
-                profile_id="26262626-2626-4262-8262-262626262626",
+                profile_id=_BUCKET,
                 display_name="Source mesh ready profile",
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,
@@ -84,7 +85,7 @@ def _repositories(objects: SecureObjectRepository):
     return (
         WorkUnitCatalogueRepository(objects=objects),
         CalculationRevisionCatalogueRepository(objects=objects),
-        TransactionCatalogueRepository(bucket_id="bucket-a", objects=objects),
+        TransactionCatalogueRepository(bucket_id=_BUCKET, objects=objects),
         InvoiceCatalogueRepository(objects=objects),
     )
 
@@ -98,7 +99,7 @@ def _seed_work_unit(
     revision_id: str,
 ):
     return create_work_unit(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET,
         modelo=modelo,
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),

@@ -35,6 +35,7 @@ from ....application.invoices import build_catalogue_invoice
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
+from ....core.aggregation import IntracomOperationType
 from ....domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....tests.cli_runner import invoke_cached_cli
@@ -220,16 +221,10 @@ def test_catalogue_create_stamps_intra_community_category() -> None:
     stored = InvoiceCatalogueRepository().load().get(invoice_id)
     assert stored is not None, "catalogue invoice missing after create"
     assert stored.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+    assert stored.operation_type is IntracomOperationType.E
 
 
-def test_catalogue_create_refuses_unrepresentable_operation_type() -> None:
-    """A service/rectification/miscellany code is refused, never silently dropped.
-
-    The recapitulative resolver derives a clave only for E/A/T, so an
-    ``--operation-type S`` invoice would vanish from M349. The verb refuses it
-    and names the supported set rather than persisting an invoice that cannot
-    reach the calculation it was created for.
-    """
+def test_catalogue_create_stamps_service_operation_type() -> None:
     result = invoke_cached_cli(
         [
             "app", "ledger", "invoice", "catalogue", "create",
@@ -242,5 +237,10 @@ def test_catalogue_create_refuses_unrepresentable_operation_type() -> None:
             "--country-code", "DE", "--operation-type", "S",
         ],
     )  # fmt: skip
-    assert result.exit_code != 0, result.output
-    assert "E, A, T" in result.output, result.output
+    assert result.exit_code == 0, result.output
+    invoice_id = _line_value(result.output, "invoice_id")
+
+    stored = InvoiceCatalogueRepository().load().get(invoice_id)
+    assert stored is not None, "catalogue invoice missing after create"
+    assert stored.operation_type is IntracomOperationType.S
+    assert stored.iva_category is None

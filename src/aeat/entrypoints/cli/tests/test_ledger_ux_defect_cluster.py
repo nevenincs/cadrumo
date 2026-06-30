@@ -34,6 +34,14 @@ def test_categories_command_lists_the_canonical_spending_taxonomy(
     assert grouped == expected
     assert "actividad_economica" in payload["irpf_category_ids"]
     assert "arrendamiento_local" in payload["irpf_category_ids"]
+    activity_category = next(item for item in payload["irpf_categories"] if item["id"] == "actividad_economica")
+    assert activity_category["net_paid_invoice"] is True
+    assert activity_category["directions"] == ["INCOMING", "OUTGOING"]
+    assert activity_category["related_category_ids"] == [
+        "asesoria_contable",
+        "asesoria_fiscal",
+        "asesoria_juridica",
+    ]
     rent_category = next(item for item in payload["irpf_categories"] if item["id"] == "arrendamiento_local")
     assert rent_category["net_paid_invoice"] is True
     assert rent_category["related_category_ids"] == ["arrendamiento_local"]

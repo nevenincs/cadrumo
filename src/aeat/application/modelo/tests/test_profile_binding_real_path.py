@@ -52,7 +52,8 @@ from .._profile_binding import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "binding-pin-test-operator"
+_PROFILE_ID = "10000000-0000-4000-8000-000000000477"
+_BUCKET_ID = _PROFILE_ID
 _YEAR = 2025
 _PERIOD = "0A"
 _CLOCK = datetime(2026, 5, 27, 9, 0, 0, tzinfo=UTC)
@@ -86,7 +87,7 @@ def _full_m100_profile() -> UserProfileRecord:
     strings as ``str``; Decimals as ``Decimal``.
     """
     return UserProfileRecord(
-        profile_id=_BUCKET_ID,
+        profile_id=_PROFILE_ID,
         display_name="Binding pin test taxpayer",
         facts=(
             # 0006 renta-2025-profile-tax-id
@@ -242,7 +243,7 @@ def test_unmarried_profile_resolves_neutral_marriage_facts_without_marriage_date
     """A single taxpayer does not owe an impossible marriage date to resolve 0245-0247."""
     snapshot = _modelo_100_snapshot()
     record = UserProfileRecord(
-        profile_id=_BUCKET_ID,
+        profile_id=_PROFILE_ID,
         display_name="Single binding pin taxpayer",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -267,7 +268,7 @@ def test_married_profile_without_marriage_date_keeps_marriage_facts_unresolved()
     """A married taxpayer still needs the actual marriage date for Art. 82 month facts."""
     snapshot = _modelo_100_snapshot()
     record = UserProfileRecord(
-        profile_id=_BUCKET_ID,
+        profile_id=_PROFILE_ID,
         display_name="Married binding pin taxpayer",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),

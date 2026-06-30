@@ -38,7 +38,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # Chain 3 — M349 invoices (collectible_invoice): PROVEN LIVE
 # ---------------------------------------------------------------------------
 
-_M349_BUCKET = "bucket-m349-invoice-fold"
+_M349_BUCKET = "34900000-0000-4000-8000-000000000013"
 _M349_REVISION = "2020-y-siguientes"
 _M349_YEAR = 2026
 _M349_IMPORTE_CASILLA: CasillaId = _casilla_id("decl.importe-operaciones")

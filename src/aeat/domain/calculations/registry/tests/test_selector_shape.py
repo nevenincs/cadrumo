@@ -362,16 +362,17 @@ def test_withholding_selector_rejects_unknown_fact() -> None:
 
 
 def test_retenciones_aggregation_selector_accepts_well_shaped_selector() -> None:
-    """The annual retenciones count source validates at construction."""
+    """The retenciones aggregation source validates declared scalar facts."""
 
-    binding = _binding(
-        source="retenciones_aggregation",
-        selector={
-            "target_casilla_id": _M111_RETENCIONES_CASILLA,
-            "fact": "perceptor_count_distinct",
-        },
-    )
-    assert validate_binding_selector_shape(binding) == []
+    for fact in ("perceptor_count_distinct", "taxable_base_sum", "retencion_amount_sum"):
+        binding = _binding(
+            source="retenciones_aggregation",
+            selector={
+                "target_casilla_id": _M111_RETENCIONES_CASILLA,
+                "fact": fact,
+            },
+        )
+        assert validate_binding_selector_shape(binding) == []
 
 
 def test_retenciones_aggregation_selector_rejects_unknown_fact() -> None:

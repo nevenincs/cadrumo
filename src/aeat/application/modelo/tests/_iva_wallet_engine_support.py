@@ -39,7 +39,8 @@ from ...calculations import CalculationObservationRepository, IvaWalletDecisionR
 from ...user_profile import UserProfileLifecycleRepository
 from .. import create_work_unit
 
-_TAXPAYER_NIF = "taxpayeralpha"
+_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
+_TAXPAYER_NIF = "12345678Z"
 _TARGET_YEAR = 2026
 _TARGET_PERIOD = "2T"
 _DECIDED_AT = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
@@ -75,7 +76,7 @@ def _snapshot_303(*, filing_year: int = _TARGET_YEAR, period: str = _TARGET_PERI
 
 @contextmanager
 def _secure_backend(tmp_path: Path) -> Generator[None]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         yield
 
 
@@ -182,7 +183,7 @@ def _create_modelo_303_work_unit(
     clock: datetime = _DECIDED_AT,
 ) -> WorkUnit:
     return create_work_unit(
-        bucket_id="operator",
+        bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=snapshot.filing_year,
         period=_period(snapshot.filing_year, snapshot.period),
@@ -212,9 +213,9 @@ def _store_operator_profile() -> None:
 
 
 def _store_operator_profile_with_tax_id(tax_id: str) -> None:
-    UserProfileLifecycleRepository(bucket_id="operator").save(
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
         UserProfileRecord(
-            profile_id="11111111-1111-4111-8111-111111111111",
+            profile_id=_BUCKET_ID,
             display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value=tax_id),
@@ -273,7 +274,7 @@ def _work_unit_and_revision_for_wallet_gate(
 ) -> tuple[WorkUnit, CalculationRevision]:
     target_period = _period(_TARGET_YEAR, _TARGET_PERIOD)
     work_unit_id = derive_work_unit_id(
-        bucket_id="operator",
+        bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=_TARGET_YEAR,
         period=target_period,
@@ -290,7 +291,7 @@ def _work_unit_and_revision_for_wallet_gate(
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
-        bucket_id="operator",
+        bucket_id=_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=_TARGET_YEAR,
         period=target_period,

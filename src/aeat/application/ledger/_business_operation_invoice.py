@@ -36,6 +36,7 @@ from ...adapters.persistence.storage import LEDGER_BUSINESS_OPERATION_INVOICE_NA
 from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.aggregation import IntracomOperationType
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ...core.external_constants import DEFAULT_CURRENCY
@@ -61,23 +62,6 @@ class BusinessOperationInvoiceDirection(StrEnum):
 
     PAYABLE_INVOICE = "payable_invoice"
     COLLECTIBLE_INVOICE = "collectible_invoice"
-
-
-class IntracomOperationType(StrEnum):
-    """M349 intracomunitaria operation type codes per BOE M349 schema.
-
-    E = entrega de bienes, S = prestación de servicios, T = triangular,
-    R = rectificación, A = adquisición de bienes, ADQUISICION_SERVICIOS =
-    adquisición de servicios (code "I"), M = miscelánea.
-    """
-
-    E = "E"
-    S = "S"
-    T = "T"
-    R = "R"
-    A = "A"
-    ADQUISICION_SERVICIOS = "I"
-    M = "M"
 
 
 class BusinessOperationInvoiceInputError(AeatError):

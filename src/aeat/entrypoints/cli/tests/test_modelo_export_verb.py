@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator, Sequence
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -30,6 +31,7 @@ from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_w
 from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
@@ -172,6 +174,8 @@ _M111_CASILLA_21: CasillaId = validated_casilla_id("21", surface="modelo 111 exp
 _M111_CASILLA_24: CasillaId = validated_casilla_id("24", surface="modelo 111 export test casilla")
 _M111_CASILLA_27: CasillaId = validated_casilla_id("27", surface="modelo 111 export test casilla")
 _M111_CASILLA_29: CasillaId = validated_casilla_id("29", surface="modelo 111 export test casilla")
+_M202_CASILLA_01: CasillaId = validated_casilla_id("01", surface="modelo 202 export test casilla")
+_M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-2023-2024-pagos-fraccionados-anteriores"
 
 _MODELO_111_INPUTS: dict[CasillaId, str] = {
     _M111_CASILLA_03: "180.25",
@@ -195,6 +199,30 @@ def _set_export_profile_name() -> None:
                 UserProfileFact(path="identity.name", value="Ana"),
                 UserProfileFact(path="identity.surnames", value="Export Test"),
                 UserProfileFact(path="activities.description", value="Consulting"),
+            ),
+        ),
+    )
+
+
+def _set_emilio_legal_entity_export_profile() -> None:
+    workflow_state_repository().update(
+        lambda state: set_active_fields(
+            state,
+            (
+                UserProfileFact(path="identity.tax_id", value="B12345674"),
+                UserProfileFact(path="identity.name", value="Emilio"),
+                UserProfileFact(path="identity.surnames", value="Corporate Persona"),
+                UserProfileFact(path="identity.legal_name", value="Emilio Consulting Sociedad Limitada"),
+                UserProfileFact(path="activities.description", value="Consulting"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="withholding.has_employees", value=True),
+                UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
+                UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value=""),
+                UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="500000"),
+                UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
+                UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value="100"),
+                UserProfileFact(path="irpf.estimation_regime", value=""),
             ),
         ),
     )
@@ -347,6 +375,67 @@ def _seed_exportable_modelo_111_revision(
     return work_unit_id, calculation_revision_id
 
 
+def _seed_exportable_modelo_202_2024_revision() -> tuple[str, str]:
+    """Persist a verified-complete M202 2024 1P revision with the 2023-2024 binding channel."""
+
+    state = workflow_state_repository().load()
+    bucket_id = state.active_profile_bucket_id()
+    assert bucket_id is not None
+    revision_id = _active_registry_revision_id(modelo="202", filing_year=2024, period="1P")
+    filing_period = Period.from_year_and_code(2024, "1P")
+    work_unit_id = derive_work_unit_id(
+        bucket_id=bucket_id,
+        modelo="202",
+        filing_year=2024,
+        period=filing_period,
+        revision_id=revision_id,
+    )
+    inputs = {_M202_CASILLA_01: "0"}
+    binding_overrides = {_M202_2023_2024_PRIOR_PAYMENTS_BINDING: "0"}
+    casilla_values = {_M202_CASILLA_01: Decimal("0")}
+    calculation_revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        input_values_by_casilla_id=inputs,
+        binding_overrides=binding_overrides,
+        casilla_values=casilla_values,
+    )
+    now = datetime.now(UTC)
+    work_unit = WorkUnit(
+        work_unit_id=work_unit_id,
+        bucket_id=bucket_id,
+        modelo=ModeloCode("202"),
+        filing_year=2024,
+        period=filing_period,
+        revision_id=revision_id,
+        name="202-2024-1P",
+        created_at=now,
+        updated_at=now,
+        current_calculation_revision_id=calculation_revision_id,
+    )
+    WorkUnitCatalogueRepository().save(upsert_work_unit(WorkUnitCatalogueRepository().load(), work_unit))
+    revision = CalculationRevision(
+        calculation_revision_id=calculation_revision_id,
+        work_unit_id=work_unit_id,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        input_values_by_casilla_id=inputs,
+        binding_overrides=binding_overrides,
+        casilla_values=casilla_values,
+        observations=registry_grounded_observations(
+            modelo="202",
+            filing_year=2024,
+            period="1P",
+            casilla_values=casilla_values,
+        ),
+        created_at=now,
+        updated_at=now,
+        verified_at=now,
+        verified_by="Emilio",
+    )
+    cr_repo = CalculationRevisionCatalogueRepository()
+    cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
+    return work_unit_id, calculation_revision_id
+
+
 def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
     tmp_path: Path,
 ) -> None:
@@ -370,6 +459,81 @@ def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
     )
 
     assert result.exit_code == 0, result.output
+    assert out.exists()
+    assert out.stat().st_size > 0
+
+
+def test_export_modelo_111_emilio_legal_entity_uses_profile_identity_name(
+    tmp_path: Path,
+) -> None:
+    _set_emilio_legal_entity_export_profile()
+    _, (calculation_revision_id,) = _seed_modelo_111_revisions(
+        states=(CalculationRevisionState.VERIFICADO_COMPLETO,),
+        current_index=0,
+        filing_year=2024,
+        period="1T",
+    )
+    out = tmp_path / "m111-2024-1T.boe"
+
+    result = _invoke(
+        [
+            "app",
+            "modelo",
+            "export",
+            "--modelo",
+            "111",
+            "--year",
+            "2024",
+            "--period",
+            "1T",
+            "--output",
+            str(out),
+            "--by",
+            "Emilio",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "operation\tmodelo.export" in result.output
+    assert f"calculation_revision_id\t{calculation_revision_id}" in result.output
+    assert "modelo\t111" in result.output
+    assert "filing_year\t2024" in result.output
+    assert "period\t2024 1T" in result.output
+    assert out.exists()
+    assert out.stat().st_size > 0
+
+
+def test_export_modelo_202_2024_emilio_uses_verified_revision_snapshot(
+    tmp_path: Path,
+) -> None:
+    _set_emilio_legal_entity_export_profile()
+    _, calculation_revision_id = _seed_exportable_modelo_202_2024_revision()
+    out = tmp_path / "m202-2024-1P.boe"
+
+    result = _invoke(
+        [
+            "app",
+            "modelo",
+            "export",
+            "--modelo",
+            "202",
+            "--year",
+            "2024",
+            "--period",
+            "1P",
+            "--output",
+            str(out),
+            "--by",
+            "Emilio",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "operation\tmodelo.export" in result.output
+    assert f"calculation_revision_id\t{calculation_revision_id}" in result.output
+    assert "modelo\t202" in result.output
+    assert "filing_year\t2024" in result.output
+    assert "period\t2024 1P" in result.output
     assert out.exists()
     assert out.stat().st_size > 0
 

@@ -42,6 +42,7 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
     payment_status: str
     linked_transaction_ids: list[str] = []
     notes: str = ""
+    operation_type: str | None = None
 
 
 @register_schema("ledger.invoice.catalogue.create")

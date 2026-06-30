@@ -59,7 +59,7 @@ def _register_wizard_catalogue() -> None:
 
 
 _CLOCK = datetime(2026, 6, 5, 10, 0, tzinfo=UTC)
-_BUCKET_ID = "m202-modality-lifecycle"
+_BUCKET_ID = "69ba4fa8-427a-4853-8758-9ead443fb20c"
 _TAX_ID = "B12345674"
 _M202_RELATION_BINDING = "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior"
 _M202_PRIOR_PAYMENTS_BINDING = "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores"

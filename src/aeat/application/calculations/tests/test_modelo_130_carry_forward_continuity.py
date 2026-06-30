@@ -80,6 +80,8 @@ _Repos = tuple[
 ]
 
 _CLOCK = datetime(2026, 7, 15, 9, 0, 0, tzinfo=UTC)
+_PROFILE_ID = "13013013-0130-4130-8130-130130130130"
+_BUCKET_ID = _PROFILE_ID
 
 _CARRY_FORWARD_BINDING: BindingId = "modelo-130-resultados-negativos-anteriores"
 _PREV_YEAR_BINDING: BindingId = "irpf.previous_year_economic_activity_net_income"
@@ -152,9 +154,12 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 @pytest.fixture
 def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over an isolated profile — no mocks."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        _seed_ready_profile(UserProfileLifecycleRepository(bucket_id="default", objects=objects), bucket_id="default")
+        _seed_ready_profile(
+            UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects),
+            profile_id=_PROFILE_ID,
+        )
         yield (
             WorkUnitCatalogueRepository(objects=objects),
             CalculationRevisionCatalogueRepository(objects=objects),
@@ -165,10 +170,10 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
         )
 
 
-def _seed_ready_profile(repository: UserProfileLifecycleRepository, *, bucket_id: str) -> None:
+def _seed_ready_profile(repository: UserProfileLifecycleRepository, *, profile_id: str) -> None:
     repository.save(
         UserProfileRecord(
-            profile_id=bucket_id,
+            profile_id=profile_id,
             display_name="Sofia Operator",
             facts=_READY_PROFILE_FACTS,
             created_at=_CLOCK,
@@ -197,7 +202,7 @@ def _calculate_quarter(
 ) -> CalculationRevision:
     wu_repo, cr_repo, bv_repo, _obs_repo, _vr_repo, _filing_repo = repos
     work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
         period=Period.from_year_and_code(2026, period),
@@ -238,7 +243,7 @@ def _import_official_filing_evidence(
     wu_repo, cr_repo, bv_repo, _obs_repo, _vr_repo, filing_repo = repos
     source_snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
     source_work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo=modelo,
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),

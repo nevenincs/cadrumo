@@ -53,12 +53,16 @@ from ....core.errors import AeatError
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.iva import EUMemberState, IvaCategory
+from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
+from ....domain.iva import EUMemberState, InvoiceKind, IvaCategory
 from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._calculation_revision import CalculationRevision
+from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos._verification_report import VerificationCompletenessStatus
+from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
 from ....domain.modelos._work_unit import WorkUnit
 from ....domain.transactions import (
     BusinessClassification,
@@ -74,17 +78,21 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionRepository
 from ...calculations._observations_repository import CalculationObservationRepository
+from ...invoices import build_catalogue_invoice
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     ModeloCrossPeriodCleanStateError,
+    ModeloExportCommand,
     calculate_modelo_revision_from_bucket_aggregation,
     create_work_unit,
+    export_modelo_revision,
     persist_filed_revision_observation,
+    verify_modelo_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-e2e-ledger-303-390"
+_BUCKET_ID = "30330303-3030-4303-8303-303303303303"
 _YEAR = 2025
 _TAX_ID = "12345678Z"
 _T0 = datetime(2025, 1, 10, 10, 0, tzinfo=UTC)
@@ -184,6 +192,7 @@ def _iva_transaction(
     amount: Decimal | None = None,
     iva_category: IvaCategory | None = None,
     counterparty_eu_member_state: EUMemberState | None = None,
+    purchase_invoice_evidence_id: str | None = None,
 ) -> Transaction:
     booked = date(_YEAR, _QUARTER_MONTH[period], 10)
     payload: dict[str, object] = {
@@ -218,6 +227,8 @@ def _iva_transaction(
         payload["iva_category"] = iva_category
     if counterparty_eu_member_state is not None:
         payload["counterparty_eu_member_state"] = counterparty_eu_member_state
+    if purchase_invoice_evidence_id is not None:
+        payload["purchase_invoice_evidence_id"] = purchase_invoice_evidence_id
     return Transaction.model_validate(payload)
 
 
@@ -236,8 +247,22 @@ def _persist_year_of_invoices(secure_objects: SecureObjectRepository) -> StoredI
     avoiding a shared-literal between the seed and the expectation.
     """
     transactions: list[Transaction] = []
+    purchase_invoices = []
     stored: StoredIvaByPeriod = {}
     for period, facts in _LAURA_QUARTER_FACTS.items():
+        purchase_invoice = build_catalogue_invoice(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            counterparty_name="Proveedor Taller SL",
+            counterparty_tax_id="A58818501",
+            counterparty_country="ES",
+            invoice_number=f"REC-{_YEAR}-{period}",
+            issued_at=date(_YEAR, _QUARTER_MONTH[period], 10),
+            taxable_base=facts["received_base"],
+            iva_rate=Decimal("21"),
+            currency="EUR",
+        )
+        purchase_invoices.append(purchase_invoice)
         issued = _iva_transaction(
             f"sale-{period}",
             direction=TransactionDirection.INCOMING,
@@ -251,6 +276,7 @@ def _persist_year_of_invoices(secure_objects: SecureObjectRepository) -> StoredI
             taxable_base=facts["received_base"],
             iva_amount=facts["received_iva"],
             period=period,
+            purchase_invoice_evidence_id=purchase_invoice.invoice_id,
         )
         transactions.extend((issued, received))
         devengada = facts["issued_iva"]
@@ -290,6 +316,7 @@ def _persist_year_of_invoices(secure_objects: SecureObjectRepository) -> StoredI
         }
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions(tuple(transactions)))
+    InvoiceCatalogueRepository(objects=secure_objects).save(InvoiceCatalogue.from_invoices(tuple(purchase_invoices)))
     return stored
 
 
@@ -335,6 +362,18 @@ def _store_profile(secure_objects: SecureObjectRepository) -> None:
             created_at=_T0,
             updated_at=_T0,
         ),
+    )
+
+
+def _workflow_profile() -> TaxpayerProfile:
+    return TaxpayerProfile(
+        tax_id=_TAX_ID,
+        iva_regime=IVARegime.GENERAL,
+        has_employees=False,
+        pays_rent_with_retencion=False,
+        does_intracomunitario=True,
+        bienes_extranjero_above_threshold=False,
+        activity_start_date=date(_YEAR, 1, 1),
     )
 
 
@@ -388,6 +427,69 @@ def _calculate_and_file_m303_quarter(secure_objects: SecureObjectRepository, *, 
         captured_at=_FILE_AT,
     )
     return revision
+
+
+def test_persisted_m303_ledger_revision_verifies_and_exports_fichero_boe(
+    secure_objects: SecureObjectRepository,
+    tmp_path: Path,
+) -> None:
+    """Persona-like persisted ledger input reaches verified revision and fichero-BOE export."""
+    _store_profile(secure_objects)
+    stored = _persist_year_of_invoices(secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
+    vr_repo = VerificationReportCatalogueRepository(objects=secure_objects)
+    event_repo = BucketEventHistoryRepository(objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+
+    work_unit, revision = _calculate_m303_quarter_revision(secure_objects, period="1T")
+    assert Decimal(revision.casilla_values[_DEVENGADA_TOTAL]) == stored["1T"]["devengada"]
+    assert Decimal(revision.casilla_values[_DEDUCIBLE_TOTAL]) == stored["1T"]["deducible"]
+
+    report = verify_modelo_revision(
+        revision.calculation_revision_id,
+        actor="operator",
+        workflow_profile=_workflow_profile(),
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=filing_repo,
+        transaction_repository=tx_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=event_repo,
+        clock=_FILE_AT,
+    )
+
+    assert report.granted_verificado_completo is True
+    assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
+    verified = cr_repo.load().get(revision.calculation_revision_id)
+    assert verified is not None
+    assert verified.ledger_filing_snapshot is not None
+    assert verified.ledger_filing_evidence is not None
+
+    output_path = tmp_path / "modelo-303-1T.boe"
+    export = export_modelo_revision(
+        ModeloExportCommand(
+            calculation_revision_id=revision.calculation_revision_id,
+            output_path=output_path,
+            actor="operator",
+        ),
+        workflow_profile=_workflow_profile(),
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=filing_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=event_repo,
+        clock=_FILE_AT,
+    )
+
+    assert export.work_unit_id == work_unit.work_unit_id
+    assert export.modelo == "303"
+    assert export.format == "fichero-boe"
+    assert export.byte_size == output_path.stat().st_size
+    exported_bytes = output_path.read_bytes()
+    assert exported_bytes
+    assert _TAX_ID.encode("ascii") in exported_bytes
 
 
 def _calculate_m390_annual(secure_objects: SecureObjectRepository) -> CalculationRevision:

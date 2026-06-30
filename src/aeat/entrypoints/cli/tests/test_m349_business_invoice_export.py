@@ -3,11 +3,21 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
+from ....application.aggregation import CalculationSourceContext
+from ....application.invoices import InvoiceCatalogueSourceResolver
+from ....application.user_profile._orchestration import profile_create_storage_span
+from ....application.user_profile._testing import register_minimal_profile
+from ....application.workflow._persistence import workflow_state_repository
+from ....core import Period
+from ....core.resources import bundled_path
+from ....domain.calculations.registry import load_modelo_path
+from ....domain.invoices import InvoiceCatalogueRepository
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 
@@ -88,11 +98,18 @@ def _add_business_invoice(
     assert result.exit_code == 0, result.output
 
 
-def _exported_records(path: Path) -> list[str]:
+def _exported_records(path: Path, *, expected_records: int | None = None) -> list[str]:
     payload = path.read_bytes()
-    assert len(payload) == 2500
+    if expected_records is None:
+        assert len(payload) % 500 == 0, f"unexpected M349 fixed-width length: {len(payload)}"
+    else:
+        assert len(payload) == expected_records * 500
     text = payload.decode("latin-1")
     return [text[index : index + 500] for index in range(0, len(text), 500)]
+
+
+def _modelo_349_revision():
+    return load_modelo_path(bundled_path("registry", "aeat", "modelos", "349")).revisions["2020-y-siguientes"]
 
 
 def test_m349_business_invoices_persist_and_export_operador_rows(tmp_path: Path) -> None:
@@ -213,7 +230,9 @@ def test_m349_business_invoices_persist_and_export_operador_rows(tmp_path: Path)
     )
     assert exported.exit_code == 0, exported.output
 
-    operator_records = [record for record in _exported_records(output_path) if record.startswith("2349")]
+    operator_records = [
+        record for record in _exported_records(output_path, expected_records=5) if record.startswith("2349")
+    ]
     assert len(operator_records) == 4
     rows = {(record[77:92].strip(), record[132]): record for record in operator_records}
 
@@ -236,3 +255,64 @@ def test_m349_business_invoices_persist_and_export_operador_rows(tmp_path: Path)
     assert received_service[75:77] == "IT"
     assert received_service[92:132].strip() == "Servizi SRL"
     assert received_service[133:146] == "0000000300000"
+
+
+def test_emilio_catalogue_service_invoice_feeds_m349() -> None:
+    with profile_create_storage_span("11111111-1111-4111-8111-111111111111"):
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111"),
+        )
+        created_invoice = _invoke(
+            [
+                "app",
+                "ledger",
+                "invoice",
+                "catalogue",
+                "create",
+                "--kind",
+                "issued",
+                "--counterparty-nif",
+                "DE123456789",
+                "--counterparty-name",
+                "DE Kunde GmbH",
+                "--invoice-number",
+                "OUT-2024-Q1-DE-S",
+                "--invoice-date",
+                "2024-01-18",
+                "--taxable-base",
+                "4000.00",
+                "--iva-rate",
+                "0",
+                "--country-code",
+                "DE",
+                "--operation-type",
+                "S",
+            ],
+        )
+        assert created_invoice.exit_code == 0, created_invoice.output
+        assert "operation_type\tS" in created_invoice.output
+
+        repository = InvoiceCatalogueRepository()
+        stored = next(
+            invoice for invoice in repository.load().values() if invoice.invoice_number == "OUT-2024-Q1-DE-S"
+        )
+        assert stored.bucket_id is not None
+        resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+            CalculationSourceContext(
+                bucket_id=stored.bucket_id,
+                modelo="349",
+                filing_year=2024,
+                period=Period.from_year_and_code(2024, "1T"),
+                revision=_modelo_349_revision(),
+            ),
+        )
+
+    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
+    assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("4000.00")
+    assert len(resolution.detail_rows) == 1
+    row = resolution.detail_rows[0]
+    assert row.codigo_pais == "DE"
+    assert row.nif_comunitario == "DE123456789"
+    assert row.razon_social == "DE Kunde GmbH"
+    assert row.clave_operacion == "S"
+    assert row.importe == Decimal("4000.00")

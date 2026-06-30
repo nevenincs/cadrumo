@@ -52,7 +52,8 @@ from .. import (
     filing_external_evidence_blockers,
 )
 
-_BUCKET_ID = "default"
+_PROFILE_ID = "39039039-0390-4390-8390-390390390390"
+_BUCKET_ID = _PROFILE_ID
 _M390_YEAR = 2025
 _M390_PERIOD = "0A"
 _M390_FIRST_QUARTER = Period.from_year_and_code(_M390_YEAR, "1T")
@@ -66,10 +67,15 @@ _GROUP_MEMBER_B = "B00000001"
 _GROUP_MEMBER_C = "C00000002"
 
 
-def _store_ready_profile(*, bucket_id: str = _BUCKET_ID, tax_id: str = "X1234567L") -> None:
+def _store_ready_profile(
+    *,
+    bucket_id: str = _BUCKET_ID,
+    profile_id: str = _PROFILE_ID,
+    tax_id: str = "X1234567L",
+) -> None:
     UserProfileLifecycleRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
-            profile_id=bucket_id,
+            profile_id=profile_id,
             display_name="Cross-period clean-state test profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value=tax_id),

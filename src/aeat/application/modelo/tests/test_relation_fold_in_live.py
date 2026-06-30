@@ -72,7 +72,8 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-fold-in"
+_BUCKET_ID = "00000000-0000-4000-8000-000000000180"
+_PROFILE_LABEL = "Relation fold-in profile"
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _YEAR = 2025
@@ -94,8 +95,8 @@ _M180_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
 _M180_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
 
 # Distinct per-quarter bases so a cross-quarter contamination surfaces as a
-# mismatch. Casilla 01 = perceptores (manual int), 02 = base (manual money),
-# 03 = retenciones (computed 19% of 02), 04 = anteriores (manual zero).
+# mismatch. Casillas 01/02 resolve through the M115 retenciones aggregation
+# bindings, 03 = retenciones (computed 19% of 02), 04 = anteriores (manual zero).
 _QUARTERS: dict[str, dict[CasillaId, Decimal]] = {
     "1T": {
         _M115_PERCEPTORES_CASILLA: Decimal("2"),
@@ -124,7 +125,7 @@ _M180_PERCEPTOR_NIFS: tuple[str, ...] = ("11111111H", "22222222J")
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_PROFILE_LABEL) as profile:
         _seed_ready_profile(profile.repository)
         yield profile.repository
 
@@ -134,7 +135,7 @@ def _seed_ready_profile(objects: SecureObjectRepository) -> None:
     UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name="Relation fold-in profile",
+            display_name=_PROFILE_LABEL,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="identity.name", value="Test"),
@@ -164,11 +165,18 @@ def _seed_115_quarters(*, obs_repo: CalculationObservationRepository) -> dict[Ca
     }
     for period, casilla_inputs in _QUARTERS.items():
         snapshot = auth.snapshot("115", filing_year=_YEAR, period=period)
-        inputs = {**resolve_bound_inputs_by_casilla_id(snapshot.revision, {}), **casilla_inputs}
+        binding_values = {
+            "modelo-115-perceptores": casilla_inputs[_M115_PERCEPTORES_CASILLA],
+            "modelo-115-base-retenciones": casilla_inputs[_M115_BASE_CASILLA],
+        }
+        inputs = {
+            **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+            _M115_ANTERIORES_CASILLA: casilla_inputs[_M115_ANTERIORES_CASILLA],
+        }
         result = calculate_registry_snapshot(
             snapshot,
             inputs=inputs,
-            binding_values={},
+            binding_values=binding_values,
             date_context={"filing_period": date(_YEAR, 12, 31)},
         )
         obs_repo.save_observation(

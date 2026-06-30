@@ -13,7 +13,7 @@ import pytest
 from ....core import Period
 from ....core.identity import nif_check_letter
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
+from ....domain.calculations.registry import BindingId, CasillaId, RegistrySnapshotRef, validated_casilla_id
 from ....domain.deadlines import TaxpayerProfile
 from ....domain.deadlines._models import IVARegime
 from ....domain.modelos._calculation_repository import (
@@ -125,8 +125,12 @@ def _seed_revision(
     modelo: str = "130",
     filing_year: int = 2026,
     period: str = "1T",
+    input_values_by_casilla_id: dict[CasillaId, str] | None = None,
+    binding_overrides: dict[BindingId, str] | None = None,
     casilla_values: dict[CasillaId, Decimal] | None = None,
 ) -> tuple[str, str]:
+    input_values_by_casilla_id = dict(input_values_by_casilla_id or {})
+    binding_overrides = dict(binding_overrides or {})
     casilla_values = dict(casilla_values or {})
     typed_period = Period.from_year_and_code(filing_year, period)
     snapshot = resources().modelos.authority.snapshot(
@@ -159,8 +163,8 @@ def _seed_revision(
     )
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        input_values_by_casilla_id={},
-        binding_overrides={},
+        input_values_by_casilla_id=input_values_by_casilla_id,
+        binding_overrides=binding_overrides,
         casilla_values=casilla_values,
     )
     revision = CalculationRevision(
@@ -169,6 +173,8 @@ def _seed_revision(
         state=state,
         created_at=now,
         updated_at=now,
+        input_values_by_casilla_id=input_values_by_casilla_id,
+        binding_overrides=binding_overrides,
         casilla_values=casilla_values,
         observations=registry_grounded_observations(
             modelo=modelo,

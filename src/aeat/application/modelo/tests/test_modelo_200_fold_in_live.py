@@ -92,7 +92,7 @@ from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-m200-self-carry-fold"
+_BUCKET_ID = "e30320c1-7532-458b-b0ba-a8b8f4b70c9e"
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _M200 = "200"

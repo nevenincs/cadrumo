@@ -9,6 +9,7 @@ from typing import cast
 import pytest
 
 from .....core import BindingSourceKind
+from .....core.aggregation import IntracomOperationType
 from .. import (
     CasillaId,
     InputKind,
@@ -96,6 +97,20 @@ def test_committed_modelo_349_declares_invoice_source_bindings_for_declarant_sum
         selector = _selector(binding)
         assert selector["rectification_scope"] == "only_rectifications"
         assert cast("tuple[str, ...]", selector["claves"]) == expected_payable_claves
+
+
+def test_core_intracom_operation_type_covers_modelo_349_registry_claves() -> None:
+    """The shared invoice enum must cover the official M349 clave-de-operacion set."""
+
+    revision = _modelo_349_revision()
+    registry_claves = {
+        clave
+        for binding in revision.bindings
+        if binding.source in {BindingSourceKind.COLLECTIBLE_INVOICE, BindingSourceKind.PAYABLE_INVOICE}
+        for clave in cast("tuple[str, ...]", _selector(binding).get("claves", ()))
+    }
+
+    assert {member.value for member in IntracomOperationType} == registry_claves
 
 
 def test_committed_modelo_349_invoice_binding_requirements_split_by_rectification_scope() -> None:

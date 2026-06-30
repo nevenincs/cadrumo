@@ -75,13 +75,14 @@ from aeat.application.modelo import (
     create_work_unit,
 )
 
-_BUCKET = "b30-no-wizard"
+_PROFILE_ID = "20020020-0200-4200-8200-200200200200"
+_BUCKET = _PROFILE_ID
 _T0 = datetime(2026, 1, 12, 10, 0, tzinfo=UTC)
 tmp = Path(sys.argv[1])
 
 with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
     record = UserProfileRecord(
-        profile_id=_BUCKET,
+        profile_id=_PROFILE_ID,
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345678"),

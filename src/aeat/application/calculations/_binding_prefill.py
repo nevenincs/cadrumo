@@ -274,6 +274,7 @@ class LocalIvaCompensationRecurrence(BaseModel):
     source_filing_year: int
     source_periods: tuple[Period, ...]
     resolved_at: datetime
+    source_locator: str | None = None
 
 
 def _gather_grouped_member_observations(

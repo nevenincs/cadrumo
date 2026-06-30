@@ -1,18 +1,21 @@
 """Canonical registry slot for the wizard-flow catalogue.
 
 Domain modules that need to inspect ``SETUP_FLOW`` or ``WIZARD_FLOWS``
-import from here — never from ``aeat.application.wizard._catalogue``.
+import from here, never from ``aeat.application.wizard._catalogue``. This
+module is the core slot that holds already-built descriptors; it does not build
+wizard sections, render prompts, compile profile keys, persist answers, or
+own the :mod:`aeat.core.setup_answers` typed answer model.
 
 The application layer registers the concrete descriptors at startup via
-:func:`register_wizard_catalogue`.  Until registration the accessors
+:func:`register_wizard_catalogue`. Until registration, the accessors
 :func:`get_setup_flow` and :func:`get_wizard_flows` raise
-:class:`WizardCatalogueNotRegisteredError` so any premature domain
-access surfaces immediately rather than silently returning a stale
-import from an upward dependency.
+:class:`WizardCatalogueNotRegisteredError` so any premature domain access
+surfaces immediately rather than silently falling back to an upward dependency.
 
-The protocol this module defines (:class:`WizardFlowProtocol`) is
-satisfied by ``aeat.application.wizard._models.WizardFlow``; domain code
-only depends on the structural type, not the concrete class.
+The protocol this module defines (:class:`WizardFlowProtocol`) is satisfied by
+``aeat.application.wizard._models.WizardFlow``. Domain code depends only on the
+structural slot and the accessor functions; the concrete descriptor class stays
+owned by the application wizard package.
 """
 
 from __future__ import annotations
@@ -38,15 +41,17 @@ class WizardCatalogueNotRegisteredError(CoreError):
 
 
 class WizardCatalogueAlreadyRegisteredError(CoreError):
-    """Raised when register_wizard_catalogue() is called a second time with different objects."""
+    """Raised when :func:`register_wizard_catalogue` receives different objects after registration."""
 
 
 @runtime_checkable
 class WizardFlowProtocol(Protocol):
     """Structural type satisfied by WizardFlow descriptors.
 
-    Domain code depends only on this protocol; it never imports the
-    concrete WizardFlow class from the application layer.
+    The protocol captures the smallest attribute core consumers need for
+    diagnostics. Accessors still return the concrete descriptor object, but
+    domain code reaches it through this core slot and never imports the
+    application-layer ``WizardFlow`` class directly.
     """
 
     @property
@@ -73,9 +78,11 @@ def register_wizard_catalogue(
     ``aeat.application.wizard._catalogue`` module body, after the
     ``SETUP_FLOW`` / ``WIZARD_FLOWS`` constants are built).
 
-    Calling with identical objects a second time is a no-op.
-    Calling with *different* objects raises :class:`RuntimeError` to
-    prevent accidental re-registration from a different source.
+    Calling with identical objects a second time is a no-op. Calling with
+    *different* objects raises :class:`WizardCatalogueAlreadyRegisteredError`
+    to prevent accidental re-registration from a different source. The function
+    stores object identity only; it does not copy, validate, or normalise the
+    application-owned descriptors.
     """
     if _SETUP_FLOW_SLOT:
         if _SETUP_FLOW_SLOT[0] is setup_flow and _WIZARD_FLOWS_SLOT[0] is wizard_flows:
@@ -97,7 +104,9 @@ def get_setup_flow() -> Any:  # ANY-RETURN-RATIONALE-CATALOGUE-SLOT
 
     Returns:
         The concrete ``SETUP_FLOW`` descriptor registered by the
-        application layer.
+        application layer. Callers should treat it as the canonical setup-flow
+        descriptor and should not import ``aeat.application.wizard._catalogue``
+        as a fallback.
 
     Raises:
         WizardCatalogueNotRegisteredError: When the application layer has
@@ -116,7 +125,8 @@ def get_wizard_flows() -> tuple[Any, ...]:  # ANY-RETURN-RATIONALE-CATALOGUE-SLO
 
     Returns:
         Tuple of concrete wizard-flow descriptors registered by the
-        application layer.
+        application layer. The tuple identity is preserved so downstream
+        consumers inspect the same catalogue object the application registered.
 
     Raises:
         WizardCatalogueNotRegisteredError: When the application layer has

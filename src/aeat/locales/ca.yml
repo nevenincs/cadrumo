@@ -2773,12 +2773,12 @@ cli:
         `ledger preflight` no marquen un ingrés com a missing_category.
       irpf_header: CATEGORIES D'IRPF PER A --irpf-category
       irpf_id_column: irpf-category (passa aquest valor exacte)
-      irpf_purpose_activity_income_withholding: retencio d'ingres professional cobrat
-        net
+      irpf_purpose_activity_income_withholding: retencio d'activitat professional cobrada o pagada neta
       irpf_purpose_employment_income: rendiments del treball (no per a factures netes)
       irpf_purpose_rent_expense_withholding: retencio de lloguer pagat net
       irpf_usage_example: 'Lloguer net: --category-id {rent_category} --irpf-category
-        {rent_category}. Ingres professional net: --irpf-category {activity_category}.'
+        {rent_category}. Servei professional net: --category-id {professional_category}
+        --irpf-category {activity_category}.'
       irpf_use_column: us
       usage_example: Passa l'id sense prefix, p. ex. --category-id {example} (no una
         clau composta ni amb prefix de família).

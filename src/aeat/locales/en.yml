@@ -2622,11 +2622,12 @@ cli:
         do not flag income as missing_category.
       irpf_header: IRPF CATEGORIES FOR --irpf-category
       irpf_id_column: irpf-category (pass this exact value)
-      irpf_purpose_activity_income_withholding: net-paid professional income withholding
+      irpf_purpose_activity_income_withholding: professional activity withholding (received or paid net)
       irpf_purpose_employment_income: employment income (not for net-paid invoices)
       irpf_purpose_rent_expense_withholding: net-paid rent expense withholding
       irpf_usage_example: 'Net-paid rent example: --category-id {rent_category} --irpf-category
-        {rent_category}. Net-paid professional income: --irpf-category {activity_category}.'
+        {rent_category}. Net-paid professional service: --category-id {professional_category}
+        --irpf-category {activity_category}.'
       irpf_use_column: use
       usage_example: Pass the bare id, e.g. --category-id {example} (not a family-prefixed
         or compound key).

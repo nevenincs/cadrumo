@@ -193,6 +193,7 @@ def _register_ledger_categories_command(app: typer.Typer) -> None:
             tr(
                 "cli.ledger.categories.irpf_usage_example",
                 rent_category="arrendamiento_local",
+                professional_category="asesoria_fiscal",
                 activity_category="actividad_economica",
             ),
         )

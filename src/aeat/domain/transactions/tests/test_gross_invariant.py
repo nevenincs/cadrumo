@@ -107,6 +107,34 @@ def test_professional_income_net_of_irpf_withholding_validates() -> None:
     assert tx.taxable_base + tx.iva_amount > tx.raw.amount
 
 
+def test_professional_service_expense_paid_net_of_irpf_withholding_validates() -> None:
+    """A paid professional invoice can keep the supplier invoice base/IVA.
+
+    Javier repro: 1000.00 base + 210.00 IVA with 150.00 IRPF withheld is paid
+    as a 1060.00 bank movement. The cash amount must stay net while the row
+    preserves the full invoice substrate for IVA and expense aggregation.
+    """
+    tx = Transaction.model_validate(
+        {
+            "raw": _raw(amount=Decimal("1060.00")),
+            "direction": TransactionDirection.OUTGOING,
+            "business_classification": BusinessClassification.BUSINESS,
+            "category_id": "asesoria_fiscal",
+            "taxable_base": Decimal("1000.00"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("210.00"),
+            "irpf_category": "actividad_economica",
+        },
+    )
+
+    assert tx.raw.amount == Decimal("1060.00")
+    assert tx.category_id == "asesoria_fiscal"
+    assert tx.taxable_base is not None
+    assert tx.iva_amount is not None
+    assert tx.taxable_base + tx.iva_amount == Decimal("1210.00")
+    assert tx.taxable_base + tx.iva_amount > tx.raw.amount
+
+
 def test_activity_income_base_cash_is_not_inferred_as_iva_sized_withholding() -> None:
     """A base-only cash receipt plus IVA must not become a fake M130 retention.
 
@@ -123,6 +151,23 @@ def test_activity_income_base_cash_is_not_inferred_as_iva_sized_withholding() ->
                 "taxable_base": Decimal("2000.00"),
                 "iva_rate": Decimal("0.21"),
                 "iva_amount": Decimal("420.00"),
+                "irpf_category": "actividad_economica",
+            },
+        )
+
+
+def test_professional_service_base_cash_is_not_inferred_as_iva_sized_withholding() -> None:
+    """Paid professional-service cash equal to base must not become retencion."""
+    with pytest.raises(ValidationError, match="inferred IRPF withholding exceeds"):
+        Transaction.model_validate(
+            {
+                "raw": _raw(amount=Decimal("1000.00")),
+                "direction": TransactionDirection.OUTGOING,
+                "business_classification": BusinessClassification.BUSINESS,
+                "category_id": "asesoria_fiscal",
+                "taxable_base": Decimal("1000.00"),
+                "iva_rate": Decimal("0.21"),
+                "iva_amount": Decimal("210.00"),
                 "irpf_category": "actividad_economica",
             },
         )
@@ -203,6 +248,23 @@ def test_outgoing_irpf_category_does_not_relax_non_rent_expense_gross() -> None:
                 "iva_rate": Decimal("0.21"),
                 "iva_amount": Decimal("210.00"),
                 "irpf_category": "arrendamiento_local",
+            },
+        )
+
+
+def test_activity_irpf_category_does_not_relax_non_professional_expense_gross() -> None:
+    """actividad_economica is scoped to professional-service expense categories."""
+    with pytest.raises(ValidationError, match="must equal the gross to the cent"):
+        Transaction.model_validate(
+            {
+                "raw": _raw(amount=Decimal("1020.00")),
+                "direction": TransactionDirection.OUTGOING,
+                "business_classification": BusinessClassification.BUSINESS,
+                "category_id": "material_oficina",
+                "taxable_base": Decimal("1000.00"),
+                "iva_rate": Decimal("0.21"),
+                "iva_amount": Decimal("210.00"),
+                "irpf_category": "actividad_economica",
             },
         )
 

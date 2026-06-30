@@ -77,6 +77,8 @@ _Repos = tuple[
 
 #: Modelo id this module enrolls into the multi-year-renta authorization gate.
 _MODELO = "130"
+_PROFILE_ID = "13013013-0130-4130-8130-130130130131"
+_BUCKET_ID = _PROFILE_ID
 
 #: The two distinct renta years the enrollment exercises. Renta year N's
 #: annual M100 net income feeds renta year N+1's M130 casilla-13 minoración.
@@ -140,9 +142,9 @@ _Q1_INPUTS: dict[CasillaId, Decimal] = {
 
 
 def _seed_ready_profile(objects: object) -> None:
-    UserProfileLifecycleRepository(bucket_id="default", objects=objects).save(
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         UserProfileRecord(
-            profile_id="00000000-0000-4000-8000-000000000000",
+            profile_id=_PROFILE_ID,
             display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -166,7 +168,7 @@ def _seed_ready_profile(objects: object) -> None:
 @pytest.fixture
 def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over an isolated profile — no mocks."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         _seed_ready_profile(objects)
         yield (
@@ -193,7 +195,7 @@ def _calculate_quarter(
     """
     wu_repo, cr_repo, bv_repo, _obs_repo = repos
     work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo=_MODELO,
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),

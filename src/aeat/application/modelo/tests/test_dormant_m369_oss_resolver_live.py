@@ -50,7 +50,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # Chain 2 — M369 OSS/IOSS (ledger_oss_aggregation): live invoice projection
 # ---------------------------------------------------------------------------
 
-_M369_BUCKET = "bucket-m369-oss-fold"
+_M369_BUCKET = "36900000-0000-4000-8000-000000000013"
 _M369_REVISION = "esquema-union"
 _M369_YEAR = 2026
 

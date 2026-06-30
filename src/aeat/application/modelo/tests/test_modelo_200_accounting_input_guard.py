@@ -54,7 +54,7 @@ def _register_wizard_catalogue() -> None:
     from ...wizard import _catalogue  # noqa: F401  (import for registration side effect)
 
 
-_BUCKET_ID = "bucket-m200-accounting-input-guard"
+_BUCKET_ID = "2035baea-4afe-4fe3-b502-ff084fe79153"
 _T0 = datetime(2026, 1, 14, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 14, 11, 0, tzinfo=UTC)
 _M200 = "200"

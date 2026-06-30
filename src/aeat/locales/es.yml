@@ -2815,12 +2815,12 @@ cli:
         preflight` no marcan un ingreso como missing_category.
       irpf_header: CATEGORIAS DE IRPF PARA --irpf-category
       irpf_id_column: irpf-category (pasa este valor exacto)
-      irpf_purpose_activity_income_withholding: retencion de ingreso profesional cobrado
-        neto
+      irpf_purpose_activity_income_withholding: retencion por actividad profesional cobrada o pagada neta
       irpf_purpose_employment_income: rendimientos del trabajo (no para facturas netas)
       irpf_purpose_rent_expense_withholding: retencion de alquiler pagado neto
       irpf_usage_example: 'Alquiler neto: --category-id {rent_category} --irpf-category
-        {rent_category}. Ingreso profesional neto: --irpf-category {activity_category}.'
+        {rent_category}. Servicio profesional neto: --category-id {professional_category}
+        --irpf-category {activity_category}.'
       irpf_use_column: uso
       usage_example: Pasa el id sin prefijo, p. ej. --category-id {example} (no una
         clave compuesta ni con prefijo de familia).

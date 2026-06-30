@@ -278,6 +278,76 @@ def test_ledger_classify_refuses_activity_income_when_base_cash_would_be_iva_siz
     assert "inferred IRPF withholding exceeds" in classified.output
 
 
+def test_ledger_classify_persists_professional_service_paid_net_of_irpf_withholding(
+    tmp_path: Path,
+) -> None:
+    """A professional-service bank payment can keep supplier invoice facts.
+
+    Javier repro: 1000.00 + 210.00 IVA - 150.00 IRPF withholding = 1060.00
+    paid. The CLI path must not rewrite cash to 1210.00 and must persist the
+    category axes that explain the net payment.
+    """
+    added = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2025-07-15",
+            "--amount",
+            "1060.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "Factura asesoria fiscal neta de retencion",
+        ],
+    )
+    assert added.exit_code == 0, added.output
+    transaction_id = json.loads(added.output)["result"]["transaction_id"]
+
+    classified = _invoke(
+        [
+            "app",
+            "ledger",
+            "classify",
+            transaction_id,
+            "--classification",
+            "BUSINESS",
+            "--category-id",
+            "asesoria_fiscal",
+            "--taxable-base",
+            "1000.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "210.00",
+            "--iva-category",
+            "domestic_general_21",
+            "--irpf-category",
+            "actividad_economica",
+            "--actor",
+            "Javier",
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+    assert classified.exit_code == 0, classified.output
+
+    viewed = _invoke(["--format", "json", "app", "ledger", "view", transaction_id])
+    assert viewed.exit_code == 0, viewed.output
+    transaction = json.loads(viewed.output)["result"]["transaction"]
+
+    assert transaction["amount"] == "1060"
+    assert transaction["direction"] == "OUTGOING"
+    assert transaction["category_id"] == "asesoria_fiscal"
+    assert transaction["taxable_base"] == "1000"
+    assert transaction["iva_amount"] == "210"
+    assert transaction["iva_rate"] == "0.21"
+    assert transaction["iva_category"] == "domestic_general_21"
+    assert transaction["irpf_category"] == "actividad_economica"
+
+
 def test_ledger_classify_persists_rent_paid_net_of_withholding(
     tmp_path: Path,
 ) -> None:

@@ -41,6 +41,7 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _T0 = datetime(2026, 6, 5, 9, 0, 0, tzinfo=UTC)
+_ADDRESSING_PROFILE_ID = "13000000-0000-4000-8000-000000000230"
 _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="identity.tax_id", value="00000000T"),
     UserProfileFact(path="identity.name", value="Test Operator"),
@@ -83,7 +84,7 @@ def addressing_repos(
     tmp_path: Path,
 ) -> Iterator[tuple[str, WorkUnitCatalogueRepository, CalculationRevisionCatalogueRepository]]:
     """Yield real repositories over one isolated runtime profile."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="modelo-addressing-test") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_ADDRESSING_PROFILE_ID) as profile:
         objects = profile.repository
         _seed_ready_profile(objects, bucket_id=profile.bucket_id)
         yield (

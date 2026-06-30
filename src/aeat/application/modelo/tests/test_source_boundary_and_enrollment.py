@@ -51,7 +51,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 
-_BUCKET_ID = "bucket-a"
+_BUCKET_ID = "34900000-0000-4000-8000-000000000349"
 _READY_PROFILE_FACTS = (
     UserProfileFact(path="identity.tax_id", value="12345678Z"),
     UserProfileFact(path="identity.name", value="Ready"),
@@ -65,6 +65,16 @@ _READY_PROFILE_FACTS = (
     UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
     UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
 )
+_ATTRIBUTION_PROFILE_FACTS = (
+    UserProfileFact(path="identity.tax_id", value="E12345678"),
+    UserProfileFact(path="identity.name", value="Ready CB"),
+    UserProfileFact(path="activities.description", value="attribution-entity activity"),
+    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="taxpayer_type.entity_type", value="attribution_entity"),
+    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+)
 
 
 def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str = _BUCKET_ID) -> None:
@@ -73,6 +83,18 @@ def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str = _BU
             profile_id=bucket_id,
             display_name="Source boundary ready profile",
             facts=_READY_PROFILE_FACTS,
+            created_at=_T0,
+            updated_at=_T0,
+        ),
+    )
+
+
+def _seed_attribution_entity_profile(objects: SecureObjectRepository, *, bucket_id: str = _BUCKET_ID) -> None:
+    UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name="Source boundary attribution profile",
+            facts=_ATTRIBUTION_PROFILE_FACTS,
             created_at=_T0,
             updated_at=_T0,
         ),
@@ -189,6 +211,7 @@ def test_s08_source_diagnostics_carries_advisory_for_deferred_source(
     so the engine does not crash on a missing relation value and we can isolate the
     unhandled-source advisory path cleanly.
     """
+    _seed_attribution_entity_profile(secure_objects)
     wu_repo, cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
     work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2015-y-siguientes")
 
@@ -222,6 +245,7 @@ def test_s08_source_diagnostics_carries_advisory_for_atribucion_member(
     secure_objects: SecureObjectRepository,
 ) -> None:
     """Deferred source kind 'atribucion_member' surfaces an advisory on source_diagnostics."""
+    _seed_attribution_entity_profile(secure_objects)
     wu_repo, cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
     work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2015-y-siguientes")
 
@@ -445,6 +469,8 @@ def test_s10_deferred_kinds_advisory_fires_not_silent_blank(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         _seed_ready_profile(objects)
+        if modelo == "184":
+            _seed_attribution_entity_profile(objects)
         wu_repo, cr_repo, tx_repo, invoice_repo = (
             WorkUnitCatalogueRepository(objects=objects),
             CalculationRevisionCatalogueRepository(objects=objects),

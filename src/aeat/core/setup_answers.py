@@ -1,24 +1,29 @@
-"""Canonical typed-answer model and projection registry for the setup flow.
+"""Canonical typed-answer model and projection slot for the setup flow.
 
 :class:`SetupAnswers` is the authoritative typed-answers model for the wizard
-``setup`` flow.  Domain modules import it from here — never from the application
-wizard layer — so the hexagonal boundary (domain → core is allowed; domain →
-application is forbidden) is respected.
+``setup`` flow. Domain modules import it from here, not from the application
+wizard layer, so the permitted dependency direction remains domain-to-core
+rather than domain-to-application.
 
-The :func:`project_answers` callable is initially unregistered and is populated
-at application startup by the wizard layer via :func:`register_project_answers`.
-Domain consumers call :func:`project_answers` directly; it raises
-:class:`ProjectAnswersNotRegisteredError` when the application layer has not
-yet run.
+This module owns typed answer validation and the core registration slot for the
+reverse projection from persisted canonical-token strings. It does not own
+prompt rendering, profile persistence, secure storage, deadline scheduling, or
+registry semantics. The application wizard registers its concrete projector at
+startup with :func:`register_project_answers`; domain consumers call
+:func:`project_answers` through this core slot and receive
+:class:`ProjectAnswersNotRegisteredError` if startup has not installed it.
 
-This pattern mirrors the one established in :mod:`aeat.core.wizard_catalogue`
-for ``SETUP_FLOW`` / ``WIZARD_FLOWS``.
+The contract mirrors :mod:`aeat.core.wizard_catalogue`: the application layer
+declares the ``SETUP_FLOW`` descriptor, while core exposes the stable answer
+model and the projection hook. Downstream profile construction, including
+``taxpayer_profile_from_mapping``, therefore stays aligned with wizard
+canonical-token parsing without importing application modules directly.
 
 Domain taxonomy types (``EntityType``, ``IVARegime``, etc.) are imported lazily
 inside validators rather than at module level to break the circular import
-path: ``aeat.core.setup_answers`` → ``aeat.domain.deadlines._models`` →
-``aeat.domain.deadlines.__init__`` → ``aeat.domain.deadlines._profiles`` →
-``aeat.core.setup_answers``.  This mirrors the deferral strategy used in
+path: ``aeat.core.setup_answers`` -> ``aeat.domain.deadlines._models`` ->
+``aeat.domain.deadlines.__init__`` -> ``aeat.domain.deadlines._profiles`` ->
+``aeat.core.setup_answers``. This mirrors the deferral strategy used in
 ``aeat.core.resources._repos.*`` and is the established project pattern.
 """
 
@@ -40,8 +45,11 @@ _log = get_logger(__name__)
 def _parse_optional_bool_token(value: object, *, field_name: str) -> object:
     """Parse a three-state optional wizard boolean token.
 
-    Blank means undeclared and must survive as ``""`` so profile persistence
-    drops the fact instead of writing a declared false value.
+    Accepted affirmative tokens become ``True``; accepted negative tokens become
+    ``False``. Blank input and ``None`` remain the empty-string sentinel so
+    profile persistence drops the fact instead of writing a declared false
+    value. This helper does not parse prompt labels or locale text; it accepts
+    only canonical yes/no tokens.
     """
     if value == "" or value is None:
         return ""
@@ -74,7 +82,7 @@ class ProfileRegistrationError(CoreError):
 
 
 class ProjectAnswersNotRegisteredError(CoreError):
-    """Raised when domain code calls project_answers before registration."""
+    """Raised when domain code calls :func:`project_answers` before registration."""
 
     def __init__(self) -> None:
         """Initialise with a fixed message directing the caller to register the projection."""
@@ -110,7 +118,9 @@ def register_project_answers(fn: ProjectAnswersFn) -> None:
     Call exactly once at application startup (e.g. in
     ``aeat.application.wizard._persistence`` module body after the function is
     defined). A second call with an identical callable is a no-op; a second
-    call with a different callable raises :class:`RuntimeError`.
+    call with a different callable raises :class:`ProfileRegistrationError`.
+    Domain code should depend on :func:`project_answers`, not on the
+    application-layer implementation object registered here.
     """
     if _PROJECT_ANSWERS_SLOT:
         if _PROJECT_ANSWERS_SLOT[0] is fn:
@@ -153,7 +163,9 @@ def project_answers(flow: Any, values: Mapping[str, str]) -> BaseModel:
         flow: The wizard flow descriptor identifying which flow to
             project answers for.
         values: Mapping of canonical token keys to raw string values
-            collected from the wizard.
+            collected from the wizard or read from profile storage. Blank
+            strings preserve undeclared optional facts for the registered
+            projector to interpret.
 
     Returns:
         A typed answers model instance produced by the registered
@@ -216,11 +228,19 @@ class SetupAnswers(BaseModel):
     imports :class:`SetupAnswers` from here; the domain deadline engine likewise
     imports it from here — no layer needs to cross the hexagonal boundary.
 
+    The model stores canonical answer tokens and typed taxonomy values for the
+    setup flow. It is not the persisted profile record and it is not the
+    deadline-engine taxpayer profile; those are produced downstream by wizard
+    persistence and deadline profile projection. Where validators allow the
+    empty string, the value means undeclared/no answer rather than false, zero,
+    or a default legal fact.
+
     Field annotations use ``Any`` for domain taxonomy union types because those
     types are loaded lazily inside validators to prevent a circular import.
-    Validators enforce the same invariants the original typed annotations
-    carried: they reject values outside the declared enum / blank-string set and
-    raise :class:`~aeat.core.errors.ProfileAnswerTypeError`.
+    That ``Any`` is not a loose schema: validators enforce the same invariants
+    the original typed annotations carried, reject values outside the declared
+    enum / blank-string set, and raise
+    :class:`~aeat.core.errors.ProfileAnswerTypeError`.
     """
 
     model_config = STRICT_FROZEN_CONFIG

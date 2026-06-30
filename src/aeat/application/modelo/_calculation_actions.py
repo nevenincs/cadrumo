@@ -568,11 +568,10 @@ def _resolve_bucket_source_mesh(
             # pre-classified callers can still pass candidates directly through
             # the resolver constructor.
             OssIossLedgerSourceResolver(invoice_repository=invoice_repository).resolve(context),
-            # M180/M193 distinct perceptor-NIF count (retenciones_aggregation):
-            # reads the dedicated per-perceptor retención store and materialises the
-            # "número total de perceptores" box via the validated distinct-count
-            # primitive — replacing the wrong sum-of-quarterly-M115-counts relation
-            # (RET-1). Empty store on a declaring revision surfaces a no-silent advisory.
+            # Retenciones family source (retenciones_aggregation): M115 reads the
+            # dedicated per-perceptor store for quarterly count/base, while M180/M193
+            # read it for distinct perceptor-NIF counts. Empty store on a declaring
+            # revision surfaces a no-silent advisory.
             RetencionesAggregationSourceResolver().resolve(context),
             # M190 distinct percepción count (withholding): reads the dedicated
             # per-perceptor-clave withholding store and materialises scalar
