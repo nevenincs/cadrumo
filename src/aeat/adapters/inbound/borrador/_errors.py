@@ -1,9 +1,11 @@
-"""Error hierarchy for the borrador parser.
+"""Error hierarchy for the Modelo 100 borrador parser.
 
-Specialises :class:`aeat.domain.justificante.PdfModeloImportError`
-with Modelo 100 specific exceptions raised by
-:func:`aeat.adapters.inbound.borrador.parse_borrador` and the helpers in
-:mod:`aeat.adapters.inbound.borrador._detect`.
+The hierarchy specialises
+:class:`~aeat.domain.justificante.PdfModeloImportError` with Modelo 100
+exceptions raised by :func:`aeat.adapters.inbound.borrador.parse_borrador`,
+the artefact detector, and coverage validation. It is an inbound parse-error
+boundary; callers should inspect the structured attributes on
+:class:`BorradorParseError` rather than parsing rendered messages.
 """
 
 from __future__ import annotations
@@ -16,9 +18,11 @@ from ....domain.justificante import PdfModeloImportError
 class BorradorParseError(PdfModeloImportError):
     """Raised when a Modelo 100 PDF cannot be parsed into a filing record.
 
-    Base class for every domain-specific failure raised by the borrador
-    pipeline. Subclasses (e.g. :class:`ArtefactNotRecognisedError`)
-    refine the failure mode.
+    Base class for every borrador-specific failure raised by the inbound
+    parser. Subclasses, such as :class:`ArtefactNotRecognisedError`, refine the
+    failure mode while preserving the
+    :class:`~aeat.domain.justificante.PdfModeloImportError` import-family
+    contract.
 
     When the error originates from an extraction-coverage failure the
     following structured attributes are populated so callers can assert
@@ -63,6 +67,7 @@ class BorradorParseError(PdfModeloImportError):
 class ArtefactNotRecognisedError(BorradorParseError):
     """Raised when the PDF does not match any known Modelo 100 artefact shape.
 
-    Surfaced by :func:`aeat.adapters.inbound.borrador._detect.detect_artefact_kind`
-    when none of the BORRADOR / VISTA PREVIA / CSV markers can be located.
+    Surfaced by
+    :func:`~aeat.adapters.inbound.borrador._detect.detect_artefact_kind` when
+    none of the BORRADOR / VISTA PREVIA / CSV markers can be located.
     """

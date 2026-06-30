@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import Period
 from ....domain.calculations.registry import CasillaId
 from ._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
@@ -24,7 +23,6 @@ from ._file_flow_support import (
     M130_CARRY_FORWARD_CASILLA,
     M130_INCOME_CASILLA,
     M180_PERCEPTOR_BASE_CASILLA,
-    T0,
     T1,
     T2,
     T3,
@@ -48,7 +46,6 @@ from ._file_flow_support import (
     asyncio,
     calculate_modelo_revision,
     canonical_work_unit_period,
-    create_work_unit,
     get_calculation_revision,
     get_verification_report,
     get_work_unit,
@@ -506,14 +503,12 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
 
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
 
-    work_unit = create_work_unit(
-        bucket_id="default",
+    work_unit = seed_work_unit(
+        wu_repo,
         modelo=VERIFY_MODELO,
         filing_year=2010,
-        period=Period.from_year_and_code(2010, VERIFY_PERIOD),
+        period=VERIFY_PERIOD,
         revision_id=VERIFY_REVISION,
-        repository=wu_repo,
-        clock=T0,
     )
     # Direct-seed a DRAFT revision because ``calculate_modelo_revision``
     # now runs the formula engine and would refuse the unresolvable

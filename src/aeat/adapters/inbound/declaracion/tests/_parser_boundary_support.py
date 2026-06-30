@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
 
@@ -60,6 +61,7 @@ __all__ = [
     "TemplateNotDetectedError",
     "_casilla_id",
     "_casilla_ids",
+    "_expected_casilla_values",
     "_expected_period",
     "_extract_pages_words",
     "_modelo_130_snapshot",
@@ -114,6 +116,10 @@ def _casilla_id(value: object) -> CasillaId:
 
 def _casilla_ids(*values: object) -> tuple[CasillaId, ...]:
     return tuple(_casilla_id(value) for value in values)
+
+
+def _expected_casilla_values(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
+    return {_casilla_id(casilla_id): amount for casilla_id, amount in values.items()}
 
 
 _MODELO_130_EXPECTED_TARGETS: tuple[CasillaId, ...] = _casilla_ids(*(f"{index:02d}" for index in range(1, 20)))

@@ -42,6 +42,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
+_BUCKET_ID = "26262626-2626-4262-8262-262626262626"
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -77,7 +78,7 @@ _M303_RESULT_OPERAND_CASILLAS: set[CasillaId] = {
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile.repository
 
 
@@ -86,7 +87,7 @@ def _repositories(objects: SecureObjectRepository):
         WorkUnitCatalogueRepository(objects=objects),
         CalculationRevisionCatalogueRepository(objects=objects),
         BucketEventHistoryRepository(objects=objects),
-        TransactionCatalogueRepository(bucket_id="bucket-a", objects=objects),
+        TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
     )
 
 
@@ -147,7 +148,7 @@ def _seed_303_work_unit(
 ):
     typed_period = Period.from_year_and_code(2026, period)
     return create_work_unit(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=2026,
         period=typed_period,
@@ -162,9 +163,9 @@ def _seed_303_work_unit(
 
 
 def _store_profile(objects: SecureObjectRepository) -> None:
-    UserProfileLifecycleRepository(bucket_id="bucket-a", objects=objects).save(
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         UserProfileRecord(
-            profile_id="26262626-2626-4262-8262-262626262626",
+            profile_id=_BUCKET_ID,
             display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -265,7 +266,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transacti
         calculation_repository=cr_repo,
         bucket_event_repository=event_repo,
         transaction_repository=TransactionCatalogueRepository(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             objects=secure_objects,
         ),
         clock=_T1,
@@ -308,7 +309,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transacti
     assert computed_result.legal_refs
     assert computed_result.source_refs
 
-    events = event_repo.load().for_bucket("bucket-a")
+    events = event_repo.load().for_bucket(_BUCKET_ID)
     calculation_events = [event for event in events if event.event_type == BucketEventType.MODELO_CALCULATION_CREATED]
     assert len(calculation_events) == 1
     assert calculation_events[0].payload["casilla_count"] == str(len(revision.casilla_values))

@@ -1,15 +1,19 @@
 """Pdfplumber-backed page text extraction for declaración PDFs.
 
-Wraps :mod:`pdfplumber` behind a single :func:`extract_pages_text`
-function that returns the per-page text as a tuple. Errors from the
-underlying library and pathological inputs (missing file, scan-only PDF
-without an OCR layer) are translated into
-:exc:`aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`.
+Wraps :mod:`pdfplumber` behind
+:func:`~aeat.adapters.inbound.declaracion._parsers._pdfplumber_backend.extract_pages_text`
+and
+:func:`~aeat.adapters.inbound.declaracion._parsers._pdfplumber_backend.extract_pages_text_from_bytes`,
+which return one stripped text string per page. Errors from the underlying
+library and pathological inputs (missing file, scan-only PDF without an OCR
+layer) are translated into
+:class:`~aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`.
 
-A pypdfium2 fast-path is consulted before the canonical pdfplumber
-primitive. The fast-path only commits its output when at least one
-declaration-content canary (NIF row or declarant row) matches; this
-keeps unrelated PDFs out of the fast lane and avoids cache poisoning.
+A pypdfium2 fast path is consulted before the canonical pdfplumber primitive.
+The fast path only commits its output when at least one declaration-content
+canary (NIF row or declarant row) matches; this keeps unrelated PDFs out of the
+fast lane and avoids cache poisoning. The bytes route follows the same canary
+discipline without writing decrypted content to disk.
 """
 
 from __future__ import annotations
@@ -42,12 +46,20 @@ _DECLARANT_ROW_CANARY_RE = re.compile(
 def extract_pages_text(pdf_path: Path) -> tuple[str, ...]:
     """Extract the text of each page in order.
 
+    The declaration backend first tries the pypdfium2 fast path and falls back
+    to the shared pdfplumber primitive when the fast path is unavailable or its
+    declaration canaries do not match.
+
     Args:
         pdf_path: Filesystem path of the PDF to read.
 
     Returns:
         Tuple with one stripped string per page in the source order.
         Empty pages preserve their slot as the empty string.
+
+    Raises:
+        DeclaracionParseError: When the PDF is missing or no extractable text
+            can be read from any page.
     """
     return _extract_pages_text_with_fast_path_impl(
         pdf_path,
@@ -59,6 +71,7 @@ def extract_pages_text(pdf_path: Path) -> tuple[str, ...]:
 
 
 def _extract_pages_text_with_pdfium(pdf_path: Path) -> tuple[str, ...] | None:
+    """Run the cached pypdfium2 path extraction for one filesystem PDF."""
     resolved = pdf_path.resolve()
     stat = resolved.stat()
     return _extract_pages_text_with_pdfium_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
@@ -70,6 +83,7 @@ def _extract_pages_text_with_pdfium_cached(
     byte_count: int,
     modified_ns: int,
 ) -> tuple[str, ...] | None:
+    """Return canary-validated pypdfium2 page text for a stable file revision."""
     del byte_count, modified_ns
     try:
         import pypdfium2 as pdfium
@@ -105,6 +119,7 @@ _PDFIUM_BYTES_CACHE: dict[str, tuple[str, ...]] = {}
 
 
 def _extract_pages_text_with_pdfium_from_bytes(pdf_bytes: bytes) -> tuple[str, ...] | None:
+    """Return canary-validated pypdfium2 page text for in-memory PDF bytes."""
     from hashlib import sha256
 
     digest = sha256(pdf_bytes).hexdigest()
@@ -149,7 +164,17 @@ def _extract_pages_text_with_pdfium_from_bytes(pdf_bytes: bytes) -> tuple[str, .
 
 
 def extract_pages_text_from_bytes(pdf_bytes: bytes, *, source_label: str = "in-memory PDF") -> tuple[str, ...]:
-    """Extract text from PDF bytes without materialising a plaintext file."""
+    """Extract text from PDF bytes without materialising a plaintext file.
+
+    The bytes path mirrors ``extract_pages_text``: pypdfium2 gets the first
+    chance to return canary-validated page text, then the shared pdfplumber
+    bytes primitive handles the fallback while keeping the caller's decrypted
+    bytes in memory.
+
+    Raises:
+        DeclaracionParseError: When no extractable text can be read from the
+            supplied PDF bytes.
+    """
     fast_pages = _extract_pages_text_with_pdfium_from_bytes(pdf_bytes)
     if fast_pages is not None:
         return fast_pages

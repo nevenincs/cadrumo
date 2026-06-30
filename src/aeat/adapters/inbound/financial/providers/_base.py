@@ -5,8 +5,12 @@ record :class:`ProviderValidation`, the provider error hierarchy
 (:class:`FinancialProviderError`, :class:`InvalidFinancialSourceError`,
 :class:`UnsupportedFinancialSourceError`, :class:`BankStatementParseError`),
 and the parsing / provenance helpers concrete providers reuse to emit
-:class:`aeat.domain.transactions.RawTransaction`
-records with consistent provenance.
+:class:`~aeat.domain.transactions.RawTransaction` records with consistent
+:class:`~aeat.domain.transactions.RawProvenance`.
+
+Providers emit :class:`ParsedLedgerRow` objects: the source sign is consumed at
+the adapter boundary into a :class:`~aeat.domain.transactions.TransactionDirection`,
+while the stored raw amount is an absolute magnitude.
 
 Provider corpus discipline
 --------------------------
@@ -108,8 +112,8 @@ class BankStatementParseError(FinancialProviderError):
 
     Carries structured attributes that allow callers to assert on the
     failure kind without parsing the message string — the same pattern
-    as :class:`aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`
-    and :class:`aeat.domain.justificante._errors.JustificanteParseError`.
+    as :class:`~aeat.adapters.inbound.declaracion.DeclaracionParseError`
+    and :class:`~aeat.domain.justificante.JustificanteParseError`.
 
     This error is appropriate for PDF-specific parse failures where the
     document was accepted by format detection but extraction produced
@@ -183,10 +187,9 @@ class FinancialProvider(ABC):
     :attr:`verification_source`, and :attr:`provisional_pending_specimen`
     and implement :meth:`ingest` plus :meth:`validate_source`. The shared
     :meth:`_build_provenance` helper centralises
-    :class:`aeat.domain.transactions.RawProvenance`
-    construction so every emitted
-    :class:`aeat.domain.transactions.RawTransaction`
-    carries consistent provenance metadata.
+    :class:`~aeat.domain.transactions.RawProvenance` construction so every
+    emitted :class:`~aeat.domain.transactions.RawTransaction` carries
+    consistent provenance metadata.
 
     See the module docstring for the corpus discipline contract that
     :attr:`verification_source` and :attr:`provisional_pending_specimen`
@@ -312,7 +315,13 @@ class FinancialProvider(ABC):
         """
 
     def _read_source_bytes(self, path: Path) -> bytes:
-        """Read the raw source bytes once for validation and provenance."""
+        """Read raw source bytes after enforcing adapter input safety guards.
+
+        The shared guard refuses symlinks, missing files, non-files, and sources
+        over the configured size ceiling before format-specific parsers receive
+        bytes. Concrete providers reuse the same bytes for validation,
+        extraction, and SHA-256 provenance.
+        """
         if path.is_symlink():
             raise InvalidFinancialSourceError(
                 translated_message="errors.financial.source_file_is_symlink",
@@ -568,14 +577,15 @@ class ParsedLedgerRow(BaseModel):
 
     The provider observes the bank export's sign (or native debit/credit
     signal) once, at the parse boundary, to choose a
-    :class:`aeat.domain.transactions.TransactionDirection`; it then stores the
+    :class:`~aeat.domain.transactions.TransactionDirection`; it then stores the
     **absolute magnitude** on ``raw`` and discards the sign. Downstream the
     import action carries ``direction`` straight onto the
-    :class:`aeat.domain.transactions.Transaction`, never re-deriving flow from
+    :class:`~aeat.domain.transactions.Transaction`, never re-deriving flow from
     a sign that no longer exists.
 
     Attributes:
-        raw: The verbatim per-row :class:`RawTransaction` carrying the
+        raw: The verbatim per-row
+            :class:`~aeat.domain.transactions.RawTransaction` carrying the
             non-negative magnitude amount.
         direction: The authoritative flow direction derived from the source
             sign at the parse boundary.
@@ -617,8 +627,9 @@ def build_raw_transaction(
     """Create one :class:`ParsedLedgerRow` from a source-signed amount.
 
     ``amount`` is the source-signed value as the parser read it. Its sign is
-    consumed here to choose the :class:`aeat.domain.transactions.TransactionDirection`,
-    then the stored :class:`aeat.domain.transactions.RawTransaction` carries the
+    consumed here to choose the
+    :class:`~aeat.domain.transactions.TransactionDirection`, then the stored
+    :class:`~aeat.domain.transactions.RawTransaction` carries the
     absolute magnitude (flow lives in ``direction``, never in the sign). A
     **zero-amount** row carries no flow and is refused at the parse boundary,
     consistent with the manual ledger path.

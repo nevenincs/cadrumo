@@ -61,6 +61,7 @@ from .._observations_repository import CalculationObservationRepository
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CARRY_BINDING_ID = "modelo-130-pagos-fraccionados-anteriores"
+_BUCKET_ID = "13005000-0000-4000-8000-000000000130"
 _FILING_YEAR = 2026
 
 
@@ -88,7 +89,7 @@ def obs_repo(tmp_path: Path) -> Iterator[CalculationObservationRepository]:
     ``irpf.previous_year_economic_activity_net_income`` previous_filing binding
     resolves; it is upstream substrate, not the casilla-05 carry under test.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = CalculationObservationRepository(objects=profile.repository)
         repo.save_observation(
             registry_grounded_modelo_observation(
@@ -272,7 +273,7 @@ def test_first_filer_2t_alta_clean_state_suppresses_pre_activity_casilla_05_requ
     # Activity starts mid-2T; the 1T period (ending 2026-03-31) is strictly prior.
     verdict = evaluate_cross_period_clean_state(
         snapshot,
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         observation_repository=obs_repo,
         filing_repository=ModeloRecordCatalogueRepository(),
         calculation_repository=CalculationRevisionCatalogueRepository(),

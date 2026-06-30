@@ -1,8 +1,12 @@
-"""Artefact-kind detection for Modelo 100 PDFs.
+"""Artefact-kind detection for observed Modelo 100 PDFs.
 
-Inspects the printed text of a borrador / predeclaración / declaración
-PDF and returns the matching :class:`aeat.adapters.inbound.borrador._schema.ArtefactKind`.
-The detection ladder is documented on :func:`detect_artefact_kind`.
+This module classifies the printed text extracted from a Renta borrador,
+predeclaración, or declaración PDF into an
+:class:`~aeat.adapters.inbound.borrador._schema.ArtefactKind`. It is a local
+adapter helper: it reads PDF text through
+:func:`aeat.adapters.inbound.borrador._parsers.extract_pages_text`, applies the
+documented marker precedence ladder, and returns the artefact kind consumed by
+:func:`~aeat.adapters.inbound.borrador.parse_borrador`.
 """
 
 from __future__ import annotations

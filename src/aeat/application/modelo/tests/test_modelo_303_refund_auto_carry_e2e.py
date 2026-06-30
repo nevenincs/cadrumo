@@ -65,6 +65,7 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _TAX_ID = "X1234567L"
+_BUCKET_ID = "30300000-0000-4000-8000-000000000032"
 _YEAR = 2026
 _REFUND_PERIOD = "2T"
 _NEXT_PERIOD = "3T"
@@ -102,14 +103,14 @@ _NEGATIVE_CREDIT_ENGINE_INPUTS = {
 
 @contextmanager
 def _secure_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         yield
 
 
 def _store_operator_profile() -> None:
-    UserProfileLifecycleRepository(bucket_id="operator").save(
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
         UserProfileRecord(
-            profile_id="11111111-1111-4111-8111-111111111111",
+            profile_id=_BUCKET_ID,
             display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_TAX_ID),
@@ -171,7 +172,7 @@ def _file_negative_2t_period(*, redeme_enrolled: bool) -> Decimal:
     assert report.decision.divergence == "first_period_zero"
 
     work_unit = create_work_unit(
-        bucket_id="operator",
+        bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _REFUND_PERIOD),

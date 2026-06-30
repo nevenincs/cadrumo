@@ -77,7 +77,7 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-e2e-ledger-303-recargo"
+_BUCKET_ID = "30330303-0303-4303-8303-303303303303"
 _YEAR = 2025
 _TAX_ID = "12345678Z"
 _T0 = datetime(2025, 1, 10, 10, 0, tzinfo=UTC)

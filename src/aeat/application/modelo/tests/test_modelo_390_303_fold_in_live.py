@@ -81,7 +81,7 @@ from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-m390-303-fold"
+_BUCKET_ID = "39000000-0000-4000-8000-000000000390"
 _T0 = datetime(2026, 1, 20, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 20, 11, 0, tzinfo=UTC)
 _YEAR = 2025

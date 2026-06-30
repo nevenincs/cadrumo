@@ -46,6 +46,7 @@ Corpus fixtures use:
     Modalidad:       Estimación directa simplificada (casilla 0168 = S → boolean 0)
     Base liquidable: 30 000,00 EUR (0505)
     Retenciones:     0 (simplest verifiable scenario; no prior-period bindings)
+    Pagos fracc.:    0 (no prior M130/M131 quarterly filings in fixture)
 
 Comprehensive M100 borrador verdict:
 
@@ -144,6 +145,15 @@ def _enum_binding_values_for_year(year: int) -> dict[str, str]:
     return {f"renta-{year}-profile-tax-residence-ccaa": "cataluna"}
 
 
+def _relation_values_for_year(year: int) -> dict[str, Decimal]:
+    """Return relation-channel values for absent quarterly pago fraccionado evidence."""
+    pfx = f"renta-{year}-"
+    return {
+        f"{pfx}rel-130-pagos-fraccionados": Decimal("0"),
+        f"{pfx}rel-131-pagos-fraccionados": Decimal("0"),
+    }
+
+
 @pytest.mark.parametrize(
     "year",
     [2021, 2022, 2023],
@@ -217,6 +227,7 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
             date_context={"filing_period": date(year, 6, 30)},
             binding_values=_binding_values_for_year(year),
             enum_binding_values=_enum_binding_values_for_year(year),
+            relation_values=_relation_values_for_year(year),
         )
     except RegistryValidationError as exc:
         pytest.fail(
@@ -224,7 +235,8 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
             f"RegistryValidationError — a required binding is missing.\n"
             f"  error: {exc}\n"
             f"  inputs supplied: {sorted(inputs)}\n"
-            f"  binding_values supplied: {sorted(_binding_values_for_year(year))}",
+            f"  binding_values supplied: {sorted(_binding_values_for_year(year))}\n"
+            f"  relation_values supplied: {sorted(_relation_values_for_year(year))}",
         )
 
     engine_values = dict(result.values)

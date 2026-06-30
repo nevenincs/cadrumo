@@ -1,16 +1,24 @@
-"""Regex-driven field extraction for AEAT justificante PDFs.
+"""Regex-driven field extraction for AEAT justificante receipt PDFs.
 
 This module translates the raw text of a justificante (as returned by one of
 the backends in :mod:`aeat.adapters.inbound.justificante._parsers`) into a
-:class:`aeat.domain.justificante._schema.Justificante` pydantic record. The
-regex patterns deliberately accept both accented ("Código Seguro de
+:class:`~aeat.domain.justificante.Justificante` pydantic record. It extracts
+receipt metadata only: CSV, modelo, period/ejercicio, taxpayer, presentation
+timestamp, optional payment totals, and the verification URL. Casilla-level
+filing values belong to the declaración/borrador adapters, not this receipt
+surface.
+
+The regex patterns deliberately accept both accented ("Código Seguro de
 Verificación") and stripped ("Codigo Seguro de Verificacion") label variants
 because AEAT's historical PDF corpus mixes the two depending on the year and
 font embedding.
 
 The extractor is **deterministic**: same input bytes produce the same output
 record. All monetary values are parsed via :class:`decimal.Decimal` to
-preserve the receipt precision; never floats.
+preserve the receipt precision; never floats. Parse failures populate the
+structured attributes on
+:class:`~aeat.domain.justificante.JustificanteParseError` so callers and tests
+do not need to parse message strings.
 """
 
 from __future__ import annotations
@@ -288,6 +296,9 @@ def _require(match: re.Match[str] | None, field: str) -> str:
 def extract_justificante(text: str, pdf_path: Path) -> Justificante:
     """Extract a :class:`Justificante` from the raw text of a receipt PDF.
 
+    This path-based helper computes the PDF digest itself before delegating to
+    ``extract_justificante_from_digest``.
+
     Args:
         text: Full concatenated text returned by a parser backend.
         pdf_path: Path of the source PDF (used to compute the
@@ -315,7 +326,17 @@ def extract_justificante_from_digest(
     source_pdf_sha256: str,
     source_label: object = "<input-pdf>",
 ) -> Justificante:
-    """Extract a :class:`Justificante` when the caller already has the PDF digest."""
+    """Extract a :class:`Justificante` when the caller already has the PDF digest.
+
+    The digest is converted into the persisted ``source_pdf_path`` reference, so
+    callers that parse bytes from secure storage can retain provenance without
+    writing those bytes to disk.
+
+    Raises:
+        JustificanteParseError: If receipt text is empty, a required field is
+            missing, a captured value is malformed, or the final strict record
+            fails validation.
+    """
     if not text.strip():
         raise JustificanteParseError(f"empty text extracted from {source_label}", missing=("text",))
     normalised = _strip_accents(text)

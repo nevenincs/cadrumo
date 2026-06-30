@@ -44,9 +44,12 @@ from ._iva_compensation_history_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_HISTORY_BUCKET_ID = "30330300-0000-4000-8000-000000000303"
+_CONFLICT_BUCKET_ID = "30330300-0000-4000-8000-000000000304"
+
 
 def test_three_year_filed_history_repository_projects_compensation_lots(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="iva-history-three-year"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HISTORY_BUCKET_ID):
         repository = IvaCompensationHistoryRepository()
         observations = (
             _filed_303_compensation_observation(
@@ -181,7 +184,7 @@ def test_iva_compensation_state_from_filed_observation_raises_localized_decimal_
 
 
 def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="iva-compensation-conflict"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CONFLICT_BUCKET_ID):
         seed_iva_compensation_period(
             taxpayer_nif=_TAXPAYER_REF,
             period=Period.from_year_and_code(2024, "2T"),
