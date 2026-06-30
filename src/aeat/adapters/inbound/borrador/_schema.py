@@ -3,6 +3,10 @@
 Defines the inbound data shapes that the borrador pipeline produces:
 
 - :class:`ArtefactKind` — three Modelo 100 PDF flavours.
+- :class:`BorradorParseMode` — observed rows versus caller-supplied
+  registry-profile validation.
+- :class:`BorradorExtractionProfile` — lightweight protocol projected by the
+  caller from registry metadata when completeness checks are required.
 - :class:`BorradorObservation` — parsed observed record with printed
   casillas, source provenance and per-casilla advisory warnings.
 """
@@ -40,21 +44,39 @@ class ArtefactKind(StrEnum):
 
 
 class BorradorParseMode(StrEnum):
-    """Parser authority mode requested by the caller."""
+    """Parser authority mode requested by the caller.
+
+    Attributes:
+        OBSERVED: Return the casilla rows printed in the PDF without minimum
+            coverage enforcement.
+        REGISTRY_PROFILE: Require a caller-supplied
+            :class:`BorradorExtractionProfile`, filter to its target casillas,
+            and enforce its minimum coverage.
+    """
 
     OBSERVED = "observed"
     REGISTRY_PROFILE = "registry_profile"
 
 
 class BorradorExtractionTarget(Protocol):
-    """Per-target descriptor surface the parser reads from a profile."""
+    """Per-target descriptor surface the parser reads from a profile.
+
+    This protocol is intentionally narrow so callers can project registry
+    targets without making the inbound adapter depend on registry internals.
+    """
 
     @property
     def casilla_id(self) -> CasillaId: ...
 
 
 class BorradorExtractionProfile(Protocol):
-    """Registry extraction-profile surface consumed by the parser."""
+    """Registry extraction-profile surface consumed by the parser.
+
+    The parser consumes this structural protocol only when
+    :class:`BorradorParseMode.REGISTRY_PROFILE` is requested. It is supplied by
+    the caller; the inbound adapter does not look up
+    :class:`~aeat.domain.calculations.registry.RegistrySnapshot` data itself.
+    """
 
     @property
     def id(self) -> str: ...
