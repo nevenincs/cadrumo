@@ -1,9 +1,10 @@
 """Orchestration layer for ledger imports with diagnostics.
 
-:func:`import_ledger_with_diagnostics` accepts an existing
-:class:`TransactionCatalogue` and an iterable of raw rows. It emits
-structured diagnostics for parser-empty, duplicate, calendar-gap, and
-original-file checks during import verification.
+:func:`~aeat.application.transactions.import_ledger_with_diagnostics` accepts an
+existing :class:`TransactionCatalogue` and an iterable of
+:class:`~aeat.domain.transactions.RawTransaction` rows. It emits structured
+diagnostics for parser-empty, duplicate, calendar-gap, and original-file checks
+during import verification.
 
 Duplicate detection uses the stable
 :func:`~aeat.domain.transactions.derive_import_fingerprint` identity so
@@ -38,9 +39,10 @@ class LedgerImportResult(BaseModel):
     """Return value of an orchestrated ledger import with diagnostics.
 
     ``imported_count`` and ``skipped_count`` reflect the previewed outcome for
-    the supplied :class:`RawTransaction` rows; ``diagnostics`` carries the
-    structured :class:`LedgerImportDiagnostic` records explaining parser,
-    duplicate, gap, or original-file findings.
+    the supplied :class:`~aeat.domain.transactions.RawTransaction` rows;
+    ``diagnostics`` carries the structured
+    :class:`~aeat.application.transactions.LedgerImportDiagnostic` records
+    explaining parser, duplicate, gap, or original-file findings.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -70,7 +72,8 @@ def import_ledger_with_diagnostics(
             the caller from parse-boundary facts such as transaction direction.
 
     Returns:
-        An immutable :class:`LedgerImportResult` with finding diagnostics.
+        An immutable :class:`~aeat.application.transactions.LedgerImportResult`
+        with finding diagnostics.
     """
     diagnostics: list[LedgerImportDiagnostic] = []
     imported_count = 0
