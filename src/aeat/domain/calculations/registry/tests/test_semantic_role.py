@@ -793,16 +793,112 @@ class TestTypoTwinWarning:
             _emit_semantic_role_typo_twin_warnings([m])
         assert any("permanent_aumento" in str(w.message) for w in captured)
 
-    def test_legacy_token_groups_are_not_axis_tokens(self) -> None:
-        legacy_pairs = (
-            ("tipo_renta_atribuida_clave", "tipo_renta_atribuida_subclave"),
-            ("total_percepciones_count", "total_percepciones_amount"),
-            ("iva_compensacion_pendiente_anteriores", "iva_compensacion_pendiente_posteriores"),
-            ("irpf_ganancia_valor_transmision", "irpf_ganancia_valor_adquisicion"),
-            ("irpf_anexo_b_ab_importe", "irpf_anexo_b_c_importe"),
-        )
-        for left, right in legacy_pairs:
-            assert semantic_roles_are_axis_siblings(left, right) is False
+    @pytest.mark.parametrize(
+        ("left", "right"),
+        (
+            pytest.param("tipo_renta_atribuida_clave", "tipo_renta_atribuida_subclave", id="renta-attribuida"),
+            pytest.param("total_percepciones_count", "total_percepciones_amount", id="percepciones-total"),
+            pytest.param(
+                "iva_compensacion_pendiente_anteriores",
+                "iva_compensacion_pendiente_posteriores",
+                id="iva-compensacion-temporal",
+            ),
+            pytest.param(
+                "irpf_ganancia_valor_transmision",
+                "irpf_ganancia_valor_adquisicion",
+                id="ganancia-valor-kind",
+            ),
+            pytest.param("irpf_anexo_b_ab_importe", "irpf_anexo_b_c_importe", id="anexo-b-letter"),
+            pytest.param(
+                "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_aumento",
+                "is_correccion_libertad_amortizacion_mantenimiento_empleo_permanente_aumento",
+                id="sin-maintenance",
+            ),
+            pytest.param(
+                "is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
+                "is_correccion_operaciones_a_plazos_dt1_permanente_aumento",
+                id="legal-reference",
+            ),
+            pytest.param(
+                "is_deduccion_di_internacional_rdleg_pendiente",
+                "is_deduccion_di_internacional_pendiente",
+                id="legal-regime",
+            ),
+            pytest.param(
+                "irpf_red_prevision_social_exceso_2015_2019",
+                "irpf_red_prevision_social_exceso_2016_2020",
+                id="numeric-window",
+            ),
+            pytest.param(
+                "irpf_anexo_c_exceso_sps_rg_aportaciones_periodo",
+                "irpf_anexo_c_exceso_sps_rg_aportaciones_aplicado",
+                id="period-applied",
+            ),
+            pytest.param(
+                "is_deduccion_di_interna_rdleg_pendiente",
+                "is_deduccion_di_internacional_rdleg_pendiente",
+                id="internal-international",
+            ),
+            pytest.param(
+                "is_correccion_detalle_correcciones_resultado_permanente_disminucion",
+                "is_correccion_otras_correcciones_resultado_permanente_disminucion",
+                id="detail-other",
+            ),
+            pytest.param("is_liquidacion_i_importe", "is_liquidacion_ii_importe", id="roman-liquidation"),
+            pytest.param(
+                "irpf_descendiente_fecha_nacimiento",
+                "irpf_descendiente_fecha_fallecimiento",
+                id="birth-death",
+            ),
+            pytest.param(
+                "irpf_descendiente_apellidos_nombre",
+                "irpf_ascendiente_apellidos_nombre",
+                id="relationship",
+            ),
+            pytest.param(
+                "irpf_anexo_b_aav_importe_satisfecho",
+                "irpf_anexo_b_importe_satisfecho",
+                id="anexo-b-aav-marker",
+            ),
+            pytest.param(
+                "irpf_ganancia_premios_juegos_pub_valoracion",
+                "irpf_ganancia_premios_juegos_valoracion",
+                id="public-source",
+            ),
+            pytest.param(
+                "irpf_eo_agr_reintegro_subvenciones",
+                "irpf_eo_reintegro_subvenciones",
+                id="agricultural-objective-estimation",
+            ),
+            pytest.param(
+                "irpf_deduccion_cantabria_obras_mejora_pendiente_1",
+                "irpf_deduccion_cantabria_obras_mejora_pendiente_2",
+                id="numeric-line",
+            ),
+            pytest.param(
+                "irpf_deduccion_murcia_vehiculo_importe",
+                "irpf_deduccion_asturias_vehiculo_importe",
+                id="ccaa",
+            ),
+            pytest.param(
+                "irpf_deduccion_madrid_vivienda_municipio_riesgo_anio",
+                "irpf_deduccion_madrid_vivienda_municipio_riesgo",
+                id="field-detail-year",
+            ),
+            pytest.param(
+                "irpf_deduccion_madrid_vivienda_municipio_riesgo_precio",
+                "irpf_deduccion_madrid_vivienda_municipio_riesgo",
+                id="field-detail-price",
+            ),
+            pytest.param(
+                "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_4",
+                "irpf_ganancia_inmueble_referencia_catastral_4",
+                id="cadastral-anexo-c1",
+            ),
+        ),
+    )
+    def test_non_axis_token_pairs_are_not_axis_siblings(self, left: str, right: str) -> None:
+        assert semantic_roles_are_axis_siblings(left, right) is False
 
     def test_related_party_row_slot_roles_do_not_warn_as_typos(self) -> None:
         first_slot = _casilla(cid="a", semantic_role="related_party_nif_1", data_type="nif")
@@ -813,105 +909,6 @@ class TestTypoTwinWarning:
             _emit_semantic_role_typo_twin_warnings([m])
         assert captured == []
 
-    def test_sin_maintenance_marker_is_not_optional_axis_token(self) -> None:
-        assert (
-            semantic_roles_are_axis_siblings(
-                "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_aumento",
-                "is_correccion_libertad_amortizacion_mantenimiento_empleo_permanente_aumento",
-            )
-            is False
-        )
-
-    def test_legal_reference_tokens_are_not_axis_tokens(self) -> None:
-        assert (
-            semantic_roles_are_axis_siblings(
-                "is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
-                "is_correccion_operaciones_a_plazos_dt1_permanente_aumento",
-            )
-            is False
-        )
-
-    def test_legal_regime_tokens_are_not_axis_tokens(self) -> None:
-        assert (
-            semantic_roles_are_axis_siblings(
-                "is_deduccion_di_internacional_rdleg_pendiente",
-                "is_deduccion_di_internacional_pendiente",
-            )
-            is False
-        )
-
-    def test_numeric_window_tokens_are_not_axis_tokens(self) -> None:
-        assert (
-            semantic_roles_are_axis_siblings(
-                "irpf_red_prevision_social_exceso_2015_2019",
-                "irpf_red_prevision_social_exceso_2016_2020",
-            )
-            is False
-        )
-
-    def test_period_applied_tokens_are_not_axis_tokens(self) -> None:
-        assert (
-            semantic_roles_are_axis_siblings(
-                "irpf_anexo_c_exceso_sps_rg_aportaciones_periodo",
-                "irpf_anexo_c_exceso_sps_rg_aportaciones_aplicado",
-            )
-            is False
-        )
-
-    def test_internal_international_tokens_are_not_axis_tokens(self) -> None:
-        assert (
-            semantic_roles_are_axis_siblings(
-                "is_deduccion_di_interna_rdleg_pendiente",
-                "is_deduccion_di_internacional_rdleg_pendiente",
-            )
-            is False
-        )
-
-    def test_detail_other_tokens_are_not_axis_tokens(self) -> None:
-        assert (
-            semantic_roles_are_axis_siblings(
-                "is_correccion_detalle_correcciones_resultado_permanente_disminucion",
-                "is_correccion_otras_correcciones_resultado_permanente_disminucion",
-            )
-            is False
-        )
-
-    def test_liquidation_roman_tokens_are_not_axis_tokens(self) -> None:
-        assert (
-            semantic_roles_are_axis_siblings(
-                "is_liquidacion_i_importe",
-                "is_liquidacion_ii_importe",
-            )
-            is False
-        )
-
-    def test_birth_death_tokens_are_not_axis_tokens(self) -> None:
-        assert (
-            semantic_roles_are_axis_siblings(
-                "irpf_descendiente_fecha_nacimiento",
-                "irpf_descendiente_fecha_fallecimiento",
-            )
-            is False
-        )
-
-    def test_relationship_tokens_are_not_axis_tokens(self) -> None:
-        assert (
-            semantic_roles_are_axis_siblings(
-                "irpf_descendiente_apellidos_nombre",
-                "irpf_ascendiente_apellidos_nombre",
-            )
-            is False
-        )
-
-    def test_anexo_b_aav_marker_is_not_optional_axis_token(self) -> None:
-        assert (
-            semantic_roles_are_axis_siblings(
-                "irpf_anexo_b_aav_importe_satisfecho",
-                "irpf_anexo_b_importe_satisfecho",
-            )
-            is False
-        )
-
     def test_coti_scope_marker_is_not_optional_axis_token(self) -> None:
         coti = _casilla(cid="a", semantic_role="irpf_ganancia_fondos_coti_ganancia")
         general_a = _casilla(cid="b", semantic_role="irpf_ganancia_fondos_ganancia")
@@ -921,67 +918,6 @@ class TestTypoTwinWarning:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
         assert any("irpf_ganancia_fondos_coti_ganancia" in str(item.message) for item in captured)
-
-    def test_public_source_marker_is_not_optional_axis_token(self) -> None:
-        assert (
-            semantic_roles_are_axis_siblings(
-                "irpf_ganancia_premios_juegos_pub_valoracion",
-                "irpf_ganancia_premios_juegos_valoracion",
-            )
-            is False
-        )
-
-    def test_agricultural_objective_estimation_marker_is_not_optional_axis_token(self) -> None:
-        assert (
-            semantic_roles_are_axis_siblings(
-                "irpf_eo_agr_reintegro_subvenciones",
-                "irpf_eo_reintegro_subvenciones",
-            )
-            is False
-        )
-
-    def test_numeric_line_tokens_are_not_axis_tokens(self) -> None:
-        assert (
-            semantic_roles_are_axis_siblings(
-                "irpf_deduccion_cantabria_obras_mejora_pendiente_1",
-                "irpf_deduccion_cantabria_obras_mejora_pendiente_2",
-            )
-            is False
-        )
-
-    def test_ccaa_tokens_are_not_axis_tokens(self) -> None:
-        assert (
-            semantic_roles_are_axis_siblings(
-                "irpf_deduccion_murcia_vehiculo_importe",
-                "irpf_deduccion_asturias_vehiculo_importe",
-            )
-            is False
-        )
-
-    def test_field_detail_tokens_are_not_optional_axis_tokens(self) -> None:
-        assert (
-            semantic_roles_are_axis_siblings(
-                "irpf_deduccion_madrid_vivienda_municipio_riesgo_anio",
-                "irpf_deduccion_madrid_vivienda_municipio_riesgo",
-            )
-            is False
-        )
-        assert (
-            semantic_roles_are_axis_siblings(
-                "irpf_deduccion_madrid_vivienda_municipio_riesgo_precio",
-                "irpf_deduccion_madrid_vivienda_municipio_riesgo",
-            )
-            is False
-        )
-
-    def test_cadastral_anexo_c1_marker_is_not_optional_axis_token(self) -> None:
-        assert (
-            semantic_roles_are_axis_siblings(
-                "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_4",
-                "irpf_ganancia_inmueble_referencia_catastral_4",
-            )
-            is False
-        )
 
 
 class TestSemanticRoleTypoTwinHelpers:
