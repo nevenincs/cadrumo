@@ -558,6 +558,30 @@ def test_modelo_100_anexo_c_energy_excess_roles_are_spelled_and_grounded(filing_
     assert not missing_da50
 
 
+def test_modelo_100_derechos_transmission_global_role_spans_revisions() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_role = "irpf_ganancia_derechos_valor_transmision_global"
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0343"))
+
+        assert tuple(casilla.section) == ("toma_datos_ampliada", "gp_derechos", "entidad_derecho")
+        assert casilla.semantic_role == expected_role
+        assert casilla.label.startswith("Importe global de las transmisiones efectuadas en ")
+        assert {"ley-35-2006:art-33", "ley-35-2006:art-34"}.issubset(casilla.legal_refs)
+        assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+            casilla.source_refs,
+        )
+
+    assert all(
+        casilla.semantic_role != "irpf_ganancia_transmisiones_importe_global_2024"
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    )
+
+
 def test_modelo_100_retrib_especie_no_exenta_total_role_names_aggregate() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
