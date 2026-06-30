@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ._parser_boundary_m130_support import _M130_CORPUS_IDS, _M130_CORPUS_PARAMS
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M130,
     BindingId,
@@ -38,23 +39,8 @@ _M130_FORMULA_CHAIN_CASILLAS: tuple[CasillaId, ...] = (
 
 @pytest.mark.parametrize(
     "pdf_stem,year,period",
-    [
-        ("2021-2T", 2021, "2T"),
-        ("2021-3T", 2021, "3T"),
-        ("2021-4T", 2021, "4T"),
-        ("2022-1T", 2022, "1T"),
-        ("2022-2T", 2022, "2T"),
-        ("2022-3T", 2022, "3T"),
-        ("2022-4T", 2022, "4T"),
-        ("2023-1T", 2023, "1T"),
-        ("2023-2T", 2023, "2T"),
-        ("2023-3T", 2023, "3T"),
-        ("2023-4T", 2023, "4T"),
-        ("2024-1T", 2024, "1T"),
-        ("2024-2T", 2024, "2T"),
-        ("2024-3T", 2024, "3T"),
-        ("2024-4T", 2024, "4T"),
-    ],
+    _M130_CORPUS_PARAMS,
+    ids=_M130_CORPUS_IDS,
 )
 def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: str, year: int, period: str) -> None:
     """Engine recomputes casilla 19 (resultado final) from extracted leaf inputs."""
