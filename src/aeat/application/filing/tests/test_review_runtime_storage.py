@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage import EphemeralMasterKeyProvider
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core import Period
@@ -25,6 +24,7 @@ from ....domain.transactions import (
     TransactionCatalogueRepository,
     TransactionDirection,
 )
+from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     ModeloApprovalStaleReason,
     approval_stale_reasons,
@@ -36,7 +36,7 @@ from ..testing import build_registry_filing_draft_from_decimals
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_MASTER_KEY = b"m" * 32
+_BUCKET_ID = "cf394ec1-128f-4d57-b66d-2d57f35aaf35"
 _Q1_2026 = Period.from_year_and_code(2026, "1T")
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
@@ -78,12 +78,12 @@ def test_compute_current_approval_basis_refuses_missing_runtime_session(tmp_path
     draft = _ready_modelo_130_draft()
 
     with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile="bucket-a"),
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID),
         pytest.raises(StorageValidationError, match=r"no active bucket session|route does not match"),
     ):
         compute_current_approval_basis(
             draft,
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             schema_provider=schema_provider,
         )
 
@@ -92,26 +92,23 @@ def test_approval_stale_reasons_reloads_transaction_catalogue_from_runtime_defau
     schema_provider = build_runtime_schema_provider(modelos=("130",), filing_year=_Q1_2026.filing_year, period=_Q1_2026)
     draft = _ready_modelo_130_draft()
 
-    with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile="ephemeral"),
-        EphemeralMasterKeyProvider(key=_MASTER_KEY),
-    ):
-        TransactionCatalogueRepository(bucket_id="ephemeral").save(
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
             TransactionCatalogue.from_transactions((_transaction("initial"),)),
         )
         approved = approve_draft(
             draft,
-            bucket_id="ephemeral",
+            bucket_id=profile.bucket_id,
             approved_by="operator",
             schema_provider=schema_provider,
         )
 
-        TransactionCatalogueRepository(bucket_id="ephemeral").save(
+        TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
             TransactionCatalogue.from_transactions((_transaction("changed"),)),
         )
         reasons = approval_stale_reasons(
             approved,
-            bucket_id="ephemeral",
+            bucket_id=profile.bucket_id,
             schema_provider=schema_provider,
         )
 
