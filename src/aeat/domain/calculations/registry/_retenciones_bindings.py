@@ -23,6 +23,7 @@ from typing import Literal, Protocol
 from pydantic import BaseModel, ConfigDict
 
 from ....core import BindingSourceKind
+from ....core.aggregation import RetencionScheme
 from ._binding_selector_utils import selector_against_model
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._ids import BindingId, CasillaId
@@ -33,7 +34,26 @@ class _RetencionesAggregationProtocol(Protocol):
     """The scalar totals the retenciones-aggregation source materialises."""
 
     @property
+    def rollups(self) -> tuple[_RetencionesRollupProtocol, ...]: ...
+
+    @property
     def total_perceptors(self) -> int: ...
+
+    @property
+    def total_taxable_base(self) -> Decimal: ...
+
+    @property
+    def total_retencion(self) -> Decimal: ...
+
+
+class _RetencionesRollupProtocol(Protocol):
+    """One per-perceptor/scheme rollup row exposed by the retenciones source."""
+
+    @property
+    def perceptor_nif(self) -> str: ...
+
+    @property
+    def scheme(self) -> RetencionScheme: ...
 
     @property
     def total_taxable_base(self) -> Decimal: ...
@@ -54,6 +74,7 @@ class _RetencionesAggregationSelector(BaseModel):
     model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
 
     target_casilla_id: CasillaId
+    schemes: tuple[RetencionScheme, ...] = ()
     fact: Literal["perceptor_count_distinct", "taxable_base_sum", "retencion_amount_sum"] = (
         "perceptor_count_distinct"
     )
@@ -79,18 +100,33 @@ def resolve_retenciones_aggregation_binding_values(
     :attr:`BindingSourceKind.RETENCIONES_AGGREGATION`, keyed by the selector's
     declared fact.
     """
-    values = {
-        "perceptor_count_distinct": Decimal(aggregation.total_perceptors),
-        "taxable_base_sum": aggregation.total_taxable_base,
-        "retencion_amount_sum": aggregation.total_retencion,
-    }
     resolved: dict[BindingId, Decimal] = {}
     for binding in revision.bindings:
         if binding.source != BindingSourceKind.RETENCIONES_AGGREGATION:
             continue
         selector = _RetencionesAggregationSelector.model_validate(_selector_as_dict(binding))
-        resolved[binding.id] = values[selector.fact]
+        resolved[binding.id] = _retenciones_selector_value(selector, aggregation)
     return resolved
+
+
+def _retenciones_selector_value(
+    selector: _RetencionesAggregationSelector,
+    aggregation: _RetencionesAggregationProtocol,
+) -> Decimal:
+    if not selector.schemes:
+        values = {
+            "perceptor_count_distinct": Decimal(aggregation.total_perceptors),
+            "taxable_base_sum": aggregation.total_taxable_base,
+            "retencion_amount_sum": aggregation.total_retencion,
+        }
+        return values[selector.fact]
+
+    selected = tuple(row for row in aggregation.rollups if row.scheme in selector.schemes)
+    if selector.fact == "perceptor_count_distinct":
+        return Decimal(len({row.perceptor_nif for row in selected}))
+    if selector.fact == "taxable_base_sum":
+        return sum((row.total_taxable_base for row in selected), Decimal("0"))
+    return sum((row.total_retencion for row in selected), Decimal("0"))
 
 
 __all__ = [
