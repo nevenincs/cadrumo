@@ -37,6 +37,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROBE_NAMESPACE = "aeat.application.live.test_snapshot_base_probe"
 _PROBE_VERSION = 1
+_BUCKET_ID = "52525252-5252-4252-8252-525252525252"
+_OTHER_BUCKET_ID = "53535353-5353-4353-8353-535353535353"
+_PROTO_BUCKET_ID = "54545454-5454-4454-8454-545454545454"
 
 
 # ---- Test payload ---------------------------------------------------------
@@ -215,7 +218,7 @@ class ProbeService(SnapshotService[ProbeSnapshot]):
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile.repository
 
 
@@ -341,8 +344,8 @@ def test_derive_snapshot_id_is_sha256_hex() -> None:
 
 
 def test_service_capture_persists_active_snapshot(secure_objects: SecureObjectRepository) -> None:
-    repository = ProbeRepository(bucket_id="bucket-a", objects=secure_objects)
-    service = ProbeService(bucket_id="bucket-a", repository=repository)
+    repository = ProbeRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    service = ProbeService(bucket_id=_BUCKET_ID, repository=repository)
 
     snapshot = service.capture(axis_label="renta-2025", captured_at=_CAPTURED_AT, payload_text="alpha")
 
@@ -352,8 +355,8 @@ def test_service_capture_persists_active_snapshot(secure_objects: SecureObjectRe
 
 
 def test_service_capture_deduplicates_by_content_id(secure_objects: SecureObjectRepository) -> None:
-    repository = ProbeRepository(bucket_id="bucket-a", objects=secure_objects)
-    service = ProbeService(bucket_id="bucket-a", repository=repository)
+    repository = ProbeRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    service = ProbeService(bucket_id=_BUCKET_ID, repository=repository)
 
     first = service.capture(axis_label="renta-2025", captured_at=_CAPTURED_AT, payload_text="alpha")
     second = service.capture(axis_label="renta-2025", captured_at=_CAPTURED_AT, payload_text="alpha")
@@ -365,8 +368,8 @@ def test_service_capture_deduplicates_by_content_id(secure_objects: SecureObject
 def test_service_capture_supersedes_prior_active_on_same_axis(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    repository = ProbeRepository(bucket_id="bucket-a", objects=secure_objects)
-    service = ProbeService(bucket_id="bucket-a", repository=repository)
+    repository = ProbeRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    service = ProbeService(bucket_id=_BUCKET_ID, repository=repository)
 
     first = service.capture(axis_label="renta-2025", captured_at=_CAPTURED_AT, payload_text="alpha")
     second = service.capture(
@@ -385,8 +388,8 @@ def test_service_capture_supersedes_prior_active_on_same_axis(
 
 
 def test_service_capture_demotes_late_arrival(secure_objects: SecureObjectRepository) -> None:
-    repository = ProbeRepository(bucket_id="bucket-a", objects=secure_objects)
-    service = ProbeService(bucket_id="bucket-a", repository=repository)
+    repository = ProbeRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    service = ProbeService(bucket_id=_BUCKET_ID, repository=repository)
 
     newer = service.capture(
         axis_label="renta-2025",
@@ -405,8 +408,8 @@ def test_service_capture_demotes_late_arrival(secure_objects: SecureObjectReposi
 def test_service_capture_does_not_supersede_across_axis(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    repository = ProbeRepository(bucket_id="bucket-a", objects=secure_objects)
-    service = ProbeService(bucket_id="bucket-a", repository=repository)
+    repository = ProbeRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    service = ProbeService(bucket_id=_BUCKET_ID, repository=repository)
 
     first = service.capture(axis_label="renta-2025", captured_at=_CAPTURED_AT, payload_text="alpha")
     second = service.capture(
@@ -420,8 +423,8 @@ def test_service_capture_does_not_supersede_across_axis(
 
 
 def test_service_resolve_snapshot_supports_prefix(secure_objects: SecureObjectRepository) -> None:
-    repository = ProbeRepository(bucket_id="bucket-a", objects=secure_objects)
-    service = ProbeService(bucket_id="bucket-a", repository=repository)
+    repository = ProbeRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    service = ProbeService(bucket_id=_BUCKET_ID, repository=repository)
 
     captured = service.capture(axis_label="renta-2025", captured_at=_CAPTURED_AT, payload_text="alpha")
     resolved = service.resolve_snapshot(captured.snapshot_id[:12])
@@ -429,9 +432,9 @@ def test_service_resolve_snapshot_supports_prefix(secure_objects: SecureObjectRe
 
 
 def test_service_constructor_rejects_bucket_mismatch(secure_objects: SecureObjectRepository) -> None:
-    repository = ProbeRepository(bucket_id="bucket-a", objects=secure_objects)
+    repository = ProbeRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     with pytest.raises(LiveApplicationInputError, match="does not match repository bucket"):
-        ProbeService(bucket_id="bucket-b", repository=repository)
+        ProbeService(bucket_id=_OTHER_BUCKET_ID, repository=repository)
 
 
 # ---- Per-service SnapshotNotFoundError subclass hierarchy ---------------
@@ -480,7 +483,7 @@ def test_borrador100_snapshot_repository_conforms_to_protocol(
     secure_objects: SecureObjectRepository,
 ) -> None:
     """Borrador100SnapshotRepository satisfies SnapshotRepository[…] structurally."""
-    repo = Borrador100SnapshotRepository(bucket_id="proto-gate-test", objects=secure_objects)
+    repo = Borrador100SnapshotRepository(bucket_id=_PROTO_BUCKET_ID, objects=secure_objects)
     assert isinstance(repo, SnapshotRepository)
     # Rule 9-A: structural conformance only — no explicit inheritance.
     assert SnapshotRepository not in type(repo).__mro__
@@ -490,7 +493,7 @@ def test_censo_snapshot_repository_conforms_to_protocol(
     secure_objects: SecureObjectRepository,
 ) -> None:
     """CensoSnapshotRepository satisfies SnapshotRepository[…] structurally."""
-    repo = CensoSnapshotRepository(bucket_id="proto-gate-test", objects=secure_objects)
+    repo = CensoSnapshotRepository(bucket_id=_PROTO_BUCKET_ID, objects=secure_objects)
     assert isinstance(repo, SnapshotRepository)
 
 
@@ -508,7 +511,7 @@ def test_secure_snapshot_repository_conforms_to_protocol(
     )
 
     repo: SecureSnapshotRepository[PersistedExpedientesSnapshot] = SecureSnapshotRepository(
-        bucket_id="proto-gate-test",
+        bucket_id=_PROTO_BUCKET_ID,
         payload_model=PersistedExpedientesSnapshot,
         namespace_definition=LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
         object_key=expedientes_snapshot_object_key,
@@ -525,7 +528,7 @@ def test_secure_snapshot_repository_list_rejects_payload_bucket_mismatch(
 ) -> None:
     snapshot = ProbeSnapshot(
         snapshot_id="misrouted-snapshot",
-        bucket_id="bucket-b",
+        bucket_id=_OTHER_BUCKET_ID,
         axis_label="renta-2025",
         captured_at=_CAPTURED_AT,
         payload_text="misrouted",
@@ -539,14 +542,14 @@ def test_secure_snapshot_repository_list_rejects_payload_bucket_mismatch(
     )
     secure_objects.save(
         namespace=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.namespace,
-        object_key=_probe_object_key("bucket-a", snapshot.snapshot_id),
+        object_key=_probe_object_key(_BUCKET_ID, snapshot.snapshot_id),
         classification=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.sensitivity,
         schema_version=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.schema_version,
         written_at=envelope.written_at,
         payload=envelope.model_dump_json().encode("utf-8"),
     )
     repo: SecureSnapshotRepository[ProbeSnapshot] = SecureSnapshotRepository(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         payload_model=ProbeSnapshot,
         namespace_definition=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
         object_key=_probe_object_key,
@@ -564,8 +567,8 @@ def test_secure_snapshot_repository_list_rejects_payload_bucket_mismatch(
     assert exc_info.value.translated_message == "application.live.snapshot_base.errors.snapshot_bucket_mismatch"
     assert exc_info.value.context == {
         "domain_label": "probe",
-        "snapshot_bucket": "bucket-b",
-        "repository_bucket": "bucket-a",
+        "snapshot_bucket": _OTHER_BUCKET_ID,
+        "repository_bucket": _BUCKET_ID,
     }
 
 
