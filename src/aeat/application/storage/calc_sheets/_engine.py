@@ -35,11 +35,13 @@ from ....domain.calculations.registry import (
     binding_aggregation_op,
     binding_row_set_selector,
     casillas_by_id,
+    relation_source_requirements,
 )
 from ._errors import CalcSheetsEngineError
 from ._layout import SheetLayout, plan_layout
 from ._records import (
     OperatorInputs,
+    RelationValue,
     RelationValues,
     SheetAnchor,
     SheetCellAddress,
@@ -693,6 +695,60 @@ def _relation_value_cells(
     return tuple(cells)
 
 
+def _relation_values_with_registry_grounding(
+    snapshot: RegistrySnapshot,
+    layout: SheetLayout,
+    relation_values: RelationValues,
+) -> RelationValues:
+    """Attach registry-owned source identity and grounding to relation scalar rows."""
+    supplied_by_relation = relation_values.by_relation()
+    relations_by_id = {relation.id: relation for relation in snapshot.revision.relations}
+    requirements_by_relation = {
+        relation_id: requirement
+        for requirement in relation_source_requirements(
+            snapshot.revision,
+            filing_year=snapshot.filing_year,
+            period=snapshot.period,
+        )
+        for relation_id in requirement.relation_ids
+    }
+    values: list[RelationValue] = []
+    for relation_id in layout.relation_cells:
+        relation = relations_by_id[relation_id]
+        supplied = supplied_by_relation.get(relation_id)
+        requirement = requirements_by_relation.get(relation_id)
+        source_modelo = requirement.source_modelo if requirement is not None else relation.source_modelo
+        source_filing_year = (
+            requirement.filing_year
+            if requirement is not None
+            else supplied.source_filing_year
+            if supplied is not None
+            else None
+        )
+        source_periods = requirement.periods if requirement is not None else relation.source_periods
+        source_casilla_ids = (
+            requirement.source_casilla_ids if requirement is not None else (relation.source_casilla_id,)
+        )
+        legal_refs = requirement.legal_refs if requirement is not None else relation.legal_refs
+        source_refs = requirement.source_refs if requirement is not None else relation.source_refs
+        values.append(
+            RelationValue(
+                relation=relation_id,
+                value=supplied.value if supplied is not None else None,
+                provenance=supplied.provenance if supplied is not None else "operator_manual",
+                source_modelo=source_modelo,
+                source_filing_year=source_filing_year,
+                source_periods=source_periods,
+                source_casilla_ids=source_casilla_ids,
+                legal_refs=legal_refs,
+                source_refs=source_refs,
+                resolved_at=supplied.resolved_at if supplied is not None else None,
+                note=supplied.note if supplied is not None else None,
+            ),
+        )
+    return RelationValues(values=tuple(values))
+
+
 def _protected_ranges(layout: SheetLayout) -> tuple[SheetProtectedRange, ...]:
     last_calc_row = max((row.row for row in layout.calculos_rows), default=1)
     return (
@@ -866,17 +922,18 @@ def build_export_plan(
     """
     inputs = operator_inputs if operator_inputs is not None else OperatorInputs()
     if relation_values is not None:
-        relations = relation_values
+        supplied_relations = relation_values
     elif relation_resolver is not None:
-        relations = relation_resolver(snapshot)
+        supplied_relations = relation_resolver(snapshot)
     else:
-        relations = RelationValues()
+        supplied_relations = RelationValues()
     revision = snapshot.revision
     # Anchor every temporal lookup (scalar parameter, bracket-table
     # window selection) at the snapshot's filing date so the workbook
     # mirrors the same registry slice the local runtime would consult.
     filing_anchor = date(snapshot.filing_year, 12, 31)
     layout = plan_layout(revision, bracket_filter_date=filing_anchor)
+    relations = _relation_values_with_registry_grounding(snapshot, layout, supplied_relations)
 
     entradas = _value_cells_for_entradas(revision, layout, inputs)
     calculos_labels = _label_cells_for_calculos(revision, layout)

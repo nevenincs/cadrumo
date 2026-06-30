@@ -689,8 +689,8 @@ class RelationValue(BaseModel):
     source_filing_year: int | None = Field(default=None, ge=2000, le=2099)
     source_periods: tuple[str, ...] = ()
     source_casilla_ids: tuple[CasillaId, ...] = ()
-    legal_refs: tuple[LegalRefId, ...] = ()
-    source_refs: tuple[SourceRefId, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     resolved_at: datetime | None = None
     note: str | None = None
 
