@@ -6,9 +6,8 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
-from .....core import Modelo
 from .....core.resources import bundled_path
 from ....categories import SpendingCategory, resolve_category_profiles
 from ....renta import (
@@ -79,12 +78,16 @@ def _expense_observation(
     *,
     category: SpendingCategory,
     gross_amount: Decimal,
+    taxable_base: Decimal | None = None,
+    iva_amount: Decimal | None = None,
 ):
     fact = RentaDeductibleExpenseFact(
         transaction_id=transaction_id,
         catalogue_id="ledger",
         operation_date=date(2025, 4, 5),
         gross_amount=gross_amount,
+        taxable_base=taxable_base,
+        iva_amount=iva_amount,
         direction=RentaExpenseDirection.OUTGOING_EXPENSE,
         category=category,
     )
@@ -366,21 +369,6 @@ def test_unsupported_renta_expense_flags_observation_routed_to_no_binding() -> N
     assert result == (unrouted,)
 
 
-class _ExpenseObservation(BaseModel):
-    """Minimal structural stand-in satisfying RentaExpenseObservationProtocol.
-
-    Used to exercise the zero-deductible false-fire guard: the production
-    deductibility evaluator never emits a zero-gross fact, but a fully
-    non-deductible category legitimately yields a zero ``deductible_amount`` on
-    a non-zero expense, which the screen must not flag.
-    """
-
-    modelo: Modelo
-    period: str
-    target_casilla_id: CasillaId
-    deductible_amount: Decimal
-
-
 def test_unsupported_renta_expense_does_not_flag_zero_deductible() -> None:
     """A zero-deductible observation routed to no binding must NOT false-fire.
 
@@ -391,12 +379,15 @@ def test_unsupported_renta_expense_does_not_flag_zero_deductible() -> None:
     snapshot = _modelo_100_2025_snapshot()
     revision = _single_expense_binding_revision(snapshot, "0186")
 
-    zero_unrouted = _ExpenseObservation(
-        modelo=Modelo.M100,
-        period="0A",
-        target_casilla_id=_M100_GASTO_OTROS_CONCEPTOS_CASILLA,
-        deductible_amount=Decimal("0"),
+    zero_unrouted = _expense_observation(
+        "tx-zero-ratio",
+        category=SpendingCategory.ASESORIA_FISCAL,
+        gross_amount=Decimal("121.00"),
+        taxable_base=Decimal("0"),
+        iva_amount=Decimal("121.00"),
     )
+    assert zero_unrouted.target_casilla_id == _M100_GASTO_OTROS_CONCEPTOS_CASILLA
+    assert zero_unrouted.deductible_amount == Decimal("0")
 
     result = unsupported_ledger_renta_expense_observations(revision, (zero_unrouted,))
     assert result == ()
