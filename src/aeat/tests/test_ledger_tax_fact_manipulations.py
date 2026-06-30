@@ -102,6 +102,7 @@ def test_base_iva_rederivation_at_21_10_4_routes_to_m303_soportado() -> None:
                 {
                     "raw": _raw(f"row-rate-{idx}", amount=gross, description=f"Compra al {rate}"),
                     "direction": TransactionDirection.OUTGOING,
+                    "group_label": None,
                     "business_classification": BusinessClassification.BUSINESS,
                     "source_jurisdiction": "ES",
                     "taxable_base": base,
@@ -134,6 +135,7 @@ def _deductible_total(*, classification: BusinessClassification, business_pct: D
         "direction": TransactionDirection.OUTGOING,
         "business_classification": classification,
         "source_jurisdiction": "ES",
+        "group_label": None,
         "category_id": _DEDUCTIBLE_CATEGORY.value,
         "taxable_base": Decimal("100.00"),
         "iva_rate": Decimal("0.21"),
@@ -177,6 +179,7 @@ def _income_observation_count(irpf_category: str) -> int:
         {
             "raw": _raw("row-income", amount=Decimal("1000.00"), description="Cobro cliente"),
             "direction": TransactionDirection.INCOMING,
+            "group_label": None,
             "business_classification": BusinessClassification.BUSINESS,
             "source_jurisdiction": "ES",
             "irpf_category": irpf_category,

@@ -204,6 +204,7 @@ def _evaluate_import_rows(
                 "rate_source": rate_source,
                 "rate_date": rate_date,
                 "source_jurisdiction": _source_jurisdiction_from_raw_fields(raw.raw_fields),
+                "group_label": None,
                 # D6: an imported row is freshly created at import time.
                 "created_at": stamped_at,
                 "modified_at": stamped_at,

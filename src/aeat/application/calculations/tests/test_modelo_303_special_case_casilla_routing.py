@@ -203,6 +203,7 @@ def _recargo_purchase() -> Transaction:
         transaction_id=derive_transaction_id(raw),
         raw=raw,
         direction=TransactionDirection.OUTGOING,
+        group_label=None,
         business_classification=BusinessClassification.BUSINESS,
         source_jurisdiction="ES",
         iva_category=IvaCategory.RECARGO_EQUIVALENCIA,

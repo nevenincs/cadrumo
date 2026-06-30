@@ -107,6 +107,7 @@ def _transaction(evidence_id: str) -> Transaction:
         {
             "raw": raw,
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
             "source_jurisdiction": "ES",
             "purchase_invoice_evidence_id": evidence_id,
         },

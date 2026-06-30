@@ -84,6 +84,7 @@ def _tx(
         "direction": direction,
         "business_classification": business_classification,
         "source_jurisdiction": "ES",
+        "group_label": None,
         "iva_category": iva_category,
         "lifecycle_state": lifecycle_state,
         "attachment_ids": attachment_ids,

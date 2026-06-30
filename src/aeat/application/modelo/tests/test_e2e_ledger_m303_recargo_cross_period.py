@@ -161,6 +161,7 @@ def _recargo_sale(
                 raw_fields={"source_kind": "ledger_transaction"},
             ),
             "direction": TransactionDirection.INCOMING,
+            "group_label": None,
             "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "category_id": "test_recargo_sale",

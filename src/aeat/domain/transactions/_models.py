@@ -850,7 +850,7 @@ class Transaction(BaseModel):
     # category): it is a personal organisational axis for working at scale
     # over thousands of rows. ``None`` means ungrouped. Length-bounded so a
     # grouped display stays legible.
-    group_label: str | None = Field(default=None, max_length=64)
+    group_label: str | None = Field(..., max_length=64)
     # Persistence-record lifecycle timestamps (ledger-interface-contract D6).
     # ``created_at`` is stamped once and carried verbatim through every later
     # edit; ``modified_at`` is re-stamped on every mutating edit

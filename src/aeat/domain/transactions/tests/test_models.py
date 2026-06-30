@@ -98,10 +98,10 @@ def test_transaction_id_hash_is_stable_for_same_identity_tuple() -> None:
     raw_b = _sample_raw(source_row_index=99, counterparty="Second counterparty")
 
     tx_a = Transaction.model_validate(
-        {"raw": raw_a, "direction": TransactionDirection.OUTGOING, "source_jurisdiction": "ES"},
+        {"raw": raw_a, "direction": TransactionDirection.OUTGOING, "group_label": None, "source_jurisdiction": "ES"},
     )
     tx_b = Transaction.model_validate(
-        {"raw": raw_b, "direction": TransactionDirection.OUTGOING, "source_jurisdiction": "ES"},
+        {"raw": raw_b, "direction": TransactionDirection.OUTGOING, "group_label": None, "source_jurisdiction": "ES"},
     )
 
     assert tx_a.transaction_id == tx_b.transaction_id
@@ -113,6 +113,7 @@ def test_direction_enum_round_trips_through_json() -> None:
         {
             "raw": _sample_raw(),
             "direction": TransactionDirection.INTERNAL_TRANSFER,
+            "group_label": None,
             "source_jurisdiction": "ES",
         },
     )
@@ -130,6 +131,7 @@ def test_business_pct_is_only_allowed_for_mixed_transactions() -> None:
             transaction_id="x" * 64,
             raw=_sample_raw(),
             direction=TransactionDirection.OUTGOING,
+            group_label=None,
             source_jurisdiction="ES",
             business_classification=BusinessClassification.BUSINESS,
             business_pct=Decimal("0.2"),
@@ -140,6 +142,7 @@ def test_business_pct_is_only_allowed_for_mixed_transactions() -> None:
             transaction_id="x" * 64,
             raw=_sample_raw(),
             direction=TransactionDirection.OUTGOING,
+            group_label=None,
             source_jurisdiction="ES",
             business_classification=BusinessClassification.MIXED,
             business_pct=Decimal("1.2"),
@@ -149,6 +152,7 @@ def test_business_pct_is_only_allowed_for_mixed_transactions() -> None:
         {
             "raw": _sample_raw(),
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
             "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.MIXED,
             "business_pct": Decimal("0.5"),
@@ -167,6 +171,7 @@ def test_transaction_tax_fields_are_typed_and_round_trip_through_json() -> None:
             # (the gross == base + iva consistency invariant on Transaction).
             "raw": _sample_raw(amount=Decimal("121.00")),
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
             "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "category_id": "office-supplies",
@@ -200,6 +205,7 @@ def test_transaction_lineage_fields_are_typed_and_round_trip_through_json() -> N
         {
             "raw": _sample_raw(),
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
             "source_jurisdiction": "ES",
             "created_by": "operator-A",
             "source_command": "aeat app ledger add",
@@ -244,6 +250,7 @@ def test_transaction_lifecycle_lineage_round_trips_through_json() -> None:
         {
             "raw": _sample_raw(),
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
             "source_jurisdiction": "ES",
             "lifecycle_state": TransactionLifecycleState.ARCHIVED,
             "lifecycle_lineage": (
@@ -275,6 +282,7 @@ def test_transaction_lifecycle_lineage_rejects_noop_transition() -> None:
             {
                 "raw": _sample_raw(),
                 "direction": TransactionDirection.OUTGOING,
+                "group_label": None,
                 "source_jurisdiction": "ES",
                 "lifecycle_state": TransactionLifecycleState.ACTIVE,
                 "lifecycle_lineage": (
@@ -298,6 +306,7 @@ def test_transaction_tax_fields_reject_negative_values_and_legacy_multi_purchase
             {
                 "raw": _sample_raw(),
                 "direction": TransactionDirection.OUTGOING,
+                "group_label": None,
                 "source_jurisdiction": "ES",
                 "taxable_base": Decimal("-1.00"),
             },
@@ -308,6 +317,7 @@ def test_transaction_tax_fields_reject_negative_values_and_legacy_multi_purchase
             {
                 "raw": _sample_raw(),
                 "direction": TransactionDirection.OUTGOING,
+                "group_label": None,
                 "source_jurisdiction": "ES",
                 "purchase_invoice_evidence_id": ("evidence-1", "evidence-2"),
             },
@@ -320,6 +330,7 @@ def test_classified_by_accepts_only_whitelisted_shapes() -> None:
         {
             "raw": _sample_raw(),
             "direction": TransactionDirection.INCOMING,
+            "group_label": None,
             "source_jurisdiction": "ES",
             "classified_by": "auto",
         },
@@ -328,6 +339,7 @@ def test_classified_by_accepts_only_whitelisted_shapes() -> None:
         {
             "raw": _sample_raw(),
             "direction": TransactionDirection.INCOMING,
+            "group_label": None,
             "source_jurisdiction": "ES",
             "classified_by": "manual",
         },
@@ -336,6 +348,7 @@ def test_classified_by_accepts_only_whitelisted_shapes() -> None:
         {
             "raw": _sample_raw(),
             "direction": TransactionDirection.INCOMING,
+            "group_label": None,
             "source_jurisdiction": "ES",
             "classified_by": "rule:vendor-map",
         },
@@ -344,6 +357,7 @@ def test_classified_by_accepts_only_whitelisted_shapes() -> None:
         {
             "raw": _sample_raw(),
             "direction": TransactionDirection.INCOMING,
+            "group_label": None,
             "source_jurisdiction": "ES",
             "classified_by": "derived:iva-category",
         },
@@ -359,6 +373,7 @@ def test_classified_by_accepts_only_whitelisted_shapes() -> None:
             {
                 "raw": _sample_raw(),
                 "direction": TransactionDirection.INCOMING,
+                "group_label": None,
                 "source_jurisdiction": "ES",
                 "classified_by": "rule:",
             },
@@ -369,6 +384,7 @@ def test_classified_by_accepts_only_whitelisted_shapes() -> None:
             {
                 "raw": _sample_raw(),
                 "direction": TransactionDirection.INCOMING,
+                "group_label": None,
                 "source_jurisdiction": "ES",
                 "classified_by": "derived:",
             },
@@ -379,6 +395,7 @@ def test_classified_by_accepts_only_whitelisted_shapes() -> None:
             {
                 "raw": _sample_raw(),
                 "direction": TransactionDirection.INCOMING,
+                "group_label": None,
                 "source_jurisdiction": "ES",
                 "classified_by": "bot",
             },
@@ -493,6 +510,7 @@ def test_source_jurisdiction_roundtrips_es_through_json() -> None:
         {
             "raw": _sample_raw(),
             "direction": TransactionDirection.INCOMING,
+            "group_label": None,
             "source_jurisdiction": "ES",
         },
     )
@@ -508,6 +526,7 @@ def test_source_jurisdiction_is_required_but_nullable() -> None:
         {
             "raw": _sample_raw(),
             "direction": TransactionDirection.INCOMING,
+            "group_label": None,
             "source_jurisdiction": None,
         },
     )
@@ -520,6 +539,7 @@ def test_source_jurisdiction_is_required_but_nullable() -> None:
             {
                 "raw": _sample_raw(),
                 "direction": TransactionDirection.INCOMING,
+                "group_label": None,
             },
         )
 
@@ -532,6 +552,7 @@ def test_source_jurisdiction_rejects_non_iso_alpha2_codes() -> None:
                 {
                     "raw": _sample_raw(),
                     "direction": TransactionDirection.INCOMING,
+                    "group_label": None,
                     "source_jurisdiction": invalid,
                 },
             )
@@ -543,8 +564,33 @@ def test_source_jurisdiction_normalises_surrounding_whitespace() -> None:
         {
             "raw": _sample_raw(),
             "direction": TransactionDirection.INCOMING,
+            "group_label": None,
             "source_jurisdiction": " FR ",
         },
     )
 
     assert txn.source_jurisdiction == "FR"
+
+
+def test_group_label_is_required_but_nullable() -> None:
+    """Rows must carry the grouping key, while explicit ungrouped remains valid."""
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(),
+            "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+        },
+    )
+    restored = Transaction.model_validate_json(original.model_dump_json())
+
+    assert restored == original
+    assert restored.group_label is None
+    with pytest.raises(ValidationError, match="Field required"):
+        Transaction.model_validate(
+            {
+                "raw": _sample_raw(),
+                "direction": TransactionDirection.INCOMING,
+                "source_jurisdiction": "ES",
+            },
+        )

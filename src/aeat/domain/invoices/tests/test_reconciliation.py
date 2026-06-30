@@ -111,6 +111,7 @@ def _transaction(
         "raw": raw,
         "direction": direction,
         "source_jurisdiction": "ES",
+        "group_label": None,
     }
     if invoice_id is not None:
         payload["invoice_id"] = invoice_id

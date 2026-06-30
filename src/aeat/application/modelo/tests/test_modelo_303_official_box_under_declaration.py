@@ -211,6 +211,7 @@ def _iva_transaction(
                 raw_fields={"source_kind": "ledger_transaction"},
             ),
             "direction": direction,
+            "group_label": None,
             "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "category_id": "test_iva_operation",
