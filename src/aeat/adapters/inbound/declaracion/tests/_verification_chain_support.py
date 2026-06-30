@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 
@@ -48,8 +49,16 @@ def _casilla_ids(*values: object) -> frozenset[CasillaId]:
 
 
 _M303_STATE_ATTRIBUTION_RATIO_CASILLA: CasillaId = _casilla_id("65")
+_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("27")
+_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("45")
+_M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-regimen-general")
 _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
     "iva.compensacion-pendiente-periodos-anteriores",
+)
+_M303_ENGINE_REQUIRED_CASILLAS: tuple[CasillaId, ...] = (
+    _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
+    _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
+    _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
 )
 _COMPUTED_CASILLAS_M130: frozenset[CasillaId] = _casilla_ids(
     "03",
@@ -174,6 +183,30 @@ def _build_m303_engine_result(pdf_stem: str, year: int, period: str):  # type: i
             f"  binding_values supplied: {sorted(binding_values)}",
         )
     return extracted, dict(result.values), inputs
+
+
+def _assert_m303_engine_matches_extracted_decimal(
+    *,
+    pdf_stem: str,
+    engine_values: Mapping[CasillaId, object],
+    extracted: Mapping[CasillaId, object],
+    casilla_id: CasillaId,
+    label: str,
+    formula_context: str,
+) -> Decimal:
+    engine_value = engine_values.get(casilla_id)
+    assert isinstance(engine_value, Decimal), (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine {label} missing or non-Decimal: {engine_value!r}"
+    )
+    extracted_value = extracted.get(casilla_id)
+    assert isinstance(extracted_value, Decimal), (
+        f"VERIFIED-FAIL [{pdf_stem}]: extracted {label} missing or non-Decimal: {extracted_value!r}"
+    )
+    assert engine_value == extracted_value, (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine {label} {engine_value!r} != extracted {extracted_value!r}\n"
+        f"  ({formula_context})"
+    )
+    return engine_value
 
 
 _COMPUTED_CASILLAS_M390: frozenset[CasillaId] = _casilla_ids(
