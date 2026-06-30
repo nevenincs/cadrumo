@@ -3,50 +3,49 @@ tags:
   - '#plan'
   - '#modelo-190-percepciones-count'
 date: '2026-06-25'
-modified: '2026-06-25'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-25-modelo-190-percepciones-count-adr]]'
   - '[[2026-06-25-modelo-190-percepciones-count-research]]'
 ---
+
 # `modelo-190-percepciones-count` plan
 
 ### Phase `P01` - Producer-clave precondition
 
 Prove the pull/import path supplies clave on every WithholdingObservation row so the distinct-(perceptor,clave) count cannot mis-count over a partially clave-less producer.
 
-
-
-- [ ] `P01.S01` - Verify the pull and import path populates clave on every WithholdingObservation row; `src/aeat/application/aggregation`.
-- [ ] `P01.S02` - Add a producer-clave gate test refusing a clave-less withholding row; `src/aeat/application/aggregation/tests`.
+- [x] `P01.S01` - Verify the pull and import path populates clave on every WithholdingObservation row; `src/aeat/application/aggregation`.
+- [x] `P01.S02` - Add a producer-clave gate test refusing a clave-less withholding row; `src/aeat/application/aggregation/tests`.
 
 ### Phase `P02` - Distinct-(perceptor,clave) count primitive
 
 Add a distinct (perceptor_tax_id, clave, subclave) count aggregation over the existing withholding detail, grounded against the Diseno registros tipo 2.
 
-- [ ] `P02.S03` - Add a distinct (perceptor, clave, subclave) count aggregation over the withholding source; `src/aeat/domain/calculations/registry/_withholding_bindings.py`.
-- [ ] `P02.S04` - Add grounded distinct-count tests where recurring quarters count once and two claves count twice; `src/aeat/domain/calculations/registry/tests`.
+- [x] `P02.S03` - Add a distinct (perceptor, clave, subclave) count aggregation over the withholding source; `src/aeat/domain/calculations/registry/_withholding_bindings.py`.
+- [x] `P02.S04` - Add grounded distinct-count tests where recurring quarters count once and two claves count twice; `src/aeat/domain/calculations/registry/tests`.
 
 ### Phase `P03` - Mesh enrollment (SWEEP-GATED)
 
 Enroll the withholding-count source on the live calc mesh so the M190 count is computed, not silently blank; executes post casilla-id sweep.
 
-- [ ] `P03.S05` - Enroll the withholding-count source in merge_source_resolutions and the owned-source set; `src/aeat/application/modelo/_calculation_actions.py`.
-- [ ] `P03.S06` - Update the resolver enrollment catalogue for the withholding-count source; `src/aeat/application/aggregation/tests/test_source_resolver_enrollment.py`.
+- [x] `P03.S05` - Enroll the withholding-count source in merge_source_resolutions and the owned-source set; `src/aeat/application/modelo/_calculation_actions.py`.
+- [x] `P03.S06` - Update the resolver enrollment catalogue for the withholding-count source; `src/aeat/application/aggregation/tests/test_source_resolver_enrollment.py`.
 
 ### Phase `P04` - M190 registry re-point (SWEEP-GATED)
 
 Re-point M190 decl.total-percepciones to the count binding and retire the nine op=sum percepciones relations; executes post casilla-id sweep.
 
-- [ ] `P04.S07` - Re-point M190 decl.total-percepciones to the count binding; `src/aeat/_data/registry/aeat/modelos/190/revisions/2024-y-siguientes`.
-- [ ] `P04.S08` - Retire the nine op=sum percepciones relations and drop their dependency entries; `src/aeat/_data/registry/aeat/modelos/190/revisions/2024-y-siguientes`.
+- [x] `P04.S07` - Re-point M190 decl.total-percepciones to the count binding; `src/aeat/_data/registry/aeat/modelos/190/revisions/2024-y-siguientes`.
+- [x] `P04.S08` - Retire the nine op=sum percepciones relations and drop their dependency entries; `src/aeat/_data/registry/aeat/modelos/190/revisions/2024-y-siguientes`.
 
 ### Phase `P05` - Gates
 
 Pull==calculate parity and distinct-count regression grounded in the Diseno, plus the full registry and aggregation suites green.
 
-- [ ] `P05.S09` - Add the pull equals calculate percepciones-count parity test; `src/aeat/application/calculations/tests`.
-- [ ] `P05.S10` - Add the distinct-count regression and run the full registry and aggregation suites; `src/aeat/application/aggregation/tests`.
+- [x] `P05.S09` - Add the pull equals calculate percepciones-count parity test; `src/aeat/application/calculations/tests`.
+- [x] `P05.S10` - Add the distinct-count regression and run the full registry and aggregation suites; `src/aeat/application/aggregation/tests`.
 
 ## Description
 
@@ -55,8 +54,9 @@ NIF, clave, subclave) records ("número de registros de tipo 2", per the bundled
 AEAT Diseño), replacing the current over-declaring sum of quarterly Modelo 111
 perceptor counts across nine claves. The fix counts over the EXISTING clave-bearing
 withholding detail (`WithholdingObservation` already carries clave/subclave +
-`per_perceptor_clave` grouping) and enrols that count on the calc mesh (the
-withholding source is deferred today). It does NOT touch the RET-1
+`per_perceptor_clave` grouping) and enrols that count on the calc mesh. At
+closeout the withholding source is enrolled; the prior deferred-source state is
+retired. It does NOT touch the RET-1
 `retenciones_aggregation` source (distinct-NIF, correct for M180/M193's "número de
 perceptores" but an under-count for M190's percepciones). Sub-decision: ship on the
 existing 2-char clave string; the `core` `RetencionClave` StrEnum is the separate
@@ -69,12 +69,6 @@ NOT run against the dirty tree. P01 (producer-clave precondition) and P02 (the c
 primitive + tests) are greenfield-ish and can land earlier on clean files.
 
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 
@@ -100,5 +94,8 @@ formula; (3) the withholding-count source is enrolled in `merge_source_resolutio
 `decl.total-percepciones` resolves from the count binding, the nine op=sum
 percepciones relations + their dependency entries are retired (no registry!=runtime
 drift), and the monetary `decl.percepciones-total` relations are unchanged; (5) a
-pull==calculate percepciones-count parity test passes. Every Step closed and the
-full registry + aggregation suites green.
+pull==calculate percepciones-count parity test passes. Every Step is closed; the
+focused M190-owned registry, aggregation, enrollment, and calculation gates are
+green. The broad registry + aggregation sweep remains red in the shared worktree
+from unrelated Modelo 100 registry/legal-ref failures, recorded in S10 rather than
+claimed as global green.
