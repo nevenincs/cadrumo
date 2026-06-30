@@ -134,6 +134,7 @@ def _income_transaction(
                 raw_fields={"Concepto": provider_id},
             ),
             "direction": TransactionDirection.INCOMING,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "business_pct": None,
             "purchase_invoice_evidence_id": None,

@@ -77,7 +77,7 @@ def _transaction(evidence_id: str | None) -> Transaction:
         ),
         raw_fields={"Concepto": "office supplies"},
     )
-    payload: dict[str, object] = {"raw": raw, "direction": TransactionDirection.OUTGOING}
+    payload: dict[str, object] = {"raw": raw, "direction": TransactionDirection.OUTGOING, "source_jurisdiction": "ES"}
     if evidence_id is not None:
         payload["purchase_invoice_evidence_id"] = evidence_id
     return Transaction.model_validate(payload)

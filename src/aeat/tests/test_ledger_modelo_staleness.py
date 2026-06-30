@@ -99,6 +99,7 @@ def _txn(*, taxable_base: Decimal) -> Transaction:
             "raw": raw,
             "direction": TransactionDirection.OUTGOING,
             "business_classification": BusinessClassification.BUSINESS,
+            "source_jurisdiction": "ES",
             "taxable_base": taxable_base,
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,

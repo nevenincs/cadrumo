@@ -200,6 +200,7 @@ def _income_transaction(period: str) -> Transaction:
                 raw_fields={"Concepto": f"factura {period}"},
             ),
             "direction": TransactionDirection.INCOMING,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "business_pct": None,
             "purchase_invoice_evidence_id": None,

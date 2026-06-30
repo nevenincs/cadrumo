@@ -74,6 +74,7 @@ def _transaction(
         "raw": _raw(provider_id, amount, description),
         "direction": TransactionDirection.OUTGOING,
         "business_classification": classification,
+        "source_jurisdiction": "ES",
     }
     if business_pct is not None:
         payload["business_pct"] = business_pct
@@ -330,18 +331,15 @@ def test_transaction_catalogue_preserves_source_jurisdiction_through_encrypted_s
     assert loaded_txn.source_jurisdiction == "ES"
 
 
-def test_transaction_catalogue_grandfathers_missing_source_jurisdiction_key(
+def test_transaction_catalogue_rejects_missing_source_jurisdiction_key(
     tmp_path: Path,
 ) -> None:
-    """A persisted envelope lacking source_jurisdiction must load with None.
+    """A persisted envelope lacking source_jurisdiction is not current schema.
 
-    Anti-tautology proof for the grandfather contract: surgically delete
+    Anti-tautology proof for the no-legacy contract: surgically delete
     the source_jurisdiction key from a previously-persisted envelope and
-    reload. The load must succeed with ``loaded.source_jurisdiction is
-    None`` because the field carries a None default — operator catalogues
-    written before the axis was introduced must continue to deserialise
-    cleanly. The original-with-ES catalogue must NOT equal the deleted-key
-    version, locking the field's identity contribution.
+    reload. The load must refuse the malformed record instead of silently
+    defaulting the regulatory source axis.
     """
 
     import json as _json
@@ -372,7 +370,7 @@ def test_transaction_catalogue_grandfathers_missing_source_jurisdiction_key(
         envelope = _json.loads(record.payload.decode("utf-8"))
         txn_dict = envelope["payload"]
         assert txn_dict.get("source_jurisdiction") == "ES", (
-            "fixture must serialise source_jurisdiction into the envelope for the grandfather proof to be meaningful"
+            "fixture must serialise source_jurisdiction into the envelope for the missing-key proof to be meaningful"
         )
         del txn_dict["source_jurisdiction"]
         profile.repository.save(
@@ -384,13 +382,10 @@ def test_transaction_catalogue_grandfathers_missing_source_jurisdiction_key(
             payload=_json.dumps(envelope).encode("utf-8"),
         )
 
-        loaded = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
-        loaded_txn = loaded.transactions[spanish_txn.transaction_id]
-        assert loaded_txn.source_jurisdiction is None
-        # Strict-inequality witness: the field carries identity weight at
-        # the model boundary, so the grandfathered catalogue must NOT
-        # equal the original ES-bearing catalogue.
-        assert loaded != original
+        with pytest.raises(StoredTransactionDriftError) as exc_info:
+            TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+        assert isinstance(exc_info.value.original_exception, ValidationError)
+        assert "source_jurisdiction" in str(exc_info.value.original_exception)
 
 
 def test_transaction_catalogue_preserves_group_label_through_encrypted_storage(
@@ -413,6 +408,7 @@ def test_transaction_catalogue_preserves_group_label_through_encrypted_storage(
                 "raw": _raw("provider-row-grp", Decimal("90.00"), "Billete tren Proyecto Acme"),
                 "direction": TransactionDirection.OUTGOING,
                 "business_classification": BusinessClassification.BUSINESS,
+                "source_jurisdiction": "ES",
                 "group_label": "Proyecto Acme",
             },
         )
@@ -448,6 +444,7 @@ def test_transaction_catalogue_grandfathers_missing_group_label_key(
                 "raw": _raw("provider-row-grp", Decimal("90.00"), "Billete tren Proyecto Acme"),
                 "direction": TransactionDirection.OUTGOING,
                 "business_classification": BusinessClassification.BUSINESS,
+                "source_jurisdiction": "ES",
                 "group_label": "Proyecto Acme",
             },
         )
@@ -510,6 +507,7 @@ def test_transaction_catalogue_preserves_nonnegative_amount_and_direction(
                 "raw": _raw("provider-row-transfer", Decimal("5000.00"), "Traspaso a cuenta de ahorro"),
                 "direction": TransactionDirection.INTERNAL_TRANSFER,
                 "business_classification": BusinessClassification.PERSONAL,
+                "source_jurisdiction": "ES",
             },
         )
         original = TransactionCatalogue.from_transactions([outgoing, transfer])
@@ -547,6 +545,7 @@ def test_transaction_catalogue_preserves_created_modified_at_through_encrypted_s
                 "raw": _raw("provider-row-ts", Decimal("77.00"), "Compra material oficina"),
                 "direction": TransactionDirection.OUTGOING,
                 "business_classification": BusinessClassification.BUSINESS,
+                "source_jurisdiction": "ES",
                 "created_at": created,
                 "modified_at": modified,
             },
@@ -589,6 +588,7 @@ def test_transaction_catalogue_rejects_missing_created_at_key(
                 "raw": _raw("provider-row-ts", Decimal("77.00"), "Compra material oficina"),
                 "direction": TransactionDirection.OUTGOING,
                 "business_classification": BusinessClassification.BUSINESS,
+                "source_jurisdiction": "ES",
                 "created_at": created,
                 "modified_at": modified,
             },

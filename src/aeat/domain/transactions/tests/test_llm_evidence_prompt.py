@@ -50,7 +50,9 @@ def _transaction() -> Transaction:
         ),
         raw_fields={"Concepto": "office supplies"},
     )
-    return Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
+    return Transaction.model_validate(
+        {"raw": raw, "direction": TransactionDirection.OUTGOING, "source_jurisdiction": "ES"},
+    )
 
 
 def test_evidence_text_is_injected_into_prompt() -> None:

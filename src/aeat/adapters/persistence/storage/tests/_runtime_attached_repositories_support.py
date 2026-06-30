@@ -317,7 +317,9 @@ def _transaction(label: str) -> Transaction:
         ),
         raw_fields={"Concepto": f"runtime attached repository {label}"},
     )
-    return Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
+    return Transaction.model_validate(
+        {"raw": raw, "direction": TransactionDirection.OUTGOING, "source_jurisdiction": "ES"},
+    )
 
 
 def _asset(identifier: str) -> AssetRecord:

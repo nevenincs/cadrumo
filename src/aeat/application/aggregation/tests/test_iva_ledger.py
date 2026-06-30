@@ -117,6 +117,7 @@ def _transaction(
                 currency=currency,
             ),
             "direction": direction,
+            "source_jurisdiction": "ES",
             "business_classification": business_classification,
             "business_pct": business_pct,
             "taxable_base": taxable_base,

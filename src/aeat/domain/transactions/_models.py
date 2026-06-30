@@ -792,8 +792,8 @@ class Transaction(BaseModel):
             foreign-source). Drives the IRNR scope filter (non-resident
             profiles only emit Spanish-source rows into AEAT bases) and
             the Art. 93 LIRPF Beckham filter (impatriado IRPF base
-            excludes foreign-source rows). ``None`` grandfathers rows
-            authored before the axis was introduced.
+            excludes foreign-source rows). ``None`` records an explicitly
+            unknown jurisdiction.
         created_at: UTC-aware timestamp stamped once at construction and
             carried verbatim through every later edit.
         modified_at: UTC-aware timestamp re-stamped on every mutating edit.
@@ -844,7 +844,7 @@ class Transaction(BaseModel):
     # strict-frozen JSON persistence boundary.
     rate_source: str | None = None
     rate_date: str | None = None
-    source_jurisdiction: str | None = None
+    source_jurisdiction: str | None
     # Operator-assigned free-text grouping label (e.g. "Proyecto Acme",
     # "Q1 viajes"). Orthogonal to category_id (the regulatory spending
     # category): it is a personal organisational axis for working at scale
@@ -958,8 +958,8 @@ class Transaction(BaseModel):
 
         Carries the regulatory-source axis (Spanish-source vs foreign-source)
         through every ledger boundary. Required for IRNR scope enforcement and
-        for the Art. 93 LIRPF impatriado base filter; ``None`` grandfathers
-        rows that pre-date the axis.
+        for the Art. 93 LIRPF impatriado base filter; ``None`` means the
+        current record explicitly declares the jurisdiction unknown.
         """
         if value is None:
             return None

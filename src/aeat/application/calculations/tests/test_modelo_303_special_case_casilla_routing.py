@@ -204,6 +204,7 @@ def _recargo_purchase() -> Transaction:
         raw=raw,
         direction=TransactionDirection.OUTGOING,
         business_classification=BusinessClassification.BUSINESS,
+        source_jurisdiction="ES",
         iva_category=IvaCategory.RECARGO_EQUIVALENCIA,
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("0.21"),

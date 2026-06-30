@@ -65,7 +65,9 @@ def _transaction() -> Transaction:
         ),
         raw_fields={"Concepto": "client lunch"},
     )
-    return Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
+    return Transaction.model_validate(
+        {"raw": raw, "direction": TransactionDirection.OUTGOING, "source_jurisdiction": "ES"},
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -58,6 +58,7 @@ def test_all_none_tax_substrate_validates() -> None:
         {
             "raw": _raw(amount=Decimal("121.00")),
             "direction": TransactionDirection.OUTGOING,
+            "source_jurisdiction": "ES",
         },
     )
     assert tx.taxable_base is None
@@ -70,6 +71,7 @@ def test_consistent_triple_validates_against_magnitude_gross() -> None:
         {
             "raw": _raw(amount=Decimal("121.00")),
             "direction": TransactionDirection.OUTGOING,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "taxable_base": Decimal("100.00"),
             "iva_rate": Decimal("0.21"),
@@ -92,6 +94,7 @@ def test_professional_income_net_of_irpf_withholding_validates() -> None:
         {
             "raw": _raw(amount=Decimal("2120.00")),
             "direction": TransactionDirection.INCOMING,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "taxable_base": Decimal("2000.00"),
             "iva_rate": Decimal("0.21"),
@@ -118,6 +121,7 @@ def test_professional_service_expense_paid_net_of_irpf_withholding_validates() -
         {
             "raw": _raw(amount=Decimal("1060.00")),
             "direction": TransactionDirection.OUTGOING,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "category_id": "asesoria_fiscal",
             "taxable_base": Decimal("1000.00"),
@@ -147,6 +151,7 @@ def test_activity_income_base_cash_is_not_inferred_as_iva_sized_withholding() ->
             {
                 "raw": _raw(amount=Decimal("2000.00")),
                 "direction": TransactionDirection.INCOMING,
+                "source_jurisdiction": "ES",
                 "business_classification": BusinessClassification.BUSINESS,
                 "taxable_base": Decimal("2000.00"),
                 "iva_rate": Decimal("0.21"),
@@ -163,6 +168,7 @@ def test_professional_service_base_cash_is_not_inferred_as_iva_sized_withholding
             {
                 "raw": _raw(amount=Decimal("1000.00")),
                 "direction": TransactionDirection.OUTGOING,
+                "source_jurisdiction": "ES",
                 "business_classification": BusinessClassification.BUSINESS,
                 "category_id": "asesoria_fiscal",
                 "taxable_base": Decimal("1000.00"),
@@ -185,6 +191,7 @@ def test_rent_expense_paid_net_of_withholding_validates() -> None:
         {
             "raw": _raw(amount=Decimal("1020.00")),
             "direction": TransactionDirection.OUTGOING,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "category_id": "arrendamiento_local",
             "taxable_base": Decimal("1000.00"),
@@ -209,6 +216,7 @@ def test_rent_expense_paid_net_requires_irpf_category() -> None:
             {
                 "raw": _raw(amount=Decimal("1020.00")),
                 "direction": TransactionDirection.OUTGOING,
+                "source_jurisdiction": "ES",
                 "business_classification": BusinessClassification.BUSINESS,
                 "category_id": "arrendamiento_local",
                 "taxable_base": Decimal("1000.00"),
@@ -225,6 +233,7 @@ def test_rent_expense_paid_net_requires_rental_irpf_category() -> None:
             {
                 "raw": _raw(amount=Decimal("1020.00")),
                 "direction": TransactionDirection.OUTGOING,
+                "source_jurisdiction": "ES",
                 "business_classification": BusinessClassification.BUSINESS,
                 "category_id": "arrendamiento_local",
                 "taxable_base": Decimal("1000.00"),
@@ -242,6 +251,7 @@ def test_outgoing_irpf_category_does_not_relax_non_rent_expense_gross() -> None:
             {
                 "raw": _raw(amount=Decimal("1020.00")),
                 "direction": TransactionDirection.OUTGOING,
+                "source_jurisdiction": "ES",
                 "business_classification": BusinessClassification.BUSINESS,
                 "category_id": "material_oficina",
                 "taxable_base": Decimal("1000.00"),
@@ -259,6 +269,7 @@ def test_activity_irpf_category_does_not_relax_non_professional_expense_gross() 
             {
                 "raw": _raw(amount=Decimal("1020.00")),
                 "direction": TransactionDirection.OUTGOING,
+                "source_jurisdiction": "ES",
                 "business_classification": BusinessClassification.BUSINESS,
                 "category_id": "material_oficina",
                 "taxable_base": Decimal("1000.00"),
@@ -276,6 +287,7 @@ def test_invoice_gross_above_cash_without_irpf_category_is_rejected() -> None:
             {
                 "raw": _raw(amount=Decimal("2120.00")),
                 "direction": TransactionDirection.INCOMING,
+                "source_jurisdiction": "ES",
                 "business_classification": BusinessClassification.BUSINESS,
                 "taxable_base": Decimal("2000.00"),
                 "iva_rate": Decimal("0.21"),
@@ -291,6 +303,7 @@ def test_work_irpf_category_does_not_relax_professional_invoice_gross() -> None:
             {
                 "raw": _raw(amount=Decimal("2120.00")),
                 "direction": TransactionDirection.INCOMING,
+                "source_jurisdiction": "ES",
                 "business_classification": BusinessClassification.BUSINESS,
                 "taxable_base": Decimal("2000.00"),
                 "iva_rate": Decimal("0.21"),
@@ -307,6 +320,7 @@ def test_irpf_category_does_not_accept_understated_invoice_gross() -> None:
             {
                 "raw": _raw(amount=Decimal("2420.00")),
                 "direction": TransactionDirection.INCOMING,
+                "source_jurisdiction": "ES",
                 "business_classification": BusinessClassification.BUSINESS,
                 "taxable_base": Decimal("2000.00"),
                 "iva_rate": Decimal("0.21"),
@@ -323,6 +337,7 @@ def test_drifted_triple_is_rejected() -> None:
             {
                 "raw": _raw(amount=Decimal("121.00")),
                 "direction": TransactionDirection.OUTGOING,
+                "source_jurisdiction": "ES",
                 "business_classification": BusinessClassification.BUSINESS,
                 "taxable_base": Decimal("100.00"),
                 "iva_rate": Decimal("0.21"),
@@ -337,6 +352,7 @@ def test_base_present_but_iva_absent_validates() -> None:
         {
             "raw": _raw(amount=Decimal("121.00")),
             "direction": TransactionDirection.OUTGOING,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "taxable_base": Decimal("100.00"),
         },
@@ -358,6 +374,7 @@ def test_invariant_uses_native_raw_amount_not_value_in_eur() -> None:
         {
             "raw": _raw(amount=Decimal("100.00"), currency="USD"),
             "direction": TransactionDirection.OUTGOING,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "fx_rate": Decimal("1.10"),
             "value_in_eur": Decimal("110.00"),
@@ -381,6 +398,7 @@ def test_invariant_against_native_amount_rejects_eur_split() -> None:
             {
                 "raw": _raw(amount=Decimal("100.00"), currency="USD"),
                 "direction": TransactionDirection.OUTGOING,
+                "source_jurisdiction": "ES",
                 "business_classification": BusinessClassification.BUSINESS,
                 "fx_rate": Decimal("1.10"),
                 "value_in_eur": Decimal("110.00"),

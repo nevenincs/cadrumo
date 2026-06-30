@@ -121,6 +121,7 @@ def _inbound_tx(
         {
             "raw": _raw(provider_id, amount=amount, direction=direction),
             "direction": direction,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "taxable_base": taxable_base,
             "iva_rate": iva_rate,

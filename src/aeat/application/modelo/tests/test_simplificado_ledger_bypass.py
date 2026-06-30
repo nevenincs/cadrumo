@@ -100,6 +100,7 @@ def _blocking_transaction() -> Transaction:
             # BusinessClassification.NOT_YET_PROCESSED → not in _CLASSIFIED_TAX_STATES →
             # preflight raises MISSING_BUSINESS_CLASSIFICATION for this bucket.
             "direction": TransactionDirection.OUTGOING,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.NOT_YET_PROCESSED,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
         },

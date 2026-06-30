@@ -76,6 +76,7 @@ def _tx(
         {
             "raw": raw,
             "direction": TransactionDirection.OUTGOING,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "taxable_base": taxable_base,
             "iva_rate": Decimal("0.21"),

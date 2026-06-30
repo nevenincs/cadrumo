@@ -110,6 +110,7 @@ def _transaction(
     payload: dict[str, object] = {
         "raw": raw,
         "direction": direction,
+        "source_jurisdiction": "ES",
     }
     if invoice_id is not None:
         payload["invoice_id"] = invoice_id

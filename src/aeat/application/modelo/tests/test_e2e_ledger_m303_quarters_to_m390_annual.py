@@ -216,6 +216,7 @@ def _iva_transaction(
         ),
         "direction": direction,
         "business_classification": BusinessClassification.BUSINESS,
+        "source_jurisdiction": "ES",
         "category_id": "test_iva_operation",
         "taxable_base": taxable_base,
         "iva_rate": iva_rate,

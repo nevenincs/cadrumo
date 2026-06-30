@@ -141,6 +141,7 @@ def _intracom_ledger_transaction(provider_id: str) -> Transaction:
             "raw": _raw_transaction(provider_id, booked_date=date(2026, 2, 10), amount=Decimal("1000.00")),
             "direction": TransactionDirection.INCOMING,
             "business_classification": BusinessClassification.BUSINESS,
+            "source_jurisdiction": "ES",
             "category_id": "intracom_supply",
             "taxable_base": Decimal("1000.00"),
             "iva_rate": Decimal("0"),
