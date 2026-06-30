@@ -76,6 +76,37 @@ profiles can be shown by label, but not by UUID. That leaves S14 open for the
 by-id command-family sweep and conflicts with the resolver contract that
 inspection callers may include tombstoned profiles by UUID.
 
+### m303-seed-help-rereview | low | M303 wording correction is review-clear
+
+Corrective commit `5abb0081e` resolves the M303 seed-help overclaim. The
+Catalan and Hungarian `seed_help` entries now state that `--amount 0` declares a
+zero opening balance, including prior-filer cases where the last M303 left no
+pending compensation, and separately state that automatic `first_period_zero`
+is independent of `seed` and proven during calculation and reconciliation from
+activity-start and registry conditions. The re-review found no placeholder,
+YAML, or formatting issue.
+
+### ledger-diagnostics-direction | medium | verified re-import diagnostics lost duplicate signal
+
+Corrective commit `34873aa5a` resolves the original high data-loss and
+raw-provider-boundary blockers, but it regresses verified re-import diagnostics.
+The persisted import path stamps direction-qualified fingerprints, while
+`import_ledger_with_diagnostics` in `src/aeat/application/transactions/_import.py`
+still receives only raw rows and recomputes fingerprints without parsed
+direction. The ledger import path in `src/aeat/application/ledger/_actions_import.py`
+passes `tuple(parsed.raw for parsed in parsed_rows)`, so existing duplicate
+diagnostics coverage in `src/aeat/application/ledger/tests/test_actions_review_query_imports.py`
+now reports only `gap`, not `duplicate`.
+
+### profile-inspect-stale-active | medium | stale tombstoned active profile blocks inspect commands
+
+Corrective commit `5083d57e6` fixes live app routing and baseline tombstoned
+`config profile show <uuid>` parity, but a stale active profile environment
+variable or pointer that names a tombstoned UUID is refused by the root callback
+before `config profile show <label|uuid>` can reach its tombstone-aware inspect
+resolver. Live app commands should still refuse tombstoned active UUIDs, but the
+read-only inspect surface must remain reachable.
+
 ## Recommendations
 
 - Do not close W02.P03 until the M303 seed help text distinguishes declaration of
@@ -83,7 +114,9 @@ inspection callers may include tombstoned profiles by UUID.
   exec records tie the no-change code finding to RAG and test evidence.
 - Do not close W02.P04 until canonical ledger exports are kept out of the raw
   bank-provider import path, dedup fingerprints include the missing financial
-  discriminators, and unsupported-source diagnostics render the source path.
+  discriminators, unsupported-source diagnostics render the source path, and
+  verified re-import diagnostics retain duplicate reporting.
 - Do not close W02.P05 until active-profile UUID routing applies the tombstone
-  filter and `config profile show <uuid>` has real CLI coverage for tombstoned
-  inspection.
+  filter, `config profile show <uuid>` has real CLI coverage for tombstoned
+  inspection, and stale tombstoned active profiles do not block explicit
+  read-only profile inspection.
