@@ -26,6 +26,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core.aggregation import IntracomOperationType
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -89,6 +90,7 @@ def build_catalogue_invoice(
     payment_status: PaymentStatus = PaymentStatus.PENDING,
     notes: str = "",
     iva_category: IvaCategory | None = None,
+    operation_type: IntracomOperationType | None = None,
 ) -> Invoice:
     """Return a strict rich :class:`Invoice` from operator-supplied fields.
 
@@ -98,10 +100,9 @@ def build_catalogue_invoice(
     no linked transactions yet — ``link --invoice-id`` populates them later.
 
     ``iva_category`` carries the intra-community classification the M349
-    recapitulative resolver reads to derive a transaction's clave (E/A/T); it
-    is the calculation-feeding companion to the slim record's free-text
-    ``operation_type``. When ``None`` the invoice is treated as a domestic
-    operation and does not contribute to M349.
+    recapitulative resolver reads for historical goods/triangulation records.
+    ``operation_type`` carries the explicit Modelo 349 clave for invoice
+    records that need a key not represented by an IVA category.
     """
     from ...domain.invoices import iva_rate_percentage
 
@@ -143,6 +144,8 @@ def build_catalogue_invoice(
     }
     if iva_category is not None:
         invoice_payload["iva_category"] = iva_category.value
+    if operation_type is not None:
+        invoice_payload["operation_type"] = operation_type.value
     return Invoice.model_validate(invoice_payload)
 
 
@@ -161,6 +164,7 @@ def create_catalogue_invoice(
     payment_status: PaymentStatus = PaymentStatus.PENDING,
     notes: str = "",
     iva_category: IvaCategory | None = None,
+    operation_type: IntracomOperationType | None = None,
     repository: InvoiceCatalogueRepositoryProtocol | None = None,
 ) -> CatalogueInvoiceCreateResult:
     """Persist one rich catalogue :class:`Invoice` and return the updated catalogue.
@@ -186,6 +190,7 @@ def create_catalogue_invoice(
         payment_status=payment_status,
         notes=notes,
         iva_category=iva_category,
+        operation_type=operation_type,
     )
     catalogue = repo.load()
     if invoice.invoice_id in catalogue:

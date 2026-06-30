@@ -517,6 +517,18 @@ class OperationKind349(StrEnum):
     TRIANGULAR = "triangular"  # clave T
 
 
+class IntracomOperationType(StrEnum):
+    """Modelo 349 operation-key letters carried by invoice records."""
+
+    E = "E"
+    S = "S"
+    T = "T"
+    R = "R"
+    A = "A"
+    ADQUISICION_SERVICIOS = "I"
+    M = "M"
+
+
 class ForeignAssetClass(StrEnum):
     """Modelo 720 asset classes (clave de tipo de bien).
 
