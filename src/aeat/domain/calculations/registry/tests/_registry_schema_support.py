@@ -159,6 +159,10 @@ _SNAPSHOT_HEADER_EXPECTATIONS = (
 _EXPECTED_LIVE_CROSS_REFERENCES = frozenset({"modelo-130-static-official", "modelo-130-filed-declarations-read"})
 
 _EXPECTED_DEADLINE_WINDOWS = (
+    "modelo-130-2024-1t",
+    "modelo-130-2024-2t",
+    "modelo-130-2024-3t",
+    "modelo-130-2024-4t",
     "modelo-130-2025-1t",
     "modelo-130-2025-2t",
     "modelo-130-2025-3t",
