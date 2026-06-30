@@ -1,3 +1,18 @@
+"""Auxiliary modelo payload schemas split from the main modelo registry.
+
+These strict :class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclasses
+are registered through :func:`~aeat.entrypoints.cli._schemas.register_schema`
+and re-exported by :mod:`aeat.entrypoints.cli._modelo_payloads` so audit,
+work-history, workflow-run, list, and describe emitters keep one payload import
+surface. Validated results enter
+:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:func:`~aeat.entrypoints.cli._common._emit_envelope`.
+
+The application/modelo, workflow, and audit services remain authoritative for
+evidence-bundle manifests, work-unit event history, workflow runs, and modelo
+catalogue metadata; this module only pins CLI transport shapes.
+"""
+
 from __future__ import annotations
 
 from ._schemas import OutputSchema, register_schema
