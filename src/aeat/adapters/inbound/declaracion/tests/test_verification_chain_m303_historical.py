@@ -10,17 +10,15 @@ from ._verification_chain_support import (
     _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
     _M303_ENGINE_REQUIRED_CASILLAS,
     _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
-    FIXTURES_DIR,
     BindingId,
-    CasillaId,
     Decimal,
-    DeclaracionParseError,
     RegistryValidationError,
     _assert_m303_engine_matches_extracted_decimal,
+    _decimal_inputs_from_extracted_values,
+    _parse_extracted_declaracion_values,
     _registry_snapshot,
     calculate_registry_snapshot,
     date,
-    parse_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -57,21 +55,7 @@ def test_verification_chain_m303_historical_engine_recomputes_resultado_regimen_
     historical specimens (2021-2022). Corpus-regenerated with
     formula-consistent synthetic values.
     """
-    pdf_path = FIXTURES_DIR / "justificantes" / "303" / f"{pdf_stem}.pdf"
-
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override="303",
-            año_override=year,
-            period_override=period,
-        )
-    except DeclaracionParseError as exc:
-        pytest.fail(
-            f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised - M303 legacy extraction failed.\n  error: {exc}",
-        )
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+    extracted = _parse_extracted_declaracion_values(modelo="303", fixture_stem=pdf_stem, year=year, period=period)
 
     for required_id in _M303_ENGINE_REQUIRED_CASILLAS:
         assert required_id in extracted, (
@@ -79,13 +63,10 @@ def test_verification_chain_m303_historical_engine_recomputes_resultado_regimen_
             f"  got: {sorted(extracted)}"
         )
 
-    inputs: dict[CasillaId, Decimal] = {}
-    for casilla_id, value in extracted.items():
-        if casilla_id in _COMPUTED_CASILLAS_M303 and casilla_id not in _DR303_PROJECTION_CASILLAS:
-            continue
-        if not isinstance(value, Decimal):
-            continue
-        inputs[casilla_id] = value
+    inputs = _decimal_inputs_from_extracted_values(
+        extracted,
+        excluding=_COMPUTED_CASILLAS_M303 - _DR303_PROJECTION_CASILLAS,
+    )
 
     _extracted_comp = extracted.get(_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA, Decimal("0"))
     _comp = _extracted_comp if isinstance(_extracted_comp, Decimal) else Decimal("0")
