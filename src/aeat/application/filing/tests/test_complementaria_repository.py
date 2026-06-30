@@ -54,19 +54,20 @@ def _make_amendment(*, amendment_id: str = "amend-001") -> ModeloComplementaria:
         ),
     )
     _period = Period.from_year_and_code(2026, "1T")
+    snapshot_ref = _snapshot_ref(modelo="130", period=_period, schema_version="test-schema-v1")
     amended_draft = ModeloDraft(
         draft_id=compute_modelo_draft_id(
             modelo="130",
             period=_period,
             profile_tax_id="00000000T",
-            schema_version="test-schema-v1",
+            snapshot_ref=snapshot_ref,
             values=values,
         ),
         modelo="130",
         period=_period,
         profile_tax_id="00000000T",
         subject_tax_id="00000000T",
-        snapshot_ref=_snapshot_ref(modelo="130", period=_period, schema_version="test-schema-v1"),
+        snapshot_ref=snapshot_ref,
         status=ModeloDraftStatus.VALIDADO,
         values=values,
         created_at=now,

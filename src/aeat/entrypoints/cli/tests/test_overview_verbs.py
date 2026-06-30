@@ -226,11 +226,12 @@ def _minimal_stored_draft(
         ),
     )
     schema_version = "overview-period-filter-test"
+    snapshot_ref = _snapshot_ref(modelo=modelo, period=period, schema_version=schema_version)
     draft_id = compute_modelo_draft_id(
         modelo=modelo,
         period=period,
         profile_tax_id="00000000T",
-        schema_version=schema_version,
+        snapshot_ref=snapshot_ref,
         values=values,
     )
     return ModeloDraft(
@@ -239,7 +240,7 @@ def _minimal_stored_draft(
         period=period,
         profile_tax_id="00000000T",
         subject_tax_id="00000000T",
-        snapshot_ref=_snapshot_ref(modelo=modelo, period=period, schema_version=schema_version),
+        snapshot_ref=snapshot_ref,
         status=ModeloDraftStatus.BORRADOR,
         values=values,
         created_at=now,
