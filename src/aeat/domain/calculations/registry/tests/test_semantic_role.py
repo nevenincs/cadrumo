@@ -286,6 +286,18 @@ class TestTypoTwinWarning:
                 "is_deduccion_di_interna_rdleg_pendiente",
             ),
             (
+                "200",
+                "2024-y-siguientes",
+                "03396",
+                "is_correccion_otras_correcciones_resultado_permanente_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03397",
+                "is_correccion_otras_correcciones_resultado_temporaria_ejercicio_disminucion",
+            ),
+            (
                 "100",
                 "2020",
                 "1171",
@@ -507,6 +519,8 @@ class TestTypoTwinWarning:
             "irpf_anexo_c_exceso_sps_rg_aportaciones_aplicado",
             "is_deduccion_di_internacional_rdleg_pendiente",
             "is_deduccion_di_interna_rdleg_pendiente",
+            "is_correccion_otras_correcciones_resultado_permanente_disminucion",
+            "is_correccion_otras_correcciones_resultado_temporaria_ejercicio_disminucion",
             "irpf_deduccion_c_valenciana_ayudas_publicas_generalitat_2020",
             "irpf_num_hijos_maternidad_2020",
             "irpf_incremento_maternidad_no_aplicado_2020",
@@ -725,21 +739,6 @@ class TestTypoTwinWarning:
             _emit_semantic_role_typo_twin_warnings([m])
         assert captured == []
 
-    def test_scope_token_sibling_roles_do_not_warn_as_typos(self) -> None:
-        detalle = _casilla(
-            cid="a",
-            semantic_role="is_correccion_detalle_correcciones_resultado_permanente_disminucion",
-        )
-        otras = _casilla(
-            cid="b",
-            semantic_role="is_correccion_otras_correcciones_resultado_permanente_disminucion",
-        )
-        m = _registry_modelo("200", "2024-y-siguientes", [detalle, otras])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
-
     def test_numeric_window_tokens_are_not_axis_tokens(self) -> None:
         assert (
             semantic_roles_are_axis_siblings(
@@ -763,6 +762,15 @@ class TestTypoTwinWarning:
             semantic_roles_are_axis_siblings(
                 "is_deduccion_di_interna_rdleg_pendiente",
                 "is_deduccion_di_internacional_rdleg_pendiente",
+            )
+            is False
+        )
+
+    def test_detail_other_tokens_are_not_axis_tokens(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "is_correccion_detalle_correcciones_resultado_permanente_disminucion",
+                "is_correccion_otras_correcciones_resultado_permanente_disminucion",
             )
             is False
         )
