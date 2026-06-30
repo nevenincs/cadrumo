@@ -31,7 +31,7 @@ Build a current, append-only inventory of persona roots, transcripts, final summ
 Classify dirty files, concurrent agent ownership, and safe assignment boundaries before any worker mutates code.
 
 - [x] `W01.P02.S04` - Classify shared worktree dirty files and active ownership before assignment; `.`.
-- [ ] `W01.P02.S05` - Brief worker agents with RAG no-fallback and worktree-safety constraints; `agent orchestration`.
+- [x] `W01.P02.S05` - Brief worker agents with RAG no-fallback and worktree-safety constraints; `agent orchestration`.
 
 ## Wave `W02` - P0 calculation and data-safety hardening
 

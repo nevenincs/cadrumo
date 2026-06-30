@@ -20,6 +20,7 @@ related:
   - '[[2026-06-30-cli-persona-testimonials-W01-P01-S02]]'
   - '[[2026-06-30-cli-persona-testimonials-W01-P01-S03]]'
   - '[[2026-06-30-cli-persona-testimonials-W01-P02-S04]]'
+  - '[[2026-06-30-cli-persona-testimonials-W01-P02-S05]]'
   - '[[2026-06-30-cli-persona-testimonials-plan]]'
 ---
 
@@ -49,6 +50,7 @@ Auto-generated index of all documents tagged with `#cli-persona-testimonials`.
 - `2026-06-30-cli-persona-testimonials-W01-P01-S02` - Reconcile testimonial closeout ledger against the vault audit trail
 - `2026-06-30-cli-persona-testimonials-W01-P01-S03` - Record the current campaign tracker as the canonical wave schedule
 - `2026-06-30-cli-persona-testimonials-W01-P02-S04` - Classify shared worktree dirty files and active ownership before assignment
+- `2026-06-30-cli-persona-testimonials-W01-P02-S05` - Brief worker agents with RAG no-fallback and worktree-safety constraints
 
 ### plan
 
