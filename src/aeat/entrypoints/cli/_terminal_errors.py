@@ -1,6 +1,6 @@
 """Terminal exception handling for the root ``aeat`` dispatch.
 
-Typer's standalone ``main`` renders every :class:`ClickException` (usage
+Typer's standalone ``main`` renders every :class:`click.ClickException` (usage
 errors, bad parameters, unknown options) as Rich text and lets unexpected
 exceptions escape as raw Python tracebacks. Under ``--format json`` that
 meant the shared-spine error document (``schema_version`` / ``command`` /
@@ -8,8 +8,9 @@ meant the shared-spine error document (``schema_version`` / ``command`` /
 cli-envelope-notice-standardisation ADR never appeared on any parse-time
 or crash failure — automation read prose, an empty stdout, or a traceback.
 
-:func:`run_standalone_with_error_contract` re-implements the standalone
-terminal handling around a non-standalone dispatch:
+:func:`~aeat.entrypoints.cli._terminal_errors.run_standalone_with_error_contract`
+re-implements the standalone terminal handling around a non-standalone
+dispatch:
 
 - **Usage / Click errors** (either Click runtime's exception classes —
   Typer vendors its own fork under ``typer._click``): when the parse-time
