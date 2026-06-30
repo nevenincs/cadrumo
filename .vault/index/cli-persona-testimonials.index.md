@@ -42,8 +42,15 @@ related:
   - '[[2026-06-30-cli-persona-testimonials-W04-P09-S24]]'
   - '[[2026-06-30-cli-persona-testimonials-W04-P09-S25]]'
   - '[[2026-06-30-cli-persona-testimonials-W04-P09-S26]]'
+  - '[[2026-06-30-cli-persona-testimonials-W05-P10-S27]]'
+  - '[[2026-06-30-cli-persona-testimonials-W05-P10-S28]]'
+  - '[[2026-06-30-cli-persona-testimonials-W05-P10-S29]]'
+  - '[[2026-06-30-cli-persona-testimonials-W05-P11-S30]]'
+  - '[[2026-06-30-cli-persona-testimonials-W05-P11-S31]]'
+  - '[[2026-06-30-cli-persona-testimonials-W05-P11-S32]]'
   - '[[2026-06-30-cli-persona-testimonials-audit]]'
   - '[[2026-06-30-cli-persona-testimonials-plan]]'
+  - '[[2026-06-30-cli-persona-testimonials-w05-closure-audit]]'
 ---
 
 # `cli-persona-testimonials` feature index
@@ -61,6 +68,7 @@ Auto-generated index of all documents tagged with `#cli-persona-testimonials`.
 - `2026-05-20-cli-persona-testimonials-audit` - `cli-persona-testimonials` audit: `cli-operator-persona-testimonial-audit`
 - `2026-05-21-cli-persona-testimonials-audit` - `cli-persona-testimonials` audit: `errorcode-message-key-translation-gap`
 - `2026-06-30-cli-persona-testimonials-audit` - `cli-persona-testimonials` audit: `W02 worker code review`
+- `2026-06-30-cli-persona-testimonials-w05-closure-audit` - `cli-persona-testimonials` audit: W05 checkpoint closure
 
 ### exec
 
@@ -95,6 +103,12 @@ Auto-generated index of all documents tagged with `#cli-persona-testimonials`.
 - `2026-06-30-cli-persona-testimonials-W04-P09-S24` - W04.P09.S24 Modelo 303 Compensation And Devolucion Legal Wording
 - `2026-06-30-cli-persona-testimonials-W04-P09-S25` - W04.P09.S25 EU VAT Advisory And Foreign-Currency IVA Diagnostics
 - `2026-06-30-cli-persona-testimonials-W04-P09-S26` - W04.P09.S26 Calculation Registry Legal-Source Bundle Verification
+- `2026-06-30-cli-persona-testimonials-W05-P10-S27` - W05.P10.S27 Touched-Surface Calculation And CLI Gates
+- `2026-06-30-cli-persona-testimonials-W05-P10-S28` - W05.P10.S28 Owner-Aware Full-Tree Gate Classification
+- `2026-06-30-cli-persona-testimonials-W05-P10-S29` - W05.P10.S29 Vault Plan And Schema Checks
+- `2026-06-30-cli-persona-testimonials-W05-P11-S30` - W05.P11.S30 Closure Audit
+- `2026-06-30-cli-persona-testimonials-W05-P11-S31` - W05.P11.S31 Open Follow-Up Queue
+- `2026-06-30-cli-persona-testimonials-W05-P11-S32` - W05.P11.S32 Completed Fix Review
 
 ### plan
 

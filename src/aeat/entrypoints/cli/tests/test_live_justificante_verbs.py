@@ -26,16 +26,18 @@ from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_ACTIVE_TEST_BUCKET_ID = "00000000-0000-4000-8000-000000000000"
+
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(aeat_audit_dir=tmp_path / "audit"),
-        profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
+        profile_create_storage_span(_ACTIVE_TEST_BUCKET_ID),
     ):
         workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id="00000000-0000-4000-8000-000000000000")
+            lambda state: register_minimal_profile(state, profile_id=_ACTIVE_TEST_BUCKET_ID)
         )
         yield
 
@@ -64,7 +66,7 @@ def test_justificante_view_refuses_unknown_snapshot() -> None:
 
 def test_justificante_list_and_view_emit_registry_period_tokens() -> None:
     pdf_bytes = b"%PDF-1.4\njustificante period cli smoke\n%%EOF"
-    snapshot = JustificanteCaptureSnapshotService(bucket_id="default").capture(
+    snapshot = JustificanteCaptureSnapshotService(bucket_id=_ACTIVE_TEST_BUCKET_ID).capture(
         modelo="130",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),

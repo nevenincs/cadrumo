@@ -110,8 +110,8 @@ def _refunded_303_observations(
 ) -> tuple[CasillaObservation, ...]:
     """Zero the generated-credit components of a refunded Modelo 303 observation.
 
-    A refunded (devolución) period returns its credit rather than carrying it
-    forward, so the persisted cross-period carry must drop the generated credit:
+    A refunded (devolución) period is requested as devolución rather than
+    compensación carry, so the persisted cross-period carry must drop the generated credit:
     ``iva.compensacion-disponible-fin-periodo`` is re-stamped to its
     posterior-only value from ``iva.compensacion-pendiente-periodos-posteriores``
     (AEAT box 87) and ``iva.compensacion-generada-periodo`` to zero. Every other
