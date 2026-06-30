@@ -14,12 +14,11 @@ scope. This gate locks the resolver's contract offline, with no network:
 from __future__ import annotations
 
 import pytest
-from googleapiclient.errors import HttpError
-from httplib2 import Response
 
 from .....domain.attachments import AttachmentSource
 from ....outbound.storage._errors import OutboundStoragePermissionError, OutboundStorageValidationError
 from .._document_link_resolver import _download_drive_file_from_service, parse_drive_file_id, resolve_document_link
+from ._drive_media_server import drive_media_endpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -71,56 +70,22 @@ def test_drive_link_without_id_is_validation_error() -> None:
         resolve_document_link(source=AttachmentSource.GOOGLE_DRIVE, reference="no-id-here", credentials=None)
 
 
-class _InMemoryDriveRequest:
-    def __init__(self, payload: bytes) -> None:
-        self._payload = payload
-
-    def execute(self) -> bytes:
-        return self._payload
-
-
-class _InMemoryDriveFiles:
-    def __init__(self, payload: bytes, recorder: dict[str, object]) -> None:
-        self._payload = payload
-        self._recorder = recorder
-
-    def get_media(self, *, fileId: str) -> _InMemoryDriveRequest:  # noqa: N803 - Google API kwarg
-        self._recorder["file_id"] = fileId
-        return _InMemoryDriveRequest(self._payload)
-
-
-class _InMemoryDriveResource:
-    def __init__(self, payload: bytes, recorder: dict[str, object]) -> None:
-        self._files = _InMemoryDriveFiles(payload, recorder)
-
-    def files(self) -> _InMemoryDriveFiles:
-        return self._files
-
-
 def test_drive_download_preserves_google_media_bytes() -> None:
-    recorder: dict[str, object] = {}
     payload = b"%PDF-1.4 justificante bytes"
-    service = _InMemoryDriveResource(payload, recorder)
 
-    out = _download_drive_file_from_service(_FILE_ID, service)
+    with drive_media_endpoint(payload=payload) as endpoint:
+        out = _download_drive_file_from_service(_FILE_ID, endpoint.service)
+
     assert out == payload
-    assert recorder["file_id"] == _FILE_ID
+    assert endpoint.requested_paths == [f"/drive/v3/files/{_FILE_ID}?alt=media"]
 
 
 def test_drive_403_surfaces_drive_readonly_scope() -> None:
-    class _Files:
-        def get_media(self, *, fileId: str):  # noqa: N803 - Google API kwarg
-            class _Req:
-                def execute(self) -> bytes:
-                    raise HttpError(Response({"status": "403", "reason": "Forbidden"}), b"{}")
+    with (
+        drive_media_endpoint(payload=b"{}", status=403) as endpoint,
+        pytest.raises(OutboundStoragePermissionError) as excinfo,
+    ):
+        _download_drive_file_from_service(_FILE_ID, endpoint.service)
 
-            return _Req()
-
-    class _Svc:
-        def files(self) -> _Files:
-            return _Files()
-
-    with pytest.raises(OutboundStoragePermissionError) as excinfo:
-        _download_drive_file_from_service(_FILE_ID, _Svc())
     assert excinfo.value.context is not None
     assert excinfo.value.context["required_scope"] == "https://www.googleapis.com/auth/drive.readonly"
