@@ -7,8 +7,9 @@ selected :class:`ModeloRevision`.
 This module is the calculation-service assembly layer between source resolution
 and engine execution. It delegates source-specific work to the binding
 resolution helpers, then returns typed channel bundles that
-``calculate_modelo_revision`` can pass to the registry engine and persistence
-boundary.
+:func:`aeat.application.modelo.calculate_modelo_revision` can pass to
+:func:`aeat.domain.calculations.registry.calculate_registry_snapshot` and the
+:class:`CalculationRevision` persistence boundary.
 
 See Also:
     :func:`aeat.application.modelo._binding_resolution.resolve_borrador_source_tier`
@@ -56,8 +57,8 @@ class ResolvedCalculationChannels:
     ``bindings`` feeds the Decimal channel, ``enum_bindings`` feeds string
     dispatch keys, and ``date_bindings`` feeds date-valued profile bindings.
     The borrador fields carry the typed snapshot trace from
-    :class:`~aeat.application.aggregation.CalculationSourceResolution` through
-    to the persisted :class:`CalculationRevision`.
+    :class:`aeat.application.aggregation.CalculationSourceResolution` through to
+    the persisted :class:`CalculationRevision`.
     """
 
     bindings: dict[BindingId, Decimal]
@@ -74,7 +75,9 @@ class CalculationReplayPayloads:
     The persistence layer stores user-visible inputs as strings, not live
     :class:`~decimal.Decimal` instances. These maps are derived after all source
     overlays have settled so replay and revision identity use the same canonical
-    values the engine consumed.
+    values the engine consumed. They are the persisted replay side of the
+    :class:`CalculationRevision` hash domain, not an independent calculation
+    path.
     """
 
     input_values_by_casilla_id: dict[CasillaId, str]
@@ -95,14 +98,16 @@ def resolve_calculation_binding_channels(
 ) -> ResolvedCalculationChannels:
     """Resolve all binding channels for ``work_unit`` and ``snapshot``.
 
-    The ``work_unit`` is the :class:`WorkUnit` whose bucket, filing year, and
-    period select the source-resolution axis. The ``snapshot`` is the
-    :class:`RegistrySnapshot` supplying the revision whose binding channels are
-    being resolved.
+    The ``work_unit`` is the :class:`aeat.domain.modelos.WorkUnit` whose bucket,
+    filing year, and period select the source-resolution axis. The ``snapshot``
+    is the :class:`RegistrySnapshot` supplying the revision whose binding
+    channels are being resolved.
 
     The source-precedence ladder is profile, backend, borrador, then caller. The
     returned :class:`ResolvedCalculationChannels` contains the merged Decimal,
-    enum, and date channels after
+    enum, and date channels, plus any
+    :class:`aeat.application.live.Borrador100SnapshotRepository` provenance,
+    after
     :func:`aeat.application.modelo._binding_resolution.reject_binding_channel_mismatch`
     verifies the registry-declared channel shape and
     :func:`aeat.application.modelo._binding_resolution.lift_previous_filing_casilla_overrides_to_bindings`
@@ -175,7 +180,9 @@ def resolve_calculation_inputs(
     """Build the canonical casilla input map for engine execution.
 
     The ``revision`` is the :class:`ModeloRevision` whose declaration-period and
-    bound casilla inputs are being projected.
+    bound casilla inputs are being projected. The :class:`aeat.core.Period`
+    supplies the filing-period casilla values that the registry declares as
+    inputs.
 
     Declaration-period bindings are projected first, followed by backend casilla
     inputs, bound casillas resolved from merged binding values, and finally the
@@ -211,7 +218,9 @@ def build_calculation_replay_payloads(
     Casilla and relation Decimals are canonicalized with the domain decimal
     formatter. Decimal, enum, and date binding channels share the single
     ``binding_overrides`` replay map because that is the persisted
-    :class:`CalculationRevision` contract.
+    :class:`CalculationRevision` contract. The replay payload is built after
+    source precedence and bound-casilla projection so its values match the
+    engine inputs exactly.
     """
     return CalculationReplayPayloads(
         input_values_by_casilla_id=dict(
