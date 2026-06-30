@@ -5,26 +5,15 @@ import pytest
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M123_2019,
     _COMPUTED_CASILLAS_M123_2024,
-    FIXTURES_DIR,
     CasillaId,
-    Decimal,
-    DeclaracionParseError,
-    RegistryValidationError,
-    _period_to_date,
-    _registry_snapshot,
-    calculate_registry_snapshot,
-    parse_declaracion,
-    validated_casilla_id,
+    _assert_engine_closure_matches_extracted_decimal,
+    _calculate_engine_values_from_inputs,
+    _casilla_id,
+    _decimal_inputs_from_extracted_values,
+    _parse_extracted_declaracion_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
-
-
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
 
 
 _M123_2019_CLOSURE_CASILLAS: tuple[CasillaId, ...] = (
@@ -81,53 +70,23 @@ def test_verification_chain_m123_engine_recomputes_closure_casillas(
 
     Verdict: VERIFIED for all closure casillas in both revisions.
     """
-    pdf_path = FIXTURES_DIR / "justificantes" / "123" / f"{pdf_stem}.pdf"
-
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override="123",
-            año_override=year,
-            period_override=period,
-        )
-    except DeclaracionParseError as exc:
-        pytest.fail(f"PARSER-GAP [M123/{pdf_stem}]: parse_declaracion raised.\n  error: {exc}")
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
-
-    inputs: dict[CasillaId, Decimal] = {
-        cid: val for cid, val in extracted.items() if cid not in computed_set and isinstance(val, Decimal)
-    }
-
-    snapshot = _registry_snapshot("123", year, period)
-    filing_period_date = _period_to_date(year, period)
-
-    try:
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=inputs,
-            date_context={"filing_period": filing_period_date},
-        )
-    except RegistryValidationError as exc:
-        pytest.fail(
-            f"BINDING-GAP [M123/{pdf_stem}]: calculate_registry_snapshot raised "
-            f"RegistryValidationError.\n  error: {exc}\n  inputs: {sorted(inputs)}",
-        )
-
-    engine_values = dict(result.values)
+    extracted = _parse_extracted_declaracion_values(modelo="123", fixture_stem=pdf_stem, year=year, period=period)
+    inputs = _decimal_inputs_from_extracted_values(extracted, excluding=computed_set)
+    engine_values = _calculate_engine_values_from_inputs(
+        modelo="123",
+        year=year,
+        period=period,
+        label=f"M123/{pdf_stem}",
+        inputs=inputs,
+    )
 
     for closure_id in closure_ids:
         if closure_id not in extracted:
             continue
-        extracted_val = extracted[closure_id]
-        assert isinstance(extracted_val, Decimal), (
-            f"PARSER-GAP [M123/{pdf_stem}]: casilla {closure_id!r} is not Decimal: {type(extracted_val).__name__!r}"
-        )
-        engine_val = engine_values.get(closure_id)
-        assert engine_val is not None, (
-            f"FORMULA-MISMATCH [M123/{pdf_stem}]: casilla {closure_id!r} absent from engine result."
-        )
-        assert engine_val == extracted_val, (
-            f"FORMULA-MISMATCH [M123/{pdf_stem}]: engine casilla {closure_id!r} = {engine_val!r}, "
-            f"AEAT-printed = {extracted_val!r}.\n  inputs: {inputs}"
+        _assert_engine_closure_matches_extracted_decimal(
+            label=f"M123/{pdf_stem}",
+            engine_values=engine_values,
+            extracted=extracted,
+            casilla_id=closure_id,
+            inputs=inputs,
         )

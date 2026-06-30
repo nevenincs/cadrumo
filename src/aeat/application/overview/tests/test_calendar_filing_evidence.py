@@ -34,6 +34,9 @@ from .. import (
     calendar_filing_evidence_from_sources,
 )
 from .calendar_test_support import (
+    BUCKET_ID as _BUCKET_ID,
+)
+from .calendar_test_support import (
     PERIOD_2025_1T as _PERIOD_2025_1T,
 )
 from .calendar_test_support import (
@@ -70,7 +73,7 @@ def _justificante_capture_snapshot(
     pdf_bytes = f"{csv}-pdf".encode()
     return JustificanteCaptureSnapshot(
         snapshot_id=f"snapshot-{csv}",
-        bucket_id="bucket-calendar",
+        bucket_id=_BUCKET_ID,
         modelo=modelo,
         filing_year=filing_year,
         period=period,
@@ -460,7 +463,7 @@ def test_expedientes_event_marks_observed_submission_but_not_justificante_verifi
         (
             PersistedExpedientesSnapshot(
                 snapshot_id="e" * 64,
-                bucket_id="bucket-1",
+                bucket_id=_BUCKET_ID,
                 captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 authenticated_identity="X1234567L",
@@ -498,7 +501,7 @@ def test_expedientes_event_for_wrong_authenticated_identity_is_not_submission_ev
         (
             PersistedExpedientesSnapshot(
                 snapshot_id="e" * 64,
-                bucket_id="bucket-1",
+                bucket_id=_BUCKET_ID,
                 captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 authenticated_identity="Y7654321Z",
@@ -531,7 +534,7 @@ def test_non_alta_expedientes_event_does_not_create_submission_evidence() -> Non
         (
             PersistedExpedientesSnapshot(
                 snapshot_id="f" * 64,
-                bucket_id="bucket-1",
+                bucket_id=_BUCKET_ID,
                 captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 declarations=(

@@ -38,6 +38,9 @@ from .. import (
     user_state_for,
 )
 from .calendar_test_support import (
+    BUCKET_ID as _BUCKET_ID,
+)
+from .calendar_test_support import (
     PERIOD_2025_1T as _PERIOD_2025_1T,
 )
 from .calendar_test_support import (
@@ -380,7 +383,7 @@ def test_entry_is_frozen() -> None:
 def test_expedientes_snapshots_project_filing_events_inside_range() -> None:
     snapshot = PersistedExpedientesSnapshot(
         snapshot_id="e" * 64,
-        bucket_id="bucket-1",
+        bucket_id=_BUCKET_ID,
         captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
         source_url=_SOURCE_URL,
         authenticated_identity="X1234567L",
@@ -417,7 +420,7 @@ def test_expedientes_snapshots_project_filing_events_inside_range() -> None:
 def test_expedientes_snapshot_for_wrong_identity_does_not_project_filing_event() -> None:
     snapshot = PersistedExpedientesSnapshot(
         snapshot_id="e" * 64,
-        bucket_id="bucket-1",
+        bucket_id=_BUCKET_ID,
         captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
         source_url=_SOURCE_URL,
         authenticated_identity="Y7654321Z",
@@ -460,7 +463,7 @@ def test_notification_snapshots_project_message_events_on_notification_date() ->
     )
     snapshot = PersistedNotificationsSnapshot(
         snapshot_id="a" * 64,
-        bucket_id="bucket-1",
+        bucket_id=_BUCKET_ID,
         captured_at=datetime(2025, 3, 13, 10, 0, tzinfo=UTC),
         source_url=_SOURCE_URL,
         rows=(row,),
@@ -510,7 +513,7 @@ def test_notification_snapshots_filter_message_events_by_expected_taxpayer() -> 
     )
     snapshot = PersistedNotificationsSnapshot(
         snapshot_id="a" * 64,
-        bucket_id="bucket-1",
+        bucket_id=_BUCKET_ID,
         captured_at=datetime(2025, 3, 13, 10, 0, tzinfo=UTC),
         source_url=_SOURCE_URL,
         rows=(matching, other_taxpayer),
@@ -557,7 +560,7 @@ def test_notification_snapshots_filter_message_events_by_authenticated_snapshot_
     )
     matching_snapshot = PersistedNotificationsSnapshot(
         snapshot_id="a" * 64,
-        bucket_id="bucket-1",
+        bucket_id=_BUCKET_ID,
         captured_at=datetime(2025, 3, 13, 10, 0, tzinfo=UTC),
         source_url=_SOURCE_URL,
         authenticated_identity="B12345678",
@@ -566,7 +569,7 @@ def test_notification_snapshots_filter_message_events_by_authenticated_snapshot_
     )
     other_snapshot = PersistedNotificationsSnapshot(
         snapshot_id="b" * 64,
-        bucket_id="bucket-1",
+        bucket_id=_BUCKET_ID,
         captured_at=datetime(2025, 3, 14, 10, 0, tzinfo=UTC),
         source_url=_SOURCE_URL,
         authenticated_identity="C12345678",
@@ -589,7 +592,7 @@ def test_build_overview_calendar_accepts_observed_events() -> None:
         notification_snapshots=(
             PersistedNotificationsSnapshot(
                 snapshot_id="a" * 64,
-                bucket_id="bucket-1",
+                bucket_id=_BUCKET_ID,
                 captured_at=datetime(2025, 3, 13, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 rows=(

@@ -35,6 +35,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _NOW = datetime.now(UTC).replace(microsecond=0)
 _KEK = b"k" * 32
 _DEK = b"d" * 32
+_BUCKET_A_ID = "094d94e7-4474-407c-8971-d9c1a2476db0"
+_BUCKET_B_ID = "d9df0562-55c9-43c8-8486-b79d4016cfbc"
+_PRIVATE_BUCKET_ID = "80bc7e0d-f9dd-4be7-afc6-71d192074647"
 
 
 def _settings_for_bucket(root: Path, bucket_id: str) -> Settings:
@@ -71,9 +74,9 @@ def _issue_codes(runtime: StorageRuntime) -> tuple[StorageRuntimeReadinessCode, 
 
 
 def test_runtime_ready_when_route_and_active_session_match(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
 
-    with activate_session(_session("bucket-a")):
+    with activate_session(_session(_BUCKET_A_ID)):
         runtime = inspect_storage_runtime(settings, now=_NOW)
 
     assert runtime.readiness.ready is True
@@ -87,7 +90,7 @@ def test_runtime_ready_when_route_and_active_session_match(tmp_path: Path) -> No
 
 
 def test_runtime_reports_missing_session_without_touching_route(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
 
     runtime = inspect_storage_runtime(settings, now=_NOW)
 
@@ -102,22 +105,22 @@ def test_runtime_reports_missing_session_without_touching_route(tmp_path: Path) 
     ("session", "expected_code", "expected_session_flag"),
     (
         (
-            _session("bucket-a", opened_at=_NOW - timedelta(minutes=20), idle_minutes=5),
+            _session(_BUCKET_A_ID, opened_at=_NOW - timedelta(minutes=20), idle_minutes=5),
             StorageRuntimeReadinessCode.SESSION_EXPIRED,
             "expired",
         ),
         (
-            _sealed_session("bucket-a"),
+            _sealed_session(_BUCKET_A_ID),
             StorageRuntimeReadinessCode.SESSION_SEALED,
             "sealed",
         ),
         (
-            _session("bucket-b"),
+            _session(_BUCKET_B_ID),
             StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH,
             None,
         ),
         (
-            _session("bucket-a", unsecured_backend=True),
+            _session(_BUCKET_A_ID, unsecured_backend=True),
             StorageRuntimeReadinessCode.UNSECURED_BACKEND,
             "unsecured_backend",
         ),
@@ -135,7 +138,7 @@ def test_runtime_reports_unready_active_session_states(
     expected_code: StorageRuntimeReadinessCode,
     expected_session_flag: str | None,
 ) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
 
     with activate_session(session):
         runtime = inspect_storage_runtime(settings, now=_NOW)
@@ -151,7 +154,7 @@ def test_runtime_reports_unready_active_session_states(
 def test_runtime_reports_root_fallback_route_as_unready(tmp_path: Path) -> None:
     settings = Settings(aeat_local_storage_root=tmp_path)
 
-    with activate_session(_session("bucket-a")):
+    with activate_session(_session(_BUCKET_A_ID)):
         runtime = inspect_storage_runtime(settings, now=_NOW)
 
     assert runtime.readiness.ready is False
@@ -160,9 +163,9 @@ def test_runtime_reports_root_fallback_route_as_unready(tmp_path: Path) -> None:
 
 
 def test_runtime_repository_factory_refuses_route_and_session_bucket_mismatch(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
 
-    with activate_session(_session("bucket-b")):
+    with activate_session(_session(_BUCKET_B_ID)):
         runtime = inspect_storage_runtime(settings, now=_NOW)
         with pytest.raises(StorageValidationError) as raised:
             runtime.secure_object_repository()
@@ -172,9 +175,9 @@ def test_runtime_repository_factory_refuses_route_and_session_bucket_mismatch(tm
 
 
 def test_runtime_repository_factory_refuses_initial_unsecured_backend(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
 
-    with activate_session(_session("bucket-a", unsecured_backend=True)):
+    with activate_session(_session(_BUCKET_A_ID, unsecured_backend=True)):
         runtime = inspect_storage_runtime(settings, now=_NOW)
         with pytest.raises(StorageValidationError) as raised:
             runtime.secure_object_repository()
@@ -184,13 +187,13 @@ def test_runtime_repository_factory_refuses_initial_unsecured_backend(tmp_path: 
 
 
 def test_runtime_reports_explicit_database_url_without_public_path_leak(tmp_path: Path) -> None:
-    explicit_db = tmp_path / "bucket-a-private" / "explicit.db"
+    explicit_db = tmp_path / _PRIVATE_BUCKET_ID / "explicit.db"
     settings = Settings(
         aeat_local_storage_root=tmp_path / "state-root-private",
         aeat_database_url=f"sqlite:///{explicit_db.as_posix()}",
     )
 
-    with activate_session(_session("bucket-a-private")):
+    with activate_session(_session(_PRIVATE_BUCKET_ID)):
         runtime = inspect_storage_runtime(settings, now=_NOW)
 
     dumped = json.dumps(runtime.model_dump(mode="json"), sort_keys=True)
@@ -198,7 +201,7 @@ def test_runtime_reports_explicit_database_url_without_public_path_leak(tmp_path
     assert runtime.route_kind is StorageRouteKind.EXPLICIT_DATABASE_URL
     assert runtime.route_has_database_path is True
     assert StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET.value in dumped
-    assert "bucket-a-private" not in dumped
+    assert _PRIVATE_BUCKET_ID not in dumped
     assert "explicit.db" not in dumped
     assert "state-root-private" not in dumped
 
@@ -209,8 +212,8 @@ def test_named_bucket_runtime_refuses_live_explicit_database_url(tmp_path: Path)
         aeat_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
     )
 
-    with activate_session(_session("bucket-a")):
-        runtime = inspect_bucket_storage_runtime("bucket-a", settings, now=_NOW)
+    with activate_session(_session(_BUCKET_A_ID)):
+        runtime = inspect_bucket_storage_runtime(_BUCKET_A_ID, settings, now=_NOW)
 
     assert runtime.readiness.ready is False
     assert runtime.route_kind is StorageRouteKind.EXPLICIT_DATABASE_URL
@@ -236,13 +239,13 @@ def test_named_bucket_runtime_rejects_blank_bucket_with_localized_validation(tmp
 
 
 def test_runtime_creates_bucket_attached_secure_object_repository(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
 
     with (
         override_settings(
             aeat_local_storage_root=tmp_path,
         ),
-        activate_session(_session("bucket-a")),
+        activate_session(_session(_BUCKET_A_ID)),
     ):
         runtime = inspect_storage_runtime(settings, now=_NOW)
         repo = runtime.secure_object_repository()
@@ -270,18 +273,18 @@ def test_runtime_creates_bucket_attached_secure_object_repository(tmp_path: Path
 
     assert loaded is not None
     assert loaded.payload == b"runtime-payload"
-    assert (tmp_path / "buckets" / "bucket-a" / "db" / "aeat.db").exists()
+    assert (tmp_path / "buckets" / _BUCKET_A_ID / "db" / "aeat.db").exists()
 
 
 def test_runtime_repository_rejects_unregistered_namespace_writes(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
     namespace = "aeat.test.runtime.unregistered"
 
     with (
         override_settings(
             aeat_local_storage_root=tmp_path,
         ),
-        activate_session(_session("bucket-a")),
+        activate_session(_session(_BUCKET_A_ID)),
     ):
         runtime = inspect_storage_runtime(settings, now=_NOW)
         repo = runtime.secure_object_repository()
@@ -301,17 +304,17 @@ def test_runtime_repository_rejects_unregistered_namespace_writes(tmp_path: Path
 
 
 def test_runtime_bound_repository_refuses_write_after_session_bucket_changes(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
     namespace = WORKFLOW_STATE_NAMESPACE.namespace
     object_key = "stale-session-write"
 
     with (
         override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
-        activate_session(_session("bucket-a")),
+        activate_session(_session(_BUCKET_A_ID)),
     ):
         runtime = inspect_storage_runtime(settings, now=_NOW)
         repo = runtime.secure_object_repository()
-        with activate_session(_session("bucket-b")):
+        with activate_session(_session(_BUCKET_B_ID)):
             with pytest.raises(StorageValidationError) as raised:
                 repo.save(
                     namespace=namespace,
@@ -336,17 +339,17 @@ def test_runtime_bound_repository_refuses_write_after_session_bucket_changes(tmp
 
 
 def test_runtime_bound_repository_refuses_raw_key_write_after_session_bucket_changes(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
     namespace = WORKFLOW_STATE_NAMESPACE.namespace
     hashed_object_key = b"h" * 32
 
     with (
         override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
-        activate_session(_session("bucket-a")),
+        activate_session(_session(_BUCKET_A_ID)),
     ):
         runtime = inspect_storage_runtime(settings, now=_NOW)
         repo = runtime.secure_object_repository()
-        with activate_session(_session("bucket-b")):
+        with activate_session(_session(_BUCKET_B_ID)):
             with pytest.raises(StorageValidationError) as raised:
                 repo.save_with_raw_key(
                     namespace=namespace,
@@ -366,17 +369,17 @@ def test_runtime_bound_repository_refuses_raw_key_write_after_session_bucket_cha
 
 
 def test_runtime_bound_repository_refuses_write_after_session_becomes_unsecured(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
     namespace = WORKFLOW_STATE_NAMESPACE.namespace
     object_key = "unsecured-session-write"
 
     with (
         override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
-        activate_session(_session("bucket-a")),
+        activate_session(_session(_BUCKET_A_ID)),
     ):
         runtime = inspect_storage_runtime(settings, now=_NOW)
         repo = runtime.secure_object_repository()
-        with activate_session(_session("bucket-a", unsecured_backend=True)):
+        with activate_session(_session(_BUCKET_A_ID, unsecured_backend=True)):
             with pytest.raises(StorageValidationError) as raised:
                 repo.save(
                     namespace=namespace,
@@ -401,13 +404,13 @@ def test_runtime_bound_repository_refuses_write_after_session_becomes_unsecured(
 
 
 def test_runtime_bound_repository_refuses_quarantine_after_session_bucket_changes(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
     namespace = WORKFLOW_STATE_NAMESPACE.namespace
     object_key = "stale-quarantine-row"
 
     with (
         override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
-        activate_session(_session("bucket-a")),
+        activate_session(_session(_BUCKET_A_ID)),
     ):
         runtime = inspect_storage_runtime(settings, now=_NOW)
         repo = runtime.secure_object_repository()
@@ -420,7 +423,7 @@ def test_runtime_bound_repository_refuses_quarantine_after_session_bucket_change
             payload=b"quarantine-guard-payload",
         )
 
-        with activate_session(_session("bucket-b", kek=b"x" * 32, dek=b"y" * 32)):
+        with activate_session(_session(_BUCKET_B_ID, kek=b"x" * 32, dek=b"y" * 32)):
             with pytest.raises(StorageValidationError) as raised:
                 repo.quarantine_unreadable_rows()
             rendered = resolve_error_message(raised.value)
@@ -439,13 +442,13 @@ def test_runtime_bound_repository_refuses_quarantine_after_session_bucket_change
 
 
 def test_runtime_bound_repository_refuses_diagnostics_after_session_bucket_changes(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
     namespace = WORKFLOW_STATE_NAMESPACE.namespace
     object_key = "stale-diagnostic-row"
 
     with (
         override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
-        activate_session(_session("bucket-a")),
+        activate_session(_session(_BUCKET_A_ID)),
     ):
         runtime = inspect_storage_runtime(settings, now=_NOW)
         repo = runtime.secure_object_repository()
@@ -458,7 +461,7 @@ def test_runtime_bound_repository_refuses_diagnostics_after_session_bucket_chang
             payload=b"diagnostic-guard-payload",
         )
 
-        with activate_session(_session("bucket-b", kek=b"x" * 32, dek=b"y" * 32)):
+        with activate_session(_session(_BUCKET_B_ID, kek=b"x" * 32, dek=b"y" * 32)):
             diagnostic_calls = (
                 lambda: repo.exists(namespace, object_key),
                 lambda: tuple(repo.iter_all_records_raw()),
@@ -492,7 +495,7 @@ def test_runtime_bound_repository_refuses_diagnostics_after_session_bucket_chang
 
 
 def test_runtime_repository_factory_refuses_unready_runtime(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
     runtime = inspect_storage_runtime(settings, now=_NOW)
 
     with override_settings(aeat_output_language="en"):
@@ -543,7 +546,7 @@ def test_cold_bootstrap_repository_refuses_active_profile(tmp_path: Path) -> Non
     with (
         override_settings(
             aeat_local_storage_root=tmp_path,
-            aeat_active_profile="bucket-a",
+            aeat_active_profile=_BUCKET_A_ID,
             aeat_output_language="en",
         ),
         pytest.raises(StorageValidationError) as excinfo,
@@ -557,7 +560,7 @@ def test_cold_bootstrap_repository_refuses_settings_scoped_active_profile(
 ) -> None:
     settings = Settings(
         aeat_local_storage_root=tmp_path,
-        aeat_active_profile="bucket-a",
+        aeat_active_profile=_BUCKET_A_ID,
         aeat_output_language=OutputLanguage.EN,
     )
 
@@ -580,7 +583,7 @@ def test_cold_bootstrap_repository_refuses_explicit_database_route(tmp_path: Pat
 def test_default_route_repository_refuses_settings_scoped_active_profile_without_session(
     tmp_path: Path,
 ) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
 
     with pytest.raises(StorageValidationError, match="no active bucket session"):
         secure_object_repository_for_active_bucket_or_default_route(settings)
@@ -591,7 +594,7 @@ def test_default_route_repository_refuses_pointer_scoped_active_profile_without_
 ) -> None:
     """A plaintext pointer selects a runtime bucket; it must not fall back to root DB."""
 
-    write_pointer(tmp_path, BucketPointer(bucket_id="bucket-a", schema_version=1))
+    write_pointer(tmp_path, BucketPointer(bucket_id=_BUCKET_A_ID, schema_version=1))
 
     with (
         override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=None),
@@ -601,9 +604,9 @@ def test_default_route_repository_refuses_pointer_scoped_active_profile_without_
 
 
 def test_runtime_repository_factory_rechecks_live_session(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
 
-    with activate_session(_session("bucket-a")):
+    with activate_session(_session(_BUCKET_A_ID)):
         runtime = inspect_storage_runtime(settings, now=_NOW)
 
     with pytest.raises(StorageValidationError, match="no active bucket session"):
@@ -611,24 +614,24 @@ def test_runtime_repository_factory_rechecks_live_session(tmp_path: Path) -> Non
 
 
 def test_runtime_repository_factory_rechecks_session_bucket(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
 
-    with activate_session(_session("bucket-a")):
+    with activate_session(_session(_BUCKET_A_ID)):
         runtime = inspect_storage_runtime(settings, now=_NOW)
 
     with (
-        activate_session(_session("bucket-b")),
+        activate_session(_session(_BUCKET_B_ID)),
         pytest.raises(StorageValidationError, match="active bucket session changed"),
     ):
         runtime.secure_object_repository()
 
 
 def test_runtime_repository_factory_rechecks_sealed_session(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
-    sealed_session = _session("bucket-a")
+    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
+    sealed_session = _session(_BUCKET_A_ID)
     sealed_session.close()
 
-    with activate_session(_session("bucket-a")):
+    with activate_session(_session(_BUCKET_A_ID)):
         runtime = inspect_storage_runtime(settings, now=_NOW)
 
     with (
@@ -639,14 +642,14 @@ def test_runtime_repository_factory_rechecks_sealed_session(tmp_path: Path) -> N
 
 
 def test_runtime_repository_factory_rechecks_expired_session(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
     expired_session = _session(
-        "bucket-a",
+        _BUCKET_A_ID,
         opened_at=datetime(2000, 1, 1, tzinfo=UTC),
         idle_minutes=5,
     )
 
-    with activate_session(_session("bucket-a")):
+    with activate_session(_session(_BUCKET_A_ID)):
         runtime = inspect_storage_runtime(settings, now=_NOW)
 
     with (
@@ -657,13 +660,13 @@ def test_runtime_repository_factory_rechecks_expired_session(tmp_path: Path) -> 
 
 
 def test_runtime_repository_factory_rechecks_unsecured_session(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
 
-    with activate_session(_session("bucket-a")):
+    with activate_session(_session(_BUCKET_A_ID)):
         runtime = inspect_storage_runtime(settings, now=_NOW)
 
     with (
-        activate_session(_session("bucket-a", unsecured_backend=True)),
+        activate_session(_session(_BUCKET_A_ID, unsecured_backend=True)),
         pytest.raises(StorageValidationError, match="active bucket session uses unsecured backend"),
     ):
         runtime.secure_object_repository()

@@ -1,4 +1,33 @@
-"""Source-kind policy for bucket aggregation calculation."""
+"""Source-kind policy for bucket aggregation calculation.
+
+This module is the modelo-application projection of the source-mesh disposition
+registry. It starts from the canonical :class:`aeat.core.BindingSourceKind`
+taxonomy, classifies the live bucket-aggregation set with
+:func:`aeat.application.aggregation.build_binding_source_dispositions`, and
+exposes the enrolled / deferred union consumed by the calculate path's
+novel-source gate.
+
+``BUCKET_AGGREGATION_OWNED_SOURCES`` is the enrolled source set for live
+calculation: sources routed by active resolvers, pre-mesh tiers, or
+``manual_input``. ``ACCEPTED_BUCKET_AGGREGATION_SOURCE_KINDS`` extends that set
+with :data:`aeat.application.aggregation.DEFERRED_SOURCE_KINDS` so known
+pull-only detail families produce standing
+:class:`aeat.application.aggregation.CalculationSourceDiagnostic` advisories
+instead of silently blanking.
+
+``BUCKET_AGGREGATION_LOCK_SOURCES`` marks deterministic bucket-owned resolvers
+whose values must not be caller-overridden on this path.
+``CALLER_OVERRIDABLE_CARRY_SOURCES`` preserves the narrow fallback channel for
+carry-style sources whose absence can be supplied by explicit caller values.
+
+See Also:
+    :class:`aeat.application.aggregation.BindingSourceDisposition`:
+        The enrolled / deferred / reserved registry that keeps every source kind
+        accounted for.
+    :func:`aeat.application.modelo.assert_no_novel_source_kinds`:
+        Rejects a registry source kind absent from both the enrolled and
+        deferred policy sets before it can calculate as a silent blank.
+"""
 
 from __future__ import annotations
 

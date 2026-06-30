@@ -75,6 +75,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _TEST_LEGAL_REF = "test-actions:legal"
 _TEST_SOURCE_REF = "test-actions:source"
+_BUCKET_ID = "ac42089b-a822-458e-99e6-333861181de7"
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -572,7 +573,7 @@ def test_iva_wallet_unsupported_decision_type_is_localised() -> None:
             "303",
             2026,
             Period.from_year_and_code(2026, "1T"),
-            bucket_id="bucket-1",
+            bucket_id=_BUCKET_ID,
             revision=_test_revision(),
             taxpayer_nif="12345678Z",
             caller_binding_values={},

@@ -1,7 +1,16 @@
 """Operator-safe access to encrypted AEAT auth diagnostics.
 
-Diagnostic records are encrypted and retrieved through a
-:class:`SecureObjectRepository` scoped to the active profile bucket.
+Diagnostic records are support evidence for failed Cl@ve/browser auth flows.
+They may include raw HTML, screenshot bytes, route metadata, and identity
+alignment hints, so they are stored only as encrypted objects through a
+:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository` scoped to
+the active profile bucket.
+
+Public functions return redacted summaries, bounded body placeholders, and
+hash fingerprints instead of raw page bodies or taxpayer identifiers.
+Operator phone-state reports are appended back into the encrypted diagnostic
+payload so later troubleshooting can distinguish "app did not prompt" from
+"operator did not check" without creating a plaintext side channel.
 """
 
 from __future__ import annotations
@@ -140,7 +149,9 @@ def list_auth_diagnostics() -> AuthDiagnosticListReport:
 def load_auth_diagnostic(diagnostic_id: str) -> AuthDiagnosticDetail | None:
     """Load one encrypted Cl@ve auth diagnostic by id.
 
-    Returns an :class:`AuthDiagnosticDetail`, redacting sensitive bodies.
+    Returns an :class:`AuthDiagnosticDetail` with redacted body placeholders
+    and hashed identity/configuration fingerprints. Raw HTML and screenshot
+    bytes remain encrypted in storage and are not returned by this facade.
     """
     record = _secure_objects().load(
         _DIAGNOSTIC_NAMESPACE,
@@ -171,6 +182,9 @@ def record_auth_diagnostic_phone_state(
     phone_state: str,
 ) -> AuthDiagnosticReportResult | None:
     """Attach the operator-observed Cl@ve app state to an encrypted diagnostic.
+
+    The update writes the selected closed phone-state token back into the same
+    encrypted diagnostic payload. It does not create a plaintext report file.
 
     Returns an :class:`AuthDiagnosticReportResult`, or ``None`` when the
     diagnostic is not found.

@@ -23,6 +23,8 @@ from .._expedientes import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _DECLARACION_CONSULT_URL = aeat_url("www6", configured_path("sede_paths", "declaracion_consult"))
+_BUCKET_A_ID = "56565656-5656-4656-8656-565656565656"
+_BUCKET_B_ID = "57575757-5757-4757-8757-575757575757"
 
 
 @pytest.fixture
@@ -184,7 +186,7 @@ class TestLatest:
 
 class TestBucketIsolation:
     def test_snapshots_are_runtime_profile_scoped(self, tmp_path: Path) -> None:
-        with isolated_runtime_profile(tmp_path=tmp_path / "bucket-a", bucket_id="bucket-A") as bucket_a:
+        with isolated_runtime_profile(tmp_path=tmp_path / "profile-a", bucket_id=_BUCKET_A_ID) as bucket_a:
             svc_a = _service(bucket_a)
             svc_a.capture(
                 bucket_id=bucket_a.bucket_id,
@@ -192,7 +194,7 @@ class TestBucketIsolation:
             )
             assert svc_a.list_snapshots(bucket_id=bucket_a.bucket_id)[0].declarations[0].modelo == "303"
 
-        with isolated_runtime_profile(tmp_path=tmp_path / "bucket-b", bucket_id="bucket-B") as bucket_b:
+        with isolated_runtime_profile(tmp_path=tmp_path / "profile-b", bucket_id=_BUCKET_B_ID) as bucket_b:
             svc_b = _service(bucket_b)
             assert svc_b.list_snapshots(bucket_id=bucket_b.bucket_id) == ()
             svc_b.capture(
@@ -230,7 +232,7 @@ class TestSecureStorage:
 
     def test_object_key_refuses_blank_snapshot_with_locale_metadata(self) -> None:
         with pytest.raises(LiveApplicationInputError) as exc_info:
-            expedientes_snapshot_object_key("bucket-1", " ")
+            expedientes_snapshot_object_key(_BUCKET_A_ID, " ")
         assert exc_info.value.translated_message == "application.live.expedientes.errors.snapshot_id_blank"
 
 

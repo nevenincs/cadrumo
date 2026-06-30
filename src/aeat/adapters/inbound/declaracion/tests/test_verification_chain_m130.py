@@ -4,19 +4,16 @@ from __future__ import annotations
 
 import pytest
 
+from ._parser_boundary_m130_support import _M130_CORPUS_IDS, _M130_CORPUS_PARAMS
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M130,
-    FIXTURES_DIR,
     BindingId,
     CasillaId,
     Decimal,
-    DeclaracionParseError,
-    RegistryValidationError,
+    _calculate_engine_values_from_inputs,
     _casilla_id,
-    _period_to_date,
-    _registry_snapshot,
-    calculate_registry_snapshot,
-    parse_declaracion,
+    _decimal_inputs_from_extracted_values,
+    _parse_extracted_declaracion_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -42,43 +39,12 @@ _M130_FORMULA_CHAIN_CASILLAS: tuple[CasillaId, ...] = (
 
 @pytest.mark.parametrize(
     "pdf_stem,year,period",
-    [
-        ("2021-2T", 2021, "2T"),
-        ("2021-3T", 2021, "3T"),
-        ("2021-4T", 2021, "4T"),
-        ("2022-1T", 2022, "1T"),
-        ("2022-2T", 2022, "2T"),
-        ("2022-3T", 2022, "3T"),
-        ("2022-4T", 2022, "4T"),
-        ("2023-1T", 2023, "1T"),
-        ("2023-2T", 2023, "2T"),
-        ("2023-3T", 2023, "3T"),
-        ("2023-4T", 2023, "4T"),
-        ("2024-1T", 2024, "1T"),
-        ("2024-2T", 2024, "2T"),
-        ("2024-3T", 2024, "3T"),
-        ("2024-4T", 2024, "4T"),
-    ],
+    _M130_CORPUS_PARAMS,
+    ids=_M130_CORPUS_IDS,
 )
 def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: str, year: int, period: str) -> None:
     """Engine recomputes casilla 19 (resultado final) from extracted leaf inputs."""
-    pdf_path = FIXTURES_DIR / "justificantes" / "130" / f"{pdf_stem}.pdf"
-
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override="130",
-            año_override=year,
-            period_override=period,
-        )
-    except DeclaracionParseError as exc:
-        pytest.fail(
-            f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised DeclaracionParseError - "
-            f"extraction coverage failure prevents engine recomputation.\n"
-            f"  error: {exc}",
-        )
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+    extracted = _parse_extracted_declaracion_values(modelo="130", fixture_stem=pdf_stem, year=year, period=period)
 
     closure_extracted: Decimal | None
     if _M130_RESULTADO_CASILLA not in extracted:
@@ -91,13 +57,7 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
         closure_extracted = raw_closure
 
     extracted_c03 = extracted.get(_M130_RENDIMIENTO_NETO_CASILLA)
-    inputs: dict[CasillaId, Decimal] = {}
-    for casilla_id, value in extracted.items():
-        if casilla_id in _COMPUTED_CASILLAS_M130:
-            continue
-        if not isinstance(value, Decimal):
-            continue
-        inputs[casilla_id] = value
+    inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M130)
     if isinstance(extracted_c03, Decimal):
         inputs[_M130_INGRESOS_CASILLA] = extracted_c03
 
@@ -106,27 +66,14 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
         "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         "irpf.previous_year_economic_activity_net_income": Decimal("0"),
     }
-
-    snapshot = _registry_snapshot("130", year, period)
-    filing_period_date = _period_to_date(year, period)
-
-    try:
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=inputs,
-            date_context={"filing_period": filing_period_date},
-            binding_values=binding_values,
-        )
-    except RegistryValidationError as exc:
-        pytest.fail(
-            f"BINDING-GAP [{pdf_stem}]: calculate_registry_snapshot raised "
-            f"RegistryValidationError - a required binding is missing.\n"
-            f"  error: {exc}\n"
-            f"  inputs supplied: {sorted(inputs)}\n"
-            f"  binding_values supplied: {sorted(binding_values)}",
-        )
-
-    engine_values = dict(result.values)
+    engine_values = _calculate_engine_values_from_inputs(
+        modelo="130",
+        year=year,
+        period=period,
+        label=pdf_stem,
+        inputs=inputs,
+        binding_values=binding_values,
+    )
 
     input_01 = inputs.get(_M130_INGRESOS_CASILLA, Decimal("0"))
     input_02 = inputs.get(_M130_GASTOS_CASILLA, Decimal("0"))

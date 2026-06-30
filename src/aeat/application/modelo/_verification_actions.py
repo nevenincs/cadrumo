@@ -1,11 +1,11 @@
 """Verification actions and predicates for modelo filings.
 
 ``verify_modelo_revision`` evaluates a draft
-:class:`~aeat.domain.modelos._calculation_revision.CalculationRevision` against
+:class:`~aeat.domain.modelos.CalculationRevision` against
 its :class:`~aeat.domain.calculations.registry.RegistrySnapshot`, workflow
 :class:`~aeat.domain.deadlines.TaxpayerProfile`, ledger diagnostics, registry
 verification predicates, and cross-period clean-state verdicts before persisting
-a :class:`~aeat.domain.modelos._verification_report.VerificationReport`.
+a :class:`~aeat.domain.modelos.VerificationReport`.
 
 Verification findings are the operator-facing gate vocabulary. BLOCKING-severity
 findings refuse the verified-complete transition; WARNING-severity ADVISORY
@@ -13,7 +13,7 @@ findings remain visible in the report without bricking verify, file, or export.
 Calculate-path source diagnostics are separate
 :class:`~aeat.application.aggregation.CalculationSourceDiagnostic` advisories;
 this module converts only verify-time registry, profile, provenance, and
-cross-period facts into :class:`~aeat.domain.modelos._verification_report.ModeloVerificationFinding`
+cross-period facts into :class:`~aeat.domain.modelos.ModeloVerificationFinding`
 records.
 
 Verification emits bucket-history entries through
@@ -27,7 +27,7 @@ See Also:
         Shared cross-period gate used by verify, file, and export.
     :mod:`aeat.application.modelo._calculation_diagnostics`:
         Calculate-path diagnostics that feed advisory observations before verify.
-    :mod:`aeat.domain.modelos._verification_report`:
+    :mod:`aeat.domain.modelos`:
         Finding kind, severity, and completeness-status authority.
 """
 
@@ -702,8 +702,8 @@ def _missing_evidence_findings(
     Loads the revision's source transactions and projects each
     :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
     (reason ``missing_transaction_evidence``) into a
-    :class:`ModeloVerificationFinding`. Deductible input-IVA gaps are blocking;
-    output-IVA gaps remain advisory. A revision with no contributing
+    :class:`~aeat.domain.modelos.ModeloVerificationFinding`. Deductible input-IVA
+    gaps are blocking; output-IVA gaps remain advisory. A revision with no contributing
     transactions, or whose significant rows all carry evidence, yields no
     findings.
     """
@@ -834,10 +834,10 @@ def verify_modelo_revision(
     """Evaluate a draft revision against registry, clean-state, provenance, and workflow gates.
 
     The verifier loads the draft
-    :class:`~aeat.domain.modelos._calculation_revision.CalculationRevision`,
+    :class:`~aeat.domain.modelos.CalculationRevision`,
     resolves its work unit and registry snapshot, builds verify-time findings,
     classifies the outcome, persists a
-    :class:`~aeat.domain.modelos._verification_report.VerificationReport`, records
+    :class:`~aeat.domain.modelos.VerificationReport`, records
     bucket history, and updates the calculation revision only when the
     verified-complete transition is granted.
 
@@ -849,7 +849,7 @@ def verify_modelo_revision(
     severity can refuse the transition.
 
     Returns:
-        The persisted :class:`VerificationReport`.
+        The persisted :class:`~aeat.domain.modelos.VerificationReport`.
 
     Raises:
         CalculationRevisionNotFoundError: The requested calculation revision does
@@ -1028,11 +1028,12 @@ def _build_participation_writes(
     """Build the per-transaction participation-index co-emission writes.
 
     For each ``source_transaction_id`` of the verified revision, load that
-    transaction's existing :class:`TransactionRevisionParticipationIndex`, upsert
+    transaction's existing
+    :class:`~aeat.domain.modelos.TransactionRevisionParticipationIndex`, upsert
     the new ``VERIFICADO_COMPLETO`` participation (replacing any prior entry for
     the same revision), and return the resulting ``SecureObjectWrite`` so the
-    caller co-emits them in the same atomic unit of work as the revision save.
-    A revision with no contributing transactions yields no writes.
+    caller co-emits them in the same atomic unit of work as the revision save. A
+    revision with no contributing transactions yields no writes.
     """
     writes: list[SecureObjectWrite] = []
     for transaction_id in verified.source_transaction_ids:

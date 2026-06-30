@@ -4,16 +4,12 @@ import pytest
 
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M390,
-    FIXTURES_DIR,
     CasillaId,
     Decimal,
-    DeclaracionParseError,
-    RegistryValidationError,
+    _calculate_engine_values_from_inputs,
     _casilla_id,
-    _registry_snapshot,
-    calculate_registry_snapshot,
-    date,
-    parse_declaracion,
+    _decimal_inputs_from_extracted_values,
+    _parse_extracted_declaracion_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -79,19 +75,7 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
       iva.anual.cuota-deducible-total  (box 64): VERIFIED
       iva.anual.resultado-regimen-general (box 65): VERIFIED
     """
-    pdf_path = FIXTURES_DIR / "justificantes" / "390" / f"{pdf_stem}.pdf"
-
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override="390",
-            año_override=year,
-            period_override="0A",
-        )
-    except DeclaracionParseError as exc:
-        pytest.fail(f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised - M390 extraction failed.\n  error: {exc}")
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+    extracted = _parse_extracted_declaracion_values(modelo="390", fixture_stem=pdf_stem, year=year, period="0A")
 
     for required_id in _M390_REQUIRED_CASILLAS:
         assert required_id in extracted, (
@@ -99,13 +83,7 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
             f"not in extracted values - parser did not capture it.\n  got: {sorted(extracted)}"
         )
 
-    inputs: dict[CasillaId, Decimal] = {}
-    for casilla_id, value in extracted.items():
-        if casilla_id in _COMPUTED_CASILLAS_M390:
-            continue
-        if not isinstance(value, Decimal):
-            continue
-        inputs[casilla_id] = value
+    inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M390)
 
     _extracted_comp_97 = extracted.get(_M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA, Decimal("0"))
     _comp_97 = _extracted_comp_97 if isinstance(_extracted_comp_97, Decimal) else Decimal("0")
@@ -118,26 +96,14 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
         "modelo-390-prev-303-compensacion-ultimo-periodo": _comp_97,
         "modelo-390-prev-303-compensacion-generada-ejercicio-no-97": _comp_662,
     }
-
-    snapshot = _registry_snapshot("390", year, "0A")
-
-    try:
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=inputs,
-            date_context={"filing_period": date(year, 12, 31)},
-            binding_values=binding_values,
-        )
-    except RegistryValidationError as exc:
-        pytest.fail(
-            f"BINDING-GAP [{pdf_stem}]: calculate_registry_snapshot raised "
-            f"RegistryValidationError - a required binding is missing.\n"
-            f"  error: {exc}\n"
-            f"  inputs supplied: {sorted(inputs)}\n"
-            f"  binding_values supplied: {sorted(binding_values)}",
-        )
-
-    engine_values = dict(result.values)
+    engine_values = _calculate_engine_values_from_inputs(
+        modelo="390",
+        year=year,
+        period="0A",
+        label=pdf_stem,
+        inputs=inputs,
+        binding_values=binding_values,
+    )
 
     extracted_devengada = extracted[_M390_CUOTA_DEVENGADA_TOTAL_CASILLA]
     engine_devengada = engine_values.get(_M390_CUOTA_DEVENGADA_TOTAL_CASILLA)

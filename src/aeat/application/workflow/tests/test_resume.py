@@ -56,7 +56,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 _T = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
-_BUCKET_ID = "test-runtime-profile"
+_BUCKET_ID = "a38b7cd5-d38e-4d69-809f-5a244c74e08b"
 _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="identity.tax_id", value="00000000T"),
     UserProfileFact(path="identity.name", value="Test Operator"),

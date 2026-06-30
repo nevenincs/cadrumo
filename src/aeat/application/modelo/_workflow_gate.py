@@ -5,11 +5,13 @@ participate in the filing workflow engine. The public application facade
 continues to export the operator-facing services from
 :mod:`aeat.application.modelo`.
 
-The gate adapts one persisted :class:`CalculationRevision` and its
-:class:`~aeat.domain.modelos._work_unit.WorkUnit` into
-:class:`~aeat.application.workflow.WorkflowEngine` inputs. It scopes deadline and
-filing-window checks with :class:`TaxpayerProfile`, and locally approves filing
-drafts through the transient :class:`TransactionCatalogue` used by the filing
+The gate adapts one persisted
+:class:`~aeat.domain.modelos.CalculationRevision` and its
+:class:`~aeat.domain.modelos.WorkUnit` into
+:class:`~aeat.application.workflow.WorkflowEngine` inputs. It scopes deadline
+and filing-window checks with :class:`~aeat.domain.deadlines.TaxpayerProfile`,
+and locally approves filing drafts through the transient
+:class:`~aeat.domain.transactions.TransactionCatalogue` used by the filing
 surface.
 
 The gate is a precondition runner, not the owner of verification reports or
@@ -19,7 +21,7 @@ verification findings have granted, while
 :mod:`aeat.application.modelo._filing_actions` invokes it with
 :class:`~aeat.application.workflow.WorkflowPurpose.FILE` before local
 mark-as-filed persistence. Aborted workflow runs are persisted for audit and then
-surfaced as :class:`ModeloWorkflowGateError`.
+surfaced as :class:`~aeat.application.modelo.ModeloWorkflowGateError`.
 
 See Also:
     :mod:`aeat.application.workflow._engine`:

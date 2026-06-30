@@ -4,27 +4,17 @@ import pytest
 
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M131,
-    FIXTURES_DIR,
     BindingId,
     CasillaId,
     Decimal,
-    DeclaracionParseError,
-    RegistryValidationError,
-    _period_to_date,
-    _registry_snapshot,
-    calculate_registry_snapshot,
-    parse_declaracion,
-    validated_casilla_id,
+    _assert_engine_closure_matches_extracted_decimal,
+    _calculate_engine_values_from_inputs,
+    _casilla_id,
+    _decimal_inputs_from_extracted_values,
+    _parse_extracted_declaracion_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
-
-
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
 
 
 _M131_CLOSURE_CASILLAS: tuple[CasillaId, ...] = (
@@ -63,64 +53,34 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
 
     Verdict: VERIFIED - all four formula closure casillas match fixture values.
     """
-    pdf_path = FIXTURES_DIR / "justificantes" / "131" / "2024-1T.pdf"
-
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override="131",
-            año_override=2026,
-            template_revision_override="2026",
-            period_override="1T",
-        )
-    except DeclaracionParseError as exc:
-        detail = exc.translated_message or str(exc) or type(exc).__name__
-        context = exc.context if exc.context else {}
-        pytest.fail(
-            f"PARSER-GAP [M131/2024-1T.pdf/yr=2026]: parse_declaracion raised.\n  error: {detail} (context={context})",
-        )
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
-
-    inputs: dict[CasillaId, Decimal] = {
-        cid: val
-        for cid, val in extracted.items()
-        if cid not in _COMPUTED_CASILLAS_M131 and isinstance(val, Decimal)
-    }
+    extracted = _parse_extracted_declaracion_values(
+        modelo="131",
+        fixture_stem="2024-1T",
+        year=2026,
+        period="1T",
+        template_revision="2026",
+    )
+    inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M131)
 
     binding_values: dict[BindingId, Decimal] = {
         "modelo-131-2026-resultados-negativos-anteriores": Decimal("0"),
     }
-
-    snapshot = _registry_snapshot("131", 2026, "1T")
-    filing_period_date = _period_to_date(2026, "1T")
-
-    try:
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=inputs,
-            date_context={"filing_period": filing_period_date},
-            binding_values=binding_values,
-        )
-    except RegistryValidationError as exc:
-        pytest.fail(
-            f"BINDING-GAP [M131/yr=2026-1T]: calculate_registry_snapshot raised "
-            f"RegistryValidationError.\n  error: {exc}\n"
-            f"  inputs: {sorted(inputs)}\n  binding_values: {sorted(binding_values)}",
-        )
-
-    engine_values = dict(result.values)
+    engine_values = _calculate_engine_values_from_inputs(
+        modelo="131",
+        year=2026,
+        period="1T",
+        label="M131/yr=2026-1T",
+        inputs=inputs,
+        binding_values=binding_values,
+    )
 
     for closure_id in _M131_CLOSURE_CASILLAS:
         if closure_id not in extracted:
             continue
-        extracted_val = extracted[closure_id]
-        assert isinstance(extracted_val, Decimal)
-        engine_val = engine_values.get(closure_id)
-        assert engine_val is not None, (
-            f"FORMULA-MISMATCH [M131/yr=2026-1T]: casilla {closure_id!r} absent from engine result."
-        )
-        assert engine_val == extracted_val, (
-            f"FORMULA-MISMATCH [M131/yr=2026-1T]: engine casilla {closure_id!r} = {engine_val!r}, "
-            f"AEAT-printed = {extracted_val!r}.\n  inputs: {inputs}"
+        _assert_engine_closure_matches_extracted_decimal(
+            label="M131/yr=2026-1T",
+            engine_values=engine_values,
+            extracted=extracted,
+            casilla_id=closure_id,
+            inputs=inputs,
         )

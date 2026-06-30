@@ -34,11 +34,14 @@ WU_A = _hex64("wu-A")
 WU_B = _hex64("wu-B")
 REV_1_ID = _hex64("rev-1")
 FILING_1_ID = _hex64("filing-1")
+_BUCKET_ID = "41e0c259-7c89-4c5f-9908-c5d44d8d77a8"
+_BUCKET_A_ID = "2585593c-dcdb-4af7-8c1a-4852593c2d4e"
+_BUCKET_B_ID = "e46b34f4-5d44-49da-97f8-830ec116d038"
 
 
 @pytest.fixture
 def runtime_profile(tmp_path: Path) -> Generator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-001") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile
 
 
@@ -74,7 +77,7 @@ class TestBuild:
             filing_record_id=FILING_1_ID,
         )
         assert len(bundle.bundle_id) == 64  # sha256 hex
-        assert bundle.bucket_id == "bucket-001"
+        assert bundle.bucket_id == _BUCKET_ID
         assert bundle.work_unit_id == WU_100
         assert len(bundle.records) == 2
         assert bundle.verification_state is BundleVerificationState.PENDING
@@ -320,7 +323,7 @@ class TestBucketIsolation:
         tmp_path: Path,
         payloads: dict[tuple[str, str], bytes],
     ) -> None:
-        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-A") as profile_a:
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_A_ID) as profile_a:
             service_a = EvidenceBundleService(settings=profile_a.settings)
             a_added = service_a.build(
                 bucket_id=profile_a.bucket_id,
@@ -329,7 +332,7 @@ class TestBucketIsolation:
             )
             assert service_a.show(bucket_id=profile_a.bucket_id, bundle_id=a_added.bundle_id) == a_added
 
-        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-B") as profile_b:
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_B_ID) as profile_b:
             service_b = EvidenceBundleService(settings=profile_b.settings)
             b_added = service_b.build(
                 bucket_id=profile_b.bucket_id,
@@ -362,13 +365,13 @@ class TestDeriveBundleId:
             payload_size_bytes=10,
         )
         id_a = derive_bundle_id(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             work_unit_id=WU_1,
             manifest_version=1,
             records=(rec_a,),
         )
         id_b = derive_bundle_id(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             work_unit_id=WU_1,
             manifest_version=1,
             records=(rec_b,),

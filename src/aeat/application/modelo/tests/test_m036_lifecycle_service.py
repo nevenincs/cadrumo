@@ -47,7 +47,7 @@ def test_record_alta_persists_result_with_bucket_scope(tmp_path: Path) -> None:
         result = record_m036_declaration(_alta_command(), bucket_id=runtime.bucket_id)
 
     assert isinstance(result, M036DeclarationResult)
-    assert result.bucket_id == "test-runtime-profile"
+    assert result.bucket_id == runtime.bucket_id
     assert result.event_kind is CensoModeloEventKind.ALTA
     assert result.profile_id == _PROFILE_ID
     assert result.declared_on == date(2026, 6, 4)

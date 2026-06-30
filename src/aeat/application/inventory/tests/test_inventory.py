@@ -24,10 +24,15 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_BUCKET_ID = "f2b75bc8-7925-49a1-9744-55c86dce3064"
+_BUCKET_A_ID = "b319db66-5926-4885-80db-2d3c9137b2e6"
+_BUCKET_B_ID = "f054bdb7-870f-40e6-b7c8-99d9a9c9d265"
+_OTHER_BUCKET_ID = "7add327e-476e-4abe-b306-a25d88026213"
+
 
 @pytest.fixture
 def secure_engine(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile
 
 
@@ -334,17 +339,17 @@ class TestBucketIsolation:
         svc = _make_svc(secure_engine)
 
         with pytest.raises(StorageValidationError, match=r"route does not match|storage runtime is not ready"):
-            svc.list_all(bucket_id="different-bucket")
+            svc.list_all(bucket_id=_OTHER_BUCKET_ID)
 
     def test_ledgers_are_runtime_profile_scoped(self, tmp_path: Path) -> None:
-        with isolated_runtime_profile(tmp_path=tmp_path / "bucket-a", bucket_id="bucket-A") as bucket_a:
+        with isolated_runtime_profile(tmp_path=tmp_path / "profile-a", bucket_id=_BUCKET_A_ID) as bucket_a:
             svc_a = _make_svc(bucket_a)
             svc_a.create(bucket_id=bucket_a.bucket_id, actividad_id="A1", year=2025, valuation_method="fifo")
             assert svc_a.show(bucket_id=bucket_a.bucket_id, actividad_id="A1", year=2025).valuation_method is (
                 ValuationMethod.FIFO
             )
 
-        with isolated_runtime_profile(tmp_path=tmp_path / "bucket-b", bucket_id="bucket-B") as bucket_b:
+        with isolated_runtime_profile(tmp_path=tmp_path / "profile-b", bucket_id=_BUCKET_B_ID) as bucket_b:
             svc_b = _make_svc(bucket_b)
             assert svc_b.list_all(bucket_id=bucket_b.bucket_id) == ()
             svc_b.create(bucket_id=bucket_b.bucket_id, actividad_id="A1", year=2025, valuation_method="pmp")

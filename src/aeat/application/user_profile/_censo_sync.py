@@ -1,12 +1,12 @@
-"""Operator-facing 036 censo-sync service.
+"""Operator-facing Modelo 036 censo-sync service.
 
 :class:`CensoSyncService` exposes the four-verb surface the CLI mounts
 under ``aeat config profile censo {refresh, show, compare, apply}``.
-Persisted profile facts are stamped onto a :class:`UserProfileRecord`
-on ``apply``. AEAT is
-the binding legal source of truth for censo data; this service is the
-only path that captures censo facts into the secure store and stamps
-them onto the operator's profile.
+Persisted profile facts are stamped onto a
+:class:`~aeat.domain.user_profile.UserProfileRecord` on ``apply``. AEAT
+is the binding legal source of truth for censo data; this service is the
+only application path that captures censo facts into the secure store
+and stamps them onto the operator's profile.
 
 The service composes:
 
@@ -19,11 +19,11 @@ The service composes:
 
 The sede G313 live fetch is injected as a ``fact_source`` callable so
 the same service body backs both the production sede adapter and
-test scaffolding without conditional code paths. The dependent-
-stamping walker (mark CalculationRevision / WorkUnit / ModeloDraft /
-ModeloRecord as CENSO_STALE on apply) is the P05 follow-on; this
-service emits ``CENSO_APPLIED`` so the walker can hook in via that
-event without further coupling.
+real-behavior tests without conditional code paths. This service owns
+profile-fact writes and ``CENSO_REFRESHED`` / ``CENSO_APPLIED`` event
+emission. It does not mutate work units, calculation revisions, drafts,
+or filing records directly; consumers that need downstream stale-state
+handling react to the bucket events outside this module.
 """
 
 from __future__ import annotations
@@ -317,16 +317,17 @@ class CensoSyncService:
     ) -> CensoApplyResult:
         """Stamp the snapshot facts onto the profile, replacing prior ``aeat_censo_read`` facts.
 
-        Every raw censo fact lands as a :class:`UserProfileFact` with
+        Every raw censo fact lands as a
+        :class:`~aeat.domain.user_profile.UserProfileFact` with
         ``source = "aeat_censo_read"``. Facts defensibly derived from
-        the censo/profile pair land with ``source =
-        "aeat_censo_derived"``. Pre-existing facts from either censo
-        source are replaced; facts from other sources (``manual_cli``,
-        wizard) are preserved untouched so operator-entered values stay
-        addressable for the compare verb.
+        the censo/profile pair land with
+        ``source = "aeat_censo_derived"``. Pre-existing facts from
+        either censo source are replaced; facts from other sources
+        (``manual_cli``, wizard) are preserved untouched so
+        operator-entered values stay addressable for the compare verb.
 
         Emits ``CENSO_APPLIED`` on the bucket-event-history catalogue
-        itself so the stale-cascade walker can react without the CLI
+        itself so downstream maintenance can react without the CLI
         owning event-enrolment policy.
 
         Raises :exc:`CensoApplyConflictError` when the profile is

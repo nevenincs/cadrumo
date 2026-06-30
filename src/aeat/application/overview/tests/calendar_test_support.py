@@ -13,6 +13,7 @@ from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....adapters.outbound.aeat.sede._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 from ....core import Period
+from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, RegistryModeloObservation, validated_casilla_id
 from ....domain.deadlines import (
     DeadlineEngine,
@@ -45,10 +46,13 @@ from .. import (
 SOURCE_URL = aeat_url("sede", "/")
 WORK_UNIT_ID = "a" * 64
 CALCULATION_REVISION_ID = "b" * 64
-BUCKET_ID = "c" * 32
+BUCKET_ID = "7390a6bb-5577-4e08-8518-16e6292f690f"
 PERIOD_2025_1T = Period.from_year_and_code(2025, "1T")
 FILED_JUSTIFICANTE_STORAGE_REF = "secure-object:financial:" + "d" * 64
 OBSERVED_CASILLA: CasillaId = validated_casilla_id("01", surface="overview calendar observed casilla")
+OBSERVED_REVISION_ID = str(
+    resources().modelos.authority.snapshot("303", filing_year=2025, period=PERIOD_2025_1T.registry_token).revision.id,
+)
 
 
 @cache
@@ -208,11 +212,13 @@ def calculation_observation_payload(
             observation=observation,
             captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
             source_kind=source_kind,
+            stamped_revision_id=OBSERVED_REVISION_ID,
         )
     return CalculationObservationRepository.payload_type(
         observation=observation,
         captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         source_kind=source_kind,
+        stamped_revision_id=OBSERVED_REVISION_ID,
         source_metadata=source_metadata,
     )
 

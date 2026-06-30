@@ -18,20 +18,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _VALID_KEK = bytes(range(32))
 _VALID_DEK = bytes(range(32, 64))
+_BUCKET_ID = "66666666-6666-4666-8666-666666666666"
 
 
 def test_wrap_dek_raises_encryption_error_for_short_kek() -> None:
     """_dek_wrap.py:74 — short kek raises EncryptionError."""
 
     with pytest.raises(EncryptionError, match="kek must be exactly 32 bytes"):
-        wrap_dek(kek=b"x" * 16, dek=_VALID_DEK, bucket_id="bucket-a")
+        wrap_dek(kek=b"x" * 16, dek=_VALID_DEK, bucket_id=_BUCKET_ID)
 
 
 def test_wrap_dek_raises_encryption_error_for_short_dek() -> None:
     """_dek_wrap.py:76 — short dek raises EncryptionError."""
 
     with pytest.raises(EncryptionError, match="dek must be exactly 32 bytes"):
-        wrap_dek(kek=_VALID_KEK, dek=b"x" * 16, bucket_id="bucket-a")
+        wrap_dek(kek=_VALID_KEK, dek=b"x" * 16, bucket_id=_BUCKET_ID)
 
 
 def test_wrap_dek_raises_encryption_error_for_empty_bucket_id() -> None:

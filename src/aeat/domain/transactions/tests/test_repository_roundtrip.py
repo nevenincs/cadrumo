@@ -37,6 +37,8 @@ from .._repository import TransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_BUCKET_ID = "33333333-3333-4333-8333-333333333333"
+
 
 def _raw(provider_id: str, amount: Decimal, description: str) -> RawTransaction:
     return RawTransaction(
@@ -85,7 +87,7 @@ def test_transaction_catalogue_survives_encrypted_storage_roundtrip(
 ) -> None:
     """A populated transaction catalogue round-trips through the encrypted bucket store."""
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         mixed_txn = _transaction(
             provider_id="provider-row-1",
@@ -122,7 +124,7 @@ def test_transaction_catalogue_survives_encrypted_storage_roundtrip(
     # Provenance must survive ingest.
     assert loaded_mixed.raw.provenance.source_format is SourceFormat.CSV
     assert loaded_mixed.raw.provenance.source_row_index == 7
-    assert (tmp_path / "aeat-storage" / "buckets" / "default-bucket" / "db" / "aeat.db").is_file()
+    assert (tmp_path / "aeat-storage" / "buckets" / _BUCKET_ID / "db" / "aeat.db").is_file()
 
 
 def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
@@ -145,7 +147,7 @@ def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
 
     from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         mixed_txn = _transaction(
             provider_id="provider-row-1",
@@ -202,7 +204,7 @@ def test_transaction_catalogue_inner_classification_mismatch_is_structured(
 
     from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         txn = _transaction(
             provider_id="provider-row-1",
@@ -254,7 +256,7 @@ def test_transaction_catalogue_inner_schema_version_mismatch_is_structured(
 
     from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         txn = _transaction(
             provider_id="provider-row-1",
@@ -309,7 +311,7 @@ def test_transaction_catalogue_preserves_source_jurisdiction_through_encrypted_s
     the Art. 93 LIRPF Beckham base filter.
     """
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         spanish_txn = Transaction.model_validate(
             {
@@ -346,7 +348,7 @@ def test_transaction_catalogue_grandfathers_missing_source_jurisdiction_key(
 
     from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         spanish_txn = Transaction.model_validate(
             {
@@ -404,7 +406,7 @@ def test_transaction_catalogue_preserves_group_label_through_encrypted_storage(
     grouping made over thousands of rows.
     """
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         labelled = Transaction.model_validate(
             {
@@ -439,7 +441,7 @@ def test_transaction_catalogue_grandfathers_missing_group_label_key(
 
     from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         labelled = Transaction.model_validate(
             {
@@ -495,7 +497,7 @@ def test_transaction_catalogue_preserves_nonnegative_amount_and_direction(
     axis would silently lose the operator's flow encoding.
     """
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         outgoing = _transaction(
             provider_id="provider-row-out",
@@ -536,7 +538,7 @@ def test_transaction_catalogue_preserves_created_modified_at_through_encrypted_s
     silently lose the temporal sort key for every persisted row.
     """
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         created = datetime(2024, 4, 14, 9, 30, tzinfo=UTC)
         modified = datetime(2024, 6, 1, 16, 45, tzinfo=UTC)
@@ -578,7 +580,7 @@ def test_transaction_catalogue_rejects_missing_created_at_key(
 
     from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         created = datetime(2024, 4, 14, 9, 30, tzinfo=UTC)
         modified = datetime(2024, 6, 1, 16, 45, tzinfo=UTC)
@@ -641,7 +643,7 @@ def test_transaction_catalogue_negative_amount_payload_rejected_at_load(
 
     from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         txn = _transaction(
             provider_id="provider-row-1",

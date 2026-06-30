@@ -34,6 +34,8 @@ from .._errors import LiveApplicationInputError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PERIOD = Period.from_year_and_code(2024, "0A")
+_BUCKET_ID = "50505050-5050-4050-8050-505050505050"
+_OTHER_BUCKET_ID = "51515151-5151-4151-8151-515151515151"
 
 
 def _borrador_detail_url(expediente_id: str) -> str:
@@ -81,7 +83,7 @@ def test_borrador_100_snapshot_survives_encrypted_storage_roundtrip(
 ) -> None:
     """A populated borrador snapshot round-trips through the encrypted store."""
 
-    bucket_id = "renta-2024-bucket"
+    bucket_id = _BUCKET_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
         repo = Borrador100SnapshotRepository(bucket_id=bucket_id)
         original = _populated_snapshot(bucket_id=bucket_id)
@@ -104,10 +106,10 @@ def test_borrador_100_repository_default_refuses_active_bucket_mismatch(tmp_path
     """A repository for bucket-b must not write logical bucket-b rows into bucket-a storage."""
 
     with (
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a"),
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID),
         pytest.raises(StorageValidationError, match="storage runtime is not ready"),
     ):
-        Borrador100SnapshotRepository(bucket_id="bucket-b")
+        Borrador100SnapshotRepository(bucket_id=_OTHER_BUCKET_ID)
 
 
 def test_borrador_100_superseded_state_survives_encrypted_storage_roundtrip(
@@ -123,7 +125,7 @@ def test_borrador_100_superseded_state_survives_encrypted_storage_roundtrip(
     as the model_validator rejecting the rehydrated record.
     """
 
-    bucket_id = "renta-2024-bucket"
+    bucket_id = _BUCKET_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         repo = Borrador100SnapshotRepository(bucket_id=bucket_id)
         # First save the successor so the supersession pointer references
@@ -194,7 +196,7 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
     from ....adapters.persistence.storage.sql._orm import SecureObjectRow
     from ....adapters.persistence.storage.sql.session import session_scope
 
-    bucket_id = "renta-2024-bucket"
+    bucket_id = _BUCKET_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
         repo = Borrador100SnapshotRepository(bucket_id=bucket_id)
 

@@ -6,17 +6,13 @@ import pytest
 
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M111,
-    FIXTURES_DIR,
     CasillaId,
-    Decimal,
-    DeclaracionParseError,
-    RegistryValidationError,
+    _assert_engine_closure_matches_extracted_decimal,
+    _calculate_engine_values_from_inputs,
     _casilla_id,
     _casilla_ids,
-    _period_to_date,
-    _registry_snapshot,
-    calculate_registry_snapshot,
-    parse_declaracion,
+    _decimal_inputs_from_extracted_values,
+    _parse_extracted_declaracion_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -55,67 +51,31 @@ def test_verification_chain_m111_engine_recomputes_closure_casillas_28_and_30(
     GROUNDED authority: AEAT corpus PDFs from the sanitised real-form fixture
     set committed at src/aeat/tests/fixtures/justificantes/111/.
     """
-    pdf_path = FIXTURES_DIR / "justificantes" / "111" / f"{pdf_stem}.pdf"
-
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override="111",
-            año_override=year,
-            period_override=period,
-        )
-    except DeclaracionParseError as exc:
-        pytest.fail(f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised DeclaracionParseError.\n  error: {exc}")
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
-
-    inputs: dict[CasillaId, Decimal] = {}
-    for casilla_id, value in extracted.items():
-        if casilla_id in _COMPUTED_CASILLAS_M111:
-            continue
-        if isinstance(value, Decimal):
-            inputs[casilla_id] = value
-
-    snapshot = _registry_snapshot("111", year, period)
-    filing_period_date = _period_to_date(year, period)
-
-    try:
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=inputs,
-            date_context={"filing_period": filing_period_date},
-        )
-    except RegistryValidationError as exc:
-        pytest.fail(
-            f"BINDING-GAP [{pdf_stem}]: calculate_registry_snapshot raised "
-            f"RegistryValidationError - a required binding is missing.\n"
-            f"  error: {exc}\n"
-            f"  inputs supplied: {sorted(inputs)}",
-        )
-
-    engine_values = dict(result.values)
+    extracted = _parse_extracted_declaracion_values(modelo="111", fixture_stem=pdf_stem, year=year, period=period)
+    inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M111)
+    engine_values = _calculate_engine_values_from_inputs(
+        modelo="111",
+        year=year,
+        period=period,
+        label=pdf_stem,
+        inputs=inputs,
+    )
     has_leaf_inputs = bool(inputs.keys() & _M111_RETENCIONES_TOTAL_LEAVES)
 
     if _M111_RETENCIONES_TOTAL_CASILLA in extracted and has_leaf_inputs:
-        extracted_28 = extracted[_M111_RETENCIONES_TOTAL_CASILLA]
-        assert isinstance(extracted_28, Decimal)
-        engine_28 = engine_values.get(_M111_RETENCIONES_TOTAL_CASILLA)
-        assert engine_28 is not None, f"FORMULA-MISMATCH [{pdf_stem}]: casilla '28' absent from engine result."
-        assert engine_28 == extracted_28, (
-            f"FORMULA-MISMATCH [{pdf_stem}]: engine casilla '28' = {engine_28!r}, "
-            f"AEAT-printed = {extracted_28!r}.\n"
-            f"  diff: {engine_28 - extracted_28!r}\n"
-            f"  inputs: {inputs}"
+        _assert_engine_closure_matches_extracted_decimal(
+            label=pdf_stem,
+            engine_values=engine_values,
+            extracted=extracted,
+            casilla_id=_M111_RETENCIONES_TOTAL_CASILLA,
+            inputs=inputs,
         )
 
     if _M111_RESULTADO_CASILLA in extracted and has_leaf_inputs:
-        extracted_30 = extracted[_M111_RESULTADO_CASILLA]
-        assert isinstance(extracted_30, Decimal)
-        engine_30 = engine_values.get(_M111_RESULTADO_CASILLA)
-        assert engine_30 is not None, f"FORMULA-MISMATCH [{pdf_stem}]: casilla '30' absent from engine result."
-        assert engine_30 == extracted_30, (
-            f"FORMULA-MISMATCH [{pdf_stem}]: engine casilla '30' = {engine_30!r}, "
-            f"AEAT-printed = {extracted_30!r}.\n"
-            f"  diff: {engine_30 - extracted_30!r}\n"
-            f"  inputs: {inputs}"
+        _assert_engine_closure_matches_extracted_decimal(
+            label=pdf_stem,
+            engine_values=engine_values,
+            extracted=extracted,
+            casilla_id=_M111_RESULTADO_CASILLA,
+            inputs=inputs,
         )

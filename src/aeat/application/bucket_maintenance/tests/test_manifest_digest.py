@@ -25,9 +25,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 _INSTANT = datetime(2026, 6, 3, 12, 0, 0, tzinfo=UTC)
+_BUCKET_ID = "e7dcd668-cc45-4b13-8186-947dfe1319d1"
+_OTHER_BUCKET_ID = "7ba57eb5-ac32-449d-a8f7-ddac8130a873"
 
 
-def _manifest(*, bucket_id: str = "test-bucket", label: str = "Test label") -> BucketManifest:
+def _manifest(*, bucket_id: str = _BUCKET_ID, label: str = "Test label") -> BucketManifest:
     return BucketManifest(
         bucket_id=bucket_id,
         label=label,
@@ -76,7 +78,7 @@ def test_digest_changes_when_label_changes() -> None:
 
 def test_digest_changes_when_bucket_id_changes() -> None:
     """A bucket_id edit shifts the digest — the importer's identity-collision guard relies on this."""
-    digest_a = compute_manifest_digest(_manifest(bucket_id="bucket-a"))
-    digest_b = compute_manifest_digest(_manifest(bucket_id="bucket-b"))
+    digest_a = compute_manifest_digest(_manifest(bucket_id=_BUCKET_ID))
+    digest_b = compute_manifest_digest(_manifest(bucket_id=_OTHER_BUCKET_ID))
 
     assert digest_a != digest_b

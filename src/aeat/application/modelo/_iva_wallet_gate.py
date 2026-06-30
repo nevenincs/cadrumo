@@ -2,30 +2,34 @@
 
 Modelo 303 prior-compensation belongs to the IVA wallet authority, not to the
 generic previous-filing source mesh. This module uses the calculation
-:class:`RegistrySnapshot` and :class:`ModeloRevision` to route the wallet
+:class:`~aeat.domain.calculations.registry.RegistrySnapshot` and
+:class:`~aeat.domain.calculations.registry.ModeloRevision` to route the wallet
 decision into the prior-compensation binding, then checks a persisted
 :class:`~aeat.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`
-against the exported or filed :class:`CalculationRevision`.
+against the exported or filed
+:class:`~aeat.domain.modelos.CalculationRevision`.
 
 The gate is deliberately repository-backed: transient wallet decisions cannot
 feed the Modelo 303 engine unless the same decision is already present in
-:class:`IvaWalletDecisionRepository` for the work-unit taxpayer and period.
-Calculation, verification, internal filing, and export all replay this authority
-instead of trusting a caller-provided binding value for casilla 110. Blocked,
-missing, stale, target-mismatched, or amount-mismatched decisions raise
-:class:`ModeloIvaWalletReconciliationBlockedError` before a revision, filing
-record, or fichero-BOE artefact can be persisted.
+:class:`~aeat.application.calculations.IvaWalletDecisionRepository` for the
+work-unit taxpayer and period. Calculation, verification, internal filing, and
+export all replay this authority instead of trusting a caller-provided binding
+value for casilla 110. Blocked, missing, stale, target-mismatched, or
+amount-mismatched decisions raise
+:class:`~aeat.application.modelo.ModeloIvaWalletReconciliationBlockedError`
+before a revision, filing record, or fichero-BOE artefact can be persisted.
 
 The only lazy path is local-authority derivation for a bucket-scoped
-:class:`WorkUnit`: it can persist a non-blocking local recurrence decision, and a
-``first_period_zero`` decision is accepted only when profile activity-start
-evidence and the :class:`RegistrySnapshot` prove every prior Modelo 303
-compensation dependency is pre-activity.
+:class:`~aeat.domain.modelos.WorkUnit`: it can persist a non-blocking local
+recurrence decision, and a ``first_period_zero`` decision is accepted only when
+profile activity-start evidence and the
+:class:`~aeat.domain.calculations.registry.RegistrySnapshot` prove every prior
+Modelo 303 compensation dependency is pre-activity.
 
 See Also:
     :func:`aeat.application.calculations.reconcile_modelo_303_iva_compensation`:
         Builds and persists the reconciliation decision consumed here.
-    :class:`aeat.application.calculations.IvaWalletDecisionSourceResolver`:
+    :class:`~aeat.application.calculations.IvaWalletDecisionSourceResolver`:
         Projects a non-blocking decision into calculation binding values.
     :func:`aeat.application.modelo._verification_actions._require_cross_period_clean_state`:
         Treats matching IVA-wallet authority as the Modelo 303 compensation gate.
@@ -85,7 +89,7 @@ _M303_PRIOR_COMPENSATION_ORIGIN_IDS: Final[frozenset[str]] = frozenset(
 
 
 def _casilla_id(value: object) -> CasillaId:
-    """Validate a static IVA-wallet casilla constant as a :class:`CasillaId`."""
+    """Validate a static IVA-wallet casilla constant as a :class:`~aeat.domain.calculations.registry.CasillaId`."""
     try:
         return validated_casilla_id(value, surface="IVA wallet gate casilla constant")
     except ValueError as exc:
@@ -122,15 +126,16 @@ def resolve_iva_compensation_decision_for_calculation(
 ) -> object | None:
     """Resolve the Modelo 303 IVA wallet decision that may feed calculation bindings.
 
-    The :class:`WorkUnit` fixes the bucket, taxpayer profile lookup, target
-    period, and registry revision; the :class:`RegistrySnapshot` is passed to the
+    The :class:`~aeat.domain.modelos.WorkUnit` fixes the bucket, taxpayer profile
+    lookup, target period, and registry revision; the
+    :class:`~aeat.domain.calculations.registry.RegistrySnapshot` is passed to the
     lazy reconciliation path when no caller-supplied or persisted wallet decision
     exists. A supplied decision must match the persisted
-    :class:`IvaCompensationReconciliationDecision`. If the caller supplied a
-    prior-compensation binding or casilla without a decision, the function tries
-    only the local-authority zero path and otherwise returns ``None`` so
-    calculation surfaces the seed/reconcile guidance instead of silently trusting
-    the value.
+    :class:`~aeat.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`.
+    If the caller supplied a prior-compensation binding or casilla without a
+    decision, the function tries only the local-authority zero path and otherwise
+    returns ``None`` so calculation surfaces the seed/reconcile guidance instead
+    of silently trusting the value.
     """
     if supplied_decision is None:
         persisted = load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
@@ -199,12 +204,12 @@ def apply_iva_compensation_decision_binding(
 ) -> None:
     """Apply a non-blocking IVA wallet decision to Modelo 303 binding values.
 
-    The :class:`ModeloRevision` defines the binding channel; the decision amount
-    is written only after target period and taxpayer identity checks pass. Caller
-    and backend inputs for the same binding or casilla must either match the
-    selected decision amount or are refused as conflicts. The effective value is
-    then produced through
-    :class:`aeat.application.calculations.IvaWalletDecisionSourceResolver`, so
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` defines the
+    binding channel; the decision amount is written only after target period and
+    taxpayer identity checks pass. Caller and backend inputs for the same binding
+    or casilla must either match the selected decision amount or are refused as
+    conflicts. The effective value is then produced through
+    :class:`~aeat.application.calculations.IvaWalletDecisionSourceResolver`, so
     the calculation source mesh records the IVA-wallet provenance instead of a
     generic ``previous_filing`` source.
     """
@@ -303,11 +308,13 @@ def require_persisted_iva_compensation_decision_for_work_unit(
 ) -> object:
     """Require a supplied Modelo 303 wallet decision to match the persisted decision.
 
-    The optional :class:`RegistrySnapshot` grounds first-period-zero decisions;
-    when omitted, the function resolves the snapshot from the supplied
-    :class:`WorkUnit`. This check prevents a transient or stale
-    :class:`IvaCompensationReconciliationDecision` from feeding calculation
-    values unless the repository contains the same authority record.
+    The optional :class:`~aeat.domain.calculations.registry.RegistrySnapshot`
+    grounds first-period-zero decisions; when omitted, the function resolves the
+    snapshot from the supplied :class:`~aeat.domain.modelos.WorkUnit`. This check
+    prevents a transient or stale
+    :class:`~aeat.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`
+    from feeding calculation values unless the repository contains the same
+    authority record.
     """
     if work_unit.modelo != Modelo.M303:
         return supplied_decision
@@ -335,7 +342,7 @@ def load_persisted_iva_compensation_decision_for_work_unit(
     *,
     repository: IvaWalletDecisionRepository | None = None,
 ) -> IvaCompensationReconciliationDecision | None:
-    """Load the persisted :class:`IvaCompensationReconciliationDecision` for a :class:`WorkUnit`."""
+    """Load the persisted IVA compensation decision for a :class:`~aeat.domain.modelos.WorkUnit`."""
     if work_unit.modelo != Modelo.M303:
         return None
     taxpayer_nif = taxpayer_nif_for_bucket(work_unit.bucket_id)
@@ -555,15 +562,17 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
     """Auto-derive and persist the local-authority Modelo 303 compensation decision.
 
     Calculate's prior-compensation gate requires a persisted
-    :class:`IvaCompensationReconciliationDecision`. In the seed-only local
-    authority case, the local Modelo 303 recurrence is the authority, so derive
-    and persist the decision here instead of refusing calculation.
+    :class:`~aeat.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`.
+    In the seed-only local authority case, the local Modelo 303 recurrence is the
+    authority, so derive and persist the decision here instead of refusing
+    calculation.
 
-    The :class:`RegistrySnapshot` supplies the Modelo 303 revision context for
-    the reconciliation service. Missing local recurrence is treated as
-    ``first_period_zero`` only when the work unit's profile activity-start date
-    scopes every Modelo 303 compensation dependency out as pre-activity; otherwise
-    the reconciliation remains a blocking missing-authority state.
+    The :class:`~aeat.domain.calculations.registry.RegistrySnapshot` supplies the
+    Modelo 303 revision context for the reconciliation service. Missing local
+    recurrence is treated as ``first_period_zero`` only when the work unit's
+    profile activity-start date scopes every Modelo 303 compensation dependency
+    out as pre-activity; otherwise the reconciliation remains a blocking
+    missing-authority state.
     """
     if work_unit.modelo != Modelo.M303:
         return None
@@ -675,10 +684,11 @@ def require_persisted_iva_compensation_decision_matches_revision(
     *,
     repository: IvaWalletDecisionRepository | None = None,
 ) -> IvaCompensationReconciliationDecision | None:
-    """Return the :class:`IvaCompensationReconciliationDecision` when it matches the revision.
+    """Return the IVA compensation decision when it matches the revision.
 
-    The check reads the supplied :class:`CalculationRevision` and blocks
-    verification, internal filing, or export when its Modelo 303
+    The check reads the supplied
+    :class:`~aeat.domain.modelos.CalculationRevision` and blocks verification,
+    internal filing, or export when its Modelo 303
     prior-compensation amount differs from the persisted wallet decision, when
     the decision targets another period, or when the decision is blocked/missing.
     Non-Modelo 303 work units return ``None`` because the IVA wallet authority
@@ -744,8 +754,8 @@ def require_persisted_iva_compensation_decision_matches_revision(
 def revision_iva_compensation_amount(revision: CalculationRevision) -> Decimal | None:
     """Return the Modelo 303 prior-compensation amount carried by a revision.
 
-    Reads the :class:`CalculationRevision` casilla values first, then binding
-    overrides, matching the persisted calculation payload.
+    Reads the :class:`~aeat.domain.modelos.CalculationRevision` casilla values
+    first, then binding overrides, matching the persisted calculation payload.
     """
     casilla_value = dict(revision.casilla_values).get(_M303_PRIOR_COMPENSATION_CASILLA_ID)
     if casilla_value is not None:

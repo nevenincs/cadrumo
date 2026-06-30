@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ._parser_boundary_part2_support import (
+from ._parser_boundary_casillas import (
     _M349_IMPORTE_OPERACIONES_CASILLA,
     _M349_IMPORTE_RECTIFICACIONES_CASILLA,
     _M349_NUMERO_OPERADORES_CASILLA,

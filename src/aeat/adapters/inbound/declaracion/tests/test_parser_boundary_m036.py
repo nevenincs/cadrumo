@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ._parser_boundary_part2_support import _M036_EVENT_KIND_CASILLA
+from ._parser_boundary_casillas import _M036_EVENT_KIND_CASILLA
 from ._parser_boundary_support import (
     _MODELO_036_SYNTHETIC_FIXTURE,
     CasillaId,

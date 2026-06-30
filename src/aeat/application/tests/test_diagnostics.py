@@ -41,6 +41,9 @@ from ..diagnostics import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_ACTIVE_BUCKET_ID = "44444444-4444-4444-8444-444444444444"
+_OTHER_BUCKET_ID = "55555555-5555-4555-8555-555555555555"
+
 
 @pytest.fixture(autouse=True)
 def isolated_default_secure_sql(tmp_path: Path) -> Iterator[None]:
@@ -338,7 +341,7 @@ def test_secure_object_unreadable_total_logs_missing_active_bucket_session(
 
     caplog.set_level("DEBUG", logger="aeat.application.diagnostics")
 
-    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile="bucket-a") as settings:
+    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_ACTIVE_BUCKET_ID) as settings:
         dispose_engine(settings)
         try:
             assert secure_object_unreadable_total() == 0
@@ -359,8 +362,8 @@ def test_secure_object_unreadable_total_logs_route_session_mismatch(
     caplog.set_level("DEBUG", logger="aeat.application.diagnostics")
 
     with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile="bucket-a") as settings,
-        activate_session(_bucket_session("bucket-b")),
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_ACTIVE_BUCKET_ID) as settings,
+        activate_session(_bucket_session(_OTHER_BUCKET_ID)),
     ):
         dispose_engine(settings)
         try:

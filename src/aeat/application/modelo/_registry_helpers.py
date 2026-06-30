@@ -6,7 +6,8 @@ the selected :class:`ModeloRevision`, and refuses non-canonical printed-number
 tokens before the calculation engine or persistence layer sees them.
 
 It also verifies stored :class:`CalculationRevision` payloads by re-deriving
-their content-addressed identifiers and checking observation/value consistency.
+their content-addressed identifiers and checking observation/value consistency
+before stored payloads are trusted by verification or filing workflows.
 """
 
 from __future__ import annotations
@@ -53,7 +54,8 @@ def reject_incomplete_amendment_casillas(
 ) -> None:
     """Mirror the verify-modelo-revision required-manual gate on amend.
 
-    The supplied :class:`~aeat.core.Period` selects the registry snapshot. Missing
+    The supplied :class:`aeat.core.Period` selects the
+    :class:`RegistrySnapshot` used to read required manual casillas. Missing
     required manual casillas raise :class:`AmendmentVerificationRefusedError`
     before an amendment can be accepted as complete.
     """
@@ -83,7 +85,9 @@ def validate_casilla_input_ids[CasillaKey, CasillaValue](
 
     The :class:`ModeloRevision` supplies the declared casilla ids, data types,
     and non-canonical reference targets used to reject ambiguous or malformed
-    operator input.
+    operator input. The returned mapping is keyed by canonical
+    :class:`CasillaId` values and contains only ``Decimal`` numeric inputs that
+    the registry engine may consume.
     """
     if not casilla_inputs:
         return {}
@@ -189,7 +193,7 @@ def reject_unknown_override_casillas[CasillaKey](
 
     Keys are canonicalised as :class:`CasillaId` values and checked against the
     :class:`RegistrySnapshot` selected by ``modelo``, ``filing_year``, and
-    :class:`~aeat.core.Period`. Printed-number aliases and ambiguous reused
+    :class:`aeat.core.Period`. Printed-number aliases and ambiguous reused
     numbers are refused instead of being projected to a declared casilla.
     """
     if not overrides:
@@ -271,8 +275,9 @@ def reject_unknown_import_casillas[CasillaKey](
     """Validate imported casilla ids and return the resolved :class:`RegistrySnapshot`.
 
     The returned mapping is keyed by canonical :class:`CasillaId` values declared
-    by the selected revision. Unknown, malformed, and non-canonical printed
-    numbers raise :class:`ExternalModeloImportError`.
+    by the selected :class:`ModeloRevision`. Unknown, malformed, and
+    non-canonical printed numbers raise :class:`ExternalModeloImportError` so
+    imported AEAT values enter observation projection only under registry ids.
     """
     from ...domain.calculations.registry import RegistrySnapshotError
 
@@ -348,10 +353,11 @@ def required_input_casilla_ids_for_revision(
 ) -> tuple[tuple[CasillaId, ...], tuple[CasillaId, ...]] | None:
     """Resolve required manual and replayable input casilla ids for a revision.
 
-    Returns ``None`` when the registry root or snapshot cannot be loaded. The
-    first tuple contains required manual casillas; the second contains declared
-    manual, bound, and computed casillas that amendment/import paths may need to
-    carry through replay.
+    Returns ``None`` when the registry root or :class:`RegistrySnapshot` cannot
+    be loaded. The first tuple contains required manual casillas from the
+    selected :class:`ModeloRevision`; the second contains declared manual,
+    bound, and computed casillas that amendment/import paths may need to carry
+    through replay.
     """
     from ...domain.calculations.registry import RegistrySnapshotError
 
@@ -384,8 +390,9 @@ def verification_predicates_for_revision(
 ) -> tuple[VerificationPredicateDefinition, ...]:
     """Return :class:`VerificationPredicateDefinition` rows for the selected revision.
 
-    Missing registry roots or unresolved snapshots produce an empty tuple so
-    callers can degrade to their existing verification paths.
+    Missing registry roots or unresolved :class:`RegistrySnapshot` instances
+    produce an empty tuple so callers can degrade to their existing verification
+    paths.
     """
     from ...domain.calculations.registry import RegistrySnapshotError
 
@@ -407,7 +414,10 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
 
     The supplied :class:`CalculationRevision` is re-hashed from its persisted
     inputs, bindings, relations, casilla values, and source metadata before its
-    provenance observations are compared with ``casilla_values``.
+    provenance observations are compared with ``casilla_values``. This is a
+    defense-in-depth read-side check for raw storage corruption that bypassed
+    normal model construction; a mismatched observation envelope is refused
+    before the revision is treated as authoritative.
     """
     expected = derive_calculation_revision_id(
         work_unit_id=revision.work_unit_id,

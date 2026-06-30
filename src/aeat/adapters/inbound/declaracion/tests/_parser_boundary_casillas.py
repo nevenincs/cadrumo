@@ -1,4 +1,4 @@
-"""Shared constants for the parser boundary corpus split."""
+"""Shared casilla constants for parser boundary tests."""
 
 from __future__ import annotations
 

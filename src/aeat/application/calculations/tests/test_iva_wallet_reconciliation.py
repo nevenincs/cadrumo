@@ -41,6 +41,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 _NOW = datetime(2026, 5, 19, 10, 0, 0, tzinfo=UTC)
+_BUCKET_ID = "35353535-3535-4353-8353-353535353535"
 _TAXPAYER_REF = "synthetic-taxpayer"
 _OTHER_TAXPAYER_REF = "other-synthetic-taxpayer"
 
@@ -110,7 +111,7 @@ def test_iva_wallet_decision_source_resolver_emits_modelo_303_binding_and_proven
 
     resolution = IvaWalletDecisionSourceResolver(decision).resolve(
         CalculationSourceContext(
-            bucket_id="operator",
+            bucket_id=_BUCKET_ID,
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "2T"),

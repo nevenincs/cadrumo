@@ -164,6 +164,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 __all__ = [
     "LLM_USAGE_NAMESPACE",
+    "_BUCKET_A_ATTACHMENT_PAYLOAD",
+    "_BUCKET_A_ID",
+    "_BUCKET_B_ATTACHMENT_PAYLOAD",
+    "_BUCKET_B_ID",
+    "_WALLET_SUBJECT_ID",
     "AmortizacionLedger",
     "ApoderadoService",
     "AttachmentNotFoundError",
@@ -227,6 +232,11 @@ _DEK = b"d" * 32
 _MASTER_KEY = b"m" * 32
 
 _GOOGLE_OAUTH_ENDPOINT = "https://oauth2.googleapis.com/token"
+_BUCKET_A_ID = "0f60a84e-d1ac-4c0e-9e91-c094a33df00a"
+_BUCKET_B_ID = "9b22bbfd-d870-4207-a1a7-30a2b4b3600b"
+_WALLET_SUBJECT_ID = "ES12345678Z"
+_BUCKET_A_ATTACHMENT_PAYLOAD = f"{_BUCKET_A_ID} attachment payload".encode("ascii")
+_BUCKET_B_ATTACHMENT_PAYLOAD = f"{_BUCKET_B_ID} attachment payload".encode("ascii")
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -296,7 +306,7 @@ def _transaction(label: str) -> Transaction:
         amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Proveedor SL",
-        description=f"runtime migrated repository {label}",
+        description=f"runtime attached repository {label}",
         provenance=RawProvenance(
             source_path=Path(f"/bank/{label}.csv"),
             source_sha256="a" * 64,
@@ -305,7 +315,7 @@ def _transaction(label: str) -> Transaction:
             ingested_at=datetime.now(UTC).replace(microsecond=0),
             provider_name="CSV provider",
         ),
-        raw_fields={"Concepto": f"runtime migrated repository {label}"},
+        raw_fields={"Concepto": f"runtime attached repository {label}"},
     )
     return Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
 
@@ -313,7 +323,7 @@ def _transaction(label: str) -> Transaction:
 def _asset(identifier: str) -> AssetRecord:
     return AssetRecord(
         identifier=identifier,
-        description=f"runtime migrated asset {identifier}",
+        description=f"runtime attached asset {identifier}",
         asset_class=AssetClass.ELECTRONICA_INFORMATICA,
         acquisition_date=date(2026, 1, 1),
         cost_basis=Decimal("1000.00"),
@@ -345,7 +355,7 @@ def _workflow_run(label: str) -> WorkflowResult:
         started_at=when,
         ended_at=when,
         success=True,
-        summary=f"runtime migrated workflow run {label}",
+        summary=f"runtime attached workflow run {label}",
     )
     return WorkflowResult(
         run_id=_hex(f"workflow-run-{label}")[:16],
@@ -354,7 +364,7 @@ def _workflow_run(label: str) -> WorkflowResult:
         final_stage=WorkflowStage.DONE,
         aborted_reason=None,
         steps=(step,),
-        summary=f"runtime migrated workflow run {label}",
+        summary=f"runtime attached workflow run {label}",
     )
 
 
@@ -384,7 +394,7 @@ def _bucket_event(label: str) -> BucketEvent:
 
 def _invoice(label: str) -> Invoice:
     line = InvoiceLine(
-        description=f"runtime migrated invoice line {label}",
+        description=f"runtime attached invoice line {label}",
         quantity=Decimal("1"),
         unit_price=Decimal("100.00"),
         subtotal=Decimal("100.00"),
@@ -437,7 +447,7 @@ def _modelo_draft(label: str) -> ModeloDraft:
                 casilla_id=_casilla_id(f"iva.devengado.{label}"),
                 value=Decimal("100.00"),
                 kind=ModeloValueKind.LITERAL,
-                source="runtime migrated repository test",
+                source="runtime attached repository test",
             ),
         ),
         binding_values=(),
@@ -455,7 +465,7 @@ def _modelo_amendment(label: str) -> ModeloComplementaria:
             casilla_id=_casilla_id("iva.devengado"),
             old_value=Decimal("100.00"),
             new_value=Decimal("121.00"),
-            reason=f"runtime migrated amendment {label}",
+            reason=f"runtime attached amendment {label}",
         ),
     )
     submission_id = f"S-{label}"
@@ -569,7 +579,7 @@ def _calculation_catalogue(label: str) -> CalculationRevisionCatalogue:
                 casilla_id=_CALCULATION_OUTPUT_CASILLA,
                 value=Decimal("100.00"),
                 legal_refs=("ley-58-2003:art-93",),
-                source_refs=("runtime-migrated-repository-test",),
+                source_refs=("runtime-attached-repository-test",),
             ),
         ),
         created_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
@@ -598,7 +608,7 @@ def _filing_record_catalogue(bucket_id: str, label: str) -> ModeloRecordCatalogu
         period=_Period.from_year_and_code(2026, "1T"),
         filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
-        notes=f"runtime migrated filing record {label}",
+        notes=f"runtime attached filing record {label}",
         aeat_accepted=True,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
@@ -706,12 +716,12 @@ def _google_records(label: str) -> tuple[OAuthClient, OAuthToken, OAuthMetadata,
 
 
 def _llm_request() -> LLMRequest:
-    return LLMRequest(prompt="Summarise a runtime storage migration", cache_key="runtime-storage")
+    return LLMRequest(prompt="Summarise a runtime storage routing", cache_key="runtime-storage")
 
 
 def _llm_response(label: str) -> LLMResponse:
     return LLMResponse(
-        text=f"runtime migrated response {label}",
+        text=f"runtime attached response {label}",
         provider=LLMProvider.OPENAI,
         model="gpt-test",
         input_tokens=10,
@@ -741,7 +751,7 @@ def _usage_record(label: str) -> UsageRecord:
 
 
 def _sede_artefact(label: str) -> tuple[FiledDeclaracionArtefact, bytes]:
-    body = f"runtime migrated sede artefact {label}".encode()
+    body = f"runtime attached sede artefact {label}".encode()
     return (
         FiledDeclaracionArtefact(
             kind="submitted_file",
@@ -771,8 +781,8 @@ def _borrador_snapshot(bucket_id: str, label: str) -> Borrador100Snapshot:
 
 def _repair_decision(label: str) -> RepairRemediationDecision:
     decided_at = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
-    target_namespace = "aeat.test.runtime.migrated"
-    reason = f"runtime migrated repair decision {label}"
+    target_namespace = "aeat.test.runtime.attached"
+    reason = f"runtime attached repair decision {label}"
     likely_origin = "runtime family gate"
     decision_id = repair_remediation_decision_id(
         target_namespace=target_namespace,
@@ -801,7 +811,7 @@ def _repair_decision(label: str) -> RepairRemediationDecision:
 
 def _iva_wallet_decision(label: str, *, target_period: str = "2T") -> IvaCompensationReconciliationDecision:
     return IvaCompensationReconciliationDecision(
-        taxpayer_nif=f"ES{label.upper()}",
+        taxpayer_nif=_WALLET_SUBJECT_ID,
         target_year=2026,
         target_period=_Period.from_year_and_code(2026, target_period),
         selected_authority="aeat_wallet",
@@ -812,7 +822,7 @@ def _iva_wallet_decision(label: str, *, target_period: str = "2T") -> IvaCompens
         divergence="match",
         blocked=False,
         stale_wallet=False,
-        reason=f"Runtime migrated IVA wallet decision {label}.",
+        reason=f"Runtime attached IVA wallet decision {label}.",
         wallet_captured_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
         decided_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
     )
@@ -821,7 +831,7 @@ def _iva_wallet_decision(label: str, *, target_period: str = "2T") -> IvaCompens
 def _save_auth_diagnostic(label: str) -> None:
     payload = {
         "diagnostic_id": f"diagnostic-{label}",
-        "reason": "runtime migrated auth diagnostic",
+        "reason": "runtime attached auth diagnostic",
         "url": aeat_url("sede", AUTH_DIAGNOSTIC_PATH_FIXTURE),
         "captured_at": datetime(2026, 5, 26, 9, 0, tzinfo=UTC).isoformat(),
         "auth_attempt": {"auth_mode": "clave", "headless": True},

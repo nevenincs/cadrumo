@@ -3,8 +3,9 @@
 This module prepares binding, enum, and informational inputs for one
 :class:`RegistrySnapshot` before the registry engine evaluates its
 :class:`ModeloRevision`. Profile, backend mesh, borrador, and caller values are
-normalised as :class:`~aeat.application.aggregation.CalculationSourceResolution`
-tiers, then the calculation assembly layer overlays them by precedence.
+normalised as :class:`aeat.application.aggregation.CalculationSourceResolution`
+tiers, then the calculation assembly layer overlays them by precedence:
+profile, backend mesh, borrador, and finally caller overrides.
 
 The module also owns the application-specific partial projection from available
 binding values to :class:`CasillaId` inputs. That differs from the domain
@@ -60,21 +61,22 @@ def resolve_borrador_source_tier(
     caller_enum_binding_values: Mapping[BindingId, str],
     borrador_snapshot_repository: Borrador100SnapshotRepository | None,
 ) -> CalculationSourceResolution:
-    """Resolve the borrador precedence tier as a :class:`CalculationSourceResolution`.
+    """Resolve the borrador precedence tier as a source-mesh resolution.
 
     The :class:`RegistrySnapshot` supplies the revision and modelo identity used
     to resolve the borrador source through the source mesh; the returned
-    resolution carries the typed ``borrador_provenance`` (snapshot id +
-    sourced-binding trace) the persistence boundary consumes.
+    :class:`aeat.application.aggregation.CalculationSourceResolution` carries
+    the typed ``borrador_provenance`` (snapshot id + sourced-binding trace) the
+    persistence boundary consumes.
 
     Caller-supplied :class:`BindingId` values remain higher precedence than the
     snapshot, so the resolver receives both decimal and enum caller channels and
     omits any borrador value already owned by the caller.
 
     See Also:
-        :class:`~aeat.application.aggregation.CalculationSourceResolution`:
+        :class:`aeat.application.aggregation.CalculationSourceResolution`:
             The shared carrier used by the precedence overlay.
-        :class:`~aeat.application.live.Borrador100SnapshotRepository`:
+        :class:`aeat.application.live.Borrador100SnapshotRepository`:
             Loads the optional captured snapshot when a borrador id is supplied.
     """
     return _resolve_borrador_bindings_for_calculation(
@@ -99,7 +101,7 @@ def resolve_profile_source_tier(
     borrador_resolution: CalculationSourceResolution,
     backend_binding_values: Mapping[BindingId, Decimal],
 ) -> CalculationSourceResolution:
-    """Resolve the profile precedence tier as a :class:`CalculationSourceResolution`.
+    """Resolve the profile precedence tier as a source-mesh resolution.
 
     The :class:`RegistrySnapshot` identifies the revision whose
     ``source = "profile"`` bindings are enrolled through the source mesh. Profile
@@ -113,7 +115,7 @@ def resolve_profile_source_tier(
     supplied.
 
     See Also:
-        :class:`~aeat.application.aggregation.ProfileSourceResolver`:
+        :class:`aeat.application.aggregation.ProfileSourceResolver`:
             Source resolver that reads the stored user profile facts.
         :func:`aeat.application.modelo._calculation_resolution.resolve_calculation_binding_channels`:
             Places this profile tier below backend, borrador, and caller tiers.
@@ -193,7 +195,7 @@ def resolve_declaration_period_inputs(
     The :class:`ModeloRevision` supplies the informational casillas eligible for
     metadata projection. Only casillas with unique ``filing_year`` or
     ``filing_period`` semantic roles are populated. The
-    :class:`~aeat.core.Period` registry token is mapped to the ordinal expected
+    :class:`aeat.core.Period` registry token is mapped to the ordinal expected
     by the registry snapshot; unsupported tokens or non-informational role
     targets raise :class:`ModeloError`.
 
@@ -251,8 +253,9 @@ def _resolve_borrador_bindings_for_calculation(
 ) -> CalculationSourceResolution:
     """Resolve the optional borrador snapshot, returning its resolution directly.
 
-    The returned :class:`CalculationSourceResolution` carries the typed
-    ``borrador_provenance`` (snapshot id + sourced-binding trace) the
+    The returned
+    :class:`aeat.application.aggregation.CalculationSourceResolution` carries
+    the typed ``borrador_provenance`` (snapshot id + sourced-binding trace) the
     persistence boundary consumes.
     """
     from ..aggregation import CalculationSourceContext

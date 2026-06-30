@@ -17,6 +17,9 @@ from .. import (
     calendar_filing_evidence_from_sources,
 )
 from .calendar_test_support import (
+    BUCKET_ID as _BUCKET_ID,
+)
+from .calendar_test_support import (
     FILED_JUSTIFICANTE_STORAGE_REF as _FILED_JUSTIFICANTE_STORAGE_REF,
 )
 from .calendar_test_support import (
@@ -47,7 +50,7 @@ def test_calendar_entry_carries_distinct_local_and_aeat_states() -> None:
         (
             PersistedExpedientesSnapshot(
                 snapshot_id="f" * 64,
-                bucket_id="bucket-1",
+                bucket_id=_BUCKET_ID,
                 captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 declarations=(
@@ -85,7 +88,7 @@ def test_calendar_warns_when_aeat_submission_lacks_verified_justificante() -> No
         (
             PersistedExpedientesSnapshot(
                 snapshot_id="f" * 64,
-                bucket_id="bucket-1",
+                bucket_id=_BUCKET_ID,
                 captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 declarations=(
@@ -121,7 +124,7 @@ def test_calendar_uses_generic_justificante_fix_when_multiple_periods_need_pull(
         (
             PersistedExpedientesSnapshot(
                 snapshot_id="f" * 64,
-                bucket_id="bucket-1",
+                bucket_id=_BUCKET_ID,
                 captured_at=datetime(2025, 7, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 declarations=(
@@ -166,7 +169,7 @@ def test_calendar_clears_justificante_warning_when_filed_history_verifies_receip
         (
             PersistedExpedientesSnapshot(
                 snapshot_id="f" * 64,
-                bucket_id="bucket-1",
+                bucket_id=_BUCKET_ID,
                 captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 declarations=(
@@ -205,7 +208,7 @@ def test_calendar_event_carries_verified_justificante_from_filed_observation() -
         (
             PersistedExpedientesSnapshot(
                 snapshot_id="1" * 64,
-                bucket_id="bucket-1",
+                bucket_id=_BUCKET_ID,
                 captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 declarations=(
@@ -246,7 +249,7 @@ def test_calendar_event_justificante_verification_is_expediente_specific() -> No
         (
             PersistedExpedientesSnapshot(
                 snapshot_id="2" * 64,
-                bucket_id="bucket-1",
+                bucket_id=_BUCKET_ID,
                 captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 declarations=(

@@ -44,7 +44,8 @@ from .._filing_repository import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_BUCKET_ID = "modelo-runtime"
+_BUCKET_ID = "30330300-0000-4000-8000-000000000700"
+_RECORD_BUCKET_ID = "30330300-0000-4000-8000-000000000701"
 _P_2024_2T = Period.from_year_and_code(2024, "2T")
 _P_2026_01 = Period.from_year_and_code(2026, "01")
 
@@ -57,7 +58,7 @@ def _hex(seed: str) -> str:
 
 
 def _populated_catalogue() -> ModeloRecordCatalogue:
-    bucket_id = "bucket-A"
+    bucket_id = _RECORD_BUCKET_ID
     work_unit_id = _hex("a")
     superseded_revision = _hex("b")
     current_revision = _hex("c")
@@ -129,7 +130,7 @@ def test_filing_record_catalogue_survives_encrypted_storage_roundtrip(
     assert loaded == original
     assert len(loaded.records) == 2
     current = loaded.current_for(
-        bucket_id="bucket-A",
+        bucket_id=_RECORD_BUCKET_ID,
         modelo="303",
         filing_year=2024,
         period=_P_2024_2T,
@@ -152,7 +153,7 @@ def test_filing_record_catalogue_survives_encrypted_storage_roundtrip(
 def test_filing_record_catalogue_allows_distinct_current_group_members() -> None:
     """Member-scoped filing history keeps separate grupo members independent."""
 
-    bucket_id = "bucket-A"
+    bucket_id = _RECORD_BUCKET_ID
     filed_at = datetime(2026, 2, 20, 9, 0, 0, tzinfo=UTC)
     member_a_id = derive_filing_record_id(
         work_unit_id=_hex("1"),
@@ -243,7 +244,7 @@ def test_filing_record_rejects_aeat_acceptance_without_external_evidence() -> No
             filing_record_id=filing_id,
             work_unit_id=_hex("9"),
             calculation_revision_id=_hex("a"),
-            bucket_id="bucket-A",
+            bucket_id=_RECORD_BUCKET_ID,
             modelo=ModeloCode("303"),
             filing_year=2024,
             period=_P_2024_2T,
@@ -266,7 +267,7 @@ def test_filing_record_model_copy_revalidates_aeat_acceptance_invariant() -> Non
         filing_record_id=filing_id,
         work_unit_id=_hex("b"),
         calculation_revision_id=_hex("c"),
-        bucket_id="bucket-A",
+        bucket_id=_RECORD_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=2024,
         period=_P_2024_2T,
@@ -298,7 +299,7 @@ def test_filing_record_rejects_external_evidence_without_aeat_acceptance() -> No
             filing_record_id=filing_id,
             work_unit_id=_hex("d"),
             calculation_revision_id=_hex("e"),
-            bucket_id="bucket-A",
+            bucket_id=_RECORD_BUCKET_ID,
             modelo=ModeloCode("303"),
             filing_year=2024,
             period=_P_2024_2T,
@@ -321,7 +322,7 @@ def test_filing_record_model_copy_revalidates_external_evidence_acceptance_invar
         filing_record_id=filing_id,
         work_unit_id=_hex("f"),
         calculation_revision_id=_hex("0"),
-        bucket_id="bucket-A",
+        bucket_id=_RECORD_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=2024,
         period=_P_2024_2T,
@@ -364,7 +365,7 @@ def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> Non
                     filing_record_id=first_id,
                     work_unit_id=_hex("5"),
                     calculation_revision_id=_hex("6"),
-                    bucket_id="bucket-A",
+                    bucket_id=_RECORD_BUCKET_ID,
                     modelo=ModeloCode("322"),
                     filing_year=2026,
                     period=_P_2026_01,
@@ -376,7 +377,7 @@ def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> Non
                     filing_record_id=second_id,
                     work_unit_id=_hex("7"),
                     calculation_revision_id=_hex("8"),
-                    bucket_id="bucket-A",
+                    bucket_id=_RECORD_BUCKET_ID,
                     modelo=ModeloCode("322"),
                     filing_year=2026,
                     period=_P_2026_01,
@@ -530,7 +531,7 @@ def test_filing_record_source_transaction_ids_survive_roundtrip(tmp_path: Path) 
         filing_record_id=filing_id,
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        bucket_id="bucket-A",
+        bucket_id=_RECORD_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=2024,
         period=_P_2024_2T,
@@ -566,7 +567,7 @@ def test_derive_filing_record_id_is_stable_regardless_of_source_transaction_ids(
         filing_record_id=derived,
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        bucket_id="bucket-A",
+        bucket_id=_RECORD_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=2024,
         period=_P_2024_2T,
@@ -597,7 +598,7 @@ def test_filing_record_absent_source_transaction_ids_defaults_to_empty(tmp_path:
         filing_record_id=filing_id,
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        bucket_id="bucket-A",
+        bucket_id=_RECORD_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=2024,
         period=_P_2024_2T,

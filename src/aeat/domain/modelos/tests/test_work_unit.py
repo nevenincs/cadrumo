@@ -53,13 +53,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
-_ACTION_BUCKET_ID = "work-unit-test"
+_DERIVATION_BUCKET_ID = "30330300-0000-4000-8000-000000000300"
+_ACTION_BUCKET_ID = "30330300-0000-4000-8000-000000000301"
+_WORK_UNIT_BUCKET_A_ID = "30330300-0000-4000-8000-0000000000a1"
+_WORK_UNIT_BUCKET_B_ID = "30330300-0000-4000-8000-0000000000b2"
+_WORK_UNIT_EVENT_BUCKET_ID = "30330300-0000-4000-8000-000000000303"
 _P_2026_1T = Period.from_year_and_code(2026, "1T")
 _P_2026_2T = Period.from_year_and_code(2026, "2T")
 _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="identity.tax_id", value="00000000T"),
     UserProfileFact(path="identity.name", value="Test"),
     UserProfileFact(path="identity.surnames", value="Operator"),
+    UserProfileFact(path="activities.description", value="Professional services"),
     UserProfileFact(path="tax_residence.ccaa", value="madrid"),
     UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
     UserProfileFact(path="iva.regime", value="GENERAL"),
@@ -100,7 +105,7 @@ def test_derive_work_unit_id_is_64_char_lowercase_hex() -> None:
     in the project: exactly 64 lowercase hex characters."""
 
     wid = derive_work_unit_id(
-        bucket_id="default",
+        bucket_id=_DERIVATION_BUCKET_ID,
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
@@ -114,7 +119,7 @@ def test_derive_work_unit_id_is_deterministic() -> None:
     """Two identical inputs always produce the same identifier."""
 
     args: dict[str, Any] = {
-        "bucket_id": "default",
+        "bucket_id": _DERIVATION_BUCKET_ID,
         "modelo": "303",
         "filing_year": 2026,
         "period": Period.from_year_and_code(2026, "1T"),
@@ -134,8 +139,8 @@ def test_derive_work_unit_id_distinguishes_buckets() -> None:
         "period": Period.from_year_and_code(2026, "1T"),
         "revision_id": "2009-y-siguientes",
     }
-    a = derive_work_unit_id(bucket_id="bucket-A", **base)
-    b = derive_work_unit_id(bucket_id="bucket-B", **base)
+    a = derive_work_unit_id(bucket_id=_WORK_UNIT_BUCKET_A_ID, **base)
+    b = derive_work_unit_id(bucket_id=_WORK_UNIT_BUCKET_B_ID, **base)
     assert a != b
 
 
@@ -145,14 +150,14 @@ def test_derive_work_unit_id_normalises_case_on_modelo_and_period() -> None:
     ``\"Q1\"``) hash to the same id."""
 
     canonical = derive_work_unit_id(
-        bucket_id="default",
+        bucket_id=_DERIVATION_BUCKET_ID,
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
         revision_id="2009-y-siguientes",
     )
     lower_period = derive_work_unit_id(
-        bucket_id="default",
+        bucket_id=_DERIVATION_BUCKET_ID,
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1t"),
@@ -167,7 +172,7 @@ def test_derive_work_unit_id_normalises_case_on_modelo_and_period() -> None:
 
 
 def _build_unit(**overrides: Any) -> WorkUnit:
-    bucket_id = overrides.pop("bucket_id", "default")
+    bucket_id = overrides.pop("bucket_id", _DERIVATION_BUCKET_ID)
     modelo = overrides.pop("modelo", "303")
     filing_year = overrides.pop("filing_year", 2026)
     period = overrides.pop("period", Period.from_year_and_code(filing_year, "1T"))
@@ -356,9 +361,9 @@ def test_list_work_units_sorts_by_bucket_year_modelo_period(repo: WorkUnitCatalo
                     revision_id=revision_id,
                 )
                 for bucket, modelo, year, period, revision_id in (
-                    ("bucket-B", "303", 2026, "1T", "2009-y-siguientes"),
-                    ("bucket-A", "303", 2026, "2T", "2009-y-siguientes"),
-                    ("bucket-A", "130", 2026, "1T", "2019-y-siguientes"),
+                    (_WORK_UNIT_BUCKET_B_ID, "303", 2026, "1T", "2009-y-siguientes"),
+                    (_WORK_UNIT_BUCKET_A_ID, "303", 2026, "2T", "2009-y-siguientes"),
+                    (_WORK_UNIT_BUCKET_A_ID, "130", 2026, "1T", "2019-y-siguientes"),
                 )
             ),
         ),
@@ -366,9 +371,9 @@ def test_list_work_units_sorts_by_bucket_year_modelo_period(repo: WorkUnitCatalo
     units = list_work_units(repository=repo)
     keys = tuple((u.bucket_id, str(u.modelo), u.period.registry_token) for u in units)
     assert keys == (
-        ("bucket-A", "130", "1T"),
-        ("bucket-A", "303", "2T"),
-        ("bucket-B", "303", "1T"),
+        (_WORK_UNIT_BUCKET_A_ID, "130", "1T"),
+        (_WORK_UNIT_BUCKET_A_ID, "303", "2T"),
+        (_WORK_UNIT_BUCKET_B_ID, "303", "1T"),
     )
 
 
@@ -377,14 +382,14 @@ def test_list_work_units_filters_by_bucket_id(repo: WorkUnitCatalogueRepository)
         WorkUnitCatalogue.from_work_units(
             (
                 _build_unit(
-                    bucket_id="bucket-A",
+                    bucket_id=_WORK_UNIT_BUCKET_A_ID,
                     modelo="303",
                     filing_year=2026,
                     period=_P_2026_1T,
                     revision_id="2009-y-siguientes",
                 ),
                 _build_unit(
-                    bucket_id="bucket-B",
+                    bucket_id=_WORK_UNIT_BUCKET_B_ID,
                     modelo="303",
                     filing_year=2026,
                     period=_P_2026_2T,
@@ -393,9 +398,9 @@ def test_list_work_units_filters_by_bucket_id(repo: WorkUnitCatalogueRepository)
             ),
         ),
     )
-    only_a = list_work_units(bucket_id="bucket-A", repository=repo)
+    only_a = list_work_units(bucket_id=_WORK_UNIT_BUCKET_A_ID, repository=repo)
     assert len(only_a) == 1
-    assert only_a[0].bucket_id == "bucket-A"
+    assert only_a[0].bucket_id == _WORK_UNIT_BUCKET_A_ID
 
 
 def test_get_work_unit_raises_when_id_is_absent(repo: WorkUnitCatalogueRepository) -> None:
@@ -631,7 +636,7 @@ def test_rename_work_unit_emits_renamed_bucket_event_with_actor_and_names(
         BucketEventType,
     )
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="work-unit-events-test") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_WORK_UNIT_EVENT_BUCKET_ID) as profile:
         _seed_ready_profile(profile.bucket_id, objects=profile.repository)
         wu_repo = WorkUnitCatalogueRepository(objects=profile.repository)
         bv_repo = BucketEventHistoryRepository(objects=profile.repository)
