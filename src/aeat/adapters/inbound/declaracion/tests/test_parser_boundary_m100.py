@@ -1,4 +1,4 @@
-"""Annual parser boundary corpus tests split from parser boundary part 2."""
+"""Modelo 100 parser boundary corpus tests."""
 
 from __future__ import annotations
 
@@ -12,6 +12,36 @@ from ._parser_boundary_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+
+_M100_EXPECTED_CASILLAS: frozenset[str] = frozenset(
+    {
+        # First chunk: cuota-chain closure.
+        "0545",
+        "0546",
+        "0505",
+        "0585",
+        "0586",
+        "0587",
+        "0595",
+        "0610",
+        "0670",
+        # Second chunk: apartado-summary bases.
+        "0235",
+        "0432",
+        "0500",
+        "0510",
+        # Third chunk: actividades-economicas ED detail.
+        "0180",
+        "0218",
+        "0223",
+        "0224",
+        "0226",
+        "0231",
+        # Fourth chunk: ED leaf input for the formula chain.
+        "0171",
+    }
+)
+
 
 @pytest.mark.parametrize(
     "pdf_stem,year",
@@ -66,32 +96,7 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
     # 0435 (base imponible general) is deferred: the IRPF form prints the line twice
     # (body section + base liquidable section), both identical, so the parser rejects it as
     # ambiguous. It remains a candidate for a future chunk with multiline context anchoring.
-    assert set(values.keys()) == {
-        # First chunk: cuota-chain closure
-        "0545",
-        "0546",
-        "0505",
-        "0585",
-        "0586",
-        "0587",
-        "0595",
-        "0610",
-        "0670",
-        # Second chunk: apartado-summary bases
-        "0235",  # rendimiento neto reducido total actividades economicas ED
-        "0432",  # saldo neto rendimientos a integrar en base imponible general
-        "0500",  # base liquidable general
-        "0510",  # base liquidable del ahorro
-        # Third chunk: actividades economicas ED detail
-        "0180",  # total ingresos computables
-        "0218",  # suma de gastos fiscalmente deducibles
-        "0223",  # total gastos deducibles modalidad simplificada
-        "0224",  # rendimiento neto
-        "0226",  # rendimiento neto reducido
-        "0231",  # suma de rendimientos netos reducidos (pre-0235 subtotal)
-        # Fourth chunk: ED leaf input for the formula chain
-        "0171",  # ingresos de explotacion (leaf input for 0180 = sum(0171..0179))
-    }
+    assert set(values.keys()) == _M100_EXPECTED_CASILLAS
 
     # pdfplumber merges the adjacent box number onto the value token in all corpus
     # specimens; each extracted value is a valid Decimal but does not equal 1000.00.
