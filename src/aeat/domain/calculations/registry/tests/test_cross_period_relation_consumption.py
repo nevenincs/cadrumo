@@ -26,13 +26,10 @@ from collections.abc import Iterator
 
 import pytest
 
-from .....core.resources import bundled_path
-from .._loader import load_registry_tree
 from .._schema import ModeloRevision, RelationDefinition
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 # Roles whose relation must feed a consumed value slot to be live.
 _VALUE_FEEDING_ROLES = frozenset(
@@ -85,7 +82,7 @@ def test_no_inert_value_feeding_cross_period_relations() -> None:
     or, if the relation is a supplementary cross-check, declare it
     ``dependency_role = "factual_evidence"``.
     """
-    modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelos, _catalogues = _committed_registry_tree()
     gaps: list[str] = []
     for modelo in modelos:
         for revision_id, revision in modelo.revisions.items():
@@ -118,7 +115,7 @@ def test_evidence_relations_are_the_only_unconsumed_relations() -> None:
     if an evidence relation becomes consumed (wired into a value) it should be
     reclassified to a value-feeding role and is surfaced here.
     """
-    modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelos, _catalogues = _committed_registry_tree()
     unconsumed_roles: set[str] = set()
     for modelo in modelos:
         for _revision_id, revision in modelo.revisions.items():
@@ -138,7 +135,7 @@ def test_evidence_relations_are_the_only_unconsumed_relations() -> None:
 
 def test_factual_evidence_relations_are_not_value_consumed() -> None:
     """A consumed relation must not keep the supplementary-evidence role."""
-    modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelos, _catalogues = _committed_registry_tree()
     consumed_evidence: list[str] = []
     for modelo in modelos:
         for revision_id, revision in modelo.revisions.items():

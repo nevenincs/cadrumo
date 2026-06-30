@@ -24,15 +24,12 @@ from collections.abc import Mapping
 
 import pytest
 
-from .....core.resources import bundled_path
 from .._binding_selector_utils import selector_as_dict
-from .._loader import load_registry_tree
 from .._schema import ModeloDefinition, RelationDefinition
 from .._validate_relation_periods import select_relation_source_revisions
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 # Canonical (feeder modelo id, summary modelo id) chains that the AEAT
 # filing cycle requires. Each pair represents a periodic feeder whose
@@ -54,7 +51,7 @@ _RELATION_BACKED_FEEDER_SUMMARY_CHAINS = tuple(
 
 
 def _registry() -> dict[str, ModeloDefinition]:
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
+    modelos, _ = _committed_registry_tree()
     return {modelo.id: modelo for modelo in modelos}
 
 
