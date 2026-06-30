@@ -262,25 +262,23 @@ def test_verify_result_rejects_legacy_casilla_list_keys() -> None:
     assert "unchecked_casillas" in message
 
 
-def test_verify_result_rejects_blank_casilla_ids() -> None:
-    with pytest.raises(ValueError, match=r"casilla|empty|at least 1 character"):
+@pytest.mark.parametrize(
+    ("mismatched_casilla_ids", "match"),
+    (
+        pytest.param(("", "07"), r"casilla|empty|at least 1 character", id="blank"),
+        pytest.param((" 01 ",), r"casilla|whitespace|leading|trailing", id="padded"),
+    ),
+)
+def test_verify_result_rejects_invalid_casilla_ids(
+    mismatched_casilla_ids: tuple[str, ...],
+    match: str,
+) -> None:
+    with pytest.raises(ValueError, match=match):
         DeclaracionVerifyResult(
             draft_id="d",
             file_path=_OTHER_EXPORT_PATH,
             verdict=DeclaracionVerifyVerdict.DRIFT,
-            mismatched_casilla_ids=("", "07"),
-            verified_at=datetime(2026, 5, 3, tzinfo=UTC),
-            narrative=_narrative(),
-        )
-
-
-def test_verify_result_rejects_padded_casilla_ids() -> None:
-    with pytest.raises(ValueError, match=r"casilla|whitespace|leading|trailing"):
-        DeclaracionVerifyResult(
-            draft_id="d",
-            file_path=_OTHER_EXPORT_PATH,
-            verdict=DeclaracionVerifyVerdict.DRIFT,
-            mismatched_casilla_ids=(" 01 ",),
+            mismatched_casilla_ids=mismatched_casilla_ids,
             verified_at=datetime(2026, 5, 3, tzinfo=UTC),
             narrative=_narrative(),
         )
