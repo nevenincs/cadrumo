@@ -113,7 +113,7 @@ class ModeloVerificationFinding(BaseModel):
     expectation_id: VerificationExpectationId | None = None
     message: _FindingMessage
     next_action: _FindingMessage | None = None
-    legal_refs: tuple[str, ...] = ()
+    legal_refs: tuple[str, ...] = Field(min_length=1)
     source_refs: tuple[str, ...] = ()
 
 
