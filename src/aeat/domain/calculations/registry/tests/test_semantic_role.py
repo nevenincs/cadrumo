@@ -263,6 +263,18 @@ class TestTypoTwinWarning:
             ),
             (
                 "100",
+                "2021",
+                "1757",
+                "irpf_anexo_c_exceso_sps_rg_aportaciones_periodo",
+            ),
+            (
+                "100",
+                "2021",
+                "1758",
+                "irpf_anexo_c_exceso_sps_rg_aportaciones_aplicado",
+            ),
+            (
+                "100",
                 "2020",
                 "1171",
                 "irpf_deduccion_c_valenciana_ayudas_publicas_generalitat_2020",
@@ -478,6 +490,8 @@ class TestTypoTwinWarning:
             "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_anio",
             "irpf_red_prevision_social_exceso_2015_2019",
             "irpf_red_prevision_social_exceso_2016_2020",
+            "irpf_anexo_c_exceso_sps_rg_aportaciones_periodo",
+            "irpf_anexo_c_exceso_sps_rg_aportaciones_aplicado",
             "irpf_deduccion_c_valenciana_ayudas_publicas_generalitat_2020",
             "irpf_num_hijos_maternidad_2020",
             "irpf_incremento_maternidad_no_aplicado_2020",
@@ -716,6 +730,15 @@ class TestTypoTwinWarning:
             semantic_roles_are_axis_siblings(
                 "irpf_red_prevision_social_exceso_2015_2019",
                 "irpf_red_prevision_social_exceso_2016_2020",
+            )
+            is False
+        )
+
+    def test_period_applied_tokens_are_not_axis_tokens(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "irpf_anexo_c_exceso_sps_rg_aportaciones_periodo",
+                "irpf_anexo_c_exceso_sps_rg_aportaciones_aplicado",
             )
             is False
         )
