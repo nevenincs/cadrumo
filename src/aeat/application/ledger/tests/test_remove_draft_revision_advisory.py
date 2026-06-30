@@ -39,6 +39,7 @@ from ....domain.modelos._work_unit import (
 )
 from ....tests.registry_observations import registry_grounded_observations
 from ._action_test_support import (
+    _BUCKET_ID,
     UTC,
     Decimal,
     ManualLedgerTransactionCommand,
@@ -70,7 +71,7 @@ def _seed_revision_citing_transaction(
     transaction_id: str,
     state: CalculationRevisionState,
     period_code: str,
-    bucket_id: str = "bucket-a",
+    bucket_id: str = _BUCKET_ID,
 ) -> str:
     """Seed one real revision (in ``state``) citing ``transaction_id``.
 
@@ -156,7 +157,7 @@ def _create_row(
     transaction_repository, event_repository = _repositories(objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 2),
             amount=Decimal("1200.00"),
             direction=TransactionDirection.INCOMING,
@@ -187,7 +188,7 @@ def test_remove_advises_on_draft_revision_and_still_removes(
     )
 
     report = remove_manual_transaction(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=transaction_id,
         actor="operator-A",
         reason="duplicate income",
@@ -231,7 +232,7 @@ def test_remove_dry_run_surfaces_draft_advisory_without_mutation(
     )
 
     report = remove_manual_transaction(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=transaction_id,
         actor="operator-A",
         dry_run=True,
@@ -269,7 +270,7 @@ def test_remove_uncited_row_yields_empty_draft_advisory(
     )
 
     report = remove_manual_transaction(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=uncited_id,
         actor="operator-A",
         transaction_repository=transaction_repository,
@@ -302,7 +303,7 @@ def test_remove_discarded_draft_is_not_advised(
     )
 
     report = remove_manual_transaction(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=transaction_id,
         actor="operator-A",
         transaction_repository=transaction_repository,
@@ -337,7 +338,7 @@ def test_remove_finalized_revision_still_blocks_and_not_advised(
     )
 
     dry_run = remove_manual_transaction(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=transaction_id,
         actor="operator-A",
         dry_run=True,
@@ -351,7 +352,7 @@ def test_remove_finalized_revision_still_blocks_and_not_advised(
 
     with pytest.raises(TransactionValidationError, match="finalized modelo"):
         remove_manual_transaction(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             transaction_id=transaction_id,
             actor="operator-A",
             transaction_repository=transaction_repository,

@@ -9,6 +9,8 @@ import pytest
 
 from ....domain.iva import EUMemberState, IvaCategory
 from ._action_test_support import (
+    _BUCKET_ID,
+    _OTHER_BUCKET_ID,
     UTC,
     BucketEventObjectType,
     BucketEventType,
@@ -53,7 +55,7 @@ def test_import_ledger_transactions_persists_rows_and_emits_import_events(
     )
 
     first_import = import_ledger_transactions(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         parsed_rows=(first_parsed, second_parsed),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
@@ -62,7 +64,7 @@ def test_import_ledger_transactions_persists_rows_and_emits_import_events(
         occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
     )
     duplicate_import = import_ledger_transactions(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         parsed_rows=(first_parsed,),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
@@ -81,7 +83,7 @@ def test_import_ledger_transactions_persists_rows_and_emits_import_events(
     assert tuple(sorted(persisted.transactions)) == tuple(
         sorted(ref.transaction_id for ref in first_import.summary.imported_refs),
     )
-    events = event_repository.load().for_bucket("bucket-a")
+    events = event_repository.load().for_bucket(_BUCKET_ID)
     assert [event.event_type for event in events] == [
         BucketEventType.LEDGER_TRANSACTION_IMPORTED,
         BucketEventType.LEDGER_TRANSACTION_IMPORTED,
@@ -114,7 +116,7 @@ def test_import_keeps_genuine_intrabatch_twins_with_distinct_ids(
     )
 
     first = import_ledger_transactions(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         parsed_rows=(twin_a, twin_b),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
@@ -126,7 +128,7 @@ def test_import_keeps_genuine_intrabatch_twins_with_distinct_ids(
     assert len(transaction_repository.load().transactions) == 2
 
     second = import_ledger_transactions(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         parsed_rows=(twin_a, twin_b),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
@@ -153,7 +155,7 @@ def test_import_skips_true_transaction_id_collision_within_batch(
     )
 
     result = import_ledger_transactions(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         parsed_rows=(row, row),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
@@ -182,7 +184,7 @@ def test_import_ledger_source_owns_provider_validation_ingest_and_persistence(
         LedgerSourceImportCommand(path=statement, provider="csv", dry_run=True, verify=True, source=statement),
     )
     persisted = import_ledger_source(
-        LedgerSourceImportCommand(bucket_id="bucket-a", path=statement, provider="csv", actor="operator-A"),
+        LedgerSourceImportCommand(bucket_id=_BUCKET_ID, path=statement, provider="csv", actor="operator-A"),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     )
@@ -194,7 +196,7 @@ def test_import_ledger_source_owns_provider_validation_ingest_and_persistence(
     assert dry_run.imported == 2
     assert dry_run.skipped == 0
     assert dry_run.source.sha256 is not None
-    assert persisted.bucket_id == "bucket-a"
+    assert persisted.bucket_id == _BUCKET_ID
     assert persisted.imported == 2
     assert persisted.skipped == 0
     assert persisted.import_batch_id is not None
@@ -226,12 +228,12 @@ def test_import_ledger_source_honors_explicit_direction_column_on_positive_amoun
     )
 
     imported = import_ledger_source(
-        LedgerSourceImportCommand(bucket_id="bucket-a", path=statement, provider="csv", actor="operator-A"),
+        LedgerSourceImportCommand(bucket_id=_BUCKET_ID, path=statement, provider="csv", actor="operator-A"),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     )
     exported = export_ledger_transactions(
-        LedgerExportCommand(bucket_id="bucket-a", export_format=export_format),
+        LedgerExportCommand(bucket_id=_BUCKET_ID, export_format=export_format),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     )
@@ -280,7 +282,7 @@ def test_import_outgoing_magnitude_row_stores_positive_with_outgoing_direction(
         direction=TransactionDirection.OUTGOING,
     )
     result = import_ledger_transactions(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         parsed_rows=(parsed,),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
@@ -309,7 +311,7 @@ def test_import_internal_transfer_row_stores_magnitude_with_transfer_direction(
         direction=TransactionDirection.INTERNAL_TRANSFER,
     )
     result = import_ledger_transactions(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         parsed_rows=(parsed,),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
@@ -393,7 +395,7 @@ def test_export_ledger_transactions_serializes_active_bucket_rows_and_emits_even
     transaction_repository, event_repository = _repositories(secure_objects)
     first = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 2),
             amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
@@ -411,7 +413,7 @@ def test_export_ledger_transactions_serializes_active_bucket_rows_and_emits_even
     )
     second = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("250.00"),
             direction=TransactionDirection.INCOMING,
@@ -426,7 +428,7 @@ def test_export_ledger_transactions_serializes_active_bucket_rows_and_emits_even
 
     result = export_ledger_transactions(
         LedgerExportCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             export_format=ExportSerializationFormat.CSV,
             actor="operator-A",
         ),
@@ -444,7 +446,7 @@ def test_export_ledger_transactions_serializes_active_bucket_rows_and_emits_even
     assert parsed[1]["taxable_base"] == "100.00"
     assert parsed[1]["purchase_invoice_evidence_id"] == ""
     assert transaction_repository.load().get(first.ref.transaction_id) is not None
-    events = event_repository.load().for_bucket("bucket-a")
+    events = event_repository.load().for_bucket(_BUCKET_ID)
     assert events[-1].event_type is BucketEventType.LEDGER_TRANSACTION_EXPORTED
     assert events[-1].object_type is BucketEventObjectType.LEDGER_EXPORT
     assert events[-1].object_id == result.export_id
@@ -463,7 +465,7 @@ def test_export_ledger_transactions_serializes_iva_category_and_counterparty_eu_
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 6),
             amount=Decimal("1000.00"),
             direction=TransactionDirection.INCOMING,
@@ -482,7 +484,7 @@ def test_export_ledger_transactions_serializes_iva_category_and_counterparty_eu_
     )
 
     exported = export_ledger_transactions(
-        LedgerExportCommand(bucket_id="bucket-a", export_format=export_format),
+        LedgerExportCommand(bucket_id=_BUCKET_ID, export_format=export_format),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         occurred_at=datetime(2026, 5, 6, 10, 0, tzinfo=UTC),
@@ -509,7 +511,7 @@ def test_export_ledger_transactions_excludes_inactive_rows_by_default(secure_obj
     transaction_repository, event_repository = _repositories(secure_objects)
     active = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("250.00"),
             direction=TransactionDirection.INCOMING,
@@ -522,7 +524,7 @@ def test_export_ledger_transactions_excludes_inactive_rows_by_default(secure_obj
     )
     inactive = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 2),
             amount=Decimal("25.00"),
             direction=TransactionDirection.OUTGOING,
@@ -534,7 +536,7 @@ def test_export_ledger_transactions_excludes_inactive_rows_by_default(secure_obj
         occurred_at=datetime(2026, 5, 4, 9, 31, tzinfo=UTC),
     )
     stash_manual_transaction(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=inactive.ref.transaction_id,
         actor="operator-A",
         transaction_repository=transaction_repository,
@@ -543,13 +545,13 @@ def test_export_ledger_transactions_excludes_inactive_rows_by_default(secure_obj
     )
 
     active_only = export_ledger_transactions(
-        LedgerExportCommand(bucket_id="bucket-a"),
+        LedgerExportCommand(bucket_id=_BUCKET_ID),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
     )
     with_inactive = export_ledger_transactions(
-        LedgerExportCommand(bucket_id="bucket-a", include_inactive=True),
+        LedgerExportCommand(bucket_id=_BUCKET_ID, include_inactive=True),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         occurred_at=datetime(2026, 5, 5, 10, 1, tzinfo=UTC),
@@ -570,7 +572,7 @@ def test_export_ledger_transactions_event_payload_stays_bounded_for_large_export
     for index in range(12):
         create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id="bucket-a",
+                bucket_id=_BUCKET_ID,
                 booked_date=date(2026, 5, index + 1),
                 amount=Decimal("25.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -583,14 +585,14 @@ def test_export_ledger_transactions_event_payload_stays_bounded_for_large_export
         )
 
     result = export_ledger_transactions(
-        LedgerExportCommand(bucket_id="bucket-a"),
+        LedgerExportCommand(bucket_id=_BUCKET_ID),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
     )
 
     assert result.row_count == 12
-    event = event_repository.load().for_bucket("bucket-a")[-1]
+    event = event_repository.load().for_bucket(_BUCKET_ID)[-1]
     assert event.event_type is BucketEventType.LEDGER_TRANSACTION_EXPORTED
     assert "transaction_ids" not in event.payload
     assert event.payload["row_count"] == "12"
@@ -599,11 +601,11 @@ def test_export_ledger_transactions_event_payload_stays_bounded_for_large_export
 
 
 def test_export_ledger_transactions_reads_requested_bucket_only(secure_objects: SecureObjectRepository) -> None:
-    repo_a, event_repo_a = _repositories(secure_objects, bucket_id="bucket-a")
-    repo_b, event_repo_b = _repositories(secure_objects, bucket_id="bucket-b")
+    repo_a, event_repo_a = _repositories(secure_objects, bucket_id=_BUCKET_ID)
+    repo_b, event_repo_b = _repositories(secure_objects, bucket_id=_OTHER_BUCKET_ID)
     first = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("25.00"),
             direction=TransactionDirection.OUTGOING,
@@ -616,7 +618,7 @@ def test_export_ledger_transactions_reads_requested_bucket_only(secure_objects: 
     )
     create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-b",
+            bucket_id=_OTHER_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("25.00"),
             direction=TransactionDirection.OUTGOING,
@@ -629,17 +631,17 @@ def test_export_ledger_transactions_reads_requested_bucket_only(secure_objects: 
     )
 
     result = export_ledger_transactions(
-        LedgerExportCommand(bucket_id="bucket-a", export_format=ExportSerializationFormat.JSONL),
+        LedgerExportCommand(bucket_id=_BUCKET_ID, export_format=ExportSerializationFormat.JSONL),
         transaction_repository=repo_a,
         bucket_event_repository=event_repo_a,
         occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
     )
 
     assert result.row_count == 1
-    assert result.rows[0].bucket_id == "bucket-a"
+    assert result.rows[0].bucket_id == _BUCKET_ID
     assert result.rows[0].transaction_id == first.ref.transaction_id
     assert b"bucket b row" not in result.payload
-    assert [event.event_type for event in event_repo_b.load().for_bucket("bucket-b")] == [
+    assert [event.event_type for event in event_repo_b.load().for_bucket(_OTHER_BUCKET_ID)] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
     ]
 
@@ -651,7 +653,7 @@ def test_export_ledger_transactions_writes_output_before_export_event(
     transaction_repository, event_repository = _repositories(secure_objects)
     create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("25.00"),
             direction=TransactionDirection.OUTGOING,
@@ -665,12 +667,12 @@ def test_export_ledger_transactions_writes_output_before_export_event(
 
     with pytest.raises(OSError):
         export_ledger_transactions(
-            LedgerExportCommand(bucket_id="bucket-a", output_path=tmp_path),
+            LedgerExportCommand(bucket_id=_BUCKET_ID, output_path=tmp_path),
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
             occurred_at=datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
         )
 
-    assert [event.event_type for event in event_repository.load().for_bucket("bucket-a")] == [
+    assert [event.event_type for event in event_repository.load().for_bucket(_BUCKET_ID)] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
     ]
