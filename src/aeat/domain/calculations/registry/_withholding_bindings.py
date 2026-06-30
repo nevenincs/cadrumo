@@ -23,8 +23,10 @@ from ._ids import BindingId
 from ._schema import DataBindingDefinition, ModeloRevision
 
 __all__ = [
+    "WithholdingClaveBreakdown",
     "WithholdingObservation",
     "WithholdingObservationRequirement",
+    "aggregate_withholding_by_clave",
     "resolve_withholding_binding_row_values",
     "resolve_withholding_binding_values",
     "validate_withholding_binding_selector_shape",
@@ -348,3 +350,63 @@ def _build_withholding_rows(
         bucket["retencion_practicada"] = prev_retencion + observation.retencion_practicada
         bucket["ingreso_a_cuenta"] = prev_ingreso + observation.ingreso_a_cuenta
     return tuple(accum[key] for key in sorted(accum.keys()))
+
+
+class WithholdingClaveBreakdown(BaseModel):
+    """One per-clave row of the Modelo 190 retención reconciliation breakdown.
+
+    Groups the per-perceptor-clave withholding detail (the AEAT Diseño de
+    Registros type-2 records) by ``clave de percepción`` and carries that clave's
+    distinct percepción count and percibido / retención magnitudes. The figures
+    reuse the scalar withholding-fact arithmetic
+    (:func:`resolve_withholding_binding_values`): ``percepcion_count`` is the
+    distinct ``(perceptor, clave, subclave)`` count, ``percibido_total`` is
+    ``percibido_dinerario + percibido_especie``, and ``retencion_total`` is
+    ``retencion_practicada + ingreso_a_cuenta``. It is a projection of the same
+    store the percepciones-count resolver reads, so the operator can reconcile
+    the annual Modelo 190 totals against the individual Modelo 111 quarterly
+    filings clave by clave.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    clave: RetencionClave
+    percepcion_count: int = Field(ge=0)
+    percibido_total: Decimal = Field(ge=Decimal("0"))
+    retencion_total: Decimal = Field(ge=Decimal("0"))
+
+
+def aggregate_withholding_by_clave(
+    observations: Iterable[WithholdingObservation],
+) -> tuple[WithholdingClaveBreakdown, ...]:
+    """Project withholding observations into a per-clave retención breakdown.
+
+    Pure function: identical observations in any order yield the same tuple,
+    sorted by ``clave``. No new aggregation is introduced — the magnitudes apply
+    the exact ``percepcion_count`` / ``percibido_sum`` / ``retencion_sum`` field
+    arithmetic of :func:`resolve_withholding_binding_values`, so the breakdown
+    cannot drift from the bound facts that feed the calculation. Per clave, the
+    distinct percepción key is ``(perceptor_tax_id, subclave)`` (the clave is the
+    grouping axis).
+    """
+    percepciones: dict[RetencionClave, set[tuple[str, str]]] = {}
+    percibido: dict[RetencionClave, Decimal] = {}
+    retencion: dict[RetencionClave, Decimal] = {}
+    for observation in observations:
+        clave = observation.clave
+        percepciones.setdefault(clave, set()).add((observation.perceptor_tax_id, observation.subclave))
+        percibido[clave] = (
+            percibido.get(clave, Decimal("0")) + observation.percibido_dinerario + observation.percibido_especie
+        )
+        retencion[clave] = (
+            retencion.get(clave, Decimal("0")) + observation.retencion_practicada + observation.ingreso_a_cuenta
+        )
+    return tuple(
+        WithholdingClaveBreakdown(
+            clave=clave,
+            percepcion_count=len(percepciones[clave]),
+            percibido_total=percibido[clave],
+            retencion_total=retencion[clave],
+        )
+        for clave in sorted(percepciones)
+    )

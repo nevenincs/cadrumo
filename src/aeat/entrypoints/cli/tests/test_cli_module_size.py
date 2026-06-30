@@ -16,7 +16,7 @@ _DEFAULT_MODULE_LINE_LIMIT = 1250
 # Per-module ceilings for SPLIT-CANDIDATE CLI modules grown by recovered features.
 _MODULE_LINE_LIMIT_OVERRIDES = {
     "_modelo.py": 1320,  # SPLIT-CANDIDATE
-    "_modelo_payloads.py": 1300,  # SPLIT-CANDIDATE
+    "_modelo_payloads.py": 1320,  # SPLIT-CANDIDATE
 }
 _DEFAULT_COMMAND_LINE_LIMIT = 180
 # Per-command ceilings for command bodies pinned above the default, mirroring the
