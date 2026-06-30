@@ -1,8 +1,10 @@
 """Preparation gates for modelo calculation actions.
 
 This module prepares calculation input channels against the registry
-:class:`ModeloRevision` for a work unit and runs the optional ledger preflight
-through a :class:`TransactionCatalogueRepository` before calculation proceeds.
+:class:`ModeloRevision` for a :class:`aeat.domain.modelos.WorkUnit`, resolves
+the law-determined :class:`RegistrySnapshot`, applies the Modelo 303 IVA wallet
+gate, and runs ledger preflight through a :class:`TransactionCatalogueRepository`
+before calculation proceeds.
 """
 
 from __future__ import annotations
@@ -48,6 +50,15 @@ resolve_iva_compensation_decision_for_calculation = _iva_wallet_gate.resolve_iva
 
 @dataclass(frozen=True, slots=True)
 class PreparedCalculation:
+    """Validated calculation preflight bundle consumed by the action layer.
+
+    ``work_unit`` is the loaded :class:`aeat.domain.modelos.WorkUnit`;
+    ``snapshot`` is the resolved :class:`RegistrySnapshot`; ``channels`` is the
+    merged :class:`ResolvedCalculationChannels` set that the registry engine will
+    consume. Casilla inputs have already been canonicalised and ledger, profile,
+    required-binding, borrador, and IVA-wallet gates have already run.
+    """
+
     work_units: WorkUnitCatalogue
     work_unit: WorkUnit
     snapshot: object
@@ -80,6 +91,11 @@ def prepare_calculation(
     The resolved registry :class:`ModeloRevision` supplies binding and casilla
     requirements. ``ledger_preflight_transaction_repository`` may provide a
     :class:`TransactionCatalogueRepository` for the ledger-tax readiness check.
+    ``iva_compensation_decision_repository`` may provide the matching
+    :class:`aeat.application.calculations.IvaWalletDecisionRepository` for the
+    Modelo 303 wallet authority, while
+    :class:`aeat.application.live.Borrador100SnapshotRepository` supplies the
+    optional Modelo 100 borrador tier.
 
     Returns:
         A :class:`PreparedCalculation` carrying the work unit, snapshot, validated
@@ -240,6 +256,7 @@ def _raise_if_ledger_preflight_blocks_calculation(
     revision: ModeloRevision,
     transaction_repository: TransactionCatalogueRepository | None = None,
 ) -> None:
+    """Refuse ledger-backed calculations whose period ledger readiness blocks."""
     if not any(binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES for binding in revision.bindings):
         return
     iva_regime = _iva_regime_for_bucket(work_unit.bucket_id)
@@ -274,6 +291,7 @@ def _raise_if_m200_ledger_requires_accounting_result_input(
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
     transaction_repository: TransactionCatalogueRepository | None,
 ) -> None:
+    """Refuse Modelo 200 ledger-backed calculation without accounting-result input."""
     if str(work_unit.modelo) != Modelo.M200.value:
         return
     if _M200_ACCOUNTING_RESULT_CASILLA in casilla_inputs or (
