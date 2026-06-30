@@ -34,12 +34,16 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_RUNTIME_BUCKET_ID = "e2505e3c-97de-49e7-84c8-6858cbece132"
+_PROFILE_BUCKET_ID = "9ab28b80-7c35-4143-88f3-b2dcb7a48af7"
+_PRIVATE_EVENTS_RUNTIME_BUCKET_ID = "2ac01741-cd0f-44ea-84c1-ff3db73942f2"
+
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(
         tmp_path=tmp_path,
-        bucket_id="user-profile-lifecycle-test",
+        bucket_id=_RUNTIME_BUCKET_ID,
     ) as profile:
         yield profile.repository
 
@@ -51,7 +55,7 @@ def schema() -> ProfileSchemaDefinition:
 
 def _service(secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition) -> ProfileLifecycleService:
     return ProfileLifecycleService(
-        repository=UserProfileLifecycleRepository(bucket_id="bucket-a", objects=secure_objects),
+        repository=UserProfileLifecycleRepository(bucket_id=_PROFILE_BUCKET_ID, objects=secure_objects),
         validator=ProfileValidationService(schema=schema),
         events=BucketEventHistoryRepository(objects=secure_objects),
     )
@@ -126,10 +130,10 @@ def test_register_refuses_duplicate_profile_id(
     error = exc_info.value
     assert str(error) == "profile already exists in the active bucket"
     assert "11111111-1111-4111-8111-111111111111" not in str(error)
-    assert "bucket-a" not in str(error)
+    assert _PROFILE_BUCKET_ID not in str(error)
     assert error.translated_message == "application.user_profile.errors.lifecycle_profile_already_exists"
     assert tr(error.translated_message) != error.translated_message
-    assert error.context == {"profile_id": "11111111-1111-4111-8111-111111111111", "bucket_id": "bucket-a"}
+    assert error.context == {"profile_id": "11111111-1111-4111-8111-111111111111", "bucket_id": _PROFILE_BUCKET_ID}
 
 
 def test_edit_field_upserts_a_fact(secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition) -> None:
@@ -319,7 +323,7 @@ def test_lifecycle_emits_bucket_events(secure_objects: SecureObjectRepository, s
 def test_lifecycle_event_payload_values_are_encrypted_at_rest(tmp_path: Path, schema: ProfileSchemaDefinition) -> None:
     with isolated_runtime_profile(
         tmp_path=tmp_path,
-        bucket_id="user-profile-lifecycle-private-events",
+        bucket_id=_PRIVATE_EVENTS_RUNTIME_BUCKET_ID,
     ) as profile:
         svc = _service(profile.repository, schema)
         source_profile_id = "55555555-5555-4555-8555-555555555555"
@@ -346,15 +350,15 @@ def test_lifecycle_event_payload_values_are_encrypted_at_rest(tmp_path: Path, sc
 
         catalogue = BucketEventHistoryRepository(objects=profile.repository).load()
         register_events = catalogue.for_bucket(
-            "bucket-a",
+            _PROFILE_BUCKET_ID,
             event_types=(BucketEventType.PROFILE_BUCKET_CREATED,),
         )
         rename_events = catalogue.for_bucket(
-            "bucket-a",
+            _PROFILE_BUCKET_ID,
             event_types=(BucketEventType.PROFILE_RENAMED,),
         )
         duplicate_events = catalogue.for_bucket(
-            "bucket-a",
+            _PROFILE_BUCKET_ID,
             event_types=(BucketEventType.PROFILE_DUPLICATED,),
         )
         assert register_events[-1].payload["display_name"] == original_label
