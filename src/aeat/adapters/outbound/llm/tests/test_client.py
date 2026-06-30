@@ -13,9 +13,9 @@ from pathlib import Path
 
 import pytest
 from pydantic import SecretStr
-from pydantic_settings import SettingsConfigDict
 
-from .....core.config import LLMProviderSetting, Settings
+from .....core.config import LLMProviderSetting
+from .....tests.fixtures.settings import EnvFileFreeSettings
 from .. import (
     LLMCache,
     LLMClient,
@@ -27,10 +27,6 @@ from .. import (
 from .._providers import ProviderRequest, _DeterministicAdapter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
-
-
-class _IsolatedSettings(Settings):
-    model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
 
 
 def test_deterministic_adapter_contract() -> None:
@@ -57,7 +53,7 @@ def test_deterministic_adapter_contract() -> None:
 def test_client_uses_cache_before_calling_provider(tmp_path: Path) -> None:
     """A repeated request should hit the cache instead of re-calling the adapter."""
 
-    settings = _IsolatedSettings(
+    settings = EnvFileFreeSettings(
         aeat_llm_provider=LLMProviderSetting.ANTHROPIC,
         aeat_llm_model="claude-sonnet-4-6",
         aeat_llm_cache_dir=tmp_path / "cache",
@@ -81,7 +77,7 @@ def test_client_uses_cache_before_calling_provider(tmp_path: Path) -> None:
 def test_client_surfaces_provider_error(tmp_path: Path) -> None:
     """Provider failures should surface as LLM provider errors."""
 
-    settings = _IsolatedSettings(
+    settings = EnvFileFreeSettings(
         aeat_llm_provider=LLMProviderSetting.ANTHROPIC,
         aeat_llm_model="claude-sonnet-4-6",
         aeat_llm_cache_dir=tmp_path / "cache",
@@ -100,7 +96,7 @@ def test_client_surfaces_provider_error(tmp_path: Path) -> None:
 def test_client_surfaces_rate_limit_error(tmp_path: Path) -> None:
     """Rate-limit failures should surface as the dedicated rate-limit error."""
 
-    settings = _IsolatedSettings(
+    settings = EnvFileFreeSettings(
         aeat_llm_provider=LLMProviderSetting.ANTHROPIC,
         aeat_llm_model="claude-sonnet-4-6",
         aeat_llm_cache_dir=tmp_path / "cache",
@@ -119,7 +115,7 @@ def test_client_surfaces_rate_limit_error(tmp_path: Path) -> None:
 def test_secretstr_masks_llm_keys_in_settings_repr() -> None:
     """LLM API keys should never appear in repr or serialized JSON."""
 
-    settings = _IsolatedSettings(
+    settings = EnvFileFreeSettings(
         aeat_llm_provider=LLMProviderSetting.ANTHROPIC,
         aeat_llm_model="claude-sonnet-4-6",
         aeat_llm_anthropic_api_key=SecretStr("sk-test-secret"),

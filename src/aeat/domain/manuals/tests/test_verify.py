@@ -6,10 +6,10 @@ import json
 from pathlib import Path
 
 import pytest
-from pydantic_settings import SettingsConfigDict
 
 from ....core.config import Settings
 from ....tests.aeat_literal_fixtures import manual_practicos_url
+from ....tests.fixtures.settings import EnvFileFreeSettings
 from .. import ManualId, ManualPart, verify_manual_dir
 from .._errors import ManualNotFoundError, ManualReviewRequiredError
 from .._verify import raise_on_errors
@@ -19,19 +19,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _IVA_MANUAL_URL = manual_practicos_url("iva.pdf")
 
 
-class _IsolatedSettings(Settings):
-    """Settings variant that skips the on-disk env file for test isolation."""
-
-    model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
-
-
 def _write_json(path: Path, payload: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def _settings(root: Path, *, review_required: bool = True) -> Settings:
-    return _IsolatedSettings(
+    return EnvFileFreeSettings(
         aeat_manuals_root=root,
         aeat_manuals_review_required=review_required,
     )
