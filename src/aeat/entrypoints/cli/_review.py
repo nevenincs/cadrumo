@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 import typer
 
 from ...application.review import (
@@ -44,6 +46,29 @@ def _row_to_payload(row: ReviewQueueRow) -> ReviewQueueRowPayload:
     )
 
 
+def _resolve_confidence_threshold(value: float | None) -> Decimal | None:
+    """Validate and lift the ``--confidence-below`` option to a Decimal.
+
+    ``classification_confidence`` is constrained to the inclusive ``[0, 1]``
+    range on the transaction model, so a threshold outside that range can
+    never match a stored confidence. The CLI gate names the accepted range
+    on a bad value rather than silently passing it through (the
+    instructive-gate mandate).
+    """
+    if value is None:
+        return None
+    threshold = Decimal(str(value))
+    if threshold < 0 or threshold > 1:
+        raise _bad(
+            tr(
+                "cli.review.errors.invalid_confidence",
+                value=str(value),
+                default="Confidence threshold %{value} is out of range; supply a value between 0 and 1.",
+            ),
+        )
+    return threshold
+
+
 app = typer.Typer(
     name="review",
     help=tr("cli.review.app_help"),
@@ -58,6 +83,19 @@ def review_queue(
     source_kinds: list[str] = typer.Option([], "--source-kind", help=tr("cli.review.queue.source_kind_help")),
     state: str = typer.Option(ReviewState.PENDING.value, "--state", help=tr("cli.review.queue.state_help")),
     modelo: str | None = typer.Option(None, "--modelo", help=tr("cli.review.queue.modelo_help")),
+    confidence_below: float | None = typer.Option(
+        None,
+        "--confidence-below",
+        help=tr(
+            "cli.review.queue.confidence_below_help",
+            default=(
+                "Restrict the queue to classified transactions whose "
+                "classification confidence is strictly below this threshold "
+                "(a value between 0 and 1). Lowest-confidence rows surface "
+                "first so they can be triaged."
+            ),
+        ),
+    ),
     explain: bool = typer.Option(
         False,
         "--explain",
@@ -71,9 +109,16 @@ def review_queue(
     ),
 ) -> None:
     """List read-only review queue rows."""
+    threshold = _resolve_confidence_threshold(confidence_below)
     try:
         resolved_state = ReviewState(state.strip().lower())
-        report = project_review_queue(kinds=kinds, source_kinds=source_kinds, state=resolved_state, modelo=modelo)
+        report = project_review_queue(
+            kinds=kinds,
+            source_kinds=source_kinds,
+            state=resolved_state,
+            modelo=modelo,
+            confidence_below=threshold,
+        )
     except ValueError as exc:
         raise _bad(tr("cli.review.errors.invalid_state", state=state)) from exc
     except ReviewError as exc:
