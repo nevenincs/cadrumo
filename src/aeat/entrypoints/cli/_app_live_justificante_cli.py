@@ -1,4 +1,4 @@
-"""Typer registration for live justificante-capture commands."""
+"""Typer registration for live :class:`~aeat.application.live.JustificanteCaptureSnapshot` commands."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ def register_justificante_commands(
     active_bucket_id: Callable[[], str],
     auth_preflight: Callable[[], None],
 ) -> None:
-    """Mount live justificante commands on the live app."""
+    """Mount the bucket-scoped justificante snapshot commands on the live app."""
     global _active_bucket_id, _auth_preflight
     _active_bucket_id = active_bucket_id
     _auth_preflight = auth_preflight
@@ -70,7 +70,14 @@ def justificante_pull(
     ],
     period: Annotated[str, typer.Option("--period", help=tr("cli.app.live.period_help", default="Period (e.g. 1T)."))],
 ) -> None:
-    """Live-pull the justificante for one filed period and persist a bucket-scoped capture."""
+    """Pull one signed AEAT receipt into a persisted :class:`~aeat.application.live.JustificanteCaptureSnapshot`.
+
+    The command delegates to
+    :func:`~aeat.application.live.capture_justificante_snapshot_outcome`, so
+    the remote read, content-addressed snapshot write, parsed justificante
+    metadata registration, and optional local filing-evidence stamp share the
+    same application boundary.
+    """
     from ...application.live import capture_justificante_snapshot_outcome
     from ._app_live_payloads import JustificanteCaptureResult
 
@@ -137,7 +144,7 @@ def justificante_pull(
     ),
 )
 def justificante_list(ctx: typer.Context) -> None:
-    """List persisted justificante-capture snapshots for the active bucket."""
+    """List active captures from :class:`~aeat.application.live.JustificanteCaptureSnapshotService`."""
     from ...application.live import JustificanteCaptureSnapshotService
     from ._app_live_payloads import JustificanteListResult, JustificanteSnapshotSummaryPayload
 
@@ -187,7 +194,7 @@ def justificante_view(
         ),
     ],
 ) -> None:
-    """Show one justificante capture's provenance for the active bucket."""
+    """Show one :class:`~aeat.application.live.JustificanteCaptureSnapshot` provenance record."""
     from ...application.live import JustificanteCaptureSnapshotService
     from ._app_live_payloads import JustificanteViewResult
 
