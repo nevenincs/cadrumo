@@ -27,21 +27,23 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_BUCKET_ID = "73737373-7373-4373-8373-737373737311"
+
 
 @pytest.fixture(autouse=True)
 def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="b1") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile
 
 
 def test_load_returns_profile_when_no_home_office_overrides() -> None:
     save_usage_ratios(
         UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.50")}),
-        bucket_id="b1",
+        bucket_id=_BUCKET_ID,
     )
 
     profile = load_usage_ratios_with_censo_guard(
-        bucket_id="b1",
+        bucket_id=_BUCKET_ID,
         raw_afectacion_ratio=None,
     )
 
@@ -51,12 +53,12 @@ def test_load_returns_profile_when_no_home_office_overrides() -> None:
 def test_refuses_when_censo_unset_but_home_office_override_persisted() -> None:
     save_usage_ratios(
         UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.20")}),
-        bucket_id="b1",
+        bucket_id=_BUCKET_ID,
     )
 
     with pytest.raises(CensoRatioMismatchError) as exc:
         load_usage_ratios_with_censo_guard(
-            bucket_id="b1",
+            bucket_id=_BUCKET_ID,
             raw_afectacion_ratio=None,
         )
 
@@ -66,12 +68,12 @@ def test_refuses_when_censo_unset_but_home_office_override_persisted() -> None:
 def test_refuses_on_mismatch_between_persisted_and_censo_derived() -> None:
     save_usage_ratios(
         UsageRatioProfile(ratios={SpendingCategory.AMORTIZACION_VIVIENDA_AFECTO: Decimal("0.50")}),
-        bucket_id="b1",
+        bucket_id=_BUCKET_ID,
     )
 
     with pytest.raises(CensoRatioMismatchError) as exc:
         load_usage_ratios_with_censo_guard(
-            bucket_id="b1",
+            bucket_id=_BUCKET_ID,
             raw_afectacion_ratio=Decimal("0.20"),
         )
 
@@ -89,11 +91,11 @@ def test_accepts_when_persisted_matches_censo_derived_value() -> None:
                 SpendingCategory.COMUNIDAD_VIVIENDA_AFECTO: raw,
             },
         ),
-        bucket_id="b1",
+        bucket_id=_BUCKET_ID,
     )
 
     profile = load_usage_ratios_with_censo_guard(
-        bucket_id="b1",
+        bucket_id=_BUCKET_ID,
         raw_afectacion_ratio=raw,
     )
 
