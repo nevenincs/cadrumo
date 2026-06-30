@@ -632,7 +632,6 @@ def test_list_filing_records_orders_multiple_periods_without_period_comparison(r
         filing_record_id=derive_filing_record_id(
             work_unit_id="1" * 64,
             calculation_revision_id="2" * 64,
-            filed_at=T1,
             filed_by="operator-A",
         ),
         work_unit_id="1" * 64,
@@ -648,7 +647,6 @@ def test_list_filing_records_orders_multiple_periods_without_period_comparison(r
         filing_record_id=derive_filing_record_id(
             work_unit_id="3" * 64,
             calculation_revision_id="4" * 64,
-            filed_at=T2,
             filed_by="operator-A",
         ),
         work_unit_id="3" * 64,
@@ -683,7 +681,6 @@ def test_list_filing_records_filters_by_modelo(repos: Repos) -> None:
         filing_record_id=derive_filing_record_id(
             work_unit_id="1" * 64,
             calculation_revision_id="2" * 64,
-            filed_at=T1,
             filed_by="operator-A",
         ),
         work_unit_id="1" * 64,
@@ -699,7 +696,6 @@ def test_list_filing_records_filters_by_modelo(repos: Repos) -> None:
         filing_record_id=derive_filing_record_id(
             work_unit_id="3" * 64,
             calculation_revision_id="4" * 64,
-            filed_at=T2,
             filed_by="operator-A",
         ),
         work_unit_id="3" * 64,

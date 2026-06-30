@@ -228,7 +228,6 @@ def _seed_current_130_filing(
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        filed_at=_CAPTURED_AT,
         filed_by="operator",
     )
     filing = ModeloRecord(

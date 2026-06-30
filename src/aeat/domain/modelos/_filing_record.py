@@ -113,24 +113,23 @@ def derive_filing_record_id(
     *,
     work_unit_id: str,
     calculation_revision_id: str,
-    filed_at: datetime,
     filed_by: str,
     member_nif: str | None = None,
 ) -> str:
     """Deterministic 64-char SHA-256 id for a filing record.
 
-    The id is content-addressed by the parent work unit, the filed
-    calculation revision, the filing timestamp, and the actor. Two
-    operators filing the same revision at the same instant produce
-    the same id, which is impossible in practice because the timestamp
-    guarantees uniqueness. Member-scoped group filings include the
-    member NIF in the identity; single-filer records omit it so existing
-    record ids remain stable.
+    Content-addressed by the filing *outcome* - the parent work unit, the
+    filed calculation revision, the actor, and (for member-scoped group
+    filings) the member NIF. ``filed_at`` is deliberately excluded from the
+    identity so a re-file of the same revision by the same actor resolves to
+    the same record (an idempotent re-file is a no-op, not a new time-stamped
+    duplicate); ``filed_at`` is retained on :class:`ModeloRecord` as a
+    non-identity last-seen field. Member-scoped group filings include the
+    member NIF in the identity; single-filer records omit it.
     """
     payload = {
         "work_unit_id": work_unit_id.strip(),
         "calculation_revision_id": calculation_revision_id.strip(),
-        "filed_at": filed_at.isoformat(),
         "filed_by": filed_by.strip(),
     }
     if member_nif is not None:
@@ -143,10 +142,13 @@ class ModeloRecord(BaseModel):
 
     Pairs a filed :class:`CalculationRevisionId` with the filing event
     metadata (actor, timestamp, notes, AEAT-acceptance bit, supersession
-    link). The id is content-addressed by ``work_unit_id``,
-    ``calculation_revision_id``, ``filed_at``, and ``filed_by`` via
-    :func:`derive_filing_record_id`; a ``model_validator`` enforces the
-    derivation on construction.
+    link). The id is content-addressed by the filing outcome -
+    ``work_unit_id``, ``calculation_revision_id``, ``filed_by``, and (for
+    member-scoped group filings) ``member_nif`` - via
+    :func:`derive_filing_record_id`; ``filed_at`` is a non-identity last-seen
+    field, so a re-file of the same revision by the same actor is an
+    idempotent no-op rather than a new record. A ``model_validator`` enforces
+    the derivation on construction.
 
     ``aeat_accepted`` records an externally-observed AEAT acceptance
     signal imported through read-only live signals — it does not imply
@@ -198,7 +200,6 @@ class ModeloRecord(BaseModel):
         derived = derive_filing_record_id(
             work_unit_id=self.work_unit_id,
             calculation_revision_id=self.calculation_revision_id,
-            filed_at=self.filed_at,
             filed_by=self.filed_by,
             member_nif=self.member_nif,
         )
