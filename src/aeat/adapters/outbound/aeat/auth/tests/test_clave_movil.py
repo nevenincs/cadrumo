@@ -352,38 +352,39 @@ class TestAuthenticateFresh:
 
         _run(run())
 
-    def test_non_qr_fallback_rejects_missing_nie_support(
+    @pytest.mark.parametrize(
+        ("env_overrides", "expected_message"),
+        (
+            pytest.param(
+                {
+                    "AEAT_CLAVE_MOVIL_DNI_NIE": "Y0000000Z",
+                    "AEAT_CLAVE_PREFER_NON_QR": "true",
+                },
+                r"AEAT_CLAVE_MOVIL_NIE_SOPORTE|non-QR|NIE",
+                id="nie-support",
+            ),
+            pytest.param(
+                {
+                    "AEAT_CLAVE_MOVIL_DNI_NIE": "12345678Z",
+                    "AEAT_CLAVE_PREFER_NON_QR": "true",
+                },
+                r"AEAT_CLAVE_MOVIL_DNI_FECHA|non-QR|fallback",
+                id="dni-fecha",
+            ),
+        ),
+    )
+    def test_non_qr_fallback_rejects_missing_required_identity_support(
         self,
         tmp_path: Path,
+        env_overrides: dict[str, str],
+        expected_message: str,
     ) -> None:
-        settings = _settings_for(
-            tmp_path,
-            AEAT_CLAVE_MOVIL_DNI_NIE="Y0000000Z",
-            AEAT_CLAVE_PREFER_NON_QR="true",
-        )
+        settings = _settings_for(tmp_path, **env_overrides)
         provider = ClaveMovilAuthProvider(settings)
         browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
 
         async def run() -> None:
-            with pytest.raises(ClaveMovilConfigurationError, match=r"AEAT_CLAVE_MOVIL_NIE_SOPORTE|non-QR|NIE"):
-                await provider.authenticate(browser_session=browser_session)
-
-        _run(run())
-
-    def test_non_qr_fallback_rejects_missing_fecha(
-        self,
-        tmp_path: Path,
-    ) -> None:
-        settings = _settings_for(
-            tmp_path,
-            AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z",
-            AEAT_CLAVE_PREFER_NON_QR="true",
-        )
-        provider = ClaveMovilAuthProvider(settings)
-        browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
-
-        async def run() -> None:
-            with pytest.raises(ClaveMovilConfigurationError, match=r"AEAT_CLAVE_MOVIL_DNI_FECHA|non-QR|fallback"):
+            with pytest.raises(ClaveMovilConfigurationError, match=expected_message):
                 await provider.authenticate(browser_session=browser_session)
 
         _run(run())
