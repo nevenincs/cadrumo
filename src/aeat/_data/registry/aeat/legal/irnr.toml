@@ -1,21 +1,13 @@
 # TRLIRNR (Impuesto sobre la Renta de no Residentes) legal-catalogue
-# entries supporting M210 Phase 1 (post-stub engine landing).
+# entries supporting the current M210 IRNR engine.
 #
-# Authoring scope: TRLIRNR Arts 2, 10, 13.1.h, 24, 25.1.a, 25.1.f under
+# Authoring scope: TRLIRNR Arts 2, 10, 13.1.h, 24, 25.1.a, 25.1.b, 25.1.f under
 # the consolidated text approved by Real Decreto Legislativo
 # 5/2004 (BOE-A-2004-4527). Required_text patterns are populated
-# from the bundled corpus so the M210 Phase 1 rate rows are checked
-# against the provisions that bind them. Article 25.1.b (pensiones
-# special tarifa) is catalogued and implemented as a live M210
-# progressive-tariff branch.
+# from the bundled corpus so the M210 base, rate, treaty, and tariff rows
+# are checked against the provisions that bind them.
 #
-# IMPORTANT: An earlier draft of the M210 ADR mis-cited "TRLIRNR
-# Art 47" for the representante-fiscal mandate. The correct
-# citation is TRLIRNR Art 10 (entry below). TRLIRNR Art 47
-# governs "sucesion en la deuda tributaria" (successor-tax-
-# liability) and is OUT of M210 Phase 1 scope; if a future
-# campaign needs the general-LGT representante surface,
-# ley-58-2003:art-47 (LGT) is the parallel authority.
+# TRLIRNR Art 10 is the representante-fiscal authority for M210.
 
 [legal."trlirnr-rdleg-5-2004:art-2"]
 evidence_tier = "legal_authority"
@@ -46,7 +38,7 @@ effective_from = 2004-03-13
 review_status = "reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "wgergely"
-notes = "TRLIRNR art 10: obligacion de designar representante fiscal con residencia en Espana para los contribuyentes que no sean residentes en otro Estado miembro de la Union Europea, cuando operen mediante establecimiento permanente o cuando la Administracion Tributaria lo requiera por la cuantia o caracteristicas de la renta. Fundamento legal del gate de verification predicate implies_nonzero(['fiscal_residency','representante_fiscal_nif']) en M210 Phase 1; corregido respecto del borrador previo del ADR que mencionaba Art 47."
+notes = "TRLIRNR art 10: obligacion de designar representante fiscal con residencia en Espana para los contribuyentes que no sean residentes en otro Estado miembro de la Union Europea, cuando operen mediante establecimiento permanente o cuando la Administracion Tributaria lo requiera por la cuantia o caracteristicas de la renta. Fundamento legal del gate de verification predicate implies_nonzero(['fiscal_residency','representante_fiscal_nif']) en la superficie M210 vigente."
 required_text = ["no sean residentes en otro Estado miembro de la Union Europea", "persona fisica o juridica con residencia en Espana", "les represente ante la Administracion Tributaria"]
 
 [legal."trlirnr-rdleg-5-2004:art-13.1.h"]

@@ -56,7 +56,7 @@ def _irnr_profile(country_code: str) -> TaxpayerProfile:
     """Build a NON_RESIDENT_IRNR profile for a non-EU/EEA country.
 
     GB / MA / AR / ZW are all outside the EU/EEA, so each profile
-    needs a fiscal representative per Art. 47 LGT + Art. 10 TRLIRNR.
+    needs a fiscal representative per TRLIRNR Art. 10.
     """
 
     return TaxpayerProfile(

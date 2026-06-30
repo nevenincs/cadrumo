@@ -1,4 +1,4 @@
-# M210 IRNR Phase 1 tipo-de-gravamen resolution formula.
+# M210 IRNR tipo-de-gravamen resolution formula.
 #
 # Dispatches through the `m210_resolve_rate` formula op (S400):
 # - args[0]: text casilla `tipo_renta` (operator-supplied enum)

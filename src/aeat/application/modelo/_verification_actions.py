@@ -297,9 +297,8 @@ def _evaluate_applicability_filter(filter_name: str, profile: TaxpayerProfile) -
     """
     if filter_name == "non_resident_irnr_non_eea":
         # TRLIRNR Art 10 letter applies only to non-EU residents.
-        # Phase 1 uses the broader ue_eee_status per m210-irnr-full-engine
-        # ADR §D2.5 escape hatch: EEA residents are exempt because of the
-        # bilateral mutual-assistance regime.
+        # M210 uses the broader ue_eee_status: EEA residents are exempt
+        # because of the bilateral mutual-assistance regime.
         return profile.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR and not profile.ue_eee_status
     raise ModeloApplicabilityFilterError(f"Unknown applicability filter: {filter_name!r}")
 
