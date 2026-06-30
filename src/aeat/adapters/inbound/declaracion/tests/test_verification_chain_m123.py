@@ -6,14 +6,11 @@ from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M123_2019,
     _COMPUTED_CASILLAS_M123_2024,
     CasillaId,
-    RegistryValidationError,
     _assert_engine_closure_matches_extracted_decimal,
+    _calculate_engine_values_from_inputs,
     _casilla_id,
     _decimal_inputs_from_extracted_values,
     _parse_extracted_declaracion_values,
-    _period_to_date,
-    _registry_snapshot,
-    calculate_registry_snapshot,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -75,23 +72,13 @@ def test_verification_chain_m123_engine_recomputes_closure_casillas(
     """
     extracted = _parse_extracted_declaracion_values(modelo="123", fixture_stem=pdf_stem, year=year, period=period)
     inputs = _decimal_inputs_from_extracted_values(extracted, excluding=computed_set)
-
-    snapshot = _registry_snapshot("123", year, period)
-    filing_period_date = _period_to_date(year, period)
-
-    try:
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=inputs,
-            date_context={"filing_period": filing_period_date},
-        )
-    except RegistryValidationError as exc:
-        pytest.fail(
-            f"BINDING-GAP [M123/{pdf_stem}]: calculate_registry_snapshot raised "
-            f"RegistryValidationError.\n  error: {exc}\n  inputs: {sorted(inputs)}",
-        )
-
-    engine_values = dict(result.values)
+    engine_values = _calculate_engine_values_from_inputs(
+        modelo="123",
+        year=year,
+        period=period,
+        label=f"M123/{pdf_stem}",
+        inputs=inputs,
+    )
 
     for closure_id in closure_ids:
         if closure_id not in extracted:

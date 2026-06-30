@@ -15,11 +15,8 @@ from ._verification_chain_m100_support import (
 )
 from ._verification_chain_support import (
     Decimal,
-    RegistryValidationError,
+    _calculate_engine_values_from_inputs,
     _decimal_inputs_from_extracted_values,
-    _registry_snapshot,
-    calculate_registry_snapshot,
-    date,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -57,37 +54,29 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
     extracted = _parse_m100_corpus(year, f"M100/{year}-0A corpus-limited")
 
     inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_M100_COMPUTED_CASILLAS)
-
-    snapshot = _registry_snapshot("100", year, "0A")
-
-    try:
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=inputs,
-            date_context={"filing_period": date(year, 12, 31)},
-            binding_values={
-                "renta-2021-modelo-100-estimacion-directa-es-normal": Decimal("0"),
-                "renta-2021-modelo-111-retenciones-periodicas": Decimal("0"),
-                "renta-2021-modelo-115-retenciones-periodicas": Decimal("0"),
-                "renta-2021-modelo-123-retenciones-periodicas": Decimal("0"),
-            },
-            enum_binding_values={
-                "renta-2021-profile-tax-residence-ccaa": "cataluna",
-            },
-            relation_values={
-                "renta-2021-rel-130-pagos-fraccionados": Decimal("0"),
-                "renta-2021-rel-131-pagos-fraccionados": Decimal("0"),
-            },
-        )
-    except RegistryValidationError as exc:
-        pytest.fail(
-            f"BINDING-GAP [M100/{year}-0A corpus-limited]: calculate_registry_snapshot raised "
-            f"RegistryValidationError - a required binding is missing.\n"
-            f"  error: {exc}\n"
-            f"  inputs: {sorted(inputs)}",
-        )
-
-    engine_values = dict(result.values)
+    binding_values = {
+        "renta-2021-modelo-100-estimacion-directa-es-normal": Decimal("0"),
+        "renta-2021-modelo-111-retenciones-periodicas": Decimal("0"),
+        "renta-2021-modelo-115-retenciones-periodicas": Decimal("0"),
+        "renta-2021-modelo-123-retenciones-periodicas": Decimal("0"),
+    }
+    enum_binding_values = {
+        "renta-2021-profile-tax-residence-ccaa": "cataluna",
+    }
+    relation_values = {
+        "renta-2021-rel-130-pagos-fraccionados": Decimal("0"),
+        "renta-2021-rel-131-pagos-fraccionados": Decimal("0"),
+    }
+    engine_values = _calculate_engine_values_from_inputs(
+        modelo="100",
+        year=year,
+        period="0A",
+        label=f"M100/{year}-0A corpus-limited",
+        inputs=inputs,
+        binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
+        relation_values=relation_values,
+    )
 
     for closure_id in _M100_CLOSURE_ASSERTION_CASILLAS:
         assert engine_values.get(closure_id) is not None, (

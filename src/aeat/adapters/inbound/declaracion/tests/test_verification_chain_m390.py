@@ -6,13 +6,10 @@ from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M390,
     CasillaId,
     Decimal,
-    RegistryValidationError,
+    _calculate_engine_values_from_inputs,
     _casilla_id,
     _decimal_inputs_from_extracted_values,
     _parse_extracted_declaracion_values,
-    _registry_snapshot,
-    calculate_registry_snapshot,
-    date,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -99,26 +96,14 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
         "modelo-390-prev-303-compensacion-ultimo-periodo": _comp_97,
         "modelo-390-prev-303-compensacion-generada-ejercicio-no-97": _comp_662,
     }
-
-    snapshot = _registry_snapshot("390", year, "0A")
-
-    try:
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=inputs,
-            date_context={"filing_period": date(year, 12, 31)},
-            binding_values=binding_values,
-        )
-    except RegistryValidationError as exc:
-        pytest.fail(
-            f"BINDING-GAP [{pdf_stem}]: calculate_registry_snapshot raised "
-            f"RegistryValidationError - a required binding is missing.\n"
-            f"  error: {exc}\n"
-            f"  inputs supplied: {sorted(inputs)}\n"
-            f"  binding_values supplied: {sorted(binding_values)}",
-        )
-
-    engine_values = dict(result.values)
+    engine_values = _calculate_engine_values_from_inputs(
+        modelo="390",
+        year=year,
+        period="0A",
+        label=pdf_stem,
+        inputs=inputs,
+        binding_values=binding_values,
+    )
 
     extracted_devengada = extracted[_M390_CUOTA_DEVENGADA_TOTAL_CASILLA]
     engine_devengada = engine_values.get(_M390_CUOTA_DEVENGADA_TOTAL_CASILLA)
