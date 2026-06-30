@@ -57,6 +57,7 @@ source_refs = [
     "aeat-dr-100-2024-input-dictionary",
     "aeat-dr-100-2024-xsd",
     "aeat-renta-2024-manual-parte1",
+    "aeat-renta-2024-manual-deducciones-autonomicas",
     "boe-modelo-100-2024-form",
     "aeat-dr-100-2025-dictionary",
     "aeat-dr-100-2025-input-dictionary",

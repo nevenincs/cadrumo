@@ -150,20 +150,26 @@ def test_modelo_100_2021_deportistas_0489_is_grounded_in_dictionary_and_manual()
 def test_renta_manual_sources_match_manifest() -> None:
     catalogues = _catalogues()
     sources_by_path = {source.corpus_path: source for source in catalogues.sources.values()}
-    manual_roots = (
-        bundled_path("corpus", "manuals", "renta", "2025", "part1"),
-        bundled_path("corpus", "manuals", "renta", "2025", "part2-deducciones-autonomicas"),
+    renta_root = bundled_path("corpus", "manuals", "renta")
+    manifest_paths = sorted(
+        renta_root.glob("*/*/manifest.json"),
+        key=lambda path: path.relative_to(renta_root).as_posix(),
     )
     checked: list[str] = []
 
-    for root in manual_roots:
-        manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest_paths
+    for manifest_path in manifest_paths:
+        root = manifest_path.parent
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        pdf_path = root / manifest["relative_pdf_path"]
         # corpus_path on registry sources is bundled-corpus-relative
         # (i.e. begins with ``corpus/...``), so relativise against the
         # bundle root rather than PROJECT_ROOT.
-        corpus_path = root.joinpath(manifest["relative_pdf_path"]).relative_to(bundled_path()).as_posix()
+        corpus_path = pdf_path.relative_to(bundled_path()).as_posix()
         source = sources_by_path.get(corpus_path)
 
+        assert manifest["synthetic"] is False, f"Renta manual manifest must cite a real PDF: {manifest_path}"
+        assert pdf_path.is_file(), f"Renta manual manifest points at a missing PDF: {pdf_path}"
         assert source is not None, f"Renta manual corpus artefact has no registry source: {corpus_path}"
         assert source.sha256 == manifest["sha256"]
         assert source.bytes == manifest["content_length"]
@@ -173,7 +179,16 @@ def test_renta_manual_sources_match_manifest() -> None:
         verify_source_file(PROJECT_ROOT, source)
         checked.append(source.id)
 
-    assert checked == ["aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas"]
+    assert checked == [
+        "aeat-renta-2020-manual-parte1",
+        "aeat-renta-2021-manual-parte1",
+        "aeat-renta-2022-manual-parte1",
+        "aeat-renta-2023-manual-parte1",
+        "aeat-renta-2024-manual-parte1",
+        "aeat-renta-2024-manual-deducciones-autonomicas",
+        "aeat-renta-2025-manual-parte1",
+        "aeat-renta-2025-manual-deducciones-autonomicas",
+    ]
 
 
 def test_renta_economic_activity_legal_basis_links_to_corpus() -> None:

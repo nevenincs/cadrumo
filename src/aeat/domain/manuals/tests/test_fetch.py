@@ -38,16 +38,17 @@ def _manifest(sha256: str = "a" * 64, length: int = 10) -> FetchedManualPart:
 
 
 class TestPartSpecs:
-    """The PartSpec table covers every supported triple and only those triples."""
+    """The PartSpec table covers every supported official PDF triple."""
 
     def test_part_specs_cover_v1_triples(self) -> None:
-        """PART_SPECS contains exactly the supported (renta p1, renta p2, iva) entries."""
+        """PART_SPECS contains exactly the currently published official PDF entries."""
         triples = {(spec.manual_id, spec.year, spec.part) for spec in PART_SPECS}
         expected = set()
         for year in [2020, 2021, 2022, 2023, 2024, 2025]:
             expected.add((ManualId.RENTA, year, ManualPart.PARTE_1))
-            expected.add((ManualId.RENTA, year, ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS))
             expected.add((ManualId.IVA, year, ManualPart.SINGLE))
+        for year in [2024, 2025]:
+            expected.add((ManualId.RENTA, year, ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS))
         assert triples == expected
 
     def test_part_specs_urls_are_aeat(self) -> None:
