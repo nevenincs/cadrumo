@@ -1,4 +1,4 @@
-RDLeg 5/2004 (TRLIRNR) — Articulos 2, 10, 13, 24, 25 (snippet de catalogo M210 Phase 1)
+RDLeg 5/2004 (TRLIRNR) - Articulos 2, 10, 13, 24, 25 (snippet de catalogo M210 Phase 1)
 Articulo 2. Ambito de aplicacion.
 1. Este impuesto se aplicara en todo el territorio espanol.
 2. El territorio espanol comprende el territorio del Estado espanol, incluyendo el espacio aereo, las aguas interiores, asi como el mar territorial y las areas exteriores a el, en las que, con arreglo al derecho internacional y en virtud de su legislacion interna, el Estado espanol ejerza o pueda ejercer jurisdiccion o derechos de soberania respecto del fondo marino, su subsuelo y aguas suprayacentes y sus recursos naturales.
