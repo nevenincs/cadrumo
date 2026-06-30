@@ -8,8 +8,8 @@ document only the transport shape registered with
 :func:`~aeat.entrypoints.cli._schemas.register_schema` and emitted through
 :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` by
 :func:`~aeat.entrypoints.cli._common._emit_envelope`. Capability semantics live
-in :mod:`aeat.application.user_profile`, and provisioning semantics live in
-:mod:`aeat.application.provisioning`.
+in :mod:`~aeat.application.user_profile`, and provisioning semantics live in
+:mod:`~aeat.application.provisioning`.
 """
 
 from __future__ import annotations
@@ -36,7 +36,9 @@ class CheckCapabilityPayload(OutputSchema):
 class CheckDependencyPayload(OutputSchema):
     """One external dependency availability row.
 
-    Nested in :class:`ConfigCheckResult` and mirrors
+    Nested in
+    :class:`~aeat.entrypoints.cli._config._check_payloads.ConfigCheckResult`
+    and mirrors
     :class:`~aeat.application.provisioning.DependencyStatus` rows from
     :func:`~aeat.application.provisioning.probe_ollama_vision`,
     :func:`~aeat.application.provisioning.probe_subprocess_providers`,
@@ -56,9 +58,12 @@ class ConfigCheckResult(OutputSchema):
     """JSON envelope for ``aeat config check``.
 
     Combines :func:`~aeat.application.user_profile.resolve_active_capability`
-    decisions in :class:`CheckCapabilityPayload` rows with
+    decisions in
+    :class:`~aeat.entrypoints.cli._config._check_payloads.CheckCapabilityPayload`
+    rows with
     :class:`~aeat.application.provisioning.DependencyStatus` projections in
-    :class:`CheckDependencyPayload` rows. ``ok`` is false (and the command exits
+    :class:`~aeat.entrypoints.cli._config._check_payloads.CheckDependencyPayload`
+    rows. ``ok`` is false (and the command exits
     non-zero) when a capability the profile opted into has a missing dependency,
     meaning the operator asked for a service that is not provisioned. ``issues``
     names those capability/dependency gaps while ``dependencies`` still reports
