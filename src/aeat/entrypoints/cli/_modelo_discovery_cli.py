@@ -26,7 +26,7 @@ from ...application.modelo import (
     registry_list_modelos,
     registry_modelo_codes,
 )
-from ...core import Period
+from ...core import Modelo, Period
 from ...core.i18n import output_language, tr
 from ...domain.calculations.registry import (
     InputKind,
@@ -410,7 +410,7 @@ _M200_M202_PAGOS_RELATION_CHANNELS: tuple[tuple[str, str, str, str], ...] = (
 
 
 def _m200_m202_relation_guidance_lines(report, rows) -> tuple[str, ...]:
-    if str(report.code) != "200" or report.period != "0A":
+    if str(report.code) != Modelo.M200.value or report.period != "0A":
         return ()
     listed_binding_ids = {str(row.binding_id) for row in rows}
     visible_channels = tuple(

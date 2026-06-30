@@ -41,6 +41,7 @@ from ...application.modelo import (
     validate_m349_country_prefix_context,
     validate_m349_nif_format,
 )
+from ...core import Modelo
 from ...core.errors import AeatError, build_error_envelope, resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
@@ -509,7 +510,7 @@ def _validate_m349_detail_rows_for_work_unit(work_unit_id: str, rows: tuple[Mode
     if not operador_rows:
         return
     unit = get_work_unit(work_unit_id)
-    if str(unit.modelo) != "349":
+    if str(unit.modelo) != Modelo.M349.value:
         return
     for row in operador_rows:
         try:
