@@ -1,10 +1,11 @@
 """Shared calculation helpers for modelo application actions.
 
-The helpers load mutable :class:`~aeat.domain.modelos._work_unit.WorkUnit`
-records, resolve their law-determined :class:`RegistrySnapshot`, and project
-engine or imported values into :class:`CasillaObservation` provenance rows.
-Amendment helpers reuse the baseline :class:`CalculationRevision` where a
-corrected casilla was not overridden.
+The helpers load mutable :class:`aeat.domain.modelos.WorkUnit` records, resolve
+their law-determined :class:`RegistrySnapshot`, and project engine, imported, or
+amended values into :class:`CasillaObservation` provenance rows. Amendment
+helpers reuse the baseline :class:`CalculationRevision` where a corrected
+casilla was not overridden, and rebuild overridden rows from the selected
+snapshot so legal/source grounding is never silently erased.
 
 See Also:
     :mod:`aeat.application.modelo._calculation_actions`:
@@ -50,7 +51,7 @@ from ._registry_resources import (
 
 
 def load_work_unit_for_calculation(work_units: WorkUnitCatalogue, *, work_unit_id: str) -> WorkUnit:
-    """Load a mutable :class:`WorkUnit` for calculation.
+    """Load a mutable :class:`aeat.domain.modelos.WorkUnit` for calculation.
 
     Missing ids raise :class:`WorkUnitNotFoundError`. Work units already marked
     ``DESCARTADO`` raise :class:`WorkUnitMutationRefusedError`, because the
@@ -82,8 +83,9 @@ def resolve_registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnap
     :exc:`WorkUnitRevisionDivergenceError` directing the operator to re-create
     the work unit.
 
-    The work unit's ``revision_id`` is never passed into the snapshot resolution
-    call; it is only compared against the resolver's answer.
+    The :class:`aeat.domain.modelos.WorkUnit` ``revision_id`` is never passed
+    into the snapshot resolution call; it is only compared against the
+    law-determined resolver answer.
 
     See Also:
         :func:`aeat.application.modelo._work_addressing.resolve_registry_revision_for_work_target`:
@@ -140,11 +142,14 @@ def build_typed_observations(
 ) -> tuple[CasillaObservation, ...]:
     """Build a :class:`CasillaObservation` tuple for every engine-result casilla.
 
-    Formula targets carry their :class:`RegistryCalculationEntry` provenance.
-    Non-formula values get legal/source references from the
-    :class:`RegistrySnapshot` casilla definitions. Any value without either
-    source raises :class:`CasillaProvenanceMissingError` through
-    :func:`casilla_observation_for` rather than emitting an ungrounded row.
+    Formula targets carry their
+    :class:`aeat.domain.calculations.registry.RegistryCalculationEntry`
+    provenance. Non-formula values get legal/source references from the
+    :class:`RegistrySnapshot` casilla definitions. Any value without a formula
+    entry or registry casilla definition raises
+    :class:`CasillaProvenanceMissingError` through
+    :func:`aeat.application.modelo._calculation_helpers.casilla_observation_for`
+    rather than emitting an ungrounded row.
     """
     revision_casillas_by_id = casillas_by_id(snapshot.revision)
     entries_by_target = {entry.target_casilla_id: entry for entry in engine_result.entries}
@@ -167,9 +172,9 @@ def external_filing_observations(
     """Build :class:`CasillaObservation` records for externally imported casilla values.
 
     The :class:`RegistrySnapshot` supplies the provenance for imported values that
-    have no formula entry in the current process. This keeps imported AEAT
-    baselines on the same typed-observation contract as locally calculated
-    revisions.
+    have no :class:`aeat.domain.calculations.registry.RegistryCalculationEntry`
+    in the current process. This keeps imported AEAT baselines on the same
+    typed-observation contract as locally calculated revisions.
     """
     revision_casillas_by_id = casillas_by_id(snapshot.revision)
     return tuple(
@@ -193,9 +198,11 @@ def casilla_observation_for(
     """Project one casilla into a :class:`CasillaObservation` with full provenance.
 
     Formula entries contribute formula id, operand lineage, and legal/source
-    refs. Non-formula casillas use the registry casilla definition. A missing
-    definition is a hard provenance error, because emitting a row without
-    ``legal_refs`` and ``source_refs`` would erase legal grounding.
+    refs. Non-formula casillas use the
+    :class:`aeat.domain.calculations.registry.CasillaDefinition` selected by the
+    :class:`RegistrySnapshot`. A missing definition is a hard provenance error,
+    because emitting a row without ``legal_refs`` and ``source_refs`` would
+    erase legal grounding.
     """
     if entry is not None:
         return CasillaObservation(
@@ -240,7 +247,8 @@ def amendment_observations(
     for casillas the amendment did not override. Newly overridden casillas are
     rebuilt from the :class:`RegistrySnapshot` so the persisted amendment
     revision carries legal/source provenance even when the imported baseline had
-    sparse observation rows.
+    sparse observation rows. A corrected casilla absent from the snapshot is a
+    :class:`CasillaProvenanceMissingError`, not an empty-provenance observation.
     """
     revision_casillas_by_id = casillas_by_id(snapshot.revision)
     baseline_by_id = {obs.casilla_id: obs for obs in baseline_revision.observations}
