@@ -64,10 +64,13 @@ from ....domain.calculations.registry import (
     CasillaDefinition,
     CasillaId,
     InputKind,
+    LegalRefId,
+    ModeloId,
     RegistryCalculationResult,
     RegistrySnapshot,
     RelationId,
     RevisionId,
+    SourceRefId,
     calculate_registry_snapshot,
     casillas_by_id,
     undeclared_casilla_ids,
@@ -147,8 +150,9 @@ class BindingEdit(BaseModel):
 class RelationEdit(BaseModel):
     """One pre-resolved cross-revision relation value mirrored in Tarifas.
 
-    The provenance / source_filing_year / source_periods / resolved_at
-    fields are recovered from the workbook's developer metadata
+    The provenance / source_modelo / source_filing_year / source_periods /
+    source_casilla_ids / legal_refs / source_refs / resolved_at fields are
+    recovered from the workbook's developer metadata
     (``aeat_relation:<relation>`` keys written by the apply adapter).
     They are absent for relations that were edited manually in the
     workbook without an apply round-trip; in that case the relation
@@ -160,8 +164,12 @@ class RelationEdit(BaseModel):
     relation: RelationId
     value: Decimal | None = None
     provenance: Literal["local_filing", "aeat_live", "operator_manual"] | None = None
+    source_modelo: ModeloId | None = None
     source_filing_year: int | None = Field(default=None, ge=2000, le=2099)
     source_periods: tuple[str, ...] = ()
+    source_casilla_ids: tuple[CasillaId, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = ()
+    source_refs: tuple[SourceRefId, ...] = ()
     resolved_at: datetime | None = None
 
 
@@ -659,7 +667,16 @@ def _decode_relation_edits(
         coerced = coerce_decimal(raw)
         if coerced is not None:
             cells_read += 1
-        provenance, source_filing_year, source_periods, resolved_at = _parse_relation_metadata(
+        (
+            provenance,
+            source_modelo,
+            source_filing_year,
+            source_periods,
+            source_casilla_ids,
+            legal_refs,
+            source_refs,
+            resolved_at,
+        ) = _parse_relation_metadata(
             metadata_pairs.get(f"aeat_relation:{relation_id}", ""),
         )
         edits.append(
@@ -667,8 +684,12 @@ def _decode_relation_edits(
                 relation=relation_id,
                 value=coerced,
                 provenance=provenance,
+                source_modelo=source_modelo,
                 source_filing_year=source_filing_year,
                 source_periods=source_periods,
+                source_casilla_ids=source_casilla_ids,
+                legal_refs=legal_refs,
+                source_refs=source_refs,
                 resolved_at=resolved_at,
             ),
         )
@@ -679,13 +700,17 @@ def _parse_relation_metadata(
     raw: str,
 ) -> tuple[
     Literal["local_filing", "aeat_live", "operator_manual"] | None,
+    ModeloId | None,
     int | None,
     tuple[str, ...],
+    tuple[CasillaId, ...],
+    tuple[LegalRefId, ...],
+    tuple[SourceRefId, ...],
     datetime | None,
 ]:
     """Parse the ``"k=v; k=v"`` shape written by the apply adapter."""
     if not raw:
-        return None, None, (), None
+        return None, None, None, (), (), (), (), None
     parts = [piece.strip() for piece in raw.split(";") if "=" in piece]
     fields: dict[str, str] = {}
     for part in parts:
@@ -702,6 +727,7 @@ def _parse_relation_metadata(
             provenance = "operator_manual"
         case _:
             provenance = None
+    source_modelo: ModeloId | None = fields.get("source_modelo") or None
     source_filing_year: int | None = None
     raw_year = fields.get("source_filing_year", "")
     if raw_year:
@@ -713,6 +739,18 @@ def _parse_relation_metadata(
     raw_periods = fields.get("source_periods", "")
     if raw_periods:
         source_periods = tuple(piece for piece in raw_periods.split("+") if piece)
+    source_casilla_ids: tuple[CasillaId, ...] = ()
+    raw_casilla_ids = fields.get("source_casilla_ids", "")
+    if raw_casilla_ids:
+        source_casilla_ids = tuple(piece for piece in raw_casilla_ids.split("+") if piece)
+    legal_refs: tuple[LegalRefId, ...] = ()
+    raw_legal_refs = fields.get("legal_refs", "")
+    if raw_legal_refs:
+        legal_refs = tuple(piece for piece in raw_legal_refs.split("+") if piece)
+    source_refs: tuple[SourceRefId, ...] = ()
+    raw_source_refs = fields.get("source_refs", "")
+    if raw_source_refs:
+        source_refs = tuple(piece for piece in raw_source_refs.split("+") if piece)
     resolved_at: datetime | None = None
     raw_resolved = fields.get("resolved_at", "")
     if raw_resolved:
@@ -720,7 +758,16 @@ def _parse_relation_metadata(
             resolved_at = datetime.fromisoformat(raw_resolved)
         except ValueError:
             resolved_at = None
-    return provenance, source_filing_year, source_periods, resolved_at
+    return (
+        provenance,
+        source_modelo,
+        source_filing_year,
+        source_periods,
+        source_casilla_ids,
+        legal_refs,
+        source_refs,
+        resolved_at,
+    )
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource exposes
