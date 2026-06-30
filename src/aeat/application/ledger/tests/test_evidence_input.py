@@ -38,11 +38,12 @@ from .._evidence_input import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PDF_BYTES = b"%PDF-1.4 evidence-input-roundtrip body"
+_BUCKET_ID = "30303030-3030-4030-8030-303030303030"
 
 
 @pytest.fixture
 def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-001") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile
 
 
@@ -72,7 +73,7 @@ def _added_record(
         settings=isolated_settings,
         bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
     )
-    return svc.add(bucket_id="bucket-001", source_path=pdf_file).record
+    return svc.add(bucket_id=_BUCKET_ID, source_path=pdf_file).record
 
 
 def test_add_stores_bytes_in_secure_storage_under_attachment_id(
@@ -108,7 +109,7 @@ def test_add_with_nonexistent_path_refuses_with_path_oriented_guidance(
     bogus = tmp_path / "does-not-exist.pdf"
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as exc_info:
-        svc.add(bucket_id="bucket-001", source_path=bogus)
+        svc.add(bucket_id=_BUCKET_ID, source_path=bogus)
 
     error = exc_info.value
     # The suggestion addresses the path, not the (irrelevant) list verb.
@@ -163,7 +164,7 @@ def test_resolve_refuses_record_without_in_store_attachment(
     # fall back to a cleartext path read.
     orphan = PurchaseInvoiceEvidence(
         evidence_id="ev-orphan",
-        bucket_id="bucket-001",
+        bucket_id=_BUCKET_ID,
         source_path="/some/cleartext/path.pdf",
         source_sha256=hashlib.sha256(_PDF_BYTES).hexdigest(),
         attachment_id=None,
