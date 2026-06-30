@@ -3,7 +3,8 @@
 Each payload is a strict
 :class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass registered with
 :func:`~aeat.entrypoints.cli._schemas.register_schema` on the shared
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` surface.
+:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` surface through
+:func:`~aeat.entrypoints.cli._common._emit_envelope`.
 
 The unified ``aeat app ledger invoice`` group drives the slim
 :class:`~aeat.application.ledger.BusinessOperationInvoice` operator record
@@ -27,10 +28,13 @@ from ._schemas import OutputSchema, register_schema
 class CatalogueInvoiceRecordPayload(OutputSchema):
     """One rich catalogue invoice projected for the operator surface.
 
-    Carries the content-addressed ``invoice_id`` (the value
-    ``link --invoice-id`` resolves) plus the identity and total fields. The
-    ``linked_transaction_ids`` list reflects the bidirectional links the
-    ``link`` verb writes onto the rich :class:`~aeat.domain.invoices.Invoice`.
+    Nested in :class:`CatalogueInvoiceCreateResult`,
+    :class:`CatalogueInvoiceViewResult`, :class:`CatalogueInvoiceRemoveResult`,
+    and :class:`CatalogueInvoiceListResult`. Carries the content-addressed
+    ``invoice_id`` (the value ``link --invoice-id`` resolves) plus the identity
+    and total fields. The ``linked_transaction_ids`` list reflects the
+    bidirectional links the ``link`` verb writes onto the rich
+    :class:`~aeat.domain.invoices.Invoice`.
     """
 
     invoice_id: str
