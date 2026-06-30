@@ -19,6 +19,12 @@ co-write atomicity the single-blob ``save`` had. The diff that decides which
 rows to write or delete is driven by a decryption-free
 :meth:`SecureObjectRepository.namespace_payload_hashes` scan, so an unchanged
 transaction is never rewritten.
+
+The namespace authority is
+:data:`aeat.adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`;
+this module derives the bucket-local transaction row keys with
+:func:`transaction_object_key` and the membership-index key with
+:func:`transaction_index_object_key`.
 """
 
 from __future__ import annotations
@@ -68,7 +74,12 @@ class _TransactionIndex(BaseModel):
 
 
 def transaction_index_object_key(bucket_id: str) -> str:
-    """Return the per-bucket transaction-membership-index secure-object key."""
+    """Return the per-bucket transaction-membership-index secure-object key.
+
+    The index row shares
+    :data:`aeat.adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`
+    with the per-transaction rows and bounds reads/deletions to one bucket.
+    """
     trimmed = bucket_id.strip()
     if not trimmed:
         raise LedgerStorageError(
@@ -92,7 +103,8 @@ def transaction_object_key(bucket_id: str, transaction_id: str) -> str:
     Each transaction is its own secure-object row. The key qualifies with the
     bucket id (``transaction:{bucket_id}:{transaction_id}``); cross-bucket
     aggregation must qualify with ``(bucket_id, tx_id)`` because ``tx_id`` alone
-    is unique only within one bucket.
+    is unique only within one bucket. Rows live under
+    :data:`aeat.adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`.
     """
     trimmed = bucket_id.strip()
     if not trimmed:
@@ -179,9 +191,13 @@ class TransactionCatalogueRepository:
     Every instance is bound to one profile bucket via ``bucket_id``. The
     catalogue is stored as one secure-object row per transaction (keyed
     ``transaction:{bucket_id}:{transaction_id}``) inside the
-    ``aeat.domain.transactions.bucket`` namespace, so two operator profiles
-    never share transaction storage and a single-transaction mutation touches a
-    single row.
+    :data:`aeat.adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`
+    namespace, so two operator profiles never share transaction storage and a
+    single-transaction mutation touches a single row. Each
+    :class:`Transaction` payload and the bucket membership index are wrapped in
+    :class:`~aeat.adapters.persistence.storage.Envelope` before
+    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    persists them.
     """
 
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
