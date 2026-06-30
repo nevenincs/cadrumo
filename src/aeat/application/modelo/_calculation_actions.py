@@ -46,6 +46,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core import BindingSourceKind, Modelo
+from ...core.decimal import coerce_decimal_strict
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepository
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
@@ -174,9 +175,7 @@ def _m349_row_field_template_casilla_ids(revision: ModeloRevision) -> frozenset[
 def _calculated_decimal(value: object | None) -> Decimal:
     if value is None:
         return _ZERO
-    if isinstance(value, Decimal):
-        return value
-    return Decimal(str(value))
+    return coerce_decimal_strict(value)
 
 
 def _m390_303_reconciliation_targets(
