@@ -3,6 +3,7 @@ id = "0080"
 number = "0080"
 label = "Número de días en que ha tenido este uso: Bien inmueble afecto a actividades económicas"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+data_type = "integer"
 semantic_role = "irpf_inmueble_dias_afecto_actividades_economicas"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

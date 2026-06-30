@@ -738,6 +738,30 @@ def test_modelo_100_2025_coti_fund_loss_role_matches_loss_label() -> None:
     )
 
 
+def test_modelo_100_inmueble_0080_activity_use_days_are_integer() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_role = "irpf_inmueble_dias_afecto_actividades_economicas"
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0080"))
+
+        assert (
+            casilla.label
+            == "Número de días en que ha tenido este uso: Bien inmueble afecto a actividades económicas"
+        )
+        assert tuple(casilla.section) == ("toma_datos_ampliada", "inmuebles", "inmueble")
+        assert casilla.data_type == "integer"
+        assert casilla.semantic_role == expected_role
+        assert {"ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30"}.issubset(
+            casilla.legal_refs,
+        )
+        assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+            casilla.source_refs,
+        )
+
+
 def test_modelo_100_retrib_especie_no_exenta_total_role_names_aggregate() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
