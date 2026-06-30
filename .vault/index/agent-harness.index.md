@@ -21,6 +21,7 @@ related:
   - '[[2026-06-30-agent-harness-W05-P12-summary]]'
   - '[[2026-06-30-agent-harness-W05-P13-summary]]'
   - '[[2026-06-30-agent-harness-adr]]'
+  - '[[2026-06-30-agent-harness-audit]]'
   - '[[2026-06-30-agent-harness-plan]]'
   - '[[2026-06-30-agent-harness-research]]'
 ---
@@ -34,6 +35,10 @@ Auto-generated index of all documents tagged with `#agent-harness`.
 ### adr
 
 - `2026-06-30-agent-harness-adr` - `agent-harness` adr: `AEAT CLI agent-harness framework` | (**status:** `accepted`)
+
+### audit
+
+- `2026-06-30-agent-harness-audit` - `agent-harness` audit: `campaign close honesty review`
 
 ### exec
 
