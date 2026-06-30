@@ -8,7 +8,10 @@ facade remains authoritative for
 :class:`~aeat.application.modelo.ModeloReconciliationReport` and
 :class:`~aeat.application.modelo.TaxationComparisonResult`; this module only
 documents the CLI transport shape that enters
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope`.
+:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:func:`~aeat.entrypoints.cli._common._emit_envelope`. The parent
+:mod:`aeat.entrypoints.cli._modelo_payloads` module re-exports these split
+schemas so modelo emitters keep one payload import surface.
 """
 
 from __future__ import annotations
@@ -21,7 +24,8 @@ from ._schemas import OutputSchema, register_schema
 class ModeloReconciliationDiffPayload(OutputSchema):
     """One metadata disagreement surfaced in a reconciliation report.
 
-    Mirrors :class:`~aeat.application.modelo.ModeloReconciliationDiff`. Current
+    Nested in :class:`ModeloReconcileResult` and mirrors
+    :class:`~aeat.application.modelo.ModeloReconciliationDiff`. Current
     justificante reconciliation compares header evidence (modelo, period,
     ejercicio, tax id, and totals), not individual casilla values; casilla-level
     declaration diffs require a modelo-specific declaration parser.
@@ -44,8 +48,8 @@ class ModeloReconcileResult(OutputSchema):
     :func:`~aeat.application.modelo.modelo_reconcile_bytes`: a work-unit-level
     :class:`~aeat.application.modelo.ModeloReconciliationVerdict`, bucket scope,
     :class:`~aeat.application.modelo.ModeloReconciliationEvidenceKind`, evidence
-    path/reference, metadata diff list, reconciliation timestamp, and optional
-    narrative.
+    path/reference, :class:`ModeloReconciliationDiffPayload` list,
+    reconciliation timestamp, and optional narrative.
     """
 
     work_unit_id: WorkUnitId
