@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-persona-testimonials'
-date: '2026-06-15'
-modified: '2026-06-15'
+date: '2026-06-30'
+modified: '2026-06-30'
 related:
   - '[[2026-05-20-cli-persona-testimonials-audit]]'
   - '[[2026-05-20-cli-persona-testimonials-research]]'
@@ -16,6 +16,11 @@ related:
   - '[[2026-05-22-cli-persona-testimonials-P05-S02]]'
   - '[[2026-05-22-cli-persona-testimonials-P06-S04]]'
   - '[[2026-06-04-cli-persona-testimonials-adr]]'
+  - '[[2026-06-30-cli-persona-testimonials-W01-P01-S01]]'
+  - '[[2026-06-30-cli-persona-testimonials-W01-P01-S02]]'
+  - '[[2026-06-30-cli-persona-testimonials-W01-P01-S03]]'
+  - '[[2026-06-30-cli-persona-testimonials-W01-P02-S04]]'
+  - '[[2026-06-30-cli-persona-testimonials-plan]]'
 ---
 
 # `cli-persona-testimonials` feature index
@@ -40,10 +45,15 @@ Auto-generated index of all documents tagged with `#cli-persona-testimonials`.
 - `2026-05-22-cli-persona-testimonials-P05-S01` - P05.S01 - profile display names and UUID identity
 - `2026-05-22-cli-persona-testimonials-P05-S02` - P05.S02 - CLI UX polish cluster
 - `2026-05-22-cli-persona-testimonials-P06-S04` - P06.S04 - Modelo 200 casilla 00592 registry drift
+- `2026-06-30-cli-persona-testimonials-W01-P01-S01` - Inventory persona roots transcripts summaries and closeout gaps
+- `2026-06-30-cli-persona-testimonials-W01-P01-S02` - Reconcile testimonial closeout ledger against the vault audit trail
+- `2026-06-30-cli-persona-testimonials-W01-P01-S03` - Record the current campaign tracker as the canonical wave schedule
+- `2026-06-30-cli-persona-testimonials-W01-P02-S04` - Classify shared worktree dirty files and active ownership before assignment
 
 ### plan
 
 - `2026-05-21-cli-persona-testimonials-plan` - `cli-persona-testimonials` `cli-persona-testimonial-remediation-plan` plan
+- `2026-06-30-cli-persona-testimonials-plan` - `cli-persona-testimonials` plan
 
 ### research
 
