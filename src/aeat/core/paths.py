@@ -13,6 +13,10 @@ absolute components, and any resolved path that escapes the owning root. They
 raise :class:`~aeat.core.errors.CoreValidationError` and are the load-bearing
 defence against caller-controlled identifier injection on the on-disk store
 paths.
+
+These helpers validate and compose paths only. They do not read, write,
+create, or secure files; persistence adapters that need registered storage
+errors wrap this module in their own typed containment layer.
 """
 
 from __future__ import annotations
@@ -23,13 +27,23 @@ from pathlib import Path, PurePosixPath
 from .errors import CoreValidationError
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
-"""Absolute filesystem path to the repository root."""
+"""Absolute filesystem path to the repository root.
+
+Used to anchor repo-relative defaults. It is not the process cwd and not a
+runtime storage root selected from settings.
+"""
 
 _SAFE_FILE_TOKEN_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 
 
 def resolve_project_path(value: str | Path) -> Path:
     """Resolve a repo-relative path against :data:`PROJECT_ROOT`.
+
+    Absolute paths are returned as absolute resolved paths. Relative paths
+    are interpreted as repository-relative, not cwd-relative, which keeps
+    config defaults stable regardless of where the CLI process starts.
+    This helper is not a containment guard: callers that accept subpaths
+    under an owning root should use :func:`resolve_relative_subpath`.
 
     Args:
         value: An absolute or repo-relative path; user-style ``~``
@@ -47,6 +61,10 @@ def resolve_project_path(value: str | Path) -> Path:
 def normalize_project_relative_path(value: Path | None) -> Path | None:
     """Normalise an optional path setting to an absolute repo-rooted path.
 
+    Used by settings validators for optional path fields. It preserves
+    ``None`` and delegates path semantics to :func:`resolve_project_path`;
+    it does not verify that the resulting path exists.
+
     Args:
         value: Optional configured path, or ``None``.
 
@@ -61,6 +79,11 @@ def normalize_project_relative_path(value: Path | None) -> Path | None:
 
 def resolve_relative_subpath(root: Path, relative_path: str, *, context: str) -> Path:
     """Resolve ``relative_path`` under ``root`` and enforce containment.
+
+    The returned path is resolved and proven to stay under ``root`` after
+    normalization. The helper performs no filesystem mutation and does not
+    assert that the target exists; callers decide whether a missing file is
+    valid for their operation.
 
     Args:
         root: The fixed parent directory that the result must live
@@ -96,6 +119,11 @@ def resolve_relative_subpath(root: Path, relative_path: str, *, context: str) ->
 def resolve_record_json_path(root: Path, record_id: str, *, context: str) -> Path:
     """Resolve a file-backed record id to ``<root>/<record_id>.json`` safely.
 
+    The token allow-list prevents path separators, dot components, and
+    overlong filename material from becoming a filesystem path. It is not
+    domain-id validation: callers still own UUID/modelo/CSV/hash shape
+    checks before they choose ``record_id``.
+
     Args:
         root: The directory that owns the JSON sidecar files.
         record_id: A simple filename token. Must match a strict
@@ -130,6 +158,10 @@ def file_stat_fingerprint(path: Path) -> tuple[str, int, int]:
     proxy for file identity used by file-backed loader caches. Any
     in-place modification that changes size or mtime invalidates the
     cache without requiring a full content hash.
+
+    This is not an integrity hash or evidence digest. For byte-level
+    verification use :func:`aeat.core.hashing.hash_file` or
+    :func:`aeat.core.hashing.sha256_file`.
 
     Args:
         path: The file to fingerprint. Must be an existing, stat-able
