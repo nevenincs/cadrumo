@@ -1720,16 +1720,7 @@ cli:
         seed_conflict: 'Error intern: conflicte amb un registre d''import inicial
           de compensació d''IVA existent.'
         seed_filing_year_help: Any fiscal de l'import inicial.
-        seed_help: "Declara un saldo inicial d'arrossegament del Model 303 per a\
-          \ un període anterior a l'historial local. Es rebutja si ja existeix un\
-          \ registre per al període.\n\nDos casos:\n\n  --amount 0   Primer període\
-          \ real: és la primera declaració del Model 303 del contribuent sota aquest\
-          \ NIF. iva.compensacion-pendiente-periodos-anteriores (casella AEAT 110)\
-          \ és zero perquè no existeix saldo de compensació anterior (LIVA art. 99.5,\
-          \ Llei 37/1992). El mòdul de conciliació ho tracta com first_period_zero,\
-          \ no bloquejant.\n\n  --amount X   Traspàs: el contribuent ha presentat\
-          \ M303 anteriors amb una altra eina o directament a l'AEAT. X és la compensació\
-          \ pendent de períodes posteriors de l'última declaració presentada."
+        seed_help: "Declara un saldo inicial d'arrossegament del Model 303 per a un període anterior a l'historial local. Es rebutja si ja existeix un registre per al període.\n\nDos casos:\n\n  --amount 0   Saldo inicial zero: declara que no hi ha compensació pendent per arrossegar a aquest període. Això també pot correspondre a un contribuent que ja havia presentat M303 anteriors si l'últim M303 no va deixar compensació pendent.\n\n  --amount X   Traspàs: el contribuent ha presentat M303 anteriors amb una altra eina o directament a l'AEAT. X és la compensació pendent de períodes posteriors de l'última declaració presentada.\n\nEl cas automàtic first_period_zero és independent de l'ordre seed: durant el càlcul i la conciliació es prova amb les condicions d'inici d'activitat i del registre que és el primer període IVA; aleshores la casella AEAT 110 és zero segons LIVA art. 99.5 (Llei 37/1992) i no bloqueja."
         seed_invalid_amount: L'import inicial ha de ser un decimal vàlid i no negatiu.
         seed_period_help: 'Periode de la presentacio del Model 303: trimestres 1T-4T
           (p. ex. 4T).'
