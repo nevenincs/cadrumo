@@ -17,7 +17,6 @@ match surfaces as a strict pydantic / Decimal inequality.
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -29,7 +28,6 @@ from .....application.storage.calc_sheets import (
     registry_sha,
 )
 from .....application.storage.calc_sheets._records import OperatorInput
-from .....core.resources import resources
 from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from .....domain.calculations.registry._schema import InputKind
 from .._calc_sheets_pull import (
@@ -41,18 +39,13 @@ from .._calc_sheets_pull import (
     RelationEdit,
     compute_from_pull,
 )
+from ._calc_sheets_support import modelo_130_2025_1t_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_INGRESOS_CASILLA")
 _GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_GASTOS_CASILLA")
 _RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("03", surface="_RENDIMIENTO_NETO_CASILLA")
-
-
-def _modelo_130_snapshot():
-    """Load a real modelo-130 snapshot from the bundled registry."""
-
-    return resources().modelos.authority.snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
 
 
 def _casilla_id_from_plan_cell(value: object) -> CasillaId:
@@ -106,7 +99,7 @@ def test_workbook_input_values_survive_export_pull_compute_loop() -> None:
     chain.
     """
 
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     ingresos = Decimal("10000.50")
     gastos = Decimal("2000.25")
     inputs = OperatorInputs(
@@ -188,7 +181,7 @@ def test_workbook_input_count_matches_pulled_edit_count() -> None:
     produces.
     """
 
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     plan = build_export_plan(
         snapshot,
         operator_inputs=OperatorInputs(),
