@@ -10,6 +10,9 @@ file lands on disk.
 See Also:
     :class:`aeat.domain.submission.ModeloPresentado`
         Payload model encrypted by this repository.
+    :data:`aeat.adapters.persistence.storage.SUBMISSION_RECORDS_NAMESPACE`
+        AUDIT namespace, schema-version, object-key, and custody contract for
+        submission audit records.
     :class:`aeat.adapters.persistence.storage.sql.SecureObjectRepository`
         SQL object store underlying the bound repository.
     :mod:`aeat.application.filing._import`
@@ -42,10 +45,10 @@ class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
 
     The :class:`SecureBoundRepository` base stores each
     :class:`ModeloPresentado` in a
-    :class:`~aeat.adapters.persistence.storage.Envelope` row under the
-    ``aeat.domain.submission.records`` namespace. The natural key is the
-    submission id, so the list and iteration APIs expose historical filing
-    attempts rather than any live submission capability.
+    :class:`~aeat.adapters.persistence.storage.Envelope` row under
+    :data:`aeat.adapters.persistence.storage.SUBMISSION_RECORDS_NAMESPACE`.
+    The natural key is the submission id, so the list and iteration APIs expose
+    historical filing attempts rather than any live submission capability.
 
     See Also:
         :mod:`aeat.application.filing._import`

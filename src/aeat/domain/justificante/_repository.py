@@ -14,6 +14,11 @@ fields), not by the modelo's ``output_sensitivity`` declaration. The
 ``ModeloDefinition.output_sensitivity`` field governs output artefacts
 (calculation drafts, export payloads); justificante metadata is an
 audit-sink artefact and is irreducibly AUDIT regardless of modelo.
+
+See Also:
+    :data:`aeat.adapters.persistence.storage.JUSTIFICANTE_METADATA_NAMESPACE`
+        AUDIT namespace, schema-version, object-key, and custody contract for
+        parsed AEAT receipt metadata.
 """
 
 from __future__ import annotations
@@ -32,10 +37,10 @@ class JustificanteRepository(SecureBoundRepository[Justificante]):
     """Encrypted AUDIT repository for :class:`Justificante` metadata.
 
     The :class:`SecureBoundRepository` base stores each :class:`Justificante`
-    in a :class:`~aeat.adapters.persistence.storage.Envelope` row under the
-    ``aeat.domain.justificante.metadata`` namespace. The AEAT CSV is the
-    natural key, so list and iteration APIs expose persisted receipt metadata
-    without reading plaintext metadata from disk.
+    in a :class:`~aeat.adapters.persistence.storage.Envelope` row under
+    :data:`aeat.adapters.persistence.storage.JUSTIFICANTE_METADATA_NAMESPACE`.
+    The AEAT CSV is the natural key, so list and iteration APIs expose
+    persisted receipt metadata without reading plaintext metadata from disk.
 
     Domain port previously at ``_protocols.py`` was removed on 2026-06-01 as
     zero-consumer; re-add via ADR amendment if a domain-layer caller needs
