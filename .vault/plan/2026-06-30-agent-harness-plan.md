@@ -43,20 +43,20 @@ Establish the operator harness home as reviewed package data under the agent dat
 
 Create the shipped harness data tree, declare the aeat[agent] extra, and prove the data ships in the wheel.
 
-- [ ] `W02.P03.S10` - Create the shipped operator-harness data tree skeleton; `src/aeat/_data/agent/`.
-- [ ] `W02.P03.S11` - Declare the aeat[agent] optional extra carrying no weights or credentials; `pyproject.toml`.
-- [ ] `W02.P03.S12` - Add the importlib.resources accessor for the harness data tree; `src/aeat/agent/__init__.py`.
-- [ ] `W02.P03.S13` - Add a packaging-smoke probe asserting harness data ships in the wheel; `Justfile`.
+- [x] `W02.P03.S10` - Create the shipped operator-harness data tree skeleton; `src/aeat/_data/agent/`.
+- [x] `W02.P03.S11` - Declare the aeat[agent] optional extra carrying no weights or credentials; `pyproject.toml`.
+- [x] `W02.P03.S12` - Add the importlib.resources accessor for the harness data tree; `src/aeat/agent/__init__.py`.
+- [x] `W02.P03.S13` - Add a packaging-smoke probe asserting harness data ships in the wheel; `Justfile`.
 
 ### Phase `W02.P04` - operator operating rules authoring
 
 Author the Layer 1 operator rules and the drift gate that keeps every CLI verb and JSON field they name resolvable at HEAD.
 
-- [ ] `W02.P04.S14` - Author the never-compute, provenance-relay operating rule; `src/aeat/_data/agent/rules/operator-operating-rules.md`.
-- [ ] `W02.P04.S15` - Author the safety and filing-handoff operating rule; `src/aeat/_data/agent/rules/operator-safety-handoff.md`.
-- [ ] `W02.P04.S16` - Author the envelope-and-exit-code reading rule; `src/aeat/_data/agent/rules/operator-envelope-reading.md`.
-- [ ] `W02.P04.S17` - Author the revision-by-law and under-declaration-suspicion rule; `src/aeat/_data/agent/rules/operator-grounding.md`.
-- [ ] `W02.P04.S18` - Add the rule-surface drift gate over named CLI verbs and JSON fields; `src/aeat/_data/agent/tests/test_rule_surface_conformance.py`.
+- [x] `W02.P04.S14` - Author the never-compute, provenance-relay operating rule; `src/aeat/_data/agent/rules/operator-operating-rules.md`.
+- [x] `W02.P04.S15` - Author the safety and filing-handoff operating rule; `src/aeat/_data/agent/rules/operator-safety-handoff.md`.
+- [x] `W02.P04.S16` - Author the envelope-and-exit-code reading rule; `src/aeat/_data/agent/rules/operator-envelope-reading.md`.
+- [x] `W02.P04.S17` - Author the revision-by-law and under-declaration-suspicion rule; `src/aeat/_data/agent/rules/operator-grounding.md`.
+- [x] `W02.P04.S18` - Add the rule-surface drift gate over named CLI verbs and JSON fields; `src/aeat/_data/agent/tests/test_rule_surface_conformance.py`.
 
 ## Wave `W03` - Layer 2/3 vertical slice: one modelo workflow and a golden eval
 
