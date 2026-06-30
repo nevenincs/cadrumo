@@ -296,17 +296,13 @@ class TestTokenMapShape:
         mapping = TokenMap()
         assert mapping.is_empty()
 
-    def test_categories_default_to_empty_tuples(self) -> None:
+    @pytest.mark.parametrize(
+        "category",
+        ("nif", "name", "address", "expediente", "csv", "nrc", "iban", "importe", "arbitrary"),
+    )
+    def test_categories_default_to_empty_tuples(self, category: str) -> None:
         mapping = TokenMap()
-        assert mapping.nif == ()
-        assert mapping.name == ()
-        assert mapping.address == ()
-        assert mapping.expediente == ()
-        assert mapping.csv == ()
-        assert mapping.nrc == ()
-        assert mapping.iban == ()
-        assert mapping.importe == ()
-        assert mapping.arbitrary == ()
+        assert getattr(mapping, category) == ()
 
     def test_frozen_rejects_mutation(self) -> None:
         mapping = TokenMap()
