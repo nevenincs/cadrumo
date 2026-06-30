@@ -43,7 +43,7 @@ def _header(*, recovery_wrap_present: bool = False) -> ExportArchiveHeader:
         bucket_id=_BUCKET_ID,
         manifest_digest=_MANIFEST_DIGEST,
         recovery_wrap_present=recovery_wrap_present,
-        archive_schema_version=1,
+        archive_schema_version=2,
         created_at=_FROZEN_INSTANT,
     )
 

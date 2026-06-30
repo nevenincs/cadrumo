@@ -2,9 +2,12 @@
 
 This module composes
 :class:`~aeat.domain.user_profile.UserProfilePortableExport` payloads at
-the application boundary. A v2 bundle contains the profile record plus
+the application boundary. A v3 bundle contains the profile record plus
 the four bucket-local history categories that must move with it: work
 units, ledger transactions, calculation revisions, and filing records.
+The v3 shape additionally carries the generic secure-object custody
+schema and coverage manifest, default-empty until the transport-aware
+phases populate them.
 The ledger category is loaded as a
 :class:`~aeat.domain.transactions.TransactionCatalogue` through
 :class:`~aeat.domain.transactions.TransactionCatalogueRepository`.
@@ -15,8 +18,8 @@ their owning repositories; import saves those records through the target
 bucket's repository save paths so the target bucket re-encrypts them
 under its own data-encryption key.
 
-Only the current v2 shape is accepted in this pre-beta codebase. Older
-facts-only bundles are not bridged. Callers must provision and
+Only the current v3 shape is accepted in this pre-beta codebase. Older
+bundle shapes are not bridged. Callers must provision and
 collision-check the target bucket and hold the appropriate bucket
 session before deserialising; this module performs schema-version
 validation and typed repository writes.
@@ -33,10 +36,10 @@ if TYPE_CHECKING:
 
 
 #: Versions the import path will accept.  This is a pre-beta project with no
-#: released bundles (no-legacy-compatibility): only the current shape (v2) is
-#: accepted; the earlier facts-only v1 shape is deleted, not bridged.  Add a new
+#: released bundles (no-legacy-compatibility): only the current shape (v3) is
+#: accepted; earlier shapes are deleted, not bridged.  Add a new
 #: integer here when a new schema version is introduced.
-SUPPORTED_BUNDLE_SCHEMA_VERSIONS: frozenset[int] = frozenset({2})
+SUPPORTED_BUNDLE_SCHEMA_VERSIONS: frozenset[int] = frozenset({3})
 
 
 # ---------------------------------------------------------------------------
@@ -45,7 +48,7 @@ SUPPORTED_BUNDLE_SCHEMA_VERSIONS: frozenset[int] = frozenset({2})
 
 
 def serialize_profile_bundle(*, bucket_id: str) -> UserProfilePortableExport:
-    """Build a v2 :class:`~aeat.domain.user_profile.UserProfilePortableExport`.
+    """Build a v3 :class:`~aeat.domain.user_profile.UserProfilePortableExport`.
 
     Reads the profile record and all four financial-history categories
     from ``bucket_id``'s encrypted repositories and assembles them into
@@ -79,7 +82,6 @@ def serialize_profile_bundle(*, bucket_id: str) -> UserProfilePortableExport:
     filing_records = tuple(filing_catalogue)
 
     return UserProfilePortableExport(
-        bundle_schema_version=2,
         profile=record,
         work_units=work_units,
         ledger_transactions=ledger_transactions,
@@ -98,7 +100,7 @@ def deserialize_profile_bundle(bundle: UserProfilePortableExport, *, target_buck
 
     Validates ``bundle.bundle_schema_version`` against
     ``SUPPORTED_BUNDLE_SCHEMA_VERSIONS`` before any writes; only the
-    current v2 shape is accepted.
+    current v3 shape is accepted.
 
     Saves work units, ledger transactions, calculation revisions, and
     filing records into the target bucket via the standard repository
@@ -127,7 +129,8 @@ def deserialize_profile_bundle(bundle: UserProfilePortableExport, *, target_buck
             f"supported versions: {sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)}",
         )
 
-    # v2: import all four financial-history categories.
+    # v3 keeps the existing financial-history import path; secure-object carry
+    # population lands in the later custody deserialise phase.
     _import_work_units(bundle, target_bucket_id=target_bucket_id)
     _import_ledger_transactions(bundle, target_bucket_id=target_bucket_id)
     _import_calculation_revisions(bundle, target_bucket_id=target_bucket_id)
