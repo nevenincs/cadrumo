@@ -226,6 +226,10 @@ def calendar_events_from_notification_snapshots(
     Notifications become :class:`OverviewCalendarEventType.MESSAGE` rows only;
     they are additive calendar observations and never imply
     :class:`OverviewAeatSubmissionState` or filing evidence for an obligation.
+
+    Returns:
+        A tuple of :class:`OverviewCalendarEvent` message observations inside
+        ``calendar_range``.
     """
     events: list[OverviewCalendarEvent] = []
     for snapshot in sorted(snapshots, key=lambda item: item.captured_at):

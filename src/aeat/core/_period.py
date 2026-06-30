@@ -240,6 +240,9 @@ class Period(BaseModel):
             value: Space-separated display string containing a four-digit filing
                 year and a bare registry period code.
 
+        Returns:
+            A :class:`Period` parsed from the canonical display string.
+
         Raises:
             PeriodError: When ``value`` is not the display form or contains an
                 invalid registry period code.
