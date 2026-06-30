@@ -7,40 +7,79 @@ modified: '2026-06-30'
 related: []
 ---
 
-# `cpdefix-calculation-allgreen` audit: focused calculation checkpoint
+# `cpdefix-calculation-allgreen` audit: calculation capability checkpoint
 
 ## Scope
 
-This checkpoint records the calculation-adjacent verification slices run during
-the 2026-06-30 current-profile and legal-grounding cleanup campaign. It covers
-focused tests only: Modelo 130 casilla-05 carry, IVA compensation relation
-prefill, IVA compensation filed-observation history, and declaration parser
-chain splits touched during the campaign.
+This checkpoint records the calculation-adjacent verification campaign run on
+2026-06-30 after the cpdefix follow-up work. The reviewed scope includes the
+application modelo, application calculations, aggregation, registry, CLI modelo,
+and declaration parser gates that were exercised during the closeout.
 
-It is not a full-tree all-green certification. No full `pytest`, full registry
-gate, or full Vaultspec gate was run for this checkpoint.
+This is not a full-tree all-green certification. The full Vaultspec vault check
+still reports pre-existing vault-wide documentation hygiene issues outside this
+campaign.
 
 ## Findings
 
-### focused-gates | low | calculation slices passed their focused gates
+### calculation-gates | low | calculation capability gates passed
 
-The focused calculation slices passed their local gates:
-`test_modelo_130_casilla_05_carry.py` passed 5 unit tests,
-`test_iva_compensation_relation_prefill.py` and
-`test_iva_compensation_filed_observations.py` passed 13 unit tests together,
-and the declaration M303 parser/historical split passed its focused unit tests.
-These gates prove the edited slices remain behaviourally intact after
-current-profile fixture cleanup and test-file splitting.
+The closeout application gate passed:
+`uv run --no-sync pytest src/aeat/application/modelo/tests src/aeat/application/calculations/tests src/aeat/application/aggregation/tests -q --tb=short`
+reported 1575 passing tests on re-run during this audit update. The registry gate passed:
+`uv run --no-sync pytest src/aeat/domain/calculations/registry/tests -q --tb=short`
+reported 3475 passing tests on re-run during this audit update. The declaration
+adapter gate passed:
+`uv run --no-sync pytest src/aeat/adapters/inbound/declaracion/tests -q --tb=short`
+reported 218 passing tests after the Modelo 130 parser-boundary split. The
+targeted registry parity/reviewability check passed:
+`uv run --no-sync pytest -q --tb=short src/aeat/domain/calculations/registry/tests/test_formula_modelo_registry_parity.py src/aeat/domain/calculations/registry/tests/test_modelo_parity_coverage.py src/aeat/domain/calculations/registry/tests/test_registry_reviewability.py`
+reported 6 passing tests.
 
-### allgreen-scope | medium | full calculation all-green remains unclaimed
+### persona-risk-verifiers | low | testimonial residuals are covered by focused gates
 
-The file name reflects the intended checkpoint topic, but the evidence gathered
-in this run is focused, not global. Treat this audit as a slice-level status
-record until a full calculation/registry gate is run and recorded separately.
+The persona closeout found three residual risks that needed live verification
+instead of assumption. Taller Norte's first-period Modelo 303 compensation path
+is covered by `test_first_iva_period_m303_1t_uses_wallet_first_period_zero`,
+`test_existing_activity_m303_1t_missing_prior_filing_blocks_wallet_zero`, and
+`test_grounded_first_period_zero_decision_feeds_real_modelo_303_engine_and_lifecycle_gate`;
+all passed. The gestor same-signature ledger twin import and cross-profile
+refusal risks are covered by focused ledger/profile tests; the combined verifier
+reported 36 passing integration tests after the test-helper drift below was
+repaired, and the full ledger import UX file reported 11 passing integration
+tests.
+
+### test-helper-drift | low | ledger import UX helper used a retired profile id shape
+
+The focused ledger/profile verifier initially exposed a setup error in
+`src/aeat/entrypoints/cli/tests/_ledger_validation_support.py`: the helper used
+`tester` as both label and profile id, but current profile registration requires
+a UUIDv4 bucket/profile id. The helper now uses a stable UUIDv4 id and preserves
+`tester` as the display label. The worker grounded the change with
+`vaultspec-rag` before editing.
+
+### review-scope | medium | full-tree and artifact-completeness remain unclaimed
+
+An independent code-review pass found no blocking calculation findings and
+confirmed that the profile-readiness work preserved the real readiness gate
+rather than bypassing it. The review also confirmed that M115 and M210
+completeness changes are consistent with their registry closure surfaces.
+However, the claim remains scoped: the campaign does not certify full-tree
+all-green, Vaultspec vault-wide cleanliness, or complete persona replay
+artifact hygiene.
+
+### persona-artifacts | low | transcript and final-summary coverage is mixed
+
+The persona closeout inspection found no additional code-fixer dispatch clearly
+required from `tmp/personas`. Canonical narrative testimonials for older
+harnessed campaigns live under `.agents/testimonials/<slug>.md`, while many
+`tmp/personas` directories are storage roots or scratch regression logs rather
+than transcript stores. Several storage roots still lack a local transcript or
+final-summary-like closeout artifact, so artifact hygiene remains separate from
+the calculation gates that passed in this checkpoint.
 
 ## Recommendations
 
-Run and record a full calculation gate before marking any broader
-`cpdefix-calculation-allgreen` campaign objective complete. If unrelated
-pre-existing failures remain, classify them by owner and surface them as
-explicit non-closure evidence rather than calling the tree green.
+Use the green gates above for the scoped calculation-capability claim. Keep any
+broader full-tree, Vaultspec-clean, or persona-artifact-complete claim open until
+those separate surfaces are repaired and verified with their own gates.
