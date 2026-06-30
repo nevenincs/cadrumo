@@ -11,9 +11,8 @@ from typing import NamedTuple
 import pytest
 
 from ._inventory import (
+    all_test_control_modules,
     ast_for_path,
-    discover_test_control_modules,
-    project_test_control_modules,
     qualified_name,
     repo_relative,
 )
@@ -252,7 +251,7 @@ def broad_exception_inventory() -> _BroadExceptionInventory:
     contextlib_suppressions: list[str] = []
     broad_raise_suppressions: list[str] = []
 
-    for module_path in sorted(set(discover_test_control_modules()) | set(project_test_control_modules())):
+    for module_path in all_test_control_modules():
         relative = repo_relative(module_path)
         tree = ast_for_path(module_path)
         if tree is not None:
@@ -392,5 +391,5 @@ with ignored(ValueError):
 
 def test_discovery_found_modules() -> None:
     """Guardrail: the discovery walk must find at least one test/control module."""
-    modules = sorted(set(discover_test_control_modules()) | set(project_test_control_modules()))
+    modules = all_test_control_modules()
     assert modules, "No test/control modules discovered -- check glob roots."

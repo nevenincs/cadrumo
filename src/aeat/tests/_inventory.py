@@ -90,6 +90,11 @@ def project_test_control_modules() -> tuple[Path, ...]:
 
 
 @cache
+def all_test_control_modules() -> tuple[Path, ...]:
+    return tuple(sorted(set(discover_test_control_modules()) | set(project_test_control_modules())))
+
+
+@cache
 def package_python_files(*, include_data: bool = False) -> tuple[Path, ...]:
     """Return package ``.py`` files under ``src/aeat``.
 
