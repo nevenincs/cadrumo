@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -27,10 +28,12 @@ from ....domain.transactions import (
     RawProvenance,
     RawTransaction,
     SourceFormat,
+    SubprocessLLMClassifier,
     Transaction,
     TransactionCatalogue,
     TransactionCatalogueRepository,
     TransactionDirection,
+    prompt_spec_with_saturation_fields,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 
@@ -38,21 +41,20 @@ _NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
 _BUCKET = "bucket-split"
 
 
-class _FixedSplitProposer:
-    """Concrete in-process split proposer returning a fixed proposal."""
+def _split_subprocess_proposer(*, response: LLMSplitResponse, model: str = "test-model") -> SubprocessLLMClassifier:
+    response_json = response.model_dump_json()
+    script = f"""
+import sys
 
-    def __init__(self, *, response: LLMSplitResponse, model: str = "test-model") -> None:
-        self._response = response
-        self._model = model
-        self.last_evidence_text: str | None = None
-
-    @property
-    def decided_by(self) -> str:
-        return f"llm:claude:{self._model}"
-
-    def propose_split(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMSplitResponse:
-        self.last_evidence_text = evidence_text
-        return self._response
+sys.stdin.read()
+print({response_json!r})
+"""
+    return SubprocessLLMClassifier(
+        name="claude",
+        command=(sys.executable, "-c", script),
+        model=model,
+        spec=prompt_spec_with_saturation_fields(),
+    )
 
 
 def _two_line_proposal() -> LLMSplitResponse:
