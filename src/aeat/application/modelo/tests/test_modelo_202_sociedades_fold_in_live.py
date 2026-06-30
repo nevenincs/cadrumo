@@ -118,7 +118,7 @@ def _register_wizard_catalogue() -> None:
     from ...wizard import _catalogue  # noqa: F401  (import for registration side effect)
 
 
-_BUCKET_ID = "bucket-m202-sociedades-fold"
+_BUCKET_ID = "7a432b52-bcc2-4e8c-a150-93a0f33812f3"
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _M202 = "202"
@@ -165,7 +165,7 @@ _RELATION_PREFILL_SOURCE = "relation_prefill"
 
 # Distinct bucket so the M200 proof does not share observation state with the
 # M202 self-carry / cuota-base scenarios above.
-_BUCKET_ID_M200 = "bucket-m200-pagos-fold"
+_BUCKET_ID_M200 = "8ebc9e26-9e28-48aa-946f-f34d71807ad3"
 
 # The *computed* casilla that the formula ``modelo-200-cuota-diferencial``
 # targets: 00611 = subtract(DP200014B:00599, relation[pagos-fraccionados]).

@@ -75,7 +75,8 @@ from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET = "bucket-m130-prior-payment-advisory"
+_BUCKET = "00000000-0000-4000-8000-000000000130"
+_PROFILE_LABEL = "M130 prior payment advisory profile"
 _REVISION = "2019-y-siguientes"
 _YEAR = 2026
 _PRIOR_YEAR = 2025
@@ -140,7 +141,7 @@ _INCOME_DATE = date(2026, 2, 14)  # inside both 1T (Jan-Mar) and 2T (Jan-Jun) wi
 
 @pytest.fixture
 def objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL) as profile:
         _seed_ready_profile(profile.repository)
         yield profile.repository
 
@@ -150,7 +151,7 @@ def _seed_ready_profile(objects: SecureObjectRepository) -> None:
     UserProfileLifecycleRepository(bucket_id=_BUCKET, objects=objects).save(
         UserProfileRecord(
             profile_id=_BUCKET,
-            display_name="M130 prior payment advisory profile",
+            display_name=_PROFILE_LABEL,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="identity.name", value="Test"),

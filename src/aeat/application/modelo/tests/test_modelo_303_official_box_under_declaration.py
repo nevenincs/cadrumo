@@ -74,7 +74,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
-_BUCKET = "bucket-303-official-box"
+_BUCKET = "33333333-3333-4333-8333-333333333333"
 
 # DISTINCT non-equal cuotas so the wiring is unmistakable: one INCOMING general-21
 # sale (cuota → semantic iva.repercutido.general → official box 09) and one

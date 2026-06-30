@@ -93,6 +93,8 @@ _M130_PAGOS_FRACCIONADOS_CASILLA: CasillaId = validated_casilla_id("10", surface
 _M130_A_DEDUCIR_CASILLA: CasillaId = validated_casilla_id("15", surface="_M130_A_DEDUCIR_CASILLA")
 _M130_RESULTADO_PREVIO_CASILLA: CasillaId = validated_casilla_id("16", surface="_M130_RESULTADO_PREVIO_CASILLA")
 _M130_RESULTADO_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_RESULTADO_CASILLA")
+_BUCKET_ID = "00000000-0000-4000-8000-000000000131"
+_PROFILE_LABEL = "M130 verification test"
 
 
 def _required_manual_casillas_for_m130() -> tuple[CasillaId, ...]:
@@ -116,7 +118,7 @@ def _seed_runtime_profile_record(bucket_id: str) -> None:
     UserProfileLifecycleRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name="M130 verification test",
+            display_name=_PROFILE_LABEL,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="X1234567L"),
                 UserProfileFact(path="identity.name", value="Marta"),
@@ -160,8 +162,8 @@ def _persist_justificante_metadata(csv: str, *, modelo: str, filing_year: int, p
 @pytest.fixture
 def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over a fresh isolated profile."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
-        _seed_runtime_profile_record("default")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_PROFILE_LABEL) as profile:
+        _seed_runtime_profile_record(_BUCKET_ID)
         objects = profile.repository
         wu = WorkUnitCatalogueRepository(objects=objects)
         cr = CalculationRevisionCatalogueRepository(objects=objects)
@@ -273,7 +275,7 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(re
     )
 
     work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo=_M130_MODELO,
         filing_year=_M130_FILING_YEAR,
         period=Period.from_year_and_code(_M130_FILING_YEAR, _M130_PERIOD),
@@ -329,7 +331,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> No
     required = _required_manual_casillas_for_m130()
 
     work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo=_M130_MODELO,
         filing_year=_M130_FILING_YEAR,
         period=Period.from_year_and_code(_M130_FILING_YEAR, _M130_PERIOD),
@@ -416,7 +418,7 @@ def test_tampered_revision_raises_drift_error(repos: _Repos) -> None:
     wu_repo, cr_repo, _filing_repo, _vr_repo, bv_repo = repos
 
     work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo=_M130_MODELO,
         filing_year=_M130_FILING_YEAR,
         period=Period.from_year_and_code(_M130_FILING_YEAR, _M130_PERIOD),

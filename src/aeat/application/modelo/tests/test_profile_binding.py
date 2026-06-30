@@ -44,7 +44,8 @@ from .._profile_binding import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "operator"
+_PROFILE_ID = "10000000-0000-4000-8000-000000000476"
+_BUCKET_ID = _PROFILE_ID
 _YEAR = 2025
 _PERIOD = "0A"
 _TYPED_PERIOD = Period.from_year_and_code(_YEAR, _PERIOD)
@@ -92,7 +93,7 @@ def _modelo_100_snapshot() -> RegistrySnapshot:
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
     return UserProfileRecord(
-        profile_id=_BUCKET_ID,
+        profile_id=_PROFILE_ID,
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -149,7 +150,7 @@ def test_profile_resolution_skips_caller_supplied_bindings() -> None:
 def test_profile_resolution_is_empty_when_no_profile_fact_is_set() -> None:
     """A profile without the CCAA fact contributes nothing for that binding."""
     record = UserProfileRecord(
-        profile_id=_BUCKET_ID,
+        profile_id=_PROFILE_ID,
         display_name="Test runtime profile",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
         created_at=_CLOCK,
@@ -196,7 +197,7 @@ def test_profile_numeric_fact_resolves_into_the_decimal_binding_channel() -> Non
     """
     snapshot = _snapshot_with_decimal_profile_binding(_modelo_100_snapshot())
     record = UserProfileRecord(
-        profile_id=_BUCKET_ID,
+        profile_id=_PROFILE_ID,
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -341,7 +342,7 @@ def _snapshot_with_bool_profile_binding(snapshot: RegistrySnapshot) -> RegistryS
 
 def _profile_with_bool_fact(value: bool) -> UserProfileRecord:
     return UserProfileRecord(
-        profile_id=_BUCKET_ID,
+        profile_id=_PROFILE_ID,
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -411,7 +412,7 @@ class TestBoolTypedProfileBinding:
         # by a bool fact — a mis-wired scenario the guard must catch.
         snapshot = _modelo_100_snapshot()
         bool_profile = UserProfileRecord(
-            profile_id=_BUCKET_ID,
+            profile_id=_PROFILE_ID,
             display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -444,7 +445,7 @@ def test_string_decimal_profile_raises_type_invalid_error_without_leaking_value(
     """
     snapshot = _snapshot_with_decimal_profile_binding(_modelo_100_snapshot())
     record = UserProfileRecord(
-        profile_id=_BUCKET_ID,
+        profile_id=_PROFILE_ID,
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
