@@ -925,6 +925,64 @@ def test_modelo_100_eo_agricultural_activity_key_is_integer() -> None:
         )
 
 
+def test_modelo_100_eo_agricultural_product_indices_are_decimal() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_legal_refs = {
+        "ley-35-2006:art-27",
+        "ley-35-2006:art-28",
+        "ley-35-2006:art-30",
+        "ley-35-2006:art-31",
+        "ley-35-2006:art-32",
+    }
+    expected_ids = {
+        _casilla_id(casilla_id)
+        for casilla_id in (
+            "1489",
+            "1492",
+            "1495",
+            "1498",
+            "1501",
+            "1504",
+            "1507",
+            "1510",
+            "1513",
+            "1516",
+            "1519",
+            "1522",
+            "1525",
+            "1528",
+            "1531",
+            "1534",
+        )
+    }
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        ids_for_year = set(expected_ids)
+        if filing_year == 2025:
+            ids_for_year.add(_casilla_id("0158"))
+        casillas_by_id = {
+            casilla.id: casilla
+            for casilla in revision.casillas
+            if casilla.semantic_role == "irpf_eo_agr_indice"
+        }
+
+        assert set(casillas_by_id) == ids_for_year
+        for casilla in casillas_by_id.values():
+            assert casilla.label == "Índice"
+            assert tuple(casilla.section) == (
+                "toma_datos_ampliada",
+                "reg_estima_obj_agricola",
+                "actividad_agr",
+            )
+            assert casilla.data_type == "decimal"
+            assert expected_legal_refs.issubset(casilla.legal_refs)
+            assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+                casilla.source_refs,
+            )
+
+
 def test_modelo_100_eo_agricultural_indices_are_decimal() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
