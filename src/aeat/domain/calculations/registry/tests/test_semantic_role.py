@@ -257,6 +257,12 @@ class TestTypoTwinWarning:
             ("202", "2025-y-siguientes", "64", "is_pf_mod_40_3_b2_base_tipo_4"),
             ("202", "2025-y-siguientes", "65", "is_pf_mod_40_3_b2_porcentaje_4"),
             ("202", "2025-y-siguientes", "67", "is_pf_mod_40_3_correcciones_impuesto_complementario"),
+            ("100", "2025", "0773", "irpf_deduccion_cantabria_desplazamiento_nuevos_residentes"),
+            ("100", "2025", "0776", "irpf_deduccion_cantabria_desplazamiento_nuevos_residentes_generado"),
+            ("100", "2025", "1715", "irpf_deduccion_cantabria_desplazamiento_nuevos_residentes_pendiente"),
+            ("100", "2025", "1708", "irpf_deduccion_cantabria_nuevos_contribuyentes_extranjero"),
+            ("100", "2025", "1714", "irpf_deduccion_cantabria_nuevos_contribuyentes_extranjero_generado"),
+            ("100", "2025", "1717", "irpf_deduccion_cantabria_nuevos_contribuyentes_extranjero_pendiente"),
             # M303 compensacion-pendiente roles appear in both 2009-y-siguientes and
             # 2023-y-siguientes revisions; the validator requires unique occurrence for
             # intentional_singleton, so they carry semantic_role_cardinality="shared".
@@ -513,8 +519,8 @@ class TestTypoTwinWarning:
         assert captured == []
 
     def test_optional_numeric_axis_roles_do_not_warn_as_typos(self) -> None:
-        annual_line = _casilla(cid="a", semantic_role="irpf_deduccion_cantabria_generado_2025_pendiente_2")
-        general_line = _casilla(cid="b", semantic_role="irpf_deduccion_cantabria_generado_pendiente")
+        annual_line = _casilla(cid="a", semantic_role="irpf_deduccion_cantabria_obras_mejora_pendiente_1")
+        general_line = _casilla(cid="b", semantic_role="irpf_deduccion_cantabria_obras_mejora_pendiente_2")
         m = _registry_modelo("100", "2025", [annual_line, general_line])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")

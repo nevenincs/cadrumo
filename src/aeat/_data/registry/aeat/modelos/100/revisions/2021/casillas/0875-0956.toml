@@ -3,6 +3,6 @@ id = "0956"
 number = "0956"
 label = "Por obras de mejora generada en 2021 a deducir en los 2 años siguientes"
 section = ["resultados", "deduccion_autonomica_res", "cantabria_res"]
-semantic_role = "irpf_deduccion_cantabria_generado_ejercicio_pendiente"
+semantic_role = "irpf_deduccion_cantabria_obras_mejora_generado_ejercicio_pendiente"
 legal_refs = ["ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
