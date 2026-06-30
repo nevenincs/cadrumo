@@ -805,8 +805,9 @@ class LedgerParticipationRebuildResult(OutputSchema):
 class LedgerTrackingProvenancePayload(OutputSchema):
     """One evidence-link lineage entry nested in ``ledger track`` (D2).
 
-    Mirrors :class:`aeat.domain.transactions.TransactionEvidenceProvenanceEntry`'s
-    JSON dump; ``linked_at`` is the ISO-8601 timestamp.
+    Mirrors
+    :class:`~aeat.domain.transactions.TransactionEvidenceProvenanceEntry`'s JSON
+    dump; ``linked_at`` is the ISO-8601 timestamp.
     """
 
     evidence_id: str
@@ -820,8 +821,8 @@ class LedgerTrackingProvenancePayload(OutputSchema):
 class LedgerTrackingEditPayload(OutputSchema):
     """One manual-correction lineage entry nested in ``ledger track`` (D2).
 
-    Mirrors :class:`aeat.domain.transactions.TransactionEditLineageEntry`'s JSON
-    dump; ``edited_at`` is the ISO-8601 timestamp.
+    Mirrors :class:`~aeat.domain.transactions.TransactionEditLineageEntry`'s
+    JSON dump; ``edited_at`` is the ISO-8601 timestamp.
     """
 
     previous_transaction_id: str
@@ -834,8 +835,9 @@ class LedgerTrackingEditPayload(OutputSchema):
 class LedgerTrackingLifecyclePayload(OutputSchema):
     """One lifecycle-transition lineage entry nested in ``ledger track`` (D2).
 
-    Mirrors :class:`aeat.domain.transactions.TransactionLifecycleLineageEntry`'s
-    JSON dump; ``changed_at`` is the ISO-8601 timestamp.
+    Mirrors
+    :class:`~aeat.domain.transactions.TransactionLifecycleLineageEntry`'s JSON
+    dump; ``changed_at`` is the ISO-8601 timestamp.
     """
 
     previous_state: str
@@ -850,9 +852,10 @@ class LedgerTrackingLifecyclePayload(OutputSchema):
 class LedgerTrackingPayload(OutputSchema):
     """Durable event-lineage projection for one transaction (D2).
 
-    Mirrors :class:`aeat.application.ledger.LedgerTransactionTrackingPayload`'s
-    JSON dump — replaces the former bare ``dict[str, object]`` ``tracking`` field
-    on :class:`LedgerTrackResult`.
+    Mirrors
+    :class:`~aeat.application.ledger.LedgerTransactionTrackingPayload`'s JSON
+    dump — replaces the former bare ``dict[str, object]`` ``tracking`` field on
+    :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerTrackResult`.
     """
 
     transaction_id: str
@@ -869,9 +872,9 @@ class LedgerTrackResult(OutputSchema):
 
     ``participated_in`` carries the finalized-revision participations that
     consumed this transaction (the inverse audit trail), or ``None`` when the
-    transaction appears in no finalized revision.  The field is read from the
-    rebuildable participation index and complements the transaction's own
-    evidence/edit/lifecycle lineage.
+    transaction appears in no finalized revision.  The field is read from
+    :class:`~aeat.domain.modelos.TransactionRevisionParticipationIndex` and
+    complements the transaction's own evidence/edit/lifecycle lineage.
     """
 
     bucket_id: str
