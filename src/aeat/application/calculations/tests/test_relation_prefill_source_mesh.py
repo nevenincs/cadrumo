@@ -111,12 +111,19 @@ def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: 
         assert source_resolution.owned_sources == ("relation_prefill",)
         assert source_resolution.provenance
         assert all(item.source_kind == "relation_prefill" for item in source_resolution.provenance)
+        relations_by_id = {relation.id: relation for relation in snapshot.revision.relations}
+        for item in prefill.values:
+            relation = relations_by_id[item.relation]
+            assert item.source_modelo == relation.source_modelo
+            assert item.source_casilla_ids == (relation.source_casilla_id,)
+            assert item.legal_refs == tuple(relation.legal_refs)
+            assert item.source_refs == tuple(relation.source_refs)
         # RET-1: the perceptores relation is retired (decl.total-perceptores is now
         # a distinct-NIF count from the retención store); only the monetary
         # base/retenciones relations remain on the relation_prefill source.
         assert {item.source_ref for item in source_resolution.provenance} == {
-            "modelo-180-rel-115-base-anual:2026:1T,2T,3T,4T",
-            "modelo-180-rel-115-retenciones-anual:2026:1T,2T,3T,4T",
+            "modelo-180-rel-115-base-anual:115:2026:1T,2T,3T,4T:02",
+            "modelo-180-rel-115-retenciones-anual:115:2026:1T,2T,3T,4T:03",
         }
 
 

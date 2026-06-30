@@ -19,7 +19,7 @@ from ....core import STRICT_FROZEN_CONFIG, Period
 from ....core.aggregation import RelationAggregationOp
 from ._binding_selector_utils import unique_tuple
 from ._errors import RegistryValidationError
-from ._ids import BindingId, CasillaId, ModeloId, RelationId
+from ._ids import BindingId, CasillaId, LegalRefId, ModeloId, RelationId, SourceRefId
 from ._observation_fold import gather_observed_requirement_values
 from ._period_offset_math import apply_period_offset
 from ._relation_aggregation import relation_aggregation_op
@@ -47,8 +47,10 @@ class RegistryFoldRequirement(BaseModel):
     record is a superset of the two prior shapes — a relation requirement fans
     plural ``periods`` against a single ``source_casilla_ids`` member, while a
     ``previous_filing`` requirement carries a single ``periods`` member against
-    plural ``source_casilla_ids``. Each producer emits a single-element tuple
-    where its cardinality is one; no value shifts, only the record TYPE unifies.
+    plural ``source_casilla_ids``. ``legal_refs`` and ``source_refs`` retain the
+    originating relation/binding grounding for operator diagnostics. Each
+    producer emits a single-element tuple where its cardinality is one; no value
+    shifts, only the record TYPE unifies.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -64,14 +66,20 @@ class RegistryFoldRequirement(BaseModel):
     dependency_role: str = ""
     dependency_treatment: str = ""
     aggregation_op: str = ""
+    legal_refs: tuple[LegalRefId, ...] = ()
+    source_refs: tuple[SourceRefId, ...] = ()
 
-    _values_unique = field_validator("binding_ids", "source_casilla_ids")(unique_tuple("fold requirement tuple"))
+    _values_unique = field_validator("binding_ids", "source_casilla_ids", "legal_refs", "source_refs")(
+        unique_tuple("fold requirement tuple")
+    )
 
 
 @dataclass(slots=True)
 class _RelationRequirementBucket:
     relation_ids: set[RelationId]
     target_bindings: set[BindingId]
+    legal_refs: set[LegalRefId]
+    source_refs: set[SourceRefId]
 
 
 def relation_source_requirements(
@@ -123,9 +131,19 @@ def relation_source_requirements(
             str(classification.treatment),
             relation_aggregation_op(relation).value,
         )
-        bucket = grouped.setdefault(key, _RelationRequirementBucket(relation_ids=set(), target_bindings=set()))
+        bucket = grouped.setdefault(
+            key,
+            _RelationRequirementBucket(
+                relation_ids=set(),
+                target_bindings=set(),
+                legal_refs=set(),
+                source_refs=set(),
+            ),
+        )
         bucket.relation_ids.add(relation.id)
         bucket.target_bindings.add(relation.target_binding)
+        bucket.legal_refs.update(relation.legal_refs)
+        bucket.source_refs.update(relation.source_refs)
     return tuple(
         RegistryFoldRequirement(
             source_modelo=source_modelo,
@@ -142,6 +160,8 @@ def relation_source_requirements(
             dependency_role=dependency_role,
             dependency_treatment=dependency_treatment,
             aggregation_op=aggregation_op,
+            legal_refs=tuple(sorted(values.legal_refs)),
+            source_refs=tuple(sorted(values.source_refs)),
         )
         for (
             source_modelo,

@@ -8,7 +8,7 @@ bytes, the cross-period calculation inputs, the live captures, and the audit
 trail.
 
 Mechanism. Each carried row is read from the encrypted substrate with its
-decrypted ``Envelope`` payload bytes intact and re-keyed by its **natural**
+decrypted :class:`Envelope` payload bytes intact and re-keyed by its **natural**
 object key (never the stored HMAC digest, which is derived from the per-bucket
 data-encryption key and is therefore unreadable in a recipient bucket — see the
 custody roundtrip tests). On import each row is re-saved through the raw
@@ -18,11 +18,11 @@ counterpart of the typed categories' ``repository.save`` re-encrypt-on-import
 path and honours the same ``D2`` decrypted-payload custody contract.
 
 The set of carried namespaces is registry-driven: it is exactly the namespaces
-whose :class:`StorageCustodyDisposition` is in the requested custody profile,
-minus the five typed-category namespaces this module deliberately leaves to the
-typed bundle fields. A populated, carried-disposition namespace with no natural
-key resolver fails the export fail-closed, so a newly-registered durable store
-cannot be silently dropped.
+whose :class:`~aeat.adapters.persistence.storage.StorageCustodyDisposition` is
+in the requested custody profile, minus the five typed-category namespaces this
+module deliberately leaves to the typed bundle fields. A populated,
+carried-disposition namespace with no natural key resolver fails the export
+fail-closed, so a newly-registered durable store cannot be silently dropped.
 """
 
 from __future__ import annotations
@@ -109,7 +109,7 @@ def _blob_resolver(record: SecureObjectRecord, _bucket_id: str) -> str:
 
 
 def _json_field_resolver(field: str) -> NaturalKeyResolver:
-    """Resolver for an ``Envelope`` row whose natural key is one top-level payload field."""
+    """Resolver for an :class:`Envelope` row whose natural key is one top-level payload field."""
 
     def _resolve(record: SecureObjectRecord, _bucket_id: str) -> str:
         envelope = json.loads(record.payload.decode("utf-8"))

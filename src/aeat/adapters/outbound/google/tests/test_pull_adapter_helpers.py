@@ -28,6 +28,7 @@ from .._calc_sheets_pull import (
     _classify_metadata_match,
     _coerce_value,
     _merge_developer_metadata_entries,
+    _parse_relation_metadata,
     pull_operator_edits,
 )
 from ._calc_sheets_support import modelo_130_2025_1t_snapshot
@@ -87,6 +88,35 @@ def test_coerce_decimal_returns_none_for_empty_or_invalid() -> None:
 def test_coerce_decimal_parses_int_and_float() -> None:
     assert _coerce_decimal(42) == Decimal("42")
     assert _coerce_decimal(1500.5) == Decimal("1500.5")
+
+
+def test_parse_relation_metadata_preserves_relation_grounding() -> None:
+    """Pull metadata parser keeps source modelo, source casilla, and registry refs."""
+
+    parsed = _parse_relation_metadata(
+        "value=190.00; provenance=local_filing; source_modelo=115; source_filing_year=2026; "
+        "source_periods=1T+2T+3T+4T; source_casilla_ids=02; legal_refs=ley-35-2006:art-99; "
+        "source_refs=boe-modelo-180-2023-form; resolved_at=2026-06-30T12:00:00+00:00",
+    )
+
+    (
+        provenance,
+        source_modelo,
+        source_filing_year,
+        source_periods,
+        source_casilla_ids,
+        legal_refs,
+        source_refs,
+        resolved_at,
+    ) = parsed
+    assert provenance == "local_filing"
+    assert source_modelo == "115"
+    assert source_filing_year == 2026
+    assert source_periods == ("1T", "2T", "3T", "4T")
+    assert source_casilla_ids == ("02",)
+    assert legal_refs == ("ley-35-2006:art-99",)
+    assert source_refs == ("boe-modelo-180-2023-form",)
+    assert resolved_at is not None and resolved_at.isoformat() == "2026-06-30T12:00:00+00:00"
 
 
 # ---------------------------------------------------------------------------

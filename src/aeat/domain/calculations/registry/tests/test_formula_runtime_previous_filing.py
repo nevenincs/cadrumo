@@ -98,6 +98,8 @@ def test_previous_filing_requirements_are_declared_from_registry_binding_selecto
     assert requirement.periods == (source_reference.required_periods[0],)
     assert requirement.binding_ids == (_PREVIOUS_YEAR_NET_INCOME_BINDING,)
     assert requirement.source_casilla_ids == tuple(sorted(source_reference.source_casilla_ids))
+    assert requirement.legal_refs == tuple(sorted(binding.legal_refs))
+    assert requirement.source_refs == tuple(sorted(binding.source_refs))
 
 
 def test_relation_requirements_cover_all_source_periods_for_annual_summary(
@@ -131,6 +133,16 @@ def test_relation_requirements_cover_all_source_periods_for_annual_summary(
         _M115_BASE_CASILLA,
         _M115_RETENCIONES_CASILLA,
     }
+    relations_by_id = {relation.id: relation for relation in committed_modelo_180_snapshot.revision.relations}
+    for requirement in requirements:
+        assert requirement.legal_refs == tuple(
+            sorted({ref for relation_id in requirement.relation_ids for ref in relations_by_id[relation_id].legal_refs})
+        )
+        assert requirement.source_refs == tuple(
+            sorted(
+                {ref for relation_id in requirement.relation_ids for ref in relations_by_id[relation_id].source_refs}
+            )
+        )
 
 
 def test_relation_resolves_annual_summary_from_all_source_periods(

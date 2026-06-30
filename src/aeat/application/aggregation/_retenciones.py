@@ -119,6 +119,7 @@ class RetencionesAggregation(BaseModel):
 _MODELO_111_SCHEMES: frozenset[RetencionScheme] = frozenset(
     {
         RetencionScheme.WORK_INCOME,
+        RetencionScheme.WORK_INCOME_DIRECTOR,
         RetencionScheme.ECONOMIC_ACTIVITY,
         RetencionScheme.PROFESSIONAL,
         RetencionScheme.PRIZE,

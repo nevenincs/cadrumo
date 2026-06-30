@@ -42,10 +42,12 @@ from ...application.workflow import workflow_state_repository
 from ...core import RefundElection
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import resources
 from ...domain.calculations.registry import RegistrySnapshotError
 from ...domain.modelos import (
     CalculationRevisionCatalogueRepository,
+    CalculationRevisionState,
     ModeloRecordCatalogueRepository,
     VerificationReportCatalogueRepository,
 )
@@ -504,6 +506,11 @@ def _register_work_file_command(
             )
             require_profile_ready_for_work_unit(get_work_unit(selected_revision.work_unit_id))
             workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
+            # A revision already in PRESENTADO is the current filed answer, so the
+            # file call is a guarded-idempotent no-op that returns the existing
+            # record unchanged (no duplicate filing record or lifecycle event).
+            # Capture that before the call to surface it as an info Notice.
+            already_filed = selected_revision.state is CalculationRevisionState.PRESENTADO
             record = file_modelo_revision(
                 selected_revision.calculation_revision_id,
                 actor=actor or resolve_default_actor(),
@@ -525,7 +532,28 @@ def _register_work_file_command(
         result = WorkFileResult.model_validate(filing_record_payload(record).model_dump(mode="python"))
         lines = ["operation\tmodelo.work.file", *filing_record_lines(record)]
         lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
-        _emit_envelope(ctx, command="modelo.work.file", result=result, lines=lines)
+        notices: list[Notice] = []
+        if already_filed:
+            # Inline operator message, mirroring the hardcoded `filing_disambiguation`
+            # line emitted just above in this handler; the notice carries the
+            # machine-queryable ids on `context`.
+            noop_message = (
+                f"Idempotent no-op: calculation revision {record.calculation_revision_id} is already "
+                "filed; returned the existing filing record without changes."
+            )
+            notices.append(
+                Notice(
+                    severity=NoticeSeverity.INFO,
+                    code="modelo.work.file.idempotent_noop",
+                    message=noop_message,
+                    context={
+                        "calculation_revision_id": record.calculation_revision_id,
+                        "filing_record_id": record.filing_record_id,
+                    },
+                ),
+            )
+            lines.append(noop_message)
+        _emit_envelope(ctx, command="modelo.work.file", result=result, lines=lines, notices=notices or None)
 
 
 __all__ = ["register_work_verification_commands"]

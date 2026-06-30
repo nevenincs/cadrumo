@@ -25,14 +25,6 @@ class TestBucketIdConstraint:
         container = _Container(bucket_id="profile-7b9c-bucket")
         assert container.bucket_id == "profile-7b9c-bucket"
 
-    def test_rejects_empty_value(self) -> None:
-        with pytest.raises(ValidationError):
-            _Container(bucket_id="")
-
-    def test_rejects_value_longer_than_max(self) -> None:
-        with pytest.raises(ValidationError):
-            _Container(bucket_id="x" * 129)
-
     def test_accepts_value_at_max_length(self) -> None:
         container = _Container(bucket_id="x" * 128)
         assert len(container.bucket_id) == 128
@@ -41,6 +33,14 @@ class TestBucketIdConstraint:
         container = _Container(bucket_id="  profile-bucket  ")
         assert container.bucket_id == "profile-bucket"
 
-    def test_rejects_whitespace_only_value_after_strip(self) -> None:
+    @pytest.mark.parametrize(
+        "bucket_id",
+        (
+            pytest.param("", id="empty"),
+            pytest.param("x" * 129, id="too-long"),
+            pytest.param("   ", id="whitespace-only"),
+        ),
+    )
+    def test_rejects_invalid_value(self, bucket_id: str) -> None:
         with pytest.raises(ValidationError):
-            _Container(bucket_id="   ")
+            _Container(bucket_id=bucket_id)

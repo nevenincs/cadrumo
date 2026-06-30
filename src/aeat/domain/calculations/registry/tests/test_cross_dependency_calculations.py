@@ -22,6 +22,7 @@ from .._binding_selector_utils import selector_as_dict
 from .._bindings import RegistryModeloObservation, resolve_previous_filing_binding_values
 from .._relations import (
     RegistryFoldRequirement,
+    materialize_relation_binding_values,
     relation_source_requirements,
     resolve_relation_values_from_observations,
 )
@@ -383,6 +384,81 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
         "renta-2025-rel-130-pagos-fraccionados",
         "renta-2025-rel-131-pagos-fraccionados",
     )
+
+
+def test_modelo_184_attribution_income_folds_into_modelo_100_casilla_1577(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    """Régimen de atribución de rentas fold-in (LIRPF art. 86).
+
+    The entidad en régimen de atribución files Modelo 184 and the partner
+    declares the attributed share in Modelo 100. The entidad's attributed
+    economic-activity net income — Modelo 184 source casilla
+    ``tipo2.renta-atribuible-importe`` — folds into the partner's Modelo 100
+    casilla 1577 (``Rendimiento neto de actividad economica atribuido por
+    entidades en regimen de atribucion de rentas``) through the canonical
+    cross-modelo relation ``renta-2025-rel-184-atribucion-actividades-economicas``
+    whose ``relation_prefill`` target binding materialises the value.
+
+    The expected 1577 value is the SEEDED Modelo 184 observation, NOT a registry
+    formula output: a distinct seed (``777.77``, unrelated to any registry
+    formula) discriminates the live fold-in from a silent default-zero blank and
+    proves the relation -> materialise -> bound-casilla chain carries the real
+    attributed amount end to end.
+    """
+    attributed_income = Decimal("777.77")
+    m184_relation = "renta-2025-rel-184-atribucion-actividades-economicas"
+    m184_target_binding = "renta-2025-modelo-184-atribucion-actividades-economicas"
+    casilla_1577 = validated_casilla_id("1577", surface="modelo-184 attribution fold-in target")
+
+    snapshot = registry_snapshot("100", 2025, "0A")
+
+    def _value_for(requirement: RegistryFoldRequirement, period_index: int) -> Decimal:
+        if requirement.relation_ids[0] == m184_relation:
+            return attributed_income
+        return _renta_relation_observed_value(requirement, period_index)
+
+    requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
+    observations = _observations_from_requirements(requirements, _value_for)
+    relation_values = resolve_relation_values_from_observations(
+        snapshot.revision,
+        observations,
+        filing_year=2025,
+        period="0A",
+    )
+    assert relation_values[m184_relation] == attributed_income
+
+    # Materialise ONLY the M184 attribution relation into its declared
+    # ``relation_prefill`` target binding. The retencion relations (111/123/...)
+    # feed other casillas and are out of scope for this fold-in; restricting the
+    # materialisation isolates the M184 -> 1577 path under test.
+    materialized = materialize_relation_binding_values(
+        snapshot.revision,
+        {m184_relation: relation_values[m184_relation]},
+        period="0A",
+    )
+    assert materialized[m184_target_binding] == attributed_income
+
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={},
+        date_context={"filing_period": date(2025, 12, 31)},
+        relation_values=relation_values,
+        binding_values={
+            "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+            **materialized,
+            "renta-2025-profile-declaration-type": Decimal("1"),
+            "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
+            "renta-2025-profile-marriage-full-year": Decimal("0"),
+            "renta-2025-profile-marriage-month-start": Decimal("0"),
+            "renta-2025-profile-marriage-month-end": Decimal("0"),
+            "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+        },
+        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
+    )
+
+    assert result.values[casilla_1577] == attributed_income
 
 
 def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_registry_results(

@@ -807,10 +807,14 @@ def _developer_metadata_pairs(plan: SheetExportPlan) -> list[tuple[str, str]]:
             payload = {
                 "value": str(relation.value) if relation.value is not None else "",
                 "provenance": relation.provenance,
+                "source_modelo": relation.source_modelo or "",
                 "source_filing_year": str(relation.source_filing_year)
                 if relation.source_filing_year is not None
                 else "",
                 "source_periods": "+".join(relation.source_periods),
+                "source_casilla_ids": "+".join(relation.source_casilla_ids),
+                "legal_refs": "+".join(relation.legal_refs),
+                "source_refs": "+".join(relation.source_refs),
                 "resolved_at": relation.resolved_at.isoformat() if relation.resolved_at is not None else "",
             }
             pairs.append(

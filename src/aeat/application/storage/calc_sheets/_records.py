@@ -45,9 +45,12 @@ from ....domain.calculations.registry import (
     BindingId,
     CasillaId,
     FormulaId,
+    LegalRefId,
+    ModeloId,
     ParameterId,
     RelationId,
     RevisionId,
+    SourceRefId,
 )
 from ....domain.calculations.registry import DecimalValue as _RegistryDecimalValue
 from ._errors import CalcSheetsRecordError
@@ -672,6 +675,9 @@ class RelationValue(BaseModel):
     justificante parse), `operator_manual` (operator entered the
     value into Sheets directly). The engine stamps the provenance
     on the workbook so the pull adapter can detect stale prefills.
+    The `source_*` and ref fields mirror the registry relation so the
+    scalar workbook value remains joinable back to its official source
+    modelo, source casilla, and legal grounding.
     """
 
     model_config = _STRICT_FROZEN
@@ -679,8 +685,12 @@ class RelationValue(BaseModel):
     relation: RelationId
     value: Decimal | None = None
     provenance: Literal["local_filing", "aeat_live", "operator_manual"] = "operator_manual"
+    source_modelo: ModeloId | None = None
     source_filing_year: int | None = Field(default=None, ge=2000, le=2099)
     source_periods: tuple[str, ...] = ()
+    source_casilla_ids: tuple[CasillaId, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = ()
+    source_refs: tuple[SourceRefId, ...] = ()
     resolved_at: datetime | None = None
     note: str | None = None
 

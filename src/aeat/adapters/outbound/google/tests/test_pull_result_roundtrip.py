@@ -102,8 +102,12 @@ def _populated_pull_result() -> PullResult:
                 relation="relation.cross.prior-period",
                 value=Decimal("42.00"),
                 provenance="local_filing",
+                source_modelo="130",
                 source_filing_year=2024,
                 source_periods=("1T", "2T", "3T"),
+                source_casilla_ids=("19",),
+                legal_refs=("ley-35-2006:art-99",),
+                source_refs=("boe-modelo-130-2024-form",),
                 resolved_at=datetime(2025, 4, 10, 12, 0, 0, tzinfo=UTC),
             ),
             RelationEdit(relation="relation.cross.unset", value=None),
@@ -174,8 +178,12 @@ def test_pull_result_json_roundtrip_preserves_decimal_precision() -> None:
     # year / periods / resolved_at; the pull adapter must read them back.
     prior = next(edit for edit in roundtripped.relation_edits if edit.relation == "relation.cross.prior-period")
     assert prior.provenance == "local_filing"
+    assert prior.source_modelo == "130"
     assert prior.source_filing_year == 2024
     assert prior.source_periods == ("1T", "2T", "3T")
+    assert prior.source_casilla_ids == ("19",)
+    assert prior.legal_refs == ("ley-35-2006:art-99",)
+    assert prior.source_refs == ("boe-modelo-130-2024-form",)
     assert prior.resolved_at == datetime(2025, 4, 10, 12, 0, 0, tzinfo=UTC)
 
 

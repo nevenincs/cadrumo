@@ -626,3 +626,82 @@ def test_filing_record_absent_source_transaction_ids_defaults_to_empty(tmp_path:
     (mutated_record,) = mutated.records.values()
     assert mutated_record.source_transaction_ids == ()
     assert mutated != original
+
+
+def test_filing_record_id_is_clock_free_and_outcome_pinned() -> None:
+    """filed_at is excluded from the filing-record identity; the outcome inputs define it.
+
+    Two records that differ ONLY in filed_at share the same content-addressed id
+    (the model validator accepts both), so a re-file of the same revision by the
+    same actor collapses onto one record rather than minting a time-stamped
+    duplicate; a different actor diverges the identity.
+    """
+    work_unit_id = _hex("d")
+    revision_id = _hex("e")
+    record_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        filed_by="operator-A",
+    )
+    early = ModeloRecord(
+        filing_record_id=record_id,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        bucket_id=_RECORD_BUCKET_ID,
+        modelo=ModeloCode("303"),
+        filing_year=2026,
+        period=_P_2026_01,
+        filed_at=datetime(2026, 1, 31, 9, 0, 0, tzinfo=UTC),
+        filed_by="operator-A",
+        status=ModeloRecordStatus.VIGENTE,
+    )
+    late = ModeloRecord(
+        filing_record_id=record_id,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        bucket_id=_RECORD_BUCKET_ID,
+        modelo=ModeloCode("303"),
+        filing_year=2026,
+        period=_P_2026_01,
+        filed_at=datetime(2026, 1, 31, 23, 59, 0, tzinfo=UTC),
+        filed_by="operator-A",
+        status=ModeloRecordStatus.VIGENTE,
+    )
+    assert early.filing_record_id == late.filing_record_id == record_id
+    assert early.filed_at != late.filed_at
+    # A different actor diverges the outcome identity.
+    other_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        filed_by="operator-B",
+    )
+    assert other_id != record_id
+
+
+def test_filing_record_rejects_id_not_matching_outcome() -> None:
+    """Anti-tautology: a ModeloRecord whose id does not match the outcome derivation is refused.
+
+    The id is derived for ``operator-Z`` but the record carries ``operator-A``;
+    the model validator re-derives the outcome-pinned id and raises, with
+    ``filed_at`` populated non-default to confirm it never participates in the id.
+    """
+    work_unit_id = _hex("f")
+    revision_id = _hex("g")
+    mismatched_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        filed_by="operator-Z",
+    )
+    with pytest.raises(ValidationError):
+        ModeloRecord(
+            filing_record_id=mismatched_id,
+            work_unit_id=work_unit_id,
+            calculation_revision_id=revision_id,
+            bucket_id=_RECORD_BUCKET_ID,
+            modelo=ModeloCode("303"),
+            filing_year=2026,
+            period=_P_2026_01,
+            filed_at=datetime(2026, 1, 31, 12, 0, 0, tzinfo=UTC),
+            filed_by="operator-A",
+            status=ModeloRecordStatus.VIGENTE,
+        )

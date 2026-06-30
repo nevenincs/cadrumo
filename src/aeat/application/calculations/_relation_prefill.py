@@ -166,6 +166,29 @@ def _provenance_note(
     )
 
 
+def _relation_value_grounding(
+    relation: object,
+    requirement: RegistryFoldRequirement | None,
+) -> dict[str, object]:
+    """Project registry relation source identity and grounding onto a scalar relation value."""
+    return {
+        "source_modelo": requirement.source_modelo if requirement is not None else relation.source_modelo,
+        "source_casilla_ids": (
+            requirement.source_casilla_ids if requirement is not None else (relation.source_casilla_id,)
+        ),
+        "legal_refs": tuple(relation.legal_refs),
+        "source_refs": tuple(relation.source_refs),
+    }
+
+
+def _relation_provenance_ref(item: RelationValue) -> str:
+    source_modelo = item.source_modelo or "unknown-modelo"
+    source_year = str(item.source_filing_year) if item.source_filing_year is not None else "unknown-year"
+    source_periods = ",".join(item.source_periods) if item.source_periods else "unknown-period"
+    source_casillas = ",".join(item.source_casilla_ids) if item.source_casilla_ids else "unknown-casilla"
+    return f"{item.relation}:{source_modelo}:{source_year}:{source_periods}:{source_casillas}"
+
+
 def _relation_source_filing_year(relation: object, *, filing_year: int) -> int:
     selector = relation.source_revision_selector
     if selector.year is not None:
@@ -515,6 +538,7 @@ def resolve_relations_from_local_store(
             else _relation_source_filing_year(relation, filing_year=snapshot.filing_year)
         )
         source_periods = requirement.periods if requirement is not None else tuple(relation.source_periods)
+        grounding = _relation_value_grounding(relation, requirement)
         resolved = resolved_map.get(relation.id)
         if resolved is None:
             # IS-3 / ADR 2026-06-19-m202-first-period-attestation: a first-year IS
@@ -539,6 +563,7 @@ def resolve_relations_from_local_store(
                         provenance="operator_manual",
                         source_filing_year=target_year,
                         source_periods=source_periods,
+                        **grounding,
                         resolved_at=when,
                         note=(
                             "first-year IS filer under modalidad cuota (LIS art. 40.2): no Modelo 202 "
@@ -555,6 +580,7 @@ def resolve_relations_from_local_store(
                         provenance="operator_manual",
                         source_filing_year=target_year,
                         source_periods=source_periods,
+                        **grounding,
                         resolved_at=when,
                         note=(
                             f"source modelo {requirement.source_modelo} is not applicable for the bucket "
@@ -563,7 +589,7 @@ def resolve_relations_from_local_store(
                     ),
                 )
                 continue
-            values.append(RelationValue(relation=relation.id, value=None))
+            values.append(RelationValue(relation=relation.id, value=None, **grounding))
             continue
         values.append(
             RelationValue(
@@ -572,6 +598,7 @@ def resolve_relations_from_local_store(
                 provenance=_LOCAL_FILING_PROVENANCE,
                 source_filing_year=target_year,
                 source_periods=source_periods,
+                **grounding,
                 resolved_at=when,
                 note=_provenance_note(
                     relation.id,
@@ -798,7 +825,7 @@ class RelationPrefillSourceResolver:
             provenance=tuple(
                 CalculationSourceProvenance(
                     source_kind="relation_prefill",
-                    source_ref=(f"{item.relation}:{item.source_filing_year}:{','.join(item.source_periods)}"),
+                    source_ref=_relation_provenance_ref(item),
                 )
                 for item in resolved
             ),
