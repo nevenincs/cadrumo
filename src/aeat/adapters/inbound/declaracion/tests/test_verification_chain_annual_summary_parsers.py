@@ -5,12 +5,10 @@ from __future__ import annotations
 import pytest
 
 from ._verification_chain_support import (
-    FIXTURES_DIR,
     CasillaId,
     Decimal,
-    DeclaracionParseError,
     _casilla_ids,
-    parse_declaracion,
+    _parse_extracted_declaracion_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -38,19 +36,7 @@ def test_verification_chain_annual_summary_parser_extracts_declaracion_pdf_casil
     modelo: str,
     case_label: str,
 ) -> None:
-    pdf_path = FIXTURES_DIR / "justificantes" / modelo / "2024-0A.pdf"
-
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override=modelo,
-            año_override=2024,
-            period_override="0A",
-        )
-    except DeclaracionParseError as exc:
-        pytest.fail(f"PARSER-GAP [{case_label}]: parse_declaracion raised.\n  error: {exc}")
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+    extracted = _parse_extracted_declaracion_values(modelo=modelo, fixture_stem="2024-0A", year=2024, period="0A")
     assert set(extracted.keys()) == _DECL_SUMMARY_CASILLAS, (
         f"PARSER-GAP [{case_label}]: unexpected casilla set.\n  got: {sorted(extracted)}"
     )

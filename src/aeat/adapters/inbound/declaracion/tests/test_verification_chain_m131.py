@@ -4,17 +4,16 @@ import pytest
 
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M131,
-    FIXTURES_DIR,
     BindingId,
     CasillaId,
     Decimal,
-    DeclaracionParseError,
     RegistryValidationError,
     _casilla_id,
+    _decimal_inputs_from_extracted_values,
+    _parse_extracted_declaracion_values,
     _period_to_date,
     _registry_snapshot,
     calculate_registry_snapshot,
-    parse_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -56,30 +55,14 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
 
     Verdict: VERIFIED - all four formula closure casillas match fixture values.
     """
-    pdf_path = FIXTURES_DIR / "justificantes" / "131" / "2024-1T.pdf"
-
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override="131",
-            año_override=2026,
-            template_revision_override="2026",
-            period_override="1T",
-        )
-    except DeclaracionParseError as exc:
-        detail = exc.translated_message or str(exc) or type(exc).__name__
-        context = exc.context if exc.context else {}
-        pytest.fail(
-            f"PARSER-GAP [M131/2024-1T.pdf/yr=2026]: parse_declaracion raised.\n  error: {detail} (context={context})",
-        )
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
-
-    inputs: dict[CasillaId, Decimal] = {
-        cid: val
-        for cid, val in extracted.items()
-        if cid not in _COMPUTED_CASILLAS_M131 and isinstance(val, Decimal)
-    }
+    extracted = _parse_extracted_declaracion_values(
+        modelo="131",
+        fixture_stem="2024-1T",
+        year=2026,
+        period="1T",
+        template_revision="2026",
+    )
+    inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M131)
 
     binding_values: dict[BindingId, Decimal] = {
         "modelo-131-2026-resultados-negativos-anteriores": Decimal("0"),

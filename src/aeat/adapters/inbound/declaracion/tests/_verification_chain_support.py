@@ -49,8 +49,18 @@ def _casilla_ids(*values: object) -> frozenset[CasillaId]:
     return frozenset(_casilla_id(value) for value in values)
 
 
-def _declaracion_case_label(modelo: str, fixture_stem: str) -> str:
-    return f"M{modelo}/{fixture_stem}"
+def _declaracion_case_label(
+    modelo: str,
+    fixture_stem: str,
+    *,
+    year: int,
+    period: str,
+    template_revision: str | None,
+) -> str:
+    suffix = f"/yr={year}/period={period}"
+    if template_revision is not None:
+        suffix += f"/template={template_revision}"
+    return f"M{modelo}/{fixture_stem}{suffix}"
 
 
 def _parse_extracted_declaracion_values(
@@ -59,8 +69,15 @@ def _parse_extracted_declaracion_values(
     fixture_stem: str,
     year: int,
     period: str,
+    template_revision: str | None = None,
 ) -> dict[CasillaId, object]:
-    label = _declaracion_case_label(modelo, fixture_stem)
+    label = _declaracion_case_label(
+        modelo,
+        fixture_stem,
+        year=year,
+        period=period,
+        template_revision=template_revision,
+    )
     pdf_path = FIXTURES_DIR / "justificantes" / modelo / f"{fixture_stem}.pdf"
 
     try:
@@ -69,9 +86,12 @@ def _parse_extracted_declaracion_values(
             modelo_override=modelo,
             año_override=year,
             period_override=period,
+            template_revision_override=template_revision,
         )
     except DeclaracionParseError as exc:
-        pytest.fail(f"PARSER-GAP [{label}]: parse_declaracion raised.\n  error: {exc}")
+        detail = exc.translated_message or str(exc) or type(exc).__name__
+        context = f" (context={exc.context})" if exc.context else ""
+        pytest.fail(f"PARSER-GAP [{label}]: parse_declaracion raised.\n  error: {detail}{context}")
 
     return {value.casilla_id: value.printed_value for value in filing.values}
 
