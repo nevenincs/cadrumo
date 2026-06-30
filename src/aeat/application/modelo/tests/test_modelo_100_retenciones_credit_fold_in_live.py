@@ -42,26 +42,9 @@ coincidental sum cannot satisfy the assertion. The test does not recompute any
 registry IRPF formula — it proves the enrolled relation resolver wires the four
 prior periodic filings through to each annual credit casilla.
 
-WIRING-GAP CARVE-OUT: the M100/2024 revision declares two further
-``relation_prefill`` retenciones bindings whose relations fold a source modelo's
-retenciones output, but NO casilla binds to either — they are ORPHANED bindings
-(the same wiring-gap shape found in the M200 base-determination and M369 OSS paths):
-
-* ``renta-2024-modelo-115-retenciones-periodicas`` (M115 ``source_casilla_id='03'``,
-  arrendamientos retención): the only inmobiliario-retención casilla, ``0598``,
-  is ``computed`` by formula ``renta-2024-retenciones-arrendamientos-urbanos``
-  (= ``copy(0153)``), where ``0153`` is a per-inmueble MANUAL input
-  (``irpf_inmueble_retenciones_ingresos_a_cuenta``), not the M115 binding. The
-  M115 relation folds into a binding that no casilla consumes.
-* ``renta-2024-modelo-193-retenciones-anuales`` (M193 ``source_casilla_id=
-  'decl.retenciones-total'``, copy): no casilla binds it; the capital-mobiliario
-  retención casilla ``0597`` consumes the M123 binding, not M193.
-
-Both orphaned bindings are referenced only by their own definition, their
-relation's ``target_binding``, and the ``dependent-modelos`` construct — never by
-a casilla ``binding`` field nor a formula. They are NOT proven-live here; the gap
-is reported precisely so the epic can decide whether to wire a consuming casilla
-or retire the orphaned binding.
+M193 annual retenciones are covered separately by the registry-level M100
+retenciones binding wiring tests; M100 rental retenciones remain grounded in
+casilla ``0153`` and its ``0598`` copy formula.
 """
 
 from __future__ import annotations

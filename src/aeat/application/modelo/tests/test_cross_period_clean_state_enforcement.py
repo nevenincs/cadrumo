@@ -490,7 +490,6 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path:
             binding_values={
                 "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0"),
                 retenciones_trabajo_binding: retenciones_trabajo_amount,
-                "renta-2025-modelo-115-retenciones-periodicas": Decimal("0"),
                 "renta-2025-modelo-123-retenciones-periodicas": Decimal("0"),
                 zero_binding: Decimal("0"),
             },

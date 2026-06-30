@@ -36,8 +36,8 @@ from .._service import _archive_associated_data, _recovery_wrap_bytes
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-_BUCKET_ID = "bucket-maintenance-export-test"
-_INCOMPLETE_BUCKET_ID = "bucket-maintenance-incomplete-import"
+_BUCKET_ID = "66666666-6666-4666-8666-666666666666"
+_INCOMPLETE_BUCKET_ID = "77777777-7777-4777-8777-777777777777"
 _LABEL = "Export target"
 _RECOVERY_WORDS = ("correct", "horse", "battery", "staple")
 _MANIFEST_DIGEST = "b" * 64

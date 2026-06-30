@@ -143,7 +143,6 @@ _TOLERANCE = Decimal("0.02")
 _RELATION_VALUES_2024: dict[RelationId, Decimal] = {
     "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2024-rel-115-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
     "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
@@ -155,7 +154,6 @@ def _binding_values() -> dict[BindingId, Decimal]:
     return {
         "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
-        "renta-2024-modelo-115-retenciones-periodicas": Decimal("0"),
         "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
         "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
         # declaration_type = 1 (individual) → 0461 computed = 0

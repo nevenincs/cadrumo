@@ -324,6 +324,11 @@ def test_modelo_303_verify_blocks_deductible_vat_missing_evidence_but_warns_outp
         finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE
         and purchase.transaction_id in finding.message
         and "deductible VAT" in finding.message
+        and "aeat app ledger evidence add" in (finding.next_action or "")
+        and (
+            f"aeat app ledger attach {purchase.transaction_id} --purchase-invoice-evidence-id"
+            in (finding.next_action or "")
+        )
         for finding in blocking
     )
     assert any(
@@ -360,6 +365,9 @@ def test_modelo_303_export_refuses_legacy_verified_deductible_vat_missing_eviden
         )
 
     assert exc_info.value.context["reason"] == "deductible_vat_evidence_missing"
+    assert exc_info.value.suggestion is not None
+    assert "aeat app ledger evidence add" in exc_info.value.suggestion
+    assert "--purchase-invoice-evidence-id" in exc_info.value.suggestion
     assert not output_path.exists()
     assert not output_path.with_name(output_path.name + ".tmp").exists()
 
@@ -386,4 +394,7 @@ def test_modelo_303_internal_file_refuses_legacy_verified_deductible_vat_missing
         )
 
     assert exc_info.value.context["reason"] == "deductible_vat_evidence_missing"
+    assert exc_info.value.suggestion is not None
+    assert "aeat app ledger evidence add" in exc_info.value.suggestion
+    assert "--purchase-invoice-evidence-id" in exc_info.value.suggestion
     assert tuple(filing_repo.load().values()) == ()

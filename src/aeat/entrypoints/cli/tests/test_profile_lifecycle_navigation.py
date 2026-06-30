@@ -478,7 +478,11 @@ def test_deleted_profile_name_is_reusable_by_create_and_rename(
             "--accept-defaults",
             "--tax-id",
             "12345678Z",
+            "--entity-type",
+            "natural_person",
             "--name",
+            "Operator",
+            "--surnames",
             "Operator",
             "--activity",
             "design",
@@ -544,3 +548,38 @@ def test_show_tombstoned_profile_is_session_context_independent(
     for context in (with_session, no_session):
         flat = context.output.lower()
         assert "desconocido" not in flat and "unknown profile" not in flat
+
+
+def test_profile_flag_refuses_tombstoned_uuid_like_tombstoned_label(
+    _per_bucket_backend: Path,
+) -> None:
+    """``--profile <uuid>`` cannot activate a tombstoned bucket.
+
+    Operators normally address profiles by label, but automation may retain a
+    UUID. A deleted profile must be excluded from live command routing by either
+    identifier; otherwise a tombstoned UUID would bypass the label tombstone
+    filter and route app commands into a deleted taxpayer bucket.
+    """
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....core import resolve_active_bucket_id
+
+    seed("alpha")
+    pointer = read_profile_bucket("alpha")
+    assert pointer is not None
+    tombstoned_uuid = pointer.bucket_id
+
+    dispose_engine()
+    deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
+    assert deleted.exit_code == 0, deleted.output
+
+    dispose_engine()
+    by_label = _invoke(("--language", "en", "--profile", "alpha", "app", "ledger", "list"))
+    by_uuid = _invoke(("--language", "en", "--profile", tombstoned_uuid, "app", "ledger", "list"))
+
+    assert by_label.exit_code != 0, by_label.output
+    assert by_uuid.exit_code != 0, by_uuid.output
+    assert "Unknown profile" in by_label.output
+    assert "Unknown profile" in by_uuid.output
+    assert "rows" not in by_uuid.output
+    assert resolve_active_bucket_id() is None

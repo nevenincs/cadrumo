@@ -214,6 +214,7 @@ async def verify_csv(
     csv: str,
     *,
     browser: VerifyBrowserSessionLike | None = None,
+    browser_session_factory: VerifyBrowserSessionFactory | None = None,
 ) -> bool:
     """Verify a justificante CSV against AEAT's Sede electrónica.
 
@@ -221,13 +222,15 @@ async def verify_csv(
     URL under the read-only guard, submits the CSV, and parses the returned HTML
     for AEAT confirmation tokens. Passing ``browser`` borrows the session from
     the caller; omitting it builds a self-owned session through
-    :data:`DEFAULT_BROWSER_SESSION_FACTORY` and closes that session after the
-    round-trip.
+    ``browser_session_factory`` or :data:`DEFAULT_BROWSER_SESSION_FACTORY` and
+    closes that session after the round-trip.
 
     Args:
         csv: The Código Seguro de Verificación as printed on the receipt.
         browser: An already-constructed :class:`VerifyBrowserSessionLike`.
             When ``None``, one is built from the default settings/profile.
+        browser_session_factory: Optional no-argument factory for the
+            self-owned path. Ignored when ``browser`` is supplied.
 
     Returns:
         ``True`` if AEAT confirms the CSV as valid; ``False`` if AEAT reports
@@ -246,7 +249,8 @@ async def verify_csv(
     session = browser
     if session is None:
         try:
-            session = await DEFAULT_BROWSER_SESSION_FACTORY()
+            factory = browser_session_factory or DEFAULT_BROWSER_SESSION_FACTORY
+            session = await factory()
             own_browser = True
         except (_PlaywrightError, _AeatError) as exc:
             raise _JustificanteVerificationError(f"failed to construct default BrowserSession: {exc}") from exc

@@ -1,24 +1,32 @@
 """Typed ``--json`` payload schemas for overview CLI commands.
 
-Each class declared here is a strict :class:`OutputSchema` subclass and is
-decorated with :func:`register_schema` so the JSON-contract test suite can
-enumerate every overview-command surface this module covers.
+Each class declared here is a strict
+:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass and is decorated
+with :func:`~aeat.entrypoints.cli._schemas.register_schema` so the
+JSON-contract test suite can enumerate every overview-command surface this
+module covers.
 
-Field sets match the production payload dicts constructed in ``_overview.py``
-at their emit sites. All sequence fields use ``list`` rather than ``tuple``
-because ``model_dump(mode='json')`` serialises pydantic tuples as JSON arrays,
-and the strict ``OutputSchema`` base does not coerce lists to tuples on
-re-validation.
+Field sets match the production payload dicts constructed in
+:mod:`aeat.entrypoints.cli._overview` at their emit sites. All sequence fields
+use ``list`` rather than ``tuple`` because ``model_dump(mode='json')``
+serialises pydantic tuples as JSON arrays, and the strict
+:class:`~aeat.entrypoints.cli._schemas.OutputSchema` base does not coerce lists
+to tuples on re-validation.
 
 The nested calendar payloads mirror the JSON form of
 :class:`~aeat.application.overview.OverviewCalendar`,
 :class:`~aeat.application.overview.OverviewCalendarEntry`,
 :class:`~aeat.application.overview.OverviewCalendarEvent`, and
-:class:`~aeat.application.overview.OverviewCalendarFilingEvidence`.  Registered
-result schemas then wrap those fragments for the
+:class:`~aeat.application.overview.OverviewCalendarFilingEvidence`. Registered
+result schemas then wrap those fragments, plus read models returned by
+:func:`~aeat.application.overview.build_overview_status_report`,
+:func:`~aeat.application.overview.build_overview_agenda`,
+:func:`~aeat.application.overview.build_overview_backlog`, and
+:func:`~aeat.application.overview.build_overview_explain`, for the
 :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` surface.  The application
 overview package remains the source of business semantics; this module only
-documents and validates the transport shape emitted by ``_overview.py``.
+documents and validates the transport shape emitted by
+:mod:`aeat.entrypoints.cli._overview`.
 """
 
 from __future__ import annotations
@@ -35,7 +43,8 @@ class OverviewDraftPayload(OutputSchema):
 
     The full-status branch forwards
     :class:`~aeat.application.overview.OverviewStatusReport` counters, while the
-    period branch expands the selected draft list into these small JSON rows.
+    period branch expands the selected :class:`~aeat.domain.filing.ModeloDraft`
+    records into these small JSON rows.
     """
 
     draft_id: str
@@ -207,7 +216,8 @@ class OverviewCalendarProfilePayload(OutputSchema):
     """One profile block in ``overview calendar --all-profiles`` mode.
 
     The embedded :class:`OverviewCalendarPayload` is the full calendar result
-    for that profile, keeping all-profile output typed instead of falling back
+    for that profile. :class:`OverviewCalendarResult` then carries these blocks
+    under ``profiles``, keeping all-profile output typed instead of falling back
     to a raw nested ``dict``.
     """
 
@@ -227,8 +237,9 @@ class OverviewStatusResult(OutputSchema):
 
     The full-status branch accepts the JSON form of
     :class:`~aeat.application.overview.OverviewStatusReport`; the period branch
-    uses :class:`OverviewDraftPayload` rows for the scoped draft list. The
-    application report is derived from
+    uses :class:`OverviewDraftPayload` rows derived from matching
+    :class:`~aeat.domain.filing.ModeloDraft` records for the scoped draft list.
+    The application report is derived from
     :class:`~aeat.application.state_projection.OperatorStateProjection`; this
     schema only bounds the CLI envelope branch and permits future report fields
     through ``extra='allow'``.

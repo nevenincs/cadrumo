@@ -2601,10 +2601,11 @@ cli:
       actor_help: Operator name recorded on the bucket event
       attachment_help: Secure attachment id to link to the transaction; repeat for
         multiple attachments
-      help: Attach secure evidence objects to one ledger transaction
+      help: Attach secure evidence objects to one ledger transaction. Create a purchase
+        invoice evidence id first with 'aeat app ledger evidence add PATH'.
       id_help: Ledger transaction id to attach evidence to
       purchase_invoice_evidence_help: Purchase invoice evidence id supporting the
-        transaction
+        transaction; create one with 'aeat app ledger evidence add PATH'
     categories:
       family_column: family
       header: RECOGNISED LEDGER SPENDING CATEGORIES

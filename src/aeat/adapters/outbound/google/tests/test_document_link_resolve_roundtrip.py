@@ -3,8 +3,9 @@
 The C2 ledger-evidence campaign rewired ``aeat app ledger doclink`` to resolve a
 Drive document link to its bytes and store those bytes as encrypted evidence —
 never a link. This gate exercises that end to end with the storage and manifest
-path REAL (a real ``AttachmentStore`` over real SQLite) and only the Drive
-transport seam (``service.files().get_media``) faked:
+path REAL (a real ``AttachmentStore`` over real SQLite) and the Drive media
+request executed through a real ``google-api-python-client`` resource pointed at
+a local HTTP endpoint:
 
 * the fetched bytes equal the stored bytes, and the persisted manifest's
   ``sha256`` / ``mime_type`` match (the fetch-and-encrypt roundtrip);
@@ -36,6 +37,7 @@ from .....domain.attachments._errors import AttachmentValidationError
 from .....tests.secure_sql import isolated_runtime_profile
 from ....outbound.storage._errors import OutboundStoragePermissionError
 from .._document_link_resolver import resolve_document_link
+from ._drive_media_server import drive_media_endpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -43,40 +45,16 @@ _FILE_ID = "1AbcDEfgHIjkLMnoPQRstuVWxyz12345"
 _DRIVE_LINK = f"https://drive.google.com/file/d/{_FILE_ID}/view"
 
 
-class _InMemoryDriveRequest:
-    def __init__(self, payload: bytes) -> None:
-        self._payload = payload
-
-    def execute(self) -> bytes:
-        return self._payload
-
-
-class _InMemoryDriveFiles:
-    def __init__(self, payload: bytes) -> None:
-        self._payload = payload
-
-    def get_media(self, *, fileId: str) -> _InMemoryDriveRequest:  # noqa: N803 - Google API kwarg name
-        return _InMemoryDriveRequest(self._payload)
-
-
-class _InMemoryDriveResource:
-    """Transport-only seam: stands in for the built Drive ``v3`` service."""
-
-    def __init__(self, payload: bytes) -> None:
-        self._files = _InMemoryDriveFiles(payload)
-
-    def files(self) -> _InMemoryDriveFiles:
-        return self._files
-
-
 def _store_resolved_link(store: AttachmentStore, *, payload: bytes):
-    """Resolve a Drive link via the transport seam and store the fetched bytes."""
-    data = resolve_document_link(
-        source=AttachmentSource.GOOGLE_DRIVE,
-        reference=_DRIVE_LINK,
-        credentials=None,
-        service=_InMemoryDriveResource(payload),
-    )
+    """Resolve a Drive link through the Google client and store the fetched bytes."""
+    with drive_media_endpoint(payload=payload) as endpoint:
+        data = resolve_document_link(
+            source=AttachmentSource.GOOGLE_DRIVE,
+            reference=_DRIVE_LINK,
+            credentials=None,
+            service=endpoint.service,
+        )
+        assert endpoint.requested_paths == [f"/drive/v3/files/{_FILE_ID}?alt=media"]
     return add_attachment_bytes(
         store,
         data=data,

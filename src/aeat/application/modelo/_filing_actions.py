@@ -322,7 +322,10 @@ def _require_filing_preconditions(
         target,
         error_type=ModeloFilingEvidenceMissingError,
         surface="internal filing",
-        suggestion="aeat app ledger attach <transaction-id> --attachment-id <attachment-id>",
+        suggestion=(
+            "aeat app ledger evidence add PATH; "
+            "aeat app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID"
+        ),
     )
     require_profile_ready_for_work_unit(work_unit)
     _require_persisted_required_bindings_resolved(

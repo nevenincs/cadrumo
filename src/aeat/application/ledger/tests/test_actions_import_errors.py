@@ -78,3 +78,55 @@ def test_import_ledger_source_auto_missing_file_is_clean_refusal_without_probe_n
         if record.levelno >= logging.ERROR and record.name.startswith("aeat.adapters.inbound.financial.providers")
     ]
     assert probe_errors == []
+
+
+def test_import_ledger_source_auto_unsupported_file_raises_localised_import_error(tmp_path: Path) -> None:
+    """Auto-detection failures use the translated import refusal contract."""
+    from ....core.errors import resolve_error_message
+
+    unsupported = tmp_path / "statement.txt"
+    unsupported.write_text("not a bank statement\n", encoding="utf-8")
+
+    with pytest.raises(TransactionValidationError) as excinfo:
+        import_ledger_source(
+            LedgerSourceImportCommand(path=unsupported, provider="auto", dry_run=True),
+        )
+
+    error = excinfo.value
+    assert error.translated_message == "errors.transaction.ledger_import_failed"
+    assert error.context is not None
+    assert error.context["path"] == str(unsupported)
+    rendered = resolve_error_message(error)
+    assert rendered
+    assert "auto-detection" not in rendered
+
+
+def test_import_ledger_source_verify_missing_original_file_raises_localised_error(tmp_path: Path) -> None:
+    """A missing verification source is reported through the financial-source key."""
+    from ....core.errors import resolve_error_message
+
+    statement = tmp_path / "bank.csv"
+    statement.write_text(
+        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
+        "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        encoding="utf-8",
+    )
+    missing_original = tmp_path / "missing-original.pdf"
+
+    with pytest.raises(TransactionValidationError) as excinfo:
+        import_ledger_source(
+            LedgerSourceImportCommand(
+                path=statement,
+                provider="csv",
+                dry_run=True,
+                verify=True,
+                source=missing_original,
+            ),
+        )
+
+    error = excinfo.value
+    assert error.translated_message == "errors.financial.source_file_not_found"
+    assert error.context == {"path": str(missing_original)}
+    rendered = resolve_error_message(error)
+    assert rendered
+    assert str(missing_original) in rendered

@@ -57,7 +57,6 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
     binding_values = {
         "renta-2021-modelo-100-estimacion-directa-es-normal": Decimal("0"),
         "renta-2021-modelo-111-retenciones-periodicas": Decimal("0"),
-        "renta-2021-modelo-115-retenciones-periodicas": Decimal("0"),
         "renta-2021-modelo-123-retenciones-periodicas": Decimal("0"),
     }
     enum_binding_values = {

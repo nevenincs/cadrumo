@@ -3,6 +3,13 @@
 Strict :class:`OutputSchema` subclasses for the LLM decision terminals,
 split out of ``_ledger_payloads.py`` to keep that registry within its size
 budget. These are emitted under the ``ledger.classify`` command envelope.
+
+The application layer owns the suggestion contracts:
+:class:`~aeat.application.ledger.LLMClassificationSuggestion`,
+:class:`~aeat.application.ledger.LLMSaturatedSuggestion`, and
+:class:`~aeat.application.ledger.LLMSuggestionRejectionResult`.  These schemas
+only validate the transport payloads emitted while the operator reviews,
+applies elsewhere, or rejects a model proposal.
 """
 
 from __future__ import annotations
@@ -13,9 +20,15 @@ from ._schemas import OutputSchema
 class LedgerClassifyLlmSuggestResult(OutputSchema):
     """JSON envelope for the ``aeat app ledger classify --llm`` (no ``--apply``) path (D1).
 
+    Mirrors the review fields from
+    :class:`~aeat.application.ledger.LLMClassificationSuggestion`: model
+    provider, transaction id, business/personal classification, optional
+    spending category, confidence, reason, and ``llm:<model>`` provenance.
     The proposed decision is surfaced for operator review; nothing is
     persisted (``persisted`` is ``False``) until the operator re-runs with
-    ``--apply``.
+    ``--apply``. The apply branch emits the normal
+    :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerClassifySingleResult`
+    because persistence then follows the shared manual-classification write.
     """
 
     llm: bool
@@ -32,8 +45,11 @@ class LedgerClassifyLlmSuggestResult(OutputSchema):
 class LedgerClassifyLlmSaturateResult(OutputSchema):
     """JSON envelope for the ``aeat app ledger classify --llm --saturate`` path (D1).
 
-    The model-selected IVA category plus the system-derived euro substrate.
-    The numbers are present only when the category was derivable; otherwise
+    Mirrors :class:`~aeat.application.ledger.LLMSaturatedSuggestion`, extending
+    the stage-1 review fields with the model-selected IVA category plus the
+    system-derived euro substrate. The model never supplies ``iva_rate``,
+    ``taxable_base``, or ``iva_amount``; those values are derived by the
+    application registry path when ``rate_derivable`` is true. Otherwise
     ``derivation_note`` explains why the operator must complete them.
     """
 
@@ -59,10 +75,14 @@ class LedgerClassifyLlmSaturateResult(OutputSchema):
 class LedgerClassifyLlmRejectResult(OutputSchema):
     """JSON envelope for ``aeat app ledger classify ... --reject``.
 
+    Projects :class:`~aeat.application.ledger.LLMSuggestionRejectionResult`
+    after :func:`~aeat.application.ledger.reject_llm_suggestion` records the
+    declined proposal in the bucket-event history.
     An explicit, audit-trailed rejection of an LLM suggestion: the row is NOT
     classified (``persisted`` is ``False``), but the rejection is recorded as a
-    bucket event (``bucket_event_id``). ``suggestion_kind`` is ``classification``
-    or ``split``; ``operator_reason`` carries the operator's free-text reason.
+    bucket event (``bucket_event_id``). ``suggestion_kind`` is
+    ``classification`` or ``split``; ``operator_reason`` carries the operator's
+    free-text reason.
     """
 
     llm: bool

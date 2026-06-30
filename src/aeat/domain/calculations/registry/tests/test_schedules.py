@@ -15,7 +15,7 @@ calculation tautologies.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from types import SimpleNamespace
 
 import pytest
 
@@ -100,31 +100,20 @@ def test_resolve_profile_fact_resolves_nested_dict_path() -> None:
     assert _resolve_profile_fact(facts, "residence.ccaa") == "madrid"
 
 
-@dataclass
-class _ProfileObject:
-    age: int
-    residence: object
-
-
-@dataclass
-class _ResidenceObject:
-    ccaa: str
-
-
 def test_resolve_profile_fact_resolves_single_level_object_attribute() -> None:
-    profile = _ProfileObject(age=35, residence=_ResidenceObject(ccaa="madrid"))
+    profile = SimpleNamespace(age=35, residence=SimpleNamespace(ccaa="madrid"))
     assert _resolve_profile_fact(profile, "age") == 35
 
 
 def test_resolve_profile_fact_resolves_nested_object_attribute_path() -> None:
-    profile = _ProfileObject(age=35, residence=_ResidenceObject(ccaa="madrid"))
+    profile = SimpleNamespace(age=35, residence=SimpleNamespace(ccaa="madrid"))
     assert _resolve_profile_fact(profile, "residence.ccaa") == "madrid"
 
 
 def test_resolve_profile_fact_mixes_dict_then_object_traversal() -> None:
     """The walker dispatches per-segment, so a top-level dict can contain
     a nested object whose attribute is then resolved by getattr."""
-    facts = {"residence": _ResidenceObject(ccaa="madrid")}
+    facts = {"residence": SimpleNamespace(ccaa="madrid")}
     assert _resolve_profile_fact(facts, "residence.ccaa") == "madrid"
 
 
@@ -134,7 +123,7 @@ def test_resolve_profile_fact_missing_dict_key_raises() -> None:
 
 
 def test_resolve_profile_fact_missing_object_attribute_raises() -> None:
-    profile = _ProfileObject(age=35, residence=_ResidenceObject(ccaa="madrid"))
+    profile = SimpleNamespace(age=35, residence=SimpleNamespace(ccaa="madrid"))
     with pytest.raises(RegistryValidationError, match="profile facts missing 'name'"):
         _resolve_profile_fact(profile, "name")
 

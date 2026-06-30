@@ -1,7 +1,14 @@
 """Typed payload schemas for modelo reconciliation and taxation comparison.
 
-Every declared payload is an :class:`OutputSchema` subclass registered for
-the modelo reconciliation and taxation-comparison JSON-contract surface.
+Every declared payload is a
+:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass registered with
+:func:`~aeat.entrypoints.cli._schemas.register_schema` for the modelo
+reconciliation and taxation-comparison JSON-contract surface. The application
+facade remains authoritative for
+:class:`~aeat.application.modelo.ModeloReconciliationReport` and
+:class:`~aeat.application.modelo.TaxationComparisonResult`; this module only
+documents the CLI transport shape that enters
+:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope`.
 """
 
 from __future__ import annotations
@@ -12,7 +19,13 @@ from ._schemas import OutputSchema, register_schema
 
 
 class ModeloReconciliationDiffPayload(OutputSchema):
-    """One per-casilla disagreement surfaced in a reconciliation report."""
+    """One metadata disagreement surfaced in a reconciliation report.
+
+    Mirrors :class:`~aeat.application.modelo.ModeloReconciliationDiff`. Current
+    justificante reconciliation compares header evidence (modelo, period,
+    ejercicio, tax id, and totals), not individual casilla values; casilla-level
+    declaration diffs require a modelo-specific declaration parser.
+    """
 
     field_name: str
     work_unit_value: str = ""
@@ -25,10 +38,14 @@ class ModeloReconciliationDiffPayload(OutputSchema):
 class ModeloReconcileResult(OutputSchema):
     """Result payload for ``modelo reconcile file`` and ``modelo reconcile pull``.
 
-    Both verbs share the :class:`ModeloReconciliationReport` shape from
-    the application service: a work-unit-level verdict, the bucket
-    scope, the external-evidence source kind and path, the per-casilla
-    diff list, the reconciliation timestamp, and an optional narrative.
+    Both verbs share
+    :class:`~aeat.application.modelo.ModeloReconciliationReport` from
+    :func:`~aeat.application.modelo.modelo_reconcile` or
+    :func:`~aeat.application.modelo.modelo_reconcile_bytes`: a work-unit-level
+    :class:`~aeat.application.modelo.ModeloReconciliationVerdict`, bucket scope,
+    :class:`~aeat.application.modelo.ModeloReconciliationEvidenceKind`, evidence
+    path/reference, metadata diff list, reconciliation timestamp, and optional
+    narrative.
     """
 
     work_unit_id: WorkUnitId
@@ -45,9 +62,12 @@ class ModeloReconcileResult(OutputSchema):
 class WorkCompareTaxationResult(OutputSchema):
     """Result payload for ``aeat app modelo work compare-taxation``.
 
-    Surfaces cuota resultante autoliquidacion (0595) and cuota
-    diferencial / resultado (0610) for both conjunta and individual
-    filing modes, plus the delta and recommendation.
+    Projects :class:`~aeat.application.modelo.TaxationComparisonResult` returned
+    by :func:`~aeat.application.modelo.compare_taxation_for_work_address`.
+    It surfaces the semantic-role-selected cuota resultante de la
+    autoliquidación and cuota diferencial / resultado for both conjunta and
+    individual filing modes, plus the signed delta and
+    :class:`~aeat.application.modelo.TaxationRecommendation`.
     """
 
     operation: str = "modelo.work.compare_taxation"

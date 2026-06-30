@@ -10,12 +10,12 @@ the registry.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
 import pytest
 
+from ....adapters.outbound.google._calc_sheets_pull import RowSetCellEdit
 from ....core.resources import resources
 from ....domain.calculations.registry._errors import RegistryValidationError
 from .._row_set_assembly import (
@@ -30,20 +30,6 @@ from .._row_set_assembly import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-@dataclass(frozen=True)
-class _Cell:
-    """Structural stand-in for the pull adapter's RowSetCellEdit.
-
-    The assemblers consume any object with ``binding`` / ``row_index`` /
-    ``value`` attributes, so this lightweight dataclass keeps tests free
-    of an outbound adapter import.
-    """
-
-    binding: str
-    row_index: int
-    value: Decimal | str | None
-
-
 def _modelo(modelo_id: str, revision_id: str):
     return resources().modelos.get(modelo_id).revisions[revision_id]
 
@@ -51,16 +37,16 @@ def _modelo(modelo_id: str, revision_id: str):
 def test_assemble_withholding_groups_two_perceptors_into_two_observations() -> None:
     revision = _modelo("190", "2024-y-siguientes")
     cells = (
-        _Cell("modelo-190-perceptor-row-nif", 1, "12345678A"),
-        _Cell("modelo-190-perceptor-row-name", 1, "Perceptor One"),
-        _Cell("modelo-190-perceptor-row-clave", 1, "A"),
-        _Cell("modelo-190-perceptor-row-percibido-dinerario", 1, Decimal("10000")),
-        _Cell("modelo-190-perceptor-row-retencion-practicada", 1, Decimal("1500")),
-        _Cell("modelo-190-perceptor-row-nif", 2, "87654321Z"),
-        _Cell("modelo-190-perceptor-row-name", 2, "Perceptor Two"),
-        _Cell("modelo-190-perceptor-row-clave", 2, "G"),
-        _Cell("modelo-190-perceptor-row-percibido-dinerario", 2, Decimal("30000")),
-        _Cell("modelo-190-perceptor-row-retencion-practicada", 2, Decimal("5500")),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="12345678A"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-name", row_index=1, value="Perceptor One"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-clave", row_index=1, value="A"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-percibido-dinerario", row_index=1, value=Decimal("10000")),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-retencion-practicada", row_index=1, value=Decimal("1500")),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=2, value="87654321Z"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-name", row_index=2, value="Perceptor Two"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-clave", row_index=2, value="G"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-percibido-dinerario", row_index=2, value=Decimal("30000")),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-retencion-practicada", row_index=2, value=Decimal("5500")),
     )
 
     observations = assemble_withholding_observations(cells, revision, filing_year=2025)
@@ -81,9 +67,9 @@ def test_assemble_withholding_synthesizes_source_id_per_row() -> None:
 
     revision = _modelo("190", "2024-y-siguientes")
     cells = (
-        _Cell("modelo-190-perceptor-row-nif", 1, "12345678A"),
-        _Cell("modelo-190-perceptor-row-clave", 1, "A"),
-        _Cell("modelo-190-perceptor-row-percibido-dinerario", 1, Decimal("100")),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="12345678A"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-clave", row_index=1, value="A"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-percibido-dinerario", row_index=1, value=Decimal("100")),
     )
 
     observations = assemble_withholding_observations(cells, revision, filing_year=2025)
@@ -96,10 +82,10 @@ def test_assemble_withholding_decimal_strings_coerce() -> None:
 
     revision = _modelo("190", "2024-y-siguientes")
     cells = (
-        _Cell("modelo-190-perceptor-row-nif", 1, "12345678A"),
-        _Cell("modelo-190-perceptor-row-clave", 1, "A"),
-        _Cell("modelo-190-perceptor-row-percibido-dinerario", 1, "5000.55"),
-        _Cell("modelo-190-perceptor-row-retencion-practicada", 1, "750.25"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="12345678A"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-clave", row_index=1, value="A"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-percibido-dinerario", row_index=1, value="5000.55"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-retencion-practicada", row_index=1, value="750.25"),
     )
 
     observations = assemble_withholding_observations(cells, revision, filing_year=2025)
@@ -119,10 +105,10 @@ def test_assemble_withholding_unknown_binding_silently_dropped() -> None:
 
     revision = _modelo("190", "2024-y-siguientes")
     cells = (
-        _Cell("modelo-190-perceptor-row-nif", 1, "12345678A"),
-        _Cell("modelo-190-perceptor-row-clave", 1, "A"),
-        _Cell("modelo-190-perceptor-row-percibido-dinerario", 1, Decimal("100")),
-        _Cell("nonexistent-binding-id", 1, "ignored-value"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="12345678A"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-clave", row_index=1, value="A"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-percibido-dinerario", row_index=1, value=Decimal("100")),
+        RowSetCellEdit(binding="nonexistent-binding-id", row_index=1, value="ignored-value"),
     )
 
     observations = assemble_withholding_observations(cells, revision, filing_year=2025)
@@ -134,12 +120,12 @@ def test_assemble_withholding_unknown_binding_silently_dropped() -> None:
 def test_assemble_foreign_asset_parses_iso_acquisition_date() -> None:
     revision = _modelo("720", "2013-y-siguientes")
     cells = (
-        _Cell("modelo-720-asset-row-class", 1, "C"),
-        _Cell("modelo-720-asset-row-country", 1, "CH"),
-        _Cell("modelo-720-asset-row-currency", 1, "CHF"),
-        _Cell("modelo-720-asset-row-identifier", 1, "CH-iban-001"),
-        _Cell("modelo-720-asset-row-acquisition-date", 1, "2020-01-15"),
-        _Cell("modelo-720-asset-row-valuation", 1, Decimal("120000")),
+        RowSetCellEdit(binding="modelo-720-asset-row-class", row_index=1, value="C"),
+        RowSetCellEdit(binding="modelo-720-asset-row-country", row_index=1, value="CH"),
+        RowSetCellEdit(binding="modelo-720-asset-row-currency", row_index=1, value="CHF"),
+        RowSetCellEdit(binding="modelo-720-asset-row-identifier", row_index=1, value="CH-iban-001"),
+        RowSetCellEdit(binding="modelo-720-asset-row-acquisition-date", row_index=1, value="2020-01-15"),
+        RowSetCellEdit(binding="modelo-720-asset-row-valuation", row_index=1, value=Decimal("120000")),
     )
 
     observations = assemble_foreign_asset_observations(cells, revision, filing_year=2025)
@@ -157,9 +143,9 @@ def test_assemble_atribucion_caps_share_percentage_at_validation() -> None:
 
     revision = _modelo("184", "2015-y-siguientes")
     cells = (
-        _Cell("modelo-184-member-row-nif", 1, "12345678A"),
-        _Cell("modelo-184-member-row-share", 1, Decimal("150")),
-        _Cell("modelo-184-member-row-base-assigned", 1, Decimal("1000")),
+        RowSetCellEdit(binding="modelo-184-member-row-nif", row_index=1, value="12345678A"),
+        RowSetCellEdit(binding="modelo-184-member-row-share", row_index=1, value=Decimal("150")),
+        RowSetCellEdit(binding="modelo-184-member-row-base-assigned", row_index=1, value=Decimal("1000")),
     )
 
     with pytest.raises(RegistryValidationError, match=r"share_percentage must be within \[0, 100\]"):
@@ -169,12 +155,12 @@ def test_assemble_atribucion_caps_share_percentage_at_validation() -> None:
 def test_assemble_related_party_reads_operation_kind_and_method() -> None:
     revision = _modelo("232", "2018-y-siguientes")
     cells = (
-        _Cell("modelo-232-related-party-row-nif", 1, "A12345678"),
-        _Cell("modelo-232-related-party-row-name", 1, "Counter SL"),
-        _Cell("modelo-232-related-party-row-country", 1, "ES"),
-        _Cell("modelo-232-related-party-row-operation-kind", 1, "01"),
-        _Cell("modelo-232-related-party-row-tpr-method", 1, "CUP"),
-        _Cell("modelo-232-related-party-row-amount", 1, Decimal("50000")),
+        RowSetCellEdit(binding="modelo-232-related-party-row-nif", row_index=1, value="A12345678"),
+        RowSetCellEdit(binding="modelo-232-related-party-row-name", row_index=1, value="Counter SL"),
+        RowSetCellEdit(binding="modelo-232-related-party-row-country", row_index=1, value="ES"),
+        RowSetCellEdit(binding="modelo-232-related-party-row-operation-kind", row_index=1, value="01"),
+        RowSetCellEdit(binding="modelo-232-related-party-row-tpr-method", row_index=1, value="CUP"),
+        RowSetCellEdit(binding="modelo-232-related-party-row-amount", row_index=1, value=Decimal("50000")),
     )
 
     observations = assemble_related_party_observations(cells, revision, filing_year=2025)
@@ -190,11 +176,11 @@ def test_assemble_related_party_reads_operation_kind_and_method() -> None:
 def test_assemble_refund_parses_iso_operation_date() -> None:
     revision = _modelo("360", "2010-y-siguientes")
     cells = (
-        _Cell("modelo-360-refund-row-member-state", 1, "FR"),
-        _Cell("modelo-360-refund-row-operation-kind", 1, "01"),
-        _Cell("modelo-360-refund-row-operation-date", 1, "2025-06-15"),
-        _Cell("modelo-360-refund-row-supplier-nif", 1, "FR-supplier-1"),
-        _Cell("modelo-360-refund-row-amount", 1, Decimal("500")),
+        RowSetCellEdit(binding="modelo-360-refund-row-member-state", row_index=1, value="FR"),
+        RowSetCellEdit(binding="modelo-360-refund-row-operation-kind", row_index=1, value="01"),
+        RowSetCellEdit(binding="modelo-360-refund-row-operation-date", row_index=1, value="2025-06-15"),
+        RowSetCellEdit(binding="modelo-360-refund-row-supplier-nif", row_index=1, value="FR-supplier-1"),
+        RowSetCellEdit(binding="modelo-360-refund-row-amount", row_index=1, value=Decimal("500")),
     )
 
     observations = assemble_refund_observations(cells, revision, filing_year=2025)
@@ -217,8 +203,8 @@ def test_assemble_observations_for_grouping_dispatches_per_perceptor_clave() -> 
 
     revision = _modelo("190", "2024-y-siguientes")
     cells = (
-        _Cell("modelo-190-perceptor-row-nif", 1, "12345678A"),
-        _Cell("modelo-190-perceptor-row-clave", 1, "A"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="12345678A"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-clave", row_index=1, value="A"),
     )
 
     source_kind, observations = assemble_observations_for_grouping(
@@ -238,8 +224,8 @@ def test_assemble_observations_for_grouping_dispatches_per_perceptor_clave() -> 
 def test_assemble_observations_for_grouping_dispatches_foreign_asset() -> None:
     revision = _modelo("720", "2013-y-siguientes")
     cells = (
-        _Cell("modelo-720-asset-row-class", 1, "C"),
-        _Cell("modelo-720-asset-row-country", 1, "CH"),
+        RowSetCellEdit(binding="modelo-720-asset-row-class", row_index=1, value="C"),
+        RowSetCellEdit(binding="modelo-720-asset-row-country", row_index=1, value="CH"),
     )
 
     source_kind, observations = assemble_observations_for_grouping(
@@ -291,8 +277,8 @@ def test_assemble_withholding_missing_nif_raises_not_fabricates() -> None:
     cells = (
         # Deliberately omit perceptor_tax_id — the model's min_length=1
         # constraint must surface, not be masked by a fabricated empty-string default.
-        _Cell("modelo-190-perceptor-row-clave", 1, "A"),
-        _Cell("modelo-190-perceptor-row-percibido-dinerario", 1, Decimal("10000")),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-clave", row_index=1, value="A"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-percibido-dinerario", row_index=1, value=Decimal("10000")),
     )
 
     with pytest.raises(RegistryValidationError, match="perceptor_tax_id"):
@@ -309,11 +295,11 @@ def test_assemble_withholding_refuses_a_row_without_clave() -> None:
     """
     revision = _modelo("190", "2024-y-siguientes")
     cells = (
-        _Cell("modelo-190-perceptor-row-nif", 1, "12345678A"),
-        _Cell("modelo-190-perceptor-row-name", 1, "Perceptor Sin Clave"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="12345678A"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-name", row_index=1, value="Perceptor Sin Clave"),
         # No clave cell for row 1 - previously silently defaulted to "A".
-        _Cell("modelo-190-perceptor-row-percibido-dinerario", 1, Decimal("10000")),
-        _Cell("modelo-190-perceptor-row-retencion-practicada", 1, Decimal("1500")),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-percibido-dinerario", row_index=1, value=Decimal("10000")),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-retencion-practicada", row_index=1, value=Decimal("1500")),
     )
     with pytest.raises(RegistryValidationError, match="no clave"):
         assemble_withholding_observations(cells, revision, filing_year=2025)

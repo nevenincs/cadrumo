@@ -86,11 +86,9 @@ _C1585 = _casilla_id("1585")
 _RELATION_ZERO_VALUES_2025 = {
     "renta-2025-rel-111-retenciones-trimestrales": Decimal("0"),
     "renta-2025-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2025-rel-115-retenciones-trimestrales": Decimal("0"),
     "renta-2025-rel-123-retenciones-trimestrales": Decimal("0"),
     "renta-2025-rel-130-pagos-fraccionados": Decimal("0"),
     "renta-2025-rel-131-pagos-fraccionados": Decimal("0"),
-    "renta-2025-rel-180-retenciones-anuales": Decimal("0"),
     "renta-2025-rel-190-retenciones-anuales": Decimal("0"),
     "renta-2025-rel-193-retenciones-anuales": Decimal("0"),
 }

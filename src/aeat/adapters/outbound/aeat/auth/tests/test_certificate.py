@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from cryptography import x509
@@ -21,6 +22,7 @@ from pydantic import SecretStr
 from ......core.config import CertificateBackend, Settings
 from ......tests.env_scope import isolated_aeat_env
 from .. import (
+    CERTIFICATE_CONTEXT_MARKER,
     CertificateBundle,
     CertificateExpiredError,
     CertificateHandshakeError,
@@ -283,11 +285,8 @@ def test_playwright_preload_rejects_unmarked_context(tmp_path: Path) -> None:
     )
     loaded = load_certificate(bundle)
 
-    class _UnmarkedContext:
-        pass
-
     with pytest.raises(CertificateError, match=r"certificate"):
-        preload_into_browser_context(loaded, _UnmarkedContext())
+        preload_into_browser_context(loaded, SimpleNamespace())
 
 
 def test_playwright_preload_accepts_marked_context(tmp_path: Path) -> None:
@@ -299,12 +298,8 @@ def test_playwright_preload_accepts_marked_context(tmp_path: Path) -> None:
     )
     loaded = load_certificate(bundle)
 
-    class _MarkedContext:
-        def __init__(self, thumbprint: str) -> None:
-            self._aeat_certificate_thumbprint = thumbprint
-
-    ctx = _MarkedContext(loaded.sha256_thumbprint)
-    assert ctx._aeat_certificate_thumbprint == loaded.sha256_thumbprint
+    ctx = SimpleNamespace(**{CERTIFICATE_CONTEXT_MARKER: loaded.sha256_thumbprint})
+    assert getattr(ctx, CERTIFICATE_CONTEXT_MARKER) == loaded.sha256_thumbprint
     result = preload_into_browser_context(loaded, ctx)
     assert result is None
 

@@ -24,7 +24,7 @@ import pytest
 from .....core.paths import PROJECT_ROOT
 from .....core.resources import bundled_path
 from .. import CasillaId, load_registry_tree, validated_casilla_id
-from .._runtime_graph import expression_binding_refs, expression_parameter_refs
+from .._runtime_graph import expression_binding_refs, expression_parameter_refs, expression_relation_refs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -319,6 +319,32 @@ def test_every_relation_references_an_existing_target_binding() -> None:
                     f"{revision_id}: relation {relation.id!r} target_binding {target_binding!r} not declared",
                 )
     assert not offences, "relations with undeclared target_bindings:\n  " + "\n  ".join(offences)
+
+
+def test_relation_target_bindings_are_consumed_or_relation_is_formula_operand() -> None:
+    """Relation targets must either feed a casilla binding or be used directly by a formula."""
+    modelo, _ = _modelo_100()
+    offences: list[str] = []
+    for revision_id, revision in modelo.revisions.items():
+        formula_relation_refs: set[str] = set()
+        for formula in revision.formulas:
+            formula_relation_refs.update(expression_relation_refs(formula.expression))
+
+        consumed_bindings: set[str] = set()
+        for casilla in revision.casillas:
+            if casilla.binding:
+                consumed_bindings.add(casilla.binding)
+            consumed_bindings.update(casilla.alternate_bindings)
+
+        for relation in revision.relations:
+            target_binding = getattr(relation, "target_binding", None)
+            if not target_binding:
+                continue
+            if target_binding not in consumed_bindings and relation.id not in formula_relation_refs:
+                offences.append(
+                    f"{revision_id}: relation {relation.id!r} targets unused binding {target_binding!r}",
+                )
+    assert not offences, "relations with unused target_bindings:\n  " + "\n  ".join(offences)
 
 
 def test_every_formula_binding_reference_resolves_to_a_declared_binding() -> None:

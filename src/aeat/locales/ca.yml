@@ -1720,8 +1720,16 @@ cli:
         seed_conflict: 'Error intern: conflicte amb un registre d''import inicial
           de compensació d''IVA existent.'
         seed_filing_year_help: Any fiscal de l'import inicial.
-        seed_help: Creació d'un registre d'import inicial del moneder de compensació
-          d'IVA per inicialitzar el saldo anterior del moneder.
+        seed_help: "Declara un saldo inicial d'arrossegament del Model 303 per a\
+          \ un període anterior a l'historial local. Es rebutja si ja existeix un\
+          \ registre per al període.\n\nDos casos:\n\n  --amount 0   Primer període\
+          \ real: és la primera declaració del Model 303 del contribuent sota aquest\
+          \ NIF. iva.compensacion-pendiente-periodos-anteriores (casella AEAT 110)\
+          \ és zero perquè no existeix saldo de compensació anterior (LIVA art. 99.5,\
+          \ Llei 37/1992). El mòdul de conciliació ho tracta com first_period_zero,\
+          \ no bloquejant.\n\n  --amount X   Traspàs: el contribuent ha presentat\
+          \ M303 anteriors amb una altra eina o directament a l'AEAT. X és la compensació\
+          \ pendent de períodes posteriors de l'última declaració presentada."
         seed_invalid_amount: L'import inicial ha de ser un decimal vàlid i no negatiu.
         seed_period_help: 'Periode de la presentacio del Model 303: trimestres 1T-4T
           (p. ex. 4T).'
@@ -2752,10 +2760,12 @@ cli:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       attachment_help: Id d'adjunt segur a enllaçar amb el moviment; repetir per a
         diversos adjunts
-      help: Adjuntar objectes d'evidència segura a un moviment del llibre
+      help: Adjuntar objectes d'evidència segura a un moviment del llibre. Crea abans
+        un id de justificant de factura de compra amb 'aeat app ledger evidence add
+        PATH'.
       id_help: Id del moviment del llibre al qual adjuntar evidència
       purchase_invoice_evidence_help: Id de justificant de factura de compra que suporta
-        el moviment
+        el moviment; crea'l amb 'aeat app ledger evidence add PATH'
     categories:
       family_column: família
       header: CATEGORIES DE DESPESA RECONEGUDES DEL LLIBRE

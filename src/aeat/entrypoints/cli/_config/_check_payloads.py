@@ -1,8 +1,13 @@
-"""Typed ``--json`` payload schemas for ``aeat config check`` (the workstation doctor).
+"""Typed ``--json`` payload schemas for ``aeat config check``.
 
-Reports, for every external service, the active profile's capability posture, the
-dependency availability, and the remediation for any gap. Strict
-:class:`OutputSchema` subclasses registered with :func:`register_schema`.
+The command is the workstation doctor: it reports every
+:class:`~aeat.core.ServiceCapability` resolved for the active profile beside the
+external dependency probes that must be provisioned for opted-in capabilities.
+These strict :class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclasses
+document only the transport shape registered with
+:func:`~aeat.entrypoints.cli._schemas.register_schema`; capability semantics live
+in :mod:`aeat.application.user_profile`, and provisioning semantics live in
+:mod:`aeat.application.provisioning`.
 """
 
 from __future__ import annotations
@@ -11,7 +16,15 @@ from .._schemas import OutputSchema, register_schema
 
 
 class CheckCapabilityPayload(OutputSchema):
-    """One capability's resolved posture for the active profile (nested)."""
+    """One resolved capability posture for the active profile.
+
+    ``capability`` is a :class:`~aeat.core.ServiceCapability` value. ``enabled``
+    and ``source`` mirror
+    :class:`~aeat.application.user_profile.CapabilityDecision`, with the source
+    rendered from :class:`~aeat.application.user_profile.CapabilitySource` so the
+    doctor can distinguish profile facts, defaults, global settings, and safety
+    floors without owning that resolution logic.
+    """
 
     capability: str
     enabled: bool
@@ -19,7 +32,15 @@ class CheckCapabilityPayload(OutputSchema):
 
 
 class CheckDependencyPayload(OutputSchema):
-    """One external dependency's availability (nested)."""
+    """One external dependency availability row.
+
+    Mirrors :class:`~aeat.application.provisioning.DependencyStatus` rows from
+    :func:`~aeat.application.provisioning.probe_ollama_vision`,
+    :func:`~aeat.application.provisioning.probe_subprocess_providers`,
+    :func:`~aeat.application.provisioning.probe_playwright_browser`, and
+    :func:`~aeat.application.provisioning.probe_optional_extras`. ``remediation``
+    is populated only when the probe can name a concrete operator action.
+    """
 
     service: str
     available: bool
@@ -31,9 +52,12 @@ class CheckDependencyPayload(OutputSchema):
 class ConfigCheckResult(OutputSchema):
     """JSON envelope for ``aeat config check``.
 
-    ``ok`` is false (and the command exits non-zero) when a capability the profile
-    opted into has a missing dependency — the operator asked for a service that is
-    not provisioned. ``issues`` names each such gap with its fix.
+    Combines :func:`~aeat.application.user_profile.resolve_active_capability`
+    decisions with :class:`~aeat.application.provisioning.DependencyStatus`
+    rows. ``ok`` is false (and the command exits non-zero) when a capability the
+    profile opted into has a missing dependency, meaning the operator asked for a
+    service that is not provisioned. ``issues`` names those capability/dependency
+    gaps while ``dependencies`` still reports every probe row for diagnostics.
     """
 
     profile_id: str | None = None

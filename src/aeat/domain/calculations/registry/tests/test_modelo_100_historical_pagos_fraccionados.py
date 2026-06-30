@@ -52,7 +52,6 @@ def _historical_m100_binding_values(year: int) -> dict[str, Decimal]:
     return {
         f"renta-{year}-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         f"renta-{year}-modelo-111-retenciones-periodicas": Decimal("0"),
-        f"renta-{year}-modelo-115-retenciones-periodicas": Decimal("0"),
         f"renta-{year}-modelo-123-retenciones-periodicas": Decimal("0"),
     }
 

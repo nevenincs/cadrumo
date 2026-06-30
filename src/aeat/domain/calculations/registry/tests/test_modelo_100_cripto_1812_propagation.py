@@ -65,7 +65,6 @@ def _binding_values_2024() -> dict[BindingId, Decimal]:
     return {
         "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
-        "renta-2024-modelo-115-retenciones-periodicas": Decimal("0"),
         "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
         "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
         # declaration_type = 1 (individual) → 0461 computed = 0
@@ -87,7 +86,6 @@ def _binding_values_2024() -> dict[BindingId, Decimal]:
 _RELATION_VALUES_2024: dict[RelationId, Decimal] = {
     "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2024-rel-115-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
     "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
@@ -216,11 +214,9 @@ def _relation_values_2025() -> dict[RelationId, Decimal]:
     return {
         "renta-2025-rel-111-retenciones-trimestrales": Decimal("0"),
         "renta-2025-rel-111-retenciones-mensuales": Decimal("0"),
-        "renta-2025-rel-115-retenciones-trimestrales": Decimal("0"),
         "renta-2025-rel-123-retenciones-trimestrales": Decimal("0"),
         "renta-2025-rel-130-pagos-fraccionados": Decimal("0"),
         "renta-2025-rel-131-pagos-fraccionados": Decimal("0"),
-        "renta-2025-rel-180-retenciones-anuales": Decimal("0"),
         "renta-2025-rel-184-atribucion-actividades-economicas": Decimal("0"),
         "renta-2025-rel-190-retenciones-anuales": Decimal("0"),
         "renta-2025-rel-193-retenciones-anuales": Decimal("0"),

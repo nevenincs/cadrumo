@@ -57,7 +57,7 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
             # ── taxpayer biographic (visible: natural person) ──
             "",  # taxpayer-sex
             "",  # taxpayer-marital-status
-            "",  # situacion-familiar (Art. 82 LIRPF axis, contract)
+            "soltero",  # situacion-familiar (Art. 82 LIRPF axis, contract)
             # taxpayer-marriage-date SKIPPED (conditional on marital-status == CASADO)
             "",  # taxpayer-birth-date
             "",  # taxpayer-disability-grade
@@ -83,8 +83,9 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
             "false",  # professional-income-withholding-ge-70pct
             "false",  # pays-rent-with-retencion
             "false",  # pays-capital-income-with-retencion
+            "",  # modelo-111-no-retenciones-periods
             "directa_normal",  # irpf-estimation-regime
-            "",  # irpf-special-regime (visible: natural person; blank = no special regime)
+            "general",  # irpf-special-regime (visible: natural person; no special regime)
             # irpf-special-regime-start-date SKIPPED (conditional on irpf-special-regime == IMPATRIADO)
             "false",  # does-intracomunitario
             "false",  # third-party-transactions-above-347-threshold
@@ -197,7 +198,7 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
             # ── taxpayer biographic (visible: natural person) ──
             "",  # taxpayer-sex
             "",  # taxpayer-marital-status
-            "",  # situacion-familiar (Art. 82 LIRPF axis, contract)
+            "soltero",  # situacion-familiar (Art. 82 LIRPF axis, contract)
             # taxpayer-marriage-date SKIPPED (conditional on marital-status == CASADO)
             "",  # taxpayer-birth-date
             "",  # taxpayer-disability-grade
@@ -227,8 +228,9 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
             "false",  # professional-income-withholding-ge-70pct
             "false",  # pays-rent-with-retencion
             "false",  # pays-capital-income-with-retencion
+            "",  # modelo-111-no-retenciones-periods
             "directa_normal",  # irpf-estimation-regime
-            "",  # irpf-special-regime (visible: natural person)
+            "general",  # irpf-special-regime (visible: natural person)
             # irpf-special-regime-start-date SKIPPED (conditional on impatriado)
             "false",  # does-intracomunitario
             "false",  # third-party-transactions-above-347-threshold

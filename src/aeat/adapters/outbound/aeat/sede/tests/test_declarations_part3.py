@@ -73,7 +73,6 @@ class TestFiledObservationRelations:
         # layer; assertions here pin the resolver's wiring contract only.
         quarterly_aggregations = {
             "renta-2025-rel-111-retenciones-trimestrales": Decimal("40"),  # max single quarter
-            "renta-2025-rel-115-retenciones-trimestrales": Decimal("8"),
             "renta-2025-rel-123-retenciones-trimestrales": Decimal("24"),
             "renta-2025-rel-130-pagos-fraccionados": Decimal("56"),
             "renta-2025-rel-131-pagos-fraccionados": Decimal("88"),
@@ -92,7 +91,6 @@ class TestFiledObservationRelations:
         # fixture's literal threads through to the resolved relation
         # value unchanged.
         annual_copies = {
-            "renta-2025-rel-180-retenciones-anuales": Decimal("90"),
             "renta-2025-rel-190-retenciones-anuales": Decimal("178"),
             "renta-2025-rel-193-retenciones-anuales": Decimal("60"),
             "renta-2025-rel-184-atribucion-actividades-economicas": Decimal("77"),

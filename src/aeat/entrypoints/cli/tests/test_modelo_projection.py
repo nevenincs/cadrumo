@@ -554,7 +554,6 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
         binding_values={
             f"renta-{_FILING_YEAR}-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             f"renta-{_FILING_YEAR}-modelo-111-retenciones-periodicas": Decimal("0"),
-            f"renta-{_FILING_YEAR}-modelo-115-retenciones-periodicas": Decimal("0"),
             f"renta-{_FILING_YEAR}-modelo-123-retenciones-periodicas": Decimal("0"),
             f"renta-{_FILING_YEAR}-modelo-193-retenciones-anuales": Decimal("0"),
             f"renta-{_FILING_YEAR}-profile-declaration-type": Decimal("1"),

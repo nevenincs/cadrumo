@@ -156,6 +156,15 @@ def test_ledger_help_enumerates_every_registered_verb() -> None:
     assert not missing, f"`aeat app ledger --help` omits registered verbs {missing!r}; help output: {result.output!r}"
 
 
+def test_ledger_attach_help_names_purchase_evidence_creation_path() -> None:
+    """`ledger attach --help` tells operators how to create the evidence id it consumes."""
+
+    result = _invoke(["app", "ledger", "attach", "--help"])
+    assert result.exit_code == 0, result.output
+    assert "aeat app ledger evidence add" in result.output
+    assert "--purchase-invoice-evidence-id" in result.output
+
+
 def test_modelo_help_enumerates_every_registered_verb() -> None:
     """`aeat app modelo --help` lists every mounted verb so the operator
     can discover the noun-group's full surface from the help output alone."""

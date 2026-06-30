@@ -9,13 +9,23 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....domain.calculations.registry import CasillaFieldKind, RegistryValidationError, parse_export_payload
+from ....core import Period
+from ....domain.calculations.registry import (
+    CasillaFieldKind,
+    CasillaId,
+    RegistryValidationError,
+    parse_export_payload,
+    validated_casilla_id,
+)
 from ....domain.filing import FilingExportError
+from ....domain.submission import ModeloDraftStatus
 from .. import (
     DeclaracionExportFormat,
     DeclaracionExportResult,
     DeclaracionVerifyResult,
     DeclaracionVerifyVerdict,
+    ModeloOperatorProfile,
+    build_draft,
     export_draft,
     verify_export,
 )
@@ -86,6 +96,27 @@ from ._export_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id(
+    "00501",
+    surface="_M200_RESULTADO_CONTABLE_CASILLA",
+)
+_M200_CORRECCIONES_AUMENTO_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:01033",
+    surface="_M200_CORRECCIONES_AUMENTO_CASILLA",
+)
+_M200_CORRECCIONES_DISMINUCION_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:01034",
+    surface="_M200_CORRECCIONES_DISMINUCION_CASILLA",
+)
+_M200_CUOTA_DIFERENCIAL_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014B:00611",
+    surface="_M200_CUOTA_DIFERENCIAL_CASILLA",
+)
+_M200_GRUPO_FISCAL_CASILLA: CasillaId = validated_casilla_id(
+    "00040",
+    surface="_M200_GRUPO_FISCAL_CASILLA",
+)
 
 
 def test_build_draft_populates_registry_casilla_provenance() -> None:
@@ -485,6 +516,71 @@ def test_export_writes_signed_positive_money_with_blank_sign_slot(tmp_path: Path
     assert rendered[0] == " "
     assert rendered[1:] == "7500".zfill(len(rendered) - 1)
     assert parse_export_payload(layout, payload).casillas
+
+
+def test_export_writes_modelo_200_negative_cuota_diferencial_as_signed_money(tmp_path: Path) -> None:
+    """A verified-clean M200 negative cuota diferencial must reach fichero bytes.
+
+    The 2025 Diseño de Registro for page 14B publishes casilla 00611 as
+    type ``N`` (numeric signed), position 711, length 17. This test drives
+    the real M200 registry calculation through ``build_draft``: accounting
+    profit 200 produces cuota 46, and 450 of Modelo 202 pagos fraccionados
+    produces ``DP200014B:00611 = -404.00``. Export must render that amount
+    with the signed-money ``N`` marker in the first byte, then parse back
+    through the registry layout.
+    """
+    provider = _schema_provider(filing_year=2024, period="0A", modelos=("200",))
+    draft = build_draft(
+        modelo="200",
+        period=Period.from_year_and_code(2024, "0A"),
+        profile=ModeloOperatorProfile(
+            tax_id="B12345674",
+            display_name="Emilio Export Test SL",
+        ),
+        inputs={
+            _M200_GRUPO_FISCAL_CASILLA: Decimal("0"),
+            _M200_RESULTADO_CONTABLE_CASILLA: Decimal("200.00"),
+            _M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("0.00"),
+            _M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("0.00"),
+            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-2024-profile-incn-prior-12-months": Decimal("500000"),
+            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-2024-profile-legal-entity-form": "sl",
+            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+            "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("450"),
+            "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
+        },
+        schema_provider=provider,
+    )
+    assert draft.findings == ()
+    approved = draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
+    output = tmp_path / "modelo-200.txt"
+
+    export_draft(
+        approved,
+        output_path=output,
+        headers={
+            "declaration_type": "D",
+            "surnames": "EMILIO EXPORT TEST SL",
+            "name": "EMILIO EXPORT TEST SL",
+            "program_version": "A001",
+            "presenter_nif": "B12345674",
+        },
+        schema_provider=provider,
+    )
+
+    payload = output.read_bytes()
+    layout = provider.get_subview(approved.modelo).export_layouts[0]
+    parsed = parse_export_payload(layout, payload)
+    exported_values = {entry.casilla_id: entry.value for entry in parsed.casillas if entry.casilla_id is not None}
+    field_slice = _field_slice(layout, "modelo-200-page-014b", "modelo-200-page-014b-casilla-00611")
+    rendered = payload[field_slice].decode("latin-1")
+
+    assert exported_values[_M200_CUOTA_DIFERENCIAL_CASILLA] == Decimal("-404.00")
+    assert rendered == "N" + "40400".zfill(16)
+    assert verify_export(approved, file_path=output, schema_provider=provider).verdict is DeclaracionVerifyVerdict.MATCH
 
 
 def test_export_writes_modelo_111_registry_layout(tmp_path: Path) -> None:

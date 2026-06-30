@@ -8,10 +8,7 @@ legal_refs = [
     "ley-35-2006:art-99",
     "rd-439-2007:art-13",
     "rd-439-2007:art-100",
-    "rd-439-2007:art-108",
     "orden-hac-277-2026:art-3",
-    "orden-hap-1732-2014:art-2",
-    "orden-hfp-1284-2023:art-7",
     "ley-35-2006:art-85",
     "ley-35-2006:art-101",
 ]
@@ -56,12 +53,3 @@ formulas = [
     "renta-2025-capital-inmobiliario-suma-rendimientos-reducidos",
     "renta-2025-retenciones-arrendamientos-urbanos",
 ]
-bindings = [
-    "renta-2025-modelo-115-retenciones-periodicas",
-    "renta-2025-modelo-180-retenciones-anuales",
-]
-relations = [
-    "renta-2025-rel-115-retenciones-trimestrales",
-    "renta-2025-rel-180-retenciones-anuales",
-]
-dependency_classifications = ["renta-2025-dep-115", "renta-2025-dep-180"]

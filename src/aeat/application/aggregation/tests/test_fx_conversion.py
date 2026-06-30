@@ -2,7 +2,7 @@
 
 Exercises the end-to-end path:
   1. A non-EUR RawTransaction is fed to import_ledger_transactions with a
-     real CurrencyNormalizationService backed by a deterministic ECB-rate table.
+     real CurrencyNormalizationService backed by a deterministic ECB XML snapshot.
   2. The resulting Transaction carries fx_rate and value_in_eur populated from
      the published ECB reference rate for the transaction date.
   3. The shared is_non_eur_without_conversion predicate gates the row as
@@ -29,9 +29,8 @@ ECB oracle source:
     rate = Decimal("1") / Decimal("1.0868")
   The ECB-published rate is the EUR/USD rate (how many USD per 1 EUR).
   Our provider inverts it: eur_per_usd = 1 / eur_usd_quote.
-  eur_per_usd = 1 / 1.0868 = 0.92014... → rounded to 6 significant figures:
-    Decimal("0.920138")
-  value_in_eur = 100.00 * 0.920138 = 92.0138 → quantize 0.01 = 92.01
+  eur_per_usd = 1 / 1.0868 = 0.9201324990...
+  value_in_eur = 100.00 * 0.9201324990... → quantize 0.01 = 92.01
 
 The test asserts against Decimal("92.01") — derived from the published ECB
 value, not from the formula under test.
@@ -47,6 +46,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.inbound.financial.providers import ParsedLedgerRow
+from ....adapters.outbound.fx import EcbReferenceRateProvider
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....application.ledger._actions_import import import_ledger_transactions
 from ....domain.currency import (
@@ -66,39 +66,34 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # ECB EXR 2024-01-15: USD/EUR = 1.0868
 # rate for ExchangeRateProvider (original * rate = eur_amount):
-#   1 USD = 1/1.0868 EUR = 0.920138... EUR
-# Stored as a 6-decimal precision Decimal to match what a real ECB feed would
-# provide after reasonable rounding.  The expected EUR value is derived by
-# multiplying the raw USD amount by this rate and rounding half-even to 0.01.
+#   1 USD = 1/1.0868 EUR = 0.920132... EUR
 _ECB_2024_01_15_USD_QUOTE = Decimal("1.0868")  # EUR/USD reference rate, i.e. 1 EUR = 1.0868 USD
-_ECB_2024_01_15_USD_RATE = (Decimal("1") / _ECB_2024_01_15_USD_QUOTE).quantize(
-    Decimal("0.000001"),
-)  # 0.920138 — the multiplier stored by the provider
+_ECB_2024_01_15_USD_RATE = Decimal("1") / _ECB_2024_01_15_USD_QUOTE
 
-# Oracle: 100.00 USD * 0.920138 = 92.0138 -> rounded half-even 0.01 = 92.01 EUR
+# Oracle: 100.00 USD * (1 / 1.0868) = 92.013249... -> rounded half-even 0.01 = 92.01 EUR
 _USD_AMOUNT = Decimal("100.00")
 _EXPECTED_EUR = (_USD_AMOUNT * _ECB_2024_01_15_USD_RATE).quantize(Decimal("0.01"))
 assert Decimal("92.01") == _EXPECTED_EUR, f"Oracle mismatch: {_EXPECTED_EUR}"
 
 
-class _EcbTableRateProvider:
-    """Deterministic ECB-rate table used in tests.
-
-    Maps (currency, date) → EUR multiplier rate derived from the published
-    ECB reference quotes.  Only the 2024-01-15 USD rate is seeded here;
-    every other lookup returns None.
-
-    The table is mutable so the anti-tautology test can swap the USD rate
-    for a different value and assert that value_in_eur changes accordingly.
-    """
-
-    def __init__(self, usd_rate: Decimal = _ECB_2024_01_15_USD_RATE) -> None:
-        self._usd_rate = usd_rate
-
-    def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
-        if currency == "USD" and rate_date == date(2024, 1, 15):
-            return self._usd_rate
-        return None
+def _ecb_provider(tmp_path: Path, *, usd_quote: Decimal | None = _ECB_2024_01_15_USD_QUOTE) -> EcbReferenceRateProvider:
+    usd_rate_line = "" if usd_quote is None else f'<Cube currency="USD" rate="{usd_quote}" />'
+    rates_path = tmp_path / f"eurofxref-{len(tuple(tmp_path.iterdir()))}.xml"
+    rates_path.write_text(
+        f"""<?xml version="1.0" encoding="UTF-8"?>
+<gesmes:Envelope
+  xmlns:gesmes="http://www.gesmes.org/xml/2002-08-01"
+  xmlns="http://www.ecb.int/vocabulary/2002-08-01/eurofxref">
+  <Cube>
+    <Cube time="2024-01-15">
+      {usd_rate_line}
+    </Cube>
+  </Cube>
+</gesmes:Envelope>
+""",
+        encoding="utf-8",
+    )
+    return EcbReferenceRateProvider(rates_path=rates_path)
 
 
 def _usd_raw(provider_id: str, *, amount: Decimal = _USD_AMOUNT) -> RawTransaction:
@@ -135,6 +130,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 def test_usd_import_populates_fx_rate_and_value_in_eur(
     secure_objects: SecureObjectRepository,
+    tmp_path: Path,
 ) -> None:
     """USD invoice imported with the ECB provider gets fx_rate and value_in_eur set.
 
@@ -142,8 +138,7 @@ def test_usd_import_populates_fx_rate_and_value_in_eur(
     rate for 2024-01-15 (USD/EUR = 1.0868), not hand-multiplied by a synthetic
     rate.
     """
-    provider = _EcbTableRateProvider()
-    normalizer = CurrencyNormalizationService(rate_provider=provider)
+    normalizer = CurrencyNormalizationService(rate_provider=_ecb_provider(tmp_path))
     repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
 
     result = import_ledger_transactions(
@@ -208,18 +203,15 @@ def test_usd_transaction_without_conversion_is_flagged() -> None:
 
 def test_missing_rate_leaves_fx_fields_absent(
     secure_objects: SecureObjectRepository,
+    tmp_path: Path,
 ) -> None:
-    """When the ECB table has no rate for a date, fx_rate and value_in_eur stay None.
+    """When the ECB snapshot has no rate for a date, fx_rate and value_in_eur stay None.
 
     This verifies the coupling invariant: both absent is valid; partially set
     is not allowed by the Transaction model_validator.
     """
 
-    class _NoRateProvider:
-        def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
-            return None
-
-    normalizer = CurrencyNormalizationService(rate_provider=_NoRateProvider())
+    normalizer = CurrencyNormalizationService(rate_provider=_ecb_provider(tmp_path, usd_quote=None))
     repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
 
     result = import_ledger_transactions(
@@ -238,21 +230,21 @@ def test_missing_rate_leaves_fx_fields_absent(
 
 def test_anti_tautology_mutated_rate_changes_value_in_eur(
     secure_objects: SecureObjectRepository,
+    tmp_path: Path,
 ) -> None:
-    """Mutating the ECB rate table changes the stored value_in_eur.
+    """Changing the ECB quote fixture changes the stored value_in_eur.
 
     Verifies the test is not tautological: if the rate were ignored,
     both result sets would produce the same value_in_eur; the assertion
     would pass trivially.  The inequality below fails if value_in_eur
     does not reflect the rate actually used.
     """
-    canonical_provider = _EcbTableRateProvider(usd_rate=_ECB_2024_01_15_USD_RATE)
-    canonical_normalizer = CurrencyNormalizationService(rate_provider=canonical_provider)
+    canonical_normalizer = CurrencyNormalizationService(rate_provider=_ecb_provider(tmp_path))
 
-    # Use a deliberately different rate (50% of canonical) to produce a different EUR value
-    mutant_rate = (_ECB_2024_01_15_USD_RATE * Decimal("0.5")).quantize(Decimal("0.000001"))
-    mutant_provider = _EcbTableRateProvider(usd_rate=mutant_rate)
-    mutant_normalizer = CurrencyNormalizationService(rate_provider=mutant_provider)
+    # Use a deliberately different ECB quote to produce a different EUR value.
+    mutant_normalizer = CurrencyNormalizationService(
+        rate_provider=_ecb_provider(tmp_path, usd_quote=_ECB_2024_01_15_USD_QUOTE * Decimal("2")),
+    )
 
     repo_canonical = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
 

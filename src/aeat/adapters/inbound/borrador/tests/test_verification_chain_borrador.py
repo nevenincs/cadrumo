@@ -131,7 +131,6 @@ def _binding_values_for_year(year: int) -> dict[str, Decimal]:
     return {
         f"{pfx}modelo-100-estimacion-directa-es-normal": Decimal("0"),
         f"{pfx}modelo-111-retenciones-periodicas": Decimal("0"),
-        f"{pfx}modelo-115-retenciones-periodicas": Decimal("0"),
         f"{pfx}modelo-123-retenciones-periodicas": Decimal("0"),
     }
 

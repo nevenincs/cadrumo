@@ -230,7 +230,7 @@ dev = [
     { name = "types-reportlab", specifier = ">=4.4.10.20260408" },
     { name = "types-xlrd", specifier = ">=2.0.0.20260408" },
     { name = "vaultspec-core", specifier = ">=0.1.25" },
-    { name = "vaultspec-rag", specifier = ">=0.2.14" },
+    { name = "vaultspec-rag", specifier = ">=0.2.26" },
     { name = "vulture", specifier = ">=2.16" },
 ]
 

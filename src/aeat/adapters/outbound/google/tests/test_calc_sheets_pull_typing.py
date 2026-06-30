@@ -66,13 +66,9 @@ def test_batch_get_values_returns_empty_list_for_empty_ranges() -> None:
     returned and its type is correct (empty list of dicts).
     """
 
-    # A sentinel object with no .spreadsheets() attribute so any call
-    # beyond the empty-list guard would raise AttributeError.
-    class _NeverCalledSheets:
-        def spreadsheets(self) -> object:
-            raise AssertionError("spreadsheets() must not be called for empty ranges")
-
-    result = _batch_get_values(_NeverCalledSheets(), "some-id", [])
+    # A plain object has no .spreadsheets() attribute, so any call beyond
+    # the empty-list guard would raise AttributeError.
+    result = _batch_get_values(object(), "some-id", [])
     assert result == []
     assert isinstance(result, list)
 

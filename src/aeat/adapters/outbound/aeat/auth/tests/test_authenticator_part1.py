@@ -12,18 +12,13 @@ from ._authenticator_support import (
     SECRET_PASSPHRASE,
     UTC,
     AeatAuthenticator,
-    AeatLoginAssertion,
     AeatLoginAssertionError,
-    AeatSession,
     AuthProvider,
-    AuthProviderDescription,
     AuthProviderKind,
     AuthValidationError,
     CertificateBackend,
     CertificateError,
     CertificateNifParseError,
-    ClaveMovilLoginAssertionDetail,
-    ClaveMovilSessionDetail,
     NameOID,
     NoReturn,
     Path,
@@ -381,54 +376,14 @@ def test_aeat_session_is_stale_with_naive_datetime(tmp_path: Path) -> None:
     assert session.is_stale(naive_future) is True
 
 
-def test_auth_provider_protocol_conformance() -> None:
-    class _NullAuthProvider:
-        kind = AuthProviderKind.CLAVE_MOVIL
+def test_auth_provider_protocol_conformance(tmp_path: Path, _settings_factory) -> None:
+    bundle_path = _build_bundle(tmp_path)
+    settings = _settings_factory(bundle_path)
 
-        async def authenticate(
-            self,
-            *,
-            browser_session: object | None = None,
-            target_url: str | None = None,
-        ) -> AeatSession:
-            now = datetime.now(UTC)
-            return AeatSession(
-                provider_kind=self.kind,
-                authenticated_at=now,
-                idle_deadline=now + AEAT_SESSION_IDLE_TTL,
-                storage_state_path=None,
-                identity_nif="X1234567L",
-                provider_detail=ClaveMovilSessionDetail(dni_nie="X1234567L"),
-            )
+    providers = tuple(select_provider(kind, settings=settings) for kind in AuthProviderKind)
 
-        async def verify(
-            self,
-            session: AeatSession,
-            *,
-            target_url: str | None = None,
-        ) -> AeatLoginAssertion:
-            return AeatLoginAssertion(
-                target_url=target_url or "https://example.invalid/",
-                is_valid=True,
-                provider_kind=session.provider_kind,
-                identity_nif=session.identity_nif,
-                status_code=200,
-                elapsed_ms=1,
-                attempted_at=datetime.now(UTC),
-                assertion_detail=ClaveMovilLoginAssertionDetail(session_cookie_present=True),
-            )
-
-        def describe(self) -> AuthProviderDescription:
-            return AuthProviderDescription(
-                kind=self.kind,
-                label="Null provider",
-                configured=True,
-                available=True,
-                identity_nif="X1234567L",
-            )
-
-    provider = _NullAuthProvider()
-    assert isinstance(provider, AuthProvider)
+    assert {provider.kind for provider in providers} == set(AuthProviderKind)
+    assert all(isinstance(provider, AuthProvider) for provider in providers)
 
 
 def test_select_provider_returns_certificate_provider(tmp_path: Path, _settings_factory) -> None:

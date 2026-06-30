@@ -17,6 +17,7 @@ from ._modelo_100_registry_support import (
     _LEGACY_MADRID_REUSED_ID_ROLES,
     _MADRID_DEDUCTION_SECTION,
     _MADRID_REUSED_ID_DEDUCTION_ROWS,
+    _MADRID_VIVIENDA_ACQUISITION_DETAIL_ROWS,
     _modelo_100_snapshot,
 )
 
@@ -54,6 +55,23 @@ def test_modelo_100_madrid_reused_ids_are_regional_deductions(filing_year: int) 
     ]
 
     assert not legacy_rows
+    assert set(casillas_by_id) == set(expected_rows)
+    for casilla_id, (expected_label, expected_role) in expected_rows.items():
+        casilla = casillas_by_id[casilla_id]
+        assert casilla.label == expected_label
+        assert tuple(casilla.section) == _MADRID_DEDUCTION_SECTION
+        assert casilla.semantic_role == expected_role
+        assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+
+
+@pytest.mark.parametrize("filing_year", [2024, 2025])
+def test_modelo_100_madrid_vivienda_acquisition_detail_roles_follow_current_deduction(
+    filing_year: int,
+) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    expected_rows = _MADRID_VIVIENDA_ACQUISITION_DETAIL_ROWS[filing_year]
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_rows}
+
     assert set(casillas_by_id) == set(expected_rows)
     for casilla_id, (expected_label, expected_role) in expected_rows.items():
         casilla = casillas_by_id[casilla_id]
