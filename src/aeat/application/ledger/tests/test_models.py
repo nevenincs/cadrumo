@@ -210,7 +210,9 @@ def test_manual_ledger_transaction_result_requires_matching_strict_shapes() -> N
         ),
         raw_fields={"source": "manual"},
     )
-    transaction = Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
+    transaction = Transaction.model_validate(
+        {"raw": raw, "direction": TransactionDirection.OUTGOING, "source_jurisdiction": "ES"},
+    )
     result = ManualLedgerTransactionResult(
         ref=BucketTransactionRef(bucket_id=_BUCKET_ID, transaction_id=transaction.transaction_id),
         transaction=transaction,

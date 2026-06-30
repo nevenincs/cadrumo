@@ -93,7 +93,7 @@ def _transaction(provider_id: str = "row-1") -> Transaction:
         raw_fields={"Concepto": "payment"},
     )
     return Transaction.model_validate(
-        {"raw": raw, "direction": TransactionDirection.INCOMING},
+        {"raw": raw, "direction": TransactionDirection.INCOMING, "source_jurisdiction": "ES"},
     )
 
 

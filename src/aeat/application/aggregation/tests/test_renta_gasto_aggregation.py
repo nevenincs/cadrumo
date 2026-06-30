@@ -127,6 +127,7 @@ def _gasto_transaction(
                 currency=currency,
             ),
             "direction": direction,
+            "source_jurisdiction": "ES",
             "business_classification": business_classification,
             "business_pct": business_pct,
             "purchase_invoice_evidence_id": None,

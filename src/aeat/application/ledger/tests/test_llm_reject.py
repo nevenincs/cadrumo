@@ -84,7 +84,9 @@ def _seed_parent(repository: TransactionCatalogueRepository, *, amount: Decimal 
         ),
         raw_fields={"Concepto": "supplier invoice"},
     )
-    tx = Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
+    tx = Transaction.model_validate(
+        {"raw": raw, "direction": TransactionDirection.OUTGOING, "source_jurisdiction": "ES"},
+    )
     repository.save(TransactionCatalogue.from_transactions([tx]))
     return tx.transaction_id
 

@@ -269,6 +269,7 @@ def _income_transaction(objects: SecureObjectRepository) -> None:
                 raw_fields={"Concepto": "income"},
             ),
             "direction": TransactionDirection.INCOMING,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "business_pct": None,
             "purchase_invoice_evidence_id": None,

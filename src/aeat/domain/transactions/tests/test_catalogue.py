@@ -58,6 +58,7 @@ def _sample_transaction(
         {
             "raw": _sample_raw(provider_id=provider_id, amount=amount, description=description),
             "direction": TransactionDirection.OUTGOING,
+            "source_jurisdiction": "ES",
             "business_classification": classification,
         },
     )
@@ -297,6 +298,7 @@ def _bare_transaction() -> Transaction:
         {
             "raw": raw,
             "direction": TransactionDirection.OUTGOING,
+            "source_jurisdiction": "ES",
         },
     )
 

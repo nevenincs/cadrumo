@@ -75,7 +75,9 @@ def _sample_transactions() -> list[tuple[Transaction, dict[str, Any]]]:
                     rule = _match(raw.description, rules)
                     if rule is None:
                         continue
-                    txn = Transaction.model_validate({"raw": raw, "direction": parsed.direction})
+                    txn = Transaction.model_validate(
+                        {"raw": raw, "direction": parsed.direction, "source_jurisdiction": "ES"},
+                    )
                     out.append((txn, rule))
                     seen.add(needle)
     return out
@@ -85,7 +87,9 @@ def _live_classifier_or_fail():
     """Return a live Claude classifier, failing when the live LLM is unavailable."""
     classifier = build_claude_classifier(alias="claude-sonnet")
     probe_account = next(CsvProvider().ingest(_CORPUS / _ACCOUNTS[0])).raw
-    probe = Transaction.model_validate({"raw": probe_account, "direction": TransactionDirection.OUTGOING})
+    probe = Transaction.model_validate(
+        {"raw": probe_account, "direction": TransactionDirection.OUTGOING, "source_jurisdiction": "ES"},
+    )
     try:
         classifier.classify(probe)
     except LLMClassifierError as exc:

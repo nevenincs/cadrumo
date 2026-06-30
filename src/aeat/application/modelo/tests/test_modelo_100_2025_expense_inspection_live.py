@@ -160,6 +160,7 @@ def _expense_transaction(
         {
             "raw": _raw_transaction(provider_id, value_date=value_date, amount=gross_amount),
             "direction": TransactionDirection.OUTGOING,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "business_pct": None,
             "purchase_invoice_evidence_id": None,

@@ -121,7 +121,9 @@ def _seed_unclassified(repository: TransactionCatalogueRepository, *, amount: De
         ),
         raw_fields={"Concepto": "client lunch"},
     )
-    tx = Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
+    tx = Transaction.model_validate(
+        {"raw": raw, "direction": TransactionDirection.OUTGOING, "source_jurisdiction": "ES"},
+    )
     repository.save(TransactionCatalogue.from_transactions([tx]))
     return tx.transaction_id
 
@@ -156,6 +158,7 @@ def _seed_business(
             "raw": raw,
             "direction": TransactionDirection.OUTGOING,
             "business_classification": BusinessClassification.BUSINESS,
+            "source_jurisdiction": "ES",
             "category_id": category.value,
         },
     )

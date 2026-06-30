@@ -72,7 +72,9 @@ def _transaction(provider_id: str) -> Transaction:
         ),
         raw_fields={"Concepto": provider_id},
     )
-    return Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
+    return Transaction.model_validate(
+        {"raw": raw, "direction": TransactionDirection.OUTGOING, "source_jurisdiction": "ES"},
+    )
 
 
 def test_active_transaction_catalogue_repository_routes_by_active_profile_bucket(

@@ -177,6 +177,7 @@ def test_usd_transaction_with_value_in_eur_passes_non_eur_predicate() -> None:
         {
             "raw": raw,
             "direction": TransactionDirection.OUTGOING,
+            "source_jurisdiction": "ES",
             "fx_rate": _ECB_2024_01_15_USD_RATE,
             "value_in_eur": _EXPECTED_EUR,
         },
@@ -195,6 +196,7 @@ def test_usd_transaction_without_conversion_is_flagged() -> None:
         {
             "raw": raw,
             "direction": TransactionDirection.OUTGOING,
+            "source_jurisdiction": "ES",
         },
     )
 

@@ -180,7 +180,7 @@ def _seed_parent(
         ),
         raw_fields={"Concepto": "mixed supplier invoice"},
     )
-    fields: dict[str, object] = {"raw": raw, "direction": TransactionDirection.OUTGOING}
+    fields: dict[str, object] = {"raw": raw, "direction": TransactionDirection.OUTGOING, "source_jurisdiction": "ES"}
     if evidence_id is not None:
         fields["purchase_invoice_evidence_id"] = evidence_id
     tx = Transaction.model_validate(fields)

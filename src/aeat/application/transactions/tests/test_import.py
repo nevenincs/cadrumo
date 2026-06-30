@@ -176,7 +176,9 @@ def test_import_duplicate_against_catalogue_emits_duplicate_info() -> None:
     is the documented distinguisher between re-import and in-file
     duplicate."""
     raw = _raw_transaction("tx-1")
-    transaction = Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
+    transaction = Transaction.model_validate(
+        {"raw": raw, "direction": TransactionDirection.OUTGOING, "source_jurisdiction": "ES"},
+    )
     catalogue = TransactionCatalogue.model_validate({transaction.transaction_id: transaction})
 
     result = import_ledger_with_diagnostics(

@@ -104,7 +104,12 @@ def _transaction(evidence_id: str) -> Transaction:
         raw_fields={"Concepto": "office supplies"},
     )
     return Transaction.model_validate(
-        {"raw": raw, "direction": TransactionDirection.OUTGOING, "purchase_invoice_evidence_id": evidence_id},
+        {
+            "raw": raw,
+            "direction": TransactionDirection.OUTGOING,
+            "source_jurisdiction": "ES",
+            "purchase_invoice_evidence_id": evidence_id,
+        },
     )
 
 

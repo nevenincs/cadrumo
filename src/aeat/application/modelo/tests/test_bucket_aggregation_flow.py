@@ -130,6 +130,7 @@ def _transaction(
         {
             "raw": _raw_transaction(provider_id, amount=amount, booked_date=booked_date),
             "direction": direction,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "category_id": "test_iva_operation",
             "taxable_base": taxable_base,

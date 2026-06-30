@@ -154,4 +154,6 @@ def _transaction() -> Transaction:
         ),
         raw_fields={"amount": "121.00"},
     )
-    return Transaction.model_validate({"raw": raw, "direction": TransactionDirection.INCOMING})
+    return Transaction.model_validate(
+        {"raw": raw, "direction": TransactionDirection.INCOMING, "source_jurisdiction": "ES"},
+    )
