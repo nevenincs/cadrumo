@@ -2,10 +2,16 @@
 
 Records are stored at
 :class:`~aeat.adapters.persistence.storage.SensitivityClass` ``AUDIT`` under
-the IVA compensation history namespace. The repository exposes typed
+the
+:data:`aeat.adapters.persistence.storage.IVA_COMPENSATION_HISTORY_NAMESPACE`.
+The repository exposes typed
 :class:`~aeat.domain.iva_compensation._carry_forward.IvaCompensationPeriodState`
 objects; carry-forward projection is produced by
 :func:`~aeat.domain.iva_compensation._carry_forward.build_iva_compensation_carry_forward_report`.
+Rows are written through
+:class:`~aeat.adapters.persistence.storage.envelope.SecureBoundRepository`, so
+the namespace, schema version, and sensitivity declared by the storage registry
+remain the persistence authority.
 
 This module uses
 :class:`~aeat.application.calculations._iva_compensation_history.IvaCompensationAnnualSummary`
@@ -153,8 +159,11 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
 
     Persists
     :class:`~aeat.domain.iva_compensation._carry_forward.IvaCompensationPeriodState`
-    rows in the IVA compensation history namespace for later carry-forward,
-    balance, and reconciliation reads.
+    rows in
+    :data:`aeat.adapters.persistence.storage.IVA_COMPENSATION_HISTORY_NAMESPACE`
+    for later carry-forward, balance, and reconciliation reads. The
+    :class:`SecureBoundRepository` base writes those rows as encrypted
+    AUDIT-class envelopes for active-bucket lookup.
     """
 
     namespace: ClassVar[str] = IVA_COMPENSATION_HISTORY_NAMESPACE.namespace
