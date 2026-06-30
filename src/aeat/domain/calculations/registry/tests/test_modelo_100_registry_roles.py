@@ -713,6 +713,31 @@ def test_modelo_100_tfi_operation_counts_are_integer_until_restructure() -> None
     assert tuple(casilla_0414_2025.section) == ("resultado_declaracion",)
 
 
+def test_modelo_100_2025_coti_fund_loss_role_matches_loss_label() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    revision = modelo.revisions["2025"]
+    coti_loss = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("2233"))
+    general_loss = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0321"))
+
+    assert coti_loss.label == "Pérdidas patrimoniales"
+    assert tuple(coti_loss.section) == ("toma_datos_ampliada", "gp_fondos_coti", "fondo")
+    assert coti_loss.semantic_role == "irpf_perdida_fondos_coti_importe"
+    assert coti_loss.semantic_role_cardinality == "intentional_singleton"
+    assert coti_loss.semantic_role_cardinality_reason
+    assert "quoted-fund coti capital-loss slot" in coti_loss.semantic_role_cardinality_reason
+    assert {"ley-35-2006:art-33", "ley-35-2006:art-34"}.issubset(coti_loss.legal_refs)
+    assert {"aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd"}.issubset(coti_loss.source_refs)
+
+    assert general_loss.label == coti_loss.label
+    assert general_loss.semantic_role == "irpf_perdida_fondos_importe"
+    assert all(
+        casilla.semantic_role != "irpf_perdida_fondos_coti_importe_obtenido"
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    )
+
+
 def test_modelo_100_retrib_especie_no_exenta_total_role_names_aggregate() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
