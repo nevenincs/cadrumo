@@ -1,4 +1,11 @@
-"""Projection helpers for the ``aeat app ledger list`` CLI command."""
+"""Projection helpers for the ``aeat app ledger list`` CLI command.
+
+The CLI parser turns ``--filter`` clauses into
+:class:`~aeat.application.review.LedgerReviewFilterSpec`, asks
+:func:`~aeat.application.ledger.query_ledger_review_rows` for review-derived
+rows, and emits :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerListRowPayload`
+instances.
+"""
 
 from __future__ import annotations
 
@@ -29,7 +36,7 @@ from ._ledger_payloads import LedgerListRowPayload
 
 @dataclass(frozen=True)
 class LedgerListProjection:
-    """Rendered payload inputs for ``ledger list``."""
+    """Rendered :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerListRowPayload` inputs for ``ledger list``."""
 
     bucket_id: str
     rows: list[LedgerListRowPayload]
@@ -47,7 +54,7 @@ def parse_ledger_list_filter_spec(filters: list[str]) -> LedgerReviewFilterSpec:
 
 
 def ledger_filter_parse_error_message(exc: FilterParseError, *, year: int | None = None) -> str:
-    """Render a CLI message for a parsed ledger filter error."""
+    """Render a CLI message for a parsed :class:`~aeat.application.review.FilterParseError`."""
     if exc.reason == "invalid-value-ledger-period":
         return tr("cli.common.errors.period_unrecognised", raw=_filter_period_value(exc))
     if exc.reason == "ledger-period-year-pairing":
@@ -169,6 +176,8 @@ LLM_DECISION_EVENT_TYPES = (
 def latest_llm_decision_is_rejection(event_catalogue: BucketEventHistoryCatalogue, transaction_id: str) -> bool:
     """Return True when the row's most recent LLM decision was a rejection.
 
+    Reads :class:`~aeat.domain.buckets.BucketEventHistoryCatalogue` entries whose
+    type belongs to :data:`~aeat.entrypoints.cli._ledger_list.LLM_DECISION_EVENT_TYPES`.
     The standing LLM decision is the latest of {classified, llm-suggestion-rejected}
     for the transaction. A row whose latest such event is a rejection has been
     reviewed-and-declined and should drop out of the pending review queue when the
