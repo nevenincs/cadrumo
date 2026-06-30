@@ -107,19 +107,18 @@ class TestNameReplacement:
         )
         assert replacement.synthetic == _SYNTHETIC_NAME
 
-    def test_rejects_mixed_case(self) -> None:
-        with pytest.raises(ValidationError, match=r"synthetic name must be uppercase"):
+    @pytest.mark.parametrize(
+        ("synthetic", "expected_message"),
+        (
+            pytest.param("Apellido Nombre", r"synthetic name must be uppercase", id="mixed-case"),
+            pytest.param("APELLIDO 1", r"synthetic name must not contain digits", id="digits"),
+        ),
+    )
+    def test_rejects_invalid_synthetic_name(self, synthetic: str, expected_message: str) -> None:
+        with pytest.raises(ValidationError, match=expected_message):
             NameReplacement(
                 real=SecretStr(_REAL_NAME_CANARY),
-                synthetic="Apellido Nombre",
-                surface_label="taxpayer name",
-            )
-
-    def test_rejects_digits(self) -> None:
-        with pytest.raises(ValidationError, match=r"synthetic name must not contain digits"):
-            NameReplacement(
-                real=SecretStr(_REAL_NAME_CANARY),
-                synthetic="APELLIDO 1",
+                synthetic=synthetic,
                 surface_label="taxpayer name",
             )
 
