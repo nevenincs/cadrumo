@@ -13,6 +13,7 @@ from ....adapters.persistence.storage import StorageValidationError
 from ....application.ledger import (
     BusinessOperationInvoiceDirection,
     BusinessOperationInvoiceRepository,
+    CollectibleInvoiceService,
     IntracomOperationType,
     PayableInvoiceService,
 )
@@ -253,7 +254,47 @@ def test_invoice_catalogue_source_resolver_folds_slim_received_service_acquisiti
     assert {item.source_ref for item in resolution.provenance} == {f"payable_invoice:{added.record.invoice_id}"}
 
 
-def test_invoice_catalogue_source_resolver_refuses_slim_rectification_without_metadata_for_m349(
+def test_invoice_catalogue_source_resolver_folds_slim_consignment_transfer_for_m349(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    added = CollectibleInvoiceService(settings=secure_profile.settings).add(
+        bucket_id=secure_profile.bucket_id,
+        counterparty_nif="DE222222222",
+        counterparty_name="Consignment Customer GmbH",
+        invoice_number="DE-CONSIGN-2026-001",
+        invoice_date="2026-03-10",
+        taxable_base=Decimal("100.00"),
+        iva_rate=Decimal("0"),
+        country_code="DE",
+        operation_type=IntracomOperationType.R,
+    )
+    snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
+
+    resolution = InvoiceCatalogueSourceResolver(
+        invoice_repository=InvoiceCatalogueRepository(objects=secure_profile.repository),
+        business_invoice_repository=BusinessOperationInvoiceRepository(objects=secure_profile.repository),
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=secure_profile.bucket_id,
+            modelo="349",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision=snapshot.revision,
+        ),
+    )
+
+    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
+    assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("100.00")
+    assert len(resolution.detail_rows) == 1
+    row = resolution.detail_rows[0]
+    assert row.codigo_pais == "DE"
+    assert row.nif_comunitario == "DE222222222"
+    assert row.clave_operacion == "R"
+    assert row.importe == Decimal("100.00")
+    assert {item.source_ref for item in resolution.provenance} == {f"collectible_invoice:{added.record.invoice_id}"}
+
+
+def test_invoice_catalogue_source_resolver_refuses_payable_consignment_transfer_for_m349(
     secure_profile: TestRuntimeProfile,
 ) -> None:
     PayableInvoiceService(settings=secure_profile.settings).add(
@@ -269,7 +310,7 @@ def test_invoice_catalogue_source_resolver_refuses_slim_rectification_without_me
     )
     snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
 
-    with pytest.raises(RegistryValidationError, match="rectification operation type R"):
+    with pytest.raises(RegistryValidationError, match="source kind 'payable_invoice'"):
         InvoiceCatalogueSourceResolver(
             invoice_repository=InvoiceCatalogueRepository(objects=secure_profile.repository),
             business_invoice_repository=BusinessOperationInvoiceRepository(objects=secure_profile.repository),
