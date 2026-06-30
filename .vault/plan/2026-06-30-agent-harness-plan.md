@@ -86,6 +86,7 @@ Stand up the operator golden-task runner and the modelo-130 AEAT-worked-example 
 - [x] `W03.P07.S25` - Author the modelo-130 golden scenario from an AEAT worked example; `src/aeat/agent/eval/scenarios/modelo_130.toml`.
 - [x] `W03.P07.S26` - Implement the golden-task runner asserting trajectory, value, and provenance; `src/aeat/agent/eval/_runner.py`.
 - [x] `W03.P07.S27` - Wire the modelo-130 golden eval into the test surface; `src/aeat/agent/eval/tests/test_modelo_130_golden.py`.
+- [ ] `W03.P07.S56` - Implement the AEAT-worked-example value oracle: seed a calculation and assert a computed casilla against a published AEAT figure (sanctioned non-tautological oracle); add the expected-value dimension to the golden runner; `src/aeat/agent/eval/_runner.py`.
 
 ## Wave `W04` - MCP server, HITL tiers, and faithfulness hooks
 
