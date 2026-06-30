@@ -5,7 +5,7 @@ import pytest
 from ._verification_chain_support import (
     _M303_2023_ONWARDS_PARAMS,
     CasillaId,
-    Decimal,
+    _assert_all_extracted_values_decimal,
     _casilla_ids,
     _parse_extracted_declaracion_values,
 )
@@ -45,8 +45,4 @@ def test_verification_chain_m303_parser_extracts_all_profile_casillas(pdf_stem: 
         f"the expected 18 casilla IDs (6 primitives + 12 form-page totals).\n"
         f"  got: {sorted(extracted)}"
     )
-    for casilla_id, value in extracted.items():
-        assert isinstance(value, Decimal), (
-            f"PARSER-GAP [{pdf_stem}]: casilla {casilla_id!r} should be Decimal, "
-            f"got {type(value).__name__!r} = {value!r}"
-        )
+    _assert_all_extracted_values_decimal(extracted, label=pdf_stem)

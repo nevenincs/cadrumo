@@ -8,7 +8,7 @@ from ._verification_chain_m100_support import (
     _M100_CORPUS_YEARS,
     _parse_m100_corpus,
 )
-from ._verification_chain_support import Decimal
+from ._verification_chain_support import _assert_all_extracted_values_decimal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -39,8 +39,4 @@ def test_verification_chain_m100_parser_extracts_declaracion_pdf_casillas(year: 
         f"PARSER-GAP [{label}]: unexpected casilla set.\n"
         f"  got: {sorted(extracted)}\n  expected: {sorted(_EXPECTED_CASILLAS_M100)}"
     )
-    for casilla_id, value in extracted.items():
-        assert isinstance(value, Decimal), (
-            f"PARSER-GAP [{label}]: casilla {casilla_id!r} is not Decimal: "
-            f"{type(value).__name__!r} = {value!r}"
-        )
+    _assert_all_extracted_values_decimal(extracted, label=label)
