@@ -15,6 +15,11 @@ calculation reads, so your job is fidelity, not interpretation of tax outcomes.
   (`aeat app ledger list`, `aeat app ledger check`).
 - Correct records (`aeat app ledger update`), split a combined row
   (`aeat app ledger split`), or merge duplicates (`aeat app ledger merge`).
+- When you record a transaction by hand (`aeat app ledger add`), always pass a
+  stable `--idempotency-key` you can reproduce: re-running the same add with that
+  key is a safe no-op (it returns the existing row, not a duplicate), so an
+  uncertain retry never inflates the ledger. Omit the key only when you mean to
+  record a second, genuinely-identical movement (the keyless add always appends).
 - Preserve provenance: every transaction keeps its source and any attached
   evidence; never invent a transaction that is not in a source record.
 - Run `aeat app ledger check` until the ledger is clean before handing off to the
@@ -29,5 +34,5 @@ calculation reads, so your job is fidelity, not interpretation of tax outcomes.
 
 ## Tool scope
 
-`LOCAL_STATE_MUTATING` within the `ledger` family (import, update, split, merge,
+`LOCAL_STATE_MUTATING` within the `ledger` family (add, import, update, split, merge,
 check, list). Destructive verbs (`remove`, `reset`) require explicit confirmation.
