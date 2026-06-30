@@ -681,6 +681,38 @@ def test_modelo_100_2020_0356_is_gp_otros_ordinal_element_number() -> None:
     assert set(later_revision_roles.values()) == {"irpf_ganancia_premios_ayuda_200_euros"}
 
 
+def test_modelo_100_tfi_operation_counts_are_integer_until_restructure() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_roles = {
+        _casilla_id("0414"): "irpf_re_especial_tfi_declarante_num_operaciones",
+        _casilla_id("0416"): "irpf_re_especial_tfi_conyuge_num_operaciones",
+    }
+
+    for filing_year in range(2020, 2023):
+        revision = modelo.revisions[str(filing_year)]
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_roles}
+
+        assert set(casillas_by_id) == set(expected_roles)
+        for casilla_id, expected_role in expected_roles.items():
+            casilla = casillas_by_id[casilla_id]
+
+            assert casilla.label.endswith("Nº de operaciones")
+            assert tuple(casilla.section) == ("toma_datos_ampliada", "regimen_especial")
+            assert casilla.data_type == "integer"
+            assert casilla.semantic_role == expected_role
+            assert "ley-35-2006:art-37" in casilla.legal_refs
+            assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+                casilla.source_refs,
+            )
+
+    revision_2025 = modelo.revisions["2025"]
+    casilla_0414_2025 = next(casilla for casilla in revision_2025.casillas if casilla.id == _casilla_id("0414"))
+
+    assert casilla_0414_2025.semantic_role == "irpf_deduccion_obtencion_rendimientos_trabajo"
+    assert tuple(casilla_0414_2025.section) == ("resultado_declaracion",)
+
+
 def test_modelo_100_retrib_especie_no_exenta_total_role_names_aggregate() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
