@@ -10,15 +10,6 @@ related:
   - '[[2026-06-30-ledger-add-idempotency-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `ledger-add-idempotency` plan
 
@@ -92,11 +83,11 @@ Prove the retry-safety and genuine-duplicate-preservation contracts against real
 
 Content-pin the filing record id to the filing outcome and make a re-file of an already-presentado revision a clean idempotent no-op, mirroring the verify-report decision, while keeping the not-verified case a hard refusal.
 
-- [ ] `P06.S20` - Content-pin derive_filing_record_id to the filing outcome of work_unit_id, calculation_revision_id, filed_by, and member_nif, dropping filed_at from the identity while retaining filed_at as a non-identity last-seen body field, and update the ModeloRecord model validator to re-check the outcome-pinned id; `src/aeat/domain/modelos/_filing_record.py`.
-- [ ] `P06.S21` - Upgrade the re-file of an already-PRESENTADO revision from the hard CalculationRevisionStateError to a clean idempotent no-op that returns the existing VIGENTE filing record without emitting a duplicate filing record or lifecycle event, keeping the not-VERIFICADO_COMPLETO case a hard refusal; `src/aeat/application/modelo/_filing_actions.py`.
-- [ ] `P06.S22` - Surface the idempotent re-file no-op outcome as an info Notice on the modelo file envelope through the typed notice channel, never as a bespoke result field; `src/aeat/entrypoints/cli/_modelo_filing_cli.py`.
-- [ ] `P06.S23` - Add real-repository tests proving a retried file of a PRESENTADO revision returns the existing record as a no-op with no duplicate record or event while a not-yet-verified file still hard-refuses; `src/aeat/application/modelo/tests/`.
-- [ ] `P06.S24` - Add a strict ModeloRecord save-load-equality roundtrip plus anti-tautology proof with filed_at populated non-default and the outcome-pinned id enforced by the model validator; `src/aeat/domain/modelos/tests/`.
+- [x] `P06.S20` - Content-pin derive_filing_record_id to the filing outcome of work_unit_id, calculation_revision_id, filed_by, and member_nif, dropping filed_at from the identity while retaining filed_at as a non-identity last-seen body field, and update the ModeloRecord model validator to re-check the outcome-pinned id; `src/aeat/domain/modelos/_filing_record.py`.
+- [x] `P06.S21` - Upgrade the re-file of an already-PRESENTADO revision from the hard CalculationRevisionStateError to a clean idempotent no-op that returns the existing VIGENTE filing record without emitting a duplicate filing record or lifecycle event, keeping the not-VERIFICADO_COMPLETO case a hard refusal; `src/aeat/application/modelo/_filing_actions.py`.
+- [x] `P06.S22` - Surface the idempotent re-file no-op outcome as an info Notice on the modelo file envelope through the typed notice channel, never as a bespoke result field; `src/aeat/entrypoints/cli/_modelo_filing_cli.py`.
+- [x] `P06.S23` - Add real-repository tests proving a retried file of a PRESENTADO revision returns the existing record as a no-op with no duplicate record or event while a not-yet-verified file still hard-refuses; `src/aeat/application/modelo/tests/`.
+- [x] `P06.S24` - Add a strict ModeloRecord save-load-equality roundtrip plus anti-tautology proof with filed_at populated non-default and the outcome-pinned id enforced by the model validator; `src/aeat/domain/modelos/tests/`.
 
 ## Parallelization
 
