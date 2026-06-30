@@ -2760,10 +2760,12 @@ cli:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       attachment_help: Id d'adjunt segur a enllaçar amb el moviment; repetir per a
         diversos adjunts
-      help: Adjuntar objectes d'evidència segura a un moviment del llibre
+      help: Adjuntar objectes d'evidència segura a un moviment del llibre. Crea abans
+        un id de justificant de factura de compra amb 'aeat app ledger evidence add
+        PATH'.
       id_help: Id del moviment del llibre al qual adjuntar evidència
       purchase_invoice_evidence_help: Id de justificant de factura de compra que suporta
-        el moviment
+        el moviment; crea'l amb 'aeat app ledger evidence add PATH'
     categories:
       family_column: família
       header: CATEGORIES DE DESPESA RECONEGUDES DEL LLIBRE

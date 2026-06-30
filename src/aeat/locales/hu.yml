@@ -2715,9 +2715,11 @@ cli:
       attachment_help: A tranzakcióhoz csatolandó biztonságos melléklet azonosítója;
         több melléklet esetén ismételje meg.
       help: Biztonságos bizonyítékobjektumok csatolása egyetlen főkönyvi tranzakcióhoz.
+        Vásárlásiszámla-bizonyíték azonosítója előbb az 'aeat app ledger evidence
+        add PATH' paranccsal hozható létre.
       id_help: A főkönyvi tranzakció azonosítója, amelyhez bizonyítékot csatolnak.
       purchase_invoice_evidence_help: A tranzakciót alátámasztó vásárlásiszámla-bizonyíték
-        azonosítója.
+        azonosítója; létrehozás: 'aeat app ledger evidence add PATH'.
     categories:
       family_column: Kategóriacsalád
       header: ELISMERT FŐKÖNYVI KIADÁSI KATEGÓRIÁK
