@@ -195,7 +195,7 @@ class SecureObjectRepository:
         schema_version: int,
         definition: SecureObjectNamespaceDefinition | None,
     ) -> None:
-        if definition is None or schema_version <= definition.schema_version:
+        if definition is None or schema_version == definition.schema_version:
             return
         raise EnvelopeVersionError(
             translated_message="errors.storage.namespace.schema_mismatch",
@@ -471,8 +471,9 @@ class SecureObjectRepository:
             namespace: The storage namespace whose rows are listed.
             expected_class: The :class:`SensitivityClass` all rows in this
                 namespace must carry.
-            max_supported_version: Rows whose ``schema_version`` exceeds
-                this ceiling are treated as unreadable.
+            max_supported_version: Current row ``schema_version`` expected
+                by the consumer. Any different version is treated as
+                unreadable.
         """
         records: list[SecureObjectRecord] = []
         for item in self.iter_records_with_failures(
@@ -517,9 +518,9 @@ class SecureObjectRepository:
             expected_class: The :class:`SensitivityClass` all rows in this
                 namespace must carry; rows with a differing classification
                 are yielded as :class:`SecureObjectUnreadable`.
-            max_supported_version: Rows whose ``schema_version`` exceeds
-                this ceiling are yielded as :class:`SecureObjectUnreadable`
-                so callers can detect forward-migration gaps.
+            max_supported_version: Current row ``schema_version`` expected
+                by the consumer. Rows with a different version are yielded
+                as :class:`SecureObjectUnreadable`.
             batch_size: SQLAlchemy ``yield_per`` chunk size for the raw row
                 scan. The default keeps memory bounded for large namespaces
                 while preserving deterministic ``(object_key ASC)`` order.
@@ -596,7 +597,7 @@ class SecureObjectRepository:
                         ),
                     )
                     continue
-                if schema_version > max_supported_version:
+                if schema_version != max_supported_version:
                     yield SecureObjectUnreadable(
                         namespace=namespace,
                         row_id=row_id,
@@ -604,7 +605,7 @@ class SecureObjectRepository:
                         classification=classification_str,
                         schema_version=schema_version,
                         written_at=written_at,
-                        reason=(f"schema version {schema_version} exceeds supported {max_supported_version}"),
+                        reason=(f"schema version {schema_version} does not match expected {max_supported_version}"),
                     )
                     continue
                 try:
@@ -1224,7 +1225,7 @@ class SecureObjectRepository:
                 },
                 translated_message="errors.storage.namespace.classification_mismatch",
             )
-        if row.schema_version > max_supported_version:
+        if row.schema_version != max_supported_version:
             raise EnvelopeVersionError(
                 context={
                     "namespace": row.namespace,

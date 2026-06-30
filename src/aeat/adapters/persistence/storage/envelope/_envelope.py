@@ -3,8 +3,8 @@
 The envelope is the single contract every file-backed persistence
 consumer adheres to. It pins:
 
-- the on-disk schema version (so per-domain migrators can roll forward
-  older-version payloads);
+- the on-disk schema version, which must match the consumer's current
+  schema exactly;
 - the timestamp of the write (timezone-aware datetime);
 - the sensitivity classification (so the substrate can refuse to load
   a record if a consumer accidentally bypasses its repository);
@@ -16,11 +16,8 @@ write and read the envelope JSON via the project's standard
 ``tempfile.NamedTemporaryFile + os.replace`` pattern. Encrypted envelopes
 derive their key from the active :class:`MasterKeyProvider` via HKDF-SHA256.
 
-Per-domain migrators are not implemented at the substrate level - the
-:class:`EnvelopeMigrator` protocol is the extension point consumers
-register their own migrators against. The substrate simply refuses to
-load a payload whose ``schema_version`` exceeds the consumer's
-expected version, or which fails classification validation.
+The substrate refuses any payload whose ``schema_version`` differs from
+the consumer's expected version, or which fails classification validation.
 """
 
 from __future__ import annotations
@@ -32,7 +29,7 @@ import tempfile
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Protocol, cast, runtime_checkable
+from typing import cast
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
@@ -151,8 +148,7 @@ class Envelope[PayloadT: BaseModel](BaseModel):
 
     Attributes:
         schema_version: Integer version that consumers compare to their
-            expected version. Older versions are routed through the
-            migrator chain; newer versions are refused.
+            expected version. Older and newer versions are refused.
         written_at: Timezone-aware datetime captured at write time.
         classification: The :class:`SensitivityClass` declared by the
             writer. Mismatches at load time raise
@@ -198,18 +194,6 @@ class Envelope[PayloadT: BaseModel](BaseModel):
         return cast("type[Envelope[PayloadT]]", cls.__class_getitem__(payload_cls))
 
 
-@runtime_checkable
-class EnvelopeMigrator[PayloadT: BaseModel](Protocol):
-    """Pluggable forward-migrator for one envelope schema version transition."""
-
-    source_version: int
-    target_version: int
-
-    def migrate(self, envelope: Envelope[PayloadT]) -> Envelope[PayloadT]:
-        """Return the migrated :class:`Envelope` advanced to ``target_version``."""
-        ...
-
-
 def save_envelope[T: BaseModel](envelope: Envelope[T], path: Path) -> None:
     """Atomically persist ``envelope`` as JSON to ``path``.
 
@@ -253,7 +237,6 @@ def load_envelope[PayloadT: BaseModel](
     *,
     expected_class: SensitivityClass,
     max_supported_version: int,
-    migrators: tuple[EnvelopeMigrator[PayloadT], ...] = (),
 ) -> Envelope[PayloadT]:
     """Load and validate an envelope from disk.
 
@@ -264,12 +247,8 @@ def load_envelope[PayloadT: BaseModel](
             validate the JSON against the typed payload.
         expected_class: The :class:`SensitivityClass` the consumer
             expects. Mismatch raises :class:`ClassificationError`.
-        max_supported_version: The highest ``schema_version`` the
-            consumer can handle. Newer versions raise
-            :class:`EnvelopeVersionError`.
-        migrators: Optional ordered tuple of forward migrators applied
-            when the on-disk version is below ``max_supported_version``.
-            Migrators are applied in their declared order; gaps raise
+        max_supported_version: The current ``schema_version`` the
+            consumer expects. Any different version raises
             :class:`EnvelopeVersionError`.
 
     Returns:
@@ -278,9 +257,8 @@ def load_envelope[PayloadT: BaseModel](
     Raises:
         ClassificationError: If the on-disk classification does not
             match ``expected_class``.
-        EnvelopeVersionError: If the on-disk version exceeds
-            ``max_supported_version`` or no migrator chain advances it
-            to ``max_supported_version``.
+        EnvelopeVersionError: If the on-disk version differs from
+            ``max_supported_version``.
     """
     raw = _read_envelope_text(path)
     envelope = _parse_model_json(envelope_type, raw, label="plaintext")
@@ -288,61 +266,11 @@ def load_envelope[PayloadT: BaseModel](
         raise ClassificationError(
             f"envelope classification {envelope.classification}; consumer expected {expected_class}",
         )
-    if envelope.schema_version > max_supported_version:
+    if envelope.schema_version != max_supported_version:
         raise EnvelopeVersionError(
-            f"envelope is at version {envelope.schema_version}; consumer supports up to {max_supported_version}",
+            f"envelope is at version {envelope.schema_version}; consumer expects {max_supported_version}",
         )
-    if envelope.schema_version < max_supported_version:
-        envelope = _apply_migrators(envelope, max_supported_version, migrators)
     return envelope
-
-
-def _apply_migrators[PayloadT: BaseModel](
-    envelope: Envelope[PayloadT],
-    target_version: int,
-    migrators: tuple[EnvelopeMigrator[PayloadT], ...],
-) -> Envelope[PayloadT]:
-    """Apply the migrator chain in declared order until ``target_version``.
-
-    Per-step debug logging records the attempted chain (vs-M-6); a
-    monotonic-version assertion (sec-M-5) raises
-    :class:`EnvelopeVersionError` if a migrator returns a non-monotonic
-    schema version, defending against migrator chains that would
-    otherwise be silent downgrade attacks.
-    """
-    current = envelope
-    attempted: list[str] = []
-    for migrator in migrators:
-        if current.schema_version == target_version:
-            break
-        if migrator.source_version != current.schema_version:
-            attempted.append(
-                f"skip {type(migrator).__name__} ({migrator.source_version}->{migrator.target_version})",
-            )
-            continue
-        previous_version = current.schema_version
-        current = migrator.migrate(current)
-        attempted.append(
-            f"apply {type(migrator).__name__} ({previous_version}->{current.schema_version})",
-        )
-        if current.schema_version <= previous_version:
-            raise EnvelopeVersionError(
-                f"migrator {type(migrator).__name__} returned non-monotonic "
-                f"schema_version: {previous_version} -> {current.schema_version}; "
-                f"chain so far: {attempted}",
-            )
-        _log.debug(
-            "envelope migrator %s advanced version %s -> %s",
-            type(migrator).__name__,
-            previous_version,
-            current.schema_version,
-        )
-    if current.schema_version != target_version:
-        raise EnvelopeVersionError(
-            f"envelope is at version {current.schema_version}; no migrator chain "
-            f"advances it to {target_version}; attempted chain: {attempted}",
-        )
-    return current
 
 
 _HKDF_CONTEXT_ENVELOPE_PAYLOAD = b"aeat.envelope.payload.v1"
@@ -492,7 +420,6 @@ def load_encrypted_envelope[PayloadT: BaseModel](
     master_key_provider: MasterKeyProvider,
     hkdf_context: bytes,
     max_supported_version: int,
-    migrators: tuple[EnvelopeMigrator[PayloadT], ...] = (),
 ) -> Envelope[PayloadT]:
     """Load and decrypt an at-rest-ciphertext envelope.
 
@@ -501,7 +428,7 @@ def load_encrypted_envelope[PayloadT: BaseModel](
     consulted — a foreign-class ciphertext is rejected without any
     crypto attempt (defense in depth). After decryption, the inner
     plaintext is parsed back into the typed :class:`Envelope`,
-    classification-checked again, and version-migrated.
+    classification-checked again, and version-checked.
 
     Args:
         path: Source file (must exist).
@@ -513,12 +440,11 @@ def load_encrypted_envelope[PayloadT: BaseModel](
             used to derive the per-consumer decryption key via HKDF-SHA256.
         hkdf_context: Per-consumer context bytes; MUST match the
             value supplied at save time.
-        max_supported_version: Highest inner-envelope schema version
-            the consumer supports.
-        migrators: Optional ordered tuple of forward migrators.
+        max_supported_version: Current inner-envelope schema version
+            the consumer expects.
 
     Returns:
-        The decrypted and version-migrated inner :class:`Envelope`.
+        The decrypted and version-checked inner :class:`Envelope`.
 
     Raises:
         ClassificationError: If the cipher envelope's class differs
@@ -527,8 +453,7 @@ def load_encrypted_envelope[PayloadT: BaseModel](
             tampering since the AAD binds them).
         DecryptionError: If the AEAD tag fails to verify.
         EnvelopeVersionError: If the inner plaintext envelope's
-            schema version exceeds ``max_supported_version`` or no
-            migrator chain can advance it.
+            schema version differs from ``max_supported_version``.
     """
     raw = _read_envelope_text(path)
     cipher_envelope = _parse_model_json(CipherEnvelope, raw, label="cipher")
@@ -555,12 +480,10 @@ def load_encrypted_envelope[PayloadT: BaseModel](
         raise ClassificationError(
             f"inner envelope drifted to {inner.classification}; consumer expected {expected_class}",
         )
-    if inner.schema_version > max_supported_version:
+    if inner.schema_version != max_supported_version:
         raise EnvelopeVersionError(
-            f"inner envelope is at version {inner.schema_version}; consumer supports up to {max_supported_version}",
+            f"inner envelope is at version {inner.schema_version}; consumer expects {max_supported_version}",
         )
-    if inner.schema_version < max_supported_version:
-        inner = _apply_migrators(inner, max_supported_version, migrators)
     return inner
 
 
@@ -572,7 +495,6 @@ def reencrypt_envelope_file[PayloadT: BaseModel](
     master_key_provider: MasterKeyProvider,
     hkdf_context: bytes,
     max_supported_version: int,
-    migrators: tuple[EnvelopeMigrator[PayloadT], ...] = (),
 ) -> bool:
     """Re-encrypt a single plaintext envelope file in place.
 
@@ -584,8 +506,8 @@ def reencrypt_envelope_file[PayloadT: BaseModel](
     Returns ``True`` iff the file was re-encrypted, ``False`` if the
     file was already ciphertext or did not exist. The atomic-replace
     pattern from :func:`save_encrypted_envelope` governs the on-disk
-    transition — a crash mid-migration leaves either the plaintext OR
-    the ciphertext on disk, never a torn write.
+    rewrite: a crash mid-rewrite leaves either the plaintext OR the
+    ciphertext on disk, never a torn write.
 
     Repository load paths are strict ciphertext-only; this function
     is the only sanctioned path that touches plaintext envelopes.
@@ -598,9 +520,8 @@ def reencrypt_envelope_file[PayloadT: BaseModel](
             used to derive the per-consumer encryption key via HKDF-SHA256.
         hkdf_context: Per-consumer context bytes; MUST match those used
             for subsequent load calls.
-        max_supported_version: Highest inner-envelope schema version
-            the consumer supports.
-        migrators: Optional ordered tuple of forward migrators.
+        max_supported_version: Current inner-envelope schema version
+            the consumer expects.
     """
     if not path.exists():
         return False
@@ -626,13 +547,11 @@ def reencrypt_envelope_file[PayloadT: BaseModel](
             f"plaintext envelope classification {plaintext_envelope.classification}; "
             f"consumer expected {expected_class}",
         )
-    if plaintext_envelope.schema_version > max_supported_version:
+    if plaintext_envelope.schema_version != max_supported_version:
         raise EnvelopeVersionError(
             f"plaintext envelope is at version {plaintext_envelope.schema_version}; "
-            f"consumer supports up to {max_supported_version}",
+            f"consumer expects {max_supported_version}",
         )
-    if plaintext_envelope.schema_version < max_supported_version:
-        plaintext_envelope = _apply_migrators(plaintext_envelope, max_supported_version, migrators)
     save_encrypted_envelope(
         plaintext_envelope,
         path,
@@ -646,7 +565,6 @@ __all__ = [
     "CipherEnvelope",
     "EncryptionMetadata",
     "Envelope",
-    "EnvelopeMigrator",
     "_build_aad",
     "_derive_envelope_key",
     "load_encrypted_envelope",

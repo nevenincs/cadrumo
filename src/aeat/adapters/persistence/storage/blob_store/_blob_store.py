@@ -417,7 +417,7 @@ class EncryptedBlobStore:
             for manifest_path in sorted(shard_dir.glob("*.manifest.json")):
                 # Single read + inline gate: iter_manifests is
                 # classification-class-agnostic at the API surface, so
-                # the only gate that applies is the version ceiling.
+                # the schema-version contract is the only gate here.
                 try:
                     envelope = Envelope[BlobManifest].model_validate_json(
                         manifest_path.read_text(encoding=_UTF_8_ENCODING),
@@ -433,10 +433,10 @@ class EncryptedBlobStore:
                         violation="manifest_payload",
                         object_kind="manifest",
                     ) from exc
-                if envelope.schema_version > BLOB_MANIFEST_SCHEMA_VERSION:
+                if envelope.schema_version != BLOB_MANIFEST_SCHEMA_VERSION:
                     raise EnvelopeVersionError(
                         f"blob manifest is at version {envelope.schema_version}; "
-                        f"consumer supports up to {BLOB_MANIFEST_SCHEMA_VERSION}",
+                        f"consumer expects {BLOB_MANIFEST_SCHEMA_VERSION}",
                     )
                 yield manifest_path, envelope.payload
 
