@@ -521,12 +521,15 @@ class IntracomOperationType(StrEnum):
     """Modelo 349 operation-key letters carried by invoice records."""
 
     E = "E"
+    H = "H"
+    M = "M"
     S = "S"
     T = "T"
     R = "R"
     A = "A"
     ADQUISICION_SERVICIOS = "I"
-    M = "M"
+    D = "D"
+    C = "C"
 
 
 class ForeignAssetClass(StrEnum):

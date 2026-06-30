@@ -77,9 +77,13 @@ _M349_OPERADOR_ROW_BINDINGS: dict[BindingId, str] = {
 _COLLECTIBLE_M349_OPERATION_TYPES: frozenset[IntracomOperationType] = frozenset(
     {
         IntracomOperationType.E,
+        IntracomOperationType.H,
+        IntracomOperationType.M,
         IntracomOperationType.S,
         IntracomOperationType.T,
-        IntracomOperationType.M,
+        IntracomOperationType.R,
+        IntracomOperationType.D,
+        IntracomOperationType.C,
     },
 )
 _PAYABLE_M349_OPERATION_TYPES: frozenset[IntracomOperationType] = frozenset(
@@ -272,11 +276,6 @@ def _m349_clave_for_operation_type(
     operation_type: IntracomOperationType,
     record_label: str,
 ) -> str:
-    if operation_type is IntracomOperationType.R:
-        raise RegistryValidationError(
-            f"{record_label} {invoice_id!r} uses rectification operation type R "
-            "but the invoice record has no rectified period/base metadata",
-        )
     allowed = (
         _COLLECTIBLE_M349_OPERATION_TYPES
         if source_kind is BindingSourceKind.COLLECTIBLE_INVOICE
