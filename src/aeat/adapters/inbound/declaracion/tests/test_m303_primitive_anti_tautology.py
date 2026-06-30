@@ -23,21 +23,23 @@ Grounded authority:
 
 from __future__ import annotations
 
-from datetime import date
-from decimal import Decimal
-
 import pytest
 
-from .....core.resources import resources
-from .....domain.calculations.registry import (
+from ._verification_chain_support import (
+    _COMPUTED_CASILLAS_M303,
+    _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
+    _M303_STATE_ATTRIBUTION_RATIO_CASILLA,
     BindingId,
     CasillaId,
+    Decimal,
     RegistryValidationError,
+    _casilla_id,
+    _decimal_inputs_from_extracted_values,
+    _parse_extracted_declaracion_values,
+    _registry_snapshot,
     calculate_registry_snapshot,
+    date,
 )
-from .....tests import FIXTURES_DIR
-from .. import DeclaracionParseError, parse_declaracion
-from ._verification_chain_support import _casilla_id, _casilla_ids
 
 pytestmark = [
     pytest.mark.unit,
@@ -45,38 +47,12 @@ pytestmark = [
 ]
 
 _IVA_REPERCUTIDO_GENERAL_CASILLA: CasillaId = _casilla_id("iva.repercutido.general")
-_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
-_M303_STATE_ATTRIBUTION_RATIO_CASILLA: CasillaId = _casilla_id("65")
-
-_COMPUTED_CASILLAS_M303: frozenset[CasillaId] = _casilla_ids(
-    "iva.cuota-devengada-total",
-    "iva.cuota-deducible-total",
-    "iva.resultado-regimen-general",
-    "03",
-    "06",
-    "09",
-    "11",
-    "13",
-    "27",
-    "29",
-    "33",
-    "37",
-    "45",
-    "64",
-    "66",
-    "iva.compensacion-aplicada-periodo",
-    "iva.compensacion-pendiente-periodos-posteriores",
-    "iva.resultado",
-    "71",
-    "iva.compensacion-generada-periodo",
-    "iva.compensacion-disponible-fin-periodo",
-)
 
 
 def _run_engine(inputs: dict[CasillaId, Decimal], year: int, period: str) -> dict[CasillaId, Decimal]:
     """Calculate the registry snapshot with ``inputs`` and return engine values."""
     _period_month = {"1T": 1, "2T": 4, "3T": 7, "4T": 10}[period]
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=year, period=period)
+    snapshot = _registry_snapshot("303", year, period)
     binding_values: dict[BindingId, Decimal] = {
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
@@ -107,18 +83,7 @@ def test_m303_engine_sums_extracted_primitives_not_printed_total() -> None:
     that bypasses the primitives) will fail this test loudly with a
     devengada-total that did not move under the mutation.
     """
-    pdf_path = FIXTURES_DIR / "justificantes" / "303" / "2023-1T.pdf"
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override="303",
-            año_override=2023,
-            period_override="1T",
-        )
-    except DeclaracionParseError as exc:  # pragma: no cover - diagnostic
-        pytest.fail(f"PARSER-GAP: parse_declaracion raised — M303 extraction failed.\n  error: {exc}")
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+    extracted = _parse_extracted_declaracion_values(modelo="303", fixture_stem="2023-1T", year=2023, period="1T")
 
     # Confirm the primitive leaf was extracted; otherwise the mutation probe
     # is meaningless (we would be poking a key the engine never reads).
@@ -130,24 +95,18 @@ def test_m303_engine_sums_extracted_primitives_not_printed_total() -> None:
     )
 
     # Baseline inputs: every extracted non-computed Decimal leaf.
-    base_inputs: dict[CasillaId, Decimal] = {}
-    for casilla_id, value in extracted.items():
-        if casilla_id in _COMPUTED_CASILLAS_M303:
-            continue
-        if not isinstance(value, Decimal):
-            continue
-        base_inputs[casilla_id] = value
+    base_inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M303)
     base_inputs[_M303_STATE_ATTRIBUTION_RATIO_CASILLA] = Decimal("100")
 
     base_values = _run_engine(base_inputs, 2023, "1T")
-    base_devengada = base_values[_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA]
+    base_devengada = base_values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
 
     # Mutate the primitive by a known delta and re-run.
     delta = Decimal("100.00")
     mutated_inputs = dict(base_inputs)
     mutated_inputs[_IVA_REPERCUTIDO_GENERAL_CASILLA] = primitive + delta
     mutated_values = _run_engine(mutated_inputs, 2023, "1T")
-    mutated_devengada = mutated_values[_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA]
+    mutated_devengada = mutated_values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
 
     assert mutated_devengada - base_devengada == delta, (
         "ANTI-TAUTOLOGY-FAIL: mutating iva.repercutido.general by "
