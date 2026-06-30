@@ -123,9 +123,9 @@ def test_modelo_390_export_refuses_missing_boe_layout_from_real_registry(tmp_pat
         export_draft(draft, output_path=output_path, headers={}, schema_provider=provider)
 
     message = str(exc_info.value)
-    assert "modelo '390' fichero-BOE export is unsupported" in message
+    assert "modelo '390' local declaration export is unsupported" in message
     assert "registry snapshot has no complete export_layouts definition" in message
     assert "calculation, verification, and local filing surfaces may exist" in message.lower()
-    assert "cannot produce a BOE export file" in message
+    assert "cannot produce an AEAT-compatible export file" in message
     assert "does not certify legal correctness" in message
     assert not output_path.exists()

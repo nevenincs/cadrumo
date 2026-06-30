@@ -27,13 +27,13 @@ from ....domain.modelos._calculation_revision import CalculationRevisionState
 from .. import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
+    ModeloCrossPeriodCleanStateError,
 )
 from .._export import (
     ModeloExportCommand,
     ModeloExportCrossBucketRefusedError,
     ModeloExportNoActiveBucketError,
     ModeloExportResult,
-    ModeloExportUnsupportedError,
     ModeloIvaWalletDecisionProvenance,
     export_modelo_revision,
     iva_wallet_decision_export_provenance,
@@ -247,12 +247,10 @@ def test_export_refuses_borrador_revision(
     }
 
 
-def test_export_refuses_modelo_100_xml_dictionary_layout_before_writing(
+def test_export_reaches_modelo_100_xml_dictionary_path_before_later_readiness_gate(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    """M100's XML dictionary is registry parse/read data, not a local BOE renderer."""
-
     bucket_id = _seed_profile()
     _, calc_rev_id = _seed_revision(
         bucket_id=bucket_id,
@@ -263,7 +261,7 @@ def test_export_refuses_modelo_100_xml_dictionary_layout_before_writing(
     )
     out = tmp_path / "modelo-100.xml"
 
-    with pytest.raises(ModeloExportUnsupportedError) as exc_info:
+    with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
         export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id=calc_rev_id,
@@ -273,16 +271,9 @@ def test_export_refuses_modelo_100_xml_dictionary_layout_before_writing(
             workflow_profile=_profile(),
         )
 
-    assert exc_info.value.translated_message == "application.modelo.errors.export_unsupported"
-    assert exc_info.value.context == {
-        "modelo": "100",
-        "reason": (
-            "export layout 'modelo-100-2025-xml-dictionary' uses unsupported format 'xml_dictionary'; "
-            "the local fichero-BOE exporter currently renders fixed_width layouts only"
-        ),
-        "layout_id": "modelo-100-2025-xml-dictionary",
-        "layout_format": "xml_dictionary",
-    }
+    assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
+    assert "export_unsupported" not in str(exc_info.value.context)
+    assert "fixed_width" not in str(exc_info.value.context)
     assert not out.exists()
     assert not out.with_name(out.name + ".tmp").exists()
 

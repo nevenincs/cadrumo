@@ -15,6 +15,7 @@ from .. import (
     ModeloOperatorProfile,
     build_draft,
     export_draft,
+    export_layout_renderability_reason,
     verify_export,
 )
 from ._export_support import (
@@ -66,26 +67,12 @@ def test_export_rejects_modelo_without_registry_export_layout(tmp_path: Path) ->
     _assert_missing_export_layout_refusal(str(exc_info.value), draft.modelo)
 
 
-def test_export_refuses_unsupported_xml_dictionary_layout(tmp_path: Path) -> None:
-    draft = _approved_registry_draft()
-    provider = _schema_provider()
-    layout = provider.get_subview(draft.modelo).export_layouts[0]
-    xml_layout = layout.model_copy(
-        update={
-            "format": "xml_dictionary",
-            "dictionary_source_ref": layout.source_refs[0],
-            "records": (),
-        },
-    )
-    xml_provider = _provider_with_export_layouts(provider, draft.modelo, (xml_layout,))
+def test_xml_dictionary_layout_is_renderable_for_modelo_100() -> None:
+    provider = _schema_provider(filing_year=2024, period="0A", modelos=("100",))
+    layout = provider.get_subview("100").export_layouts[0]
 
-    with pytest.raises(FilingExportError, match="unsupported format 'xml_dictionary'"):
-        export_draft(
-            draft,
-            output_path=tmp_path / "modelo-130.txt",
-            headers=_modelo_130_export_headers(),
-            schema_provider=xml_provider,
-        )
+    assert layout.format == "xml_dictionary"
+    assert export_layout_renderability_reason("100", layout) is None
 
 
 def test_export_refuses_layout_without_records(tmp_path: Path) -> None:

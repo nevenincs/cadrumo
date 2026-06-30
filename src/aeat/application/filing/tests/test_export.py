@@ -5,19 +5,29 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from xml.etree import ElementTree
 
 import pytest
+from defusedxml import ElementTree as DefusedElementTree
 from pydantic import ValidationError
 
 from ....core import Period
+from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
     CasillaFieldKind,
     CasillaId,
+    RegistrySnapshotRef,
     RegistryValidationError,
     parse_export_payload,
     validated_casilla_id,
 )
-from ....domain.filing import FilingExportError
+from ....domain.filing import (
+    FilingExportError,
+    ModeloCasillaProvenance,
+    ModeloDraft,
+    ModeloValue,
+    ModeloValueKind,
+)
 from ....domain.submission import ModeloDraftStatus
 from .. import (
     DeclaracionExportFormat,
@@ -138,6 +148,7 @@ def test_build_draft_populates_registry_casilla_provenance() -> None:
 
 def test_format_enum_carries_cli_values() -> None:
     assert DeclaracionExportFormat.FICHERO_BOE.value == "fichero-boe"
+    assert DeclaracionExportFormat.XML_DICTIONARY.value == "xml-dictionary"
 
 
 def test_verdict_enum_orders_match_drift_missing() -> None:
@@ -328,6 +339,178 @@ def test_export_writes_modelo_130_registry_layout(tmp_path: Path) -> None:
     draft_provenance = {entry.casilla_id: entry for entry in draft.casilla_provenance}
     assert set(exported_values).issubset(exported_provenance)
     assert all(exported_provenance[casilla_id] == draft_provenance[casilla_id] for casilla_id in exported_values)
+
+
+def _approved_modelo_100_xml_dictionary_draft() -> ModeloDraft:
+    provider = _schema_provider(filing_year=2024, period="0A", modelos=("100",))
+    collection = provider.get_collection("100")
+    now = datetime.now(UTC).replace(microsecond=0)
+    values = (
+        ModeloValue(
+            casilla_id="0003",
+            value=Decimal("12000.25"),
+            kind=ModeloValueKind.LITERAL,
+            source="test registry value",
+        ),
+        ModeloValue(
+            casilla_id="0596",
+            value=Decimal("1500.50"),
+            kind=ModeloValueKind.INHERITED,
+            source="test observed withholding",
+        ),
+        ModeloValue(
+            casilla_id="0604",
+            value=Decimal("325.75"),
+            kind=ModeloValueKind.COMPUTED,
+            source="test relation fold",
+        ),
+        ModeloValue(
+            casilla_id="0609",
+            value=Decimal("1826.25"),
+            kind=ModeloValueKind.COMPUTED,
+            source="test total payments",
+        ),
+        ModeloValue(
+            casilla_id="0610",
+            value=Decimal("-12.34"),
+            kind=ModeloValueKind.COMPUTED,
+            source="test cuota diferencial",
+        ),
+    )
+    provenance_by_id = {
+        casilla.casilla_id: ModeloCasillaProvenance(
+            casilla_id=casilla.casilla_id,
+            formula_id=casilla.formula,
+            legal_refs=casilla.legal_refs,
+            source_refs=casilla.source_refs,
+        )
+        for casilla in collection.all()
+    }
+    return ModeloDraft(
+        draft_id="modelo-100-xml-dictionary-test",
+        modelo="100",
+        period=Period.from_year_and_code(2024, "0A"),
+        profile_tax_id="12345678Z",
+        subject_tax_id="12345678Z",
+        snapshot_ref=RegistrySnapshotRef(
+            modelo="100",
+            revision_id="2024",
+            modelo_year=2024,
+            period="0A",
+        ),
+        status=ModeloDraftStatus.APROBADO,
+        values=values,
+        binding_values=(),
+        casilla_provenance=tuple(provenance_by_id[value.casilla_id] for value in values),
+        findings=(),
+        created_at=now,
+        updated_at=now,
+        schema_version=collection.schema_version,
+    )
+
+
+def _official_modelo_100_2024_dictionary_paths() -> dict[str, str]:
+    dictionary = bundled_path(
+        "corpus",
+        "aeat_official",
+        "disenos_registro",
+        "modelo_100",
+        "files",
+        "08-100-diccionario-declaracion-individual-ejercicio-2024-actualizado-29-01-2026-393-kb-otros-fi.properties",
+    )
+    paths: dict[str, str] = {}
+    for line in dictionary.read_text(encoding="cp1252").splitlines():
+        if not line.strip() or line.startswith("#"):
+            continue
+        _field, _, payload = line.partition("=")
+        parts = payload.split("][")
+        if len(parts) < 3:
+            continue
+        path = parts[0].lstrip("[")
+        casilla = parts[2].rstrip("]")
+        if casilla.isdigit():
+            paths[casilla] = path
+    return paths
+
+
+def _xml_value(root: ElementTree.Element[str], absolute_path: str) -> str:
+    current = root
+    for index, part in enumerate(part for part in absolute_path.strip("/").split("/") if part):
+        if index == 0 and part == root.tag:
+            continue
+        match = next((child for child in current if child.tag == part), None)
+        assert match is not None, f"missing XML dictionary path {absolute_path!r}"
+        current = match
+    assert current.text is not None
+    return current.text
+
+
+def test_export_writes_modelo_100_xml_dictionary_layout(tmp_path: Path) -> None:
+    draft = _approved_modelo_100_xml_dictionary_draft()
+    provider = _schema_provider(filing_year=2024, period="0A", modelos=("100",))
+    output = tmp_path / "modelo-100-2024.xml"
+
+    receipt = export_draft(
+        draft,
+        output_path=output,
+        headers={"surnames": "MARTA BLANK", "name": "STATE"},
+        schema_provider=provider,
+    )
+
+    payload = output.read_bytes()
+    layout = provider.get_subview("100").export_layouts[0]
+    root = DefusedElementTree.fromstring(payload)
+    official_paths = _official_modelo_100_2024_dictionary_paths()
+    parsed = parse_export_payload(layout, payload, source_root=provider.source_root, sources=provider.sources)
+    parsed_values = {entry.casilla_id: entry.value for entry in parsed.casillas if entry.casilla_id is not None}
+
+    assert receipt.format is DeclaracionExportFormat.XML_DICTIONARY
+    assert receipt.byte_size == len(payload)
+    assert root.tag == "Declaracion"
+    assert root.attrib["modelo"] == "100"
+    assert root.attrib["ejercicio"] == "2024"
+    assert root.attrib["periodo"] == "0A"
+    assert root.attrib["versionxsd"] in _official_modelo_100_2024_xsd_versions()
+    assert root.attrib["{http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation"].endswith(
+        "Renta2024.xsd",
+    )
+    assert _xml_value(root, official_paths["0003"]) == "12000.25"
+    assert _xml_value(root, official_paths["0596"]) == "1500.50"
+    assert _xml_value(root, official_paths["0604"]) == "325.75"
+    assert _xml_value(root, official_paths["0609"]) == "1826.25"
+    assert _xml_value(root, official_paths["0610"]) == "-12.34"
+    assert parsed_values["0003"] == Decimal("12000.25")
+    assert parsed_values["0596"] == Decimal("1500.50")
+    assert parsed_values["0604"] == Decimal("325.75")
+    assert parsed_values["0609"] == Decimal("1826.25")
+    assert parsed_values["0610"] == Decimal("-12.34")
+    assert verify_export(draft, file_path=output, schema_provider=provider).verdict is DeclaracionVerifyVerdict.MATCH
+
+
+def _official_modelo_100_2024_xsd_versions() -> set[str]:
+    xsd = bundled_path(
+        "corpus",
+        "aeat_official",
+        "disenos_registro",
+        "modelo_100",
+        "files",
+        "29-100-esquema-xsd-ejercicio-2024-actualizado-19-01-2026-747-kb-ejecutable.xsd",
+    )
+    root = DefusedElementTree.parse(xsd).getroot()
+    versions: set[str] = set()
+    for simple_type in root.iter("{http://www.w3.org/2001/XMLSchema}simpleType"):
+        if simple_type.attrib.get("name") != "tipo_VersionXSD":
+            continue
+        versions.update(
+            enumeration.attrib["value"]
+            for enumeration in simple_type.iter("{http://www.w3.org/2001/XMLSchema}enumeration")
+        )
+    assert versions
+    assert any(
+        element.attrib.get("name") == "Declaracion"
+        for element in root.iter("{http://www.w3.org/2001/XMLSchema}element")
+    )
+    return versions
 
 
 def test_export_and_verify_build_model_scoped_provider_when_omitted(tmp_path: Path) -> None:
