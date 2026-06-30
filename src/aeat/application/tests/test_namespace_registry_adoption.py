@@ -24,6 +24,7 @@ import pytest
 
 from ...adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY
 from ...core.paths import PROJECT_ROOT
+from ...tests._inventory import leaf_name
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -98,7 +99,7 @@ def _namespace_literal_usages(node: ast.AST) -> list[tuple[str, int]]:
         for keyword in node.keywords:
             if keyword.arg == "namespace":
                 _append_literal(usages, keyword.value)
-        if node.args and _call_name(node.func) in _SECURE_OBJECT_METHODS:
+        if node.args and leaf_name(node.func) in _SECURE_OBJECT_METHODS:
             _append_literal(usages, node.args[0])
     return usages
 
@@ -114,11 +115,3 @@ def _is_namespace_target(node: ast.AST) -> bool:
     if isinstance(node, ast.Attribute):
         return node.attr == "namespace" or node.attr.endswith("_NAMESPACE")
     return False
-
-
-def _call_name(node: ast.AST) -> str:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return node.attr
-    return ""
