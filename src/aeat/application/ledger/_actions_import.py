@@ -84,8 +84,8 @@ class LedgerProviderID(StrEnum):
     PDF_N26 = "pdf-n26"
 
 
-def _transaction_dedup_fingerprint(transaction: Transaction) -> str:
-    """Return the import-dedup fingerprint for an already-stored transaction.
+def _transaction_dedup_fingerprints(transaction: Transaction) -> frozenset[str]:
+    """Return import-dedup fingerprints for an already-stored transaction.
 
     Rows imported after the cross-format dedup landed carry a stamped
     :attr:`Transaction.import_fingerprint`; that value is the canonical
@@ -94,7 +94,10 @@ def _transaction_dedup_fingerprint(transaction: Transaction) -> str:
     fingerprint is derived from the current ``raw`` as a best-effort
     fallback - this keeps re-imports of unstamped rows idempotent.
     """
-    return transaction.import_fingerprint or derive_import_fingerprint(transaction.raw)
+    fingerprints = {derive_import_fingerprint(transaction.raw, direction=transaction.direction)}
+    if transaction.import_fingerprint:
+        fingerprints.add(transaction.import_fingerprint)
+    return frozenset(fingerprints)
 
 
 class _ImportRowPlan(NamedTuple):
@@ -158,12 +161,17 @@ def _evaluate_import_rows(
     :class:`RawTransaction` and the authoritative ``direction`` the provider
     derived from the source sign at the parse boundary; this classifier never
     re-derives flow from a sign. Deduplication keys on
-    :func:`derive_import_fingerprint` â€” an identity that is stable across both
-    later edits of a transaction and a re-export of the same movement in a
-    different file format. This single classifier backs both the persisting
-    import path and the ``--dry-run`` preview, so the preview count is exact.
+    :func:`derive_import_fingerprint` â€” a direction- and currency-qualified
+    identity that is stable across both later edits of a transaction and a
+    re-export of the same movement in a different file format. This single
+    classifier backs both the persisting import path and the ``--dry-run``
+    preview, so the preview count is exact.
     """
-    existing_fingerprints = {_transaction_dedup_fingerprint(transaction) for transaction in catalogue.values()}
+    existing_fingerprints = {
+        fingerprint
+        for transaction in catalogue.values()
+        for fingerprint in _transaction_dedup_fingerprints(transaction)
+    }
     existing_day_keys = {derive_movement_day_key(transaction.raw) for transaction in catalogue.values()}
     imported: list[Transaction] = []
     skipped_refs: list[BucketTransactionRef] = []
@@ -171,7 +179,7 @@ def _evaluate_import_rows(
     batch_transaction_ids: set[str] = set()
     for parsed in parsed_rows:
         raw = parsed.raw
-        fingerprint = derive_import_fingerprint(raw)
+        fingerprint = derive_import_fingerprint(raw, direction=parsed.direction)
         transaction_id = derive_transaction_id(raw)
         # Re-import dedup keys on the persisted catalogue only: a fingerprint
         # already stored is the same movement seen before (re-importing the same
@@ -519,7 +527,7 @@ def _unsupported_import_source(path: Path) -> TransactionValidationError:
     return TransactionValidationError(
         translated_message="errors.transaction.ledger_import_failed",
         context={
-            "reason": tr("errors.transaction.import_source_invalid"),
+            "reason": f"{tr('errors.transaction.import_source_invalid')}: {path}",
             "path": str(path),
         },
     )

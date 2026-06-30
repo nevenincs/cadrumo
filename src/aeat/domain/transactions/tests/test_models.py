@@ -32,6 +32,7 @@ def _sample_raw(
     provider_id: str = "provider-row-1",
     value_date: date | None = date(2026, 4, 10),
     amount: Decimal = Decimal("123.45"),
+    currency: str = "EUR",
     description: str = "Office rent",
     source_row_index: int = 1,
     counterparty: str | None = "Landlord SL",
@@ -41,7 +42,7 @@ def _sample_raw(
         booked_date=date(2026, 4, 10),
         value_date=value_date,
         amount=amount,
-        currency="EUR",
+        currency=currency,
         counterparty=counterparty,
         description=description,
         provenance=RawProvenance(
@@ -453,14 +454,18 @@ def test_import_fingerprint_ignores_provider_id_and_file_format() -> None:
     """The same movement exported by two providers shares one fingerprint.
 
     `derive_import_fingerprint` keys on the movement identity (date,
-    amount, normalised narrative) — not on the provider-assigned id or
-    the source file format — so an OFX export and a CSV export of the
-    same bank movement deduplicate against each other.
+    amount, currency, direction, normalised narrative) — not on the
+    provider-assigned id or the source file format — so an OFX export
+    and a CSV export of the same bank movement deduplicate against each
+    other.
     """
     ofx_row = _ofx_sample_raw(provider_id="ofx-fitid-1")
     csv_row = _sample_raw(provider_id="csv-row-7")
 
-    assert derive_import_fingerprint(ofx_row) == derive_import_fingerprint(csv_row)
+    assert derive_import_fingerprint(ofx_row, direction=TransactionDirection.OUTGOING) == derive_import_fingerprint(
+        csv_row,
+        direction=TransactionDirection.OUTGOING,
+    )
     # The legacy transaction id still diverges — it folds in the
     # provider id — which is exactly why a coarser dedup key is needed.
     assert derive_transaction_id(ofx_row) != derive_transaction_id(csv_row)
@@ -471,17 +476,24 @@ def test_import_fingerprint_normalises_accents_and_punctuation() -> None:
     accented = _sample_raw(description="Reunió de negòcis - Òscar")
     plain = _sample_raw(description="reunio  de negocis: oscar")
 
-    assert derive_import_fingerprint(accented) == derive_import_fingerprint(plain)
+    assert derive_import_fingerprint(accented, direction=TransactionDirection.OUTGOING) == derive_import_fingerprint(
+        plain,
+        direction=TransactionDirection.OUTGOING,
+    )
 
 
 def test_import_fingerprint_distinguishes_genuinely_different_movements() -> None:
-    """A different amount or date produces a different fingerprint."""
+    """A different amount, date, currency, or direction produces a different fingerprint."""
     base = _sample_raw()
     other_amount = _sample_raw(amount=Decimal("999.99"))
     other_date = _sample_raw(value_date=date(2026, 4, 11))
+    other_currency = _sample_raw(currency="USD")
 
-    assert derive_import_fingerprint(base) != derive_import_fingerprint(other_amount)
-    assert derive_import_fingerprint(base) != derive_import_fingerprint(other_date)
+    base_fingerprint = derive_import_fingerprint(base, direction=TransactionDirection.OUTGOING)
+    assert base_fingerprint != derive_import_fingerprint(other_amount, direction=TransactionDirection.OUTGOING)
+    assert base_fingerprint != derive_import_fingerprint(other_date, direction=TransactionDirection.OUTGOING)
+    assert base_fingerprint != derive_import_fingerprint(other_currency, direction=TransactionDirection.OUTGOING)
+    assert base_fingerprint != derive_import_fingerprint(base, direction=TransactionDirection.INCOMING)
 
 
 def test_movement_day_key_groups_same_date_and_amount() -> None:

@@ -7,9 +7,12 @@ import logging
 import pytest
 
 from ._action_test_support import (
+    _BUCKET_ID,
     LedgerSourceImportCommand,
     Path,
+    TransactionDirection,
     TransactionValidationError,
+    _repositories,
     import_ledger_source,
 )
 
@@ -98,7 +101,85 @@ def test_import_ledger_source_auto_unsupported_file_raises_localised_import_erro
     assert error.context["path"] == str(unsupported)
     rendered = resolve_error_message(error)
     assert rendered
+    assert str(unsupported) in rendered
     assert "auto-detection" not in rendered
+
+
+def test_import_dedup_keeps_opposite_direction_same_amount_narrative_date(
+    secure_objects,
+    tmp_path: Path,
+) -> None:
+    """Opposite cashflow directions are distinct imported movements."""
+    transaction_repository, event_repository = _repositories(secure_objects)
+    incoming = tmp_path / "incoming.csv"
+    incoming.write_text(
+        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID,direction\n"
+        "2026-04-17,Client SL,Mirror movement,48.40,EUR,n26-in,INCOMING\n",
+        encoding="utf-8",
+    )
+    outgoing = tmp_path / "outgoing.csv"
+    outgoing.write_text(
+        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID,direction\n"
+        "2026-04-17,Client SL,Mirror movement,48.40,EUR,n26-out,OUTGOING\n",
+        encoding="utf-8",
+    )
+
+    first = import_ledger_source(
+        LedgerSourceImportCommand(bucket_id=_BUCKET_ID, path=incoming, provider="csv"),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    )
+    second = import_ledger_source(
+        LedgerSourceImportCommand(bucket_id=_BUCKET_ID, path=outgoing, provider="csv"),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    )
+
+    assert first.imported == 1
+    assert first.skipped == 0
+    assert second.imported == 1
+    assert second.skipped == 0
+    assert {transaction.direction for transaction in transaction_repository.load().values()} == {
+        TransactionDirection.INCOMING,
+        TransactionDirection.OUTGOING,
+    }
+
+
+def test_import_dedup_keeps_same_numeric_amount_in_different_currencies(
+    secure_objects,
+    tmp_path: Path,
+) -> None:
+    """Currency is part of imported movement identity."""
+    transaction_repository, event_repository = _repositories(secure_objects)
+    eur = tmp_path / "eur.csv"
+    eur.write_text(
+        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID,direction\n"
+        "2026-04-17,Client SL,Subscription,100.00,EUR,n26-eur,OUTGOING\n",
+        encoding="utf-8",
+    )
+    usd = tmp_path / "usd.csv"
+    usd.write_text(
+        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID,direction\n"
+        "2026-04-17,Client SL,Subscription,100.00,USD,n26-usd,OUTGOING\n",
+        encoding="utf-8",
+    )
+
+    first = import_ledger_source(
+        LedgerSourceImportCommand(bucket_id=_BUCKET_ID, path=eur, provider="csv"),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    )
+    second = import_ledger_source(
+        LedgerSourceImportCommand(bucket_id=_BUCKET_ID, path=usd, provider="csv"),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    )
+
+    assert first.imported == 1
+    assert first.skipped == 0
+    assert second.imported == 1
+    assert second.skipped == 0
+    assert {transaction.raw.currency for transaction in transaction_repository.load().values()} == {"EUR", "USD"}
 
 
 def test_import_ledger_source_verify_missing_original_file_raises_localised_error(tmp_path: Path) -> None:
