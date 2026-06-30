@@ -454,11 +454,38 @@ def test_compute_draft_id_excludes_findings_and_status() -> None:
         modelo=draft.modelo,
         period=draft.period,
         profile_tax_id=draft.profile_tax_id,
-        schema_version=draft.schema_version,
+        snapshot_ref=draft.snapshot_ref,
         values=draft.values,
         binding_values=draft.binding_values,
     )
     assert recomputed == draft.draft_id
+
+
+def test_compute_draft_id_uses_snapshot_ref_not_schema_version() -> None:
+    draft = _draft()
+    schema_mutated = draft.model_copy(update={"schema_version": f"{draft.schema_version}:changed"})
+    snapshot_mutated_ref = draft.snapshot_ref.model_copy(
+        update={"revision_id": f"{draft.snapshot_ref.revision_id}-changed"},
+    )
+    schema_mutated_id = compute_modelo_draft_id(
+        modelo=schema_mutated.modelo,
+        period=schema_mutated.period,
+        profile_tax_id=schema_mutated.profile_tax_id,
+        snapshot_ref=schema_mutated.snapshot_ref,
+        values=schema_mutated.values,
+        binding_values=schema_mutated.binding_values,
+    )
+    snapshot_mutated_id = compute_modelo_draft_id(
+        modelo=draft.modelo,
+        period=draft.period,
+        profile_tax_id=draft.profile_tax_id,
+        snapshot_ref=snapshot_mutated_ref,
+        values=draft.values,
+        binding_values=draft.binding_values,
+    )
+
+    assert schema_mutated_id == draft.draft_id
+    assert snapshot_mutated_id != draft.draft_id
 
 
 def test_iter_findings_threshold() -> None:

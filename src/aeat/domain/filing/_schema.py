@@ -159,7 +159,7 @@ class ModeloDraft(BaseModel):
     """A typed, validated draft of one filing.
 
     The ``draft_id`` is a content-addressed hash of
-    ``(modelo, period, profile_tax_id, schema_version, values)``.
+    ``(modelo, period, profile_tax_id, snapshot_ref, values)``.
     Re-validating a draft preserves its identity because findings,
     status, ``updated_at`` and ``notes`` are deliberately excluded
     from the hash.
@@ -201,7 +201,7 @@ def compute_modelo_draft_id(
     modelo: str,
     period: Period,
     profile_tax_id: str,
-    schema_version: str,
+    snapshot_ref: RegistrySnapshotRef,
     values: tuple[ModeloValue, ...],
     binding_values: tuple[ModeloBindingValue, ...] = (),
 ) -> str:
@@ -215,7 +215,7 @@ def compute_modelo_draft_id(
         modelo: Modelo string ID.
         period: Typed :class:`~aeat.core.Period` for the filing period.
         profile_tax_id: Taxpayer tax ID.
-        schema_version: The casilla DB version this draft was
+        snapshot_ref: Typed registry snapshot coordinate this draft was
             built against.
         values: The tuple of :class:`ModeloValue` records to hash.
         binding_values: Optional tuple of :class:`ModeloBindingValue` records
@@ -230,7 +230,7 @@ def compute_modelo_draft_id(
         "modelo": modelo,
         "period": {"filing_year": period.filing_year, "code": period.registry_token},
         "profile_tax_id": profile_tax_id,
-        "schema_version": schema_version,
+        "snapshot_ref": snapshot_ref.model_dump(mode="json"),
         "values": [v.model_dump(mode="json") for v in sorted_values],
         "binding_values": [v.model_dump(mode="json") for v in sorted_binding_values],
     }
