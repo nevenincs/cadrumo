@@ -77,9 +77,26 @@ _M100_CLOSURE_ASSERTION_CASILLAS: tuple[CasillaId, ...] = (
     _casilla_id("0585"),
     _casilla_id("0586"),
 )
+_M100_CORPUS_YEARS: tuple[int, ...] = (2021, 2022, 2023)
+_M100_CORPUS_YEAR_IDS: tuple[str, ...] = tuple(f"{year}-0A" for year in _M100_CORPUS_YEARS)
 
 
-def test_verification_chain_m100_parser_extracts_declaracion_pdf_casillas() -> None:
+def _parse_m100_corpus(year: int, label: str) -> dict[CasillaId, object]:
+    pdf_path = FIXTURES_DIR / "justificantes" / "100" / f"{year}-0A.pdf"
+    try:
+        filing = parse_declaracion(
+            pdf_path,
+            modelo_override="100",
+            año_override=year,
+            period_override="0A",
+        )
+    except DeclaracionParseError as exc:
+        pytest.fail(f"PARSER-GAP [{label}]: parse_declaracion raised.\n  error: {exc}")
+    return {v.casilla_id: v.printed_value for v in filing.values}
+
+
+@pytest.mark.parametrize("year", _M100_CORPUS_YEARS, ids=_M100_CORPUS_YEAR_IDS)
+def test_verification_chain_m100_parser_extracts_declaracion_pdf_casillas(year: int) -> None:
     """Parser extracts M100 cuota-chain, actividades-economicas, and 0171 leaf casillas.
 
     GROUNDED authority: real AEAT corpus PDFs (sanitised) committed at
@@ -98,28 +115,17 @@ def test_verification_chain_m100_parser_extracts_declaracion_pdf_casillas() -> N
     of any closure impossible. See test_verification_chain_m100_engine_corpus_limited
     for the empirical confirmation of the sanitisation artefact.
     """
-    for year in (2021, 2022, 2023):
-        pdf_path = FIXTURES_DIR / "justificantes" / "100" / f"{year}-0A.pdf"
-        try:
-            filing = parse_declaracion(
-                pdf_path,
-                modelo_override="100",
-                año_override=year,
-                period_override="0A",
-            )
-        except DeclaracionParseError as exc:
-            pytest.fail(f"PARSER-GAP [M100/{year}-0A]: parse_declaracion raised.\n  error: {exc}")
-
-        extracted = {v.casilla_id: v.printed_value for v in filing.values}
-        assert set(extracted.keys()) == _EXPECTED_CASILLAS_M100, (
-            f"PARSER-GAP [M100/{year}-0A]: unexpected casilla set.\n"
-            f"  got: {sorted(extracted)}\n  expected: {sorted(_EXPECTED_CASILLAS_M100)}"
+    label = f"M100/{year}-0A"
+    extracted = _parse_m100_corpus(year, label)
+    assert set(extracted.keys()) == _EXPECTED_CASILLAS_M100, (
+        f"PARSER-GAP [{label}]: unexpected casilla set.\n"
+        f"  got: {sorted(extracted)}\n  expected: {sorted(_EXPECTED_CASILLAS_M100)}"
+    )
+    for casilla_id, value in extracted.items():
+        assert isinstance(value, Decimal), (
+            f"PARSER-GAP [{label}]: casilla {casilla_id!r} is not Decimal: "
+            f"{type(value).__name__!r} = {value!r}"
         )
-        for casilla_id, value in extracted.items():
-            assert isinstance(value, Decimal), (
-                f"PARSER-GAP [M100/{year}-0A]: casilla {casilla_id!r} is not Decimal: "
-                f"{type(value).__name__!r} = {value!r}"
-            )
 
 
 def test_verification_chain_m100_engine_corpus_limited() -> None:
@@ -151,19 +157,7 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
     Legal grounding: Ley 35/2006 arts. 50, 62-68; RD 439/2007 Disposicion Final.
     """
     year = 2021
-    pdf_path = FIXTURES_DIR / "justificantes" / "100" / f"{year}-0A.pdf"
-
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override="100",
-            año_override=year,
-            period_override="0A",
-        )
-    except DeclaracionParseError as exc:
-        pytest.fail(f"PARSER-GAP [M100/{year}-0A corpus-limited]: parse_declaracion raised.\n  error: {exc}")
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+    extracted = _parse_m100_corpus(year, f"M100/{year}-0A corpus-limited")
 
     inputs: dict[CasillaId, Decimal] = {
         cid: val for cid, val in extracted.items() if cid not in _M100_COMPUTED_CASILLAS and isinstance(val, Decimal)
