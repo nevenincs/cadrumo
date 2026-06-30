@@ -9,13 +9,11 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from functools import lru_cache
 
 import pytest
 from pydantic import ValidationError
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
-from .....core.resources import resources
 from ....iva import (
     EUMemberState,
     InvoiceKind,
@@ -33,13 +31,13 @@ from .. import (
     validate_ledger_oss_aggregation_binding_definition,
 )
 from .._binding_selector_utils import selector_as_dict
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-@lru_cache(maxsize=1)
 def _modelo_369_union_revision() -> ModeloRevision:
-    modelo = resources().modelos.get("369")
+    modelo, _catalogues = _committed_modelo("369")
     return modelo.revisions["esquema-union"]
 
 
