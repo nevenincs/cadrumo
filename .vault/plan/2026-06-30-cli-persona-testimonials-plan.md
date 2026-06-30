@@ -41,25 +41,25 @@ Harden the highest-risk calculation and data-loss paths first: IVA first-period 
 
 Prove or harden the legal and implementation boundary for first-period zero compensation, prior filing evidence, and cross-period suppression.
 
-- [ ] `W02.P03.S06` - Audit first-period IVA compensation suppression against registry requirements; `src/aeat/application/modelo/_iva_wallet_gate.py`.
-- [ ] `W02.P03.S07` - Add real-behavior M303 first-period and prior-filing regression coverage; `src/aeat/application/modelo/tests/test_local_cross_period_carry.py`.
-- [ ] `W02.P03.S08` - Verify operator-visible M303 wallet guidance and translations; `src/aeat/locales`.
+- [x] `W02.P03.S06` - Audit first-period IVA compensation suppression against registry requirements; `src/aeat/application/modelo/_iva_wallet_gate.py`.
+- [x] `W02.P03.S07` - Add real-behavior M303 first-period and prior-filing regression coverage; `src/aeat/application/modelo/tests/test_local_cross_period_carry.py`.
+- [x] `W02.P03.S08` - Verify operator-visible M303 wallet guidance and translations; `src/aeat/locales`.
 
 ### Phase `W02.P04` - ledger import and provider provenance
 
 Verify that raw bank imports, provider detection, duplicate handling, and corpus-scale import/export behavior preserve financial facts without data loss.
 
-- [ ] `W02.P04.S09` - Harden ledger provider detection and unsupported-source diagnostics; `src/aeat/adapters/inbound/financial/providers`.
-- [ ] `W02.P04.S10` - Harden import deduplication provenance and gap diagnostics; `src/aeat/application/ledger`.
-- [ ] `W02.P04.S11` - Exercise corpus import-export roundtrip without permissive imports; `src/aeat/entrypoints/cli/tests/test_ledger_corpus_import_export.py`.
+- [x] `W02.P04.S09` - Harden ledger provider detection and unsupported-source diagnostics; `src/aeat/adapters/inbound/financial/providers`.
+- [x] `W02.P04.S10` - Harden import deduplication provenance and gap diagnostics; `src/aeat/application/ledger`.
+- [x] `W02.P04.S11` - Exercise corpus import-export roundtrip without permissive imports; `src/aeat/entrypoints/cli/tests/test_ledger_corpus_import_export.py`.
 
 ### Phase `W02.P05` - cross-profile identity resolution
 
 Sweep profile-id, bucket-id, display-label, active-profile, and command-family resolution so one taxpayer cannot bleed into another.
 
-- [ ] `W02.P05.S12` - Audit active-profile label-to-UUID normalization at the CLI root; `src/aeat/entrypoints/cli/__init__.py`.
-- [ ] `W02.P05.S13` - Harden workflow bucket-scan ambiguity and tombstone behavior; `src/aeat/application/workflow/_profile_bucket_scan.py`.
-- [ ] `W02.P05.S14` - Sweep profile identity CLI journeys for by-id and by-label parity; `src/aeat/entrypoints/cli/tests`.
+- [x] `W02.P05.S12` - Audit active-profile label-to-UUID normalization at the CLI root; `src/aeat/entrypoints/cli/__init__.py`.
+- [x] `W02.P05.S13` - Harden workflow bucket-scan ambiguity and tombstone behavior; `src/aeat/application/workflow/_profile_bucket_scan.py`.
+- [x] `W02.P05.S14` - Sweep profile identity CLI journeys for by-id and by-label parity; `src/aeat/entrypoints/cli/tests`.
 
 ## Wave `W03` - persona replay and export evidence closure
 

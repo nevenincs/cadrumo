@@ -107,16 +107,45 @@ before `config profile show <label|uuid>` can reach its tombstone-aware inspect
 resolver. Live app commands should still refuse tombstoned active UUIDs, but the
 read-only inspect surface must remain reachable.
 
+### profile-show-option-target | medium | command-local options can masquerade as explicit show target
+
+Corrective commit `3a451a94` preserves explicit `config profile show
+<label|uuid>` inspection under a stale tombstoned active UUID, but the
+real-entrypoint verb parser can treat a command-local option value such as
+`--output-language en` as a fourth verb-path token. That makes no-arg
+`config profile show --output-language en` look like targeted inspection,
+skipping stale-active normalization even though no profile target was supplied.
+No-arg `config profile show` must remain active-profile dependent; only an
+explicit profile label or UUID argument should bypass stale active-profile
+normalization.
+
+### ledger-diagnostics-rereview | low | final ledger correction is review-clear
+
+Corrective commit `2c78a89da` resolves the verified re-import diagnostics
+regression by passing direction-qualified fingerprints into diagnostics and by
+matching stamped, direction-derived, and legacy unstamped catalogue
+fingerprints. The final ledger review reported no findings for W02.P04, and the
+focused ledger gate reported 62 passed and 7 deselected.
+
+### profile-option-target-rereview | low | final profile correction is review-clear
+
+Corrective commit `e7482b35` resolves the command-local option masking edge.
+The root CLI target detector now skips value-taking options such as
+`--output-language en`, so no-arg `config profile show --output-language en`
+remains active-profile dependent while explicit
+`config profile show <label|uuid> --output-language en` remains reachable for
+read-only tombstoned inspection. Final profile review reported no findings for
+W02.P05.S12-S14, and the focused profile gate reported 55 integration tests
+passed.
+
 ## Recommendations
 
-- Do not close W02.P03 until the M303 seed help text distinguishes declaration of
-  a zero carry-forward from automatic proof of `first_period_zero`, and W02.P03
-  exec records tie the no-change code finding to RAG and test evidence.
-- Do not close W02.P04 until canonical ledger exports are kept out of the raw
-  bank-provider import path, dedup fingerprints include the missing financial
-  discriminators, unsupported-source diagnostics render the source path, and
-  verified re-import diagnostics retain duplicate reporting.
-- Do not close W02.P05 until active-profile UUID routing applies the tombstone
-  filter, `config profile show <uuid>` has real CLI coverage for tombstoned
-  inspection, and stale tombstoned active profiles do not block explicit
-  read-only profile inspection.
+- Keep W02.P03 closed: corrective commit `5abb0081e` distinguishes a declared
+  zero carry-forward from automatic `first_period_zero`, and the M303 locale and
+  seed-help verification gates passed.
+- Keep W02.P04 closed: corrective commits `34873aa5a` and `2c78a89da` preserve
+  the raw-provider boundary, direction-qualified duplicate diagnostics,
+  unsupported-source paths, and corpus import/export refusal behavior.
+- Keep W02.P05 closed: corrective commits `5083d57e6`, `3a451a94`, and
+  `e7482b35` preserve tombstone-aware read-only inspection while keeping live
+  active-profile routing guarded against tombstoned UUIDs.
