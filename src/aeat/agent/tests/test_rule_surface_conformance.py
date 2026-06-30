@@ -16,12 +16,12 @@ import re
 
 import pytest
 
-from aeat.agent import iter_operator_rules
-from aeat.application.operator_surface import (
+from ...application.operator_surface import (
     CommandSchemaRef,
     build_operator_surface_manifest,
 )
-from aeat.core.json_contract import ENVELOPE_SCHEMA_VERSION, Notice, SchemaEnvelope
+from ...core.json_contract import ENVELOPE_SCHEMA_VERSION, Notice, SchemaEnvelope
+from .. import iter_operator_rules
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -58,7 +58,7 @@ def _valid_command_paths() -> frozenset[str]:
 def _command_schema_refs_via_cli() -> tuple[CommandSchemaRef, ...]:
     # Reuse the CLI's own payload-discovery + projection so the gate sees exactly
     # the surface an operator's `aeat app contract` would.
-    from aeat.entrypoints.cli._app_contract import _command_schema_refs
+    from ...entrypoints.cli._app_contract import _command_schema_refs
 
     return _command_schema_refs()
 
