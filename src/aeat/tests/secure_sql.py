@@ -30,6 +30,10 @@ from ..adapters.persistence.storage.sql.engine import dispose_engine
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ..core.config import Settings, load_settings, override_settings
 
+_DEFAULT_RUNTIME_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
+_DEFAULT_PRIMARY_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
+_DEFAULT_SECONDARY_BUCKET_ID = "33333333-3333-4333-8333-333333333333"
+
 
 def _provision_bucket_dek_v1_session(
     *,
@@ -219,7 +223,7 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Iterator[Path]:
 def isolated_runtime_profile(
     *,
     tmp_path: Path,
-    bucket_id: str = "test-runtime-profile",
+    bucket_id: str = _DEFAULT_RUNTIME_BUCKET_ID,
     label: str = "Test runtime profile",
 ) -> Iterator[TestRuntimeProfile]:
     """Create a real active-profile bucket runtime for tests.
@@ -312,8 +316,8 @@ class MultiBucketTestRuntime:
 def isolated_two_bucket_runtime(
     *,
     tmp_path: Path,
-    primary_bucket_id: str = "primary-test-runtime",
-    secondary_bucket_id: str = "secondary-test-runtime",
+    primary_bucket_id: str = _DEFAULT_PRIMARY_BUCKET_ID,
+    secondary_bucket_id: str = _DEFAULT_SECONDARY_BUCKET_ID,
     primary_label: str = "Primary test runtime",
     secondary_label: str = "Secondary test runtime",
 ) -> Iterator[MultiBucketTestRuntime]:
@@ -401,7 +405,7 @@ def isolated_two_bucket_runtime(
 def isolated_cli_runtime_profile(
     *,
     tmp_path: Path,
-    bucket_id: str = "test-runtime-profile",
+    bucket_id: str = _DEFAULT_RUNTIME_BUCKET_ID,
     label: str = "Test runtime profile",
 ) -> Iterator[TestRuntimeProfile]:
     """Create a real runtime profile with CLI-adjacent directories isolated.
