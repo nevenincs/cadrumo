@@ -50,7 +50,13 @@ class WorkRevisionResult(OutputSchema):
 
 @register_schema("modelo.work.observations")
 class WorkObservationsResult(OutputSchema):
-    """Typed observation/provenance view for one stored calculation revision."""
+    """Typed provenance view for one stored :class:`CalculationRevision`.
+
+    ``observations`` reuses the same :class:`ObservationPayload` rows emitted by
+    :class:`WorkRevisionResult` and :class:`aeat.entrypoints.cli._modelo_payloads.WorkCalculateResult`;
+    the separate command exists so operators can inspect formula, legal, source,
+    and operand provenance without reading the full revision payload.
+    """
 
     operation: str = "modelo.work.observations"
     calculation_revision_id: CalculationRevisionId
