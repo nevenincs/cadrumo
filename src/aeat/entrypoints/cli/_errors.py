@@ -6,24 +6,26 @@ stable stderr payload (text or JSON) plus a stable :class:`typer.Exit`
 code drawn from :class:`aeat.entrypoints.cli._exit_codes.ExitCode`.
 
 Two narrow boundary exceptions wrap unexpected failures so they reach
-:func:`render_error_text` and :func:`render_error_json` with a
-predictable shape:
+:func:`~aeat.core.errors.render_error_text` and
+:func:`~aeat.core.errors.render_error_json` with a predictable shape:
 
-- :exc:`CliValidationBoundaryError` wraps a leaked
+- :exc:`~aeat.entrypoints.cli._errors.CliValidationBoundaryError` wraps a leaked
   :exc:`pydantic.ValidationError`.
-- :exc:`CliUnexpectedBoundaryError` wraps any other non-control-flow
-  exception.
+- :exc:`~aeat.entrypoints.cli._errors.CliUnexpectedBoundaryError` wraps any
+  other non-control-flow exception.
 
-A third type, :exc:`CliRefusedBoundaryError`, is reserved for refusals
-emitted in JSON mode whose payload is intentionally stderr-only.
+A third type, :exc:`~aeat.entrypoints.cli._errors.CliRefusedBoundaryError`, is
+reserved for refusals emitted in JSON mode whose payload is intentionally
+stderr-only.
 
-The :func:`command_error_boundary` decorator wraps a callback so that
+The :func:`~aeat.entrypoints.cli._errors.command_error_boundary` decorator wraps a callback so that
 :class:`aeat.core.errors.AeatError` instances are emitted via
-:func:`_emit_error_and_exit`. :func:`decorate_typer_app` walks a
-:class:`typer.Typer` tree and applies the decorator to every registered
-command and group callback (with an opt-out via ``skip_paths``).
-:func:`error_boundary_under_test` toggles the boundary off for tests
-that want to assert on the raised exception directly.
+:func:`~aeat.entrypoints.cli._errors._emit_error_and_exit`.
+:func:`~aeat.entrypoints.cli._errors.decorate_typer_app` walks a
+:class:`typer.Typer` tree and applies the decorator to every registered command
+and group callback (with an opt-out via ``skip_paths``).
+:func:`~aeat.entrypoints.cli._errors.error_boundary_under_test` toggles the
+boundary off for tests that want to assert on the raised exception directly.
 """
 
 from __future__ import annotations
@@ -84,8 +86,9 @@ class CliValidationBoundaryError(AeatError):
 
     This class covers input-time validation failures (the operator passed
     an invalid argument or body).  It is distinct from
-    :exc:`CliStoredDataValidationBoundaryError`, which handles schema drift
-    on persisted records and legitimately suggests ``aeat config repair``.
+    :exc:`~aeat.entrypoints.cli._errors.CliStoredDataValidationBoundaryError`,
+    which handles schema drift on persisted records and legitimately suggests
+    ``aeat config repair``.
     Suggesting ``aeat config repair`` here would be misleading: repair
     diagnoses local configuration state and cannot fix an application
     schema mismatch or an invalid CLI argument.
@@ -112,7 +115,7 @@ class CliValidationBoundaryError(AeatError):
 class CliUnexpectedBoundaryError(AeatError):
     """Raised when a CLI callback leaks an unexpected exception.
 
-    Used for any exception that is not :class:`AeatError`,
+    Used for any exception that is not :class:`~aeat.core.errors.AeatError`,
     :exc:`pydantic.ValidationError`, or Typer/Click control flow. The
     original exception is preserved on :attr:`original_exception`.
 
@@ -141,9 +144,10 @@ class CliUnexpectedBoundaryError(AeatError):
 class CliStoredDataValidationBoundaryError(AeatError):
     """Raised when a CLI callback loads stored profile data that fails validation.
 
-    Distinct from :exc:`CliValidationBoundaryError` (which wraps input-time
-    validation failures) so downstream handlers and tests can discriminate
-    between malformed user input and drifted stored profile data.  The stored
+    Distinct from
+    :exc:`~aeat.entrypoints.cli._errors.CliValidationBoundaryError` (which wraps
+    input-time validation failures) so downstream handlers and tests can
+    discriminate between malformed user input and drifted stored profile data.  The stored
     record was valid when it was written; schema evolution or an out-of-band
     edit caused the drift.
 
@@ -182,26 +186,29 @@ class CliRefusedBoundaryError(AeatError):
 
 
 def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
-    """Wrap ``callback`` so :class:`AeatError` emits the structured stderr form.
+    """Wrap ``callback`` so :class:`~aeat.core.errors.AeatError` emits the structured stderr form.
 
     The wrapper catches four exception families and routes them to
-    :func:`_emit_error_and_exit`:
+    :func:`~aeat.entrypoints.cli._errors._emit_error_and_exit`:
 
     - :exc:`~aeat.domain.user_profile.StoredProfileDriftError` is
-      wrapped in :exc:`CliStoredDataValidationBoundaryError` so operators see a
-      repair-oriented message distinct from input-time validation failures.
-      Checked before the broad :class:`AeatError` arm by typed exception, not
-      field-path introspection.
+      wrapped in
+      :exc:`~aeat.entrypoints.cli._errors.CliStoredDataValidationBoundaryError`
+      so operators see a repair-oriented message distinct from input-time
+      validation failures. Checked before the broad
+      :class:`~aeat.core.errors.AeatError` arm by typed exception, not field-path
+      introspection.
     - :class:`aeat.core.errors.AeatError` is forwarded verbatim.
     - :exc:`pydantic.ValidationError` is wrapped in
-      :exc:`CliValidationBoundaryError`.
+      :exc:`~aeat.entrypoints.cli._errors.CliValidationBoundaryError`.
     - Any other non-control-flow exception is wrapped in
-      :exc:`CliUnexpectedBoundaryError`.
+      :exc:`~aeat.entrypoints.cli._errors.CliUnexpectedBoundaryError`.
 
     Typer/Click control-flow exceptions (e.g. :exc:`click.exceptions.Exit`,
     :exc:`click.Abort`, :exc:`typer.Exit`) propagate untouched so the
-    framework can act on them. When :func:`error_boundary_under_test` is
-    active the original exception is re-raised instead of being emitted.
+    framework can act on them. When
+    :func:`~aeat.entrypoints.cli._errors.error_boundary_under_test` is active
+    the original exception is re-raised instead of being emitted.
 
     Calls are memoised by callback identity so wrapping the same
     callback twice returns the original wrapper.
@@ -293,7 +300,7 @@ def decorate_typer_app(
     *,
     skip_paths: Sequence[tuple[str, ...]] = (),
 ) -> None:
-    """Apply :func:`command_error_boundary` across an entire Typer tree.
+    """Apply :func:`~aeat.entrypoints.cli._errors.command_error_boundary` across an entire Typer tree.
 
     Walks ``app`` recursively and wraps every command and group callback
     that is a plain function. Sub-apps are descended into.
@@ -312,11 +319,11 @@ def write_stderr(text: str, *, stream: io.TextIOBase | None = None) -> None:
     """Write ``text`` to stderr with UTF-8-safe fallback behaviour.
 
     On Windows consoles whose default encoding is cp1252, raw writes of
-    non-ASCII characters raise :exc:`UnicodeEncodeError`. This helper
+    non-ASCII characters raise ``UnicodeEncodeError``. This helper
     first attempts to reconfigure the stream to UTF-8 via
-    :class:`_ReconfigurableTextIO`; on encoding failure it falls back to
-    the underlying byte buffer with ``errors="replace"``, and finally to
-    an ASCII-safe replacement string.
+    :class:`~aeat.entrypoints.cli._errors._ReconfigurableTextIO`; on encoding
+    failure it falls back to the underlying byte buffer with
+    ``errors="replace"``, and finally to an ASCII-safe replacement string.
 
     Args:
         text: Text payload to emit.
@@ -347,8 +354,9 @@ def _emit_error_and_exit(error: AeatError) -> Never:
     """Render ``error`` to stderr and terminate with its registered exit code.
 
     Selects the JSON or text renderer based on whether the active
-    callback opted into JSON output via :func:`json_output_requested`,
-    writes the payload through :func:`write_stderr`, and raises
+    callback opted into JSON output via
+    :func:`~aeat.core.click_context.json_output_requested`, writes the payload
+    through :func:`~aeat.entrypoints.cli._errors.write_stderr`, and raises
     :class:`typer.Exit` with the category-mapped exit code.
     """
     code = get_registered_error_code(error)
@@ -359,7 +367,7 @@ def _emit_error_and_exit(error: AeatError) -> Never:
 
 @contextmanager
 def error_boundary_under_test() -> Iterator[None]:
-    """Temporarily force :func:`command_error_boundary` to re-raise originals.
+    """Temporarily force :func:`~aeat.entrypoints.cli._errors.command_error_boundary` to re-raise originals.
 
     Tests that need to assert on the raised exception type rather than
     the rendered stderr payload should wrap their invocation in this
@@ -368,8 +376,8 @@ def error_boundary_under_test() -> Iterator[None]:
     unaffected.
 
     Yields:
-        :data:`None`. The context's only purpose is the side effect on
-        the internal flag.
+        ``None``. The context's only purpose is the side effect on the internal
+        flag.
     """
     token: Token[bool] = _UNDER_TEST.set(True)
     try:
@@ -416,7 +424,10 @@ def _callback_name(callback: Callable[..., object] | None) -> str:
 
 
 def _is_memoised_wrapper(obj: object) -> TypeGuard[Callable[..., object]]:
-    """Narrow ``obj`` to a callable when it was produced by :func:`command_error_boundary`.
+    """Narrow ``obj`` to a callable produced by the command error boundary.
+
+    The callable must have been produced by
+    :func:`~aeat.entrypoints.cli._errors.command_error_boundary`.
 
     A hit in ``_WRAPPED_CALLBACKS`` guarantees the stored value is the ``_wrapped``
     closure returned by this module; all such closures satisfy ``Callable[..., object]``.
@@ -437,15 +448,15 @@ def _supports_reconfigure(stream: object) -> TypeGuard[_ReconfigurableTextIO]:
 
 
 def _unwrap_aeat_error(error: BaseException) -> AeatError | None:
-    """Return the typed :class:`AeatError` wrapped inside ``error``, if any.
+    """Return the typed :class:`~aeat.core.errors.AeatError` wrapped inside ``error``, if any.
 
     A library boundary (notably SQLAlchemy) can catch an
-    :class:`AeatError` raised inside its own machinery and re-raise it
-    wrapped in a library-specific exception. The typed refusal is then
-    reachable only through the ``orig`` attribute SQLAlchemy sets, or
-    through the standard ``__cause__`` / ``__context__`` chain. This
-    helper walks both so the refusal can be forwarded verbatim rather
-    than mis-reported as an unexpected internal error.
+    :class:`~aeat.core.errors.AeatError` raised inside its own machinery and
+    re-raise it wrapped in a library-specific exception. The typed refusal is
+    then reachable only through the ``orig`` attribute SQLAlchemy sets, or
+    through the standard ``__cause__`` / ``__context__`` chain. This helper walks
+    both so the refusal can be forwarded verbatim rather than mis-reported as an
+    unexpected internal error.
 
     The walk is depth-bounded to avoid pathological cycles.
     """
@@ -483,7 +494,7 @@ _CONTROL_FLOW_EXCEPTIONS: tuple[type[BaseException], ...] = (
 
 
 def _is_click_control_flow(error: Exception) -> bool:
-    """Return :data:`True` when ``error`` is Typer/Click control flow, not a bug.
+    """Return ``True`` when ``error`` is Typer/Click control flow, not a bug.
 
     Recognises :exc:`click.ClickException`, :exc:`click.exceptions.Exit`,
     :exc:`click.Abort`, and :exc:`typer.Exit`. Typer vendors its own Click
