@@ -3,8 +3,8 @@
 Imports the raw bank-export corpus through the real
 :class:`aeat.adapters.inbound.financial.providers._csv.CsvProvider`, applies the
 ground-truth oracle classification (``ground-truth.manifest.json``), wires a
-fixed ECB-rate :class:`aeat.domain.currency.CurrencyNormalizationService` for the
-foreign-currency rows, builds strict :class:`aeat.domain.transactions.Transaction`
+corpus-local ECB-rate snapshot into :class:`aeat.domain.currency.CurrencyNormalizationService`
+for the foreign-currency rows, builds strict :class:`aeat.domain.transactions.Transaction`
 records, and runs the real aggregation pipelines.
 
 The oracle states each row's expected typed facts and target bucket; the
@@ -17,7 +17,7 @@ independent expectation -- they do NOT re-compute registry tax formulas
 from __future__ import annotations
 
 import json
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from typing import Any
@@ -25,6 +25,7 @@ from typing import Any
 import pytest
 
 from ..adapters.inbound.financial.providers._csv import CsvProvider
+from ..adapters.outbound.fx import EcbReferenceRateProvider
 from ..application.aggregation import aggregate_iva_ledger_observations
 from ..application.aggregation._renta_income_ledger import aggregate_renta_income_ledger
 from ..core import Period
@@ -45,17 +46,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _CORPUS = Path(__file__).parent / "fixtures" / "financial" / "ledger-corpus"
 _CENT = Decimal("0.01")
 _CLASSIFIED_AT = datetime(2026, 6, 2, 12, 0, tzinfo=UTC)
-
-
-# --- fixed ECB-style rate provider (real rate data, not a behaviour mock) ----
-class _FixedRateProvider:
-    """Deterministic EUR rate source for the corpus's foreign-currency dates."""
-
-    def __init__(self, rates: dict[str, Decimal]) -> None:
-        self._rates = rates
-
-    def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
-        return self._rates.get(currency.upper())
+_FX_SNAPSHOT = _CORPUS / "eurofxref-corpus.xml"
 
 
 def _load_manifest() -> dict[str, Any]:
@@ -102,8 +93,7 @@ def _build_transactions() -> list[tuple[Transaction, dict[str, Any], str]]:
     """
     manifest = _load_manifest()
     rules = manifest["rules"]
-    fx_rates = {k: Decimal(v) for k, v in manifest["fx_rates_to_eur"].items()}
-    fx = CurrencyNormalizationService(rate_provider=_FixedRateProvider(fx_rates))
+    fx = CurrencyNormalizationService(rate_provider=EcbReferenceRateProvider(rates_path=_FX_SNAPSHOT))
     provider = CsvProvider()
 
     built: list[tuple[Transaction, dict[str, Any], str]] = []
