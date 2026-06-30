@@ -50,27 +50,29 @@ _SYNTHETIC_NAME = "APELLIDO APELLIDO NOMBRE"
 class TestNifReplacement:
     """Synthetic NIF/NIE values must pass the AEAT checksum."""
 
-    def test_accepts_valid_synthetic_nie(self) -> None:
+    @pytest.mark.parametrize(
+        ("real", "synthetic", "surface_label"),
+        (
+            pytest.param(_REAL_NIE_CANARY, _SYNTHETIC_NIE, "taxpayer NIE", id="nie"),
+            pytest.param(_REAL_NIF_CANARY, _SYNTHETIC_NIF, "taxpayer NIF", id="nif"),
+        ),
+    )
+    def test_accepts_valid_synthetic_identity(
+        self,
+        real: str,
+        synthetic: str,
+        surface_label: str,
+    ) -> None:
         replacement = NifReplacement(
-            real=SecretStr(_REAL_NIE_CANARY),
-            synthetic=_SYNTHETIC_NIE,
-            surface_label="taxpayer NIE",
+            real=SecretStr(real),
+            synthetic=synthetic,
+            surface_label=surface_label,
         )
         # A silent-acceptance regression would still match "no exception
         # raised"; pinning the synthetic and real fields catches a
         # validator that wrongly normalises (trim, lowercase) the input.
-        assert replacement.synthetic == _SYNTHETIC_NIE
-        assert replacement.real.get_secret_value() == _REAL_NIE_CANARY
-
-    def test_accepts_valid_synthetic_nif(self) -> None:
-        # 12345678 % 23 == 14 → letter Z
-        replacement = NifReplacement(
-            real=SecretStr(_REAL_NIF_CANARY),
-            synthetic=_SYNTHETIC_NIF,
-            surface_label="taxpayer NIF",
-        )
-        assert replacement.synthetic == _SYNTHETIC_NIF
-        assert replacement.real.get_secret_value() == _REAL_NIF_CANARY
+        assert replacement.synthetic == synthetic
+        assert replacement.real.get_secret_value() == real
 
     def test_rejects_synthetic_with_bad_checksum(self) -> None:
         # IdentityError now inherits from ValueError so pydantic wraps
