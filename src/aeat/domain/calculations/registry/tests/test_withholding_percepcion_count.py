@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from functools import cache
 
 import pytest
 
@@ -25,6 +26,7 @@ from .._withholding_bindings import WithholdingObservation, resolve_withholding_
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+@cache
 def _m190_revision() -> ModeloRevision:
     return resources().modelos.authority.snapshot("190", filing_year=2024, period="0A").revision
 
