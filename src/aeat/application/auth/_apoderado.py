@@ -15,8 +15,9 @@ Operator verbs:
     offline configuration read.
 
 Configuration is persisted per-bucket as an encrypted envelope row in
-the :class:`SecureObjectRepository` under the
-``aeat.auth.apoderado`` namespace. The ``represented_nif`` is an
+the :class:`SecureObjectRepository` under
+:data:`aeat.adapters.persistence.storage.AUTH_APODERADO_CONFIGURATION_NAMESPACE`.
+The ``represented_nif`` is an
 identity-bearing tax identifier, so the record carries
 :class:`SensitivityClass` ``IDENTITY`` and is encrypted at rest; the
 service never writes plaintext to disk. Live mutation of AEAT-side
@@ -86,10 +87,13 @@ class ApoderadoStatus(BaseModel):
 class _ApoderadoConfigRepository(SecureBoundRepository[ApoderadoConfiguration]):
     """Encrypted per-bucket apoderado configuration store.
 
-    Records carry :attr:`SensitivityClass.IDENTITY`: the
-    ``represented_nif`` is an identity-bearing tax identifier. The
-    natural key is the ``bucket_id``, so each bucket holds at most one
-    apoderado configuration.
+    Records carry :class:`SensitivityClass` ``IDENTITY`` as declared by
+    :data:`aeat.adapters.persistence.storage.AUTH_APODERADO_CONFIGURATION_NAMESPACE`:
+    the ``represented_nif`` is an identity-bearing tax identifier. The
+    :class:`SecureBoundRepository` base serialises each
+    :class:`ApoderadoConfiguration` through an
+    :class:`~aeat.adapters.persistence.storage.Envelope`. The natural key is
+    the ``bucket_id``, so each bucket holds at most one apoderado configuration.
     """
 
     namespace: ClassVar[str] = AUTH_APODERADO_CONFIGURATION_NAMESPACE.namespace
