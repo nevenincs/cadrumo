@@ -1,7 +1,17 @@
 """Application-owned custody operations for the profile secret store.
 
-This module uses :class:`Settings` for configuration and :class:`RecoveryVerificationError`
-for recovery validation errors.
+The config CLI calls this module for recovery-code minting,
+verification, rekey, and recovery. Storage primitives stay in
+:mod:`aeat.adapters.persistence.storage`; this layer resolves
+:class:`~aeat.core.config.Settings`, updates the active profile manifest
+when recovery is enrolled, and returns typed application result records.
+
+Plaintext recovery words are returned only from
+:func:`mint_recovery_code`. They are never persisted by this module; the
+secret store keeps only wrapped recovery material. Verification failures
+from :class:`~aeat.adapters.persistence.storage.RecoveryVerificationError`
+and related storage errors are rendered as a false verification result
+rather than leaking backend exception details.
 """
 
 from __future__ import annotations

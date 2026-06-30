@@ -1,25 +1,25 @@
-"""Bundled-export serialiser and deserialiser for :class:`UserProfilePortableExport`.
+"""Portable profile-bundle serialisation for bucket export/import.
 
-The serialiser reads all four financial-history categories from the
-active bucket's repositories and populates the v2 bundle fields.
-The :class:`TransactionCatalogue` is loaded via
-:class:`TransactionCatalogueRepository` and is one of the four payload
-categories included in each export bundle.
+This module composes
+:class:`~aeat.domain.user_profile.UserProfilePortableExport` payloads at
+the application boundary. A v2 bundle contains the profile record plus
+the four bucket-local history categories that must move with it: work
+units, ledger transactions, calculation revisions, and filing records.
+The ledger category is loaded as a
+:class:`~aeat.domain.transactions.TransactionCatalogue` through
+:class:`~aeat.domain.transactions.TransactionCatalogueRepository`.
 
-S106 — deserialiser: validates ``bundle_schema_version`` against
-``SUPPORTED_BUNDLE_SCHEMA_VERSIONS`` before parsing; imports work units,
-ledger transactions, calculation revisions, and filing records via their
-respective repository save paths.
+Bundles carry typed domain-model payloads, not encrypted blobs, key
+material, or raw secure-storage rows. Export reads domain records from
+their owning repositories; import saves those records through the target
+bucket's repository save paths so the target bucket re-encrypts them
+under its own data-encryption key.
 
-ADR decisions honoured here:
-
-  D2 — no encrypted-material blobs; decrypted domain-model payloads only.
-  D3 — ``model_dump(mode="json")`` / ``model_validate()`` throughout; no
-  ``dict[str, Any]`` intermediate; ``exclude_none=True`` forbidden.
-  D4 — version constant validated at import boundary; unsupported versions
-  raise ``CliRefusedBoundaryError``.
-  D5 — bundle ``profile_id`` is preserved; two-tier collision guard runs
-  before any write.
+Only the current v2 shape is accepted in this pre-beta codebase. Older
+facts-only bundles are not bridged. Callers must provision and
+collision-check the target bucket and hold the appropriate bucket
+session before deserialising; this module performs schema-version
+validation and typed repository writes.
 """
 
 from __future__ import annotations
@@ -45,16 +45,17 @@ SUPPORTED_BUNDLE_SCHEMA_VERSIONS: frozenset[int] = frozenset({2})
 
 
 def serialize_profile_bundle(*, bucket_id: str) -> UserProfilePortableExport:
-    """Build a v2 portable export bundle for ``bucket_id``.
+    """Build a v2 :class:`~aeat.domain.user_profile.UserProfilePortableExport`.
 
     Reads the profile record and all four financial-history categories
-    from the bucket's encrypted repositories and assembles them into a
-    :class:`UserProfilePortableExport`.  The caller is responsible for
-    ensuring a live :class:`BucketSession` is active for ``bucket_id``.
+    from ``bucket_id``'s encrypted repositories and assembles them into
+    one portable payload. The caller is responsible for ensuring a live
+    bucket session is active for ``bucket_id``.
 
     The bundle carries only decrypted pydantic domain-model payloads
-    (ADR D2).  The recipient re-encrypts each object under their own
-    bucket DEK via the standard repository save path on import.
+    (no encrypted envelopes or key material). The recipient re-encrypts
+    each object under its own bucket data-encryption key through the
+    standard repository save paths on import.
     """
     from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
     from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
@@ -96,19 +97,20 @@ def deserialize_profile_bundle(bundle: UserProfilePortableExport, *, target_buck
     """Import financial-history objects from ``bundle`` into ``target_bucket_id``.
 
     Validates ``bundle.bundle_schema_version`` against
-    ``SUPPORTED_BUNDLE_SCHEMA_VERSIONS`` before any writes (ADR D4); only the
+    ``SUPPORTED_BUNDLE_SCHEMA_VERSIONS`` before any writes; only the
     current v2 shape is accepted.
 
-    Saves work units, ledger transactions, calculation
-    revisions, and filing records into the target bucket via the standard
-    repository save paths.  Each domain object is re-encrypted under the
-    target bucket's own DEK (ADR D2).  No ``dict[str, Any]`` intermediate
-    is used; pydantic models flow directly into typed catalogue saves (ADR D3).
+    Saves work units, ledger transactions, calculation revisions, and
+    filing records into the target bucket via the standard repository
+    save paths. Each domain object is re-encrypted under the target
+    bucket's own data-encryption key. No ``dict[str, Any]`` intermediate
+    is used; pydantic models flow directly into typed catalogue saves.
 
     The caller is responsible for:
+
       - Provisioning the target bucket before calling this function.
-      - Ensuring a live :class:`BucketSession` is active for ``target_bucket_id``.
-      - Running the two-tier collision guard (ADR D5) before provisioning.
+      - Ensuring a live bucket session is active for ``target_bucket_id``.
+      - Running the two-tier collision guard before provisioning.
 
     Args:
         bundle: The validated export bundle.
