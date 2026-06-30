@@ -1664,17 +1664,7 @@ cli:
           megerősítéséhez.
         seed_conflict: 'Belső hiba: ütközés a meglévő IVA-kompenzációs vetőösszeg-rekorddal.'
         seed_filing_year_help: A vetőösszeg benyújtási éve.
-        seed_help: "Modelo 303 áthozott kompenzációs nyitóegyenleg deklarálása egy\
-          \ olyan időszakra, amely megelőzi a helyi előzményeket. Megtagadja, ha\
-          \ az időszakhoz már van rekord.\n\nKét eset:\n\n  --amount 0   Valódi első\
-          \ időszak: ez az adózó első Modelo 303 bevallása ezzel a NIF azonosítóval.\
-          \ Az iva.compensacion-pendiente-periodos-anteriores (AEAT 110-es casilla)\
-          \ nulla, mert nincs korábbi kompenzációs egyenleg (LIVA 99.5. cikk, 37/1992.\
-          \ törvény). Az egyeztetési réteg ezt first_period_zero értékként kezeli,\
-          \ nem blokkolóként.\n\n  --amount X   Áthozott egyenleg: az adózó korábbi\
-          \ M303 bevallásokat nyújtott be más eszközzel vagy közvetlenül az AEAT-nál.\
-          \ X az utolsó benyújtott M303 bevallásból származó, későbbi időszakokra\
-          \ függőben maradó kompenzáció."
+        seed_help: "Modelo 303 áthozott kompenzációs nyitóegyenleg deklarálása egy olyan időszakra, amely megelőzi a helyi előzményeket. Megtagadja, ha az időszakhoz már van rekord.\n\nKét eset:\n\n  --amount 0   Nulla nyitóegyenleg: azt deklarálja, hogy erre az időszakra nincs áthozandó függő kompenzáció. Ez olyan adózónál is előfordulhat, aki korábban már adott be M303 bevallást, ha az utolsó M303 nem hagyott függőben lévő kompenzációt.\n\n  --amount X   Áthozott egyenleg: az adózó korábbi M303 bevallásokat nyújtott be más eszközzel vagy közvetlenül az AEAT-nál. X az utolsó benyújtott M303 bevallásból származó, későbbi időszakokra függőben maradó kompenzáció.\n\nAz automatikus first_period_zero eset független a seed parancstól: a számítás és az egyeztetés során a tevékenységkezdési és nyilvántartási feltételek bizonyítják, hogy ez az első IVA-időszak; ekkor az AEAT 110-es casilla nulla a LIVA 99.5. cikke (37/1992. törvény) alapján, és nem blokkol."
         seed_invalid_amount: A vetőösszegnek érvényes, nem negatív decimálisnak kell
           lennie.
         seed_period_help: 'A 303-as nyomtatvány benyújtásának időszaka: 1T-4T negyedévek
@@ -2719,7 +2709,8 @@ cli:
         add PATH' paranccsal hozható létre.
       id_help: A főkönyvi tranzakció azonosítója, amelyhez bizonyítékot csatolnak.
       purchase_invoice_evidence_help: A tranzakciót alátámasztó vásárlásiszámla-bizonyíték
-        azonosítója; létrehozás: 'aeat app ledger evidence add PATH'.
+        azonosítója; létrehozásához használja az 'aeat app ledger evidence add PATH'
+        parancsot.
     categories:
       family_column: Kategóriacsalád
       header: ELISMERT FŐKÖNYVI KIADÁSI KATEGÓRIÁK
