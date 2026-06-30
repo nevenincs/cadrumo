@@ -27,6 +27,11 @@ prior-filing, relation-prefill, invoice, borrador, and IVA-wallet resolvers from
 neighboring application packages; their shared contract is still
 :class:`CalculationSourceResolution`, not :class:`CasillaAggregation`.
 
+Aggregation resolvers prepare provenance-carrying source values; they do not
+execute registry formulas, decide filing readiness, or mutate work-unit filing
+state. Those steps remain in :mod:`aeat.domain.calculations.registry` and
+:mod:`aeat.application.modelo`.
+
 The facade also re-exports encrypted observation repositories for the
 retenciones and withholding stores, informativa rollups, and the shared
 :class:`AggregationError` failure taxonomy.
