@@ -1,0 +1,80 @@
+"""Manual ledger import parse and source path refusal tests."""
+
+from __future__ import annotations
+
+import logging
+
+import pytest
+
+from ._action_test_support import (
+    LedgerSourceImportCommand,
+    Path,
+    TransactionValidationError,
+    import_ledger_source,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def test_import_rejects_zero_amount_row_at_parse_boundary(tmp_path: Path) -> None:
+    """A zero-amount source row is refused at the parse boundary, like the manual path."""
+    statement = tmp_path / "bank-zero.csv"
+    statement.write_text(
+        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
+        "2026-04-15,Client SL,Invoice 1,0.00,EUR,n26-zero\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(TransactionValidationError) as exc_info:
+        import_ledger_source(
+            LedgerSourceImportCommand(path=statement, provider="csv", dry_run=True),
+        )
+    assert exc_info.value.translated_message == "errors.transaction.ledger_import_failed"
+    assert "zero amount" in str((exc_info.value.context or {}).get("reason", ""))
+
+
+def test_import_ledger_source_missing_file_raises_localised_error(tmp_path: Path) -> None:
+    """A missing source file raises a tr()-localised error, not naked English."""
+    from ....core.errors import resolve_error_message
+
+    missing = tmp_path / "no-such-statement.csv"
+    with pytest.raises(TransactionValidationError) as excinfo:
+        import_ledger_source(
+            LedgerSourceImportCommand(path=missing, provider="csv", dry_run=True, verify=False, source=missing),
+        )
+
+    error = excinfo.value
+    assert error.translated_message == "errors.financial.source_file_not_found"
+    assert error.context == {"path": str(missing)}
+    rendered = resolve_error_message(error)
+    assert "El archivo de origen no existe" in rendered
+    assert str(missing) in rendered
+
+
+def test_import_ledger_source_auto_missing_file_is_clean_refusal_without_probe_noise(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """``--provider auto`` on a missing file refuses cleanly without probe noise."""
+    from ....core.errors import resolve_error_message
+
+    missing = tmp_path / "no-such-statement.csv"
+    with (
+        caplog.at_level("ERROR", logger="aeat.adapters.inbound.financial.providers"),
+        pytest.raises(TransactionValidationError) as excinfo,
+    ):
+        import_ledger_source(
+            LedgerSourceImportCommand(path=missing, provider="auto", dry_run=True),
+        )
+
+    error = excinfo.value
+    assert error.translated_message == "errors.financial.source_file_not_found"
+    assert error.context == {"path": str(missing)}
+    rendered = resolve_error_message(error)
+    assert str(missing) in rendered
+    assert "auto-detection" not in rendered
+    probe_errors = [
+        record
+        for record in caplog.records
+        if record.levelno >= logging.ERROR and record.name.startswith("aeat.adapters.inbound.financial.providers")
+    ]
+    assert probe_errors == []

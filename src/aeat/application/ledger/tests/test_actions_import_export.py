@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import logging
 
 import pytest
 
@@ -24,7 +23,6 @@ from ._action_test_support import (
     SecureObjectRepository,
     StringIO,
     TransactionDirection,
-    TransactionValidationError,
     _repositories,
     create_manual_transaction,
     csv,
@@ -254,22 +252,6 @@ def test_import_ledger_source_honors_explicit_direction_column_on_positive_amoun
     assert row["source_jurisdiction"] == "FR"
 
 
-def test_import_rejects_zero_amount_row_at_parse_boundary(tmp_path: Path) -> None:
-    """A zero-amount source row is refused at the parse boundary, like the manual path."""
-    statement = tmp_path / "bank-zero.csv"
-    statement.write_text(
-        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
-        "2026-04-15,Client SL,Invoice 1,0.00,EUR,n26-zero\n",
-        encoding="utf-8",
-    )
-    with pytest.raises(TransactionValidationError) as exc_info:
-        import_ledger_source(
-            LedgerSourceImportCommand(path=statement, provider="csv", dry_run=True),
-        )
-    assert exc_info.value.translated_message == "errors.transaction.ledger_import_failed"
-    assert "zero amount" in str((exc_info.value.context or {}).get("reason", ""))
-
-
 def test_import_outgoing_magnitude_row_stores_positive_with_outgoing_direction(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -320,73 +302,6 @@ def test_import_internal_transfer_row_stores_magnitude_with_transfer_direction(
     (stored,) = transaction_repository.load().values()
     assert stored.raw.amount == Decimal("5000.00")
     assert stored.direction is TransactionDirection.INTERNAL_TRANSFER
-
-
-def test_import_ledger_source_missing_file_raises_localised_error(tmp_path: Path) -> None:
-    """A missing source file raises a tr()-localised error, not naked English.
-
-    Regression guard for the CLI persona testimonial finding: the ledger
-    import error must carry the ``translated_message`` tr-key and render
-    in the operator's locale (Spanish by default), not a hardcoded
-    English sentence.
-    """
-    from ....core.errors import resolve_error_message
-
-    missing = tmp_path / "no-such-statement.csv"
-    with pytest.raises(TransactionValidationError) as excinfo:
-        import_ledger_source(
-            LedgerSourceImportCommand(path=missing, provider="csv", dry_run=True, verify=False, source=missing),
-        )
-
-    error = excinfo.value
-    assert error.translated_message == "errors.financial.source_file_not_found"
-    assert error.context == {"path": str(missing)}
-    rendered = resolve_error_message(error)
-    assert "El archivo de origen no existe" in rendered
-    assert str(missing) in rendered
-
-
-def test_import_ledger_source_auto_missing_file_is_clean_refusal_without_probe_noise(
-    tmp_path: Path,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """``--provider auto`` on a missing file refuses cleanly without probe noise.
-
-    Regression guard for audit finding m1: a non-existent path with
-    ``provider="auto"`` previously ran the format-detection probe loop
-    before the existence check, dumping a raw ``FileNotFoundError``
-    traceback and spurious provider-probe ``ERROR`` log lines (the OFX and
-    PDF parsers) before finally raising the auto-detection failure. The fix
-    refuses up front with the path-naming ``source_file_not_found`` typed
-    error, and the detection probe loop never runs, so no provider emits an
-    ERROR-level probe-failure record.
-    """
-    from ....core.errors import resolve_error_message
-
-    missing = tmp_path / "no-such-statement.csv"
-    with (
-        caplog.at_level("ERROR", logger="aeat.adapters.inbound.financial.providers"),
-        pytest.raises(TransactionValidationError) as excinfo,
-    ):
-        import_ledger_source(
-            LedgerSourceImportCommand(path=missing, provider="auto", dry_run=True),
-        )
-
-    error = excinfo.value
-    # The refusal names the missing path; it is NOT the downstream
-    # "auto-detection of ledger format failed" error the probe loop raised.
-    assert error.translated_message == "errors.financial.source_file_not_found"
-    assert error.context == {"path": str(missing)}
-    rendered = resolve_error_message(error)
-    assert str(missing) in rendered
-    assert "auto-detection" not in rendered
-    # No provider-probe ERROR records leaked to the operator-facing log.
-    probe_errors = [
-        record
-        for record in caplog.records
-        if record.levelno >= logging.ERROR and record.name.startswith("aeat.adapters.inbound.financial.providers")
-    ]
-    assert probe_errors == []
 
 
 def test_export_ledger_transactions_serializes_active_bucket_rows_and_emits_event(
