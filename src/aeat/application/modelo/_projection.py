@@ -440,10 +440,6 @@ def project_modelo_100_from_m130(
             surface="project modelo 100 generated binding id",
         ),
         _binding_id(
-            f"renta-{year}-modelo-115-retenciones-periodicas",
-            surface="project modelo 100 generated binding id",
-        ),
-        _binding_id(
             f"renta-{year}-modelo-123-retenciones-periodicas",
             surface="project modelo 100 generated binding id",
         ),

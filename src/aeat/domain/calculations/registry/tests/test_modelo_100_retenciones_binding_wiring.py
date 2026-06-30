@@ -58,7 +58,6 @@ _DATE_BINDINGS_2025: dict[BindingId, date] = {"renta-2025-profile-taxpayer-birth
 _RELATION_VALUES_2024: dict[RelationId, Decimal] = {
     "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2024-rel-115-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
     "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
@@ -79,7 +78,6 @@ def _base_binding_values(
     values: dict[BindingId, Decimal] = {
         "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-2024-modelo-111-retenciones-periodicas": m111,
-        "renta-2024-modelo-115-retenciones-periodicas": Decimal("0"),
         "renta-2024-profile-declaration-type": Decimal("1"),
         "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
         # Art. 81 bis LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.

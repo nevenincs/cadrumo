@@ -1,9 +1,0 @@
-[[revisions."2025".dependency_classifications]]
-id = "renta-2025-dep-115"
-source_modelo = "115"
-treatment = "factual_evidence"
-taxpayer_files_source = false
-target_constructs = ["renta-dependent-modelos", "renta-payments-retentions", "renta-real-estate-capital"]
-relation_refs = ["renta-2025-rel-115-retenciones-trimestrales"]
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-hac-277-2026:art-3"]
-source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
