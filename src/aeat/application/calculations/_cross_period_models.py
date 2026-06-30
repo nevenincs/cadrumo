@@ -31,7 +31,7 @@ class _ObservationPayload(Protocol):
     observation: RegistryModeloObservation
     source_kind: str
     member_nif: str | None
-    stamped_revision_id: str | None
+    stamped_revision_id: str
     source_metadata: dict[str, str]
 
 
@@ -65,13 +65,13 @@ class CrossPeriodCleanStateBlocker(StrEnum):
     MISSING_EXPECTED_GROUP_MEMBER_ROSTER = "missing_expected_group_member_roster"
     UNEXPECTED_GROUP_MEMBER_SOURCE = "unexpected_group_member_source"
     REGISTRY_REVISION_DIVERGENCE = "registry_revision_divergence"
-    """Stamped revision id does not match the law-determined revision for the source (modelo, filing_year, period).
+    """Stamped revision id does not re-confirm against the law-determined revision for the source.
 
     ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2: a prior
     observation captured under a revision that is no longer the law-determined
-    revision for its source context must not silently propagate its norms. The
-    carry is refused until the operator re-files and re-stamps under the correct
-    revision.
+    revision for its source context, or whose source context cannot be resolved
+    for re-confirmation, must not silently propagate its norms. The carry is
+    refused until the operator re-files and re-stamps under the current revision.
     """
 
 
@@ -293,14 +293,6 @@ class CrossPeriodDependencyEvidence(BaseModel):
     missing_member_nifs: tuple[str, ...] = ()
     unexpected_member_nifs: tuple[str, ...] = ()
     blockers: tuple[CrossPeriodCleanStateBlocker, ...] = ()
-    unstamped_revision_advisory: bool = False
-    """Non-blocking advisory: the source revision stamp could not be re-confirmed.
-
-    The carry proceeds but this flag is ``True`` when the source context cannot
-    be resolved for stamp re-confirmation. Operators should re-pull the source
-    period to obtain a currently verifiable record. A divergent stamp produces
-    ``REGISTRY_REVISION_DIVERGENCE`` in :attr:`blockers` instead.
-    """
     no_prior_obligation: NoPriorObligationProvenance | None = None
     """Typed marker that this dependency was scoped out as no-prior-obligation.
 
@@ -420,11 +412,6 @@ class CrossPeriodCleanStateVerdict(BaseModel):
     @property
     def blockers(self) -> tuple[CrossPeriodCleanStateBlocker, ...]:
         return tuple(dict.fromkeys(blocker for item in self.dependencies for blocker in item.blockers))
-
-    @property
-    def has_unstamped_revision_advisory(self) -> bool:
-        """True when any dependency carries a revision re-confirmation advisory."""
-        return any(item.unstamped_revision_advisory for item in self.dependencies)
 
     @property
     def has_non_official_local_chain_advisory(self) -> bool:

@@ -6,9 +6,8 @@ tests exercise the resolvable cases through public application contracts:
 - ``resolve_bindings_from_local_store`` for previous-filing binding prefill.
 - ``evaluate_cross_period_clean_state`` for cross-period verification gates.
 
-The indeterminate authority case is pinned directly on the shared gate because
-the public carry readers only operate on registry-derived, resolvable
-requirements.
+The unresolvable authority case is pinned directly on the shared gate because
+the public carry readers only operate on registry-derived requirements.
 """
 
 from __future__ import annotations
@@ -102,11 +101,11 @@ def _save_source_observation(
     )
 
 
-def _cross_period_outcome(
+def _cross_period_refused(
     verdict: CrossPeriodCleanStateVerdict,
     *,
     requirement_keys: set[tuple[str, int, str]],
-) -> tuple[bool, bool]:
+) -> bool:
     evidence = tuple(
         item
         for item in verdict.dependencies
@@ -118,15 +117,13 @@ def _cross_period_outcome(
         in requirement_keys
     )
     assert evidence, "M390 must expose first-quarter M303 cross-period dependencies"
-    diverges = any(CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE in item.blockers for item in evidence)
-    advisory = any(item.unstamped_revision_advisory for item in evidence)
-    return diverges, advisory
+    return any(CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE in item.blockers for item in evidence)
 
 
 def _public_carry_outcomes(
     tmp_path: Path,
     stamped_revision_id: str,
-) -> tuple[tuple[bool, bool], tuple[bool, bool]]:
+) -> tuple[bool, bool]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         repository = CalculationObservationRepository()
         cross_snapshot, cross_requirements = _m390_first_quarter_requirements()
@@ -141,10 +138,7 @@ def _public_carry_outcomes(
 
         binding_snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR, period=_TARGET_PERIOD)
         binding_report = resolve_bindings_from_local_store(binding_snapshot, repository=repository)
-        binding_outcome = (
-            _M303_CARRY_BINDING_ID not in binding_report.binding_values,
-            binding_report.has_unstamped_revision_advisory,
-        )
+        binding_refused = _M303_CARRY_BINDING_ID not in binding_report.binding_values
 
         cross_verdict = evaluate_cross_period_clean_state(
             cross_snapshot,
@@ -159,7 +153,7 @@ def _public_carry_outcomes(
             (requirement.source_modelo, requirement.filing_year, requirement.period.registry_token)
             for requirement in cross_requirements
         }
-        return binding_outcome, _cross_period_outcome(cross_verdict, requirement_keys=requirement_keys)
+        return binding_refused, _cross_period_refused(cross_verdict, requirement_keys=requirement_keys)
 
 
 @pytest.mark.parametrize("case", ["matching", "divergent"])
@@ -167,29 +161,28 @@ def test_public_carry_reads_match_shared_gate_for_resolvable_source(tmp_path: Pa
     """Binding-prefill and cross-period readers expose the shared R2 decision."""
     if case == "matching":
         stamp = _law_revision_id()
-        expected = (False, False)
+        expected = False
     else:
         stamp = _DIVERGENT_REVISION_ID
-        expected = (True, False)
-
-    shared = revision_carry_outcome(
+        expected = True
+    shared_refused = revision_carry_outcome(
         stamp,
         source_modelo=_MODELO,
         source_filing_year=_YEAR,
         source_period=_SOURCE_PERIOD,
     )
-    binding, cross_period = _public_carry_outcomes(tmp_path / case, stamp)
+    binding_refused, cross_period_refused = _public_carry_outcomes(tmp_path / case, stamp)
 
-    assert shared == expected, f"shared gate disagreed with the spec for {case!r}"
-    assert binding == expected, f"binding prefill diverged from the shared gate for {case!r}"
-    assert cross_period == expected, f"cross-period clean state diverged from the shared gate for {case!r}"
+    assert shared_refused is expected, f"shared gate disagreed with the spec for {case!r}"
+    assert binding_refused is expected, f"binding prefill diverged from the shared gate for {case!r}"
+    assert cross_period_refused is expected, f"cross-period clean state diverged from the shared gate for {case!r}"
 
 
-def test_shared_gate_treats_unresolvable_source_as_advisory() -> None:
-    """A source context the registry cannot resolve is advisory, not divergent."""
+def test_shared_gate_refuses_unresolvable_source() -> None:
+    """A source context the registry cannot resolve is refused, not carried."""
     assert revision_carry_outcome(
         _DIVERGENT_REVISION_ID,
         source_modelo=_NONEXISTENT_MODELO,
         source_filing_year=_YEAR,
         source_period=_SOURCE_PERIOD,
-    ) == (False, True)
+    ) is True

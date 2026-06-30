@@ -399,10 +399,8 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
 
     assert report.granted_verificado_completo is True
     assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
-    # The report carries no BLOCKING finding. A NON-BLOCKING revision-stamp ADVISORY
-    # (WARNING) may be present when a cross-period carry source observation has no
-    # re-confirmable registry revision stamp (period-revision-resolution decision,
-    # Ruling 3 / R2) — it surfaces the carry to the operator without blocking the grant.
+    # The report carries no BLOCKING finding. Other non-blocking advisory findings
+    # may be present, but source-revision re-confirmation failures are blockers.
     assert not any(f.severity is ModeloVerificationFindingSeverity.BLOCKING for f in report.findings)
     assert all(f.kind is ModeloVerificationFindingKind.ADVISORY for f in report.findings)
     assert set(report.resolved_casilla_ids) == set(required)

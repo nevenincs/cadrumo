@@ -14,20 +14,18 @@ for its source context
 which delegates to law-determined revision selection) before trusting the value.
 
 This module is the single implementation of that gate. Before this extraction
-the same ``(diverges, advisory)`` decision was open-coded in three carry sites
+the same revision-stamp refusal decision was open-coded in three carry sites
 with subtly duplicated try/except handling; ``carried-observations-stamp-their-
 revision`` and ``revision-resolution-is-law-determined`` require one
 law-determined re-confirmation, not three parallel copies that can drift.
 
 See Also:
     :func:`~aeat.application.calculations._binding_prefill.resolve_bindings_from_local_store`
-        Previous-filing binding reader that drops divergent carries and surfaces
-        revision re-confirmation advisories.
+        Previous-filing binding reader that drops unreconfirmable carries.
     :func:`~aeat.application.calculations._relation_prefill.resolve_relations_from_local_store`
         Relation-prefill reader that applies the same revision-stamp gate.
     :func:`~aeat.application.calculations._cross_period_clean_state.evaluate_cross_period_clean_state`
-        Filing-grade dependency proof that maps the shared outcome to blockers
-        and advisories.
+        Filing-grade dependency proof that maps the shared outcome to blockers.
 """
 
 from __future__ import annotations
@@ -41,8 +39,8 @@ def revision_carry_outcome(
     source_modelo: str,
     source_filing_year: int,
     source_period: str,
-) -> tuple[bool, bool]:
-    """Return ``(diverges, advisory)`` for a carried observation's revision stamp.
+) -> bool:
+    """Return whether a carried observation's revision stamp must be refused.
 
     Uses
     :meth:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority.snapshot`
@@ -50,12 +48,12 @@ def revision_carry_outcome(
 
     ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2:
 
-    - Indeterminate (source context fails to resolve) → ``(False, True)``: carry
-      proceeds, but the stamp could not be re-confirmed so the advisory MUST be set
-      rather than carrying silently clean.
-    - Divergent stamp → ``(True, False)``: carry refused (caller drops the
+    - Indeterminate (source context fails to resolve) → carry refused. Current
+      observations must be re-confirmable against the law-determined revision;
+      there is no legacy advisory bridge.
+    - Divergent stamp → carry refused (caller drops the
       observation or raises ``REGISTRY_REVISION_DIVERGENCE``).
-    - Matching stamp → ``(False, False)``: clean carry, no advisory.
+    - Matching stamp → clean carry.
 
     Args:
         stamped_revision_id: The revision the source filing was stamped with.
@@ -65,9 +63,8 @@ def revision_carry_outcome(
             (``"1T"``, ``"0A"``, …).
 
     Returns:
-        A ``(diverges, advisory)`` pair. ``diverges`` is ``True`` only when a
-        present stamp disagrees with the law-determined revision; ``advisory`` is
-        ``True`` when the stamp could not be re-confirmed.
+        ``True`` when the stamp disagrees with, or cannot be re-confirmed
+        against, the law-determined revision.
     """
     try:
         snapshot = resources().modelos.authority.snapshot(
@@ -76,11 +73,10 @@ def revision_carry_outcome(
             period=source_period,
         )
     except Exception:
-        # Indeterminate: the source context will not resolve, so the stamp cannot
-        # be re-confirmed. Surface the advisory rather than silently carrying a
-        # clean, unverifiable stamp.
-        return False, True
-    return stamped_revision_id != snapshot.revision.id, False
+        # Indeterminate source context: fail closed. A carry that cannot be
+        # re-confirmed against the law-determined revision is not current data.
+        return True
+    return stamped_revision_id != snapshot.revision.id
 
 
 __all__ = ["revision_carry_outcome"]

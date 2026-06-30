@@ -7,9 +7,9 @@ Tests for the period-revision-resolution decision, Ruling 3 / R2:
 - ``save_observation`` derives the law-determined stamp when callers omit it.
 - Anti-tautology proof: nulling ``stamped_revision_id`` in the on-disk JSON
   envelope refuses on reload.
-- R2 carry gate in ``resolve_bindings_from_local_store``: a divergent
-  stamped revision blocks the carry (binding absent from resolved map),
-  a matching stamp carries cleanly.
+- R2 carry gate in ``resolve_bindings_from_local_store``: a divergent or
+  unreconfirmable stamped revision blocks the carry (binding absent from
+  resolved map), and a matching stamp carries cleanly.
   Subject: Modelo 303/2025/2T whose single ``previous_filing`` binding
   ``modelo-303-compensacion-pendiente-anteriores`` reads from M303/2025/1T.
   M390's five M303-sourced bindings migrated to ``relation_prefill``
@@ -231,7 +231,7 @@ def test_stamped_revision_id_anti_tautology_null_refuses_load(tmp_path: Path) ->
 # - divergent stamp on 1T → 1T observation refused by the gate;
 #   _gather_observations returns () → early return with empty BindingPrefillReport.
 #   Proof: binding absent from report.binding_values.
-# - matching stamp on 1T → carry proceeds cleanly without advisory.
+# - matching stamp on 1T → carry proceeds cleanly.
 # ---------------------------------------------------------------------------
 
 _M303_CARRY_YEAR = 2025
@@ -302,7 +302,7 @@ def test_carry_divergent_stamp_refuses_single_observation(tmp_path: Path) -> Non
 
 
 def test_carry_matching_stamp_carries_cleanly(tmp_path: Path) -> None:
-    """R2: a correctly stamped M303/1T observation carries without advisory and without blocking.
+    """R2: a correctly stamped M303/1T observation carries without blocking.
 
     Subject: M303/2025/2T prefill; the single ``previous_filing`` binding
     ``modelo-303-compensacion-pendiente-anteriores`` reads M303/2025/1T.
@@ -328,9 +328,6 @@ def test_carry_matching_stamp_carries_cleanly(tmp_path: Path) -> None:
         assert report.prefilled, "correctly stamped 1T observation must carry; the prefill must not be empty."
         assert _M303_CARRY_BINDING_ID in report.binding_values, (
             f"binding {_M303_CARRY_BINDING_ID!r} must be resolved from the correctly stamped 1T observation."
-        )
-        assert not report.has_unstamped_revision_advisory, (
-            "correctly stamped observation must not set the revision re-confirmation advisory."
         )
 
 
