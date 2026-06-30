@@ -1,9 +1,9 @@
 """Stable CLI exit-code table for the JSON output contract.
 
 Defines :class:`~aeat.entrypoints.cli._exit_codes.ExitCode`, the canonical
-exit-code reservation used by every command in :mod:`aeat.entrypoints.cli`, and
+exit-code reservation used by every command in :mod:`~aeat.entrypoints.cli`, and
 :func:`~aeat.entrypoints.cli._exit_codes.exit_with`, the thin helper that emits
-an optional stderr message and raises :class:`typer.Exit` with the chosen code.
+an optional stderr message and raises :class:`~typer.Exit` with the chosen code.
 Keeping the table centralised beside
 :func:`~aeat.core.errors.get_error_exit_code` guarantees that the CLI contract
 and the structured error envelope speak the same exit-code vocabulary.
