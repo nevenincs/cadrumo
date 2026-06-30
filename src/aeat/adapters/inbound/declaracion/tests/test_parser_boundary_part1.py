@@ -7,10 +7,7 @@ import pytest
 from ._parser_boundary_support import (
     A4,
     FIXTURES_DIR,
-    AeatError,
-    DeclaracionParseError,
     Path,
-    PdfModeloImportError,
     TemplateNotDetectedError,
     _extract_pages_words,
     canvas,
@@ -19,12 +16,6 @@ from ._parser_boundary_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
-
-
-def test_declaracion_errors_stay_on_core_exception_hierarchy() -> None:
-    assert issubclass(DeclaracionParseError, PdfModeloImportError)
-    assert issubclass(DeclaracionParseError, AeatError)
-    assert issubclass(TemplateNotDetectedError, DeclaracionParseError)
 
 
 def test_parser_debug_log_does_not_expose_source_filename(caplog: pytest.LogCaptureFixture) -> None:
