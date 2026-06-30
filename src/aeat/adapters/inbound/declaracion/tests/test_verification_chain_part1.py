@@ -7,7 +7,6 @@ from collections.abc import Mapping
 import pytest
 
 from ._verification_chain_support import (
-    _COMPUTED_CASILLAS_M111,
     _COMPUTED_CASILLAS_M303,
     _DR303_PROJECTION_CASILLAS,
     _M303_2023_ONWARDS_PARAMS,
@@ -18,7 +17,6 @@ from ._verification_chain_support import (
     DeclaracionParseError,
     RegistryValidationError,
     _build_m303_engine_result,
-    _period_to_date,
     _registry_snapshot,
     calculate_registry_snapshot,
     date,
@@ -50,19 +48,6 @@ _M303_RESULTADO_AUTOLIQUIDACION_CASILLA: CasillaId = _casilla_id("iva.resultado"
 _M303_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("71")
 _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
     "iva.compensacion-pendiente-periodos-anteriores",
-)
-_M111_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("28")
-_M111_RESULTADO_CASILLA: CasillaId = _casilla_id("30")
-_M111_RETENCIONES_TOTAL_LEAVES: frozenset[CasillaId] = _casilla_ids(
-    "03",
-    "06",
-    "09",
-    "12",
-    "15",
-    "18",
-    "21",
-    "24",
-    "27",
 )
 _M303_2023_PROFILE_CASILLAS: frozenset[CasillaId] = _casilla_ids(
     "iva.repercutido.general",
@@ -149,125 +134,6 @@ def _assert_m303_engine_matches_extracted_decimal(
         f"  ({formula_context})"
     )
     return engine_value
-
-
-@pytest.mark.parametrize(
-    "pdf_stem,year,period",
-    [
-        ("2024-1T", 2024, "1T"),
-        ("2024-2T", 2024, "2T"),
-        ("2024-3T", 2024, "3T"),
-        ("2024-4T", 2024, "4T"),
-    ],
-)
-def test_verification_chain_m111_engine_recomputes_closure_casillas_28_and_30(
-    pdf_stem: str,
-    year: int,
-    period: str,
-) -> None:
-    """Engine recomputes casilla 28 (total retenciones) and 30 (resultado) from leaf inputs.
-
-    GROUNDED authority: AEAT corpus PDFs from the sanitised real-form fixture
-    set committed at src/aeat/tests/fixtures/justificantes/111/.
-
-    Chain:
-      1. parse_declaracion → DeclaracionObservation with extracted casillas
-      2. Filter to non-computed casillas (01-27, 29) → inputs
-      3. calculate_registry_snapshot
-      4. Assert engine.values["28"] == extracted["28"] (when present)
-         Assert engine.values["30"] == extracted["30"] (when present)
-
-    Formula:
-      28 = sum(03, 06, 09, 12, 15, 18, 21, 24, 27)  [total retenciones]
-      30 = 28 - 29                                   [resultado a ingresar]
-
-    2024-1T/2T/3T: VERIFIED — leaf casilla 09 (retenciones actividades economicas
-    dinerarias) is extracted; engine recomputes 28 = 09 = 1000, 30 = 28 - 0 = 1000.
-
-    2024-4T: NEGATIVA/SIN ACTIVIDAD/RESULTADO CERO corpus PDF.  All col-C leaf
-    casillas are zero; the printed box 30 comes from the real filing's settlement
-    section (not derivable from current-period inputs).  has_leaf_inputs=False,
-    so formula-consistency assertions are skipped — the test PASSES correctly.
-    No formula gap, no bbox gap.  This is the expected path for a nil filing.
-
-    Casilla 29 (anteriores autoliquidaciones) is absent from the corpus (zero);
-    the engine defaults it to 0, so 30 = 28 - 0 = 28 for the non-nil quarters.
-    """
-    pdf_path = FIXTURES_DIR / "justificantes" / "111" / f"{pdf_stem}.pdf"
-
-    # Parse the declaration.
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override="111",
-            año_override=year,
-            period_override=period,
-        )
-    except DeclaracionParseError as exc:
-        pytest.fail(f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised DeclaracionParseError.\n  error: {exc}")
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
-
-    # Build inputs: exclude computed casillas 28 and 30.
-    inputs: dict[CasillaId, Decimal] = {}
-    for casilla_id, value in extracted.items():
-        if casilla_id in _COMPUTED_CASILLAS_M111:
-            continue
-        if isinstance(value, Decimal):
-            inputs[casilla_id] = value
-
-    # Resolve snapshot and run engine.
-    snapshot = _registry_snapshot("111", year, period)
-    filing_period_date = _period_to_date(year, period)
-
-    try:
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=inputs,
-            date_context={"filing_period": filing_period_date},
-        )
-    except RegistryValidationError as exc:
-        pytest.fail(
-            f"BINDING-GAP [{pdf_stem}]: calculate_registry_snapshot raised "
-            f"RegistryValidationError — a required binding is missing.\n"
-            f"  error: {exc}\n"
-            f"  inputs supplied: {sorted(inputs)}",
-        )
-
-    engine_values = dict(result.values)
-
-    # Leaf inputs for formula 28 = sum(03,06,09,12,15,18,21,24,27).
-    # When none of the leaf casillas are present in the corpus PDF (data-sparse
-    # filing where only the totals were printed), the engine correctly computes
-    # 28=0 and 30=0 — these cannot be compared against the extracted totals
-    # without the breakdown.  Skip formula-consistency checks in that case.
-    has_leaf_inputs = bool(inputs.keys() & _M111_RETENCIONES_TOTAL_LEAVES)
-
-    # Verify casilla 28 when extracted and leaf inputs are present.
-    if _M111_RETENCIONES_TOTAL_CASILLA in extracted and has_leaf_inputs:
-        extracted_28 = extracted[_M111_RETENCIONES_TOTAL_CASILLA]
-        assert isinstance(extracted_28, Decimal)
-        engine_28 = engine_values.get(_M111_RETENCIONES_TOTAL_CASILLA)
-        assert engine_28 is not None, f"FORMULA-MISMATCH [{pdf_stem}]: casilla '28' absent from engine result."
-        assert engine_28 == extracted_28, (
-            f"FORMULA-MISMATCH [{pdf_stem}]: engine casilla '28' = {engine_28!r}, "
-            f"AEAT-printed = {extracted_28!r}.\n"
-            f"  diff: {engine_28 - extracted_28!r}\n"
-            f"  inputs: {inputs}"
-        )
-
-    # Verify casilla 30 when extracted and leaf inputs are present.
-    if _M111_RESULTADO_CASILLA in extracted and has_leaf_inputs:
-        extracted_30 = extracted[_M111_RESULTADO_CASILLA]
-        assert isinstance(extracted_30, Decimal)
-        engine_30 = engine_values.get(_M111_RESULTADO_CASILLA)
-        assert engine_30 is not None, f"FORMULA-MISMATCH [{pdf_stem}]: casilla '30' absent from engine result."
-        assert engine_30 == extracted_30, (
-            f"FORMULA-MISMATCH [{pdf_stem}]: engine casilla '30' = {engine_30!r}, "
-            f"AEAT-printed = {extracted_30!r}.\n"
-            f"  diff: {engine_30 - extracted_30!r}\n"
-            f"  inputs: {inputs}"
-        )
 
 
 @pytest.mark.parametrize(

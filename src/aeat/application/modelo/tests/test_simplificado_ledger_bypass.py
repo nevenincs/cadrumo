@@ -47,6 +47,8 @@ from .._calculation_actions import _raise_if_ledger_preflight_blocks_calculation
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_SIMPLIFICADO_PROFILE_ID = "30300000-0000-4000-8000-000000000303"
+_GENERAL_PROFILE_ID = "30300000-0000-4000-8000-000000000304"
 
 
 def _build_work_unit(bucket_id: str) -> WorkUnit:
@@ -131,7 +133,7 @@ def test_simplificado_bypasses_ledger_preflight_when_transactions_are_unclassifi
     clients do not use the ledger aggregation path). The preflight check must
     not block them from calculating M303 via the manual casillas 47-58 path.
     """
-    bucket_id = "bucket-rs"
+    bucket_id = _SIMPLIFICADO_PROFILE_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         _seed_profile(bucket_id, iva_regime="SIMPLIFICADO")
         tx_repo = _seed_blocking_transaction(bucket_id)
@@ -152,7 +154,7 @@ def test_general_profile_raises_preflight_error_when_transactions_are_unclassifi
     If this test ever stops raising, the bypass has widened beyond SIMPLIFICADO
     and the previous test becomes tautological.
     """
-    bucket_id = "bucket-gr"
+    bucket_id = _GENERAL_PROFILE_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         _seed_profile(bucket_id, iva_regime="GENERAL")
         tx_repo = _seed_blocking_transaction(bucket_id)

@@ -87,6 +87,7 @@ _T3 = datetime(2026, 4, 15, 15, 0, 0, tzinfo=UTC)
 _T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
 _T5 = datetime(2026, 4, 17, 13, 0, 0, tzinfo=UTC)
 _TAX_ID = "X1234567L"
+_PROFILE_ID = "13000000-0000-4000-8000-000000000001"
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -131,9 +132,12 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Yield the five catalogue repositories over an encrypted SQLite db."""
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
         objects = profile.repository
-        _seed_ready_profile(UserProfileLifecycleRepository(bucket_id="default", objects=objects), bucket_id="default")
+        _seed_ready_profile(
+            UserProfileLifecycleRepository(bucket_id=_PROFILE_ID, objects=objects),
+            bucket_id=_PROFILE_ID,
+        )
         wu = WorkUnitCatalogueRepository(objects=objects)
         cr = CalculationRevisionCatalogueRepository(objects=objects)
         fr = ModeloRecordCatalogueRepository(objects=objects)
@@ -160,7 +164,7 @@ def _seed_work_unit(wu_repo: WorkUnitCatalogueRepository):
     locally-filed regression test."""
 
     return create_work_unit(
-        bucket_id="default",
+        bucket_id=_PROFILE_ID,
         modelo="130",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
@@ -536,7 +540,7 @@ def test_import_refuses_printed_number_metadata_token(repos: _Repos) -> None:
 
     wu_repo, _, _, _, _ = repos
     work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_PROFILE_ID,
         modelo="303",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
@@ -780,7 +784,7 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(repos: _Repo
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_PROFILE_ID,
         modelo="111",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),

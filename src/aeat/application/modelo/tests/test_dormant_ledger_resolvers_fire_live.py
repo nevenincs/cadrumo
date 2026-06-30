@@ -42,7 +42,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # Chain 1 — M130 income (ledger_renta_income_aggregation): PROVEN LIVE
 # ---------------------------------------------------------------------------
 
-_M130_BUCKET = "bucket-m130-income-fold"
+_M130_BUCKET = "13000000-0000-4000-8000-000000000013"
 _M130_REVISION = "2019-y-siguientes"
 _M130_YEAR = 2026
 _M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")

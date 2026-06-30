@@ -41,6 +41,8 @@ _NOW = datetime(2026, 6, 27, 12, 0, 0, tzinfo=UTC)
 _M130_REVISION = "2019-y-siguientes"
 _M200_REVISION = "2024-y-siguientes"
 _M303_REVISION = "2023-y-siguientes"
+_OPERATOR_PROFILE_ID = "30300000-0000-4000-8000-000000000001"
+_NONRESIDENT_PROFILE_ID = "20000000-0000-4000-8000-000000000002"
 
 
 def _store_incomplete_profile(bucket_id: str) -> None:
@@ -172,12 +174,12 @@ def _store_draft_revision(repository: CalculationRevisionCatalogueRepository, *,
 
 
 def test_create_work_unit_service_refuses_incomplete_profile(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator"):
-        _store_incomplete_profile("operator")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
+        _store_incomplete_profile(_OPERATOR_PROFILE_ID)
 
         with pytest.raises(ModeloProfileReadinessError):
             create_work_unit(
-                bucket_id="operator",
+                bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo.M303.value,
                 filing_year=2025,
                 period=Period.from_year_and_code(2025, "1T"),
@@ -187,13 +189,13 @@ def test_create_work_unit_service_refuses_incomplete_profile(tmp_path: Path) -> 
 
 
 def test_create_work_unit_service_refuses_profile_missing_activity(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator") as profile:
-        _store_profile_without_activity("operator")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID) as profile:
+        _store_profile_without_activity(_OPERATOR_PROFILE_ID)
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
 
         with pytest.raises(ModeloProfileReadinessError) as excinfo:
             create_work_unit(
-                bucket_id="operator",
+                bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo.M130.value,
                 filing_year=2025,
                 period=Period.from_year_and_code(2025, "1T"),
@@ -213,12 +215,12 @@ def test_create_work_unit_service_refuses_profile_missing_activity(tmp_path: Pat
 
 def test_create_work_unit_service_refuses_period_year_mismatch_with_typed_error(tmp_path: Path) -> None:
     """A mismatched Period/year pair refuses through the modelo error hierarchy."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID) as profile:
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
 
         with pytest.raises(WorkUnitMutationRefusedError) as excinfo:
             create_work_unit(
-                bucket_id="operator",
+                bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo.M303.value,
                 filing_year=2025,
                 period=Period.from_year_and_code(2026, "1T"),
@@ -239,13 +241,13 @@ def test_create_work_unit_service_refuses_period_year_mismatch_with_typed_error(
 
 
 def test_create_work_unit_service_refuses_nonresident_legal_entity_m200(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="nordhaus") as profile:
-        _store_nonresident_legal_entity_profile("nordhaus")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_NONRESIDENT_PROFILE_ID) as profile:
+        _store_nonresident_legal_entity_profile(_NONRESIDENT_PROFILE_ID)
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
 
         with pytest.raises(ModeloProfileReadinessError) as excinfo:
             create_work_unit(
-                bucket_id="nordhaus",
+                bucket_id=_NONRESIDENT_PROFILE_ID,
                 modelo=Modelo.M200.value,
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "0A"),
@@ -257,7 +259,7 @@ def test_create_work_unit_service_refuses_nonresident_legal_entity_m200(tmp_path
         assert "NON_RESIDENT_IRNR" in str(excinfo.value)
         assert "establecimiento permanente" in str(excinfo.value)
         assert excinfo.value.context == {
-            "bucket_id": "nordhaus",
+            "bucket_id": _NONRESIDENT_PROFILE_ID,
             "modelo": Modelo.M200.value,
             "applicability_verdict": "not_applicable",
             "legal_refs": (
@@ -269,11 +271,11 @@ def test_create_work_unit_service_refuses_nonresident_legal_entity_m200(tmp_path
 
 
 def test_mark_verified_service_refuses_existing_work_unit_with_incomplete_profile(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator"):
-        _store_incomplete_profile("operator")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
+        _store_incomplete_profile(_OPERATOR_PROFILE_ID)
         work_repository = WorkUnitCatalogueRepository()
         calculation_repository = CalculationRevisionCatalogueRepository()
-        work_unit = _store_work_unit(work_repository, bucket_id="operator")
+        work_unit = _store_work_unit(work_repository, bucket_id=_OPERATOR_PROFILE_ID)
         revision_id = _store_draft_revision(calculation_repository, work_unit=work_unit)
 
         with pytest.raises(ModeloProfileReadinessError):
@@ -287,10 +289,10 @@ def test_mark_verified_service_refuses_existing_work_unit_with_incomplete_profil
 
 
 def test_calculate_service_refuses_existing_work_unit_with_incomplete_profile(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator"):
-        _store_incomplete_profile("operator")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
+        _store_incomplete_profile(_OPERATOR_PROFILE_ID)
         repository = WorkUnitCatalogueRepository()
-        work_unit = _store_work_unit(repository, bucket_id="operator")
+        work_unit = _store_work_unit(repository, bucket_id=_OPERATOR_PROFILE_ID)
 
         with pytest.raises(ModeloProfileReadinessError):
             calculate_modelo_revision(
@@ -304,13 +306,13 @@ def test_calculate_service_refuses_existing_work_unit_with_incomplete_profile(tm
 
 
 def test_calculate_service_refuses_existing_nonresident_legal_entity_m200(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="nordhaus") as profile:
-        _store_nonresident_legal_entity_profile("nordhaus")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_NONRESIDENT_PROFILE_ID) as profile:
+        _store_nonresident_legal_entity_profile(_NONRESIDENT_PROFILE_ID)
         work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
         calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
         work_unit = _store_work_unit(
             work_repository,
-            bucket_id="nordhaus",
+            bucket_id=_NONRESIDENT_PROFILE_ID,
             modelo=Modelo.M200,
             filing_year=2026,
             period_code="0A",
@@ -334,13 +336,13 @@ def test_calculate_service_refuses_existing_nonresident_legal_entity_m200(tmp_pa
 
 
 def test_create_work_unit_service_refuses_pre_activity_m303_and_persists_no_work_unit(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator") as profile:
-        _store_ready_profile("operator", activity_start_date=date(2026, 5, 1))
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID) as profile:
+        _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2026, 5, 1))
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
 
         with pytest.raises(ModeloProfileReadinessError) as excinfo:
             create_work_unit(
-                bucket_id="operator",
+                bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo.M303.value,
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
@@ -351,7 +353,7 @@ def test_create_work_unit_service_refuses_pre_activity_m303_and_persists_no_work
 
         assert "pre-activity period" in str(excinfo.value)
         assert excinfo.value.context == {
-            "bucket_id": "operator",
+            "bucket_id": _OPERATOR_PROFILE_ID,
             "modelo": "303",
             "filing_year": 2026,
             "period": "1T",
@@ -362,13 +364,13 @@ def test_create_work_unit_service_refuses_pre_activity_m303_and_persists_no_work
 
 
 def test_create_work_unit_service_refuses_pre_activity_m130_and_persists_no_work_unit(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator") as profile:
-        _store_ready_profile("operator", activity_start_date=date(2026, 7, 15))
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID) as profile:
+        _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2026, 7, 15))
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
 
         with pytest.raises(ModeloProfileReadinessError) as excinfo:
             create_work_unit(
-                bucket_id="operator",
+                bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo.M130.value,
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "2T"),
@@ -380,7 +382,7 @@ def test_create_work_unit_service_refuses_pre_activity_m130_and_persists_no_work
         assert "Modelo 130 2026 2T is before" in str(excinfo.value)
         assert "pre-activity period" in str(excinfo.value)
         assert excinfo.value.context == {
-            "bucket_id": "operator",
+            "bucket_id": _OPERATOR_PROFILE_ID,
             "modelo": Modelo.M130.value,
             "filing_year": 2026,
             "period": "2T",
@@ -391,14 +393,14 @@ def test_create_work_unit_service_refuses_pre_activity_m130_and_persists_no_work
 
 
 def test_stale_pre_activity_m303_calculate_refuses_before_wallet_or_revision(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator") as profile:
-        _store_ready_profile("operator", activity_start_date=date(2026, 5, 1))
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID) as profile:
+        _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2026, 5, 1))
         work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
         calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
         wallet_repository = IvaWalletDecisionRepository(objects=profile.repository)
         work_unit = _store_work_unit(
             work_repository,
-            bucket_id="operator",
+            bucket_id=_OPERATOR_PROFILE_ID,
             filing_year=2026,
             period_code="1T",
         )
@@ -419,13 +421,13 @@ def test_stale_pre_activity_m303_calculate_refuses_before_wallet_or_revision(tmp
 
 
 def test_stale_pre_activity_m130_calculate_and_verify_refuse_before_revision_mutation(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator") as profile:
-        _store_ready_profile("operator", activity_start_date=date(2026, 7, 15))
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID) as profile:
+        _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2026, 7, 15))
         work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
         calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
         work_unit = _store_work_unit(
             work_repository,
-            bucket_id="operator",
+            bucket_id=_OPERATOR_PROFILE_ID,
             modelo=Modelo.M130,
             filing_year=2026,
             period_code="2T",
@@ -464,14 +466,14 @@ def test_stale_pre_activity_m130_calculate_and_verify_refuse_before_revision_mut
 
 def test_first_active_m303_period_allows_create_and_calculate(tmp_path: Path) -> None:
     period = Period.from_year_and_code(2026, "2T")
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator") as profile:
-        _store_ready_profile("operator", activity_start_date=date(2026, 5, 1))
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID) as profile:
+        _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2026, 5, 1))
         work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
         calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
         wallet_repository = IvaWalletDecisionRepository(objects=profile.repository)
 
         work_unit = create_work_unit(
-            bucket_id="operator",
+            bucket_id=_OPERATOR_PROFILE_ID,
             modelo=Modelo.M303.value,
             filing_year=2026,
             period=period,
@@ -496,12 +498,12 @@ def test_first_active_m303_period_allows_create_and_calculate(tmp_path: Path) ->
 
 
 def test_visible_target_ensure_refuses_reused_pre_activity_m303_before_rename(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator") as profile:
-        _store_ready_profile("operator", activity_start_date=date(2026, 5, 1))
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID) as profile:
+        _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2026, 5, 1))
         work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
         work_unit = _store_work_unit(
             work_repository,
-            bucket_id="operator",
+            bucket_id=_OPERATOR_PROFILE_ID,
             filing_year=2026,
             period_code="1T",
             revision_id=_M303_REVISION,
@@ -509,7 +511,7 @@ def test_visible_target_ensure_refuses_reused_pre_activity_m303_before_rename(tm
 
         with pytest.raises(ModeloProfileReadinessError) as excinfo:
             ensure_modelo_work_unit_for_visible_target(
-                bucket_id="operator",
+                bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo.M303.value,
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
