@@ -7,7 +7,7 @@ from typing import cast
 import pytest
 
 from .....core import Period
-from ._runtime_migrated_repositories_support import (
+from ._runtime_attached_repositories_support import (
     LLM_USAGE_NAMESPACE,
     AmortizacionLedger,
     ApoderadoService,
@@ -168,7 +168,7 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
     ("case_name", "operation"),
     _RUNTIME_DEFAULT_REFUSAL_CASES,
 )
-def test_migrated_runtime_defaults_refuse_missing_session(
+def test_current_runtime_defaults_refuse_missing_session(
     tmp_path: Path,
     case_name: str,
     operation: Callable[[], object],
@@ -185,7 +185,7 @@ def test_migrated_runtime_defaults_refuse_missing_session(
     ("case_name", "operation"),
     _RUNTIME_DEFAULT_REFUSAL_CASES,
 )
-def test_migrated_runtime_defaults_refuse_route_session_mismatch(
+def test_current_runtime_defaults_refuse_route_session_mismatch(
     tmp_path: Path,
     case_name: str,
     operation: Callable[[], object],
@@ -293,7 +293,7 @@ def test_transaction_repository_default_isolates_bucket_writes(tmp_path: Path) -
 
     assert len(loaded.transactions) == 1
     transaction = next(iter(loaded.transactions.values()))
-    assert transaction.raw.description == "runtime migrated repository bucket-a"
+    assert transaction.raw.description == "runtime attached repository bucket-a"
 
 
 def test_attachment_store_default_isolates_active_profile_writes(tmp_path: Path) -> None:
@@ -345,7 +345,7 @@ def test_event_and_workflow_run_defaults_isolate_active_profile_writes(tmp_path:
         runs = WorkflowRunRepository().list()
 
     assert tuple(events) == (event_a.event_id,)
-    assert [run.summary for run in runs] == ["runtime migrated workflow run bucket-a"]
+    assert [run.summary for run in runs] == ["runtime attached workflow run bucket-a"]
 
 
 def test_domain_repository_defaults_isolate_active_profile_writes(tmp_path: Path) -> None:
@@ -530,7 +530,7 @@ def test_runtime_default_surfaces_isolate_active_profile_writes(tmp_path: Path) 
         diagnostic_report = preview_quarantine_unreadable_secure_objects()
 
     assert tuple(snapshot.snapshot_id for snapshot in snapshots) == ("snapshot-bucket-a",)
-    assert tuple(decision.reason for decision in decisions) == ("runtime migrated repair decision bucket-a",)
+    assert tuple(decision.reason for decision in decisions) == ("runtime attached repair decision bucket-a",)
     assert auth_report.row_count == 1
     assert tuple(row.diagnostic_id for row in auth_report.rows) == ("diagnostic-bucket-a",)
     assert LLM_USAGE_NAMESPACE.namespace in tuple(item.namespace for item in diagnostic_report.namespaces)
@@ -595,7 +595,7 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
         assert google_session_store.load_drive_config(profile) == google_a[3]
 
     assert cached is not None
-    assert cached.text == "runtime migrated response bucket-a"
+    assert cached.text == "runtime attached response bucket-a"
     assert tuple(record.request_id for record in usage_records) == ("request-bucket-a",)
     assert tuple(ledger.actividad_id for ledger in inventory) == ("retail-bucket-a",)
     assert amortizacion == _amortizacion_ledger("bucket-a")
