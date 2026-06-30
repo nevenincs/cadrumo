@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -13,6 +14,7 @@ _DECLARACION_PACKAGE = Path(__file__).parent
 _PDF_PACKAGE = _DECLARACION_PACKAGE.parent / "pdf"
 
 
+@cache
 def _production_modules() -> tuple[Path, ...]:
     packages = (_DECLARACION_PACKAGE, _PDF_PACKAGE)
     return tuple(
@@ -25,6 +27,7 @@ def _production_modules() -> tuple[Path, ...]:
     )
 
 
+@cache
 def _production_trees() -> tuple[tuple[Path, ast.AST], ...]:
     return tuple(
         (path, ast.parse(path.read_text(encoding="utf-8"), filename=str(path)))
