@@ -13,7 +13,6 @@ from .....core.resources import bundled_path
 from .. import binding_source_casilla_ids
 from .._binding_selector_utils import selector_as_dict
 from .._errors import RegistryValidationError
-from .._loader import load_registry_tree
 from .._relation_aggregation import relation_aggregation_op
 from .._relations import relation_source_requirements
 from .._runtime_graph import expression_relation_refs
@@ -28,15 +27,15 @@ from .._schema import (
 )
 from .._validate import RegistryValidator
 from .._validate_relation_periods import select_relation_source_revisions
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _CALCULATION_ROLES = {"direct_calculation", "instalment_to_final_settlement", "periodic_to_annual_summary"}
 
 
 def _registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
-    return load_registry_tree(_REGISTRY_ROOT)
+    return _committed_registry_tree()
 
 
 @lru_cache(maxsize=1)
