@@ -121,6 +121,22 @@ def create_manual_transaction(
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
     event_repository = _bucket_event_repository(bucket_id=command.bucket_id, repository=bucket_event_repository)
+    catalogue = repository.load()
+    if command.idempotency_key is not None:
+        existing = catalogue.get(_provider_transaction_id(command, occurred_at=now))
+        if existing is not None:
+            if _command_matches_current(command, existing):
+                # Guarded idempotent retry: same idempotency key, identical content.
+                # Return the stored row unchanged with no new event (an empty
+                # bucket_event_ids tuple is the structural no-op signal), mirroring
+                # the create_work_unit existing-record contract.
+                return _result(command.bucket_id, existing, ())
+            raise TransactionValidationError(
+                f"ledger add idempotency-key {command.idempotency_key!r} already names a stored "
+                "transaction with different content; use a new idempotency key for a different "
+                "movement, or omit --idempotency-key to append a deliberate duplicate",
+                translated_message="application.ledger.errors.idempotency_key_conflict",
+            )
     transaction_base = _transaction_from_command(command, occurred_at=now)
     _verify_evidence_references(
         command,
@@ -138,7 +154,6 @@ def create_manual_transaction(
         payload=_event_payload(command),
     )
     transaction = _transaction_from_command(command, occurred_at=now, bucket_event_id=event.event_id)
-    catalogue = repository.load()
     _save_transaction_catalogue_and_events(
         transaction_repository=repository,
         event_repository=event_repository,

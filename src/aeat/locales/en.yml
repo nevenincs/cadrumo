@@ -591,6 +591,7 @@ application:
         evidence or attachment ids.
       purchase_evidence_already_set: Ledger transaction already has a purchase_invoice_evidence_id;
         remove or replace through the attachments workflow.
+      idempotency_key_conflict: 'The idempotency key already identifies a stored transaction with different details. Use a new idempotency key for a different movement, or omit the key to append a deliberate duplicate.'
   live:
     expedientes:
       errors:
@@ -1460,13 +1461,6 @@ cli:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         list_help: List the required and available bindings for a modelo / year /
           period
-        m200_m202_relation_channel: "%{relation_id}\tM202 %{modality} casilla %{casilla}\t\
-          use --relation %{relation_id}=VALUE\tpaired target binding %{binding_id}"
-        m200_m202_relation_guidance: Modelo 200 M202 pagos fraccionados feed DP200014B:00611
-          through --relation values, not --binding target binding ids. The M202 40.3
-          casilla 34 and 40.2 casilla 03 channels are mutually exclusive per filing;
-          when entering manual relation values, put the annual sum on the elected
-          modality and 0 on the unused modality.
         missing_help: 'Filter to the bindings still owed: drops constant-valued bindings
           and any the active profile already resolves. With no active profile every
           non-constant binding is shown (the conservative answer).'
@@ -1480,6 +1474,8 @@ cli:
         unknown_keys: 'Unknown --binding key(s) {keys}; known bindings for {code}@{revision}
           ({period}): {suggestion}.'
         year_help: Tax year of the modelo (e.g. 2026)
+        relation_input_guidance: 'Some bindings below are fed by registry relations (cross-modelo or cross-period fold-ins), not direct --binding values. Supply each with --relation RELATION_ID=VALUE before calculating.'
+        relation_input_channel: "%{binding_id}\tfed by relation %{relation_id}\tuse --relation %{relation_id}=VALUE"
       casillas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         explain_help: Include localized help text in the text output.
@@ -2736,7 +2732,7 @@ cli:
         it to the classifier.
       reaffirm_help: Reaffirm the classification of an already-classified transaction.
       reaffirmed: Classification reaffirmed.
-      reason_help: Free-text reason recorded with a --reject decision.
+      reason_help: 'Free-text reason recorded as the transaction notes for a manual classification, or with a --reject decision.'
       reject_apply_exclusive: '--reject cannot be combined with --apply: reject records
         a declined suggestion, apply records an accepted one.'
       reject_help: Record an explicit rejection of the LLM suggestion as an audit
@@ -2756,6 +2752,7 @@ cli:
       taxable_base_help: Taxable base amount
       vision_model_help: Override the local Ollama vision model for an image/scanned-invoice
         read (e.g. qwen2.5vl:7b); defaults to the configured model.
+      reason_empty: 'Refused. --reason must record why you are classifying this transaction. Pass a non-empty rationale, or omit --reason.'
     doclink:
       actor_help: Operator label.
       help: Fetch a Drive document link and store its bytes as encrypted evidence
