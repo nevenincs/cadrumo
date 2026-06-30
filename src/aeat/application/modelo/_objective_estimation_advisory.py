@@ -26,6 +26,7 @@ from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
 from ...core import Modelo
+from ...core.decimal import coerce_decimal_strict
 from ...core.resources import resources
 from ...domain.deadlines import IrpfEstimationRegime, TaxpayerProfile
 from ...domain.modelos._errors import ModeloValidationError
@@ -162,7 +163,7 @@ def _scope_source_refs(filing_year: int) -> tuple[str, ...]:
 
 def _as_decimal(value: object, surface: str) -> Decimal:
     try:
-        return value if isinstance(value, Decimal) else Decimal(str(value).strip())
+        return coerce_decimal_strict(value if isinstance(value, Decimal) else str(value).strip())
     except (InvalidOperation, ValueError) as exc:
         raise ModeloValidationError(f"invalid decimal value {value!r} for {surface}") from exc
 
