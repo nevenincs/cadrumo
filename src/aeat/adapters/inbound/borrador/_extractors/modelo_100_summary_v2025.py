@@ -1,9 +1,19 @@
-"""Modelo 100 (IRPF / Renta) observed-value extractor for año 2025.
+"""Modelo 100 (IRPF / Renta) observed-value extractor implementation.
 
-The extractor reads printed casilla/value rows from a Renta artefact.
-It does not define Modelo 100 completeness or filing-grade authority.
-When callers pass a registry extraction profile, the parser filters to
-that profile and fails hard if the observed coverage is insufficient.
+The extractor reads printed casilla/value rows from a Renta artefact using the
+year-stable ``NNNN label amount`` grammar shared by current 2021-2025 fixtures.
+The class name records the original 2025 implementation point, but
+:mod:`aeat.adapters.inbound.borrador._extractors` deliberately maps every
+supported year to this implementation while the observed row grammar remains
+stable.
+
+This is a read-only inbound adapter. It does not define Modelo 100
+completeness, resolve a
+:class:`~aeat.domain.calculations.registry.RegistrySnapshot`, or make
+filing-grade authority decisions. When callers pass a
+:class:`~aeat.adapters.inbound.borrador._schema.BorradorExtractionProfile`, the
+extractor filters to that profile and fails hard if observed coverage is
+insufficient.
 """
 
 from __future__ import annotations
@@ -37,14 +47,17 @@ _CSV_RE = re.compile(
 
 
 class Modelo100ObservedV2025Extractor:
-    """Concrete Modelo 100 observed-value extractor for año 2025.
+    """Concrete Modelo 100 observed-value extractor implementation.
 
-    Reads the printed text via ``extract_pages_text``, locates
-    printed casilla rows, and returns a
-    strict :class:`~aeat.adapters.inbound.borrador._schema.BorradorObservation`.
+    Reads the printed text via
+    :func:`~aeat.adapters.inbound.borrador._parsers.extract_pages_text`, locates
+    printed casilla rows, and returns a strict
+    :class:`~aeat.adapters.inbound.borrador._schema.BorradorObservation`.
 
     Attributes:
-        año: The tax year this extractor targets.
+        año: The original implementation year. The extractor registry may map
+            additional years to this class while the observed row grammar stays
+            compatible.
     """
 
     año: ClassVar[int] = 2025
@@ -60,10 +73,11 @@ class Modelo100ObservedV2025Extractor:
         Args:
             pdf_path: Path to the Modelo 100 PDF.
             artefact_kind: The artefact kind discovered by
-                :func:`aeat.adapters.inbound.borrador._detect.detect_artefact_kind`
+                :func:`~aeat.adapters.inbound.borrador._detect.detect_artefact_kind`
                 (or supplied by the caller as an override).
-            extraction_profile: Optional registry profile that declares
-                target casillas and minimum coverage for this parse.
+            extraction_profile: Optional caller-supplied registry-profile
+                projection that declares target casillas and minimum coverage
+                for this parse.
 
         Returns:
             The strict :class:`~aeat.adapters.inbound.borrador._schema.BorradorObservation`
@@ -153,7 +167,7 @@ def _observed_values(text: str) -> tuple[dict[CasillaId, Decimal], list[str]]:
 
 
 def _require_match(pattern: re.Pattern[str], text: str, field: str) -> str:
-    """Return the first capturing-group match or raise a parse error."""
+    """Return the first capturing-group match or raise :class:`BorradorParseError`."""
     match = pattern.search(text)
     if match is None:
         raise BorradorParseError(f"could not locate required field: {field}")
