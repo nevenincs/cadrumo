@@ -27,6 +27,7 @@ from .._work_unit import derive_work_unit_id
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _NOW = datetime(2026, 6, 3, 14, 0, tzinfo=UTC)
+_BUCKET_ID = "30330300-0000-4000-8000-000000000501"
 _TX_ID = "c" * 64
 
 
@@ -42,7 +43,7 @@ _EVIDENCE_CASILLA: CasillaId = _casilla_id("00501")
 
 @pytest.fixture
 def objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile.repository
 
 
@@ -93,7 +94,7 @@ def _evidence() -> LedgerFilingEvidence:
 
 def _revision(evidence: LedgerFilingEvidence | None) -> CalculationRevision:
     work_unit_id = derive_work_unit_id(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
