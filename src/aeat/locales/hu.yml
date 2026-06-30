@@ -3868,10 +3868,10 @@ errors:
       {expected_kind} levélnek kell lennie.
     m210_gastos_deducibles_negative: 'A(z) M210 gastos_deducibles %{casilla_id} nem lehet negativ; kapott ertek %{value}.'
     m210_gastos_deducibles_not_allowed: 'A(z) M210 gastos_deducibles %{casilla_id} csak az EU/EGT 24.6 cikk szerinti uton engedelyezett; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.'
-    m210_imputation_coefficient_invalid: errors.calc.m210_imputation_coefficient_invalid
-    m210_imputation_days_invalid: errors.calc.m210_imputation_days_invalid
-    m210_imputation_no_catastral_value_missing: errors.calc.m210_imputation_no_catastral_value_missing
-    m210_imputation_no_filing_year: errors.calc.m210_imputation_no_filing_year
+    m210_imputation_coefficient_invalid: 'A(z) M210 ingatlan-imputacios egyutthato %{casilla_id} csak a registryben rogzitett Art. 85 kulcsok egyike lehet (%{allowed_values}); kapott ertek %{value}.'
+    m210_imputation_days_invalid: 'A(z) M210 imputacios napok %{casilla_id} erteke 1 es %{max_days} kozotti egesz szam kell legyen; kapott ertek %{value}.'
+    m210_imputation_no_catastral_value_missing: 'Kataszteri ertek nelkuli M210 ingatlan-imputaciohoz pozitiv szerzesi ertek vagy hatosag altal megallapitott ertek kell (%{acquisition_casilla_id}, %{administrative_casilla_id}).'
+    m210_imputation_no_filing_year: 'Az M210 ingatlan-imputacio szamitasahoz nem nulla bevallasi ev szukseges.'
     parameter_unknown: A(z) {parameter_id} paraméter nincs regisztrálva.
     relation_value_missing: A(z) {relation_id} relációnak nincs megadott értéke.
     text_input_non_text_casillas: errors.calc.text_input_non_text_casillas

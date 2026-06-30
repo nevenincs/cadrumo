@@ -3718,10 +3718,10 @@ errors:
       leaf.
     m210_gastos_deducibles_negative: 'M210 gastos_deducibles %{casilla_id} must be non-negative; got %{value}.'
     m210_gastos_deducibles_not_allowed: 'M210 gastos_deducibles %{casilla_id} is only allowed for the EU/EEA Art. 24.6 path; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.'
-    m210_imputation_coefficient_invalid: errors.calc.m210_imputation_coefficient_invalid
-    m210_imputation_days_invalid: errors.calc.m210_imputation_days_invalid
-    m210_imputation_no_catastral_value_missing: errors.calc.m210_imputation_no_catastral_value_missing
-    m210_imputation_no_filing_year: errors.calc.m210_imputation_no_filing_year
+    m210_imputation_coefficient_invalid: 'M210 imputed real-estate coefficient %{casilla_id} must be one of the registry-authored Art. 85 rates (%{allowed_values}); got %{value}.'
+    m210_imputation_days_invalid: 'M210 imputation days %{casilla_id} must be an integer from 1 to %{max_days}; got %{value}.'
+    m210_imputation_no_catastral_value_missing: 'M210 imputed real-estate without cadastral value requires a positive acquisition value or administrative checked value (%{acquisition_casilla_id}, %{administrative_casilla_id}).'
+    m210_imputation_no_filing_year: 'M210 imputed real-estate calculation requires a non-zero filing year.'
     parameter_unknown: Parameter {parameter_id} is not registered.
     relation_value_missing: Relation {relation_id} has no supplied value.
     text_input_non_text_casillas: 'Text input supplied for non-text fields: %{casilla_ids}.'
