@@ -11,7 +11,7 @@ non-PDF/non-image source paths with a typed
 
 Persistence is bucket-scoped encrypted secure-object storage. The evidence
 catalogue is a :class:`PurchaseInvoiceEvidenceDocument` persisted through
-:class:`SecureBoundRepository` under
+:class:`~aeat.adapters.persistence.storage.SecureBoundRepository` under
 :data:`aeat.adapters.persistence.storage.LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE`.
 At ``add`` time the source file's bytes are copied into the encrypted
 :class:`AttachmentStore` (active bucket) and the resulting content-addressed
@@ -179,6 +179,9 @@ class PurchaseInvoiceEvidenceRepository(SecureBoundRepository[PurchaseInvoiceEvi
     The namespace, sensitivity, schema version, and object-key contract come
     from
     :data:`aeat.adapters.persistence.storage.LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE`.
+    The :class:`~aeat.adapters.persistence.storage.SecureBoundRepository` base
+    wraps each :class:`PurchaseInvoiceEvidenceDocument` in a
+    :class:`~aeat.adapters.persistence.storage.Envelope` before writing it.
 
     See Also:
         :class:`PurchaseInvoiceEvidenceService`
