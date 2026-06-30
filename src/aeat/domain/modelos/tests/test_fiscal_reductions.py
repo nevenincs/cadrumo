@@ -93,10 +93,11 @@ class TestSalReservaEspecialDotacion:
     def test_aitor_oracle_shape_below_cap(self) -> None:
         """beneficio=120k, capital=100k, reserva=30k.
 
-        cap = 100k * 2 = 200k (Ley 44/2015 art. 14: hasta el doble del capital)
-        headroom = 200k - 30k = 170k
+        threshold = 100k * 2 + 0.01 = 200000.01
+        (Ley 44/2015 art. 14: superior al doble del capital)
+        headroom = 200000.01 - 30k = 170000.01
         dotacion_obligatoria = 120k * 10% = 12k
-        dotacion = min(12k, 170k) = 12k
+        dotacion = min(12k, 170000.01) = 12k
         """
         result = compute_sal_reserva_especial_dotacion(
             beneficio_neto=Decimal("120000"),
@@ -108,23 +109,33 @@ class TestSalReservaEspecialDotacion:
     def test_anti_tautology_next_year_cap_partial(self) -> None:
         """reserva=195k (near the 2x cap), capital=100k.
 
-        cap = 100k * 2 = 200k (Ley 44/2015 art. 14)
-        headroom = 200k - 195k = 5k
+        threshold = 100k * 2 + 0.01 = 200000.01
+        (Ley 44/2015 art. 14: superior al doble del capital)
+        headroom = 200000.01 - 195k = 5000.01
         dotacion_obligatoria = 120k * 10% = 12k
-        dotacion = min(12k, 5k) = 5k  (capped by headroom)
+        dotacion = min(12k, 5000.01) = 5000.01  (capped by headroom)
         """
         result = compute_sal_reserva_especial_dotacion(
             beneficio_neto=Decimal("120000"),
             reserva_dotada=Decimal("195000"),
             capital_social=Decimal("100000"),
         )
-        assert result == Decimal("5000.00")
+        assert result == Decimal("5000.01")
 
-    def test_cap_reached_yields_zero(self) -> None:
-        """reserva=200k (at the 2x cap), capital=100k => dotacion=0."""
+    def test_exact_double_cap_requires_one_cent_to_exceed(self) -> None:
+        """reserva=200k exactly, capital=100k => dotacion=0.01."""
         result = compute_sal_reserva_especial_dotacion(
             beneficio_neto=Decimal("120000"),
             reserva_dotada=Decimal("200000"),
+            capital_social=Decimal("100000"),
+        )
+        assert result == Decimal("0.01")
+
+    def test_first_cent_above_double_cap_yields_zero(self) -> None:
+        """reserva=200000.01, capital=100k => threshold reached."""
+        result = compute_sal_reserva_especial_dotacion(
+            beneficio_neto=Decimal("120000"),
+            reserva_dotada=Decimal("200000.01"),
             capital_social=Decimal("100000"),
         )
         assert result == Decimal("0.00")
