@@ -2037,20 +2037,10 @@ cli:
         runs_help: 'Mentett munkafolyamat-futtatások listázása futtatásazonosítókkal,
           legújabb először. Futtatásazonosítót használjon: `aeat app modelo work resume`.
           Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
-        sal_beneficio_neto_help: A munkavállalói tulajdonú társaság (SAL/SLL, 44/2015.
-          törvény 14. cikk) tárgyévi nettó nyeresége. Az asszisztens 10%-ot alkalmaz
-          a kötelező külön tartalék kiszámításához, a jegyzett tőke 50%-os küszöbével
-          korlátozva. Használd a --sal-reserva-dotada és --sal-capital-social opciókkal
-          együtt.
-        sal_capital_social_help: 'A munkavállalói tulajdonú társaság jegyzett tőkéje
-          (44/2015. törvény 14. cikk). Az 50%-os teszt nevezője: a dotáció nulla,
-          amikor a felhalmozott tartalék eléri a jegyzett tőke 50%-át. Szükséges a
-          --sal-beneficio-neto és --sal-reserva-dotada opciókkal együtt.'
+        sal_beneficio_neto_help: 'A munkavállalói tulajdonú társaság (SAL/SLL, 44/2015. törvény 14. cikk) tárgyévi nettó nyeresége. Az asszisztens 10%-ot alkalmaz a kötelező külön tartalék kiszámításához, a jegyzett tőke kétszeresét egy eurócenttel meghaladó küszöbig korlátozva. Használd a --sal-reserva-dotada és --sal-capital-social opciókkal együtt.'
+        sal_capital_social_help: 'A munkavállalói tulajdonú társaság jegyzett tőkéje (44/2015. törvény 14. cikk). A szigorú küszöb alapja: a dotáció nulla, amikor a felhalmozott tartalék eléri a jegyzett tőke kétszeresét egy eurócenttel meghaladó összeget. Szükséges a --sal-beneficio-neto és --sal-reserva-dotada opciókkal együtt.'
         sal_computation_error: 'SAL számítási hiba: %{message}'
-        sal_reserva_dotada_help: Korábbi években felhalmozott külön tartalék (44/2015.
-          törvény 14. cikk). Annak ellenőrzésére szolgál, hogy a tartalék már elérte-e
-          a jegyzett tőke 50%-át. Szükséges a --sal-beneficio-neto és --sal-capital-social
-          opciókkal együtt.
+        sal_reserva_dotada_help: 'Korábbi években felhalmozott külön tartalék (44/2015. törvény 14. cikk). Annak ellenőrzésére szolgál, hogy a tartalék már elérte-e a jegyzett tőke kétszeresét egy eurócenttel meghaladó összeget. Szükséges a --sal-beneficio-neto és --sal-capital-social opciókkal együtt.'
         sal_reserva_not_decimal: A --sal-* értékeknek decimális összegeknek kell lenniük.
         selector_ambiguous: Több aktív munkaegység illeszkedik erre a modelo/év/időszak
           párosra. Válasszon nyilvántartási revíziót vagy adjon meg pontos munkaegység-azonosítót.

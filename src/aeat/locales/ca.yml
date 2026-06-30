@@ -2095,18 +2095,10 @@ cli:
         runs_help: Llistar les execucions de flux persistides amb els seus ids d'execució,
           de la més recent a la més antiga. Usa un id d'execució amb `aeat app modelo
           work resume`. Només local; mai contacta amb AEAT.
-        sal_beneficio_neto_help: Benefici net de l'exercici de la Societat Laboral
-          (SAL/SLL, Llei 44/2015 art. 14). S'aplica el 10% per calcular la dotació
-          obligatòria a la reserva especial, limitada pel llindar del 50% del capital
-          social. Fes-lo servir amb --sal-reserva-dotada i --sal-capital-social.
-        sal_capital_social_help: 'Capital social de la Societat Laboral (Llei 44/2015
-          art. 14). Denominador del test del 50%: la dotació s''anul·la quan la reserva
-          acumulada arriba al 50% del capital social. Necessari amb --sal-beneficio-neto
-          i --sal-reserva-dotada.'
+        sal_beneficio_neto_help: 'Benefici net de l''exercici de la Societat Laboral (SAL/SLL, Llei 44/2015 art. 14). S''aplica el 10% per calcular la dotació obligatòria a la reserva especial, limitada al primer cèntim per sobre del doble del capital social. Fes-lo servir amb --sal-reserva-dotada i --sal-capital-social.'
+        sal_capital_social_help: 'Capital social de la Societat Laboral (Llei 44/2015 art. 14). Base del llindar estricte: la dotació s''anul·la quan la reserva acumulada arriba al primer cèntim per sobre del doble del capital social. Necessari amb --sal-beneficio-neto i --sal-reserva-dotada.'
         sal_computation_error: 'Error de càlcul SAL: %{message}'
-        sal_reserva_dotada_help: Reserva especial acumulada en exercicis anteriors
-          (Llei 44/2015 art. 14). S'utilitza per comprovar si ja s'ha assolit el límit
-          del 50% del capital social. Necessari amb --sal-beneficio-neto i --sal-capital-social.
+        sal_reserva_dotada_help: 'Reserva especial acumulada en exercicis anteriors (Llei 44/2015 art. 14). S''utilitza per comprovar si la reserva ja arriba al primer cèntim per sobre del doble del capital social. Necessari amb --sal-beneficio-neto i --sal-capital-social.'
         sal_reserva_not_decimal: Els valors --sal-* han de ser imports decimals.
         selector_ambiguous: Mes d una unitat de treball activa coincideix amb aquest
           modelo/any/periode. Trieu una revisio del registre o passeu un id explicit

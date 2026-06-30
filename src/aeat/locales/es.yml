@@ -2130,18 +2130,10 @@ cli:
         runs_help: Listar las ejecuciones de flujo persistidas con sus ids de ejecución,
           de la más reciente a la más antigua. Usa un id de ejecución con `aeat app
           modelo work resume`. Solo local; nunca contacta con AEAT.
-        sal_beneficio_neto_help: Beneficio neto del ejercicio de la Sociedad Laboral
-          (SAL/SLL, Ley 44/2015 Art. 14). Se aplica el 10% para calcular la dotación
-          obligatoria a la reserva especial, limitada por el umbral del 50% del capital
-          social. Úsalo junto con --sal-reserva-dotada y --sal-capital-social.
-        sal_capital_social_help: 'Capital social de la Sociedad Laboral (Ley 44/2015
-          Art. 14). Denominador del test del 50%: la dotación se anula cuando la reserva
-          acumulada alcanza el 50% del capital social. Necesario junto con --sal-beneficio-neto
-          y --sal-reserva-dotada.'
+        sal_beneficio_neto_help: 'Beneficio neto del ejercicio de la Sociedad Laboral (SAL/SLL, Ley 44/2015 Art. 14). Se aplica el 10% para calcular la dotación obligatoria a la reserva especial, limitada al primer céntimo por encima del doble del capital social. Úsalo junto con --sal-reserva-dotada y --sal-capital-social.'
+        sal_capital_social_help: 'Capital social de la Sociedad Laboral (Ley 44/2015 Art. 14). Base del umbral estricto: la dotación se anula cuando la reserva acumulada alcanza el primer céntimo por encima del doble del capital social. Necesario junto con --sal-beneficio-neto y --sal-reserva-dotada.'
         sal_computation_error: 'Error de cómputo SAL: %{message}'
-        sal_reserva_dotada_help: Reserva especial acumulada en ejercicios anteriores
-          (Ley 44/2015 Art. 14). Se usa para comprobar si ya se ha alcanzado el límite
-          del 50% del capital social. Necesario junto con --sal-beneficio-neto y --sal-capital-social.
+        sal_reserva_dotada_help: 'Reserva especial acumulada en ejercicios anteriores (Ley 44/2015 Art. 14). Se usa para comprobar si la reserva ya alcanza el primer céntimo por encima del doble del capital social. Necesario junto con --sal-beneficio-neto y --sal-capital-social.'
         sal_reserva_not_decimal: Los valores --sal-* deben ser importes decimales.
         selector_ambiguous: Mas de una unidad de trabajo activa coincide con este
           modelo/ano/periodo. Elija una revision del registro o pase un id de unidad
