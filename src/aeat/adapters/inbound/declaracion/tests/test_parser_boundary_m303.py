@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ._parser_boundary_m303_support import _M303_CORPUS_STEMS, _M303_CURRENT_PROFILE_CASILLAS
 from ._parser_boundary_support import (
     _REAL_MODELO_303_DECLARATION_COPY,
     FIXTURES_DIR,
@@ -14,46 +15,6 @@ from ._parser_boundary_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
-
-_M303_CORPUS_STEMS: tuple[str, ...] = (
-    "2021-2T",
-    "2021-3T",
-    "2021-4T",
-    "2022-1T",
-    "2022-2T",
-    "2022-3T",
-    "2022-4T",
-    "2023-1T",
-    "2023-2T",
-    "2023-3T",
-    "2023-4T",
-    "2024-1T",
-    "2024-2T",
-    "2024-3T",
-    "2024-4T",
-)
-_M303_PROFILE_CASILLAS: frozenset[str] = frozenset(
-    {
-        "iva.repercutido.general",
-        "iva.repercutido.reducido",
-        "iva.repercutido.super-reducido",
-        "iva.autorepercutido.intracomunitaria",
-        "iva.soportado.interiores",
-        "iva.autoconsumo.promotor.base",
-        "27",
-        "29",
-        "37",
-        "45",
-        "iva.resultado-regimen-general",
-        "64",
-        "66",
-        "iva.compensacion-pendiente-periodos-anteriores",
-        "iva.compensacion-aplicada-periodo",
-        "iva.compensacion-pendiente-periodos-posteriores",
-        "iva.resultado",
-        "71",
-    }
-)
 
 
 def test_parser_extracts_modelo_303_targets_from_real_redacted_declaration_copy() -> None:
@@ -68,7 +29,7 @@ def test_parser_extracts_modelo_303_targets_from_real_redacted_declaration_copy(
     assert filing.period == _expected_period(2024, "1T")
     assert filing.tax_id == "Y0000001S"
     values = {value.casilla_id: value.printed_value for value in filing.values}
-    assert set(values.keys()) == _M303_PROFILE_CASILLAS
+    assert set(values.keys()) == _M303_CURRENT_PROFILE_CASILLAS
 
     expected_values = _expected_casilla_values(
         {

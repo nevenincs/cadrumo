@@ -23,6 +23,11 @@ from ._parser_boundary_m303_current_expected import (
     _M303_CASILLA_C46,
     _M303_CASILLA_C69,
 )
+from ._parser_boundary_m303_support import (
+    _M303_2023_2024_IDS,
+    _M303_2023_2024_PARAMS,
+    _M303_CURRENT_PROFILE_CASILLAS,
+)
 from ._parser_boundary_support import (
     FIXTURES_DIR,
     Decimal,
@@ -31,18 +36,6 @@ from ._parser_boundary_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
-
-_M303_2023_2024_PARAMS: tuple[tuple[str, int, str], ...] = (
-    ("2023-1T", 2023, "1T"),
-    ("2023-2T", 2023, "2T"),
-    ("2023-3T", 2023, "3T"),
-    ("2023-4T", 2023, "4T"),
-    ("2024-1T", 2024, "1T"),
-    ("2024-2T", 2024, "2T"),
-    ("2024-3T", 2024, "3T"),
-    ("2024-4T", 2024, "4T"),
-)
-_M303_2023_2024_IDS: tuple[str, ...] = tuple(stem for stem, _year, _period in _M303_2023_2024_PARAMS)
 
 
 @pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_2024_PARAMS, ids=_M303_2023_2024_IDS)
@@ -72,29 +65,7 @@ def test_parser_extracts_modelo_303_profile_targets_from_corpus(pdf_stem: str, y
 
     values = {v.casilla_id: v.printed_value for v in filing.values}
 
-    # All 18 profile casillas (6 primitives + 12 form-page totals) must be present.
-    assert set(values.keys()) == {
-        # Primitive cuota leaves for parser-to-engine total reconstruction.
-        "iva.repercutido.general",
-        "iva.repercutido.reducido",
-        "iva.repercutido.super-reducido",
-        "iva.autorepercutido.intracomunitaria",
-        "iva.soportado.interiores",
-        "iva.autoconsumo.promotor.base",
-        # Form-page totals.
-        "27",
-        "29",
-        "37",
-        "45",
-        "iva.resultado-regimen-general",
-        "64",
-        "66",
-        "iva.compensacion-pendiente-periodos-anteriores",
-        "iva.compensacion-aplicada-periodo",
-        "iva.compensacion-pendiente-periodos-posteriores",
-        "iva.resultado",
-        "71",
-    }
+    assert set(values.keys()) == _M303_CURRENT_PROFILE_CASILLAS
 
     # Stable casillas: formula-consistent values derived from _generate.py fixtures.
     expected_c46 = exp[_M303_CASILLA_C46]
