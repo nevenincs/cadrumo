@@ -38,7 +38,7 @@ def _seed_active_profile(tax_id: str = "00000000T", activity: str = "design") ->
     repo.update(
         lambda state: register_active_profile(
             state,
-            profile_id="default",
+            profile_id="00000000-0000-4000-8000-000000000000",
             display_name="operator",
             facts=facts,
         ),

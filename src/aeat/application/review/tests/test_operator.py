@@ -39,7 +39,7 @@ def test_unknown_review_kind_error_omits_raw_operator_value() -> None:
 def test_project_review_item_not_found_error_omits_raw_item_id() -> None:
     sensitive_item_id = "review-client-tax-id-12345678Z-private-note"
 
-    with profile_create_storage_span("test"), pytest.raises(ReviewError) as exc_info:
+    with profile_create_storage_span("23232323-2323-4232-8232-232323232323"), pytest.raises(ReviewError) as exc_info:
         project_review_item(sensitive_item_id, settings=Settings())
 
     assert exc_info.value.translated_message == "review.operator.errors.item_not_found"

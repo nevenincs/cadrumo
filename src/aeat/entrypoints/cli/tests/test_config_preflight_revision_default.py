@@ -16,11 +16,13 @@ the genuine refusal-translation path are exercised end to end.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from collections.abc import Iterator, Mapping
 from pathlib import Path
 from typing import cast
+from uuid import UUID
 
 import pytest
 from click.testing import Result
@@ -49,11 +51,16 @@ def _seed_active_profile(name: str = "operator", *, overrides: Mapping[str, str]
     activity so the profile carries the basics; preflight then reports
     only the modelo-specific selectors still missing (or none).
     """
-    with profile_create_storage_span(name):
+    digest = bytearray(hashlib.sha256(name.encode("utf-8")).digest()[:16])
+    digest[6] = (digest[6] & 0x0F) | 0x40
+    digest[8] = (digest[8] & 0x3F) | 0x80
+    profile_id = str(UUID(bytes=bytes(digest)))
+    with profile_create_storage_span(profile_id):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
                 state,
-                profile_id=name,
+                profile_id=profile_id,
+                display_name=name,
                 overrides=overrides,
                 enforce_unique_tax_id=False,
             ),

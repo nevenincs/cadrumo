@@ -18,17 +18,18 @@ from ....domain.calculations.registry import CensoModeloEventKind
 from .._m036_lifecycle import M036DeclarationCommand, M036DeclarationResult, derive_m036_declaration_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+_PROFILE_ID = "31313131-3131-4131-8131-313131313131"
 
 
 def test_command_accepts_minimum_fields() -> None:
     """profile_id + event_kind + declared_on construct a valid command."""
     cmd = M036DeclarationCommand(
-        profile_id="profile-test",
+        profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.ALTA,
         declared_on=date(2026, 6, 3),
     )
 
-    assert cmd.profile_id == "profile-test"
+    assert cmd.profile_id == _PROFILE_ID
     assert cmd.event_kind is CensoModeloEventKind.ALTA
     assert cmd.sede_justificante is None
     assert cmd.note is None
@@ -37,7 +38,7 @@ def test_command_accepts_minimum_fields() -> None:
 def test_command_carries_optional_justificante_and_note() -> None:
     """sede_justificante + note carry through when supplied."""
     cmd = M036DeclarationCommand(
-        profile_id="profile-test",
+        profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.MODIFICACION,
         declared_on=date(2026, 6, 3),
         sede_justificante="AEAT-ACUSE-2026-0000123",
@@ -53,7 +54,7 @@ def test_command_rejects_unknown_event_kind() -> None:
     with pytest.raises(ValidationError):
         M036DeclarationCommand.model_validate(
             {
-                "profile_id": "profile-test",
+                "profile_id": _PROFILE_ID,
                 "event_kind": "cancelacion",
                 "declared_on": date(2026, 6, 3),
             },
@@ -66,7 +67,7 @@ def test_result_pins_declaration_id_to_64_char_lowercase_hex() -> None:
     result = M036DeclarationResult(
         declaration_id=digest,
         bucket_id="bucket-test",
-        profile_id="profile-test",
+        profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.BAJA,
         declared_on=date(2026, 6, 3),
         recorded_at=datetime(2026, 6, 3, 14, 0, 0, tzinfo=UTC),
@@ -92,7 +93,7 @@ def test_result_rejects_non_sha256_declaration_id(bad_id: str) -> None:
         M036DeclarationResult(
             declaration_id=bad_id,
             bucket_id="bucket-test",
-            profile_id="profile-test",
+            profile_id=_PROFILE_ID,
             event_kind=CensoModeloEventKind.ALTA,
             declared_on=date(2026, 6, 3),
             recorded_at=datetime(2026, 6, 3, 14, 0, 0, tzinfo=UTC),
@@ -102,7 +103,7 @@ def test_result_rejects_non_sha256_declaration_id(bad_id: str) -> None:
 def test_derive_declaration_id_is_64_char_lowercase_hex() -> None:
     """The derived id matches the result-model declaration_id pattern."""
     declaration_id = derive_m036_declaration_id(
-        profile_id="profile-test",
+        profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.ALTA,
         declared_on=date(2026, 6, 3),
         sede_justificante=None,
@@ -116,13 +117,13 @@ def test_derive_declaration_id_is_64_char_lowercase_hex() -> None:
 def test_derive_declaration_id_is_deterministic() -> None:
     """Same tuple → same id (idempotent re-declaration writes the same row)."""
     a = derive_m036_declaration_id(
-        profile_id="profile-test",
+        profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.MODIFICACION,
         declared_on=date(2026, 6, 3),
         sede_justificante="ACUSE-123",
     )
     b = derive_m036_declaration_id(
-        profile_id="profile-test",
+        profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.MODIFICACION,
         declared_on=date(2026, 6, 3),
         sede_justificante="ACUSE-123",
@@ -138,13 +139,13 @@ def test_derive_declaration_id_distinguishes_justificante_presence() -> None:
     coalesce with the pre-acuse draft — it's a new declaration record.
     """
     draft = derive_m036_declaration_id(
-        profile_id="profile-test",
+        profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.ALTA,
         declared_on=date(2026, 6, 3),
         sede_justificante=None,
     )
     confirmed = derive_m036_declaration_id(
-        profile_id="profile-test",
+        profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.ALTA,
         declared_on=date(2026, 6, 3),
         sede_justificante="ACUSE-XYZ",
@@ -156,13 +157,13 @@ def test_derive_declaration_id_distinguishes_justificante_presence() -> None:
 def test_derive_declaration_id_distinguishes_event_kind() -> None:
     """Same profile + same date but different event_kind → distinct ids."""
     alta = derive_m036_declaration_id(
-        profile_id="profile-test",
+        profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.ALTA,
         declared_on=date(2026, 6, 3),
         sede_justificante=None,
     )
     modificacion = derive_m036_declaration_id(
-        profile_id="profile-test",
+        profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.MODIFICACION,
         declared_on=date(2026, 6, 3),
         sede_justificante=None,
@@ -176,7 +177,7 @@ def test_result_carries_bucket_id_field() -> None:
     result = M036DeclarationResult(
         declaration_id="a" * 64,
         bucket_id="bucket-test",
-        profile_id="profile-test",
+        profile_id="31313131-3131-4131-8131-313131313131",
         event_kind=CensoModeloEventKind.ALTA,
         declared_on=date(2026, 6, 3),
         recorded_at=datetime(2026, 6, 3, 14, 0, 0, tzinfo=UTC),
@@ -190,7 +191,7 @@ def test_result_rejects_missing_bucket_id() -> None:
         M036DeclarationResult.model_validate(
             {
                 "declaration_id": "a" * 64,
-                "profile_id": "profile-test",
+                "profile_id": _PROFILE_ID,
                 "event_kind": CensoModeloEventKind.ALTA,
                 "declared_on": date(2026, 6, 3),
                 "recorded_at": datetime(2026, 6, 3, 14, 0, 0, tzinfo=UTC),
@@ -204,7 +205,7 @@ def test_snapshot_id_computed_field_aliases_declaration_id() -> None:
     result = M036DeclarationResult(
         declaration_id=declaration_id,
         bucket_id="bucket-test",
-        profile_id="profile-test",
+        profile_id="31313131-3131-4131-8131-313131313131",
         event_kind=CensoModeloEventKind.MODIFICACION,
         declared_on=date(2026, 6, 3),
         recorded_at=datetime(2026, 6, 3, 14, 0, 0, tzinfo=UTC),
@@ -217,13 +218,13 @@ def test_result_roundtrips_through_strict_json_with_bucket_id() -> None:
     """A populated record round-trips through model_validate_json with no drift."""
     original = M036DeclarationResult(
         declaration_id=derive_m036_declaration_id(
-            profile_id="profile-test",
+            profile_id="31313131-3131-4131-8131-313131313131",
             event_kind=CensoModeloEventKind.ALTA,
             declared_on=date(2026, 6, 3),
             sede_justificante="ACUSE-RT-001",
         ),
         bucket_id="bucket-rt-001",
-        profile_id="profile-test",
+        profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.ALTA,
         declared_on=date(2026, 6, 3),
         sede_justificante="ACUSE-RT-001",
@@ -248,7 +249,7 @@ def test_result_serialisation_omits_snapshot_id_runtime_alias() -> None:
     result = M036DeclarationResult(
         declaration_id="c" * 64,
         bucket_id="bucket-test",
-        profile_id="profile-test",
+        profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.BAJA,
         declared_on=date(2026, 6, 3),
         recorded_at=datetime(2026, 6, 3, 14, 0, 0, tzinfo=UTC),
@@ -273,7 +274,7 @@ def test_result_anti_tautology_proof_load_refuses_missing_bucket_id() -> None:
     result = M036DeclarationResult(
         declaration_id="d" * 64,
         bucket_id="bucket-tautology-test",
-        profile_id="profile-test",
+        profile_id="31313131-3131-4131-8131-313131313131",
         event_kind=CensoModeloEventKind.ALTA,
         declared_on=date(2026, 6, 3),
         recorded_at=datetime(2026, 6, 3, 14, 0, 0, tzinfo=UTC),

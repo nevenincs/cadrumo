@@ -105,10 +105,10 @@ def test_impatriado_regime_and_start_date_survive_encrypted_sql_roundtrip(
         UserProfileFact(path="irpf.special_regime_start_date", value=election_date.isoformat()),
     )
 
-    with profile_create_storage_span("impatriado-roundtrip") as routing_profile_id:
+    with profile_create_storage_span("99999999-9999-4999-8999-999999999999") as routing_profile_id:
         state = register_active_profile(
             WorkflowState(),
-            profile_id="impatriado-roundtrip",
+            profile_id="99999999-9999-4999-8999-999999999999",
             display_name="Beckham-regime operator",
             facts=facts,
             schema=schema,
@@ -117,7 +117,7 @@ def test_impatriado_regime_and_start_date_survive_encrypted_sql_roundtrip(
 
         record = read_active_profile(state, schema=schema)
     assert record is not None
-    assert record.profile_id == "impatriado-roundtrip"
+    assert record.profile_id == "99999999-9999-4999-8999-999999999999"
 
     # Both facts cross the encrypted boundary with their exact persisted values.
     assert _fact_value(record, "irpf.special_regime") == "impatriado"
@@ -146,10 +146,10 @@ def test_record_without_special_regime_projects_to_none(
         for f in _required_facts(schema)
     )
 
-    with profile_create_storage_span("general-regime-no-special") as routing_profile_id:
+    with profile_create_storage_span("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa") as routing_profile_id:
         state = register_active_profile(
             WorkflowState(),
-            profile_id="general-regime-no-special",
+            profile_id="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
             display_name="General-regime operator",
             facts=facts,
             schema=schema,
@@ -180,6 +180,11 @@ def test_anti_tautology_mutating_regime_changes_projection(
     test would fail on the inequality assertion.
     """
 
+    profile_ids = {
+        "impatriado": "1f1f1f1f-1f1f-4f1f-8f1f-1f1f1f1f1f1f",
+        "general": "20202020-2020-4020-8020-202020202020",
+    }
+
     def _build_record(regime_value: str) -> UserProfileRecord:
         extra: list[UserProfileFact] = [UserProfileFact(path="irpf.special_regime", value=regime_value)]
         if regime_value == "impatriado":
@@ -193,7 +198,7 @@ def test_anti_tautology_mutating_regime_changes_projection(
             ),
             *extra,
         )
-        profile_id = f"anti-tautology-{regime_value}"
+        profile_id = profile_ids[regime_value]
         with profile_create_storage_span(profile_id) as routing_profile_id:
             state = register_active_profile(
                 WorkflowState(),

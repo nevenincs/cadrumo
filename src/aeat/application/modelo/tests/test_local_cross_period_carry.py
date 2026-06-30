@@ -210,7 +210,7 @@ def _file_1t_with_negative_result(repos_: _Repos) -> Decimal:
 def _seed_first_year_activity_profile(repos_: _Repos) -> None:
     objects = repos_[4].secure_object_repository
     profile = UserProfileRecord(
-        profile_id="default",
+        profile_id="00000000-0000-4000-8000-000000000000",
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -235,7 +235,7 @@ def _seed_first_year_activity_profile(repos_: _Repos) -> None:
 def _seed_existing_303_activity_profile(repos_: _Repos) -> None:
     objects = repos_[4].secure_object_repository
     profile = UserProfileRecord(
-        profile_id="default",
+        profile_id="00000000-0000-4000-8000-000000000000",
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),
@@ -260,7 +260,7 @@ def _seed_existing_303_activity_profile(repos_: _Repos) -> None:
 def _seed_first_303_activity_profile(repos_: _Repos) -> None:
     objects = repos_[4].secure_object_repository
     profile = UserProfileRecord(
-        profile_id="default",
+        profile_id="00000000-0000-4000-8000-000000000000",
         display_name="Test first IVA profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),

@@ -27,7 +27,7 @@ def test_facts_to_values_translates_paths_through_schema_selectors() -> None:
 
 def test_record_to_values_uses_schema_model_selectors() -> None:
     record = UserProfileRecord(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         display_name="Operator",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
@@ -36,7 +36,7 @@ def test_record_to_values_uses_schema_model_selectors() -> None:
 
 def test_projection_for_taxpayer_round_trips_iva_regime_through_descriptor() -> None:
     record = UserProfileRecord(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         display_name="Operator",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -55,7 +55,7 @@ def test_projection_for_taxpayer_accepts_a_flat_mapping_directly() -> None:
 
 
 def test_projection_for_taxpayer_uses_defaults_when_record_is_blank() -> None:
-    record = UserProfileRecord(profile_id="operator", display_name="Operator", facts=())
+    record = UserProfileRecord(profile_id="11111111-1111-4111-8111-111111111111", display_name="Operator", facts=())
     profile = projection_for_taxpayer(record, tax_id_default="Z0000000Z")
     assert profile.tax_id == "Z0000000Z"
     assert profile.iva_regime is IVARegime.GENERAL
@@ -77,7 +77,7 @@ def test_projection_for_taxpayer_carries_section_prefixed_withholding_facts() ->
     """
 
     record = UserProfileRecord(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         display_name="Operator",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -107,7 +107,7 @@ def test_record_to_values_emits_bare_key_for_third_party_threshold() -> None:
     emit a false warning even when the operator had declared the value.
     """
     record = UserProfileRecord(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         display_name="Operator",
         facts=(
             UserProfileFact(
@@ -128,7 +128,7 @@ def test_crypto_abroad_threshold_projects_to_taxpayer_profile() -> None:
     """Modelo 721's threshold is distinct from Modelo 720's foreign-assets fact."""
 
     record = UserProfileRecord(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         display_name="Operator",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),

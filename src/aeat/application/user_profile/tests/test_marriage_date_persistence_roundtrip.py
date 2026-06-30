@@ -96,10 +96,10 @@ def test_marriage_date_fact_survives_encrypted_sql_roundtrip(
         ),
     )
 
-    with profile_create_storage_span("marriage-date-roundtrip") as routing_profile_id:
+    with profile_create_storage_span("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb") as routing_profile_id:
         state = register_active_profile(
             WorkflowState(),
-            profile_id="marriage-date-roundtrip",
+            profile_id="bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
             display_name="Marcos 2024",
             facts=facts,
             schema=schema,
@@ -108,7 +108,7 @@ def test_marriage_date_fact_survives_encrypted_sql_roundtrip(
 
         record = read_active_profile(state, schema=schema)
     assert record is not None
-    assert record.profile_id == "marriage-date-roundtrip"
+    assert record.profile_id == "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
 
     # The schema type = "date" field deserialises as a typed date, not a string.
     assert _fact_value(record, _MARRIAGE_DATE_PATH) == marriage_date
@@ -127,10 +127,10 @@ def test_marriage_date_absent_when_not_stored(
         for f in _required_facts(schema)
     )
 
-    with profile_create_storage_span("no-marriage-date") as routing_profile_id:
+    with profile_create_storage_span("cccccccc-cccc-4ccc-8ccc-cccccccccccc") as routing_profile_id:
         state = register_active_profile(
             WorkflowState(),
-            profile_id="no-marriage-date",
+            profile_id="cccccccc-cccc-4ccc-8ccc-cccccccccccc",
             display_name="Soltera 2024",
             facts=facts,
             schema=schema,

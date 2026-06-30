@@ -98,7 +98,7 @@ def _ensure_operator_storage_span() -> None:
         raise RuntimeError("state projection test storage span is not active")
     from ..user_profile._orchestration import profile_create_storage_span
 
-    _ACTIVE_STORAGE_STACK.enter_context(profile_create_storage_span("operator"))
+    _ACTIVE_STORAGE_STACK.enter_context(profile_create_storage_span("11111111-1111-4111-8111-111111111111"))
     _PROFILE_SPAN_OPEN = True
 
 
@@ -107,7 +107,9 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
 
     _ensure_operator_storage_span()
     workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="operator", overrides=overrides),
+        lambda state: register_minimal_profile(
+            state, profile_id="11111111-1111-4111-8111-111111111111", overrides=overrides
+        ),
     )
     bucket_id = workflow_state_repository().load().active_profile_bucket_id()
     assert bucket_id is not None

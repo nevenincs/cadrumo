@@ -62,7 +62,7 @@ def _store_profile_with_nif(nif: str) -> None:
     created_at = datetime(2025, 1, 1, 12, 0, tzinfo=UTC)
     UserProfileLifecycleRepository(bucket_id="seed-test").save(
         UserProfileRecord(
-            profile_id="seed-test",
+            profile_id="21212121-2121-4121-8121-212121212121",
             display_name="Test runtime profile",
             facts=(UserProfileFact(path="identity.tax_id", value=nif),),
             created_at=created_at,

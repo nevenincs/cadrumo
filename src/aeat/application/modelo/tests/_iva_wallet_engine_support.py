@@ -214,7 +214,7 @@ def _store_operator_profile() -> None:
 def _store_operator_profile_with_tax_id(tax_id: str) -> None:
     UserProfileLifecycleRepository(bucket_id="operator").save(
         UserProfileRecord(
-            profile_id="operator",
+            profile_id="11111111-1111-4111-8111-111111111111",
             display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value=tax_id),

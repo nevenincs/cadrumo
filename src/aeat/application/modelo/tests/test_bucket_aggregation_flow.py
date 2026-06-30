@@ -44,7 +44,6 @@ _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 
 
-
 def _casilla_id(value: object) -> CasillaId:
     try:
         return validated_casilla_id(value, surface="test casilla id")
@@ -165,7 +164,7 @@ def _seed_303_work_unit(
 def _store_profile(objects: SecureObjectRepository) -> None:
     UserProfileLifecycleRepository(bucket_id="bucket-a", objects=objects).save(
         UserProfileRecord(
-            profile_id="bucket-a",
+            profile_id="26262626-2626-4262-8262-262626262626",
             display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),

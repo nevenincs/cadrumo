@@ -114,7 +114,7 @@ def test_active_snapshot_cannot_carry_supersession_pointer() -> None:
 
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     snapshot_id = derive_censo_snapshot_id(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         captured_at=captured_at,
         source_url="https://example/G313",
         censo_facts={},
@@ -123,7 +123,7 @@ def test_active_snapshot_cannot_carry_supersession_pointer() -> None:
         CensoSnapshot(
             snapshot_id=snapshot_id,
             bucket_id="bucket-1",
-            profile_id="operator",
+            profile_id="11111111-1111-4111-8111-111111111111",
             captured_at=captured_at,
             source_url="https://example/G313",
             state=SnapshotLifecycleState.ACTIVE,
@@ -136,7 +136,7 @@ def test_superseded_snapshot_requires_successor_pointer() -> None:
 
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     snapshot_id = derive_censo_snapshot_id(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         captured_at=captured_at,
         source_url="https://example/G313",
         censo_facts={},
@@ -145,7 +145,7 @@ def test_superseded_snapshot_requires_successor_pointer() -> None:
         CensoSnapshot(
             snapshot_id=snapshot_id,
             bucket_id="bucket-1",
-            profile_id="operator",
+            profile_id="11111111-1111-4111-8111-111111111111",
             captured_at=captured_at,
             source_url="https://example/G313",
             state=SnapshotLifecycleState.SUPERSEDED,
@@ -164,7 +164,7 @@ def test_censo_snapshot_survives_encrypted_storage_roundtrip(
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     facts = _populated_facts()
     snapshot_id = derive_censo_snapshot_id(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         captured_at=captured_at,
         source_url=_G313_URL,
         censo_facts=facts,
@@ -172,7 +172,7 @@ def test_censo_snapshot_survives_encrypted_storage_roundtrip(
     original = CensoSnapshot(
         snapshot_id=snapshot_id,
         bucket_id=bucket_id,
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         captured_at=captured_at,
         source_url=_G313_URL,
         state=SnapshotLifecycleState.ACTIVE,
@@ -211,13 +211,13 @@ def test_capture_is_idempotent_for_structurally_identical_facts(
     facts = _populated_facts()
 
     first = service.capture(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         captured_at=captured_at,
         source_url="https://example/G313",
         censo_facts=facts,
     )
     second = service.capture(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         captured_at=captured_at,
         source_url="https://example/G313",
         censo_facts=facts,
@@ -241,13 +241,13 @@ def test_capture_auto_supersedes_prior_active_for_same_profile(
     facts_v2["censo.elected_withholding_pct"] = "7"
 
     snapshot_v1 = service.capture(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         captured_at=datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC),
         source_url="https://example/G313",
         censo_facts=facts_v1,
     )
     snapshot_v2 = service.capture(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         captured_at=datetime(2026, 5, 17, 9, 30, 0, tzinfo=UTC),
         source_url="https://example/G313",
         censo_facts=facts_v2,
@@ -260,7 +260,7 @@ def test_capture_auto_supersedes_prior_active_for_same_profile(
     assert snapshot_v2.state is SnapshotLifecycleState.ACTIVE
 
     # latest_active returns v2.
-    latest = service.latest_active(profile_id="operator")
+    latest = service.latest_active(profile_id="11111111-1111-4111-8111-111111111111")
     assert latest is not None
     assert latest.snapshot_id == snapshot_v2.snapshot_id
 
@@ -278,13 +278,13 @@ def test_capture_marks_older_snapshot_superseded_when_a_newer_active_exists(
     facts_older["censo.elected_withholding_pct"] = "1"
 
     newer = service.capture(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         captured_at=datetime(2026, 5, 17, 9, 30, 0, tzinfo=UTC),
         source_url="https://example/G313",
         censo_facts=facts_newer,
     )
     older = service.capture(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         captured_at=datetime(2026, 5, 15, 9, 30, 0, tzinfo=UTC),
         source_url="https://example/G313",
         censo_facts=facts_older,
@@ -292,7 +292,7 @@ def test_capture_marks_older_snapshot_superseded_when_a_newer_active_exists(
 
     assert older.state is SnapshotLifecycleState.SUPERSEDED
     assert older.superseded_by_snapshot_id == newer.snapshot_id
-    latest_active = service.latest_active(profile_id="operator")
+    latest_active = service.latest_active(profile_id="11111111-1111-4111-8111-111111111111")
     assert latest_active is not None
     assert latest_active.snapshot_id == newer.snapshot_id
 
@@ -305,13 +305,13 @@ def test_supersession_scopes_to_profile_id(isolated_secure_store: None) -> None:
     facts = _populated_facts()
 
     operator_a = service.capture(
-        profile_id="operator-a",
+        profile_id="28282828-2828-4282-8282-282828282828",
         captured_at=datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC),
         source_url="https://example/G313",
         censo_facts=facts,
     )
     operator_b = service.capture(
-        profile_id="operator-b",
+        profile_id="29292929-2929-4292-8292-292929292929",
         captured_at=datetime(2026, 5, 16, 10, 30, 0, tzinfo=UTC),
         source_url="https://example/G313",
         censo_facts=facts,
@@ -333,7 +333,7 @@ def test_discard_marks_snapshot_discarded_with_audit(
 
     service = CensoSnapshotService(bucket_id="operator-bucket")
     captured = service.capture(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         captured_at=datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC),
         source_url="https://example/G313",
         censo_facts=_populated_facts(),
@@ -351,7 +351,7 @@ def test_discard_marks_snapshot_discarded_with_audit(
 
     # latest_active for the profile returns None because the discarded
     # snapshot is no longer ACTIVE.
-    assert service.latest_active(profile_id="operator") is None
+    assert service.latest_active(profile_id="11111111-1111-4111-8111-111111111111") is None
 
 
 def test_namespace_constant_uses_storage_registry() -> None:
@@ -373,7 +373,7 @@ def test_fixture_built_superseded_snapshot_roundtrips_with_successor_pointer(
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     facts = _populated_facts()
     snapshot_id = derive_censo_snapshot_id(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         captured_at=captured_at,
         source_url="https://example/G313",
         censo_facts=facts,
@@ -382,7 +382,7 @@ def test_fixture_built_superseded_snapshot_roundtrips_with_successor_pointer(
     original = CensoSnapshot(
         snapshot_id=snapshot_id,
         bucket_id=bucket_id,
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         captured_at=captured_at,
         source_url="https://example/G313",
         state=SnapshotLifecycleState.SUPERSEDED,
@@ -410,7 +410,7 @@ def test_fixture_built_discarded_snapshot_roundtrips_with_full_audit_triple(
     discarded_at = datetime(2026, 5, 17, 14, 0, 0, tzinfo=UTC)
     facts = _populated_facts()
     snapshot_id = derive_censo_snapshot_id(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         captured_at=captured_at,
         source_url="https://example/G313",
         censo_facts=facts,
@@ -418,7 +418,7 @@ def test_fixture_built_discarded_snapshot_roundtrips_with_full_audit_triple(
     original = CensoSnapshot(
         snapshot_id=snapshot_id,
         bucket_id=bucket_id,
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         captured_at=captured_at,
         source_url="https://example/G313",
         state=SnapshotLifecycleState.DISCARDED,
@@ -458,7 +458,7 @@ def test_anti_tautology_mutating_on_disk_payload_is_detected_on_load(
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     facts = _populated_facts()
     snapshot_id = derive_censo_snapshot_id(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         captured_at=captured_at,
         source_url="https://example/G313",
         censo_facts=facts,
@@ -467,7 +467,7 @@ def test_anti_tautology_mutating_on_disk_payload_is_detected_on_load(
     original = CensoSnapshot(
         snapshot_id=snapshot_id,
         bucket_id=bucket_id,
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         captured_at=captured_at,
         source_url="https://example/G313",
         state=SnapshotLifecycleState.SUPERSEDED,

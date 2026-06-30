@@ -70,7 +70,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
         UserProfileLifecycleRepository(bucket_id="bucket-a", objects=profile.repository).save(
             UserProfileRecord(
-                profile_id="bucket-a",
+                profile_id="26262626-2626-4262-8262-262626262626",
                 display_name="Source mesh ready profile",
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,
