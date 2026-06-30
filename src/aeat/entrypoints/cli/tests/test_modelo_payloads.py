@@ -136,6 +136,31 @@ def test_observation_payload_rejects_non_canonical_operand_casilla_ref() -> None
         )
 
 
+def test_observation_payload_carries_formula_op_through_json_channel() -> None:
+    """The typed ``op`` survives model_dump_json / model_validate_json.
+
+    The draft-review inline trace (``op(refs) = op(values) = value``) is fully
+    reconstructible from the JSON observation, so ``op`` must round-trip through
+    the strict envelope alongside the operand lineage.
+    """
+
+    original = ObservationPayload(
+        casilla_id=_PAYLOAD_CASILLA,
+        value="1234.56",
+        formula_id="f1",
+        op="subtract",
+        operand_refs=(_PAYLOAD_CASILLA, "iva.rate"),
+        operand_casilla_refs=(_PAYLOAD_CASILLA,),
+        operand_values=("2000.00", "765.44"),
+        legal_refs=("art-1",),
+        source_refs=("libro-1",),
+    )
+    restored = ObservationPayload.model_validate_json(original.model_dump_json())
+
+    assert restored == original
+    assert restored.op == "subtract"
+
+
 def test_observation_payload_rejects_untraced_operand_casilla_ref() -> None:
     with pytest.raises(ValidationError, match="declares operand_casilla_refs"):
         ObservationPayload(
