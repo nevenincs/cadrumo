@@ -1,8 +1,12 @@
 """Typed ``--json`` payload schemas for Google config CLI commands.
 
-Each class declared here is a strict :class:`OutputSchema` subclass and is
-decorated with :func:`register_schema` so the JSON-contract test suite can
-enumerate every google-config command surface this module covers.
+Each class declared here is a strict
+:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass and is decorated
+with :func:`~aeat.entrypoints.cli._schemas.register_schema` so the
+JSON-contract test suite can enumerate every google-config command surface this
+module covers. Validated results enter
+:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:func:`~aeat.entrypoints.cli._common._emit_envelope`.
 
 Field sets match the production payload dicts constructed in ``_google.py``,
 ``_google_folder.py``, and ``_google_sync_calc.py`` at their emit sites. All
@@ -14,6 +18,14 @@ The payload classes document only the CLI transport shapes registered with
 owned by :mod:`aeat.adapters.outbound.google`, Drive mirror state by
 :mod:`aeat.adapters.outbound.storage`, and calc-sheets semantics by
 :mod:`aeat.application.storage.calc_sheets`.
+
+See Also:
+    :mod:`aeat.entrypoints.cli._config._google`
+        Google OAuth, status, and Drive mirror emit sites.
+    :mod:`aeat.entrypoints.cli._config._google_folder`
+        Drive root-folder configuration emit sites.
+    :mod:`aeat.entrypoints.cli._config._google_sync_calc`
+        Google Sheets export, pull, verify, and compute emit sites.
 """
 
 from __future__ import annotations
