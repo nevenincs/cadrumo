@@ -50,33 +50,10 @@ def _split_semantic_role_axis_suffix(role: str) -> tuple[tuple[str, ...] | None,
     return None, None
 
 
-_SEMANTIC_ROLE_AXIS_TOKEN_GROUPS: tuple[frozenset[str], ...] = (
-    frozenset({"clave", "subclave"}),
-    frozenset({"count", "amount"}),
-    frozenset({"anteriores", "posteriores"}),
-    frozenset({"transmision", "adquisicion"}),
-    frozenset({"ab", "c"}),
-)
-
 def _semantic_roles_are_axis_token_siblings(left: str, right: str) -> bool:
     left_parts = tuple(left.split("_"))
     right_parts = tuple(right.split("_"))
-    if len(left_parts) == len(right_parts):
-        differing = [
-            (left_part, right_part)
-            for left_part, right_part in zip(left_parts, right_parts, strict=True)
-            if left_part != right_part
-        ]
-        if len(differing) == 1 and _semantic_role_tokens_share_axis(*differing[0]):
-            return True
-        if _semantic_role_related_party_row_slot_siblings(left_parts, right_parts):
-            return True
-
-    return False
-
-
-def _semantic_role_tokens_share_axis(left: str, right: str) -> bool:
-    return any(left in group and right in group for group in _SEMANTIC_ROLE_AXIS_TOKEN_GROUPS)
+    return _semantic_role_related_party_row_slot_siblings(left_parts, right_parts)
 
 
 def _semantic_role_related_party_row_slot_siblings(left: tuple[str, ...], right: tuple[str, ...]) -> bool:

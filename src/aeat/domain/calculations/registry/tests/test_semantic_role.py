@@ -701,20 +701,16 @@ class TestTypoTwinWarning:
             _emit_semantic_role_typo_twin_warnings([m])
         assert any("permanent_aumento" in str(w.message) for w in captured)
 
-    def test_token_axis_sibling_roles_do_not_warn_as_typos(self) -> None:
-        anteriores = _casilla(
-            cid="a",
-            semantic_role="iva_compensacion_pendiente_anteriores",
+    def test_legacy_token_groups_are_not_axis_tokens(self) -> None:
+        legacy_pairs = (
+            ("tipo_renta_atribuida_clave", "tipo_renta_atribuida_subclave"),
+            ("total_percepciones_count", "total_percepciones_amount"),
+            ("iva_compensacion_pendiente_anteriores", "iva_compensacion_pendiente_posteriores"),
+            ("irpf_ganancia_valor_transmision", "irpf_ganancia_valor_adquisicion"),
+            ("irpf_anexo_b_ab_importe", "irpf_anexo_b_c_importe"),
         )
-        posteriores = _casilla(
-            cid="b",
-            semantic_role="iva_compensacion_pendiente_posteriores",
-        )
-        m = _registry_modelo("303", "2009-y-siguientes", [anteriores, posteriores])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
+        for left, right in legacy_pairs:
+            assert semantic_roles_are_axis_siblings(left, right) is False
 
     def test_related_party_row_slot_roles_do_not_warn_as_typos(self) -> None:
         first_slot = _casilla(cid="a", semantic_role="related_party_nif_1", data_type="nif")
