@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import bundled_path, resources
 from .._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from .._groi_oracle import GROI_ORACLE_ID, GroiOracle
 from .._live_parity import (
@@ -24,10 +23,9 @@ from .._live_parity import (
 )
 from .._renta_web_open_oracle import RentaWebOpenOracle
 from .._schema import ModeloDefinition
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 # Concrete (oracle_id, surface) inputs paired with the registered
 # production adapter that supplies the surface_kind. Every entry sits
@@ -49,7 +47,8 @@ def _build_catalogue() -> LiveParityCatalogue:
 
 
 def _modelo_130() -> ModeloDefinition:
-    return resources().modelos.get("130")
+    modelo, _catalogues = _committed_modelo("130")
+    return modelo
 
 
 def _bind_first_cross_reference(
