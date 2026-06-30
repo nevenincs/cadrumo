@@ -25,7 +25,7 @@ from .. import BucketMaintenanceService, DeleteBucketCommand
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-_BUCKET_ID = "bucket-maintenance-delete-test"
+_BUCKET_ID = "44444444-4444-4444-8444-444444444444"
 _ORIGINAL_LABEL = "Doomed bucket"
 
 
