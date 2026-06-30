@@ -1030,8 +1030,14 @@ def _public_selector_value(value: object) -> BindingSelectorQueryValue:
     public_value = _public_value(value)
     if isinstance(public_value, str | int | bool):
         return public_value
-    if isinstance(public_value, tuple) and all(isinstance(item, str) for item in public_value):
-        return cast("tuple[str, ...]", public_value)
+    if isinstance(public_value, tuple):
+        string_items: list[str] = []
+        for item in public_value:
+            if not isinstance(item, str):
+                break
+            string_items.append(item)
+        else:
+            return tuple(string_items)
     raise RegistryValidationError(f"unsupported public binding selector value {public_value!r}")
 
 
