@@ -326,9 +326,8 @@ def persist_filed_revision(
     Modelo 303 period is filed as a refund request (devolución, Tipo de
     declaración ``D``) the generated credit is excluded from compensación carry, so
     the persisted cross-period carry generates ZERO compensación. It is forwarded
-    verbatim to
-    :func:`persist_filed_revision_observation`; the default ``False`` preserves
-    the standard compensación carry (RD 1624/1992 art. 30 / Ley 37/1992 art. 116).
+    verbatim to :func:`persist_filed_revision_observation`; the default ``False``
+    preserves the standard compensación carry (RD 1624/1992 art. 30 / Ley 37/1992 art. 116).
     """
     calculation_revision_id = target.calculation_revision_id
     new_filing_id = derive_filing_record_id(
