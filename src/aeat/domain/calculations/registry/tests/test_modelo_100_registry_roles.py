@@ -558,6 +558,38 @@ def test_modelo_100_anexo_c_energy_excess_roles_are_spelled_and_grounded(filing_
     assert not missing_da50
 
 
+def test_modelo_100_anexo_c_protected_patrimony_current_year_excess_role_is_grounded() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    current_year_role = "irpf_anexo_c_exceso_patrim_protegido_ejercicio_actual"
+    old_role = "irpf_anexo_c_exceso_patrim_protegido_generado"
+    expected_section = ("resultados", "anexo_c_res", "excesos_patrim_protegidos_res")
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("1362"))
+        expected_sources = {
+            f"aeat-dr-100-{filing_year}-dictionary",
+            f"aeat-dr-100-{filing_year}-input-dictionary",
+            f"aeat-dr-100-{filing_year}-xsd",
+        }
+
+        assert casilla.label == (
+            f"Aportaciones de {filing_year} no aplicadas cuyo importe se solicita poder reducir "
+            "en los 4 ejercicios siguientes"
+        )
+        assert tuple(casilla.section) == expected_section
+        assert casilla.semantic_role == current_year_role
+        assert "ley-35-2006:art-54" in casilla.legal_refs
+        assert expected_sources.issubset(casilla.source_refs)
+
+    assert all(
+        casilla.semantic_role != old_role
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    )
+
+
 def test_modelo_100_prevision_social_0383_splits_income_threshold_polarity() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
