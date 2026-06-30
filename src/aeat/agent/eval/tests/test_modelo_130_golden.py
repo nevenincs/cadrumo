@@ -39,6 +39,7 @@ def test_every_golden_scenario_passes_all_dimensions(scenario_path: Path) -> Non
     assert result.lifecycle_ordered
     assert result.skill_consistent
     assert result.provenance_present
+    assert result.verification_grounded
 
 
 def test_at_least_the_130_and_303_scenarios_are_shipped() -> None:
@@ -78,3 +79,30 @@ def test_runner_rejects_out_of_order_lifecycle() -> None:
     result = run_golden_scenario(scenario, valid_commands=_valid_commands())
     assert not result.passed
     assert not result.lifecycle_ordered
+
+
+def test_verification_dimension_is_grounded_and_not_vacuous() -> None:
+    # The modelo-130 revision must declare an AEAT-grounded verification contract
+    # (computed_casilla_ids with source_refs), so a pass is grounded.
+    from ....core.resources import resources
+
+    scenario = load_scenario(_SCENARIO)
+    revision = (
+        resources()
+        .modelos.authority.snapshot(scenario.modelo, filing_year=scenario.filing_year, period=scenario.period)
+        .revision
+    )
+    expectations = list(revision.verification_expectations)
+    assert expectations, "modelo-130 revision declares no verification contract"
+    computed = {c for e in expectations for c in e.computed_casilla_ids}
+    assert {"03", "04", "07"} <= computed
+    assert all(e.source_refs for e in expectations if e.computed_casilla_ids)
+
+
+def test_runner_rejects_an_ungrounded_expected_computed_casilla() -> None:
+    # Anti-tautology: a casilla id that is NOT in the registry's AEAT-grounded
+    # computed set must fail the verification dimension.
+    scenario = load_scenario(_SCENARIO).model_copy(update={"expected_computed_casillas": ("9999",)})
+    result = run_golden_scenario(scenario, valid_commands=_valid_commands())
+    assert not result.passed
+    assert not result.verification_grounded

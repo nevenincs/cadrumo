@@ -27,6 +27,10 @@ class GoldenScenario(BaseModel):
             (e.g. ``("modelo.work.create", "modelo.work.calculate", ...)``).
         provenance_required: When true, every casilla on the resolved revision
             must carry non-empty ``legal_refs`` and ``source_refs``.
+        expected_computed_casillas: Casilla ids the workflow expects the calculate
+            step to compute and verify. Each must appear in the resolved revision's
+            AEAT-grounded verification contract (``computed_casilla_ids``); empty
+            disables the cross-check.
     """
 
     model_config = _STRICT_FROZEN
@@ -38,6 +42,7 @@ class GoldenScenario(BaseModel):
     skill_name: str = Field(min_length=1)
     expected_trajectory: tuple[str, ...] = Field(min_length=1)
     provenance_required: bool = True
+    expected_computed_casillas: tuple[str, ...] = ()
 
 
 class GoldenResult(BaseModel):
@@ -55,6 +60,7 @@ class GoldenResult(BaseModel):
     lifecycle_ordered: bool
     skill_consistent: bool
     provenance_present: bool
+    verification_grounded: bool
     failures: tuple[str, ...] = ()
 
     @property
@@ -65,5 +71,6 @@ class GoldenResult(BaseModel):
             and self.lifecycle_ordered
             and self.skill_consistent
             and self.provenance_present
+            and self.verification_grounded
             and not self.failures
         )

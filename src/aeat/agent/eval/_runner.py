@@ -36,9 +36,10 @@ def load_scenario(path: Path) -> GoldenScenario:
     the trajectory array is coerced before validation.
     """
     payload = tomllib.loads(path.read_text(encoding="utf-8"))
-    trajectory = payload.get("expected_trajectory")
-    if isinstance(trajectory, list):
-        payload["expected_trajectory"] = tuple(trajectory)
+    for key in ("expected_trajectory", "expected_computed_casillas"):
+        value = payload.get(key)
+        if isinstance(value, list):
+            payload[key] = tuple(value)
     return GoldenScenario.model_validate(payload)
 
 
@@ -62,13 +63,18 @@ def _skill_path_parts(skill: object) -> set[str]:
     return set(text.replace("\\", "/").split("/"))
 
 
-def _check_provenance(scenario: GoldenScenario, failures: list[str]) -> bool:
+def _resolve_revision(scenario: GoldenScenario) -> object:
+    """Load the registry revision the scenario resolves to (pure registry read)."""
     snapshot = resources().modelos.authority.snapshot(
         scenario.modelo,
         filing_year=scenario.filing_year,
         period=scenario.period,
     )
-    casillas: Iterable[object] = _iter_casillas(snapshot.revision.casillas)
+    return snapshot.revision
+
+
+def _check_provenance(scenario: GoldenScenario, revision: object, failures: list[str]) -> bool:
+    casillas: Iterable[object] = _iter_casillas(getattr(revision, "casillas", ()))
     ungrounded = 0
     for casilla in casillas:
         legal_refs = getattr(casilla, "legal_refs", ())
@@ -78,6 +84,41 @@ def _check_provenance(scenario: GoldenScenario, failures: list[str]) -> bool:
     if ungrounded:
         failures.append(
             f"{ungrounded} casilla(s) on {scenario.modelo} {scenario.period} lack legal_refs/source_refs",
+        )
+        return False
+    return True
+
+
+def _check_verification_contract(scenario: GoldenScenario, revision: object, failures: list[str]) -> bool:
+    """Assert the revision declares an AEAT-grounded verification contract.
+
+    The registry bundles no numeric worked examples (a figure-level oracle is a
+    separate AEAT-corpus concern); what it does carry is each revision's
+    ``verification_expectations`` - the computed-and-reconciled casilla set with
+    AEAT ``source_refs`` and a tolerance. This dimension proves the operator's
+    calculate/verify step has that grounded reconciliation target, and that the
+    scenario's declared ``expected_computed_casillas`` are within it.
+    """
+    expectations = tuple(getattr(revision, "verification_expectations", ()) or ())
+    computed: set[str] = set()
+    grounded = False
+    for expectation in expectations:
+        ids = tuple(getattr(expectation, "computed_casilla_ids", ()) or ())
+        source_refs = tuple(getattr(expectation, "source_refs", ()) or ())
+        computed |= {str(i) for i in ids}
+        if ids and source_refs:
+            grounded = True
+    if not grounded:
+        failures.append(
+            f"{scenario.modelo} {scenario.period} declares no AEAT-grounded verification "
+            "contract (computed_casilla_ids with source_refs)",
+        )
+        return False
+    missing = [c for c in scenario.expected_computed_casillas if c not in computed]
+    if missing:
+        failures.append(
+            "scenario expected_computed_casillas absent from the registry's AEAT-grounded "
+            f"computed set: {', '.join(missing)}",
         )
         return False
     return True
@@ -127,9 +168,13 @@ def run_golden_scenario(scenario: GoldenScenario, *, valid_commands: frozenset[s
                 "skill playbook does not cite trajectory verbs: " + ", ".join(_cli_form(v) for v in missing),
             )
 
+    revision = _resolve_revision(scenario)
+
     provenance_present = True
     if scenario.provenance_required:
-        provenance_present = _check_provenance(scenario, failures)
+        provenance_present = _check_provenance(scenario, revision, failures)
+
+    verification_grounded = _check_verification_contract(scenario, revision, failures)
 
     return GoldenResult(
         scenario=scenario.name,
@@ -137,5 +182,6 @@ def run_golden_scenario(scenario: GoldenScenario, *, valid_commands: frozenset[s
         lifecycle_ordered=lifecycle_ordered,
         skill_consistent=skill_consistent,
         provenance_present=provenance_present,
+        verification_grounded=verification_grounded,
         failures=tuple(failures),
     )
