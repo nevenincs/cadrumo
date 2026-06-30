@@ -1,7 +1,7 @@
 """Command-resolution suggestions and lazy subcommand loading.
 
 Typer's built-in :class:`~typer.core.TyperGroup` suggests a near-miss
-command via :func:`difflib.get_close_matches`. That covers typos
+command via :func:`~difflib.get_close_matches`. That covers typos
 (``overvew`` -> ``overview``) but misses two operator-facing cases:
 
 * **Semantic synonyms** — a different word for the same verb, e.g.
@@ -75,7 +75,7 @@ class LazySubcommand:
     """A deferred subcommand: a Typer factory imported on first use.
 
     ``factory`` is a zero-argument callable that imports the owning
-    command module and returns its :class:`typer.Typer` instance. The
+    command module and returns its :class:`~typer.Typer` instance. The
     import — and therefore the application-layer / registry cost — is
     paid only when
     :meth:`~aeat.entrypoints.cli._command_suggestions.LazySubcommand.load`
@@ -156,7 +156,7 @@ INVOCATION_REMAINDER_META_KEY = "aeat.invocation_remainder"
 
 
 class AeatTyperGroup(TyperGroup):
-    """:class:`typer.core.TyperGroup` with synonym hints and lazy loading.
+    """:class:`~typer.core.TyperGroup` with synonym hints and lazy loading.
 
     Three behaviours layer on top of the base Typer group:
 
@@ -187,7 +187,7 @@ class AeatTyperGroup(TyperGroup):
     def main(self, *args: Any, standalone_mode: bool = True, **kwargs: Any) -> object:
         """Terminal exception funnel honouring the JSON error contract.
 
-        Typer's standalone ``main`` renders every :class:`click.ClickException`
+        Typer's standalone ``main`` renders every :class:`~click.ClickException`
         (usage errors, bad parameters) as Rich text and lets unexpected
         exceptions escape as raw tracebacks — so under ``--format json``
         the shared-spine error document never appeared on any parse-time
