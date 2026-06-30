@@ -78,28 +78,6 @@ def _casilla(
     )
 
 
-def _modelo(modelo_id: str, revision_id: str, casillas: Iterable[CasillaDefinition]) -> Any:
-    """Build the minimum object shape `_validate_semantic_role_consistency` expects.
-
-    The validator only reads `.id` on the modelo, `.id` on each
-    revision, and walks `.casillas`. Use a lightweight stand-in to
-    avoid pulling the full ModeloDefinition / ModeloRevision schema
-    (with its many required fields) for unit-test scope.
-    """
-
-    class _Rev:
-        def __init__(self) -> None:
-            self.id = revision_id
-            self.casillas = tuple(casillas)
-
-    class _Mod:
-        def __init__(self) -> None:
-            self.id = modelo_id
-            self.revisions = {revision_id: _Rev()}
-
-    return _Mod()
-
-
 def _registry_modelo(modelo_id: str, revision_id: str, casillas: Iterable[CasillaDefinition]) -> ModeloDefinition:
     revision = ModeloRevision.model_validate(
         {
@@ -195,21 +173,21 @@ class TestSemanticRoleFieldShape:
 
 class TestValidateSemanticRoleConsistency:
     def test_no_role_declarations_passes(self) -> None:
-        m = _modelo("180", "2023", [_casilla()])
+        m = _registry_modelo("180", "2023", [_casilla()])
         assert _validate_semantic_role_consistency([m]) == ()
 
     def test_matching_role_declarations_pass(self) -> None:
         a = _casilla(cid="a", semantic_role="taxpayer_nif", data_type="nif")
         b = _casilla(cid="b", semantic_role="taxpayer_nif", data_type="nif")
-        m1 = _modelo("180", "2023", [a])
-        m2 = _modelo("184", "2023", [b])
+        m1 = _registry_modelo("180", "2023", [a])
+        m2 = _registry_modelo("184", "2023", [b])
         assert _validate_semantic_role_consistency([m1, m2]) == ()
 
     def test_diverging_data_type_rejected(self) -> None:
         a = _casilla(cid="a", semantic_role="taxpayer_nif", data_type="nif")
         b = _casilla(cid="b", semantic_role="taxpayer_nif", data_type="text")
-        m1 = _modelo("180", "2023", [a])
-        m2 = _modelo("184", "2023", [b])
+        m1 = _registry_modelo("180", "2023", [a])
+        m2 = _registry_modelo("184", "2023", [b])
         failures = _validate_semantic_role_consistency([m1, m2])
         assert any("data_type" in f for f in failures)
         assert any("taxpayer_nif" in f for f in failures)
@@ -221,8 +199,8 @@ class TestValidateSemanticRoleConsistency:
         unconstrained = CasillaConstraints(sign="any", legal_refs=common_legal, source_refs=common_source)
         a = _casilla(cid="a", semantic_role="retenciones", data_type="money", constraints=constrained)
         b = _casilla(cid="b", semantic_role="retenciones", data_type="money", constraints=unconstrained)
-        m1 = _modelo("180", "2023", [a])
-        m2 = _modelo("184", "2023", [b])
+        m1 = _registry_modelo("180", "2023", [a])
+        m2 = _registry_modelo("184", "2023", [b])
         failures = _validate_semantic_role_consistency([m1, m2])
         assert any("constraints" in f for f in failures)
 
@@ -234,7 +212,7 @@ class TestValidateSemanticRoleCardinality:
             semantic_role_cardinality="intentional_singleton",
             semantic_role_cardinality_reason="2025-only legal slot",
         )
-        m = _modelo("202", "2025-y-siguientes", [c])
+        m = _registry_modelo("202", "2025-y-siguientes", [c])
         assert _validate_semantic_role_cardinality([m]) == ()
 
     def test_intentional_singleton_role_repeated_elsewhere_fails(self) -> None:
@@ -245,8 +223,8 @@ class TestValidateSemanticRoleCardinality:
             semantic_role_cardinality_reason="2025-only legal slot",
         )
         b = _casilla(cid="b", semantic_role="is_pf_mod_40_3_b2_base_tipo_3")
-        m1 = _modelo("202", "2025-y-siguientes", [a])
-        m2 = _modelo("202", "2026-y-siguientes", [b])
+        m1 = _registry_modelo("202", "2025-y-siguientes", [a])
+        m2 = _registry_modelo("202", "2026-y-siguientes", [b])
         failures = _validate_semantic_role_cardinality([m1, m2])
         assert failures == (
             "semantic_role 'is_pf_mod_40_3_b2_base_tipo_3': casilla "
@@ -321,7 +299,7 @@ class TestTypoTwinWarning:
 
     def test_single_occurrence_role_emits_warning(self) -> None:
         a = _casilla(cid="a", semantic_role="taxpayer-nif", data_type="nif")  # note hyphen typo
-        m = _modelo("180", "2023", [a])
+        m = _registry_modelo("180", "2023", [a])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
@@ -331,7 +309,7 @@ class TestTypoTwinWarning:
         typo = _casilla(cid="a", semantic_role="taxpayer_niff", data_type="nif")
         canonical_a = _casilla(cid="b", semantic_role="taxpayer_nif", data_type="nif")
         canonical_b = _casilla(cid="c", semantic_role="taxpayer_nif", data_type="nif")
-        m = _modelo("180", "2023", [typo, canonical_a, canonical_b])
+        m = _registry_modelo("180", "2023", [typo, canonical_a, canonical_b])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
@@ -361,7 +339,7 @@ class TestTypoTwinWarning:
             semantic_role_cardinality="intentional_singleton",
             semantic_role_cardinality_reason="legacy source spelling is legally unique",
         )
-        m = _modelo("180", "2023", [a])
+        m = _registry_modelo("180", "2023", [a])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
@@ -370,8 +348,8 @@ class TestTypoTwinWarning:
     def test_repeated_role_does_not_warn(self) -> None:
         a = _casilla(cid="a", semantic_role="taxpayer_nif", data_type="nif")
         b = _casilla(cid="b", semantic_role="taxpayer_nif", data_type="nif")
-        m1 = _modelo("180", "2023", [a])
-        m2 = _modelo("184", "2023", [b])
+        m1 = _registry_modelo("180", "2023", [a])
+        m2 = _registry_modelo("184", "2023", [b])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m1, m2])
@@ -387,7 +365,7 @@ class TestTypoTwinWarning:
             cid="b",
             semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanente_disminucion",
         )
-        m = _modelo("200", "2024-y-siguientes", [aumento, disminucion])
+        m = _registry_modelo("200", "2024-y-siguientes", [aumento, disminucion])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
@@ -402,7 +380,7 @@ class TestTypoTwinWarning:
             cid="b",
             semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
         )
-        m = _modelo("200", "2024-y-siguientes", [typo, canonical])
+        m = _registry_modelo("200", "2024-y-siguientes", [typo, canonical])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
@@ -417,7 +395,7 @@ class TestTypoTwinWarning:
             cid="b",
             semantic_role="iva_compensacion_pendiente_posteriores",
         )
-        m = _modelo("303", "2009-y-siguientes", [anteriores, posteriores])
+        m = _registry_modelo("303", "2009-y-siguientes", [anteriores, posteriores])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
@@ -432,7 +410,7 @@ class TestTypoTwinWarning:
             cid="b",
             semantic_role="is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_aumento",
         )
-        m = _modelo("200", "2024-y-siguientes", [con_mantenimiento, sin_mantenimiento])
+        m = _registry_modelo("200", "2024-y-siguientes", [con_mantenimiento, sin_mantenimiento])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
@@ -447,7 +425,7 @@ class TestTypoTwinWarning:
             cid="b",
             semantic_role="is_correccion_operaciones_a_plazos_dt1_permanente_aumento",
         )
-        m = _modelo("200", "2024-y-siguientes", [article, transitional])
+        m = _registry_modelo("200", "2024-y-siguientes", [article, transitional])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
@@ -462,7 +440,7 @@ class TestTypoTwinWarning:
             cid="b",
             semantic_role="is_deduccion_di_internacional_pendiente",
         )
-        m = _modelo("200", "2024-y-siguientes", [rdleg, current])
+        m = _registry_modelo("200", "2024-y-siguientes", [rdleg, current])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
@@ -477,7 +455,7 @@ class TestTypoTwinWarning:
             cid="b",
             semantic_role="is_correccion_otras_correcciones_resultado_permanente_disminucion",
         )
-        m = _modelo("200", "2024-y-siguientes", [detalle, otras])
+        m = _registry_modelo("200", "2024-y-siguientes", [detalle, otras])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
@@ -486,7 +464,7 @@ class TestTypoTwinWarning:
     def test_numeric_axis_sibling_roles_do_not_warn_as_typos(self) -> None:
         first_window = _casilla(cid="a", semantic_role="irpf_red_prevision_social_exceso_2015_2019")
         second_window = _casilla(cid="b", semantic_role="irpf_red_prevision_social_exceso_2016_2020")
-        m = _modelo("100", "2021", [first_window, second_window])
+        m = _registry_modelo("100", "2021", [first_window, second_window])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
@@ -495,7 +473,7 @@ class TestTypoTwinWarning:
     def test_relationship_axis_sibling_roles_do_not_warn_as_typos(self) -> None:
         descendant = _casilla(cid="a", semantic_role="irpf_descendiente_fecha_nacimiento")
         ascendant = _casilla(cid="b", semantic_role="irpf_ascendiente_fecha_nacimiento")
-        m = _modelo("100", "2025", [descendant, ascendant])
+        m = _registry_modelo("100", "2025", [descendant, ascendant])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
@@ -504,7 +482,7 @@ class TestTypoTwinWarning:
     def test_optional_scope_axis_roles_do_not_warn_as_typos(self) -> None:
         listed = _casilla(cid="a", semantic_role="irpf_ganancia_fondos_coti_ganancia")
         general = _casilla(cid="b", semantic_role="irpf_ganancia_fondos_ganancia")
-        m = _modelo("100", "2025", [listed, general])
+        m = _registry_modelo("100", "2025", [listed, general])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
@@ -513,7 +491,7 @@ class TestTypoTwinWarning:
     def test_multiple_optional_scope_axis_roles_do_not_warn_as_typos(self) -> None:
         scoped = _casilla(cid="a", semantic_role="irpf_ganancia_premios_juegos_pub_valoracion_b")
         general = _casilla(cid="b", semantic_role="irpf_ganancia_premios_juegos_valoracion")
-        m = _modelo("100", "2025", [scoped, general])
+        m = _registry_modelo("100", "2025", [scoped, general])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
@@ -522,7 +500,7 @@ class TestTypoTwinWarning:
     def test_optional_numeric_axis_roles_do_not_warn_as_typos(self) -> None:
         annual_line = _casilla(cid="a", semantic_role="irpf_deduccion_cantabria_generado_2025_pendiente_2")
         general_line = _casilla(cid="b", semantic_role="irpf_deduccion_cantabria_generado_pendiente")
-        m = _modelo("100", "2025", [annual_line, general_line])
+        m = _registry_modelo("100", "2025", [annual_line, general_line])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
@@ -531,7 +509,7 @@ class TestTypoTwinWarning:
     def test_ccaa_axis_roles_do_not_warn_as_typos(self) -> None:
         murcia = _casilla(cid="a", semantic_role="irpf_deduccion_murcia_vehiculo_importe")
         asturias = _casilla(cid="b", semantic_role="irpf_deduccion_asturias_vehiculo_importe")
-        m = _modelo("100", "2025", [murcia, asturias])
+        m = _registry_modelo("100", "2025", [murcia, asturias])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
@@ -541,7 +519,7 @@ class TestTypoTwinWarning:
         parent = _casilla(cid="a", semantic_role="irpf_deduccion_madrid_vivienda_municipio_riesgo")
         year = _casilla(cid="b", semantic_role="irpf_deduccion_madrid_vivienda_municipio_riesgo_anio")
         price = _casilla(cid="c", semantic_role="irpf_deduccion_madrid_vivienda_municipio_riesgo_precio")
-        m = _modelo("100", "2025", [parent, year, price])
+        m = _registry_modelo("100", "2025", [parent, year, price])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
