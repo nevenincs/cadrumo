@@ -24,6 +24,7 @@ from .. import (
     build_overview_calendar,
     calendar_events_from_expedientes_snapshots,
 )
+from .calendar_test_support import BUCKET_ID as _BUCKET_ID
 from .calendar_test_support import SOURCE_URL as _SOURCE_URL
 from .calendar_test_support import profile as _profile
 
@@ -185,7 +186,7 @@ def test_calendar_undeclared_profile_preserves_observed_events() -> None:
         (
             PersistedExpedientesSnapshot(
                 snapshot_id="e" * 64,
-                bucket_id="bucket-1",
+                bucket_id=_BUCKET_ID,
                 captured_at=datetime(2026, 4, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 declarations=(

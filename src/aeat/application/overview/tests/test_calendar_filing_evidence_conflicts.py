@@ -17,6 +17,9 @@ from .. import (
     calendar_filing_evidence_from_sources,
 )
 from .calendar_test_support import (
+    BUCKET_ID as _BUCKET_ID,
+)
+from .calendar_test_support import (
     FILED_JUSTIFICANTE_STORAGE_REF as _FILED_JUSTIFICANTE_STORAGE_REF,
 )
 from .calendar_test_support import (
@@ -59,7 +62,7 @@ def test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disag
         (
             PersistedExpedientesSnapshot(
                 snapshot_id="3" * 64,
-                bucket_id="bucket-1",
+                bucket_id=_BUCKET_ID,
                 captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 declarations=(
