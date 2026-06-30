@@ -78,9 +78,9 @@ required_text = ["tipo de gravamen"]
 # micro-empresa scale: when INCN < 1.000.000 EUR the cuota-integra
 # formula routes the post-nivelacion base 01330 through the
 # `is.modelo-200.tipo-gravamen-pyme` two-tranche bracket scale
-# (17 / 20 in 2025, 19 / 21 in 2026) via
-# `lookup_bracket_by_entity_type`; otherwise the sub-form dispatch
-# applies the general / cooperative-protected / non-profit rate.
+# (23 flat in 2024; DT 44ª 21 / 22 in 2025 and 19 / 21 in 2026)
+# via `lookup_bracket_by_entity_type`; otherwise the sub-form
+# dispatch applies the general / cooperative-protected / non-profit rate.
 # Sourced from the Decimal profile fact `incn_prior_12_months`. An
 # undeclared INCN raises `binding has no supplied value` so the
 # engine refuses to guess micro-empresa identification.
