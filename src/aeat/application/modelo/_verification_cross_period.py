@@ -348,12 +348,9 @@ def _cross_period_clean_state_findings(
     """Return verification findings for a cross-period clean-state verdict.
 
     Emits a BLOCKING ``CROSS_PERIOD_DEPENDENCY_UNCLEAN`` finding for each unclean
-    dependency, plus a NON-BLOCKING ``ADVISORY`` (``WARNING`` severity) finding for
-    each dependency whose source revision stamp could not be re-confirmed
-    (``unstamped_revision_advisory``). The advisory is surfaced even when the
-    dependency is otherwise ``clean`` so an indeterminate carry never degrades
-    silently. The WARNING severity keeps the grant path open (see
-    :func:`_classify_verification_outcome`) while making the carry operator-visible.
+    dependency. A source revision stamp that cannot be re-confirmed is a blocker,
+    not a legacy advisory: current carry data must resolve against the
+    law-determined revision before it can feed a downstream filing.
 
     ADR 2026-06-13-first-filer-attestation-adr adds two outcomes:
 
@@ -397,8 +394,6 @@ def _cross_period_clean_state_findings(
                         source_refs=_cross_period_requirement_source_refs(requirement),
                     ),
                 )
-        if evidence.unstamped_revision_advisory:
-            findings.append(_cross_period_unstamped_revision_advisory_finding(verdict, evidence))
         if evidence.operator_declared_suppression_advisory:
             findings.append(_cross_period_operator_declared_suppression_advisory_finding(verdict, evidence))
         if evidence.non_official_local_chain_advisory:
@@ -531,45 +526,6 @@ def _cross_period_missing_activity_start_finding(
             "existed, capture or import its AEAT justificante/CSV/live evidence instead."
         ),
         legal_refs=_CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
-    )
-
-
-def _cross_period_unstamped_revision_advisory_finding(
-    verdict: CrossPeriodCleanStateVerdict,
-    evidence: CrossPeriodDependencyEvidence,
-) -> ModeloVerificationFinding:
-    """Build the NON-BLOCKING revision-stamp advisory finding for one dependency.
-
-    A prior filing whose stamp could not be re-confirmed because the source
-    context will not resolve carries, but the operator MUST be told so the value
-    is not accepted silently. The remediation is to re-pull the source period so
-    a currently verifiable observation is captured.
-    """
-    requirement = evidence.requirement
-    requirement_period = requirement.period.registry_token
-    re_file_capture = (
-        "aeat app live filed pull-sources "
-        f"--modelo {requirement.source_modelo} "
-        f"--year {requirement.filing_year} "
-        f"--period {requirement_period}"
-    )
-    return ModeloVerificationFinding(
-        kind=ModeloVerificationFindingKind.ADVISORY,
-        severity=ModeloVerificationFindingSeverity.WARNING,
-        message=(
-            "cross-period carry used a prior filing whose registry "
-            f"revision stamp could not be re-confirmed: modelo={requirement.source_modelo} "
-            f"year={requirement.filing_year} "
-            f"period={requirement_period} origin={requirement.origin.value}. The carried value "
-            "was accepted but its source revision could not be re-confirmed against the "
-            "law-determined revision."
-        ),
-        next_action=(
-            f"Re-pull the source period to capture a currently verifiable observation: run `{re_file_capture}`, "
-            "then rerun verification so the carry is re-confirmed against the law-determined revision."
-        ),
-        legal_refs=_cross_period_requirement_legal_refs(requirement),
-        source_refs=_cross_period_requirement_source_refs(requirement),
     )
 
 
@@ -752,12 +708,13 @@ def _cross_period_clean_state_next_action(
     )
     if CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE in blockers:
         # ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2: the prior
-        # filing's stamped revision is no longer the law-determined revision for its
-        # source context. Re-file and re-stamp the source period under the correct
-        # revision rather than carrying a stale-norm value forward.
+        # filing's stamped revision no longer re-confirms against the law-determined
+        # revision for its source context. Re-file and re-stamp the source period
+        # under the current revision rather than carrying a stale or unverifiable
+        # value forward.
         return (
-            f"The prior filing for {source_hint} was captured under a registry revision that is no longer "
-            "the law-determined revision for that period; its values may follow superseded rules. Re-file and "
+            f"The prior filing for {source_hint} does not re-confirm against the law-determined registry "
+            "revision for that period; its values may follow superseded or unverifiable rules. Re-file and "
             f"re-capture the source period so it is re-stamped under the current revision: run `{source_capture}`, "
             "then rerun verification."
         )

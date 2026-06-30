@@ -193,15 +193,15 @@ def _load_303_observations_for_partition(
         if payload is None:
             continue
         observation = payload.observation
-        diverges, _advisory = revision_carry_outcome(
+        refused = revision_carry_outcome(
             payload.stamped_revision_id,
             source_modelo=observation.modelo,
             source_filing_year=observation.filing_year,
             source_period=observation.period,
         )
-        if diverges:
+        if refused:
             _log.debug(
-                "dropping stale m303 observation from iva annual partition stamped_revision_id=%s period=%s",
+                "dropping unreconfirmable m303 observation from iva annual partition stamped_revision_id=%s period=%s",
                 payload.stamped_revision_id,
                 observation.period,
             )
