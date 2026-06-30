@@ -940,6 +940,7 @@ def _required_amendment_inputs(
     reason: str | None,
     set_overrides: list[str] | None,
 ) -> tuple[str, str, str, tuple[str, ...]]:
+    """Return raw amendment CLI inputs or raise one combined option error."""
     missing: list[str] = []
     if not from_filing_record_id or not from_filing_record_id.strip():
         missing.append("--from-filing-record")
@@ -963,6 +964,7 @@ def _required_amendment_inputs(
 
 
 def _parse_amendment_kind(kind: str) -> CalculationRevisionAmendmentKind:
+    """Parse ``--kind`` into :class:`CalculationRevisionAmendmentKind`."""
     try:
         return CalculationRevisionAmendmentKind(kind.strip())
     except ValueError as exc:
@@ -976,6 +978,7 @@ def _parse_amendment_kind(kind: str) -> CalculationRevisionAmendmentKind:
 
 
 def _parse_amendment_overrides(set_overrides: tuple[str, ...]) -> dict[CasillaId, Decimal]:
+    """Parse ``--set`` values into validated ``CasillaId`` decimal overrides."""
     overrides: dict[CasillaId, Decimal] = {}
     for spec in set_overrides:
         key, value = _parse_amendment_casilla(spec)
@@ -1024,7 +1027,17 @@ def work_amend(
     ``--reason``, and at least one ``--set``) are batch-validated so a
     run missing several flags reports every absent one in a single
     refusal instead of forcing the operator to rediscover them one
-    invocation at a time.
+    invocation at a time. The command then parses the requested
+    :class:`CalculationRevisionAmendmentKind`, validates each override as a
+    ``CasillaId`` decimal, delegates to
+    :func:`aeat.application.modelo.amend_modelo_revision`, and emits a
+    :class:`aeat.entrypoints.cli._modelo_payloads.WorkAmendResult`.
+
+    The application service requires the source
+    :class:`aeat.domain.modelos.ModeloRecord` to carry
+    :class:`aeat.domain.modelos.ExternalEvidence`; locally filed records cannot
+    enter this path. The new record is an internal filing envelope and does not
+    submit anything to AEAT.
     """
     from_filing_record_id, kind, reason, set_specs = _required_amendment_inputs(
         from_filing_record_id=from_filing_record_id,

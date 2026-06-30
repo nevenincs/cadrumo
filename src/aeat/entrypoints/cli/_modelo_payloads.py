@@ -521,9 +521,13 @@ class WorkFileResult(OutputSchema):
 class WorkAmendResult(OutputSchema):
     """Amendment filing confirmation returned by ``aeat app modelo work amend``.
 
-    Carries the amendment-specific pair (``amendment_kind``,
-    ``amends_filing_record_id``) above the standard filing-record body.
-    ``live_submission`` is always ``False``; does NOT submit to AEAT.
+    The command delegates to
+    :func:`aeat.application.modelo.amend_modelo_revision` and returns the
+    resulting :class:`ModeloRecordPayload` with the amendment-specific pair
+    (``amendment_kind``, ``amends_filing_record_id``). The source filing record
+    must be an externally evidenced baseline; the new filing record clears
+    ``external_evidence`` and remains local, so ``live_submission`` is always
+    ``False``.
     """
 
     operation: str = "modelo.work.amend"
