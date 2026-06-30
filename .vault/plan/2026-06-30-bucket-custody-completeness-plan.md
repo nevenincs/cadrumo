@@ -32,39 +32,39 @@ Bump the bundle and archive schema versions, delete the old shapes, and extend t
 
 Serialise the carry set generically per transport custody profile and build the coverage manifest with a fail-closed full-coverage assertion.
 
-- [ ] `P03.S07` - Add a CustodyProfile parameter to serialize_profile_bundle and read carry-set secure objects generically through the substrate; `src/aeat/application/user_profile/_bundle.py`.
-- [ ] `P03.S08` - Build the coverage manifest and apply the fail-closed full-coverage assertion for the sealed profile; `src/aeat/application/user_profile/_bundle.py`.
+- [x] `P03.S07` - Add a CustodyProfile parameter to serialize_profile_bundle and read carry-set secure objects generically through the substrate; `src/aeat/application/user_profile/_bundle.py`.
+- [x] `P03.S08` - Build the coverage manifest and apply the fail-closed full-coverage assertion for the sealed profile; `src/aeat/application/user_profile/_bundle.py`.
 
 ### Phase `P04` - transport-aware deserialise and import completeness
 
 Re-encrypt and re-save every carried object under the recipient DEK, merge the audit trail idempotently, and rebuild the participation index after import.
 
-- [ ] `P04.S09` - Re-save every carried secure object through the substrate save path under the recipient DEK in deserialize_profile_bundle; `src/aeat/application/user_profile/_bundle.py`.
-- [ ] `P04.S10` - Merge the carried bucket event-history catalogue idempotently and rebuild the participation index after import; `src/aeat/application/user_profile/_bundle.py`.
+- [x] `P04.S09` - Re-save every carried secure object through the substrate save path under the recipient DEK in deserialize_profile_bundle; `src/aeat/application/user_profile/_bundle.py`.
+- [x] `P04.S10` - Merge the carried bucket event-history catalogue idempotently and rebuild the participation index after import; `src/aeat/application/user_profile/_bundle.py`.
 
 ### Phase `P05` - transport wiring
 
 Wire the sealed archive to the full custody profile with coverage verification and the cleartext bundle to the structured-only profile with a loud not-a-full-backup notice.
 
-- [ ] `P05.S11` - Wire BucketMaintenanceService export and import_ to the full custody profile and verify coverage on import; `src/aeat/application/bucket_maintenance/_service.py`.
-- [ ] `P05.S12` - Wire the cleartext config profile export and import to the structured-only profile and extend the export notice to name the sealed archive as the full backup; `src/aeat/entrypoints/cli/_config/_profile_bundle.py`.
+- [x] `P05.S11` - Wire BucketMaintenanceService export and import_ to the full custody profile and verify coverage on import; `src/aeat/application/bucket_maintenance/_service.py`.
+- [x] `P05.S12` - Wire the cleartext config profile export and import to the structured-only profile and extend the export notice to name the sealed archive as the full backup; `src/aeat/entrypoints/cli/_config/_profile_bundle.py`.
 
 ### Phase `P06` - tests and gates
 
 Add roundtrip, anti-tautology, coverage-gate-negative, cleartext-exclusion, and registry-disposition tests per the roundtrip discipline.
 
-- [ ] `P06.S13` - Extend the sealed roundtrip to seed every carried store with non-default state and assert strict per-store equality; `src/aeat/application/bucket_maintenance/tests/test_service_import_export.py`.
-- [ ] `P06.S14` - Add an anti-tautology proof for the carried-object boundary; `src/aeat/application/bucket_maintenance/tests/test_custody_completeness.py`.
-- [ ] `P06.S15` - Add a coverage-gate negative test where a populated undeclared namespace fails the sealed export; `src/aeat/application/bucket_maintenance/tests/test_custody_completeness.py`.
-- [ ] `P06.S16` - Add a cleartext structured-only test asserting no FINANCIAL bytes are carried and the not-a-full-backup notice is emitted; `src/aeat/entrypoints/cli/tests/test_profile_export_roundtrip.py`.
-- [ ] `P06.S17` - Add a registry test asserting every namespace declares a custody_disposition; `src/aeat/adapters/persistence/storage/tests/test_namespace_registry.py`.
+- [x] `P06.S13` - Extend the sealed roundtrip to seed every carried store with non-default state and assert strict per-store equality; `src/aeat/application/bucket_maintenance/tests/test_service_import_export.py`.
+- [x] `P06.S14` - Add an anti-tautology proof for the carried-object boundary; `src/aeat/application/bucket_maintenance/tests/test_custody_completeness.py`.
+- [x] `P06.S15` - Add a coverage-gate negative test where a populated undeclared namespace fails the sealed export; `src/aeat/application/bucket_maintenance/tests/test_custody_completeness.py`.
+- [x] `P06.S16` - Add a cleartext structured-only test asserting no FINANCIAL bytes are carried and the not-a-full-backup notice is emitted; `src/aeat/entrypoints/cli/tests/test_profile_export_roundtrip.py`.
+- [x] `P06.S17` - Add a registry test asserting every namespace declares a custody_disposition; `src/aeat/adapters/persistence/storage/tests/test_namespace_registry.py`.
 
 ### Phase `P07` - manual persona verification and closeout
 
 Drive a real operator-persona export-import recovery cycle, run a fresh honesty review, and resolve all surfaced and deferred work.
 
-- [ ] `P07.S18` - Drive a real operator-persona CLI export then import recovery cycle and verify evidence bytes, audit trail, and cross-period calc inputs survive; `src/aeat/entrypoints/cli`.
-- [ ] `P07.S19` - Run a fresh-context honesty review, sweep for deferred or unresolved work, and close every surfaced item with verification; `src/aeat`.
+- [x] `P07.S18` - Drive a real operator-persona CLI export then import recovery cycle and verify evidence bytes, audit trail, and cross-period calc inputs survive; `src/aeat/entrypoints/cli`.
+- [x] `P07.S19` - Run a fresh-context honesty review, sweep for deferred or unresolved work, and close every surfaced item with verification; `src/aeat`.
 
 ## Description
 
