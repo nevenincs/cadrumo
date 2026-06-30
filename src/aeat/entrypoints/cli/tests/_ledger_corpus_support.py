@@ -107,6 +107,20 @@ def _find(rows: list[dict[str, Any]], needle: str) -> dict[str, Any]:
     return next(r for r in rows if needle in r["description"])
 
 
+def _set_group(tx_id: str, label: str) -> None:
+    result = _invoke(["app", "ledger", "update", tx_id, "--group", label])
+    assert result.exit_code == 0, result.output
+
+
+def _active_repo() -> Any:
+    from ....core import resolve_active_bucket_id
+    from ....domain.transactions import TransactionCatalogueRepository
+
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    return TransactionCatalogueRepository(bucket_id=bucket_id)
+
+
 def _xlsx_mirror_of_csv(csv_path: Path, out: Path) -> None:
     """Write a faithful XLSX mirror of a ';'-delimited bank CSV.
 
