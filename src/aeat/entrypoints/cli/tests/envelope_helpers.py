@@ -4,7 +4,8 @@ Envelope-aware CLI commands emit a typed payload shaped as
 ``{"schema_version": str, "command": str, "status": str,
 "result": {...}, "notices": [...]}`` through ``_emit_envelope``. Test
 assertions generally target the inner ``result`` mapping; commands that
-return a plain payload directly are passed through unchanged.
+intentionally exercise a documented bare-payload exemption are passed
+through unchanged.
 
 This module is the single source of the helper that multiple test
 modules previously duplicated inline under the name ``_payload``
@@ -32,8 +33,8 @@ def unwrap_schema_envelope(output: str) -> dict[str, Any]:
 
     Returns:
         The decoded inner ``result`` mapping if the payload is a
-        SchemaEnvelope; otherwise the parsed top-level mapping
-        unchanged.
+        SchemaEnvelope; otherwise the parsed top-level mapping from a
+        documented bare-payload test surface.
     """
     raw = json.loads(output)
     if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:

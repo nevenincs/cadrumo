@@ -60,6 +60,12 @@ def test_config_create_then_config_show_round_trips_iva_regime(
                 "--quiet",
                 "--tax-id",
                 "00000000T",
+                "--entity-type",
+                "natural_person",
+                "--name",
+                "Operator",
+                "--surnames",
+                "Example",
                 "--activity",
                 "design",
                 "--iva-regime",
@@ -71,9 +77,9 @@ def test_config_create_then_config_show_round_trips_iva_regime(
         show_via_config = invoke_cached_cli(["--format", "json", "config", "profile", "show", "default"])
         assert show_via_config.exit_code == 0, show_via_config.output
         _show_payload = json.loads(show_via_config.output)
-        # Migrated commands emit a SchemaEnvelope wrapper; pre-migration
-        # commands emit the bare payload.
-        _facts_payload = _show_payload.get("result", _show_payload)
+        assert isinstance(_show_payload, dict)
+        assert "schema_version" in _show_payload and "result" in _show_payload
+        _facts_payload = _show_payload["result"]
         facts = {row["path"]: row["value"] for row in _facts_payload["facts"]}
         assert facts["iva.regime"] == "GENERAL"
 
@@ -105,6 +111,12 @@ def test_config_create_then_config_status_surfaces_assigned_value(
                 "--quiet",
                 "--tax-id",
                 "00000000T",
+                "--entity-type",
+                "natural_person",
+                "--name",
+                "Operator",
+                "--surnames",
+                "Example",
                 "--activity",
                 "design",
                 "--iva-regime",

@@ -286,7 +286,7 @@ def test_compare_emits_json_payload_with_typed_rows() -> None:
 
     raw = json.loads(result.output)
     # Every CLI verb now emits the centralised {schema_version, command,
-    # result, warnings} envelope; the operator-visible payload lives
+    # status, result, notices} envelope; the operator-visible payload lives
     # under ``result``.
     payload = raw["result"] if isinstance(raw, dict) and "schema_version" in raw else raw
     assert payload["snapshot_id"]
