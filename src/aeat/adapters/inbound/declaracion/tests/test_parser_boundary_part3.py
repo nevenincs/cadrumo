@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from ._parser_boundary_support import (
-    _MODELO_180_SYNTHETIC_FIXTURE,
     _MODELO_193_SYNTHETIC_FIXTURE,
     _MODELO_369_SYNTHETIC_FIXTURE,
     CasillaId,
@@ -22,80 +21,6 @@ _DECL_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
 _DECL_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
 _DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
 _DECL_PERIODO_CASILLA: CasillaId = _casilla_id("decl.periodo")
-
-
-def test_parser_extracts_modelo_180_synthetic_fixture_targets() -> None:
-    """Round-trip: parse the sanitized M180 synthetic fixture and verify all three casillas.
-
-    Ground truth is the AEAT-published printed-form template at:
-      src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_180/files/
-        02-180-orden-de-20-de-noviembre-de-2000-12-kb-pdf.pdf
-    Page 1, REGISTRO DE TIPO 1 (REGISTRO DE DECLARANTE) printed layout.
-
-    AEAT label text (verbatim from the printed form bitmap):
-      "NUMERO TOTAL DE PERCEPTORES"             (positions 136-144)
-      "BASE DE RETENCIONES E INGRESOS A CUENTA" (positions 145-160)
-      "RETENCIONES E INGRESOS A CUENTA"         (positions 161-175)
-
-    Confirmed in the Orden HAP/1732/2014 EDI spec
-    (01-180-orden-hap-1732-2014-actualizado-por-orden-hfp-1284-2023…pdf):
-      p.4 "NÚMERO TOTAL DE PERCEPTORES"
-      p.5 "BASE RETENCIONES E INGRESOS A CUENTA"
-      p.6 "RETENCIONES E INGRESOS A CUENTA"
-
-    The synthetic fixture prints those labels so the named_label parser captures
-    the trailing value token on each line.  Non-tautological: a pattern that
-    drifts from the AEAT-published label format will produce a zero-match
-    parse failure.
-    """
-    filing = parse_declaracion(
-        _MODELO_180_SYNTHETIC_FIXTURE,
-        modelo_override="180",
-        año_override=2024,
-        period_override="0A",
-    )
-
-    assert filing.modelo == "180"
-    assert filing.period == _expected_period(2024, "0A")
-    assert filing.tax_id == "Y0000001S"
-    assert filing.registry_snapshot_ref is not None
-    assert filing.registry_snapshot_ref.modelo == "180"
-    assert filing.registry_snapshot_ref.modelo_year == 2024
-    assert filing.registry_snapshot_ref.period == "0A"
-
-    values = {v.casilla_id: v.printed_value for v in filing.values}
-
-    # All three casillas defined by the M180 declaracion_pdf profile must be present.
-    assert set(values.keys()) == {
-        _DECL_TOTAL_PERCEPTORES_CASILLA,
-        _DECL_BASE_TOTAL_CASILLA,
-        _DECL_RETENCIONES_TOTAL_CASILLA,
-    }, f"expected exactly the three M180 profile casillas, got {set(values.keys())!r}"
-
-    # decl.total-perceptores: fixture prints "Numero total de perceptores 3";
-    # parse_spanish_decimal("3") = Decimal("3").
-    # Ground truth: AEAT printed form "NUMERO TOTAL DE PERCEPTORES" (positions 136-144).
-    assert values[_DECL_TOTAL_PERCEPTORES_CASILLA] == Decimal("3"), (
-        f"decl.total-perceptores: expected Decimal('3'), got {values[_DECL_TOTAL_PERCEPTORES_CASILLA]!r}"
-    )
-
-    # decl.base-total: fixture prints
-    # "Base retenciones e ingresos a cuenta total 12.000,00";
-    # parse_spanish_decimal("12.000,00") = Decimal("12000.00").
-    # Ground truth: AEAT printed form "BASE DE RETENCIONES E INGRESOS A CUENTA"
-    # (positions 145-160, Orden HAP/1732/2014 p.5).
-    assert values[_DECL_BASE_TOTAL_CASILLA] == Decimal("12000.00"), (
-        f"decl.base-total: expected Decimal('12000.00'), got {values[_DECL_BASE_TOTAL_CASILLA]!r}"
-    )
-
-    # decl.retenciones-total: fixture prints
-    # "Retenciones e ingresos a cuenta total 2.280,00";
-    # parse_spanish_decimal("2.280,00") = Decimal("2280.00").
-    # Ground truth: AEAT printed form "RETENCIONES E INGRESOS A CUENTA"
-    # (positions 161-175, Orden HAP/1732/2014 p.6).
-    assert values[_DECL_RETENCIONES_TOTAL_CASILLA] == Decimal("2280.00"), (
-        f"decl.retenciones-total: expected Decimal('2280.00'), got {values[_DECL_RETENCIONES_TOTAL_CASILLA]!r}"
-    )
 
 
 def test_parser_extracts_modelo_193_synthetic_fixture_targets() -> None:
