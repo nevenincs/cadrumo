@@ -118,3 +118,27 @@ def test_modelo_100_cadastral_construction_ratios_are_decimal_roles() -> None:
         for revision in modelo.revisions.values()
         for casilla in revision.casillas
     )
+
+
+def test_modelo_100_regularization_refunds_use_noun_role() -> None:
+    modelos_by_id, _catalogues = _loaded_registry()
+    modelo = modelos_by_id["100"]
+
+    for year in range(2020, 2026):
+        revision = modelo.revisions[str(year)]
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+        expected_casilla_ids = ("0677", "0682") if year <= 2023 else ("0677",)
+
+        for casilla_id in expected_casilla_ids:
+            casilla = casillas_by_id[casilla_id]
+
+            assert tuple(casilla.section) == ("resultados", "regularizacion_res")
+            assert casilla.semantic_role == "irpf_regularizacion_devolucion_autoliquidaciones_anteriores"
+            assert "devoluci" in casilla.label.lower()
+            assert str(year) in casilla.label
+
+    assert all(
+        casilla.semantic_role != "irpf_regularizacion_autoliquidaciones_anteriores_devolver"
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    )
