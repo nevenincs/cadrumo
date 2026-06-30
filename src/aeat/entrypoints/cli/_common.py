@@ -2,11 +2,14 @@
 
 Provides output helpers, period normalisation, and repository accessors
 used by the ledger, modelo, and config command groups. The repository
-accessors return typed domain objects: :class:`TransactionCatalogue` and
-:class:`TransactionCatalogueRepository` for transaction ledger access,
-:class:`InvoiceCatalogue` and :class:`InvoiceCatalogueRepository` for
-invoice data, :class:`ModeloDraft` for in-progress modelo drafts, and
-:class:`TaxpayerProfile` for deadline and period calculations.
+accessors return typed domain objects:
+:class:`~aeat.domain.transactions.TransactionCatalogue` and
+:class:`~aeat.domain.transactions.TransactionCatalogueRepository` for transaction
+ledger access, :class:`~aeat.domain.invoices.InvoiceCatalogue` and
+:class:`~aeat.domain.invoices.InvoiceCatalogueRepository` for invoice data,
+:class:`~aeat.domain.filing.ModeloDraft` for in-progress modelo drafts, and
+:class:`~aeat.domain.deadlines.TaxpayerProfile` for deadline and period
+calculations.
 
 The output boundary has two paths. Legacy/exempt surfaces call
 :func:`~aeat.entrypoints.cli._common._emit`, which delegates to
@@ -100,10 +103,11 @@ def _emit_envelope(
     lines: Iterable[str],
     notices: Sequence[Notice] | None = None,
 ) -> None:
-    """Render a typed result through :class:`SchemaEnvelope` for JSON or as text lines.
+    """Render a typed result through JSON or text output.
 
     JSON mode goes through :func:`~aeat.core.json_contract.emit_json_success`
-    so the payload is wrapped in the shared spine
+    so the payload is wrapped in the shared
+    :class:`~aeat.core.json_contract.SchemaEnvelope` spine
     ``{"schema_version": ..., "command": ..., "status": ..., "result": ...,
     "notices": ...}``; ``status`` is derived from the supplied notice
     severities. Text mode keeps the existing line iterator unchanged so
@@ -230,7 +234,7 @@ def _canonical_period(period: str, *, year: int) -> Period:
 
     The ledger ``--period`` surface accepts only the canonical AEAT modelo
     tokens (``0A`` annual, ``1T``-``4T`` quarters, ``01``-``12`` months),
-    validated through the registry period union at :mod:`aeat.core`,
+    validated through the registry period union at :mod:`~aeat.core`,
     and composes them with ``--year`` exactly as the modelo surface does. A
     calendar shape (``2026Q1`` / ``2026-03`` / ``2026``) or any other notation
     is refused with a message naming the AEAT tokens and the ``--year``
@@ -303,7 +307,7 @@ def _parse_iso_date_str(raw: str, *, label: str) -> str:
     refuses every non-ISO ordering by construction (``15/01/2026``,
     ``01-15-2026``, ``2026/01/15``); this wrapper returns the canonical
     ``YYYY-MM-DD`` form for the several service contracts that persist the date
-    as a 10-character string rather than a :class:`datetime.date`. The
+    as a 10-character string rather than a :class:`~datetime.date`. The
     DD/MM-vs-MM/DD ambiguity never arises because only the ISO ordering parses.
     """
     return _parse_iso_date(raw, label=label).isoformat()
