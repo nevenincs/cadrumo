@@ -1,10 +1,13 @@
 """Typed ``--json`` payload schemas for ledger rule commands.
 
-Every declared payload is an :class:`OutputSchema` subclass registered for
-the ledger rule command JSON-contract surface.  These schemas are the CLI
-projection of the secure, profile-local rule engine: persisted
+Every declared payload is an
+:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass registered with
+:func:`~aeat.entrypoints.cli._schemas.register_schema` for the ledger rule
+command JSON-contract surface carried by
+:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope`. These schemas are the
+CLI projection of the secure, profile-local rule engine: persisted
 :class:`~aeat.domain.transactions.LedgerClassificationRule` records are listed
-and added through the rule commands, while
+and added through :mod:`aeat.entrypoints.cli._ledger_rules_cli`, while
 :func:`~aeat.application.ledger.apply_classification_rules` owns live mutation
 semantics.
 """
@@ -61,8 +64,11 @@ class RuleApplyMatchPayload(OutputSchema):
     """One non-mutating preview row for ``ledger rule apply --dry-run``.
 
     The row reports the first rule that would classify the transaction if the
-    operator re-ran without ``--dry-run``.  It is preview evidence only; no
-    transaction state or bucket event is written for these rows.
+    operator re-ran without ``--dry-run``. It previews the same priority-ordered
+    :class:`~aeat.domain.transactions.LedgerClassificationRule` match selection
+    as :func:`~aeat.application.ledger.apply_classification_rules`, but remains
+    evidence only: no transaction state or bucket event is written for these
+    rows.
     """
 
     transaction_id: str
@@ -76,7 +82,8 @@ class RuleApplyAppliedPayload(OutputSchema):
 
     Mirrors :class:`~aeat.application.ledger.ApplyRulesAppliedRow`: the
     transaction id, the matched content-addressed rule id, and the
-    classification that was persisted through the ledger mutation path.
+    classification persisted through the shared manual transaction mutation
+    path with ``rule:<rule_id>`` provenance.
     """
 
     transaction_id: str
@@ -146,8 +153,10 @@ class LedgerProvidersResult(OutputSchema):
 
     Reports subprocess cloud-provider CLIs from
     :func:`~aeat.application.ledger.available_llm_providers` and the on-host
-    Ollama vision model, so the operator sees every classification backend -
-    cloud and local - in one place before running LLM-assisted classification.
+    Ollama vision model probed by
+    :func:`~aeat.application.provisioning.probe_ollama_vision`, so the operator
+    sees every classification backend - cloud and local - in one place before
+    running LLM-assisted classification.
     """
 
     providers: list[LLMProviderAvailabilityPayload]
