@@ -5,6 +5,13 @@ through :class:`SecureObjectRepository`, keyed by declaration identity so a
 prior filing can be retrieved without re-fetching it from the sede. Each
 envelope is classified at :class:`SensitivityClass` FINANCIAL and encrypted
 via the active :class:`MasterKeyProvider`.
+
+Artefact bytes are stored under
+:data:`aeat.adapters.persistence.storage.AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE`;
+filed-declaration observation envelopes are stored under
+:data:`aeat.adapters.persistence.storage.AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE`;
+IVA wallet observation envelopes are stored under
+:data:`aeat.adapters.persistence.storage.AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE`.
 """
 
 from __future__ import annotations
@@ -44,7 +51,15 @@ _STORAGE_REF_PREFIX = "secure-object:financial:"
 
 
 class FiledDeclaracionObservationStore:
-    """Persist captured AEAT filed data through the encrypted SQL backend."""
+    """Persist captured AEAT filed data through encrypted SQL namespaces.
+
+    The store writes raw captured artefact bytes to
+    :data:`aeat.adapters.persistence.storage.AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE`.
+    It wraps :class:`FiledDeclaracionObservation` and
+    :class:`IvaCompensationWalletObservation` payloads in :class:`Envelope`
+    records before writing them to their dedicated FINANCIAL namespaces through
+    :class:`SecureObjectRepository`.
+    """
 
     def __init__(
         self,
