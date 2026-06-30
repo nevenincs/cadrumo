@@ -13,7 +13,7 @@ from pathlib import Path
 from ._schema import LegalReference, SourceCitation, SourceReference
 from ._text import normalise_corpus_text
 
-_SourceTextCacheKey = tuple[str, str, int]
+_SourceTextCacheKey = tuple[str, str, int, int]
 _NORMALISED_SOURCE_TEXT_CACHE: dict[_SourceTextCacheKey, str] = {}
 
 
@@ -22,16 +22,7 @@ def _normalise_required_text(text: str) -> str:
     return normalise_corpus_text(text)
 
 
-_STAT_CACHE: dict[Path, os.stat_result] = {}
 _DISK_CACHE: dict[str, str] | None = None
-
-
-def _cached_stat(path: Path) -> os.stat_result:
-    stat = _STAT_CACHE.get(path)
-    if stat is None:
-        stat = path.stat()
-        _STAT_CACHE[path] = stat
-    return stat
 
 
 def _load_disk_cache() -> dict[str, str]:
@@ -175,16 +166,16 @@ class EvidenceValidator:
             return cached
         if self._source_root is None:
             return ""
-        source_path = self._source_root / source.corpus_path
-        stat = _cached_stat(source_path)
-        source_key = (source.kind, source_path.name, stat.st_size)
+        source_path = (self._source_root / source.corpus_path).expanduser().resolve()
+        stat = source_path.stat()
+        source_key = (source.kind, str(source_path), stat.st_size, stat.st_mtime_ns)
         global_cached = _NORMALISED_SOURCE_TEXT_CACHE.get(source_key)
         if global_cached is not None:
             self._source_text_cache[source.id] = global_cached
             return global_cached
 
         # Check disk cache
-        cache_key_str = f"{source_path.name}:{stat.st_size}:{int(stat.st_mtime)}"
+        cache_key_str = f"{source.kind}:{source_path}:{stat.st_size}:{stat.st_mtime_ns}"
         disk_cache = _load_disk_cache()
         if cache_key_str in disk_cache:
             normalised = disk_cache[cache_key_str]
@@ -193,7 +184,7 @@ class EvidenceValidator:
             return normalised
 
         if source.kind == "manual_pdf":
-            text = _extract_pdf_text_impl(str(source_path.expanduser().resolve()))
+            text = _extract_pdf_text_impl(str(source_path))
         else:
             text = source_path.read_text(encoding="utf-8", errors="replace")
         normalised = normalise_corpus_text(text)

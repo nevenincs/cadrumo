@@ -16,8 +16,9 @@ from .._corpus_catalogue import verify_source_catalogue, verify_source_file
 from .._errors import RegistryValidationError
 from .._legal import verify_legal_catalogue
 from .._loader import load_registry_tree
-from .._schema import LegalReference, RegistryCatalogues, SourceReference
+from .._schema import LegalReference, RegistryCatalogues, SourceCitation, SourceReference
 from .._validate import RegistryValidator
+from .._validate_evidence import EvidenceValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -212,6 +213,52 @@ def test_legal_corpus_text_cache_is_path_scoped_for_same_size_files(tmp_path: Pa
 
     verify_legal_catalogue({alpha.id: alpha}, source_root=tmp_path)
     verify_legal_catalogue({bravo.id: bravo}, source_root=tmp_path)
+
+
+def test_source_citation_text_cache_is_path_scoped_for_same_size_files(tmp_path: Path) -> None:
+    """Same-name, same-size official sources must not share cached citation text."""
+    basename = f"{tmp_path.name}-same-size-citation.html"
+    alpha_path = tmp_path / "corpus" / "sources" / "alpha" / basename
+    bravo_path = tmp_path / "corpus" / "sources" / "bravo" / basename
+    alpha_path.parent.mkdir(parents=True)
+    bravo_path.parent.mkdir(parents=True)
+    alpha_payload = b"<p>alpha required</p>"
+    bravo_payload = b"<p>bravo required</p>"
+    alpha_path.write_bytes(alpha_payload)
+    bravo_path.write_bytes(bravo_payload)
+
+    assert alpha_path.name == bravo_path.name
+    assert alpha_path.stat().st_size == bravo_path.stat().st_size
+
+    alpha = _source_reference(f"corpus/sources/alpha/{basename}", alpha_payload).model_copy(
+        update={"id": "source-alpha", "evidence_tier": "official_source_guidance"},
+    )
+    bravo = _source_reference(f"corpus/sources/bravo/{basename}", bravo_payload).model_copy(
+        update={"id": "source-bravo", "evidence_tier": "official_source_guidance"},
+    )
+    validator = EvidenceValidator(
+        legal_refs={},
+        source_refs={alpha.id: alpha, bravo.id: bravo},
+        source_root=tmp_path,
+    )
+
+    alpha_failures = validator.validate_source_citations(
+        "scope",
+        "alpha",
+        (alpha.id,),
+        (SourceCitation(source_ref=alpha.id, required_text=("alpha required",)),),
+        "official_source_guidance",
+    )
+    bravo_failures = validator.validate_source_citations(
+        "scope",
+        "bravo",
+        (bravo.id,),
+        (SourceCitation(source_ref=bravo.id, required_text=("bravo required",)),),
+        "official_source_guidance",
+    )
+
+    assert alpha_failures == []
+    assert bravo_failures == []
 
 
 def test_verify_legal_catalogue_rejects_missing_required_text_on_single_path(tmp_path: Path) -> None:
