@@ -139,19 +139,26 @@ def test_browser_session_cleanup_is_bounded_by_settings_timeout(tmp_path: Path) 
 
 
 class TestIdentityClassification:
-    def test_classifies_dni(self) -> None:
-        assert _classify_identity("12345678Z") == "DNI"
+    @pytest.mark.parametrize(
+        ("identity", "expected_kind"),
+        (
+            pytest.param("12345678Z", "DNI", id="dni"),
+            pytest.param("X1234567L", "NIE", id="nie"),
+        ),
+    )
+    def test_classifies_dni_and_nie(self, identity: str, expected_kind: str) -> None:
+        assert _classify_identity(identity) == expected_kind
 
-    def test_classifies_nie(self) -> None:
-        assert _classify_identity("X1234567L") == "NIE"
-
-    def test_rejects_cif(self) -> None:
-        with pytest.raises(ClaveMovilConfigurationError, match=r"NIF|NIE|identity|CIF"):
-            _classify_identity("B12345674")
-
-    def test_rejects_empty(self) -> None:
-        with pytest.raises(ClaveMovilConfigurationError, match=r"NIF|NIE|identity|empty"):
-            _classify_identity("")
+    @pytest.mark.parametrize(
+        ("identity", "expected_message"),
+        (
+            pytest.param("B12345674", r"NIF|NIE|identity|CIF", id="cif"),
+            pytest.param("", r"NIF|NIE|identity|empty", id="empty"),
+        ),
+    )
+    def test_rejects_unsupported_identity(self, identity: str, expected_message: str) -> None:
+        with pytest.raises(ClaveMovilConfigurationError, match=expected_message):
+            _classify_identity(identity)
 
 
 class TestAttemptDiagnostics:
