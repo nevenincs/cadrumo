@@ -41,6 +41,7 @@ def _casilla_id(value: object) -> CasillaId:
 
 _C0003 = _casilla_id("0003")
 _C0426 = _casilla_id("0426")
+_C0427 = _casilla_id("0427")
 _C0429 = _casilla_id("0429")
 _C0432 = _casilla_id("0432")
 _C0433 = _casilla_id("0433")
@@ -339,6 +340,41 @@ def test_plan_de_empleo_reduccion_below_caps_full_amount() -> None:
             RegistryScenarioExpectedOutput(target_casilla_id=_C0467, value=Decimal("4200.00")),
             RegistryScenarioExpectedOutput(target_casilla_id=_C0468, value=Decimal("4200.00")),
             RegistryScenarioExpectedOutput(target_casilla_id=_C0500, value=Decimal("52300.00")),
+        ),
+    )
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    assert_registry_scenario_matches(report)
+
+
+def test_plan_de_empleo_employer_contribution_reduces_base_general() -> None:
+    """Employer plan-de-empleo contributions (casilla 0427) reduce the base imponible general.
+
+    Guards issue #545: the Art. 52 LIRPF reducción for employer pension-plan
+    (plan de empleo) contributions must flow through the previsión-social chain
+    and reduce the base liquidable general. Casilla 0427 ("Contribuciones
+    empresariales a sistemas de previsión social, excepto ... seguros colectivos
+    de dependencia") is the employer-side input box; the existing chain tests
+    exercise the worker-side box (0426), so this locks the 0427 path the issue
+    names explicitly.
+
+    Oracle derivation (Art. 51/52 LIRPF, AEAT Renta 2025 Manual Parte 1):
+      trabajo rendimientos (0003) = 40,000 → 0025 = 0432 = 40,000
+      30% cap = 0.30 * 40,000 = 12,000
+      employer contribution (0427) = 6,000 → 0467 = 6,000
+      0468 = min(6000, 10000, 12000) = 6,000   (below both caps)
+      0435 = 40,000 (no negative G/P balance); 0461 = 0; 0501 = 0
+      0500 = 40,000 - 6,000 - 0 - 0 = 34,000
+    """
+    scenario = _scenario_2025(
+        "plan-empleo-employer-contribution-reduces-base",
+        overrides={
+            _C0003: Decimal("40000.00"),  # trabajo → 0432 = 40,000
+            _C0427: Decimal("6000.00"),  # employer contribution → 0467 = 6,000
+        },
+        expected=(
+            RegistryScenarioExpectedOutput(target_casilla_id=_C0467, value=Decimal("6000.00")),
+            RegistryScenarioExpectedOutput(target_casilla_id=_C0468, value=Decimal("6000.00")),
+            RegistryScenarioExpectedOutput(target_casilla_id=_C0500, value=Decimal("34000.00")),
         ),
     )
     report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
