@@ -562,11 +562,11 @@ class TestTypoTwinWarning:
             ("100", "2025", "2234", "irpf_perdida_fondos_coti_importe_computable"),
             ("100", "2025", "0360", "irpf_ganancia_premios_juegos_valoracion_b"),
             ("100", "2025", "0361", "irpf_ganancia_premios_juegos_pub_valoracion_b"),
-            ("100", "2025", "0413", "irpf_ganancia_inmueble_catastral_4"),
+            ("100", "2025", "0413", "irpf_ganancia_inmueble_referencia_catastral_4"),
             ("100", "2025", "0238", "irpf_eo_reintegro_subvenciones"),
             ("100", "2025", "0239", "irpf_eo_agr_reintegro_subvenciones"),
             ("100", "2025", "2202", "irpf_anexo_b_aav_importe_satisfecho"),
-            ("100", "2025", "2243", "irpf_ganancia_inmueble_catastral_4_b"),
+            ("100", "2025", "2243", "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_4"),
             ("100", "2025", "2154", "irpf_deduccion_murcia_vehiculo_matricula"),
             ("100", "2025", "2155", "irpf_deduccion_murcia_vehiculo_importe"),
             ("100", "2025", "2246", "irpf_deduccion_canarias_acciones_participaciones"),
@@ -682,11 +682,11 @@ class TestTypoTwinWarning:
             "irpf_perdida_fondos_coti_importe_computable",
             "irpf_ganancia_premios_juegos_valoracion_b",
             "irpf_ganancia_premios_juegos_pub_valoracion_b",
-            "irpf_ganancia_inmueble_catastral_4",
+            "irpf_ganancia_inmueble_referencia_catastral_4",
             "irpf_eo_reintegro_subvenciones",
             "irpf_eo_agr_reintegro_subvenciones",
             "irpf_anexo_b_aav_importe_satisfecho",
-            "irpf_ganancia_inmueble_catastral_4_b",
+            "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_4",
             "irpf_deduccion_murcia_vehiculo_matricula",
             "irpf_deduccion_murcia_vehiculo_importe",
             "irpf_deduccion_canarias_acciones_participaciones",
@@ -972,11 +972,11 @@ class TestTypoTwinWarning:
             is False
         )
 
-    def test_cadastral_b_marker_is_not_optional_axis_token(self) -> None:
+    def test_cadastral_anexo_c1_marker_is_not_optional_axis_token(self) -> None:
         assert (
             semantic_roles_are_axis_siblings(
-                "irpf_ganancia_inmueble_catastral_4_b",
-                "irpf_ganancia_inmueble_catastral_4",
+                "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_4",
+                "irpf_ganancia_inmueble_referencia_catastral_4",
             )
             is False
         )
