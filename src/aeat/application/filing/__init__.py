@@ -572,6 +572,10 @@ def _binding_provenance(
         )
     legal_refs = tuple(getattr(binding, "legal_refs", ()) or ())
     source_refs = tuple(getattr(binding, "source_refs", ()) or ())
+    if not legal_refs or not source_refs:
+        raise ModeloBuilderError(
+            f"registry binding {getattr(binding, 'id', binding)!r} requires legal_refs/source_refs provenance",
+        )
     return source, legal_refs, source_refs
 
 
