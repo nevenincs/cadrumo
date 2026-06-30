@@ -15,13 +15,11 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import bundled_path
-from .._loader import load_registry_tree
 from .._temporal import select_revision
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _ACTIVIDADES_CHAPTER = frozenset({f"ley-35-2006:art-{n}" for n in (27, 28, 30, 31, 32)})
 
 # section tag -> (required article(s), years the section exists)
@@ -64,10 +62,13 @@ _SECTION_ROLE_GROUNDING_OVERRIDES: dict[tuple[str, int, str], tuple[str, ...]] =
 }
 
 
+def _m100_revision(filing_year: int):
+    modelo, _ = _committed_modelo("100")
+    return select_revision(modelo, filing_year=filing_year, period="0A")
+
+
 def _section_casillas(filing_year: int, section_tag: str):
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
-    modelos_by_id = {m.id: m for m in modelos}
-    rev = select_revision(modelos_by_id["100"], filing_year=filing_year, period="0A")
+    rev = _m100_revision(filing_year)
     return [c for c in rev.casillas if section_tag in tuple(c.section)]
 
 
@@ -107,9 +108,7 @@ def _prevision_social_casillas(filing_year: int):
     """Boxes for aportaciones/excesos a sistemas de previsión social + seguros
     colectivos de dependencia (arts. 51/52), excluding patrimonio-protegido (art. 54)
     and deportistas (DA-11ª) which share the 'excesos' prefix but bind to other law."""
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
-    modelos_by_id = {m.id: m for m in modelos}
-    rev = select_revision(modelos_by_id["100"], filing_year=filing_year, period="0A")
+    rev = _m100_revision(filing_year)
     out = []
     for c in rev.casillas:
         sec = "/".join(tuple(c.section))
@@ -164,9 +163,7 @@ def _autonomic_deduction_casillas(filing_year: int):
     """Comunidad-named autonomic-deduction sections. Their LIRPF home is art. 77
     (cuota líquida autonómica = cuota íntegra autonómica − deducciones autonómicas);
     the specific comunidad-law article is a future refinement on this framework."""
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
-    modelos_by_id = {m.id: m for m in modelos}
-    rev = select_revision(modelos_by_id["100"], filing_year=filing_year, period="0A")
+    rev = _m100_revision(filing_year)
     out = []
     for c in rev.casillas:
         sec = "/".join(tuple(c.section))
@@ -201,9 +198,7 @@ def test_autonomic_deductions_ground_in_own_article_not_actividades(year: int) -
 
 
 def _casillas_with_section_substr(filing_year: int, needle: str):
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
-    modelos_by_id = {m.id: m for m in modelos}
-    rev = select_revision(modelos_by_id["100"], filing_year=filing_year, period="0A")
+    rev = _m100_revision(filing_year)
     return [c for c in rev.casillas if needle in "/".join(tuple(c.section))]
 
 

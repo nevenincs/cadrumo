@@ -20,14 +20,12 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import bundled_path
 from .. import CasillaId, validated_casilla_id
-from .._loader import load_registry_tree
 from .._temporal import select_revision
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _TRABAJO_REDUCCION_CASILLA = validated_casilla_id(
     "0023",
     surface="test_trabajo_reduccion_art20_grounded.trabajo_reduccion",
@@ -39,9 +37,8 @@ _TRABAJO_NETO_REDUCIDO_CASILLA = validated_casilla_id(
 
 
 def _m100_revision(filing_year: int):
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
-    modelos_by_id = {m.id: m for m in modelos}
-    return select_revision(modelos_by_id["100"], filing_year=filing_year, period="0A")
+    modelo, _ = _committed_modelo("100")
+    return select_revision(modelo, filing_year=filing_year, period="0A")
 
 
 @pytest.mark.parametrize("year", [2020, 2021, 2022, 2023, 2024, 2025])
