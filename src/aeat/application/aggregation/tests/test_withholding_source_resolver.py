@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -29,6 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PERCEPCION_BINDING_ID = "modelo-190-123-percepciones-anual-test"
 
 
+@cache
 def _m190_revision() -> ModeloRevision:
     return resources().modelos.authority.snapshot("190", filing_year=2024, period="0A").revision
 
