@@ -1,13 +1,12 @@
 """E2E: filing an M303 devolución period AUTO-carries zero compensación forward.
 
-decision record 2026-06-21-m303-carry-reconciliation (part 2): the refund disposition is
-determined ONCE at the calculate/file boundary from the profile REDEME axis and
-the eligibility gate, and BOTH the export "Tipo de declaración" and the
-cross-period carry persistence read that one determined fact. The current
-accepted ADR treats a REDEME company's negative Modelo 303 period as requested as
-devolución (``D``) under its standing monthly-devolución disposition policy, so
-the period must carry ZERO compensación into the next period's casilla 110 -
-never double-claim the requested devolución credit.
+The refund disposition is determined ONCE at the calculate/file boundary from
+the profile REDEME axis and the eligibility gate, and BOTH the export "Tipo de
+declaración" and the cross-period carry persistence read that one determined
+fact. The domain rule treats a REDEME company's negative Modelo 303 period as
+requested as devolución (``D``) under its standing monthly-devolución
+disposition policy, so the period must carry ZERO compensación into the next
+period's casilla 110 - never double-claim the requested devolución credit.
 
 The load-bearing contract: the refunded carry fires AUTOMATICALLY from the real
 ``file_modelo_revision`` filing path. NO test passes ``refunded=True`` — the
