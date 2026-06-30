@@ -4,12 +4,15 @@ Every declared payload is an
 :class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass registered with
 :func:`~aeat.entrypoints.cli._schemas.register_schema` for the ledger rule
 command JSON-contract surface carried by
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope`. These schemas are the
+:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:func:`~aeat.entrypoints.cli._common._emit_envelope`. These schemas are the
 CLI projection of the secure, profile-local rule engine: persisted
 :class:`~aeat.domain.transactions.LedgerClassificationRule` records are listed
 and added through :mod:`aeat.entrypoints.cli._ledger_rules_cli`, while
 :func:`~aeat.application.ledger.apply_classification_rules` owns live mutation
-semantics.
+semantics. The parent :mod:`aeat.entrypoints.cli._ledger_payloads` module
+re-exports these split schemas so existing ledger command emitters keep one
+payload import surface.
 """
 
 from __future__ import annotations
@@ -21,10 +24,10 @@ class ClassificationRulePayload(OutputSchema):
     """One persisted ledger classification rule row.
 
     Mirrors :class:`~aeat.domain.transactions.LedgerClassificationRule` as
-    emitted by ``ledger rule add`` and ``ledger rule list``.  ``rule_id`` is the
-    content-addressed id, ``description_pattern`` is the regex evaluated against
-    transaction descriptions, and lower ``priority`` values run before higher
-    ones.
+    emitted by :class:`RuleAddResult` and nested in :class:`RuleListResult`.
+    ``rule_id`` is the content-addressed id, ``description_pattern`` is the
+    regex evaluated against transaction descriptions, and lower ``priority``
+    values run before higher ones.
     """
 
     rule_id: str
@@ -68,7 +71,7 @@ class RuleApplyMatchPayload(OutputSchema):
     :class:`~aeat.domain.transactions.LedgerClassificationRule` match selection
     as :func:`~aeat.application.ledger.apply_classification_rules`, but remains
     evidence only: no transaction state or bucket event is written for these
-    rows.
+    :class:`RuleApplyResult` rows.
     """
 
     transaction_id: str
@@ -80,10 +83,11 @@ class RuleApplyMatchPayload(OutputSchema):
 class RuleApplyAppliedPayload(OutputSchema):
     """One transaction classified by a live ``ledger rule apply`` pass.
 
-    Mirrors :class:`~aeat.application.ledger.ApplyRulesAppliedRow`: the
-    transaction id, the matched content-addressed rule id, and the
-    classification persisted through the shared manual transaction mutation
-    path with ``rule:<rule_id>`` provenance.
+    Nested in :class:`RuleApplyResult` and mirrors
+    :class:`~aeat.application.ledger.ApplyRulesAppliedRow`: the transaction id,
+    the matched content-addressed rule id, and the classification persisted
+    through the shared manual transaction mutation path with ``rule:<rule_id>``
+    provenance.
     """
 
     transaction_id: str
@@ -121,7 +125,8 @@ class RuleApplyResult(OutputSchema):
 class LLMProviderAvailabilityPayload(OutputSchema):
     """One subprocess LLM provider's PATH availability.
 
-    Mirrors :class:`~aeat.application.ledger.LLMProviderAvailability` from
+    Nested in :class:`LedgerProvidersResult` and mirrors
+    :class:`~aeat.application.ledger.LLMProviderAvailability` from
     :func:`~aeat.application.ledger.available_llm_providers`.  The probe uses
     PATH lookup only; it does not spawn the provider CLI or send transaction
     data to a cloud service.
@@ -136,9 +141,10 @@ class LLMProviderAvailabilityPayload(OutputSchema):
 class VisionProviderPayload(OutputSchema):
     """The on-host Ollama vision model's availability.
 
-    Carries the local vision backend readiness surfaced beside subprocess LLM
-    providers, including operator remediation text when the local model or
-    service is unavailable.
+    Nested in :class:`LedgerProvidersResult` and carries the
+    :class:`~aeat.application.provisioning.DependencyStatus` fields surfaced
+    beside subprocess LLM providers, including operator remediation text when
+    the local model or service is unavailable.
     """
 
     service: str
