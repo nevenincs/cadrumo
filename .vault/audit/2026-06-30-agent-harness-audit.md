@@ -78,12 +78,36 @@ match for the hard-block path is a future improvement (not yet tracked as a step
 personas, and skills, but not flag names, and the envelope-field check hardcodes
 the spine list rather than scanning the documents. A future enhancement.
 
+### value-oracle-grounding-model | medium | the repo bundles no numeric worked examples; the eval now asserts the bundled AEAT verification contract instead
+
+Investigating the value-oracle follow-up surfaced a load-bearing grounding fact:
+the registry bundles **zero** numeric input-to-output worked examples for any
+modelo (zero `runner_required` workbook fixtures; all 52 are layout/`record_design`
+parity). Calculation-figure correctness is grounded by the calc engine via
+verification predicates plus live-oracle reconciliation, not bundled fixtures. So
+a figure-level oracle (a computed casilla vs a published AEAT number) is not an
+operator-harness gap to "just implement" - it requires a separate AEAT-corpus
+sourcing campaign, and fabricating a figure is forbidden. What the registry **does**
+carry is each revision's `verification_expectations`: the computed-and-reconciled
+casilla set with AEAT `source_refs` and a tolerance. The golden runner now asserts
+that AEAT-grounded verification contract and cross-checks each scenario's
+`expected_computed_casillas` (IDs, not values) against it, with a non-vacuous proof
+and an anti-tautology rejection of an ungrounded casilla id (step `W03.P07.S57`,
+done). The numeric figure oracle is re-scoped accordingly and carried forward as
+the open cross-campaign step `W03.P07.S56`.
+
 ## Recommendations
 
-The two blocking and the workspace findings are resolved in commit `e98e5e877`;
-the value-oracle deferral is corrected and tracked as open step `W03.P07.S56`. The
-faithfulness/CONFIRM framing is already honest in the execution records. The two
-remaining low findings (tighter faithfulness hard-block matching, flag-name drift
-checking) are improvements that do not block structural completion; capture them
-as follow-ups if they recur. The campaign is structurally complete once the open
-value-oracle step is either implemented or carried forward as a tracked deferral.
+The two blocking and the workspace findings are resolved in commit `e98e5e877`.
+The value-oracle finding is now split honestly: the achievable, AEAT-grounded
+verification-contract dimension is implemented and tested (step `W03.P07.S57`,
+closed), and the numeric figure oracle is re-scoped to its true nature - a
+cross-campaign AEAT-corpus task (the repo bundles no numeric worked examples) -
+and carried forward as the open step `W03.P07.S56`. The faithfulness/CONFIRM
+framing is already honest in the execution records. The two remaining low findings
+(tighter faithfulness hard-block matching, flag-name drift checking) are
+improvements that do not block structural completion; capture them as follow-ups
+if they recur. The campaign is structurally complete: every operator-harness
+assurance the bundled grounding model supports is in place, and the one item it
+does not (a numeric figure oracle) is honestly characterised and tracked rather
+than declared done.

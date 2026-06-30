@@ -86,7 +86,8 @@ Stand up the operator golden-task runner and the modelo-130 AEAT-worked-example 
 - [x] `W03.P07.S25` - Author the modelo-130 golden scenario from an AEAT worked example; `src/aeat/agent/eval/scenarios/modelo_130.toml`.
 - [x] `W03.P07.S26` - Implement the golden-task runner asserting trajectory, value, and provenance; `src/aeat/agent/eval/_runner.py`.
 - [x] `W03.P07.S27` - Wire the modelo-130 golden eval into the test surface; `src/aeat/agent/eval/tests/test_modelo_130_golden.py`.
-- [ ] `W03.P07.S56` - Implement the AEAT-worked-example value oracle: seed a calculation and assert a computed casilla against a published AEAT figure (sanctioned non-tautological oracle); add the expected-value dimension to the golden runner; `src/aeat/agent/eval/_runner.py`.
+- [ ] `W03.P07.S56` - Source and bundle an AEAT numeric worked example (inputs and expected casilla figures) and add a numeric value-oracle dimension that seeds a calculation and asserts a computed casilla against the published AEAT figure. CROSS-CAMPAIGN: the registry currently bundles no numeric worked examples (zero runner_required fixtures); figure-level correctness is grounded by the calc engine via live-oracle reconciliation, so this needs a separate AEAT-corpus sourcing campaign before the operator golden eval can consume it; `src/aeat/_data/registry`.
+- [x] `W03.P07.S57` - Add the AEAT-grounded verification-contract dimension to the golden runner: assert each revision declares verification_expectations (computed_casilla_ids with AEAT source_refs) and that the scenario expected_computed_casillas are within that grounded set; `anti-tautology proof rejects an ungrounded casilla id; `src/aeat/agent/eval/_runner.py`.
 
 ## Wave `W04` - MCP server, HITL tiers, and faithfulness hooks
 
