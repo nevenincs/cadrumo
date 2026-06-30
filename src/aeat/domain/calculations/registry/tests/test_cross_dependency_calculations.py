@@ -371,11 +371,9 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
     assert set(relation_values) == {
         "renta-2025-rel-111-retenciones-trimestrales",
         "renta-2025-rel-111-retenciones-mensuales",
-        "renta-2025-rel-115-retenciones-trimestrales",
         "renta-2025-rel-123-retenciones-trimestrales",
         "renta-2025-rel-130-pagos-fraccionados",
         "renta-2025-rel-131-pagos-fraccionados",
-        "renta-2025-rel-180-retenciones-anuales",
         "renta-2025-rel-184-atribucion-actividades-economicas",
         "renta-2025-rel-190-retenciones-anuales",
         "renta-2025-rel-193-retenciones-anuales",
@@ -642,16 +640,12 @@ def _renta_relation_observed_value(requirement: RegistryFoldRequirement, period_
         return (Decimal("1"), Decimal("2"), Decimal("3"), Decimal("4"))[period_index]
     if relation_id == "renta-2025-rel-111-retenciones-mensuales":
         return Decimal(period_index + 1)
-    if relation_id == "renta-2025-rel-115-retenciones-trimestrales":
-        return Decimal("10")
     if relation_id == "renta-2025-rel-123-retenciones-trimestrales":
         return Decimal("20")
     if relation_id == "renta-2025-rel-130-pagos-fraccionados":
         return (Decimal("100"), Decimal("200"), Decimal("300"), Decimal("400"))[period_index]
     if relation_id == "renta-2025-rel-131-pagos-fraccionados":
         return Decimal("5")
-    if relation_id == "renta-2025-rel-180-retenciones-anuales":
-        return Decimal("30")
     if relation_id == "renta-2025-rel-190-retenciones-anuales":
         return Decimal("40")
     if relation_id == "renta-2025-rel-193-retenciones-anuales":
@@ -676,7 +670,6 @@ def _renta_2024_relation_observed_value(
     if relation_id in {
         "renta-2024-rel-111-retenciones-trimestrales",
         "renta-2024-rel-111-retenciones-mensuales",
-        "renta-2024-rel-115-retenciones-trimestrales",
         "renta-2024-rel-123-retenciones-trimestrales",
         "renta-2024-rel-193-retenciones-anuales",
     }:

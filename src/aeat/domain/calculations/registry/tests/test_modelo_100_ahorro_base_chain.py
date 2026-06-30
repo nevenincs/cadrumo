@@ -55,7 +55,6 @@ _DATE_2025 = {"filing_period": date(2025, 12, 31)}
 _BINDINGS_2024: dict[str, Decimal] = {
     "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
     "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
-    "renta-2024-modelo-115-retenciones-periodicas": Decimal("0"),
     "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
     "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
     # declaration_type = 1 (individual) → 0461 computed = 0
@@ -82,7 +81,6 @@ _ENUM_BINDINGS_2024 = {"renta-2024-profile-tax-residence-ccaa": "madrid"}
 _RELATION_VALUES_2024: dict[str, Decimal] = {
     "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2024-rel-115-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
     "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),

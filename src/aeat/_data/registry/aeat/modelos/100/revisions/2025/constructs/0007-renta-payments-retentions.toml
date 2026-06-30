@@ -25,12 +25,10 @@ legal_refs = [
     "orden-eha-3377-2011:art-1",
     "orden-hac-1431-2025:art-2",
     "orden-hac-277-2026:art-3",
-    "orden-hap-1732-2014:art-2",
     "orden-eha-672-2007:art-1",
     "orden-eha-672-2007:art-3",
     "orden-eha-3435-2007:anexo-ii",
     "orden-hac-56-2024:art-1",
-    "orden-hfp-1284-2023:art-7",
 ]
 source_refs = [
     "aeat-renta-2025-manual-parte1",
@@ -41,11 +39,9 @@ source_refs = [
 ]
 bindings = [
     "renta-2025-modelo-111-retenciones-periodicas",
-    "renta-2025-modelo-115-retenciones-periodicas",
     "renta-2025-modelo-123-retenciones-periodicas",
     "renta-2025-modelo-130-pagos-fraccionados",
     "renta-2025-modelo-131-pagos-fraccionados",
-    "renta-2025-modelo-180-retenciones-anuales",
     "renta-2025-modelo-190-retenciones-anuales",
     "renta-2025-modelo-193-retenciones-anuales",
 ]
@@ -65,21 +61,17 @@ formulas = [
 relations = [
     "renta-2025-rel-111-retenciones-trimestrales",
     "renta-2025-rel-111-retenciones-mensuales",
-    "renta-2025-rel-115-retenciones-trimestrales",
     "renta-2025-rel-123-retenciones-trimestrales",
     "renta-2025-rel-130-pagos-fraccionados",
     "renta-2025-rel-131-pagos-fraccionados",
-    "renta-2025-rel-180-retenciones-anuales",
     "renta-2025-rel-190-retenciones-anuales",
     "renta-2025-rel-193-retenciones-anuales",
 ]
 dependency_classifications = [
     "renta-2025-dep-111",
-    "renta-2025-dep-115",
     "renta-2025-dep-123",
     "renta-2025-dep-130",
     "renta-2025-dep-131",
-    "renta-2025-dep-180",
     "renta-2025-dep-190",
     "renta-2025-dep-193",
 ]

@@ -28,7 +28,6 @@ source_refs = [
 ]
 bindings = [
     "renta-2024-modelo-111-retenciones-periodicas",
-    "renta-2024-modelo-115-retenciones-periodicas",
     "renta-2024-modelo-123-retenciones-periodicas",
     "renta-2024-modelo-130-pagos-fraccionados",
     "renta-2024-modelo-131-pagos-fraccionados",
@@ -43,7 +42,6 @@ formulas = [
 relations = [
     "renta-2024-rel-111-retenciones-trimestrales",
     "renta-2024-rel-111-retenciones-mensuales",
-    "renta-2024-rel-115-retenciones-trimestrales",
     "renta-2024-rel-123-retenciones-trimestrales",
     "renta-2024-rel-130-pagos-fraccionados",
     "renta-2024-rel-131-pagos-fraccionados",
@@ -51,7 +49,6 @@ relations = [
 ]
 dependency_classifications = [
     "renta-2024-dep-111",
-    "renta-2024-dep-115",
     "renta-2024-dep-123",
     "renta-2024-dep-130",
     "renta-2024-dep-131",
