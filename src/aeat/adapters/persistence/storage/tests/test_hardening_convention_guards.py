@@ -50,6 +50,7 @@ _APPROVED_EXPLICIT_ROUTE_TEST_SURFACES = {
     "src/aeat/adapters/persistence/storage/tests/test_hardening_convention_guards.py",
     "src/aeat/adapters/persistence/storage/tests/test_runtime.py",
     "src/aeat/application/tests/test_diagnostics.py",
+    "src/aeat/application/modelo/tests/test_export_iva_wallet.py",
     "src/aeat/application/tests/test_repair_integrity.py",
     "src/aeat/application/tests/test_state_projection.py",
     "src/aeat/application/tests/test_storage_write_policy.py",
