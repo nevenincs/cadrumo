@@ -582,6 +582,37 @@ def test_modelo_100_derechos_transmission_global_role_spans_revisions() -> None:
     )
 
 
+def test_modelo_100_premios_0303_splits_historical_emancipation_grant_from_rental_aid() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_by_year = {
+        2020: ("irpf_ganancia_premios_renta_basica_emancipacion", "emancipaci"),
+        2021: ("irpf_ganancia_premios_renta_basica_emancipacion", "emancipaci"),
+        2022: ("irpf_ganancia_premios_ayuda_alquiler", "al alquiler"),
+        2023: ("irpf_ganancia_premios_ayuda_alquiler", "al alquiler"),
+        2024: ("irpf_ganancia_premios_ayuda_alquiler", "al alquiler"),
+        2025: ("irpf_ganancia_premios_ayuda_alquiler", "al alquiler"),
+    }
+
+    for filing_year, (expected_role, label_fragment) in expected_by_year.items():
+        revision = modelo.revisions[str(filing_year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0303"))
+
+        assert tuple(casilla.section) == ("toma_datos_ampliada", "gp_premios", "otras")
+        assert casilla.semantic_role == expected_role
+        assert label_fragment in casilla.label
+        assert {"ley-35-2006:art-33", "ley-35-2006:art-34"}.issubset(casilla.legal_refs)
+        assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+            casilla.source_refs,
+        )
+
+    assert all(
+        casilla.semantic_role != "irpf_ganancia_renta_basica_emancipacion"
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    )
+
+
 def test_modelo_100_retrib_especie_no_exenta_total_role_names_aggregate() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
