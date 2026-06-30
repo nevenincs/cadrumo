@@ -162,7 +162,7 @@ class TestListAndIter:
 
         assert tuple(repo.iter_submissions()) == (healthy,)
         assert "skipping unreadable submission" in caplog.text
-        assert "schema version 2 exceeds supported 1" in caplog.text
+        assert "schema version 2 does not match expected 1" in caplog.text
 
 
 class TestDelete:
