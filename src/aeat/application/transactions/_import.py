@@ -55,6 +55,7 @@ def import_ledger_with_diagnostics(
     raw_transactions: Iterable[RawTransaction],
     existing_catalogue: TransactionCatalogue,
     original_source_path: Path | None = None,
+    import_fingerprints: Iterable[str] | None = None,
 ) -> LedgerImportResult:
     """Evaluate an imported stream against the four diagnostic checks.
 
@@ -65,6 +66,8 @@ def import_ledger_with_diagnostics(
             import-fingerprint duplicate detection.
         original_source_path: Optional original file path to record when it is
             present on disk.
+        import_fingerprints: Optional per-row import fingerprints derived by
+            the caller from parse-boundary facts such as transaction direction.
 
     Returns:
         An immutable :class:`LedgerImportResult` with finding diagnostics.
@@ -74,14 +77,27 @@ def import_ledger_with_diagnostics(
     skipped_count = 0
 
     rows = tuple(raw_transactions)
+    row_fingerprints = (
+        tuple(import_fingerprints)
+        if import_fingerprints is not None
+        else tuple(derive_import_fingerprint(raw) for raw in rows)
+    )
+    if len(row_fingerprints) != len(rows):
+        raise ValueError("import_fingerprints must contain one fingerprint per raw transaction")
     seen_fingerprints: set[str] = set()
     # The duplicate check keys on the stable import fingerprint — the
     # same identity the persisting import path deduplicates on — so a
     # verify run's preview agrees with what a real import would do,
     # including across file formats and after a transaction is edited.
     existing_fingerprints = {
-        transaction.import_fingerprint or derive_import_fingerprint(transaction.raw)
+        fingerprint
         for transaction in existing_catalogue.values()
+        for fingerprint in (
+            transaction.import_fingerprint,
+            derive_import_fingerprint(transaction.raw, direction=transaction.direction),
+            derive_import_fingerprint(transaction.raw),
+        )
+        if fingerprint is not None
     }
 
     if not rows:
@@ -97,9 +113,8 @@ def import_ledger_with_diagnostics(
 
     # Duplicate check & import logic
     dates = []
-    for raw in rows:
+    for raw, fingerprint in zip(rows, row_fingerprints, strict=True):
         tx_id = derive_transaction_id(raw)
-        fingerprint = derive_import_fingerprint(raw)
 
         if fingerprint in existing_fingerprints:
             skipped_count += 1
