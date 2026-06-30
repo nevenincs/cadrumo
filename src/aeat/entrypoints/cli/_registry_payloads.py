@@ -13,7 +13,8 @@ because ``model_dump(mode='json')`` serialises pydantic tuples as JSON arrays.
 The application layer remains authoritative for registry validation, oracle
 audits, workbook verification, filed-state comparison, and parity tape
 execution. These schemas document the CLI transport shape that enters
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope`.
+:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:func:`~aeat.entrypoints.cli._common._emit_envelope`.
 """
 
 from __future__ import annotations
@@ -58,7 +59,9 @@ class RegistryVerifyResult(OutputSchema):
     Mirrors the validated :class:`~aeat.application.registry.RegistryTreeReport`
     returned by :func:`~aeat.application.registry.verify_registry_tree`.
     ``verified`` marks the fail-fast registry/corpus validation branch, while
-    extra fields preserve the same detailed inventory available from inspect.
+    extra fields preserve the same
+    :class:`~aeat.application.registry.RegistryRevisionDetailReport` inventory
+    available from :class:`RegistryInspectResult`.
     """
 
     verified: bool
