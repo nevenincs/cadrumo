@@ -74,7 +74,7 @@ Pin the verification report id to the verification outcome and drop run_at from 
 Make the agent harness and CLI surface state that a stable idempotency key is required per logical add and the keyless path is append-only.
 
 - [x] `P04.S11` - Update the --idempotency-key CLI help text through the locale CLI to state that a stable key is required per logical add and the keyless path is append-only; `src/aeat/locales/`.
-- [ ] `P04.S12` - Update the agent-harness ledger persona or skill instruction to mandate passing a stable idempotency key on every ledger add, citing only the live CLI surface; `src/aeat/_data/agent/`.
+- [x] `P04.S12` - Update the agent-harness ledger persona or skill instruction to mandate passing a stable idempotency key on every ledger add, citing only the live CLI surface; `src/aeat/_data/agent/`.
 
 ### Phase `P05` - Real-behaviour idempotency, roundtrip, and gate verification
 
