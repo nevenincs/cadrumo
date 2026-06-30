@@ -6,32 +6,40 @@ from ._verification_chain_support import (
     BindingId,
     CasillaId,
     Decimal,
-    RegistryValidationError,
+    _assert_annual_relation_closure_chain,
     _casilla_id,
-    _parse_extracted_declaracion_values,
-    _registry_modelo_observations_from_values,
-    _registry_snapshot,
-    calculate_registry_snapshot,
-    date,
-    resolve_bound_inputs_by_casilla_id,
-    resolve_relation_values_from_observations,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
-_DECL_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("decl.total-perceptores")
-_DECL_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
-_DECL_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
-_DECL_MONETARY_SUMMARY_CASILLAS: tuple[CasillaId, ...] = (
-    _DECL_BASE_TOTAL_CASILLA,
-    _DECL_RETENCIONES_TOTAL_CASILLA,
-)
 _M123_TOTAL_RENTAS_CASILLA: CasillaId = _casilla_id("03")
 _M123_TOTAL_BASE_CASILLA: CasillaId = _casilla_id("06")
 _M123_TOTAL_RETENCIONES_CASILLA: CasillaId = _casilla_id("09")
 _M193_PERCEPTORES_BINDING: BindingId = "modelo-193-123-perceptores-anual"
 _M193_RETIRED_PERCEPTORES_RELATION = "modelo-193-rel-123-perceptores-anual"
+_M123_QUARTERLY_VALUES: dict[str, dict[CasillaId, Decimal]] = {
+    "1T": {
+        _M123_TOTAL_RENTAS_CASILLA: Decimal("2"),
+        _M123_TOTAL_BASE_CASILLA: Decimal("2000.00"),
+        _M123_TOTAL_RETENCIONES_CASILLA: Decimal("380.00"),
+    },
+    "2T": {
+        _M123_TOTAL_RENTAS_CASILLA: Decimal("0"),
+        _M123_TOTAL_BASE_CASILLA: Decimal("2000.00"),
+        _M123_TOTAL_RETENCIONES_CASILLA: Decimal("380.00"),
+    },
+    "3T": {
+        _M123_TOTAL_RENTAS_CASILLA: Decimal("0"),
+        _M123_TOTAL_BASE_CASILLA: Decimal("2000.00"),
+        _M123_TOTAL_RETENCIONES_CASILLA: Decimal("380.00"),
+    },
+    "4T": {
+        _M123_TOTAL_RENTAS_CASILLA: Decimal("0"),
+        _M123_TOTAL_BASE_CASILLA: Decimal("2000.00"),
+        _M123_TOTAL_RETENCIONES_CASILLA: Decimal("380.00"),
+    },
+}
 
 
 def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_relations_and_binding() -> None:
@@ -62,111 +70,14 @@ def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_re
     Verdict: VERIFIED - the M123->M193 monetary relation chain resolves without
     resurrecting the retired quarterly perceptor-count relation.
     """
-    extracted = _parse_extracted_declaracion_values(modelo="193", fixture_stem="2024-0A", year=2024, period="0A")
-
-    perceptor_binding_value = Decimal("2")
-    extracted_perceptors = extracted.get(_DECL_TOTAL_PERCEPTORES_CASILLA)
-    assert extracted_perceptors == perceptor_binding_value, (
-        f"PARSER-GAP [M193/2024-0A engine]: fixture printed {_DECL_TOTAL_PERCEPTORES_CASILLA!r} "
-        f"as {extracted_perceptors!r}, expected {perceptor_binding_value!r}."
+    _assert_annual_relation_closure_chain(
+        annual_modelo="193",
+        source_modelo="123",
+        fixture_stem="2024-0A",
+        year=2024,
+        period="0A",
+        source_period_values=_M123_QUARTERLY_VALUES,
+        perceptor_binding_id=_M193_PERCEPTORES_BINDING,
+        perceptor_binding_value=Decimal("2"),
+        retired_perceptor_relation_id=_M193_RETIRED_PERCEPTORES_RELATION,
     )
-
-    _m123_quarterly: dict[str, dict[CasillaId, Decimal]] = {
-        "1T": {
-            _M123_TOTAL_RENTAS_CASILLA: Decimal("2"),
-            _M123_TOTAL_BASE_CASILLA: Decimal("2000.00"),
-            _M123_TOTAL_RETENCIONES_CASILLA: Decimal("380.00"),
-        },
-        "2T": {
-            _M123_TOTAL_RENTAS_CASILLA: Decimal("0"),
-            _M123_TOTAL_BASE_CASILLA: Decimal("2000.00"),
-            _M123_TOTAL_RETENCIONES_CASILLA: Decimal("380.00"),
-        },
-        "3T": {
-            _M123_TOTAL_RENTAS_CASILLA: Decimal("0"),
-            _M123_TOTAL_BASE_CASILLA: Decimal("2000.00"),
-            _M123_TOTAL_RETENCIONES_CASILLA: Decimal("380.00"),
-        },
-        "4T": {
-            _M123_TOTAL_RENTAS_CASILLA: Decimal("0"),
-            _M123_TOTAL_BASE_CASILLA: Decimal("2000.00"),
-            _M123_TOTAL_RETENCIONES_CASILLA: Decimal("380.00"),
-        },
-    }
-    observations = _registry_modelo_observations_from_values(
-        modelo="123",
-        filing_year=2024,
-        period_values=_m123_quarterly,
-    )
-
-    snapshot = _registry_snapshot("193", 2024, "0A")
-    try:
-        relation_values = resolve_relation_values_from_observations(
-            snapshot.revision,
-            observations,
-            filing_year=2024,
-            period="0A",
-        )
-    except RegistryValidationError as exc:
-        pytest.fail(
-            f"BINDING-GAP [M193/2024-0A engine]: resolve_relation_values_from_observations raised "
-            f"RegistryValidationError - M123->M193 relation chain is structurally broken.\n"
-            f"  error: {exc}",
-        )
-    assert _M193_RETIRED_PERCEPTORES_RELATION not in relation_values, (
-        f"BINDING-GAP [M193/2024-0A engine]: retired quarterly perceptor relation "
-        f"{_M193_RETIRED_PERCEPTORES_RELATION!r} was resolved. Perceptor count must flow through "
-        f"{_M193_PERCEPTORES_BINDING!r}."
-    )
-
-    binding_values: dict[BindingId, Decimal] = {_M193_PERCEPTORES_BINDING: perceptor_binding_value}
-    try:
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-            date_context={"filing_period": date(2024, 12, 31)},
-            binding_values=binding_values,
-            relation_values=relation_values,
-        )
-    except RegistryValidationError as exc:
-        pytest.fail(
-            f"BINDING-GAP [M193/2024-0A engine]: calculate_registry_snapshot raised "
-            f"RegistryValidationError - engine could not recompute from supplied relation_values.\n"
-            f"  error: {exc}\n"
-            f"  binding_values keys: {sorted(binding_values)}\n"
-            f"  relation_values keys: {sorted(relation_values)}",
-        )
-
-    engine_values = dict(result.values)
-    entries_by_target = {entry.target_casilla_id: entry for entry in result.entries}
-
-    assert _DECL_TOTAL_PERCEPTORES_CASILLA not in entries_by_target, (
-        f"FORMULA-MISMATCH [M193/2024-0A engine]: {_DECL_TOTAL_PERCEPTORES_CASILLA!r} was produced "
-        "by a formula entry, but this casilla must be bound."
-    )
-    assert engine_values.get(_DECL_TOTAL_PERCEPTORES_CASILLA) == perceptor_binding_value, (
-        f"FORMULA-MISMATCH [M193/2024-0A engine]: engine resolved {_DECL_TOTAL_PERCEPTORES_CASILLA!r} "
-        f"as {engine_values.get(_DECL_TOTAL_PERCEPTORES_CASILLA)!r}, expected binding "
-        f"{_M193_PERCEPTORES_BINDING!r} value {perceptor_binding_value!r}."
-    )
-
-    for casilla_id in _DECL_MONETARY_SUMMARY_CASILLAS:
-        extracted_value = extracted.get(casilla_id)
-        engine_value = engine_values.get(casilla_id)
-        assert extracted_value is not None, (
-            f"PARSER-GAP [M193/2024-0A engine]: closure casilla {casilla_id!r} absent from extracted values"
-        )
-        assert isinstance(extracted_value, Decimal), (
-            f"PARSER-GAP [M193/2024-0A engine]: {casilla_id!r} is not Decimal: {type(extracted_value).__name__!r}"
-        )
-        assert engine_value is not None, (
-            f"FORMULA-MISMATCH [M193/2024-0A engine]: casilla {casilla_id!r} absent from engine result - "
-            f"formula evaluation order issue or casilla missing from revision."
-        )
-        assert engine_value == extracted_value, (
-            f"FORMULA-MISMATCH [M193/2024-0A engine]: engine recomputed {casilla_id!r} as "
-            f"{engine_value!r} but AEAT-printed fixture shows {extracted_value!r}.\n"
-            f"  diff: {engine_value - extracted_value!r}\n"
-            f"  binding_values supplied: {binding_values}\n"
-            f"  relation_values supplied: {relation_values}"
-        )
