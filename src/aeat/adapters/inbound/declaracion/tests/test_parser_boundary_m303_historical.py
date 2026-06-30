@@ -10,65 +10,20 @@ from ._parser_boundary_casillas import (
     _M303_CASILLA_45,
     _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
 )
+from ._parser_boundary_m303_support import (
+    _M303_C46_ALIAS,
+    _M303_HISTORICAL_EXPECTED,
+    _M303_HISTORICAL_IDS,
+    _M303_HISTORICAL_PARAMS,
+    _M303_HISTORICAL_PROFILE_CASILLAS,
+)
 from ._parser_boundary_support import (
     FIXTURES_DIR,
-    CasillaId,
-    Decimal,
-    _casilla_id,
-    _expected_casilla_values,
     _expected_period,
     parse_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
-
-_M303_HISTORICAL_PARAMS: tuple[tuple[str, int, str], ...] = (
-    ("2021-2T", 2021, "2T"),
-    ("2021-3T", 2021, "3T"),
-    ("2021-4T", 2021, "4T"),
-    ("2022-1T", 2022, "1T"),
-    ("2022-2T", 2022, "2T"),
-    ("2022-3T", 2022, "3T"),
-    ("2022-4T", 2022, "4T"),
-)
-_M303_HISTORICAL_IDS: tuple[str, ...] = tuple(stem for stem, _year, _period in _M303_HISTORICAL_PARAMS)
-_M303_HISTORICAL_PROFILE_CASILLAS: frozenset[str] = frozenset(
-    {
-        "iva.repercutido.general",
-        "iva.repercutido.reducido",
-        "iva.repercutido.super-reducido",
-        "iva.autorepercutido.intracomunitaria",
-        "iva.soportado.interiores",
-        "27",
-        "29",
-        "45",
-        "iva.resultado-regimen-general",
-    },
-)
-_M303_C46_ALIAS: CasillaId = _casilla_id("c46")
-_M303_HISTORICAL_EXPECTED: dict[str, dict[CasillaId, Decimal]] = {
-    "2021-2T": _expected_casilla_values(
-        {"27": Decimal("12000.00"), "29": Decimal("7800.00"), "45": Decimal("7800.00"), "c46": Decimal("4200.00")},
-    ),
-    "2021-3T": _expected_casilla_values(
-        {"27": Decimal("13200.00"), "29": Decimal("8400.00"), "45": Decimal("8400.00"), "c46": Decimal("4800.00")},
-    ),
-    "2021-4T": _expected_casilla_values(
-        {"27": Decimal("14400.00"), "29": Decimal("9000.00"), "45": Decimal("9000.00"), "c46": Decimal("5400.00")},
-    ),
-    "2022-1T": _expected_casilla_values(
-        {"27": Decimal("12600.00"), "29": Decimal("8100.00"), "45": Decimal("8100.00"), "c46": Decimal("4500.00")},
-    ),
-    "2022-2T": _expected_casilla_values(
-        {"27": Decimal("15000.00"), "29": Decimal("9600.00"), "45": Decimal("9600.00"), "c46": Decimal("5400.00")},
-    ),
-    "2022-3T": _expected_casilla_values(
-        {"27": Decimal("16200.00"), "29": Decimal("10200.00"), "45": Decimal("10200.00"), "c46": Decimal("6000.00")},
-    ),
-    "2022-4T": _expected_casilla_values(
-        {"27": Decimal("18000.00"), "29": Decimal("11400.00"), "45": Decimal("11400.00"), "c46": Decimal("6600.00")},
-    ),
-}
 
 
 @pytest.mark.parametrize("pdf_stem,year,period", _M303_HISTORICAL_PARAMS, ids=_M303_HISTORICAL_IDS)
