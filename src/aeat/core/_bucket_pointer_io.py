@@ -1,17 +1,24 @@
-"""Atomic IO for the ``<aeat-root>/active-profile`` pointer file.
+"""Atomic IO and selector resolution for the active-profile pointer file.
 
-The pointer file is the third rung of the active-profile precedence
-chain (``--profile`` flag > ``AEAT_ACTIVE_PROFILE`` env > pointer file).
-The write path uses the write-then-rename pattern so a crashed switch
-never produces a truncated pointer; the read path returns ``None``
-when the pointer is absent and the higher-level precedence resolver
-handles the missing case.
+The pointer file lives at ``<aeat-root>/active-profile`` and is the on-disk
+default after the per-invocation / per-shell override path. The CLI ``--profile``
+flag is normalised into ``Settings.aeat_active_profile``, so this module's
+runtime branches are settings override first and pointer file second. The write
+path uses the write-then-rename pattern so a crashed switch never produces a
+truncated pointer; the read path returns ``None`` only when the pointer is
+absent.
 
 The IO helpers serialise :class:`BucketPointer` records and feed
-:func:`resolve_active_bucket_id`, which is the single active-profile
-resolver used by storage and CLI startup flows. Repository factories that need
-a hard bucket id use :func:`resolve_repository_bucket_id` so each domain can
-raise its own error type while sharing the same pointer precedence.
+:func:`resolve_active_bucket_id`, the central core resolver consumed by storage
+and CLI startup flows. The resolver returns the selected bucket id string; it
+does not prove a ``buckets/<id>/manifest.toml`` exists, scan profile display
+labels, or open encrypted state. Those registry/existence checks belong to
+application-layer manifest scanners that return
+:class:`~aeat.application.workflow.ProfileBucketPointer`.
+
+Repository factories that need a hard bucket id use
+:func:`resolve_repository_bucket_id` so each domain can raise its own error type
+while sharing the same pointer precedence.
 """
 
 from __future__ import annotations
@@ -29,7 +36,14 @@ _POINTER_FILENAME = "active-profile"
 
 
 def pointer_path(root: Path) -> Path:
-    """Return the canonical ``active-profile`` pointer path under the AEAT root."""
+    """Return the canonical ``active-profile`` pointer path under the AEAT root.
+
+    Args:
+        root: AEAT local storage root.
+
+    Returns:
+        ``root / "active-profile"`` without touching the filesystem.
+    """
     return root / _POINTER_FILENAME
 
 
@@ -49,6 +63,12 @@ def read_pointer(root: Path) -> BucketPointer | None:
         The parsed :class:`BucketPointer`, or ``None`` when the pointer
         file is absent. The higher-level resolver treats ``None`` as
         "fall through to the next precedence rung".
+
+    Raises:
+        OSError: If the present pointer file cannot be read.
+        tomllib.TOMLDecodeError: If the present file is not valid TOML.
+        pydantic.ValidationError: If the present TOML violates the strict
+            :class:`BucketPointer` schema.
     """
     target = pointer_path(root)
     if not target.is_file():
@@ -84,6 +104,10 @@ def resolve_active_bucket_id() -> str | None:
     at-rest crypto substrate (master-key provider) resolves the active
     bucket through this function, so it must sit at or below the adapter
     layer to keep the dependency direction acyclic.
+
+    Returns:
+        The selected active bucket id, or ``None`` when neither settings nor the
+        pointer file selects one.
     """
     from .config import load_settings
 
@@ -111,6 +135,13 @@ def require_active_bucket_id() -> str:
     Diagnostic surfaces (browser-connectivity probe, status flows) MUST NOT call
     this helper — they call :func:`resolve_active_bucket_id` and supply their own
     fallback label so a missing profile stays diagnosable.
+
+    Returns:
+        The selected active bucket id.
+
+    Raises:
+        aeat.core.errors.NoActiveProfileError: If neither settings nor the
+            pointer file selects a bucket id.
     """
     from .errors import NoActiveProfileError
 
@@ -131,6 +162,14 @@ def write_pointer(root: Path, pointer: BucketPointer) -> None:
     intermediate. The payload comes from
     :meth:`~aeat.core._bucket_pointer.BucketPointer.to_toml`, and the AEAT root
     is created lazily if absent.
+
+    Args:
+        root: AEAT local storage root that will contain the pointer file.
+        pointer: Validated pointer record to serialise.
+
+    Raises:
+        OSError: If the parent directory cannot be created, the temporary file
+            cannot be written, or the atomic replacement fails.
     """
     target = pointer_path(root)
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -159,6 +198,10 @@ def resolve_repository_bucket_id(bucket_id: str | None, *, error_type: type[Aeat
 
     Returns:
         The resolved bucket id.
+
+    Raises:
+        AeatError: The supplied ``error_type`` when ``bucket_id`` is blank or no
+            active profile bucket can be resolved.
     """
     if bucket_id is not None:
         trimmed = bucket_id.strip()
