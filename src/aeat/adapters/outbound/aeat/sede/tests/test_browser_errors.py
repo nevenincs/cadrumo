@@ -19,10 +19,6 @@ from .._errors import BrowserAdapterTypeError
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
-class _NonPageSentinel:
-    """A deliberately wrong return type for BrowserContext.new_page()."""
-
-
 # ---------------------------------------------------------------------------
 # contract-A: registry binding
 # ---------------------------------------------------------------------------
@@ -50,7 +46,7 @@ def test_browser_adapter_type_error_round_trips_through_build_error_envelope() -
 
 def test_require_playwright_page_rejects_wrong_page_type() -> None:
     with pytest.raises(BrowserAdapterTypeError) as exc_info:
-        require_playwright_page(_NonPageSentinel())
+        require_playwright_page(object())
 
     assert exc_info.value.context is not None
-    assert exc_info.value.context["actual_type"] == "_NonPageSentinel"
+    assert exc_info.value.context["actual_type"] == "object"
