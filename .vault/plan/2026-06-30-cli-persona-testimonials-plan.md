@@ -12,16 +12,6 @@ related:
   - '[[2026-06-02-ledger-operator-hardening-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `cli-persona-testimonials` plan
 
 ## Wave `W01` - campaign intake and evidence authority
@@ -148,8 +138,8 @@ Reconcile newly arrived persona artifacts and evidence gaps while keeping artifa
 Convert only reproduced operator-visible product defects into code work, with RAG-grounded briefs, disjoint ownership, review, and owner-aware gates.
 
 - [x] `W06.P13.S36` - Replay new transcript final messages for under-declaration data-loss cross-profile legal-evidence and live-read risks; `tmp/personas`.
-- [ ] `W06.P13.S37` - Dispatch RAG-grounded code fixers for reproduced campaign-owned behavior defects; `agent orchestration`.
-- [ ] `W06.P13.S38` - Run owner-aware touched-surface gates for W06 fixes and classify unrelated baseline or concurrent failures; `src/aeat`.
+- [x] `W06.P13.S37` - Dispatch RAG-grounded code fixers for reproduced campaign-owned behavior defects; `agent orchestration`.
+- [x] `W06.P13.S38` - Run owner-aware touched-surface gates for W06 fixes and classify unrelated baseline or concurrent failures; `src/aeat`.
 
 ## Description
 
