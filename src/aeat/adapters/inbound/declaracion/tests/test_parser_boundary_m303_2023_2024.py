@@ -30,20 +30,20 @@ from ._parser_boundary_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
-
-@pytest.mark.parametrize(
-    "pdf_stem,year,period",
-    [
-        ("2023-1T", 2023, "1T"),
-        ("2023-2T", 2023, "2T"),
-        ("2023-3T", 2023, "3T"),
-        ("2023-4T", 2023, "4T"),
-        ("2024-1T", 2024, "1T"),
-        ("2024-2T", 2024, "2T"),
-        ("2024-3T", 2024, "3T"),
-        ("2024-4T", 2024, "4T"),
-    ],
+_M303_2023_2024_PARAMS: tuple[tuple[str, int, str], ...] = (
+    ("2023-1T", 2023, "1T"),
+    ("2023-2T", 2023, "2T"),
+    ("2023-3T", 2023, "3T"),
+    ("2023-4T", 2023, "4T"),
+    ("2024-1T", 2024, "1T"),
+    ("2024-2T", 2024, "2T"),
+    ("2024-3T", 2024, "3T"),
+    ("2024-4T", 2024, "4T"),
 )
+_M303_2023_2024_IDS: tuple[str, ...] = tuple(stem for stem, _year, _period in _M303_2023_2024_PARAMS)
+
+
+@pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_2024_PARAMS, ids=_M303_2023_2024_IDS)
 def test_parser_extracts_modelo_303_profile_targets_from_corpus(pdf_stem: str, year: int, period: str) -> None:
     """Round-trip: parse all 8 corpus M303 PDFs and verify casilla coverage.
 
