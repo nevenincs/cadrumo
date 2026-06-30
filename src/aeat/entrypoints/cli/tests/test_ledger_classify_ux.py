@@ -196,6 +196,52 @@ def test_classify_business_pct_on_non_mixed_row_is_refused(tmp_path: Path) -> No
     assert "MIXED" in result.output
 
 
+def test_classify_reason_persists_to_transaction_notes(tmp_path: Path) -> None:
+    """`classify --reason` records WHY into the transaction notes (issue #223)."""
+    txn = _imported_transaction_id(tmp_path)
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "classify",
+            txn,
+            "--classification",
+            "BUSINESS",
+            "--reason",
+            "Recurring SaaS subscription used solely for the business.",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    transaction = json.loads(result.output)["result"]["transaction"]
+    assert transaction["business_classification"] == "BUSINESS"
+    assert transaction["notes"] == "Recurring SaaS subscription used solely for the business."
+
+
+def test_classify_empty_reason_is_refused_instructively(tmp_path: Path) -> None:
+    """An explicitly empty `--reason` is refused, naming the flag and the fix."""
+    txn = _imported_transaction_id(tmp_path)
+    result = _invoke(
+        ["app", "ledger", "classify", txn, "--classification", "BUSINESS", "--reason", "   "],
+    )
+    assert result.exit_code != 0
+    assert "--reason" in result.output
+    assert "config repair" not in result.output
+
+
+def test_classify_without_reason_leaves_notes_unchanged(tmp_path: Path) -> None:
+    """Omitting `--reason` keeps the no-rationale path working (notes stay empty)."""
+    txn = _imported_transaction_id(tmp_path)
+    result = _invoke(
+        ["--format", "json", "app", "ledger", "classify", txn, "--classification", "BUSINESS"],
+    )
+    assert result.exit_code == 0, result.output
+    transaction = json.loads(result.output)["result"]["transaction"]
+    assert transaction["business_classification"] == "BUSINESS"
+    assert transaction["notes"] == ""
+
+
 def test_history_accepts_the_id_positionally_like_view(tmp_path: Path) -> None:
     """`ledger history <id>` takes the id positionally, matching `ledger view`."""
     txn = _imported_transaction_id(tmp_path)

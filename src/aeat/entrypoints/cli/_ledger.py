@@ -503,7 +503,7 @@ def ledger_classify(
         help=tr("cli.ledger.classify.auto_split_help"),
     ),
     reject: bool = typer.Option(False, "--reject", help=tr("cli.ledger.classify.reject_help")),
-    reason: str = typer.Option("", "--reason", help=tr("cli.ledger.classify.reason_help")),
+    reason: str | None = typer.Option(None, "--reason", help=tr("cli.ledger.classify.reason_help")),
 ) -> None:
     """Classify one ledger transaction (positional id), via LLM (--llm), or in bulk (--from-csv)."""
     if auto_split:
@@ -519,7 +519,7 @@ def ledger_classify(
             evidence_acknowledged=evidence_acknowledged,
             vision_model=vision_model,
             reject=reject,
-            reason=reason,
+            reason=reason or "",
         )
         return
     if llm is not None or read_evidence:
@@ -536,7 +536,7 @@ def ledger_classify(
             "evidence_acknowledged": evidence_acknowledged,
             "vision_model": vision_model,
             "reject": reject,
-            "reason": reason,
+            "reason": reason or "",
         }
         if saturate:
             ledger_saturate_llm(**saturate_kwargs)
@@ -597,6 +597,19 @@ def ledger_classify(
                 ),
             ),
         )
+    if reason is not None and not reason.strip():
+        # A manual classification may record WHY via --reason, persisted to the
+        # transaction notes. An explicitly empty/whitespace reason carries no
+        # rationale; refuse it instructively rather than silently dropping it.
+        raise _bad(
+            tr(
+                "cli.ledger.classify.reason_empty",
+                default=(
+                    "Refused. --reason must record why you are classifying this "
+                    "transaction. Pass a non-empty rationale, or omit --reason."
+                ),
+            ),
+        )
     validated_category_id = _validate_category_id(category_id)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
     if classification is BusinessClassification.MIXED and business_pct is None:
@@ -626,6 +639,7 @@ def ledger_classify(
             irpf_category=irpf_category,
             iva_category=iva_category,
             counterparty_eu_member_state=counterparty_eu_member_state,
+            notes=reason,
         )
         result = update_manual_transaction_fields(
             bucket_id=transaction_repository.bucket_id,
