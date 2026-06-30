@@ -281,7 +281,7 @@ def build_draft(
     }
     values: list[ModeloValue] = []
     for casilla in snapshot.revision.casillas:
-        if casilla.input_kind == _InputKind.COMPUTED:
+        if casilla.id in entries:
             entry = entries[casilla.id]
             trace = formula_input_casilla_ids_by_casilla.get(casilla.id)
             if trace is None:
