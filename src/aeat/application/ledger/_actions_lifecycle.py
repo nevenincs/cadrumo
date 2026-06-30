@@ -1,10 +1,15 @@
-"""Application services for bucket-scoped manual ledger transactions.
+"""Lifecycle services for bucket-scoped manual ledger transactions.
 
-Services operate over a :class:`TransactionCatalogueRepository` for ledger
-state, a :class:`BucketEventHistoryRepository` for durable audit events, and
-an optional :class:`InvoiceCatalogueRepository` for purchase-invoice evidence
-cascade on removal. The inner functions accept a :class:`TransactionCatalogue`
-or :class:`InvoiceCatalogue` directly when the caller supplies pre-loaded data.
+Archive, stash, restore, remove, and reset operations mutate a loaded
+:class:`TransactionCatalogue`, append bucket events, and return typed
+application reports. Removal and reset paths can also update an
+:class:`InvoiceCatalogue` through an :class:`InvoiceCatalogueRepository` when
+purchase-invoice evidence must be detached.
+
+The public services return
+:class:`~aeat.application.ledger.ManualLedgerTransactionResult`,
+:class:`~aeat.application.ledger.LedgerTransactionRemovalReport`, or
+:class:`~aeat.application.ledger.LedgerCatalogueResetReport`.
 """
 
 from __future__ import annotations
@@ -78,8 +83,8 @@ def archive_manual_transaction(
 ) -> ManualLedgerTransactionResult:
     """Mark one bucket-scoped ledger transaction as archived.
 
-    Returns a :class:`ManualLedgerTransactionResult` reflecting the
-    archived transaction state.
+    Returns a :class:`~aeat.application.ledger.ManualLedgerTransactionResult`
+    reflecting the archived transaction state.
     """
     return _transition_manual_transaction_lifecycle(
         bucket_id=bucket_id,
@@ -112,8 +117,8 @@ def stash_manual_transaction(
 ) -> ManualLedgerTransactionResult:
     """Mark one active bucket-scoped ledger transaction as stashed.
 
-    Returns a :class:`ManualLedgerTransactionResult` reflecting the
-    stashed transaction state.
+    Returns a :class:`~aeat.application.ledger.ManualLedgerTransactionResult`
+    reflecting the stashed transaction state.
     """
     return _transition_manual_transaction_lifecycle(
         bucket_id=bucket_id,
@@ -146,8 +151,9 @@ def restore_manual_transaction(
 ) -> ManualLedgerTransactionResult:
     """Restore one stashed or archived ledger transaction to active.
 
-    The clean inverse of :func:`archive_manual_transaction` and
-    :func:`stash_manual_transaction`. Moves ``STASHED -> ACTIVE`` and
+    The clean inverse of
+    :func:`~aeat.application.ledger.archive_manual_transaction` and
+    :func:`~aeat.application.ledger.stash_manual_transaction`. Moves ``STASHED -> ACTIVE`` and
     ``ARCHIVED -> ACTIVE`` through the single-writer
     :func:`_transition_manual_transaction_lifecycle` primitive, so it
     inherits that primitive's atomic catalogue-plus-event persistence, its
@@ -155,11 +161,12 @@ def restore_manual_transaction(
     sealed (``VERIFICADO_COMPLETO`` / ``PRESENTADO`` /
     ``PRESENTADO_SUPERSEDIDO``) calculation revision is refused so a restore
     cannot silently change the input basis of an already-filed period. Split
-    and merged lineage stays out of scope — only
-    :func:`split_transaction` / :func:`merge_transactions` move those rows.
+    and merged lineage stays out of scope - only
+    :func:`~aeat.application.ledger.split_transaction` /
+    :func:`~aeat.application.ledger.merge_transactions` move those rows.
 
-    Returns a :class:`ManualLedgerTransactionResult` reflecting the
-    restored, now-active transaction state.
+    Returns a :class:`~aeat.application.ledger.ManualLedgerTransactionResult`
+    reflecting the restored, now-active transaction state.
 
     Raises:
         TransactionValidationError: when the row is already active (with an
@@ -220,8 +227,9 @@ def remove_manual_transaction(
 ) -> LedgerTransactionRemovalReport:
     """Remove one bucket-scoped ledger transaction after finalized-modelo checks.
 
-    Returns a :class:`LedgerTransactionRemovalReport` indicating whether
-    the transaction was removed or blocked by a finalized-modelo reference.
+    Returns a :class:`~aeat.application.ledger.LedgerTransactionRemovalReport`
+    indicating whether the transaction was removed or blocked by a
+    finalized-modelo reference.
     """
     now = _normalise_timestamp(occurred_at)
     trimmed_actor = _require_actor(actor, operation="ledger removal")
@@ -340,7 +348,7 @@ def reset_ledger_catalogue(
 ) -> LedgerCatalogueResetReport:
     """Reset one bucket's ledger catalogue after finalized-modelo checks.
 
-    Returns a :class:`LedgerCatalogueResetReport`.
+    Returns a :class:`~aeat.application.ledger.LedgerCatalogueResetReport`.
     """
     now = _normalise_timestamp(occurred_at)
     trimmed_actor = _require_actor(actor, operation="ledger reset")
