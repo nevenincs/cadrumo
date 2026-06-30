@@ -20,6 +20,14 @@ legal_refs = ["ley-35-2006:art-101", "ley-35-2006:art-99", "orden-eha-586-2011:a
 source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "01"
+number = "01"
+
+[[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "02"
+number = "02"
+
+[[revisions."2019-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "03"
 number = "03"
 
@@ -28,12 +36,28 @@ casilla_id = "06"
 number = "06"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "07"
+number = "07"
+
+[[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "08"
+number = "08"
+
+[[revisions."2019-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "09"
 number = "09"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "12"
 number = "12"
+
+[[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "13"
+number = "13"
+
+[[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "14"
+number = "14"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "15"
