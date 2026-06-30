@@ -29,9 +29,15 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
 
 
 class JustificanteRepository(SecureBoundRepository[Justificante]):
-    """Repository over encrypted SQL-backed justificante metadata.
+    """Encrypted AUDIT repository for :class:`Justificante` metadata.
 
-    Domain port previously at ``_protocols.py`` removed 2026-06-01 as
+    The :class:`SecureBoundRepository` base stores each :class:`Justificante`
+    in a :class:`~aeat.adapters.persistence.storage.Envelope` row under the
+    ``aeat.domain.justificante.metadata`` namespace. The AEAT CSV is the
+    natural key, so list and iteration APIs expose persisted receipt metadata
+    without reading plaintext metadata from disk.
+
+    Domain port previously at ``_protocols.py`` was removed on 2026-06-01 as
     zero-consumer; re-add via ADR amendment if a domain-layer caller needs
     typed substitutability.
     """
