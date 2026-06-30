@@ -107,6 +107,46 @@ def test_modelo_100_record_design_sources_match_manifest() -> None:
     assert len(checked) == 18
 
 
+def _source_path(corpus_path: str) -> Path:
+    return bundled_path(*corpus_path.split("/"))
+
+
+def _record_design_label(corpus_path: str, casilla_id: str) -> str:
+    marker = f"[{casilla_id}]"
+    for line in _source_path(corpus_path).read_text(encoding="cp1252").splitlines():
+        if marker not in line:
+            continue
+        label = line.split(marker, 1)[1].strip()
+        assert label.startswith("[") and label.endswith("]"), line
+        return label[1:-1]
+    raise AssertionError(f"source {corpus_path} has no label for casilla {casilla_id}")
+
+
+def _manual_extracted_text(corpus_path: str) -> str:
+    extracted_path = Path(f"{_source_path(corpus_path)}.extracted.json")
+    payload = json.loads(extracted_path.read_text(encoding="utf-8"))
+    return "\n".join(unit["text"] for unit in payload["units"])
+
+
+def test_modelo_100_2021_deportistas_0489_is_grounded_in_dictionary_and_manual() -> None:
+    modelos, catalogues = _registry_tree()
+    modelo = next(modelo for modelo in modelos if modelo.id == "100")
+    revision = modelo.revisions["2021"]
+    casilla = next(casilla for casilla in revision.casillas if casilla.id == "0489")
+    dictionary = catalogues.sources["aeat-dr-100-2021-dictionary"]
+    manual = catalogues.sources["aeat-renta-2021-manual-parte1"]
+
+    assert dictionary.evidence_tier == "layout_authority"
+    assert manual.evidence_tier == "official_source_guidance"
+    assert casilla.label == _record_design_label(dictionary.corpus_path, "0489")
+    assert "aeat-renta-2021-manual-parte1" in casilla.source_refs
+    assert casilla.semantic_role == "irpf_red_deportistas_aportaciones_contribuciones"
+
+    manual_text = " ".join(_manual_extracted_text(manual.corpus_path).split())
+    assert "casillas [0488] y [0489]" in manual_text
+    assert "aportaciones y contribuciones realizadas en 2021" in manual_text
+
+
 def test_renta_manual_sources_match_manifest() -> None:
     catalogues = _catalogues()
     sources_by_path = {source.corpus_path: source for source in catalogues.sources.values()}
