@@ -130,24 +130,17 @@ class TestNie:
 class TestCif:
     """Spanish CIF (kind letter + 7 digits + check character)."""
 
-    def test_valid_digit_only_kind(self) -> None:
-        # A12345674 — kind A is digit-only.
-        # sum = (1*2/sum-digits) + 2 + (3*2) + 4 + (5*2/sd) + 6 + (7*2/sd)
-        #     =  2 + 2 + 6 + 4 + 1 (10 -> 1+0) + 6 + 5 (14 -> 1+4) = 26
-        # check = (10 - 26 % 10) % 10 = (10 - 6) % 10 = 4
-        assert validate_identity("A12345674") is IdentityDocument.CIF
-
-    def test_valid_letter_only_kind(self) -> None:
-        # Reuse same digit body 1234567 -> check int 4 -> letter D.
-        assert validate_identity("P1234567D") is IdentityDocument.CIF
-
-    def test_mixed_kind_accepts_digit(self) -> None:
-        # Kind C (mixed): digit form acceptable.
-        assert validate_identity("C12345674") is IdentityDocument.CIF
-
-    def test_mixed_kind_accepts_letter(self) -> None:
-        # Same C kind, letter form (D for index 4).
-        assert validate_identity("C1234567D") is IdentityDocument.CIF
+    @pytest.mark.parametrize(
+        "candidate",
+        (
+            pytest.param("A12345674", id="digit-only-kind"),
+            pytest.param("P1234567D", id="letter-only-kind"),
+            pytest.param("C12345674", id="mixed-kind-digit-control"),
+            pytest.param("C1234567D", id="mixed-kind-letter-control"),
+        ),
+    )
+    def test_valid_cif_round_trip(self, candidate: str) -> None:
+        assert validate_identity(candidate) is IdentityDocument.CIF
 
     def test_wrong_check_rejected(self) -> None:
         with pytest.raises(IdentityError) as excinfo:
