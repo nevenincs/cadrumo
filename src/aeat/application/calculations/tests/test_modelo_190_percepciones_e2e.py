@@ -29,6 +29,7 @@ from ....tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_BUCKET_ID = "36363636-3636-4363-8363-363636363636"
 _TOTAL_PERCEPCIONES = validated_casilla_id("decl.total-percepciones", surface="test")
 
 
@@ -45,7 +46,7 @@ def _obs(nif: str, clave: str) -> WithholdingObservation:
 
 def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(tmp_path: Path) -> None:
     """3 percepciones (one perceptor under 2 claves + a second) -> decl.total-percepciones == 3."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         period = Period.from_year_and_code(2024, "0A")
         persist_withholding_observations(
             modelo="190",
@@ -56,7 +57,7 @@ def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(t
         snapshot = resources().modelos.authority.snapshot("190", filing_year=2024, period="0A")
         resolution = WithholdingSourceResolver().resolve(
             CalculationSourceContext(
-                bucket_id="operator",
+                bucket_id=_BUCKET_ID,
                 modelo="190",
                 filing_year=2024,
                 period=period,
