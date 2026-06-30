@@ -18,6 +18,10 @@ content rewrite precedes the metadata scrub because some XMP-write
 paths in :mod:`pikepdf` re-stamp metadata if they detect a content
 change. The deterministic save runs last so byte-stable output
 captures every prior mutation.
+
+The library function is a pure transformer over ``bytes | Path`` plus a
+declarative token map. It returns sanitised bytes and an audit record; CLI or
+workflow code decides whether to write those bytes to disk.
 """
 
 from __future__ import annotations
@@ -79,14 +83,16 @@ def sanitize_pdf(
     scrub_xmp_strategy: Literal["delete", "rewrite"] = "delete",
     refuse_if_already_sanitized: bool = True,
 ) -> SanitizationResult:
-    """Strips PII from ``source`` against ``mapping``.
+    """Strip PII from ``source`` against ``mapping``.
 
     Args:
         source: Raw bytes of the source PDF, or a :class:`Path`
             pointing to it. Path inputs are read once at the top
             of the function.
         mapping: Declarative cleartext-to-synthetic
-            :class:`TokenMap`.
+            :class:`TokenMap`. Real values are consumed in memory through
+            ``SecretStr`` fields; callers must keep any serialized mapping
+            files outside git.
         drop_attachments: When True, removes every embedded file.
         drop_javascript: When True, removes embedded JavaScript
             and document-level actions (OpenAction, AA).
@@ -114,7 +120,8 @@ def sanitize_pdf(
 
     Returns:
         A :class:`SanitizationResult` carrying the sanitised
-        bytes, audit log, and warnings.
+        bytes, audit log, and warnings. The function itself does not write the
+        PDF or audit record to disk.
 
     Raises:
         SanitizerSourceParseError: If the source bytes cannot be opened by :mod:`pikepdf`.
