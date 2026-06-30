@@ -7,6 +7,7 @@ verification, export, or local filing lets deductible input IVA proceed.
 from __future__ import annotations
 
 from decimal import Decimal
+from enum import StrEnum
 
 from ...domain.iva import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
@@ -41,11 +42,11 @@ _EVIDENCE_EXPECTING_BUSINESS_STATES: frozenset[BusinessClassification] = frozens
 )
 
 
-def _enum_or_none(enum_type: type, value: str | None) -> object | None:
+def _enum_or_none[EnumT: StrEnum](enum_type: type[EnumT], value: str | None) -> EnumT | None:
     if value is None:
         return None
     try:
-        return enum_type(value)  # type: ignore[call-arg]
+        return enum_type(value)
     except ValueError:
         return None
 
