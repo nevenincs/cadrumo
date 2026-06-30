@@ -2575,6 +2575,7 @@ cli:
       direction_help: Transaction direction (INCOMING / OUTGOING / INTERNAL_TRANSFER)
       help: Add one manual ledger transaction in the active profile
       idempotency_key_help: Caller-supplied idempotency key recorded with the row
+      idempotent_noop: 'Idempotent no-op: a transaction with this idempotency key already exists (%{transaction_id}); nothing was added.'
       irpf_category_help: IRPF-specific category key
       iva_amount_help: Optional IVA amount on the row
       iva_rate_help: Optional IVA rate as a decimal fraction
