@@ -612,7 +612,7 @@ def test_transaction_catalogue_rejects_missing_created_at_key(
         envelope = _json.loads(record.payload.decode("utf-8"))
         txn_dict = envelope["payload"]
         assert txn_dict.get("created_at") is not None, (
-            "fixture must serialise created_at into the envelope for the grandfather proof to be meaningful"
+            "fixture must serialise created_at into the envelope for the missing-key proof to be meaningful"
         )
         del txn_dict["created_at"]
         profile.repository.save(
