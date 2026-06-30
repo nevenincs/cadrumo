@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
+from functools import lru_cache
 
 from .....core.resources import bundled_path
 from .. import CasillaId, validated_casilla_id, validated_casilla_id_map
@@ -12,6 +13,7 @@ from .._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
 )
+from ._registry_schema_support import _committed_modelo
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 
@@ -32,25 +34,50 @@ def _inputs(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
     return validated_casilla_id_map(values, surface="test_registry_scenarios.inputs")
 
 
+@lru_cache(maxsize=1)
+def _m100_2025_refs_by_target() -> dict[CasillaId, tuple[tuple[str, ...], tuple[str, ...]]]:
+    modelo, _catalogues = _committed_modelo("100")
+    revision = modelo.revisions["2025"]
+    refs: dict[CasillaId, tuple[tuple[str, ...], tuple[str, ...]]] = {
+        casilla.id: (
+            tuple(str(ref) for ref in casilla.legal_refs),
+            tuple(str(ref) for ref in casilla.source_refs),
+        )
+        for casilla in revision.casillas
+    }
+    refs.update(
+        {
+            formula.target_casilla_id: (
+                tuple(str(ref) for ref in formula.legal_refs),
+                tuple(str(ref) for ref in formula.source_refs),
+            )
+            for formula in revision.formulas
+        },
+    )
+    return refs
+
+
 def _expected(
     target: object,
     *,
     value: Decimal,
     operand_refs: tuple[object, ...] = (),
     operand_casilla_refs: tuple[CasillaId, ...] | None = None,
-    legal_refs: tuple[str, ...] = (),
-    source_refs: tuple[str, ...] = (),
+    legal_refs: tuple[str, ...] | None = None,
+    source_refs: tuple[str, ...] | None = None,
 ) -> RegistryScenarioExpectedOutput:
     if operand_refs and operand_casilla_refs is None:
         raise AssertionError("scenario expectations with operand_refs must declare operand_casilla_refs explicitly")
     expected_operand_casilla_refs = () if operand_casilla_refs is None else operand_casilla_refs
+    target_casilla_id = _casilla_id(target)
+    default_legal_refs, default_source_refs = _m100_2025_refs_by_target()[target_casilla_id]
     return RegistryScenarioExpectedOutput(
-        target_casilla_id=_casilla_id(target),
+        target_casilla_id=target_casilla_id,
         value=value,
         operand_refs=_operand_refs(*operand_refs),
         operand_casilla_refs=expected_operand_casilla_refs,
-        legal_refs=legal_refs,
-        source_refs=source_refs,
+        legal_refs=default_legal_refs if legal_refs is None else legal_refs,
+        source_refs=default_source_refs if source_refs is None else source_refs,
     )
 
 

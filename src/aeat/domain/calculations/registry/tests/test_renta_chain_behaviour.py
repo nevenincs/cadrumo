@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from functools import lru_cache
 
 import pytest
 
@@ -94,6 +95,45 @@ _RELATION_ZERO_VALUES_2025 = {
     "renta-2025-rel-193-retenciones-anuales": Decimal("0"),
 }
 
+@lru_cache(maxsize=1)
+def _m100_2025_refs_by_target() -> dict[CasillaId, tuple[tuple[str, ...], tuple[str, ...]]]:
+    modelo, _catalogues = _committed_modelo("100")
+    revision = modelo.revisions["2025"]
+    refs: dict[CasillaId, tuple[tuple[str, ...], tuple[str, ...]]] = {
+        casilla.id: (
+            tuple(str(ref) for ref in casilla.legal_refs),
+            tuple(str(ref) for ref in casilla.source_refs),
+        )
+        for casilla in revision.casillas
+    }
+    refs.update(
+        {
+            formula.target_casilla_id: (
+                tuple(str(ref) for ref in formula.legal_refs),
+                tuple(str(ref) for ref in formula.source_refs),
+            )
+            for formula in revision.formulas
+        },
+    )
+    return refs
+
+
+def _expected_output(
+    *,
+    target_casilla_id: CasillaId,
+    value: Decimal,
+    operand_refs: tuple[object, ...] = (),
+    operand_casilla_refs: tuple[CasillaId, ...] = (),
+) -> RegistryScenarioExpectedOutput:
+    legal_refs, source_refs = _m100_2025_refs_by_target()[target_casilla_id]
+    return RegistryScenarioExpectedOutput(
+        target_casilla_id=target_casilla_id,
+        value=value,
+        operand_refs=tuple(str(ref) for ref in operand_refs),
+        operand_casilla_refs=operand_casilla_refs,
+        legal_refs=legal_refs,
+        source_refs=source_refs,
+    )
 
 def _base_2025_inputs() -> dict[CasillaId, Decimal]:
     return {
@@ -218,17 +258,17 @@ def test_minimo_personal_split_min_uses_smaller_of_base_liquidable_and_total_min
         # → 0505 = max(0, 1000 - 0) = 1000  (0527 anualidades alimentos = 0)
         overrides={_C0003: Decimal("1000.00")},
         expected=(
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0500, value=Decimal("1000.00")),
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0505, value=Decimal("1000.00")),
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0519, value=expected_minimo),
-            RegistryScenarioExpectedOutput(
+            _expected_output(target_casilla_id=_C0500, value=Decimal("1000.00")),
+            _expected_output(target_casilla_id=_C0505, value=Decimal("1000.00")),
+            _expected_output(target_casilla_id=_C0519, value=expected_minimo),
+            _expected_output(
                 target_casilla_id=_C0521,
                 value=Decimal("1000.00"),
                 operand_refs=(_C0505, _C0519),
                 operand_casilla_refs=(_C0505, _C0519),
             ),
             # 0522 = min(0519 - 0521, 0510) = min(5550 - 1000, 0) = 0 (0510 default 0)
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0522, value=Decimal("0.00")),
+            _expected_output(target_casilla_id=_C0522, value=Decimal("0.00")),
         ),
     )
     report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
@@ -255,8 +295,8 @@ def test_base_imponible_general_subtracts_negative_capital_gains_balance() -> No
             _C1585: Decimal("5000.00"),  # G/P pérdidas → 1607 → 0419 → 0421 → 0433 cap
         },
         expected=(
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0432, value=Decimal("30000.00")),
-            RegistryScenarioExpectedOutput(
+            _expected_output(target_casilla_id=_C0432, value=Decimal("30000.00")),
+            _expected_output(
                 target_casilla_id=_C0435,
                 value=Decimal("25000.00"),
                 operand_refs=(_C0432, _C0433, _C1389),
@@ -306,10 +346,10 @@ def test_base_liquidable_general_applies_reductions() -> None:
         # Age 44 at year-end 2025 → no age increment → 0511 = 5,550 base only.
         date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
         expected_outputs=(
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0435, value=Decimal("40000.00")),
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0461, value=Decimal("3400.00")),
+            _expected_output(target_casilla_id=_C0435, value=Decimal("40000.00")),
+            _expected_output(target_casilla_id=_C0461, value=Decimal("3400.00")),
             # 0500 = 0435 - 0461 - 0501 = 40000 - 3400 - 1000 = 35600
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0500, value=Decimal("35600.00")),
+            _expected_output(target_casilla_id=_C0500, value=Decimal("35600.00")),
         ),
     )
     report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
@@ -336,9 +376,9 @@ def test_plan_de_empleo_reduccion_below_caps_full_amount() -> None:
             _C0426: Decimal("4200.00"),  # plan de empleo aportación → 0467 = 4,200
         },
         expected=(
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0467, value=Decimal("4200.00")),
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0468, value=Decimal("4200.00")),
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0500, value=Decimal("52300.00")),
+            _expected_output(target_casilla_id=_C0467, value=Decimal("4200.00")),
+            _expected_output(target_casilla_id=_C0468, value=Decimal("4200.00")),
+            _expected_output(target_casilla_id=_C0500, value=Decimal("52300.00")),
         ),
     )
     report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
@@ -362,10 +402,10 @@ def test_plan_de_empleo_reduccion_capped_at_10000() -> None:
             _C0426: Decimal("15000.00"),  # plan de empleo aportación → 0467 = 15,000
         },
         expected=(
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0467, value=Decimal("15000.00")),
+            _expected_output(target_casilla_id=_C0467, value=Decimal("15000.00")),
             # 0468 = min(15000, 10000, 24000) = 10,000
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0468, value=Decimal("10000.00")),
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0500, value=Decimal("70000.00")),
+            _expected_output(target_casilla_id=_C0468, value=Decimal("10000.00")),
+            _expected_output(target_casilla_id=_C0500, value=Decimal("70000.00")),
         ),
     )
     report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
