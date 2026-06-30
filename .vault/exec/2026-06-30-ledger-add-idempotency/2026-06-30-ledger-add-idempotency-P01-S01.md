@@ -30,3 +30,5 @@ Landed in commit `8349fc8b3` (`feat(ledger): make keyed manual add a guarded-ide
 ## Notes
 
 Code authored by a teammate and committed before this task was reassigned; this record documents the landed change. The matching unit/roundtrip proofs land under Phase `P05`.
+
+Follow-up correctness fix in commit `f5bd349a5`: the first guard looked up the content-folding catalogue id (`derive_transaction_id`), which never matched, so a keyed retry still double-wrote. The guard now scans the catalogue for the row whose `raw.transaction_id` equals the clock-free provider id `manual:{bucket}:{key}`, making the idempotency key authoritative for the logical add. Proven by `test_manual_add_idempotency.py` (commit `3d8a6c14b`).
