@@ -10,6 +10,15 @@ related:
   - '[[2026-06-30-ledger-add-idempotency-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `ledger-add-idempotency` plan
 
@@ -42,15 +51,15 @@ Complete the half-built keyed-idempotency hook so a same-key retry is a true no-
 - [x] `P01.S01` - Add an existence check in create_manual_transaction so a same-key add whose content matches the stored row returns the existing-row quintet as a no-op, emitting no second LEDGER_TRANSACTION_CREATED event, leaving created_at and modified_at unchanged, and skipping evidence re-verification, modelled on create_work_unit; `src/aeat/application/ledger/_actions_manual.py`.
 - [x] `P01.S02` - Raise an instructive localised conflict error when a stored row exists for the same idempotency key but the command content differs, naming the conflicting field set; `src/aeat/application/ledger/_actions_manual.py`.
 - [x] `P01.S03` - Signal the no-op structurally on the result by returning the existing-row quintet with empty bucket_event_ids, preserving the uniform ledger mutation quintet shape; `src/aeat/application/ledger/_actions_common.py`.
-- [ ] `P01.S04` - Surface the duplicate no-op outcome as an info Notice on the ledger add envelope through the typed notice channel, never as a bespoke result field; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `P01.S04` - Surface the duplicate no-op outcome as an info Notice on the ledger add envelope through the typed notice channel, never as a bespoke result field; `src/aeat/entrypoints/cli/_ledger.py`.
 
 ### Phase `P02` - Keyless append preservation and content-fingerprint advisory
 
 Keep the keyless path append-only so two genuine identical same-day movements both persist, and stamp the content-only import fingerprint on manual rows so they join the existing non-blocking likely-duplicate advisory.
 
-- [ ] `P02.S05` - Stamp the content-only import fingerprint from derive_import_fingerprint onto manual rows at creation time, replacing the current import_fingerprint=None, without folding any timestamp; `src/aeat/application/ledger/_actions_manual.py`.
-- [ ] `P02.S06` - Confirm the keyless add path remains append-only so two genuine identical same-day movements both persist as distinct rows, and add a regression that locks this behaviour; `src/aeat/application/ledger/tests/`.
-- [ ] `P02.S07` - Wire manual rows into the existing day-key likely-duplicate advisory so a probable manual duplicate warns non-blockingly and never blocks a genuine movement; `src/aeat/application/ledger/_actions_import.py`.
+- [x] `P02.S05` - Stamp the content-only import fingerprint from derive_import_fingerprint onto manual rows at creation time, replacing the current import_fingerprint=None, without folding any timestamp; `src/aeat/application/ledger/_actions_manual.py`.
+- [x] `P02.S06` - Confirm the keyless add path remains append-only so two genuine identical same-day movements both persist as distinct rows, and add a regression that locks this behaviour; `src/aeat/application/ledger/tests/`.
+- [x] `P02.S07` - Wire manual rows into the existing day-key likely-duplicate advisory so a probable manual duplicate warns non-blockingly and never blocks a genuine movement; `src/aeat/application/ledger/_actions_import.py`.
 
 ### Phase `P03` - Verify report content-pinned identity
 
@@ -64,17 +73,17 @@ Pin the verification report id to the verification outcome and drop run_at from 
 
 Make the agent harness and CLI surface state that a stable idempotency key is required per logical add and the keyless path is append-only.
 
-- [ ] `P04.S11` - Update the --idempotency-key CLI help text through the locale CLI to state that a stable key is required per logical add and the keyless path is append-only; `src/aeat/locales/`.
+- [x] `P04.S11` - Update the --idempotency-key CLI help text through the locale CLI to state that a stable key is required per logical add and the keyless path is append-only; `src/aeat/locales/`.
 - [ ] `P04.S12` - Update the agent-harness ledger persona or skill instruction to mandate passing a stable idempotency key on every ledger add, citing only the live CLI surface; `src/aeat/_data/agent/`.
 
 ### Phase `P05` - Real-behaviour idempotency, roundtrip, and gate verification
 
 Prove the retry-safety and genuine-duplicate-preservation contracts against real repositories with no mocks, plus roundtrip and anti-tautology proofs and the focused conformance gates.
 
-- [ ] `P05.S13` - Add a real-repository idempotency test proving a retried keyed add yields one row, one creation event, an unchanged created_at, and a no-op notice; `src/aeat/application/ledger/tests/`.
-- [ ] `P05.S14` - Add a test proving a same-key add with differing content raises the instructive conflict error; `src/aeat/application/ledger/tests/`.
-- [ ] `P05.S15` - Add a test proving a deliberate duplicate stays possible via the keyless path and via a distinct idempotency key, both yielding two distinct rows; `src/aeat/application/ledger/tests/`.
-- [ ] `P05.S16` - Add a strict Transaction save-load-equality roundtrip plus anti-tautology proof with the content fingerprint stamp populated non-default; `src/aeat/application/ledger/tests/`.
+- [x] `P05.S13` - Add a real-repository idempotency test proving a retried keyed add yields one row, one creation event, an unchanged created_at, and a no-op notice; `src/aeat/application/ledger/tests/`.
+- [x] `P05.S14` - Add a test proving a same-key add with differing content raises the instructive conflict error; `src/aeat/application/ledger/tests/`.
+- [x] `P05.S15` - Add a test proving a deliberate duplicate stays possible via the keyless path and via a distinct idempotency key, both yielding two distinct rows; `src/aeat/application/ledger/tests/`.
+- [x] `P05.S16` - Add a strict Transaction save-load-equality roundtrip plus anti-tautology proof with the content fingerprint stamp populated non-default; `src/aeat/application/ledger/tests/`.
 - [x] `P05.S17` - Add a test proving two non-granting verify retries with identical findings collapse to one report while a changed-finding re-verify produces a distinct report; `src/aeat/application/modelo/tests/`.
 - [x] `P05.S18` - Add a strict VerificationReport save-load-equality roundtrip plus anti-tautology proof with run_at populated non-default and the outcome-pinned id enforced; `src/aeat/domain/modelos/tests/`.
 - [ ] `P05.S19` - Run the focused gates clean: pytest collect-only, the ledger and modelo-verify suites, JSON schema and notice conformance, documented-command and harness-surface conformance, plus lint and type checks; `src/aeat/`.
