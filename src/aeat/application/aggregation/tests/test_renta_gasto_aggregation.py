@@ -376,7 +376,7 @@ def test_domain_resolver_folds_gasto_observations_into_the_m130_casilla_02_bindi
     is the sum of the deductible bases, derived from the inputs — never copied
     from engine output.
     """
-    modelo_def = next(item for item in resources().modelos.all() if item.id == "130")
+    modelo_def = resources().modelos.get("130")
     revision = modelo_def.revisions["2019-y-siguientes"]
 
     casilla_02 = next(c for c in revision.casillas if c.id == _M130_GASTOS_CASILLA)
