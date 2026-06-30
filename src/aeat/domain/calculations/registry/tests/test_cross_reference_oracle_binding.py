@@ -14,20 +14,17 @@ from pydantic import ValidationError
 
 from .....core.resources import bundled_path
 from .. import RegistryValidationError
-from .._loader import load_registry_tree
 from .._schema import LiveCrossReferenceDecision, ModeloDefinition, ModeloRevision
 from .._validate import RegistryValidator
+from ._registry_schema_support import _committed_modelo, _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def _committed_cross_reference() -> LiveCrossReferenceDecision:
     """Return a real cross-reference from the committed Modelo 130 registry."""
 
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(modelo for modelo in modelos if modelo.id == "130")
+    modelo, _ = _committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     return revision.live_cross_references[0]
 
@@ -92,8 +89,7 @@ def _modelo_with_revision(
 
 
 def test_registry_rejects_duplicate_oracle_binding_within_a_revision() -> None:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(modelo for modelo in modelos if modelo.id == "130")
+    modelo, catalogues = _committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     base_xref = revision.live_cross_references[0]
 
@@ -110,8 +106,7 @@ def test_registry_rejects_duplicate_oracle_binding_within_a_revision() -> None:
 
 
 def test_registry_accepts_distinct_oracle_bindings_within_a_revision() -> None:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(modelo for modelo in modelos if modelo.id == "130")
+    modelo, catalogues = _committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     base_xref = revision.live_cross_references[0]
 
@@ -137,7 +132,7 @@ def test_registry_accepts_distinct_oracle_bindings_within_a_revision() -> None:
 def test_registry_accepts_no_oracle_binding_anywhere() -> None:
     """The committed registry has no oracle bindings yet; it must still validate."""
 
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelos, catalogues = _committed_registry_tree()
     assert len(modelos) >= 5, "committed registry must declare a meaningful number of modelos"
     validator = RegistryValidator(catalogues, source_root=bundled_path())
     validated = 0
