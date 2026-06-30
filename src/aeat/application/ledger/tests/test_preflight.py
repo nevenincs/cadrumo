@@ -35,6 +35,8 @@ from .. import LedgerPreflightIssueReason, preflight_ledger_tax_readiness, prefl
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SEDE_ORIGIN = Settings.external_constants().aeat.domains.sede
+_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
+_OTHER_BUCKET_ID = "23232323-2323-4323-8323-232323232323"
 _HOME_OFFICE_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
 
@@ -48,7 +50,7 @@ _AD_HOC_2026 = _period(2026, "AD-HOC")
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile.repository
 
 
@@ -140,7 +142,7 @@ def _apply_home_office_censo(bucket_id: str) -> None:
 
 def test_preflight_refuses_non_span_period_even_with_empty_catalogue() -> None:
     report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         period=_AD_HOC_2026,
         transactions=TransactionCatalogue.from_transactions(()),
     )
@@ -153,7 +155,7 @@ def test_preflight_refuses_non_span_period_even_with_empty_catalogue() -> None:
 
 def test_preflight_refuses_non_span_period_before_touching_transactions() -> None:
     report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         period=_AD_HOC_2026,
         transactions=TransactionCatalogue.from_transactions((_transaction("row-ready"),)),
     )
@@ -188,7 +190,7 @@ def test_preflight_reports_all_missing_modelo_readiness_facts() -> None:
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions(
             (unclassified, missing_business_facts, mixed_missing_ratio),
@@ -231,7 +233,7 @@ def test_preflight_does_not_flag_missing_category_on_income_transaction() -> Non
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((income,)),
     )
@@ -254,7 +256,7 @@ def test_preflight_still_flags_missing_category_on_expense_transaction() -> None
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((expense,)),
     )
@@ -286,7 +288,7 @@ def test_preflight_flags_missing_category_on_income_refund_with_purchase_evidenc
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((refund,)),
     )
@@ -322,7 +324,7 @@ def test_preflight_ignores_personal_internal_transfer_and_out_of_period_rows() -
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((personal, transfer, old)),
     )
@@ -352,7 +354,7 @@ def test_preflight_ignores_archived_and_stashed_rows() -> None:
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((ready, archived_missing_facts, stashed_missing_facts)),
     )
@@ -384,7 +386,7 @@ def test_preflight_skips_iva_facts_on_trabajo_income_rows() -> None:
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((nomina,)),
     )
@@ -410,7 +412,7 @@ def test_preflight_still_flags_iva_facts_on_non_trabajo_income_rows() -> None:
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((income_no_irpf,)),
     )
@@ -426,7 +428,7 @@ def test_preflight_reports_unsupported_currency_before_modelo_aggregation() -> N
     usd = _transaction("row-usd", currency="USD")
 
     report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((usd,)),
     )
@@ -437,13 +439,13 @@ def test_preflight_reports_unsupported_currency_before_modelo_aggregation() -> N
 
 def test_preflight_repository_path_loads_bucket_catalogue(secure_objects: SecureObjectRepository) -> None:
     objects = secure_objects
-    repository = TransactionCatalogueRepository(bucket_id="bucket-a", objects=objects)
+    repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
     repository.save(TransactionCatalogue.from_transactions((_transaction("row-ready"),)))
 
     report = preflight_ledger_tax_readiness(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         period=_Q2_2026,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="bucket-a", objects=objects),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
     )
 
     assert report.ready is True
@@ -452,7 +454,7 @@ def test_preflight_repository_path_loads_bucket_catalogue(secure_objects: Secure
 
 
 def test_preflight_flags_home_office_ratio_without_applied_censo(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         category = SpendingCategory.SUMINISTROS_HOME_OFFICE_INTERNET
         save_usage_ratios(
             UsageRatioProfile(ratios={category: Decimal("0.30")}),
@@ -554,7 +556,7 @@ def test_preflight_flags_home_office_ratio_that_disagrees_with_applied_censo(tmp
 
 
 def test_preflight_does_not_attach_home_office_censo_mismatch_to_unrelated_ratio(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         save_usage_ratios(
             UsageRatioProfile(
                 ratios={
@@ -591,7 +593,7 @@ def test_preflight_does_not_attach_home_office_censo_mismatch_to_unrelated_ratio
 
 
 def test_preflight_default_repository_loads_active_runtime_bucket(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
             TransactionCatalogue.from_transactions((_transaction("row-ready"),)),
         )
@@ -607,7 +609,7 @@ def test_preflight_rejects_repository_bucket_mismatch(secure_objects: SecureObje
     objects = secure_objects
     with pytest.raises(TransactionValidationError, match="bucket_id"):
         preflight_ledger_tax_readiness(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             period=_Q2_2026,
-            transaction_repository=TransactionCatalogueRepository(bucket_id="bucket-b", objects=objects),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_OTHER_BUCKET_ID, objects=objects),
         )
