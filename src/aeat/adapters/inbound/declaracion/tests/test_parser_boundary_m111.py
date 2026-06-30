@@ -4,31 +4,22 @@ from __future__ import annotations
 
 import pytest
 
+from ._parser_boundary_m111_support import (
+    _M111_CASILLA_30,
+    _M111_CORPUS_IDS,
+    _M111_CORPUS_PARAMS,
+    _M111_POSITIVE_EXPECTED_VALUES,
+)
 from ._parser_boundary_support import (
     _MODELO_111_EXPECTED_TARGETS,
     FIXTURES_DIR,
-    CasillaId,
     Decimal,
-    _casilla_id,
     _expected_period,
     _modelo_snapshot,
     parse_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
-
-_M111_CASILLA_07: CasillaId = _casilla_id("07")
-_M111_CASILLA_08: CasillaId = _casilla_id("08")
-_M111_CASILLA_09: CasillaId = _casilla_id("09")
-_M111_CASILLA_28: CasillaId = _casilla_id("28")
-_M111_CASILLA_30: CasillaId = _casilla_id("30")
-_M111_CORPUS_PARAMS: tuple[tuple[str, int, str], ...] = (
-    ("2024-1T", 2024, "1T"),
-    ("2024-2T", 2024, "2T"),
-    ("2024-3T", 2024, "3T"),
-    ("2024-4T", 2024, "4T"),
-)
-_M111_CORPUS_IDS: tuple[str, ...] = tuple(stem for stem, _year, _period in _M111_CORPUS_PARAMS)
 
 
 def test_parser_extracts_modelo_111_registry_profile_targets_from_pdf() -> None:
@@ -94,16 +85,10 @@ def test_parser_extracts_modelo_111_casillas_from_corpus(pdf_stem: str, year: in
         )
         return
 
-    expected_positive_values = {
-        _M111_CASILLA_07: Decimal("1"),
-        _M111_CASILLA_08: Decimal("1000.00"),
-        _M111_CASILLA_09: Decimal("1000.00"),
-        _M111_CASILLA_28: Decimal("1000.00"),
-    }
-    assert set(expected_positive_values) <= set(values), (
+    assert set(_M111_POSITIVE_EXPECTED_VALUES) <= set(values), (
         f"{pdf_stem}: expected casillas 07/08/09/28/30, got {set(values.keys())!r}"
     )
-    for casilla_id, expected_value in expected_positive_values.items():
+    for casilla_id, expected_value in _M111_POSITIVE_EXPECTED_VALUES.items():
         assert values[casilla_id] == expected_value, (
             f"{pdf_stem}: casilla {casilla_id!r} expected {expected_value!r}, got {values[casilla_id]!r}"
         )
