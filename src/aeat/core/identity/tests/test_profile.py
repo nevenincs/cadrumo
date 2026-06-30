@@ -5,15 +5,14 @@ from __future__ import annotations
 from uuid import uuid4
 
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
+from ....tests.fixtures.identity_holder import single_field_model
 from .. import ProfileId
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-
-class _Holder(BaseModel):
-    profile_id: ProfileId
+_Holder = single_field_model("profile_id", ProfileId)
 
 
 def test_accepts_canonical_uuid_minted_value() -> None:

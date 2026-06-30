@@ -5,15 +5,14 @@ from __future__ import annotations
 import hashlib
 
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
+from ....tests.fixtures.identity_holder import single_field_model
 from .._ids import VerificationReportId
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-
-class _Holder(BaseModel):
-    verification_report_id: VerificationReportId
+_Holder = single_field_model("verification_report_id", VerificationReportId)
 
 
 def test_accepts_canonical_sha256_hex_digest() -> None:
