@@ -9,7 +9,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG, Period
-from ....core.aggregation import BindingAggregationOp, BindingSourceKind, CounterpartSourceKind, RowSetGroupingKind
+from ....core.aggregation import BindingAggregationOp, BindingSourceKind, CounterpartSourceKind
 from ._binding_aggregation import binding_aggregation_op, default_binding_aggregation_op
 from ._binding_selector_utils import selector_against_model, selector_as_dict
 from ._bindings_previous_filing import (
@@ -724,9 +724,9 @@ class _ManualInputSelector(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-_BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
-    "previous_filing": _PreviousModeloSelector,
-    "relation_prefill": _RelationPrefillSelector,
+_BINDING_SELECTOR_REGISTRY: dict[BindingSourceKind, type[BaseModel]] = {
+    BindingSourceKind.PREVIOUS_FILING: _PreviousModeloSelector,
+    BindingSourceKind.RELATION_PREFILL: _RelationPrefillSelector,
     BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION: _IvaCompensationAnnualPartitionSelector,
     # Counterpart-aggregation family: every source whose selector shape
     # mirrors the invoice family (fact + claves + rectification_scope +
@@ -738,19 +738,19 @@ _BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
     BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: _InvoiceSelector,
     BindingSourceKind.PAYABLE_INVOICE: _InvoiceSelector,
     BindingSourceKind.COLLECTIBLE_INVOICE: _InvoiceSelector,
-    "ledger_oss_aggregation": _OssIossLedgerSelector,
-    "ledger_iva_aggregation": _IvaLedgerSelector,
-    "ledger_renta_expense_aggregation": _RentaLedgerExpenseSelector,
-    "ledger_renta_income_aggregation": _RentaLedgerIncomeSelector,
-    "ledger_renta_gasto_aggregation": _RentaLedgerGastoSelector,
-    "retenciones_aggregation": _RetencionesAggregationSelector,
-    RowSetGroupingKind.WITHHOLDING: _WithholdingSelector,
-    "related_party_operation": _RelatedPartySelector,
-    RowSetGroupingKind.FOREIGN_ASSET: _ForeignAssetSelector,
-    "atribucion_member": _AtributionSelector,
-    "refund_operation": _RefundSelector,
-    "manual_input": _ManualInputSelector,
-    "profile": _ProfileSelector,
+    BindingSourceKind.LEDGER_OSS_AGGREGATION: _OssIossLedgerSelector,
+    BindingSourceKind.LEDGER_IVA_AGGREGATION: _IvaLedgerSelector,
+    BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION: _RentaLedgerExpenseSelector,
+    BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION: _RentaLedgerIncomeSelector,
+    BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION: _RentaLedgerGastoSelector,
+    BindingSourceKind.RETENCIONES_AGGREGATION: _RetencionesAggregationSelector,
+    BindingSourceKind.WITHHOLDING: _WithholdingSelector,
+    BindingSourceKind.RELATED_PARTY_OPERATION: _RelatedPartySelector,
+    BindingSourceKind.FOREIGN_ASSET: _ForeignAssetSelector,
+    BindingSourceKind.ATRIBUCION_MEMBER: _AtributionSelector,
+    BindingSourceKind.REFUND_OPERATION: _RefundSelector,
+    BindingSourceKind.MANUAL_INPUT: _ManualInputSelector,
+    BindingSourceKind.PROFILE: _ProfileSelector,
 }
 
 
@@ -804,9 +804,9 @@ def _validate_selector_only(selector_model: type[BaseModel]) -> _BindingFamilyVa
 # ---------------------------------------------------------------------------
 
 
-_BINDING_VALIDATOR_REGISTRY: dict[str, _BindingFamilyValidator] = {
-    "previous_filing": validate_previous_filing_binding,
-    "relation_prefill": _validate_selector_only(_RelationPrefillSelector),
+_BINDING_VALIDATOR_REGISTRY: dict[BindingSourceKind, _BindingFamilyValidator] = {
+    BindingSourceKind.PREVIOUS_FILING: validate_previous_filing_binding,
+    BindingSourceKind.RELATION_PREFILL: _validate_selector_only(_RelationPrefillSelector),
     BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION: _validate_selector_only(
         _IvaCompensationAnnualPartitionSelector,
     ),
@@ -819,19 +819,19 @@ _BINDING_VALIDATOR_REGISTRY: dict[str, _BindingFamilyValidator] = {
     BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: validate_invoice_binding,
     BindingSourceKind.PAYABLE_INVOICE: validate_invoice_binding,
     BindingSourceKind.COLLECTIBLE_INVOICE: validate_invoice_binding,
-    "ledger_oss_aggregation": validate_ledger_oss_aggregation_binding,
-    "ledger_iva_aggregation": validate_ledger_iva_aggregation_binding,
-    "ledger_renta_expense_aggregation": validate_ledger_renta_expense_aggregation_binding,
-    "ledger_renta_income_aggregation": validate_ledger_renta_income_aggregation_binding,
-    "ledger_renta_gasto_aggregation": validate_ledger_renta_gasto_aggregation_binding,
-    "retenciones_aggregation": validate_retenciones_aggregation_binding,
-    "related_party_operation": validate_related_party_binding,
-    RowSetGroupingKind.FOREIGN_ASSET: validate_foreign_asset_binding,
-    "atribucion_member": validate_atribucion_binding,
-    "refund_operation": validate_refund_binding,
-    RowSetGroupingKind.WITHHOLDING: validate_withholding_binding_selector_shape,
-    "manual_input": _validate_selector_only(_ManualInputSelector),
-    "profile": _validate_selector_only(_ProfileSelector),
+    BindingSourceKind.LEDGER_OSS_AGGREGATION: validate_ledger_oss_aggregation_binding,
+    BindingSourceKind.LEDGER_IVA_AGGREGATION: validate_ledger_iva_aggregation_binding,
+    BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION: validate_ledger_renta_expense_aggregation_binding,
+    BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION: validate_ledger_renta_income_aggregation_binding,
+    BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION: validate_ledger_renta_gasto_aggregation_binding,
+    BindingSourceKind.RETENCIONES_AGGREGATION: validate_retenciones_aggregation_binding,
+    BindingSourceKind.RELATED_PARTY_OPERATION: validate_related_party_binding,
+    BindingSourceKind.FOREIGN_ASSET: validate_foreign_asset_binding,
+    BindingSourceKind.ATRIBUCION_MEMBER: validate_atribucion_binding,
+    BindingSourceKind.REFUND_OPERATION: validate_refund_binding,
+    BindingSourceKind.WITHHOLDING: validate_withholding_binding_selector_shape,
+    BindingSourceKind.MANUAL_INPUT: _validate_selector_only(_ManualInputSelector),
+    BindingSourceKind.PROFILE: _validate_selector_only(_ProfileSelector),
 }
 
 
