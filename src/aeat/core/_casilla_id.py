@@ -14,6 +14,11 @@ masquerade as canonical registry identifiers. Registry membership helpers
 such as :func:`~aeat.domain.calculations.registry.casillas_by_id` and
 :func:`~aeat.domain.calculations.registry.declared_casilla_ids` then compare
 only declared ``casilla.id`` values.
+
+The alias is a structural token, not a registry lookup. It can prove that a
+string is shaped like a canonical ``casilla.id``; only a selected
+:class:`~aeat.domain.calculations.registry.ModeloRevision` can prove that the id
+is declared for a filing context.
 """
 
 from __future__ import annotations
@@ -31,7 +36,21 @@ _CASILLA_ID_ADAPTER: TypeAdapter[CasillaId] = TypeAdapter(CasillaId)
 
 
 def validated_casilla_id(value: object, *, surface: str = "casilla.id") -> CasillaId:
-    """Return ``value`` as a canonical :data:`CasillaId`, failing at the declaring surface."""
+    """Return ``value`` as a canonical :data:`CasillaId`, failing at the declaring surface.
+
+    This validates the token shape only. Callers that need revision membership
+    must also compare against
+    :func:`~aeat.domain.calculations.registry.declared_casilla_ids` or
+    :func:`~aeat.domain.calculations.registry.undeclared_casilla_ids`.
+
+    Args:
+        value: Candidate boundary value.
+        surface: Human-readable source used in the failure message.
+
+    Raises:
+        ValueError: When ``value`` is not a string or fails the canonical
+            ``casilla.id`` shape.
+    """
     if not isinstance(value, str):
         raise ValueError(f"{surface} {value!r} is not a canonical casilla.id")
     try:
@@ -49,7 +68,9 @@ def validated_casilla_id_map[T](
 
     Mapping validators feed registry and filing surfaces that accept
     ``dict[CasillaId, T]`` inputs, including calculation-revision snapshots and
-    registry filing test helpers.
+    registry filing test helpers. Like :func:`validated_casilla_id`, this checks
+    key shape only; the caller remains responsible for validating membership
+    against the selected :class:`~aeat.domain.calculations.registry.ModeloRevision`.
     """
     return {
         validated_casilla_id(key, surface=f"{surface} key"): value
