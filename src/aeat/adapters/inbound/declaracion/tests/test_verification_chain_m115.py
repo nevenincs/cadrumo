@@ -4,16 +4,15 @@ import pytest
 
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M115,
-    FIXTURES_DIR,
     CasillaId,
     Decimal,
-    DeclaracionParseError,
     RegistryValidationError,
     _casilla_id,
+    _decimal_inputs_from_extracted_values,
+    _parse_extracted_declaracion_values,
     _period_to_date,
     _registry_snapshot,
     calculate_registry_snapshot,
-    parse_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -58,30 +57,14 @@ def test_verification_chain_m115_engine_recomputes_retenciones_and_resultado() -
     Verdict: VERIFIED - the percent formula for retenciones and the subtract formula
     for resultado both match the synthetic AEAT-grounded fixture.
     """
-    pdf_path = FIXTURES_DIR / "justificantes" / "115" / "2024-1T.pdf"
-
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override="115",
-            año_override=2024,
-            period_override="1T",
-        )
-    except DeclaracionParseError as exc:
-        pytest.fail(f"PARSER-GAP [M115/2024-1T]: parse_declaracion raised.\n  error: {exc}")
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+    extracted = _parse_extracted_declaracion_values(modelo="115", fixture_stem="2024-1T", year=2024, period="1T")
 
     for required_id in _M115_REQUIRED_CASILLAS:
         assert required_id in extracted, (
             f"PARSER-GAP [M115/2024-1T]: casilla {required_id!r} not extracted.\n  got: {sorted(extracted)}"
         )
 
-    inputs: dict[CasillaId, Decimal] = {
-        cid: val
-        for cid, val in extracted.items()
-        if cid not in _COMPUTED_CASILLAS_M115 and isinstance(val, Decimal)
-    }
+    inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M115)
 
     snapshot = _registry_snapshot("115", 2024, "1T")
     filing_period_date = _period_to_date(2024, "1T")

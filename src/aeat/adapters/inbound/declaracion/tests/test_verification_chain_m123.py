@@ -5,16 +5,15 @@ import pytest
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M123_2019,
     _COMPUTED_CASILLAS_M123_2024,
-    FIXTURES_DIR,
     CasillaId,
     Decimal,
-    DeclaracionParseError,
     RegistryValidationError,
     _casilla_id,
+    _decimal_inputs_from_extracted_values,
+    _parse_extracted_declaracion_values,
     _period_to_date,
     _registry_snapshot,
     calculate_registry_snapshot,
-    parse_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -74,23 +73,8 @@ def test_verification_chain_m123_engine_recomputes_closure_casillas(
 
     Verdict: VERIFIED for all closure casillas in both revisions.
     """
-    pdf_path = FIXTURES_DIR / "justificantes" / "123" / f"{pdf_stem}.pdf"
-
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override="123",
-            año_override=year,
-            period_override=period,
-        )
-    except DeclaracionParseError as exc:
-        pytest.fail(f"PARSER-GAP [M123/{pdf_stem}]: parse_declaracion raised.\n  error: {exc}")
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
-
-    inputs: dict[CasillaId, Decimal] = {
-        cid: val for cid, val in extracted.items() if cid not in computed_set and isinstance(val, Decimal)
-    }
+    extracted = _parse_extracted_declaracion_values(modelo="123", fixture_stem=pdf_stem, year=year, period=period)
+    inputs = _decimal_inputs_from_extracted_values(extracted, excluding=computed_set)
 
     snapshot = _registry_snapshot("123", year, period)
     filing_period_date = _period_to_date(year, period)

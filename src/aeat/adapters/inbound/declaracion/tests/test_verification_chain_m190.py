@@ -5,12 +5,10 @@ from __future__ import annotations
 import pytest
 
 from ._verification_chain_support import (
-    FIXTURES_DIR,
     CasillaId,
     Decimal,
-    DeclaracionParseError,
     _casilla_id,
-    parse_declaracion,
+    _parse_extracted_declaracion_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -30,19 +28,7 @@ def test_verification_chain_m190_parser_extracts_declaracion_pdf_casillas() -> N
     BINDING-GAP for formula verification; no formula to exercise. This test
     verifies the extraction side of the chain.
     """
-    pdf_path = FIXTURES_DIR / "justificantes" / "190" / "2024-0A.pdf"
-
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override="190",
-            año_override=2024,
-            period_override="0A",
-        )
-    except DeclaracionParseError as exc:
-        pytest.fail(f"PARSER-GAP [M190/2024-0A]: parse_declaracion raised.\n  error: {exc}")
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+    extracted = _parse_extracted_declaracion_values(modelo="190", fixture_stem="2024-0A", year=2024, period="0A")
     assert _DECL_RETENCIONES_TOTAL_CASILLA in extracted, (
         f"PARSER-GAP [M190/2024-0A]: 'decl.retenciones-total' not extracted.\n  got: {sorted(extracted)}"
     )
