@@ -47,6 +47,17 @@ _SYNTHETIC_NIF = "12345678Z"
 _SYNTHETIC_NAME = "APELLIDO APELLIDO NOMBRE"
 
 
+def _determinism_flags() -> DeterminismFlags:
+    return DeterminismFlags(
+        deterministic_id=True,
+        static_id=False,
+        object_stream_mode="preserve",
+        linearize=False,
+        recompress_flate=False,
+        compress_streams=True,
+    )
+
+
 class TestNifReplacement:
     """Synthetic NIF/NIE values must pass the AEAT checksum."""
 
@@ -490,14 +501,7 @@ class TestDeterminismFlagsShape:
     """DeterminismFlags exposes the captured save-flag set."""
 
     def test_accepts_canonical_flags(self) -> None:
-        flags = DeterminismFlags(
-            deterministic_id=True,
-            static_id=False,
-            object_stream_mode="preserve",
-            linearize=False,
-            recompress_flate=False,
-            compress_streams=True,
-        )
+        flags = _determinism_flags()
         assert flags.object_stream_mode == "preserve"
 
     def test_rejects_unknown_object_stream_mode(self) -> None:
@@ -518,14 +522,7 @@ class TestSanitizationResultShape:
     """SanitizationResult assembles the typed outcome of a sanitisation run."""
 
     def test_accepts_canonical_result(self) -> None:
-        flags = DeterminismFlags(
-            deterministic_id=True,
-            static_id=False,
-            object_stream_mode="preserve",
-            linearize=False,
-            recompress_flate=False,
-            compress_streams=True,
-        )
+        flags = _determinism_flags()
         result = SanitizationResult(
             output_bytes=b"%PDF-1.4\n",
             source_sha256="a" * 64,
@@ -541,14 +538,7 @@ class TestSanitizationResultShape:
         assert result.sanitizer_version == "0.1.0"
 
     def test_rejects_invalid_source_sha(self) -> None:
-        flags = DeterminismFlags(
-            deterministic_id=True,
-            static_id=False,
-            object_stream_mode="preserve",
-            linearize=False,
-            recompress_flate=False,
-            compress_streams=True,
-        )
+        flags = _determinism_flags()
         with pytest.raises(ValidationError, match=r"source_sha256"):
             SanitizationResult(
                 output_bytes=b"%PDF-1.4\n",
