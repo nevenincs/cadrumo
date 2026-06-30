@@ -23,6 +23,8 @@ from .. import CLASSIFIED_BY_MANUAL, ManualLedgerTransactionCommand, ManualLedge
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_BUCKET_ID = "21212121-2121-4121-8121-212121212121"
+
 
 def _command(**overrides: object) -> ManualLedgerTransactionCommand:
     """Build a minimal valid command, overriding the field under test.
@@ -33,7 +35,7 @@ def _command(**overrides: object) -> ManualLedgerTransactionCommand:
     """
 
     fields: dict[str, object] = {
-        "bucket_id": "bucket-a",
+        "bucket_id": _BUCKET_ID,
         "booked_date": date(2026, 5, 1),
         "amount": Decimal("121.00"),
         "direction": TransactionDirection.OUTGOING,
@@ -61,7 +63,7 @@ def test_source_jurisdiction_rejects_non_iso_3166_alpha2(bad: str) -> None:
 
 def test_manual_ledger_transaction_command_normalises_operator_text() -> None:
     command = ManualLedgerTransactionCommand(
-        bucket_id=" bucket-a ",
+        bucket_id=f" {_BUCKET_ID} ",
         booked_date=date(2026, 5, 1),
         amount=Decimal("121.00"),
         currency=" eur ",
@@ -74,7 +76,7 @@ def test_manual_ledger_transaction_command_normalises_operator_text() -> None:
         source_command=" aeat app ledger add ",
     )
 
-    assert command.bucket_id == "bucket-a"
+    assert command.bucket_id == _BUCKET_ID
     assert command.currency == "EUR"
     assert command.counterparty == "Proveedor SL"
     assert command.description == "material oficina"
@@ -87,7 +89,7 @@ def test_manual_ledger_transaction_command_normalises_operator_text() -> None:
 def test_manual_ledger_transaction_command_enforces_mixed_business_percentage() -> None:
     with pytest.raises(ValidationError, match="business_pct is required"):
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
@@ -100,7 +102,7 @@ def test_manual_ledger_transaction_command_rejects_multi_purchase_evidence_value
     with pytest.raises(ValidationError, match="purchase_invoice_evidence_id"):
         ManualLedgerTransactionCommand.model_validate(
             {
-                "bucket_id": "bucket-a",
+                "bucket_id": _BUCKET_ID,
                 "booked_date": date(2026, 5, 1),
                 "amount": Decimal("121.00"),
                 "direction": TransactionDirection.OUTGOING,
@@ -113,7 +115,7 @@ def test_manual_ledger_transaction_command_rejects_multi_purchase_evidence_value
 def test_manual_ledger_transaction_command_rejects_duplicate_attachment_ids() -> None:
     with pytest.raises(ValidationError, match="identifier tuple must not contain duplicates"):
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
@@ -125,7 +127,7 @@ def test_manual_ledger_transaction_command_rejects_duplicate_attachment_ids() ->
 def test_manual_ledger_transaction_command_rejects_zero_amount_rows() -> None:
     with pytest.raises(ValidationError, match="amount must be non-zero"):
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("0"),
             direction=TransactionDirection.INCOMING,
@@ -139,7 +141,7 @@ def test_manual_ledger_transaction_command_rejects_negative_magnitude() -> None:
     # of the declared direction.
     with pytest.raises(ValidationError, match="non-negative magnitude"):
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("-121.00"),
             direction=TransactionDirection.OUTGOING,
@@ -148,7 +150,7 @@ def test_manual_ledger_transaction_command_rejects_negative_magnitude() -> None:
 
     with pytest.raises(ValidationError, match="non-negative magnitude"):
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("-121.00"),
             direction=TransactionDirection.INCOMING,
@@ -160,14 +162,14 @@ def test_manual_ledger_transaction_command_accepts_magnitude_for_either_directio
     # The same non-negative magnitude is valid for both INCOMING and OUTGOING;
     # direction alone decides the flow.
     outgoing = ManualLedgerTransactionCommand(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         booked_date=date(2026, 5, 1),
         amount=Decimal("121.00"),
         direction=TransactionDirection.OUTGOING,
         description="office supplies",
     )
     incoming = ManualLedgerTransactionCommand(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         booked_date=date(2026, 5, 1),
         amount=Decimal("121.00"),
         direction=TransactionDirection.INCOMING,
@@ -180,7 +182,7 @@ def test_manual_ledger_transaction_command_accepts_magnitude_for_either_directio
 def test_manual_ledger_transaction_command_rejects_tax_payload_on_internal_transfer() -> None:
     with pytest.raises(ValidationError, match=r"INTERNAL_TRANSFER.*tax or evidence fields"):
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("121.00"),
             direction=TransactionDirection.INTERNAL_TRANSFER,
@@ -210,12 +212,12 @@ def test_manual_ledger_transaction_result_requires_matching_strict_shapes() -> N
     )
     transaction = Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
     result = ManualLedgerTransactionResult(
-        ref=BucketTransactionRef(bucket_id="bucket-a", transaction_id=transaction.transaction_id),
+        ref=BucketTransactionRef(bucket_id=_BUCKET_ID, transaction_id=transaction.transaction_id),
         transaction=transaction,
         bucket_event_ids=("event-1",),
     )
 
-    assert result.ref.bucket_id == "bucket-a"
+    assert result.ref.bucket_id == _BUCKET_ID
     assert result.ref.transaction_id == transaction.transaction_id
     assert result.transaction.raw.provenance.source_format is SourceFormat.MANUAL
     assert result.bucket_event_ids == ("event-1",)
