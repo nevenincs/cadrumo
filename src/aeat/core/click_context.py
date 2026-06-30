@@ -7,6 +7,10 @@ object explicitly. They live in :mod:`aeat.core` so domain code can call
 :func:`context_chain_requests_json` without inverting the dependency direction
 onto :mod:`aeat.entrypoints.cli`. Terminal error handlers that have no live
 context can fall back to :func:`argv_requests_json`.
+
+This module answers output-mode questions only. It is not an active-profile,
+bucket-session, or command-dispatch state source; those boundaries remain in the
+CLI bootstrap and storage/session helpers that own them.
 """
 
 from __future__ import annotations
@@ -20,7 +24,11 @@ _JSON_PARAM_NAMES = frozenset({"json", "as_json", "json_out", "json_output"})
 
 
 class _ContextLike(Protocol):
-    """Structural view of a Click context (upstream or Typer's vendored fork)."""
+    """Structural view of a Click context (upstream or Typer's vendored fork).
+
+    The two concrete context classes are nominally different but expose the
+    same ``params`` / ``obj`` / ``parent`` shape needed by the output-mode probe.
+    """
 
     params: dict[str, object]
     obj: object
@@ -64,7 +72,9 @@ def current_cli_flag(name: str) -> bool:
     Walks the :class:`click.Context` parent chain looking for the first
     ``ctx.obj`` mapping that carries ``name``; the truthiness of the
     associated value is returned. Returns ``False`` when no context is
-    active or no ancestor carries the flag.
+    active or no ancestor carries the flag. This helper intentionally reads
+    ``ctx.obj`` only; option values stored in ``ctx.params`` are handled by
+    :func:`json_output_requested`.
 
     Args:
         name: Key to look up inside each ancestor's ``ctx.obj`` dict.
@@ -93,7 +103,9 @@ def json_output_requested() -> bool:
     Python-facing ``format_`` parameter name.
     The variant tolerance lets callers register the flag under whichever
     Python parameter name fits their command without breaking the
-    output-mode probe.
+    output-mode probe. For terminal handlers without a live current context,
+    use :func:`context_chain_requests_json` when an exception carries a context
+    or :func:`argv_requests_json` as the last-resort argv parser.
     """
     return any(_context_layer_requests_json(ctx) for ctx in _iter_context_chain())
 
@@ -106,6 +118,10 @@ def context_chain_requests_json(ctx: object) -> bool:
     exception handler, where a :class:`click.UsageError` carries its
     parse-time context on ``exc.ctx`` but no context is "current").
     Accepts either Click runtime's context object structurally.
+
+    Args:
+        ctx: Upstream or Typer-vendored Click context, or any object exposing
+            compatible ``params``, ``obj``, and ``parent`` attributes.
     """
     current = ctx
     while current is not None:
@@ -125,7 +141,8 @@ def argv_requests_json(argv: Iterable[str]) -> bool:
     Last-resort probe for terminal handlers that have neither an active
     context stack nor an exception-carried context (e.g. a crash before
     or outside command dispatch). Recognises ``--format json``,
-    ``--format=json``, and the ``--json`` flag family.
+    ``--format=json``, and the ``--json`` flag family. It is syntactic only:
+    command parsing and value validation still belong to Click/Typer.
     """
     args = list(argv)
     for index, arg in enumerate(args):
