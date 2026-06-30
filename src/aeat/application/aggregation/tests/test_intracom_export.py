@@ -22,14 +22,14 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 
 import pytest
 
 from ....core import Period
-from ....core.resources import bundled_path
-from ....domain.calculations.registry import BindingId, CasillaId, load_registry_tree, validated_casilla_id
+from ....core.resources import resources
+from ....domain.calculations.registry import BindingId, CasillaId, validated_casilla_id
 from ....domain.calculations.registry._ledger_bindings import (
     resolve_ledger_iva_aggregation_binding_values,
 )
@@ -63,10 +63,9 @@ _CASILLA_BASE_BINDING: dict[CasillaId, BindingId] = {
 }
 
 
-@lru_cache(maxsize=1)
+@cache
 def _modelo_303_revision():
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    return next(m for m in modelos if m.id == "303").revisions["2023-y-siguientes"]
+    return resources().modelos.get("303").revisions["2023-y-siguientes"]
 
 
 def _casilla_base(aggregation: IvaLedgerAggregation, casilla_id: CasillaId) -> Decimal:
