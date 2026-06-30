@@ -4,5 +4,7 @@ number = "1717"
 label = "Importe generado en 2025 pendiente de aplicación"
 section = ["resultados", "deduccion_autonomica_res", "cantabria_res"]
 semantic_role = "irpf_deduccion_cantabria_nuevos_contribuyentes_extranjero_pendiente"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only Cantabria CANT23 foreign-new-taxpayer pending-application slot."
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
