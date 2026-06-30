@@ -2,8 +2,8 @@
 
 Exercises :func:`saturate_llm_classification` and
 :func:`apply_saturated_llm_classification` against real SQLite persistence in an
-isolated profile, with a concrete in-process classifier injected by dependency
-injection (no mocks). Covers the llm-ledger-classification contract:
+isolated profile, with the production subprocess classifier adapter driven by a
+local child process. Covers the llm-ledger-classification contract:
 
 * the model SELECTS an IvaCategory and the system DERIVES the rate / base /
   amount from the registry (never the model);
@@ -31,7 +31,7 @@ from .. import (
 )
 from ._llm_saturation_support import (
     _BUCKET,
-    _FixedSaturatingClassifier,
+    _saturating_subprocess_classifier,
     _seed_unclassified,
 )
 from ._llm_saturation_support import (
@@ -62,7 +62,7 @@ def test_suggest_derives_substrate_from_selected_category(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
         provider=LLMProvider.CLAUDE,
-        classifier=_FixedSaturatingClassifier(iva_category=IvaCategory.DOMESTIC_GENERAL_21),
+        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory.DOMESTIC_GENERAL_21),
         transaction_repository=repository,
     )
 
@@ -88,7 +88,7 @@ def test_suggest_zero_rated_category_derives_zero_iva(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
         provider=LLMProvider.CLAUDE,
-        classifier=_FixedSaturatingClassifier(iva_category=IvaCategory.DOMESTIC_ZERO),
+        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory.DOMESTIC_ZERO),
         transaction_repository=repository,
     )
 
@@ -108,7 +108,7 @@ def test_suggest_non_derivable_category_surfaces_reason_not_a_guess(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
         provider=LLMProvider.CLAUDE,
-        classifier=_FixedSaturatingClassifier(iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY),
+        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY),
         transaction_repository=repository,
     )
 

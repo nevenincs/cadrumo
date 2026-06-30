@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+import sys
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -14,14 +16,15 @@ from ....domain.categories import SpendingCategory
 from ....domain.iva import IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
-    LLMClassificationResponse,
     RawProvenance,
     RawTransaction,
     SourceFormat,
+    SubprocessLLMClassifier,
     Transaction,
     TransactionCatalogue,
     TransactionCatalogueRepository,
     TransactionDirection,
+    prompt_spec_with_saturation_fields,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 
@@ -29,35 +32,35 @@ _NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
 _BUCKET = "17171717-1717-4717-8717-171717171717"
 
 
-class _FixedSaturatingClassifier:
-    """Concrete in-process classifier returning a fixed saturated response."""
+def _saturating_subprocess_classifier(
+    *,
+    classification: BusinessClassification = BusinessClassification.BUSINESS,
+    iva_category: IvaCategory | None = IvaCategory.DOMESTIC_GENERAL_21,
+    business_pct: Decimal | None = None,
+    model: str = "test-model",
+) -> SubprocessLLMClassifier:
+    payload = {
+        "classification": classification.value,
+        "confidence": "0.9",
+        "reason": "grounded saturation fixture",
+    }
+    if iva_category is not None:
+        payload["iva_category"] = iva_category.value
+    if business_pct is not None:
+        payload["business_pct"] = format(business_pct, "f")
+    response_json = json.dumps(payload, sort_keys=True)
+    script = f"""
+import sys
 
-    def __init__(
-        self,
-        *,
-        classification: BusinessClassification = BusinessClassification.BUSINESS,
-        iva_category: IvaCategory | None = IvaCategory.DOMESTIC_GENERAL_21,
-        business_pct: Decimal | None = None,
-        model: str = "test-model",
-    ) -> None:
-        self._classification = classification
-        self._iva_category = iva_category
-        self._business_pct = business_pct
-        self._model = model
-
-    @property
-    def decided_by(self) -> str:
-        return f"llm:claude:{self._model}"
-
-    def classify(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMClassificationResponse:
-        self.last_evidence_text = evidence_text
-        return LLMClassificationResponse(
-            classification=self._classification,
-            confidence=Decimal("0.9"),
-            reason="grounded saturation fixture",
-            iva_category=self._iva_category,
-            business_pct=self._business_pct,
-        )
+sys.stdin.read()
+print({response_json!r})
+"""
+    return SubprocessLLMClassifier(
+        name="claude",
+        command=(sys.executable, "-c", script),
+        model=model,
+        spec=prompt_spec_with_saturation_fields(),
+    )
 
 
 @pytest.fixture
