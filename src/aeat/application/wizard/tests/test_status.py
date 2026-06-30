@@ -27,6 +27,8 @@ from .._status import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
+
 
 @pytest.fixture(autouse=True)
 def _file_backed_profile_store(tmp_path: Path) -> Iterator[None]:
@@ -61,12 +63,12 @@ def test_empty_state_yields_no_active_profile_report() -> None:
 def test_active_profile_with_identity_and_iva_regime_is_profile_ready() -> None:
     state = _register_profile_state(
         WorkflowState(),
-        profile_id="11111111-1111-4111-8111-111111111111",
+        profile_id=_PROFILE_ID,
         overrides={"activities.description": "design"},
     )
-    with profile_storage_session("operator"):
+    with profile_storage_session(_PROFILE_ID):
         report = build_wizard_status(state)
-    assert report.active_profile == "operator"
+    assert report.active_profile == _PROFILE_ID
     assert report.identity_ready is True
     assert report.enrolment_ready is True
     assert report.profile_ready is True
@@ -111,9 +113,9 @@ def test_load_active_taxpayer_profile_raises_wizard_status_error_when_no_profile
 def test_load_active_taxpayer_profile_returns_taxpayer_record_for_minimal_profile() -> None:
     state = _register_profile_state(
         WorkflowState(),
-        profile_id="11111111-1111-4111-8111-111111111111",
+        profile_id=_PROFILE_ID,
         overrides={"activities.description": "design", "identity.tax_id": "00000000T"},
     )
-    with profile_storage_session("operator"):
+    with profile_storage_session(_PROFILE_ID):
         profile = load_active_taxpayer_profile(state)
     assert profile.tax_id == "00000000T"
