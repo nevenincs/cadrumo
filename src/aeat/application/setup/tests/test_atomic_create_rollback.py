@@ -56,6 +56,8 @@ _VALID_FACTS: Mapping[str, str] = {
 # validator reject the record at the encrypted-record-write step of
 # the atomic create.
 _INCOMPLETE_FACTS: Mapping[str, str] = {key: value for key, value in _VALID_FACTS.items() if key != "iva.regime"}
+_VICTIM_PROFILE_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+_SURVIVOR_PROFILE_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
 
 
 @pytest.fixture
@@ -103,10 +105,10 @@ def test_failed_atomic_create_raises_and_leaves_no_profile(_backend: Path) -> No
     """
 
     with pytest.raises(ProfileSchemaValidationError):
-        _register("victim", facts=_INCOMPLETE_FACTS)
+        _register(_VICTIM_PROFILE_ID, facts=_INCOMPLETE_FACTS)
 
     root = load_settings().aeat_local_storage_root
-    paths = bucket_paths(root, "victim")
+    paths = bucket_paths(root, _VICTIM_PROFILE_ID)
 
     # The existence claims are gone: no manifest, no pointer.
     assert not manifest_path(paths).is_file(), "rollback left a manifest behind"
@@ -114,7 +116,7 @@ def test_failed_atomic_create_raises_and_leaves_no_profile(_backend: Path) -> No
 
     # The manifest-scan oracle reports no such profile — `profile list`
     # would show nothing.
-    assert read_profile_bucket("victim") is None, "rollback left a phantom profile in the manifest scan"
+    assert read_profile_bucket(_VICTIM_PROFILE_ID) is None, "rollback left a phantom profile in the manifest scan"
 
 
 def test_successful_atomic_create_lands_the_artifacts_a_failure_clears(_backend: Path) -> None:
@@ -129,15 +131,15 @@ def test_successful_atomic_create_lands_the_artifacts_a_failure_clears(_backend:
     and genuinely do not on rollback.
     """
 
-    _register("survivor", facts=_VALID_FACTS)
+    _register(_SURVIVOR_PROFILE_ID, facts=_VALID_FACTS)
 
     root = load_settings().aeat_local_storage_root
-    paths = bucket_paths(root, "survivor")
+    paths = bucket_paths(root, _SURVIVOR_PROFILE_ID)
 
     assert manifest_path(paths).is_file()
     pointer = read_pointer(root)
     assert pointer is not None
-    assert pointer.bucket_id == "survivor"
-    scanned = read_profile_bucket("survivor")
+    assert pointer.bucket_id == _SURVIVOR_PROFILE_ID
+    scanned = read_profile_bucket(_SURVIVOR_PROFILE_ID)
     assert scanned is not None
-    assert scanned.bucket_id == "survivor"
+    assert scanned.bucket_id == _SURVIVOR_PROFILE_ID
