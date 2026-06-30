@@ -7,13 +7,15 @@ calculation consumes it. The primary movement fact remains
 ``ledger_transaction``. Purchase invoice evidence and payable / collectible
 business invoices are related bucket-scoped records, not ledger rows, and their
 source-kind identity is carried by
-:class:`BusinessOperationInvoiceDirection`.
+:class:`~aeat.application.ledger.BusinessOperationInvoiceDirection`.
 
 The ledger-mounted invoice surface is intentionally slim:
-:class:`BusinessOperationInvoice` records carry the
-:class:`BusinessOperationInvoiceDirection` source-kind discriminator consumed by
-:class:`PayableInvoiceService` and :class:`CollectibleInvoiceService`. Rich
-invoice-line detail and reconciliation links stay in
+:class:`~aeat.application.ledger.BusinessOperationInvoice` records carry the
+:class:`~aeat.application.ledger.BusinessOperationInvoiceDirection` source-kind
+discriminator consumed by
+:class:`~aeat.application.ledger.PayableInvoiceService` and
+:class:`~aeat.application.ledger.CollectibleInvoiceService`. Rich invoice-line
+detail and reconciliation links stay in
 :mod:`aeat.domain.invoices`, while the application invoice package maps issued /
 received invoice directions back onto
 :attr:`~aeat.core.BindingSourceKind.PAYABLE_INVOICE` and
@@ -21,25 +23,35 @@ received invoice directions back onto
 
 Major declarations:
 
-* :func:`import_ledger_source` and :func:`bulk_classify_from_csv` — the
+* :func:`~aeat.application.ledger.import_ledger_source` and
+  :func:`~aeat.application.ledger.bulk_classify_from_csv` - the
   ingest and batch-classification entry points.
-* :func:`create_manual_transaction`, :func:`split_transaction`, and
-  :func:`merge_transactions` — manual ledger edits.
-* :func:`preflight_ledger_tax_readiness` with :class:`LedgerPreflightReport`
-  and :class:`LedgerPreflightIssue` — the readiness gate that reports rows
-  missing a category, base, IVA rate, currency, or prorrata reference.
-* :class:`PurchaseInvoiceEvidenceService` — the evidence lifecycle for receipts
-  or supplier invoice artefacts attached to ledger transactions.
-* :class:`PayableInvoiceService`, :class:`CollectibleInvoiceService`, and
-  :class:`BusinessOperationInvoiceRepository` — the encrypted CRUD surface behind
-  ``aeat app ledger invoice --kind issued|received``.
-* :func:`resolve_transaction_id` — the unambiguous-prefix id resolver, and
-  :func:`resolve_lineage_transaction_id` — its read-side lineage-aware
+* :func:`~aeat.application.ledger.create_manual_transaction`,
+  :func:`~aeat.application.ledger.split_transaction`, and
+  :func:`~aeat.application.ledger.merge_transactions` - manual ledger edits.
+* :func:`~aeat.application.ledger.preflight_ledger_tax_readiness` with
+  :class:`~aeat.application.ledger.LedgerPreflightReport` and
+  :class:`~aeat.application.ledger.LedgerPreflightIssue` - the readiness gate
+  that reports rows missing a category, base, IVA rate, currency, or prorrata
+  reference.
+* :class:`~aeat.application.ledger.PurchaseInvoiceEvidenceService` - the
+  evidence lifecycle for receipts or supplier invoice artefacts attached to
+  ledger transactions.
+* :class:`~aeat.application.ledger.PayableInvoiceService`,
+  :class:`~aeat.application.ledger.CollectibleInvoiceService`, and
+  :class:`~aeat.application.ledger.BusinessOperationInvoiceRepository` - the
+  encrypted CRUD surface behind ``aeat app ledger invoice --kind issued|received``.
+* :func:`~aeat.application.ledger.resolve_transaction_id` - the
+  unambiguous-prefix id resolver, and
+  :func:`~aeat.application.ledger.resolve_lineage_transaction_id` - its
+  read-side lineage-aware
   variant that resolves a superseded (pre-edit) handle to the live row.
-* The typed command and result records (:class:`LedgerSourceImportCommand`,
-  :class:`LedgerImportOperationResult`, :class:`LedgerReviewQueryResult`,
-  :class:`LedgerStatusReport`, and siblings) that carry each operation
-  across the CLI boundary.
+* The typed command and result records
+  (:class:`~aeat.application.ledger.LedgerSourceImportCommand`,
+  :class:`~aeat.application.ledger.LedgerImportOperationResult`,
+  :class:`~aeat.application.ledger.LedgerReviewQueryResult`,
+  :class:`~aeat.application.ledger.LedgerStatusReport`, and siblings) that
+  carry each operation across the CLI boundary.
 
 See Also:
     :mod:`aeat.application.invoices`
@@ -54,7 +66,7 @@ See Also:
         envelope consumed by modelo calculation.
     :mod:`aeat.application.modelo`
         Work-unit calculation actions that call
-        :func:`preflight_ledger_tax_readiness` before resolving
+        :func:`~aeat.application.ledger.preflight_ledger_tax_readiness` before resolving
         ledger-backed bindings for a :class:`~aeat.domain.modelos.WorkUnit`.
     :mod:`aeat.domain.transactions`
         The transaction catalogue and lifecycle states that remain the ledger's
