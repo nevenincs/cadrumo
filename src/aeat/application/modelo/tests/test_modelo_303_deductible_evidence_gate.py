@@ -281,6 +281,8 @@ def _persist_legacy_verified_revision(
         catalogue=catalogue,
         snapshot_fingerprint=snapshot.snapshot_fingerprint,
         captured_at=_VERIFIED_AT,
+        legal_refs=tuple(dict.fromkeys(str(ref) for obs in revision.observations for ref in obs.legal_refs)),
+        source_refs=tuple(dict.fromkeys(str(ref) for obs in revision.observations for ref in obs.source_refs)),
     )
     legacy = revision.model_copy(
         update={
