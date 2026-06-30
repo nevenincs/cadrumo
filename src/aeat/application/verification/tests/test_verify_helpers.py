@@ -47,7 +47,7 @@ from ....adapters.inbound.declaracion._schema import (
 )
 from ....adapters.inbound.pdf._shared import ExtractedCasilla
 from ....core import Period
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
 from .._schema import DiscrepancyCause, VerificationStatus
 from .._verify import (
     _classify_discrepancy,
@@ -226,6 +226,12 @@ def _declaracion(casilla_ids: tuple[CasillaId, ...]) -> DeclaracionObservation:
             año=2025,
             revision="2025.01",
             detected_from="explicit_override",
+        ),
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="100",
+            revision_id="2025",
+            modelo_year=2025,
+            period="0A",
         ),
         values=values,
         source_pdf_path=Path(__file__),

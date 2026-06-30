@@ -91,7 +91,7 @@ class DeclaracionObservation(BaseModel):
         tax_id: NIF / NIE of the filer (as printed).
         template_revision: Which AEAT template the PDF matches.
         registry_snapshot_ref: Four-axis registry coordinate that supplied the
-            extraction profile, or ``None`` for legacy observations.
+            extraction profile.
         values: Tuple of observed :class:`ExtractedCasilla` records.
         warnings: Tuple of advisories — unresolved casillas, ambiguous
             labels, bbox fallbacks, etc.
@@ -108,16 +108,15 @@ class DeclaracionObservation(BaseModel):
     period: Period = Field()
     tax_id: str = Field(min_length=4, max_length=32)
     template_revision: TemplateRevision
-    registry_snapshot_ref: RegistrySnapshotRef | None = None
+    registry_snapshot_ref: RegistrySnapshotRef
     """Four-axis registry coordinate captured at parse time.
 
     Populated by the parser from the active ``RegistrySnapshot`` so a
     persisted observation can be re-resolved against the live registry
     catalogue with a single
-    :meth:`ValidatedRegistryAuthority.snapshot` call. ``None`` for
-    unstamped observations parsed before this field existed; current
-    observations carry the ref to detect silent AEAT template drift
-    on subsequent registry releases.
+    :meth:`ValidatedRegistryAuthority.snapshot` call. Current observations
+    always carry the ref so downstream checks can detect silent AEAT template
+    drift on subsequent registry releases.
     """
     values: tuple[ExtractedCasilla, ...]
     warnings: tuple[ExtractionWarning, ...] = ()
