@@ -5,13 +5,13 @@ from __future__ import annotations
 import pytest
 
 from ._verification_chain_support import (
-    FIXTURES_DIR,
     CasillaId,
     Decimal,
-    DeclaracionParseError,
+    _assert_decimal_casilla,
     _casilla_id,
     _casilla_ids,
-    parse_declaracion,
+    _declaracion_case_label,
+    _parse_extracted_declaracion_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -28,50 +28,8 @@ _DECL_PERIODO_CASILLA: CasillaId = _casilla_id("decl.periodo")
 _DECL_EVENT_KIND_CASILLA: CasillaId = _casilla_id("decl.event-kind")
 
 
-def _case_label(modelo: str, fixture_stem: str) -> str:
-    return f"M{modelo}/{fixture_stem}"
-
-
-def _parse_extracted_values(
-    *,
-    modelo: str,
-    fixture_stem: str,
-    year: int,
-    period: str,
-) -> dict[CasillaId, object]:
-    label = _case_label(modelo, fixture_stem)
-    pdf_path = FIXTURES_DIR / "justificantes" / modelo / f"{fixture_stem}.pdf"
-
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override=modelo,
-            año_override=year,
-            period_override=period,
-        )
-    except DeclaracionParseError as exc:
-        pytest.fail(f"PARSER-GAP [{label}]: parse_declaracion raised.\n  error: {exc}")
-
-    return {value.casilla_id: value.printed_value for value in filing.values}
-
-
-def _assert_decimal_casilla(
-    extracted: dict[CasillaId, object],
-    casilla_id: CasillaId,
-    *,
-    label: str,
-) -> None:
-    assert casilla_id in extracted, (
-        f"PARSER-GAP [{label}]: {casilla_id!r} not extracted.\n  got: {sorted(extracted)}"
-    )
-    value = extracted[casilla_id]
-    assert isinstance(value, Decimal), (
-        f"PARSER-GAP [{label}]: {casilla_id!r} not Decimal: {type(value).__name__!r}"
-    )
-
-
 def test_verification_chain_m349_parser_extracts_declaracion_pdf_casillas() -> None:
-    extracted = _parse_extracted_values(modelo="349", fixture_stem="2024-1T", year=2024, period="1T")
+    extracted = _parse_extracted_declaracion_values(modelo="349", fixture_stem="2024-1T", year=2024, period="1T")
 
     assert set(extracted.keys()) == _M349_SUMMARY_CASILLAS, (
         f"PARSER-GAP [M349/2024-1T]: unexpected casilla set.\n  got: {sorted(extracted)}"
@@ -98,13 +56,17 @@ def test_verification_chain_informativa_parser_extracts_ejercicio_casilla(
     fixture_stem: str,
     period: str,
 ) -> None:
-    extracted = _parse_extracted_values(modelo=modelo, fixture_stem=fixture_stem, year=2024, period=period)
+    extracted = _parse_extracted_declaracion_values(modelo=modelo, fixture_stem=fixture_stem, year=2024, period=period)
 
-    _assert_decimal_casilla(extracted, _DECL_EJERCICIO_CASILLA, label=_case_label(modelo, fixture_stem))
+    _assert_decimal_casilla(
+        extracted,
+        _DECL_EJERCICIO_CASILLA,
+        label=_declaracion_case_label(modelo, fixture_stem),
+    )
 
 
 def test_verification_chain_m369_parser_extracts_declaracion_pdf_casillas() -> None:
-    extracted = _parse_extracted_values(modelo="369", fixture_stem="2024-1T", year=2024, period="1T")
+    extracted = _parse_extracted_declaracion_values(modelo="369", fixture_stem="2024-1T", year=2024, period="1T")
 
     _assert_decimal_casilla(extracted, _DECL_EJERCICIO_CASILLA, label="M369/2024-1T")
     assert _DECL_PERIODO_CASILLA in extracted, (
@@ -113,7 +75,7 @@ def test_verification_chain_m369_parser_extracts_declaracion_pdf_casillas() -> N
 
 
 def test_verification_chain_m036_parser_extracts_event_kind_casilla() -> None:
-    extracted = _parse_extracted_values(modelo="036", fixture_stem="2025-alta", year=2025, period="alta")
+    extracted = _parse_extracted_declaracion_values(modelo="036", fixture_stem="2025-alta", year=2025, period="alta")
 
     assert _DECL_EVENT_KIND_CASILLA in extracted, (
         f"PARSER-GAP [M036/2025-alta]: {_DECL_EVENT_KIND_CASILLA!r} not extracted.\n  got: {sorted(extracted)}"

@@ -48,6 +48,48 @@ def _casilla_ids(*values: object) -> frozenset[CasillaId]:
     return frozenset(_casilla_id(value) for value in values)
 
 
+def _declaracion_case_label(modelo: str, fixture_stem: str) -> str:
+    return f"M{modelo}/{fixture_stem}"
+
+
+def _parse_extracted_declaracion_values(
+    *,
+    modelo: str,
+    fixture_stem: str,
+    year: int,
+    period: str,
+) -> dict[CasillaId, object]:
+    label = _declaracion_case_label(modelo, fixture_stem)
+    pdf_path = FIXTURES_DIR / "justificantes" / modelo / f"{fixture_stem}.pdf"
+
+    try:
+        filing = parse_declaracion(
+            pdf_path,
+            modelo_override=modelo,
+            año_override=year,
+            period_override=period,
+        )
+    except DeclaracionParseError as exc:
+        pytest.fail(f"PARSER-GAP [{label}]: parse_declaracion raised.\n  error: {exc}")
+
+    return {value.casilla_id: value.printed_value for value in filing.values}
+
+
+def _assert_decimal_casilla(
+    extracted: Mapping[CasillaId, object],
+    casilla_id: CasillaId,
+    *,
+    label: str,
+) -> None:
+    assert casilla_id in extracted, (
+        f"PARSER-GAP [{label}]: {casilla_id!r} not extracted.\n  got: {sorted(extracted)}"
+    )
+    value = extracted[casilla_id]
+    assert isinstance(value, Decimal), (
+        f"PARSER-GAP [{label}]: {casilla_id!r} not Decimal: {type(value).__name__!r}"
+    )
+
+
 _M303_STATE_ATTRIBUTION_RATIO_CASILLA: CasillaId = _casilla_id("65")
 _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("27")
 _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("45")
