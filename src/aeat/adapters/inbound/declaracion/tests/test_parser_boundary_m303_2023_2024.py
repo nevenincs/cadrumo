@@ -1,4 +1,4 @@
-"""Focused adapter contract tests split from the original monolith."""
+"""Modelo 303 parser boundary tests for the 2023-2024 printed template."""
 
 from __future__ import annotations
 
