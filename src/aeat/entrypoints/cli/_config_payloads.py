@@ -1,21 +1,26 @@
 """Typed ``--json`` payload schemas for config CLI commands.
 
-Each class declared here is a strict :class:`OutputSchema` subclass and is
-decorated with :func:`register_schema` so the JSON-contract test suite can
-enumerate every config-command surface this module covers.
+Each class declared here is a strict
+:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass and is decorated
+with :func:`~aeat.entrypoints.cli._schemas.register_schema` so the
+JSON-contract test suite can enumerate every config-command surface this
+module covers.
 
 Field sets match the production payload dicts constructed in
-``_config/__init__.py`` at their emit sites. Optional fields cover
-multi-branch payload shapes (e.g. repair.quarantine has a no-active-profile
-branch, a dry-run preview branch, and a live branch; config.status has
-several readiness states).
+:mod:`aeat.entrypoints.cli._config` and its config submodules at their emit
+sites. Optional fields cover multi-branch payload shapes (e.g.
+repair.quarantine has a no-active-profile branch, a dry-run preview branch, and
+a live branch; config.status has several readiness states).
 
 All sequence fields use ``list`` rather than ``tuple`` because
 ``model_dump(mode='json')`` serialises pydantic tuples as JSON arrays.
 
 The application services remain the source of profile, auth, apoderado, and
-repair semantics. These payload classes document and validate only the CLI
-transport shapes that enter :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope`.
+repair semantics: :mod:`aeat.application.user_profile`,
+:mod:`aeat.application.auth`, :mod:`aeat.application.diagnostics`,
+:mod:`aeat.application.repair_integrity`, and :mod:`aeat.application.workflow`.
+These payload classes document and validate only the CLI transport shapes that
+enter :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope`.
 """
 
 from __future__ import annotations
@@ -69,10 +74,10 @@ class WorkflowFingerprintPayload(OutputSchema):
 class ProfilePointerPayload(OutputSchema):
     """One active-profile pointer row in the config profile listing.
 
-    Mirrors the manifest projection that links an operator-facing profile name
-    to the immutable profile bucket id. The row deliberately carries no
-    profile facts; detailed facts stay under :class:`ProfileFactPayload` in the
-    profile-show envelope.
+    Mirrors the :class:`~aeat.application.workflow.ProfileBucketPointer`
+    projection that links an operator-facing profile name to the immutable
+    profile bucket id. The row deliberately carries no profile facts; detailed
+    facts stay under :class:`ProfileFactPayload` in the profile-show envelope.
     """
 
     name: str
@@ -315,9 +320,10 @@ class ConfigProfileShowResult(OutputSchema):
 class ConfigProfileValidateResult(OutputSchema):
     """JSON envelope for ``aeat config profile validate``.
 
-    Report-only surface: same :class:`ProfileValidationService` outcome that
-    ``aeat config profile show`` exposes inline, but as the primary payload
-    with no fact dump so the operator can audit a profile's schema
+    Report-only surface: same
+    :class:`~aeat.application.user_profile.ProfileValidationService` outcome
+    that ``aeat config profile show`` exposes inline, but as the primary
+    payload with no fact dump so the operator can audit a profile's schema
     conformance independent of its data view. Exit code is ``0`` when no
     blocking issues exist and ``2`` when any error-severity issue surfaces.
     """
@@ -476,11 +482,12 @@ class AuthConfigurePayload(OutputSchema):
 
     @classmethod
     def from_result(cls, result: AuthConfigureResult) -> AuthConfigurePayload:
-        """Project the application :class:`AuthConfigureResult` into this CLI envelope.
+        """Project the application auth result into this CLI envelope.
 
         Explicit field projection (DB-26 S50): the envelope derives its values from
-        the application result instead of the command handler re-declaring the field
-        map inline. ``status`` is a CLI-only display field left to its default.
+        the application :class:`~aeat.application.auth.AuthConfigureResult`
+        instead of the command handler re-declaring the field map inline.
+        ``status`` is a CLI-only display field left to its default.
 
         Returns:
             The projected :class:`AuthConfigurePayload` instance.
@@ -563,7 +570,10 @@ class AuthClearPayload(OutputSchema):
 
     @classmethod
     def from_result(cls, result: AuthClearResult) -> AuthClearPayload:
-        """Project the application :class:`AuthClearResult` (1:1) into this CLI envelope.
+        """Project the application clear result into this CLI envelope.
+
+        The mapping stays 1:1 with
+        :class:`~aeat.application.auth.AuthClearResult`.
 
         Returns:
             The projected :class:`AuthClearPayload` instance.
@@ -730,8 +740,8 @@ class RepairIntegrityObjectsResult(OutputSchema):
     Covers the no-active-profile guard branch (``readable``/``unreadable``
     counts with ``reason``) and the live-probe branch (full report with
     nested namespace breakdown). ``extra="allow"`` forwards the
-    :class:`RepairIntegrityReport` payload without re-declaring every
-    sub-model.
+    :class:`~aeat.application.repair_integrity.RepairIntegrityReport` payload
+    without re-declaring every sub-model.
     """
 
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
@@ -744,7 +754,9 @@ class RepairIntegrityObjectsResult(OutputSchema):
 class RepairIntegrityRegistryResult(OutputSchema):
     """JSON envelope for ``aeat config repair integrity registry``.
 
-    Mirrors :class:`RegistryIntegrityReport.model_dump(mode='json')`.
+    Mirrors
+    :class:`~aeat.application.diagnostics.RegistryIntegrityReport`
+    ``model_dump(mode='json')``.
     ``extra="allow"`` forwards the typed sub-models without re-declaring
     the registry / diagnostic-check shapes locally.
     """
