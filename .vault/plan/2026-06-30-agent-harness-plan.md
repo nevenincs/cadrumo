@@ -127,30 +127,30 @@ Complete the persona roster and the canonical workflow skill matrix, ship the op
 
 Author the onboarding, ledger-groomer, classifier, and reconciler personas.
 
-- [ ] `W05.P11.S41` - Author the onboarding persona; `src/aeat/_data/agent/personas/onboarding.md`.
-- [ ] `W05.P11.S42` - Author the ledger-groomer persona; `src/aeat/_data/agent/personas/ledger-groomer.md`.
-- [ ] `W05.P11.S43` - Author the classifier persona; `src/aeat/_data/agent/personas/classifier.md`.
-- [ ] `W05.P11.S44` - Author the reconciler persona; `src/aeat/_data/agent/personas/reconciler.md`.
+- [x] `W05.P11.S41` - Author the onboarding persona; `src/aeat/_data/agent/personas/onboarding.md`.
+- [x] `W05.P11.S42` - Author the ledger-groomer persona; `src/aeat/_data/agent/personas/ledger-groomer.md`.
+- [x] `W05.P11.S43` - Author the classifier persona; `src/aeat/_data/agent/personas/classifier.md`.
+- [x] `W05.P11.S44` - Author the reconciler persona; `src/aeat/_data/agent/personas/reconciler.md`.
 
 ### Phase `W05.P12` - canonical workflow skills
 
 Author the remaining canonical workflow skills across the onboarding-to-reconcile happy path.
 
-- [ ] `W05.P12.S45` - Author the taxpayer-onboarding skill; `src/aeat/_data/agent/skills/alta-contribuyente/SKILL.md`.
-- [ ] `W05.P12.S46` - Author the ledger-building skill; `src/aeat/_data/agent/skills/llevar-libro/SKILL.md`.
-- [ ] `W05.P12.S47` - Author the classify-and-apportion skill; `src/aeat/_data/agent/skills/clasificar/SKILL.md`.
-- [ ] `W05.P12.S48` - Author the export-and-handoff skill; `src/aeat/_data/agent/skills/exportar-declaracion/SKILL.md`.
-- [ ] `W05.P12.S49` - Author the reconcile skill; `src/aeat/_data/agent/skills/reconciliar/SKILL.md`.
+- [x] `W05.P12.S45` - Author the taxpayer-onboarding skill; `src/aeat/_data/agent/skills/alta-contribuyente/SKILL.md`.
+- [x] `W05.P12.S46` - Author the ledger-building skill; `src/aeat/_data/agent/skills/llevar-libro/SKILL.md`.
+- [x] `W05.P12.S47` - Author the classify-and-apportion skill; `src/aeat/_data/agent/skills/clasificar/SKILL.md`.
+- [x] `W05.P12.S48` - Author the export-and-handoff skill; `src/aeat/_data/agent/skills/exportar-declaracion/SKILL.md`.
+- [x] `W05.P12.S49` - Author the reconcile skill; `src/aeat/_data/agent/skills/reconciliar/SKILL.md`.
 
 ### Phase `W05.P13` - workspace materialiser and standing gate
 
 Ship the operator-workspace materialiser command and bind the golden plus replay eval as a standing harness-change gate.
 
-- [ ] `W05.P13.S50` - Mount the operator-workspace materialiser command under app; `src/aeat/entrypoints/cli/_app_agent_workspace.py`.
-- [ ] `W05.P13.S51` - Register the workspace materialiser schema in the conformance gate; `src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py`.
-- [ ] `W05.P13.S52` - Expand the golden scenarios to cover the full lifecycle for 303 and 130; `src/aeat/agent/eval/scenarios/`.
-- [ ] `W05.P13.S53` - Bind the golden and replay eval as a standing harness-change CI gate; `.github/workflows/agent-harness-eval.yml`.
-- [ ] `W05.P13.S54` - Codify the operator co-commit drift discipline as a project rule; `.vaultspec/rules/rules/`.
+- [x] `W05.P13.S50` - Mount the operator-workspace materialiser command under app; `src/aeat/entrypoints/cli/_app_agent_workspace.py`.
+- [x] `W05.P13.S51` - Register the workspace materialiser schema in the conformance gate; `src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py`.
+- [x] `W05.P13.S52` - Expand the golden scenarios to cover the full lifecycle for 303 and 130; `src/aeat/agent/eval/scenarios/`.
+- [x] `W05.P13.S53` - Bind the golden and replay eval as a standing harness-change CI gate; `.github/workflows/agent-harness-eval.yml`.
+- [x] `W05.P13.S54` - Codify the operator co-commit drift discipline as a project rule; `.vaultspec/rules/rules/`.
 
 ## Description
 
