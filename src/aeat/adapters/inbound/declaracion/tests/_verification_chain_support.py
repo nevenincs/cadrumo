@@ -138,6 +138,11 @@ def _build_m303_engine_result(pdf_stem: str, year: int, period: str):  # type: i
         pytest.fail(f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised — M303 extraction failed.\n  error: {exc}")
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
+    for required_id in _M303_ENGINE_REQUIRED_CASILLAS:
+        assert required_id in extracted, (
+            f"PARSER-GAP [{pdf_stem}]: required casilla {required_id!r} not in extracted values.\n"
+            f"  got: {sorted(extracted)}"
+        )
 
     inputs: dict[CasillaId, Decimal] = {}
     for casilla_id, value in extracted.items():
