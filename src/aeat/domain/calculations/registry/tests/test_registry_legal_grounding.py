@@ -9,14 +9,24 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import RegistryValidator, load_registry_tree, verify_legal_catalogue
+from .._corpus_catalogue import verify_source_catalogue
+from .._schema import ModeloDefinition, RegistryCatalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_committed_registry_legal_and_construct_references_validate_through_loader() -> None:
-    """The loaded registry must satisfy legal refs and construct closure checks."""
+@pytest.fixture(scope="module")
+def committed_registry() -> tuple[Path, tuple[ModeloDefinition, ...], RegistryCatalogues]:
     registry_root = bundled_path("registry", "aeat")
     modelos, catalogues = load_registry_tree(registry_root)
+    return registry_root, modelos, catalogues
+
+
+def test_committed_registry_legal_and_construct_references_validate_through_loader(
+    committed_registry: tuple[Path, tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """The loaded registry must satisfy legal refs and construct closure checks."""
+    _registry_root, modelos, catalogues = committed_registry
 
     assert modelos, "committed registry load produced no modelos"
 
@@ -24,13 +34,13 @@ def test_committed_registry_legal_and_construct_references_validate_through_load
     validator.validate_registry(modelos)
 
 
-def _collect_legal_refs_from_toml(path: Path) -> tuple[str, ...]:
+def _collect_refs(value: object, key_name: str) -> tuple[str, ...]:
     found: list[str] = []
 
     def walk(value: object) -> None:
         if isinstance(value, dict):
             for key, item in value.items():
-                if key == "legal_refs":
+                if key == key_name:
                     if isinstance(item, list):
                         found.extend(ref for ref in item if isinstance(ref, str))
                     elif isinstance(item, str):
@@ -40,21 +50,52 @@ def _collect_legal_refs_from_toml(path: Path) -> tuple[str, ...]:
             for item in value:
                 walk(item)
 
-    walk(tomllib.loads(path.read_text(encoding="utf-8")))
+    walk(value)
     return tuple(found)
 
 
-def test_every_bundled_registry_toml_legal_ref_resolves_to_catalogue_and_corpus() -> None:
-    registry_root = bundled_path("registry", "aeat")
-    _modelos, catalogues = load_registry_tree(registry_root)
-    refs_by_file = {
-        path.relative_to(registry_root).as_posix(): refs
-        for path in registry_root.rglob("*.toml")
-        if (refs := _collect_legal_refs_from_toml(path))
+@pytest.fixture(scope="module")
+def raw_registry_refs(
+    committed_registry: tuple[Path, tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> dict[str, dict[str, tuple[str, ...]]]:
+    registry_root, _modelos, _catalogues = committed_registry
+    refs_by_key: dict[str, dict[str, tuple[str, ...]]] = {
+        "legal_refs": {},
+        "source_refs": {},
     }
+    for path in registry_root.rglob("*.toml"):
+        data = tomllib.loads(path.read_text(encoding="utf-8"))
+        relative_path = path.relative_to(registry_root).as_posix()
+        for key_name, refs_by_file in refs_by_key.items():
+            refs = _collect_refs(data, key_name)
+            if refs:
+                refs_by_file[relative_path] = refs
+    return refs_by_key
+
+
+def test_every_bundled_registry_toml_legal_ref_resolves_to_catalogue_and_corpus(
+    committed_registry: tuple[Path, tuple[ModeloDefinition, ...], RegistryCatalogues],
+    raw_registry_refs: dict[str, dict[str, tuple[str, ...]]],
+) -> None:
+    _registry_root, _modelos, catalogues = committed_registry
+    refs_by_file = raw_registry_refs["legal_refs"]
     refs = sorted({ref for file_refs in refs_by_file.values() for ref in file_refs})
 
     assert refs_by_file, "bundled registry TOML contains no legal_refs keys"
     missing = sorted(ref for ref in refs if ref not in catalogues.legal)
     assert not missing, f"bundled registry TOML legal_refs absent from legal catalogue: {missing}"
     verify_legal_catalogue({ref: catalogues.legal[ref] for ref in refs}, source_root=bundled_path())
+
+
+def test_every_bundled_registry_toml_source_ref_resolves_to_catalogue_and_corpus(
+    committed_registry: tuple[Path, tuple[ModeloDefinition, ...], RegistryCatalogues],
+    raw_registry_refs: dict[str, dict[str, tuple[str, ...]]],
+) -> None:
+    _registry_root, _modelos, catalogues = committed_registry
+    refs_by_file = raw_registry_refs["source_refs"]
+    refs = sorted({ref for file_refs in refs_by_file.values() for ref in file_refs})
+
+    assert refs_by_file, "bundled registry TOML contains no source_refs keys"
+    missing = sorted(ref for ref in refs if ref not in catalogues.sources)
+    assert not missing, f"bundled registry TOML source_refs absent from source catalogue: {missing}"
+    verify_source_catalogue(bundled_path(), {ref: catalogues.sources[ref] for ref in refs})
