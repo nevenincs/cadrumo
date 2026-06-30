@@ -62,6 +62,7 @@ type IvaCompensationDivergence = Literal[
     "override",
     "first_period_zero",
     "filed_history_zero",
+    "local_recurrence_zero",
     "missing",
 ]
 
@@ -409,6 +410,23 @@ def _missing_wallet_decision(
             ),
             wallet_captured_at=None,
         )
+    if ctx.local_recurrence_amount == Decimal("0"):
+        return _decision(
+            ctx,
+            selected_authority="local_recurrence",
+            selected_amount=Decimal("0"),
+            wallet_amount=None,
+            local_recurrence_amount=Decimal("0"),
+            override_amount=None,
+            divergence="local_recurrence_zero",
+            blocked=False,
+            stale_wallet=False,
+            reason=(
+                "Local Modelo 303 recurrence proves zero carry-forward compensation; "
+                "no prior compensation balance is available to apply."
+            ),
+            wallet_captured_at=None,
+        )
     return _decision(
         ctx,
         selected_authority="local_recurrence",
@@ -565,13 +583,16 @@ def local_recurrence_authority_source(
     source_filing_year = int(recurrence.source_filing_year)
     source_periods = tuple(recurrence.source_periods)
     resolved_at = recurrence.resolved_at
+    source_locator = str(
+        getattr(recurrence, "source_locator", None) or f"binding:{binding_id}",
+    )
     source_kind: IvaCompensationAuthorityKind = (
         _FILED_HISTORY_OBSERVATION if recurrence.source_kind in _AEAT_FILED_HISTORY_SOURCE_KINDS else "local_recurrence"
     )
     return IvaCompensationAuthoritySource(
         source_kind=source_kind,
         amount=amount,
-        source_locator=f"binding:{binding_id}",
+        source_locator=source_locator,
         captured_at=resolved_at,
         source_modelo=source_modelo,
         source_filing_year=source_filing_year,
