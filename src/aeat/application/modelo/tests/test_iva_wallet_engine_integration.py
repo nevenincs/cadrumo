@@ -695,6 +695,69 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
         assert exc_info.value.context["divergence"] == "filed_history_only"
 
 
+def test_prior_positive_payable_calculated_303_unblocks_next_period_zero_without_override(tmp_path: Path) -> None:
+    taxpayer_nif = "X1234567L"
+    decided_1t_at = datetime(2026, 3, 19, 12, 0, 0, tzinfo=UTC)
+    with _secure_backend(tmp_path):
+        _store_operator_profile_with_tax_id(taxpayer_nif)
+        work_repo, calc_repo, event_repo = _work_unit_repositories()
+        snapshot_1t = _snapshot_303(period="1T")
+        work_unit_1t = _create_modelo_303_work_unit(
+            snapshot_1t,
+            work_unit_repository=work_repo,
+            clock=decided_1t_at,
+        )
+        revision_1t = calculate_modelo_revision(
+            work_unit_1t.work_unit_id,
+            actor="operator",
+            casilla_inputs={},
+            binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+            backend_binding_values={
+                **_modelo_303_engine_inputs(),
+                "modelo-303-iva-repercutido-general-cuota": Decimal("84.00"),
+            },
+            iva_compensation_decision=None,
+            filing_period_date=date(2026, 3, 31),
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+            clock=decided_1t_at,
+        )
+        assert revision_1t.casilla_values[_M303_RESULTADO_CASILLA] == Decimal("84.00")
+        assert revision_1t.casilla_values[_M303_DISPONIBLE_CASILLA] == Decimal("0.00")
+
+        snapshot_2t = _snapshot_303(period="2T")
+        work_unit_2t = _create_modelo_303_work_unit(snapshot_2t, work_unit_repository=work_repo)
+        revision_2t = calculate_modelo_revision(
+            work_unit_2t.work_unit_id,
+            actor="operator",
+            casilla_inputs={},
+            binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+            backend_binding_values=_modelo_303_engine_inputs(),
+            iva_compensation_decision=None,
+            filing_period_date=date(2026, 6, 30),
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+            clock=_DECIDED_AT,
+        )
+
+        assert revision_2t.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("0")
+        decision = IvaWalletDecisionRepository().load_decision(
+            taxpayer_nif,
+            _period(_TARGET_YEAR, "2T"),
+        )
+        assert decision is not None
+        assert decision.divergence == "local_recurrence_zero"
+        assert decision.selected_amount == Decimal("0")
+        assert decision.local_recurrence_amount == Decimal("0")
+        assert any(
+            source.source_locator == f"calculation_revision:{revision_1t.calculation_revision_id}"
+            and source.source_periods == (_period(_TARGET_YEAR, "1T"),)
+            for source in decision.authority_sources
+        )
+
+
 def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine_prefill(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
         _store_operator_profile()
