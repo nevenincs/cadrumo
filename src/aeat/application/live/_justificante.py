@@ -13,8 +13,10 @@ Modelo 100 borrador service: it keys supersession on the
 ``(modelo, filing_year, period)`` axis so a re-filed period's fresh
 capture supersedes the prior ACTIVE one, and it persists each snapshot
 through a :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
-at FINANCIAL sensitivity under the justificante-capture namespace, and records
-each capture as a lifecycle event via :class:`BucketEventHistoryRepository`.
+at FINANCIAL sensitivity under
+:data:`aeat.adapters.persistence.storage.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`,
+and records each capture as a lifecycle event via
+:class:`BucketEventHistoryRepository`.
 
 The captured PDF bytes ride inside the encrypted snapshot :class:`Envelope`
 as a base64 ``str`` (binary cannot survive the JSON envelope verbatim); the
@@ -161,7 +163,11 @@ class JustificanteCaptureSnapshot(BaseModel):
 
 
 def justificante_capture_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
-    """Return the secure-object key for one bucket's justificante-capture snapshot."""
+    """Return the secure-object key for one bucket's justificante-capture snapshot.
+
+    The key shape is the object-key grammar declared by
+    :data:`aeat.adapters.persistence.storage.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`.
+    """
     trimmed_bucket = bucket_id.strip()
     trimmed_snapshot = snapshot_id.strip()
     if not trimmed_bucket:
@@ -262,6 +268,14 @@ class JustificanteCaptureSnapshotRepository:
     ``captured_at`` list ordering. ``save`` is kept local because justificante
     stamps the envelope ``written_at`` with the capture time (not ``now()``),
     a deliberate divergence from the shared base.
+
+    The namespace, sensitivity, schema version, and key grammar come from
+    :data:`aeat.adapters.persistence.storage.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`.
+    Each :class:`JustificanteCaptureSnapshot` is written through an
+    :class:`~aeat.adapters.persistence.storage.Envelope` so the captured PDF,
+    CSV, and expediente metadata stay inside the encrypted
+    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    bucket store.
     """
 
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
