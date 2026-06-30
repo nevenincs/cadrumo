@@ -2,14 +2,16 @@
 
 :class:`ModeloDraft` records carry exact casilla arithmetic and tax due
 values. They are stored as encrypted byte objects via
-:class:`SecureObjectRepository` at :class:`SensitivityClass` FINANCIAL and
-serialised through an :class:`Envelope` by :class:`SecureBoundRepository`;
-no plaintext draft JSON or envelope file lands on disk.
+:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository` at
+:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``FINANCIAL`` and
+serialised through an :class:`~aeat.adapters.persistence.storage.Envelope` by
+:class:`~aeat.adapters.persistence.storage.SecureBoundRepository`; no plaintext
+draft JSON or envelope file lands on disk.
 
 See Also:
     :class:`ModeloDraft`
         Strict filing payload persisted by this repository.
-    :class:`SecureBoundRepository`
+    :class:`~aeat.adapters.persistence.storage.SecureBoundRepository`
         Generic encrypted-envelope repository base used for the draft store.
     :data:`aeat.adapters.persistence.storage.FILING_DRAFTS_NAMESPACE`
         Namespace, sensitivity, schema-version, object-key, and custody
@@ -38,7 +40,9 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
     :class:`~aeat.adapters.persistence.storage.Envelope` and writes it under
     :data:`aeat.adapters.persistence.storage.FILING_DRAFTS_NAMESPACE`. The
     draft id is the natural key, so list and iteration APIs expose draft
-    aggregates rather than submission or amendment records.
+    aggregates rather than submission or amendment records. The namespace
+    definition supplies the FINANCIAL sensitivity, schema version, object-key
+    grammar, and custody contract.
     """
 
     namespace: ClassVar[str] = "aeat.domain.filing.drafts"
