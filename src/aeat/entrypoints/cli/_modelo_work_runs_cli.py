@@ -1,4 +1,26 @@
-"""Typer registration for modelo work workflow-run commands."""
+"""Typer registration for modelo workflow-run discovery and resume.
+
+This CLI module is a transport boundary for persisted
+:class:`aeat.application.workflow.WorkflowResult` rows. The ``runs`` command
+renders local run history from :func:`aeat.application.workflow.list_runs`; the
+``resume`` command validates operator selectors, delegates target resolution to
+:func:`aeat.application.workflow.resolve_modelo_workflow_resume_target`, and
+passes the selected run id to
+:func:`aeat.application.workflow.resume_modelo_workflow`.
+
+Resume output combines the resumable
+:class:`aeat.application.workflow.WorkflowResumeContext` with the selector
+metadata carried by
+:class:`aeat.application.workflow.WorkflowResumeTargetResolution`. No command in
+this module contacts AEAT or mutates workflow, bucket, or modelo state.
+
+See Also:
+    :mod:`aeat.application.workflow`:
+        Public workflow facade that owns run persistence and resume validation.
+    :mod:`aeat.application.modelo`:
+        Public modelo facade used indirectly by workflow resume resolution for
+        visible filing targets, exact work-unit targets, and revision selectors.
+"""
 
 from __future__ import annotations
 
@@ -36,7 +58,12 @@ def register_work_run_commands(
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
     resolve_optional_cli_period: Callable[..., Period | None],
 ) -> None:
-    """Register workflow-run discovery and resume commands."""
+    """Register workflow-run discovery and resume commands.
+
+    The command callbacks delegate business rules to the public workflow
+    application facade and keep CLI responsibilities limited to option parsing,
+    localization, and envelope emission.
+    """
 
     @work_app.command(
         "runs",
@@ -53,7 +80,7 @@ def register_work_run_commands(
         ctx: typer.Context,
         output_language: OutputLanguageOpt = None,
     ) -> None:
-        """List persisted workflow runs so an operator can discover run ids."""
+        """List persisted :class:`aeat.application.workflow.WorkflowResult` rows."""
         activate_output_language(ctx, output_language)
         runs = list_runs()
 
@@ -155,7 +182,14 @@ def register_work_run_commands(
         ] = None,
         output_language: OutputLanguageOpt = None,
     ) -> None:
-        """Surface the workflow-resume preconditions and resumable context."""
+        """Surface workflow-resume preconditions and resumable context.
+
+        The natural-key path, exact work-unit path, calculation-revision path,
+        and direct workflow-run path are normalized by
+        :func:`aeat.application.workflow.resolve_modelo_workflow_resume_target`
+        before :func:`aeat.application.workflow.resume_modelo_workflow` validates
+        that the selected run is actually resumable.
+        """
         activate_output_language(ctx, output_language)
 
         try:
@@ -188,6 +222,15 @@ def _emit_work_resume(
     result: WorkflowResumeContext,
     resolution: WorkflowResumeTargetResolution,
 ) -> None:
+    """Emit the resume context and resolved selector metadata.
+
+    Args:
+        ctx: Typer context carrying output-mode configuration.
+        result: :class:`aeat.application.workflow.WorkflowResumeContext`
+            produced by the workflow application service.
+        resolution: :class:`aeat.application.workflow.WorkflowResumeTargetResolution`
+            produced by the resume-target resolver.
+    """
     resume_result = WorkResumeResult(
         prior_workflow_run_id=result.resumed_from_run_id,
         resolved_source=resolution.source,
