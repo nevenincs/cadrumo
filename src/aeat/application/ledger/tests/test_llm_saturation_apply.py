@@ -21,7 +21,7 @@ from .. import (
 from ._llm_saturation_support import (
     _BUCKET,
     _NOW,
-    _FixedSaturatingClassifier,
+    _saturating_subprocess_classifier,
     _seed_unclassified,
 )
 from ._llm_saturation_support import repositories as repositories
@@ -40,7 +40,7 @@ def test_apply_persists_derived_substrate_with_llm_provenance(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
         provider=LLMProvider.CLAUDE,
-        classifier=_FixedSaturatingClassifier(iva_category=IvaCategory.DOMESTIC_GENERAL_21),
+        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory.DOMESTIC_GENERAL_21),
         transaction_repository=repository,
     )
 
@@ -75,7 +75,7 @@ def test_apply_non_derivable_persists_category_without_numbers(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
         provider=LLMProvider.CLAUDE,
-        classifier=_FixedSaturatingClassifier(iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY),
+        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY),
         transaction_repository=repository,
     )
 
@@ -104,7 +104,7 @@ def test_apply_mixed_without_business_pct_refuses(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
         provider=LLMProvider.CLAUDE,
-        classifier=_FixedSaturatingClassifier(
+        classifier=_saturating_subprocess_classifier(
             classification=BusinessClassification.MIXED,
             iva_category=IvaCategory.DOMESTIC_GENERAL_21,
             business_pct=None,
@@ -132,7 +132,7 @@ def test_apply_mixed_uses_proposed_business_pct(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
         provider=LLMProvider.CLAUDE,
-        classifier=_FixedSaturatingClassifier(
+        classifier=_saturating_subprocess_classifier(
             classification=BusinessClassification.MIXED,
             iva_category=IvaCategory.DOMESTIC_GENERAL_21,
             business_pct=Decimal("0.6"),
