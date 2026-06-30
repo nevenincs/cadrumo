@@ -107,6 +107,29 @@ def _create_115_work_unit() -> dict[str, object]:
     return _payload(result.output)
 
 
+def _create_180_work_unit() -> dict[str, object]:
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "180",
+            "--year",
+            "2026",
+            "--period",
+            "0A",
+            "--revision",
+            "2023-y-siguientes",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    return _payload(result.output)
+
+
 def _raw_transaction(
     provider_id: str,
     *,
@@ -280,6 +303,34 @@ def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_eviden
     assert envelope["error"]["context"]["period"] == "1T"
     assert envelope["error"]["context"]["source_kind"] == "retenciones_aggregation"
     assert "--retencion-observation" in envelope["error"]["suggestion"]
+
+
+def test_work_calculate_modelo_180_refuses_string_perceptor_casilla_with_detail_guidance() -> None:
+    """M180 perceptor string fields are refused before the decimal casilla parser."""
+
+    _create_profile()
+    work_unit = _create_180_work_unit()
+
+    calculated = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            str(work_unit["work_unit_id"]),
+            "--casilla",
+            "perc.nif=B12345678",
+        ],
+    )
+
+    assert calculated.exit_code != 0, calculated.output
+    envelope = json.loads(calculated.output)
+    assert envelope["error"]["code"] == "REFUSED_MODELO_CALCULATE_CASILLA_INPUT"
+    assert envelope["error"]["context"]["key"] == "perc.nif"
+    assert "perceptor/property detail rows are not supported" in envelope["error"]["message"]
+    assert "--retencion-observation" in envelope["error"]["message"]
 
 
 def test_work_calculate_persists_ledger_source_mesh_observations() -> None:

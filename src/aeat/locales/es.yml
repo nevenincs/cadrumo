@@ -896,6 +896,7 @@ application:
         Vuelva a crear la unidad de trabajo para vincularla a la revision actual.
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
+      calculate_detail_casilla_unsupported: 'La casilla %{key} nombra un campo de detalle de perceptor/inmueble del Modelo 180, no una casilla decimal escalar. El canal local --casilla solo acepta casillas decimales escalares; las filas de detalle de perceptor/inmueble del Modelo 180 aun no estan soportadas en la superficie publica --row. Usa aeat app modelo aggregate --modelo 180 --retencion-observation para la fuente soportada de numero de perceptores/base/retenciones anual.'
     findings:
       art20_reduccion_next_action: Verifique si sus otras rentas distintas de las
         del trabajo excluidas las exentas del ejercicio no superan 6500 EUR; en ese

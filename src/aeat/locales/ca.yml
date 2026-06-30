@@ -885,6 +885,7 @@ application:
         Torneu a crear la unitat de treball per vincular-la a la revisio actual.
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
+      calculate_detail_casilla_unsupported: 'La casella %{key} identifica un camp de detall de perceptor/immoble del Model 180, no una casella decimal escalar. El canal local --casilla nomes accepta caselles decimals escalars; les files de detall de perceptor/immoble del Model 180 encara no estan suportades a la superficie publica --row. Usa aeat app modelo aggregate --modelo 180 --retencion-observation per a la font suportada de nombre de perceptors/base/retencions anual.'
     findings:
       art20_reduccion_next_action: Verifiqueu si les vostres altres rendes diferents
         de les del treball excloses les exemptes de l'exercici no superen 6500 EUR;

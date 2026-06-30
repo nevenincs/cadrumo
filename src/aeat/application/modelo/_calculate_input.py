@@ -74,6 +74,7 @@ _INSS_EXENTA_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_prestacion_inss_maternida
 _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE = "irpf_deduccion_maternidad"
 _REDUCCION_TRABAJO_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_reduccion"
 _SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE = "is_sal_reserva_especial_dotacion"
+_DETAIL_CASILLA_OVERRIDE_PREFIXES = ("perc.", "perceptor.", "inmueble.")
 
 
 class ModeloCalculateInputError(ModeloError, ValueError):
@@ -263,7 +264,7 @@ def calculate_modelo_work_revision(
 def build_work_calculate_input_bundle(
     *,
     work_unit_id: str,
-    casilla_overrides: Mapping[CasillaId, str],
+    casilla_overrides: Mapping[str, str],
     binding_overrides: Mapping[BindingId, str],
     relation_overrides: Mapping[RelationId, str],
     detail_rows: tuple[ModeloDetailRow, ...],
@@ -296,6 +297,7 @@ def build_work_calculate_input_bundle(
     revision = _revision_for_work_unit(work_unit_id)
     casilla_inputs: dict[CasillaId, Decimal] = {}
     for raw_key, raw_value in casilla_overrides.items():
+        _refuse_detail_casilla_override(raw_key)
         key = _validated_canonical_casilla_id(raw_key, revision)
         casilla_inputs[key] = _decimal(raw_value, flag="--casilla", key=key)
     casilla_inputs = validate_casilla_input_ids(revision, casilla_inputs)
@@ -385,6 +387,26 @@ def _decimal(raw_value: str, *, flag: str, key: str) -> Decimal:
             context={"flag": flag, "key": key, "value": raw_value},
             translated_message="application.modelo.errors.calculate_decimal_input_invalid",
         ) from exc
+
+
+def _refuse_detail_casilla_override(key: str) -> None:
+    """Reject detail-row aliases before the decimal-only casilla path parses values."""
+    if not is_detail_casilla_override_key(key):
+        return
+    raise ModeloCalculateCasillaInputError(
+        f"--casilla {key!r} names a Modelo 180 perceptor/property detail field, not a scalar decimal "
+        "casilla input. The local work --casilla channel only accepts scalar decimal casillas; "
+        "Modelo 180 perceptor/property detail rows are not supported on the public --row surface yet. "
+        "Use `aeat app modelo aggregate --modelo 180 --retencion-observation ...` for the supported "
+        "annual perceptor count/base/retenciones source, and do not supply string fields through --casilla.",
+        context={"key": key},
+        translated_message="application.modelo.errors.calculate_detail_casilla_unsupported",
+    )
+
+
+def is_detail_casilla_override_key(key: str) -> bool:
+    """Return whether *key* names a reserved detail-row alias, not a scalar casilla."""
+    return key.strip().lower().startswith(_DETAIL_CASILLA_OVERRIDE_PREFIXES)
 
 
 def _revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
@@ -672,5 +694,6 @@ __all__ = [
     "authorization_advisory_for_modelo",
     "build_work_calculate_input_bundle",
     "calculate_modelo_work_revision",
+    "is_detail_casilla_override_key",
     "modelo_202_modality_for_work_unit",
 ]

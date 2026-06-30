@@ -832,6 +832,7 @@ application:
         létre újra a munkaegységet.
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
+      calculate_detail_casilla_unsupported: 'A(z) %{key} casilla a Modelo 180 perceptor/ingatlan reszletsor mezojet nevezi meg, nem skalaris decimalis casilla bemenetet. A helyi --casilla csatorna csak skalaris decimalis casillakat fogad; a Modelo 180 perceptor/ingatlan reszletsorai meg nem tamogatottak a nyilvanos --row feluleten. Hasznald az aeat app modelo aggregate --modelo 180 --retencion-observation parancsot a tamogatott eves perceptor-szam/base/retenciones forrashoz.'
     findings:
       art20_reduccion_next_action: Ellenorizze, hogy a nem munkabol szarmazo egyeb
         jovedelme a mentes jovedelem nelkul az adoevben nem haladja-e meg a 6500 EUR-t;
