@@ -170,7 +170,7 @@ class ModeloDraft(BaseModel):
     draft_id: str
     modelo: str
     period: Period
-    profile_tax_id: str
+    profile_tax_id: SubjectTaxId
     # Typed Spanish NIF/NIE/CIF of the filing subject. New drafts
     # populate this from the validated profile substrate so the
     # identity is re-checkable at persistence time.
@@ -200,7 +200,7 @@ def compute_modelo_draft_id(
     *,
     modelo: str,
     period: Period,
-    profile_tax_id: str,
+    profile_tax_id: SubjectTaxId,
     snapshot_ref: RegistrySnapshotRef,
     values: tuple[ModeloValue, ...],
     binding_values: tuple[ModeloBindingValue, ...] = (),
@@ -214,7 +214,7 @@ def compute_modelo_draft_id(
     Args:
         modelo: Modelo string ID.
         period: Typed :class:`~aeat.core.Period` for the filing period.
-        profile_tax_id: Taxpayer tax ID.
+        profile_tax_id: Validated taxpayer tax ID.
         snapshot_ref: Typed registry snapshot coordinate this draft was
             built against.
         values: The tuple of :class:`ModeloValue` records to hash.
