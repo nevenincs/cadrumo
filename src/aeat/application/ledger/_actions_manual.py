@@ -1,10 +1,12 @@
-"""Application services for bucket-scoped manual ledger transactions.
+"""Manual ledger transaction services and read projections.
 
-Services operate over a :class:`TransactionCatalogueRepository` for ledger
-state, a :class:`BucketEventHistoryRepository` for durable audit events, and
-an optional :class:`InvoiceCatalogueRepository` for purchase-invoice evidence
-cascade on removal. The inner functions accept a :class:`TransactionCatalogue`
-or :class:`InvoiceCatalogue` directly when the caller supplies pre-loaded data.
+The services build :class:`~aeat.domain.transactions.Transaction` records from
+:class:`~aeat.application.ledger.ManualLedgerTransactionCommand`, persist them
+in a loaded :class:`TransactionCatalogue`, append bucket events, and return
+:class:`~aeat.application.ledger.ManualLedgerTransactionResult` values.
+Evidence paths validate purchase-invoice, attachment, and
+:class:`~aeat.domain.usage_ratios.UsageRatioProfile` references before
+persistence.
 """
 
 from __future__ import annotations
@@ -113,8 +115,8 @@ def create_manual_transaction(
 ) -> ManualLedgerTransactionResult:
     """Persist one manual ledger transaction in the command's bucket.
 
-    Returns a :class:`ManualLedgerTransactionResult` with the created
-    transaction and associated bucket event.
+    Returns a :class:`~aeat.application.ledger.ManualLedgerTransactionResult`
+    with the created transaction and associated bucket event.
     """
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
@@ -165,7 +167,7 @@ def attach_manual_transaction_evidence(
 ) -> ManualLedgerTransactionResult:
     """Attach purchase evidence or supplementary attachments to one ledger transaction.
 
-    Returns a :class:`ManualLedgerTransactionResult`.
+    Returns a :class:`~aeat.application.ledger.ManualLedgerTransactionResult`.
     """
     trimmed_actor = _require_actor(actor, operation="ledger evidence attachment")
     trimmed_source_command = _require_source_command(source_command, operation="ledger evidence attachment")
@@ -218,7 +220,7 @@ def get_manual_transaction(
     transaction_id: str,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> ManualLedgerTransactionResult:
-    """Return one :class:`ManualLedgerTransactionResult` from a bucket-scoped catalogue."""
+    """Return one :class:`~aeat.application.ledger.ManualLedgerTransactionResult` from a bucket catalogue."""
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transaction = _require_transaction(repository.load(), transaction_id)
     return _result(bucket_id, transaction, ())
@@ -231,7 +233,8 @@ def list_manual_transactions(
 ) -> tuple[ManualLedgerTransactionResult, ...]:
     """Return every transaction in a bucket, sorted by effective date and id.
 
-    Each element is a :class:`ManualLedgerTransactionResult` for one
+    Each element is a
+    :class:`~aeat.application.ledger.ManualLedgerTransactionResult` for one
     stored transaction.
     """
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
@@ -253,7 +256,7 @@ def query_ledger_review_rows(
 ) -> LedgerReviewQueryResult:
     """Return review rows for bucket-local ledger transactions.
 
-    Returns a :class:`LedgerReviewQueryResult`.
+    Returns a :class:`~aeat.application.ledger.LedgerReviewQueryResult`.
     """
     repository = _transaction_repository(bucket_id=query.bucket_id, repository=transaction_repository)
     catalogue = repository.load()
@@ -266,7 +269,7 @@ def query_ledger_review_rows(
 
 
 def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPayload:
-    """Return the :class:`LedgerTransactionPayload` for one ledger transaction."""
+    """Return the :class:`~aeat.application.ledger.LedgerTransactionPayload` for one ledger transaction."""
     raw = transaction.raw
     return LedgerTransactionPayload(
         transaction_id=transaction.transaction_id,
@@ -309,8 +312,9 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
 def ledger_transaction_review_payload(transaction: Transaction) -> LedgerTransactionReviewPayload:
     """Return one ledger transaction projection plus derived operator review status.
 
-    Returns a :class:`LedgerTransactionReviewPayload` with all operator-facing
-    fields populated from the transaction record.
+    Returns a
+    :class:`~aeat.application.ledger.LedgerTransactionReviewPayload` with all
+    operator-facing fields populated from the transaction record.
     """
     base = ledger_transaction_payload(transaction)
     return LedgerTransactionReviewPayload(
@@ -320,7 +324,10 @@ def ledger_transaction_review_payload(transaction: Transaction) -> LedgerTransac
 
 
 def ledger_transaction_result_payload(result: ManualLedgerTransactionResult) -> LedgerTransactionResultPayload:
-    """Return the canonical :class:`LedgerTransactionResultPayload` for a single ledger mutation/read result."""
+    """Return the canonical result payload for one ledger mutation/read result.
+
+    Returns a :class:`~aeat.application.ledger.LedgerTransactionResultPayload`.
+    """
     return LedgerTransactionResultPayload(
         bucket_id=result.ref.bucket_id,
         transaction_id=result.ref.transaction_id,
@@ -330,7 +337,11 @@ def ledger_transaction_result_payload(result: ManualLedgerTransactionResult) -> 
 
 
 def ledger_transaction_tracking_payload(transaction: Transaction) -> LedgerTransactionTrackingPayload:
-    """Return durable event lineage fields as a :class:`LedgerTransactionTrackingPayload` for one ledger transaction."""
+    """Return durable event lineage fields for one ledger transaction.
+
+    Returns a
+    :class:`~aeat.application.ledger.LedgerTransactionTrackingPayload`.
+    """
     return LedgerTransactionTrackingPayload(
         transaction_id=transaction.transaction_id,
         created_event_id=transaction.created_event_id,
@@ -347,7 +358,7 @@ def summarize_manual_transactions(
     period: Period | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> LedgerStatusReport:
-    """Return a read-only :class:`LedgerStatusReport` for one bucket's ledger transactions."""
+    """Return a read-only :class:`~aeat.application.ledger.LedgerStatusReport` for one bucket."""
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transactions = tuple(repository.load().values())
     status_counts: dict[LedgerReviewStatus, int] = {
