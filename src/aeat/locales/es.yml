@@ -2765,7 +2765,7 @@ cli:
       description_help: Descripción no vacía de la transacción
       direction_help: Sentido de la transacción (INCOMING, OUTGOING o INTERNAL_TRANSFER)
       help: Añade una transacción manual al libro del perfil activo
-      idempotency_key_help: Clave de idempotencia aportada por el llamador
+      idempotency_key_help: 'Clave estable para esta anotación lógica: repetir la misma clave es una operación sin efecto, por lo que los reintentos no duplican la fila. Omítala para añadir un duplicado deliberado.'
       idempotent_noop: 'Operación idempotente sin efecto: ya existe una transacción con esta clave de idempotencia (%{transaction_id}); no se añadió nada.'
       irpf_category_help: Categoría de IRPF para cálculos de modelos
       iva_amount_help: Importe de IVA de la transacción
