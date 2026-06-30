@@ -34,7 +34,13 @@ from .._errors import LiveApplicationInputError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_SESSION_BUCKET_ID = "ephemeral"
+_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
+_OTHER_PROFILE_ID = "22222222-2222-4222-8222-222222222222"
+_SESSION_BUCKET_ID = "46464646-4646-4464-8464-464646464646"
+_SNAPSHOT_BUCKET_ID = _SESSION_BUCKET_ID
+_OTHER_BUCKET_ID = "48484848-4848-4484-8484-484848484848"
+_SHARED_BUCKET_ID = _SESSION_BUCKET_ID
+_DISCARD_ACTOR = "operator-label"
 _G313_URL = (
     f"{Settings.external_constants().aeat.domains.sede}"
     f"{Settings.external_constants().aeat.sede_paths.censo_g313_launcher}"
@@ -73,7 +79,7 @@ def test_derive_censo_snapshot_id_is_deterministic_over_canonical_inputs() -> No
 
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     base_kwargs: _DeriveKwargs = {
-        "profile_id": "operator",
+        "profile_id": _PROFILE_ID,
         "captured_at": captured_at,
         "source_url": _G313_URL,
         "censo_facts": _populated_facts(),
@@ -86,7 +92,7 @@ def test_derive_censo_snapshot_id_is_deterministic_over_canonical_inputs() -> No
     assert derive_censo_snapshot_id(**base_kwargs) == base_id
 
     # Different profile_id => different id.
-    drift_kwargs: _DeriveKwargs = {**base_kwargs, "profile_id": "other-operator"}
+    drift_kwargs: _DeriveKwargs = {**base_kwargs, "profile_id": _OTHER_PROFILE_ID}
     assert derive_censo_snapshot_id(**drift_kwargs) != base_id
 
     # Different fact value => different id.
@@ -100,12 +106,12 @@ def test_censo_snapshot_object_key_namespaces_by_bucket_and_snapshot() -> None:
     """The secure-object key embeds bucket and snapshot ids so the
     namespace cannot collide across buckets or snapshots."""
 
-    key = censo_snapshot_object_key("bucket-1", "snap-abc")
-    assert key == "censo-snapshot:bucket-1:snap-abc"
+    key = censo_snapshot_object_key(_OTHER_BUCKET_ID, "snap-abc")
+    assert key == f"censo-snapshot:{_OTHER_BUCKET_ID}:snap-abc"
     with pytest.raises(LiveApplicationInputError, match=r"bucket_id"):
         censo_snapshot_object_key("   ", "snap-abc")
     with pytest.raises(LiveApplicationInputError, match=r"snapshot_id"):
-        censo_snapshot_object_key("bucket-1", "   ")
+        censo_snapshot_object_key(_OTHER_BUCKET_ID, "   ")
 
 
 def test_active_snapshot_cannot_carry_supersession_pointer() -> None:
@@ -114,7 +120,7 @@ def test_active_snapshot_cannot_carry_supersession_pointer() -> None:
 
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     snapshot_id = derive_censo_snapshot_id(
-        profile_id="11111111-1111-4111-8111-111111111111",
+        profile_id=_PROFILE_ID,
         captured_at=captured_at,
         source_url="https://example/G313",
         censo_facts={},
@@ -122,8 +128,8 @@ def test_active_snapshot_cannot_carry_supersession_pointer() -> None:
     with pytest.raises(LiveApplicationInputError, match=r"active.*supersession"):
         CensoSnapshot(
             snapshot_id=snapshot_id,
-            bucket_id="bucket-1",
-            profile_id="11111111-1111-4111-8111-111111111111",
+            bucket_id=_OTHER_BUCKET_ID,
+            profile_id=_PROFILE_ID,
             captured_at=captured_at,
             source_url="https://example/G313",
             state=SnapshotLifecycleState.ACTIVE,
@@ -136,7 +142,7 @@ def test_superseded_snapshot_requires_successor_pointer() -> None:
 
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     snapshot_id = derive_censo_snapshot_id(
-        profile_id="11111111-1111-4111-8111-111111111111",
+        profile_id=_PROFILE_ID,
         captured_at=captured_at,
         source_url="https://example/G313",
         censo_facts={},
@@ -144,8 +150,8 @@ def test_superseded_snapshot_requires_successor_pointer() -> None:
     with pytest.raises(LiveApplicationInputError, match=r"superseded.*superseded_by"):
         CensoSnapshot(
             snapshot_id=snapshot_id,
-            bucket_id="bucket-1",
-            profile_id="11111111-1111-4111-8111-111111111111",
+            bucket_id=_OTHER_BUCKET_ID,
+            profile_id=_PROFILE_ID,
             captured_at=captured_at,
             source_url="https://example/G313",
             state=SnapshotLifecycleState.SUPERSEDED,
@@ -159,12 +165,12 @@ def test_censo_snapshot_survives_encrypted_storage_roundtrip(
     """The populated snapshot round-trips through the encrypted store
     preserving both Decimal and str fact values intact."""
 
-    bucket_id = "operator-bucket"
+    bucket_id = _SNAPSHOT_BUCKET_ID
     repo = CensoSnapshotRepository(bucket_id=bucket_id)
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     facts = _populated_facts()
     snapshot_id = derive_censo_snapshot_id(
-        profile_id="11111111-1111-4111-8111-111111111111",
+        profile_id=_PROFILE_ID,
         captured_at=captured_at,
         source_url=_G313_URL,
         censo_facts=facts,
@@ -172,7 +178,7 @@ def test_censo_snapshot_survives_encrypted_storage_roundtrip(
     original = CensoSnapshot(
         snapshot_id=snapshot_id,
         bucket_id=bucket_id,
-        profile_id="11111111-1111-4111-8111-111111111111",
+        profile_id=_PROFILE_ID,
         captured_at=captured_at,
         source_url=_G313_URL,
         state=SnapshotLifecycleState.ACTIVE,
@@ -206,18 +212,18 @@ def test_capture_is_idempotent_for_structurally_identical_facts(
     snapshot_id is deterministic so the service returns the existing
     snapshot rather than persisting a duplicate."""
 
-    service = CensoSnapshotService(bucket_id="operator-bucket")
+    service = CensoSnapshotService(bucket_id=_SNAPSHOT_BUCKET_ID)
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     facts = _populated_facts()
 
     first = service.capture(
-        profile_id="11111111-1111-4111-8111-111111111111",
+        profile_id=_PROFILE_ID,
         captured_at=captured_at,
         source_url="https://example/G313",
         censo_facts=facts,
     )
     second = service.capture(
-        profile_id="11111111-1111-4111-8111-111111111111",
+        profile_id=_PROFILE_ID,
         captured_at=captured_at,
         source_url="https://example/G313",
         censo_facts=facts,
@@ -235,19 +241,19 @@ def test_capture_auto_supersedes_prior_active_for_same_profile(
     """A fresh capture for the same profile transitions the prior
     ACTIVE snapshot into SUPERSEDED with a successor pointer."""
 
-    service = CensoSnapshotService(bucket_id="operator-bucket")
+    service = CensoSnapshotService(bucket_id=_SNAPSHOT_BUCKET_ID)
     facts_v1 = _populated_facts()
     facts_v2 = dict(facts_v1)
     facts_v2["censo.elected_withholding_pct"] = "7"
 
     snapshot_v1 = service.capture(
-        profile_id="11111111-1111-4111-8111-111111111111",
+        profile_id=_PROFILE_ID,
         captured_at=datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC),
         source_url="https://example/G313",
         censo_facts=facts_v1,
     )
     snapshot_v2 = service.capture(
-        profile_id="11111111-1111-4111-8111-111111111111",
+        profile_id=_PROFILE_ID,
         captured_at=datetime(2026, 5, 17, 9, 30, 0, tzinfo=UTC),
         source_url="https://example/G313",
         censo_facts=facts_v2,
@@ -260,7 +266,7 @@ def test_capture_auto_supersedes_prior_active_for_same_profile(
     assert snapshot_v2.state is SnapshotLifecycleState.ACTIVE
 
     # latest_active returns v2.
-    latest = service.latest_active(profile_id="11111111-1111-4111-8111-111111111111")
+    latest = service.latest_active(profile_id=_PROFILE_ID)
     assert latest is not None
     assert latest.snapshot_id == snapshot_v2.snapshot_id
 
@@ -272,19 +278,19 @@ def test_capture_marks_older_snapshot_superseded_when_a_newer_active_exists(
     SUPERSEDED with a pointer to the newer ACTIVE — mirrors the
     Borrador100 out-of-order capture path."""
 
-    service = CensoSnapshotService(bucket_id="operator-bucket")
+    service = CensoSnapshotService(bucket_id=_SNAPSHOT_BUCKET_ID)
     facts_newer = _populated_facts()
     facts_older = dict(facts_newer)
     facts_older["censo.elected_withholding_pct"] = "1"
 
     newer = service.capture(
-        profile_id="11111111-1111-4111-8111-111111111111",
+        profile_id=_PROFILE_ID,
         captured_at=datetime(2026, 5, 17, 9, 30, 0, tzinfo=UTC),
         source_url="https://example/G313",
         censo_facts=facts_newer,
     )
     older = service.capture(
-        profile_id="11111111-1111-4111-8111-111111111111",
+        profile_id=_PROFILE_ID,
         captured_at=datetime(2026, 5, 15, 9, 30, 0, tzinfo=UTC),
         source_url="https://example/G313",
         censo_facts=facts_older,
@@ -292,7 +298,7 @@ def test_capture_marks_older_snapshot_superseded_when_a_newer_active_exists(
 
     assert older.state is SnapshotLifecycleState.SUPERSEDED
     assert older.superseded_by_snapshot_id == newer.snapshot_id
-    latest_active = service.latest_active(profile_id="11111111-1111-4111-8111-111111111111")
+    latest_active = service.latest_active(profile_id=_PROFILE_ID)
     assert latest_active is not None
     assert latest_active.snapshot_id == newer.snapshot_id
 
@@ -301,7 +307,7 @@ def test_supersession_scopes_to_profile_id(isolated_secure_store: None) -> None:
     """Captures for different profile_ids in the same bucket do NOT
     supersede each other (multi-profile bucket isolation)."""
 
-    service = CensoSnapshotService(bucket_id="shared-bucket")
+    service = CensoSnapshotService(bucket_id=_SHARED_BUCKET_ID)
     facts = _populated_facts()
 
     operator_a = service.capture(
@@ -331,9 +337,9 @@ def test_discard_marks_snapshot_discarded_with_audit(
     """The discard verb transitions a snapshot to DISCARDED with the
     operator label and timestamp captured for the audit trail."""
 
-    service = CensoSnapshotService(bucket_id="operator-bucket")
+    service = CensoSnapshotService(bucket_id=_SNAPSHOT_BUCKET_ID)
     captured = service.capture(
-        profile_id="11111111-1111-4111-8111-111111111111",
+        profile_id=_PROFILE_ID,
         captured_at=datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC),
         source_url="https://example/G313",
         censo_facts=_populated_facts(),
@@ -341,17 +347,17 @@ def test_discard_marks_snapshot_discarded_with_audit(
 
     discarded = service.discard(
         snapshot_id=captured.snapshot_id,
-        discarded_by="operator",
+        discarded_by=_DISCARD_ACTOR,
         discard_reason="malformed elected_withholding_pct from sede",
     )
     assert discarded.state is SnapshotLifecycleState.DISCARDED
-    assert discarded.discarded_by == "operator"
+    assert discarded.discarded_by == _DISCARD_ACTOR
     assert "malformed" in discarded.discard_reason
     assert discarded.discarded_at is not None
 
     # latest_active for the profile returns None because the discarded
     # snapshot is no longer ACTIVE.
-    assert service.latest_active(profile_id="11111111-1111-4111-8111-111111111111") is None
+    assert service.latest_active(profile_id=_PROFILE_ID) is None
 
 
 def test_namespace_constant_uses_storage_registry() -> None:
@@ -368,12 +374,12 @@ def test_fixture_built_superseded_snapshot_roundtrips_with_successor_pointer(
     path tests above never exercise the field on a load — they read it
     after a save the service itself performs in the same memory image."""
 
-    bucket_id = "operator-bucket"
+    bucket_id = _SNAPSHOT_BUCKET_ID
     repo = CensoSnapshotRepository(bucket_id=bucket_id)
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     facts = _populated_facts()
     snapshot_id = derive_censo_snapshot_id(
-        profile_id="11111111-1111-4111-8111-111111111111",
+        profile_id=_PROFILE_ID,
         captured_at=captured_at,
         source_url="https://example/G313",
         censo_facts=facts,
@@ -382,7 +388,7 @@ def test_fixture_built_superseded_snapshot_roundtrips_with_successor_pointer(
     original = CensoSnapshot(
         snapshot_id=snapshot_id,
         bucket_id=bucket_id,
-        profile_id="11111111-1111-4111-8111-111111111111",
+        profile_id=_PROFILE_ID,
         captured_at=captured_at,
         source_url="https://example/G313",
         state=SnapshotLifecycleState.SUPERSEDED,
@@ -404,13 +410,13 @@ def test_fixture_built_discarded_snapshot_roundtrips_with_full_audit_triple(
     ``discard_reason``). A save that drops any of them would leave them
     at their default — the model_validator would raise on load."""
 
-    bucket_id = "operator-bucket"
+    bucket_id = _SNAPSHOT_BUCKET_ID
     repo = CensoSnapshotRepository(bucket_id=bucket_id)
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     discarded_at = datetime(2026, 5, 17, 14, 0, 0, tzinfo=UTC)
     facts = _populated_facts()
     snapshot_id = derive_censo_snapshot_id(
-        profile_id="11111111-1111-4111-8111-111111111111",
+        profile_id=_PROFILE_ID,
         captured_at=captured_at,
         source_url="https://example/G313",
         censo_facts=facts,
@@ -418,13 +424,13 @@ def test_fixture_built_discarded_snapshot_roundtrips_with_full_audit_triple(
     original = CensoSnapshot(
         snapshot_id=snapshot_id,
         bucket_id=bucket_id,
-        profile_id="11111111-1111-4111-8111-111111111111",
+        profile_id=_PROFILE_ID,
         captured_at=captured_at,
         source_url="https://example/G313",
         state=SnapshotLifecycleState.DISCARDED,
         censo_facts=facts,
         discarded_at=discarded_at,
-        discarded_by="operator",
+        discarded_by=_DISCARD_ACTOR,
         discard_reason="malformed elected_withholding_pct from sede",
     )
     repo.save(original)
@@ -432,7 +438,7 @@ def test_fixture_built_discarded_snapshot_roundtrips_with_full_audit_triple(
 
     assert loaded.state is SnapshotLifecycleState.DISCARDED
     assert loaded.discarded_at == discarded_at
-    assert loaded.discarded_by == "operator"
+    assert loaded.discarded_by == _DISCARD_ACTOR
     assert "malformed" in loaded.discard_reason
 
 
@@ -453,12 +459,12 @@ def test_anti_tautology_mutating_on_disk_payload_is_detected_on_load(
         SensitivityClass,
     )
 
-    bucket_id = "operator-bucket"
+    bucket_id = _SNAPSHOT_BUCKET_ID
     repo = CensoSnapshotRepository(bucket_id=bucket_id)
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     facts = _populated_facts()
     snapshot_id = derive_censo_snapshot_id(
-        profile_id="11111111-1111-4111-8111-111111111111",
+        profile_id=_PROFILE_ID,
         captured_at=captured_at,
         source_url="https://example/G313",
         censo_facts=facts,
@@ -467,7 +473,7 @@ def test_anti_tautology_mutating_on_disk_payload_is_detected_on_load(
     original = CensoSnapshot(
         snapshot_id=snapshot_id,
         bucket_id=bucket_id,
-        profile_id="11111111-1111-4111-8111-111111111111",
+        profile_id=_PROFILE_ID,
         captured_at=captured_at,
         source_url="https://example/G313",
         state=SnapshotLifecycleState.SUPERSEDED,
