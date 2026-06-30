@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources import resources
 from ....deadlines import (
     EntityType,
     FiscalResidency,
@@ -17,7 +17,6 @@ from ....deadlines import (
     LegalEntityForm,
     TaxpayerProfile,
 )
-from .. import ValidatedRegistryAuthority
 from ..applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
@@ -55,8 +54,7 @@ def test_seed_modelo_applicability_rules_are_registry_owned() -> None:
 def test_seed_modelo_applicability_legal_refs_resolve_in_registry() -> None:
     """Every seed applicability rule carries real scoped legal refs."""
 
-    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
-    registered_legal_ids = set(authority.catalogues.legal)
+    registered_legal_ids = set(resources().modelos.authority.catalogues.legal)
     assert registered_legal_ids
 
     for rule in iter_modelo_applicability_rules():
