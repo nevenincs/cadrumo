@@ -14,16 +14,17 @@ Operator verbs:
     :class:`ApoderadoLiveCheckUnavailableError`; use ``status`` for the
     offline configuration read.
 
-Configuration is persisted per-bucket as an encrypted envelope row in
-the :class:`SecureObjectRepository` under
+Configuration is persisted per-bucket as an encrypted
+:class:`~aeat.adapters.persistence.storage.Envelope` row in the
+:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository` under
 :data:`aeat.adapters.persistence.storage.AUTH_APODERADO_CONFIGURATION_NAMESPACE`.
 The ``represented_nif`` is an
 identity-bearing tax identifier, so the record carries
-:class:`SensitivityClass` ``IDENTITY`` and is encrypted at rest; the
-service never writes plaintext to disk. Live mutation of AEAT-side
-apoderamiento state (registrar, ampliar, revocar, confirmar,
-renunciar, presentar-en-representacion) is permanently refused at
-this boundary; the service has no verb that would write to AEAT.
+:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``IDENTITY`` and
+is encrypted at rest; the service never writes plaintext to disk. Live mutation
+of AEAT-side apoderamiento state (registrar, ampliar, revocar, confirmar,
+renunciar, presentar-en-representacion) is permanently refused at this boundary;
+the service has no verb that would write to AEAT.
 """
 
 from __future__ import annotations
@@ -87,10 +88,12 @@ class ApoderadoStatus(BaseModel):
 class _ApoderadoConfigRepository(SecureBoundRepository[ApoderadoConfiguration]):
     """Encrypted per-bucket apoderado configuration store.
 
-    Records carry :class:`SensitivityClass` ``IDENTITY`` as declared by
+    Records carry :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+    ``IDENTITY`` as declared by
     :data:`aeat.adapters.persistence.storage.AUTH_APODERADO_CONFIGURATION_NAMESPACE`:
     the ``represented_nif`` is an identity-bearing tax identifier. The
-    :class:`SecureBoundRepository` base serialises each
+    :class:`~aeat.adapters.persistence.storage.envelope.SecureBoundRepository`
+    base serialises each
     :class:`ApoderadoConfiguration` through an
     :class:`~aeat.adapters.persistence.storage.Envelope`. The natural key is
     the ``bucket_id``, so each bucket holds at most one apoderado configuration.
