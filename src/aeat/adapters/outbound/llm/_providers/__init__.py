@@ -16,10 +16,9 @@ from .local import LocalAdapter, rasterise_pdf_pages_to_base64_png
 from .openai import OpenAIAdapter
 
 if TYPE_CHECKING:
-    # AnthropicAdapter eagerly imports the optional `anthropic` SDK at module
-    # load, so it is exposed lazily via __getattr__ — importing this package (as
-    # the LLM client does) must not pull in the `anthropic` extra. The boundary
-    # guard lives in LLMClient._build_adapter (require_optional_extra).
+    # Runtime access stays lazy so importing this package does not construct
+    # the optional Anthropic SDK boundary. AnthropicAdapter itself remains
+    # importable without the extra; construction performs the guarded load.
     from .anthropic import AnthropicAdapter
 
 __all__ = [

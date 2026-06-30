@@ -22,8 +22,8 @@ from ._providers import (
     _ProviderAdapter,
 )
 
-# AnthropicAdapter is NOT imported here: it pulls the optional `anthropic` SDK at
-# module load. It is imported lazily in _build_adapter behind the extra guard.
+# AnthropicAdapter stays lazy here so provider construction remains behind the
+# optional-extra guard in _build_adapter.
 from ._usage import UsageRecorder
 
 _LOGGER = get_logger(__name__)
