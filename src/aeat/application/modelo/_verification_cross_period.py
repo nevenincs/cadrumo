@@ -45,6 +45,10 @@ from ..calculations import (
     CrossPeriodExpectedMemberSet,
     evaluate_cross_period_clean_state,
 )
+from ..calculations._m111_no_retenciones import (
+    M111_NO_RETENCIONES_PROFILE_PATH,
+    m111_no_retenciones_periods_for_bucket,
+)
 from ._action_errors import ModeloCrossPeriodCleanStateError
 from ._registry_resources import authority_via_resources as _authority_via_resources
 
@@ -179,6 +183,7 @@ def _cross_period_clean_state_verdict_for_work_unit(
     workflow_profile: TaxpayerProfile | None = None,
     not_applicable_source_modelos: frozenset[str] | None = None,
     zero_value_previous_filing_binding_ids: frozenset[str] | None = None,
+    m111_no_retenciones_periods: frozenset[tuple[int, str]] | None = None,
 ) -> CrossPeriodCleanStateVerdict | None:
     """Evaluate the cross-period clean-state verdict for a work unit.
 
@@ -228,6 +233,11 @@ def _cross_period_clean_state_verdict_for_work_unit(
         taxpayer_files_economic_activity=taxpayer_files_economic_activity,
         not_applicable_source_modelos=not_applicable_source_modelos,
         zero_value_previous_filing_binding_ids=zero_value_previous_filing_binding_ids,
+        m111_no_retenciones_periods=(
+            m111_no_retenciones_periods
+            if m111_no_retenciones_periods is not None
+            else m111_no_retenciones_periods_for_bucket(work_unit.bucket_id)
+        ),
     )
 
 
@@ -273,6 +283,10 @@ _M100_ZERO_VALUE_PREVIOUS_FILING_BINDING_RE = _re.compile(
     r"^renta-\d{4}-base-liquidable-negativa-general-anterior$",
 )
 _M100_ZERO_BIN_LEGAL_REFS: tuple[str, ...] = ("ley-35-2006:art-48",)
+_M111_NO_RETENCIONES_LEGAL_REFS: tuple[str, ...] = (
+    "rd-439-2007:art-108",
+    "orden-eha-586-2011:art-1",
+)
 
 
 def _zero_value_previous_filing_binding_ids(target: CalculationRevision | None) -> frozenset[str]:
@@ -373,6 +387,8 @@ def _cross_period_clean_state_findings(
             findings.append(_cross_period_first_year_fractional_suppression_advisory_finding(verdict, evidence))
         if evidence.zero_value_previous_filing_advisory:
             findings.append(_cross_period_zero_value_previous_filing_advisory_finding(verdict, evidence))
+        if evidence.m111_no_retenciones_no_obligation_advisory:
+            findings.append(_cross_period_m111_no_retenciones_advisory_finding(verdict, evidence))
     if activity_start_date is None and has_first_filer_candidate_block:
         findings.append(_cross_period_missing_activity_start_finding(verdict))
     if verdict.has_modelo_not_applicable_advisory:
@@ -609,6 +625,34 @@ def _cross_period_zero_value_previous_filing_advisory_finding(
     )
 
 
+def _cross_period_m111_no_retenciones_advisory_finding(
+    verdict: CrossPeriodCleanStateVerdict,
+    evidence: CrossPeriodDependencyEvidence,
+) -> ModeloVerificationFinding:
+    """NON-BLOCKING advisory for explicit M111 no-retenciones/no-obligation evidence."""
+    requirement = evidence.requirement
+    requirement_period = requirement.period.registry_token
+    origin_text = _summarize_cross_period_ids(requirement.origin_ids)
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.ADVISORY,
+        severity=ModeloVerificationFindingSeverity.WARNING,
+        message=(
+            "Modelo 111 cross-period dependency scoped out as no-retenciones/no-obligation: "
+            f"modelo={requirement.source_modelo} year={requirement.filing_year} "
+            f"period={requirement_period} origin_ids={origin_text} for target modelo={verdict.target_modelo} "
+            f"year={verdict.target_filing_year} period={verdict.target_period.registry_token}. The profile fact "
+            f"{M111_NO_RETENCIONES_PROFILE_PATH} attests that no rentas subject to retencion or ingreso a cuenta "
+            "were paid in that period, so AEAT instructions say an all-blank Modelo 111 should not be filed."
+        ),
+        next_action=(
+            "Keep 036/037 censo or operator evidence supporting the no-retenciones period. If any subject "
+            "payment existed, remove that period from the profile fact, capture the per-perceptor "
+            "retencion observation, calculate/file Modelo 111, and rerun verification."
+        ),
+        legal_refs=(*_M111_NO_RETENCIONES_LEGAL_REFS, *_cross_period_dependency_legal_refs(requirement.origin_ids)),
+    )
+
+
 def _cross_period_non_official_local_chain_advisory_finding(
     verdict: CrossPeriodCleanStateVerdict,
     evidence: CrossPeriodDependencyEvidence,
@@ -763,6 +807,7 @@ def _require_cross_period_clean_state(
         taxpayer_files_economic_activity=taxpayer_files_economic_activity,
         workflow_profile=workflow_profile,
         zero_value_previous_filing_binding_ids=_zero_value_previous_filing_binding_ids(target_revision),
+        m111_no_retenciones_periods=m111_no_retenciones_periods_for_bucket(work_unit.bucket_id),
     )
     findings = _cross_period_clean_state_findings(
         verdict,

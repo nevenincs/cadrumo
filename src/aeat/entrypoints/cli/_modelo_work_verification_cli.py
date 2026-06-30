@@ -24,6 +24,7 @@ from ...application.calculations import (
     cross_period_dependency_inventory,
     evaluate_cross_period_clean_state,
 )
+from ...application.calculations._m111_no_retenciones import m111_no_retenciones_periods_for_bucket
 from ...application.modelo import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -268,6 +269,7 @@ def _register_work_dependencies_command(
                     taxpayer_tax_id=workflow_profile.tax_id,
                     activity_start_date=workflow_profile.activity_start_date,
                     taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
+                    m111_no_retenciones_periods=m111_no_retenciones_periods_for_bucket(active_bucket_id),
                 )
         except (FileNotFoundError, RegistrySnapshotError, ValueError) as exc:
             raise bad_parameter_from_error(exc) from exc

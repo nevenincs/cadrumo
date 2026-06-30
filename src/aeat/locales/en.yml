@@ -4939,6 +4939,10 @@ wizard:
         help: CLI output language for this profile
       pays-capital-income-with-retencion:
         help: Pays capital income with retención
+      modelo-111-no-retenciones-periods:
+        help: 'Comma-separated Modelo 111 no-obligation periods, format YYYY:PERIOD
+          (for example 2025:2T,2025:3T). Use only when no subject payments were
+          made.'
       pays-professionals-with-retencion:
         help: Pays professionals with retención
       pays-rent-with-retencion:
@@ -5076,6 +5080,10 @@ wizard:
         prompt: Virtual currencies held abroad above Modelo 721 threshold
       pays-capital-income-with-retencion:
         prompt: Pays capital income with retención
+      modelo-111-no-retenciones-periods:
+        help: 'Comma-separated YYYY:PERIOD periods where no rentas subject to retención
+          or ingreso a cuenta were paid, so no all-blank Modelo 111 is filed.'
+        prompt: Modelo 111 no-retenciones periods
       pays-professionals-with-retencion:
         prompt: Pays professionals with retención
       pays-rent-with-retencion:

@@ -679,6 +679,16 @@ description = "Whether the taxpayer pays capital income with withholding."
 model_selectors = ["pays_capital_income_with_retencion"]
 schedule_predicates = ["pays_capital_income_with_retencion"]
 
+[[sections.fields]]
+key = "modelo_111_no_retenciones_periods"
+type = "string"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Comma-separated YYYY:PERIOD Modelo 111 periods where no rentas subject to retencion or ingreso a cuenta were paid, so no all-blank Modelo 111 filing obligation existed."
+model_selectors = ["withholding.modelo_111_no_retenciones_periods"]
+legal_refs = ["rd-439-2007:art-108", "orden-eha-586-2011:art-1"]
+
 [[sections]]
 key = "iva"
 title = "IVA profile"
