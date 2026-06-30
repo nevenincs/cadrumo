@@ -84,6 +84,10 @@ dependencies = [
 
 [project.scripts]
 aeat = "aeat.entrypoints.cli:main"
+# Operator MCP server (the `aeat[agent]` capability). Refuses with an install
+# hint when the agent extra is absent, so a bare-core install carries the script
+# without the runtime.
+aeat-mcp = "aeat.entrypoints.mcp:main"
 
 [project.urls]
 Homepage = "https://github.com/wgergely/aeat"
@@ -125,10 +129,12 @@ anthropic = [
 # Operator agent-harness runtime. The harness operating layer (rules, personas,
 # skills) ships as reviewed product data in the CORE wheel under
 # `src/aeat/_data/agent/` and is read with no extra dependency. This extra gates
-# the optional MCP server runtime reached by the `aeat-mcp` console script; its
-# runtime dependency lands with the server. No model weights or credentials are
-# ever bundled (per the product-packaging and secure-storage ADRs).
-agent = []
+# the optional MCP server runtime reached by the `aeat-mcp` console script. No
+# model weights or credentials are ever bundled (per the product-packaging and
+# secure-storage ADRs).
+agent = [
+  "mcp>=1.12,<2",
+]
 # Convenience aggregate: every optional integration at once.
 all = [
   "aeat[google]",

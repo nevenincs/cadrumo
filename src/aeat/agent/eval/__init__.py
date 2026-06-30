@@ -13,11 +13,23 @@ value (that would be a tautological calculation test).
 from __future__ import annotations
 
 from ._models import GoldenResult, GoldenScenario
+from ._replay import (
+    GoldenToolCall,
+    ToolCallResolver,
+    divergent_replays,
+    record_tool_call,
+    replay_tool_call,
+)
 from ._runner import load_scenario, run_golden_scenario
 
 __all__ = [
     "GoldenResult",
     "GoldenScenario",
+    "GoldenToolCall",
+    "ToolCallResolver",
+    "divergent_replays",
     "load_scenario",
+    "record_tool_call",
+    "replay_tool_call",
     "run_golden_scenario",
 ]
