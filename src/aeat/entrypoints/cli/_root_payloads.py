@@ -1,8 +1,8 @@
 """Typed ``--json`` payload schemas for root CLI group callbacks.
 
-The root callbacks in :mod:`aeat.entrypoints.cli` are not ordinary leaf
+The root callbacks in :mod:`~aeat.entrypoints.cli` are not ordinary leaf
 commands, but they still emit :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope`
-documents through :func:`aeat.entrypoints.cli._common._emit_envelope`.
+documents through :func:`~aeat.entrypoints.cli._common._emit_envelope`.
 Each class declared here is a strict
 :class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass and is decorated
 with :func:`~aeat.entrypoints.cli._schemas.register_schema` so the
@@ -10,7 +10,7 @@ JSON-contract and CLI-reference conformance gates can enumerate these
 group-callback surfaces alongside normal command leaves.
 
 Field sets match the production payload dicts constructed in
-:mod:`aeat.entrypoints.cli` at the ``root.status`` and ``root.app`` emit sites.
+:mod:`~aeat.entrypoints.cli` at the ``root.status`` and ``root.app`` emit sites.
 The concrete application shape depends on the callback branch:
 :class:`~aeat.application.operator_surface.HelpDocument`,
 :class:`~aeat.application.operator_surface.RootLandingReport`, or
