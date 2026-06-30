@@ -110,9 +110,7 @@ def test_modelo_130_extraction_profile_legal_refs_match_target_casillas(
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
     profile = next(item for item in revision.extraction_profiles if item.id == "modelo-130-declaracion-pdf")
     target_refs = frozenset(
-        legal_ref
-        for target in profile.target_casillas
-        for legal_ref in casillas_by_id[target.casilla_id].legal_refs
+        legal_ref for target in profile.target_casillas for legal_ref in casillas_by_id[target.casilla_id].legal_refs
     )
 
     assert target_refs == _M130_EXTRACTION_PROFILE_TARGET_LEGAL_REFS
@@ -664,3 +662,87 @@ def test_modelo_130_art109_casilla_17_computes_normally_when_retention_ratio_bel
     assert casilla_17.value != Decimal("0"), (
         "Below-threshold case: casilla 17 must not be zero when income=50000 and retenciones=1000 (2% ratio)"
     )
+
+
+# ---------------------------------------------------------------------------
+# Issue #549 — retención article distinction (Art. 101.5 vs the misattributed
+# "Art. 101.6 sport/art"). Two grounded guards: (1) M130 has no retención-rate
+# computation home, so no activity-article branch belongs in it; (2) the
+# sport/artistic professional rate is the REDUCED 7% of art. 95.1.d RIRPF, not a
+# distinct 15% "Art. 101.6" case as the round-22 testimonial asserted.
+# ---------------------------------------------------------------------------
+
+
+def test_modelo_130_retencion_casilla_is_reported_amount_not_a_rate_computation(
+    modelo_130_registry: _ModeloFixture,
+) -> None:
+    """M130 carries no retención-rate computation, so no Art. 101.5/101.6 branch.
+
+    The retención RATE on professional activities is set by the PAYER under
+    art. 95 RIRPF (developing art. 101.5 LIRPF) and reported on Modelo 111;
+    Modelo 130 never computes it. In M130 the suffered retención enters as a
+    manually-reported amount (casilla 06) whose only downstream use is the
+    art. 109 70%-exemption ratio. There is therefore no place in M130 to branch
+    a retención treatment on the activity article, which is why issue #549's
+    requested "Art. 101.6 sport/art" axis has no M130 calculation home: art. 95
+    RIRPF grounds the reported amount's provenance, not a rate the form derives.
+    """
+    modelo, _catalogues = modelo_130_registry
+    revision = modelo.revisions["2019-y-siguientes"]
+    retenciones = next(casilla for casilla in revision.casillas if casilla.id == _M130_RETENCIONES_CASILLA)
+
+    assert retenciones.input_kind is InputKind.MANUAL
+    assert retenciones.binding is None
+    assert retenciones.formula is None
+    # The retención provision (art. 95 RIRPF) grounds the reported amount's
+    # provenance; it is not a rate the form computes.
+    assert "rd-439-2007:art-95" in retenciones.legal_refs
+
+
+def test_art_95_rirpf_grounds_sport_and_artistic_activity_at_reduced_7pct(
+    modelo_130_registry: _ModeloFixture,
+) -> None:
+    """Issue #549 grounding: sport/artistic professional activity is the REDUCED
+    7% retención of art. 95.1.d RIRPF, not a distinct 15% "Art. 101.6" case.
+
+    The round-22 testimonial asserted an "Art. 101.6 LIRPF (deportivo/artístico)"
+    at 15% distinct from the general professional 15% of art. 101.5. Grounded
+    against the bundled consolidated RIRPF, that premise is wrong: art. 95.1
+    RIRPF sets the general professional rate at 15% and a REDUCED 7% rate for
+    contributors in the artistic/sport IAE groups (sección segunda grupos
+    851-869 and sección tercera agrupaciones 01/02/03/05 — cine, danza, música,
+    espectáculos). There is no 15% sport/art carve-out to model.
+
+    Expected wording is derived from the bundled authoritative consolidated
+    RIRPF (rd-439-2007 art. 95), not hand-restated: the test would fail if a
+    future change encoded the testimonial's wrong 15% sport/art rate.
+    """
+    _modelo, catalogues = modelo_130_registry
+    art_95 = catalogues.legal["rd-439-2007:art-95"]
+
+    assert art_95.article == "95"
+    # The registry declares both the general 15% and the reduced 7% rate; the
+    # legal evidence gate cross-checks these phrases against the corpus at build.
+    joined_required = "\n".join(art_95.required_text)
+    assert "15 por ciento sobre los ingresos íntegros" in joined_required
+    assert "7 por ciento" in joined_required
+
+    # Cross-check against the bundled authoritative corpus: the reduced 7% rate
+    # is the one that enumerates the artistic/sport IAE groups, and the artistic
+    # groups appear only after (within) the 7% clause — never under a 15% rate.
+    corpus_path = art_95.corpus_ref.split("#", 1)[0]
+    corpus_text = (bundled_path() / f"{corpus_path}.extracted.md").read_text("utf-8")
+    normalised = normalise_corpus_text(corpus_text)
+
+    seven_pct_index = normalised.find(normalise_corpus_text("7 por ciento"))
+    fifteen_pct_index = normalised.find(normalise_corpus_text("15 por ciento"))
+    seccion_tercera_index = normalised.find(normalise_corpus_text("sección tercera"))
+    grupo_851_index = normalised.find(normalise_corpus_text("851"))
+
+    # The corpus states the general professional 15% rate first, then the
+    # reduced 7% rate, whose clause enumerates the artistic/sport IAE groups.
+    assert fifteen_pct_index != -1
+    assert seven_pct_index != -1
+    assert fifteen_pct_index < seven_pct_index
+    assert seccion_tercera_index > seven_pct_index
+    assert grupo_851_index > seven_pct_index

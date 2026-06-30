@@ -169,6 +169,86 @@ def test_verification_report_rejects_legacy_casilla_list_keys() -> None:
     assert "missing_required_casillas" in message
 
 
+def test_report_id_is_clock_free_for_an_identical_outcome() -> None:
+    """Two reports with an identical outcome but different run_at share one id.
+
+    The id derivation takes no clock; it is content-addressed by the outcome.
+    Constructing two reports that differ ONLY in run_at must therefore yield the
+    same id (the model validator accepts both), so an identical-outcome verify
+    retry collapses on upsert instead of accumulating.
+    """
+    revision_id = "c" * 64
+    verified_by = "cli/aeat"
+    findings = (
+        ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message="reconciliation total mismatch over tolerance",
+        ),
+    )
+    report_id = derive_verification_report_id(
+        calculation_revision_id=revision_id,
+        completeness_status=VerificationCompletenessStatus.BLOCKED,
+        findings=findings,
+        verified_by=verified_by,
+    )
+    report_early = VerificationReport(
+        verification_report_id=report_id,
+        calculation_revision_id=revision_id,
+        completeness_status=VerificationCompletenessStatus.BLOCKED,
+        findings=findings,
+        run_at=datetime(2026, 1, 1, 9, 0, tzinfo=UTC),
+        verified_by=verified_by,
+        granted_verificado_completo=False,
+    )
+    report_late = VerificationReport(
+        verification_report_id=report_id,
+        calculation_revision_id=revision_id,
+        completeness_status=VerificationCompletenessStatus.BLOCKED,
+        findings=findings,
+        run_at=datetime(2026, 12, 31, 23, 59, tzinfo=UTC),
+        verified_by=verified_by,
+        granted_verificado_completo=False,
+    )
+    assert report_early.verification_report_id == report_late.verification_report_id == report_id
+    assert report_early.run_at != report_late.run_at
+
+
+def test_report_id_diverges_when_findings_change() -> None:
+    """A changed findings tuple (same revision and actor) yields a distinct id.
+
+    The findings tuple is part of the outcome identity, so a re-verify whose
+    findings differ produces a new distinct report rather than colliding with
+    the prior one.
+    """
+    revision_id = "d" * 64
+    verified_by = "cli/aeat"
+    base_finding = ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message="reconciliation total mismatch over tolerance",
+    )
+    extra_finding = ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        casilla_id=_IVA_DEVENGADO_CASILLA,
+        message="iva.devengado is required but unresolved",
+    )
+    id_one = derive_verification_report_id(
+        calculation_revision_id=revision_id,
+        completeness_status=VerificationCompletenessStatus.BLOCKED,
+        findings=(base_finding,),
+        verified_by=verified_by,
+    )
+    id_two = derive_verification_report_id(
+        calculation_revision_id=revision_id,
+        completeness_status=VerificationCompletenessStatus.BLOCKED,
+        findings=(base_finding, extra_finding),
+        verified_by=verified_by,
+    )
+    assert id_one != id_two
+
+
 def test_verification_report_flipped_grant_invariant_surfaces_at_load(
     tmp_path: Path,
 ) -> None:

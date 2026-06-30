@@ -35,7 +35,7 @@ dependencies = [
     { name = "formulas" },
     { name = "httpx" },
     { name = "keyring" },
-    { name = "ofxparse" },
+    { name = "ofxtools" },
     { name = "openpyxl" },
     { name = "pdfplumber" },
     { name = "pikepdf" },
@@ -153,7 +153,7 @@ requires-dist = [
     { name = "google-auth-oauthlib", marker = "extra == 'google'", specifier = ">=1.3.1,<2" },
     { name = "httpx", specifier = ">=0.28.1,<1" },
     { name = "keyring", specifier = ">=25.6.0,<26" },
-    { name = "ofxparse", specifier = ">=0.21,<1" },
+    { name = "ofxtools", specifier = ">=1.1,<2" },
     { name = "openpyxl", specifier = ">=3.1.5,<4" },
     { name = "pdfplumber", specifier = ">=0.11.9,<1" },
     { name = "pikepdf", specifier = ">=10.0.0,<11" },
@@ -1932,16 +1932,13 @@ wheels = [
 ]
 
 [[package]]
-name = "ofxparse"
-version = "0.21"
+name = "ofxtools"
+version = "1.1.1"
 source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "beautifulsoup4" },
-    { name = "lxml" },
-    { name = "six" },
+sdist = { url = "https://files.pythonhosted.org/packages/0d/15/12ce2de32fbdeb26ef20510f9d8dba1c5a408c3061e0a4cd20d28140ecb9/ofxtools-1.1.1.tar.gz", hash = "sha256:b55803e622539e59d04209ec0a289338557973c331d86031e9868d84592912a6", size = 196023, upload-time = "2026-06-12T18:51:39.777Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0a/12/2033cdcf76d05cd4cdab318074428e74c2be4536377bb62832148b034609/ofxtools-1.1.1-py3-none-any.whl", hash = "sha256:4c6a80cfd08d8a6ce7e791ce3bc317e203f36359a0961b20df667cf91a9560e9", size = 236779, upload-time = "2026-06-12T18:51:38.343Z" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/45/ae/98a2acfd06d15869c4b1be7fb74849c8a67cf15b65181f1fe879547e7494/ofxparse-0.21.tar.gz", hash = "sha256:057ab68d31270dece4d1a47662096aa76341968aaee145ffc711cb44cbd5c4a7", size = 53837, upload-time = "2021-05-31T03:38:59.526Z" }
-
 [[package]]
 name = "openpyxl"
 version = "3.1.5"
