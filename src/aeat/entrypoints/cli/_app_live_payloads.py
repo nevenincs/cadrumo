@@ -1,14 +1,24 @@
 """Typed ``--json`` payload schemas for app live CLI commands.
 
-Each class declared here is a strict :class:`OutputSchema` subclass and is
-decorated with :func:`register_schema` so the JSON-contract test suite can
-enumerate every live-command surface this module covers.
+Each class declared here is a strict
+:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass and is decorated
+with :func:`~aeat.entrypoints.cli._schemas.register_schema` so the
+JSON-contract test suite can enumerate every live-command surface this module
+covers.
 
 Field sets match the production payload dicts constructed in ``_app_live.py``
 at their emit sites.  All sequence fields use ``list`` rather than ``tuple``
 because ``model_dump(mode='json')`` serialises pydantic tuples as JSON arrays,
 and the strict ``OutputSchema`` base does not coerce lists to tuples on
 re-validation.
+
+The application live facade remains authoritative for read-only AEAT access,
+bucket-scoped encrypted snapshot persistence, filed-declaration observations,
+IVA wallet acquisition, justificante capture, notifications, expedientes,
+verification observations, and Borrador 100 snapshots. These classes document
+only the CLI transport shape that enters
+:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope`; they do not define a
+live-write surface or a second persistence contract.
 """
 
 from __future__ import annotations
@@ -328,7 +338,14 @@ class IvaWalletPullEvidenceResult(OutputSchema):
 
 
 class NotificationRowPayload(OutputSchema):
-    """One DEHú notification snapshot row in a viewed/captured snapshot."""
+    """One DEHú notification row in a viewed persisted snapshot.
+
+    Mirrors :class:`~aeat.adapters.outbound.aeat.sede.RemoteNotification` rows
+    stored inside
+    :class:`~aeat.application.live._notifications.PersistedNotificationsSnapshot`.
+    The payload is a CLI projection of already-captured evidence; rendering it
+    does not acknowledge, mark, or mutate a notification in AEAT.
+    """
 
     certificado_id: str
     tipo: str
@@ -431,7 +448,16 @@ class NotificationsLatestResult(OutputSchema):
 
 
 class PortalEntryPayload(OutputSchema):
-    """One portal-registry catalogue entry."""
+    """One local portal-registry catalogue entry.
+
+    Projects :class:`~aeat.domain.portals.PortalMetadata` from
+    :data:`~aeat.domain.portals.PORTAL_REGISTRY`, resolving translatable labels
+    before the value enters the CLI envelope.  Category, auth-method, and URL
+    stability fields carry the domain enum values from
+    :class:`~aeat.domain.portals.PortalCategory`,
+    :class:`~aeat.domain.portals.AuthMethod`, and
+    :class:`~aeat.domain.portals.UrlStability`.
+    """
 
     portal: str
     category: str
@@ -446,7 +472,13 @@ class PortalEntryPayload(OutputSchema):
 
 @register_schema("app.live.portals.list")
 class PortalsListResult(OutputSchema):
-    """Payload for ``aeat app live portals list``."""
+    """Typed local-catalogue result for ``aeat app live portals list``.
+
+    Rows are selected from :data:`~aeat.domain.portals.PORTAL_REGISTRY` directly
+    or through :func:`~aeat.domain.portals.portals_by_category` /
+    :func:`~aeat.domain.portals.portals_for_modelo`; the command never opens a
+    browser or contacts AEAT.
+    """
 
     count: int
     rows: list[PortalEntryPayload]
@@ -454,7 +486,12 @@ class PortalsListResult(OutputSchema):
 
 @register_schema("app.live.portals.view")
 class PortalsViewResult(PortalEntryPayload):
-    """Payload for ``aeat app live portals view``."""
+    """Typed local-catalogue result for ``aeat app live portals view``.
+
+    The requested portal id resolves through
+    :func:`~aeat.domain.portals.get_portal` and emits the same
+    :class:`PortalEntryPayload` projection as the list surface.
+    """
 
 
 # ---------------------------------------------------------------------------
@@ -463,7 +500,15 @@ class PortalsViewResult(PortalEntryPayload):
 
 
 class ExpedienteDeclarationPayload(OutputSchema):
-    """One Declaracion row inside an expedientes-view payload."""
+    """One declaration-register row inside an expedientes-view payload.
+
+    Mirrors :class:`~aeat.adapters.outbound.aeat.sede.Declaracion` rows
+    persisted in a
+    :class:`~aeat.application.live._expedientes.PersistedExpedientesSnapshot`.
+    Link-text and cell-index fields report what the read-only AEAT register
+    exposed; they are not downloaded artefacts and do not imply a remote
+    mutation.
+    """
 
     modelo: str
     ejercicio: int
@@ -497,7 +542,14 @@ class ExpedienteSnapshotSummaryPayload(OutputSchema):
 
 
 class ExpedientesCaptureFailurePayload(OutputSchema):
-    """One failed expedientes pull row."""
+    """One failed modelo/year row from a bulk expedientes pull.
+
+    Mirrors
+    :class:`~aeat.application.live.ExpedientesBulkCaptureFailureRow` entries in
+    :class:`~aeat.application.live.ExpedientesBulkCaptureReport`, preserving the
+    failed input coordinates and redacted diagnostic text without inventing a
+    partial snapshot.
+    """
 
     modelo: str
     year: int
