@@ -308,6 +308,10 @@ class TestTypoTwinWarning:
             ("100", "2025", "FALLDLG", "irpf_descendiente_fecha_fallecimiento"),
             ("100", "2025", "ANOASDLG", "irpf_ascendiente_fecha_nacimiento"),
             ("100", "2025", "FALLASDLG", "irpf_ascendiente_fecha_fallecimiento"),
+            ("100", "2025", "APENOMDLG", "irpf_descendiente_apellidos_nombre"),
+            ("100", "2025", "MINUSDLG", "irpf_descendiente_clave_discapacidad"),
+            ("100", "2025", "APENOMDLG_ASC", "irpf_ascendiente_apellidos_nombre"),
+            ("100", "2025", "PCTMINASDLG", "irpf_ascendiente_clave_discapacidad"),
             (
                 "100",
                 "2020",
@@ -538,6 +542,10 @@ class TestTypoTwinWarning:
             "irpf_descendiente_fecha_fallecimiento",
             "irpf_ascendiente_fecha_nacimiento",
             "irpf_ascendiente_fecha_fallecimiento",
+            "irpf_descendiente_apellidos_nombre",
+            "irpf_descendiente_clave_discapacidad",
+            "irpf_ascendiente_apellidos_nombre",
+            "irpf_ascendiente_clave_discapacidad",
             "irpf_deduccion_c_valenciana_ayudas_publicas_generalitat_2020",
             "irpf_num_hijos_maternidad_2020",
             "irpf_incremento_maternidad_no_aplicado_2020",
@@ -810,14 +818,14 @@ class TestTypoTwinWarning:
             is False
         )
 
-    def test_relationship_axis_sibling_roles_do_not_warn_as_typos(self) -> None:
-        descendant = _casilla(cid="a", semantic_role="irpf_descendiente_fecha_nacimiento")
-        ascendant = _casilla(cid="b", semantic_role="irpf_ascendiente_fecha_nacimiento")
-        m = _registry_modelo("100", "2025", [descendant, ascendant])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
+    def test_relationship_tokens_are_not_axis_tokens(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "irpf_descendiente_apellidos_nombre",
+                "irpf_ascendiente_apellidos_nombre",
+            )
+            is False
+        )
 
     def test_anexo_b_aav_marker_is_not_optional_axis_token(self) -> None:
         assert (
@@ -926,15 +934,13 @@ class TestSemanticRoleTypoTwinHelpers:
         max_diff = int(0.08 * (len(role) + len(known)))
         assert _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index) is True
 
-    def test_axis_sibling_candidate_is_exempt(self) -> None:
-        # ascendiente vs descendiente share a relationship axis -> not a typo twin.
+    def test_relationship_candidate_is_not_axis_exempt(self) -> None:
+        # ascendiente vs descendiente are source-visible relationship subjects.
         role = "irpf_ascendiente_fecha_nacimiento"
         known = "irpf_descendiente_fecha_nacimiento"
         index = self._index(known)
         max_diff = int(0.08 * (len(role) + len(known)))
-        # The two differ by more than the fast-check budget, so they never reach
-        # the sibling exemption: the fast prefix/suffix filter rejects first.
-        assert _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index) is False
+        assert _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index) is True
 
     def test_scan_finds_near_duplicate_across_length_buckets(self) -> None:
         index = self._index("taxpayer_nif", "unrelated_role_value")
