@@ -75,24 +75,24 @@ def _semantic_roles_are_axis_token_siblings(left: str, right: str) -> bool:
         ]
         if len(differing) == 1 and _semantic_role_tokens_share_axis(*differing[0]):
             return True
-        if differing and all(left.isdigit() and right.isdigit() for left, right in differing):
+        if _semantic_role_related_party_row_slot_siblings(left_parts, right_parts):
             return True
 
-    return _semantic_role_numeric_axis_token_siblings(left_parts, right_parts)
+    return False
 
 
 def _semantic_role_tokens_share_axis(left: str, right: str) -> bool:
     return any(left in group and right in group for group in _SEMANTIC_ROLE_AXIS_TOKEN_GROUPS)
 
 
-def _semantic_role_numeric_axis_token_siblings(left: tuple[str, ...], right: tuple[str, ...]) -> bool:
-    left_stripped = _strip_semantic_role_numeric_axis_tokens(left)
-    right_stripped = _strip_semantic_role_numeric_axis_tokens(right)
-    return left_stripped == right_stripped and (left_stripped != left or right_stripped != right)
-
-
-def _strip_semantic_role_numeric_axis_tokens(parts: tuple[str, ...]) -> tuple[str, ...]:
-    return tuple(part for part in parts if not part.isdigit())
+def _semantic_role_related_party_row_slot_siblings(left: tuple[str, ...], right: tuple[str, ...]) -> bool:
+    if len(left) < 4 or left[:-1] != right[:-1] or left[-1] == right[-1]:
+        return False
+    return (
+        left[:2] == ("related", "party")
+        and left[-1] in {"1", "2", "3", "4", "5"}
+        and right[-1] in {"1", "2", "3", "4", "5"}
+    )
 
 
 _SEMANTIC_ROLE_CCAA_TOKENS: frozenset[str] = frozenset(
