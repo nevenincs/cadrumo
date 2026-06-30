@@ -294,6 +294,12 @@ class TestTypoTwinWarning:
                 "2015",
                 "irpf_deduccion_c_valenciana_aportaciones_fondos_propios_pendiente_1",
             ),
+            ("100", "2025", "2227", "irpf_ganancia_fondos_coti_valor_transmision_global"),
+            ("100", "2025", "2228", "irpf_ganancia_fondos_coti_valor_transmision_renta_vitalicia"),
+            ("100", "2025", "2229", "irpf_ganancia_fondos_coti_valor_adquisicion_global"),
+            ("100", "2025", "2230", "irpf_ganancia_fondos_coti_ganancia"),
+            ("100", "2025", "2231", "irpf_ganancia_fondos_coti_exenta_renta_vitalicia"),
+            ("100", "2025", "2234", "irpf_perdida_fondos_coti_importe_computable"),
             # M303 compensacion-pendiente roles appear in both 2009-y-siguientes and
             # 2023-y-siguientes revisions; the validator requires unique occurrence for
             # intentional_singleton, so they carry semantic_role_cardinality="shared".
@@ -343,6 +349,12 @@ class TestTypoTwinWarning:
             "irpf_deduccion_c_valenciana_aportaciones_fondos_propios_generado_pendiente_1",
             "irpf_deduccion_c_valenciana_danos_vivienda_dana_pendiente_1",
             "irpf_deduccion_c_valenciana_aportaciones_fondos_propios_pendiente_1",
+            "irpf_ganancia_fondos_coti_valor_transmision_global",
+            "irpf_ganancia_fondos_coti_valor_transmision_renta_vitalicia",
+            "irpf_ganancia_fondos_coti_valor_adquisicion_global",
+            "irpf_ganancia_fondos_coti_ganancia",
+            "irpf_ganancia_fondos_coti_exenta_renta_vitalicia",
+            "irpf_perdida_fondos_coti_importe_computable",
             "iva_oss_union_servicios_destino_de_cuota",
             "iva_oss_union_servicios_destino_fr_cuota",
         }
@@ -538,13 +550,23 @@ class TestTypoTwinWarning:
         assert captured == []
 
     def test_optional_scope_axis_roles_do_not_warn_as_typos(self) -> None:
-        listed = _casilla(cid="a", semantic_role="irpf_ganancia_fondos_coti_ganancia")
-        general = _casilla(cid="b", semantic_role="irpf_ganancia_fondos_ganancia")
+        listed = _casilla(cid="a", semantic_role="irpf_anexo_b_aav_importe_satisfecho")
+        general = _casilla(cid="b", semantic_role="irpf_anexo_b_importe_satisfecho")
         m = _registry_modelo("100", "2025", [listed, general])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
         assert captured == []
+
+    def test_coti_scope_marker_is_not_optional_axis_token(self) -> None:
+        coti = _casilla(cid="a", semantic_role="irpf_ganancia_fondos_coti_ganancia")
+        general_a = _casilla(cid="b", semantic_role="irpf_ganancia_fondos_ganancia")
+        general_b = _casilla(cid="c", semantic_role="irpf_ganancia_fondos_ganancia")
+        m = _registry_modelo("100", "2025", [coti, general_a, general_b])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert any("irpf_ganancia_fondos_coti_ganancia" in str(item.message) for item in captured)
 
     def test_multiple_optional_scope_axis_roles_do_not_warn_as_typos(self) -> None:
         scoped = _casilla(cid="a", semantic_role="irpf_ganancia_premios_juegos_pub_valoracion_b")
