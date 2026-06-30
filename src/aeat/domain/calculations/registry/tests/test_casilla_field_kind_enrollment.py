@@ -6,7 +6,6 @@ import pytest
 
 from .....core import BindingSourceKind
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
-from .....core.resources import bundled_path
 from ..._export_field_kind import CasillaFieldKind
 from .. import (
     CasillaId,
@@ -15,10 +14,10 @@ from .. import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
     derive_export_layouts_from_bindings,
-    load_registry_tree,
     validated_casilla_id,
 )
 from .._schema import PeriodSelector
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -30,7 +29,7 @@ _CASILLA_01: CasillaId = validated_casilla_id("01", surface="_CASILLA_01")
 def test_bundled_export_field_kinds_are_hydrated_enum_members() -> None:
     """Every committed export field reaches consumers as a CasillaFieldKind."""
 
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = _committed_registry_tree()
 
     checked = 0
     offenders: list[str] = []
