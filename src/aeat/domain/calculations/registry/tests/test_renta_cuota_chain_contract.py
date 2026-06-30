@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import bundled_path
-from .. import CasillaId, ModeloDefinition, load_registry_tree, validated_casilla_id
+from .. import CasillaId, ModeloDefinition, validated_casilla_id
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -90,8 +90,7 @@ _FULL_CUOTA_CHAIN_TARGETS = (
 
 
 def _modelo_100():
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    return next(m for m in modelos if m.id == "100"), _catalogues
+    return _committed_modelo("100")
 
 
 def _formula_target_casillas_for_revision(modelo: ModeloDefinition, revision_id: str) -> frozenset[CasillaId]:
