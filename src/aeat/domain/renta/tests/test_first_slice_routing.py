@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....core.resources import resources
 from ...calculations.registry import CasillaId
 from ...categories import SpendingCategory
 from .._first_slice_routing import (
@@ -78,12 +79,7 @@ def test_first_slice_routing_targets_exist_in_modelo_100_registry() -> None:
     :func:`_check_all_id_references`.
     """
 
-    from ....core.resources import bundled_path
-    from ...calculations.registry._loader import load_registry_tree
-
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo_100 = next((m for m in modelos if m.id == "100"), None)
-    assert modelo_100 is not None, "modelo-100 must be present in bundled registry"
+    modelo_100 = resources().modelos.get("100")
 
     all_casilla_ids: set[CasillaId] = set()
     for revision in modelo_100.revisions.values():
