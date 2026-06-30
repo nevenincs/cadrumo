@@ -558,6 +558,49 @@ def test_modelo_100_anexo_c_energy_excess_roles_are_spelled_and_grounded(filing_
     assert not missing_da50
 
 
+def test_modelo_100_prevision_social_0383_splits_income_threshold_polarity() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_by_year = {
+        2023: (
+            "irpf_red_prevision_social_rendimientos_trabajo_igual_inferior_60000_flag",
+            "iguales o inferiores a 60.000",
+        ),
+        2024: (
+            "irpf_red_prevision_social_rendimientos_trabajo_igual_inferior_60000_flag",
+            "iguales o inferiores a 60.000",
+        ),
+        2025: (
+            "irpf_red_prevision_social_rendimientos_trabajo_superior_60000_flag",
+            "superiores a 60.000",
+        ),
+    }
+
+    for filing_year, (expected_role, label_fragment) in expected_by_year.items():
+        revision = modelo.revisions[str(filing_year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0383"))
+
+        assert tuple(casilla.section) == ("toma_datos_ampliada", "red_base_imponible", "red_prevision_social")
+        assert casilla.semantic_role == expected_role
+        assert label_fragment in casilla.label
+        if filing_year == 2025:
+            assert casilla.semantic_role_cardinality == "intentional_singleton"
+            assert casilla.semantic_role_cardinality_reason
+            assert "flips casilla 0383" in casilla.semantic_role_cardinality_reason
+        else:
+            assert casilla.semantic_role_cardinality == "shared"
+        assert {"ley-35-2006:art-51", "ley-35-2006:art-52"}.issubset(casilla.legal_refs)
+        assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+            casilla.source_refs,
+        )
+
+    assert all(
+        casilla.semantic_role != "irpf_red_prevision_social_rendimientos_trabajo_rango_flag"
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    )
+
+
 def test_modelo_100_derechos_transmission_global_role_spans_revisions() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
