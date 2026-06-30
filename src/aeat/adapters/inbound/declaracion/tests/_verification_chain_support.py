@@ -231,31 +231,14 @@ _M303_2023_ONWARDS_PARAMS = [
 
 def _build_m303_engine_result(pdf_stem: str, year: int, period: str):  # type: ignore[return]
     """Parse the corpus PDF and run the registry engine.  Returns (extracted, engine_values)."""
-    pdf_path = FIXTURES_DIR / "justificantes" / "303" / f"{pdf_stem}.pdf"
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override="303",
-            año_override=year,
-            period_override=period,
-        )
-    except DeclaracionParseError as exc:
-        pytest.fail(f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised — M303 extraction failed.\n  error: {exc}")
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+    extracted = _parse_extracted_declaracion_values(modelo="303", fixture_stem=pdf_stem, year=year, period=period)
     for required_id in _M303_ENGINE_REQUIRED_CASILLAS:
         assert required_id in extracted, (
             f"PARSER-GAP [{pdf_stem}]: required casilla {required_id!r} not in extracted values.\n"
             f"  got: {sorted(extracted)}"
         )
 
-    inputs: dict[CasillaId, Decimal] = {}
-    for casilla_id, value in extracted.items():
-        if casilla_id in _COMPUTED_CASILLAS_M303:
-            continue
-        if not isinstance(value, Decimal):
-            continue
-        inputs[casilla_id] = value
+    inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M303)
 
     # Box 65 — % atribuible Estado; bound to the profile-derived
     # ``tax_residence.state_attribution_ratio`` via casilla.binding. The engine's
@@ -317,6 +300,36 @@ def _assert_m303_engine_matches_extracted_decimal(
         f"  ({formula_context})"
     )
     return engine_value
+
+
+def _assert_m303_resultado_regimen_general_consistency(
+    *,
+    pdf_stem: str,
+    engine_values: Mapping[CasillaId, object],
+    extracted: Mapping[CasillaId, object],
+) -> None:
+    engine_resultado = _assert_m303_engine_matches_extracted_decimal(
+        pdf_stem=pdf_stem,
+        engine_values=engine_values,
+        extracted=extracted,
+        casilla_id=_M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
+        label="box 46 (resultado regimen general)",
+        formula_context="box 46 = box 27 - box 45, Orden EHA/3786/2008 art. 1",
+    )
+    engine_27 = engine_values.get(_M303_CUOTA_DEVENGADA_TOTAL_CASILLA)
+    engine_45 = engine_values.get(_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA)
+    assert isinstance(engine_27, Decimal), (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine-computed box 27 missing or non-Decimal: {engine_27!r}"
+    )
+    assert isinstance(engine_45, Decimal), (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine-computed box 45 missing or non-Decimal: {engine_45!r}"
+    )
+    expected_resultado = engine_27 - engine_45
+    assert engine_resultado == expected_resultado, (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine resultado-regimen-general "
+        f"{engine_resultado!r} != box27({engine_27!r}) - box45({engine_45!r}) = {expected_resultado!r}\n"
+        f"  (internal formula consistency broken - registry formula defect)"
+    )
 
 
 _COMPUTED_CASILLAS_M390: frozenset[CasillaId] = _casilla_ids(

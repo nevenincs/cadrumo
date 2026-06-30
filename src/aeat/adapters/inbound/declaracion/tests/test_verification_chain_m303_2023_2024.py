@@ -6,12 +6,11 @@ import pytest
 
 from ._verification_chain_support import (
     _M303_2023_ONWARDS_PARAMS,
-    _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
-    _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
     _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
     CasillaId,
     Decimal,
     _assert_m303_engine_matches_extracted_decimal,
+    _assert_m303_resultado_regimen_general_consistency,
     _build_m303_engine_result,
     _casilla_id,
 )
@@ -63,16 +62,7 @@ _M303_SYNTHETIC_CLOSURE_CASE_IDS: tuple[str, ...] = (
 
 @pytest.mark.parametrize(
     "pdf_stem,year,period",
-    [
-        ("2023-1T", 2023, "1T"),
-        ("2023-2T", 2023, "2T"),
-        ("2023-3T", 2023, "3T"),
-        ("2023-4T", 2023, "4T"),
-        ("2024-1T", 2024, "1T"),
-        ("2024-2T", 2024, "2T"),
-        ("2024-3T", 2024, "3T"),
-        ("2024-4T", 2024, "4T"),
-    ],
+    _M303_2023_ONWARDS_PARAMS,
 )
 def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
     pdf_stem: str,
@@ -96,32 +86,10 @@ def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
     """
     extracted, engine_values, _inputs = _build_m303_engine_result(pdf_stem, year, period)
 
-    # VERIFIED gate: engine resultado must equal extracted printed box 46.
-    # The synthetic corpus PDFs were generated with c46 = c27 - c45, matching
-    # the registry formula. Any future registry formula change that breaks this
-    # will cause a loud test failure.
-    engine_resultado = _assert_m303_engine_matches_extracted_decimal(
+    _assert_m303_resultado_regimen_general_consistency(
         pdf_stem=pdf_stem,
         engine_values=engine_values,
         extracted=extracted,
-        casilla_id=_M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
-        label="box 46 (resultado regimen general)",
-        formula_context="box 46 = box 27 - box 45, Orden EHA/3786/2008 art. 1",
-    )
-    # Internal consistency cross-check: engine resultado == computed c27 - c45.
-    engine_27 = engine_values.get(_M303_CUOTA_DEVENGADA_TOTAL_CASILLA)
-    engine_45 = engine_values.get(_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA)
-    assert isinstance(engine_27, Decimal), (
-        f"VERIFIED-FAIL [{pdf_stem}]: engine-computed box 27 missing or non-Decimal: {engine_27!r}"
-    )
-    assert isinstance(engine_45, Decimal), (
-        f"VERIFIED-FAIL [{pdf_stem}]: engine-computed box 45 missing or non-Decimal: {engine_45!r}"
-    )
-    expected_resultado = engine_27 - engine_45
-    assert engine_resultado == expected_resultado, (
-        f"VERIFIED-FAIL [{pdf_stem}]: engine resultado-regimen-general "
-        f"{engine_resultado!r} != box27({engine_27!r}) - box45({engine_45!r}) = {expected_resultado!r}\n"
-        f"  (internal formula consistency broken — registry formula defect)"
     )
 
 
