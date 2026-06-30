@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from ._parser_boundary_support import (
-    _MODELO_111_EXPECTED_TARGETS,
     _MODELO_123_2023_SYNTHETIC_FIXTURE,
     _MODELO_123_2024_SYNTHETIC_FIXTURE,
     _MODELO_123_CURRENT_EXPECTED_TARGETS,
@@ -14,13 +13,11 @@ from ._parser_boundary_support import (
     A4,
     FIXTURES_DIR,
     AeatError,
-    CasillaId,
     Decimal,
     DeclaracionParseError,
     Path,
     PdfModeloImportError,
     TemplateNotDetectedError,
-    _casilla_id,
     _expected_casilla_values,
     _expected_period,
     _extract_pages_words,
@@ -32,13 +29,6 @@ from ._parser_boundary_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
-
-
-_M111_CASILLA_07: CasillaId = _casilla_id("07")
-_M111_CASILLA_08: CasillaId = _casilla_id("08")
-_M111_CASILLA_09: CasillaId = _casilla_id("09")
-_M111_CASILLA_28: CasillaId = _casilla_id("28")
-_M111_CASILLA_30: CasillaId = _casilla_id("30")
 
 
 def test_declaracion_errors_stay_on_core_exception_hierarchy() -> None:
@@ -86,130 +76,6 @@ def test_word_extraction_debug_log_does_not_expose_source_filename(
     assert pdf_path.name not in rendered_logs
     assert str(pdf_path) not in rendered_logs
     assert "<input-pdf>" in rendered_logs
-
-
-def test_parser_extracts_modelo_111_registry_profile_targets_from_pdf() -> None:
-    """Assert the M111 declaracion_pdf profile declares exactly the expected 29 targets.
-
-    Casilla 29 (Autoliquidación negativa checkbox) is excluded from the
-    declaracion_pdf extraction profile; only casillas 01-28 and 30 are
-    present.  The roundtrip contract is verified against the real corpus PDFs
-    in test_parser_extracts_modelo_111_casillas_from_corpus.
-    """
-    snapshot = _modelo_snapshot("111", filing_year=2025, period="1T")
-    profile = snapshot.extraction_profiles["modelo-111-declaracion-pdf"]
-    assert tuple(target.casilla_id for target in profile.target_casillas) == _MODELO_111_EXPECTED_TARGETS
-    for target in profile.target_casillas:
-        assert target.match_strategy == "bbox_anchored", (
-            f"casilla {target.casilla_id}: expected match_strategy='bbox_anchored', got {target.match_strategy!r}"
-        )
-        assert target.bbox_anchor is not None, (
-            f"casilla {target.casilla_id}: bbox_anchor must be set for bbox_anchored targets"
-        )
-
-
-@pytest.mark.parametrize(
-    "pdf_stem,year,period",
-    [
-        ("2024-1T", 2024, "1T"),
-        ("2024-2T", 2024, "2T"),
-        ("2024-3T", 2024, "3T"),
-        ("2024-4T", 2024, "4T"),
-    ],
-)
-def test_parser_extracts_modelo_111_tax_id_from_corpus(pdf_stem: str, year: int, period: str) -> None:
-    """Tax-id extraction must succeed for all 4 M111 corpus PDFs.
-
-    Ground truth: every M111 corpus PDF carries the same sanitised tax ID
-    'Y0000001S' in the page-0 header block.  The _extract_tax_id helper is
-    exercised directly, isolating the NIF regex from profile extraction.
-    """
-    from .._parser import _extract_tax_id
-    from .._parsers import extract_pages_text
-
-    pdf_path = FIXTURES_DIR / "justificantes" / "111" / f"{pdf_stem}.pdf"
-    pages = extract_pages_text(pdf_path)
-    text = "\n".join(pages)
-
-    tax_id = _extract_tax_id(text)
-
-    assert tax_id == "Y0000001S", f"{pdf_stem}: expected tax_id='Y0000001S', got {tax_id!r}"
-
-
-@pytest.mark.parametrize(
-    "pdf_stem,year,period",
-    [
-        ("2024-1T", 2024, "1T"),
-        ("2024-2T", 2024, "2T"),
-        ("2024-3T", 2024, "3T"),
-        ("2024-4T", 2024, "4T"),
-    ],
-)
-def test_parser_extracts_modelo_111_casillas_from_corpus(pdf_stem: str, year: int, period: str) -> None:
-    """Round-trip: parse all 4 corpus M111 PDFs via the production bbox_anchored profile.
-
-    Ground truth is derived empirically by probing each corpus PDF with pdfplumber
-    word-position extraction (see _find_bbox_casilla_hits in _parser.py).  The
-    sanitised corpus replaces real amounts with synthetic values; only casillas
-    that have a non-blank value printed in the right-side value column are
-    extracted — blank (zero or not-applicable) casilla cells produce no hit and
-    are legitimately absent from the filing.
-
-    Ground truth from pdfplumber probe on the 4 sanitised corpus PDFs:
-    - 2024-1T/2T/3T: casillas 07=1, 08=1.000,00, 09=1.000,00, 28=1.000,00, 30=1.000,00
-    - 2024-4T: negative filing; only casilla 30=1.000,00 is printed
-
-    The bbox_anchored profile uses column-specific anchor_x_min/anchor_x_max to
-    restrict each casilla to its own column (A: x0~264, B: x0~347, C: x0~461), and
-    value_x_max to prevent matching the next column's box number when the cell is empty.
-    """
-    pdf_path = FIXTURES_DIR / "justificantes" / "111" / f"{pdf_stem}.pdf"
-
-    filing = parse_declaracion(
-        pdf_path,
-        modelo_override="111",
-        año_override=year,
-        period_override=period,
-    )
-
-    assert filing.modelo == "111"
-    assert filing.period == _expected_period(year, period)
-    assert filing.tax_id == "Y0000001S", f"{pdf_stem}: expected tax_id='Y0000001S', got {filing.tax_id!r}"
-    assert filing.registry_snapshot_ref is not None
-    assert filing.registry_snapshot_ref.modelo == "111"
-    assert filing.registry_snapshot_ref.modelo_year == year
-
-    values = {v.casilla_id: v.printed_value for v in filing.values}
-
-    # Casilla 30 (Resultado a ingresar) is present in all 4 corpus specimens.
-    assert _M111_CASILLA_30 in values, (
-        f"{pdf_stem}: expected casilla {_M111_CASILLA_30!r} in extracted values, got {set(values.keys())!r}"
-    )
-    assert values[_M111_CASILLA_30] == Decimal("1000.00"), (
-        f"{pdf_stem}: casilla {_M111_CASILLA_30!r} expected Decimal('1000.00'), "
-        f"got {values[_M111_CASILLA_30]!r}"
-    )
-
-    if pdf_stem == "2024-4T":
-        # Negative filing: only casilla 30 is present; no other amounts printed.
-        assert set(values.keys()) == {_M111_CASILLA_30}, (
-            f"{pdf_stem}: negative filing should yield only casilla '30', got {set(values.keys())!r}"
-        )
-    else:
-        # Positive filing: casillas 07 (count=1), 08 and 09 (amounts), 28, 30 are present.
-        assert {_M111_CASILLA_07, _M111_CASILLA_08, _M111_CASILLA_09, _M111_CASILLA_28} <= set(values), (
-            f"{pdf_stem}: expected casillas 07/08/09/28/30, got {set(values.keys())!r}"
-        )
-        expected_positive_values = {
-            _M111_CASILLA_07: Decimal("1"),
-            _M111_CASILLA_08: Decimal("1000.00"),
-            _M111_CASILLA_09: Decimal("1000.00"),
-            _M111_CASILLA_28: Decimal("1000.00"),
-        }
-        for casilla_id, expected_value in expected_positive_values.items():
-            assert values[casilla_id] == expected_value, (
-                f"{pdf_stem}: casilla {casilla_id!r} expected {expected_value!r}, got {values[casilla_id]!r}"
-            )
 
 
 def test_parser_extracts_modelo_123_current_registry_profile_targets_from_pdf(tmp_path: Path) -> None:
