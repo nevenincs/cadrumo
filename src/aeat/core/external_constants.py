@@ -7,6 +7,13 @@ modelled as a frozen, strict pydantic v2 model so callers see typed,
 immutable values and any drift between the TOML and the schema fails fast
 at import time.
 
+This is a read-only remote-mirror registry for public, externally defined
+constants. Runtime-tunable values such as timeouts, storage roots, and operator
+choices belong in :class:`~aeat.core.config.Settings`; profile data, tokens,
+passphrases, bucket ids, and SQL routes do not belong here. Loading the registry
+only reads packaged TOML (or an explicit audit/test path) and never opens
+storage, writes files, or contacts remote providers.
+
 The typed root is :class:`ExternalConstants`, with AEAT-specific subsections
 grouped under :class:`AeatSection`; callers normally reach it through
 :meth:`~aeat.core.config.Settings.external_constants`. The volatile Pre303 and
@@ -60,13 +67,23 @@ CLASSIFIED_BY_AUTO: Final[str] = "auto"
 
 
 class _Frozen(BaseModel):
-    """Strict, frozen base for external-constant submodels."""
+    """Strict, frozen base for external-constant submodels.
+
+    Unknown TOML keys are rejected and parsed instances are immutable, so a
+    newly added external value must be represented in the schema before
+    production code can consume it.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
 
 class AeatDomains(_Frozen):
-    """AEAT and related government hostnames."""
+    """AEAT and related government hostnames.
+
+    Hostnames are registry data, not executable literals in live drivers.
+    Callers combine these origins with path sections below instead of
+    re-declaring Sede, Cl@ve, BOE, or numbered AEAT subdomain strings.
+    """
 
     host_suffix: str = Field(min_length=1)
     sede: str = Field(min_length=1)
@@ -82,7 +99,12 @@ class AeatDomains(_Frozen):
 
 
 class AeatSedePaths(_Frozen):
-    """Relative path templates against the sede / www6 origins."""
+    """Relative path templates against configured AEAT origins.
+
+    These values are route fragments and templates only; consumers choose the
+    correct origin from :class:`AeatDomains` or an overrideable
+    :class:`~aeat.core.config.Settings` field before building a full URL.
+    """
 
     auth_gate_4033: str
     expedientes_resumen: str
@@ -206,7 +228,13 @@ class AeatOracles(_Frozen):
 
 
 class AeatLiveSafety(_Frozen):
-    """Centralized allow-list labels for audited live AEAT browser actions."""
+    """Centralized allow-list labels for audited live AEAT browser actions.
+
+    The patterns identify reviewed action categories for live-surface guards.
+    They do not authorize a write by themselves; command policy, capability
+    checks, and live-write gates remain responsible for deciding whether an
+    operation may run.
+    """
 
     auth_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
     wallet_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
@@ -232,7 +260,12 @@ class AeatLiveSafety(_Frozen):
 
 
 class AeatPortalPaths(_Frozen):
-    """Centralized AEAT portal catalogue paths keyed by :class:`Portal` id."""
+    """Centralized AEAT portal catalogue paths keyed by :class:`Portal` id.
+
+    Portal entries resolve their route fragments from this registry so the
+    catalogue can describe AEAT surfaces without carrying host or path source
+    literals in each entry module.
+    """
 
     filing_censo_path_regex: str = Field(min_length=1)
     filing_censo_path_description: str = Field(min_length=1)
@@ -337,7 +370,12 @@ class OnlineServicesSection(_Frozen):
 
 
 class ExternalConstants(_Frozen):
-    """Top-level registry model mirroring the TOML root."""
+    """Top-level registry model mirroring the TOML root.
+
+    The root intentionally separates AEAT-owned surfaces from other online
+    services so call sites can depend on the narrow subsection they need while
+    still sharing one typed registry load.
+    """
 
     aeat: AeatSection
     online_services: OnlineServicesSection
@@ -575,7 +613,12 @@ def load_external_constants(path: Path | None = None) -> ExternalConstants:
     Cached per-process; the first call reads and validates
     ``external_constants.toml`` from the package directory via
     ``importlib.resources`` so the resolution path is identical
-    under editable installs and built wheels.
+    under editable installs and built wheels. Passing ``path`` is reserved for
+    audits and tests that need to validate an alternate TOML payload against the
+    same schema.
+
+    Args:
+        path: Optional TOML file to parse instead of the packaged registry.
 
     Returns:
         The process-wide cached :class:`ExternalConstants` instance.
