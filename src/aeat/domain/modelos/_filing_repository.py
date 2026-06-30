@@ -2,9 +2,10 @@
 
 :class:`~aeat.domain.modelos.ModeloRecordCatalogueRepository` persists and
 loads :class:`ModeloRecord` entries in a :class:`ModeloRecordCatalogue` via
-:class:`SecureObjectRepository` at :class:`SensitivityClass` FINANCIAL using an
-:class:`Envelope` wrapper. The catalogue is stored as a single encrypted BLOB
-per profile bucket.
+:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository` at
+:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``FINANCIAL``
+using an :class:`~aeat.adapters.persistence.storage.Envelope` wrapper. The
+catalogue is stored as a single encrypted BLOB per profile bucket.
 The storage contract is declared by
 :data:`aeat.adapters.persistence.storage.MODELO_FILING_RECORD_CATALOGUE_NAMESPACE`;
 its default object key is the singleton ``catalogue`` row.
@@ -69,8 +70,9 @@ class ModeloRecordCatalogueRepository:
         A bucket is the per-profile partition that isolates one taxpayer's
         encrypted records from another's. Returns the resolved bucket
         identifier, or ``None`` when the repository was constructed against
-        an injected :class:`SecureObjectRepository` and no bucket id was
-        supplied.
+        an injected
+        :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+        and no bucket id was supplied.
         """
         return self._bucket_id
 
@@ -164,11 +166,11 @@ class ModeloRecordCatalogueRepository:
     def save(self, catalogue: ModeloRecordCatalogue) -> None:
         """Persist the filing-record catalogue as a single encrypted BLOB.
 
-        Wraps ``catalogue`` in a FINANCIAL-class :class:`Envelope` stamped with
-        the current schema version and write timestamp, then writes it through
-        the secure object store. The entire catalogue is rewritten as one
-        encrypted object per bucket, replacing any prior catalogue for this
-        bucket.
+        Wraps ``catalogue`` in a ``FINANCIAL``-class
+        :class:`~aeat.adapters.persistence.storage.Envelope` stamped with the
+        current schema version and write timestamp, then writes it through the
+        secure object store. The entire catalogue is rewritten as one encrypted
+        object per bucket, replacing any prior catalogue for this bucket.
 
         Args:
             catalogue: The :class:`ModeloRecordCatalogue` to encrypt and store.
@@ -179,7 +181,8 @@ class ModeloRecordCatalogueRepository:
         """Return the secure-object upsert for ``catalogue`` without committing it.
 
         The returned :class:`~aeat.adapters.persistence.storage.SecureObjectWrite`
-        carries the same :class:`Envelope` and :class:`SensitivityClass`
+        carries the same :class:`~aeat.adapters.persistence.storage.Envelope`
+        and :class:`~aeat.adapters.persistence.storage.SensitivityClass`
         classification that :meth:`save` would persist directly.
         """
         from ...adapters.persistence.storage import Envelope, SecureObjectWrite, SensitivityClass

@@ -2,9 +2,12 @@
 
 :class:`~aeat.domain.modelos.CalculationRevisionCatalogueRepository` persists
 and loads :class:`CalculationRevision` records in a
-:class:`CalculationRevisionCatalogue` via :class:`SecureObjectRepository` at
-:class:`SensitivityClass` FINANCIAL. Each catalogue is wrapped in an
-:class:`Envelope` before being written to the encrypted BLOB per profile bucket.
+:class:`CalculationRevisionCatalogue` via
+:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository` at
+:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``FINANCIAL``.
+Each catalogue is wrapped in
+:class:`~aeat.adapters.persistence.storage.Envelope` before being written to
+the encrypted BLOB per profile bucket.
 The storage contract is declared by
 :data:`aeat.adapters.persistence.storage.MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE`;
 its default object key is the singleton ``catalogue`` row.
@@ -77,7 +80,8 @@ class CalculationRevisionCatalogueRepository:
         per filing profile, and each profile owns its own encrypted bucket. This
         property exposes the resolved bucket identifier, or ``None`` when the
         repository was constructed against a caller-supplied
-        :class:`SecureObjectRepository` rather than a resolved bucket.
+        :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+        rather than a resolved bucket.
 
         Returns:
             The trimmed bucket identifier, or ``None`` when no bucket was resolved.
@@ -102,10 +106,10 @@ class CalculationRevisionCatalogueRepository:
         A calculation revision is a dated, computed version of a modelo's casilla
         values (a casilla is a numbered box on an AEAT form); the catalogue is the
         keyed collection of those revisions. The stored record is decrypted, its
-        :class:`Envelope` parsed, and its sensitivity classification and schema
-        version checked before the payload is returned. When nothing has been
-        persisted yet, an empty :class:`CalculationRevisionCatalogue` is returned
-        rather than raising.
+        :class:`~aeat.adapters.persistence.storage.Envelope` parsed, and its
+        sensitivity classification and schema version checked before the payload
+        is returned. When nothing has been persisted yet, an empty
+        :class:`CalculationRevisionCatalogue` is returned rather than raising.
 
         Returns:
             The persisted :class:`CalculationRevisionCatalogue`, or an empty one when no
@@ -185,11 +189,12 @@ class CalculationRevisionCatalogueRepository:
         """Persist the calculation-revision catalogue to encrypted storage.
 
         Wraps the catalogue (the keyed collection of a modelo's dated
-        calculation revisions) in an :class:`Envelope` stamped with the current
-        schema version, write time, and FINANCIAL sensitivity classification,
-        then writes the serialised envelope to the encrypted store under this
-        repository's namespace and key. An existing catalogue object at that
-        location is overwritten.
+        calculation revisions) in an
+        :class:`~aeat.adapters.persistence.storage.Envelope` stamped with the
+        current schema version, write time, and ``FINANCIAL`` sensitivity
+        classification, then writes the serialised envelope to the encrypted
+        store under this repository's namespace and key. An existing catalogue
+        object at that location is overwritten.
 
         Args:
             catalogue: The :class:`CalculationRevisionCatalogue` to serialise and
@@ -216,7 +221,8 @@ class CalculationRevisionCatalogueRepository:
         """Return the secure-object upsert for ``catalogue`` without committing it.
 
         The returned :class:`~aeat.adapters.persistence.storage.SecureObjectWrite`
-        carries the same :class:`Envelope` and :class:`SensitivityClass`
+        carries the same :class:`~aeat.adapters.persistence.storage.Envelope`
+        and :class:`~aeat.adapters.persistence.storage.SensitivityClass`
         classification that :meth:`save` would persist directly. It can be
         co-emitted with related secure objects (e.g. the participation index) in
         one :meth:`save_with_secure_object_writes` unit of work.

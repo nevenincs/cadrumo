@@ -2,10 +2,13 @@
 
 :class:`~aeat.domain.modelos.WorkUnitCatalogueRepository` persists
 :class:`WorkUnit` records in a :class:`WorkUnitCatalogue` at
-:class:`SensitivityClass` FINANCIAL through :class:`SecureObjectRepository`.
-The catalogue is serialised as a single :class:`Envelope`-wrapped JSON payload
-keyed by a stable namespace and object key; the underlying column is encrypted
-so no plaintext work-unit metadata lands on disk.
+:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``FINANCIAL``
+through
+:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`. The
+catalogue is serialised as a single
+:class:`~aeat.adapters.persistence.storage.Envelope`-wrapped JSON payload keyed
+by a stable namespace and object key; the underlying column is encrypted so no
+plaintext work-unit metadata lands on disk.
 The storage contract is declared by
 :data:`aeat.adapters.persistence.storage.MODELO_WORK_UNIT_CATALOGUE_NAMESPACE`;
 its default object key is the singleton ``catalogue`` row.
@@ -148,8 +151,10 @@ class WorkUnitCatalogueRepository:
     def save(self, catalogue: WorkUnitCatalogue) -> None:
         """Persist ``catalogue`` as the encrypted singleton object.
 
-        The on-disk database value is an encrypted :class:`Envelope` BLOB at the
-        :class:`SensitivityClass` FINANCIAL classification.
+        The on-disk database value is an encrypted
+        :class:`~aeat.adapters.persistence.storage.Envelope` BLOB at the
+        :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+        ``FINANCIAL`` classification.
 
         Args:
             catalogue: The :class:`WorkUnitCatalogue` to persist.

@@ -2,9 +2,11 @@
 
 :class:`~aeat.domain.modelos.VerificationReportCatalogueRepository` persists
 and loads :class:`VerificationReport` entries in a
-:class:`VerificationReportCatalogue` via :class:`SecureObjectRepository` at
-:class:`SensitivityClass` FINANCIAL. The catalogue is stored as a single
-encrypted BLOB per profile bucket and wrapped in an :class:`Envelope` before
+:class:`VerificationReportCatalogue` via
+:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository` at
+:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``FINANCIAL``.
+The catalogue is stored as a single encrypted BLOB per profile bucket and
+wrapped in :class:`~aeat.adapters.persistence.storage.Envelope` before
 serialisation.
 The storage contract is declared by
 :data:`aeat.adapters.persistence.storage.MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE`;
@@ -73,7 +75,9 @@ class VerificationReportCatalogueRepository:
         modelo (an AEAT tax form/declaration) the profile works on shares one
         bucket. The value is the trimmed bucket identifier resolved at
         construction, or ``None`` when the repository was built directly from
-        an injected :class:`SecureObjectRepository` and no bucket was named.
+        an injected
+        :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+        and no bucket was named.
 
         Returns:
             The resolved bucket identifier, or ``None`` when none was supplied.
@@ -99,8 +103,9 @@ class VerificationReportCatalogueRepository:
 
         Reads the single encrypted catalogue record, validates that it was
         stored at the ``FINANCIAL`` sensitivity class, and parses the wrapping
-        :class:`Envelope` to recover the typed catalogue. A verification report
-        records the outcome of checking a drafted modelo (an AEAT tax
+        :class:`~aeat.adapters.persistence.storage.Envelope` to recover the
+        typed catalogue. A verification report records the outcome of checking
+        a drafted modelo (an AEAT tax
         form/declaration) against its registry definition, casilla by casilla
         (a casilla is a numbered box/field on the form). When no record has
         ever been written, an empty catalogue is returned rather than raising.
@@ -176,12 +181,13 @@ class VerificationReportCatalogueRepository:
     def save(self, catalogue: VerificationReportCatalogue) -> None:
         """Encrypt and persist the verification-report catalogue for this bucket.
 
-        Wraps ``catalogue`` in an :class:`Envelope` stamped with the current
-        schema version, the write timestamp, and the ``FINANCIAL`` sensitivity
-        class, then overwrites the single catalogue object held under this
-        repository's namespace and key. The write replaces any prior catalogue
-        wholesale; merge a new report into the existing catalogue with
-        :func:`upsert_verification_report` before calling this.
+        Wraps ``catalogue`` in
+        :class:`~aeat.adapters.persistence.storage.Envelope` stamped with the
+        current schema version, the write timestamp, and the ``FINANCIAL``
+        sensitivity class, then overwrites the single catalogue object held
+        under this repository's namespace and key. The write replaces any prior
+        catalogue wholesale; merge a new report into the existing catalogue
+        with :func:`upsert_verification_report` before calling this.
 
         Args:
             catalogue: The full :class:`VerificationReportCatalogue` to store,
