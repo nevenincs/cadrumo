@@ -33,6 +33,7 @@ _M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA: CasillaId = validated_casilla_i
     "DP200014:00562",
     surface="_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA",
 )
+_PROFILE_ID = "20000000-0000-4000-8000-000000000562"
 
 
 def test_work_calculate_input_bundle_rejects_ambiguous_reused_printed_number(tmp_path: Path) -> None:
@@ -40,7 +41,7 @@ def test_work_calculate_input_bundle_rejects_ambiguous_reused_printed_number(tmp
     period = Period.from_year_and_code(2024, "0A")
     snapshot = resources().modelos.authority.snapshot("200", filing_year=2024, period=period.registry_token)
 
-    bucket_id = "calculate-input-casilla-id"
+    bucket_id = _PROFILE_ID
     with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(bucket_id):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(

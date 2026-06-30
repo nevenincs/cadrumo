@@ -59,6 +59,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _T0 = datetime(2026, 6, 4, 9, 0, 0, tzinfo=UTC)
 _P_2026_1T = Period.from_year_and_code(2026, "1T")
+_SELECTOR_PROFILE_ID = "13000000-0000-4000-8000-000000000130"
+_REVISION_SELECTOR_PROFILE_ID = "13000000-0000-4000-8000-000000000131"
+_EXPLICIT_PROFILE_ID = "13000000-0000-4000-8000-000000000132"
 _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="identity.tax_id", value="00000000T"),
     UserProfileFact(path="identity.name", value="Test Operator"),
@@ -99,7 +102,7 @@ _OUTPUT_CASILLA: CasillaId = _casilla_id("01")
 @pytest.fixture
 def work_repo(tmp_path: Path) -> Iterator[WorkUnitCatalogueRepository]:
     """Yield the real work-unit repository through isolated profile storage."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="modelo-selector-test") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SELECTOR_PROFILE_ID) as profile:
         _seed_ready_profile(profile.repository, bucket_id=profile.bucket_id)
         yield WorkUnitCatalogueRepository(bucket_id=profile.bucket_id)
 
@@ -109,7 +112,7 @@ def selector_repos(
     tmp_path: Path,
 ) -> Iterator[tuple[WorkUnitCatalogueRepository, CalculationRevisionCatalogueRepository]]:
     """Yield real work-unit and calculation-revision repositories."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="modelo-revision-selector-test") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_REVISION_SELECTOR_PROFILE_ID) as profile:
         objects = profile.repository
         _seed_ready_profile(objects, bucket_id=profile.bucket_id)
         yield WorkUnitCatalogueRepository(objects=objects), CalculationRevisionCatalogueRepository(objects=objects)
@@ -127,7 +130,7 @@ def _request(**overrides: object) -> ModeloWorkSelectorRequest:
 
 def _seed_work_unit(wu_repo: WorkUnitCatalogueRepository) -> WorkUnit:
     return create_work_unit(
-        bucket_id=wu_repo.bucket_id or "modelo-revision-selector-test",
+        bucket_id=wu_repo.bucket_id or _REVISION_SELECTOR_PROFILE_ID,
         modelo="130",
         filing_year=2026,
         period=_P_2026_1T,
@@ -180,8 +183,8 @@ def test_selector_resolves_active_bucket_when_no_explicit_bucket(work_repo: Work
 
 
 def test_selector_honours_explicit_bucket_over_active_bucket(work_repo: WorkUnitCatalogueRepository) -> None:
-    request = _request(bucket_id="explicit-bucket")
-    assert resolve_modelo_work_bucket(request) == "explicit-bucket"
+    request = _request(bucket_id=_EXPLICIT_PROFILE_ID)
+    assert resolve_modelo_work_bucket(request) == _EXPLICIT_PROFILE_ID
 
 
 def test_visible_target_resolution_reports_absent_before_exact_creation(work_repo: WorkUnitCatalogueRepository) -> None:
@@ -197,7 +200,7 @@ def test_visible_target_resolution_reports_absent_before_exact_creation(work_rep
 
 def test_visible_target_resolution_ignores_discarded_work_units(work_repo: WorkUnitCatalogueRepository) -> None:
     unit = create_work_unit(
-        bucket_id=work_repo.bucket_id or "modelo-selector-test",
+        bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
         modelo="130",
         filing_year=2026,
         period=_P_2026_1T,
@@ -223,7 +226,7 @@ def test_visible_target_resolution_ignores_discarded_work_units(work_repo: WorkU
 
 def test_visible_target_resolution_returns_single_active_work_unit(work_repo: WorkUnitCatalogueRepository) -> None:
     unit = create_work_unit(
-        bucket_id=work_repo.bucket_id or "modelo-selector-test",
+        bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
         modelo="130",
         filing_year=2026,
         period=_P_2026_1T,
@@ -242,7 +245,7 @@ def test_visible_target_resolution_returns_single_active_work_unit(work_repo: Wo
 
 def test_explicit_work_unit_id_validates_supplied_natural_key_flags(work_repo: WorkUnitCatalogueRepository) -> None:
     unit = create_work_unit(
-        bucket_id=work_repo.bucket_id or "modelo-selector-test",
+        bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
         modelo="130",
         filing_year=2026,
         period=_P_2026_1T,
@@ -260,7 +263,7 @@ def test_explicit_work_unit_id_validates_supplied_natural_key_flags(work_repo: W
 
 def test_revision_conflict_refuses_before_exact_target_creation(work_repo: WorkUnitCatalogueRepository) -> None:
     unit = create_work_unit(
-        bucket_id=work_repo.bucket_id or "modelo-selector-test",
+        bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
         modelo="130",
         filing_year=2026,
         period=_P_2026_1T,
@@ -281,7 +284,7 @@ def test_revision_conflict_refuses_before_exact_target_creation(work_repo: WorkU
 
 
 def test_visible_target_ambiguity_refuses_with_candidate_guidance(work_repo: WorkUnitCatalogueRepository) -> None:
-    bucket_id = work_repo.bucket_id or "modelo-selector-test"
+    bucket_id = work_repo.bucket_id or _SELECTOR_PROFILE_ID
     first = create_work_unit(
         bucket_id=bucket_id,
         modelo="130",
