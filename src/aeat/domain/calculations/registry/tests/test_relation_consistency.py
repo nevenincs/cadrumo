@@ -4,14 +4,12 @@ from collections.abc import Iterable, Mapping
 
 import pytest
 
-from .....core.resources import bundled_path
-from .. import load_registry_tree, previous_filing_source_reference
+from .. import previous_filing_source_reference
 from .._schema import DataBindingDefinition, ModeloDefinition, ModeloRevision, RelationDefinition
 from .._validate_relation_periods import select_relation_source_revisions
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 @pytest.fixture(scope="module")
@@ -26,7 +24,7 @@ def _registry_relation_cases() -> tuple[
     snapshotted alongside each triple so the per-case body never
     re-loads the tree.
     """
-    modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelos, _catalogues = _committed_registry_tree()
     by_id = {modelo.id: modelo for modelo in modelos}
     return tuple((modelo, revision, relation, by_id) for modelo, revision, relation in _relations(modelos))
 
@@ -159,7 +157,7 @@ def test_registry_relations_reference_existing_modelo_outputs_and_target_binding
 
 
 def test_previous_filing_bindings_reference_existing_source_modelo_outputs_and_periods() -> None:
-    modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelos, _catalogues = _committed_registry_tree()
     by_id = {modelo.id: modelo for modelo in modelos}
 
     errors: list[str] = []
