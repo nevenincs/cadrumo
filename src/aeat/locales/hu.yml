@@ -2692,6 +2692,7 @@ cli:
       help: Egyetlen kézi főkönyvi tranzakció hozzáadása az aktív profilban.
       idempotency_key_help: A hívó által megadott idempotencia-kulcs, amelyet a sorral
         együtt tárolnak.
+      idempotent_noop: 'Idempotens üres művelet: már létezik tranzakció ezzel az idempotencia-kulccsal (%{transaction_id}); semmi sem került hozzáadásra.'
       irpf_category_help: IRPF-specifikus kategóriakulcs.
       iva_amount_help: Opcionális IVA-összeg a soron.
       iva_rate_help: Opcionális IVA-kulcs tizedes törtként.

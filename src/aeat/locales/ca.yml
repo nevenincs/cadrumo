@@ -2737,6 +2737,7 @@ cli:
       direction_help: Sentit de la transacció (INCOMING, OUTGOING o INTERNAL_TRANSFER)
       help: Afegeix una transacció manual al llibre del perfil actiu
       idempotency_key_help: Clau d'idempotència aportada pel cridador
+      idempotent_noop: 'Operació idempotent sense efecte: ja existeix una transacció amb aquesta clau d''idempotència (%{transaction_id}); no s''ha afegit res.'
       irpf_category_help: Categoria d'IRPF per a càlculs de models
       iva_amount_help: Import d'IVA de la transacció
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
