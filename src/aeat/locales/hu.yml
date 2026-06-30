@@ -1842,11 +1842,7 @@ cli:
         create_stub_modelo_714_refused: 'A(z) %{modelo} nyomtatvany (vagyonado) munkafeladat-letrehozasa
           ebben a CLI-ben nem tamogatott. Jogi alap: Ley 19/1991 28. cikk es Orden
           HAC/1023/2021. A bevallast az AEAT Sede feluleten kell benyujtani.'
-        create_stub_modelo_refused: 'A(z) %{modelo} nyomtatvány (külföldön tartott
-          virtuális pénznemek informatív bevallása) munkafeladat-létrehozása ebben
-          a CLI-ben nem támogatott. Jogi alap: Orden HFP/887/2023 és RD 1065/2007
-          Art. 42 quater; a jelentési küszöb 50 000 EUR december 31-én. Jogszabályi
-          kötelezettség esetén az AEAT Sede felületén kell benyújtani.'
+        create_stub_modelo_refused: 'A(z) %{modelo} nyomtatvány (külföldön tartott virtuális pénznemek informatív bevallása) munkafeladat-létrehozása ebben a CLI-ben nem támogatott. Jogi alap: Orden HFP/886/2023 és RD 1065/2007 Art. 42 quater; a jelentési küszöb 50 000 EUR december 31-én. Jogszabályi kötelezettség esetén az AEAT Sede felületén kell benyújtani.'
         dependencies_help: Keresztidoszaki bevallastorteneti fuggosegek es az aktualis
           clean-state blokkolok megjelenitese a celbevallashoz
         discard_help: Munkaegység eldobottként megjelölése (auditálható állapotváltás).

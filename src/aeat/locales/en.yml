@@ -1803,11 +1803,7 @@ cli:
         create_stub_modelo_714_refused: 'Modelo %{modelo} (Wealth Tax) is not supported
           for work-unit creation in this CLI. Legal basis: Ley 19/1991 Art. 28 and
           Orden HAC/1023/2021. File the return at AEAT Sede.'
-        create_stub_modelo_refused: 'Modelo %{modelo} (informative declaration of
-          virtual currencies held abroad) is not supported for work-unit creation
-          in this CLI. Legal authority: Orden HFP/887/2023 and RD 1065/2007 Art. 42
-          quater; the reporting threshold is 50,000 EUR at 31 December. File through
-          AEAT Sede when legally required.'
+        create_stub_modelo_refused: 'Modelo %{modelo} (informative declaration of virtual currencies held abroad) is not supported for work-unit creation in this CLI. Legal authority: Orden HFP/886/2023 and RD 1065/2007 Art. 42 quater; the reporting threshold is 50,000 EUR at 31 December. File through AEAT Sede when legally required.'
         dependencies_help: Show cross-period filing-history dependencies and current
           clean-state blockers for a target filing
         discard_help: Mark a work unit as discarded (auditable state transition)
