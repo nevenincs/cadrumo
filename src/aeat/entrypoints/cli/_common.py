@@ -8,12 +8,13 @@ accessors return typed domain objects: :class:`TransactionCatalogue` and
 invoice data, :class:`ModeloDraft` for in-progress modelo drafts, and
 :class:`TaxpayerProfile` for deadline and period calculations.
 
-The output boundary has two paths. Legacy/exempt surfaces call :func:`_emit`,
-which delegates to :func:`~aeat.core.output_rendering.render_command_output`.
-Envelope-aware command handlers call :func:`_emit_envelope`, which routes JSON
-through :class:`~aeat.core.json_contract.SchemaEnvelope` and carries typed
-:class:`~aeat.core.json_contract.Notice` diagnostics while preserving the text
-line iterator unchanged.
+The output boundary has two paths. Legacy/exempt surfaces call
+:func:`~aeat.entrypoints.cli._common._emit`, which delegates to
+:func:`~aeat.core.output_rendering.render_command_output`. Envelope-aware
+command handlers call :func:`~aeat.entrypoints.cli._common._emit_envelope`,
+which routes JSON through :class:`~aeat.core.json_contract.SchemaEnvelope` and
+carries typed :class:`~aeat.core.json_contract.Notice` diagnostics while
+preserving the text line iterator unchanged.
 
 Application-layer and domain symbols are imported lazily inside each
 helper to avoid pulling the registry parse into fast-path commands such
@@ -77,8 +78,9 @@ def _emit(ctx: typer.Context, payload: object, lines: Iterable[str]) -> None:
     """Render a bare payload or text lines through the shared output renderer.
 
     This helper is for documented non-envelope surfaces; registered command
-    results should use :func:`_emit_envelope` so their JSON path carries the
-    shared :class:`~aeat.core.json_contract.SchemaEnvelope` spine.
+    results should use :func:`~aeat.entrypoints.cli._common._emit_envelope` so
+    their JSON path carries the shared
+    :class:`~aeat.core.json_contract.SchemaEnvelope` spine.
     """
     rendered = render_command_output(format_name=_format_of(ctx), payload=payload, lines=lines)
     if rendered.text:
@@ -100,11 +102,12 @@ def _emit_envelope(
 ) -> None:
     """Render a typed result through :class:`SchemaEnvelope` for JSON or as text lines.
 
-    JSON mode goes through :func:`emit_json_success` so the payload is
-    wrapped in the shared spine ``{"schema_version": ..., "command": ...,
-    "status": ..., "result": ..., "notices": ...}``; ``status`` is derived
-    from the supplied notice severities. Text mode keeps the existing line
-    iterator unchanged so terminal output is unaffected.
+    JSON mode goes through :func:`~aeat.core.json_contract.emit_json_success`
+    so the payload is wrapped in the shared spine
+    ``{"schema_version": ..., "command": ..., "status": ..., "result": ...,
+    "notices": ...}``; ``status`` is derived from the supplied notice
+    severities. Text mode keeps the existing line iterator unchanged so
+    terminal output is unaffected.
 
     Args:
         ctx: Typer context (used to discover the requested output format).
@@ -206,8 +209,8 @@ def _ledger_aeat_token(token: str) -> str | None:
     """Return the normalised ledger-meaningful registry token, or ``None``.
 
     Validates ``token`` against the registry period union and accepts it only
-    when it is a span-shaped :class:`StandardPeriodCode` member the ledger can
-    filter by (quarters, months, annual). Extended-union members the ledger
+    when it is a span-shaped :class:`~aeat.core.StandardPeriodCode` member the
+    ledger can filter by (quarters, months, annual). Extended-union members the ledger
     does not filter by (``EXT-*``, ``AD-HOC``, ``EVENT-N``) and instalment
     claves (``1P``-``4P``) return ``None``.
     """
@@ -223,7 +226,7 @@ def _ledger_aeat_token(token: str) -> str | None:
 
 
 def _canonical_period(period: str, *, year: int) -> Period:
-    """Resolve a strict AEAT ``--period`` token plus ``--year`` to a :class:`Period`.
+    """Resolve a strict AEAT ``--period`` token plus ``--year`` to a :class:`~aeat.core.Period`.
 
     The ledger ``--period`` surface accepts only the canonical AEAT modelo
     tokens (``0A`` annual, ``1T``-``4T`` quarters, ``01``-``12`` months),
@@ -231,8 +234,9 @@ def _canonical_period(period: str, *, year: int) -> Period:
     and composes them with ``--year`` exactly as the modelo surface does. A
     calendar shape (``2026Q1`` / ``2026-03`` / ``2026``) or any other notation
     is refused with a message naming the AEAT tokens and the ``--year``
-    argument. The ``(year, token)`` pair builds the :class:`Period` date span
-    the ledger filters by — there is no intermediate calendar string.
+    argument. The ``(year, token)`` pair builds the
+    :class:`~aeat.core.Period` date span the ledger filters by — there is no
+    intermediate calendar string.
     """
     from ...core import Period, PeriodError
 
@@ -256,7 +260,7 @@ def _canonical_period(period: str, *, year: int) -> Period:
 
 
 def _filter_canonical_period(token: str, *, year: int) -> Period:
-    """Resolve a ``--filter period=`` bare token plus a ``--filter year=`` year to a :class:`Period`.
+    """Resolve a ``--filter period=`` bare token plus ``--filter year=`` to :class:`~aeat.core.Period`.
 
     The ledger ``--filter`` grammar carries the filing year as a separate
     ``year=`` clause, so ``period=`` is the same bare AEAT token the
@@ -269,13 +273,14 @@ def _filter_canonical_period(token: str, *, year: int) -> Period:
 
 
 def _optional_canonical_period(period: str | None, *, year: int | None) -> Period | None:
-    """Resolve an optional ``--period`` / ``--year`` pair to a :class:`Period` or ``None``.
+    """Resolve an optional ``--period`` / ``--year`` pair to :class:`~aeat.core.Period` or ``None``.
 
     Returns ``None`` when no ``--period`` is supplied (the command scopes the
     whole ledger). When ``--period`` is supplied it requires ``--year`` (the
     AEAT token carries no year of its own) and converts the pair through
-    :func:`_canonical_period`; a ``--period`` with no ``--year`` refuses with
-    an instructive message naming the ``--year`` argument.
+    :func:`~aeat.entrypoints.cli._common._canonical_period`; a ``--period``
+    with no ``--year`` refuses with an instructive message naming the
+    ``--year`` argument.
     """
     if period is None:
         return None
@@ -294,12 +299,12 @@ def _parse_iso_date(raw: str, *, label: str) -> _date:
 def _parse_iso_date_str(raw: str, *, label: str) -> str:
     """Validate ``raw`` as an ISO-8601 date and return its canonical string.
 
-    The shared ISO gate (:func:`_parse_iso_date`) refuses every non-ISO
-    ordering by construction (``15/01/2026``, ``01-15-2026``, ``2026/01/15``);
-    this wrapper returns the canonical ``YYYY-MM-DD`` form for the several
-    service contracts that persist the date as a 10-character string rather
-    than a :class:`datetime.date`. The DD/MM-vs-MM/DD ambiguity never arises
-    because only the ISO ordering parses.
+    The shared ISO gate (:func:`~aeat.entrypoints.cli._common._parse_iso_date`)
+    refuses every non-ISO ordering by construction (``15/01/2026``,
+    ``01-15-2026``, ``2026/01/15``); this wrapper returns the canonical
+    ``YYYY-MM-DD`` form for the several service contracts that persist the date
+    as a 10-character string rather than a :class:`datetime.date`. The
+    DD/MM-vs-MM/DD ambiguity never arises because only the ISO ordering parses.
     """
     return _parse_iso_date(raw, label=label).isoformat()
 
@@ -308,8 +313,9 @@ def _parse_optional_iso_date_str(raw: str | None, *, label: str) -> str | None:
     """Validate an optional ISO-8601 date, returning its canonical string or ``None``.
 
     Returns ``None`` when ``raw`` is ``None`` (the date was not supplied);
-    otherwise delegates to :func:`_parse_iso_date_str`, so a supplied non-ISO
-    date refuses at the CLI boundary.
+    otherwise delegates to
+    :func:`~aeat.entrypoints.cli._common._parse_iso_date_str`, so a supplied
+    non-ISO date refuses at the CLI boundary.
     """
     if raw is None:
         return None
@@ -376,8 +382,9 @@ def parse_optional_decimal_amount(raw: str | None, *, label: str, signed: bool =
     """Parse an optional canonical-grammar decimal, or ``None`` when unset.
 
     Returns ``None`` when ``raw`` is ``None`` (the field was not supplied);
-    otherwise delegates to :func:`parse_decimal_amount`, so the same canonical
-    grammar and :meth:`~decimal.Decimal.is_finite` guard apply.
+    otherwise delegates to
+    :func:`~aeat.entrypoints.cli._common.parse_decimal_amount`, so the same
+    canonical grammar and :meth:`~decimal.Decimal.is_finite` guard apply.
     """
     if raw is None:
         return None
@@ -402,7 +409,9 @@ def active_bucket_id_or_refuse() -> str:
     """Return the active profile bucket id or raise the canonical no-active-profile refusal.
 
     Stateless single source for the cold-start bucket-id guard shared across
-    the ledger command family; :func:`_active_bucket_id_or_bad` delegates here.
+    the ledger command family;
+    :func:`~aeat.entrypoints.cli._common._active_bucket_id_or_bad` delegates
+    here.
     """
     from ...core import require_active_bucket_id
     from ...core.errors import NoActiveProfileError
