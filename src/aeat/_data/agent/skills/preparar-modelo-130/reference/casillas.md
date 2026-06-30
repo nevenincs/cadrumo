@@ -3,7 +3,7 @@
 The registry is the authority for the exact casilla set, numbering, legal
 grounding, and formulas of the revision that applies to a given
 `(year, period)`. Read it with
-`aeat app modelo casillas --modelo 130 --year <YEAR> --period <PERIOD>` and treat
+`aeat app modelo casillas 130 --year <YEAR> --period <PERIOD>` and treat
 that output as canonical; this page is orientation only, so you know what you are
 looking at. Never report a casilla value from this page — report the value the CLI
 computes, with its `legal_refs`/`source_refs`.

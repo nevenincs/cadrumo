@@ -12,7 +12,10 @@ non-existent verb or field fails the gate.
 
 from __future__ import annotations
 
+import functools
 import re
+from collections.abc import Sequence
+from typing import Any
 
 import pytest
 
@@ -30,6 +33,8 @@ _BACKTICK = re.compile(r"`([^`]+)`")
 # placeholders (``<id>``), and argument values (``130``, ``1T``) do not match and
 # stop command-path collection.
 _SUBCOMMAND = re.compile(r"^[a-z][a-z0-9-]*$")
+# A flag token cited in prose: short or long option, lowercase.
+_FLAG = re.compile(r"^--?[a-z][a-z0-9-]*$")
 # Envelope-spine / notice field names a rule may cite in backticks. Each must be a
 # real field on the model named here, or the rule is teaching a phantom field.
 _ENVELOPE_FIELDS = frozenset(SchemaEnvelope.model_fields)
@@ -86,6 +91,82 @@ def _command_path_from_invocation(invocation: str) -> str | None:
     return ".".join(command_tokens)
 
 
+@functools.lru_cache(maxsize=1)
+def _live_root_command() -> Any:
+    """Materialise the full live Click command tree (all lazy subtrees loaded)."""
+    from typer.main import get_command
+
+    from ...entrypoints.cli import app as live_app
+    from ...entrypoints.cli._command_suggestions import _LAZY_REGISTRY
+
+    seen: set[int] = set()
+    pending = [live_app]
+    while pending:
+        node = pending.pop()
+        if id(node) in seen:
+            continue
+        seen.add(id(node))
+        for lazy in _LAZY_REGISTRY.get(node.info.name or "", {}).values():
+            lazy.load()
+        for group in node.registered_groups:
+            if group.typer_instance is not None:
+                pending.append(group.typer_instance)
+
+    root = get_command(live_app)
+    root.name = live_app.info.name or "aeat"
+    return root
+
+
+def _flags_of(command: Any) -> frozenset[str]:
+    """Return every option string declared on ``command`` (incl. secondary opts)."""
+    flags: set[str] = set()
+    for param in getattr(command, "params", ()):
+        for opt in (*getattr(param, "opts", ()), *getattr(param, "secondary_opts", ())):
+            if opt.startswith("-"):
+                flags.add(opt)
+    return frozenset(flags)
+
+
+def _resolve_command(tokens: Sequence[str]) -> Any | None:
+    """Descend the live tree by ``tokens`` (sans ``aeat``); return the command or None."""
+    import click
+
+    command = _live_root_command()
+    for token in tokens:
+        is_group = callable(getattr(command, "list_commands", None)) and callable(getattr(command, "get_command", None))
+        if not is_group:
+            return None
+        with click.Context(command, info_name=command.name or None) as ctx:
+            command = command.get_command(ctx, token)
+        if command is None:
+            return None
+    return command
+
+
+@functools.lru_cache(maxsize=1)
+def _global_flags() -> frozenset[str]:
+    """Root-level options valid on any command (``--format``, ``--language``, ...)."""
+    return _flags_of(_live_root_command()) | {"--help", "-h"}
+
+
+def _invocation_tokens(invocation: str) -> tuple[list[str], list[str]] | None:
+    """Split an ``aeat ...`` span into (command tokens, cited flag tokens)."""
+    tokens = invocation.split()
+    if not tokens or tokens[0] != "aeat":
+        return None
+    command_tokens: list[str] = []
+    consuming_path = True
+    flags: list[str] = []
+    for token in tokens[1:]:
+        if consuming_path and _SUBCOMMAND.match(token):
+            command_tokens.append(token)
+            continue
+        consuming_path = False
+        if _FLAG.match(token):
+            flags.append(token)
+    return command_tokens, flags
+
+
 def _rule_documents() -> list[tuple[str, str]]:
     return [(rule.name, rule.read_text(encoding="utf-8")) for rule in iter_operator_rules()]
 
@@ -122,6 +203,32 @@ def test_every_cited_verb_resolves() -> None:
             if path not in valid:
                 failures.append(f"{name}: `{span}` -> unresolved command path '{path}'")
     assert not failures, "operator rules cite non-existent CLI verbs:\n" + "\n".join(failures)
+
+
+def test_every_cited_flag_resolves() -> None:
+    # Every flag a rule/persona/skill cites on an `aeat ...` command must be a real
+    # option of that command (or a root-global flag). A cited dead flag is the same
+    # orphaned-instruction failure as a dead verb.
+    global_flags = _global_flags()
+    failures: list[str] = []
+    for name, text in _all_operator_documents():
+        for span in _BACKTICK.findall(text):
+            parts = _invocation_tokens(span)
+            if parts is None:
+                continue
+            command_tokens, flags = parts
+            if not flags:
+                continue
+            command = _resolve_command(command_tokens)
+            if command is None:
+                # The verb gate already reports an unresolved command path; skip
+                # flag-checking a command that does not resolve.
+                continue
+            allowed = _flags_of(command) | global_flags
+            for flag in flags:
+                if flag not in allowed:
+                    failures.append(f"{name}: `{span}` -> unknown flag '{flag}' for `aeat {' '.join(command_tokens)}`")
+    assert not failures, "operator docs cite non-existent CLI flags:\n" + "\n".join(failures)
 
 
 def test_cited_envelope_spine_fields_still_exist() -> None:
