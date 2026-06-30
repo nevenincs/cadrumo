@@ -32,6 +32,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_serializer, fiel
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
+from ...core.external_constants import DEFAULT_CURRENCY
 from ...domain.calculations.registry import (
     BindingId,
     IvaLedgerObservation,
@@ -98,6 +99,7 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     MISSING_IVA_AMOUNT = "missing_iva_amount"
     MISSING_IVA_RATE = "missing_iva_rate"
     UNSUPPORTED_IVA_RATE = "unsupported_iva_rate"
+    MISSING_EUR_TAX_SUBSTRATE = "missing_eur_tax_substrate"
     INVALID_PRORRATA_REFERENCE = "invalid_prorrata_reference"
     UNSUPPORTED_IVA_CATEGORY = "unsupported_iva_category"
     MISSING_COUNTERPARTY_EU_MEMBER_STATE = "missing_counterparty_eu_member_state"
@@ -450,6 +452,18 @@ def _classify_iva_transaction(
                 detail=f"transaction currency {transaction.raw.currency!r} is not supported for IVA aggregation",
             ),
         )
+    if _has_converted_non_eur_amount(transaction):
+        return _IvaTransactionOutcome(
+            gate_issue=IvaLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE,
+                detail=(
+                    f"transaction currency {transaction.raw.currency!r} has a converted gross value_in_eur "
+                    "but taxable_base/iva_amount remain native-currency facts; IVA aggregation requires "
+                    "explicit EUR tax substrate"
+                ),
+            ),
+        )
     flow_direction = _flow_direction_for(transaction.direction)
     if flow_direction is None:
         return _IvaTransactionOutcome(
@@ -690,6 +704,10 @@ def _flow_direction_for(direction: TransactionDirection) -> IvaFlowDirection | N
 
 def _business_proportionality(transaction: Transaction) -> Decimal | None:
     return business_proportion(transaction.business_classification, transaction.business_pct)
+
+
+def _has_converted_non_eur_amount(transaction: Transaction) -> bool:
+    return transaction.raw.currency != DEFAULT_CURRENCY and transaction.value_in_eur is not None
 
 
 def _missing_tax_fact_reason(transaction: Transaction) -> IvaLedgerAggregationIssueReason | None:

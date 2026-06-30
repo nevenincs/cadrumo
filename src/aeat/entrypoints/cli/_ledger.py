@@ -1,11 +1,15 @@
 """User-facing ledger and transaction management CLI commands.
 
-Provides the ``aeat ledger`` command group for importing, reviewing, and
-exporting financial transaction data. Transaction records are accessed
-through :class:`TransactionCatalogueRepository` and invoice records through
-:class:`InvoiceCatalogueRepository`. Lifecycle events are appended to the
-profile audit trail via :class:`BucketEventHistoryRepository`. Mutation and
-read verbs emit typed :class:`OutputSchema` envelopes so CLI JSON stays aligned
+Provides the ``aeat app ledger`` command group for importing, reviewing, and
+exporting financial transaction data. Transaction records are accessed through
+:class:`~aeat.domain.transactions.TransactionCatalogueRepository` and invoice
+records through :class:`~aeat.domain.invoices.InvoiceCatalogueRepository`.
+Lifecycle events are appended to the profile audit trail via
+:class:`~aeat.domain.buckets.BucketEventHistoryRepository`. Mutation and read
+verbs validate registered
+:class:`~aeat.entrypoints.cli._schemas.OutputSchema` payloads and emit
+:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` documents through
+:func:`~aeat.entrypoints.cli._common._emit_envelope` so CLI JSON stays aligned
 with the registered ledger payload contracts.
 """
 

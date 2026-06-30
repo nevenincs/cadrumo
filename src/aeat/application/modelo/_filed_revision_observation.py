@@ -110,8 +110,8 @@ def _refunded_303_observations(
 ) -> tuple[CasillaObservation, ...]:
     """Zero the generated-credit components of a refunded Modelo 303 observation.
 
-    A refunded (devolución) period returns its credit rather than carrying it
-    forward, so the persisted cross-period carry must drop the generated credit:
+    A refunded (devolución) period is requested as devolución rather than
+    compensación carry, so the persisted cross-period carry must drop the generated credit:
     ``iva.compensacion-disponible-fin-periodo`` is re-stamped to its
     posterior-only value from ``iva.compensacion-pendiente-periodos-posteriores``
     (AEAT box 87) and ``iva.compensacion-generada-periodo`` to zero. Every other
@@ -180,9 +180,9 @@ def persist_filed_revision_observation(
             active bucket's encrypted store).
         captured_at: The filing timestamp, stamped on the stored record.
         refunded: When ``True`` and the work unit is Modelo 303, the filed period
-            was disposed as a refund (devolución, Tipo de declaración ``D``): the
-            generated compensación credit is returned by AEAT, not carried, so the
-            persisted ``iva.compensacion-disponible-fin-periodo`` (and the
+            was disposed as a refund request (devolución, Tipo de declaración
+            ``D``): the generated compensación credit is excluded from carry, so
+            the persisted ``iva.compensacion-disponible-fin-periodo`` (and the
             per-period generada casilla) are zeroed for the generated component
             before the carry row is written. The default ``False`` preserves the
             standard compensación carry. Legal basis: RD 1624/1992 art. 30 / Ley

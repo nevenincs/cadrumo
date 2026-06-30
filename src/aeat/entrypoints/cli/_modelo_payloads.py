@@ -4,7 +4,8 @@ Each command result is a strict
 :class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass registered by
 :func:`~aeat.entrypoints.cli._schemas.register_schema` for a stable command path
 and wrapped at emit time in
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope`. This file is the CLI-side
+:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:func:`~aeat.entrypoints.cli._common._emit_envelope`. This file is the CLI-side
 projection boundary for :mod:`aeat.application.modelo`: application and domain
 results stay authoritative while these classes expose JSON-safe
 :class:`~aeat.domain.modelos.WorkUnit`,

@@ -319,7 +319,7 @@ def test_non_redeme_last_period_refund_election_yields_devolucion_and_zero_carry
     4T is the year's last filing period, so the refund election is lawful for a
     non-REDEME taxpayer (LIVA art. 116). The resolved disposition is devolución
     (``D``), and the next period (1T of the following year) auto-resolves a casilla-110
-    carry-in of zero — the refunded credit is requested back, not double-claimed.
+    carry-in of zero — the credit is requested as devolución, not double-claimed.
     """
     with _secure_backend(tmp_path):
         revision_id, saldo = _calculate_negative_period(period_token=_LAST_PERIOD, redeme_enrolled=False)

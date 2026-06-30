@@ -1,7 +1,8 @@
 """Text rendering and notice projection for ``overview status``.
 
-This module consumes an application-built :class:`OverviewStatusReport` and
-turns it into localized text lines plus :class:`Notice` objects for the
+This module consumes an application-built
+:class:`~aeat.application.overview.OverviewStatusReport` and turns it into
+localized text lines plus :class:`~aeat.core.json_contract.Notice` objects for the
 :class:`~aeat.core.json_contract.SchemaEnvelope` notice channel.  It is
 presentation-only: active-profile discovery, storage reads, and status assembly
 stay upstream in :mod:`aeat.application.overview` and
@@ -17,7 +18,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 
 
 def overview_next_step_notices(report: OverviewStatusReport) -> list[Notice]:
-    """Surface the workspace-state next-step guidance as :class:`Notice` values.
+    """Surface the workspace-state next-step guidance as :class:`~aeat.core.json_contract.Notice` values.
 
     Mirrors the text-mode ``_next_step_lines`` guidance so JSON consumers
     receive the same forward guidance the text surface already shows,
@@ -33,11 +34,11 @@ def overview_next_step_notices(report: OverviewStatusReport) -> list[Notice]:
 
 
 def render_cli_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...]:
-    """Render :class:`OverviewStatusReport` as operator-facing CLI text.
+    """Render :class:`~aeat.application.overview.OverviewStatusReport` as operator-facing CLI text.
 
     The renderer preserves the same next-step decisions used by
-    :func:`overview_next_step_notices`, so text and JSON-envelope notice output
-    stay aligned.
+    :func:`~aeat.entrypoints.cli._overview_rendering.overview_next_step_notices`,
+    so text and JSON-envelope notice output stay aligned.
     """
     lines: list[str] = [
         tr("cli.overview.status.title"),
@@ -63,8 +64,9 @@ def _next_step_lines(report: OverviewStatusReport) -> tuple[str, ...]:
     "import a bank statement" — that step is done. The guidance walks
     the operator forward: import when the ledger is empty, classify /
     work-modelo when transactions exist, continue the modelo flow when
-    work units are already in progress. Unsupported :class:`Modelo` work-unit
-    creation is diverted to discovery guidance instead of a dead command.
+    work units are already in progress. Unsupported
+    :class:`~aeat.core.Modelo` work-unit creation is diverted to discovery
+    guidance instead of a dead command.
     """
     if report.work_units > 0:
         return (

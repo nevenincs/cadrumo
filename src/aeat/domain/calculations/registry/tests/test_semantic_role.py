@@ -274,6 +274,45 @@ class TestTypoTwinWarning:
                 "irpf_anexo_c_exceso_sps_rg_aportaciones_aplicado",
             ),
             (
+                "200",
+                "2024-y-siguientes",
+                "00827",
+                "is_deduccion_di_internacional_rdleg_pendiente",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "00848",
+                "is_deduccion_di_interna_rdleg_pendiente",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03396",
+                "is_correccion_otras_correcciones_resultado_permanente_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03397",
+                "is_correccion_otras_correcciones_resultado_temporaria_ejercicio_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "00501",
+                "is_liquidacion_i_importe",
+            ),
+            ("100", "2025", "DECFAL", "irpf_declarante_fecha_fallecimiento"),
+            ("100", "2025", "FNACDLG", "irpf_descendiente_fecha_nacimiento"),
+            ("100", "2025", "FALLDLG", "irpf_descendiente_fecha_fallecimiento"),
+            ("100", "2025", "ANOASDLG", "irpf_ascendiente_fecha_nacimiento"),
+            ("100", "2025", "FALLASDLG", "irpf_ascendiente_fecha_fallecimiento"),
+            ("100", "2025", "APENOMDLG", "irpf_descendiente_apellidos_nombre"),
+            ("100", "2025", "MINUSDLG", "irpf_descendiente_clave_discapacidad"),
+            ("100", "2025", "APENOMDLG_ASC", "irpf_ascendiente_apellidos_nombre"),
+            ("100", "2025", "PCTMINASDLG", "irpf_ascendiente_clave_discapacidad"),
+            (
                 "100",
                 "2020",
                 "1171",
@@ -481,6 +520,7 @@ class TestTypoTwinWarning:
             _bundled_modelo("100"),
             _bundled_modelo("184"),
             _bundled_modelo("190"),
+            _bundled_modelo("200"),
             _bundled_modelo("202"),
             _bundled_modelo("303"),
             _bundled_modelo("369"),
@@ -492,6 +532,20 @@ class TestTypoTwinWarning:
             "irpf_red_prevision_social_exceso_2016_2020",
             "irpf_anexo_c_exceso_sps_rg_aportaciones_periodo",
             "irpf_anexo_c_exceso_sps_rg_aportaciones_aplicado",
+            "is_deduccion_di_internacional_rdleg_pendiente",
+            "is_deduccion_di_interna_rdleg_pendiente",
+            "is_correccion_otras_correcciones_resultado_permanente_disminucion",
+            "is_correccion_otras_correcciones_resultado_temporaria_ejercicio_disminucion",
+            "is_liquidacion_i_importe",
+            "irpf_declarante_fecha_fallecimiento",
+            "irpf_descendiente_fecha_nacimiento",
+            "irpf_descendiente_fecha_fallecimiento",
+            "irpf_ascendiente_fecha_nacimiento",
+            "irpf_ascendiente_fecha_fallecimiento",
+            "irpf_descendiente_apellidos_nombre",
+            "irpf_descendiente_clave_discapacidad",
+            "irpf_ascendiente_apellidos_nombre",
+            "irpf_ascendiente_clave_discapacidad",
             "irpf_deduccion_c_valenciana_ayudas_publicas_generalitat_2020",
             "irpf_num_hijos_maternidad_2020",
             "irpf_incremento_maternidad_no_aplicado_2020",
@@ -647,20 +701,16 @@ class TestTypoTwinWarning:
             _emit_semantic_role_typo_twin_warnings([m])
         assert any("permanent_aumento" in str(w.message) for w in captured)
 
-    def test_token_axis_sibling_roles_do_not_warn_as_typos(self) -> None:
-        anteriores = _casilla(
-            cid="a",
-            semantic_role="iva_compensacion_pendiente_anteriores",
+    def test_legacy_token_groups_are_not_axis_tokens(self) -> None:
+        legacy_pairs = (
+            ("tipo_renta_atribuida_clave", "tipo_renta_atribuida_subclave"),
+            ("total_percepciones_count", "total_percepciones_amount"),
+            ("iva_compensacion_pendiente_anteriores", "iva_compensacion_pendiente_posteriores"),
+            ("irpf_ganancia_valor_transmision", "irpf_ganancia_valor_adquisicion"),
+            ("irpf_anexo_b_ab_importe", "irpf_anexo_b_c_importe"),
         )
-        posteriores = _casilla(
-            cid="b",
-            semantic_role="iva_compensacion_pendiente_posteriores",
-        )
-        m = _registry_modelo("303", "2009-y-siguientes", [anteriores, posteriores])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
+        for left, right in legacy_pairs:
+            assert semantic_roles_are_axis_siblings(left, right) is False
 
     def test_related_party_row_slot_roles_do_not_warn_as_typos(self) -> None:
         first_slot = _casilla(cid="a", semantic_role="related_party_nif_1", data_type="nif")
@@ -710,21 +760,6 @@ class TestTypoTwinWarning:
             _emit_semantic_role_typo_twin_warnings([m])
         assert captured == []
 
-    def test_scope_token_sibling_roles_do_not_warn_as_typos(self) -> None:
-        detalle = _casilla(
-            cid="a",
-            semantic_role="is_correccion_detalle_correcciones_resultado_permanente_disminucion",
-        )
-        otras = _casilla(
-            cid="b",
-            semantic_role="is_correccion_otras_correcciones_resultado_permanente_disminucion",
-        )
-        m = _registry_modelo("200", "2024-y-siguientes", [detalle, otras])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
-
     def test_numeric_window_tokens_are_not_axis_tokens(self) -> None:
         assert (
             semantic_roles_are_axis_siblings(
@@ -743,14 +778,50 @@ class TestTypoTwinWarning:
             is False
         )
 
-    def test_relationship_axis_sibling_roles_do_not_warn_as_typos(self) -> None:
-        descendant = _casilla(cid="a", semantic_role="irpf_descendiente_fecha_nacimiento")
-        ascendant = _casilla(cid="b", semantic_role="irpf_ascendiente_fecha_nacimiento")
-        m = _registry_modelo("100", "2025", [descendant, ascendant])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
+    def test_internal_international_tokens_are_not_axis_tokens(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "is_deduccion_di_interna_rdleg_pendiente",
+                "is_deduccion_di_internacional_rdleg_pendiente",
+            )
+            is False
+        )
+
+    def test_detail_other_tokens_are_not_axis_tokens(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "is_correccion_detalle_correcciones_resultado_permanente_disminucion",
+                "is_correccion_otras_correcciones_resultado_permanente_disminucion",
+            )
+            is False
+        )
+
+    def test_liquidation_roman_tokens_are_not_axis_tokens(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "is_liquidacion_i_importe",
+                "is_liquidacion_ii_importe",
+            )
+            is False
+        )
+
+    def test_birth_death_tokens_are_not_axis_tokens(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "irpf_descendiente_fecha_nacimiento",
+                "irpf_descendiente_fecha_fallecimiento",
+            )
+            is False
+        )
+
+    def test_relationship_tokens_are_not_axis_tokens(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "irpf_descendiente_apellidos_nombre",
+                "irpf_ascendiente_apellidos_nombre",
+            )
+            is False
+        )
 
     def test_anexo_b_aav_marker_is_not_optional_axis_token(self) -> None:
         assert (
@@ -859,15 +930,13 @@ class TestSemanticRoleTypoTwinHelpers:
         max_diff = int(0.08 * (len(role) + len(known)))
         assert _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index) is True
 
-    def test_axis_sibling_candidate_is_exempt(self) -> None:
-        # ascendiente vs descendiente share a relationship axis -> not a typo twin.
+    def test_relationship_candidate_is_not_axis_exempt(self) -> None:
+        # ascendiente vs descendiente are source-visible relationship subjects.
         role = "irpf_ascendiente_fecha_nacimiento"
         known = "irpf_descendiente_fecha_nacimiento"
         index = self._index(known)
         max_diff = int(0.08 * (len(role) + len(known)))
-        # The two differ by more than the fast-check budget, so they never reach
-        # the sibling exemption: the fast prefix/suffix filter rejects first.
-        assert _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index) is False
+        assert _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index) is True
 
     def test_scan_finds_near_duplicate_across_length_buckets(self) -> None:
         index = self._index("taxpayer_nif", "unrelated_role_value")

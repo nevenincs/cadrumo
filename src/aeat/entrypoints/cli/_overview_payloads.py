@@ -23,10 +23,10 @@ result schemas then wrap those fragments, plus read models returned by
 :func:`~aeat.application.overview.build_overview_agenda`,
 :func:`~aeat.application.overview.build_overview_backlog`, and
 :func:`~aeat.application.overview.build_overview_explain`, for the
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` surface.  The application
-overview package remains the source of business semantics; this module only
-documents and validates the transport shape emitted by
-:mod:`aeat.entrypoints.cli._overview`.
+:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` surface through
+:func:`~aeat.entrypoints.cli._common._emit_envelope`. The application overview
+package remains the source of business semantics; this module only documents
+and validates the transport shape emitted by :mod:`aeat.entrypoints.cli._overview`.
 """
 
 from __future__ import annotations

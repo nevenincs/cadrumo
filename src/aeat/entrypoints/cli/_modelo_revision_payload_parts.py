@@ -6,6 +6,12 @@ work-revision result schemas. They project
 :class:`~aeat.domain.calculations.registry.RegistryCalculationResult` and
 :class:`~aeat.application.modelo.ResultSummaryRow` headline-result rows into
 strict :class:`~aeat.entrypoints.cli._schemas.OutputSchema` fragments.
+They are not registered command results on their own; registered
+:class:`~aeat.entrypoints.cli._modelo_work_revision_payloads.WorkRevisionResult`,
+:class:`~aeat.entrypoints.cli._modelo_work_revision_payloads.WorkObservationsResult`,
+and :class:`~aeat.entrypoints.cli._modelo_payloads.WorkCalculateResult` models
+carry them into :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:func:`~aeat.entrypoints.cli._common._emit_envelope`.
 """
 
 from __future__ import annotations

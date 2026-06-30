@@ -1178,6 +1178,9 @@ class InventoryValuationPreviewPayload(OutputSchema):
         The wrapper carries an inner ``preview`` plus ``bucket_event_ids``;
         ``model_dump(mode="json")`` on the inner preview performs the
         enum/Decimal coercion, and the event ids are lifted onto the same level.
+
+        Returns:
+            :class:`InventoryValuationPreviewPayload`: Flattened CLI JSON envelope.
         """
         data = result.preview.model_dump(mode="json")
         data["bucket_event_ids"] = list(result.bucket_event_ids)

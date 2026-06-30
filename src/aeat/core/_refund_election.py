@@ -1,11 +1,11 @@
 """The operator's per-filing Modelo 303 negative-result disposition election.
 
 The AEAT Modelo 303 "Tipo de declaración" disposition of a negative result is, by
-default, a credit carried forward (compensación, ``C``). A taxpayer inscribed in
-the Registro de devolución mensual (REDEME) refunds every period under a standing
-election; a taxpayer NOT inscribed in REDEME may, in the LAST filing period of the
-year (the annual liquidación, Ley 37/1992 art. 116), explicitly elect to request
-the credit back as a refund (devolución, ``D``) instead.
+default, a credit carried forward (compensación, ``C``). The current accepted ADR
+treats a taxpayer inscribed in the Registro de devolución mensual (REDEME) as
+having a standing monthly-devolución disposition policy; a taxpayer NOT inscribed
+in REDEME may, in the LAST filing period of the year (the annual liquidación, Ley
+37/1992 art. 116), explicitly elect to request devolución (``D``) instead.
 
 The exported :class:`RefundElection` closed value set is declared as a
 :class:`enum.StrEnum` in ``core`` per the core-authority discipline (closed axes
@@ -42,9 +42,10 @@ class RefundElection(StrEnum):
     period. ``DEVOLVER`` is the gated opt-in: it is honoured only when the
     eligibility gate permits a refund, and refused otherwise.
 
-    REDEME inscription is the *standing* refund election (every period); this
-    per-filing election is the separate, explicit opt-in a non-REDEME taxpayer
-    makes for the annual liquidación.
+    The current accepted ADR treats REDEME inscription as the standing
+    monthly-devolución disposition policy; this per-filing election is the
+    separate, explicit opt-in a non-REDEME taxpayer makes for the annual
+    liquidación.
 
     Attributes:
         COMPENSAR: Keep the negative result as compensación (``C``), the default

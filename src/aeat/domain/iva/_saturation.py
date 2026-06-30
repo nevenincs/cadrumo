@@ -69,36 +69,40 @@ _CATEGORY_TO_RATE_KIND: dict[IvaCategory, IvaRateKind] = {
 # operator must supply.
 _NON_DERIVABLE_REASONS: dict[IvaCategory, str] = {
     IvaCategory.DOMESTIC_NOT_SUBJECT: (
-        "not subject to Spanish IVA (no devengo); the operator confirms the non-subjection — no rate is derivable here"
+        "not subject to Spanish IVA (no devengo); no rate is derivable here, "
+        "but this reason does not confirm the filing treatment"
     ),
     IvaCategory.OPERACION_NO_SUJETA: (
-        "not subject to Spanish IVA (no devengo); the operator confirms the non-subjection — no rate is derivable here"
+        "not subject to Spanish IVA (no devengo); no rate is derivable here, "
+        "but this reason does not confirm the filing treatment"
     ),
     IvaCategory.DOMESTIC_REVERSE_CHARGE: (
-        "domestic reverse charge (inversión del sujeto pasivo): the recipient "
-        "self-assesses both devengado and soportado IVA — derivation is left "
-        "to the operator"
+        "potential domestic reverse charge (inversión del sujeto pasivo): "
+        "no rate is derivable here; verify the operation evidence and supply "
+        "the self-assessed base and cuota explicitly"
     ),
     IvaCategory.INTRA_COMMUNITY_SUPPLY: (
-        "intra-community supply: exempt with right to deduct; the rate depends "
-        "on the destination member state — no Spanish rate is derivable here"
+        "potential intra-community supply: no Spanish rate is derivable here; "
+        "verify the customer VAT ID, cross-border transport, and reporting "
+        "evidence before treating it as exempt"
     ),
     IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE: (
-        "intra-community acquisition under reverse charge: the recipient "
-        "self-assesses devengado and soportado IVA — derivation is left to "
-        "the operator"
+        "potential intra-community acquisition under reverse charge: no rate "
+        "is derivable here; verify the acquisition evidence and supply the "
+        "self-assessed base and cuota explicitly"
     ),
     IvaCategory.INTRA_COMMUNITY_TRIANGULATION: (
-        "intra-community triangulation: the intermediary does not charge Spanish IVA — no rate is derivable here"
+        "potential intra-community triangulation: no Spanish rate is derivable "
+        "here; verify the triangulation conditions and reporting evidence"
     ),
     IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED: (
-        "export to a third country: zero-rated with right to deduct; the "
-        "operator confirms the export — no domestic rate is derivable here"
+        "potential export to a third country: no domestic rate is derivable "
+        "here; verify the export evidence before treating it as zero-rated"
     ),
     IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED: (
-        "operation assimilated to an export: exempt with right to deduct under "
-        "LIVA art. 22; the operator confirms the qualifying ship, aircraft, "
-        "provisioning, or related service facts — no domestic rate is derivable here"
+        "potential operation assimilated to an export: no domestic rate is "
+        "derivable here; verify the qualifying ship, aircraft, provisioning, "
+        "or related service facts before treating it as exempt"
     ),
     IvaCategory.IMPORT_THIRD_COUNTRY: (
         "import from a third country: IVA is assessed at customs against the "

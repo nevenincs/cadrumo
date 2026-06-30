@@ -184,8 +184,8 @@ _DISPOSITION_SPEC: dict[str, _DispositionSpec] = {
 
 
 #: The fichero "Tipo de declaración" codes that mean the negative result is
-#: REFUNDED (devolución) — the credit is returned by AEAT rather than carried
-#: forward. A refunded period generates ZERO compensación carry-forward (RD
+#: requested as devolución and therefore excluded from compensación carry. A
+#: refunded period generates ZERO compensación carry-forward (RD
 #: 1624/1992 art. 30 / Ley 37/1992 art. 116). ``D`` is the ordinary refund
 #: request; ``V`` (cuenta corriente devolución) and ``X`` (devolución por
 #: transferencia al extranjero) are the same disposition through a different
@@ -202,12 +202,12 @@ _REFUND_DISPOSITIONS: frozenset[ResultDisposition] = frozenset(
 def result_disposition_is_refund(disposition: ResultDisposition) -> bool:
     """Return whether ``disposition`` files the result as a refund (devolución).
 
-    A refund disposition (``D`` / ``V`` / ``X``) returns the credit rather than
-    carrying it forward, so a refunded Modelo 303 period must generate zero
-    compensación carry-forward. The carried disposition (``C``, compensación) and
-    every ingreso/negativa code return ``False``. This is the single determined
-    fact the export "Tipo de declaración" and the carry-forward derivation both
-    read, so the fichero ``D`` and the cross-period carry cannot disagree.
+    A refund disposition (``D`` / ``V`` / ``X``) requests devolución rather than
+    carry-forward, so a refunded Modelo 303 period must generate zero compensación
+    carry-forward. The carried disposition (``C``, compensación) and every
+    ingreso/negativa code return ``False``. This is the single determined fact the
+    export "Tipo de declaración" and the carry-forward derivation both read, so
+    the fichero ``D`` and the cross-period carry cannot disagree.
     """
     return disposition in _REFUND_DISPOSITIONS
 

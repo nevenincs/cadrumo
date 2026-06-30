@@ -49,6 +49,7 @@ class LedgerPreflightIssueReason(StrEnum):
     MISSING_TAXABLE_BASE = "missing_taxable_base"
     MISSING_IVA_AMOUNT = "missing_iva_amount"
     MISSING_IVA_RATE = "missing_iva_rate"
+    MISSING_EUR_TAX_SUBSTRATE = "missing_eur_tax_substrate"
     MISSING_PROPORTIONALITY_REFERENCE = "missing_proportionality_reference"
     UNSUPPORTED_CURRENCY = "unsupported_currency"
     UNSUPPORTED_PERIOD = "unsupported_period"
@@ -326,13 +327,26 @@ def _issues_for_transaction(
             ),
         )
     # A foreign row is only unsupported when no EUR conversion was applied at
-    # import; a converted row (value_in_eur set) aggregates normally.
+    # import; converted rows still need explicit EUR-denominated tax substrate.
     if transaction.raw.currency != DEFAULT_CURRENCY and transaction.value_in_eur is None:
         issues.append(
             LedgerPreflightIssue(
                 **common,
                 reason=LedgerPreflightIssueReason.UNSUPPORTED_CURRENCY,
                 detail=f"transaction currency {transaction.raw.currency!r} is not supported for modelo aggregation",
+            ),
+        )
+        return tuple(issues)
+    if transaction.raw.currency != DEFAULT_CURRENCY and transaction.value_in_eur is not None:
+        issues.append(
+            LedgerPreflightIssue(
+                **common,
+                reason=LedgerPreflightIssueReason.MISSING_EUR_TAX_SUBSTRATE,
+                detail=(
+                    f"transaction currency {transaction.raw.currency!r} has value_in_eur but taxable_base and "
+                    "iva_amount remain native-currency facts; supply explicit EUR tax substrate or exclude the "
+                    "row before modelo calculation"
+                ),
             ),
         )
         return tuple(issues)
@@ -424,6 +438,9 @@ def _preflight_reason_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> 
         IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE: LedgerPreflightIssueReason.MISSING_TAXABLE_BASE,
         IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT: LedgerPreflightIssueReason.MISSING_IVA_AMOUNT,
         IvaLedgerAggregationIssueReason.MISSING_IVA_RATE: LedgerPreflightIssueReason.MISSING_IVA_RATE,
+        IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE: (
+            LedgerPreflightIssueReason.MISSING_EUR_TAX_SUBSTRATE
+        ),
     }[reason]
 
 
@@ -432,6 +449,9 @@ def _preflight_detail_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> 
         IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE: "transaction has no taxable_base fact",
         IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT: "transaction has no iva_amount fact",
         IvaLedgerAggregationIssueReason.MISSING_IVA_RATE: "transaction has no iva_rate fact",
+        IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE: (
+            "converted non-EUR transaction requires explicit EUR tax substrate"
+        ),
     }[reason]
 
 

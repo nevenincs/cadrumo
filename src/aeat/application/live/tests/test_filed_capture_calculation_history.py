@@ -43,6 +43,7 @@ from .. import (
     persist_filed_justificante_metadata,
 )
 from .._errors import LiveApplicationInputError
+from .._filed_data_capture import _persist_latest_filed_calculation_observations_with_failures
 from ._filed_capture_history_support import (
     _CAPTURED_AT,
     _M303_DISPONIBLE_CASILLA,
@@ -134,6 +135,30 @@ def test_latest_filed_observation_capture_threads_justificante_csv_metadata(tmp_
     assert keys == ("303:2026:1T",)
     assert loaded is not None
     assert loaded.source_metadata["aeat_justificante_csv"] == "CSV30320261T"
+
+
+def test_filed_capture_registry_enrollment_reports_incomplete_observation(tmp_path: Path) -> None:
+    with _secure_backend(tmp_path):
+        observation = _prior_303_observation(pending_compensation=Decimal("1200.00")).model_copy(
+            update={"extraction_coverage": {}},
+        )
+
+        keys, failures = _persist_latest_filed_calculation_observations_with_failures(
+            (observation,),
+            justificante_csvs_by_observation={},
+        )
+
+        stored = CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T"))
+
+    assert keys == ()
+    assert len(failures) == 1
+    assert failures[0].modelo == "303"
+    assert failures[0].year == 2026
+    assert failures[0].period == Period.from_year_and_code(2026, "1T")
+    assert failures[0].expediente_id == _SYNTHETIC_EXPEDIENTE_ID
+    assert failures[0].error_type == "SedeParseError"
+    assert "has no extraction coverage" in failures[0].message
+    assert stored is None
 
 
 def test_filed_observation_capture_promotes_cross_year_303_recurrence_history(tmp_path: Path) -> None:

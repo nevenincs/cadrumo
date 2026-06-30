@@ -19,7 +19,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from pydantic import BaseModel
 
 from ....core.i18n import Translatable as tr
 from .._commands import (
@@ -34,12 +33,9 @@ from .._commands import (
     _required_flag_questions,
 )
 from .._models import WizardCondition, WizardFlow, WizardQuestion, WizardSection, WizardWidget
+from ._support import EmptyAnswersBase
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-class _EmptyAnswersBase(BaseModel):
-    """Minimal pydantic answers model required by WizardFlow."""
 
 
 def _question(
@@ -75,7 +71,7 @@ def _flow(*questions: WizardQuestion) -> WizardFlow:
                 questions=questions,
             ),
         ),
-        answers_model=_EmptyAnswersBase,
+        answers_model=EmptyAnswersBase,
     )
 
 

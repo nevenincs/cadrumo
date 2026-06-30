@@ -67,6 +67,7 @@ from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
@@ -81,6 +82,7 @@ from ._snapshot_base import (
 JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE = JUSTIFICANTE_CAPTURE_STORAGE_NAMESPACE.namespace
 _JUSTIFICANTE_CAPTURE_SNAPSHOT_VERSION = JUSTIFICANTE_CAPTURE_STORAGE_NAMESPACE.schema_version
 _JUSTIFICANTE_CAPTURE_SNAPSHOT_SENSITIVITY = JUSTIFICANTE_CAPTURE_STORAGE_NAMESPACE.sensitivity
+_LIVE_EVIDENCE_STAMPED_PAYLOAD_VERSION = 2
 
 # Official source kind stamped on the captured receipt. Member of the
 # cross-period clean-state gate's ``_OFFICIAL_SOURCE_KINDS`` frozenset, so a
@@ -149,6 +151,8 @@ class JustificanteCaptureSnapshot(BaseModel):
             raise LiveApplicationInputError("justificante capture pdf_base64 is not valid base64") from exc
         if not decoded:
             raise LiveApplicationInputError("justificante capture pdf_base64 must decode to non-empty bytes")
+        if sha256_hex(decoded) != self.pdf_sha256:
+            raise LiveApplicationInputError("justificante capture pdf_sha256 does not match decoded PDF bytes")
         return self
 
     def decoded_pdf_bytes(self) -> bytes:
@@ -669,6 +673,10 @@ def register_capture_as_filing_evidence(
         "evidence_kind": ExternalEvidenceKind.AEAT_LIVE_CAPTURE.value,
         "evidence_reference_id": snapshot.csv,
         "snapshot_id": snapshot.snapshot_id,
+        "source_kind": snapshot.source_kind,
+        "pdf_sha256": snapshot.pdf_sha256,
+        "captured_at": snapshot.captured_at.isoformat(),
+        "expediente_id": snapshot.expediente_id,
     }
     bucket_event_repository = BucketEventHistoryRepository()
     bucket_event_repository.save(
@@ -690,7 +698,7 @@ def register_capture_as_filing_evidence(
                 actor="aeat-live-capture",
                 object_type=BucketEventObjectType.FILING_RECORD,
                 object_id=stamped.filing_record_id,
-                payload_version=1,
+                payload_version=_LIVE_EVIDENCE_STAMPED_PAYLOAD_VERSION,
                 payload=event_payload,
             ),
         ),

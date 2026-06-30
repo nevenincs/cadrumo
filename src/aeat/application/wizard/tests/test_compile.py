@@ -12,7 +12,6 @@ itself carries only frozen literals (no env / file I/O).
 from __future__ import annotations
 
 import pytest
-from pydantic import BaseModel, ConfigDict
 
 from ....core.i18n import Translatable as tr
 from ....domain.contribuyente._keys import ProfileKeyRequirement
@@ -28,12 +27,9 @@ from .._models import (
     WizardVisibility,
     WizardWidget,
 )
+from ._support import EmptyAnswersBase
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-class _EmptyAnswersBase(BaseModel):
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 def _question(
@@ -66,7 +62,7 @@ def _flow(questions: tuple[WizardQuestion, ...]) -> WizardFlow:
                 questions=questions,
             ),
         ),
-        answers_model=_EmptyAnswersBase,
+        answers_model=EmptyAnswersBase,
     )
 
 
@@ -153,7 +149,7 @@ def test_duplicate_profile_key_raises() -> None:
                 ),
             ),
         ),
-        answers_model=_EmptyAnswersBase,
+        answers_model=EmptyAnswersBase,
     )
     with pytest.raises(WizardCompileError, match=r"wizard|compile"):
         compile_profile_keys((flow_a, flow_b))

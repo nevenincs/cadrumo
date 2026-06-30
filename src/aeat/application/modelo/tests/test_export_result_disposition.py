@@ -180,7 +180,7 @@ def test_resolve_modelo_result_disposition_redeme_upgrade_boundaries(
     casilla_values: dict[CasillaId, Decimal],
     expected: str,
 ) -> None:
-    """REDEME monthly-refund election upgrades only negative Modelo 303 periods."""
+    """REDEME standing disposition resolves only negative Modelo 303 periods to D."""
     modelo = "130" if _M130_RESULT_CASILLA in casilla_values else "303"
     assert (
         _resolve_result_disposition(

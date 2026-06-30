@@ -96,6 +96,65 @@ def test_non_domestic_categories_surface_not_derivable(category: IvaCategory) ->
     assert resolution.reason != ""
 
 
+@pytest.mark.parametrize(
+    ("category", "required_fragments"),
+    [
+        (
+            IvaCategory.DOMESTIC_REVERSE_CHARGE,
+            ("potential domestic reverse charge", "verify the operation evidence", "supply the self-assessed"),
+        ),
+        (
+            IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            ("potential intra-community supply", "verify the customer VAT ID", "reporting evidence"),
+        ),
+        (
+            IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            ("potential intra-community acquisition", "verify the acquisition evidence", "self-assessed base"),
+        ),
+        (
+            IvaCategory.INTRA_COMMUNITY_TRIANGULATION,
+            ("potential intra-community triangulation", "verify the triangulation conditions"),
+        ),
+    ],
+)
+def test_eu_vat_non_derivable_reasons_are_advisory_not_filing_certainty(
+    category: IvaCategory,
+    required_fragments: tuple[str, ...],
+) -> None:
+    """EU VAT / reverse-charge reasons must not read like legal filing certainty."""
+    resolution = resolve_category_rate(category, on_date=_ON_DATE)
+
+    assert resolution.derivable is False
+    assert all(fragment in resolution.reason for fragment in required_fragments)
+    assert "exempt with right to deduct" not in resolution.reason
+    assert "operator confirms" not in resolution.reason
+
+
+@pytest.mark.parametrize(
+    ("category", "required_fragments"),
+    [
+        (
+            IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+            ("potential export", "verify the export evidence", "before treating it as zero-rated"),
+        ),
+        (
+            IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
+            ("potential operation assimilated to an export", "verify the qualifying", "before treating it as exempt"),
+        ),
+    ],
+)
+def test_export_non_derivable_reasons_remain_advisory_and_evidence_oriented(
+    category: IvaCategory,
+    required_fragments: tuple[str, ...],
+) -> None:
+    resolution = resolve_category_rate(category, on_date=_ON_DATE)
+
+    assert resolution.derivable is False
+    assert all(fragment in resolution.reason for fragment in required_fragments)
+    assert "operator confirms" not in resolution.reason
+    assert "filing certainty" not in resolution.reason
+
+
 def test_every_iva_category_is_resolvable_without_raising() -> None:
     """The resolver covers the closed IvaCategory set with no KeyError."""
     for category in IvaCategory:

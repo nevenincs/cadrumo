@@ -1,4 +1,19 @@
-"""Rendering helpers shared by modelo CLI command groups."""
+"""Projection helpers shared by modelo CLI command groups.
+
+This module turns modelo application/domain records such as
+:class:`~aeat.domain.modelos.WorkUnit`,
+:class:`~aeat.domain.modelos.CalculationRevision`,
+:class:`~aeat.domain.modelos.ModeloRecord`,
+:class:`~aeat.domain.modelos.VerificationReport`, and
+:class:`~aeat.application.modelo.ModeloWorkPlazoSummary` into CLI text lines
+and registered JSON payload fragments. The payload side feeds
+:class:`~aeat.entrypoints.cli._modelo_payloads.WorkUnitPayload`,
+:class:`~aeat.entrypoints.cli._modelo_payloads.CalculationRevisionPayload`,
+:class:`~aeat.entrypoints.cli._modelo_payloads.ModeloRecordPayload`,
+:class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportPayload`,
+and uniform :class:`~aeat.core.json_contract.Notice` rows into
+:func:`~aeat.entrypoints.cli._common._emit_envelope`.
+"""
 
 from __future__ import annotations
 
@@ -35,11 +50,11 @@ def advisory_notice(
     The single projection point that turns an incidental, non-blocking
     modelo diagnostic (source-resolution advisory, unauthorized-backend
     advisory, filing-obligation advisory) into a warning-severity
-    :class:`Notice`. Command groups call this instead of re-modelling the
-    advisory as a bespoke ``*_advisory`` payload field, so every advisory
-    flows through the one uniform notices surface. ``context`` carries any
-    structured provenance the former bespoke payload exposed (e.g. the
-    source-resolution ``reason`` / ``source_kind``).
+    :class:`~aeat.core.json_contract.Notice`. Command groups call this instead
+    of re-modelling the advisory as a bespoke ``*_advisory`` payload field, so
+    every advisory flows through the one uniform notices surface. ``context``
+    carries any structured provenance the former bespoke payload exposed (e.g.
+    the source-resolution ``reason`` / ``source_kind``).
     """
     return Notice(
         severity=NoticeSeverity.WARNING,
@@ -233,10 +248,12 @@ def _work_unit_deadline_output_from_summary(
 ) -> tuple[WorkPlazoDeadlinePayload | None, list[Notice]]:
     """Project a filing-deadline summary onto a payload + notices.
 
-    Returns the typed :class:`WorkPlazoDeadlinePayload` (structured result
-    data — the voluntary-filing close date and overdue posture) and a
-    warning-severity :class:`Notice` list. An overdue deadline raises one
-    Art. 27 LGT recargo notice whose ``context`` carries the binding legal
+    Returns the typed
+    :class:`~aeat.entrypoints.cli._modelo_payloads.WorkPlazoDeadlinePayload`
+    (structured result data: the voluntary-filing close date and overdue
+    posture) and a warning-severity
+    :class:`~aeat.core.json_contract.Notice` list. An overdue deadline raises
+    one Art. 27 LGT recargo notice whose ``context`` carries the binding legal
     reference (``legal_refs``) plus the resolved recargo band so the JSON
     surface preserves the regulatory grounding the text-mode plazo lines
     render. An in-time (or unknown) deadline raises no notice.
@@ -294,11 +311,26 @@ def _work_unit_deadline_output_from_summary(
 
 
 def work_unit_deadline_output(unit) -> tuple[WorkPlazoDeadlinePayload | None, list[Notice]]:
-    """Project a work unit's filing deadline onto :class:`WorkPlazoDeadlinePayload` plus :class:`Notice` rows."""
+    """Project a work unit's filing deadline onto payload and notice rows.
+
+    The JSON branch emits
+    :class:`~aeat.entrypoints.cli._modelo_payloads.WorkPlazoDeadlinePayload`
+    plus warning-severity :class:`~aeat.core.json_contract.Notice` rows.
+    """
     return _work_unit_deadline_output_from_summary(modelo_work_plazo_summary(unit))
 
 
 def calculation_revision_payload(rev) -> CalculationRevisionPayload:
+    """Project a calculation revision into the shared JSON payload.
+
+    The returned
+    :class:`~aeat.entrypoints.cli._modelo_payloads.CalculationRevisionPayload`
+    carries visible casilla values, nested
+    :class:`~aeat.entrypoints.cli._modelo_revision_payload_parts.ObservationPayload`
+    rows, and
+    :class:`~aeat.entrypoints.cli._modelo_revision_payload_parts.ResultSummaryRowPayload`
+    headline rows for envelope-aware commands.
+    """
     observations = tuple(
         ObservationPayload(
             casilla_id=obs.casilla_id,
@@ -351,7 +383,11 @@ def result_summary_lines(rev) -> list[str]:
 
 
 def result_summary_payload(rev) -> tuple[ResultSummaryRowPayload, ...]:
-    """Return a tuple of :class:`ResultSummaryRowPayload` headline-result summary rows for the JSON payload."""
+    """Return headline-result summary rows for the JSON payload.
+
+    Each row is a
+    :class:`~aeat.entrypoints.cli._modelo_revision_payload_parts.ResultSummaryRowPayload`.
+    """
     summary = calculation_result_summary(rev)
     if summary is None:
         return ()
@@ -494,8 +530,9 @@ def verification_report_notices(report) -> list[Notice]:
     — a contract break against
     :func:`aeat.core.json_contract.derive_status`, which derives the
     envelope ``status`` from notice severity in lock-step with the
-    ``ExitCode`` table. Each :class:`ModeloVerificationFinding` becomes one
-    :class:`Notice`.
+    ``ExitCode`` table. Each
+    :class:`~aeat.domain.modelos.ModeloVerificationFinding` becomes one
+    :class:`~aeat.core.json_contract.Notice`.
 
     Severity mapping: both ``BLOCKING`` and ``WARNING`` finding severities
     map to :attr:`NoticeSeverity.WARNING`. ``NoticeSeverity`` carries no
@@ -544,8 +581,11 @@ def verification_report_payload(report) -> VerificationReportPayload:
 
     Both ``aeat app modelo work verify`` and ``verification-report view/list``
     use this function so persisted :class:`aeat.domain.modelos.VerificationReport`
-    rows expose identical :class:`VerificationReportPayload` fields, including
-    nested :class:`FindingPayload` legal and source references.
+    rows expose identical
+    :class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportPayload`
+    fields, including nested
+    :class:`~aeat.entrypoints.cli._modelo_payloads.FindingPayload` legal and
+    source references.
     """
     return VerificationReportPayload(
         verification_report_id=report.verification_report_id,
@@ -575,10 +615,11 @@ def verification_report_payload(report) -> VerificationReportPayload:
 def verification_report_lines(report) -> list[str]:
     """Render the text transport for a verification report.
 
-    The line shape complements :func:`verification_report_payload`: text output
-    keeps the report ids, completeness verdict, missing casillas, and each
-    finding's legal/source references visible without inventing fields outside
-    the persisted :class:`aeat.domain.modelos.VerificationReport`.
+    The line shape complements
+    :func:`~aeat.entrypoints.cli._modelo_rendering.verification_report_payload`:
+    text output keeps the report ids, completeness verdict, missing casillas,
+    and each finding's legal/source references visible without inventing fields
+    outside the persisted :class:`aeat.domain.modelos.VerificationReport`.
     """
     lines = [
         f"verification_report_id\t{report.verification_report_id}",

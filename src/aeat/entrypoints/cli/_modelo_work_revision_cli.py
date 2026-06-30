@@ -3,8 +3,13 @@
 The registered commands list stored calculation revisions, show one persisted
 revision, and render its typed casilla observations without mutating modelo
 state. Selection stays in the injected application-facing resolvers; this
-transport module serializes results into :class:`WorkRevisionsResult`,
-:class:`WorkRevisionResult`, and :class:`WorkObservationsResult` envelopes.
+transport module serializes results into
+:class:`~aeat.entrypoints.cli._modelo_payloads.WorkRevisionsResult`,
+:class:`~aeat.entrypoints.cli._modelo_work_revision_payloads.WorkRevisionResult`,
+and
+:class:`~aeat.entrypoints.cli._modelo_work_revision_payloads.WorkObservationsResult`
+schemas before handing them to
+:func:`~aeat.entrypoints.cli._common._emit_envelope`.
 """
 
 from __future__ import annotations
@@ -109,7 +114,7 @@ def _register_work_revisions_command(work_app: typer.Typer, deps: _WorkRevisionC
         ] = None,
         output_language: OutputLanguageOpt = None,
     ) -> None:
-        """List persisted :class:`CalculationRevision` rows for an optional :class:`WorkUnit`."""
+        """List persisted :class:`CalculationRevision` rows for an optional :class:`~aeat.domain.modelos.WorkUnit`."""
         deps.activate_output_language(ctx, output_language)
         deps.require_active_profile()
         resolved_work_unit_id = work_unit_id
@@ -195,7 +200,11 @@ def _register_work_revision_command(work_app: typer.Typer, deps: _WorkRevisionCo
         ] = None,
         output_language: OutputLanguageOpt = None,
     ) -> None:
-        """Show one selected :class:`CalculationRevision` as a :class:`WorkRevisionResult`."""
+        """Show one selected :class:`CalculationRevision` as a work-revision result.
+
+        The JSON branch emits
+        :class:`~aeat.entrypoints.cli._modelo_work_revision_payloads.WorkRevisionResult`.
+        """
         deps.activate_output_language(ctx, output_language)
         deps.require_active_profile()
         selected_revision = _resolve_selected_revision(
@@ -282,7 +291,12 @@ def _register_work_observations_command(work_app: typer.Typer, deps: _WorkRevisi
         ] = None,
         output_language: OutputLanguageOpt = None,
     ) -> None:
-        """Show :class:`ObservationPayload` provenance for one stored :class:`CalculationRevision`."""
+        """Show observation provenance for one stored :class:`CalculationRevision`.
+
+        The JSON branch emits
+        :class:`~aeat.entrypoints.cli._modelo_revision_payload_parts.ObservationPayload`
+        rows through the observations result schema.
+        """
         deps.activate_output_language(ctx, output_language)
         deps.require_active_profile()
         selected_revision = _resolve_selected_revision(

@@ -5,15 +5,14 @@ from __future__ import annotations
 import hashlib
 
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
+from ....tests.fixtures.identity_holder import single_field_model
 from .. import SnapshotId
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-
-class _Holder(BaseModel):
-    snapshot_id: SnapshotId
+_Holder = single_field_model("snapshot_id", SnapshotId)
 
 
 def test_accepts_canonical_sha256_hex_digest() -> None:
