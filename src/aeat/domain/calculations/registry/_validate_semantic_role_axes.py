@@ -64,11 +64,6 @@ _SEMANTIC_ROLE_AXIS_TOKEN_GROUPS: tuple[frozenset[str], ...] = (
     frozenset({"ab", "c"}),
 )
 
-_SEMANTIC_ROLE_OPTIONAL_AXIS_TOKENS: frozenset[str] = frozenset(
-    {"b"},
-)
-
-
 def _semantic_roles_are_axis_token_siblings(left: str, right: str) -> bool:
     left_parts = tuple(left.split("_"))
     right_parts = tuple(right.split("_"))
@@ -83,21 +78,21 @@ def _semantic_roles_are_axis_token_siblings(left: str, right: str) -> bool:
         if differing and all(left.isdigit() and right.isdigit() for left, right in differing):
             return True
 
-    return _semantic_role_optional_axis_token_siblings(left_parts, right_parts)
+    return _semantic_role_numeric_axis_token_siblings(left_parts, right_parts)
 
 
 def _semantic_role_tokens_share_axis(left: str, right: str) -> bool:
     return any(left in group and right in group for group in _SEMANTIC_ROLE_AXIS_TOKEN_GROUPS)
 
 
-def _semantic_role_optional_axis_token_siblings(left: tuple[str, ...], right: tuple[str, ...]) -> bool:
-    left_stripped = _strip_semantic_role_optional_axis_tokens(left)
-    right_stripped = _strip_semantic_role_optional_axis_tokens(right)
+def _semantic_role_numeric_axis_token_siblings(left: tuple[str, ...], right: tuple[str, ...]) -> bool:
+    left_stripped = _strip_semantic_role_numeric_axis_tokens(left)
+    right_stripped = _strip_semantic_role_numeric_axis_tokens(right)
     return left_stripped == right_stripped and (left_stripped != left or right_stripped != right)
 
 
-def _strip_semantic_role_optional_axis_tokens(parts: tuple[str, ...]) -> tuple[str, ...]:
-    return tuple(part for part in parts if part not in _SEMANTIC_ROLE_OPTIONAL_AXIS_TOKENS and not part.isdigit())
+def _strip_semantic_role_numeric_axis_tokens(parts: tuple[str, ...]) -> tuple[str, ...]:
+    return tuple(part for part in parts if not part.isdigit())
 
 
 _SEMANTIC_ROLE_CCAA_TOKENS: frozenset[str] = frozenset(

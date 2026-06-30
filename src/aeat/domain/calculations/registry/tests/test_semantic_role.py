@@ -393,9 +393,11 @@ class TestTypoTwinWarning:
             ("100", "2025", "2234", "irpf_perdida_fondos_coti_importe_computable"),
             ("100", "2025", "0360", "irpf_ganancia_premios_juegos_valoracion_b"),
             ("100", "2025", "0361", "irpf_ganancia_premios_juegos_pub_valoracion_b"),
+            ("100", "2025", "0413", "irpf_ganancia_inmueble_catastral_4"),
             ("100", "2025", "0238", "irpf_eo_reintegro_subvenciones"),
             ("100", "2025", "0239", "irpf_eo_agr_reintegro_subvenciones"),
             ("100", "2025", "2202", "irpf_anexo_b_aav_importe_satisfecho"),
+            ("100", "2025", "2243", "irpf_ganancia_inmueble_catastral_4_b"),
             # M303 compensacion-pendiente roles appear in both 2009-y-siguientes and
             # 2023-y-siguientes revisions; the validator requires unique occurrence for
             # intentional_singleton, so they carry semantic_role_cardinality="shared".
@@ -468,9 +470,11 @@ class TestTypoTwinWarning:
             "irpf_perdida_fondos_coti_importe_computable",
             "irpf_ganancia_premios_juegos_valoracion_b",
             "irpf_ganancia_premios_juegos_pub_valoracion_b",
+            "irpf_ganancia_inmueble_catastral_4",
             "irpf_eo_reintegro_subvenciones",
             "irpf_eo_agr_reintegro_subvenciones",
             "irpf_anexo_b_aav_importe_satisfecho",
+            "irpf_ganancia_inmueble_catastral_4_b",
             "iva_oss_union_servicios_destino_de_cuota",
             "iva_oss_union_servicios_destino_fr_cuota",
         }
@@ -696,7 +700,7 @@ class TestTypoTwinWarning:
             is False
         )
 
-    def test_optional_numeric_axis_roles_do_not_warn_as_typos(self) -> None:
+    def test_numeric_axis_roles_do_not_warn_as_typos(self) -> None:
         annual_line = _casilla(cid="a", semantic_role="irpf_deduccion_cantabria_obras_mejora_pendiente_1")
         general_line = _casilla(cid="b", semantic_role="irpf_deduccion_cantabria_obras_mejora_pendiente_2")
         m = _registry_modelo("100", "2025", [annual_line, general_line])
@@ -726,6 +730,15 @@ class TestTypoTwinWarning:
             semantic_roles_are_axis_siblings(
                 "irpf_deduccion_madrid_vivienda_municipio_riesgo_precio",
                 "irpf_deduccion_madrid_vivienda_municipio_riesgo",
+            )
+            is False
+        )
+
+    def test_cadastral_b_marker_is_not_optional_axis_token(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "irpf_ganancia_inmueble_catastral_4_b",
+                "irpf_ganancia_inmueble_catastral_4",
             )
             is False
         )
