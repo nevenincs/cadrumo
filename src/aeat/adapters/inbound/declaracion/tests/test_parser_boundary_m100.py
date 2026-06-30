@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ._parser_boundary_m100_support import _M100_CORPUS_IDS, _M100_CORPUS_PARAMS, _M100_EXPECTED_CASILLAS
 from ._parser_boundary_support import (
     FIXTURES_DIR,
     Decimal,
@@ -13,43 +14,11 @@ from ._parser_boundary_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
-_M100_EXPECTED_CASILLAS: frozenset[str] = frozenset(
-    {
-        # First chunk: cuota-chain closure.
-        "0545",
-        "0546",
-        "0505",
-        "0585",
-        "0586",
-        "0587",
-        "0595",
-        "0610",
-        "0670",
-        # Second chunk: apartado-summary bases.
-        "0235",
-        "0432",
-        "0500",
-        "0510",
-        # Third chunk: actividades-economicas ED detail.
-        "0180",
-        "0218",
-        "0223",
-        "0224",
-        "0226",
-        "0231",
-        # Fourth chunk: ED leaf input for the formula chain.
-        "0171",
-    }
-)
-
 
 @pytest.mark.parametrize(
     "pdf_stem,year",
-    [
-        ("2021-0A", 2021),
-        ("2022-0A", 2022),
-        ("2023-0A", 2023),
-    ],
+    _M100_CORPUS_PARAMS,
+    ids=_M100_CORPUS_IDS,
 )
 def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, year: int) -> None:
     """Round-trip: parse M100 IRPF annual corpus PDFs and verify all 20 covered casillas.
