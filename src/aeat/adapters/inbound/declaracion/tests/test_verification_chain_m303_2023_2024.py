@@ -1,4 +1,4 @@
-"""Focused adapter contract tests split from the original monolith."""
+"""Modelo 303 2023-2024 verification-chain engine tests."""
 
 from __future__ import annotations
 
