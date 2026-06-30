@@ -38,7 +38,22 @@ _log = get_logger(__name__)
 
 
 class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
-    """Repository over encrypted SQL-backed :class:`ModeloPresentado` audit records."""
+    """Encrypted AUDIT repository for :class:`ModeloPresentado` records.
+
+    The :class:`SecureBoundRepository` base stores each
+    :class:`ModeloPresentado` in a
+    :class:`~aeat.adapters.persistence.storage.Envelope` row under the
+    ``aeat.domain.submission.records`` namespace. The natural key is the
+    submission id, so the list and iteration APIs expose historical filing
+    attempts rather than any live submission capability.
+
+    See Also:
+        :mod:`aeat.application.filing._import`
+            Offline justificante import path that can create submission audit
+            records.
+        :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+            SQL object store composed by the bound repository base.
+    """
 
     namespace: ClassVar[str] = "aeat.domain.submission.records"
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
