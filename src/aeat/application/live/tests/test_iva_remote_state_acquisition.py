@@ -49,6 +49,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _CAPTURED_AT = datetime(2026, 5, 27, 12, 0, tzinfo=UTC)
 _TARGET_1T = Period.from_year_and_code(2026, "1T")
 _TARGET_2T = Period.from_year_and_code(2026, "2T")
+_BUCKET_ID = "62626262-6262-4262-8262-626262626262"
 
 
 def test_combined_acquisition_records_authenticated_success_outcome(tmp_path: Path) -> None:
@@ -171,7 +172,7 @@ def test_year_chunked_filed_history_reports_aggregate_into_one_command_report(tm
         failed_declarations=("modelo=303;ejercicio=2023;period=4T;failure_type=TimeoutError",),
     )
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="session"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         aggregate = _aggregate_iva_compensation_history_reports(
             [report_2024, report_2023],
             output_root=tmp_path / "filed-history",
@@ -463,7 +464,7 @@ def test_live_surface_timeout_can_keep_cancellation_handler_until_loop_shutdown(
 
 
 def test_combined_acquisition_manifest_persists_redacted_surface_outcomes(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="session") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         filed_history = IvaCompensationHistoryCaptureReport(
             output_root=str(tmp_path / "filed-history"),
             year_from=2022,
@@ -548,7 +549,7 @@ def test_acquisition_manifest_persists_redacted_auth_diagnostic_ref(tmp_path: Pa
         },
     )
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="session"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         report = build_iva_remote_state_acquisition_report(
             output_root=tmp_path / "remote-state",
             year_from=2024,
@@ -590,7 +591,7 @@ def test_acquisition_manifest_redacts_sensitive_surface_failure_context(tmp_path
         },
     )
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="session") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         report = build_iva_remote_state_acquisition_report(
             output_root=tmp_path / "remote-state",
             year_from=2024,
