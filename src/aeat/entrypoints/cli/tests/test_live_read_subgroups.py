@@ -47,13 +47,73 @@ from .._app_live import (
     _reap_new_playwright_profile_processes,
     _run_live_iva_evidence_pull_command,
     borrador_100_app,
+    borrador_app,
     expedientes_app,
+    filed_app,
     iva_wallet_app,
+    justificante_app,
+    notifications_app,
+    portals_app,
     verify_app,
+)
+from .._app_live import (
+    app as live_app,
 )
 from .._app_live_auth_preflight import _live_auth_preflight_lines
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_FORBIDDEN_LIVE_MUTATION_VERBS = frozenset(
+    {
+        "submit",
+        "send",
+        "present",
+        "sign",
+        "pay",
+        "push",
+        "modify",
+        "rectify",
+        "amend",
+        "delete",
+        "cancel",
+        "acknowledge",
+        "accept",
+        "reject",
+        "file",
+        "upload",
+    }
+)
+
+
+def _registered_cli_name(value: object) -> str:
+    """Normalize Typer registration names, including enum-backed subgroup names."""
+    return str(getattr(value, "value", value))
+
+
+def _live_registered_paths(typer_app, prefix: tuple[str, ...] = ("live",)) -> tuple[tuple[str, ...], ...]:
+    paths: list[tuple[str, ...]] = []
+    for group in typer_app.registered_groups:
+        group_path = (*prefix, _registered_cli_name(group.name))
+        paths.append(group_path)
+        paths.extend(_live_registered_paths(group.typer_instance, group_path))
+    for command in typer_app.registered_commands:
+        paths.append((*prefix, _registered_cli_name(command.name)))
+    return tuple(paths)
+
+
+def _live_registered_group_paths(typer_app, prefix: tuple[str, ...] = ("live",)) -> tuple[tuple[str, ...], ...]:
+    paths: list[tuple[str, ...]] = []
+    for group in typer_app.registered_groups:
+        group_path = (*prefix, _registered_cli_name(group.name))
+        paths.append(group_path)
+        paths.extend(_live_registered_group_paths(group.typer_instance, group_path))
+    return tuple(paths)
+
+
+def _forbidden_mutation_verbs(name: str) -> frozenset[str]:
+    normalized = name.lower().replace("_", "-")
+    tokens = {normalized, *normalized.split("-")}
+    return frozenset(tokens & _FORBIDDEN_LIVE_MUTATION_VERBS)
 
 
 @pytest.fixture(autouse=True)
@@ -216,13 +276,53 @@ class TestReadOnlyStructuralInvariants:
     """Reject accidental introduction of any write/submit-style verb on the
     new live subgroups. The live-AEAT charter forbids mutation here."""
 
-    @pytest.mark.parametrize("subgroup_app", [expedientes_app, verify_app, borrador_100_app])
-    def test_no_submit_send_or_present_verb_exists(self, subgroup_app) -> None:
-        registered = {info.name for info in subgroup_app.registered_commands}
-        forbidden = {"submit", "send", "present", "sign", "pay", "push", "modify"}
-        assert registered.isdisjoint(forbidden), (
-            f"forbidden write verb on {subgroup_app.info.name}: {registered & forbidden}"
-        )
+    def test_guard_reaches_every_live_read_subgroup(self) -> None:
+        subgroup_paths = set(_live_registered_group_paths(live_app))
+
+        assert subgroup_paths == {
+            ("live", "filed"),
+            ("live", "iva-wallet"),
+            ("live", "notifications"),
+            ("live", "portals"),
+            ("live", "expedientes"),
+            ("live", "justificante"),
+            ("live", "verify"),
+            ("live", "borrador"),
+            ("live", "borrador", "100"),
+        }
+
+    def test_no_forbidden_mutation_verb_exists_anywhere_in_live_tree(self) -> None:
+        offenders: list[str] = []
+        for path in _live_registered_paths(live_app):
+            for component in path[1:]:
+                matched = _forbidden_mutation_verbs(component)
+                if matched:
+                    offenders.append(f"{'.'.join(path)}:{component}=>{','.join(sorted(matched))}")
+
+        assert offenders == []
+
+    @pytest.mark.parametrize(
+        "subgroup_app",
+        [
+            filed_app,
+            iva_wallet_app,
+            notifications_app,
+            portals_app,
+            expedientes_app,
+            justificante_app,
+            verify_app,
+            borrador_app,
+            borrador_100_app,
+        ],
+    )
+    def test_no_forbidden_mutation_verb_exists_on_live_subgroup_commands(self, subgroup_app) -> None:
+        registered = {_registered_cli_name(info.name) for info in subgroup_app.registered_commands}
+        offenders = {
+            name: _forbidden_mutation_verbs(name)
+            for name in registered
+            if _forbidden_mutation_verbs(name)
+        }
+        assert offenders == {}, f"forbidden write verb on {subgroup_app.info.name}: {offenders}"
 
 
 class TestIvaRemoteStateCliSurface:

@@ -180,9 +180,9 @@ def persist_filed_revision_observation(
             active bucket's encrypted store).
         captured_at: The filing timestamp, stamped on the stored record.
         refunded: When ``True`` and the work unit is Modelo 303, the filed period
-            was disposed as a refund (devolución, Tipo de declaración ``D``): the
-            generated compensación credit is returned by AEAT, not carried, so the
-            persisted ``iva.compensacion-disponible-fin-periodo`` (and the
+            was disposed as a refund request (devolución, Tipo de declaración
+            ``D``): the generated compensación credit is excluded from carry, so
+            the persisted ``iva.compensacion-disponible-fin-periodo`` (and the
             per-period generada casilla) are zeroed for the generated component
             before the carry row is written. The default ``False`` preserves the
             standard compensación carry. Legal basis: RD 1624/1992 art. 30 / Ley

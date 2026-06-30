@@ -61,6 +61,13 @@ def verify_legal_reference(
                         f"legal reference {reference.id!r} manual section JSON validation failed: {exc}",
                     ) from exc
 
+    if reference.required_text and source_root is not None:
+        corpus_text = _legal_corpus_text(source_root, reference)
+        for required in reference.required_text:
+            if normalise_corpus_text(required) not in corpus_text:
+                raise RegistryValidationError(
+                    f"legal reference {reference.id!r} corpus text missing required text {required!r}",
+                )
     if reference.article is None:
         return
     source = _SOURCE_BY_KIND.get(reference.kind)
@@ -71,13 +78,6 @@ def verify_legal_reference(
         raise RegistryValidationError(
             f"legal reference {reference.id!r} matches known-bad citation: {known_bad.reason}",
         )
-    if reference.required_text and source_root is not None:
-        corpus_text = _legal_corpus_text(source_root, reference)
-        for required in reference.required_text:
-            if normalise_corpus_text(required) not in corpus_text:
-                raise RegistryValidationError(
-                    f"legal reference {reference.id!r} corpus text missing required text {required!r}",
-                )
 
 
 def verify_legal_catalogue(

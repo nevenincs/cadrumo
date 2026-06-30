@@ -100,6 +100,8 @@ def _transaction(
     iva_amount: Decimal | None = Decimal("21.00"),
     prorrata_reference: str | None = None,
     lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
+    fx_rate: Decimal | None = None,
+    value_in_eur: Decimal | None = None,
 ) -> Transaction:
     # Keep the gross consistent with base + iva (the Transaction
     # gross == taxable_base + iva_amount invariant). When the caller does not
@@ -126,6 +128,8 @@ def _transaction(
             "iva_amount": iva_amount,
             "prorrata_reference": prorrata_reference,
             "lifecycle_state": lifecycle_state,
+            "fx_rate": fx_rate,
+            "value_in_eur": value_in_eur,
             "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
@@ -350,6 +354,34 @@ def test_out_of_period_and_foreign_currency_rows_do_not_project() -> None:
         IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
         IvaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
     ]
+
+
+def test_converted_foreign_currency_tax_substrate_does_not_project_as_eur() -> None:
+    converted_gbp = _transaction(
+        "row-gbp-converted",
+        currency="GBP",
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+        value_in_eur=Decimal("142.35"),
+        fx_rate=Decimal("1.176"),
+    )
+    eur_row = _transaction("row-eur", taxable_base=Decimal("50.00"), iva_amount=Decimal("10.50"))
+    unconverted_usd = _transaction("row-usd-unconverted", currency="USD")
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((converted_gbp, eur_row, unconverted_usd)),
+        period=_Q2_2026,
+    )
+
+    assert [observation.ledger_id for observation in result.observations] == [eur_row.transaction_id]
+    assert result.observations[0].base_amount == Decimal("50.00")
+    assert result.observations[0].iva_amount == Decimal("10.50")
+    assert [(issue.transaction_id, issue.reason) for issue in result.issues] == [
+        (converted_gbp.transaction_id, IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE),
+        (unconverted_usd.transaction_id, IvaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY),
+    ]
+    assert "value_in_eur" in result.issues[0].detail
+    assert "native-currency facts" in result.issues[0].detail
 
 
 def test_iva_aggregation_buckets_on_value_date_caja_basis_only() -> None:

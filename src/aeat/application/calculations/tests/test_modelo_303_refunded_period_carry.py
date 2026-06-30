@@ -1,12 +1,13 @@
-"""Modelo 303 refunded-period cross-period carry: a refund carries zero forward.
+"""Modelo 303 refunded-period cross-period carry: devolución carries zero forward.
 
-A REDEME monthly-refund company (or any taxpayer who elects devolución for a
-negative period) files that period as a refund — the credit is returned by AEAT,
-not carried into the next period. The local-file cross-period carry must honour
-that disposition: when the filed revision is refunded, the persisted
+A REDEME company under the accepted standing monthly-devolución disposition
+policy (or any taxpayer who elects devolución for an eligible negative period)
+files that period as a refund request, not as compensación carried into the next
+period. The local-file cross-period carry must honour that disposition: when the
+filed revision is requested as devolución, the persisted
 ``iva.compensacion-disponible-fin-periodo`` carries ZERO generated credit, so the
 next period's casilla 110 auto-resolves to zero rather than double-claiming the
-refunded credit.
+requested devolución credit.
 
 The CONTROL persists the SAME engine-produced negative-result revision with the
 default carried disposition and asserts the credit carries normally — the
@@ -218,9 +219,10 @@ def test_refunded_4t_period_carries_zero_into_next_period(tmp_path: Path) -> Non
     """A refunded (devolución) 4T credit period carries ZERO into 1T/N+1 casilla 110.
 
     The engine produces a real negative-result saldo for 4T/N. Filing that period
-    as a refund (``refunded=True``) returns the credit, so the persisted carry
-    observation drops the generated component and the next period auto-resolves to
-    zero — the refunded credit is not double-claimed.
+    as a refund request (``refunded=True``) excludes the generated credit from
+    compensación carry, so the persisted carry observation drops the generated
+    component and the next period auto-resolves to zero — the requested devolución
+    credit is not double-claimed.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         result_n = _calculate_303(

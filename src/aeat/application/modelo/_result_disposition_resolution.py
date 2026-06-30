@@ -3,17 +3,17 @@
 The AEAT fichero "Tipo de declaración" encodes the *result disposition* of an
 autoliquidación (a ingresar / a compensar / a devolver / negativa). For Modelo
 303 a negative result is, by default, a credit carried forward (compensación,
-``C``). A taxpayer inscribed in the Registro de devolución mensual (REDEME)
-refunds eligible negative periods under a standing election; a non-REDEME
-taxpayer may explicitly request the credit back (devolución, ``D``) only in the
-last filing period of the year.
+``C``). The current accepted ADR treats inscription in the Registro de
+devolución mensual (REDEME) as the standing monthly-devolución disposition
+policy for eligible negative periods; a non-REDEME taxpayer may explicitly
+request devolución (``D``) only in the last filing period of the year.
 
 This module is the ONE place that determination is made. The export header
 composer and the cross-period carry persistence both read the disposition from
 :func:`resolve_modelo_result_disposition`, so the fichero ``D`` the operator
 submits and the cross-period carry the next period reads can never disagree (a
-refunded period requests the money back AND carries nothing — never both). It
-reuses the codified per-modelo result→code derivation
+period requested as devolución is excluded from compensación carry - never
+both). It reuses the codified per-modelo result→code derivation
 (:func:`~aeat.core.derive_result_disposition`) and the REDEME/last-period
 eligibility gate (:func:`~aeat.domain.iva.refund_disposition_available`); it does
 not duplicate either.
@@ -95,21 +95,24 @@ def resolve_modelo_result_disposition(
 
     Computes the modelo's base disposition from its final-result casilla via the
     codified :func:`~aeat.core.derive_result_disposition`, then — for a Modelo 303
-    credit (``C``) — applies the refund election: a taxpayer inscribed in the
-    Registro de devolución mensual (REDEME) files the negative period as a refund
-    (``D``) every period under its standing election; a non-REDEME taxpayer who
-    explicitly elects ``DEVOLVER`` files the negative *last* period of the year as
-    a refund (Ley 37/1992 art. 116). The eligibility gate
+    credit (``C``) — applies the refund election: the current accepted ADR treats
+    a taxpayer inscribed in the Registro de devolución mensual (REDEME) as
+    requesting devolución (``D``) for eligible negative periods under a standing
+    monthly-devolución disposition policy; a non-REDEME taxpayer who explicitly
+    elects ``DEVOLVER`` requests devolución for the negative *last* period of the
+    year (Ley 37/1992 art. 116). The eligibility gate
     (:func:`~aeat.domain.iva.refund_disposition_available`) confirms the refund is
     lawful for the period. Every other disposition is returned unchanged.
 
     ``refund_election`` is the operator's per-filing opt-in (default
     :attr:`~aeat.domain.iva.RefundElection.COMPENSAR`, the non-regressive
-    carry-forward). It is orthogonal to the standing REDEME inscription: a REDEME
-    taxpayer refunds every eligible period regardless of this flag, while a
-    non-REDEME taxpayer refunds only when both the period is eligible AND the
+    carry-forward). It is orthogonal to the standing REDEME inscription: the
+    accepted ADR treats REDEME as the standing policy that resolves eligible
+    negative periods to devolución regardless of this flag, while a non-REDEME
+    taxpayer resolves to devolución only when both the period is eligible AND the
     operator elects ``DEVOLVER``. An election of ``DEVOLVER`` for an ineligible
-    period is refused — never silently carried, never silently refunded.
+    period is refused — never silently carried, never silently requested as
+    devolución.
 
     Returns the one :class:`~aeat.core.ResultDisposition` both the export header
     composer and the cross-period carry persistence read, so the fichero
@@ -261,17 +264,19 @@ def _apply_modelo_303_refund_election(
 ) -> ResultDisposition:
     """Upgrade a Modelo 303 carry-forward (``C``) to a refund (``D``) per the refund election.
 
-    Two independent paths produce a refund (devolución, Tipo de declaración ``D``;
-    Ley 37/1992 art. 116):
+    Two independent paths resolve to devolución (Tipo de declaración ``D``; Ley
+    37/1992 art. 116):
 
-    * **Standing REDEME election** — a taxpayer inscribed in the Registro de
-      devolución mensual (art. 30 RD 1624/1992) refunds *every* eligible period.
-      The inscription is the always-on election; this flag does not gate it.
+    * **Standing REDEME election** — the current accepted ADR treats a taxpayer
+      inscribed in the Registro de devolución mensual (art. 30 RD 1624/1992) as
+      requesting devolución for each eligible negative period. The inscription is
+      the standing monthly-devolución disposition policy; this flag does not gate
+      it.
     * **Per-filing opt-in** — a non-REDEME taxpayer who explicitly elects
-      ``DEVOLVER`` refunds the negative *last* filing period of the year (the
-      annual liquidación). Outside the last period the only lawful disposition is
-      compensación, so an election of ``DEVOLVER`` there is refused rather than
-      silently downgraded or silently filed.
+      ``DEVOLVER`` requests devolución for the negative *last* filing period of
+      the year (the annual liquidación). Outside the last period the only lawful
+      disposition is compensación, so an election of ``DEVOLVER`` there is refused
+      rather than silently downgraded or silently filed.
 
     A non-REDEME taxpayer who does not elect ``DEVOLVER`` keeps the carry-forward
     ``C``; every disposition other than a Modelo 303 ``COMPENSACION`` is untouched.
@@ -280,8 +285,8 @@ def _apply_modelo_303_refund_election(
         return declaration_type
 
     redeme = workflow_profile.iva.redeme_enrolled
-    # Standing REDEME election: refund every eligible period, independent of the
-    # per-filing flag.
+    # Standing REDEME election: resolve eligible negative periods to devolución,
+    # independent of the per-filing flag.
     if redeme and refund_disposition_available(redeme_enrolled=redeme, period=period):
         return ResultDisposition.DEVOLUCION
 
