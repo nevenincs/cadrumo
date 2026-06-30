@@ -122,11 +122,19 @@ browser = [
 anthropic = [
   "anthropic>=0.74.1,<1",
 ]
+# Operator agent-harness runtime. The harness operating layer (rules, personas,
+# skills) ships as reviewed product data in the CORE wheel under
+# `src/aeat/_data/agent/` and is read with no extra dependency. This extra gates
+# the optional MCP server runtime reached by the `aeat-mcp` console script; its
+# runtime dependency lands with the server. No model weights or credentials are
+# ever bundled (per the product-packaging and secure-storage ADRs).
+agent = []
 # Convenience aggregate: every optional integration at once.
 all = [
   "aeat[google]",
   "aeat[browser]",
   "aeat[anthropic]",
+  "aeat[agent]",
 ]
 
 [build-system]
