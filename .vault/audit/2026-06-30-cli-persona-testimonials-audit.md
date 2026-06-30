@@ -138,16 +138,15 @@ read-only tombstoned inspection. Final profile review reported no findings for
 W02.P05.S12-S14, and the focused profile gate reported 55 integration tests
 passed.
 
-### renta-annual-verification-blocked-by-registry-wip | medium | S19 cannot close while shared registry is invalid
+### renta-annual-verification-blocked-then-cleared | low | S19 verified after registry WIP landed
 
-W03.P07.S19 annual Renta verification currently stops before the product surface
-under review because dirty Modelo 100 registry files fail registry validation
-with singleton `semantic_role` declarations for C. Valenciana carry and DANA
-deduction roles. Focused M100 verification and export-refusal tests abort at
-registry load before reaching application behavior. The implicated files are
-already modified by another active registry campaign, so this persona campaign
-must not repair them or claim S19 closed until that owner lands a valid registry
-state.
+W03.P07.S19 annual Renta verification initially stopped before the product
+surface under review because dirty Modelo 100 registry files failed registry
+validation with singleton `semantic_role` declarations for C. Valenciana carry
+and DANA deduction roles. That blocker belonged to another active registry
+campaign. After the registry owner landed a valid state, the focused annual
+Renta checks passed: 3 M100 verification/export-refusal tests and 4 annual
+fold-in/export tests.
 
 ### borrador-preview-csv | low | S18 parser evidence boundary fixed
 
@@ -175,7 +174,7 @@ consultation, CSV cotejo, or filing-record import after external filing.
 - Keep W02.P05 closed: corrective commits `5083d57e6`, `3a451a94`, and
   `e7482b35` preserve tombstone-aware read-only inspection while keeping live
   active-profile routing guarded against tombstoned UUIDs.
-- Keep W03.P07.S18 and W03.P07.S20 closed on the committed parser and local
-  export evidence fixes. Do not close W03.P07.S19 until the external Modelo 100
-  registry validation blocker is repaired and the annual Renta verification and
-  M100 export-refusal gates can run to assertion.
+- Keep W03.P07.S18, W03.P07.S19, and W03.P07.S20 closed on the committed parser,
+  annual Renta verification, explicit M100 export-refusal stance, and local
+  export evidence messaging. Remaining persona export gaps are artifact hygiene,
+  not filed AEAT evidence.
