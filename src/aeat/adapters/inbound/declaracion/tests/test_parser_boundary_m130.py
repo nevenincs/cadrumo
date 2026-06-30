@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ._parser_boundary_part2_support import (
+from ._parser_boundary_casillas import (
     _M130_RENDIMIENTO_NETO_CASILLA,
     _M130_RESULTADO_CASILLA,
 )
