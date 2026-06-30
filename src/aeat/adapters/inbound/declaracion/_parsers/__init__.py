@@ -1,9 +1,14 @@
-"""PDF backend implementations for the declaración parser.
+"""PDF backend facade for the declaración parser.
 
-:mod:`aeat.adapters.inbound.declaracion._parsers._pdfplumber_backend`
-extracts per-page text via pdfplumber and is the default backend.
-Additional backends (pypdf AcroForm, OCR) plug in alongside it as
-extraction needs grow.
+The public parser imports text extraction through this package so path-based
+and bytes-based declaration-copy parsing stay paired. The active backend is
+:mod:`aeat.adapters.inbound.declaracion._parsers._pdfplumber_backend`: it tries
+a canary-guarded pypdfium2 fast path first, then falls back to the shared
+pdfplumber primitive used by the other inbound PDF adapters.
+
+Future backends can be added behind the same two exported functions without
+changing the registry-profile parser in
+:mod:`aeat.adapters.inbound.declaracion._parser`.
 """
 
 from __future__ import annotations
