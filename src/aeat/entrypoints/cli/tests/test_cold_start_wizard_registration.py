@@ -204,3 +204,71 @@ def test_cold_process_work_create_registers_wizard_catalogue(tmp_path: Path) -> 
     for leak in _REGISTRATION_LEAKS:
         assert leak not in created.stdout, f"work create surfaced an unregistered core slot: {leak!r}\n{created.stdout}"
     assert created.returncode == 0, f"work create failed in a cold process: {created.stdout}\n{created.stderr}"
+
+
+def test_cold_process_m100_2025_work_create_keeps_intracom_type_import_boundary(tmp_path: Path) -> None:
+    """M100/2025 work-create must not crash importing invoice intracom types.
+
+    The work-create path imports the CLI composition root in a cold process and
+    then resolves the modelo source mesh. That transitively imports the invoice
+    resolver, which consumes ``IntracomOperationType`` from its core enum home.
+    A boundary regression previously surfaced as a raw ImportError before any
+    user-facing refusal could be rendered.
+    """
+
+    setup = _run_cli_cold(
+        tmp_path,
+        [
+            "config",
+            "profile",
+            "create",
+            "marta-empleada-arrendadora-2025",
+            "--quiet",
+            "--accept-defaults",
+            "--entity-type",
+            "natural_person",
+            "--tax-id",
+            "12345678Z",
+            "--name",
+            "Marta",
+            "--surnames",
+            "Empleada",
+            "--activity",
+            "arrendamiento",
+            "--irpf-income-categories",
+            "actividad_economica",
+            "--irpf-estimation-regime",
+            "directa_normal",
+        ],
+    )
+    assert setup.returncode == 0, f"profile create failed: {setup.stdout}\n{setup.stderr}"
+
+    created = _run_cli_cold(
+        tmp_path,
+        [
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "100",
+            "--year",
+            "2025",
+            "--period",
+            "0A",
+            "--revision",
+            "2025",
+            "--name",
+            "marta-empleada-arrendadora-2025",
+            "--by",
+            "Marta",
+        ],
+    )
+
+    assert "ImportError" not in created.stdout
+    assert "ImportError" not in created.stderr
+    assert "cannot import name 'IntracomOperationType'" not in created.stdout
+    assert "cannot import name 'IntracomOperationType'" not in created.stderr
+    assert created.returncode == 0, f"work create failed in a cold process: {created.stdout}\n{created.stderr}"
+    assert "operation\tmodelo.work.create" in created.stdout
+    assert "status\tcreated" in created.stdout
