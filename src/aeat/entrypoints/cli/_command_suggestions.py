@@ -10,9 +10,10 @@ command via :func:`difflib.get_close_matches`. That covers typos
 * **Cross-path commands** — a command that exists, but under a
   different group, e.g. ``app status`` for ``app overview status``.
 
-:class:`AeatTyperGroup` keeps Typer's typo suggestions and layers a
-per-group synonym table on top so both cases produce a translated
-"did you mean" hint instead of a bare "No such command".
+:class:`~aeat.entrypoints.cli._command_suggestions.AeatTyperGroup` keeps
+Typer's typo suggestions and layers a per-group synonym table on top so both
+cases produce a translated "did you mean" hint instead of a bare "No such
+command".
 
 The same group class also owns **lazy subcommand loading**. The AEAT
 command tree is wide: every leaf command module pulls the application
@@ -21,13 +22,15 @@ whole tree just to construct the ``aeat`` app object made
 ``aeat --version`` and ``aeat --help`` pay that cost even though they
 never dispatch into a subcommand.
 
-Heavy subcommand groups therefore register a :class:`LazySubcommand`
-loader instead of an eagerly-imported Typer instance. The loader's
-module is imported only when :meth:`AeatTyperGroup.get_command`
-resolves that subcommand — i.e. only when an operator actually invokes
-something in that subtree. ``--version`` / ``--help`` / the bare
-landing surface short-circuit in their callbacks before any subcommand
-is resolved, so they never trigger a loader.
+Heavy subcommand groups therefore register a
+:class:`~aeat.entrypoints.cli._command_suggestions.LazySubcommand` loader
+instead of an eagerly-imported Typer instance. The loader's module is imported
+only when
+:meth:`~aeat.entrypoints.cli._command_suggestions.AeatTyperGroup.get_command`
+resolves that subcommand, which happens only when an operator invokes something
+in that subtree. ``--version`` / ``--help`` / the bare landing surface
+short-circuit in their callbacks before any subcommand is resolved, so they
+never trigger a loader.
 """
 
 from __future__ import annotations
@@ -74,7 +77,10 @@ class LazySubcommand:
     ``factory`` is a zero-argument callable that imports the owning
     command module and returns its :class:`typer.Typer` instance. The
     import — and therefore the application-layer / registry cost — is
-    paid only when :meth:`load` runs, which :class:`AeatTyperGroup`
+    paid only when
+    :meth:`~aeat.entrypoints.cli._command_suggestions.LazySubcommand.load`
+    runs, which
+    :class:`~aeat.entrypoints.cli._command_suggestions.AeatTyperGroup`
     triggers on the first ``get_command`` / ``list_commands`` access.
 
     ``decorate`` is applied to the Typer instance before it is
@@ -117,10 +123,13 @@ class LazySubcommand:
 
 
 #: Lazy-subcommand registry keyed by the owning group's command
-#: ``name``. Typer materializes the Click :class:`AeatTyperGroup`
+#: ``name``. Typer materializes the Click
+#: :class:`~aeat.entrypoints.cli._command_suggestions.AeatTyperGroup`
 #: instance lazily, inside ``get_command(app)``; the instance therefore
 #: cannot carry its lazy table at app-construction time. Keying by
-#: group name lets :func:`register_lazy_subcommand` populate the table
+#: group name lets
+#: :func:`~aeat.entrypoints.cli._command_suggestions.register_lazy_subcommand`
+#: populate the table
 #: at module-import time and lets every materialized group instance of
 #: that name read it back. AEAT group names (``aeat``, ``app``,
 #: ``config``) are unique, so the keying is unambiguous.
@@ -130,8 +139,10 @@ _LAZY_REGISTRY: dict[str, dict[str, LazySubcommand]] = {}
 def register_lazy_subcommand(group_name: str, lazy: LazySubcommand) -> None:
     """Register ``lazy`` under ``group_name`` for deferred resolution.
 
-    The owning :class:`AeatTyperGroup` imports the command module only
-    when the subcommand is first resolved through ``get_command``.
+    The owning
+    :class:`~aeat.entrypoints.cli._command_suggestions.AeatTyperGroup` imports
+    the command module only when the subcommand is first resolved through
+    ``get_command``.
     """
     _LAZY_REGISTRY.setdefault(group_name, {})[lazy.name] = lazy
 
@@ -145,7 +156,7 @@ INVOCATION_REMAINDER_META_KEY = "aeat.invocation_remainder"
 
 
 class AeatTyperGroup(TyperGroup):
-    """:class:`TyperGroup` with synonym hints and lazy subcommand loading.
+    """:class:`typer.core.TyperGroup` with synonym hints and lazy loading.
 
     Three behaviours layer on top of the base Typer group:
 
@@ -153,16 +164,17 @@ class AeatTyperGroup(TyperGroup):
       class are preserved; the synonym table only adds a hint when the
       base class produced none.
     * **Lazy subcommands.** Subcommands registered through
-      :func:`register_lazy_subcommand` import their command module only
-      when first resolved, keeping the construction of the ``aeat`` app
-      object free of the registry parse.
+      :func:`~aeat.entrypoints.cli._command_suggestions.register_lazy_subcommand`
+      import their command module only when first resolved, keeping the
+      construction of the ``aeat`` app object free of the registry parse.
     * **Remainder capture.** Click empties ``ctx.args`` and the
       protected list before running the group callback, so the callback
-      cannot see the tokens that follow the group name. :meth:`invoke`
-      stashes them in ``ctx.meta`` first (``setdefault`` — the outermost
-      group's full remainder wins) so the root callback can recognise
-      help-only and unknown-command invocations without re-reading
-      ``sys.argv`` (which is meaningless for in-process invocations).
+      cannot see the tokens that follow the group name.
+      :meth:`~aeat.entrypoints.cli._command_suggestions.AeatTyperGroup.invoke`
+      stashes them in ``ctx.meta`` first (``setdefault`` — the outermost group's
+      full remainder wins) so the root callback can recognise help-only and
+      unknown-command invocations without re-reading ``sys.argv`` (which is
+      meaningless for in-process invocations).
     """
 
     def _lazy_table(self) -> dict[str, LazySubcommand]:
@@ -175,7 +187,7 @@ class AeatTyperGroup(TyperGroup):
     def main(self, *args: Any, standalone_mode: bool = True, **kwargs: Any) -> object:
         """Terminal exception funnel honouring the JSON error contract.
 
-        Typer's standalone ``main`` renders every :class:`ClickException`
+        Typer's standalone ``main`` renders every :class:`click.ClickException`
         (usage errors, bad parameters) as Rich text and lets unexpected
         exceptions escape as raw tracebacks — so under ``--format json``
         the shared-spine error document never appeared on any parse-time
@@ -214,8 +226,9 @@ class AeatTyperGroup(TyperGroup):
         Help rendering and shell completion enumerate command names
         through this method; returning the lazy names from the registry
         keeps the listing complete without paying any import cost. The
-        per-command import happens later, in :meth:`get_command`, and
-        only for the command actually selected.
+        per-command import happens later, in
+        :meth:`~aeat.entrypoints.cli._command_suggestions.AeatTyperGroup.get_command`,
+        and only for the command actually selected.
         """
         eager = super().list_commands(ctx)
         lazy = self._lazy_table()
@@ -259,7 +272,7 @@ class AeatTyperGroup(TyperGroup):
 def _synonym_hint(group_name: str | None, token: str) -> str | None:
     """Return a translated suggestion for ``token`` under ``group_name``.
 
-    Returns :data:`None` when the group declares no synonym table or
+    Returns ``None`` when the group declares no synonym table or
     the token is not a known synonym.
     """
     if group_name is None:
