@@ -1,8 +1,8 @@
 """Explicit read-only AEAT live observation CLI commands.
 
 This module wires the live filed-declaration, IVA-wallet, and subgroup command
-families to :mod:`aeat.application.live` services, then emits registered
-:mod:`aeat.entrypoints.cli._app_live_payloads` result schemas through
+families to :mod:`~aeat.application.live` services, then emits registered
+:mod:`~aeat.entrypoints.cli._app_live_payloads` result schemas through
 :func:`~aeat.entrypoints.cli._common._emit_envelope`. The commands collect or
 render local evidence only; live submission, payment, acknowledgement, and
 representative write actions remain outside this CLI surface.
