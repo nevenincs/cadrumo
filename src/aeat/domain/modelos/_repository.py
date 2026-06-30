@@ -6,6 +6,9 @@
 The catalogue is serialised as a single :class:`Envelope`-wrapped JSON payload
 keyed by a stable namespace and object key; the underlying column is encrypted
 so no plaintext work-unit metadata lands on disk.
+The storage contract is declared by
+:data:`aeat.adapters.persistence.storage.MODELO_WORK_UNIT_CATALOGUE_NAMESPACE`;
+its default object key is the singleton ``catalogue`` row.
 """
 
 from __future__ import annotations
@@ -40,11 +43,16 @@ class WorkUnitPersistenceError(ModeloError):
 class WorkUnitCatalogueRepository:
     """Repository over encrypted SQL-backed work-unit catalogue storage.
 
-    A single envelope-wrapped catalogue object holds every work
-    unit. Loads return an empty catalogue when no object has been
-    persisted yet (no separate "fresh install" path is needed).
-    The repository wraps a :class:`SecureObjectRepository` and exposes the
-    concrete load/save implementation behind
+    A single envelope-wrapped catalogue object holds every work unit. Loads
+    return an empty catalogue when no object has been persisted yet (no
+    separate "fresh install" path is needed).
+    :data:`aeat.adapters.persistence.storage.MODELO_WORK_UNIT_CATALOGUE_NAMESPACE`
+    is the central namespace, schema-version, sensitivity, and singleton-key
+    contract used by ``exists``, ``load``, and ``save``. The
+    :class:`WorkUnitCatalogue` payload is wrapped in
+    :class:`~aeat.adapters.persistence.storage.Envelope` before the
+    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    persists it, while this class exposes the concrete implementation behind
     :class:`~aeat.domain.modelos.WorkUnitCatalogueRepositoryProtocol`.
     """
 

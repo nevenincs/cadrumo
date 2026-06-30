@@ -5,6 +5,9 @@ and loads :class:`CalculationRevision` records in a
 :class:`CalculationRevisionCatalogue` via :class:`SecureObjectRepository` at
 :class:`SensitivityClass` FINANCIAL. Each catalogue is wrapped in an
 :class:`Envelope` before being written to the encrypted BLOB per profile bucket.
+The storage contract is declared by
+:data:`aeat.adapters.persistence.storage.MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE`;
+its default object key is the singleton ``catalogue`` row.
 """
 
 from __future__ import annotations
@@ -43,8 +46,15 @@ class CalculationRevisionPersistenceError(ModeloError):
 class CalculationRevisionCatalogueRepository:
     """Repository over encrypted SQL-backed calculation-revision catalogue storage.
 
-    The repository wraps a :class:`SecureObjectRepository` and exposes the
-    concrete load/save implementation behind
+    :data:`aeat.adapters.persistence.storage.MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE`
+    is the central namespace, schema-version, sensitivity, and singleton-key
+    contract for the encrypted :class:`CalculationRevisionCatalogue` row. The
+    catalogue payload is wrapped in
+    :class:`~aeat.adapters.persistence.storage.Envelope` before
+    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    persists it, and the same envelope can be returned as a
+    :class:`~aeat.adapters.persistence.storage.SecureObjectWrite` for atomic
+    co-writes. The class exposes the concrete load/save implementation behind
     :class:`~aeat.domain.modelos.CalculationRevisionCatalogueRepositoryProtocol`.
     """
 

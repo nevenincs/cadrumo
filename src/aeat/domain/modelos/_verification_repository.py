@@ -6,6 +6,9 @@ and loads :class:`VerificationReport` entries in a
 :class:`SensitivityClass` FINANCIAL. The catalogue is stored as a single
 encrypted BLOB per profile bucket and wrapped in an :class:`Envelope` before
 serialisation.
+The storage contract is declared by
+:data:`aeat.adapters.persistence.storage.MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE`;
+its default object key is the singleton ``catalogue`` row.
 """
 
 from __future__ import annotations
@@ -40,8 +43,14 @@ class VerificationReportPersistenceError(ModeloError):
 class VerificationReportCatalogueRepository:
     """Repository over encrypted SQL-backed verification-report catalogue storage.
 
-    The repository wraps a :class:`SecureObjectRepository` and exposes the
-    concrete load/save implementation behind
+    :data:`aeat.adapters.persistence.storage.MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE`
+    is the central namespace, schema-version, sensitivity, and singleton-key
+    contract for the encrypted :class:`VerificationReportCatalogue` row. The
+    catalogue payload is wrapped in
+    :class:`~aeat.adapters.persistence.storage.Envelope` before
+    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    persists it, while this class exposes the concrete load/save implementation
+    behind
     :class:`~aeat.domain.modelos.VerificationReportCatalogueRepositoryProtocol`.
     """
 

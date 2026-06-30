@@ -5,6 +5,9 @@ loads :class:`ModeloRecord` entries in a :class:`ModeloRecordCatalogue` via
 :class:`SecureObjectRepository` at :class:`SensitivityClass` FINANCIAL using an
 :class:`Envelope` wrapper. The catalogue is stored as a single encrypted BLOB
 per profile bucket.
+The storage contract is declared by
+:data:`aeat.adapters.persistence.storage.MODELO_FILING_RECORD_CATALOGUE_NAMESPACE`;
+its default object key is the singleton ``catalogue`` row.
 """
 
 from __future__ import annotations
@@ -40,8 +43,14 @@ class ModeloRecordPersistenceError(ModeloError):
 class ModeloRecordCatalogueRepository:
     """Repository over encrypted SQL-backed filing-record catalogue storage.
 
-    The repository wraps a :class:`SecureObjectRepository` and exposes the
-    concrete load/save implementation behind
+    :data:`aeat.adapters.persistence.storage.MODELO_FILING_RECORD_CATALOGUE_NAMESPACE`
+    is the central namespace, schema-version, sensitivity, and singleton-key
+    contract for the encrypted :class:`ModeloRecordCatalogue` row. The
+    catalogue payload keeps member-scoped current/history lookups in the domain
+    type, while this repository wraps it in
+    :class:`~aeat.adapters.persistence.storage.Envelope` and writes it through
+    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`.
+    It exposes the concrete load/save implementation behind
     :class:`~aeat.domain.modelos.ModeloRecordCatalogueRepositoryProtocol`.
     """
 
