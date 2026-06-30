@@ -11,19 +11,14 @@ validator consumes.
 
 from __future__ import annotations
 
-from ....core.aggregation import BindingAggregationOp, RowSetGroupingKind
+from ....core.aggregation import ROW_SET_GROUPING_FOR_BINDING_SOURCE, BindingAggregationOp, BindingSourceKind
 from ._schema import DataBindingDefinition
 
 #: Binding ``source`` kinds whose aggregation defaults to ``rows`` (one detail
 #: row per observation) when the binding declares no explicit op. Every other
 #: source family folds to a scalar and defaults to ``sum``.
-_ROWS_DEFAULT_SOURCE_KINDS: frozenset[str] = frozenset(
-    {
-        "related_party_operation",
-        RowSetGroupingKind.FOREIGN_ASSET,
-        "atribucion_member",
-        "refund_operation",
-    },
+_ROWS_DEFAULT_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
+    source for source in ROW_SET_GROUPING_FOR_BINDING_SOURCE if source is not BindingSourceKind.WITHHOLDING
 )
 
 
@@ -35,7 +30,11 @@ def default_binding_aggregation_op(source: str) -> BindingAggregationOp:
     other source family defaults to
     :attr:`~aeat.core.aggregation.BindingAggregationOp.SUM`.
     """
-    if source in _ROWS_DEFAULT_SOURCE_KINDS:
+    try:
+        source_kind = BindingSourceKind(source)
+    except ValueError:
+        return BindingAggregationOp.SUM
+    if source_kind in _ROWS_DEFAULT_SOURCE_KINDS:
         return BindingAggregationOp.ROWS
     return BindingAggregationOp.SUM
 

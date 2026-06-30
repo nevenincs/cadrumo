@@ -25,9 +25,14 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .....core.aggregation import BindingAggregation, BindingAggregationOp
+from .....core.aggregation import (
+    ROW_SET_GROUPING_FOR_BINDING_SOURCE,
+    BindingAggregation,
+    BindingAggregationOp,
+    BindingSourceKind,
+)
 from .. import CasillaId, validated_casilla_id
-from .._binding_aggregation import binding_aggregation_op, default_binding_aggregation_op
+from .._binding_aggregation import _ROWS_DEFAULT_SOURCE_KINDS, binding_aggregation_op, default_binding_aggregation_op
 from .._schema import DataBindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -120,6 +125,16 @@ _REGISTRY_DECLARED_OPS: tuple[str, ...] = (
 def test_binding_aggregation_op_member_set_matches_registry_declarations() -> None:
     """The enum's member values equal the complete registry-declared op set."""
     assert {member.value for member in BindingAggregationOp} == set(_REGISTRY_DECLARED_OPS)
+
+
+def test_rows_default_source_kinds_derive_from_canonical_row_set_source_map() -> None:
+    """Rows-default binding sources come from the canonical detail-record source map."""
+    expected = frozenset(
+        source for source in ROW_SET_GROUPING_FOR_BINDING_SOURCE if source is not BindingSourceKind.WITHHOLDING
+    )
+
+    assert expected == _ROWS_DEFAULT_SOURCE_KINDS
+    assert all(isinstance(source, BindingSourceKind) for source in _ROWS_DEFAULT_SOURCE_KINDS)
 
 
 @pytest.mark.parametrize("op_value", _REGISTRY_DECLARED_OPS)
