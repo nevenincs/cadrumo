@@ -424,6 +424,68 @@ required_text = [
     "deberán ser probados por la entidad",
 ]
 
+# Ley 49/2002 art 6, binding provision establishing which income of a Title II
+# entidad sin fines lucrativos is EXEMPT from Impuesto sobre Sociedades
+# (donativos/donaciones, cuotas de asociados, subvenciones not financing
+# non-exempt activity, rendimientos del patrimonio mobiliario/inmobiliario,
+# rentas de transmisiones, rentas de explotaciones económicas exentas del art.
+# 7, and atribuidas/imputadas exempt income). On Modelo 200 these rentas are
+# excluded from the base imponible via the régimen-especial disminución
+# corrections (casillas 03276-03280, page 026f → [00392] disminución).
+[legal."ley-49-2002:art-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-49-2002-art-6.html#a6"
+document_id = "BOE-A-2002-25039"
+article = "6"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-25039#a6"
+published_at = 2002-12-24
+effective_from = 2002-12-25
+consolidated_as_of = 2023-12-20
+review_status = "reviewed"
+reviewed_at = 2026-06-30
+reviewed_by = "claude (agent-prepared; verified against live BOE-A-2002-25039 art. 6 consolidated text 2023-12-20; pending operator re-stamp)"
+notes = "Ley 49/2002 art 6: rentas exentas del Impuesto sobre Sociedades obtenidas por entidades sin fines lucrativos del Título II — donativos y donaciones, cuotas de asociados/colaboradores/benefactores, subvenciones (salvo las que financian explotaciones no exentas), rendimientos del patrimonio mobiliario e inmobiliario, rentas de adquisiciones/transmisiones, rentas de explotaciones económicas exentas del art. 7, y rentas atribuidas/imputadas procedentes de rentas exentas. Grounds the Modelo 200 régimen-especial disminución corrections that exclude exempt income from the base imponible."
+required_text = [
+    "Artículo 6. Rentas exentas.",
+    "Están exentas del Impuesto sobre Sociedades las siguientes rentas obtenidas por entidades sin fines lucrativos",
+    "Los donativos y donaciones recibidos para colaborar en los fines de la entidad",
+    "Las cuotas satisfechas por los asociados, colaboradores o benefactores",
+    "Las subvenciones, salvo las destinadas a financiar la realización de explotaciones económicas no exentas",
+    "Las obtenidas en el ejercicio de las explotaciones económicas exentas a que se refiere el artículo siguiente",
+]
+
+# Ley 49/2002 art 7, binding provision establishing which EXPLOTACIONES
+# ECONÓMICAS of a Title II entidad sin fines lucrativos are exempt from
+# Impuesto sobre Sociedades when carried out in pursuit of the entity's
+# specific object (asistencia social, sanitaria, I+D+i, cultural, educativa,
+# deportiva, escasa relevancia ≤ 20.000 EUR, etc.). The income of these exempt
+# activities is the art. 6.4.º exempt renta excluded from the Modelo 200 base
+# imponible. Apartado 12.º currentized by RD-ley 6/2023 (BOE-A-2023-25758).
+[legal."ley-49-2002:art-7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-49-2002-art-7.html#a7"
+document_id = "BOE-A-2002-25039"
+article = "7"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-25039#a7"
+published_at = 2002-12-24
+effective_from = 2024-01-01
+consolidated_as_of = 2023-12-20
+review_status = "reviewed"
+reviewed_at = 2026-06-30
+reviewed_by = "claude (agent-prepared; verified against live BOE-A-2002-25039 art. 7 consolidated text 2023-12-20, apartado 12.º RD-ley 6/2023; pending operator re-stamp)"
+notes = "Ley 49/2002 art 7: explotaciones económicas exentas del Impuesto sobre Sociedades cuando se desarrollan en cumplimiento del objeto o finalidad específica de la entidad sin fines lucrativos (acción/asistencia social, hospitalización y asistencia sanitaria, I+D+i del art. 35 LIS, bienes de interés cultural y museos, artes escénicas, espacios naturales protegidos, enseñanza y formación, exposiciones y seminarios, edición, deporte, auxiliares/complementarias hasta el 20%, y escasa relevancia con INCN ≤ 20.000 EUR). Su renta es la renta exenta del art. 6.4.º excluida de la base imponible del Modelo 200."
+required_text = [
+    "Artículo 7. Explotaciones económicas exentas.",
+    "Están exentas del Impuesto sobre Sociedades las rentas obtenidas por entidades sin fines lucrativos que procedan de las siguientes explotaciones económicas",
+    "siempre y cuando sean desarrolladas en cumplimiento de su objeto o finalidad específica",
+    "Las explotaciones económicas de escasa relevancia",
+    "no supere en conjunto 20.000 euros",
+]
+
 # LIS disposición transitoria cuadragésima cuarta, added by Ley 7/2024
 # (disposición final octava). Binding source for the micro-empresa
 # (INCN < 1M EUR) two-tranche transitional rate schedule applied to the
