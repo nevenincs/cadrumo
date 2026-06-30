@@ -33,6 +33,8 @@ related:
   - '[[2026-06-30-cli-persona-testimonials-W03-P06-S15]]'
   - '[[2026-06-30-cli-persona-testimonials-W03-P06-S16]]'
   - '[[2026-06-30-cli-persona-testimonials-W03-P06-S17]]'
+  - '[[2026-06-30-cli-persona-testimonials-W03-P07-S18]]'
+  - '[[2026-06-30-cli-persona-testimonials-W03-P07-S20]]'
   - '[[2026-06-30-cli-persona-testimonials-audit]]'
   - '[[2026-06-30-cli-persona-testimonials-plan]]'
 ---
@@ -77,6 +79,8 @@ Auto-generated index of all documents tagged with `#cli-persona-testimonials`.
 - `2026-06-30-cli-persona-testimonials-W03-P06-S15` - Replay weak IVA cross-period company and pos-chain persona roots
 - `2026-06-30-cli-persona-testimonials-W03-P06-S16` - Replay mixed-income autonomo and employee persona roots
 - `2026-06-30-cli-persona-testimonials-W03-P06-S17` - Replay raw Ana and Taller transcript roots through the current CLI
+- `2026-06-30-cli-persona-testimonials-W03-P07-S18` - Harden Modelo 100 borrador observation binding and parser coverage
+- `2026-06-30-cli-persona-testimonials-W03-P07-S20` - Harden local export evidence receipts and no-official-evidence messaging
 
 ### plan
 

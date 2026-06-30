@@ -87,9 +87,9 @@ Replay the known weak persona roots as real operator journeys and turn any repro
 
 Close Modelo 100 annual Renta, borrador, filing-record, and local export evidence gaps without treating local files as official AEAT proof.
 
-- [ ] `W03.P07.S18` - Harden Modelo 100 borrador observation binding and parser coverage; `src/aeat/adapters/inbound/borrador`.
+- [x] `W03.P07.S18` - Harden Modelo 100 borrador observation binding and parser coverage; `src/aeat/adapters/inbound/borrador`.
 - [ ] `W03.P07.S19` - Verify Modelo 100 calculation and export closure from annual Renta journeys; `src/aeat/application/modelo`.
-- [ ] `W03.P07.S20` - Harden local export evidence receipts and no-official-evidence messaging; `src/aeat/application/modelo/_export.py`.
+- [x] `W03.P07.S20` - Harden local export evidence receipts and no-official-evidence messaging; `src/aeat/application/modelo/_export.py`.
 
 ## Wave `W04` - legal live-read and adapter hardening
 
