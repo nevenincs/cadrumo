@@ -265,6 +265,23 @@ def _normalize_identifier_tuple(value: tuple[str, ...]) -> tuple[str, ...]:
     return normalized
 
 
+def _trim_lineage_text(value: str | None) -> str | None:
+    if value is None:
+        return None
+    trimmed = value.strip()
+    if not trimmed:
+        raise TransactionValidationError("lineage text fields must not be blank")
+    return trimmed
+
+
+def _parse_required_aware_datetime(value: object, *, field_name: str) -> datetime:
+    if isinstance(value, str):
+        value = _parse_datetime(value)
+    if not isinstance(value, datetime):
+        raise TransactionValidationError(f"{field_name} must be a datetime")
+    return _require_aware_datetime(value)
+
+
 _NON_NEGATIVE_DECIMAL_HINTS = {
     "taxable_base": (
         "taxable_base must be non-negative; it is the IVA-exclusive base amount, "
@@ -497,21 +514,12 @@ class TransactionEvidenceProvenanceEntry(BaseModel):
     @field_validator("evidence_id", "actor", "source_command", "bucket_event_id")
     @classmethod
     def _trim_optional_text(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        trimmed = value.strip()
-        if not trimmed:
-            raise TransactionValidationError("lineage text fields must not be blank")
-        return trimmed
+        return _trim_lineage_text(value)
 
     @field_validator("linked_at", mode="before")
     @classmethod
     def _parse_linked_at(cls, value: object) -> datetime:
-        if isinstance(value, str):
-            value = _parse_datetime(value)
-        if not isinstance(value, datetime):
-            raise TransactionValidationError("linked_at must be a datetime")
-        return _require_aware_datetime(value)
+        return _parse_required_aware_datetime(value, field_name="linked_at")
 
 
 class TransactionEditLineageEntry(BaseModel):
@@ -528,21 +536,12 @@ class TransactionEditLineageEntry(BaseModel):
     @field_validator("previous_transaction_id", "actor", "source_command", "bucket_event_id")
     @classmethod
     def _trim_optional_text(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        trimmed = value.strip()
-        if not trimmed:
-            raise TransactionValidationError("lineage text fields must not be blank")
-        return trimmed
+        return _trim_lineage_text(value)
 
     @field_validator("edited_at", mode="before")
     @classmethod
     def _parse_edited_at(cls, value: object) -> datetime:
-        if isinstance(value, str):
-            value = _parse_datetime(value)
-        if not isinstance(value, datetime):
-            raise TransactionValidationError("edited_at must be a datetime")
-        return _require_aware_datetime(value)
+        return _parse_required_aware_datetime(value, field_name="edited_at")
 
 
 class TransactionLifecycleLineageEntry(BaseModel):
@@ -572,12 +571,7 @@ class TransactionLifecycleLineageEntry(BaseModel):
     @field_validator("actor", "source_command", "bucket_event_id")
     @classmethod
     def _trim_optional_text(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        trimmed = value.strip()
-        if not trimmed:
-            raise TransactionValidationError("lineage text fields must not be blank")
-        return trimmed
+        return _trim_lineage_text(value)
 
     @field_validator("reason")
     @classmethod
@@ -587,11 +581,7 @@ class TransactionLifecycleLineageEntry(BaseModel):
     @field_validator("changed_at", mode="before")
     @classmethod
     def _parse_changed_at(cls, value: object) -> datetime:
-        if isinstance(value, str):
-            value = _parse_datetime(value)
-        if not isinstance(value, datetime):
-            raise TransactionValidationError("changed_at must be a datetime")
-        return _require_aware_datetime(value)
+        return _parse_required_aware_datetime(value, field_name="changed_at")
 
     @model_validator(mode="after")
     def _reject_noop_transition(self) -> Self:
