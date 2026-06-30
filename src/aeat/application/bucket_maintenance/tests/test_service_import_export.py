@@ -14,9 +14,11 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage import encrypt_record
-from ....adapters.persistence.storage.bucket import ExportArchiveHeader, read_sealed_archive, write_sealed_archive
-from ....adapters.persistence.storage.master_key import (
+from ....adapters.persistence.storage.bucket._export_header import ExportArchiveHeader
+from ....adapters.persistence.storage.bucket._sealed_archive_reader import read_sealed_archive
+from ....adapters.persistence.storage.bucket._sealed_archive_writer import write_sealed_archive
+from ....adapters.persistence.storage.crypto._crypto import encrypt_record
+from ....adapters.persistence.storage.master_key._master_key_derivation import (
     ARGON2_MEMORY_COST_KIB,
     ARGON2_PARALLELISM,
     ARGON2_TIME_COST,
@@ -24,16 +26,18 @@ from ....adapters.persistence.storage.master_key import (
 )
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.resources import resources
-from ....domain.buckets import BucketEventHistoryRepository, BucketEventType, BucketImportError
+from ....domain.buckets._errors import BucketImportError
+from ....domain.buckets._event import BucketEventType
+from ....domain.buckets._event_repository import BucketEventHistoryRepository
 from ....domain.user_profile._portable_export import UserProfilePortableExport
 from ....domain.user_profile._schema import ProfileSchemaDefinition
 from ....domain.user_profile._values import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root, isolated_runtime_profile
 from ...user_profile._commands import RegisterProfileCommand
 from ...user_profile._orchestration import profile_storage_session
-from ...workflow import read_profile_bucket_by_id
-from .. import BucketMaintenanceService, ExportBucketCommand, ImportBucketCommand
-from .._service import _archive_associated_data, _recovery_wrap_bytes
+from ...workflow._profile_bucket_scan import read_profile_bucket_by_id
+from .._contracts import ExportBucketCommand, ImportBucketCommand
+from .._service import BucketMaintenanceService, _archive_associated_data, _recovery_wrap_bytes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

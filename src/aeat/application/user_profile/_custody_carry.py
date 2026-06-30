@@ -18,9 +18,10 @@ counterpart of the typed categories' ``repository.save`` re-encrypt-on-import
 path and honours the same ``D2`` decrypted-payload custody contract.
 
 The set of carried namespaces is registry-driven: it is exactly the namespaces
-whose :class:`~aeat.adapters.persistence.storage.StorageCustodyDisposition` is
-in the requested custody profile, minus the five typed-category namespaces this
-module deliberately leaves to the typed bundle fields. A populated,
+whose
+:class:`~aeat.adapters.persistence.storage._namespace_registry.StorageCustodyDisposition`
+is in the requested custody profile, minus the five typed-category namespaces
+this module deliberately leaves to the typed bundle fields. A populated,
 carried-disposition namespace with no natural key resolver fails the export
 fail-closed, so a newly-registered durable store cannot be silently dropped.
 """
@@ -149,7 +150,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers["aeat.domain.attachments.blobs"] = _blob_resolver
 
     def _attachment_manifest(record: SecureObjectRecord, _bucket_id: str) -> str:
-        from ...domain.attachments import Attachment
+        from ...domain.attachments._models import Attachment
 
         return _envelope_payload(record, Attachment).attachment_id  # type: ignore[attr-defined]
 
@@ -157,29 +158,31 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
 
     # --- Cross-period calculation inputs (SecureBoundRepository) --------------
     def _observations_repo() -> object:
-        from ..calculations import CalculationObservationRepository
+        from ..calculations._observations_repository import CalculationObservationRepository
 
         return CalculationObservationRepository()
 
     resolvers["aeat.calculations.observations"] = _bound_resolver(_observations_repo)
 
     def _iva_history_repo() -> object:
-        from ..calculations import IvaCompensationHistoryRepository
+        from ..calculations._iva_compensation_history import IvaCompensationHistoryRepository
 
         return IvaCompensationHistoryRepository()
 
     resolvers["aeat.calculations.iva_compensation.history"] = _bound_resolver(_iva_history_repo)
 
     def _iva_wallet_repo() -> object:
-        from ..calculations import IvaWalletDecisionRepository
+        from ..calculations._observations_repository import IvaWalletDecisionRepository
 
         return IvaWalletDecisionRepository()
 
     resolvers["aeat.calculations.iva_wallet.reconciliation_decisions"] = _bound_resolver(_iva_wallet_repo)
 
     def _iva_wallet_event_key(record: SecureObjectRecord, _bucket_id: str) -> str:
-        from ..calculations import iva_wallet_decision_event_key
-        from ..calculations._observations_repository import _IvaWalletDecisionEnvelopePayload
+        from ..calculations._observations_repository import (
+            _IvaWalletDecisionEnvelopePayload,
+            iva_wallet_decision_event_key,
+        )
 
         payload = _envelope_payload(record, _IvaWalletDecisionEnvelopePayload)
         return iva_wallet_decision_event_key(payload.decision)  # type: ignore[attr-defined]
@@ -203,7 +206,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers["aeat.application.live.censo_snapshot"] = _snapshot_resolver(_censo_payload, _censo_key)
 
     def _justificante_payload() -> type:
-        from ..live import JustificanteCaptureSnapshot
+        from ..live._justificante import JustificanteCaptureSnapshot
 
         return JustificanteCaptureSnapshot
 
@@ -249,7 +252,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
 
     # --- Justificante metadata (SecureBoundRepository) -----------------------
     def _justificante_metadata_repo() -> object:
-        from ...domain.justificante import JustificanteRepository
+        from ...domain.justificante._repository import JustificanteRepository
 
         return JustificanteRepository()
 
@@ -257,14 +260,14 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
 
     # --- Withholding / retencion observations (SecureBoundRepository) ---------
     def _retencion_repo() -> object:
-        from ..aggregation import RetencionObservationRepository
+        from ..aggregation._retencion_observations_repository import RetencionObservationRepository
 
         return RetencionObservationRepository()
 
     resolvers["aeat.retenciones.observations"] = _bound_resolver(_retencion_repo)
 
     def _withholding_repo() -> object:
-        from ..aggregation import WithholdingObservationRepository
+        from ..aggregation._withholding_observations_repository import WithholdingObservationRepository
 
         return WithholdingObservationRepository()
 
@@ -272,21 +275,21 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
 
     # --- Filing/ledger/submission state (SecureBoundRepository) ---------------
     def _filing_history_repo() -> object:
-        from ..filing import ModeloHistoryRepository
+        from ..filing._history_repository import ModeloHistoryRepository
 
         return ModeloHistoryRepository()
 
     resolvers["aeat.application.filing.history"] = _bound_resolver(_filing_history_repo)
 
     def _iva_remote_state_repo() -> object:
-        from ..live import IvaRemoteStateAcquisitionManifestRepository
+        from ..live._iva_remote_state import IvaRemoteStateAcquisitionManifestRepository
 
         return IvaRemoteStateAcquisitionManifestRepository()
 
     resolvers["aeat.application.live.iva_remote_state_acquisitions"] = _bound_resolver(_iva_remote_state_repo)
 
     def _evidence_bundle_repo() -> object:
-        from ..evidence import EvidenceBundleRepository
+        from ..evidence._service import EvidenceBundleRepository
 
         return EvidenceBundleRepository()
 
@@ -300,28 +303,28 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers["aeat.application.ledger.purchase_invoice_evidence"] = _bound_resolver(_purchase_invoice_evidence_repo)
 
     def _business_operation_invoice_repo() -> object:
-        from ..ledger import BusinessOperationInvoiceRepository
+        from ..ledger._business_operation_invoice import BusinessOperationInvoiceRepository
 
         return BusinessOperationInvoiceRepository()
 
     resolvers["aeat.application.ledger.business_operation_invoices"] = _bound_resolver(_business_operation_invoice_repo)
 
     def _classification_rule_repo() -> object:
-        from ..ledger import LedgerClassificationRuleRepository
+        from ..ledger._rule_repository import LedgerClassificationRuleRepository
 
         return LedgerClassificationRuleRepository()
 
     resolvers["aeat.ledger.classification.rules"] = _bound_resolver(_classification_rule_repo)
 
     def _submission_repo() -> object:
-        from ...domain.submission import SubmissionRepository
+        from ...domain.submission._repository import SubmissionRepository
 
         return SubmissionRepository()
 
     resolvers["aeat.domain.submission.records"] = _bound_resolver(_submission_repo)
 
     def _draft_repo() -> object:
-        from ...domain.filing import ModeloDraftRepository
+        from ...domain.filing._repository import ModeloDraftRepository
 
         return ModeloDraftRepository()
 
@@ -397,8 +400,8 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers["aeat.outbound.aeat.sede.filed_declaration.artefacts"] = _sha256_payload_resolver
 
     def _filed_observation_key(record: SecureObjectRecord, _bucket_id: str) -> str:
-        from ...adapters.outbound.aeat.sede import FiledDeclaracionObservation
         from ...adapters.outbound.aeat.sede._observation_store import filed_declaracion_observation_object_key
+        from ...adapters.outbound.aeat.sede._schema import FiledDeclaracionObservation
 
         obs = _envelope_payload(record, FiledDeclaracionObservation)
         return filed_declaracion_observation_object_key(
@@ -411,10 +414,10 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers["aeat.outbound.aeat.sede.filed_declaration.observations"] = _filed_observation_key
 
     def _iva_wallet_observation_key(record: SecureObjectRecord, _bucket_id: str) -> str:
-        from ...adapters.outbound.aeat.sede import IvaCompensationWalletObservation
         from ...adapters.outbound.aeat.sede._observation_store import (
             iva_compensation_wallet_observation_object_key,
         )
+        from ...adapters.outbound.aeat.sede._schema import IvaCompensationWalletObservation
 
         obs = _envelope_payload(record, IvaCompensationWalletObservation)
         return iva_compensation_wallet_observation_object_key(
