@@ -363,6 +363,9 @@ def import_ledger_source(
             tuple(parsed.raw for parsed in parsed_rows),
             existing_catalogue,
             original_source_path=command.source,
+            import_fingerprints=tuple(
+                derive_import_fingerprint(parsed.raw, direction=parsed.direction) for parsed in parsed_rows
+            ),
         )
         if command.verify
         else None
