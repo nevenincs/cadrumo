@@ -67,24 +67,12 @@ PART_SPECS: tuple[PartSpec, ...] = (
         part=ManualPart.PARTE_1,
         source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2020/ManualRenta2020_es_es.pdf",
     ),
-    PartSpec(
-        manual_id=ManualId.RENTA,
-        year=2020,
-        part=ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS,
-        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2020/ManualRenta2020_Deducciones_Autonomicas_es_es.pdf",
-    ),
     # 2021
     PartSpec(
         manual_id=ManualId.RENTA,
         year=2021,
         part=ManualPart.PARTE_1,
         source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2021/ManualRenta2021_es_es.pdf",
-    ),
-    PartSpec(
-        manual_id=ManualId.RENTA,
-        year=2021,
-        part=ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS,
-        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2021/ManualRenta2021_Deducciones_Autonomicas_es_es.pdf",
     ),
     # 2022
     PartSpec(
@@ -93,24 +81,12 @@ PART_SPECS: tuple[PartSpec, ...] = (
         part=ManualPart.PARTE_1,
         source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2022/ManualRenta2022_es_es.pdf",
     ),
-    PartSpec(
-        manual_id=ManualId.RENTA,
-        year=2022,
-        part=ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS,
-        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2022/ManualRenta2022_Deducciones_Autonomicas_es_es.pdf",
-    ),
     # 2023
     PartSpec(
         manual_id=ManualId.RENTA,
         year=2023,
         part=ManualPart.PARTE_1,
         source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2023/ManualRenta2023_es_es.pdf",
-    ),
-    PartSpec(
-        manual_id=ManualId.RENTA,
-        year=2023,
-        part=ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS,
-        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2023/ManualRenta2023_Deducciones_Autonomicas_es_es.pdf",
     ),
     # 2024
     PartSpec(
@@ -123,7 +99,9 @@ PART_SPECS: tuple[PartSpec, ...] = (
         manual_id=ManualId.RENTA,
         year=2024,
         part=ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS,
-        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2024/ManualRenta2024Tomo2_es_es.pdf",
+        source_pdf_url=(
+            f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2024-Deducciones-autonomicas/ManualRenta2024Tomo2_es_es.pdf"
+        ),
     ),
     # 2025
     PartSpec(

@@ -1,11 +1,11 @@
 {
-  "content_length": 1000,
-  "fetched_at": "2026-05-06T00:00:00Z",
+  "content_length": 3404339,
+  "fetched_at": "2026-06-30T02:06:56.954730Z",
   "manual_id": "renta",
   "part": "part2-deducciones-autonomicas",
   "relative_pdf_path": "source.pdf",
-  "sha256": "88a12fbe5ce9de01fc6a04941db498cd30ef959c85bf6106bfdc3611c13f3481",
-  "source_pdf_url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2024/ManualRenta2024Tomo2_es_es.pdf",
-  "synthetic": true,
+  "sha256": "da4f56d3695d2afab7dbd5107d7a74673b543aca0c2ad9234c60135319eb9daa",
+  "source_pdf_url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2024-Deducciones-autonomicas/ManualRenta2024Tomo2_es_es.pdf",
+  "synthetic": false,
   "year": 2024
 }
