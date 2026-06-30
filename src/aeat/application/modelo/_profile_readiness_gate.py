@@ -1,21 +1,22 @@
 """Profile readiness gate for filing-grade modelo work.
 
-Loads the active :class:`UserProfileRecord`, builds a
-:class:`ProfilePreflightReport`, projects local-work applicability through
-:class:`TaxpayerProfile`, and raises :class:`ModeloProfileReadinessError`
-before filing-grade work proceeds when required profile facts are missing. The
-revision-specific preflight branch may receive a
-:class:`ModeloRevision` that has already been resolved by an operator-facing
-readiness surface. The
-same gate also refuses Modelo 130 and Modelo 303 target periods whose date span
-ends before the profile's ``censo.activity_start_date``; those pre-activity
-periods have no filing obligation and must not produce stale work, calculation,
+Loads the active :class:`aeat.domain.user_profile.UserProfileRecord`, builds a
+:class:`aeat.application.user_profile.ProfilePreflightReport`, projects
+local-work applicability through :class:`aeat.domain.deadlines.TaxpayerProfile`,
+and raises :class:`aeat.application.modelo.ModeloProfileReadinessError` before
+filing-grade work proceeds when required profile facts are missing. The
+revision-specific preflight branch may receive a :class:`ModeloRevision` that
+has already been resolved by an operator-facing readiness surface. The same gate
+also refuses Modelo 130 and Modelo 303 target periods whose date span ends
+before the profile's ``censo.activity_start_date``; those pre-activity periods
+have no filing obligation and must not produce stale work, calculation,
 verification, filing, or export state.
 
 See Also:
     :func:`require_profile_ready_for_work_unit`:
-        Replays the same readiness checks for an existing :class:`WorkUnit`.
-    :class:`ProfilePreflightReport`:
+        Replays the same readiness checks for an existing
+        :class:`aeat.domain.modelos.WorkUnit`.
+    :class:`aeat.application.user_profile.ProfilePreflightReport`:
         User-profile preflight result consumed by this application gate.
 """
 
@@ -92,8 +93,8 @@ def modelo_work_profile_baseline_missing_paths(record: UserProfileRecord) -> tup
     """Return profile facts required before any filing-grade modelo work starts.
 
     Args:
-        record: Active :class:`UserProfileRecord` projected into schema-path
-            values.
+        record: Active :class:`aeat.domain.user_profile.UserProfileRecord`
+            projected into schema-path values.
     """
     values = record_to_path_values(record)
     return tuple(path for path in _FILING_BASELINE_PROFILE_PATHS if not values.get(path, "").strip())
@@ -103,12 +104,12 @@ def modelo_work_profile_baseline_validation_issues(record: UserProfileRecord) ->
     """Return validate-surface issues for the central modelo work profile baseline.
 
     Args:
-        record: Active :class:`UserProfileRecord` checked against the
-            filing-grade baseline.
+        record: Active :class:`aeat.domain.user_profile.UserProfileRecord`
+            checked against the filing-grade baseline.
 
     Returns:
-        Tuple of :class:`ProfileValidationIssue` instances for missing
-        filing-grade baseline facts.
+        Tuple of :class:`aeat.application.user_profile.ProfileValidationIssue`
+        instances for missing filing-grade baseline facts.
     """
     return tuple(
         ProfileValidationIssue(
@@ -152,23 +153,24 @@ def modelo_work_profile_preflight_report(
     This combines the filing-grade baseline that every modelo work unit needs
     with the modelo/revision-specific profile selectors. Public readiness
     surfaces consume this function so they cannot claim profile readiness before
-    ``create_work_unit`` would reject the same active profile.
+    :func:`aeat.application.modelo.create_work_unit` would reject the same active
+    profile.
 
     Args:
-        record: Active :class:`UserProfileRecord`.
+        record: Active :class:`aeat.domain.user_profile.UserProfileRecord`.
         modelo: Modelo code being checked.
         revision_id: Registry revision identifier for the target modelo work.
         filing_year: Filing year for the target period.
-        period: Target :class:`Period` used for registry revision resolution
-            and profile selector evaluation.
+        period: Target :class:`aeat.core.Period` used for registry revision
+            resolution and profile selector evaluation.
         revision: Optional :class:`ModeloRevision` supplied when the caller has
             already resolved the target revision.
         resolve_revision_when_missing: Whether to resolve the registry
             revision when ``revision`` is not supplied.
 
     Returns:
-        :class:`ProfilePreflightReport` combining baseline, validation, and
-        modelo/revision-specific missing requirements.
+        :class:`aeat.application.user_profile.ProfilePreflightReport` combining
+        baseline, validation, and modelo/revision-specific missing requirements.
     """
     if revision is None and resolve_revision_when_missing:
         report = _report_for_target(
@@ -283,8 +285,8 @@ def modelo_applicability_refusal(
     """Return the local-work applicability refusal for a target, if any.
 
     Args:
-        record: Active :class:`UserProfileRecord` projected into taxpayer facts
-            for the modelo applicability check.
+        record: Active :class:`aeat.domain.user_profile.UserProfileRecord`
+            projected into taxpayer facts for the modelo applicability check.
         bucket_id: Active profile bucket identifier included in the refusal
             context.
         modelo: Modelo code being checked.
@@ -316,14 +318,15 @@ def pre_activity_period_refusal(
     """Return the pre-activity lifecycle refusal for a target, if any.
 
     Args:
-        record: Active :class:`UserProfileRecord` carrying the profile facts
-            used to resolve ``censo.activity_start_date``.
+        record: Active :class:`aeat.domain.user_profile.UserProfileRecord`
+            carrying the profile facts used to resolve
+            ``censo.activity_start_date``.
         bucket_id: Active profile bucket identifier included in the refusal
             context.
         modelo: Modelo code being checked.
         filing_year: Filing year for the target period.
-        period: Target :class:`Period` whose date span is compared against the
-            profile activity-start date.
+        period: Target :class:`aeat.core.Period` whose date span is compared
+            against the profile activity-start date.
     """
     modelo_code = modelo.strip()
     if modelo_code not in _PRE_ACTIVITY_LIFECYCLE_MODELOS or not period.has_date_span():
@@ -388,8 +391,9 @@ def require_profile_ready_for_modelo_work(
 ) -> None:
     """Refuse filing-grade modelo work when the active profile is not eligible.
 
-    Loads the bucket's :class:`UserProfileRecord`, evaluates modelo-specific
-    profile requirements through :class:`ProfilePreflightReport`, and then
+    Loads the bucket's :class:`aeat.domain.user_profile.UserProfileRecord`,
+    evaluates modelo-specific profile requirements through
+    :class:`aeat.application.user_profile.ProfilePreflightReport`, and then
     applies the pre-activity period check for lifecycle modelos whose obligation
     starts at ``censo.activity_start_date``.
     """
@@ -450,7 +454,15 @@ def require_existing_profile_baseline_ready_for_modelo_work(
     period: Period,
     enforce_applicability: bool = True,
 ) -> None:
-    """Refuse an existing active profile before registry work when it is plainly incomplete."""
+    """Refuse plainly incomplete existing profiles before registry work.
+
+    This early gate is used by :func:`aeat.application.modelo.create_work_unit`
+    before the registry revision and period are validated. It catches missing
+    baseline profile facts, local-work applicability refusals, and pre-activity
+    lifecycle periods without requiring a resolvable :class:`ModeloRevision`.
+    Missing profiles still pass through so the later full readiness gate can
+    raise the canonical missing-profile error.
+    """
     try:
         record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
     except ProfileNotFoundError:
@@ -478,11 +490,12 @@ def require_existing_profile_baseline_ready_for_modelo_work(
 
 
 def require_profile_ready_for_work_unit(work_unit: WorkUnit, *, enforce_applicability: bool = True) -> None:
-    """Run the profile readiness gate for an existing :class:`WorkUnit`.
+    """Run the profile readiness gate for an existing work unit.
 
     Calculation, verification, filing, and export services call this wrapper so
-    a previously created work unit is rechecked against the current
-    :class:`UserProfileRecord` before any filing-grade mutation proceeds.
+    a previously created :class:`aeat.domain.modelos.WorkUnit` is rechecked
+    against the current :class:`aeat.domain.user_profile.UserProfileRecord`
+    before any filing-grade mutation proceeds.
     """
     require_profile_ready_for_modelo_work(
         bucket_id=work_unit.bucket_id,
