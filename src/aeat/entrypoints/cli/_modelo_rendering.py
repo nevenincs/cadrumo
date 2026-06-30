@@ -336,6 +336,7 @@ def calculation_revision_payload(rev) -> CalculationRevisionPayload:
             casilla_id=obs.casilla_id,
             value=str(obs.value),
             formula_id=obs.formula_id,
+            op=obs.op,
             operand_refs=tuple(obs.operand_refs),
             operand_casilla_refs=tuple(obs.operand_casilla_refs),
             operand_values=tuple(str(v) for v in obs.operand_values),
@@ -402,7 +403,48 @@ def result_summary_payload(rev) -> tuple[ResultSummaryRowPayload, ...]:
     )
 
 
-def calculation_revision_lines(rev) -> list[str]:
+def casilla_inline_trace(obs) -> str | None:
+    """Render the inline formula trace for one computed casilla observation.
+
+    Returns the ``op(refs) = op(values) = value`` trace string for a formula
+    observation (a :class:`~aeat.domain.calculations.registry.CasillaObservation`
+    whose ``formula_id`` and ``op`` are set), sourced entirely from the
+    already-computed operand lineage on the typed observation. Returns ``None``
+    for an input / bound casilla that carries no formula, so those rows render
+    their value only, as before.
+    """
+    if obs.formula_id is None or obs.op is None:
+        return None
+    value = str(obs.value)
+    if obs.operand_refs:
+        symbolic = f"{obs.op}({', '.join(obs.operand_refs)})"
+        evaluated = f"{obs.op}({', '.join(str(operand) for operand in obs.operand_values)})"
+        return f"{symbolic} = {evaluated} = {value}"
+    return f"{obs.op} = {value}"
+
+
+def casilla_trace_verbose_line(obs) -> str:
+    """Render the full LedgerEntry detail for one computed casilla observation.
+
+    Exposes the complete typed
+    :class:`~aeat.domain.calculations.registry.CasillaObservation` trace -
+    ``op``, ``formula_id``, ``operand_refs``, ``operand_casilla_refs`` and
+    ``operand_values`` - on a single tab-delimited line beneath its casilla row
+    when the operator passes ``--verbose``.
+    """
+    return "\t".join(
+        (
+            f"  trace\t{obs.casilla_id}",
+            f"op={obs.op or ''}",
+            f"formula_id={obs.formula_id or ''}",
+            f"operand_refs={','.join(obs.operand_refs)}",
+            f"operand_casilla_refs={','.join(obs.operand_casilla_refs)}",
+            f"operand_values={','.join(str(operand) for operand in obs.operand_values)}",
+        ),
+    )
+
+
+def calculation_revision_lines(rev, *, verbose: bool = False) -> list[str]:
     lines = [
         f"calculation_revision_id\t{rev.calculation_revision_id}",
         f"work_unit_id\t{rev.work_unit_id}",
@@ -421,8 +463,16 @@ def calculation_revision_lines(rev) -> list[str]:
     summary_lines = result_summary_lines(rev)
     if summary_lines:
         lines.extend(summary_lines)
+    observation_by_casilla = {obs.casilla_id: obs for obs in _visible_calculation_observations(rev)}
     for casilla, value in sorted(_visible_calculation_casilla_values(rev).items()):
-        lines.append(f"casilla\t{casilla}\t{value}")
+        observation = observation_by_casilla.get(casilla)
+        trace = casilla_inline_trace(observation) if observation is not None else None
+        if trace is None:
+            lines.append(f"casilla\t{casilla}\t{value}")
+            continue
+        lines.append(f"casilla\t{casilla}\t{value}\t{trace}")
+        if verbose:
+            lines.append(casilla_trace_verbose_line(observation))
     for index, detail_row in enumerate(rev.detail_rows, start=1):
         fields = detail_row.model_dump(mode="json", exclude={"row_type"})
         field_str = " ".join(f"{key}={value}" for key, value in fields.items())

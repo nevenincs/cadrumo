@@ -209,6 +209,7 @@ def casilla_observation_for(
             casilla_id=casilla_id,
             value=value,
             formula_id=entry.formula_id,
+            op=entry.op,
             operand_refs=entry.operand_refs,
             operand_casilla_refs=entry.operand_casilla_refs,
             operand_values=entry.operand_values,

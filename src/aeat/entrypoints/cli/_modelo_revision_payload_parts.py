@@ -38,6 +38,11 @@ class ObservationPayload(OutputSchema):
     casilla_id: CasillaId
     value: str  # serialised Decimal
     formula_id: FormulaId | None = None
+    # Top-level formula operator label (``subtract``, ``add``, ``percent`` …)
+    # carried from :class:`~aeat.domain.calculations.registry.CasillaObservation`
+    # so the operand trace can be rendered inline as ``op(refs) = op(values) =
+    # value`` at the draft-review surface. ``None`` for input / bound casillas.
+    op: str | None = None
     operand_refs: tuple[str, ...] = ()
     operand_casilla_refs: tuple[CasillaId, ...] = ()
     operand_values: tuple[str, ...] = ()
