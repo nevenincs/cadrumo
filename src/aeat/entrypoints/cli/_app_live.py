@@ -1,4 +1,12 @@
-"""Explicit read-only AEAT live observation CLI commands."""
+"""Explicit read-only AEAT live observation CLI commands.
+
+This module wires the live filed-declaration, IVA-wallet, and subgroup command
+families to :mod:`aeat.application.live` services, then emits registered
+:mod:`aeat.entrypoints.cli._app_live_payloads` result schemas through
+:func:`~aeat.entrypoints.cli._common._emit_envelope`. The commands collect or
+render local evidence only; live submission, payment, acknowledgement, and
+representative write actions remain outside this CLI surface.
+"""
 
 from __future__ import annotations
 
@@ -1147,7 +1155,7 @@ def filed_pull_sources_cmd(
         ),
     ] = None,
 ) -> None:
-    """Capture registry-selected source observations for a target :class:`Period`.
+    """Capture registry-selected source observations for a target :class:`~aeat.core.Period`.
 
     Delegates to :func:`~aeat.application.live.capture_source_filed_data`, which
     resolves dependencies from a validated registry snapshot before reading
