@@ -145,7 +145,7 @@ include = [
 
 # ── uv ───────────────────────────────────────────────────────────────────────
 [tool.uv]
-# vaultspec-rag 0.2.14 requires tree-sitter-language-pack below 1.6.2, and shared
+# vaultspec-rag requires tree-sitter-language-pack below 1.6.2, and shared
 # Windows worktrees can keep the native parser DLL locked indefinitely. Keep the
 # resolver bound aligned with vaultspec-rag so additive installs and lock checks
 # do not select the incompatible 1.6.2 parser package.
@@ -217,7 +217,7 @@ dev = [
   "ty>=0.0.1a1",
   # Vault tooling — contributor-only; not imported by src/aeat/.
   "vaultspec-core>=0.1.25",
-  "vaultspec-rag>=0.2.14",
+  "vaultspec-rag>=0.2.26",
   # Sphinx documentation pipeline — `just docs` builds HTML + Markdown from
   # the Google-style + Sphinx-cross-referenced docstrings under src/aeat/.
   "sphinx>=8.1,<9",  # <9: sphinx-hoverxref 1.4.2 (latest) crashes on Sphinx 9's _Opt config repr at config-inited
