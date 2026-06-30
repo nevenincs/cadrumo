@@ -64,14 +64,16 @@ class TestNif:
         assert context["expected"] == "Z"
         assert context["got"] == "A"
 
-    def test_too_short_rejected(self) -> None:
+    @pytest.mark.parametrize(
+        "candidate",
+        (
+            pytest.param("1234567Z", id="too-short"),
+            pytest.param("123456789Z", id="too-long"),
+        ),
+    )
+    def test_invalid_shape_rejected(self, candidate: str) -> None:
         with pytest.raises(IdentityError) as excinfo:
-            validate_identity("1234567Z")
-        assert excinfo.value.translated_message == "errors.identity.nif_invalid_shape"
-
-    def test_too_long_rejected(self) -> None:
-        with pytest.raises(IdentityError) as excinfo:
-            validate_identity("123456789Z")
+            validate_identity(candidate)
         assert excinfo.value.translated_message == "errors.identity.nif_invalid_shape"
 
 
