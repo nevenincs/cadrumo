@@ -3953,10 +3953,10 @@ errors:
       sea una hoja de tipo {expected_kind}.
     m210_gastos_deducibles_negative: 'Los gastos_deducibles M210 %{casilla_id} no pueden ser negativos; valor recibido %{value}.'
     m210_gastos_deducibles_not_allowed: 'Los gastos_deducibles M210 %{casilla_id} solo se admiten en la ruta UE/EEE del articulo 24.6; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.'
-    m210_imputation_coefficient_invalid: errors.calc.m210_imputation_coefficient_invalid
-    m210_imputation_days_invalid: errors.calc.m210_imputation_days_invalid
-    m210_imputation_no_catastral_value_missing: errors.calc.m210_imputation_no_catastral_value_missing
-    m210_imputation_no_filing_year: errors.calc.m210_imputation_no_filing_year
+    m210_imputation_coefficient_invalid: 'El coeficiente de imputacion inmobiliaria M210 %{casilla_id} debe ser uno de los tipos del art. 85 declarados en el registro (%{allowed_values}); valor recibido %{value}.'
+    m210_imputation_days_invalid: 'Los dias de imputacion M210 %{casilla_id} deben ser un entero entre 1 y %{max_days}; valor recibido %{value}.'
+    m210_imputation_no_catastral_value_missing: 'La imputacion inmobiliaria M210 sin valor catastral requiere un valor de adquisicion o valor comprobado por la Administracion positivo (%{acquisition_casilla_id}, %{administrative_casilla_id}).'
+    m210_imputation_no_filing_year: 'La imputacion inmobiliaria M210 requiere un ejercicio de declaracion no nulo.'
     parameter_unknown: El parámetro {parameter_id} no está registrado.
     relation_value_missing: La relación {relation_id} no tiene valor asignado.
     text_input_non_text_casillas: 'Entrada de texto suministrada para casillas no
