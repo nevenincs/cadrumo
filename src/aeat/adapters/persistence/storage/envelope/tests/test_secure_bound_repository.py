@@ -5,10 +5,8 @@ Exercises save -> load -> iter -> delete against a real SQLite-backed
 :class:`EphemeralMasterKeyProvider`. No mocks; this is the
 anti-tautology, anti-regression gate for the new base class.
 
-A throwaway ``_RoundtripPayload`` Pydantic model and a throwaway concrete
-:class:`SecureBoundRepository` subclass live inside this module —
-production migrations of the 8 concrete repositories ship under
-subsequent steps.
+A throwaway ``_RoundtripPayload`` Pydantic model and throwaway concrete
+:class:`SecureBoundRepository` subclasses live inside this module.
 """
 
 from __future__ import annotations
@@ -54,6 +52,13 @@ class _RoundtripRepository(SecureBoundRepository[_RoundtripPayload]):
     @override
     def extract_identifier(self, payload: _RoundtripPayload) -> str:
         return payload.id
+
+
+class _RoundtripV2Repository(_RoundtripRepository):
+    """Concrete subclass used to prove older embedded envelopes are refused."""
+
+    namespace: ClassVar[str] = "aeat.test.envelope.secure_bound_roundtrip_v2"
+    schema_version: ClassVar[int] = 2
 
 
 def _bound_repo_with_engine(tmp_path: Path) -> tuple[_RoundtripRepository, Engine]:
@@ -169,6 +174,50 @@ def test_secure_bound_repository_rejects_future_schema_version(
 
             with pytest.raises(EnvelopeVersionError):
                 repo.load("future")
+        finally:
+            engine.dispose()
+
+
+def test_secure_bound_repository_rejects_older_inner_envelope_version(
+    tmp_path: Path,
+) -> None:
+    """The decrypted envelope version must match the repository contract.
+
+    The SQL row carries the current v2 schema marker, but the embedded
+    :class:`Envelope` claims v1. This represents a stale app-written
+    payload behind current row metadata and must be refused on direct
+    loads and full-namespace enumeration.
+    """
+
+    from datetime import UTC, datetime
+
+    provider = EphemeralMasterKeyProvider()
+    with provider:
+        base_repo, engine = _bound_repo_with_engine(tmp_path)
+        repo = _RoundtripV2Repository(objects=base_repo._objects)
+        try:
+            stale_payload = _RoundtripPayload(id="stale", value=7)
+            stale_envelope = Envelope[_RoundtripPayload](
+                schema_version=1,
+                written_at=datetime.now(UTC),
+                classification=SensitivityClass.AUDIT,
+                payload=stale_payload,
+            )
+            repo._objects.save(
+                namespace=_RoundtripV2Repository.namespace,
+                object_key="stale",
+                classification=SensitivityClass.AUDIT,
+                schema_version=2,
+                written_at=stale_envelope.written_at,
+                payload=stale_envelope.model_dump_json().encode("utf-8"),
+            )
+
+            with pytest.raises(EnvelopeVersionError):
+                repo.load("stale")
+            with pytest.raises(EnvelopeVersionError):
+                tuple(repo.iter_ids())
+            with pytest.raises(EnvelopeVersionError):
+                tuple(repo.iter_records())
         finally:
             engine.dispose()
 
