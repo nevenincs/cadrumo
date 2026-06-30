@@ -63,13 +63,18 @@ from ._verification_substance_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_PROFILE_ID = "13000000-0000-4000-8000-000000000330"
+
 
 @pytest.fixture
 def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over a fresh isolated profile."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
         objects = profile.repository
-        _seed_ready_profile(UserProfileLifecycleRepository(bucket_id="default", objects=objects), bucket_id="default")
+        _seed_ready_profile(
+            UserProfileLifecycleRepository(bucket_id=_PROFILE_ID, objects=objects),
+            bucket_id=_PROFILE_ID,
+        )
         wu = WorkUnitCatalogueRepository(objects=objects)
         cr = CalculationRevisionCatalogueRepository(objects=objects)
         vr = VerificationReportCatalogueRepository(objects=objects)
@@ -97,7 +102,7 @@ def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: _Repo
     assert casilla_02.binding == "modelo-130-actividad-economica-gastos-cumulative"
 
     work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_PROFILE_ID,
         modelo="130",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
@@ -222,7 +227,7 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     wu_repo, cr_repo, vr_repo, bv_repo = repos
 
     work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_PROFILE_ID,
         modelo="130",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "2T"),
@@ -329,9 +334,14 @@ def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     cantidad positiva consignada en la casilla 10".
     """
     wu_repo, cr_repo, vr_repo, bv_repo = repos
+    _seed_ready_profile(
+        UserProfileLifecycleRepository(bucket_id=_PROFILE_ID),
+        bucket_id=_PROFILE_ID,
+        irpf_estimation_regime="objetiva",
+    )
 
     work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_PROFILE_ID,
         modelo="131",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "2T"),
@@ -406,7 +416,7 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
     wu_repo, cr_repo, _vr_repo, bv_repo = repos
 
     work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_PROFILE_ID,
         modelo="130",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
