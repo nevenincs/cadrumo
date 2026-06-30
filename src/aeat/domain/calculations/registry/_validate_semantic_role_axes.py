@@ -65,7 +65,7 @@ _SEMANTIC_ROLE_AXIS_TOKEN_GROUPS: tuple[frozenset[str], ...] = (
 )
 
 _SEMANTIC_ROLE_OPTIONAL_AXIS_TOKENS: frozenset[str] = frozenset(
-    {"sin", "agr", "pub", "aav", "b", "anio", "precio"},
+    {"sin", "agr", "aav", "b", "anio", "precio"},
 )
 
 
