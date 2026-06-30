@@ -35,6 +35,7 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
+from ...adapters.persistence.storage._namespace_registry import StorageCustodyProfile
 from ..user_profile._bundle import (
     SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
     deserialize_profile_bundle,
@@ -326,7 +327,15 @@ class BucketMaintenanceService:
             )
 
         with profile_storage_session(command.bucket_id):
-            bundle = serialize_profile_bundle(bucket_id=command.bucket_id)
+            # The sealed archive is the full-custody recovery transport: it is
+            # AEAD-encrypted at rest, so it carries every durable secure-object
+            # store (evidence bytes, cross-period calc inputs, the audit trail,
+            # the live captures), and the export fails closed if any populated
+            # carried namespace is uncovered.
+            bundle = serialize_profile_bundle(
+                bucket_id=command.bucket_id,
+                custody_profile=StorageCustodyProfile.FULL,
+            )
             manifest = read_manifest(bucket_paths(load_settings().aeat_local_storage_root, command.bucket_id))
             manifest_digest = compute_manifest_digest(manifest)
             occurred_at = now()
