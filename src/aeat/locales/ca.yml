@@ -994,6 +994,7 @@ application:
           mitjancant l'ordre `aeat config profile edit`. El TRLIRNR Art. 10 exigeix
           que els declarants IRNR no residents a la UE/EEE designin un representant
           per a comunicacions amb l'AEAT.
+      modelo_210_2025_rendimientos_integros_implica_base_imponible: 'Els rendiments íntegres són positius però la base imposable és zero; reviseu la determinació de la base imposable.'
     iva_wallet:
       correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
         Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu

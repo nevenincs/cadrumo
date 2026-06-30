@@ -14,3 +14,24 @@ predicate_id = "m210-representante-fiscal-required"
 expression = 'profile_field_required("representante_fiscal_nif", "non_resident_irnr_non_eea")'
 finding_kind = "BLOCKING_RULE"
 legal_refs = ["trlirnr-rdleg-5-2004:art-10"]
+
+# Silent-under-declaration guard per no-silent-under-declaration: the general /
+# UE-EEE branch's base_imponible (manual rendimientos_integros, optionally
+# reduced by gastos_deducibles per art 24.6) is computed from
+# rendimientos_integros via m210-base-imponible-2025
+# (src/aeat/_data/registry/aeat/modelos/210/revisions/2025/formulas/0001-m210-base-imponible-2025.toml).
+# A positive rendimientos_integros with a zero base_imponible is unexpected for
+# this branch (a registry/formula regression, not a routine operator choice),
+# so the guard is ADVISORY: the consequent IS formula-derived, but a
+# legitimately zero base across every tipo_renta branch (e.g. a full
+# art 24.6 expense offset against a small UE/EEE-resident gross amount)
+# is not fully ruled out, mirroring the M131 01->02 and M200 00500->00501
+# precedent. The inmobiliaria branch (tipo_renta == "inmobiliaria") is
+# explicitly out of scope here -- its silent-zero risk needs a categorical-
+# equality predicate operator the current DSL does not support; tracked as a
+# follow-up DSL-extension feature.
+[[revisions."2025".verification_predicates]]
+predicate_id = "modelo-210-2025-rendimientos-integros-implica-base-imponible"
+expression = 'implies_nonzero(["rendimientos_integros", "base_imponible"])'
+finding_kind = "ADVISORY"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
