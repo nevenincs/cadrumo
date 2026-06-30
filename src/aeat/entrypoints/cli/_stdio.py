@@ -3,19 +3,19 @@
 Default Windows terminals expose stdout / stderr as cp1252; emoji
 flag characters, CJK ideographs, the U+2192 right arrow used by the
 review queue table, and the § sign used by some IVA-rate citations
-all fall outside cp1252 and crash :func:`typer.echo` with
+all fall outside cp1252 and crash :func:`~typer.echo` with
 ``UnicodeEncodeError``. Spanish accented characters (``á é í ó ú``,
 ``ñ``) survive the encoding boundary but Rich's legacy-Windows
 renderer can still render them as mojibake (``?``) when the wide-
 char boundary trips.
 
-This module reconfigures :data:`sys.stdout` and :data:`sys.stderr`
+This module reconfigures :data:`~sys.stdout` and :data:`~sys.stderr`
 to UTF-8 with ``errors="replace"`` so a non-encodable character
 degrades to ``?`` rather than crashing the operator's command. It
-is invoked at the top of :mod:`aeat.entrypoints.cli` before any
+is invoked at the top of :mod:`~aeat.entrypoints.cli` before any
 import that might emit through the central error / output drivers.
 
-Streams that do not support :meth:`io.TextIOWrapper.reconfigure`
+Streams that do not support :meth:`~io.TextIOWrapper.reconfigure`
 (captured streams, custom adapters, certain pipe wrappers) are
 skipped silently — the alternative is crashing the CLI startup,
 which is strictly worse than leaving the stream as-is.
@@ -74,7 +74,8 @@ def _ensure_help_render_width() -> Iterator[None]:
     the ``COLUMNS`` environment variable, falling back to the terminal
     size. When output is piped the fallback is 80 columns, which
     ellipsises long option names in the wizard help tables. This sets
-    ``COLUMNS`` to :data:`_MIN_HELP_RENDER_COLUMNS` only when a help
+    ``COLUMNS`` to
+    :data:`~aeat.entrypoints.cli._stdio._MIN_HELP_RENDER_COLUMNS` only when a help
     surface is being rendered and the resolved width is below the
     floor, so ordinary command output and genuinely wide terminals
     keep their real width.
@@ -85,7 +86,7 @@ def _ensure_help_render_width() -> Iterator[None]:
 
     Tests that exercise the decision branches scope ``sys.argv`` and
     ``os.environ[COLUMNS]`` via the centralized backend helpers in
-    :mod:`aeat.tests.env_scope` (``scoped_sys_argv`` /
+    :mod:`~aeat.tests.env_scope` (``scoped_sys_argv`` /
     ``scoped_env_var``) rather than rebinding process state directly.
     Rich reads the env var from the live environment at render time,
     so a DI-seam that bypassed the os.environ write would misrepresent
@@ -127,8 +128,9 @@ def _set_windows_console_utf8() -> None:
 
     On Windows, the default console code page is cp850 or cp1252
     depending on locale.  When the CLI reconfigures its Python streams
-    to UTF-8 via :func:`_reconfigure_stream` the bytes emitted are
-    valid UTF-8, but the console *renders* them as the active code
+    to UTF-8 via
+    :func:`~aeat.entrypoints.cli._stdio._reconfigure_stream` the bytes emitted
+    are valid UTF-8, but the console *renders* them as the active code
     page, producing mojibake for Spanish accented characters
     (``ó`` → ``Ã³`` on cp1252).
 
