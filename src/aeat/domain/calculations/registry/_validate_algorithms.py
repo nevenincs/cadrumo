@@ -9,8 +9,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ._ids import CasillaId
-from ._schema import LegalReference, ModeloRevision, SourceReference
+from ._schema import AlgorithmProviderDefinition, LegalReference, ModeloRevision, SourceReference
 from ._validate_helpers import _missing_refs
+
+
+def _format_schema_keys(values: set[str]) -> str:
+    return ", ".join(repr(value) for value in sorted(values))
 
 
 def validate_algorithm_provider_section(
@@ -32,7 +36,7 @@ def validate_algorithm_binding_section(
     *,
     prefix: str,
     revision: ModeloRevision,
-    providers: set[str],
+    provider_by_id: Mapping[str, AlgorithmProviderDefinition],
     casillas: set[CasillaId],
     resolvable_values: set[str],
     parameters: set[str],
@@ -43,8 +47,37 @@ def validate_algorithm_binding_section(
         owner = f"algorithm binding {alg_binding.id}"
         failures.extend(_missing_refs(prefix, owner, alg_binding.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, alg_binding.source_refs, source_refs, "source"))
-        if alg_binding.provider not in providers:
+        provider = provider_by_id.get(alg_binding.provider)
+        if provider is None:
             failures.append(f"{prefix}: {owner} references unknown provider {alg_binding.provider!r}")
+        else:
+            declared_inputs = set(provider.allowed_input_schema)
+            bound_inputs = set(alg_binding.inputs)
+            missing_inputs = declared_inputs - bound_inputs
+            unknown_inputs = bound_inputs - declared_inputs
+            if missing_inputs:
+                failures.append(
+                    f"{prefix}: {owner} omits provider input(s) {_format_schema_keys(missing_inputs)}",
+                )
+            if unknown_inputs:
+                failures.append(
+                    f"{prefix}: {owner} maps input(s) {_format_schema_keys(unknown_inputs)} "
+                    f"not declared by provider {alg_binding.provider!r}",
+                )
+
+            declared_outputs = set(provider.output_schema)
+            bound_outputs = set(alg_binding.output_casilla_ids)
+            missing_outputs = declared_outputs - bound_outputs
+            unknown_outputs = bound_outputs - declared_outputs
+            if missing_outputs:
+                failures.append(
+                    f"{prefix}: {owner} omits provider output(s) {_format_schema_keys(missing_outputs)}",
+                )
+            if unknown_outputs:
+                failures.append(
+                    f"{prefix}: {owner} maps output(s) {_format_schema_keys(unknown_outputs)} "
+                    f"not declared by provider {alg_binding.provider!r}",
+                )
         if alg_binding.target_casilla_id not in casillas:
             failures.append(f"{prefix}: {owner} targets unknown casilla {alg_binding.target_casilla_id!r}")
         for input_name, input_value in alg_binding.inputs.items():

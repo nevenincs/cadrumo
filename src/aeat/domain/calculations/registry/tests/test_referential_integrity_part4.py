@@ -186,7 +186,7 @@ def test_snapshot_integrity_checks_construct_algorithm_binding_ref() -> None:
         provider="provider.test",
         target_casilla_id=_NUMERIC_CASILLA_01,
         inputs={},
-        output_casilla_ids={},
+        output_casilla_ids={"result": _NUMERIC_CASILLA_01},
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),
     )
@@ -210,6 +210,74 @@ def test_snapshot_integrity_checks_construct_algorithm_binding_ref() -> None:
 
     with pytest.raises(RegistryValidationError, match=r"construct ct\.algorithm-binding\.algorithm_bindings"):
         check_all_id_references(snapshot)
+
+
+def test_modelo_validation_checks_algorithm_binding_provider_inputs() -> None:
+    """Algorithm binding input names must match the referenced provider schema."""
+
+    provider = AlgorithmProviderDefinition(
+        id="provider.test",
+        import_path="aeat.tests.provider",
+        callable_name="run",
+        deterministic=True,
+        side_effect_free=True,
+        allowed_input_schema={"value": "decimal"},
+        output_schema={"result": "decimal"},
+        trace_contract="test trace",
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(REFERENCE_SOURCE_ID,),
+    )
+    binding = AlgorithmBindingDefinition(
+        id="algorithm-binding.test",
+        provider="provider.test",
+        target_casilla_id=_NUMERIC_CASILLA_01,
+        inputs={"unexpected": _NUMERIC_CASILLA_01},
+        output_casilla_ids={"result": _NUMERIC_CASILLA_01},
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(REFERENCE_SOURCE_ID,),
+    )
+    revision = minimal_revision().model_copy(
+        update={"algorithm_providers": (provider,), "algorithm_bindings": (binding,)},
+    )
+
+    failures = _modelo_validation_failures(minimal_modelo(revision))
+
+    assert any("omits provider input(s) 'value'" in failure for failure in failures)
+    assert any("maps input(s) 'unexpected' not declared by provider 'provider.test'" in failure for failure in failures)
+
+
+def test_modelo_validation_checks_algorithm_binding_provider_outputs() -> None:
+    """Algorithm binding output names must match the referenced provider schema."""
+
+    provider = AlgorithmProviderDefinition(
+        id="provider.test",
+        import_path="aeat.tests.provider",
+        callable_name="run",
+        deterministic=True,
+        side_effect_free=True,
+        allowed_input_schema={"value": "decimal"},
+        output_schema={"result": "decimal"},
+        trace_contract="test trace",
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(REFERENCE_SOURCE_ID,),
+    )
+    binding = AlgorithmBindingDefinition(
+        id="algorithm-binding.test",
+        provider="provider.test",
+        target_casilla_id=_NUMERIC_CASILLA_01,
+        inputs={"value": _NUMERIC_CASILLA_01},
+        output_casilla_ids={"other": _NUMERIC_CASILLA_01},
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(REFERENCE_SOURCE_ID,),
+    )
+    revision = minimal_revision().model_copy(
+        update={"algorithm_providers": (provider,), "algorithm_bindings": (binding,)},
+    )
+
+    failures = _modelo_validation_failures(minimal_modelo(revision))
+
+    assert any("omits provider output(s) 'result'" in failure for failure in failures)
+    assert any("maps output(s) 'other' not declared by provider 'provider.test'" in failure for failure in failures)
 
 
 def test_snapshot_integrity_checks_construct_filing_schedule_ref() -> None:
