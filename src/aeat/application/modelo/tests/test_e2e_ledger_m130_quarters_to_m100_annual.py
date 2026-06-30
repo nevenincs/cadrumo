@@ -91,7 +91,7 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-e2e-ledger-130-100"
+_BUCKET_ID = "13010000-0000-4000-8000-000000000100"
 _YEAR = 2024
 _T0 = datetime(2024, 1, 10, 10, 0, tzinfo=UTC)
 _FILE_AT = datetime(2024, 4, 6, 12, 0, tzinfo=UTC)
