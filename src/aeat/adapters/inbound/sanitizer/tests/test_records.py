@@ -235,19 +235,18 @@ class TestImporteReplacement:
         assert replacement.synthetic == "-1.000,00"
         assert replacement.synthetic.startswith("-")
 
-    def test_rejects_dot_decimal(self) -> None:
-        with pytest.raises(ValidationError, match=r"synthetic IMPORTE must contain a decimal comma"):
+    @pytest.mark.parametrize(
+        ("synthetic", "expected_message"),
+        (
+            pytest.param("1000.00", r"synthetic IMPORTE must contain a decimal comma", id="dot-decimal"),
+            pytest.param("1.000,5", r"synthetic IMPORTE must end with two decimal digits", id="one-decimal-digit"),
+        ),
+    )
+    def test_rejects_invalid_importe_shape(self, synthetic: str, expected_message: str) -> None:
+        with pytest.raises(ValidationError, match=expected_message):
             ImporteReplacement(
                 real=SecretStr("9.876,54"),
-                synthetic="1000.00",
-                surface_label="importe",
-            )
-
-    def test_rejects_one_decimal_digit(self) -> None:
-        with pytest.raises(ValidationError, match=r"synthetic IMPORTE must end with two decimal digits"):
-            ImporteReplacement(
-                real=SecretStr("9.876,54"),
-                synthetic="1.000,5",
+                synthetic=synthetic,
                 surface_label="importe",
             )
 
