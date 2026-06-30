@@ -345,7 +345,15 @@ def filing_record_observe_local(
         ),
     ] = None,
 ) -> None:
-    """Persist local, non-official prior filing observations for calculations."""
+    """Record non-official local observations for later calculation prefill.
+
+    The command parses canonical ``CasillaId`` decimal values, delegates to
+    :func:`aeat.application.modelo.record_operator_local_observation`, and emits
+    :class:`FilingRecordLocalObservationResult` plus an advisory
+    :class:`aeat.core.json_contract.Notice`. It deliberately creates no
+    :class:`aeat.domain.modelos.ModeloRecord` and supplies no official AEAT
+    evidence for filing-grade clean-state checks.
+    """
     modelo_code = _modelo_code(modelo)
     filing_period = _filing_period(year, period)
     casilla_values: dict[CasillaId, Decimal] = {}
