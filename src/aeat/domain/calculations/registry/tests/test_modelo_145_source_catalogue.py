@@ -10,8 +10,8 @@ import pytest
 from .....core.resources import bundled_path
 from .._corpus_catalogue import verify_source_file
 from .._legal import verify_legal_catalogue
-from .._loader import load_registry_tree
 from .._record_design import extract_record_design_pdf
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -33,8 +33,13 @@ _SOURCE_IDS = {
 }
 
 
+def _catalogues():
+    _, catalogues = _committed_registry_tree()
+    return catalogues
+
+
 def test_modelo_145_legal_authority_is_reviewed_and_corpus_backed() -> None:
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = _catalogues()
     legal = {legal_id: catalogues.legal[legal_id] for legal_id in _LEGAL_IDS}
 
     verify_legal_catalogue(legal, source_root=bundled_path())
@@ -56,7 +61,7 @@ def test_modelo_145_legal_authority_is_reviewed_and_corpus_backed() -> None:
 
 
 def test_modelo_145_source_authority_files_match_catalogue_fingerprints() -> None:
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = _catalogues()
     sources = {source_id: catalogues.sources[source_id] for source_id in _SOURCE_IDS}
 
     for source in sources.values():
@@ -69,7 +74,7 @@ def test_modelo_145_source_authority_files_match_catalogue_fingerprints() -> Non
 
 
 def test_modelo_145_form_cites_rd_439_art_88_regulatory_anchor() -> None:
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = _catalogues()
     form_source = catalogues.sources["aeat-modelo-145-form"]
     form_extract = bundled_path() / f"{form_source.corpus_path}.extracted.json"
     payload = json.loads(form_extract.read_text(encoding="utf-8"))
@@ -81,7 +86,7 @@ def test_modelo_145_form_cites_rd_439_art_88_regulatory_anchor() -> None:
 
 
 def test_modelo_145_aeat_sources_pin_non_filing_scope() -> None:
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = _catalogues()
     procedure = bundled_path() / catalogues.sources["aeat-modelo-145-procedure"].corpus_path
     obligations = bundled_path() / catalogues.sources["aeat-modelo-145-obligaciones-retenedor"].corpus_path
 
@@ -96,7 +101,7 @@ def test_modelo_145_aeat_sources_pin_non_filing_scope() -> None:
 
 
 def test_modelo_145_record_design_source_matches_manifest() -> None:
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = _catalogues()
     source = catalogues.sources["aeat-dr-145-v20"]
     manifest_path = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_145", "manifest.json")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -113,7 +118,7 @@ def test_modelo_145_record_design_source_matches_manifest() -> None:
 
 
 def test_modelo_145_record_design_extracts_official_model_marker() -> None:
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = _catalogues()
     source = catalogues.sources["aeat-dr-145-v20"]
     sheets = extract_record_design_pdf(bundled_path() / source.corpus_path)
 
