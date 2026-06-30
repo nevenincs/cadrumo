@@ -292,12 +292,13 @@ _ANEXO_B_OTROS_GASTOS_LABELS = {
 _ANEXO_B_AAV_SECTION = "an_b_inf_adc_aav"
 _ANEXO_B_AAV_IMPORTE_SATISFECHO_ROLE = "irpf_anexo_b_aav_importe_satisfecho"
 _LEGACY_ANEXO_B_AAV_AMOUNT_CURRENT_ROLE = "irpf_anexo_b_aav_amount_current"
-_ANEXO_B_AAV_AMOUNT_APPLIED_ROLE = "irpf_anexo_b_aav_amount_applied"
+_ANEXO_B_AAV_IMPORTE_APLICADO_ROLE = "irpf_anexo_b_aav_importe_aplicado"
+_LEGACY_ANEXO_B_AAV_AMOUNT_APPLIED_ROLE = "irpf_anexo_b_aav_amount_applied"
 _ANEXO_B_AAV_IMPORTE_PENDIENTE_ROLE = "irpf_anexo_b_aav_importe_pendiente"
 _LEGACY_ANEXO_B_AAV_AMOUNT_PENDING_ROLE = "irpf_anexo_b_aav_amount_pending"
 _ANEXO_B_AAV_AMOUNT_ROWS = {
     "2202": ("Importe total satisfecho en 2025", _ANEXO_B_AAV_IMPORTE_SATISFECHO_ROLE),
-    "2203": ("Importe satisfecho que se aplica en el ejercicio", _ANEXO_B_AAV_AMOUNT_APPLIED_ROLE),
+    "2203": ("Importe satisfecho que se aplica en el ejercicio", _ANEXO_B_AAV_IMPORTE_APLICADO_ROLE),
     "2204": (
         "Importe satisfecho en 2025 pendiente de aplicación en ejercicios futuros",
         _ANEXO_B_AAV_IMPORTE_PENDIENTE_ROLE,
