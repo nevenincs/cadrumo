@@ -111,6 +111,14 @@ def _assert_decimal_casilla(
     )
 
 
+def _assert_all_extracted_values_decimal(extracted: Mapping[CasillaId, object], *, label: str) -> None:
+    for casilla_id, value in extracted.items():
+        assert isinstance(value, Decimal), (
+            f"PARSER-GAP [{label}]: casilla {casilla_id!r} not Decimal: "
+            f"{type(value).__name__!r} = {value!r}"
+        )
+
+
 def _registry_modelo_observations_from_values(
     *,
     modelo: str,

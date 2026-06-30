@@ -6,7 +6,7 @@ import pytest
 
 from ._verification_chain_support import (
     CasillaId,
-    Decimal,
+    _assert_all_extracted_values_decimal,
     _casilla_ids,
     _parse_extracted_declaracion_values,
 )
@@ -40,7 +40,4 @@ def test_verification_chain_annual_summary_parser_extracts_declaracion_pdf_casil
     assert set(extracted.keys()) == _DECL_SUMMARY_CASILLAS, (
         f"PARSER-GAP [{case_label}]: unexpected casilla set.\n  got: {sorted(extracted)}"
     )
-    for casilla_id, value in extracted.items():
-        assert isinstance(value, Decimal), (
-            f"PARSER-GAP [{case_label}]: casilla {casilla_id!r} not Decimal: {type(value).__name__!r}"
-        )
+    _assert_all_extracted_values_decimal(extracted, label=case_label)
