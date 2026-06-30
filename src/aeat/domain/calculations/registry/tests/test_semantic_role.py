@@ -249,6 +249,24 @@ class TestTypoTwinWarning:
                 "2029",
                 "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_anio",
             ),
+            (
+                "100",
+                "2025",
+                "2027",
+                "irpf_deduccion_madrid_vivienda_municipio_riesgo",
+            ),
+            (
+                "100",
+                "2025",
+                "2028",
+                "irpf_deduccion_madrid_vivienda_municipio_riesgo_precio",
+            ),
+            (
+                "100",
+                "2025",
+                "2029",
+                "irpf_deduccion_madrid_vivienda_municipio_riesgo_anio",
+            ),
             ("184", "2015-y-siguientes", "tipo2.clave", "tipo_renta_atribuida_clave"),
             ("184", "2015-y-siguientes", "tipo2.subclave", "tipo_renta_atribuida_subclave"),
             ("190", "2024-y-siguientes", "decl.total-percepciones", "total_percepciones_count"),
@@ -410,6 +428,9 @@ class TestTypoTwinWarning:
         reviewed_roles = {
             "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_precio",
             "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_anio",
+            "irpf_deduccion_madrid_vivienda_municipio_riesgo",
+            "irpf_deduccion_madrid_vivienda_municipio_riesgo_precio",
+            "irpf_deduccion_madrid_vivienda_municipio_riesgo_anio",
             "tipo_renta_atribuida_clave",
             "tipo_renta_atribuida_subclave",
             "total_percepciones_count",
@@ -693,15 +714,21 @@ class TestTypoTwinWarning:
             _emit_semantic_role_typo_twin_warnings([m])
         assert captured == []
 
-    def test_optional_field_scope_axis_roles_do_not_warn_as_typos(self) -> None:
-        parent = _casilla(cid="a", semantic_role="irpf_deduccion_madrid_vivienda_municipio_riesgo")
-        year = _casilla(cid="b", semantic_role="irpf_deduccion_madrid_vivienda_municipio_riesgo_anio")
-        price = _casilla(cid="c", semantic_role="irpf_deduccion_madrid_vivienda_municipio_riesgo_precio")
-        m = _registry_modelo("100", "2025", [parent, year, price])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
+    def test_field_detail_tokens_are_not_optional_axis_tokens(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "irpf_deduccion_madrid_vivienda_municipio_riesgo_anio",
+                "irpf_deduccion_madrid_vivienda_municipio_riesgo",
+            )
+            is False
+        )
+        assert (
+            semantic_roles_are_axis_siblings(
+                "irpf_deduccion_madrid_vivienda_municipio_riesgo_precio",
+                "irpf_deduccion_madrid_vivienda_municipio_riesgo",
+            )
+            is False
+        )
 
 
 class TestSemanticRoleTypoTwinHelpers:
