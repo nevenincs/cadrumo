@@ -1,7 +1,7 @@
 """Domain-layer package root for business vocabulary and authorities.
 
 The root package is intentionally thin: it re-exports only
-``ModeloIdentifier`` and does not aggregate every domain authority.
+:class:`ModeloIdentifier` and does not aggregate every domain authority.
 Callers import focused package facades such as :mod:`aeat.domain.modelos`,
 :mod:`aeat.domain.filing`, :mod:`aeat.domain.user_profile`,
 :mod:`aeat.domain.transactions`, and
@@ -14,6 +14,10 @@ deadlines, profile schema records, bucket events, and legal/manual reference
 records. Application services compose these authorities with storage, CLI, and
 adapter concerns; the domain root should stay import-light so importing
 ``aeat.domain`` never pulls registry, storage, browser, or workflow subtrees.
+
+The domain root is also not the shared error hierarchy. Package-specific
+``_errors`` modules own domain failure taxonomies, while the root validation
+base remains in :mod:`aeat.domain._errors` for lightweight identifier parsing.
 
 See Also:
     - :mod:`aeat.domain.modelos` for modelo work units, calculation revisions,
