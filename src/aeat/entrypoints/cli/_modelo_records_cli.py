@@ -443,7 +443,15 @@ def verification_report_list(
         ),
     ] = None,
 ) -> None:
-    """List verification reports, optionally filtered to one revision."""
+    """List persisted verification reports, optionally scoped to one revision.
+
+    Each row is an :class:`aeat.domain.modelos.VerificationReport` projected
+    through
+    :class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportListResult`
+    and nested
+    :class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportPayload`,
+    preserving the same findings surface as ``aeat app modelo work verify``.
+    """
     reports = list_verification_reports(calculation_revision_id=calculation_revision_id)
     result = VerificationReportListResult(
         calculation_revision_id_filter=calculation_revision_id,
@@ -480,7 +488,16 @@ def verification_report_show(
         typer.Argument(help=tr("cli.app.modelo.verification_report.verification_report_id_help")),
     ],
 ) -> None:
-    """View one verification report by id."""
+    """View one persisted verification report by id.
+
+    The command validates the shared
+    :class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportPayload`
+    into
+    :class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportShowResult`,
+    so saved report views retain the legal/source-reference
+    :class:`~aeat.entrypoints.cli._modelo_payloads.FindingPayload` detail emitted
+    by ``aeat app modelo work verify``.
+    """
     try:
         report = get_verification_report(verification_report_id)
     except VerificationReportNotFoundError as exc:

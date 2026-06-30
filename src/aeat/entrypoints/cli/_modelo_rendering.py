@@ -540,6 +540,13 @@ def verification_report_notices(report) -> list[Notice]:
 
 
 def verification_report_payload(report) -> VerificationReportPayload:
+    """Project a domain report into the shared verification JSON payload.
+
+    Both ``aeat app modelo work verify`` and ``verification-report view/list``
+    use this function so persisted :class:`aeat.domain.modelos.VerificationReport`
+    rows expose identical :class:`VerificationReportPayload` fields, including
+    nested :class:`FindingPayload` legal and source references.
+    """
     return VerificationReportPayload(
         verification_report_id=report.verification_report_id,
         calculation_revision_id=report.calculation_revision_id,
@@ -566,6 +573,13 @@ def verification_report_payload(report) -> VerificationReportPayload:
 
 
 def verification_report_lines(report) -> list[str]:
+    """Render the text transport for a verification report.
+
+    The line shape complements :func:`verification_report_payload`: text output
+    keeps the report ids, completeness verdict, missing casillas, and each
+    finding's legal/source references visible without inventing fields outside
+    the persisted :class:`aeat.domain.modelos.VerificationReport`.
+    """
     lines = [
         f"verification_report_id\t{report.verification_report_id}",
         f"calculation_revision_id\t{report.calculation_revision_id}",
