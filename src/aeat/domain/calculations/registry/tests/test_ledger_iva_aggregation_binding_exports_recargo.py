@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from functools import cache
 
 import pytest
 from pydantic import ValidationError
@@ -36,6 +37,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def _m303_revision(revision_id: str):
     modelo, _catalogues = _committed_modelo("303")
     return modelo.revisions[revision_id]
+
+
+@cache
+def _m303_2022_2t_snapshot():
+    return resources().modelos.authority.snapshot("303", filing_year=2022, period="2T")
 
 
 def test_box_59_carries_substantive_intra_community_supply_grounding() -> None:
@@ -148,7 +154,7 @@ def test_modelo_303_2009_revision_domestic_base_aggregates_from_ledger() -> None
     unbound manual state (0). Expected values are the seeded observation base sums
     (ground truth from inputs, not a re-run of the registry formula).
     """
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=2022, period="2T")
+    snapshot = _m303_2022_2t_snapshot()
     assert snapshot.revision.id == "2009-y-siguientes"  # filing_year 2022 resolves to the older revision
     observations = (
         _observation(
@@ -251,7 +257,7 @@ def test_modelo_303_2009_revision_recargo_and_intracom_export_aggregate_from_led
     the 2023 revision. filing_year=2022 resolves to the 2009 revision; expected values
     derive from the seeded amounts, not a formula re-run.
     """
-    revision = resources().modelos.authority.snapshot("303", filing_year=2022, period="2T").revision
+    revision = _m303_2022_2t_snapshot().revision
     assert revision.id == "2009-y-siguientes"
     rec_general = _observation(
         category=IvaCategory.DOMESTIC_GENERAL_21,
