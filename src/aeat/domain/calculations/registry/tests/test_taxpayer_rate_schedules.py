@@ -5,17 +5,15 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import bundled_path
-from .. import build_snapshot, load_registry_tree
+from .. import build_snapshot
 from .._binding_selector_utils import selector_as_dict
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
-
 
 def _modelo_revision(modelo_id: str, revision_id: str):
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(modelo for modelo in modelos if modelo.id == modelo_id)
+    modelo, catalogues = _committed_modelo(modelo_id)
     return build_snapshot(
         modelo,
         catalogues,
