@@ -109,7 +109,7 @@ def _secure_backend(tmp_path: Path) -> Iterator[None]:
 def _store_operator_profile() -> None:
     UserProfileLifecycleRepository(bucket_id="operator").save(
         UserProfileRecord(
-            profile_id="operator",
+            profile_id="11111111-1111-4111-8111-111111111111",
             display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_TAX_ID),

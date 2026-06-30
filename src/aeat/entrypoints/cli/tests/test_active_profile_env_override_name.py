@@ -103,11 +103,11 @@ def test_env_override_by_display_label_resolves_the_profile_bucket() -> None:
 
 
 def test_env_override_by_uuid_is_unchanged() -> None:
-    """``AEAT_ACTIVE_PROFILE=<uuid>`` resolves byte-identically (backward-compatible).
+    """``AEAT_ACTIVE_PROFILE=<uuid>`` resolves through the direct bucket-id route.
 
-    The UUID fast path must be untouched: the normalization only fires when the
+    The UUID fast path is current behavior: normalization only fires when the
     direct UUID-bucket lookup misses, so a UUID-valued override never reaches the
-    label fallback.
+    operator-label fallback.
     """
     uuid = _create_profile_and_resolve_uuid()
 

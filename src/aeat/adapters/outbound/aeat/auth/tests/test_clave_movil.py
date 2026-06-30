@@ -156,11 +156,11 @@ class TestIdentityClassification:
 
 class TestAttemptDiagnostics:
     def test_attempt_context_uses_real_profile_storage_and_redacts_identity_values(self) -> None:
-        with profile_create_storage_span("diagnostic-profile"):
+        with profile_create_storage_span("25252525-2525-4252-8252-252525252525"):
             workflow_state_repository().update(
                 lambda state: register_minimal_profile(
                     state,
-                    profile_id="diagnostic-profile",
+                    profile_id="25252525-2525-4252-8252-252525252525",
                     overrides={"identity.tax_id": "X1234567L"},
                     secure_objects=secure_object_repository_for_active_bucket(),
                     enforce_unique_tax_id=False,

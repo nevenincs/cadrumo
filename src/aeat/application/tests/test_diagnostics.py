@@ -389,11 +389,11 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
 
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("operator"),
+        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
     ):
         base = register_minimal_profile(
             WorkflowState(),
-            profile_id="operator",
+            profile_id="11111111-1111-4111-8111-111111111111",
             overrides={
                 "identity.tax_id": "00000000T",
                 "activities.description": "design",

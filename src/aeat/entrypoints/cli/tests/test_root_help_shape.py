@@ -278,8 +278,10 @@ class TestBareInvocationWithActiveProfile:
 
     def test_bare_invocation_reports_profile_state_without_cli_only_storage(self) -> None:
         missing = _invoke([])
-        with profile_create_storage_span("operator"):
-            workflow_state_repository().update(lambda current: register_minimal_profile(current, profile_id="operator"))
+        with profile_create_storage_span("11111111-1111-4111-8111-111111111111"):
+            workflow_state_repository().update(
+                lambda current: register_minimal_profile(current, profile_id="11111111-1111-4111-8111-111111111111")
+            )
         active = _invoke([])
         overview = _invoke(["app", "overview", "status"])
 
@@ -308,8 +310,10 @@ class TestBareInvocationWithActiveProfile:
         assert help_payload["surface"] == "root"
         assert help_payload["heading"]  # locale-driven; presence is the structural assertion
 
-        with profile_create_storage_span("operator"):
-            workflow_state_repository().update(lambda current: register_minimal_profile(current, profile_id="operator"))
+        with profile_create_storage_span("11111111-1111-4111-8111-111111111111"):
+            workflow_state_repository().update(
+                lambda current: register_minimal_profile(current, profile_id="11111111-1111-4111-8111-111111111111")
+            )
         active = _invoke(["--format", "json"])
 
         assert active.exit_code == 0, active.output

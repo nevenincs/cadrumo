@@ -74,7 +74,7 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
         objects = profile.repository
         UserProfileLifecycleRepository(bucket_id="default", objects=objects).save(
             UserProfileRecord(
-                profile_id="default",
+                profile_id="00000000-0000-4000-8000-000000000000",
                 display_name="Diego Operator",
                 facts=_READY_PROFILE_FACTS,
                 created_at=_CLOCK,
@@ -191,7 +191,7 @@ def test_casilla_15_binding_is_capped_at_c14(repos: _Repos) -> None:
     )
 
     assert revision.casilla_values[_M130_DIFERENCIA_PREVIA_CASILLA] > Decimal("0")
-    assert revision.casilla_values[_M130_CARRY_FORWARD_CASILLA] == revision.casilla_values[
-        _M130_DIFERENCIA_PREVIA_CASILLA
-    ]
+    assert (
+        revision.casilla_values[_M130_CARRY_FORWARD_CASILLA] == revision.casilla_values[_M130_DIFERENCIA_PREVIA_CASILLA]
+    )
     assert revision.casilla_values[_M130_DIFFERENCE_CASILLA] == Decimal("0.00")

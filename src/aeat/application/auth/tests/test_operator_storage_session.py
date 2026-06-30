@@ -32,8 +32,10 @@ def test_clear_operator_auth_reopens_profile_storage_session_when_pointer_is_act
     with isolated_profile_storage_root(tmp_path=tmp_path):
         assert WIZARD_FLOWS
         assert required_profile_keys()
-        with profile_create_storage_span("operator"):
-            workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+        with profile_create_storage_span("11111111-1111-4111-8111-111111111111"):
+            workflow_state_repository().update(
+                lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
+            )
             configure_operator_auth("certificate")
 
         assert has_active_bucket_session() is False

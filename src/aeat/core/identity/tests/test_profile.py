@@ -21,12 +21,20 @@ def test_accepts_canonical_uuid_minted_value() -> None:
     assert _Holder(profile_id=minted).profile_id == minted
 
 
-def test_accepts_legacy_short_label() -> None:
-    assert _Holder(profile_id="operator").profile_id == "operator"
+def test_rejects_operator_label() -> None:
+    with pytest.raises(ValidationError):
+        _Holder(profile_id="operator")
 
 
-def test_strips_surrounding_whitespace() -> None:
-    assert _Holder(profile_id="  op-1  ").profile_id == "op-1"
+def test_rejects_uppercase_uuid() -> None:
+    minted = str(uuid4()).upper()
+    with pytest.raises(ValidationError):
+        _Holder(profile_id=minted)
+
+
+def test_strips_surrounding_whitespace_before_uuid_validation() -> None:
+    minted = str(uuid4())
+    assert _Holder(profile_id=f"  {minted}  ").profile_id == minted
 
 
 def test_rejects_empty_value() -> None:
@@ -36,7 +44,7 @@ def test_rejects_empty_value() -> None:
 
 def test_rejects_value_over_max_length() -> None:
     with pytest.raises(ValidationError):
-        _Holder(profile_id="x" * 97)
+        _Holder(profile_id=f"{uuid4()}-extra")
 
 
 def test_rejects_value_with_disallowed_characters() -> None:

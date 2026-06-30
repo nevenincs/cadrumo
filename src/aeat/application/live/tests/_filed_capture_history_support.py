@@ -87,12 +87,12 @@ def _secure_backend(tmp_path: Path):
 def _profile_backend(tmp_path: Path, *, tax_id: str):
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("operator"),
+        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
     ):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
                 state,
-                profile_id="operator",
+                profile_id="11111111-1111-4111-8111-111111111111",
                 overrides={"identity.tax_id": tax_id},
             ),
         )

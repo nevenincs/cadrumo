@@ -178,7 +178,7 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
     clock = datetime(2026, 1, 1, tzinfo=UTC)
     UserProfileLifecycleRepository(bucket_id="bucket-001").save(
         UserProfileRecord(
-            profile_id="bucket-001",
+            profile_id="24242424-2424-4242-8242-242424242424",
             display_name="Vision opted out",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),

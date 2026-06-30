@@ -254,7 +254,7 @@ def _repos(tmp_path: Path) -> Iterator[_Repos]:
         objects = profile.repository
         UserProfileLifecycleRepository(bucket_id="default", objects=objects).save(
             UserProfileRecord(
-                profile_id="default",
+                profile_id="00000000-0000-4000-8000-000000000000",
                 display_name="File-flow ready profile",
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,

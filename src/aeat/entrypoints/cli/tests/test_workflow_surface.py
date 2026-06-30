@@ -146,11 +146,11 @@ def _seed_profile(
     }
     if extra_values:
         values.update(extra_values)
-    with profile_create_storage_span("default"):
+    with profile_create_storage_span("00000000-0000-4000-8000-000000000000"):
         repo.update(
             lambda state: register_minimal_profile(
                 state,
-                profile_id="default",
+                profile_id="00000000-0000-4000-8000-000000000000",
                 display_name=name,
                 overrides=values,
             ),
