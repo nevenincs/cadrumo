@@ -60,6 +60,30 @@ def _seed_bucket_event(bucket_id: str) -> str:
     return event_id
 
 
+def _seed_justificante() -> str:
+    from decimal import Decimal
+
+    from ....core import Period
+    from ....domain.justificante import Justificante, JustificanteRepository
+
+    csv = "ABCD1234EFGH5678"
+    justificante = Justificante(
+        csv=csv,
+        modelo="130",
+        ejercicio="2025",
+        period=Period.from_year_and_code(2025, "4T"),
+        presented_at=_INSTANT,
+        tax_id="12345678Z",
+        total_a_ingresar=Decimal("100.00"),
+        verification_url="https://sede.agenciatributaria.gob.es/verifica",
+        source_pdf_path=Path("db://blobs") / ("a" * 64),
+        source_pdf_sha256="a" * 64,
+        parsed_at=_INSTANT,
+    )
+    JustificanteRepository().save(justificante)
+    return csv
+
+
 def test_full_custody_carry_restores_evidence_bytes_and_audit_trail(tmp_path: Path) -> None:
     from ....adapters.persistence.storage._namespace_registry import StorageCustodyProfile
 
@@ -67,15 +91,19 @@ def test_full_custody_carry_restores_evidence_bytes_and_audit_trail(tmp_path: Pa
         source_bucket = runtime.primary.bucket_id
         target_bucket = runtime.secondary.bucket_id
 
-        # Seed previously-dropped stores in the source bucket.
+        # Seed previously-dropped stores in the source bucket: an attachment blob
+        # (byte store), an audit event (catalogue), and a justificante metadata
+        # record (SecureBoundRepository bound-resolver path).
         sha = AttachmentStore().put_bytes(_EVIDENCE_BYTES)
         event_id = _seed_bucket_event(source_bucket)
+        justificante_csv = _seed_justificante()
 
         carried = serialize_carried_objects(bucket_id=source_bucket, profile=StorageCustodyProfile.FULL)
 
         carried_namespaces = {obj.namespace for obj in carried}
         assert "aeat.domain.attachments.blobs" in carried_namespaces
         assert "aeat.domain.buckets.event_history" in carried_namespaces
+        assert "aeat.domain.justificante.metadata" in carried_namespaces
 
         with runtime.switch_to_secondary():
             # The recipient bucket starts without the evidence or the audit event.
@@ -91,3 +119,8 @@ def test_full_custody_carry_restores_evidence_bytes_and_audit_trail(tmp_path: Pa
             restored = BucketEventHistoryRepository().load()
             assert event_id in restored.events
             assert restored.events[event_id].payload["display_name"] == "Audited"
+
+            # The bound-resolver store survives and re-keys under the recipient DEK.
+            from ....domain.justificante import JustificanteRepository
+
+            assert JustificanteRepository().load(justificante_csv) is not None
