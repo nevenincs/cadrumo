@@ -1984,18 +1984,10 @@ cli:
         runs_help: List persisted workflow runs with their run ids, newest first.
           Use a run id with `aeat app modelo work resume`. Local-only; never contacts
           AEAT.
-        sal_beneficio_neto_help: Net profit for the fiscal year of the worker-owned
-          company (SAL/SLL, Law 44/2015 Art. 14). The assistant applies 10% to calculate
-          the mandatory special reserve allocation, capped by the 50% share-capital
-          threshold. Use it with --sal-reserva-dotada and --sal-capital-social.
-        sal_capital_social_help: 'Share capital of the worker-owned company (Law 44/2015
-          Art. 14). Denominator for the 50% test: the allocation is zero once accumulated
-          reserve reaches 50% of share capital. Required with --sal-beneficio-neto
-          and --sal-reserva-dotada.'
+        sal_beneficio_neto_help: 'Net profit for the fiscal year of the worker-owned company (SAL/SLL, Law 44/2015 Art. 14). The assistant applies 10% to calculate the mandatory special reserve allocation, capped at the first euro cent above twice share capital. Use it with --sal-reserva-dotada and --sal-capital-social.'
+        sal_capital_social_help: 'Share capital of the worker-owned company (Law 44/2015 Art. 14). Basis for the strict threshold: the allocation is zero once accumulated reserve reaches the first euro cent above twice share capital. Required with --sal-beneficio-neto and --sal-reserva-dotada.'
         sal_computation_error: 'SAL computation error: %{message}'
-        sal_reserva_dotada_help: Special reserve accumulated in previous fiscal years
-          (Law 44/2015 Art. 14). Used to check whether the reserve has already reached
-          50% of share capital. Required with --sal-beneficio-neto and --sal-capital-social.
+        sal_reserva_dotada_help: 'Special reserve accumulated in previous fiscal years (Law 44/2015 Art. 14). Used to check whether the reserve has reached the first euro cent above twice share capital. Required with --sal-beneficio-neto and --sal-capital-social.'
         sal_reserva_not_decimal: --sal-* values must be decimal amounts.
         selector_ambiguous: More than one active work unit matches this modelo/year/period.
           Choose a registry revision or pass an explicit work-unit id. {candidates}

@@ -386,7 +386,7 @@ type = "decimal"
 required = false
 sensitivity = "financial"
 effective_dated = true
-description = "Accumulated reserva especial balance already dotada in prior periods (Ley 44/2015 Art. 14). Used to test the twice-capital threshold: dotacion = 0 once reserva_dotada reaches at least 2 * capital_social."
+description = "Accumulated reserva especial balance already dotada in prior periods (Ley 44/2015 Art. 14). Used to test the strict twice-capital threshold: dotacion = 0 once reserva_dotada reaches at least 2 * capital_social + 0.01."
 model_selectors = ["taxpayer.sal_reserva_especial_dotada"]
 legal_refs = ["ley-44-2015:art-14"]
 
@@ -396,7 +396,7 @@ type = "decimal"
 required = false
 sensitivity = "financial"
 effective_dated = true
-description = "Capital social of the Sociedad Laboral. Basis for the twice-capital reserve threshold under Ley 44/2015 Art. 14. Dotacion is capped such that accumulated reserva does not exceed twice capital social."
+description = "Capital social of the Sociedad Laboral. Basis for the strict twice-capital reserve threshold under Ley 44/2015 Art. 14. Dotacion is capped once accumulated reserva reaches the first euro cent above twice capital social."
 model_selectors = ["taxpayer.sal_capital_social"]
 legal_refs = ["ley-44-2015:art-14"]
 
