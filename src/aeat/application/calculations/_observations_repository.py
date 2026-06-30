@@ -4,6 +4,13 @@ Stores :class:`~aeat.domain.calculations.registry.RegistryModeloObservation`
 records — ``(modelo, filing_year, period, casilla_values)`` — as encrypted audit
 envelopes in the
 :class:`~aeat.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
+Past-filing value rows are bound to
+:data:`aeat.adapters.persistence.storage.CALCULATION_OBSERVATIONS_NAMESPACE`;
+IVA wallet decisions are split between the latest-state
+:data:`aeat.adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE`
+and immutable
+:data:`aeat.adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE`
+namespaces.
 The records are the substrate read by
 :class:`~._multi_year.PreviousFilingSourceResolver` and
 :class:`~._relation_prefill.RelationPrefillSourceResolver` so annual modelos
@@ -278,6 +285,10 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
     It owns encrypted value history only; filing-grade source proof is assembled
     by the clean-state service from this repository plus filing, verification,
     and justificante repositories.
+
+    The repository binds each :class:`Envelope` payload to
+    :data:`aeat.adapters.persistence.storage.CALCULATION_OBSERVATIONS_NAMESPACE`
+    through :class:`SecureBoundRepository`.
     """
 
     namespace: ClassVar[str] = CALCULATION_OBSERVATIONS_NAMESPACE.namespace
@@ -376,6 +387,13 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
     the resolved gap between a taxpayer's local IVA compensation recurrence and
     the live AEAT wallet, which downstream calculation chains consult through
     :class:`~._iva_wallet_reconciliation.IvaWalletDecisionSourceResolver`.
+
+    Latest-state rows use
+    :data:`aeat.adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE`;
+    immutable audit events use
+    :data:`aeat.adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE`.
+    Both store :class:`IvaCompensationReconciliationDecision` payloads in
+    :class:`Envelope` records through :class:`SecureBoundRepository`.
     """
 
     namespace: ClassVar[str] = IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE.namespace
