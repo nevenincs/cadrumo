@@ -258,6 +258,78 @@ class TestTypoTwinWarning:
             ("202", "2025-y-siguientes", "64", "is_pf_mod_40_3_b2_base_tipo_4"),
             ("202", "2025-y-siguientes", "65", "is_pf_mod_40_3_b2_porcentaje_4"),
             ("202", "2025-y-siguientes", "67", "is_pf_mod_40_3_correcciones_impuesto_complementario"),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02631",
+                "is_correccion_libertad_amortizacion_mantenimiento_empleo_permanente_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02632",
+                "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_ejercicio_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02633",
+                "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_anteriores_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02636",
+                "is_correccion_libertad_amortizacion_mantenimiento_empleo_permanente_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02637",
+                "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_ejercicio_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02638",
+                "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_anteriores_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02641",
+                "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02642",
+                "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_ejercicio_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02643",
+                "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_anteriores_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02646",
+                "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02647",
+                "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_ejercicio_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02648",
+                "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_anteriores_disminucion",
+            ),
             ("100", "2025", "0773", "irpf_deduccion_cantabria_desplazamiento_nuevos_residentes"),
             ("100", "2025", "0776", "irpf_deduccion_cantabria_desplazamiento_nuevos_residentes_generado"),
             ("100", "2025", "1715", "irpf_deduccion_cantabria_desplazamiento_nuevos_residentes_pendiente"),
@@ -349,6 +421,18 @@ class TestTypoTwinWarning:
             "is_pf_mod_40_3_b2_base_tipo_4",
             "is_pf_mod_40_3_b2_porcentaje_4",
             "is_pf_mod_40_3_correcciones_impuesto_complementario",
+            "is_correccion_libertad_amortizacion_mantenimiento_empleo_permanente_aumento",
+            "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_ejercicio_aumento",
+            "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_anteriores_aumento",
+            "is_correccion_libertad_amortizacion_mantenimiento_empleo_permanente_disminucion",
+            "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_ejercicio_disminucion",
+            "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_anteriores_disminucion",
+            "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_aumento",
+            "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_ejercicio_aumento",
+            "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_anteriores_aumento",
+            "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_disminucion",
+            "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_ejercicio_disminucion",
+            "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_anteriores_disminucion",
             "irpf_deduccion_c_valenciana_acciones_participaciones_aplicado_ejercicio_anterior",
             "irpf_deduccion_c_valenciana_acciones_participaciones_aplicado_ejercicio",
             "irpf_deduccion_c_valenciana_danos_vivienda_dana_generado_pendiente_1",
@@ -482,20 +566,14 @@ class TestTypoTwinWarning:
             _emit_semantic_role_typo_twin_warnings([m])
         assert captured == []
 
-    def test_optional_negation_sibling_roles_do_not_warn_as_typos(self) -> None:
-        con_mantenimiento = _casilla(
-            cid="a",
-            semantic_role="is_correccion_libertad_amortizacion_mantenimiento_empleo_permanente_aumento",
+    def test_sin_maintenance_marker_is_not_optional_axis_token(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_aumento",
+                "is_correccion_libertad_amortizacion_mantenimiento_empleo_permanente_aumento",
+            )
+            is False
         )
-        sin_mantenimiento = _casilla(
-            cid="b",
-            semantic_role="is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_aumento",
-        )
-        m = _registry_modelo("200", "2024-y-siguientes", [con_mantenimiento, sin_mantenimiento])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
 
     def test_legal_reference_axis_roles_do_not_warn_as_typos(self) -> None:
         article = _casilla(
