@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -83,6 +84,29 @@ def _create_303_work_unit() -> dict[str, object]:
     return _payload(result.output)
 
 
+def _create_115_work_unit() -> dict[str, object]:
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "115",
+            "--year",
+            "2026",
+            "--period",
+            "1T",
+            "--revision",
+            "2019-y-siguientes",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    return _payload(result.output)
+
+
 def _raw_transaction(
     provider_id: str,
     *,
@@ -135,6 +159,123 @@ def _transaction(
     if counterparty_eu_member_state is not None:
         fields["counterparty_eu_member_state"] = counterparty_eu_member_state
     return Transaction.model_validate(fields)
+
+
+def _classified_rent_transaction() -> Transaction:
+    return Transaction.model_validate(
+        {
+            "raw": _raw_transaction(
+                "rent-net-withholding",
+                booked_date=date(2026, 3, 15),
+                amount=Decimal("2754.00"),
+            ),
+            "direction": TransactionDirection.OUTGOING,
+            "business_classification": BusinessClassification.BUSINESS,
+            "category_id": "arrendamiento_local",
+            "taxable_base": Decimal("2700.00"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("567.00"),
+            "irpf_category": "arrendamiento_local",
+            "classified_at": datetime(2026, 3, 15, 12, 0, tzinfo=UTC),
+            "classified_by": "manual",
+        },
+    )
+
+
+def test_work_calculate_modelo_115_uses_retenciones_aggregation_observation() -> None:
+    """M115 CLI calculation consumes persisted URBAN_RENTAL retención evidence."""
+
+    _create_profile()
+    work_unit = _create_115_work_unit()
+    observation = json.dumps(
+        {
+            "source_kind": "ledger_transaction",
+            "source_object_id": "rent-ledger-row-001",
+            "perceptor_nif": "B12345678",
+            "perceptor_name": "Arrendador Ejemplo SL",
+            "scheme": "arrendamiento_urbano",
+            "taxable_base": "2700.00",
+            "retencion_amount": "513.00",
+            "accrued_on": "2026-03-15",
+        },
+    )
+
+    aggregated = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "aggregate",
+            "--modelo",
+            "115",
+            "--year",
+            "2026",
+            "--period",
+            "1T",
+            "--retencion-observation",
+            observation,
+        ],
+    )
+    assert aggregated.exit_code == 0, aggregated.output
+    assert _payload(aggregated.output)["observation_count"] == 1
+
+    calculated = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            str(work_unit["work_unit_id"]),
+            "--casilla",
+            "04=0",
+        ],
+    )
+    assert calculated.exit_code == 0, calculated.output
+    casilla_values = _payload(calculated.output)["casilla_values"]
+    assert Decimal(casilla_values["01"]) == Decimal("1")
+    assert Decimal(casilla_values["02"]) == Decimal("2700.00")
+    assert Decimal(casilla_values["03"]) == Decimal("513.00")
+    assert Decimal(casilla_values["05"]) == Decimal("513.00")
+
+
+def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_evidence() -> None:
+    """A classified rent ledger row alone must hard-stop instead of producing zeros."""
+    from ....application.user_profile._orchestration import profile_storage_session
+    from ....core import resolve_active_bucket_id
+
+    _create_profile()
+    work_unit = _create_115_work_unit()
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    with profile_storage_session(bucket_id):
+        TransactionCatalogueRepository(bucket_id=bucket_id).save(
+            TransactionCatalogue.from_transactions((_classified_rent_transaction(),)),
+        )
+
+    calculated = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            str(work_unit["work_unit_id"]),
+            "--casilla",
+            "04=0",
+        ],
+    )
+
+    assert calculated.exit_code != 0, calculated.output
+    envelope = json.loads(calculated.output)
+    assert envelope["error"]["code"] == "ERROR_FINANCIAL_AGGREGATION_VALIDATION"
+    assert envelope["error"]["context"]["modelo"] == "115"
+    assert envelope["error"]["context"]["period"] == "1T"
+    assert envelope["error"]["context"]["source_kind"] == "retenciones_aggregation"
+    assert "--retencion-observation" in envelope["error"]["suggestion"]
 
 
 def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
