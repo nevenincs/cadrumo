@@ -551,7 +551,15 @@ class VerifyObservationPayload(OutputSchema):
 
 @register_schema("app.live.justificante.pull")
 class JustificanteCaptureResult(OutputSchema):
-    """Payload for ``aeat app live justificante pull``."""
+    """Result envelope for a persisted :class:`~aeat.application.live.JustificanteCaptureSnapshot`.
+
+    The pull command stores the signed receipt PDF through
+    :class:`~aeat.application.live.JustificanteCaptureSnapshotService` and
+    reports both the content-addressed ``pdf_sha256`` snapshot identity inputs
+    and the best-effort local enrolment outcome. ``filing_evidence_stamped`` is
+    false when no current local filing record exists; the live capture remains
+    persisted and can still back calendar evidence once metadata parses.
+    """
 
     bucket_id: str
     snapshot_id: str
@@ -572,7 +580,7 @@ class JustificanteCaptureResult(OutputSchema):
 
 
 class JustificanteSnapshotSummaryPayload(OutputSchema):
-    """One justificante-capture snapshot summary row in a listing."""
+    """Summary projection of one :class:`~aeat.application.live.JustificanteCaptureSnapshot`."""
 
     snapshot_id: str
     modelo: str
@@ -585,7 +593,13 @@ class JustificanteSnapshotSummaryPayload(OutputSchema):
 
 @register_schema("app.live.justificante.list")
 class JustificanteListResult(OutputSchema):
-    """Payload for ``aeat app live justificante list``."""
+    """List result from :class:`~aeat.application.live.JustificanteCaptureSnapshotService`.
+
+    Rows are active justificante-capture snapshots for the active bucket,
+    ordered by capture time and carrying the period token, lifecycle state, and
+    raw-PDF hash needed to identify the official receipt without exposing the
+    encrypted PDF bytes.
+    """
 
     bucket_id: str
     count: int
@@ -594,7 +608,12 @@ class JustificanteListResult(OutputSchema):
 
 @register_schema("app.live.justificante.view")
 class JustificanteViewResult(OutputSchema):
-    """Payload for ``aeat app live justificante view``."""
+    """Detail view for one persisted :class:`~aeat.application.live.JustificanteCaptureSnapshot`.
+
+    The view surfaces the AEAT expediente, CSV, official ``source_kind``,
+    lifecycle state, and ``pdf_sha256`` so operators can reconcile the local
+    evidence chain without printing the stored receipt body.
+    """
 
     bucket_id: str
     snapshot_id: str
