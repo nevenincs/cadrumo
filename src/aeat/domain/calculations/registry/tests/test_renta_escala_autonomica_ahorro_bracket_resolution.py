@@ -45,14 +45,12 @@ from functools import cache
 
 import pytest
 
-from .....core.resources import bundled_path
 from .._errors import RegistryValidationError
 from .._formula_runtime import _resolve_bracket
-from .._loader import load_registry_tree
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _ALL_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
 _YEARS_WITH_200K_BRACKET = (2021, 2022, 2023, 2024, 2025)
 _YEARS_WITH_300K_BRACKET = (2023, 2024, 2025)
@@ -60,16 +58,13 @@ _YEARS_WITH_300K_BRACKET = (2023, 2024, 2025)
 
 @cache
 def _ahorro_table(year: int):
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(m for m in modelos if m.id == "100")
-    revision = modelo.revisions[str(year)]
+    revision = _revision(year)
     return next(p for p in revision.parameters if p.id == f"renta-{year}-escala-autonomica-base-ahorro")
 
 
 @cache
 def _revision(year: int):
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(m for m in modelos if m.id == "100")
+    modelo, _ = _committed_modelo("100")
     return modelo.revisions[str(year)]
 
 
