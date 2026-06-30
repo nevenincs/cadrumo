@@ -25,8 +25,9 @@ from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 _PROFILE_TAX_ID_PATH = "identity.tax_id"
 
 if TYPE_CHECKING:
-    from ....application.workflow import ProfileBucketPointer, WorkflowStateRepository
-    from ....domain.buckets import BucketEventType
+    from ....application.workflow._models import ProfileBucketPointer
+    from ....application.workflow._persistence import WorkflowStateRepository
+    from ....domain.buckets._event import BucketEventType
 
 
 def register_profile_bundle_commands(
@@ -80,9 +81,10 @@ def _register_profile_export_command(
         ),
     ) -> None:
         """Serialize a profile bundle to a JSON file."""
-        from ....application.user_profile import profile_storage_session, serialize_profile_bundle
-        from ....domain.buckets import BucketEventType
-        from ....domain.user_profile import ProfileNotFoundError
+        from ....application.user_profile._bundle import serialize_profile_bundle
+        from ....application.user_profile._orchestration import profile_storage_session
+        from ....domain.buckets._event import BucketEventType
+        from ....domain.user_profile._errors import ProfileNotFoundError
         from ....domain.user_profile._portable_export import UserProfilePortableExport
         from .._config_payloads import ConfigProfileExportResult
 
@@ -112,8 +114,8 @@ def _register_profile_export_command(
             return serialized
 
         try:
-            from ....adapters.persistence.storage import has_active_bucket_session
-            from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
+            from ....adapters.persistence.storage.master_key._active_session import has_active_bucket_session
+            from ....core._bucket_pointer_io import resolve_active_bucket_id as _resolve_active_bucket_id
 
             if pointer.bucket_id == _resolve_active_bucket_id() and has_active_bucket_session():
                 bundle = _serialize_and_record()
@@ -216,17 +218,19 @@ def _register_profile_import_command(
     ) -> None:
         """Read a portable profile bundle from a JSON file and register it."""
         _activate_subcommand_output_language(ctx, output_language)
-        from ....application.user_profile import (
-            ProfileAlreadyRegisteredError,
+        from ....application.user_profile._bundle import (
             UnsupportedBundleSchemaVersionError,
             deserialize_profile_bundle,
-            missing_filing_baseline_flags,
-            profile_storage_session,
-            record_to_path_values,
         )
-        from ....application.workflow import read_profile_bucket as _read_profile_bucket
-        from ....application.workflow import read_profile_bucket_by_id
-        from ....domain.buckets import BucketEventType
+        from ....application.user_profile._filing_baseline import missing_filing_baseline_flags
+        from ....application.user_profile._orchestration import (
+            ProfileAlreadyRegisteredError,
+            profile_storage_session,
+        )
+        from ....application.user_profile._projections import record_to_path_values
+        from ....application.workflow._profile_bucket_scan import read_profile_bucket as _read_profile_bucket
+        from ....application.workflow._profile_bucket_scan import read_profile_bucket_by_id
+        from ....domain.buckets._event import BucketEventType
         from ....domain.user_profile._portable_export import UserProfilePortableExport
         from .._config_payloads import ConfigProfileImportResult
 
@@ -350,7 +354,7 @@ def _build_import_active_switch_notice(target_label: str) -> Notice:
 
 def _validate_bundle_schema_version(bundle: object) -> None:
     """Raise UnsupportedBundleSchemaVersionError if bundle version is not supported."""
-    from ....application.user_profile import (
+    from ....application.user_profile._bundle import (
         SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
         UnsupportedBundleSchemaVersionError,
     )
@@ -419,13 +423,13 @@ def _emit_profile_lifecycle_event(
     payload: dict[str, str],
 ) -> None:
     """Append a profile-lifecycle event to the bucket-event-history catalogue."""
-    from ....domain.buckets import (
+    from ....domain.buckets._event import (
         BucketEvent,
         BucketEventHistoryCatalogue,
-        BucketEventHistoryRepository,
         BucketEventObjectType,
         derive_bucket_event_id,
     )
+    from ....domain.buckets._event_repository import BucketEventHistoryRepository
 
     occurred_at = _now().replace(microsecond=0)
     actor = "operator"

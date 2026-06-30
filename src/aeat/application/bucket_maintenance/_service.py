@@ -27,15 +27,14 @@ from typing import TYPE_CHECKING, NamedTuple
 from ...adapters.persistence.storage._namespace_registry import StorageCustodyProfile
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now
-from ...domain.buckets import (
+from ...domain.buckets._errors import BucketDeleteRefusedError, BucketImportError
+from ...domain.buckets._event import (
     BucketEvent,
-    BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
-    BucketImportError,
-    append_bucket_event,
     derive_bucket_event_id,
 )
+from ...domain.buckets._event_repository import BucketEventHistoryRepository, append_bucket_event
 from ..user_profile._bundle import (
     SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
     deserialize_profile_bundle,
@@ -51,7 +50,7 @@ from ..user_profile._orchestration import (
     rename_profile,
 )
 from ..user_profile._projections import record_to_path_values
-from ..workflow import read_profile_bucket_by_id
+from ..workflow._profile_bucket_scan import read_profile_bucket_by_id
 from ._contracts import (
     BrowseBucketCommand,
     BrowseBucketResult,
@@ -203,8 +202,7 @@ class BucketMaintenanceService:
         Returns:
             :class:`DeleteBucketResult`: The result of the delete operation.
         """
-        from ...core import resolve_active_bucket_id
-        from ...domain.buckets import BucketDeleteRefusedError
+        from ...core._bucket_pointer_io import resolve_active_bucket_id
 
         if not command.confirmed:
             raise BucketDeleteRefusedError(
@@ -301,15 +299,13 @@ class BucketMaintenanceService:
         Returns:
             An :class:`ExportBucketResult` describing the written sealed archive.
         """
-        from ...adapters.persistence.storage import get_active_master_key
-        from ...adapters.persistence.storage.bucket import (
-            ExportArchiveHeader,
-            bucket_paths,
-            read_manifest,
-            write_sealed_archive,
-        )
-        from ...adapters.persistence.storage.crypto import encrypt_record
-        from ...adapters.persistence.storage.master_key import (
+        from ...adapters.persistence.storage.bucket._export_header import ExportArchiveHeader
+        from ...adapters.persistence.storage.bucket._layout import bucket_paths
+        from ...adapters.persistence.storage.bucket._manifest_io import read_manifest
+        from ...adapters.persistence.storage.bucket._sealed_archive_writer import write_sealed_archive
+        from ...adapters.persistence.storage.crypto._crypto import encrypt_record
+        from ...adapters.persistence.storage.master_key._active_session import get_active_master_key
+        from ...adapters.persistence.storage.master_key._master_key_derivation import (
             ARGON2_MEMORY_COST_KIB,
             ARGON2_PARALLELISM,
             ARGON2_TIME_COST,
@@ -419,10 +415,10 @@ class BucketMaintenanceService:
         Returns:
             An :class:`ImportBucketResult` describing the restored bucket.
         """
-        from ...adapters.persistence.storage import get_active_master_key
-        from ...adapters.persistence.storage.bucket import read_sealed_archive
-        from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record
-        from ...adapters.persistence.storage.master_key import derive_kek_with_params
+        from ...adapters.persistence.storage.bucket._sealed_archive_reader import read_sealed_archive
+        from ...adapters.persistence.storage.crypto._crypto import EncryptedBlob, decrypt_record
+        from ...adapters.persistence.storage.master_key._active_session import get_active_master_key
+        from ...adapters.persistence.storage.master_key._master_key_derivation import derive_kek_with_params
         from ...domain.user_profile._portable_export import UserProfilePortableExport
 
         contents = read_sealed_archive(command.source_path)
@@ -554,7 +550,7 @@ class BucketMaintenanceService:
 
     @staticmethod
     def _provision_imported_bucket(bundle: UserProfilePortableExport) -> None:
-        from ..workflow import workflow_state_repository
+        from ..workflow._persistence import workflow_state_repository
 
         profile_id = bundle.profile.profile_id
         with profile_create_storage_span(profile_id) as routing_profile_id:
