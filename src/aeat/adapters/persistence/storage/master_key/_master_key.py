@@ -867,7 +867,7 @@ def _provider_enter(
     matching ``_provider_exit`` can tear them down.
     """
     from .....core.config import load_settings
-    from ..bucket._errors import NoActiveBucketError
+    from ..bucket import NoActiveBucketError
     from ._active_session import activate_session
     from ._bucket_session import BucketSession
 

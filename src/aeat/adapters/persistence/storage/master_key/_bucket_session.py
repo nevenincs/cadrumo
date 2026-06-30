@@ -26,7 +26,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from .....core.errors import CoreValidationError
 from .....core.logging import get_logger
-from ..bucket._errors import BucketLockedError
+from ..bucket import BucketLockedError
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
