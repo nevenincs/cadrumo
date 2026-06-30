@@ -236,6 +236,18 @@ class TestValidateSemanticRoleCardinality:
 class TestTypoTwinWarning:
     def test_reviewed_singleton_roles_are_marked_in_committed_registry(self) -> None:
         reviewed_singletons = (
+            (
+                "100",
+                "2024",
+                "2028",
+                "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_precio",
+            ),
+            (
+                "100",
+                "2024",
+                "2029",
+                "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_anio",
+            ),
             ("184", "2015-y-siguientes", "tipo2.clave", "tipo_renta_atribuida_clave"),
             ("184", "2015-y-siguientes", "tipo2.subclave", "tipo_renta_atribuida_subclave"),
             ("190", "2024-y-siguientes", "decl.total-percepciones", "total_percepciones_count"),
@@ -267,6 +279,7 @@ class TestTypoTwinWarning:
 
     def test_reviewed_singleton_markers_do_not_warn(self) -> None:
         reviewed_modelos = (
+            _bundled_modelo("100"),
             _bundled_modelo("184"),
             _bundled_modelo("190"),
             _bundled_modelo("202"),
@@ -274,6 +287,8 @@ class TestTypoTwinWarning:
             _bundled_modelo("369"),
         )
         reviewed_roles = {
+            "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_precio",
+            "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_anio",
             "tipo_renta_atribuida_clave",
             "tipo_renta_atribuida_subclave",
             "total_percepciones_count",
