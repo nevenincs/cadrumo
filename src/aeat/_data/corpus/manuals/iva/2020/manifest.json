@@ -1,11 +1,11 @@
 {
-  "content_length": 1000,
-  "fetched_at": "2026-05-06T00:00:00Z",
+  "content_length": 4765246,
+  "fetched_at": "2026-06-30T02:13:35.347202Z",
   "manual_id": "iva",
   "part": "single",
   "relative_pdf_path": "source.pdf",
-  "sha256": "816318629b3a03f019857b5371ee3ef96ea8dd3937fc6536c69ca3c5b1c7515a",
+  "sha256": "10592f1847599552a1cfc3136d86ba1e3b6eb022d4554fd7eab930ba8ba39753",
   "source_pdf_url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2020.pdf",
-  "synthetic": true,
+  "synthetic": false,
   "year": 2020
 }

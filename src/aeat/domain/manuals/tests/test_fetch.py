@@ -9,6 +9,7 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from ....core.external_constants import load_external_constants
+from ....core.resources import bundled_path
 from .. import (
     PART_SPECS,
     FetchedManualPart,
@@ -130,3 +131,41 @@ class TestManifestIO:
         manifest = _manifest().model_copy(update={"relative_pdf_path": "../outside.pdf"})
         with pytest.raises(ManifestError, match="must stay within the owning root"):
             verify_fetched_pdf(manifest, tmp_path)
+
+
+class TestBundledManualCorpus:
+    """Bundled manual manifests must describe materialized official PDFs."""
+
+    def test_committed_manual_manifests_are_materialized_real_pdfs(self) -> None:
+        """Every committed manual manifest rejects synthetic placeholders and rehashes cleanly."""
+        manuals_root = bundled_path("corpus", "manuals")
+        manifest_paths = sorted(
+            manuals_root.glob("**/manifest.json"),
+            key=lambda path: path.relative_to(manuals_root).as_posix(),
+        )
+        checked: list[str] = []
+
+        assert manifest_paths
+        for manifest_path in manifest_paths:
+            manifest = load_manifest(manifest_path)
+
+            assert manifest.synthetic is False, f"{manifest_path} must not be synthetic"
+            verify_fetched_pdf(manifest, manifest_path.parent)
+            checked.append(f"{manifest.manual_id.value}/{manifest.year}/{manifest.part.value}")
+
+        assert checked == [
+            "iva/2020/single",
+            "iva/2021/single",
+            "iva/2022/single",
+            "iva/2023/single",
+            "iva/2024/single",
+            "iva/2025/single",
+            "renta/2020/part1",
+            "renta/2021/part1",
+            "renta/2022/part1",
+            "renta/2023/part1",
+            "renta/2024/part1",
+            "renta/2024/part2-deducciones-autonomicas",
+            "renta/2025/part1",
+            "renta/2025/part2-deducciones-autonomicas",
+        ]
