@@ -50,6 +50,7 @@ related:
   - '[[2026-06-30-cli-persona-testimonials-W05-P11-S32]]'
   - '[[2026-06-30-cli-persona-testimonials-W06-P12-S33]]'
   - '[[2026-06-30-cli-persona-testimonials-W06-P12-S34]]'
+  - '[[2026-06-30-cli-persona-testimonials-W06-P12-S35]]'
   - '[[2026-06-30-cli-persona-testimonials-W06-P13-S36]]'
   - '[[2026-06-30-cli-persona-testimonials-audit]]'
   - '[[2026-06-30-cli-persona-testimonials-plan]]'
@@ -114,6 +115,7 @@ Auto-generated index of all documents tagged with `#cli-persona-testimonials`.
 - `2026-06-30-cli-persona-testimonials-W05-P11-S32` - W05.P11.S32 Completed Fix Review
 - `2026-06-30-cli-persona-testimonials-W06-P12-S33` - W06.P12.S33 New Persona Intake Checkpoint
 - `2026-06-30-cli-persona-testimonials-W06-P12-S34` - W06.P12.S34 Artifact Evidence Gap Classification
+- `2026-06-30-cli-persona-testimonials-W06-P12-S35` - W06.P12.S35 Closeout Ledger Sync
 - `2026-06-30-cli-persona-testimonials-W06-P13-S36` - W06.P13.S36 Replay-Risk Review
 
 ### plan
