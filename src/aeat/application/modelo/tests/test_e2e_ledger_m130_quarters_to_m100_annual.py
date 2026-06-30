@@ -127,7 +127,6 @@ _M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = _casilla_id("1479")
 _M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = _casilla_id("1553")
 _M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = _casilla_id("1577")
 _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = _casilla_id("1391")
-_M131_SOURCE_CASILLA_ID: CasillaId = _casilla_id("15")
 
 # Prior-year (2023) actividad-económica net income. M130's casilla-13 minoración
 # reads ``irpf.previous_year_economic_activity_net_income`` — a previous_filing
@@ -182,8 +181,8 @@ _M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
 }
 
 # The M100 0604 formula sums BOTH the M130 and M131 pagos relations; this persona
-# files no estimación-objetiva, so its four M131 c15 quarters are a true zero and
-# fold as 0, leaving 0604 == the M130 sum.
+# files no estimacion objetiva, so the M131 leg resolves as not-applicable zero
+# without any synthetic M131 filings.
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
@@ -344,27 +343,6 @@ def _calculate_and_file_m130_quarter(
     return revision
 
 
-def _seed_m131_zero_quarters(secure_objects: SecureObjectRepository) -> None:
-    """File the four M131/2024 c15 quarters as a true zero (no módulos activity)."""
-    obs_repo = CalculationObservationRepository(objects=secure_objects)
-    for period in _QUARTER_ORDER:
-        obs_repo.save_observation(
-            RegistryModeloObservation(
-                modelo="131",
-                filing_year=_YEAR,
-                period=period,
-                observations=registry_grounded_observations(
-                    modelo="131",
-                    filing_year=_YEAR,
-                    period=period,
-                    casilla_values={_M131_SOURCE_CASILLA_ID: Decimal("0")},
-                ),
-            ),
-            source_kind="app_filing",
-            captured_at=_FILE_AT,
-        )
-
-
 def _seed_prior_year_m100(secure_objects: SecureObjectRepository) -> None:
     """Observe the prior-year annual Renta (M100 2023) net-income casillas.
 
@@ -496,7 +474,6 @@ def test_ledger_drives_m130_quarters_and_folds_into_m100_annual(
     _seed_taxpayer_profile()
     _persist_marta_style_ledger(secure_objects)
     _seed_prior_year_m100(secure_objects)
-    _seed_m131_zero_quarters(secure_objects)
 
     computed_c19: dict[str, Decimal] = {}
     for period in _QUARTER_ORDER:
@@ -525,7 +502,7 @@ def test_ledger_drives_m130_quarters_and_folds_into_m100_annual(
     assert Decimal(annual.casilla_values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == _EXPECTED_M100_ACTIVITY_NET
 
     # Transport invariant #2: the annual M100 0604 folds in the SUM of the four
-    # engine-computed M130 casilla-19 values (M131 c15 folds as zero). This wires
+    # engine-computed M130 casilla-19 values (M131 folds as not-applicable zero). This wires
     # the quarterly calculations the ledger produced through to the annual renta.
     expected_total = sum(computed_c19.values(), Decimal("0"))
     casilla_0604 = Decimal(annual.casilla_values[_M100_PAGOS_CASILLA])
@@ -556,7 +533,6 @@ def test_verify_gate_blocks_chain_carrying_non_official_prior_year(
     _seed_taxpayer_profile()
     _persist_marta_style_ledger(secure_objects)
     _seed_prior_year_m100(secure_objects)
-    _seed_m131_zero_quarters(secure_objects)
     for period in _QUARTER_ORDER:
         _calculate_and_file_m130_quarter(secure_objects, period=period)
     annual = _calculate_m100_annual(secure_objects)

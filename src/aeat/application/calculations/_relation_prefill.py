@@ -93,6 +93,8 @@ if TYPE_CHECKING:
 
 _LOCAL_FILING_PROVENANCE: Final = "local_filing"
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
+_ECONOMIC_ACTIVITY_CATEGORY: Final = "actividad_economica"
+_DIRECT_ESTIMATION_REGIMES: Final = frozenset({"directa_normal", "directa_simplificada"})
 _log = get_logger(__name__)
 
 
@@ -193,6 +195,50 @@ def _profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
     except ProfileNotFoundError:
         return None
     return record_to_path_values(aggregate.record)
+
+
+def _contains_profile_token(raw: object, token: str) -> bool | None:
+    """Return whether a profile projection value contains ``token``, or None if absent."""
+    if raw is None:
+        return None
+    if isinstance(raw, str):
+        stripped = raw.strip()
+        if not stripped:
+            return None
+        return token in {item.strip() for item in stripped.replace(";", ",").split(",") if item.strip()}
+    try:
+        return token in set(raw)  # type: ignore[arg-type]
+    except TypeError:
+        return False
+
+
+def _pagos_fraccionados_not_applicable_source_modelos(bucket_id: str) -> frozenset[str]:
+    """Return M130/M131 source modelos positively not applicable for the bucket profile.
+
+    This mirrors the clean-state profile split: no actividad economica means
+    neither quarterly pagos-fraccionados modelo applies; direct estimation means
+    M130 applies and M131 does not; objective estimation means M131 applies and
+    M130 does not. Missing profile facts fail closed by returning an empty set.
+    """
+    values = _profile_path_values_for_bucket(bucket_id)
+    if values is None:
+        return frozenset()
+
+    has_economic_activity = _contains_profile_token(
+        values.get("taxpayer_type.irpf_income_categories"),
+        _ECONOMIC_ACTIVITY_CATEGORY,
+    )
+    if has_economic_activity is False:
+        return frozenset({str(Modelo.M130), str(Modelo.M131)})
+    if has_economic_activity is None:
+        return frozenset()
+
+    estimation_regime = str(values.get("irpf.estimation_regime") or "").strip()
+    if estimation_regime in _DIRECT_ESTIMATION_REGIMES:
+        return frozenset({str(Modelo.M131)})
+    if estimation_regime == "objetiva":
+        return frozenset({str(Modelo.M130)})
+    return frozenset()
 
 
 def _parse_canonical_iso_date(raw: str | None) -> date | None:
@@ -370,6 +416,7 @@ def resolve_relations_from_local_store(
     modelo_202_first_year_cuota: bool = False,
     activity_start_date: date | None = None,
     m111_no_retenciones_periods: frozenset[tuple[int, str]] | None = None,
+    not_applicable_source_modelos: frozenset[str] | None = None,
 ) -> RelationValues:
     """Build a relation-value record from the local observation store.
 
@@ -396,6 +443,10 @@ def resolve_relations_from_local_store(
             attestations. Each named source period is removed from M111 relation
             folds only; unknown/non-M111 periods keep the normal filing-grade
             requirement.
+        not_applicable_source_modelos: Source modelos positively determined as
+            not applicable for this bucket profile. M100's mutually exclusive
+            M130/M131 pagos-fraccionados relations use this to resolve the absent
+            leg to explicit zero instead of requiring fake zero filings.
 
     Returns a
     :class:`~aeat.application.storage.calc_sheets._records.RelationValues`
@@ -425,6 +476,15 @@ def resolve_relations_from_local_store(
         active_bucket_id = resolve_active_bucket_id()
         m111_no_retenciones_periods = (
             m111_no_retenciones_periods_for_bucket(active_bucket_id)
+            if active_bucket_id is not None
+            else frozenset()
+        )
+    if not_applicable_source_modelos is None:
+        from ...core import resolve_active_bucket_id
+
+        active_bucket_id = resolve_active_bucket_id()
+        not_applicable_source_modelos = (
+            _pagos_fraccionados_not_applicable_source_modelos(active_bucket_id)
             if active_bucket_id is not None
             else frozenset()
         )
@@ -483,6 +543,22 @@ def resolve_relations_from_local_store(
                         note=(
                             "first-year IS filer under modalidad cuota (LIS art. 40.2): no Modelo 202 "
                             "pago-fraccionado obligation; relation resolved to 0 (see verify advisory)"
+                        ),
+                    ),
+                )
+                continue
+            if requirement is not None and requirement.source_modelo in not_applicable_source_modelos:
+                values.append(
+                    RelationValue(
+                        relation=relation.id,
+                        value=Decimal("0"),
+                        provenance="operator_manual",
+                        source_filing_year=target_year,
+                        source_periods=source_periods,
+                        resolved_at=when,
+                        note=(
+                            f"source modelo {requirement.source_modelo} is not applicable for the bucket "
+                            "profile; relation resolved to 0 without a synthetic filing"
                         ),
                     ),
                 )
@@ -628,6 +704,7 @@ class RelationPrefillSourceResolver:
         # resolution and the diagnostic so both see the same scoped requirement set.
         activity_start_date = _activity_start_date_for_bucket(str(context.bucket_id))
         m111_no_retenciones_periods = m111_no_retenciones_periods_for_bucket(str(context.bucket_id))
+        not_applicable_source_modelos = _pagos_fraccionados_not_applicable_source_modelos(str(context.bucket_id))
         try:
             relation_values = resolve_relations_from_local_store(
                 snapshot,
@@ -646,6 +723,7 @@ class RelationPrefillSourceResolver:
                 ),
                 activity_start_date=activity_start_date,
                 m111_no_retenciones_periods=m111_no_retenciones_periods,
+                not_applicable_source_modelos=not_applicable_source_modelos,
             )
         except _STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
