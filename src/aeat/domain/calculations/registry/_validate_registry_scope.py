@@ -42,6 +42,7 @@ def validate_registry_scope(modelos: Iterable[ModeloDefinition]) -> tuple[str, .
 
     modelos_by_id = {modelo.id: modelo for modelo in modelo_tuple}
     if len(modelos_by_id) == len(modelo_tuple):
+        failures.extend(_validate_dependency_classification_source_modelos(modelo_tuple, modelos_by_id))
         failures.extend(validate_relation_closure(modelo_tuple, modelos_by_id))
         failures.extend(validate_previous_filing_binding_closure(modelo_tuple, modelos_by_id))
         failures.extend(validate_slot_source_hygiene(modelo_tuple, modelos_by_id))
@@ -56,6 +57,23 @@ def validate_registry_scope(modelos: Iterable[ModeloDefinition]) -> tuple[str, .
     failures.extend(_validate_strict_cross_revision_casilla_continuity(modelo_tuple))
     failures.extend(validate_no_label_artifacts(modelo_tuple))
     failures.extend(_validate_semantic_role_typo_twins(modelo_tuple))
+    return tuple(failures)
+
+
+def _validate_dependency_classification_source_modelos(
+    modelos: Iterable[ModeloDefinition],
+    modelos_by_id: dict[str, ModeloDefinition],
+) -> tuple[str, ...]:
+    failures: list[str] = []
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            prefix = f"modelo {modelo.id} revision {revision.id}"
+            for classification in revision.dependency_classifications:
+                if classification.source_modelo not in modelos_by_id:
+                    failures.append(
+                        f"{prefix}: dependency classification {classification.id!r} "
+                        f"references unknown source modelo {classification.source_modelo!r}",
+                    )
     return tuple(failures)
 
 
