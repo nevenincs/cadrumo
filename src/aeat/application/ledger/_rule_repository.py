@@ -1,10 +1,12 @@
 """Profile-scoped encrypted repository for ledger classification rules.
 
 :class:`LedgerClassificationRule` records are stored through
-:class:`SecureBoundRepository` at the :class:`SensitivityClass` declared by
+:class:`~aeat.adapters.persistence.storage.SecureBoundRepository` at the
+:class:`~aeat.adapters.persistence.storage.SensitivityClass` declared by
 :data:`aeat.adapters.persistence.storage.LEDGER_CLASSIFICATION_RULES_NAMESPACE`.
-The bound repository serialises each rule through an :class:`Envelope`, so the
-stored rule pattern, actor, category, and classification stay encrypted at rest.
+The bound repository serialises each rule through an
+:class:`~aeat.adapters.persistence.storage.Envelope`, so the stored rule
+pattern, actor, category, and classification stay encrypted at rest.
 
 See Also:
     :class:`LedgerClassificationRule`
@@ -30,6 +32,9 @@ from ...domain.transactions._classification_rule import LedgerClassificationRule
 class LedgerClassificationRuleRepository(SecureBoundRepository[LedgerClassificationRule]):
     """Encrypted profile-local store of :class:`LedgerClassificationRule` payloads.
 
+    The namespace, sensitivity, schema version, and object-key contract come
+    from
+    :data:`aeat.adapters.persistence.storage.LEDGER_CLASSIFICATION_RULES_NAMESPACE`.
     Rules are sorted by ``(priority, created_at)`` ascending so that
     lower-priority-number rules (higher precedence) are evaluated first.
     Among same-priority rules the earliest-created rule wins.
