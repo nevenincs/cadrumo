@@ -9,16 +9,22 @@ Period codes represent the filing frequency and scheme for tax returns:
 - Ad-hoc/Event: AD-HOC, EVENT-N (event-driven filings)
 
 :class:`StandardPeriodCode` is the canonical :class:`~enum.StrEnum` for
-the basic period codes (1T-4T, 1P-4P, 0A, 01-12). Extended forms
-(EXT-*, AD-HOC, EVENT-*) are validated via separate regex patterns for
-modeller flexibility. :class:`Period` combines one accepted code with a
-filing year, and :class:`PeriodKind` classifies the resulting cadence.
+the closed standard vocabulary (1T-4T, 1P-4P, 0A, 01-12). It includes both
+calendar spans and instalment claves, so callers that need date boundaries
+must still check :meth:`Period.has_date_span`. :data:`RegistryPeriodCode`
+is the pydantic field annotation for the full registry union: standard
+members plus extended OSS/IOSS literals, ``AD-HOC``, and the open-ended
+``EVENT-N`` shape. :class:`Period` combines one accepted code with a filing
+year, and :class:`PeriodKind` classifies the resulting cadence.
 
 This module is the runtime counterpart to the registry
 :data:`aeat.domain.calculations.registry.PeriodCode` alias and
 :class:`aeat.domain.calculations.registry.PeriodSelector` schema. Registry
 objects carry bare period tokens; application services that need a concrete
 filing window compose those tokens with a year into :class:`Period`.
+Operator commands follow the same separated shape (``--year YYYY --period
+<AEAT-token>``); any year-qualified filter mini-grammar is converted at the
+CLI boundary before it reaches this model.
 """
 
 from __future__ import annotations
@@ -35,7 +41,12 @@ from .errors import AeatError
 
 
 class StandardPeriodCode(StrEnum):
-    """Canonical enumeration of standard filing-period codes."""
+    """Canonical enumeration of closed standard filing-period codes.
+
+    Quarterly, monthly, and annual members have calendar spans. Instalment
+    members (``1P``-``4P``) identify filing/payment events and intentionally do
+    not imply a contiguous ledger date span.
+    """
 
     Q1 = "1T"
     Q2 = "2T"
@@ -98,12 +109,18 @@ def _validate_period_against_registry(value: str) -> str:
 
 
 def accepted_period_codes() -> tuple[str, ...]:
-    """Return the fully enumerable period codes (StandardPeriodCode + extended literals)."""
+    """Return the fully enumerable period codes.
+
+    The tuple includes :class:`StandardPeriodCode`, extended OSS/IOSS literals,
+    and ``AD-HOC``. It deliberately excludes the infinite ``EVENT-N`` family;
+    pair it with :func:`accepted_period_patterns` when building help text or
+    parse-error guidance.
+    """
     return tuple(sorted(_STANDARD_PERIOD_SET | _EXTENDED_PERIOD_SET | {_AD_HOC_PERIOD}))
 
 
 def accepted_period_patterns() -> tuple[str, ...]:
-    """Return the period code patterns (including regex shapes for EVENT-N)."""
+    """Return human-readable period-code patterns, including open regex shapes."""
     return (
         "StandardPeriodCode (1T-4T, 1P-4P, 0A, 01-12)",
         "Extended OSS/IOSS (EXT-1T, EXT-2T, EXT-3T, EXT-4T)",
@@ -125,6 +142,8 @@ def _format_accepted_period_set() -> str:
     return "; ".join(lines)
 
 
+#: Pydantic field annotation for bare registry period tokens. Use
+#: :class:`Period` instead when a filing year is known.
 RegistryPeriodCode = Annotated[str, BeforeValidator(_validate_period_against_registry)]
 
 
@@ -164,16 +183,22 @@ class Period(BaseModel):
     fields — the :attr:`filing_year` and the registry period :attr:`code`
     (a :class:`StandardPeriodCode` member such as ``1T`` / ``0A`` / ``03``, or an
     extended union member such as ``EXT-1T`` / ``AD-HOC`` / ``EVENT-3``) — and
-    never a combined calendar string (``2026Q1`` / ``2026-03`` / ``2026``). The
-    combined form exists only as the human-readable :meth:`__str__` projection;
-    it is an output, never a parseable input. Inbound construction is always from
-    a ``(year, code)`` pair via :meth:`from_year_and_code`.
+    never a combined calendar string (``2026Q1`` / ``2026-03`` / ``2026``).
+    Those calendar shapes are neither accepted inputs nor canonical outputs.
+    The only display projection is the space-separated :meth:`__str__` form
+    (``"2026 1T"``), and normal inbound construction is from a ``(year, code)``
+    pair via :meth:`from_year_and_code`.
 
     The model is frozen and hashes by ``(filing_year, code)``, so a ``Period`` is
     a drop-in dict key, set member, and equality target wherever a typed period
     is required. The ledger and aggregation boundary routes through
     :func:`aeat.application.aggregation.aggregation_period_for_modelo`, then uses
     :meth:`contains` as the single date-boundary authority.
+
+    Attributes:
+        filing_year: Filing year carried separately from the registry token.
+        code: Bare :data:`RegistryPeriodCode` token validated against the registry
+            period union.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -204,11 +229,20 @@ class Period(BaseModel):
 
     @classmethod
     def from_string(cls, value: str) -> Period:
-        """Parse the canonical display string emitted by :meth:`__str__` into a :class:`Period`.
+        """Parse the canonical display string emitted by :meth:`__str__`.
 
         Only the separated ``"YYYY <registry-code>"`` display form is accepted.
         Combined calendar strings such as ``"2026Q1"`` or ``"2026-1T"`` are
-        refused.
+        refused; this method is for display round-trips, not an alternate CLI or
+        registry grammar.
+
+        Args:
+            value: Space-separated display string containing a four-digit filing
+                year and a bare registry period code.
+
+        Raises:
+            PeriodError: When ``value`` is not the display form or contains an
+                invalid registry period code.
         """
         if not isinstance(value, str):
             raise PeriodError(f"period string must be str, got {type(value).__name__}")
