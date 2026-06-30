@@ -17,10 +17,12 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_BUCKET_ID = "32323232-3232-4323-8323-323232323232"
+
 
 @pytest.fixture
 def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-log") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile
 
 
@@ -45,7 +47,8 @@ def test_transaction_repository_logs_bucket_fields(
     # Per-row catalogue: the save log carries the bucket id and the diff counts
     # (rewritten / deleted rows) rather than a single catalogue object_key.
     assert any(
-        "bucket_id=bucket-log" in message and "rewritten=" in message and "deleted=" in message for message in messages
+        f"bucket_id={_BUCKET_ID}" in message and "rewritten=" in message and "deleted=" in message
+        for message in messages
     )
 
 
