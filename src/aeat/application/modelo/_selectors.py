@@ -3,7 +3,7 @@
 Visible modelo/year/period input is normalized into a
 :class:`ModeloWorkSelectorRequest` and resolved to a
 :class:`ModeloWorkResolution` over active
-:class:`~aeat.domain.modelos._work_unit.WorkUnit` records. Revision selectors
+:class:`aeat.domain.modelos.WorkUnit` records. Revision selectors
 then load persisted :class:`CalculationRevision` rows and return a
 :class:`ModeloCalculationRevisionSelection` for current, latest draft, latest
 verified, filed, or explicit-id picks.
@@ -305,7 +305,7 @@ def visible_target_work_units(
     *,
     repository: WorkUnitCatalogueRepositoryProtocol | None = None,
 ) -> tuple[WorkUnit, ...]:
-    """Return active :class:`WorkUnit` records matching the operator-visible target.
+    """Return active :class:`aeat.domain.modelos.WorkUnit` records matching the visible target.
 
     The visible target is bucket/modelo/filing-year/period only. Registry
     revision is intentionally not part of this lookup so a conflicting
@@ -431,9 +431,10 @@ def select_modelo_calculation_revision(
     """Select one persisted calculation revision as :class:`ModeloCalculationRevisionSelection`.
 
     ``EXPLICIT`` requires ``calculation_revision_id`` and verifies the revision
-    belongs to ``work_unit``. Non-explicit selectors resolve through the work
-    unit's current/filed pointers or by latest state, and refuse missing or
-    mismatched state instead of falling back to another revision.
+    belongs to the supplied :class:`aeat.domain.modelos.WorkUnit`. Non-explicit
+    selectors resolve through the work unit's current/filed pointers or by
+    latest state, and refuse missing or mismatched state instead of falling back
+    to another revision.
     """
     revisions = _revisions_for_work_unit(work_unit, calculation_repository=calculation_repository)
     if selector is ModeloCalculationRevisionSelector.EXPLICIT:
@@ -528,7 +529,7 @@ def select_current_draft_revision(
     *,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
 ) -> ModeloCalculationRevisionSelection:
-    """Select the current draft revision and return a :class:`ModeloCalculationRevisionSelection` for verification."""
+    """Select the current draft revision as a :class:`ModeloCalculationRevisionSelection` for verification."""
     selection = select_modelo_calculation_revision(
         work_unit,
         selector=ModeloCalculationRevisionSelector.CURRENT,
