@@ -51,6 +51,7 @@ from ._modelo_aux_payloads import (
     ModeloDescribeResult,
     ModeloListResult,
     ModeloRowPayload,
+    WithholdingClaveBreakdownPayload,
     WorkflowRunPayload,
     WorkHistoryResult,
     WorkRunsResult,
@@ -1192,7 +1193,13 @@ class WorkResumeResult(OutputSchema):
 
 @register_schema("modelo.aggregate")
 class ModeloAggregateResult(OutputSchema):
-    """Per-modelo aggregation result."""
+    """Per-modelo aggregation result.
+
+    ``clave_breakdown`` carries the Modelo 190 per-clave retención rows (empty
+    for every other modelo); it is primary structured result data the command
+    produces, sourced from the already-ingested per-perceptor-clave withholding
+    detail, not an incidental diagnostic.
+    """
 
     operation: str = "modelo.aggregate"
     modelo: str
@@ -1201,6 +1208,7 @@ class ModeloAggregateResult(OutputSchema):
     observation_count: int
     source_kinds: list[str]
     result_row_count: int
+    clave_breakdown: list[WithholdingClaveBreakdownPayload] = Field(default_factory=list)
 
 
 @register_schema("modelo.work.preview_maritime_exemption")
@@ -1277,6 +1285,7 @@ __all__ = [
     "VerificationReportListResult",
     "VerificationReportPayload",
     "VerificationReportShowResult",
+    "WithholdingClaveBreakdownPayload",
     "WorkAmendResult",
     "WorkCalculateResult",
     "WorkCompareTaxationResult",

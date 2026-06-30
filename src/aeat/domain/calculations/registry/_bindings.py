@@ -100,9 +100,11 @@ from ._retenciones_bindings import (
 )
 from ._schema import CasillaDefinition, DataBindingDefinition, InputKind, ModeloRevision
 from ._withholding_bindings import (
+    WithholdingClaveBreakdown,
     WithholdingObservation,
     WithholdingObservationRequirement,
     _WithholdingSelector,
+    aggregate_withholding_by_clave,
     resolve_withholding_binding_row_values,
     resolve_withholding_binding_values,
     validate_withholding_binding_selector_shape,
@@ -131,10 +133,12 @@ __all__ = [
     "RentaExpenseObservationProtocol",
     "RentaGastoObservationProtocol",
     "RentaIncomeObservationProtocol",
+    "WithholdingClaveBreakdown",
     "WithholdingObservation",
     "WithholdingObservationRequirement",
     "_build_foreign_asset_rows",
     "_build_related_party_rows",
+    "aggregate_withholding_by_clave",
     "binding_aggregation_op",
     "binding_source_casilla_ids",
     "binding_source_modelo",
