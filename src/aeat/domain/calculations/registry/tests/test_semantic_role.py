@@ -298,6 +298,12 @@ class TestTypoTwinWarning:
                 "is_correccion_otras_correcciones_resultado_temporaria_ejercicio_disminucion",
             ),
             (
+                "200",
+                "2024-y-siguientes",
+                "00501",
+                "is_liquidacion_i_importe",
+            ),
+            (
                 "100",
                 "2020",
                 "1171",
@@ -521,6 +527,7 @@ class TestTypoTwinWarning:
             "is_deduccion_di_interna_rdleg_pendiente",
             "is_correccion_otras_correcciones_resultado_permanente_disminucion",
             "is_correccion_otras_correcciones_resultado_temporaria_ejercicio_disminucion",
+            "is_liquidacion_i_importe",
             "irpf_deduccion_c_valenciana_ayudas_publicas_generalitat_2020",
             "irpf_num_hijos_maternidad_2020",
             "irpf_incremento_maternidad_no_aplicado_2020",
@@ -771,6 +778,15 @@ class TestTypoTwinWarning:
             semantic_roles_are_axis_siblings(
                 "is_correccion_detalle_correcciones_resultado_permanente_disminucion",
                 "is_correccion_otras_correcciones_resultado_permanente_disminucion",
+            )
+            is False
+        )
+
+    def test_liquidation_roman_tokens_are_not_axis_tokens(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "is_liquidacion_i_importe",
+                "is_liquidacion_ii_importe",
             )
             is False
         )
