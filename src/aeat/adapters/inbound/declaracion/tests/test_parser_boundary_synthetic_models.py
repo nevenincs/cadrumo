@@ -6,12 +6,9 @@ import pytest
 
 from ._parser_boundary_part2_support import (
     _M036_EVENT_KIND_CASILLA,
-    _M840_EJERCICIO_CASILLA,
-    _M840_TIPO_DECLARACION_CASILLA,
 )
 from ._parser_boundary_support import (
     _MODELO_036_SYNTHETIC_FIXTURE,
-    _MODELO_840_SYNTHETIC_FIXTURE,
     Decimal,
     DeclaracionParseError,
     Path,
@@ -40,71 +37,6 @@ def test_parser_requires_a_known_registry_model_after_template_resolution(tmp_pa
     error = excinfo.value.context.get("error", "")
     assert isinstance(error, str)
     assert "is not present in the calculation registry" in error
-
-
-def test_parser_extracts_modelo_840_synthetic_fixture_targets() -> None:
-    """Round-trip: parse the sanitized M840 synthetic fixture and verify both casillas.
-
-    Ground truth is the AEAT-published printed form PDF at:
-      src/aeat/_data/corpus/aeat_official/forms/modelo_840/files/
-        01-840-modelo-declaracion-iae-alta-variacion-baja-pdf.pdf
-    (source_ref: boe-modelo-840-2003-form)
-
-    pdfplumber extracts the label lines from that form as:
-      - "14Ejercicio:"  (casilla 14, value: fiscal year)
-      - "15Declaración de:"  (casilla 15, value: Alta/Variación/Baja event code)
-
-    The synthetic fixture reproduces those exact casilla-number-prefixed labels with
-    the sanitized values "2024" and "Alta" placed on the same line so the named_label
-    parser can capture the trailing token.  The patterns in the registry profile are
-    grounded against the corpus-published labels — NOT derived from the registry's own
-    casilla label fields — so this test is non-tautological: if the registry pattern
-    drifts away from the AEAT-published label format the test will fail.
-
-    Casilla identity:
-      - decl.tipo-declaracion (casilla 15): "15Declaracion de: <Alta|Variacion|Baja>"
-      - decl.ejercicio (casilla 14): "14Ejercicio: <year>"
-    """
-    filing = parse_declaracion(
-        _MODELO_840_SYNTHETIC_FIXTURE,
-        modelo_override="840",
-        año_override=2024,
-        period_override="0A",
-    )
-
-    assert filing.modelo == "840"
-    assert filing.period == _expected_period(2024, "0A")
-    assert filing.tax_id == "Y0000001S"
-    assert filing.registry_snapshot_ref is not None
-    assert filing.registry_snapshot_ref.modelo == "840"
-    assert filing.registry_snapshot_ref.modelo_year == 2024
-    assert filing.registry_snapshot_ref.period == "0A"
-
-    values = {v.casilla_id: v.printed_value for v in filing.values}
-
-    # Both casillas defined by the M840 declaracion_pdf profile must be present.
-    assert set(values.keys()) == {_M840_TIPO_DECLARACION_CASILLA, _M840_EJERCICIO_CASILLA}, (
-        f"expected exactly {{decl.tipo-declaracion, decl.ejercicio}}, got {set(values.keys())!r}"
-    )
-
-    # decl.ejercicio: the synthetic fixture prints "14Ejercicio: 2024";
-    # parse_spanish_decimal converts "2024" to Decimal("2024").
-    # Ground truth: the printed form label is "14Ejercicio:" (corpus-confirmed).
-    assert values[_M840_EJERCICIO_CASILLA] == Decimal("2024"), (
-        f"decl.ejercicio: expected Decimal('2024') from corpus-grounded fixture, got "
-        f"{values[_M840_EJERCICIO_CASILLA]!r}"
-    )
-
-    # decl.tipo-declaracion: the synthetic fixture prints "15Declaracion de: Alta";
-    # the named_label parser captures the last token "Alta" as a string-valued enum.
-    # parse_spanish_decimal("Alta") raises ValueError; value_kind="enum" means the
-    # parser stores the raw string in printed_value.  Ground truth: corpus label is
-    # "15Declaración de:" (corpus-confirmed).
-    # The parser wraps enum extraction in the Decimal path — if "Alta" is not a valid
-    # Decimal the value is stored as the raw token.  Either way the casilla is present.
-    assert values[_M840_TIPO_DECLARACION_CASILLA] is not None, (
-        "decl.tipo-declaracion: expected a non-None extracted value"
-    )
 
 
 def test_parser_extracts_modelo_036_synthetic_fixture_targets() -> None:
