@@ -28,6 +28,7 @@ _Repos = tuple[
 ]
 
 _CLOCK = datetime(2026, 10, 15, 9, 0, 0, tzinfo=UTC)
+_PROFILE_ID = "00000000-0000-4000-8000-000000000000"
 _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="identity.tax_id", value="00000000T"),
     UserProfileFact(path="identity.name", value="Diego"),
@@ -70,11 +71,11 @@ _M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = _casilla_id("18")
 @pytest.fixture
 def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over an isolated profile — no mocks."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
         objects = profile.repository
-        UserProfileLifecycleRepository(bucket_id="default", objects=objects).save(
+        UserProfileLifecycleRepository(bucket_id=_PROFILE_ID, objects=objects).save(
             UserProfileRecord(
-                profile_id="00000000-0000-4000-8000-000000000000",
+                profile_id=_PROFILE_ID,
                 display_name="Diego Operator",
                 facts=_READY_PROFILE_FACTS,
                 created_at=_CLOCK,
@@ -96,7 +97,7 @@ def _work_unit_3t(repos: _Repos):
     wu_repo, cr_repo, bv_repo = repos
     return (
         create_work_unit(
-            bucket_id="default",
+            bucket_id=_PROFILE_ID,
             modelo="130",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "3T"),

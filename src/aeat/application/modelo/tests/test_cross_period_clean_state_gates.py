@@ -59,7 +59,7 @@ from .._verification_actions import _cross_period_clean_state_next_action
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "cross-period-clean-state-gates"
+_BUCKET_ID = "39039039-0390-4390-8390-390390390390"
 _CLOCK = datetime(2026, 6, 5, 11, 0, 0, tzinfo=UTC)
 _M303_REVISION = "2023-y-siguientes"
 _M303_SOURCE_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_M303_SOURCE_CASILLA_01")

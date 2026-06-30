@@ -58,7 +58,7 @@ from .._filing_actions import ModeloFilingEvidenceMissingError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-m303-evidence-gate"
+_BUCKET_ID = "30300000-0000-4000-8000-000000000303"
 _TAX_ID = "12345678Z"
 _YEAR = 2026
 _PERIOD = "1T"

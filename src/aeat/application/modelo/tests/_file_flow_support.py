@@ -183,6 +183,7 @@ _T2 = datetime(2026, 4, 14, 14, 0, 0, tzinfo=UTC)
 _T3 = datetime(2026, 4, 15, 15, 0, 0, tzinfo=UTC)
 _T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
 _T5 = datetime(2026, 4, 17, 13, 0, 0, tzinfo=UTC)
+_FILE_FLOW_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
 _VERIFY_MODELO = "180"
 _VERIFY_REVISION = "2023-y-siguientes"
@@ -250,11 +251,11 @@ def _repos(tmp_path: Path) -> Iterator[_Repos]:
     ``(work_unit, calculation_revision, filing_record,
     verification_report, bucket_event_history)``."""
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_FILE_FLOW_PROFILE_ID) as profile:
         objects = profile.repository
-        UserProfileLifecycleRepository(bucket_id="default", objects=objects).save(
+        UserProfileLifecycleRepository(bucket_id=profile.bucket_id, objects=objects).save(
             UserProfileRecord(
-                profile_id="00000000-0000-4000-8000-000000000000",
+                profile_id=profile.bucket_id,
                 display_name="File-flow ready profile",
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,
@@ -277,7 +278,7 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
 def _seed_work_unit(
     wu_repo: WorkUnitCatalogueRepository,
     *,
-    bucket_id: str = "default",
+    bucket_id: str = _FILE_FLOW_PROFILE_ID,
     modelo: str = "130",
     filing_year: int = 2026,
     period: str = "1T",
@@ -724,7 +725,7 @@ def _verify_revision(
 
 def _seed_modelo_180_work_unit(wu_repo: WorkUnitCatalogueRepository):
     return create_work_unit(
-        bucket_id="default",
+        bucket_id=_FILE_FLOW_PROFILE_ID,
         modelo=_VERIFY_MODELO,
         filing_year=_VERIFY_YEAR,
         period=Period.from_year_and_code(_VERIFY_YEAR, _VERIFY_PERIOD),

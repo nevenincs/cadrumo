@@ -65,6 +65,7 @@ from .._result_disposition_resolution import resolve_modelo_result_disposition
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _TAX_ID = "X1234567L"
+_BUCKET_ID = "30300000-0000-4000-8000-000000000033"
 _YEAR = 2025
 _LAST_PERIOD = "4T"
 _MID_PERIOD = "2T"
@@ -99,15 +100,15 @@ _NEGATIVE_CREDIT_ENGINE_INPUTS = {
 
 @contextmanager
 def _secure_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         yield
 
 
 def _store_operator_profile(*, created_at: datetime) -> None:
     activity_start_date = _activity_start_date_for_period(_LAST_PERIOD if created_at.month == 12 else _MID_PERIOD)
-    UserProfileLifecycleRepository(bucket_id="operator").save(
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
         UserProfileRecord(
-            profile_id="11111111-1111-4111-8111-111111111111",
+            profile_id=_BUCKET_ID,
             display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_TAX_ID),
@@ -205,7 +206,7 @@ def _calculate_negative_period(
     assert report.decision.divergence == "first_period_zero"
 
     work_unit = create_work_unit(
-        bucket_id="operator",
+        bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, period_token),
