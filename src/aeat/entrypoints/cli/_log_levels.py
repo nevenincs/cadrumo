@@ -2,10 +2,12 @@
 
 Encapsulates the contract for translating the CLI's ``--quiet`` /
 ``--verbose`` / ``--debug`` flag triple plus the ``AEAT_LOG_LEVEL``
-environment variable into a single :class:`LogLevel` value, and applies
-that value to the configured root logger via
-:func:`apply_to_root_logger`. Every CLI entrypoint funnels its
-verbosity decision through :func:`resolve_log_level` so behaviour stays
+environment variable into a single
+:class:`~aeat.entrypoints.cli._log_levels.LogLevel` value, and applies that
+value to the configured root logger via
+:func:`~aeat.entrypoints.cli._log_levels.apply_to_root_logger`. Every CLI
+entrypoint funnels its verbosity decision through
+:func:`~aeat.entrypoints.cli._log_levels.resolve_log_level` so behaviour stays
 consistent across commands.
 """
 
@@ -24,7 +26,8 @@ class LogLevelResolutionError(AeatError):
 
     Examples include passing more than one of ``--quiet`` / ``--verbose``
     / ``--debug`` together, or setting ``AEAT_LOG_LEVEL`` to a value
-    outside the :class:`LogLevel` vocabulary.
+    outside the :class:`~aeat.entrypoints.cli._log_levels.LogLevel`
+    vocabulary.
     """
 
 
@@ -70,16 +73,17 @@ def resolve_log_level(
         verbose: Whether ``--verbose`` was passed.
         debug: Whether ``--debug`` was passed.
         env: Optional environment mapping for deterministic tests; when
-            :data:`None`, :func:`aeat.core.config.load_settings` is
+            ``None``, :func:`aeat.core.config.load_settings` is
             consulted (the single AEAT-config surface).
 
     Returns:
-        The effective :class:`LogLevel`.
+        The effective :class:`~aeat.entrypoints.cli._log_levels.LogLevel`.
 
     Raises:
         LogLevelResolutionError: If more than one verbosity flag is
             active simultaneously, or if ``AEAT_LOG_LEVEL`` carries a
-            value outside the :class:`LogLevel` vocabulary.
+            value outside the
+            :class:`~aeat.entrypoints.cli._log_levels.LogLevel` vocabulary.
     """
     selected_flags = sum((quiet, verbose, debug))
     if selected_flags > 1:
