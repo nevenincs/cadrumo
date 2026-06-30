@@ -303,6 +303,26 @@ _ANEXO_B_AAV_AMOUNT_ROWS = {
         _ANEXO_B_AAV_IMPORTE_PENDIENTE_ROLE,
     ),
 }
+_ANEXO_B_BALEARES_NACIMIENTO_SECTION = "an_b_inf_ad_i_baleares"
+_ANEXO_B_BALEARES_NACIMIENTO_ROWS = {
+    "1990": (
+        "Deducción por nacimiento: Importe de la deducción",
+        "irpf_anexo_b_baleares_deduccion_nacimiento_importe",
+    ),
+    "1991": (
+        "Deducción por nacimiento: Importe del abono anticipado",
+        "irpf_anexo_b_deduccion_nacimiento_abono_anticipado",
+    ),
+    "1992": (
+        "Deducción por nacimiento: Importe pendiente a solicitar por el contribuyente",
+        "irpf_baleares_deduccion_nacimiento_importe_pendiente",
+    ),
+    "1993": (
+        "Deducción por nacimiento: Importe del cobro anticipado a regularizar (casilla [0504])",
+        "irpf_anexo_b_deduccion_nacimiento_cobro_anticipado_regularizar",
+    ),
+}
+_LEGACY_ANEXO_B_BIRTH_ADVANCE_REGULARIZE_ROLE = "irpf_anexo_b_birth_advance_regularize"
 _ANEXO_B_ACCOUNT_SECTION = "an_b_inf_ad_cm_viv_hab"
 _ANEXO_B_CM_VIV_HAB_TITULAR_CUENTA_ROLE = "irpf_anexo_b_cm_viv_hab_titular_cuenta"
 _LEGACY_ANEXO_B_ACCOUNT_HOLDER_KEY_ROLE = "irpf_anexo_b_account_holder_key"
