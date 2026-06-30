@@ -17,8 +17,9 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from email.parser import Parser
 from pathlib import Path
-from typing import Any
+from typing import Any, Final
 
+_UTF_8: Final[str] = "utf-8"
 _REPRESENTATIVE_DATA_LEAVES = (
     "registry/aeat/modelos/036/manifest.toml",
     "registry/aeat/user_profile/schema.toml",
@@ -127,7 +128,7 @@ def _git_env(repo_root: Path) -> dict[str, str] | None:
     dot_git = repo_root / ".git"
     if not dot_git.is_file():
         return None
-    gitdir_line = dot_git.read_text(encoding="utf-8").strip()
+    gitdir_line = dot_git.read_text(encoding=_UTF_8).strip()
     prefix = "gitdir: "
     if not gitdir_line.startswith(prefix):
         return None
@@ -257,7 +258,7 @@ def _pyproject_surfaces(repo_root: Path) -> DependencySurfaces:
 def _optional_extra_registry(repo_root: Path) -> tuple[dict[str, str], set[str]]:
     """Return capability-gated optional extras declared by the core registry."""
     source = repo_root / "src" / "aeat" / "core" / "_optional_extras.py"
-    module = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
+    module = ast.parse(source.read_text(encoding=_UTF_8), filename=str(source))
     records_by_symbol: dict[str, tuple[str, str]] = {}
     tuple_symbols: set[str] = set()
     for node in module.body:
@@ -325,7 +326,7 @@ def _wheel_metadata(wheel: Path) -> tuple[list[str], set[str]]:
     """Return wheel Requires-Dist rows and Provided-Extra names."""
     with zipfile.ZipFile(wheel) as archive:
         metadata_name = next(name for name in archive.namelist() if name.endswith(".dist-info/METADATA"))
-        metadata = Parser().parsestr(archive.read(metadata_name).decode("utf-8"))
+        metadata = Parser().parsestr(archive.read(metadata_name).decode(_UTF_8))
     return metadata.get_all("Requires-Dist") or [], {
         _normalize_name(extra) for extra in (metadata.get_all("Provides-Extra") or [])
     }
@@ -746,7 +747,7 @@ def _write_smoke_manifest(
     if details:
         payload["details"] = details
     path = work_dir / "packaging-smoke-manifest.json"
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding=_UTF_8)
     return path
 
 
