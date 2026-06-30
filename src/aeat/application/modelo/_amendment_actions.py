@@ -1,17 +1,18 @@
 """Amendment actions for externally filed modelo baselines.
 
 ``amend_modelo_revision`` starts from a current, externally evidenced
-:class:`ModeloRecord`, builds a corrected :class:`CalculationRevision` with an
-explicit :class:`CalculationRevisionAmendmentKind`, supersedes the baseline
-filing, and stores the new amendment record as current.
+:class:`~aeat.domain.modelos.ModeloRecord`, builds a corrected
+:class:`~aeat.domain.modelos.CalculationRevision` with an explicit
+:class:`~aeat.domain.modelos.CalculationRevisionAmendmentKind`, supersedes the
+baseline filing, and stores the new amendment record as current.
 
 The side effects update the work-unit pointers and emit ``modelo.amended``
-through :class:`BucketEventHistoryRepository`, matching the event-history path
-used by imported and locally filed returns.
+through :class:`~aeat.domain.buckets.BucketEventHistoryRepository`, matching the
+event-history path used by imported and locally filed returns.
 
 Only filing records carrying
-:class:`~aeat.domain.modelos._filing_record.ExternalEvidence` can enter this
-path. The standard local ``calculate -> verify -> file`` chain remains separate:
+:class:`~aeat.domain.modelos.ExternalEvidence` can enter this path. The standard
+local ``calculate -> verify -> file`` chain remains separate:
 locally filed records have no external evidence and must be corrected through
 their own re-file workflow. Amendment overrides are resolved against the target
 registry snapshot, rejected when they use printed or undeclared casilla tokens,
@@ -147,14 +148,15 @@ def amend_modelo_revision[CasillaKey](
     """Build and file an amendment over an externally filed return.
 
     ``from_filing_record_id`` must identify the current
-    :class:`ModeloRecord` for an imported AEAT-attested baseline. The baseline's
-    :class:`CalculationRevision` supplies the full casilla map; ``overrides``
-    replace only corrected casillas after registry validation, while unchanged
-    casillas are inherited. The resulting revision records the requested
-    :class:`CalculationRevisionAmendmentKind`, stores the stripped ``reason``,
-    receives registry-grounded observations, transitions through
-    ``VERIFICADO_COMPLETO`` to ``PRESENTADO``, and becomes the current filed
-    revision for the :class:`WorkUnit`.
+    :class:`~aeat.domain.modelos.ModeloRecord` for an imported AEAT-attested
+    baseline. The baseline's
+    :class:`~aeat.domain.modelos.CalculationRevision` supplies the full casilla
+    map; ``overrides`` replace only corrected casillas after registry validation,
+    while unchanged casillas are inherited. The resulting revision records the
+    requested :class:`~aeat.domain.modelos.CalculationRevisionAmendmentKind`,
+    stores the stripped ``reason``, receives registry-grounded observations,
+    transitions through ``VERIFICADO_COMPLETO`` to ``PRESENTADO``, and becomes
+    the current filed revision for the :class:`~aeat.domain.modelos.WorkUnit`.
 
     The baseline filing is marked ``SUPERSEDIDO`` and linked to the new current
     amendment record. The new filing record is an internal filing envelope:
@@ -164,7 +166,8 @@ def amend_modelo_revision[CasillaKey](
     work-unit id, and amended baseline id.
 
     Returns:
-        The new current :class:`ModeloRecord` for the amended return.
+        The new current :class:`~aeat.domain.modelos.ModeloRecord` for the
+        amended return.
 
     See Also:
         ``aeat app modelo work amend``:
