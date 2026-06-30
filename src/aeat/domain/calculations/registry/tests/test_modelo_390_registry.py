@@ -39,12 +39,29 @@ _M303_COMPENSACION_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion
 _M303_COMPENSACION_POSTERIOR_CASILLA: CasillaId = _casilla_id(
     "iva.compensacion-pendiente-periodos-posteriores",
 )
+_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.anual.cuota-deducible-total")
+_M390_RECONCILIACION_DEDUCIBLE_303_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.reconciliacion.deducible-303",
+)
 _M390_COMPENSACION_ULTIMO_PERIODO_CASILLA: CasillaId = _casilla_id(
     "iva.anual.compensacion-ultimo-periodo-97",
 )
 _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = _casilla_id(
     "iva.anual.compensacion-generada-ejercicio-no-97",
 )
+_M390_DEDUCIBLE_RECONCILIATION_PREDICATE_ID = (
+    "modelo-390-cuota-deducible-total-equals-reconciliacion-303"
+)
+_M390_DEDUCIBLE_RECONCILIATION_EXPRESSION = (
+    'equals(["iva.anual.cuota-deducible-total", "iva.anual.reconciliacion.deducible-303"])'
+)
+_M390_DEDUCIBLE_RECONCILIATION_LEGAL_REFS = {
+    "ley-37-1992:art-17",
+    "ley-37-1992:art-84",
+    "ley-37-1992:art-92",
+    "rd-1624-1992:art-71",
+    "orden-eha-3111-2009:art-1",
+}
 _M390_EXTRACTION_PROFILE_TARGET_LEGAL_REFS = frozenset(
     {
         "ley-37-1992:art-84",
@@ -197,6 +214,22 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen() -> No
         "modelo-390-iva-soportado-importaciones-cuota",
         "modelo-390-iva-autorepercutido-intracomunitaria-cuota",
     }
+
+
+def test_modelo_390_declares_deducible_total_reconciliation_predicate() -> None:
+    """The annual deducible total is blocked when it drifts from the four 303s."""
+    modelo, _ = _load_modelo_390()
+    revision = modelo.revisions["2010-y-siguientes"]
+    casilla_ids = {casilla.id for casilla in revision.casillas}
+    predicates = {predicate.predicate_id: predicate for predicate in revision.verification_predicates}
+
+    predicate = predicates[_M390_DEDUCIBLE_RECONCILIATION_PREDICATE_ID]
+
+    assert _M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA in casilla_ids
+    assert _M390_RECONCILIACION_DEDUCIBLE_303_CASILLA in casilla_ids
+    assert predicate.expression == _M390_DEDUCIBLE_RECONCILIATION_EXPRESSION
+    assert predicate.finding_kind == "BLOCKING_RULE"
+    assert set(str(ref) for ref in predicate.legal_refs) == _M390_DEDUCIBLE_RECONCILIATION_LEGAL_REFS
 
 
 def test_modelo_390_declares_annual_compensation_result_fields() -> None:

@@ -1,0 +1,11 @@
+# Modelo 390 annual ledger-vs-M303 deducible reconciliation.
+#
+# The annual ledger-derived deducible total must match the fold from the four
+# quarterly Modelo 303 deducible totals. This catches import-deductible or
+# reverse-charge category wiring drift before VERIFICADO_COMPLETO is granted.
+
+[[revisions."2010-y-siguientes".verification_predicates]]
+predicate_id = "modelo-390-cuota-deducible-total-equals-reconciliacion-303"
+expression = 'equals(["iva.anual.cuota-deducible-total", "iva.anual.reconciliacion.deducible-303"])'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
