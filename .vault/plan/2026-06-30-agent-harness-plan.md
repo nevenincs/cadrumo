@@ -95,29 +95,29 @@ Build the validated end-state tool exposure: an MCP server reached by a sibling 
 
 Stand up the MCP server entrypoint, generate tools/list from the manifest, dispatch CLI leaves as typed tools, and project mutability to annotations.
 
-- [ ] `W04.P08.S28` - Create the MCP server entrypoint scaffolding; `src/aeat/entrypoints/mcp/__init__.py`.
-- [ ] `W04.P08.S29` - Generate the tools list from the Layer 0 manifest; `src/aeat/entrypoints/mcp/_tools.py`.
-- [ ] `W04.P08.S30` - Dispatch CLI leaves as typed MCP tool handlers with input, output, and error shapes; `src/aeat/entrypoints/mcp/_dispatch.py`.
-- [ ] `W04.P08.S31` - Project operator mutability into tool annotations; `src/aeat/entrypoints/mcp/_annotations.py`.
-- [ ] `W04.P08.S32` - Declare the aeat-mcp console script; `pyproject.toml`.
+- [x] `W04.P08.S28` - Create the MCP server entrypoint scaffolding; `src/aeat/entrypoints/mcp/__init__.py`.
+- [x] `W04.P08.S29` - Generate the tools list from the Layer 0 manifest; `src/aeat/entrypoints/mcp/_tools.py`.
+- [x] `W04.P08.S30` - Dispatch CLI leaves as typed MCP tool handlers with input, output, and error shapes; `src/aeat/entrypoints/mcp/_dispatch.py`.
+- [x] `W04.P08.S31` - Project operator mutability into tool annotations; `src/aeat/entrypoints/mcp/_annotations.py`.
+- [x] `W04.P08.S32` - Declare the aeat-mcp console script; `pyproject.toml`.
 
 ### Phase `W04.P09` - HITL and faithfulness hooks
 
 Enforce the confirmation tiers and the faithfulness check, with the live-write tool never exposed.
 
-- [ ] `W04.P09.S33` - Implement the PreToolUse confirmation policy across the mutability tiers; `src/aeat/entrypoints/mcp/_hitl.py`.
-- [ ] `W04.P09.S34` - Implement the PostToolUse faithfulness hook with advisory flag and handoff block; `src/aeat/entrypoints/mcp/_faithfulness.py`.
-- [ ] `W04.P09.S35` - Add the never-expose-live-write enforcement test; `src/aeat/entrypoints/mcp/tests/test_live_write_unexposed.py`.
-- [ ] `W04.P09.S36` - Add the HITL tier behaviour test; `src/aeat/entrypoints/mcp/tests/test_hitl_tiers.py`.
-- [ ] `W04.P09.S37` - Add the faithfulness advisory-versus-block behaviour test; `src/aeat/entrypoints/mcp/tests/test_faithfulness.py`.
+- [x] `W04.P09.S33` - Implement the PreToolUse confirmation policy across the mutability tiers; `src/aeat/entrypoints/mcp/_hitl.py`.
+- [x] `W04.P09.S34` - Implement the PostToolUse faithfulness hook with advisory flag and handoff block; `src/aeat/entrypoints/mcp/_faithfulness.py`.
+- [x] `W04.P09.S35` - Add the never-expose-live-write enforcement test; `src/aeat/entrypoints/mcp/tests/test_live_write_unexposed.py`.
+- [x] `W04.P09.S36` - Add the HITL tier behaviour test; `src/aeat/entrypoints/mcp/tests/test_hitl_tiers.py`.
+- [x] `W04.P09.S37` - Add the faithfulness advisory-versus-block behaviour test; `src/aeat/entrypoints/mcp/tests/test_faithfulness.py`.
 
 ### Phase `W04.P10` - MCP packaging and determinism
 
 Gate the MCP runtime behind the agent extra and add determinism-replay capture for tool call/response pairs.
 
-- [ ] `W04.P10.S38` - Add the MCP runtime dependency to the aeat[agent] extra; `pyproject.toml`.
-- [ ] `W04.P10.S39` - Implement determinism-replay capture and replay for tool call and response pairs; `src/aeat/agent/eval/_replay.py`.
-- [ ] `W04.P10.S40` - Add a packaging-smoke probe that aeat-mcp refuses from a bare core install with an install hint; `Justfile`.
+- [x] `W04.P10.S38` - Add the MCP runtime dependency to the aeat[agent] extra; `pyproject.toml`.
+- [x] `W04.P10.S39` - Implement determinism-replay capture and replay for tool call and response pairs; `src/aeat/agent/eval/_replay.py`.
+- [x] `W04.P10.S40` - Add a packaging-smoke probe that aeat-mcp refuses from a bare core install with an install hint; `Justfile`.
 
 ## Wave `W05` - Full persona and skill matrix, workspace materialiser, and standing eval gate
 
