@@ -38,5 +38,5 @@ def test_verification_chain_informativa_parser_extracts_ejercicio_casilla(
     _assert_decimal_casilla(
         extracted,
         _DECL_EJERCICIO_CASILLA,
-        label=_declaracion_case_label(modelo, fixture_stem),
+        label=_declaracion_case_label(modelo, fixture_stem, year=2024, period=period, template_revision=None),
     )
