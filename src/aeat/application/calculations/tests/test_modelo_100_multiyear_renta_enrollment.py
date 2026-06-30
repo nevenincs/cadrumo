@@ -85,7 +85,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 #: Modelo id this module enrolls into the multi-year-renta authorization gate.
 _MODELO = "100"
-_BUCKET_ID = "operator"
+_PROFILE_ID = "10010000-0000-4100-8100-000000000101"
+_BUCKET_ID = _PROFILE_ID
 _PERIOD = "0A"
 
 #: Casillas on the cross-renta Anexo-C base-liquidable-general-negativa carry.
@@ -149,7 +150,7 @@ def _seed_taxpayer_unit_profile() -> None:
     # fixture stamps on the bucket's profile manifest ("Test runtime profile");
     # a divergent label trips the torn-rename guard in ProfileAggregate.
     record = UserProfileRecord(
-        profile_id=_BUCKET_ID,
+        profile_id=_PROFILE_ID,
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
