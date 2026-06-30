@@ -26,7 +26,7 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Literal, Protocol, runtime_checkable
 
-from pydantic import BaseModel, Field, field_serializer, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind, Period
@@ -72,6 +72,43 @@ CalculationSourceDiagnosticReason = Literal[
     "prior_payment_minoracion_not_captured",
     "settlement_not_computed",
 ]
+
+
+def _binding_source_for_token(value: object) -> BindingSourceKind | None:
+    if isinstance(value, BindingSourceKind):
+        return value
+    if not isinstance(value, str):
+        return None
+    token = value.strip()
+    if not token:
+        return None
+    try:
+        return BindingSourceKind(token)
+    except ValueError:
+        return None
+
+
+def _infer_binding_source(payload: object) -> object:
+    """Hydrate ``binding_source`` when the free ``source_kind`` token is canonical."""
+    if not isinstance(payload, Mapping):
+        return payload
+    data = dict(payload)
+    source = _binding_source_for_token(data.get("source_kind"))
+    if isinstance(data.get("source_kind"), BindingSourceKind):
+        data["source_kind"] = data["source_kind"].value
+
+    explicit = data.get("binding_source")
+    if explicit is None:
+        if source is not None:
+            data["binding_source"] = source
+        return data
+
+    explicit_source = _binding_source_for_token(explicit)
+    if explicit_source is not None:
+        data["binding_source"] = explicit_source
+    if source is not None and explicit_source is not None and source is not explicit_source:
+        raise SourceMeshError("aggregation.source_mesh.errors.binding_source_mismatch")
+    return data
 
 # Source kinds that are explicitly deferred — no mesh resolver is built yet, but
 # they are known to the system and must produce a standing advisory on
@@ -175,11 +212,18 @@ class CalculationSourceDiagnostic(BaseModel):
 
     reason: CalculationSourceDiagnosticReason
     source_kind: str = Field(min_length=1, max_length=64)
+    binding_source: BindingSourceKind | None = None
+    """Canonical binding source when ``source_kind`` names one; ``None`` for advisory categories."""
     message: str = Field(min_length=1, max_length=512)
     resolver_id: str | None = Field(default=None, min_length=1, max_length=128)
     binding_id: BindingId | None = None
     relation_id: RelationId | None = None
     casilla_id: CasillaId | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _set_binding_source(cls, value: object) -> object:
+        return _infer_binding_source(value)
 
 
 class CalculationSourceProvenance(BaseModel):
@@ -188,8 +232,15 @@ class CalculationSourceProvenance(BaseModel):
     model_config = _STRICT_FROZEN
 
     source_kind: str = Field(min_length=1, max_length=64)
+    binding_source: BindingSourceKind | None = None
+    """Canonical binding source when ``source_kind`` names one; ``None`` for non-binding provenance."""
     source_ref: str = Field(min_length=1, max_length=256)
     fingerprint: str | None = Field(default=None, min_length=1, max_length=256)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _set_binding_source(cls, value: object) -> object:
+        return _infer_binding_source(value)
 
 
 class BorradorSourceProvenance(BaseModel):

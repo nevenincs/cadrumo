@@ -59,11 +59,51 @@ def test_source_resolution_contract_is_strict_and_serializable() -> None:
     )
 
     assert tuple(resolution.source_transaction_ids) == ("tx-1", "tx-2")
+    assert resolution.diagnostics[0].binding_source is BindingSourceKind.WITHHOLDING
+    assert resolution.provenance[0].binding_source is BindingSourceKind.LEDGER_IVA_AGGREGATION
     assert resolution.model_dump(mode="json")["binding_values"] == {"modelo-303-iva-repercutido-general-cuota": "21.00"}
     assert resolution.model_dump(mode="json")["date_binding_values"] == {"profile-birth-date": "1980-01-31"}
     assert resolution.model_dump(mode="json")["relation_values"] == {"modelo-180-rel-115-base-anual": "2128.75"}
     with pytest.raises(ValidationError, match="Extra inputs"):
         CalculationSourceResolution.model_validate({"resolver_id": "ledger-iva", "unexpected": True})
+
+
+def test_source_diagnostic_keeps_advisory_category_separate_from_binding_source() -> None:
+    diagnostic = CalculationSourceDiagnostic(
+        reason="settlement_not_computed",
+        source_kind="settlement_casilla",
+        message="settlement casilla must be operator-verified",
+    )
+
+    assert diagnostic.source_kind == "settlement_casilla"
+    assert diagnostic.binding_source is None
+
+
+def test_source_diagnostic_rejects_mismatched_binding_source_projection() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind="ledger_iva_aggregation",
+            binding_source=BindingSourceKind.PROFILE,
+            message="source kind and binding source disagree",
+        )
+
+    context = exc_info.value.errors()[0].get("ctx")
+    assert context is not None
+    error = context["error"]
+    assert isinstance(error, SourceMeshError)
+    assert str(error) == "aggregation.source_mesh.errors.binding_source_mismatch"
+
+
+def test_source_provenance_projects_canonical_binding_source() -> None:
+    provenance = CalculationSourceProvenance(
+        source_kind=BindingSourceKind.RELATION_PREFILL,
+        source_ref="relation:modelo-100-rel-130",
+    )
+
+    assert provenance.source_kind == BindingSourceKind.RELATION_PREFILL.value
+    assert provenance.binding_source is BindingSourceKind.RELATION_PREFILL
+    assert provenance.model_dump(mode="json")["binding_source"] == BindingSourceKind.RELATION_PREFILL.value
 
 
 def test_source_resolution_rejects_legacy_bound_casilla_inputs_key() -> None:
