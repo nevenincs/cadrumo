@@ -7,8 +7,7 @@ import sys
 
 import pytest
 
-from ....core.resources import bundled_path
-from ...calculations.registry import load_registry_tree
+from ....core.resources import resources
 from .. import (
     UserProfileRegistryContractSeverity,
     build_user_profile_selector_index,
@@ -55,7 +54,7 @@ def test_profile_binding_selectors_is_public_and_deduplicates_supported_selector
 
 def test_committed_modelo_profile_selectors_are_declared_by_user_profile_schema() -> None:
     schema = load_user_profile_schema()
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos = resources().modelos.all()
 
     report = validate_user_profile_registry_contract(modelos, schema)
 

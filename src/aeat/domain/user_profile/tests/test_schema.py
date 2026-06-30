@@ -8,8 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.classification import SensitivityClass
-from ....core.resources import bundled_path
-from ...calculations.registry import load_registry_tree
+from ....core.resources import bundled_path, resources
 from ...calculations.registry._legal import verify_legal_catalogue
 from .. import (
     ProfileFieldDefinition,
@@ -110,7 +109,7 @@ def test_committed_user_profile_schema_exposes_profile_lookup_metadata() -> None
 
 def test_committed_user_profile_schema_legal_refs_resolve_against_catalogue_and_corpus() -> None:
     schema = load_user_profile_schema()
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = resources().modelos.authority.catalogues
     refs_by_field = {
         f"{section.key}.{field.key}": field.legal_refs
         for section in schema.sections

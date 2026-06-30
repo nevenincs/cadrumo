@@ -11,8 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.resources import bundled_path
-from ...calculations.registry import load_registry_tree
+from ....core.resources import bundled_path, resources
 from .. import ProfileSchemaDefinition, load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -25,7 +24,7 @@ def schema() -> ProfileSchemaDefinition:
 
 @pytest.fixture(scope="module")
 def legal_ids() -> frozenset[str]:
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = resources().modelos.authority.catalogues
     return frozenset(catalogues.legal)
 
 
