@@ -47,15 +47,3 @@ def test_parse_bool_falsy_tokens(raw: str) -> None:
 )
 def test_parse_bool_unknown_tokens_return_none(raw: str | None) -> None:
     assert _parse_bool(raw) is None
-
-
-@pytest.mark.parametrize("raw", ["true", "True", "TRUE", "1", "yes", "y", "si", "sí"])
-def test_parse_bool_truthy_roundtrip(raw: str) -> None:
-    """Every token in the truthy set round-trips through the parser."""
-    assert _parse_bool(raw) is True
-
-
-@pytest.mark.parametrize("raw", ["false", "False", "FALSE", "0", "no", "n"])
-def test_parse_bool_falsy_roundtrip(raw: str) -> None:
-    """Every token in the falsy set round-trips through the parser."""
-    assert _parse_bool(raw) is False
