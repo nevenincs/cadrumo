@@ -24,12 +24,16 @@ from .. import WorkflowState, active_transaction_catalogue_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_RUNTIME_BUCKET_ID = "f8dbdb29-a1ff-45d2-b63a-ed066d5f2f0c"
+_FIRST_BUCKET_ID = "db6f2ed3-93cd-407d-b683-73e57933e783"
+_SECOND_BUCKET_ID = "45a7579d-5ba0-41f0-ae45-cb45d48bd015"
+
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(
         tmp_path=tmp_path,
-        bucket_id="transaction-catalogue-resolution-test",
+        bucket_id=_RUNTIME_BUCKET_ID,
     ) as profile:
         yield profile.repository
 
@@ -76,16 +80,16 @@ def test_active_transaction_catalogue_repository_routes_by_active_profile_bucket
 ) -> None:
     from ....core.config import override_settings
 
-    first_state = _state(profile="alpha", bucket_id="bucket-alpha")
-    second_state = _state(profile="beta", bucket_id="bucket-beta")
+    first_state = _state(profile="alpha", bucket_id=_FIRST_BUCKET_ID)
+    second_state = _state(profile="beta", bucket_id=_SECOND_BUCKET_ID)
     first_transaction = _transaction("same-provider-row")
 
-    with override_settings(aeat_active_profile="bucket-alpha"):
+    with override_settings(aeat_active_profile=_FIRST_BUCKET_ID):
         active_transaction_catalogue_repository(first_state, objects=secure_objects).save(
             TransactionCatalogue.from_transactions((first_transaction,)),
         )
         first_catalogue = active_transaction_catalogue_repository(first_state, objects=secure_objects).load()
-    with override_settings(aeat_active_profile="bucket-beta"):
+    with override_settings(aeat_active_profile=_SECOND_BUCKET_ID):
         second_catalogue = active_transaction_catalogue_repository(second_state, objects=secure_objects).load()
 
     assert tuple(first_catalogue.transactions) == (first_transaction.transaction_id,)
