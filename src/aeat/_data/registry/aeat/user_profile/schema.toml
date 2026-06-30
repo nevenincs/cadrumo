@@ -629,8 +629,18 @@ type = "decimal"
 required = false
 sensitivity = "financial"
 effective_dated = true
-description = "Sum of income received from the 2nd and subsequent pagadores. Art. 96.3 LIRPF: declaración obligatoria when this value exceeds €1,500. Only meaningful when pagadores_count >= 2."
+description = "Sum of income received from the 2nd and subsequent pagadores. Art. 96.3 LIRPF: when pagadores_count >= 2 and this value exceeds €1,500, the work-income filing-exemption limit drops from the general €22,000 to the per-year reduced limit. Only meaningful when pagadores_count >= 2."
 model_selectors = ["irpf.pagadores_secondary_income"]
+legal_refs = ["ley-35-2006:art-96"]
+
+[[sections.fields]]
+key = "pagadores_total_work_income"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Total rendimientos íntegros del trabajo for the year, across all pagadores. Art. 96.2.a)/96.3 LIRPF: a Modelo 100 filing obligation arises when this total exceeds the applicable exemption limit — the general €22,000, or the per-year reduced limit (€15,876 for 2024 onward) when income comes from more than one pagador and the 2nd-and-subsequent aggregate exceeds €1,500."
+model_selectors = ["irpf.pagadores_total_work_income"]
 legal_refs = ["ley-35-2006:art-96"]
 
 [[sections]]

@@ -995,6 +995,10 @@ application:
           que els declarants IRNR no residents a la UE/EEE designin un representant
           per a comunicacions amb l'AEAT.
       modelo_210_2025_rendimientos_integros_implica_base_imponible: 'Els rendiments íntegres són positius però la base imposable és zero; reviseu la determinació de la base imposable.'
+      modelo_202_base_imponible_previa_determinada_cuando_resultado_positivo: 'El resultat comptable és positiu però la base imposable prèvia és zero; reviseu la determinació de la base imposable.'
+      modelo_123_2024_base_total_implica_retenciones_total: 'La base total és positiva però les retencions totals són zero; reviseu la determinació de la retenció.'
+      modelo_151_base_liquidable_implica_cuota_integra: 'La base liquidable general és positiva però la quota íntegra general és zero; reviseu la determinació de la quota íntegra.'
+      modelo_714_cuota_integra_implica_total_cuota_integra: 'La quota íntegra és positiva però la quota íntegra total és zero; reviseu la transcripció de la quota íntegra total.'
     iva_wallet:
       correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
         Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu
@@ -2149,6 +2153,7 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
+        file_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul %{calculation_revision_id} ja està presentada; sha retornat el registre de presentació existent sense canvis.'
   common:
     errors:
       draft_id_not_found: ID d'esborrany %{draft_id} no trobat
@@ -3491,6 +3496,7 @@ cli:
       work_units_present_with_discarded: '%{count} unitat(s) de treball de models
         actives (%{discarded} descartada(es)) en aquest emmagatzematge local; la teva
         feina de models activa esta desada, repren-la amb `aeat app modelo work list`.'
+      filing_obligation_multiple_pagadores: 'Percebre rendiments del treball de més d''un pagador, amb més de 1.500 € dels pagadors secundaris, redueix el límit de l''obligació de declarar (art. 96.3 LIRPF); podeu estar obligat a presentar el Model 100 si el total de rendiments del treball el supera.'
     status_help: Mostrar l'estat del perfil, llibre, factures i declaracions
     taxpayer_model_undeclared: El perfil actiu no declara aquest model fiscal; actualitza
       el perfil o torna a executar amb l'anul·lació de perfil incomplet.

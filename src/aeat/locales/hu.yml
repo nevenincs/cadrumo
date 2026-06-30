@@ -942,6 +942,10 @@ application:
           megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
           ki az AEAT kommunikaciohoz.
       modelo_210_2025_rendimientos_integros_implica_base_imponible: 'A bruttó jövedelem (rendimientos íntegros) pozitív, de az adóalap (base imponible) nulla; ellenőrizze az adóalap meghatározását.'
+      modelo_202_base_imponible_previa_determinada_cuando_resultado_positivo: 'A számviteli eredmény pozitív, de az előzetes adóalap (base imponible previa) nulla; ellenőrizze az adóalap meghatározását.'
+      modelo_123_2024_base_total_implica_retenciones_total: 'A teljes adóalap pozitív, de a teljes forrásadó (retenciones) nulla; ellenőrizze a forrásadó meghatározását.'
+      modelo_151_base_liquidable_implica_cuota_integra: 'Az általános adóalap (base liquidable general) pozitív, de a teljes adó (cuota íntegra general) nulla; ellenőrizze az adó meghatározását.'
+      modelo_714_cuota_integra_implica_total_cuota_integra: 'A teljes adó (cuota íntegra) pozitív, de az összesített teljes adó (total cuota íntegra) nulla; ellenőrizze az összesített adó átírását.'
     iva_wallet:
       correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
         Először futtassa az ''aeat app modelo iva-wallet seed'' parancsot; a javítás
@@ -1470,9 +1474,7 @@ cli:
         modelo_help: A háttéraggregálási szolgáltatás által támogatott nyomtatványkód
           (111, 115, 123, 180, 190, 193, 347, 349 vagy 720).
         period_help: 'Aggregációs időszaktoken: 0A éves, 1T-4T negyedévek, 01-12 hónapok.'
-        retencion_observation_help: JSON RetencionObservation objektum. A source_kind
-          értéke ledger_transaction, purchase_invoice_evidence, payable_invoice vagy
-          collectible_invoice lehet. Több megfigyeléshez ismételje meg.
+        retencion_observation_help: 'JSON RetencionObservation objektum. A source_kind erteke ledger_transaction, purchase_invoice_evidence, payable_invoice vagy collectible_invoice lehet. A 111-es Modelo munka eseten a rendimientos_trabajo scheme az alkalmazotti progressziv kulcs (LIRPF 101.1. cikk), a rendimientos_trabajo_administrador pedig a rogzitett igazgatoi/tanacstagi kulcs (LIRPF 101.2. cikk: 35 szazalek, vagy 19 szazalek, ha a szervezet netto arbevetele 100.000 EUR alatt van). Tobb megfigyeleshez ismetelje meg.'
         withholding_observation_help: Kifizetőnkénti-kulcsonkénti visszatartási megfigyelés
           (JSON) a 190-es modell juttatásszámlálásához; ismételhető.
       aggregate_help: 'A háttér nyomtatványonkénti aggregálási szolgáltatás futtatása
@@ -2092,6 +2094,7 @@ cli:
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
+        file_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id} számítási revízió már be van nyújtva; a meglévő benyújtási rekord változatlanul visszaadva.'
   common:
     errors:
       draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található
@@ -3456,6 +3459,7 @@ cli:
       work_units_present_with_discarded: '%{count} aktív modellómunka-egység (%{discarded}
         eldobott) a helyi tárban – az aktív modellómunkája mentve van; folytassa:
         `aeat app modelo work list`.'
+      filing_obligation_multiple_pagadores: 'Ha a munkajövedelem több kifizetőtől származik, és a másodlagos kifizetőktől kapott összeg meghaladja az 1.500 €-t, az IRPF bevallási mentességi határ a 96.3 LIRPF szerinti csökkentett értékre csökken; ha a teljes munkajövedelem ezt meghaladja, előfordulhat, hogy be kell nyújtania a Modelo 100-at.'
     status_help: Profil, főkönyv és nyomtatvány-készültség megjelenítése.
     taxpayer_model_undeclared: Az aktív profil nem tartalmaz adózói modellt; frissítse
       a profilt, vagy futtassa újra a hiányos profil felülbírálásával.

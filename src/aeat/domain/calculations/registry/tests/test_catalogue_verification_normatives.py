@@ -562,3 +562,65 @@ def test_modelo_100_retention_credit_formulas_do_not_cite_fractional_payment_art
 
     assert "revisions/2025/formulas/0068-renta-2025-retenciones-arrendamientos-urbanos.toml" in checked
     assert offenders == []
+
+
+def test_ley_49_2002_art_6_rentas_exentas_links_to_bundled_boe_corpus() -> None:
+    """Ley 49/2002 art. 6 (rentas exentas) grounds the Modelo 200 régimen-especial
+    exclusion of exempt foundation income from the base imponible. The binding
+    article is verified against the bundled BOE-A-2002-25039 consolidated excerpt."""
+    catalogues = _catalogues()
+    reference = catalogues.legal["ley-49-2002:art-6"]
+
+    assert reference.corpus_ref == "corpus/normatives/html/ley-49-2002-art-6.html#a6"
+    assert reference.document_id == "BOE-A-2002-25039"
+    assert reference.article == "6"
+    assert reference.required_text == (
+        "Artículo 6. Rentas exentas.",
+        "Están exentas del Impuesto sobre Sociedades las siguientes rentas "
+        "obtenidas por entidades sin fines lucrativos",
+        "Los donativos y donaciones recibidos para colaborar en los fines de la entidad",
+        "Las cuotas satisfechas por los asociados, colaboradores o benefactores",
+        "Las subvenciones, salvo las destinadas a financiar la realización de explotaciones económicas no exentas",
+        "Las obtenidas en el ejercicio de las explotaciones económicas exentas a que se refiere el artículo siguiente",
+    )
+    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+
+
+def test_ley_49_2002_art_7_explotaciones_exentas_links_to_bundled_boe_corpus() -> None:
+    """Ley 49/2002 art. 7 (explotaciones económicas exentas) grounds the exempt
+    economic-activity income that art. 6.4.º excludes from the Modelo 200 base
+    imponible. Verified against the bundled BOE-A-2002-25039 consolidated excerpt
+    (apartado 12.º escasa relevancia currentized by RD-ley 6/2023)."""
+    catalogues = _catalogues()
+    reference = catalogues.legal["ley-49-2002:art-7"]
+
+    assert reference.corpus_ref == "corpus/normatives/html/ley-49-2002-art-7.html#a7"
+    assert reference.document_id == "BOE-A-2002-25039"
+    assert reference.article == "7"
+    assert reference.required_text == (
+        "Artículo 7. Explotaciones económicas exentas.",
+        "Están exentas del Impuesto sobre Sociedades las rentas obtenidas por "
+        "entidades sin fines lucrativos que procedan de las siguientes explotaciones económicas",
+        "siempre y cuando sean desarrolladas en cumplimiento de su objeto o finalidad específica",
+        "Las explotaciones económicas de escasa relevancia",
+        "no supere en conjunto 20.000 euros",
+    )
+    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+
+
+def test_modelo_200_regimen_especial_disminucion_casillas_cite_ley_49_2002_exemption_articles() -> None:
+    """The Modelo 200 régimen-especial disminución corrections (casillas
+    03276-03280, page 026f → [00392]) exclude a Ley 49/2002 entity's exempt
+    income from the base imponible. Each MUST cite arts. 6 and 7 as the binding
+    exemption provisions; the snapshot builds (legal grounding + foundation
+    construct legal-ref coverage) under full bundled-corpus validation."""
+    from ._registry_schema_support import _committed_snapshot
+
+    snapshot = _committed_snapshot("200", 2024, "0A")
+    revision = snapshot.revision
+
+    disminucion_casilla_ids = ("03276", "03277", "03278", "03279", "03280")
+    for casilla_id in disminucion_casilla_ids:
+        casilla = next(c for c in revision.casillas if c.id == casilla_id)
+        assert "ley-49-2002:art-6" in casilla.legal_refs, casilla_id
+        assert "ley-49-2002:art-7" in casilla.legal_refs, casilla_id

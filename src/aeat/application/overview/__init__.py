@@ -101,19 +101,36 @@ if TYPE_CHECKING:
 
 _log = _get_logger(__name__)
 
+#: Advisory locale key surfaced when the Art. 96.3 LIRPF multiple-pagadores
+#: filing obligation is detected. Named as a ``_LOCALE_KEY`` constant so the
+#: locale scaffold's AST scanner discovers it for parity (the key is returned
+#: from a builder rather than passed to ``tr()`` at this call site).
+_MULTIPLE_PAGADORES_OBLIGATION_LOCALE_KEY = "cli.overview.status.filing_obligation_multiple_pagadores"
+
 
 def build_filing_obligation_advisories(
     raw_values: Mapping[str, object] | None,
+    *,
+    filing_year: int | None = None,
 ) -> tuple[str, ...]:
     """Derive overview-status advisory locale keys from raw profile values.
 
     The helper feeds :class:`OverviewStatusReport` and stays on the local
-    read-model path. It currently implements the Art. 96.3 LIRPF
+    read-model path. It implements the Art. 96.2.a)/96.3 LIRPF
     multiple-pagadores rule through
     :func:`~aeat.domain.deadlines.evaluate_multiple_pagadores_obligation`:
     when the operator has declared ``irpf.pagadores_count >= 2`` and
-    ``irpf.pagadores_secondary_income > 1500``, Modelo 100 filing is
-    mandatory regardless of the general income thresholds.
+    ``irpf.pagadores_secondary_income > 1500``, the work-income exemption
+    limit drops from the general €22,000 to the per-year reduced limit, and
+    Modelo 100 filing is mandatory when ``irpf.pagadores_total_work_income``
+    exceeds that reduced limit. When the total work income is undeclared, the
+    advisory surfaces conservatively rather than granting a false clear.
+
+    Args:
+        raw_values: Profile raw values mapping, or ``None``.
+        filing_year: The income year selecting the dated reduced limit; when
+            ``None`` the latest known reduced limit is used (the current
+            figure for a year-agnostic operator surface).
 
     Returns a tuple of ``tr()``-resolvable locale keys, empty when no
     evidence of a mandatory obligation is present. Malformed raw values are
@@ -148,9 +165,18 @@ def build_filing_obligation_advisories(
 
     pagadores_count = _to_int("irpf.pagadores_count", raw_values.get("irpf.pagadores_count"))
     secondary_income = _to_decimal("irpf.pagadores_secondary_income", raw_values.get("irpf.pagadores_secondary_income"))
+    total_work_income = _to_decimal(
+        "irpf.pagadores_total_work_income",
+        raw_values.get("irpf.pagadores_total_work_income"),
+    )
 
-    if _evaluate_multiple_pagadores_obligation(pagadores_count, secondary_income):
-        return ("cli.overview.status.filing_obligation_multiple_pagadores",)
+    if _evaluate_multiple_pagadores_obligation(
+        pagadores_count,
+        secondary_income,
+        total_work_income,
+        filing_year,
+    ):
+        return (_MULTIPLE_PAGADORES_OBLIGATION_LOCALE_KEY,)
     return ()
 
 

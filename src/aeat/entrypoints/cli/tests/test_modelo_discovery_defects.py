@@ -22,6 +22,7 @@ fleet:
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -87,8 +88,40 @@ def _create_303_work_unit() -> str:
     return _payload(result.output)["work_unit_id"]
 
 
+def _seed_m111_retencion_observation() -> None:
+    """Seed one work-income retención percepción so a Modelo 111 work unit's
+    ``work calculate`` resolves the ``retenciones_aggregation`` source.
+
+    Modelo 111 calculation requires per-perceptor retención evidence: the
+    source resolver refuses an all-blank quarter rather than silently filing
+    a zero return. One real ``rendimientos_trabajo`` percepción is the
+    minimum that makes the 2025 1T quarter calculable.
+    """
+    observation = json.dumps(
+        {
+            "source_kind": "ledger_transaction",
+            "source_object_id": "m111-work-income-row-001",
+            "perceptor_nif": "A12345678",
+            "perceptor_name": "Empresa Pagadora SL",
+            "scheme": "rendimientos_trabajo",
+            "taxable_base": "1000.00",
+            "retencion_amount": "190.00",
+            "accrued_on": "2025-01-15",
+        },
+    )
+    result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "aggregate",
+            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--retencion-observation", observation,
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+
+
 def _create_111_work_unit() -> str:
-    """Create a Modelo 111 work unit — fully calculable without any binding."""
+    """Create a Modelo 111 work unit calculable from a seeded retención percepción."""
 
     result = invoke_cached_cli(
         [
@@ -99,6 +132,7 @@ def _create_111_work_unit() -> str:
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
+    _seed_m111_retencion_observation()
     return _payload(result.output)["work_unit_id"]
 
 

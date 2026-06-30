@@ -187,6 +187,7 @@ def taxpayer_profile_from_mapping(
         representante_fiscal_nombre=canonical.get("taxpayer_type.representante_fiscal_nombre") or None,
         irpf_pagadores_count=_parse_optional_int(canonical.get("irpf.pagadores_count")),
         irpf_pagadores_secondary_income=_parse_decimal(canonical.get("irpf.pagadores_secondary_income")),
+        irpf_pagadores_total_work_income=_parse_decimal(canonical.get("irpf.pagadores_total_work_income")),
         days_in_spain=_parse_days_in_spain(canonical),
     )
 

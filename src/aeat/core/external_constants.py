@@ -25,11 +25,13 @@ from __future__ import annotations
 
 import re
 import tomllib
+from collections.abc import Mapping
 from decimal import Decimal
 from enum import StrEnum
 from functools import cached_property, lru_cache
 from importlib.resources import files  # nosemgrep
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any, Final, Literal
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
@@ -475,11 +477,49 @@ MODELO_720_REPORTING_THRESHOLD_EUR: Final[Decimal] = Decimal("50000.00")
 #: qualifying days and this ceiling.  Binding provision: Art. 7.p) LIRPF.
 ART_7P_EXEMPTION_CAP_EUR: Final[Decimal] = Decimal("60100")
 
-#: Art. 96.3 LIRPF (Ley 35/2006) secondary-pagador filing floor.
-#: A natural person whose rendimientos del trabajo originate from more than one
-#: pagador must file Modelo 100 when aggregate income from the 2nd and subsequent
-#: pagadores exceeds this amount.  Binding provision: Art. 96.3 LIRPF (Ley 35/2006).
+#: Art. 96.3 LIRPF (Ley 35/2006) secondary-pagador trigger amount. When work
+#: income comes from more than one pagador, the reduced filing-exemption limit
+#: (see ``WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR``) applies only
+#: when the aggregate income from the 2nd and subsequent pagadores STRICTLY
+#: exceeds this amount; at or below it the general 22.000 € limit is retained
+#: (Art. 96.3.a.1.º). Binding provision: Art. 96.3 LIRPF (Ley 35/2006). This
+#: trigger is year-stable and has not been revalued.
 MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR: Final[Decimal] = Decimal("1500")
+
+#: Art. 96.2.a) LIRPF (Ley 35/2006) GENERAL filing-exemption ceiling for
+#: rendimientos íntegros del trabajo. A natural person whose work income does not
+#: exceed this amount (single pagador, or multiple pagadores with the 2nd-and-
+#: subsequent aggregate at or below 1.500 €) is NOT obliged to file Modelo 100 on
+#: account of work income. Binding provision: Art. 96.2.a) LIRPF (Ley 35/2006).
+#: This ceiling is year-stable.
+WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR: Final[Decimal] = Decimal("22000")
+
+#: Art. 96.3 LIRPF (Ley 35/2006) REDUCED filing-exemption ceiling for
+#: rendimientos íntegros del trabajo, keyed by filing year (the year the income
+#: was obtained). The general 22.000 € ceiling drops to this reduced amount when
+#: work income comes from more than one pagador AND the 2nd-and-subsequent
+#: aggregate exceeds ``MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR`` (1.500 €).
+#: The amount is DATED — it was revalued upward across recent filing years:
+#:   - 2019-2022: 14.000 €  (Art. 96.3 LIRPF base value, post-Ley 26/2014)
+#:   - 2023:      15.000 €  (Ley 31/2022 PGE-2023, BOE-A-2022-22128, art. 96.3 mod.)
+#:   - 2024-2026: 15.876 €  (RD-Ley 4/2024, BOE-A-2024-13066, art. 96.3 mod.;
+#:                confirmed by the bundled consolidated LIRPF art-96 corpus,
+#:                which states "15.876 euros")
+#: Binding provision: Art. 96.3 LIRPF (Ley 35/2006), as modified per year above.
+#: A filing year beyond the latest tabulated entry resolves to the latest known
+#: amount (forward-compatible) until a new law revalues it.
+WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR: Final[Mapping[int, Decimal]] = MappingProxyType(
+    {
+        2019: Decimal("14000"),
+        2020: Decimal("14000"),
+        2021: Decimal("14000"),
+        2022: Decimal("14000"),
+        2023: Decimal("15000"),
+        2024: Decimal("15876"),
+        2025: Decimal("15876"),
+        2026: Decimal("15876"),
+    },
+)
 
 #: Art. 40.3 LIS (Ley 27/2014, BOE-A-2014-12328) INCN threshold that makes the
 #: base-imponible pago-fraccionado modality MANDATORY for Modelo 202. A taxpayer

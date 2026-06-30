@@ -20,22 +20,15 @@ def test_accepts_canonical_sha256_hex_digest() -> None:
     assert _Holder(snapshot_id=digest).snapshot_id == digest
 
 
-def test_rejects_uppercase_hex() -> None:
-    digest = hashlib.sha256(b"payload").hexdigest().upper()
+@pytest.mark.parametrize(
+    "snapshot_id",
+    (
+        pytest.param(hashlib.sha256(b"payload").hexdigest().upper(), id="uppercase"),
+        pytest.param("a" * 63, id="short"),
+        pytest.param("a" * 65, id="long"),
+        pytest.param("g" * 64, id="non-hex"),
+    ),
+)
+def test_rejects_invalid_snapshot_id(snapshot_id: str) -> None:
     with pytest.raises(ValidationError):
-        _Holder(snapshot_id=digest)
-
-
-def test_rejects_short_value() -> None:
-    with pytest.raises(ValidationError):
-        _Holder(snapshot_id="a" * 63)
-
-
-def test_rejects_long_value() -> None:
-    with pytest.raises(ValidationError):
-        _Holder(snapshot_id="a" * 65)
-
-
-def test_rejects_non_hex_characters() -> None:
-    with pytest.raises(ValidationError):
-        _Holder(snapshot_id="g" * 64)
+        _Holder(snapshot_id=snapshot_id)

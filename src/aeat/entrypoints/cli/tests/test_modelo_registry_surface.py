@@ -400,7 +400,7 @@ def test_missing_binding_guidance_routes_by_binding_source(tmp_path) -> None:
     from .._modelo import _missing_binding_guidance
 
     period = Period.from_year_and_code(2025, "1T")
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="missing-binding-route") as runtime:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="0b1d1000-0000-4000-8000-000000000001") as runtime:
         _seed_modelo_130_ready_profile(runtime.bucket_id)
         unit = create_work_unit(
             bucket_id=runtime.bucket_id,
@@ -440,7 +440,7 @@ def test_work_calculate_missing_m200_m202_relation_prefill_is_advisory(tmp_path)
     from ....domain.user_profile import UserProfileFact, UserProfileRecord
     from ....tests.secure_sql import isolated_runtime_profile
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="m200-missing-relation-guidance") as runtime:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="0c200000-0000-4000-8000-000000000002") as runtime:
         UserProfileLifecycleRepository(bucket_id=runtime.bucket_id, objects=runtime.repository).save(
             UserProfileRecord(
                 profile_id=runtime.bucket_id,
