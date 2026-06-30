@@ -523,7 +523,11 @@ class LedgerViewResult(OutputSchema):
 class LedgerStatusResult(OutputSchema):
     """JSON envelope for ``aeat app ledger status``.
 
-    Mirrors ``LedgerStatusReport.model_dump(mode='json')``.
+    Mirrors :class:`~aeat.application.ledger.LedgerStatusReport`.  With no
+    period it is an at-a-glance bucket summary; with ``--period`` it adds the
+    ledger preflight counts and readiness verdict for the selected
+    :class:`~aeat.core.Period`.  The money totals are gross EUR roll-ups over
+    active business/mixed rows, not modelo registry calculations.
     """
 
     bucket_id: str
@@ -872,7 +876,12 @@ class LedgerReviewResult(OutputSchema):
 
 
 class LedgerPreflightIssuePayload(OutputSchema):
-    """One ledger preflight / check issue row (matches LedgerPreflightIssue.model_dump)."""
+    """One readiness issue attached to a ledger transaction.
+
+    Mirrors :class:`~aeat.application.ledger.LedgerPreflightIssue`: the
+    transaction id, machine-readable reason, and operator detail explaining which
+    fact blocks or warns before modelo calculation.
+    """
 
     transaction_id: str
     reason: str
@@ -881,7 +890,13 @@ class LedgerPreflightIssuePayload(OutputSchema):
 
 @register_schema("ledger.check")
 class LedgerCheckResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger check``."""
+    """JSON envelope for ``aeat app ledger check``.
+
+    ``check`` is a report-only audit over one explicit period or every period the
+    ledger touches.  It aggregates
+    :func:`~aeat.application.ledger.preflight_transaction_catalogue` issue rows
+    into a bucket-level readiness verdict without mutating transactions.
+    """
 
     bucket_id: str
     periods: list[str]
@@ -894,9 +909,11 @@ class LedgerCheckResult(OutputSchema):
 class LedgerPreflightResult(OutputSchema):
     """JSON envelope for ``aeat app ledger preflight``.
 
-    Mirrors ``LedgerPreflightReport.model_dump(mode='json')`` produced
-    by :func:`preflight_ledger_tax_readiness`. ``period`` is the nested
-    :class:`LedgerPeriodPayload` model dump; ``ready`` is the computed-field flag.
+    Mirrors :class:`~aeat.application.ledger.LedgerPreflightReport` produced by
+    :func:`~aeat.application.ledger.preflight_ledger_tax_readiness`. ``period``
+    is the nested :class:`LedgerPeriodPayload` model dump, ``issues`` are
+    :class:`LedgerPreflightIssuePayload` rows, and ``ready`` is the computed
+    no-issues verdict.
     """
 
     bucket_id: str
