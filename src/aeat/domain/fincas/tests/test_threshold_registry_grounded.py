@@ -22,7 +22,8 @@ from decimal import Decimal
 
 import pytest
 
-from ...calculations.registry import RegistryValidationError, read_parameter
+from ....core.resources import bundled_path
+from ...calculations.registry import RegistryValidationError, load_registry_tree, read_parameter, verify_legal_catalogue
 from .._enums import ReduccionTier
 from .._tier_resolver import (
     DEFAULT_EJERCICIO_AMENDMENT_YEAR,
@@ -41,6 +42,22 @@ from .._tier_resolver import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SUPPORTED_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
+_RESOLVER_LEGAL_REFS = (
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-23-2021",
+    "ley-35-2006:dt-38",
+)
+
+
+def test_resolver_legal_refs_resolve_against_catalogue_and_bundled_corpus() -> None:
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    missing = sorted(ref for ref in _RESOLVER_LEGAL_REFS if ref not in catalogues.legal)
+
+    assert missing == []
+    verify_legal_catalogue(
+        {ref: catalogues.legal[ref] for ref in _RESOLVER_LEGAL_REFS},
+        source_root=bundled_path(),
+    )
 
 
 @pytest.mark.parametrize("year", _SUPPORTED_YEARS)
@@ -193,7 +210,7 @@ def test_with_registry_rate_overrides_wrong_template_with_registry_value(
         tier=ReduccionTier.TIER_90,
         reduccion_pct=Decimal("0.99"),
         qualifying_share=Decimal("1"),
-        boe_citation_id="art_23_2_a",
+        legal_refs=("ley-35-2006:art-23",),
     )
     result = _with_registry_rate(wrong_template, 2024, tier_id)
     # The rate comes from the registry parameter, NOT the template's 0.99.
@@ -207,7 +224,7 @@ def test_with_registry_rate_preserves_singleton_identity_when_rate_matches() -> 
         tier=ReduccionTier.TIER_90,
         reduccion_pct=Decimal("0.90"),
         qualifying_share=Decimal("1"),
-        boe_citation_id="art_23_2_a",
+        legal_refs=("ley-35-2006:art-23",),
     )
     result = _with_registry_rate(template, 2024, "tier-90")
     assert result is template
@@ -219,7 +236,7 @@ def test_with_registry_rate_preserves_qualifying_share_on_override() -> None:
         tier=ReduccionTier.TIER_70_JOVEN,
         reduccion_pct=Decimal("0.99"),
         qualifying_share=Decimal("0.5"),
-        boe_citation_id="art_23_2_b_1",
+        legal_refs=("ley-35-2006:art-23",),
     )
     result = _with_registry_rate(joven_template, 2024, "tier-70")
     assert result.reduccion_pct == Decimal("0.70")

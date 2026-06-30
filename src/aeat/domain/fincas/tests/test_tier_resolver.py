@@ -85,7 +85,7 @@ class TestPreAmendmentAndDt38:
         result = resolve_reduccion(_contract(celebration=date(2024, 1, 1)), _finca(), period_year=2023)
         assert result.tier is ReduccionTier.TIER_60_GRANDFATHERED_DT38
         assert result.reduccion_pct == Decimal("0.60")
-        assert result.boe_citation_id == "pre_amendment"
+        assert result.legal_refs == ("ley-35-2006:art-23-2021",)
 
     def test_dt_38_pre_2023_05_26_contract_returns_60(self) -> None:
         """2024+ ejercicio + contract signed on 2023-05-25 → DT 38ª flat 60 %."""
@@ -96,7 +96,7 @@ class TestPreAmendmentAndDt38:
         )
         assert result.tier is ReduccionTier.TIER_60_GRANDFATHERED_DT38
         assert result.reduccion_pct == Decimal("0.60")
-        assert result.boe_citation_id == "dt_38"
+        assert result.legal_refs == ("ley-35-2006:dt-38", "ley-35-2006:art-23-2021")
 
     def test_2024_ejercicio_2023_05_26_contract_uses_new_framework(self) -> None:
         """Boundary: contract signed exactly on 2023-05-26 is in-scope for the new framework."""
@@ -127,7 +127,7 @@ class TestLau176Forfeit:
         assert result.tier is ReduccionTier.FORFEIT_LAU_17_6
         assert result.reduccion_pct == Decimal("0")
         assert result.qualifying_share == Decimal("0")
-        assert result.boe_citation_id == "art_23_2_par_4_lau_17_6"
+        assert result.legal_refs == ("ley-35-2006:art-23",)
 
 
 class TestTier90:
@@ -146,7 +146,7 @@ class TestTier90:
         )
         assert result.tier is ReduccionTier.TIER_90
         assert result.reduccion_pct == Decimal("0.90")
-        assert result.boe_citation_id == "art_23_2_a"
+        assert result.legal_refs == ("ley-35-2006:art-23",)
 
     def test_exactly_5pct_rebaja_falls_through(self) -> None:
         """90-a wording is 'más de un 5 por ciento' — exactly 5 % does not qualify."""
@@ -193,7 +193,7 @@ class TestTier70Joven:
         assert result.tier is ReduccionTier.TIER_70_JOVEN
         assert result.reduccion_pct == Decimal("0.70")
         assert result.qualifying_share == Decimal("1")
-        assert result.boe_citation_id == "art_23_2_b_1"
+        assert result.legal_refs == ("ley-35-2006:art-23",)
 
     def test_multi_tenant_partial_qualifying_share(self) -> None:
         """2 of 3 tenants qualify → share = 2/3."""
@@ -274,7 +274,7 @@ class TestTier70PublicAdmin:
         assert result.tier is ReduccionTier.TIER_70_PUBLIC_ADMIN
         assert result.reduccion_pct == Decimal("0.70")
         assert result.qualifying_share == Decimal("1")
-        assert result.boe_citation_id == "art_23_2_b_2"
+        assert result.legal_refs == ("ley-35-2006:art-23",)
 
     def test_ley_49_2002_entity_with_social_use_qualifies(self) -> None:
         result = resolve_reduccion(
@@ -318,7 +318,7 @@ class TestTier60Rehab:
         )
         assert result.tier is ReduccionTier.TIER_60_REHAB
         assert result.reduccion_pct == Decimal("0.60")
-        assert result.boe_citation_id == "art_23_2_c"
+        assert result.legal_refs == ("ley-35-2006:art-23",)
 
     def test_rehab_finished_730_days_before_qualifies_boundary(self) -> None:
         """730-day inclusive boundary."""
@@ -368,7 +368,7 @@ class TestTier50Default:
         )
         assert result.tier is ReduccionTier.TIER_50
         assert result.reduccion_pct == Decimal("0.50")
-        assert result.boe_citation_id == "art_23_2_d"
+        assert result.legal_refs == ("ley-35-2006:art-23",)
 
 
 class TestPriorityOrder:

@@ -3390,6 +3390,50 @@ required_text = [
     "En un 50 por ciento",
 ]
 
+[legal."ley-35-2006:art-23-2021"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-23-2021.html#a23"
+document_id = "BOE-A-2006-20764"
+article = "23"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20210710&tn=1#a23"
+published_at = 2006-11-29
+effective_from = 2021-07-11
+effective_to = 2023-12-31
+review_status = "reviewed"
+reviewed_at = 2026-06-30
+reviewed_by = "codex"
+notes = "LIRPF art 23, redaction selected by BOE at 2021-07-10 and in force from 2021-07-11: housing-rental net positive real-estate capital income was reduced by a flat 60 percent before the Ley 12/2023 tiered redaction became applicable."
+required_text = [
+    "Gastos deducibles y reducciones.",
+    "arrendamiento de bienes inmuebles destinados a vivienda",
+    "se reducirá en un 60 por ciento",
+    "autoliquidación presentada antes",
+]
+
+[legal."ley-35-2006:dt-38"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#dt-6"
+document_id = "BOE-A-2006-20764"
+article = "DT 38"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dt-6"
+published_at = 2006-11-29
+effective_from = 2024-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-30
+reviewed_by = "codex"
+notes = "LIRPF DT 38: contracts for housing rental signed before Ley 12/2023 entered into force apply the reduction in art 23.2 under the redaction in force on 2021-12-31."
+required_text = [
+    "Disposición transitoria trigésima octava",
+    "contratos de arrendamiento de vivienda",
+    "con anterioridad a la entrada en vigor",
+    "Ley 12/2023, de 24 de mayo",
+    "redacción vigente a 31 de diciembre de 2021",
+]
+
 [legal."ley-35-2006:art-24"]
 evidence_tier = "legal_authority"
 authority = "boe"
