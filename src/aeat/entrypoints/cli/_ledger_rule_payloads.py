@@ -1,7 +1,12 @@
 """Typed ``--json`` payload schemas for ledger rule commands.
 
 Every declared payload is an :class:`OutputSchema` subclass registered for
-the ledger rule command JSON-contract surface.
+the ledger rule command JSON-contract surface.  These schemas are the CLI
+projection of the secure, profile-local rule engine: persisted
+:class:`~aeat.domain.transactions.LedgerClassificationRule` records are listed
+and added through the rule commands, while
+:func:`~aeat.application.ledger.apply_classification_rules` owns live mutation
+semantics.
 """
 
 from __future__ import annotations
@@ -10,7 +15,14 @@ from ._schemas import OutputSchema, register_schema
 
 
 class ClassificationRulePayload(OutputSchema):
-    """One classification-rule row (matches the dict emitted by rule.add / rule.list)."""
+    """One persisted ledger classification rule row.
+
+    Mirrors :class:`~aeat.domain.transactions.LedgerClassificationRule` as
+    emitted by ``ledger rule add`` and ``ledger rule list``.  ``rule_id`` is the
+    content-addressed id, ``description_pattern`` is the regex evaluated against
+    transaction descriptions, and lower ``priority`` values run before higher
+    ones.
+    """
 
     rule_id: str
     description_pattern: str
@@ -23,18 +35,35 @@ class ClassificationRulePayload(OutputSchema):
 
 @register_schema("ledger.rule.add")
 class RuleAddResult(ClassificationRulePayload):
-    """JSON envelope for ``aeat app ledger rule add``."""
+    """JSON envelope for ``aeat app ledger rule add``.
+
+    The command persists one
+    :class:`~aeat.domain.transactions.LedgerClassificationRule` through
+    :class:`~aeat.application.ledger.LedgerClassificationRuleRepository`; adding
+    the same pattern/classification/category tuple is idempotent because the
+    rule id is content-addressed.
+    """
 
 
 @register_schema("ledger.rule.list")
 class RuleListResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger rule list``."""
+    """JSON envelope for ``aeat app ledger rule list``.
+
+    Rows are returned in the application evaluation order exposed by
+    :meth:`~aeat.application.ledger.LedgerClassificationRuleRepository.list_rules`:
+    priority ascending, then creation time ascending for ties.
+    """
 
     rules: list[ClassificationRulePayload]
 
 
 class RuleApplyMatchPayload(OutputSchema):
-    """One dry-run match row for ``rule apply --dry-run``."""
+    """One non-mutating preview row for ``ledger rule apply --dry-run``.
+
+    The row reports the first rule that would classify the transaction if the
+    operator re-ran without ``--dry-run``.  It is preview evidence only; no
+    transaction state or bucket event is written for these rows.
+    """
 
     transaction_id: str
     description: str
@@ -43,7 +72,12 @@ class RuleApplyMatchPayload(OutputSchema):
 
 
 class RuleApplyAppliedPayload(OutputSchema):
-    """One live-applied rule row nested in ``ledger rule apply``."""
+    """One transaction classified by a live ``ledger rule apply`` pass.
+
+    Mirrors :class:`~aeat.application.ledger.ApplyRulesAppliedRow`: the
+    transaction id, the matched content-addressed rule id, and the
+    classification that was persisted through the ledger mutation path.
+    """
 
     transaction_id: str
     matched_rule_id: str
@@ -57,8 +91,11 @@ class RuleApplyResult(OutputSchema):
     Covers both the dry-run branch (``dry_run``, ``would_match``,
     ``count``) and the live-apply branch (``rules_evaluated``,
     ``transactions_scanned``, ``matched``, ``skipped_already_classified``,
-    ``no_match``, ``applied``). All fields are optional so both branches
-    validate cleanly.
+    ``no_match``, ``applied``).  Live counts mirror
+    :class:`~aeat.application.ledger.ApplyRulesResult`; dry-run rows preview the
+    same first-match rule selection without writing transaction state.  Rows
+    already classified by an operator are skipped unless the command is run with
+    the explicit ``--reaffirm`` consent flag.
     """
 
     # Dry-run path
@@ -75,7 +112,13 @@ class RuleApplyResult(OutputSchema):
 
 
 class LLMProviderAvailabilityPayload(OutputSchema):
-    """One subprocess LLM provider's PATH availability (nested)."""
+    """One subprocess LLM provider's PATH availability.
+
+    Mirrors :class:`~aeat.application.ledger.LLMProviderAvailability` from
+    :func:`~aeat.application.ledger.available_llm_providers`.  The probe uses
+    PATH lookup only; it does not spawn the provider CLI or send transaction
+    data to a cloud service.
+    """
 
     provider: str
     cli_binary: str
@@ -84,7 +127,12 @@ class LLMProviderAvailabilityPayload(OutputSchema):
 
 
 class VisionProviderPayload(OutputSchema):
-    """The on-host Ollama vision model's availability (nested)."""
+    """The on-host Ollama vision model's availability.
+
+    Carries the local vision backend readiness surfaced beside subprocess LLM
+    providers, including operator remediation text when the local model or
+    service is unavailable.
+    """
 
     service: str
     available: bool
@@ -96,9 +144,10 @@ class VisionProviderPayload(OutputSchema):
 class LedgerProvidersResult(OutputSchema):
     """JSON envelope for ``aeat app ledger providers``.
 
-    Reports the subprocess cloud-provider CLIs (claude / antigravity / codex) and
-    the on-host Ollama vision model, so the operator sees every classification
-    backend — cloud and local — in one place.
+    Reports subprocess cloud-provider CLIs from
+    :func:`~aeat.application.ledger.available_llm_providers` and the on-host
+    Ollama vision model, so the operator sees every classification backend -
+    cloud and local - in one place before running LLM-assisted classification.
     """
 
     providers: list[LLMProviderAvailabilityPayload]
