@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from datetime import date
-from functools import lru_cache
 
 import pytest
 
 from .....core.resources import bundled_path
-from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
+from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot
 from .._legal import verify_legal_catalogue
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -53,11 +53,8 @@ _M202_SOURCE_EXPECTATIONS = {
 }
 
 
-@lru_cache(maxsize=1)
 def _load_modelo_202() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(modelo for modelo in modelos if modelo.id == "202")
-    return modelo, catalogues
+    return _committed_modelo("202")
 
 
 def test_committed_modelo_202_validates_against_catalogues() -> None:
