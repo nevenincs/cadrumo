@@ -5206,6 +5206,10 @@ wizard:
         help: Idioma de sortida de la CLI per a aquest perfil
       pays-capital-income-with-retencion:
         help: Paga rendes de capital amb retenció
+      modelo-111-no-retenciones-periods:
+        help: 'Periodes Modelo 111 sense obligacio, separats per comes, format
+          AAAA:PERIODE (per exemple 2025:2T,2025:3T). Useu-ho només quan no es
+          van pagar rendes subjectes.'
       pays-professionals-with-retencion:
         help: Paga a professionals amb retenció
       pays-rent-with-retencion:
@@ -5347,6 +5351,10 @@ wizard:
         prompt: Monedes virtuals a l'estranger superen el llindar del Modelo 721
       pays-capital-income-with-retencion:
         prompt: Paga rendes de capital amb retenció
+      modelo-111-no-retenciones-periods:
+        help: 'Periodes AAAA:PERIODE en què no es van pagar rendes subjectes a retenció
+          o ingrés a compte, de manera que no es presenta un Modelo 111 en blanc.'
+        prompt: Periodes Modelo 111 sense retencions
       pays-professionals-with-retencion:
         prompt: Paga a professionals amb retenció
       pays-rent-with-retencion:

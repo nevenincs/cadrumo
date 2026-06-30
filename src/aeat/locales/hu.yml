@@ -5112,6 +5112,10 @@ wizard:
         help: CLI kimeneti nyelv ehhez a profilhoz
       pays-capital-income-with-retencion:
         help: Forrásadóval terhelt tőkejövedelmet fizet
+      modelo-111-no-retenciones-periods:
+        help: 'Vesszővel elválasztott Modelo 111 nem kötelezett időszakok, ÉÉÉÉ:IDŐSZAK
+          formátumban (például 2025:2T,2025:3T). Csak akkor használja, ha nem
+          történt forrásadó-köteles kifizetés.'
       pays-professionals-with-retencion:
         help: Forrásadóval terhelt díjazást fizet szakembereknek
       pays-rent-with-retencion:
@@ -5252,6 +5256,10 @@ wizard:
         prompt: Külföldi virtuális valuták meghaladják a Modelo 721 küszöbértékét
       pays-capital-income-with-retencion:
         prompt: Forrásadóval terhelt tőkejövedelmet fizet
+      modelo-111-no-retenciones-periods:
+        help: 'ÉÉÉÉ:IDŐSZAK időszakok, amikor nem történt retención vagy ingreso
+          a cuenta alá eső kifizetés, ezért nem nyújtandó be üres Modelo 111.'
+        prompt: Modelo 111 forrásadó nélküli időszakok
       pays-professionals-with-retencion:
         prompt: Forrásadóval terhelt díjazást fizet szakembereknek
       pays-rent-with-retencion:

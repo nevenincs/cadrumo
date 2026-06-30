@@ -328,6 +328,10 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         "--pays-capital-income-with-retencion/--no-pays-capital-income-with-retencion",
         help=tr("wizard.setup.flags.pays-capital-income-with-retencion.help"),
     ),
+    "modelo-111-no-retenciones-periods": typer.Option(
+        "--modelo-111-no-retenciones-periods",
+        help=tr("wizard.setup.flags.modelo-111-no-retenciones-periods.help"),
+    ),
     "does-intracomunitario": typer.Option(
         "--does-intracomunitario/--no-does-intracomunitario",
         help=tr("wizard.setup.flags.does-intracomunitario.help"),

@@ -91,6 +91,7 @@ from .. import (
     verify_modelo_revision,
 )
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
+from .._revision_persistence import persist_filed_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -217,6 +218,37 @@ def _calculate_annual(
         modelo=modelo,
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _ANNUAL_PERIOD),
+        revision_id=snapshot.revision.id,
+        repository=wu_repo,
+        clock=_T0,
+    )
+    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        work_unit.work_unit_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+        clock=_T1,
+    )
+
+
+def _calculate_periodic(
+    secure_objects: SecureObjectRepository,
+    *,
+    modelo: str,
+    period: str,
+) -> BucketAggregationCalculationResult:
+    """Run the live periodic calculate for ``modelo`` / ``_YEAR`` / ``period``."""
+    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
+    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=_YEAR, period=period)
+    work_unit = create_work_unit(
+        bucket_id=_BUCKET_ID,
+        modelo=modelo,
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, period),
         revision_id=snapshot.revision.id,
         repository=wu_repo,
         clock=_T0,
@@ -440,6 +472,87 @@ def _seed_m111_quarterly_m190_evidence() -> None:
         )
 
 
+def _attest_m111_no_retenciones_periods(
+    secure_objects: SecureObjectRepository,
+    *,
+    periods: tuple[str, ...],
+) -> None:
+    profile_repo = UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    record = profile_repo.load(_BUCKET_ID)
+    profile_repo.save(
+        record.model_copy(
+            update={
+                "facts": (
+                    *record.facts,
+                    UserProfileFact(
+                        path="withholding.modelo_111_no_retenciones_periods",
+                        value=",".join(f"{_YEAR}:{period}" for period in periods),
+                    ),
+                ),
+                "updated_at": _T1,
+            },
+        ),
+    )
+
+
+def _seed_and_file_m111_1t(secure_objects: SecureObjectRepository) -> BucketAggregationCalculationResult:
+    RetencionObservationRepository().replace_observations(
+        modelo="111",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        observations=[
+            RetencionObservation(
+                source_kind="ledger_transaction",
+                source_object_id="m111-1t-payroll-001",
+                perceptor_nif="12345678Z",
+                perceptor_name="Empleado Ejemplo",
+                scheme=RetencionScheme.WORK_INCOME,
+                taxable_base=Decimal("1000.00"),
+                retencion_amount=Decimal("150.00"),
+                accrued_on=f"{_YEAR}-03-15",
+            ),
+        ],
+        source_kind="aggregate_pull",
+    )
+    result = _calculate_periodic(secure_objects, modelo="111", period="1T")
+    report = verify_modelo_revision(
+        result.revision.calculation_revision_id,
+        actor="test-operator",
+        workflow_profile=_workflow_profile(),
+        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
+        filing_repository=ModeloRecordCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
+        verification_repository=VerificationReportCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
+        calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
+        bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        clock=_T1,
+    )
+    assert report.granted_verificado_completo is True, report.findings
+    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID)
+    work_units = wu_repo.load()
+    work_unit = work_units.get(result.revision.work_unit_id)
+    assert work_unit is not None
+    verified_revision = cr_repo.load().get(result.revision.calculation_revision_id)
+    assert verified_revision is not None
+    persist_filed_revision(
+        target=verified_revision,
+        work_unit=work_unit,
+        work_units=work_units,
+        notes=None,
+        actor="test-operator",
+        now=_T1,
+        calculation_repository=cr_repo,
+        filing_repository=ModeloRecordCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
+        work_unit_repository=wu_repo,
+        bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+        calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
+        taxpayer_nif=_workflow_profile().tax_id,
+    )
+    return result
+
+
 def test_m190_folds_in_four_m111_quarters_with_withholding_advisory(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -531,6 +644,52 @@ def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
     assert all("missing_current_filing_record" in finding.message for finding in m111_findings)
     assert not any("missing_observation" in finding.message for finding in m111_findings)
     assert not any("missing_observed_casilla" in finding.message for finding in m111_findings)
+
+
+def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quarters(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """M190 verify accepts a clean filed M111 1T plus explicit 2T-4T no-obligation evidence."""
+    m111_result = _seed_and_file_m111_1t(secure_objects)
+    _attest_m111_no_retenciones_periods(secure_objects, periods=("2T", "3T", "4T"))
+    _seed_m190_withholding_detail()
+
+    result = _calculate_annual(secure_objects, modelo="190")
+    expected_percepciones_amount = sum(
+        (Decimal(m111_result.revision.casilla_values[output]) for output in _M190_IMPORTE_OUTPUTS),
+        Decimal("0"),
+    )
+    expected_retenciones = Decimal(m111_result.revision.casilla_values[_M190_RETENCIONES_OUTPUT])
+    assert Decimal(result.revision.casilla_values[_DECL_PERCEPCIONES_AMOUNT]) == expected_percepciones_amount
+    assert Decimal(result.revision.casilla_values[_DECL_RETENCIONES]) == expected_retenciones
+    assert not any(diag.source_kind == _RELATION_PREFILL_SOURCE for diag in result.source_diagnostics)
+
+    report = verify_modelo_revision(
+        result.revision.calculation_revision_id,
+        actor="test-operator",
+        workflow_profile=_workflow_profile(),
+        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
+        filing_repository=ModeloRecordCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
+        verification_repository=VerificationReportCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
+        calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
+        bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        clock=_T1,
+    )
+
+    assert report.granted_verificado_completo is True, report.findings
+    blocking_cross_period = tuple(
+        finding
+        for finding in report.findings
+        if finding.kind.value == "cross_period_dependency_unclean" and finding.severity.value == "blocking"
+    )
+    assert not blocking_cross_period
+    messages = tuple(finding.message for finding in report.findings)
+    assert any("no-retenciones/no-obligation" in message and "period=2T" in message for message in messages)
+    assert any("no-retenciones/no-obligation" in message and "period=3T" in message for message in messages)
+    assert any("no-retenciones/no-obligation" in message and "period=4T" in message for message in messages)
+    assert not any("missing_current_filing_record" in message and "modelo=111" in message for message in messages)
 
 
 # ---------------------------------------------------------------------------
