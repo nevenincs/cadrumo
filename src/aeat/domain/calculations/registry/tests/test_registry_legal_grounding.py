@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import ast
+import re
 import tomllib
 from pathlib import Path
 
@@ -13,6 +15,12 @@ from .._corpus_catalogue import verify_source_catalogue
 from .._schema import ModeloDefinition, RegistryCatalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_PRODUCTION_PACKAGE_ROOT = Path(__file__).resolve().parents[4]
+_LEGAL_REF_LITERAL_RE = re.compile(
+    r"^[a-z][a-z0-9-]+:(?:art|da|dt|df|dd|di|disp|anexo)-[a-z0-9.-]+(?:-[a-z0-9.-]+)*$",
+    re.IGNORECASE,
+)
 
 
 @pytest.fixture(scope="module")
@@ -99,3 +107,50 @@ def test_every_bundled_registry_toml_source_ref_resolves_to_catalogue_and_corpus
     missing = sorted(ref for ref in refs if ref not in catalogues.sources)
     assert not missing, f"bundled registry TOML source_refs absent from source catalogue: {missing}"
     verify_source_catalogue(bundled_path(), {ref: catalogues.sources[ref] for ref in refs})
+
+
+def _docstring_line_numbers(tree: ast.AST) -> set[int]:
+    lines: set[int] = set()
+    for node in ast.walk(tree):
+        body = getattr(node, "body", None)
+        if not isinstance(body, list) or not body:
+            continue
+        first = body[0]
+        if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
+            start = getattr(first, "lineno", 0)
+            end = getattr(first, "end_lineno", start)
+            lines.update(range(start, end + 1))
+    return lines
+
+
+def _production_legal_ref_literals() -> dict[str, tuple[str, ...]]:
+    refs: dict[str, list[str]] = {}
+    for path in _PRODUCTION_PACKAGE_ROOT.rglob("*.py"):
+        if "tests" in path.relative_to(_PRODUCTION_PACKAGE_ROOT).parts:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        doc_lines = _docstring_line_numbers(tree)
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+                continue
+            if node.lineno in doc_lines or not _LEGAL_REF_LITERAL_RE.match(node.value):
+                continue
+            location = path.relative_to(_PRODUCTION_PACKAGE_ROOT.parent).as_posix()
+            refs.setdefault(node.value, []).append(f"{location}:{node.lineno}")
+    return {ref: tuple(locations) for ref, locations in refs.items()}
+
+
+def test_production_python_legal_ref_literals_resolve_to_catalogue_and_corpus(
+    committed_registry: tuple[Path, tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    _registry_root, _modelos, catalogues = committed_registry
+    refs_by_literal = _production_legal_ref_literals()
+    refs = sorted(refs_by_literal)
+
+    assert refs_by_literal, "production Python contains no legal reference literals"
+    missing = sorted(ref for ref in refs if ref not in catalogues.legal)
+    assert not missing, (
+        "production Python legal reference literals absent from legal catalogue:\n"
+        + "\n".join(f"{ref}: {refs_by_literal[ref]}" for ref in missing)
+    )
+    verify_legal_catalogue({ref: catalogues.legal[ref] for ref in refs}, source_root=bundled_path())
