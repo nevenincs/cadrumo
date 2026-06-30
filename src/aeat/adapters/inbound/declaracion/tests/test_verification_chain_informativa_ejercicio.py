@@ -1,4 +1,4 @@
-"""Parser-only declaracion verification-chain coverage for summary modelos."""
+"""Informativa ejercicio parser-verification-chain tests."""
 
 from __future__ import annotations
 
