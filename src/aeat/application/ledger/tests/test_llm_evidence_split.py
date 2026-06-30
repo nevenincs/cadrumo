@@ -18,179 +18,40 @@ the Stage-3b split contract:
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.buckets import BucketEventHistoryRepository
-from ....domain.categories import SpendingCategory
-from ....domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceCatalogueRepository,
-    InvoiceLine,
-    IvaRate,
-    PaymentStatus,
-)
-from ....domain.iva import InvoiceKind, IvaCategory
+from ....domain.iva import IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
-    LLMSplitChild,
-    LLMSplitResponse,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
     TransactionCatalogueRepository,
-    TransactionDirection,
     TransactionLifecycleState,
-    TransactionValidationError,
 )
-from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     LLMProvider,
     LLMSplitApplyResult,
     LLMSplitSuggestion,
-    apply_evidence_classification,
     apply_evidence_split,
     suggest_evidence_split,
+)
+from ._llm_evidence_split_support import (
+    _BUCKET,
+    _NOW,
+    _FixedSplitProposer,
+    _seed_parent,
+    _seed_received_invoice,
+    _two_line_proposal,
+)
+from ._llm_evidence_split_support import (
+    repositories as repositories,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
-_BUCKET = "bucket-split"
-
-
-class _FixedSplitProposer:
-    """Concrete in-process split proposer returning a fixed proposal.
-
-    Implements the :class:`aeat.domain.transactions.LLMSplitProposer` protocol
-    (``decided_by`` + ``propose_split``) with no subprocess or network I/O, so
-    the application + persistence stack runs end to end offline. Records the
-    evidence text it was handed so a test can assert evidence reached the prompt.
-    """
-
-    def __init__(self, *, response: LLMSplitResponse, model: str = "test-model") -> None:
-        self._response = response
-        self._model = model
-        self.last_evidence_text: str | None = None
-
-    @property
-    def decided_by(self) -> str:
-        return f"llm:claude:{self._model}"
-
-    def propose_split(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMSplitResponse:
-        self.last_evidence_text = evidence_text
-        return self._response
-
-
-def _two_line_proposal() -> LLMSplitResponse:
-    """A 60/40 two-child proposal, both domestic-general 21% business lines."""
-    return LLMSplitResponse(
-        children=(
-            LLMSplitChild(
-                proportion=Decimal("0.6"),
-                category=SpendingCategory.MATERIAL_OFICINA,
-                iva_category=IvaCategory.DOMESTIC_GENERAL_21,
-                evidence_citation="material de oficina",
-            ),
-            LLMSplitChild(
-                proportion=Decimal("0.4"),
-                category=SpendingCategory.SOFTWARE_SUSCRIPCION,
-                iva_category=IvaCategory.DOMESTIC_GENERAL_21,
-                evidence_citation="licencia software",
-            ),
-        ),
-        reason="invoice has two distinct line items",
-    )
-
-
-@pytest.fixture
-def repositories(
-    tmp_path: Path,
-) -> Iterator[tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository]]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
-        objects = profile.repository
-        yield (
-            TransactionCatalogueRepository(bucket_id=_BUCKET, objects=objects),
-            BucketEventHistoryRepository(objects=objects),
-            objects,
-        )
-
-
-def _seed_received_invoice(objects: SecureObjectRepository, *, invoice_number: str = "P-2026-001") -> str:
-    """Persist one RECEIVED purchase invoice in the bucket and return its id."""
-    line = InvoiceLine(
-        description="Material oficina",
-        quantity=Decimal("1"),
-        unit_price=Decimal("100.00"),
-        subtotal=Decimal("100.00"),
-        iva_rate=IvaRate.RATE_21,
-        iva_amount=Decimal("21.00"),
-    )
-    invoice = Invoice.model_validate(
-        {
-            "kind": InvoiceKind.RECEIVED,
-            "bucket_id": _BUCKET,
-            "invoice_number": invoice_number,
-            "issued_at": date(2026, 5, 2),
-            "counterparty_name": "Proveedor Mixto SL",
-            "counterparty_tax_id": "B12345674",
-            "counterparty_country": "ES",
-            "base_total": Decimal("100.00"),
-            "iva_total": Decimal("21.00"),
-            "grand_total": Decimal("121.00"),
-            "currency": "EUR",
-            "lines": (line,),
-            "payment_status": PaymentStatus.PAID,
-        },
-    )
-    InvoiceCatalogueRepository(objects=objects).save(InvoiceCatalogue.from_invoices((invoice,)))
-    return invoice.invoice_id
-
-
-def _seed_parent(
-    repository: TransactionCatalogueRepository,
-    *,
-    amount: Decimal = Decimal("121.00"),
-    evidence_id: str | None = None,
-) -> str:
-    """Persist one ACTIVE parent transaction and return its id."""
-    raw = RawTransaction(
-        transaction_id="row-split-parent",
-        booked_date=date(2026, 5, 1),
-        value_date=date(2026, 5, 1),
-        amount=amount,
-        currency="EUR",
-        counterparty="Proveedor Mixto SL",
-        description="mixed supplier invoice",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="b" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.CSV,
-            ingested_at=_NOW,
-            provider_name="csv",
-        ),
-        raw_fields={"Concepto": "mixed supplier invoice"},
-    )
-    fields: dict[str, object] = {
-        "raw": raw,
-        "direction": TransactionDirection.OUTGOING,
-        "source_jurisdiction": "ES",
-        "group_label": None,
-    }
-    if evidence_id is not None:
-        fields["purchase_invoice_evidence_id"] = evidence_id
-    tx = Transaction.model_validate(fields)
-    repository.save(TransactionCatalogue.from_transactions([tx]))
-    return tx.transaction_id
+__all__ = ["repositories"]
 
 
 # ---------------------------------------------------------------------------
@@ -397,120 +258,3 @@ def test_apply_child_numbers_are_registry_derived_not_model(
         assert child.iva_rate == Decimal("0.21")
 
 
-# ---------------------------------------------------------------------------
-# no-split verdict: one child = "single line", routed to in-place classification
-# ---------------------------------------------------------------------------
-
-
-def _single_line_proposal() -> LLMSplitResponse:
-    """A single-child proposal — the model's 'no split warranted' verdict."""
-    return LLMSplitResponse(
-        children=(
-            LLMSplitChild(
-                proportion=Decimal("1.0"),
-                category=SpendingCategory.MATERIAL_OFICINA,
-                iva_category=IvaCategory.DOMESTIC_GENERAL_21,
-                evidence_citation="material de oficina",
-            ),
-        ),
-        reason="invoice is a single line at one rate",
-    )
-
-
-def test_single_child_suggestion_does_not_recommend_split(
-    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
-) -> None:
-    repository, _events, _objects = repositories
-    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
-
-    suggestion = suggest_evidence_split(
-        bucket_id=_BUCKET,
-        transaction_id=tx_id,
-        provider=LLMProvider.CLAUDE,
-        proposer=_FixedSplitProposer(response=_single_line_proposal()),
-        transaction_repository=repository,
-        read_evidence=False,
-    )
-
-    assert suggestion.recommends_split is False
-    assert len(suggestion.children) == 1
-    # The lone child carries the whole gross and the registry-derived substrate.
-    assert suggestion.children[0].amount == Decimal("121.00")
-    assert suggestion.children[0].iva_rate == Decimal("0.21")
-
-
-def test_apply_evidence_split_refuses_a_no_split_verdict(
-    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
-) -> None:
-    repository, events, _objects = repositories
-    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
-    suggestion = suggest_evidence_split(
-        bucket_id=_BUCKET,
-        transaction_id=tx_id,
-        provider=LLMProvider.CLAUDE,
-        proposer=_FixedSplitProposer(response=_single_line_proposal()),
-        transaction_repository=repository,
-        read_evidence=False,
-    )
-    with pytest.raises(TransactionValidationError, match="no-split verdict"):
-        apply_evidence_split(
-            suggestion,
-            bucket_id=_BUCKET,
-            transaction_repository=repository,
-            bucket_event_repository=events,
-            occurred_at=_NOW,
-        )
-
-
-def test_apply_evidence_classification_writes_in_place_from_the_lone_child(
-    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
-) -> None:
-    repository, events, _objects = repositories
-    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
-    suggestion = suggest_evidence_split(
-        bucket_id=_BUCKET,
-        transaction_id=tx_id,
-        provider=LLMProvider.CLAUDE,
-        proposer=_FixedSplitProposer(response=_single_line_proposal()),
-        transaction_repository=repository,
-        read_evidence=False,
-    )
-
-    result = apply_evidence_classification(
-        suggestion,
-        bucket_id=_BUCKET,
-        transaction_repository=repository,
-        bucket_event_repository=events,
-        occurred_at=_NOW,
-    )
-
-    # The parent is classified in place — NOT split; no child rows are created.
-    catalogue = repository.load()
-    parent = catalogue.get(tx_id)
-    assert parent is not None
-    assert parent.lifecycle_state is TransactionLifecycleState.ACTIVE
-    assert parent.business_classification is BusinessClassification.BUSINESS
-    assert parent.category_id == SpendingCategory.MATERIAL_OFICINA.value
-    assert parent.iva_category is IvaCategory.DOMESTIC_GENERAL_21
-    # Registry-derived substrate for the whole gross, stamped with llm provenance.
-    assert parent.iva_rate == Decimal("0.21")
-    assert parent.taxable_base is not None and parent.iva_amount is not None
-    assert parent.taxable_base + parent.iva_amount == Decimal("121.00")
-    assert result.transaction.classified_by == "llm:claude:test-model"
-
-
-def test_apply_evidence_classification_refuses_a_multi_child_split(
-    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
-) -> None:
-    repository, _events, _objects = repositories
-    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
-    suggestion = suggest_evidence_split(
-        bucket_id=_BUCKET,
-        transaction_id=tx_id,
-        provider=LLMProvider.CLAUDE,
-        proposer=_FixedSplitProposer(response=_two_line_proposal()),
-        transaction_repository=repository,
-        read_evidence=False,
-    )
-    with pytest.raises(TransactionValidationError, match="recommends a split"):
-        apply_evidence_classification(suggestion, bucket_id=_BUCKET, transaction_repository=repository)
