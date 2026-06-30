@@ -4,7 +4,10 @@
 # as the modelo-130 scenario: the trajectory resolves against the live CLI
 # surface, follows the create->calculate->verify->export lifecycle, is consistent
 # with the shipped `preparar-modelo-303` skill, and the resolved revision's
-# casillas carry registry legal grounding. No casilla value is hand-asserted.
+# casillas carry registry legal grounding. The value-oracle dimension (a computed
+# casilla against an AEAT worked-example figure - a sanctioned non-tautological
+# oracle) needs a seeded-calculation fixture and is a tracked follow-up (plan
+# W03.P07.S56).
 
 name = "modelo-303-iva-autoliquidacion"
 modelo = "303"
