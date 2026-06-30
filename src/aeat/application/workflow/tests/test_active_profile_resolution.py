@@ -1,8 +1,7 @@
 """Precedence-chain tests for the active-profile resolver.
 
-The resolver lives at
-`aeat.application.workflow._models.resolve_active_bucket_id`. It
-consults two precedence rungs in order:
+The resolver lives at `aeat.core.resolve_active_bucket_id`. It consults
+two precedence rungs in order:
 
 1. `Settings.aeat_active_profile` (`AEAT_ACTIVE_PROFILE` env var, or
    an `override_settings(aeat_active_profile=...)` context manager).
@@ -29,6 +28,15 @@ from .._models import WorkflowState
 from .._profile_bucket_scan import resolve_profile_bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def test_workflow_models_do_not_expose_active_bucket_resolver_shims() -> None:
+    """Workflow models must not be an alternate import path for core resolvers."""
+
+    from .. import _models as workflow_models
+
+    assert not hasattr(workflow_models, "resolve_active_bucket_id")
+    assert not hasattr(workflow_models, "require_active_bucket_id")
 
 
 def test_resolver_returns_none_when_no_rung_resolves(tmp_path: Path) -> None:
