@@ -1,10 +1,15 @@
 """Public :func:`parse_borrador` entry point for Modelo 100 PDFs.
 
 Composes the artefact-kind detector
-(:func:`aeat.adapters.inbound.borrador._detect.detect_artefact_kind`)
-with the per-año extractor registry
-(:mod:`aeat.adapters.inbound.borrador._extractors`) into the single
-function callers should depend on.
+(:func:`~aeat.adapters.inbound.borrador._detect.detect_artefact_kind`) with the
+per-año extractor registry (:mod:`aeat.adapters.inbound.borrador._extractors`)
+into the single function callers should depend on.
+
+Unlike the declaración parser, this adapter does not resolve registry snapshots.
+The default parse mode returns observed PDF rows. Registry-profile validation is
+available only when the caller supplies a
+:class:`~aeat.adapters.inbound.borrador._schema.BorradorExtractionProfile`
+projection explicitly.
 """
 
 from __future__ import annotations
@@ -33,15 +38,17 @@ def parse_borrador(
     extraction_profile: BorradorExtractionProfile | None = None,
     parse_mode: BorradorParseMode = BorradorParseMode.OBSERVED,
 ) -> BorradorObservation:
-    """Parse an AEAT Modelo 100 artefact PDF.
+    """Parse an observed AEAT Modelo 100 artefact PDF.
 
     Args:
         pdf_path: Path to the borrador / predeclaración / declaración PDF.
-        artefact_kind_override: Skip auto-detection and force the kind.
-        año_override: Skip auto-detection of the tax year and force it.
-        extraction_profile: Optional registry extraction profile. When
-            provided, parsing filters to the profile's target casillas and
-            fails when coverage is below the registry minimum.
+        artefact_kind_override: Skip auto-detection and force the
+            :class:`~aeat.adapters.inbound.borrador._schema.ArtefactKind`.
+        año_override: Skip auto-detection of the tax year and force the
+            year-keyed extractor selection.
+        extraction_profile: Optional caller-supplied registry extraction-profile
+            projection. When provided, parsing filters to the profile's target
+            casillas and fails when coverage is below the profile minimum.
         parse_mode: ``OBSERVED`` returns observed PDF rows. ``REGISTRY_PROFILE``
             requires ``extraction_profile`` and validates coverage.
 
