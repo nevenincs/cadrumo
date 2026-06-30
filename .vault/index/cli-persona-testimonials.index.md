@@ -21,6 +21,15 @@ related:
   - '[[2026-06-30-cli-persona-testimonials-W01-P01-S03]]'
   - '[[2026-06-30-cli-persona-testimonials-W01-P02-S04]]'
   - '[[2026-06-30-cli-persona-testimonials-W01-P02-S05]]'
+  - '[[2026-06-30-cli-persona-testimonials-W02-P03-S06]]'
+  - '[[2026-06-30-cli-persona-testimonials-W02-P03-S07]]'
+  - '[[2026-06-30-cli-persona-testimonials-W02-P03-S08]]'
+  - '[[2026-06-30-cli-persona-testimonials-W02-P04-S09]]'
+  - '[[2026-06-30-cli-persona-testimonials-W02-P04-S10]]'
+  - '[[2026-06-30-cli-persona-testimonials-W02-P04-S11]]'
+  - '[[2026-06-30-cli-persona-testimonials-W02-P05-S12]]'
+  - '[[2026-06-30-cli-persona-testimonials-W02-P05-S13]]'
+  - '[[2026-06-30-cli-persona-testimonials-W02-P05-S14]]'
   - '[[2026-06-30-cli-persona-testimonials-audit]]'
   - '[[2026-06-30-cli-persona-testimonials-plan]]'
 ---
@@ -53,6 +62,15 @@ Auto-generated index of all documents tagged with `#cli-persona-testimonials`.
 - `2026-06-30-cli-persona-testimonials-W01-P01-S03` - Record the current campaign tracker as the canonical wave schedule
 - `2026-06-30-cli-persona-testimonials-W01-P02-S04` - Classify shared worktree dirty files and active ownership before assignment
 - `2026-06-30-cli-persona-testimonials-W01-P02-S05` - Brief worker agents with RAG no-fallback and worktree-safety constraints
+- `2026-06-30-cli-persona-testimonials-W02-P03-S06` - Audit first-period IVA compensation suppression against registry requirements
+- `2026-06-30-cli-persona-testimonials-W02-P03-S07` - Add real-behavior M303 first-period and prior-filing regression coverage
+- `2026-06-30-cli-persona-testimonials-W02-P03-S08` - Verify operator-visible M303 wallet guidance and translations
+- `2026-06-30-cli-persona-testimonials-W02-P04-S09` - Harden ledger provider detection and unsupported-source diagnostics
+- `2026-06-30-cli-persona-testimonials-W02-P04-S10` - Harden import deduplication provenance and gap diagnostics
+- `2026-06-30-cli-persona-testimonials-W02-P04-S11` - Exercise corpus import-export roundtrip without permissive imports
+- `2026-06-30-cli-persona-testimonials-W02-P05-S12` - Audit active-profile label-to-UUID normalization at the CLI root
+- `2026-06-30-cli-persona-testimonials-W02-P05-S13` - Harden workflow bucket-scan ambiguity and tombstone behavior
+- `2026-06-30-cli-persona-testimonials-W02-P05-S14` - Sweep profile identity CLI journeys for by-id and by-label parity
 
 ### plan
 
