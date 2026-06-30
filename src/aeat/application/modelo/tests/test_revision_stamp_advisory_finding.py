@@ -41,6 +41,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "revision-stamp-advisory"
 _M303_SOURCE_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_M303_SOURCE_CASILLA_01")
+_M303_REQUIREMENT_LEGAL_REFS = ("ley-58-2003:art-119",)
+_M303_REQUIREMENT_SOURCE_REFS = ("aeat-modelo-303-procedure",)
 
 
 def _requirement() -> CrossPeriodDependencyRequirement:
@@ -51,6 +53,8 @@ def _requirement() -> CrossPeriodDependencyRequirement:
         source_casilla_ids=(_M303_SOURCE_CASILLA_01,),
         origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
         origin_ids=("binding-303-casilla-01",),
+        legal_refs=_M303_REQUIREMENT_LEGAL_REFS,
+        source_refs=_M303_REQUIREMENT_SOURCE_REFS,
     )
 
 

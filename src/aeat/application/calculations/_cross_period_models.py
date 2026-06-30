@@ -9,7 +9,7 @@ from typing import Protocol, Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...core import Period
-from ...domain.calculations.registry import CasillaId, RegistryModeloObservation
+from ...domain.calculations.registry import CasillaId, LegalRefId, RegistryModeloObservation, SourceRefId
 from ...domain.modelos import CalculationRevisionState, VerificationCompletenessStatus
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -193,6 +193,8 @@ class CrossPeriodDependencyRequirement(BaseModel):
     source_casilla_ids: tuple[CasillaId, ...] = Field(min_length=1)
     origin: CrossPeriodDependencyOrigin
     origin_ids: tuple[str, ...] = Field(min_length=1)
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     requires_member_fan_in: bool = False
 
     @model_validator(mode="after")

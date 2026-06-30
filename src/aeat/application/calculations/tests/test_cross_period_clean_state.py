@@ -168,8 +168,9 @@ def test_m100_zero_prior_negative_base_carry_scopes_previous_filing_evidence(tmp
     """An explicit zero prior BIN does not require prior M100 evidence."""
     zero_binding = "renta-2025-base-liquidable-negativa-general-anterior"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
         verdict = _evaluate_clean_state(
-            resources().modelos.authority.snapshot("100", filing_year=2025, period="0A"),
+            snapshot,
             taxpayer_files_economic_activity=False,
             zero_value_previous_filing_binding_ids=frozenset({zero_binding}),
         )
@@ -180,8 +181,11 @@ def test_m100_zero_prior_negative_base_carry_scopes_previous_filing_evidence(tmp
         if item.requirement.origin is CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING
         and item.requirement.origin_ids == (zero_binding,)
     )
+    zero_binding_definition = next(binding for binding in snapshot.revision.bindings if binding.id == zero_binding)
     assert zero_carry.clean
     assert zero_carry.zero_value_previous_filing_advisory is True
+    assert set(zero_carry.requirement.legal_refs) == set(zero_binding_definition.legal_refs)
+    assert set(zero_carry.requirement.source_refs) == set(zero_binding_definition.source_refs)
     assert all(
         item.clean
         for item in verdict.dependencies
@@ -195,12 +199,18 @@ def test_cross_period_requirements_include_relation_rollups(tmp_path: Path) -> N
 
     requirements = cross_period_dependency_requirements(snapshot)
 
-    assert any(
-        requirement.origin is CrossPeriodDependencyOrigin.REGISTRY_RELATION
+    relation_requirement = next(
+        requirement
+        for requirement in requirements
+        if requirement.origin is CrossPeriodDependencyOrigin.REGISTRY_RELATION
         and requirement.source_modelo == "115"
         and requirement.period == Period.from_year_and_code(2026, "1T")
-        for requirement in requirements
     )
+    source_relation = next(
+        relation for relation in snapshot.revision.relations if relation.id == relation_requirement.origin_ids[0]
+    )
+    assert set(relation_requirement.legal_refs) == set(source_relation.legal_refs)
+    assert set(relation_requirement.source_refs) == set(source_relation.source_refs)
 
 
 def test_cross_period_dependency_inventory_covers_declared_2026_target_modelos(
