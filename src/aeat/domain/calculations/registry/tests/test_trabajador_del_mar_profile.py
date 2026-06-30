@@ -16,8 +16,8 @@ import pytest
 
 from .....core.resources import bundled_path
 from ....user_profile import ProfileFieldType, load_user_profile_schema
-from .. import load_registry_tree
 from .._legal import verify_legal_catalogue
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -207,7 +207,7 @@ def test_da41_binding_is_inactive_and_has_legal_refs() -> None:
 
 
 def test_binding_legal_refs_resolve_against_catalogue_and_corpus() -> None:
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _, catalogues = _committed_registry_tree()
     refs = {
         legal_ref
         for binding in _load_trabajador_del_mar_bindings()

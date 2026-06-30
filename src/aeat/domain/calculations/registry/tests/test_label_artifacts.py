@@ -6,11 +6,11 @@ from datetime import date
 
 import pytest
 
-from .....core.resources import bundled_path
-from .. import CasillaId, load_registry_tree, validated_casilla_id
+from .. import CasillaId, validated_casilla_id
 from .._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, PeriodSelector
 from .._validate_label_artifacts import collect_label_artifact_findings, validate_no_label_artifacts
 from .._validate_registry_scope import validate_registry_scope
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -86,7 +86,7 @@ def test_label_artifact_inventory_ignores_normal_casilla_brackets() -> None:
 
 
 def test_committed_corpus_has_no_unresolved_label_placeholders() -> None:
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _ = _committed_registry_tree()
 
     findings = collect_label_artifact_findings(modelos)
 
