@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...adapters.persistence.storage._namespace_registry import StorageCustodyProfile
+from ...adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY, StorageCustodyProfile
 from ...core.errors import AeatError
 
 if TYPE_CHECKING:
@@ -148,15 +148,26 @@ def _build_secure_object_custody_payload(
     carried_namespace_set = frozenset(
         definition.namespace for definition in carried_namespace_definitions(custody_profile)
     )
-    covered_namespaces = carried_namespace_set | _TYPED_CATEGORY_NAMESPACES
+    carried_or_typed = carried_namespace_set | _TYPED_CATEGORY_NAMESPACES
+    # ``excluded_namespaces`` (for the manifest) is every populated namespace not
+    # carried by this profile — the deliberately-excluded host-local / derived /
+    # full-only stores plus the typed-category-covered ones are reported honestly.
     excluded_namespaces = tuple(
-        namespace for namespace in populated_namespaces if namespace not in covered_namespaces
+        namespace for namespace in populated_namespaces if namespace not in carried_namespace_set
     )
 
     if custody_profile is StorageCustodyProfile.FULL:
+        # Every registered namespace declares a custody disposition (carried,
+        # typed-category, or deliberately excluded such as PROCESS_LOCAL credentials
+        # or the DERIVED participation index), so it is accounted for. The gate fails
+        # closed only on a populated namespace that is NOT in the registry at all — an
+        # unclassified durable store that would otherwise be silently dropped.
+        registered_namespaces = frozenset(
+            definition.namespace for definition in STORAGE_NAMESPACE_REGISTRY.namespaces
+        )
         _assert_full_custody_coverage(
             populated_namespaces=populated_namespaces,
-            covered_namespaces=covered_namespaces,
+            covered_namespaces=carried_or_typed | registered_namespaces,
         )
 
     carried_objects = serialize_carried_objects(bucket_id=bucket_id, profile=custody_profile)
@@ -186,8 +197,9 @@ def _assert_full_custody_coverage(
     from ...domain.user_profile._errors import ProfileExportError
 
     raise ProfileExportError(
-        "full custody profile does not cover every populated secure-object namespace",
-        context={"missing_namespaces": missing, "custody_profile": StorageCustodyProfile.FULL.value},
+        "full custody profile found a populated secure-object namespace with no registry "
+        "classification; register a custody disposition for it before it can be backed up",
+        context={"unclassified_namespaces": missing, "custody_profile": StorageCustodyProfile.FULL.value},
     )
 
 
@@ -252,7 +264,7 @@ def _rebuild_participation_index(*, target_bucket_id: str) -> None:
     ``ledger-participation-index-is-derived-rebuildable``); it is regenerated from
     the restored revision, work-unit, and filing catalogues.
     """
-    from ..modelo import rebuild_participation_index
+    from ..modelo._participation_index_rebuild import rebuild_participation_index
 
     rebuild_participation_index(bucket_id=target_bucket_id)
 

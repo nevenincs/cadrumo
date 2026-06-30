@@ -19,19 +19,22 @@ import pytest
 
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....core.resources import resources
-from ....domain.buckets import (
+from ....domain.buckets._event import (
     BucketEvent,
     BucketEventHistoryCatalogue,
-    BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
     derive_bucket_event_id,
 )
-from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
+from ....domain.buckets._event_repository import BucketEventHistoryRepository
+from ....domain.user_profile._schema import ProfileSchemaDefinition
+from ....domain.user_profile._values import UserProfileFact
 from ....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root, isolated_runtime_profile
-from ...user_profile import RegisterProfileCommand, profile_storage_session
-from ...workflow import read_profile_bucket_by_id
-from .. import BucketMaintenanceService, ExportBucketCommand, ImportBucketCommand
+from ...user_profile._commands import RegisterProfileCommand
+from ...user_profile._orchestration import profile_storage_session
+from ...workflow._profile_bucket_scan import read_profile_bucket_by_id
+from .._contracts import ExportBucketCommand, ImportBucketCommand
+from .._service import BucketMaintenanceService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -71,11 +74,9 @@ def _required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, .
 @pytest.fixture
 def seeded_bucket(runtime: TestRuntimeProfile) -> str:
     """Register a profile and seed the previously-dropped stores."""
-    from ...user_profile import (
-        ProfileLifecycleService,
-        ProfileValidationService,
-        UserProfileLifecycleRepository,
-    )
+    from ...user_profile._lifecycle import ProfileLifecycleService
+    from ...user_profile._repository import UserProfileLifecycleRepository
+    from ...user_profile._validation import ProfileValidationService
 
     schema = resources().user_profile_schema.singleton
     assert isinstance(schema, ProfileSchemaDefinition)
@@ -182,8 +183,8 @@ def test_carried_evidence_carry_is_not_tautological(tmp_path: Path) -> None:
                 store.verify_blob(sha)
 
 
-def test_full_custody_coverage_gate_refuses_uncovered_namespace() -> None:
-    """A populated namespace outside the covered set fails the full-custody export."""
+def test_full_custody_coverage_gate_refuses_unclassified_namespace() -> None:
+    """A populated namespace with no registry classification fails the full-custody export."""
     from ...user_profile._bundle import _assert_full_custody_coverage
 
     with pytest.raises(Exception) as excinfo:
@@ -191,7 +192,50 @@ def test_full_custody_coverage_gate_refuses_uncovered_namespace() -> None:
             populated_namespaces=("aeat.domain.buckets.event_history", "aeat.surprise.new_store"),
             covered_namespaces=frozenset({"aeat.domain.buckets.event_history"}),
         )
-    assert "aeat.surprise.new_store" in str(excinfo.value.context["missing_namespaces"])
+    assert "aeat.surprise.new_store" in str(excinfo.value.context["unclassified_namespaces"])
+
+
+def test_full_export_tolerates_populated_process_local_namespace(tmp_path: Path) -> None:
+    """A populated deliberately-excluded (PROCESS_LOCAL/DERIVED) store must not fail the FULL export.
+
+    Regression: a real bucket populates the DERIVED participation index after any
+    calculation and PROCESS_LOCAL workflow/credential stores in normal use. These
+    are registry-classified as not-carried, so the coverage gate must treat them as
+    accounted for rather than as an uncovered store.
+    """
+    from datetime import UTC, datetime
+
+    from ....adapters.persistence.storage._namespace_registry import StorageCustodyProfile
+    from ....core.classification import SensitivityClass
+    from ....tests.secure_sql import isolated_runtime_profile
+    from ...user_profile._bundle import _build_secure_object_custody_payload
+
+    envelope = (
+        b'{"schema_version":1,"written_at":"2026-06-30T00:00:00Z",'
+        b'"classification":"financial","payload":{}}'
+    )
+    with isolated_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id="9b9b9b9b-9b9b-49b9-89b9-9b9b9b9b9b9b",
+        label="Process-local source",
+    ) as profile:
+        profile.repository.save(
+            namespace="aeat.workflow",  # PROCESS_LOCAL workflow state
+            object_key="state",
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=1,
+            written_at=datetime.now(UTC),
+            payload=envelope,
+        )
+        # The FULL profile must build without raising even though a deliberately
+        # excluded namespace is populated.
+        carried, manifest = _build_secure_object_custody_payload(
+            bucket_id=profile.bucket_id,
+            custody_profile=StorageCustodyProfile.FULL,
+        )
+        # The excluded store is reported in the manifest, never carried.
+        assert "aeat.workflow" in manifest.excluded_namespaces
+        assert all(obj.namespace != "aeat.workflow" for obj in carried)
 
 
 def test_every_carried_namespace_has_a_natural_key_resolver() -> None:
