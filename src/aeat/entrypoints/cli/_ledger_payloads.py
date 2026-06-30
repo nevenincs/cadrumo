@@ -952,9 +952,11 @@ class LedgerPreflightResult(OutputSchema):
 
     Mirrors :class:`~aeat.application.ledger.LedgerPreflightReport` produced by
     :func:`~aeat.application.ledger.preflight_ledger_tax_readiness`. ``period``
-    is the nested :class:`LedgerPeriodPayload` model dump, ``issues`` are
-    :class:`LedgerPreflightIssuePayload` rows, and ``ready`` is the computed
-    no-issues verdict.
+    is the nested
+    :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerPeriodPayload` model
+    dump, ``issues`` are
+    :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerPreflightIssuePayload`
+    rows, and ``ready`` is the computed no-issues verdict.
     """
 
     bucket_id: str
