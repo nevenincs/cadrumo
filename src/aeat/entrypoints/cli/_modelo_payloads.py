@@ -784,6 +784,8 @@ class CasillaRowPayload(OutputSchema):
     input_kind: str
     required: bool
     label: str
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     localized_labels: dict[str, str] = Field(default_factory=dict)
     localized_help: dict[str, str] = Field(default_factory=dict)
 

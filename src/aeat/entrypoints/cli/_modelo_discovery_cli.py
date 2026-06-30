@@ -341,6 +341,8 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
                     input_kind=row.input_kind,
                     required=bool(row.required),
                     label=row.localized_labels.get(lang, row.label),
+                    legal_refs=tuple(row.legal_refs),
+                    source_refs=tuple(row.source_refs),
                     localized_labels=dict(row.localized_labels),
                     localized_help=dict(row.localized_help),
                 )
@@ -349,12 +351,14 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
         )
         if explain:
             lines = [
-                "casilla_id\tnumber\tinput\trequired\tlabel\thelp",
+                "casilla_id\tnumber\tinput\trequired\tlabel\thelp\tlegal_refs\tsource_refs",
                 *[
                     (
                         f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t"
                         f"{str(row.required).lower()}\t{row.localized_labels.get(lang, row.label)}\t"
-                        f"{row.localized_help.get(lang) or '-'}"
+                        f"{row.localized_help.get(lang) or '-'}\t"
+                        f"{', '.join(row.legal_refs)}\t"
+                        f"{', '.join(row.source_refs)}"
                     )
                     for row in report.rows
                 ],
