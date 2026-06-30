@@ -72,6 +72,7 @@ from ._renta_income_ledger import (
 from ._renta_ledger import aggregate_renta_ledger_expenses_from_repositories
 from ._retencion_observations_repository import RetencionObservationRepository
 from ._retenciones import (
+    aggregate_retenciones_111,
     aggregate_retenciones_115,
     aggregate_retenciones_180,
     aggregate_retenciones_193,
@@ -652,6 +653,7 @@ def _empty_source_resolution(
 #: "percepciones", a distinct perceptor/clave/subclave figure handled by
 #: :class:`~._withholding_source.WithholdingSourceResolver`.
 _RETENCIONES_AGGREGATORS = {
+    Modelo.M111.value: aggregate_retenciones_111,
     Modelo.M115.value: aggregate_retenciones_115,
     Modelo.M180.value: aggregate_retenciones_180,
     Modelo.M193.value: aggregate_retenciones_193,

@@ -33,6 +33,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PERCEPTOR_BINDING_ID = "modelo-180-115-perceptores-anual"
 _M115_PERCEPTOR_BINDING_ID = "modelo-115-perceptores"
 _M115_BASE_BINDING_ID = "modelo-115-base-retenciones"
+_M111_BINDING_VALUES = {
+    "modelo-111-trabajo-dinerario-perceptores": Decimal("1"),
+    "modelo-111-trabajo-dinerario-base": Decimal("100.00"),
+    "modelo-111-trabajo-dinerario-retenciones": Decimal("10.00"),
+    "modelo-111-actividades-dinerario-perceptores": Decimal("2"),
+    "modelo-111-actividades-dinerario-base": Decimal("500.00"),
+    "modelo-111-actividades-dinerario-retenciones": Decimal("50.00"),
+    "modelo-111-premios-dinerario-perceptores": Decimal("1"),
+    "modelo-111-premios-dinerario-base": Decimal("400.00"),
+    "modelo-111-premios-dinerario-retenciones": Decimal("40.00"),
+}
 
 
 def _observation(nif: str) -> RetencionObservation:
@@ -142,6 +153,74 @@ def test_resolver_materialises_modelo_115_count_and_base_from_real_store(tmp_pat
     }
     assert resolution.diagnostics == ()
     assert {item.source_ref for item in resolution.provenance} == {"perceptor:B12345678"}
+
+
+def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_real_store(tmp_path: Path) -> None:
+    """M111 source bindings resolve the real registry's per-scheme count/base/retention selectors."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        period = Period.from_year_and_code(2026, "1T")
+        RetencionObservationRepository().replace_observations(
+            modelo="111",
+            filing_year=2026,
+            period=period,
+            observations=[
+                RetencionObservation(
+                    source_kind="ledger_transaction",
+                    source_object_id="payroll-row-001",
+                    perceptor_nif="11111111H",
+                    perceptor_name="Trabajador Ejemplo",
+                    scheme=RetencionScheme.WORK_INCOME,
+                    taxable_base=Decimal("100.00"),
+                    retencion_amount=Decimal("10.00"),
+                    accrued_on="2026-01-31",
+                ),
+                RetencionObservation(
+                    source_kind="ledger_transaction",
+                    source_object_id="activity-row-001",
+                    perceptor_nif="22222222J",
+                    perceptor_name="Profesional Ejemplo A",
+                    scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+                    taxable_base=Decimal("200.00"),
+                    retencion_amount=Decimal("20.00"),
+                    accrued_on="2026-02-28",
+                ),
+                RetencionObservation(
+                    source_kind="ledger_transaction",
+                    source_object_id="professional-row-001",
+                    perceptor_nif="33333333P",
+                    perceptor_name="Profesional Ejemplo B",
+                    scheme=RetencionScheme.PROFESSIONAL,
+                    taxable_base=Decimal("300.00"),
+                    retencion_amount=Decimal("30.00"),
+                    accrued_on="2026-03-15",
+                ),
+                RetencionObservation(
+                    source_kind="ledger_transaction",
+                    source_object_id="prize-row-001",
+                    perceptor_nif="44444444A",
+                    perceptor_name="Premio Ejemplo",
+                    scheme=RetencionScheme.PRIZE,
+                    taxable_base=Decimal("400.00"),
+                    retencion_amount=Decimal("40.00"),
+                    accrued_on="2026-03-20",
+                ),
+            ],
+            source_kind="aggregate_pull",
+        )
+        snapshot = resources().modelos.authority.snapshot("111", filing_year=2026, period="1T")
+
+        resolution = RetencionesAggregationSourceResolver().resolve(
+            _context_for(modelo="111", filing_year=2026, period="1T", revision=snapshot.revision),
+        )
+
+    assert resolution.binding_values == _M111_BINDING_VALUES
+    assert resolution.diagnostics == ()
+    assert {item.source_ref for item in resolution.provenance} == {
+        "perceptor:11111111H",
+        "perceptor:22222222J",
+        "perceptor:33333333P",
+        "perceptor:44444444A",
+    }
 
 
 def test_resolver_empty_modelo_115_store_fails_before_silent_zero(tmp_path: Path) -> None:
