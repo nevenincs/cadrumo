@@ -53,8 +53,12 @@ from ...core import (
 )
 from ...core import (
     Period,
-    require_active_bucket_id,
-    resolve_active_bucket_id,
+)
+from ...core import (
+    require_active_bucket_id as _require_active_bucket_id,
+)
+from ...core import (
+    resolve_active_bucket_id as _resolve_active_bucket_id,
 )
 from ...core.identity import BucketId
 from ...core.logging import get_logger
@@ -261,11 +265,11 @@ class WorkflowState(BaseModel):
         """Return the active :class:`UserProfileRecord` from its secure bucket.
 
         The active bucket id resolves via the precedence chain in
-        :func:`resolve_active_bucket_id` (env var > pointer file > state
+        :func:`aeat.core.resolve_active_bucket_id` (env var > pointer file
         fallback). The bucket id and profile name are 1:1 by orchestration
         convention, so the resolved id is the lifecycle-service read key.
         """
-        bucket_id = resolve_active_bucket_id()
+        bucket_id = _resolve_active_bucket_id()
         if bucket_id is None:
             return None
         from ...domain.user_profile import ProfileNotFoundError
@@ -280,7 +284,7 @@ class WorkflowState(BaseModel):
 
     def active_profile_bucket_id(self) -> str | None:
         """Return the active profile's secure bucket id via the precedence chain."""
-        return resolve_active_bucket_id()
+        return _resolve_active_bucket_id()
 
 
 def active_transaction_catalogue_repository(
@@ -299,7 +303,7 @@ def active_transaction_catalogue_repository(
     from ...domain.transactions import LedgerNoActiveBucketError, TransactionCatalogueRepository
 
     try:
-        bucket_id = require_active_bucket_id()
+        bucket_id = _require_active_bucket_id()
     except NoActiveProfileError as exc:
         raise LedgerNoActiveBucketError(
             translated_message="application.workflow.errors.no_active_profile_bucket",
