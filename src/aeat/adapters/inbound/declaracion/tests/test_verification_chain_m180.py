@@ -11,23 +11,16 @@ from ._verification_chain_support import (
     DeclaracionParseError,
     RegistryModeloObservation,
     RegistryValidationError,
+    _casilla_id,
     _registry_snapshot,
     calculate_registry_snapshot,
     date,
     parse_declaracion,
     resolve_bound_inputs_by_casilla_id,
     resolve_relation_values_from_observations,
-    validated_casilla_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
-
-
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
 
 
 _DECL_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("decl.total-perceptores")
