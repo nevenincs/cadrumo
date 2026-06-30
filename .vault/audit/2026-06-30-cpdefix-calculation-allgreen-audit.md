@@ -76,7 +76,9 @@ harnessed campaigns live under `.agents/testimonials/<slug>.md`, while many
 `tmp/personas` directories are storage roots or scratch regression logs rather
 than transcript stores. Several storage roots still lack a local transcript or
 final-summary-like closeout artifact, so artifact hygiene remains separate from
-the calculation gates that passed in this checkpoint.
+the calculation gates that passed in this checkpoint. The per-directory
+disposition is recorded in the ignored closeout ledger
+`tmp/personas/_cpdefix-closeout-ledger.md`.
 
 ## Recommendations
 
