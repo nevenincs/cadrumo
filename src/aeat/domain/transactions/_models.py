@@ -115,25 +115,36 @@ def normalise_movement_reference(value: str) -> str:
     return _REFERENCE_NOISE.sub("", stripped.lower())
 
 
-def derive_import_fingerprint(raw: RawTransaction) -> str:
+def derive_import_fingerprint(raw: RawTransaction, *, direction: TransactionDirection | str | None = None) -> str:
     """Return the stable cross-format import-dedup fingerprint for a raw row.
 
     Unlike :func:`derive_transaction_id` — which keys on the provider
     identifier and the verbatim narrative and therefore changes when a
     transaction is edited or re-exported in a different file format —
     this fingerprint keys only on the *movement identity* an operator
-    would recognise: the effective date, the amount magnitude, and the
-    normalised narrative (see :func:`normalise_movement_reference`).
+    would recognise: the effective date, amount magnitude, currency,
+    direction, and the normalised narrative (see
+    :func:`normalise_movement_reference`).
 
     The fingerprint is stamped onto :class:`Transaction` at import time
     and carried verbatim through every later edit, so re-importing the
     same statement (or the same movements exported as a different file
-    format) recognises the row as already present.
+    format) recognises the row as already present. Import callers that
+    have parsed flow direction must pass it; callers without a parse-boundary
+    direction receive an explicit ``UNSPECIFIED`` discriminator.
     """
     effective_value_date = raw.value_date or raw.booked_date
+    if isinstance(direction, TransactionDirection):
+        direction_value = direction.value
+    elif direction is None:
+        direction_value = "UNSPECIFIED"
+    else:
+        direction_value = direction
     return content_hash_hex(
         {
             "amount": canonical_decimal_string(raw.amount),
+            "currency": raw.currency,
+            "direction": direction_value,
             "reference": normalise_movement_reference(raw.description),
             "value_date": effective_value_date.isoformat(),
         }
