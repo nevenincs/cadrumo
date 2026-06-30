@@ -1169,7 +1169,8 @@ class InventoryValuationPreviewPayload(OutputSchema):
     S52): this envelope *flattens* that wrapper, projecting its inner
     ``preview`` (:class:`~aeat.application.inventory.InventoryValuationPreview`)
     fields and lifting the wrapper's ``bucket_event_ids`` to the top level.
-    Derive via :meth:`from_result`.
+    Derive via
+    :meth:`~aeat.entrypoints.cli._ledger_payloads.InventoryValuationPreviewPayload.from_result`.
     """
 
     actividad_id: str
@@ -1188,7 +1189,8 @@ class InventoryValuationPreviewPayload(OutputSchema):
         enum/Decimal coercion, and the event ids are lifted onto the same level.
 
         Returns:
-            :class:`InventoryValuationPreviewPayload`: Flattened CLI JSON envelope.
+            :class:`~aeat.entrypoints.cli._ledger_payloads.InventoryValuationPreviewPayload`:
+            Flattened CLI JSON envelope.
         """
         data = result.preview.model_dump(mode="json")
         data["bucket_event_ids"] = list(result.bucket_event_ids)
