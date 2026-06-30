@@ -240,8 +240,7 @@ class CasillaObservation(BaseModel):
     # at 1T — the prior-quarter carry-forward selector with
     # ``max_year_delta = 0`` suppresses the cross-ejercicio anchor).
     # The value is ``Decimal("0")`` materialised through an explicit
-    # constructor, not the silent ``inputs.get(..., _ZERO)`` fallback
-    # that the runtime previously used for missing bound values.
+    # constructor rather than through a generic missing-input default.
     # Downstream audit and review surfaces should distinguish
     # absent-by-design zeros from value-bearing observations.
     absent_by_design: bool = False
