@@ -155,19 +155,18 @@ class TestCsvReplacement:
         assert replacement.synthetic == "SANITIZED1002021"
         assert len(replacement.synthetic) == 16
 
-    def test_rejects_short(self) -> None:
-        with pytest.raises(ValidationError, match=r"synthetic CSV must be exactly 16 characters"):
+    @pytest.mark.parametrize(
+        ("synthetic", "expected_message"),
+        (
+            pytest.param("TOO_SHORT", r"synthetic CSV must be exactly 16 characters", id="short"),
+            pytest.param("sanitized1002021", r"synthetic CSV must be uppercase alphanumeric", id="lowercase"),
+        ),
+    )
+    def test_rejects_invalid_synthetic_csv(self, synthetic: str, expected_message: str) -> None:
+        with pytest.raises(ValidationError, match=expected_message):
             CsvReplacement(
                 real=SecretStr("FNBB57PE9KZ5TN4R"),
-                synthetic="TOO_SHORT",
-                surface_label="csv",
-            )
-
-    def test_rejects_lowercase(self) -> None:
-        with pytest.raises(ValidationError, match=r"synthetic CSV must be uppercase alphanumeric"):
-            CsvReplacement(
-                real=SecretStr("FNBB57PE9KZ5TN4R"),
-                synthetic="sanitized1002021",
+                synthetic=synthetic,
                 surface_label="csv",
             )
 
