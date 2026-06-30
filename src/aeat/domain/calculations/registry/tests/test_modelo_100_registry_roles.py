@@ -864,6 +864,38 @@ def test_modelo_100_inmueble_rented_days_are_integer() -> None:
             )
 
 
+def test_modelo_100_eo_module_units_are_decimal() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_legal_refs = {
+        "ley-35-2006:art-27",
+        "ley-35-2006:art-28",
+        "ley-35-2006:art-30",
+        "ley-35-2006:art-31",
+        "ley-35-2006:art-32",
+    }
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        for casilla_id in ("1445", "1448", "1451", "1454", "1457", "1460", "1463"):
+            casilla = next(
+                casilla for casilla in revision.casillas if casilla.id == _casilla_id(casilla_id)
+            )
+
+            assert casilla.label == "Nº de unidades"
+            assert tuple(casilla.section) == (
+                "toma_datos_ampliada",
+                "reg_estima_obj",
+                "actividad_est_obj",
+            )
+            assert casilla.data_type == "decimal"
+            assert casilla.semantic_role == "irpf_eo_modulo_num_unidades"
+            assert expected_legal_refs.issubset(casilla.legal_refs)
+            assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+                casilla.source_refs,
+            )
+
+
 def test_modelo_100_retrib_especie_no_exenta_total_role_names_aggregate() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
