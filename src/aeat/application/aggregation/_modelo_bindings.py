@@ -72,6 +72,7 @@ from ._renta_income_ledger import (
 from ._renta_ledger import aggregate_renta_ledger_expenses_from_repositories
 from ._retencion_observations_repository import RetencionObservationRepository
 from ._retenciones import (
+    aggregate_retenciones_115,
     aggregate_retenciones_180,
     aggregate_retenciones_193,
 )
@@ -643,13 +644,15 @@ def _empty_source_resolution(
     return CalculationSourceResolution(resolver_id=resolver_id, owned_sources=owned_sources)
 
 
-#: The annual retenciones-summary modelos whose "número total de perceptores" box
-#: this source materialises, mapped to their validated distinct-NIF aggregator. The
-#: quarterly retenciones modelos (111/115/123) carry no perceptor-count box and are
-#: deliberately absent. Modelo 190 is not included: its annual count is
-#: "percepciones", a distinct perceptor/clave/subclave figure, not RET-1's
-#: distinct-NIF perceptor count.
-_RETENCIONES_PERCEPTOR_COUNT_AGGREGATORS = {
+#: Retenciones modelos whose registry declares ``retenciones_aggregation`` bindings,
+#: mapped to their validated per-perceptor aggregator. Modelo 115 uses the quarterly
+#: URBAN_RENTAL aggregate for casillas 01/02. Modelos 180/193 use the annual
+#: aggregate for the distinct-NIF perceptor count; their monetary totals remain on
+#: relation-prefill. Modelo 190 is not included: its annual count is
+#: "percepciones", a distinct perceptor/clave/subclave figure handled by
+#: :class:`~._withholding_source.WithholdingSourceResolver`.
+_RETENCIONES_AGGREGATORS = {
+    Modelo.M115.value: aggregate_retenciones_115,
     Modelo.M180.value: aggregate_retenciones_180,
     Modelo.M193.value: aggregate_retenciones_193,
 }
@@ -660,12 +663,11 @@ class RetencionesAggregationSourceResolver:
 
     Reads the bucket-scoped per-perceptor retención observations
     (:class:`~._retencion_observations_repository.RetencionObservationRepository`)
-    for the modelo's annual window and materialises the Modelo 180/193 "número
-    total de perceptores" box with the validated DISTINCT-NIF count
-    (``aggregate_retenciones_{180,193}``'s ``total_perceptors``). This replaces
-    the wrong sum-of-quarterly-counts relation; pull and calculate read this one
-    store (one-aggregation-path). Modelo 190's percepciones count is handled by
-    :class:`~._withholding_source.WithholdingSourceResolver`.
+    for the modelo's period and materialises the declared retenciones aggregation
+    bindings through the matching validated aggregator. Modelo 115 consumes the
+    quarterly URBAN_RENTAL count/base; annual summary modelos consume the same
+    family store for their distinct-NIF count. Modelo 190's percepciones count is
+    handled by :class:`~._withholding_source.WithholdingSourceResolver`.
     """
 
     resolver_id = "retenciones_aggregation"
@@ -677,10 +679,10 @@ class RetencionesAggregationSourceResolver:
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         if not _revision_has_binding_source(context.revision, "retenciones_aggregation"):
             return _empty_source_resolution(self.resolver_id, self.owned_sources)
-        aggregator = _RETENCIONES_PERCEPTOR_COUNT_AGGREGATORS.get(str(context.modelo))
+        aggregator = _RETENCIONES_AGGREGATORS.get(str(context.modelo))
         if aggregator is None:
             # Defensive: a revision declares the source for a modelo with no
-            # perceptor-count aggregator. Resolve empty rather than guess a count.
+            # retenciones aggregator. Resolve empty rather than guess values.
             return _empty_source_resolution(self.resolver_id, self.owned_sources)
         repository = self._retencion_repository or RetencionObservationRepository()
         try:
