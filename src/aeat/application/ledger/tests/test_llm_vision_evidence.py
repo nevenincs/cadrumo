@@ -48,6 +48,8 @@ from .._vision_classifier import LocalVisionLLMClassifier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_BUCKET_ID = "33333333-3333-4333-8333-333333333333"
+
 
 def _json_object(value: object) -> dict[str, object]:
     assert isinstance(value, dict)
@@ -65,7 +67,7 @@ def _json_array(value: object) -> list[object]:
 
 @pytest.fixture
 def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-001") as runtime:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
         yield runtime
 
 
@@ -113,7 +115,7 @@ def _add_evidence(profile: TestRuntimeProfile, tmp_path: Path, *, name: str, dat
         settings=profile.settings,
         bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
     )
-    return service.add(bucket_id="bucket-001", source_path=path).record.evidence_id
+    return service.add(bucket_id=_BUCKET_ID, source_path=path).record.evidence_id
 
 
 def test_scan_only_pdf_resolves_to_images_gestor_allowed_no_consent(
@@ -129,7 +131,7 @@ def test_scan_only_pdf_resolves_to_images_gestor_allowed_no_consent(
     )
     resolved = _resolve_evidence(
         _transaction(evidence_id),
-        bucket_id="bucket-001",
+        bucket_id=_BUCKET_ID,
         settings=gestor,
         evidence_acknowledged=False,
     )
@@ -145,7 +147,7 @@ def test_image_evidence_resolves_to_images(profile: TestRuntimeProfile, tmp_path
     evidence_id = _add_evidence(profile, tmp_path, name="receipt.png", data=_png_image())
     resolved = _resolve_evidence(
         _transaction(evidence_id),
-        bucket_id="bucket-001",
+        bucket_id=_BUCKET_ID,
         settings=profile.settings,
         evidence_acknowledged=False,
     )
@@ -176,9 +178,9 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
     from ...user_profile import UserProfileLifecycleRepository
 
     clock = datetime(2026, 1, 1, tzinfo=UTC)
-    UserProfileLifecycleRepository(bucket_id="bucket-001").save(
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
         UserProfileRecord(
-            profile_id="24242424-2424-4242-8242-242424242424",
+            profile_id=_BUCKET_ID,
             display_name="Vision opted out",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -193,7 +195,7 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
         _resolve_evidence(
             _transaction(evidence_id),
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             settings=profile.settings,
             evidence_acknowledged=False,
         )
