@@ -190,7 +190,8 @@ def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
 
     Five logical stages:
 
-    1. `config profile create` — register operator profile with --accept-defaults.
+    1. `config profile create` — register operator profile with the required
+       filing identity flags and --accept-defaults.
     2. `config profile status` — verify the wizard persisted every
        required profile fact.
     3. `config auth configure/status/test --provider certificate` —
@@ -210,7 +211,9 @@ def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
             "config", "profile", "create", "operator",
             "--quiet", "--accept-defaults",
             "--tax-id", "12345678Z",
+            "--entity-type", "natural_person",
             "--name", "Operator",
+            "--surnames", "Workflow",
             "--activity", "design",
             "--iva-regime", "GENERAL",
         ],
