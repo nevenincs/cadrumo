@@ -926,6 +926,7 @@ application:
           via the `aeat config profile edit` command. TRLIRNR Art. 10 requires non-EEA
           IRNR filers to declare a representative for AEAT communications.
       modelo_210_2025_rendimientos_integros_implica_base_imponible: 'Gross income (rendimientos íntegros) is positive but the base imponible is zero; review the base imponible determination.'
+      modelo_210_2025_inmobiliaria_implica_base_imponible: 'Tipo de renta is inmobiliaria but the base imponible is zero; review the imputed-rent base imponible determination (valor catastral, coeficiente, días de imputación).'
       modelo_202_base_imponible_previa_determinada_cuando_resultado_positivo: 'Resultado contable is positive but the base imponible previa is zero; review the base imponible determination.'
       modelo_123_2024_base_total_implica_retenciones_total: 'Base total is positive but total retenciones is zero; review the withholding determination.'
       modelo_151_base_liquidable_implica_cuota_integra: 'Base liquidable general is positive but cuota íntegra general is zero; review the cuota íntegra determination.'
@@ -2025,7 +2026,6 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
-        file_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id} is already filed; returned the existing filing record without changes.'
   common:
     errors:
       draft_id_not_found: Draft ID %{draft_id} not found
