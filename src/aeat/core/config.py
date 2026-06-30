@@ -1270,6 +1270,9 @@ def settings_for_active_profile_bucket(bucket_id: str, source: Settings | None =
     while ``aeat_database_url`` is re-derived through the same validators used
     by normal settings construction. Explicit database URLs are refused by the
     lower-level route helper because they already define the storage authority.
+
+    Returns:
+        A :class:`Settings` instance whose database route targets ``bucket_id``.
     """
     return settings_for_bucket_route(bucket_id, source or load_settings())
 

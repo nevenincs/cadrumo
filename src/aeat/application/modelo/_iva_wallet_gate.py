@@ -342,7 +342,13 @@ def load_persisted_iva_compensation_decision_for_work_unit(
     *,
     repository: IvaWalletDecisionRepository | None = None,
 ) -> IvaCompensationReconciliationDecision | None:
-    """Load the persisted IVA compensation decision for a :class:`~aeat.domain.modelos.WorkUnit`."""
+    """Load the persisted IVA compensation decision for a :class:`~aeat.domain.modelos.WorkUnit`.
+
+    Returns:
+        The persisted :class:`IvaCompensationReconciliationDecision` for Modelo
+        303 work units, or ``None`` when the work unit or bucket has no wallet
+        authority record.
+    """
     if work_unit.modelo != Modelo.M303:
         return None
     taxpayer_nif = taxpayer_nif_for_bucket(work_unit.bucket_id)
@@ -693,6 +699,10 @@ def require_persisted_iva_compensation_decision_matches_revision(
     the decision targets another period, or when the decision is blocked/missing.
     Non-Modelo 303 work units return ``None`` because the IVA wallet authority
     owns only Modelo 303 prior compensation.
+
+    Returns:
+        The matching :class:`IvaCompensationReconciliationDecision` for Modelo
+        303, or ``None`` for non-Modelo 303 work units.
     """
     if work_unit.modelo != Modelo.M303:
         return None
