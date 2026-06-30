@@ -24,6 +24,8 @@ from typing import Literal
 import pytest
 
 from .....application.storage.calc_sheets import (
+    RelationValue,
+    RelationValues,
     SheetCellAddress,
     SheetCellConstraint,
     SheetExportMetadata,
@@ -38,6 +40,7 @@ from .._calc_sheets_apply import (
     _build_structural_cleanup_requests,
     _coerce_cell_value,
     _condition_for_constraint,
+    _developer_metadata_pairs,
     _input_message_for_constraint,
 )
 
@@ -202,6 +205,48 @@ def test_input_message_renders_any_when_no_bounds() -> None:
     constraint = _make_constraint(sign="any", casilla_id=_SOME_CASILLA)
     message = _input_message_for_constraint(constraint)
     assert "any" in message
+
+
+def test_developer_metadata_pairs_preserve_relation_grounding() -> None:
+    """Relation metadata keeps the registry-declared source identity and refs."""
+
+    resolved_at = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
+    plan = SheetExportPlan(
+        metadata=SheetExportMetadata(
+            modelo_id="180",
+            revision_id="2023-y-siguientes",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "0A"),
+            engine_version="calc-sheets/0.1.0",
+            registry_sha="da9952e1610f7db6",
+            exported_at=datetime(2026, 6, 30, 12, 1, tzinfo=UTC),
+        ),
+        relation_provenance=RelationValues(
+            values=(
+                RelationValue(
+                    relation="modelo-180-rel-115-base-anual",
+                    value=Decimal("190.00"),
+                    provenance="local_filing",
+                    source_modelo="115",
+                    source_filing_year=2026,
+                    source_periods=("1T", "2T", "3T", "4T"),
+                    source_casilla_ids=("02",),
+                    legal_refs=("ley-35-2006:art-99",),
+                    source_refs=("boe-modelo-180-2023-form",),
+                    resolved_at=resolved_at,
+                ),
+            ),
+        ),
+        guide=SheetGuideContent(title="Guide", paragraphs=("Line.",)),
+    )
+
+    pairs = dict(_developer_metadata_pairs(plan))
+
+    assert pairs["aeat_relation:modelo-180-rel-115-base-anual"] == (
+        "value=190.00; provenance=local_filing; source_modelo=115; source_filing_year=2026; "
+        "source_periods=1T+2T+3T+4T; source_casilla_ids=02; legal_refs=ley-35-2006:art-99; "
+        f"source_refs=boe-modelo-180-2023-form; resolved_at={resolved_at.isoformat()}"
+    )
 
 
 # ---------------------------------------------------------------------------
