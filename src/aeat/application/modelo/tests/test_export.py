@@ -83,6 +83,12 @@ def test_export_result_json_surfaces_casilla_provenance(tmp_path: Path) -> None:
     payload = result.model_dump(mode="json")
 
     assert payload["period"] == {"filing_year": 2026, "code": "1T"}
+    assert payload["local_evidence_status"] == "local_export_not_official_aeat_filing_evidence"
+    assert "not official AEAT filing evidence" in payload["official_evidence_message"]
+    assert "justificante" in payload["official_evidence_message"]
+    assert "consulta de declaraciones presentadas" in payload["official_evidence_message"]
+    assert "CSV cotejo" in payload["official_evidence_message"]
+    assert "aeat app modelo reconcile pull" in payload["official_evidence_next_action"]
     [provenance] = payload["casilla_provenance"]
     assert _casilla_id_from_payload(provenance["casilla_id"]) == _M130_RENDIMIENTO_NETO_CASILLA
     assert provenance["formula_id"] is None

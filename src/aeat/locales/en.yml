@@ -1526,8 +1526,7 @@ cli:
         actor_help: Operator label recorded into the MODELO_EXPORTED event.
         errors:
           output_required: Supply --output PATH for the fichero-BOE artefact.
-        help: Export a verified-complete or filed modelo revision to a local AEAT-compatible
-          fichero-BOE file. Local-only; never contacts AEAT.
+        help: 'Export a verified-complete or filed modelo revision to a local AEAT-compatible fichero-BOE file. Local-only; never contacts AEAT, and the generated file is not official AEAT filing evidence. Use AEAT justificante, declaration consultation, or CSV cotejo evidence after filing.'
         output_help: Path to write the fichero-BOE artefact to.
         revision_help: Calculation revision id to export; defaults to the work unit's
           most recent verified-complete or filed revision.
