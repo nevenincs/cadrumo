@@ -1,15 +1,21 @@
 """Typed ``--json`` payload schemas for censo config CLI commands.
 
-Each class declared here is a strict :class:`OutputSchema` subclass and is
-decorated with :func:`register_schema` so the JSON-contract test suite can
-enumerate every censo command surface this module covers.
+Each class declared here is a strict
+:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass and is decorated
+with :func:`~aeat.entrypoints.cli._schemas.register_schema` so the
+JSON-contract test suite can enumerate every censo command surface this module
+covers. Validated results enter
+:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:func:`~aeat.entrypoints.cli._common._emit_envelope`.
 
 Field sets match the production payload dicts constructed in
-``_profile_censo.py`` at their emit sites.
+:mod:`aeat.entrypoints.cli._config._profile_censo` at their emit sites.
 
 The backing service is :class:`~aeat.application.user_profile.CensoSyncService`;
-this module documents only the CLI transport shapes for censo snapshot capture,
-review, comparison, and apply.
+this module documents only the CLI transport shapes for
+:class:`~aeat.application.live._censo.CensoSnapshot`,
+:class:`~aeat.application.user_profile.CensoProfileComparison`, and
+:class:`~aeat.application.user_profile.CensoApplyResult` projections.
 """
 
 from __future__ import annotations
@@ -88,7 +94,8 @@ class CensoApplyPayload(OutputSchema):
     re-declaring them. The calendar fields are a CLI-side summary of the
     resulting :class:`~aeat.application.overview.OverviewCalendar` after censo
     facts have updated the profile, so operators can see which obligations are
-    now computable. Derive instances via :meth:`from_result`.
+    now computable. Derive instances via
+    :meth:`~aeat.entrypoints.cli._config._profile_censo_payloads.CensoApplyPayload.from_result`.
     """
 
     snapshot_id: str
@@ -117,6 +124,8 @@ class CensoApplyPayload(OutputSchema):
         forwards any additional fields the application result carries.
 
         Returns:
-            The projected :class:`CensoApplyPayload` instance.
+            The projected
+            :class:`~aeat.entrypoints.cli._config._profile_censo_payloads.CensoApplyPayload`
+            instance.
         """
         return cls.model_validate(result.model_dump(mode="json"))
