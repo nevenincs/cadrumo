@@ -200,23 +200,26 @@ class TestActionableMessages:
     malformed input).
     """
 
-    def test_nif_checksum_message_names_correct_letter(self) -> None:
+    @pytest.mark.parametrize(
+        ("candidate", "expected_body", "expected_letter"),
+        (
+            pytest.param("12345678A", "12345678", "Z", id="nif"),
+            pytest.param("X1234567Z", "X1234567", "L", id="nie"),
+        ),
+    )
+    def test_checksum_message_names_correct_letter(
+        self,
+        candidate: str,
+        expected_body: str,
+        expected_letter: str,
+    ) -> None:
         from ...errors import resolve_error_message
 
         with pytest.raises(IdentityError) as excinfo:
-            validate_identity("12345678A")
+            validate_identity(candidate)
         message = resolve_error_message(excinfo.value)
-        assert "12345678" in message
-        assert "Z" in message
-
-    def test_nie_checksum_message_names_correct_letter(self) -> None:
-        from ...errors import resolve_error_message
-
-        with pytest.raises(IdentityError) as excinfo:
-            validate_identity("X1234567Z")
-        message = resolve_error_message(excinfo.value)
-        assert "X1234567" in message
-        assert "L" in message
+        assert expected_body in message
+        assert expected_letter in message
 
     def test_malformed_nif_message_states_expected_shape(self) -> None:
         from ...errors import resolve_error_message
