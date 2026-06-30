@@ -227,6 +227,75 @@ def test_invalid_pagadores_values_are_debug_logged_without_raw_value(
     assert all(raw_value not in record.getMessage() for record in caplog.records)
 
 
+_MULTIPLE_PAGADORES_OBLIGATION_KEY = "cli.overview.status.filing_obligation_multiple_pagadores"
+
+
+def test_multi_payer_over_reduced_limit_surfaces_obligation_advisory() -> None:
+    # 2 pagadores, secondary €1,600 > €1,500, total €18,000 over the 2024 reduced
+    # limit (€15,876) → the Art. 96.3 LIRPF obligation advisory fires.
+    advisories = build_filing_obligation_advisories(
+        {
+            "irpf.pagadores_count": "2",
+            "irpf.pagadores_secondary_income": "1600",
+            "irpf.pagadores_total_work_income": "18000",
+        },
+        filing_year=2024,
+    )
+    assert advisories == (_MULTIPLE_PAGADORES_OBLIGATION_KEY,)
+
+
+def test_multi_payer_under_reduced_limit_does_not_surface_advisory() -> None:
+    # Same multiple-pagadores trigger but total €10,000 is below the 2024 reduced
+    # limit (€15,876) → not obliged, no advisory.
+    advisories = build_filing_obligation_advisories(
+        {
+            "irpf.pagadores_count": "2",
+            "irpf.pagadores_secondary_income": "1600",
+            "irpf.pagadores_total_work_income": "10000",
+        },
+        filing_year=2024,
+    )
+    assert advisories == ()
+
+
+def test_single_payer_under_general_limit_does_not_surface_advisory() -> None:
+    # 1 pagador, total €18,000 below the general €22,000 → no obligation.
+    advisories = build_filing_obligation_advisories(
+        {
+            "irpf.pagadores_count": "1",
+            "irpf.pagadores_secondary_income": "0",
+            "irpf.pagadores_total_work_income": "18000",
+        },
+        filing_year=2024,
+    )
+    assert advisories == ()
+
+
+def test_multi_payer_total_undeclared_surfaces_conservatively() -> None:
+    # Total work income undeclared but the multiple-pagadores trigger is met →
+    # the advisory surfaces conservatively rather than granting a false clear.
+    advisories = build_filing_obligation_advisories(
+        {
+            "irpf.pagadores_count": "2",
+            "irpf.pagadores_secondary_income": "1600",
+        },
+        filing_year=2024,
+    )
+    assert advisories == (_MULTIPLE_PAGADORES_OBLIGATION_KEY,)
+
+
+def test_obligation_advisory_key_resolves_to_a_translation() -> None:
+    # The surfaced key must resolve to a real (non-humanised-fallback) locale
+    # string in every shipped locale — the half-shipped gap this closes.
+    from aeat.core.i18n._render import tr
+
+    rendered = tr(_MULTIPLE_PAGADORES_OBLIGATION_KEY)
+    # Cites the binding provision and names the form; not the humanised fallback.
+    assert "96.3" in rendered
+    assert "100" in rendered
+    assert rendered != "Filing obligation multiple pagadores"
+
+
 # ---------------------------------------------------------------------
 # OverviewPeriodState mapping
 # ---------------------------------------------------------------------

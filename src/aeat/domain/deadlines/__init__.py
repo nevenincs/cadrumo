@@ -97,6 +97,7 @@ from ._models import (
     evaluate_multiple_pagadores_obligation,
     irnr_representante_fiscal_required,
     is_ue_eee_country_code,
+    resolve_multiple_pagadores_reduced_limit,
 )
 from ._plazo import resolve_filing_closes_on
 from ._profiles import taxpayer_profile_from_mapping
@@ -152,6 +153,7 @@ __all__ = [
     "next_business_day",
     "next_deadline",
     "resolve_filing_closes_on",
+    "resolve_multiple_pagadores_reduced_limit",
     "resolve_recargo_band",
     "shift_deadline",
     "taxpayer_profile_from_mapping",

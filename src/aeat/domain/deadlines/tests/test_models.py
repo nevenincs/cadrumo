@@ -11,6 +11,7 @@ trip.
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
+from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
@@ -132,6 +133,24 @@ class TestTaxpayerProfile:
             intracommunity_operations_exceed_50000_eur=True,
         )
         assert profile.enrollment == ModeloEnrollment(large_company=True)
+
+    def test_mapping_projection_reads_pagadores_axes(self) -> None:
+        # The three Art. 96 LIRPF pagadores axes flow from the canonical mapping
+        # into the typed profile, including the total-work-income leg.
+        profile = taxpayer_profile_from_mapping(
+            {
+                "tax.id": "12345678Z",
+                "iva.regime": "GENERAL",
+                "irpf.pagadores_count": "2",
+                "irpf.pagadores_secondary_income": "1600",
+                "irpf.pagadores_total_work_income": "18000",
+            },
+            tax_id_default="00000000T",
+        )
+
+        assert profile.irpf_pagadores_count == 2
+        assert profile.irpf_pagadores_secondary_income == Decimal("1600")
+        assert profile.irpf_pagadores_total_work_income == Decimal("18000")
 
 
 class TestModeloDeadline:
