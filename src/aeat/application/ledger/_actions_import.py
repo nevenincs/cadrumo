@@ -456,7 +456,7 @@ def _resolve_financial_provider(provider: str, path: Path) -> FinancialProviderP
     if provider_id is LedgerProviderID.AUTO:
         detected = detect_provider(path)
         if detected is None:
-            raise TransactionValidationError(f"auto-detection of ledger format failed for {path}")
+            raise _unsupported_import_source(path)
         return detected
     if provider_id is LedgerProviderID.CSV:
         return CsvProvider()
@@ -467,7 +467,7 @@ def _resolve_financial_provider(provider: str, path: Path) -> FinancialProviderP
     if provider_id is LedgerProviderID.N26:
         detected = detect_provider(path)
         if detected is None:
-            raise TransactionValidationError(f"auto-detection of N26 format failed for {path}")
+            raise _unsupported_import_source(path)
         return detected
     # PDF and PDF_N26
     return PdfN26Provider()
@@ -507,8 +507,22 @@ def _build_source_verification(*, source: Path | None, verify: bool) -> LedgerSo
         return LedgerSourceVerificationReport(requested=True)
     resolved = source.resolve()
     if not resolved.exists() or not resolved.is_file():
-        raise TransactionValidationError(f"source file not found: {source}")
+        raise TransactionValidationError(
+            translated_message="errors.financial.source_file_not_found",
+            context={"path": str(source)},
+        )
     return LedgerSourceVerificationReport(requested=True, path=str(resolved), sha256=sha256_file(resolved))
+
+
+def _unsupported_import_source(path: Path) -> TransactionValidationError:
+    """Build the shared translated refusal for sources no provider recognises."""
+    return TransactionValidationError(
+        translated_message="errors.transaction.ledger_import_failed",
+        context={
+            "reason": tr("errors.transaction.import_source_invalid"),
+            "path": str(path),
+        },
+    )
 
 
 def _validation_report(validation: ProviderValidation) -> LedgerSourceValidationReport:

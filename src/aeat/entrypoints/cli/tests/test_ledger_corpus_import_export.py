@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -38,11 +39,12 @@ def test_export_csv_roundtrips_back_through_import(tmp_path: Path) -> None:
     out = tmp_path / "ledger-export.csv"
     exported = _invoke(["app", "ledger", "export", "--output", str(out), "--export-format", "csv"])
     assert exported.exit_code == 0, exported.output
-    # Re-importing the canonical export must dedup to zero new rows.
+    # Re-importing the canonical CSV export must dedup to zero new rows.
     reimported = _invoke(["--format", "json", "app", "ledger", "import", str(out), "--provider", "csv"])
-    # The canonical export may or may not be recognised by a bank layout; either
-    # it dedups (0 imported) or the layout is unrecognised -- both leave the
-    # active row count unchanged, which is the fidelity invariant we assert.
+    assert reimported.exit_code == 0, reimported.output
+    payload = json.loads(reimported.output)["result"]
+    assert payload["imported"] == 0, payload
+    assert payload["skipped"] == before, payload
     assert len(_list_rows()) == before, reimported.output
 
 
@@ -106,7 +108,10 @@ def test_jsonl_export_roundtrips_back_through_import(tmp_path: Path) -> None:
     exported = _invoke(["app", "ledger", "export", "--output", str(out), "--export-format", "jsonl"])
     assert exported.exit_code == 0, exported.output
     assert out.exists() and out.read_text(encoding="utf-8").strip()
-    # The canonical JSONL export carries the rich ledger schema (not a bank
-    # layout); re-import leaves the active row count unchanged (no phantom rows).
-    _invoke(["app", "ledger", "import", str(out), "--provider", "csv"])
+    # The canonical JSONL export carries the rich ledger schema, not a bank
+    # layout; importing it through a bank provider must refuse explicitly rather
+    # than being treated as a permissive no-op.
+    reimported = _invoke(["app", "ledger", "import", str(out), "--provider", "csv"])
+    assert reimported.exit_code != 0, reimported.output
+    assert "cannot be imported" in reimported.output
     assert len(_list_rows()) == before

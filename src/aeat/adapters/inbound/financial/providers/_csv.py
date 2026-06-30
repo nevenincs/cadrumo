@@ -166,7 +166,23 @@ N26_LAYOUT = CsvBankLayout(
     day_first_dates=False,
     decimal_separator=".",
 )
+AEAT_LEDGER_EXPORT_LAYOUT = CsvBankLayout(
+    bank_name="AEAT ledger export",
+    columns=CsvColumnMap(
+        booked_date=("booked_date",),
+        value_date=("value_date",),
+        amount=("amount",),
+        direction=("direction",),
+        currency=("currency",),
+        description=("description",),
+        counterparty=("counterparty",),
+        external_id=("transaction_id",),
+    ),
+    day_first_dates=False,
+    decimal_separator=".",
+)
 CSV_LAYOUTS: tuple[CsvBankLayout, ...] = (
+    AEAT_LEDGER_EXPORT_LAYOUT,
     N26_LAYOUT,
     BBVA_LAYOUT,
     SANTANDER_LAYOUT,
