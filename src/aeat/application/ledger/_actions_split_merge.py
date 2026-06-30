@@ -1,10 +1,12 @@
-"""Application services for bucket-scoped manual ledger transactions.
+"""Split and merge services for manual ledger transaction lineage.
 
-Services operate over a :class:`TransactionCatalogueRepository` for ledger
-state, a :class:`BucketEventHistoryRepository` for durable audit events, and
-an optional :class:`InvoiceCatalogueRepository` for purchase-invoice evidence
-cascade on removal. The inner functions accept a :class:`TransactionCatalogue`
-or :class:`InvoiceCatalogue` directly when the caller supplies pre-loaded data.
+Split operations load a :class:`TransactionCatalogue` through a
+:class:`TransactionCatalogueRepository`, mark parent and child rows with
+:class:`~aeat.domain.transactions.SplitLineage`, append audit events through a
+:class:`BucketEventHistoryRepository`, and return
+:class:`~aeat.application.ledger.SplitTransactionResult`. Merge operations
+verify the complete child cohort and return
+:class:`~aeat.application.ledger.MergeTransactionsResult`.
 """
 
 from __future__ import annotations
@@ -106,7 +108,7 @@ def split_transaction(
       whole lineage chain in chronological order.
     - Catalogue + event are persisted atomically.
 
-    Returns a :class:`SplitTransactionResult`.
+    Returns a :class:`~aeat.application.ledger.SplitTransactionResult`.
     """
     now = _normalise_timestamp(occurred_at)
     trimmed_actor = _require_actor(actor, operation="ledger split")
@@ -242,7 +244,7 @@ def _resolve_active_split_parent(
 ) -> Transaction:
     """Load the split-parent transaction and assert it is currently ACTIVE.
 
-    Only ACTIVE transactions can be split â€” splitting a SPLIT or
+    Only ACTIVE transactions can be split - splitting a SPLIT or
     ARCHIVED row would corrupt the lifecycle chain. The state
     refusal carries the actual lifecycle state in its context so an
     operator can diagnose why the split is blocked.
@@ -301,7 +303,7 @@ def _validate_split_child_amounts(
     flow is carried by ``direction``, which every child inherits from the
     parent in the split builder, so there is no sign to reconcile):
 
-    * ``sum(child.amount) == parent_amount`` exactly â€” no rounding
+    * ``sum(child.amount) == parent_amount`` exactly - no rounding
       slack; bank ledgers carry exact cents.
     * Every child amount is non-zero; a zero-amount child is a
       modelling error, not a legitimate split.
@@ -396,7 +398,7 @@ def merge_transactions(
 ) -> MergeTransactionsResult:
     """Re-merge a complete cohort of split children into a fresh transaction.
 
-    Returns a :class:`MergeTransactionsResult`.
+    Returns a :class:`~aeat.application.ledger.MergeTransactionsResult`.
 
     Pre-conditions:
 
@@ -405,7 +407,7 @@ def merge_transactions(
     - All children share the same ``split_group_id``.
     - All children are currently ACTIVE.
     - The parent recorded in each child's lineage is in SPLIT state.
-    - The cohort is complete â€” the children supplied must equal the
+    - The cohort is complete - the children supplied must equal the
       parent's recorded sibling set (no partial re-merge).
     - Neither the parent nor any child is referenced by a finalized
       modelo calculation.

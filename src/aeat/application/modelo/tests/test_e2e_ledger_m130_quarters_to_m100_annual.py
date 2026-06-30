@@ -55,6 +55,7 @@ import pytest
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
+from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import (
     BindingId,
     CasillaId,
@@ -62,10 +63,12 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....domain.categories import SpendingCategory
-from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.deadlines import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ....domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._calculation_revision import CalculationRevision
+from ....domain.modelos._filing_record import ExternalEvidenceKind
+from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.transactions import (
     BusinessClassification,
@@ -87,13 +90,16 @@ from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     calculate_modelo_revision_from_bucket_aggregation,
     create_work_unit,
+    import_external_filing_evidence,
     persist_filed_revision_observation,
     verify_modelo_revision,
 )
+from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "13010000-0000-4000-8000-000000000100"
+_TAX_ID = "12345678Z"
 _YEAR = 2024
 _T0 = datetime(2024, 1, 10, 10, 0, tzinfo=UTC)
 _FILE_AT = datetime(2024, 4, 6, 12, 0, tzinfo=UTC)
@@ -120,6 +126,7 @@ _M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = _casilla_id("18")
 _M130_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("19")
 _M100_PAGOS_CASILLA: CasillaId = _casilla_id("0604")
 _M100_ACTIVITY_INCOME_CASILLA: CasillaId = _casilla_id("0171")
+_M100_ACTIVITY_EXPENSES_SUMMARY_CASILLA: CasillaId = _casilla_id("0199")
 _M100_EXPENSES_PREVIOUS_SUM_CASILLA: CasillaId = _casilla_id("0218")
 _M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA: CasillaId = _casilla_id("0220")
 _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = _casilla_id("0224")
@@ -160,6 +167,12 @@ _EXPECTED_CUMULATIVE_C01: dict[str, Decimal] = {
 _EXPECTED_M100_ACTIVITY_INCOME = Decimal("12000.00")
 _EXPECTED_M100_ACTIVITY_EXPENSES = Decimal("2400.00")
 _EXPECTED_M100_ACTIVITY_NET = Decimal("9600.00")
+_MARTA_M130_C19_BY_PERIOD: dict[str, Decimal] = {
+    "1T": Decimal("300.00"),
+    "2T": Decimal("360.00"),
+    "3T": Decimal("400.00"),
+    "4T": Decimal("460.00"),
+}
 _EXPENSE_ROWS: tuple[tuple[str, date, SpendingCategory, Decimal], ...] = (
     ("expense-office", date(_YEAR, 2, 20), SpendingCategory.MATERIAL_OFICINA, Decimal("500.00")),
     ("expense-software", date(_YEAR, 5, 22), SpendingCategory.SOFTWARE_SUSCRIPCION, Decimal("700.00")),
@@ -269,6 +282,7 @@ def _expense_transaction(
             "business_classification": BusinessClassification.BUSINESS,
             "business_pct": None,
             "purchase_invoice_evidence_id": None,
+            "attachment_ids": (f"receipt-{transaction_id}",),
             "category_id": category.value,
             "taxable_base": taxable_base,
             "iva_rate": Decimal("0.21"),
@@ -343,6 +357,75 @@ def _calculate_and_file_m130_quarter(
     return revision
 
 
+def _import_official_m130_result_observation(
+    secure_objects: SecureObjectRepository,
+    *,
+    period: str,
+    c19_value: Decimal,
+) -> None:
+    """Persist Marta's filed M130 result as AEAT-attested local evidence."""
+    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
+    bucket_events = BucketEventHistoryRepository(objects=secure_objects)
+    observation_repo = CalculationObservationRepository(objects=secure_objects)
+    snapshot = resources().modelos.authority.snapshot("130", filing_year=_YEAR, period=period)
+    work_unit = create_work_unit(
+        bucket_id=_BUCKET_ID,
+        modelo="130",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, period),
+        revision_id=snapshot.revision.id,
+        repository=wu_repo,
+        clock=_FILE_AT,
+    )
+    casilla_values = {_M130_RESULTADO_FINAL_CASILLA: c19_value}
+    evidence_reference_id = f"JUST-130-{_YEAR}-{period}-MARTA-C19"
+    persist_justificante_metadata(
+        evidence_reference_id,
+        modelo="130",
+        filing_year=_YEAR,
+        period=period,
+        captured_at=_FILE_AT,
+        tax_id=_TAX_ID,
+    )
+    import_external_filing_evidence(
+        work_unit_id=work_unit.work_unit_id,
+        casilla_values=casilla_values,
+        evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+        evidence_reference_id=evidence_reference_id,
+        actor="aeat-import-test",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=filing_repo,
+        bucket_event_repository=bucket_events,
+        expected_tax_id=_TAX_ID,
+        clock=_FILE_AT,
+    )
+    observation_repo.save_observation(
+        RegistryModeloObservation(
+            modelo="130",
+            filing_year=_YEAR,
+            period=period,
+            observations=registry_grounded_observations(
+                modelo="130",
+                filing_year=_YEAR,
+                period=period,
+                casilla_values=casilla_values,
+            ),
+        ),
+        source_kind="aeat_sede_justificante",
+        captured_at=_FILE_AT,
+        stamped_revision_id=snapshot.revision.id,
+        source_metadata={
+            "aeat_register_status": "ALTA",
+            "aeat_expediente_id": f"EXP-130-{_YEAR}-{period}",
+            "aeat_justificante_csv": evidence_reference_id,
+            "authenticated_identity": _TAX_ID,
+        },
+    )
+
+
 def _seed_prior_year_m100(secure_objects: SecureObjectRepository) -> None:
     """Observe the prior-year annual Renta (M100 2023) net-income casillas.
 
@@ -385,7 +468,7 @@ def _seed_taxpayer_profile() -> None:
         profile_id=_BUCKET_ID,
         display_name="Test runtime profile",
         facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="identity.tax_id", value=_TAX_ID),
             UserProfileFact(path="identity.name", value="Annual"),
             UserProfileFact(path="identity.surnames", value="Renta Tester"),
             UserProfileFact(path="activities.description", value="design services"),
@@ -415,6 +498,24 @@ def _seed_taxpayer_profile() -> None:
         updated_at=_T0,
     )
     UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(record)
+
+
+def _marta_workflow_profile() -> TaxpayerProfile:
+    return TaxpayerProfile(
+        tax_id=_TAX_ID,
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
+        iva_regime=IVARegime.GENERAL,
+        has_employees=False,
+        pays_professionals_with_retencion=False,
+        pays_rent_with_retencion=False,
+        pays_capital_income_with_retencion=False,
+        does_intracomunitario=False,
+        third_party_transactions_above_347_threshold=False,
+        bienes_extranjero_above_threshold=False,
+        monedas_virtuales_extranjero_above_threshold=False,
+    )
 
 
 def _m100_non_relation_zero_bindings() -> dict[BindingId, Decimal]:
@@ -509,6 +610,56 @@ def test_ledger_drives_m130_quarters_and_folds_into_m100_annual(
     assert casilla_0604 == expected_total, (
         f"M100 0604 must fold in the four computed M130 c19 (sum {expected_total}); got {casilla_0604}"
     )
+
+
+def test_verify_accepts_marta_m100_with_official_m130_observations(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Marta's internally consistent M100/2024 draft passes verify replay.
+
+    The annual activity values are produced from real persisted ledger rows,
+    and 0604 is folded from four imported AEAT-attested M130 observations.
+    Verify then rebuilds the filing draft from the stored calculation revision
+    and must accept the computed 0224/0529/0531 formula traces instead of
+    treating them as manual casillas.
+    """
+    _seed_taxpayer_profile()
+    _persist_marta_style_ledger(secure_objects)
+    _seed_prior_year_m100(secure_objects)
+
+    for period, c19_value in _MARTA_M130_C19_BY_PERIOD.items():
+        _import_official_m130_result_observation(secure_objects, period=period, c19_value=c19_value)
+
+    annual = _calculate_m100_annual(secure_objects)
+
+    assert Decimal(annual.casilla_values[_M100_ACTIVITY_INCOME_CASILLA]) == Decimal("12000.00")
+    assert Decimal(annual.casilla_values[_M100_ACTIVITY_EXPENSES_SUMMARY_CASILLA]) == Decimal("2400.00")
+    assert Decimal(annual.casilla_values[_M100_EXPENSES_PREVIOUS_SUM_CASILLA]) == Decimal("2400.00")
+    assert Decimal(annual.casilla_values[_M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA]) == Decimal("2400.00")
+    assert Decimal(annual.casilla_values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == Decimal("9600.00")
+    assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("1520.00")
+    assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == sum(
+        _MARTA_M130_C19_BY_PERIOD.values(),
+        Decimal("0"),
+    )
+
+    report = verify_modelo_revision(
+        annual.calculation_revision_id,
+        actor="marta-cli-rerun",
+        workflow_profile=_marta_workflow_profile(),
+        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
+    )
+
+    assert report.calculation_revision_id == annual.calculation_revision_id
+    assert report.granted_verificado_completo is True, report.findings
+    assert not [
+        finding
+        for finding in report.findings
+        if finding.severity.value == "blocking" or "formula-divergence" in finding.message
+    ]
 
 
 def test_verify_gate_blocks_chain_carrying_non_official_prior_year(

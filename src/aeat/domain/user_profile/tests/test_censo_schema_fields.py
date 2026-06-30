@@ -8,8 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.resources import bundled_path
-from ...calculations.registry import load_registry_tree
+from ....core.resources import resources
 from .. import ProfileSchemaDefinition, load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -40,7 +39,7 @@ def _field(schema: ProfileSchemaDefinition, path: tuple[str, str]):
 
 
 def _legal_ids() -> set[str]:
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = resources().modelos.authority.catalogues
     return set(catalogues.legal)
 
 

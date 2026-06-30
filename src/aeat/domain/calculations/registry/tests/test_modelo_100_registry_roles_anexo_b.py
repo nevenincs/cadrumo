@@ -39,22 +39,6 @@ from ._modelo_100_registry_support import (
     _ANEXO_B_TOTAL_SATISFECHO_ROLE,
     _ANEXO_B_TOTAL_SATISFECHO_SECTIONS,
     _AUTONOMIC_DEDUCTION_ART_77_REF,
-    _LEGACY_ANEXO_B_AAV_AMOUNT_APPLIED_ROLE,
-    _LEGACY_ANEXO_B_AAV_AMOUNT_CURRENT_ROLE,
-    _LEGACY_ANEXO_B_AAV_AMOUNT_PENDING_ROLE,
-    _LEGACY_ANEXO_B_ACCOUNT_HOLDER_KEY_ROLE,
-    _LEGACY_ANEXO_B_BIRTH_ADVANCE_REGULARIZE_ROLE,
-    _LEGACY_ANEXO_B_CONTRIBUTOR_KEY_ROLE,
-    _LEGACY_ANEXO_B_INSURANCE_PREMIUM_ROLE,
-    _LEGACY_ANEXO_B_INSURANCE_PREMIUM_TOTAL_ROLE,
-    _LEGACY_ANEXO_B_INVESTMENT_AMOUNT_ROLE,
-    _LEGACY_ANEXO_B_INVESTMENT_AMOUNT_TOTAL_ROLE,
-    _LEGACY_ANEXO_B_OTHER_SERVICE_AMOUNT_ROLE,
-    _LEGACY_ANEXO_B_RENTAL_AMOUNT_ROLE,
-    _LEGACY_ANEXO_B_RENTAL_DEDUCTION_ELIGIBILITY_ROLE,
-    _LEGACY_ANEXO_B_RENTAL_TOTAL_ROLE,
-    _LEGACY_ANEXO_B_SERVICE_AMOUNT_ROLE,
-    _LEGACY_ANEXO_B_SERVICE_AMOUNT_TOTAL_ROLE,
     _modelo_100_snapshot,
 )
 
@@ -77,9 +61,6 @@ def test_modelo_100_anexo_b_importe_satisfecho_role_is_not_rental_specific(
     expected_count: int,
 ) -> None:
     revision = _modelo_100_snapshot(filing_year).revision
-    legacy_roles = [
-        casilla.id for casilla in revision.casillas if casilla.semantic_role == _LEGACY_ANEXO_B_RENTAL_AMOUNT_ROLE
-    ]
     checked = [
         casilla
         for casilla in revision.casillas
@@ -89,7 +70,6 @@ def test_modelo_100_anexo_b_importe_satisfecho_role_is_not_rental_specific(
         and casilla.section[2] in _ANEXO_B_IMPORTE_SATISFECHO_SECTIONS
     ]
 
-    assert not legacy_roles
     assert len(checked) == expected_count
     for casilla in checked:
         assert casilla.semantic_role == _ANEXO_B_IMPORTE_SATISFECHO_ROLE
@@ -108,20 +88,16 @@ def test_modelo_100_anexo_b_importe_anual_satisfecho_role_is_not_service_fee(
     expected_count: int,
 ) -> None:
     revision = _modelo_100_snapshot(filing_year).revision
-    legacy_roles = [
-        casilla.id for casilla in revision.casillas if casilla.semantic_role == _LEGACY_ANEXO_B_SERVICE_AMOUNT_ROLE
-    ]
     checked = [
         casilla
         for casilla in revision.casillas
         if casilla.label == _ANEXO_B_IMPORTE_ANUAL_SATISFECHO_LABEL
-        and casilla.semantic_role in {_ANEXO_B_IMPORTE_ANUAL_SATISFECHO_ROLE, _LEGACY_ANEXO_B_SERVICE_AMOUNT_ROLE}
+        and casilla.semantic_role == _ANEXO_B_IMPORTE_ANUAL_SATISFECHO_ROLE
         and len(casilla.section) >= 3
         and tuple(casilla.section[:2]) == ("resultados", "datos_adicionales_anexo_b")
         and casilla.section[2] in _ANEXO_B_IMPORTE_ANUAL_SATISFECHO_SECTIONS
     ]
 
-    assert not legacy_roles
     assert len(checked) == expected_count
     for casilla in checked:
         assert casilla.semantic_role == _ANEXO_B_IMPORTE_ANUAL_SATISFECHO_ROLE
@@ -133,14 +109,8 @@ def test_modelo_100_anexo_b_other_service_amount_role_is_otros_gastos_importe_an
     filing_year: int,
 ) -> None:
     revision = _modelo_100_snapshot(filing_year).revision
-    legacy_roles = [
-        casilla.id
-        for casilla in revision.casillas
-        if casilla.semantic_role == _LEGACY_ANEXO_B_OTHER_SERVICE_AMOUNT_ROLE
-    ]
     casilla = next(casilla for casilla in revision.casillas if casilla.id == "2140")
 
-    assert not legacy_roles
     assert casilla.label == _ANEXO_B_OTROS_GASTOS_LABELS[filing_year]
     assert tuple(casilla.section) == ("resultados", "datos_adicionales_anexo_b", _ANEXO_B_OTROS_GASTOS_SECTION)
     assert casilla.semantic_role == _ANEXO_B_OTROS_GASTOS_IMPORTE_ANUAL_ROLE
@@ -149,19 +119,8 @@ def test_modelo_100_anexo_b_other_service_amount_role_is_otros_gastos_importe_an
 
 def test_modelo_100_anexo_b_aav_amount_roles_are_grounded_in_official_labels() -> None:
     revision = _modelo_100_snapshot(2025).revision
-    legacy_roles = [
-        casilla.id
-        for casilla in revision.casillas
-        if casilla.semantic_role
-        in {
-            _LEGACY_ANEXO_B_AAV_AMOUNT_CURRENT_ROLE,
-            _LEGACY_ANEXO_B_AAV_AMOUNT_APPLIED_ROLE,
-            _LEGACY_ANEXO_B_AAV_AMOUNT_PENDING_ROLE,
-        }
-    ]
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in _ANEXO_B_AAV_AMOUNT_ROWS}
 
-    assert not legacy_roles
     assert set(casillas_by_id) == set(_ANEXO_B_AAV_AMOUNT_ROWS)
     for casilla_id, (expected_label, expected_role) in _ANEXO_B_AAV_AMOUNT_ROWS.items():
         casilla = casillas_by_id[casilla_id]
@@ -173,12 +132,8 @@ def test_modelo_100_anexo_b_aav_amount_roles_are_grounded_in_official_labels() -
 
 def test_modelo_100_anexo_b_account_holder_role_is_cm_vivienda_habitual() -> None:
     revision = _modelo_100_snapshot(2025).revision
-    legacy_roles = [
-        casilla.id for casilla in revision.casillas if casilla.semantic_role == _LEGACY_ANEXO_B_ACCOUNT_HOLDER_KEY_ROLE
-    ]
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in _ANEXO_B_ACCOUNT_ROWS}
 
-    assert not legacy_roles
     assert set(casillas_by_id) == set(_ANEXO_B_ACCOUNT_ROWS)
     for casilla_id, (expected_label, expected_role) in _ANEXO_B_ACCOUNT_ROWS.items():
         casilla = casillas_by_id[casilla_id]
@@ -193,16 +148,10 @@ def test_modelo_100_anexo_b_baleares_birth_roles_are_spanish_and_label_grounded(
     filing_year: int,
 ) -> None:
     revision = _modelo_100_snapshot(filing_year).revision
-    legacy_roles = [
-        casilla.id
-        for casilla in revision.casillas
-        if casilla.semantic_role == _LEGACY_ANEXO_B_BIRTH_ADVANCE_REGULARIZE_ROLE
-    ]
     casillas_by_id = {
         casilla.id: casilla for casilla in revision.casillas if casilla.id in _ANEXO_B_BALEARES_NACIMIENTO_ROWS
     }
 
-    assert not legacy_roles
     assert set(casillas_by_id) == set(_ANEXO_B_BALEARES_NACIMIENTO_ROWS)
     for casilla_id, (expected_label, expected_role) in _ANEXO_B_BALEARES_NACIMIENTO_ROWS.items():
         casilla = casillas_by_id[casilla_id]
@@ -228,11 +177,6 @@ def test_modelo_100_anexo_b_total_cantidades_invertidas_role_is_not_service_fee(
     expected_count: int,
 ) -> None:
     revision = _modelo_100_snapshot(filing_year).revision
-    legacy_roles = [
-        casilla.id
-        for casilla in revision.casillas
-        if casilla.semantic_role == _LEGACY_ANEXO_B_SERVICE_AMOUNT_TOTAL_ROLE
-    ]
     checked = [
         casilla
         for casilla in revision.casillas
@@ -242,7 +186,6 @@ def test_modelo_100_anexo_b_total_cantidades_invertidas_role_is_not_service_fee(
         and casilla.section[2] in _ANEXO_B_TOTAL_CANTIDADES_INVERTIDAS_SERVICE_SECTIONS
     ]
 
-    assert not legacy_roles
     assert len(checked) == expected_count
     for casilla in checked:
         assert casilla.semantic_role == _ANEXO_B_TOTAL_CANTIDADES_INVERTIDAS_ROLE
@@ -261,9 +204,6 @@ def test_modelo_100_anexo_b_contributor_key_role_is_spanish_code(
     expected_count: int,
 ) -> None:
     revision = _modelo_100_snapshot(filing_year).revision
-    legacy_roles = [
-        casilla.id for casilla in revision.casillas if casilla.semantic_role == _LEGACY_ANEXO_B_CONTRIBUTOR_KEY_ROLE
-    ]
     checked = [
         casilla
         for casilla in revision.casillas
@@ -273,7 +213,6 @@ def test_modelo_100_anexo_b_contributor_key_role_is_spanish_code(
         and casilla.section[2] in _ANEXO_B_IMPORTE_ANUAL_SATISFECHO_SECTIONS
     ]
 
-    assert not legacy_roles
     assert len(checked) == expected_count
     for casilla in checked:
         assert casilla.semantic_role == _ANEXO_B_CONTRIBUYENTE_DERECHO_CLAVE_ROLE
@@ -296,20 +235,16 @@ def test_modelo_100_anexo_b_investment_amount_role_is_deduction_investment_amoun
     expected_count: int,
 ) -> None:
     revision = _modelo_100_snapshot(filing_year).revision
-    legacy_roles = [
-        casilla.id for casilla in revision.casillas if casilla.semantic_role == _LEGACY_ANEXO_B_INVESTMENT_AMOUNT_ROLE
-    ]
     checked = [
         casilla
         for casilla in revision.casillas
         if casilla.label == _ANEXO_B_INVERSION_IMPORTE_LABEL
-        and casilla.semantic_role in {_ANEXO_B_INVERSION_IMPORTE_ROLE, _LEGACY_ANEXO_B_INVESTMENT_AMOUNT_ROLE}
+        and casilla.semantic_role == _ANEXO_B_INVERSION_IMPORTE_ROLE
         and len(casilla.section) >= 3
         and tuple(casilla.section[:2]) == ("resultados", "datos_adicionales_anexo_b")
         and casilla.section[2] in _ANEXO_B_INVERSION_TOTAL_SECTIONS
     ]
 
-    assert not legacy_roles
     assert len(checked) == expected_count
     for casilla in checked:
         assert casilla.semantic_role == _ANEXO_B_INVERSION_IMPORTE_ROLE
@@ -332,22 +267,16 @@ def test_modelo_100_anexo_b_investment_total_role_is_total_by_deduction_type(
     expected_count: int,
 ) -> None:
     revision = _modelo_100_snapshot(filing_year).revision
-    legacy_roles = [
-        casilla.id
-        for casilla in revision.casillas
-        if casilla.semantic_role == _LEGACY_ANEXO_B_INVESTMENT_AMOUNT_TOTAL_ROLE
-    ]
     checked = [
         casilla
         for casilla in revision.casillas
         if casilla.label.startswith(_ANEXO_B_INVERSION_TOTAL_LABEL_PREFIX)
-        and casilla.semantic_role in {_ANEXO_B_INVERSION_TOTAL_ROLE, _LEGACY_ANEXO_B_INVESTMENT_AMOUNT_TOTAL_ROLE}
+        and casilla.semantic_role == _ANEXO_B_INVERSION_TOTAL_ROLE
         and len(casilla.section) >= 3
         and tuple(casilla.section[:2]) == ("resultados", "datos_adicionales_anexo_b")
         and casilla.section[2] in _ANEXO_B_INVERSION_TOTAL_SECTIONS
     ]
 
-    assert not legacy_roles
     assert len(checked) == expected_count
     for casilla in checked:
         assert casilla.semantic_role == _ANEXO_B_INVERSION_TOTAL_ROLE
@@ -359,20 +288,16 @@ def test_modelo_100_anexo_b_insurance_premium_role_is_credit_insurance(
     filing_year: int,
 ) -> None:
     revision = _modelo_100_snapshot(filing_year).revision
-    legacy_roles = [
-        casilla.id for casilla in revision.casillas if casilla.semantic_role == _LEGACY_ANEXO_B_INSURANCE_PREMIUM_ROLE
-    ]
     checked = [
         casilla
         for casilla in revision.casillas
         if casilla.label == _ANEXO_B_PRIMA_SEGURO_LABEL
-        and casilla.semantic_role in {_ANEXO_B_PRIMA_SEGURO_CREDITO_ROLE, _LEGACY_ANEXO_B_INSURANCE_PREMIUM_ROLE}
+        and casilla.semantic_role == _ANEXO_B_PRIMA_SEGURO_CREDITO_ROLE
         and len(casilla.section) >= 3
         and tuple(casilla.section[:2]) == ("resultados", "datos_adicionales_anexo_b")
         and casilla.section[2] == _ANEXO_B_EPS_SECTION
     ]
 
-    assert not legacy_roles
     assert len(checked) == 3
     for casilla in checked:
         assert casilla.semantic_role == _ANEXO_B_PRIMA_SEGURO_CREDITO_ROLE
@@ -384,21 +309,15 @@ def test_modelo_100_anexo_b_insurance_premium_total_role_is_spanish_eps_total(
     filing_year: int,
 ) -> None:
     revision = _modelo_100_snapshot(filing_year).revision
-    legacy_roles = [
-        casilla.id
-        for casilla in revision.casillas
-        if casilla.semantic_role == _LEGACY_ANEXO_B_INSURANCE_PREMIUM_TOTAL_ROLE
-    ]
     checked = [
         casilla
         for casilla in revision.casillas
-        if casilla.semantic_role in {_ANEXO_B_PRIMAS_SEGURO_TOTAL_ROLE, _LEGACY_ANEXO_B_INSURANCE_PREMIUM_TOTAL_ROLE}
+        if casilla.semantic_role == _ANEXO_B_PRIMAS_SEGURO_TOTAL_ROLE
         and len(casilla.section) >= 3
         and tuple(casilla.section[:2]) == ("resultados", "datos_adicionales_anexo_b")
         and casilla.section[2] == _ANEXO_B_EPS_SECTION
     ]
 
-    assert not legacy_roles
     assert len(checked) == 1
     for casilla in checked:
         assert casilla.semantic_role == _ANEXO_B_PRIMAS_SEGURO_TOTAL_ROLE
@@ -421,9 +340,6 @@ def test_modelo_100_anexo_b_total_satisfecho_role_is_not_rental_specific(
     expected_count: int,
 ) -> None:
     revision = _modelo_100_snapshot(filing_year).revision
-    legacy_roles = [
-        casilla.id for casilla in revision.casillas if casilla.semantic_role == _LEGACY_ANEXO_B_RENTAL_TOTAL_ROLE
-    ]
     checked = [
         casilla
         for casilla in revision.casillas
@@ -433,7 +349,6 @@ def test_modelo_100_anexo_b_total_satisfecho_role_is_not_rental_specific(
         and casilla.section[2] in _ANEXO_B_TOTAL_SATISFECHO_SECTIONS
     ]
 
-    assert not legacy_roles
     assert len(checked) == expected_count
     for casilla in checked:
         assert casilla.semantic_role == _ANEXO_B_TOTAL_SATISFECHO_ROLE
@@ -456,11 +371,6 @@ def test_modelo_100_anexo_b_cantidades_deducibles_role_is_amount_not_boolean(
     expected_count: int,
 ) -> None:
     revision = _modelo_100_snapshot(filing_year).revision
-    legacy_roles = [
-        casilla.id
-        for casilla in revision.casillas
-        if casilla.semantic_role == _LEGACY_ANEXO_B_RENTAL_DEDUCTION_ELIGIBILITY_ROLE
-    ]
     checked = [
         casilla
         for casilla in revision.casillas
@@ -470,7 +380,6 @@ def test_modelo_100_anexo_b_cantidades_deducibles_role_is_amount_not_boolean(
         and casilla.section[2] in _ANEXO_B_TOTAL_SATISFECHO_SECTIONS
     ]
 
-    assert not legacy_roles
     assert len(checked) == expected_count
     for casilla in checked:
         assert casilla.semantic_role == _ANEXO_B_CANTIDADES_DEDUCIBLES_ROLE

@@ -280,15 +280,7 @@ class FiledDeclaracionObservationStore:
         period: Period,
         expediente_id: str,
     ) -> str:
-        key = "\x1f".join(
-            (
-                _safe_segment(modelo),
-                str(ejercicio),
-                _safe_segment(period.registry_token),
-                _safe_segment(expediente_id),
-            ),
-        )
-        return sha256_hex(key.encode(_UTF_8_ENCODING))
+        return filed_declaracion_observation_object_key(modelo, ejercicio, period, expediente_id)
 
     def _crypto_scope(self):
         return nullcontext()
@@ -300,15 +292,48 @@ class FiledDeclaracionObservationStore:
         target_period: Period,
         captured_at: str,
     ) -> str:
-        key = "\x1f".join(
-            (
-                _safe_segment(taxpayer_nif),
-                str(target_year),
-                _safe_segment(target_period.registry_token),
-                captured_at,
-            ),
+        return iva_compensation_wallet_observation_object_key(
+            taxpayer_nif,
+            target_year,
+            target_period,
+            captured_at,
         )
-        return sha256_hex(key.encode(_UTF_8_ENCODING))
+
+
+def filed_declaracion_observation_object_key(
+    modelo: str,
+    ejercicio: int,
+    period: Period,
+    expediente_id: str,
+) -> str:
+    """Return the secure-object natural key for a filed-declaration observation."""
+    key = "\x1f".join(
+        (
+            _safe_segment(modelo),
+            str(ejercicio),
+            _safe_segment(period.registry_token),
+            _safe_segment(expediente_id),
+        ),
+    )
+    return sha256_hex(key.encode(_UTF_8_ENCODING))
+
+
+def iva_compensation_wallet_observation_object_key(
+    taxpayer_nif: str,
+    target_year: int,
+    target_period: Period,
+    captured_at: str,
+) -> str:
+    """Return the secure-object natural key for an IVA-wallet observation."""
+    key = "\x1f".join(
+        (
+            _safe_segment(taxpayer_nif),
+            str(target_year),
+            _safe_segment(target_period.registry_token),
+            captured_at,
+        ),
+    )
+    return sha256_hex(key.encode(_UTF_8_ENCODING))
 
 
 def _safe_segment(value: str) -> str:

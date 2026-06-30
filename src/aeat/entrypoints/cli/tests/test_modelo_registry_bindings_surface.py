@@ -51,7 +51,13 @@ def test_bindings_list_missing_filter_excludes_constant_value_bindings() -> None
 
 
 def test_bindings_list_missing_m200_surfaces_m202_relation_inputs() -> None:
-    """M200 missing-input discovery names the M202 pago relation ids, not just target bindings."""
+    """M200 missing-input discovery names the feeding relation id of each relation-fed binding.
+
+    The guidance is registry-derived (each
+    :class:`~aeat.domain.calculations.registry.RelationDefinition` declares
+    its ``target_binding``), so the discovery generalises to any modelo
+    rather than enumerating a hardcoded M200 channel table.
+    """
 
     result = invoke_cached_cli(
         [
@@ -75,21 +81,17 @@ def test_bindings_list_missing_m200_surfaces_m202_relation_inputs() -> None:
     assert "missing_filter\tTrue" in result.output
     assert "\tmodelo-200-2024-pagos-fraccionados-anuales\trelation_prefill\trelation input\t" in result.output
     assert "\tmodelo-200-2024-pagos-fraccionados-anuales-40-2\trelation_prefill\trelation input\t" in result.output
+    assert "relation_guidance\tSome bindings below are fed by registry relations" in result.output
+    assert "--relation RELATION_ID=VALUE before calculating." in result.output
     assert (
-        "relation_guidance\tModelo 200 M202 pagos fraccionados feed DP200014B:00611 "
-        "through --relation values, not --binding target binding ids."
-    ) in result.output
-    assert "mutually exclusive per filing" in result.output
-    assert "unused modality" in result.output
-    assert (
-        "relation_input\tmodelo-200-2024-rel-202-pagos-fraccionados\tM202 40.3 casilla 34\t"
-        "use --relation modelo-200-2024-rel-202-pagos-fraccionados=VALUE\t"
-        "paired target binding modelo-200-2024-pagos-fraccionados-anuales"
+        "relation_input\tmodelo-200-2024-pagos-fraccionados-anuales\t"
+        "fed by relation modelo-200-2024-rel-202-pagos-fraccionados\t"
+        "use --relation modelo-200-2024-rel-202-pagos-fraccionados=VALUE"
     ) in result.output
     assert (
-        "relation_input\tmodelo-200-2024-rel-202-pagos-fraccionados-40-2\tM202 40.2 casilla 03\t"
-        "use --relation modelo-200-2024-rel-202-pagos-fraccionados-40-2=VALUE\t"
-        "paired target binding modelo-200-2024-pagos-fraccionados-anuales-40-2"
+        "relation_input\tmodelo-200-2024-pagos-fraccionados-anuales-40-2\t"
+        "fed by relation modelo-200-2024-rel-202-pagos-fraccionados-40-2\t"
+        "use --relation modelo-200-2024-rel-202-pagos-fraccionados-40-2=VALUE"
     ) in result.output
 
 
@@ -356,3 +358,48 @@ def test_bindings_list_payload_is_typed_and_carries_provenance() -> None:
         assert isinstance(row["source_refs"], list)
         assert row["legal_refs"], f"binding {row['binding_id']!r} must carry registry legal_refs"
         assert row["source_refs"], f"binding {row['binding_id']!r} must carry registry source_refs"
+
+
+def test_bindings_list_typed_payload_carries_relation_inputs_before_calculate() -> None:
+    """The typed M200 list payload names each relation-fed binding's feeding relation.
+
+    Issue #556: the M202 pagos-fraccionados inputs that Modelo 200's
+    annual settlement folds in were previously discoverable only by
+    triggering a failing ``calculate``. The typed ``bindings list``
+    payload now carries ``relation_inputs`` -- the registry relation ids
+    whose ``target_binding`` is the row's binding -- so a relation-fed
+    binding's source is discoverable in the listing ahead of any
+    calculation. The mapping is derived from the resolved revision
+    (``RelationDefinition.target_binding``), not a per-form table, so it
+    generalises to every modelo.
+    """
+    scope = ["--modelo", "200", "--year", "2024", "--period", "0A"]
+    result = invoke_cached_cli(["--format", "json", "app", "modelo", "bindings", "list", *scope])
+    assert result.exit_code == 0, result.output
+    rows = {row["binding_id"]: row for row in _payload(result.output)["bindings"]}
+
+    # Cross-check against the authoritative snapshot: every relation's
+    # target_binding must surface that relation id on the listed binding row.
+    snapshot = resources().modelos.authority.snapshot("200", filing_year=2024, period="0A")
+    expected: dict[str, set[str]] = {}
+    for relation in snapshot.revision.relations:
+        expected.setdefault(str(relation.target_binding), set()).add(str(relation.id))
+    assert expected, "Modelo 200 declares relations feeding bindings; fixture must exercise them"
+
+    for binding_id, relation_ids in expected.items():
+        assert binding_id in rows, f"relation target binding {binding_id!r} absent from listing"
+        emitted = set(rows[binding_id]["relation_inputs"])
+        assert emitted == relation_ids, (binding_id, sorted(emitted), sorted(relation_ids))
+        assert rows[binding_id]["source"] == "relation_prefill"
+        assert rows[binding_id]["readiness"] == "relation input"
+
+    # The specific M202 pagos-fraccionados fold-ins from the audit are present.
+    assert (
+        "modelo-200-2024-rel-202-pagos-fraccionados"
+        in rows["modelo-200-2024-pagos-fraccionados-anuales"]["relation_inputs"]
+    )
+
+    # A non-relation-fed binding carries an empty relation_inputs tuple.
+    non_relation = [r for r in rows.values() if r["source"] != "relation_prefill"]
+    assert non_relation, "Modelo 200 has non-relation bindings to prove the negative case"
+    assert all(r["relation_inputs"] == [] for r in non_relation)

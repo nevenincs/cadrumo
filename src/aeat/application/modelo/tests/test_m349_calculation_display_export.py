@@ -31,11 +31,11 @@ from ....domain.modelos._calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._row_models import Modelo349OperadorRow
+from ....domain.modelos._row_models import Modelo349OperadorRow, Modelo349RectificacionRow
 from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....domain.submission import ModeloDraftStatus
 from ....entrypoints.cli._modelo_rendering import calculation_revision_lines, calculation_revision_payload
-from .._calculation_actions import _suppress_m349_row_field_template_outputs
+from .._calculation_actions import _detail_row_binding_values_for_calculation, _suppress_m349_row_field_template_outputs
 from .._calculation_helpers import build_typed_observations
 from .._revision_replay_inputs import _m349_detail_row_replay_inputs
 
@@ -314,3 +314,96 @@ def test_m349_calculation_revision_display_and_export_agree_for_operator_row(
     assert record[92:132].strip() == name
     assert record[132] == clave
     assert record[133:146] == export_amount
+
+
+def test_m349_rectification_detail_row_feeds_summary_display_and_export() -> None:
+    snapshot = _m349_snapshot(period="2T")
+    work_unit = _work_unit(period="2T", snapshot=snapshot)
+    row = Modelo349RectificacionRow(
+        codigo_pais="DE",
+        nif_comunitario="DE123456789",
+        razon_social="DE Auto GmbH",
+        clave_operacion="E",
+        ejercicio="2025",
+        periodo="1T",
+        base_rectificada=Decimal("1100.00"),
+        base_anterior=Decimal("1000.00"),
+    )
+    detail_rows = (row,)
+    binding_values = _detail_row_binding_values_for_calculation(
+        work_unit=work_unit,
+        detail_rows=detail_rows,
+    )
+
+    assert binding_values == {
+        "iva-349-declarante-numero-operadores": Decimal("0"),
+        "iva-349-declarante-importe-operaciones": Decimal("0"),
+        "iva-349-declarante-numero-rectificaciones": Decimal("1"),
+        "iva-349-declarante-importe-rectificaciones": Decimal("100.00"),
+    }
+
+    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    engine_result = calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        date_context={"filing_period": work_unit.period.end_date},
+        binding_values=binding_values,
+    )
+    raw_casilla_values = dict(engine_result.values)
+    raw_observations = build_typed_observations(engine_result=engine_result, snapshot=snapshot)
+    casilla_values, observations = _suppress_m349_row_field_template_outputs(
+        work_unit=work_unit,
+        revision=snapshot.revision,
+        casilla_values=raw_casilla_values,
+        observations=raw_observations,
+    )
+    input_values = {casilla_id: str(value) for casilla_id, value in inputs.items()}
+    binding_overrides = {binding_id: str(value) for binding_id, value in binding_values.items()}
+    revision = CalculationRevision(
+        calculation_revision_id=derive_calculation_revision_id(
+            work_unit_id=work_unit.work_unit_id,
+            input_values_by_casilla_id=input_values,
+            binding_overrides=binding_overrides,
+            casilla_values=casilla_values,
+            detail_rows=detail_rows,
+        ),
+        work_unit_id=work_unit.work_unit_id,
+        state=CalculationRevisionState.BORRADOR,
+        input_values_by_casilla_id=input_values,
+        binding_overrides=binding_overrides,
+        casilla_values=casilla_values,
+        observations=observations,
+        detail_rows=detail_rows,
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+    )
+
+    assert revision.casilla_values == {
+        _DECL_NUMERO_OPERADORES: Decimal("0"),
+        _DECL_IMPORTE_OPERACIONES: Decimal("0"),
+        _DECL_NUMERO_RECTIFICACIONES: Decimal("1"),
+        _DECL_IMPORTE_RECTIFICACIONES: Decimal("100.00"),
+    }
+    rendered_revision = "\n".join(calculation_revision_lines(revision))
+    assert "casilla\trect." not in rendered_revision
+    assert "detail_row\t1\trectificacion\tcodigo_pais=DE" in rendered_revision
+    assert "ejercicio=2025" in rendered_revision
+    assert "periodo=1T" in rendered_revision
+    assert "base_rectificada=1100.00" in rendered_revision
+    assert "base_anterior=1000.00" in rendered_revision
+
+    draft = _approved_draft(snapshot=snapshot, work_unit=work_unit, revision=revision)
+    payload = render_layout(snapshot.revision.export_layouts[0], draft=draft, headers={})
+    records = [payload[index : index + 500].decode("latin-1") for index in range(0, len(payload), 500)]
+    rectification_records = [record for record in records if record.startswith("2349") and record[146:178].strip()]
+
+    assert len(rectification_records) == 1
+    record = rectification_records[0]
+    assert record[75:92].rstrip() == "DE123456789"
+    assert record[92:132].strip() == "DE Auto GmbH"
+    assert record[132] == "E"
+    assert record[133:146].strip() == ""
+    assert record[146:150] == "2025"
+    assert record[150:152] == "1T"
+    assert record[152:165] == "0000000110000"
+    assert record[165:178] == "0000000100000"

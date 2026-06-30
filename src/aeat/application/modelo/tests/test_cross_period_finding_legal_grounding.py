@@ -18,10 +18,9 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
-from ....core.resources import bundled_path
+from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
     CasillaId,
-    load_registry_tree,
     validated_casilla_id,
     verify_legal_catalogue,
 )
@@ -113,7 +112,7 @@ def _application_literal_legal_refs() -> frozenset[str]:
 
 def test_application_legal_refs_resolve_to_bundled_corpus() -> None:
     """Application-level literal legal refs must stay registry and corpus backed."""
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = resources().modelos.authority.catalogues
     ref_ids = _application_literal_legal_refs()
 
     missing = sorted(ref_ids - set(catalogues.legal))

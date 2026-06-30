@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -17,6 +18,7 @@ from ....adapters.outbound.aeat.sede import (
 )
 from ....core import Period
 from ....core.resources import resources
+from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionSourceResolver, reconcile_iva_compensation_wallet
@@ -39,7 +41,8 @@ def secure_profile_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _modelo_100_snapshot():
+@cache
+def _modelo_100_snapshot() -> RegistrySnapshot:
     return resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
 
 

@@ -212,6 +212,10 @@ _GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset(
         # callback emits the operator capability manifest under ``contract``.
         # It registers no leaf subcommand, so the leaf walker cannot reach it.
         "contract",
+        # ``aeat app agent --output DIR`` is the same shape: an
+        # ``invoke_without_command`` group-callback that materialises the operator
+        # workspace under ``agent``, with no leaf subcommand.
+        "agent",
     },
 )
 

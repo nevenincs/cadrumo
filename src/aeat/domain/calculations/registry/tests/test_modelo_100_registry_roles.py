@@ -558,6 +558,38 @@ def test_modelo_100_anexo_c_energy_excess_roles_are_spelled_and_grounded(filing_
     assert not missing_da50
 
 
+def test_modelo_100_anexo_c_protected_patrimony_current_year_excess_role_is_grounded() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    current_year_role = "irpf_anexo_c_exceso_patrim_protegido_ejercicio_actual"
+    old_role = "irpf_anexo_c_exceso_patrim_protegido_generado"
+    expected_section = ("resultados", "anexo_c_res", "excesos_patrim_protegidos_res")
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("1362"))
+        expected_sources = {
+            f"aeat-dr-100-{filing_year}-dictionary",
+            f"aeat-dr-100-{filing_year}-input-dictionary",
+            f"aeat-dr-100-{filing_year}-xsd",
+        }
+
+        assert casilla.label == (
+            f"Aportaciones de {filing_year} no aplicadas cuyo importe se solicita poder reducir "
+            "en los 4 ejercicios siguientes"
+        )
+        assert tuple(casilla.section) == expected_section
+        assert casilla.semantic_role == current_year_role
+        assert "ley-35-2006:art-54" in casilla.legal_refs
+        assert expected_sources.issubset(casilla.source_refs)
+
+    assert all(
+        casilla.semantic_role != old_role
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    )
+
+
 def test_modelo_100_prevision_social_0383_splits_income_threshold_polarity() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
@@ -762,6 +794,149 @@ def test_modelo_100_inmueble_0080_activity_use_days_are_integer() -> None:
         )
 
 
+def test_modelo_100_spouse_disability_marriage_months_are_integer_months() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_rows = {
+        _casilla_id("0246"): (
+            "Primer mes",
+            "irpf_conyuge_discapacidad_matrimonio_mes_inicio",
+        ),
+        _casilla_id("0247"): (
+            "Último mes completo",
+            "irpf_conyuge_discapacidad_matrimonio_mes_fin",
+        ),
+    }
+    expected_section = ("resultados", "calculo_impuesto_res", "deduc_conyuge_disc_res")
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_rows}
+
+        assert set(casillas_by_id) == set(expected_rows)
+        for casilla_id, (label_prefix, expected_role) in expected_rows.items():
+            casilla = casillas_by_id[casilla_id]
+            constraints = casilla.constraints
+            expected_sources = {
+                f"aeat-dr-100-{filing_year}-dictionary",
+                f"aeat-dr-100-{filing_year}-input-dictionary",
+                f"aeat-dr-100-{filing_year}-xsd",
+            }
+
+            assert casilla.label.startswith(label_prefix)
+            assert "vigente el matrimonio" in casilla.label
+            assert tuple(casilla.section) == expected_section
+            assert casilla.data_type == "integer"
+            assert casilla.semantic_role == expected_role
+            assert "ley-35-2006:art-81-bis" in casilla.legal_refs
+            assert expected_sources.issubset(casilla.source_refs)
+            assert constraints is not None
+            assert constraints.sign == "non_negative"
+            assert constraints.min_value is None
+            assert constraints.max_value == Decimal("12")
+            assert "ley-35-2006:art-81-bis" in constraints.legal_refs
+            assert expected_sources.issubset(constraints.source_refs)
+
+        formulas_by_target = {
+            formula.target_casilla_id: formula
+            for formula in revision.formulas
+            if formula.target_casilla_id in expected_rows
+        }
+        for formula in formulas_by_target.values():
+            assert "ley-35-2006:art-82" in formula.legal_refs
+            assert f"aeat-dr-100-{filing_year}-dictionary" in formula.source_refs
+            assert f"aeat-dr-100-{filing_year}-xsd" in formula.source_refs
+
+    assert all(
+        casilla.semantic_role != "irpf_matrimonio_mes_fin"
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    )
+
+
+def test_modelo_100_disability_minimum_headcounts_are_integer_counts() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_rows = {
+        _casilla_id("0618"): (
+            "descendientes",
+            ("resultados", "calculo_impuesto_res", "deduc_descendiente_disc_res"),
+            "irpf_descendiente_num_contribuyentes_derecho",
+            Decimal("1"),
+            Decimal("9"),
+        ),
+        _casilla_id("0629"): (
+            "ascendientes",
+            ("resultados", "calculo_impuesto_res", "deduc_ascendiente_disc_res"),
+            "irpf_ascendiente_num_contribuyentes_derecho",
+            None,
+            Decimal("99"),
+        ),
+    }
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_rows}
+
+        assert set(casillas_by_id) == set(expected_rows)
+        for casilla_id, (
+            label_fragment,
+            expected_section,
+            expected_role,
+            min_value,
+            max_value,
+        ) in expected_rows.items():
+            casilla = casillas_by_id[casilla_id]
+            constraints = casilla.constraints
+            expected_sources = {
+                f"aeat-dr-100-{filing_year}-dictionary",
+                f"aeat-dr-100-{filing_year}-input-dictionary",
+                f"aeat-dr-100-{filing_year}-xsd",
+            }
+
+            assert "número de personas con derecho al mínimo" in casilla.label
+            assert label_fragment in casilla.label
+            assert tuple(casilla.section) == expected_section
+            assert casilla.data_type == "integer"
+            assert casilla.semantic_role == expected_role
+            assert "ley-35-2006:art-81-bis" in casilla.legal_refs
+            assert expected_sources.issubset(casilla.source_refs)
+            assert constraints is not None
+            assert constraints.sign == "non_negative"
+            assert constraints.min_value == min_value
+            assert constraints.max_value == max_value
+            assert "ley-35-2006:art-81-bis" in constraints.legal_refs
+            assert expected_sources.issubset(constraints.source_refs)
+
+
+def test_modelo_100_family_numerosa_ascendant_count_is_integer_count() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0652"))
+        constraints = casilla.constraints
+        expected_sources = {
+            f"aeat-dr-100-{filing_year}-dictionary",
+            f"aeat-dr-100-{filing_year}-input-dictionary",
+            f"aeat-dr-100-{filing_year}-xsd",
+        }
+
+        assert casilla.label == "Indique el número de ascendientes que forman parte de la misma familia numerosa"
+        assert tuple(casilla.section) == ("resultados", "calculo_impuesto_res", "deduc_familia_numerosa_res")
+        assert casilla.data_type == "integer"
+        assert casilla.semantic_role == "irpf_familia_numerosa_num_ascendientes"
+        assert "ley-35-2006:art-81-bis" in casilla.legal_refs
+        assert expected_sources.issubset(casilla.source_refs)
+        assert constraints is not None
+        assert constraints.sign == "non_negative"
+        assert constraints.min_value is None
+        assert constraints.max_value == Decimal("99")
+        assert "ley-35-2006:art-81-bis" in constraints.legal_refs
+        assert expected_sources.issubset(constraints.source_refs)
+
+
 def test_modelo_100_inmueble_0076_habitual_residence_days_are_integer() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
@@ -890,6 +1065,186 @@ def test_modelo_100_eo_module_units_are_decimal() -> None:
             )
             assert casilla.data_type == "decimal"
             assert casilla.semantic_role == "irpf_eo_modulo_num_unidades"
+            assert expected_legal_refs.issubset(casilla.legal_refs)
+            assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+                casilla.source_refs,
+            )
+
+
+def test_modelo_100_eo_correction_indices_are_decimal() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_legal_refs = {
+        "ley-35-2006:art-27",
+        "ley-35-2006:art-28",
+        "ley-35-2006:art-30",
+        "ley-35-2006:art-31",
+        "ley-35-2006:art-32",
+    }
+    expected_roles = {
+        "1469": "irpf_eo_indice_corrector_especial",
+        "1470": "irpf_eo_indice_corrector_pequena_dimension",
+        "1471": "irpf_eo_indice_corrector_temporada",
+        "1472": "irpf_eo_indice_corrector_exceso",
+        "1473": "irpf_eo_indice_corrector_inicio",
+    }
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casillas_by_id = {
+            casilla.id: casilla
+            for casilla in revision.casillas
+            if casilla.id in {_casilla_id(casilla_id) for casilla_id in expected_roles}
+        }
+
+        assert set(casillas_by_id) == {_casilla_id(casilla_id) for casilla_id in expected_roles}
+        for casilla_id, expected_role in expected_roles.items():
+            casilla = casillas_by_id[_casilla_id(casilla_id)]
+
+            assert "Índice corrector" in casilla.label
+            assert tuple(casilla.section) == (
+                "toma_datos_ampliada",
+                "reg_estima_obj",
+                "actividad_est_obj",
+            )
+            assert casilla.data_type == "decimal"
+            assert casilla.semantic_role == expected_role
+            assert expected_legal_refs.issubset(casilla.legal_refs)
+            assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+                casilla.source_refs,
+            )
+
+
+def test_modelo_100_eo_agricultural_activity_key_is_integer() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_legal_refs = {
+        "ley-35-2006:art-27",
+        "ley-35-2006:art-28",
+        "ley-35-2006:art-30",
+        "ley-35-2006:art-31",
+        "ley-35-2006:art-32",
+    }
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("1486"))
+
+        assert casilla.label == "Actividad realizada. Clave"
+        assert tuple(casilla.section) == (
+            "toma_datos_ampliada",
+            "reg_estima_obj_agricola",
+            "actividad_agr",
+        )
+        assert casilla.data_type == "integer"
+        assert casilla.semantic_role == "irpf_eo_agr_clave_actividad"
+        assert expected_legal_refs.issubset(casilla.legal_refs)
+        assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+            casilla.source_refs,
+        )
+
+
+def test_modelo_100_eo_agricultural_product_indices_are_decimal() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_legal_refs = {
+        "ley-35-2006:art-27",
+        "ley-35-2006:art-28",
+        "ley-35-2006:art-30",
+        "ley-35-2006:art-31",
+        "ley-35-2006:art-32",
+    }
+    expected_ids = {
+        _casilla_id(casilla_id)
+        for casilla_id in (
+            "1489",
+            "1492",
+            "1495",
+            "1498",
+            "1501",
+            "1504",
+            "1507",
+            "1510",
+            "1513",
+            "1516",
+            "1519",
+            "1522",
+            "1525",
+            "1528",
+            "1531",
+            "1534",
+        )
+    }
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        ids_for_year = set(expected_ids)
+        if filing_year == 2025:
+            ids_for_year.add(_casilla_id("0158"))
+        casillas_by_id = {
+            casilla.id: casilla
+            for casilla in revision.casillas
+            if casilla.semantic_role == "irpf_eo_agr_indice"
+        }
+
+        assert set(casillas_by_id) == ids_for_year
+        for casilla in casillas_by_id.values():
+            assert casilla.label == "Índice"
+            assert tuple(casilla.section) == (
+                "toma_datos_ampliada",
+                "reg_estima_obj_agricola",
+                "actividad_agr",
+            )
+            assert casilla.data_type == "decimal"
+            assert expected_legal_refs.issubset(casilla.legal_refs)
+            assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+                casilla.source_refs,
+            )
+
+
+def test_modelo_100_eo_agricultural_indices_are_decimal() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_legal_refs = {
+        "ley-35-2006:art-27",
+        "ley-35-2006:art-28",
+        "ley-35-2006:art-30",
+        "ley-35-2006:art-31",
+        "ley-35-2006:art-32",
+    }
+    expected_roles = {
+        "1540": "irpf_eo_agr_indice_medios_ajenos",
+        "1541": "irpf_eo_agr_indice_personal_asalariado",
+        "1542": "irpf_eo_agr_indice_tierras_arrendadas",
+        "1544": "irpf_eo_agr_indice_ecologica",
+        "1545": "irpf_eo_agr_indice_regadio_electrico",
+        "1546": "irpf_eo_agr_indice_pequena_empresa",
+        "1547": "irpf_eo_agr_indice_forestal",
+    }
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        roles_for_year = dict(expected_roles)
+        if filing_year == 2025:
+            roles_for_year["0160"] = "irpf_eo_agr_indice_corrector_mejillon_batea"
+
+        casillas_by_id = {
+            casilla.id: casilla
+            for casilla in revision.casillas
+            if casilla.id in {_casilla_id(casilla_id) for casilla_id in roles_for_year}
+        }
+
+        assert set(casillas_by_id) == {_casilla_id(casilla_id) for casilla_id in roles_for_year}
+        for casilla_id, expected_role in roles_for_year.items():
+            casilla = casillas_by_id[_casilla_id(casilla_id)]
+
+            assert tuple(casilla.section) == (
+                "toma_datos_ampliada",
+                "reg_estima_obj_agricola",
+                "actividad_agr",
+            )
+            assert casilla.data_type == "decimal"
+            assert casilla.semantic_role == expected_role
             assert expected_legal_refs.issubset(casilla.legal_refs)
             assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
                 casilla.source_refs,

@@ -302,6 +302,16 @@ class ModeloBindingQueryRow(BaseModel):
             publications or working documents.
         borrador_capable: ``True`` when this binding is eligible for AEAT
             borrador (pre-filled return) data.
+        relation_inputs: Registry relation ids whose ``target_binding`` is
+            this binding -- i.e. the cross-modelo / cross-period
+            :class:`RelationDefinition` fold-ins that materialise this
+            binding's value. Non-empty only for ``source =
+            "relation_prefill"`` bindings; the operator supplies these
+            inputs through ``--relation RELATION_ID=VALUE`` rather than
+            ``--binding``. Derived from the resolved revision's
+            ``relations`` so the feeding relation is discoverable in the
+            listing surface before a calculation is attempted, for any
+            modelo, never a per-form hardcoded mapping.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -327,6 +337,7 @@ class ModeloBindingQueryRow(BaseModel):
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
     borrador_capable: bool = False
+    relation_inputs: tuple[RelationId, ...] = ()
 
 
 class ModeloBindingsReport(BaseModel):
@@ -978,6 +989,7 @@ def _binding_rows(revision: ModeloRevision) -> tuple[ModeloBindingQueryRow, ...]
     as a string enum key, ``decimal`` for every other binding.
     """
     enum_consumed = enum_consumed_binding_ids(revision)
+    relation_inputs_by_target = _relation_inputs_by_target_binding(revision)
     return tuple(
         ModeloBindingQueryRow(
             binding_id=binding.id,
@@ -989,9 +1001,27 @@ def _binding_rows(revision: ModeloRevision) -> tuple[ModeloBindingQueryRow, ...]
             legal_refs=tuple(binding.legal_refs),
             source_refs=tuple(binding.source_refs),
             borrador_capable=binding.aeat_prefilled is True,
+            relation_inputs=relation_inputs_by_target.get(binding.id, ()),
         )
         for binding in revision.bindings
     )
+
+
+def _relation_inputs_by_target_binding(revision: ModeloRevision) -> dict[BindingId, tuple[RelationId, ...]]:
+    """Map each binding id to the relation ids whose ``target_binding`` is that binding.
+
+    A ``relation_prefill`` binding's value is materialised by one or more
+    registry :class:`RelationDefinition` fold-ins; each declares the
+    binding it feeds via ``target_binding``. Inverting that declaration
+    makes the feeding relation discoverable from the binding listing
+    surface for any modelo, grounded in the resolved revision rather than
+    a per-form hardcoded channel table. Relation ids preserve their
+    declaration order so the listing is deterministic.
+    """
+    by_target: dict[BindingId, list[RelationId]] = {}
+    for relation in revision.relations:
+        by_target.setdefault(relation.target_binding, []).append(relation.id)
+    return {target: tuple(relation_ids) for target, relation_ids in by_target.items()}
 
 
 def _modelo_covers_year(modelo: ModeloDefinition, year: int) -> bool:

@@ -36,7 +36,7 @@ from ...domain.calculations.registry import (
 )
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos._calculation_revision import CalculationRevision
-from ...domain.modelos._row_models import Modelo349OperadorRow, m349_nif_number_for_export
+from ...domain.modelos._row_models import Modelo349OperadorRow, Modelo349RectificacionRow, m349_nif_number_for_export
 from ...domain.modelos._work_unit import WorkUnit
 
 _ZERO_DECIMAL_TEXT = canonical_decimal_string(Decimal("0"))
@@ -46,6 +46,16 @@ _M349_OPERADOR_ROW_BINDINGS: dict[BindingId, str] = {
     "iva-349-operador-row-apellidos": "razon_social",
     "iva-349-operador-row-clave": "clave_operacion",
     "iva-349-operador-row-base": "importe",
+}
+_M349_RECTIFICACION_ROW_BINDINGS: dict[BindingId, str] = {
+    "iva-349-rectificacion-row-codigo-pais": "codigo_pais",
+    "iva-349-rectificacion-row-nif": "nif_comunitario",
+    "iva-349-rectificacion-row-apellidos": "razon_social",
+    "iva-349-rectificacion-row-clave": "clave_operacion",
+    "iva-349-rectificacion-row-ejercicio": "ejercicio",
+    "iva-349-rectificacion-row-periodo": "periodo",
+    "iva-349-rectificacion-row-base-rectificada": "base_rectificada",
+    "iva-349-rectificacion-row-base-anterior": "base_anterior",
 }
 
 
@@ -86,28 +96,40 @@ def _m349_detail_row_replay_inputs(
     revision: CalculationRevision,
     work_unit: WorkUnit,
 ) -> dict[BindingId, dict[str, filing_domain.ModeloInputScalar]]:
-    """Project persisted Modelo 349 operador rows into indexed binding maps.
+    """Project persisted Modelo 349 detail rows into indexed binding maps.
 
     The filing runtime accepts repeating-row values as ``binding_id -> row-index
-    -> scalar``. Stored :class:`Modelo349OperadorRow` values are the durable row
-    source; the EU VAT NIF subfield is normalized with the same export helper
-    used by the row model so replay does not duplicate country-prefix logic.
+    -> scalar``. Stored row values are the durable row source; the EU VAT NIF
+    subfield is normalized with the same export helper used by the row model so
+    replay does not duplicate country-prefix logic.
     """
     if str(work_unit.modelo) != Modelo.M349.value:
         return {}
-    rows = tuple(row for row in revision.detail_rows if isinstance(row, Modelo349OperadorRow))
-    if not rows:
+    operador_rows = tuple(row for row in revision.detail_rows if isinstance(row, Modelo349OperadorRow))
+    rectification_rows = tuple(row for row in revision.detail_rows if isinstance(row, Modelo349RectificacionRow))
+    if not operador_rows and not rectification_rows:
         return {}
     replay_inputs: dict[BindingId, dict[str, filing_domain.ModeloInputScalar]] = {}
     for binding_id, attr in _M349_OPERADOR_ROW_BINDINGS.items():
         values: dict[str, filing_domain.ModeloInputScalar] = {}
-        for index, row in enumerate(rows, start=1):
+        for index, row in enumerate(operador_rows, start=1):
             if attr == "nif_comunitario":
                 value = m349_nif_number_for_export(row.nif_comunitario, row.codigo_pais)
             else:
                 value = getattr(row, attr)
             values[str(index)] = value
-        replay_inputs[binding_id] = values
+        if values:
+            replay_inputs[binding_id] = values
+    for binding_id, attr in _M349_RECTIFICACION_ROW_BINDINGS.items():
+        values = {}
+        for index, row in enumerate(rectification_rows, start=1):
+            if attr == "nif_comunitario":
+                value = m349_nif_number_for_export(row.nif_comunitario, row.codigo_pais)
+            else:
+                value = getattr(row, attr)
+            values[str(index)] = value
+        if values:
+            replay_inputs[binding_id] = values
     return replay_inputs
 
 

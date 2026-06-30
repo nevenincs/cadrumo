@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core.resources import bundled_path
+from .....core.resources import resources
 from .. import CasillaId, validated_casilla_id
 from .._authority import ValidatedRegistryAuthority
 from .._errors import AmbiguousRevisionSelectionError, RegistryValidationError
@@ -17,7 +17,6 @@ from .._schema import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _INPUT_CASILLA: CasillaId = validated_casilla_id("01", surface="_INPUT_CASILLA")
 _TARGET_CASILLA: CasillaId = validated_casilla_id("02", surface="_TARGET_CASILLA")
 
@@ -96,8 +95,7 @@ source_refs = ["test-source-001"]
 
 
 def _service() -> RegistryQueryService:
-    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=bundled_path())
-    return RegistryQueryService(authority)
+    return RegistryQueryService(resources().modelos.authority)
 
 
 def _write_year_ambiguous_registry(tmp_path) -> Path:
@@ -157,10 +155,9 @@ def test_describe_lists_every_declared_revision_id() -> None:
     ``modelo work create`` without first guessing wrong."""
 
     service = _service()
-    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=bundled_path())
 
     described = service.describe_modelo_for_scope("303", filing_year=2026, period="1T")
-    expected = {str(item.id) for item in authority.modelo("303").revisions.values()}
+    expected = {str(item.id) for item in resources().modelos.authority.modelo("303").revisions.values()}
 
     assert set(described.revision_ids) == expected
     # The resolved revision is always one of the listed ids.

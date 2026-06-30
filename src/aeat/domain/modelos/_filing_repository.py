@@ -1,9 +1,10 @@
 """Encrypted SQL repository for the filing-record catalogue.
 
-Persists and loads :class:`ModeloRecord` entries via
-:class:`SecureObjectRepository` at :class:`SensitivityClass` FINANCIAL
-using an :class:`Envelope` wrapper. The catalogue is stored as a single
-encrypted BLOB per profile bucket.
+:class:`~aeat.domain.modelos.ModeloRecordCatalogueRepository` persists and
+loads :class:`ModeloRecord` entries in a :class:`ModeloRecordCatalogue` via
+:class:`SecureObjectRepository` at :class:`SensitivityClass` FINANCIAL using an
+:class:`Envelope` wrapper. The catalogue is stored as a single encrypted BLOB
+per profile bucket.
 """
 
 from __future__ import annotations
@@ -28,11 +29,21 @@ _FILING_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_filing_record_persistence
 
 
 class ModeloRecordPersistenceError(ModeloError):
-    """Raised when the filing-record catalogue cannot be persisted or loaded."""
+    """Raised when the filing-record catalogue cannot be persisted or loaded.
+
+    This wraps storage-boundary failures from
+    :class:`~aeat.domain.modelos.ModeloRecordCatalogueRepository` while
+    preserving translated recovery context for callers.
+    """
 
 
 class ModeloRecordCatalogueRepository:
-    """Read / write the filing-record catalogue in encrypted storage."""
+    """Repository over encrypted SQL-backed filing-record catalogue storage.
+
+    The repository wraps a :class:`SecureObjectRepository` and exposes the
+    concrete load/save implementation behind
+    :class:`~aeat.domain.modelos.ModeloRecordCatalogueRepositoryProtocol`.
+    """
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
@@ -49,7 +60,8 @@ class ModeloRecordCatalogueRepository:
         A bucket is the per-profile partition that isolates one taxpayer's
         encrypted records from another's. Returns the resolved bucket
         identifier, or ``None`` when the repository was constructed against
-        an injected ``SecureObjectRepository`` and no bucket id was supplied.
+        an injected :class:`SecureObjectRepository` and no bucket id was
+        supplied.
         """
         return self._bucket_id
 
@@ -70,7 +82,7 @@ class ModeloRecordCatalogueRepository:
         receipt that a calculation revision (a dated, immutable result for
         that form) was filed for a given form, year, and period. The whole
         catalogue is persisted as one encrypted FINANCIAL-class BLOB and
-        returned as a ``ModeloRecordCatalogue``.
+        returned as a :class:`ModeloRecordCatalogue`.
 
         Returns an empty catalogue when nothing has been persisted yet.
 
@@ -78,11 +90,10 @@ class ModeloRecordCatalogueRepository:
             The decrypted :class:`ModeloRecordCatalogue` for this bucket.
 
         Raises:
-            ModeloRecordPersistenceError: If the stored envelope fails its
-                sensitivity-class or schema-version integrity checks, or if
+            :class:`ModeloRecordPersistenceError`: If the stored envelope fails
+                its sensitivity-class or schema-version integrity checks, or if
                 its on-disk classification is not FINANCIAL, or if it was
-                written at a schema version newer than this consumer
-                supports.
+                written at a schema version newer than this consumer supports.
         """
         from ...adapters.persistence.storage import Envelope, SensitivityClass
         from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
@@ -144,19 +155,24 @@ class ModeloRecordCatalogueRepository:
     def save(self, catalogue: ModeloRecordCatalogue) -> None:
         """Persist the filing-record catalogue as a single encrypted BLOB.
 
-        Wraps ``catalogue`` in a FINANCIAL-class envelope stamped with the
-        current schema version and write timestamp, then writes it through
+        Wraps ``catalogue`` in a FINANCIAL-class :class:`Envelope` stamped with
+        the current schema version and write timestamp, then writes it through
         the secure object store. The entire catalogue is rewritten as one
         encrypted object per bucket, replacing any prior catalogue for this
         bucket.
 
         Args:
-            catalogue: The ``ModeloRecordCatalogue`` to encrypt and store.
+            catalogue: The :class:`ModeloRecordCatalogue` to encrypt and store.
         """
         self._objects.save_many((self.to_secure_object_write(catalogue),))
 
     def to_secure_object_write(self, catalogue: ModeloRecordCatalogue) -> SecureObjectWrite:
-        """Return the :class:`SecureObjectWrite` upsert for ``catalogue`` without committing it."""
+        """Return the secure-object upsert for ``catalogue`` without committing it.
+
+        The returned :class:`~aeat.adapters.persistence.storage.SecureObjectWrite`
+        carries the same :class:`Envelope` and :class:`SensitivityClass`
+        classification that :meth:`save` would persist directly.
+        """
         from ...adapters.persistence.storage import Envelope, SecureObjectWrite, SensitivityClass
 
         envelope = Envelope[ModeloRecordCatalogue](
@@ -179,7 +195,14 @@ class ModeloRecordCatalogueRepository:
         catalogue: ModeloRecordCatalogue,
         extra_writes: tuple[SecureObjectWrite, ...],
     ) -> None:
-        """Persist ``catalogue`` plus related secure objects in one unit of work."""
+        """Persist ``catalogue`` plus related secure objects in one unit of work.
+
+        Args:
+            catalogue: The :class:`ModeloRecordCatalogue` to persist.
+            extra_writes: Additional
+                :class:`~aeat.adapters.persistence.storage.SecureObjectWrite`
+                objects to commit atomically with the catalogue.
+        """
         self._objects.save_many((self.to_secure_object_write(catalogue), *extra_writes))
 
 

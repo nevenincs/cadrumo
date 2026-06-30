@@ -1,10 +1,11 @@
-"""Application services for bucket-scoped manual ledger transactions.
+"""Shared ledger action helpers for repositories, events, and guards.
 
-Services operate over a :class:`TransactionCatalogueRepository` for ledger
-state, a :class:`BucketEventHistoryRepository` for durable audit events, and
-an optional :class:`InvoiceCatalogueRepository` for purchase-invoice evidence
-cascade on removal. The inner functions accept a :class:`TransactionCatalogue`
-or :class:`InvoiceCatalogue` directly when the caller supplies pre-loaded data.
+This module normalizes concrete :class:`TransactionCatalogueRepository`,
+:class:`InvoiceCatalogueRepository`, and :class:`BucketEventHistoryRepository`
+instances; builds :class:`~aeat.domain.buckets.BucketEvent` audit entries;
+mutates :class:`TransactionCatalogue` and :class:`InvoiceCatalogue` snapshots
+atomically; and verifies evidence, attachment, usage-ratio, and
+finalized-modelo blockers for the public ledger action services.
 """
 
 from __future__ import annotations
@@ -171,7 +172,7 @@ def _required_patched[T](
     """Return ``patch.<field>`` when in patch_fields and non-null; otherwise the fallback.
 
     Raises ``TransactionValidationError`` when the field is set on the
-    patch but explicitly nulled â€” the patch contract forbids resetting a
+    patch but explicitly nulled - the patch contract forbids resetting a
     required value to None. Generic in ``T`` so the caller's field type
     flows through to the assignment site (type checkers see the concrete
     type at the use point, not ``object``).

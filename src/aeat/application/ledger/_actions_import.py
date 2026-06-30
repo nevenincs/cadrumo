@@ -1,10 +1,12 @@
-"""Application services for bucket-scoped manual ledger transactions.
+"""Ledger source import services for bucket-scoped transaction catalogues.
 
-Services operate over a :class:`TransactionCatalogueRepository` for ledger
-state, a :class:`BucketEventHistoryRepository` for durable audit events, and
-an optional :class:`InvoiceCatalogueRepository` for purchase-invoice evidence
-cascade on removal. The inner functions accept a :class:`TransactionCatalogue`
-or :class:`InvoiceCatalogue` directly when the caller supplies pre-loaded data.
+Provider rows arrive as
+:class:`~aeat.adapters.inbound.financial.providers.ParsedLedgerRow` objects.
+This module classifies them against a loaded :class:`TransactionCatalogue`,
+persists imported :class:`~aeat.domain.transactions.Transaction` instances,
+records ``LEDGER_TRANSACTION_IMPORTED`` bucket events, and returns
+:class:`~aeat.application.ledger.LedgerImportOperationResult` or
+:class:`~aeat.application.ledger.LedgerSourceImportResult`.
 """
 
 from __future__ import annotations
@@ -88,7 +90,7 @@ def _transaction_dedup_fingerprints(transaction: Transaction) -> frozenset[str]:
     """Return import-dedup fingerprints for an already-stored transaction.
 
     Rows imported after the cross-format dedup landed carry a stamped
-    :attr:`Transaction.import_fingerprint`; that value is the canonical
+    :attr:`~aeat.domain.transactions.Transaction.import_fingerprint`; that value is the canonical
     identity and is used verbatim. Hand-entered rows and unstamped imported
     rows have no fingerprint, so the
     fingerprint is derived from the current ``raw`` as a best-effort
@@ -133,7 +135,8 @@ def _apply_fx_conversion(
     """Return ``(fx_rate, value_in_eur, rate_source, rate_date_iso)`` for a raw row.
 
     EUR-native rows and non-EUR rows with no normalizer / a missing rate yield
-    all ``None``, preserving the coupling invariant on :class:`Transaction`.
+    all ``None``, preserving the coupling invariant on
+    :class:`~aeat.domain.transactions.Transaction`.
     """
     if raw.currency == DEFAULT_CURRENCY or currency_normalizer is None:
         return (None, None, None, None)
@@ -157,15 +160,16 @@ def _evaluate_import_rows(
 ) -> _ImportRowPlan:
     """Classify every parsed row as imported / skipped / likely-duplicate.
 
-    Each :class:`ParsedLedgerRow` carries the magnitude
-    :class:`RawTransaction` and the authoritative ``direction`` the provider
-    derived from the source sign at the parse boundary; this classifier never
-    re-derives flow from a sign. Deduplication keys on
-    :func:`derive_import_fingerprint` â€” a direction- and currency-qualified
-    identity that is stable across both later edits of a transaction and a
-    re-export of the same movement in a different file format. This single
-    classifier backs both the persisting import path and the ``--dry-run``
-    preview, so the preview count is exact.
+    Each :class:`~aeat.adapters.inbound.financial.providers.ParsedLedgerRow`
+    carries the magnitude :class:`~aeat.domain.transactions.RawTransaction`
+    and the authoritative ``direction`` the provider derived from the source
+    sign at the parse boundary; this classifier never re-derives flow from a
+    sign. Deduplication keys on
+    :func:`~aeat.domain.transactions.derive_import_fingerprint` - a direction-
+    and currency-qualified identity that is stable across both later edits of a
+    transaction and a re-export of the same movement in a different file format.
+    This single classifier backs both the persisting import path and the
+    ``--dry-run`` preview, so the preview count is exact.
     """
     existing_fingerprints = {
         fingerprint
@@ -244,13 +248,13 @@ def import_ledger_transactions(
 ) -> LedgerImportOperationResult:
     """Import provider rows into one bucket catalogue and emit events.
 
-    Each :class:`ParsedLedgerRow` carries the magnitude
-    :class:`RawTransaction` plus the authoritative ``direction`` the provider
-    derived at the parse boundary, so the import path never re-derives flow
-    from a sign.
+    Each :class:`~aeat.adapters.inbound.financial.providers.ParsedLedgerRow`
+    carries the magnitude :class:`~aeat.domain.transactions.RawTransaction`
+    plus the authoritative ``direction`` the provider derived at the parse
+    boundary, so the import path never re-derives flow from a sign.
 
-    Returns a :class:`LedgerImportOperationResult` summarising the number
-    of imported, skipped, and failed transactions.
+    Returns a :class:`~aeat.application.ledger.LedgerImportOperationResult`
+    summarising the imported, skipped, and likely-duplicate transactions.
     """
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
@@ -331,7 +335,7 @@ def import_ledger_source(
 ) -> LedgerSourceImportResult:
     """Validate, ingest, and optionally persist one ledger source file.
 
-    Returns a :class:`LedgerSourceImportResult`.
+    Returns a :class:`~aeat.application.ledger.LedgerSourceImportResult`.
     """
     # Refuse a missing/unreadable source up front, before provider
     # resolution. With ``--provider auto`` resolution runs the detection

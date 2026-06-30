@@ -36,6 +36,7 @@ from ...application.ledger import (
 from ...core import resolve_active_bucket_id
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ...domain.iva._schema import EUMemberState, IvaCategory
 from ...domain.transactions import (
@@ -349,6 +350,34 @@ def ledger_add(
             "transaction": transaction_payload.model_dump(mode="json"),
         },
     )
+    # An empty bucket_event_ids tuple is the guarded-idempotent no-op signal
+    # from create_manual_transaction: the keyed add matched an already-stored
+    # row and wrote nothing. Surface it as an info Notice on the typed channel
+    # (never a bespoke result field) and fold the same text into the lines so
+    # JSON and text output cannot drift.
+    notices: list[Notice] = []
+    noop_lines: list[str] = []
+    if not result.bucket_event_ids:
+        noop_message = tr(
+            "cli.ledger.add.idempotent_noop",
+            transaction_id=result.ref.transaction_id,
+            default=(
+                f"Idempotent no-op: a transaction with this idempotency key already exists "
+                f"({result.ref.transaction_id}); nothing was added."
+            ),
+        )
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="ledger.add.idempotent_noop",
+                message=noop_message,
+                context={
+                    "transaction_id": result.ref.transaction_id,
+                    "idempotency_key": command.idempotency_key or "",
+                },
+            )
+        )
+        noop_lines.append(noop_message)
     _emit_envelope(
         ctx,
         command="ledger.add",
@@ -359,7 +388,9 @@ def ledger_add(
             f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
             f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
             f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
+            *noop_lines,
         ],
+        notices=notices or None,
     )
 
 
@@ -503,7 +534,7 @@ def ledger_classify(
         help=tr("cli.ledger.classify.auto_split_help"),
     ),
     reject: bool = typer.Option(False, "--reject", help=tr("cli.ledger.classify.reject_help")),
-    reason: str = typer.Option("", "--reason", help=tr("cli.ledger.classify.reason_help")),
+    reason: str | None = typer.Option(None, "--reason", help=tr("cli.ledger.classify.reason_help")),
 ) -> None:
     """Classify one ledger transaction (positional id), via LLM (--llm), or in bulk (--from-csv)."""
     if auto_split:
@@ -519,7 +550,7 @@ def ledger_classify(
             evidence_acknowledged=evidence_acknowledged,
             vision_model=vision_model,
             reject=reject,
-            reason=reason,
+            reason=reason or "",
         )
         return
     if llm is not None or read_evidence:
@@ -536,7 +567,7 @@ def ledger_classify(
             "evidence_acknowledged": evidence_acknowledged,
             "vision_model": vision_model,
             "reject": reject,
-            "reason": reason,
+            "reason": reason or "",
         }
         if saturate:
             ledger_saturate_llm(**saturate_kwargs)
@@ -597,6 +628,19 @@ def ledger_classify(
                 ),
             ),
         )
+    if reason is not None and not reason.strip():
+        # A manual classification may record WHY via --reason, persisted to the
+        # transaction notes. An explicitly empty/whitespace reason carries no
+        # rationale; refuse it instructively rather than silently dropping it.
+        raise _bad(
+            tr(
+                "cli.ledger.classify.reason_empty",
+                default=(
+                    "Refused. --reason must record why you are classifying this "
+                    "transaction. Pass a non-empty rationale, or omit --reason."
+                ),
+            ),
+        )
     validated_category_id = _validate_category_id(category_id)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
     if classification is BusinessClassification.MIXED and business_pct is None:
@@ -626,6 +670,7 @@ def ledger_classify(
             irpf_category=irpf_category,
             iva_category=iva_category,
             counterparty_eu_member_state=counterparty_eu_member_state,
+            notes=reason,
         )
         result = update_manual_transaction_fields(
             bucket_id=transaction_repository.bucket_id,

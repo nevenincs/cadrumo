@@ -1,10 +1,10 @@
 """Governed-persistence repository for the invoice catalogue.
 
-The repository is the only sanctioned read/write path for the invoice
-catalogue. It stores the catalogue as an encrypted byte object via
-:class:`SecureObjectRepository` at :class:`SensitivityClass` FINANCIAL
-using an :class:`Envelope` wrapper; no plaintext invoice row, JSON
-catalogue, or envelope file lands on disk.
+:class:`InvoiceCatalogueRepository` is the sanctioned read/write path for the
+:class:`InvoiceCatalogue`. It stores the catalogue as an encrypted byte object
+via :class:`SecureObjectRepository` at :class:`SensitivityClass` FINANCIAL using
+an :class:`Envelope` wrapper; no plaintext invoice row, JSON catalogue, or
+envelope file lands on disk.
 """
 
 from __future__ import annotations
@@ -49,7 +49,12 @@ def _resolve_invoice_bucket_id(bucket_id: str | None) -> str:
 
 
 class InvoiceCatalogueRepository:
-    """Repository over the encrypted SQL-backed invoice catalogue."""
+    """Repository over encrypted SQL-backed :class:`InvoiceCatalogue` storage.
+
+    The repository wraps a :class:`SecureObjectRepository` and exposes the
+    concrete load/save implementation behind
+    :class:`~aeat.domain.invoices.InvoiceCatalogueRepositoryProtocol`.
+    """
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
@@ -80,10 +85,12 @@ class InvoiceCatalogueRepository:
             instance when no database object is present.
 
         Raises:
-            ClassificationError: If the persisted object's classification is
-                not ``SensitivityClass.FINANCIAL``.
-            EnvelopeVersionError: If the envelope schema version is higher
-                than the consumer supports.
+            :class:`~aeat.adapters.persistence.storage.errors.ClassificationError`:
+                If the persisted object's classification is not
+                ``SensitivityClass.FINANCIAL``.
+            :class:`~aeat.adapters.persistence.storage.errors.EnvelopeVersionError`:
+                If the envelope schema version is higher than the consumer
+                supports.
         """
         from ...adapters.persistence.storage import (
             Envelope,
@@ -119,9 +126,9 @@ class InvoiceCatalogueRepository:
     def save(self, catalogue: InvoiceCatalogue) -> None:
         """Persist ``catalogue`` atomically under the file lock.
 
-        The on-disk database value is an encrypted BLOB at the
-        :attr:`~aeat.core.classification.SensitivityClass.FINANCIAL`
-        classification. No plaintext invoice row lands on disk.
+        The on-disk database value is an encrypted :class:`Envelope` BLOB at the
+        :class:`SensitivityClass` FINANCIAL classification. No plaintext invoice
+        row lands on disk.
 
         Args:
             catalogue: The :class:`InvoiceCatalogue` to persist.
@@ -148,7 +155,11 @@ class InvoiceCatalogueRepository:
         _log.debug("saved invoice catalogue (%d invoices)", len(catalogue.invoices))
 
     def to_secure_object_write(self, catalogue: InvoiceCatalogue) -> SecureObjectWrite:
-        """Return the :class:`SecureObjectWrite` upsert for ``catalogue`` without committing it.
+        """Return the secure-object upsert for ``catalogue`` without committing it.
+
+        The returned :class:`~aeat.adapters.persistence.storage.SecureObjectWrite`
+        carries the same :class:`Envelope` and :class:`SensitivityClass`
+        classification that :meth:`save` would persist directly.
 
         Args:
             catalogue: The :class:`InvoiceCatalogue` to serialise.

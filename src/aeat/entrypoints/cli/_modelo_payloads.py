@@ -821,6 +821,16 @@ class BindingListRowPayload(OutputSchema):
     borrador_capable: bool
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+    relation_inputs: tuple[RelationId, ...] = ()
+    """Registry relation ids that feed this binding's value.
+
+    Non-empty only for ``source = "relation_prefill"`` bindings, where the
+    operator supplies each value through ``--relation RELATION_ID=VALUE``
+    rather than ``--binding``. Derived from the resolved revision's
+    relations (:class:`~aeat.domain.calculations.registry.RelationDefinition`
+    ``target_binding``), so a relation-fed binding's source is discoverable
+    in this listing before a calculation is attempted, for any modelo.
+    """
 
 
 @register_schema("modelo.bindings.list")
@@ -852,6 +862,8 @@ class BindingPreviewRowPayload(OutputSchema):
     override: str | None
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+    relation_inputs: tuple[RelationId, ...] = ()
+    """Registry relation ids that feed this binding (see ``BindingListRowPayload``)."""
 
 
 @register_schema("modelo.bindings.resolve")

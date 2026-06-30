@@ -73,7 +73,7 @@ from ...domain.modelos._protocols import (
     WorkUnitCatalogueRepositoryProtocol,
 )
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
-from ...domain.modelos._row_models import Modelo349OperadorRow, ModeloDetailRow
+from ...domain.modelos._row_models import Modelo349OperadorRow, Modelo349RectificacionRow, ModeloDetailRow
 from ...domain.modelos._work_unit import WorkUnit
 from ...domain.transactions import TransactionCatalogueRepository
 from ..calculations import cross_period_dependency_requirements as _cross_period_dependency_requirements
@@ -926,14 +926,19 @@ def _detail_row_binding_values_for_calculation(
     if str(work_unit.modelo) != Modelo.M349.value:
         return {}
     operador_rows = tuple(row for row in detail_rows if isinstance(row, Modelo349OperadorRow))
-    if not operador_rows:
+    rectification_rows = tuple(row for row in detail_rows if isinstance(row, Modelo349RectificacionRow))
+    if not operador_rows and not rectification_rows:
         return {}
     importe_operaciones = sum((row.importe for row in operador_rows), Decimal("0"))
+    importe_rectificaciones = sum(
+        (abs(row.base_rectificada - row.base_anterior) for row in rectification_rows),
+        Decimal("0"),
+    )
     return {
         _M349_NUMERO_OPERADORES_BINDING: Decimal(len(operador_rows)),
         _M349_IMPORTE_OPERACIONES_BINDING: importe_operaciones,
-        _M349_NUMERO_RECTIFICACIONES_BINDING: Decimal("0"),
-        _M349_IMPORTE_RECTIFICACIONES_BINDING: Decimal("0"),
+        _M349_NUMERO_RECTIFICACIONES_BINDING: Decimal(len(rectification_rows)),
+        _M349_IMPORTE_RECTIFICACIONES_BINDING: importe_rectificaciones,
     }
 
 

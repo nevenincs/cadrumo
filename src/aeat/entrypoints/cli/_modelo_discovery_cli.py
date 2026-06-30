@@ -26,7 +26,7 @@ from ...application.modelo import (
     registry_list_modelos,
     registry_modelo_codes,
 )
-from ...core import Modelo, Period
+from ...core import Period
 from ...core.i18n import output_language, tr
 from ...domain.calculations.registry import (
     InputKind,
@@ -393,58 +393,42 @@ def _readiness_for_source(source: str) -> str:
     return _BINDING_SOURCE_TO_READINESS.get(source, "ledger source")
 
 
-_M200_M202_PAGOS_RELATION_CHANNELS: tuple[tuple[str, str, str, str], ...] = (
-    (
-        "modelo-200-2024-rel-202-pagos-fraccionados",
-        "40.3",
-        "34",
-        "modelo-200-2024-pagos-fraccionados-anuales",
-    ),
-    (
-        "modelo-200-2024-rel-202-pagos-fraccionados-40-2",
-        "40.2",
-        "03",
-        "modelo-200-2024-pagos-fraccionados-anuales-40-2",
-    ),
-)
+def _relation_input_guidance_lines(rows) -> tuple[str, ...]:
+    """Registry-derived ``--relation`` guidance for relation-fed bindings.
 
-
-def _m200_m202_relation_guidance_lines(report, rows) -> tuple[str, ...]:
-    if str(report.code) != Modelo.M200.value or report.period != "0A":
-        return ()
-    listed_binding_ids = {str(row.binding_id) for row in rows}
-    visible_channels = tuple(
-        channel for channel in _M200_M202_PAGOS_RELATION_CHANNELS if channel[3] in listed_binding_ids
-    )
-    if len(visible_channels) != len(_M200_M202_PAGOS_RELATION_CHANNELS):
+    Every binding whose value is materialised by one or more registry
+    relations (``relation_inputs`` is non-empty) is supplied through
+    ``--relation RELATION_ID=VALUE`` rather than ``--binding``. The feeding
+    relation ids come from the resolved revision (each
+    :class:`~aeat.domain.calculations.registry.RelationDefinition` declares
+    its ``target_binding``), so this guidance generalises to any modelo
+    instead of enumerating a per-form channel table.
+    """
+    relation_fed = tuple(row for row in rows if row.relation_inputs)
+    if not relation_fed:
         return ()
     lines = [
         "relation_guidance\t"
         + tr(
-            "cli.app.modelo.bindings.m200_m202_relation_guidance",
+            "cli.app.modelo.bindings.relation_input_guidance",
             default=(
-                "Modelo 200 M202 pagos fraccionados feed DP200014B:00611 through --relation "
-                "values, not --binding target binding ids. The M202 40.3 casilla 34 and 40.2 "
-                "casilla 03 channels are mutually exclusive per filing; when entering manual "
-                "relation values, put the annual sum on the elected modality and 0 on the unused modality."
+                "Some bindings below are fed by registry relations (cross-modelo or "
+                "cross-period fold-ins), not direct --binding values. Supply each with "
+                "--relation RELATION_ID=VALUE before calculating."
             ),
         ),
     ]
-    for relation_id, modality, casilla, binding_id in visible_channels:
-        lines.append(
-            "relation_input\t"
-            + tr(
-                "cli.app.modelo.bindings.m200_m202_relation_channel",
-                default=(
-                    "{relation_id}\tM202 {modality} casilla {casilla}\t"
-                    "use --relation {relation_id}=VALUE\tpaired target binding {binding_id}"
+    for row in relation_fed:
+        for relation_id in row.relation_inputs:
+            lines.append(
+                "relation_input\t"
+                + tr(
+                    "cli.app.modelo.bindings.relation_input_channel",
+                    default="{binding_id}\tfed by relation {relation_id}\tuse --relation {relation_id}=VALUE",
+                    binding_id=str(row.binding_id),
+                    relation_id=str(relation_id),
                 ),
-                relation_id=relation_id,
-                modality=modality,
-                casilla=casilla,
-                binding_id=binding_id,
-            ),
-        )
+            )
     return tuple(lines)
 
 
@@ -533,6 +517,7 @@ def _binding_list_rows_for_report(report, *, missing: bool) -> tuple[list[Bindin
                 borrador_capable=row.borrador_capable,
                 legal_refs=row.legal_refs,
                 source_refs=row.source_refs,
+                relation_inputs=row.relation_inputs,
             ),
         )
         text_rows.append(
@@ -541,7 +526,7 @@ def _binding_list_rows_for_report(report, *, missing: bool) -> tuple[list[Bindin
             f"{row.input_channel}\t{row.borrador_capable}",
         )
     if missing:
-        text_rows.extend(_m200_m202_relation_guidance_lines(report, rows))
+        text_rows.extend(_relation_input_guidance_lines(rows))
     return merged_rows, text_rows
 
 
@@ -691,6 +676,7 @@ def _register_bindings_resolve_command(bindings_app: typer.Typer, deps: _Discove
                     override=overrides.get(row.binding_id),
                     legal_refs=row.legal_refs,
                     source_refs=row.source_refs,
+                    relation_inputs=row.relation_inputs,
                 )
                 for row in report.rows
             ],

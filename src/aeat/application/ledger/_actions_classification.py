@@ -1,10 +1,13 @@
-"""Application services for bucket-scoped manual ledger transactions.
+"""Bulk and rule-based ledger classification services.
 
-Services operate over a :class:`TransactionCatalogueRepository` for ledger
-state, a :class:`BucketEventHistoryRepository` for durable audit events, and
-an optional :class:`InvoiceCatalogueRepository` for purchase-invoice evidence
-cascade on removal. The inner functions accept a :class:`TransactionCatalogue`
-or :class:`InvoiceCatalogue` directly when the caller supplies pre-loaded data.
+CSV bulk classification parses
+:class:`~aeat.application.ledger.BulkClassifyRow` records, converts populated
+fields into :class:`~aeat.application.ledger.ManualLedgerTransactionPatch`,
+and applies them through
+:func:`~aeat.application.ledger.update_manual_transaction_fields`. Rule
+application evaluates :class:`~aeat.domain.transactions.LedgerClassificationRule`
+instances over active transactions and returns
+:class:`~aeat.application.ledger.ApplyRulesResult`.
 """
 
 from __future__ import annotations
@@ -277,9 +280,9 @@ def bulk_classify_from_csv(
     optional. Blank optional cells are treated as omitted, so a partial CSV
     classification row preserves existing tax facts instead of clearing them
     accidentally. Populated tax facts ride the same
-    :class:`ManualLedgerTransactionPatch` and
-    :func:`update_manual_transaction_fields` write path the single-classify
-    surface uses, so a bulk row persists the same typed
+    :class:`~aeat.application.ledger.ManualLedgerTransactionPatch` and the
+    :func:`~aeat.application.ledger.update_manual_transaction_fields` write
+    path the single-classify surface uses, so a bulk row persists the same typed
     ``taxable_base``/``iva_rate``/``iva_amount``/``iva_category``/
     ``irpf_category`` values as ``--id``-mode classify with identical
     validation. Unknown columns are rejected before any writes. Rows that fail
@@ -288,7 +291,7 @@ def bulk_classify_from_csv(
     valid rows are applied
     (partial-success semantics matching the ledger import pattern).
 
-    Returns a :class:`BulkClassifyResult`.
+    Returns a :class:`~aeat.application.ledger.BulkClassifyResult`.
     """
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repo = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
@@ -333,8 +336,11 @@ def add_classification_rule(
     twice produces the same id and the repository save overwrites the
     prior entry (idempotent creation).
 
-    Raises :class:`ValueError` when ``description_pattern`` is not a
-    valid regex (validated by :class:`~aeat.domain.transactions._classification_rule.LedgerClassificationRule`).
+    Returns a :class:`~aeat.domain.transactions.LedgerClassificationRule`.
+
+    Raises :exc:`ValueError` when ``description_pattern`` is not a valid
+    regex, as validated by
+    :class:`~aeat.domain.transactions.LedgerClassificationRule`.
     """
     from typing import cast
 
@@ -381,7 +387,7 @@ def apply_classification_rules(
     the first matching rule wins. Match is ``re.search(pattern, description,
     re.IGNORECASE)``.
 
-    Returns an :class:`ApplyRulesResult`.
+    Returns an :class:`~aeat.application.ledger.ApplyRulesResult`.
     """
     from typing import cast
 

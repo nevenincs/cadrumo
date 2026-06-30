@@ -474,7 +474,7 @@ def test_oracle_filing_observation_distinct_from_local_roundtrip() -> None:
         filing_year=2025,
         period="1T",
         observations=(obs,),
-        oracle_id="aeat-oracle.iva.q1",
+        oracle_id="aeat-oracle-iva-q1",
     )
 
     roundtripped = OracleModeloObservation.model_validate_json(
@@ -482,7 +482,7 @@ def test_oracle_filing_observation_distinct_from_local_roundtrip() -> None:
     )
 
     assert roundtripped == original
-    assert roundtripped.oracle_id == "aeat-oracle.iva.q1"
+    assert roundtripped.oracle_id == "aeat-oracle-iva-q1"
     assert roundtripped.observations == (obs,)
     # OracleModeloObservation IS a RegistryModeloObservation; the
     # type distinction must be preserved structurally even though

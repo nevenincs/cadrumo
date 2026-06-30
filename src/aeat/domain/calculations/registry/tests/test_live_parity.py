@@ -203,6 +203,30 @@ def test_catalogue_rejects_duplicate_oracle_id() -> None:
         catalogue.register(oracle, environment=OracleEnvironment.PRODUCTION)
 
 
+@pytest.mark.parametrize(
+    "bad_id",
+    ["Aeat-Nif-Iva", "snake_case_id", "with space", "trailing-hyphen-"],
+)
+def test_catalogue_rejects_malformed_oracle_id(bad_id: str) -> None:
+    catalogue = LiveParityCatalogue()
+    oracle = _CannedOracle(
+        oracle_id=bad_id,
+        surface_kind="file_validator",
+        operations=(),
+        verdict=ParityResult(
+            oracle_id="valid-verdict-id",
+            cross_reference_id="c",
+            verdict="match",
+            narrative="x",
+        ),
+    )
+
+    with pytest.raises(RegistryValidationError, match="not a valid OracleId"):
+        catalogue.register(oracle, environment=OracleEnvironment.PRODUCTION)
+
+    assert catalogue.ids() == ()
+
+
 def test_catalogue_lookup_unknown_id_raises() -> None:
     catalogue = LiveParityCatalogue()
 

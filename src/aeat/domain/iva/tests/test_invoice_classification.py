@@ -8,7 +8,7 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from ....core.resources import bundled_path
+from ....core.resources import resources
 from ...calculations.registry import IvaLedgerObservation
 from ...invoices import IvaRate
 from .. import (
@@ -201,14 +201,10 @@ def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end()
     from datetime import date
     from decimal import Decimal
 
-    from ...calculations.registry import (
-        load_registry_tree,
-        resolve_ledger_iva_aggregation_binding_values,
-    )
+    from ...calculations.registry import resolve_ledger_iva_aggregation_binding_values
     from ...invoices import invoice_line_to_iva_observation
 
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    m303 = next(m for m in modelos if m.id == "303")
+    m303 = resources().modelos.get("303")
     revision = m303.revisions["2009-y-siguientes"]
 
     # Two issued + one received line, all standard-case domestic

@@ -293,3 +293,44 @@ def test_modelo_210_pension_tariff_and_convenio_row_are_grounded() -> None:
     assert "trlirnr-rdleg-5-2004:art-25.1.b" in casillas["tipo_renta"].legal_refs
     assert "trlirnr-rdleg-5-2004:art-25.1.b" in casillas["tipo_gravamen"].legal_refs
     assert "trlirnr-rdleg-5-2004:art-25.1.b" in casillas["cuota_integra"].legal_refs
+
+
+def test_modelo_210_2025_verification_predicates_guard_representante_fiscal_and_base_imponible() -> None:
+    """The 2025 revision carries both the representante-fiscal gate and the no-silent-
+
+    under-declaration base-imponible advisory in the same verification_predicates
+    array (per registry-revision-content-inline-or-fragmented, the array is
+    declared inline in revision.toml fragments, not in a bindings/ subdirectory).
+    """
+    modelo, catalogues = _load_modelo_210()
+    revision = modelo.revisions["2025"]
+    predicates = {p.predicate_id: p for p in revision.verification_predicates}
+
+    representante_fiscal = predicates["m210-representante-fiscal-required"]
+    assert representante_fiscal.expression == (
+        'profile_field_required("representante_fiscal_nif", "non_resident_irnr_non_eea")'
+    )
+    assert representante_fiscal.finding_kind == "BLOCKING_RULE"
+    assert "trlirnr-rdleg-5-2004:art-10" in tuple(str(r) for r in representante_fiscal.legal_refs)
+
+    base_imponible_guard = predicates["modelo-210-2025-rendimientos-integros-implica-base-imponible"]
+    assert base_imponible_guard.expression == 'implies_nonzero(["rendimientos_integros", "base_imponible"])'
+    assert base_imponible_guard.finding_kind == "ADVISORY"
+    assert "trlirnr-rdleg-5-2004:art-24" in tuple(str(r) for r in base_imponible_guard.legal_refs)
+
+    casillas = {casilla.id for casilla in revision.casillas}
+    assert "rendimientos_integros" in casillas
+    assert "base_imponible" in casillas
+
+    art_24 = catalogues.legal["trlirnr-rdleg-5-2004:art-24"]
+    assert art_24.corpus_ref.endswith("#a24")
+    # art-24's anchor sits on the <h1> heading, not a per-paragraph <p id=...>
+    # (unlike the 25.1.* sub-letter anchors), so cross-check it the same way
+    # the registry-build legal-catalogue validator does rather than via the
+    # per-paragraph slicing helper used for the lettered sub-anchors above.
+    verify_legal_catalogue({"trlirnr-rdleg-5-2004:art-24": art_24}, source_root=bundled_path())
+    corpus_text = bundled_path("corpus", "normatives", "html", "trlirnr-rdleg-5-2004.html").read_text(
+        encoding="utf-8",
+    )
+    for required_text in art_24.required_text:
+        assert required_text in corpus_text

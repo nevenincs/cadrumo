@@ -1,10 +1,10 @@
-"""Application services for bucket-scoped manual ledger transactions.
+"""Application export service for bucket-scoped manual ledger snapshots.
 
-Services operate over a :class:`TransactionCatalogueRepository` for ledger
-state, a :class:`BucketEventHistoryRepository` for durable audit events, and
-an optional :class:`InvoiceCatalogueRepository` for purchase-invoice evidence
-cascade on removal. The inner functions accept a :class:`TransactionCatalogue`
-or :class:`InvoiceCatalogue` directly when the caller supplies pre-loaded data.
+The export action reads a loaded :class:`TransactionCatalogue`, projects
+:class:`~aeat.application.ledger.LedgerExportRow` instances, serializes them
+with :func:`~aeat.application.export.serialize_tabular_rows`, emits a
+``LEDGER_TRANSACTION_EXPORTED`` bucket event, and returns
+:class:`~aeat.application.ledger.LedgerExportResult`.
 """
 
 from __future__ import annotations
@@ -86,10 +86,10 @@ def export_ledger_transactions(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
 ) -> LedgerExportResult:
-    """Export canonical bucket-local ledger transaction rows and emit an audit event.
+    """Export rows for a :class:`~aeat.application.ledger.LedgerExportCommand`.
 
     Returns:
-        :class:`LedgerExportResult`: The export outcome.
+        :class:`~aeat.application.ledger.LedgerExportResult`: The export outcome.
     """
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)

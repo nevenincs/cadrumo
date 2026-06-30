@@ -14,13 +14,14 @@ here via ``model_copy`` so P02 can be exercised before the registry re-stamp).
 from __future__ import annotations
 
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
 
 from ....core import BindingSourceKind, Period
 from ....core.resources import resources
-from ....domain.calculations.registry import ModeloRevision
+from ....domain.calculations.registry import ModeloRevision, RegistrySnapshot
 from ....tests.secure_sql import isolated_runtime_profile
 from .._errors import AggregationValidationError
 from .._modelo_bindings import RetencionesAggregationSourceResolver
@@ -46,6 +47,11 @@ _M111_BINDING_VALUES = {
 }
 
 
+@cache
+def _authority_snapshot(modelo: str, filing_year: int, period: str) -> RegistrySnapshot:
+    return resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+
+
 def _observation(nif: str) -> RetencionObservation:
     return RetencionObservation(
         source_kind="ledger_transaction",
@@ -67,7 +73,7 @@ def _m180_revision_with_retenciones_source() -> ModeloRevision:
     Simulates the P03 registry re-stamp via ``model_copy`` so the P02 resolver is
     exercised before the registry cutover lands.
     """
-    snapshot = resources().modelos.authority.snapshot("180", filing_year=2024, period="0A")
+    snapshot = _authority_snapshot("180", 2024, "0A")
     existing = next(b for b in snapshot.revision.bindings if str(b.id) == _PERCEPTOR_BINDING_ID)
     flipped = existing.model_copy(update={"source": BindingSourceKind.RETENCIONES_AGGREGATION})
     other = tuple(b for b in snapshot.revision.bindings if str(b.id) != _PERCEPTOR_BINDING_ID)
@@ -141,7 +147,7 @@ def test_resolver_materialises_modelo_115_count_and_base_from_real_store(tmp_pat
             ],
             source_kind="aggregate_pull",
         )
-        snapshot = resources().modelos.authority.snapshot("115", filing_year=2026, period="1T")
+        snapshot = _authority_snapshot("115", 2026, "1T")
 
         resolution = RetencionesAggregationSourceResolver().resolve(
             _context_for(modelo="115", filing_year=2026, period="1T", revision=snapshot.revision),
@@ -207,7 +213,7 @@ def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_real_sto
             ],
             source_kind="aggregate_pull",
         )
-        snapshot = resources().modelos.authority.snapshot("111", filing_year=2026, period="1T")
+        snapshot = _authority_snapshot("111", 2026, "1T")
 
         resolution = RetencionesAggregationSourceResolver().resolve(
             _context_for(modelo="111", filing_year=2026, period="1T", revision=snapshot.revision),
@@ -225,7 +231,7 @@ def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_real_sto
 
 def test_resolver_empty_modelo_115_store_fails_before_silent_zero(tmp_path: Path) -> None:
     """A declaring M115 revision without per-perceptor evidence refuses zero materialisation."""
-    snapshot = resources().modelos.authority.snapshot("115", filing_year=2026, period="1T")
+    snapshot = _authority_snapshot("115", 2026, "1T")
     with (
         isolated_runtime_profile(tmp_path=tmp_path),
         pytest.raises(AggregationValidationError) as exc_info,
@@ -263,7 +269,7 @@ def test_resolver_is_silent_when_revision_declares_no_retenciones_binding(tmp_pa
     declare it after the RET-1 P03 re-stamp, so this uses a non-retenciones modelo.)
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
-        snapshot = resources().modelos.authority.snapshot("303", filing_year=2024, period="1T")
+        snapshot = _authority_snapshot("303", 2024, "1T")
         resolution = RetencionesAggregationSourceResolver().resolve(
             CalculationSourceContext(
                 bucket_id="operator",

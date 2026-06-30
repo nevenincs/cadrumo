@@ -583,9 +583,11 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
         applicable_fiscal_residencies=frozenset({FiscalResidency.RESIDENT_IRPF}),
         not_applicable_reason=(
             "Modelo 100 no aplica: la declaración de la Renta corresponde "
-            "únicamente a las personas físicas contribuyentes del IRPF. El "
-            "tipo de contribuyente declarado no es una persona física, o "
-            "bien es un contribuyente NON_RESIDENT_IRNR en la ruta IRNR."
+            "únicamente a las personas físicas residentes contribuyentes del "
+            "IRPF. El tipo de contribuyente declarado no es una persona "
+            "física residente, o bien es un contribuyente NON_RESIDENT_IRNR. "
+            "Un contribuyente NON_RESIDENT_IRNR tributa por el IRNR y presenta "
+            "el Modelo 210 por la Sede Electrónica de la AEAT, no el Modelo 100."
         ),
         # Modelo 100 is the IRPF cuota self-assessment: an attribution
         # entity asked about it gets the pass-through verdict.

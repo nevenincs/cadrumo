@@ -17,14 +17,15 @@ diagnostic kinds emitted by ``aeat app ledger import PATH --provider PROVIDER --
   unknown column, encoding hint mismatch) without aborting the
   import outright.
 
-The CLI consumes :class:`LedgerImportDiagnostic` records via
-:func:`build_ledger_import_diagnostic` and renders them grouped
-by ``severity`` and ``kind``.
+The CLI consumes :class:`~aeat.application.transactions.LedgerImportDiagnostic`
+records via
+:func:`~aeat.application.transactions.build_ledger_import_diagnostic` and renders
+them grouped by ``severity`` and ``kind``.
 
 See Also:
-    :class:`LedgerImportDiagnosticKind`,
-    :class:`LedgerImportDiagnostic`, and
-    :func:`build_ledger_import_diagnostic`.
+    :class:`~aeat.application.transactions.LedgerImportDiagnosticKind`,
+    :class:`~aeat.application.transactions.LedgerImportDiagnostic`, and
+    :func:`~aeat.application.transactions.build_ledger_import_diagnostic`.
 """
 
 from __future__ import annotations
@@ -52,9 +53,10 @@ class LedgerImportDiagnostic(BaseModel):
     """One typed diagnostic emitted by the ledger import use-case.
 
     Attributes:
-        kind: Closed :class:`LedgerImportDiagnosticKind`.
-        severity: :class:`BaseSeverity`.
-        message: A strictly-typed :class:`Translatable` key.
+        kind: Closed
+            :class:`~aeat.application.transactions.LedgerImportDiagnosticKind`.
+        severity: :class:`~aeat.core.errors.BaseSeverity`.
+        message: A strictly-typed :class:`~aeat.core.i18n.Translatable` key.
         source_path: Optional pointer at the source artefact the
             diagnostic refers to (input file, provider name, etc.).
         source_locator: Optional sub-path inside ``source_path``
@@ -113,12 +115,13 @@ def build_ledger_import_diagnostic(
     source_locator: str | None = None,
     affected_transaction_ids: tuple[str, ...] = (),
 ) -> LedgerImportDiagnostic:
-    """Construct a :class:`LedgerImportDiagnostic` with the canonical field order.
+    """Construct a diagnostic with the canonical field order.
 
     Centralised factory so adding new optional metadata later means
     extending this helper rather than every emit site. The returned
-    diagnostic preserves the closed :class:`LedgerImportDiagnosticKind`
-    and :class:`BaseSeverity` values the CLI groups by.
+    :class:`~aeat.application.transactions.LedgerImportDiagnostic` preserves the
+    closed :class:`~aeat.application.transactions.LedgerImportDiagnosticKind`
+    and :class:`~aeat.core.errors.BaseSeverity` values the CLI groups by.
     """
     return LedgerImportDiagnostic(
         kind=kind,

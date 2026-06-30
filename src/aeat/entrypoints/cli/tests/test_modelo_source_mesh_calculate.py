@@ -67,7 +67,7 @@ def _create_profile() -> None:
     assert result.exit_code == 0, result.output
 
 
-def _create_303_work_unit() -> dict[str, object]:
+def _create_work_unit(*, modelo: str, year: int, period: str, revision: str) -> dict[str, object]:
     result = invoke_cached_cli(
         [
             "--format",
@@ -77,86 +77,33 @@ def _create_303_work_unit() -> dict[str, object]:
             "work",
             "create",
             "--modelo",
-            "303",
+            modelo,
             "--year",
-            "2026",
+            str(year),
             "--period",
-            "1T",
+            period,
             "--revision",
-            "2023-y-siguientes",
+            revision,
         ],
     )
     assert result.exit_code == 0, result.output
     return _payload(result.output)
+
+
+def _create_303_work_unit() -> dict[str, object]:
+    return _create_work_unit(modelo="303", year=2026, period="1T", revision="2023-y-siguientes")
 
 
 def _create_115_work_unit() -> dict[str, object]:
-    result = invoke_cached_cli(
-        [
-            "--format",
-            "json",
-            "app",
-            "modelo",
-            "work",
-            "create",
-            "--modelo",
-            "115",
-            "--year",
-            "2026",
-            "--period",
-            "1T",
-            "--revision",
-            "2019-y-siguientes",
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    return _payload(result.output)
+    return _create_work_unit(modelo="115", year=2026, period="1T", revision="2019-y-siguientes")
 
 
 def _create_111_work_unit() -> dict[str, object]:
-    result = invoke_cached_cli(
-        [
-            "--format",
-            "json",
-            "app",
-            "modelo",
-            "work",
-            "create",
-            "--modelo",
-            "111",
-            "--year",
-            "2025",
-            "--period",
-            "2T",
-            "--revision",
-            "2019-y-siguientes",
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    return _payload(result.output)
+    return _create_work_unit(modelo="111", year=2025, period="2T", revision="2019-y-siguientes")
 
 
 def _create_180_work_unit() -> dict[str, object]:
-    result = invoke_cached_cli(
-        [
-            "--format",
-            "json",
-            "app",
-            "modelo",
-            "work",
-            "create",
-            "--modelo",
-            "180",
-            "--year",
-            "2026",
-            "--period",
-            "0A",
-            "--revision",
-            "2023-y-siguientes",
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    return _payload(result.output)
+    return _create_work_unit(modelo="180", year=2026, period="0A", revision="2023-y-siguientes")
 
 
 def _raw_transaction(

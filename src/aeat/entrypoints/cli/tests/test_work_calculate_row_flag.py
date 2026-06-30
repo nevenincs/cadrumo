@@ -26,6 +26,7 @@ from ....domain.modelos._row_models import (
     Modelo347ContraparteRow,
     Modelo347ThresholdError,
     Modelo349OperadorRow,
+    Modelo349RectificacionRow,
     validate_m184_member_share_sum,
     validate_m347_threshold,
 )
@@ -236,6 +237,16 @@ class TestParseRowSpecM349:
         )
         assert isinstance(result, Modelo349OperadorRow)
 
+    @pytest.mark.parametrize("clave_operacion", ("H", "D", "C"))
+    def test_parse_operador_accepts_current_consignment_and_import_claves(self, clave_operacion: str) -> None:
+        result = _parse_row_spec(
+            "operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=EntidadDE "
+            f"clave_operacion={clave_operacion} importe=1000",
+        )
+
+        assert isinstance(result, Modelo349OperadorRow)
+        assert result.clave_operacion == clave_operacion
+
     def test_parse_operador_invalid_nif_format_raises(self) -> None:
         """operador with NIF not matching the country pattern raises BadParameter."""
         with pytest.raises(typer.BadParameter, match="NIF-IVA"):
@@ -266,6 +277,26 @@ class TestParseRowSpecM349:
             _parse_row_spec(
                 "operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=EntidadDE "
                 "clave_operacion=E importe=-100",
+            )
+
+    def test_parse_rectificacion_with_quoted_razon_social(self) -> None:
+        result = _parse_row_spec(
+            'rectificacion codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" '
+            "clave_operacion=E ejercicio=2025 periodo=2T base_rectificada=1100.00 base_anterior=1000.00",
+        )
+
+        assert isinstance(result, Modelo349RectificacionRow)
+        assert result.razon_social == "DE Auto GmbH"
+        assert result.ejercicio == "2025"
+        assert result.periodo == "2T"
+        assert result.base_rectificada == Decimal("1100.00")
+        assert result.base_anterior == Decimal("1000.00")
+
+    def test_parse_rectificacion_invalid_nif_format_raises(self) -> None:
+        with pytest.raises(typer.BadParameter, match="NIF-IVA"):
+            _parse_row_spec(
+                "rectificacion codigo_pais=DE nif_comunitario=DE12345678 razon_social=EntidadDE "
+                "clave_operacion=E ejercicio=2025 periodo=2T base_rectificada=1100.00 base_anterior=1000.00",
             )
 
 

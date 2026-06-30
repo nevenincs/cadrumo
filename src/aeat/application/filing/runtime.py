@@ -559,9 +559,15 @@ def collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaColle
                 "casilla_ids": "; ".join(identity_failures),
             },
         )
-    formulas = {formula.id: formula for formula in revision.formulas}
+    formulas_by_id = {formula.id: formula for formula in revision.formulas}
+    formulas_by_target: dict[CasillaId, FormulaDefinition] = {}
+    for formula in revision.formulas:
+        formulas_by_target.setdefault(formula.target_casilla_id, formula)
     casillas = tuple(
-        sorted((_casilla_schema(casilla, formulas) for casilla in revision.casillas), key=lambda c: c.casilla_id),
+        sorted(
+            (_casilla_schema(casilla, formulas_by_id, formulas_by_target) for casilla in revision.casillas),
+            key=lambda c: c.casilla_id,
+        ),
     )
     return RegistryCasillaCollection(
         casillas=casillas,
@@ -593,11 +599,14 @@ def _subview_from_snapshot(snapshot: RegistrySnapshot) -> RegistryModeloSubview:
 
 def _casilla_schema(
     casilla: CasillaDefinition,
-    formulas: dict[str, FormulaDefinition],
+    formulas_by_id: Mapping[FormulaId, FormulaDefinition],
+    formulas_by_target: Mapping[CasillaId, FormulaDefinition],
 ) -> RegistryCasillaSchema:
     formula_input_casilla_ids: tuple[CasillaId, ...] = ()
-    if casilla.formula is not None:
-        formula = formulas[casilla.formula]
+    formula_id = casilla.formula
+    formula = formulas_by_id[formula_id] if formula_id is not None else formulas_by_target.get(casilla.id)
+    if formula is not None:
+        formula_id = formula.id
         formula_input_casilla_ids = tuple(dict.fromkeys(expression_casilla_refs(formula.expression)))
     min_value: Decimal | None = None
     max_value: Decimal | None = None
@@ -608,7 +617,7 @@ def _casilla_schema(
         casilla_id=casilla.id,
         value_type=registry_value_type(casilla.data_type),
         required=casilla.required,
-        formula=casilla.formula,
+        formula=formula_id,
         formula_input_casilla_ids=formula_input_casilla_ids,
         legal_refs=casilla.legal_refs,
         source_refs=casilla.source_refs,

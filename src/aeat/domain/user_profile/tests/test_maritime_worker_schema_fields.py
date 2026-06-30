@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.resources import bundled_path
-from ...calculations.registry import load_registry_tree
+from ....core.resources import resources
 from .. import ProfileSchemaDefinition, load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -17,7 +16,7 @@ def schema() -> ProfileSchemaDefinition:
 
 
 def test_maritime_worker_fields_use_canonical_legal_refs(schema: ProfileSchemaDefinition) -> None:
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = resources().modelos.authority.catalogues
     legal_ids = set(catalogues.legal)
     expected = {
         "maritime_worker.worker_class": {

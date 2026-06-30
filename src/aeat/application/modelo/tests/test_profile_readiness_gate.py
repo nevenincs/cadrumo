@@ -33,11 +33,13 @@ from .. import (
     create_work_unit,
     ensure_modelo_work_unit_for_visible_target,
     mark_revision_verificado_completo,
+    modelo_applicability_refusal,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 6, 27, 12, 0, 0, tzinfo=UTC)
+_M100_REVISION = "2025"
 _M130_REVISION = "2019-y-siguientes"
 _M200_REVISION = "2024-y-siguientes"
 _M303_REVISION = "2023-y-siguientes"
@@ -116,6 +118,38 @@ def _store_nonresident_legal_entity_profile(bucket_id: str) -> None:
                 UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
                 UserProfileFact(path="taxpayer_type.fiscal_residency", value="non_resident_irnr"),
                 UserProfileFact(path="taxpayer_type.country_of_fiscal_residence", value="DE"),
+            ),
+            created_at=_NOW,
+            updated_at=_NOW,
+        ),
+    )
+
+
+def _store_nonresident_natural_person_profile(bucket_id: str) -> None:
+    """Store a declared IRNR non-resident natural-person profile.
+
+    This is the Olivia round-16 persona (issue #536): a non-resident who
+    is a NON_RESIDENT_IRNR contribuyente, not an IRPF resident, and who
+    must file Modelo 210 (IRNR) rather than Modelo 100 (the resident IRPF
+    Renta).
+    """
+    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name="Olivia Whitfield",
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="X1234567L"),
+                UserProfileFact(path="identity.name", value="Olivia"),
+                UserProfileFact(path="identity.surnames", value="Whitfield"),
+                UserProfileFact(path="activities.description", value="UK-source pension"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="taxpayer_type.fiscal_residency", value="non_resident_irnr"),
+                UserProfileFact(path="taxpayer_type.country_of_fiscal_residence", value="GB"),
+                UserProfileFact(path="taxpayer_type.representante_fiscal_nif", value="12345678Z"),
+                UserProfileFact(path="taxpayer_type.representante_fiscal_nombre", value="Gestoria Madrid SL"),
             ),
             created_at=_NOW,
             updated_at=_NOW,
@@ -262,10 +296,7 @@ def test_create_work_unit_service_refuses_nonresident_legal_entity_m200(tmp_path
             "bucket_id": _NONRESIDENT_PROFILE_ID,
             "modelo": Modelo.M200.value,
             "applicability_verdict": "not_applicable",
-            "legal_refs": (
-                "ley-27-2014:art-124, trlirnr-rdleg-5-2004:art-2, "
-                "trlirnr-rdleg-5-2004:art-24"
-            ),
+            "legal_refs": ("ley-27-2014:art-124, trlirnr-rdleg-5-2004:art-2, trlirnr-rdleg-5-2004:art-24"),
         }
         assert len(repository.load()) == 0
 
@@ -333,6 +364,104 @@ def test_calculate_service_refuses_existing_nonresident_legal_entity_m200(tmp_pa
         assert "NON_RESIDENT_IRNR" in str(excinfo.value)
         assert "establecimiento permanente" in str(excinfo.value)
         assert len(calculation_repository.load()) == 0
+
+
+def test_calculate_service_refuses_existing_nonresident_natural_person_m100(tmp_path: Path) -> None:
+    """Issue #536: a non-resident natural person is refused an M100 calculate.
+
+    The Olivia round-16 scenario: a NON_RESIDENT_IRNR contribuyente owns
+    an existing Modelo 100 work unit (created while resident, or bypassed
+    at create). The calculate service must re-check applicability against
+    the current profile and refuse — never silently produce a resident
+    IRPF Renta calculation for a non-resident. The refusal names the IRNR
+    route and the Modelo 210 path, and persists no revision.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_NONRESIDENT_PROFILE_ID) as profile:
+        _store_nonresident_natural_person_profile(_NONRESIDENT_PROFILE_ID)
+        work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
+        calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        work_unit = _store_work_unit(
+            work_repository,
+            bucket_id=_NONRESIDENT_PROFILE_ID,
+            modelo=Modelo.M100,
+            filing_year=2025,
+            period_code="0A",
+            revision_id=_M100_REVISION,
+        )
+
+        with pytest.raises(ModeloProfileReadinessError) as excinfo:
+            calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs={},
+                binding_values={},
+                work_unit_repository=work_repository,
+                calculation_repository=calculation_repository,
+                clock=_NOW,
+            )
+
+        assert "NON_RESIDENT_IRNR" in str(excinfo.value)
+        assert "Modelo 210" in str(excinfo.value)
+        assert excinfo.value.context["applicability_verdict"] == "not_applicable"
+        assert len(calculation_repository.load()) == 0
+
+
+def test_m100_applicability_gate_distinguishes_resident_from_nonresident_natural_person() -> None:
+    """Issue #536: the shared readiness gate refuses M100 for a non-resident,
+    yet accepts it for a resident — the distinction is the authoritative
+    ``fiscal_residency`` signal, not a blanket refusal.
+
+    The same ``modelo_applicability_refusal`` function the calculate,
+    verify, file, and export paths consult: it returns a refusal naming
+    the IRNR / Modelo 210 route for a NON_RESIDENT_IRNR natural person and
+    returns ``None`` (applicable, no refusal) for a resident IRPF natural
+    person whose only differing fact is the residency axis.
+    """
+    nonresident = UserProfileRecord(
+        profile_id=_NONRESIDENT_PROFILE_ID,
+        display_name="Olivia Whitfield",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="X1234567L"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            UserProfileFact(path="taxpayer_type.fiscal_residency", value="non_resident_irnr"),
+            UserProfileFact(path="taxpayer_type.country_of_fiscal_residence", value="FR"),
+        ),
+        created_at=_NOW,
+        updated_at=_NOW,
+    )
+    resident = UserProfileRecord(
+        profile_id=_OPERATOR_PROFILE_ID,
+        display_name="Resident operator",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            UserProfileFact(path="taxpayer_type.fiscal_residency", value="resident_irpf"),
+        ),
+        created_at=_NOW,
+        updated_at=_NOW,
+    )
+
+    refusal = modelo_applicability_refusal(
+        record=nonresident,
+        bucket_id=_NONRESIDENT_PROFILE_ID,
+        modelo=Modelo.M100.value,
+    )
+    assert refusal is not None
+    message, context = refusal
+    assert "NON_RESIDENT_IRNR" in message
+    assert "Modelo 210" in message
+    assert context["applicability_verdict"] == "not_applicable"
+
+    assert (
+        modelo_applicability_refusal(
+            record=resident,
+            bucket_id=_OPERATOR_PROFILE_ID,
+            modelo=Modelo.M100.value,
+        )
+        is None
+    )
 
 
 def test_create_work_unit_service_refuses_pre_activity_m303_and_persists_no_work_unit(tmp_path: Path) -> None:
@@ -456,7 +585,7 @@ def test_stale_pre_activity_m130_calculate_and_verify_refuse_before_revision_mut
                 work_unit_repository=work_repository,
                 calculation_repository=calculation_repository,
                 clock=_NOW,
-        )
+            )
 
         assert "Modelo 130 2026 2T is before" in str(verify_exc.value)
         persisted_revision = calculation_repository.load().get(revision_id)

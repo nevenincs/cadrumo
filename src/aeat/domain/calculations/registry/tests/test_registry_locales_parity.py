@@ -4,10 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import bundled_path
-from .._loader import load_registry_tree
+from .....core.resources import resources
+from .. import ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _modelos_by_id() -> dict[str, ModeloDefinition]:
+    return {modelo.id: modelo for modelo in resources().modelos.authority.modelos}
 
 
 def test_complete_registry_tree_locales_compile_and_validate_cleanly() -> None:
@@ -17,14 +21,12 @@ def test_complete_registry_tree_locales_compile_and_validate_cleanly() -> None:
     casilla_ids/continuidad_ids will fail the loader's referential integrity checks
     and raise a RegistryValidationError.
     """
-    root = bundled_path("registry", "aeat")
-
-    # This loads all models and legal parameters, parsing and verifying every locales/*.toml file
-    modelos, _catalogues = load_registry_tree(root)
-    assert len(modelos) > 0, "No modelos loaded from registry"
+    # This loads all models and legal parameters, parsing and verifying every locales/*.toml file.
+    modelos_by_id = _modelos_by_id()
+    assert modelos_by_id, "No modelos loaded from registry"
 
     # Verify that M130 has our translations loaded
-    m130 = next(m for m in modelos if str(m.id) == "130")
+    m130 = modelos_by_id["130"]
     revision = m130.revisions["2019-y-siguientes"]
     casilla_01 = next(c for c in revision.casillas if c.id == "01")
 
@@ -39,7 +41,7 @@ def test_complete_registry_tree_locales_compile_and_validate_cleanly() -> None:
     assert casilla_01.get_help("hu") == "Az adóévben elért összesített vállalkozási bevétel."
 
     # Verify Modelo 100 (revision 2024)
-    m100 = next(m for m in modelos if str(m.id) == "100")
+    m100 = modelos_by_id["100"]
     rev100 = m100.revisions["2024"]
     casilla_100_01 = next(c for c in rev100.casillas if c.id == "0001")
     assert casilla_100_01.get_label("en") == "Taxpayer obtaining yield"
@@ -48,7 +50,7 @@ def test_complete_registry_tree_locales_compile_and_validate_cleanly() -> None:
     assert casilla_100_01.get_help("en") == "Selector for the taxpayer obtaining the business yield."
 
     # Verify Modelo 200 (revision 2024-y-siguientes)
-    m200 = next(m for m in modelos if str(m.id) == "200")
+    m200 = modelos_by_id["200"]
     rev200 = m200.revisions["2024-y-siguientes"]
     casilla_200_01 = next(c for c in rev200.casillas if c.id == "00001")
     assert casilla_200_01.get_label("en") == "Non-profit entity under special tax regime Title II Law 49/2002"
@@ -63,7 +65,7 @@ def test_complete_registry_tree_locales_compile_and_validate_cleanly() -> None:
     )
 
     # Verify Modelo 303 (revision 2023-y-siguientes)
-    m303 = next(m for m in modelos if str(m.id) == "303")
+    m303 = modelos_by_id["303"]
     rev303 = m303.revisions["2023-y-siguientes"]
     casilla_303_gen = next(c for c in rev303.casillas if c.id == "iva.repercutido.general")
     assert casilla_303_gen.get_label("en") == "Output VAT amount at the standard rate (21%)"
@@ -74,10 +76,7 @@ def test_complete_registry_tree_locales_compile_and_validate_cleanly() -> None:
 
 def test_modelo_130_all_casillas_have_schema_localized_labels_and_help() -> None:
     """Modelo 130 is the complete small-model exemplar for schema-local translations."""
-    root = bundled_path("registry", "aeat")
-    modelos, _catalogues = load_registry_tree(root)
-
-    m130 = next(m for m in modelos if str(m.id) == "130")
+    m130 = _modelos_by_id()["130"]
     revision = m130.revisions["2019-y-siguientes"]
     assert len(revision.casillas) == 20
 

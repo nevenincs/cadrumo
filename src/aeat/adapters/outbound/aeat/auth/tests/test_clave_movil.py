@@ -139,19 +139,26 @@ def test_browser_session_cleanup_is_bounded_by_settings_timeout(tmp_path: Path) 
 
 
 class TestIdentityClassification:
-    def test_classifies_dni(self) -> None:
-        assert _classify_identity("12345678Z") == "DNI"
+    @pytest.mark.parametrize(
+        ("identity", "expected_kind"),
+        (
+            pytest.param("12345678Z", "DNI", id="dni"),
+            pytest.param("X1234567L", "NIE", id="nie"),
+        ),
+    )
+    def test_classifies_dni_and_nie(self, identity: str, expected_kind: str) -> None:
+        assert _classify_identity(identity) == expected_kind
 
-    def test_classifies_nie(self) -> None:
-        assert _classify_identity("X1234567L") == "NIE"
-
-    def test_rejects_cif(self) -> None:
-        with pytest.raises(ClaveMovilConfigurationError, match=r"NIF|NIE|identity|CIF"):
-            _classify_identity("B12345674")
-
-    def test_rejects_empty(self) -> None:
-        with pytest.raises(ClaveMovilConfigurationError, match=r"NIF|NIE|identity|empty"):
-            _classify_identity("")
+    @pytest.mark.parametrize(
+        ("identity", "expected_message"),
+        (
+            pytest.param("B12345674", r"NIF|NIE|identity|CIF", id="cif"),
+            pytest.param("", r"NIF|NIE|identity|empty", id="empty"),
+        ),
+    )
+    def test_rejects_unsupported_identity(self, identity: str, expected_message: str) -> None:
+        with pytest.raises(ClaveMovilConfigurationError, match=expected_message):
+            _classify_identity(identity)
 
 
 class TestAttemptDiagnostics:
@@ -345,38 +352,39 @@ class TestAuthenticateFresh:
 
         _run(run())
 
-    def test_non_qr_fallback_rejects_missing_nie_support(
+    @pytest.mark.parametrize(
+        ("env_overrides", "expected_message"),
+        (
+            pytest.param(
+                {
+                    "AEAT_CLAVE_MOVIL_DNI_NIE": "Y0000000Z",
+                    "AEAT_CLAVE_PREFER_NON_QR": "true",
+                },
+                r"AEAT_CLAVE_MOVIL_NIE_SOPORTE|non-QR|NIE",
+                id="nie-support",
+            ),
+            pytest.param(
+                {
+                    "AEAT_CLAVE_MOVIL_DNI_NIE": "12345678Z",
+                    "AEAT_CLAVE_PREFER_NON_QR": "true",
+                },
+                r"AEAT_CLAVE_MOVIL_DNI_FECHA|non-QR|fallback",
+                id="dni-fecha",
+            ),
+        ),
+    )
+    def test_non_qr_fallback_rejects_missing_required_identity_support(
         self,
         tmp_path: Path,
+        env_overrides: dict[str, str],
+        expected_message: str,
     ) -> None:
-        settings = _settings_for(
-            tmp_path,
-            AEAT_CLAVE_MOVIL_DNI_NIE="Y0000000Z",
-            AEAT_CLAVE_PREFER_NON_QR="true",
-        )
+        settings = _settings_for(tmp_path, **env_overrides)
         provider = ClaveMovilAuthProvider(settings)
         browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
 
         async def run() -> None:
-            with pytest.raises(ClaveMovilConfigurationError, match=r"AEAT_CLAVE_MOVIL_NIE_SOPORTE|non-QR|NIE"):
-                await provider.authenticate(browser_session=browser_session)
-
-        _run(run())
-
-    def test_non_qr_fallback_rejects_missing_fecha(
-        self,
-        tmp_path: Path,
-    ) -> None:
-        settings = _settings_for(
-            tmp_path,
-            AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z",
-            AEAT_CLAVE_PREFER_NON_QR="true",
-        )
-        provider = ClaveMovilAuthProvider(settings)
-        browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
-
-        async def run() -> None:
-            with pytest.raises(ClaveMovilConfigurationError, match=r"AEAT_CLAVE_MOVIL_DNI_FECHA|non-QR|fallback"):
+            with pytest.raises(ClaveMovilConfigurationError, match=expected_message):
                 await provider.authenticate(browser_session=browser_session)
 
         _run(run())

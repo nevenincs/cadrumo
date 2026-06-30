@@ -10,8 +10,8 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.storage.errors import DecryptionError
 from ....core import BindingSourceKind
-from ....core.resources import bundled_path
-from ....domain.calculations.registry import CasillaId, load_registry_tree, validated_casilla_id
+from ....core.resources import resources
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from .. import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
@@ -306,8 +306,7 @@ def test_source_resolution_merge_preserves_values_provenance_and_diagnostics() -
 
 
 def test_unhandled_source_diagnostics_name_modelo_binding_and_source_kind() -> None:
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo_303 = next(modelo for modelo in modelos if modelo.id == "303")
+    modelo_303 = resources().modelos.get("303")
     revision = modelo_303.revisions["2009-y-siguientes"]
 
     diagnostics = collect_unhandled_source_diagnostics(revision, handled_sources=frozenset())

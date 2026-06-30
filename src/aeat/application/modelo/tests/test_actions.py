@@ -17,7 +17,7 @@ import pytest
 
 from ....core import Period
 from ....core.aggregation import BindingSourceKind
-from ....core.resources import bundled_path, resources
+from ....core.resources import resources
 from ....domain.calculations.registry import (
     BindingId,
     CasillaDefinition,
@@ -25,9 +25,7 @@ from ....domain.calculations.registry import (
     DataBindingDefinition,
     InputKind,
     RegistryValidationError,
-    build_snapshot,
     calculate_registry_snapshot,
-    load_registry_tree,
     validated_casilla_id,
 )
 from ....domain.calculations.registry._schema import ModeloRevision, PeriodSelector, VerificationPredicateDefinition
@@ -731,15 +729,7 @@ class TestWorkflowInputMismatchError:
 def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() -> None:
     """Verify-time draft replay must not feed M100 0224 back as an operator input."""
     work_unit = _minimal_work_unit(modelo="100", period="0A", filing_year=2024, revision_id="2024")
-    registry_root = bundled_path() / "registry" / "aeat"
-    modelos, catalogues = load_registry_tree(registry_root)
-    snapshot = build_snapshot(
-        {modelo.id: modelo for modelo in modelos}["100"],
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2024,
-        period="0A",
-    )
+    snapshot = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A", revision_id="2024")
     binding_values: dict[BindingId, Decimal] = {
         "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),

@@ -649,6 +649,7 @@ application:
         evidència de compra o identificadors d'adjunt.
       purchase_evidence_already_set: La transacció del llibre diari ja té un purchase_invoice_evidence_id;
         elimineu-lo o substituïu-lo a través del flux d'adjunts.
+      idempotency_key_conflict: 'La clau d''idempotència ja identifica una transacció emmagatzemada amb dades diferents. Useu una clau d''idempotència nova per a un moviment diferent, o ometeu la clau per afegir un duplicat deliberat.'
   live:
     expedientes:
       errors:
@@ -993,6 +994,7 @@ application:
           mitjancant l'ordre `aeat config profile edit`. El TRLIRNR Art. 10 exigeix
           que els declarants IRNR no residents a la UE/EEE designin un representant
           per a comunicacions amb l'AEAT.
+      modelo_210_2025_rendimientos_integros_implica_base_imponible: 'Els rendiments íntegres són positius però la base imposable és zero; reviseu la determinació de la base imposable.'
     iva_wallet:
       correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
         Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu
@@ -1282,6 +1284,11 @@ categories:
   test_profile:
     display_label_851219: Etiqueta de visualització 851219
 cli:
+  agent:
+    app_help: 'Materialitza el harness de l''operador (regles, persones, habilitats) per a un runtime d''agent.'
+    materialise:
+      output_help: 'Directori on escriure l''espai de treball de l''operador.'
+      summary: 'Espai de treball de l''operador escrit a {path}: {rules} regles, {personas} persones, {skills} habilitats.'
   app:
     ledger:
       evidence:
@@ -1546,13 +1553,6 @@ cli:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         list_help: Llistar els bindings requerits i disponibles per a un model / exercici
           / període
-        m200_m202_relation_channel: "%{relation_id}\tM202 %{modality} casilla %{casilla}\t\
-          usar --relation %{relation_id}=VALUE\tbinding desti associat %{binding_id}"
-        m200_m202_relation_guidance: Els pagos fraccionados M202 del Modelo 200 alimenten
-          DP200014B:00611 mitjancant valors --relation, no mitjancant ids de binding
-          desti en --binding. Els canals M202 40.3 casilla 34 i 40.2 casilla 03 son
-          mutuament exclusius per declaracio; en introduir valors manuals de relacio,
-          posa la suma anual a la modalitat elegida i 0 a la modalitat no usada.
         missing_help: 'Filtrar als bindings encara pendents: descarta els de valor
           constant i els que el perfil actiu ja resol. Sense perfil actiu es mostren
           tots els bindings no constants (la resposta conservadora).'
@@ -1566,6 +1566,8 @@ cli:
         unknown_keys: 'Clau(s) de --binding desconeguda(es) {keys}; vinculacions conegudes
           per a {code}@{revision} ({period}): {suggestion}.'
         year_help: Exercici fiscal del model (p. ex. 2026)
+        relation_input_guidance: 'Algunes vinculacions següents s''alimenten de relacions del registre (agregacions entre models o entre períodes), no de valors --binding directes. Indiqueu cadascuna amb --relation RELATION_ID=VALUE abans de calcular.'
+        relation_input_channel: "%{binding_id}\talimentada per la relació %{relation_id}\tuseu --relation %{relation_id}=VALUE"
       casillas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         explain_help: Incloure el text d'ajuda localitzat a la sortida de text.
@@ -2086,6 +2088,7 @@ cli:
         revision_selector_help: Selector de revisio.
         revision_show_help: Mostrar els valors de casella desats d'una revisió de
           càlcul concreta (sense recalcular)
+        revision_verbose_help: Mostrar la traça completa de la fórmula per casella (op, formula_id, referències i valors dels operands).
         revisions_help: Llistar les revisions de càlcul, opcionalment filtrades per
           unitat de treball
         row_empty_key: Clau de camp buida a --row {token}; cada camp ha de tenir el
@@ -2646,10 +2649,11 @@ cli:
         persistit.
     workflow_help: Mostrar ajuda del flux de configuració
   contract:
-    app_help: 'Emet el manifest de capacitats de l''operador: arrels, families d''ordres, cicle de vida i esquemes de resultat.'
+    app_help: 'Emet el manifest de capacitats de l''operador: arrels, families d''ordres,
+      cicle de vida i esquemes de resultat.'
     summary_commands: 'Ordres registrades: {count}'
     summary_families: 'Families d''ordres: {count}'
-    summary_heading: 'Manifest de la superficie de l''operador'
+    summary_heading: Manifest de la superficie de l'operador
     summary_lifecycle: 'Cicle de vida del model: {steps}'
     summary_roots: 'Arrels: {roots}'
   diagnostics:
@@ -2734,6 +2738,7 @@ cli:
       direction_help: Sentit de la transacció (INCOMING, OUTGOING o INTERNAL_TRANSFER)
       help: Afegeix una transacció manual al llibre del perfil actiu
       idempotency_key_help: Clau d'idempotència aportada pel cridador
+      idempotent_noop: 'Operació idempotent sense efecte: ja existeix una transacció amb aquesta clau d''idempotència (%{transaction_id}); no s''ha afegit res.'
       irpf_category_help: Categoria d'IRPF per a càlculs de models
       iva_amount_help: Import d'IVA de la transacció
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
@@ -2896,7 +2901,7 @@ cli:
         la passa al classificador.
       reaffirm_help: Reafirmar la classificació d'una transacció ja classificada.
       reaffirmed: Classificació reafirmada.
-      reason_help: Motiu en text lliure que es registra amb una decisió --reject.
+      reason_help: 'Motiu en text lliure que es registra com a notes de la transacció en una classificació manual, o amb una decisió --reject.'
       reject_apply_exclusive: '--reject no es pot combinar amb --apply: reject registra
         un suggeriment rebutjat, apply un d''acceptat.'
       reject_help: Registra un rebuig explícit del suggeriment del model com a esdeveniment
@@ -2917,6 +2922,7 @@ cli:
       vision_model_help: Substitueix el model de visió local d'Ollama per llegir una
         factura escanejada o en imatge (p. ex. qwen2.5vl:7b); per defecte fa servir
         el model configurat.
+      reason_empty: 'Rebutjat. --reason ha de registrar per què classifiques aquesta transacció. Indica un motiu no buit, o omet --reason.'
     doclink:
       actor_help: Etiqueta de l'operador.
       help: Descarrega un enllaç de document de Drive i desa'n els bytes com a evidència

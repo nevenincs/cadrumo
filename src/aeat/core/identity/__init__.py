@@ -35,6 +35,14 @@ from ._documents import (
     IdentityError,
     validate_identity,
 )
+from ._nif_iva import (
+    NIF_IVA_FORMATS,
+    NifIvaFormatSpec,
+    NifIvaPrefix,
+    nif_iva_format_for_country,
+    nif_iva_prefix_for_country,
+    normalise_nif_iva,
+)
 from ._profile import ProfileId
 from ._snapshot import SnapshotId
 from ._tax_id import nif_check_letter, validate_spanish_tax_id
@@ -62,14 +70,20 @@ malformed identifier fails fast at the model boundary with an
 """
 
 __all__ = [
+    "NIF_IVA_FORMATS",
     "BucketId",
     "IdentityDocument",
     "IdentityError",
+    "NifIvaFormatSpec",
+    "NifIvaPrefix",
     "ProfileId",
     "SnapshotId",
     "SubjectTaxId",
     "TransactionId",
     "nif_check_letter",
+    "nif_iva_format_for_country",
+    "nif_iva_prefix_for_country",
+    "normalise_nif_iva",
     "validate_identity",
     "validate_spanish_tax_id",
 ]

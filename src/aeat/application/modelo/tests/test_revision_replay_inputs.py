@@ -15,7 +15,7 @@ from ....domain.modelos._calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._row_models import Modelo349OperadorRow, ModeloDetailRow
+from ....domain.modelos._row_models import Modelo349OperadorRow, Modelo349RectificacionRow, ModeloDetailRow
 from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....tests.registry_observations import registry_grounded_observations
 from .._revision_replay_inputs import revision_filing_replay_inputs
@@ -193,3 +193,33 @@ def test_revision_replay_inputs_strip_m349_country_prefix_from_export_nif_subfie
 
     assert replay_inputs["iva-349-operador-row-codigo-pais"] == {"1": "DE"}
     assert replay_inputs["iva-349-operador-row-nif"] == {"1": "123456789"}
+
+
+def test_revision_replay_inputs_project_m349_rectification_row_bindings() -> None:
+    work_unit = _work_unit(modelo="349", filing_year=2026, period_code="1T")
+    revision = _revision(
+        work_unit,
+        detail_rows=(
+            Modelo349RectificacionRow(
+                codigo_pais="DE",
+                nif_comunitario="DE123456789",
+                razon_social="ALEMAN GMBH",
+                clave_operacion="E",
+                ejercicio="2025",
+                periodo="2T",
+                base_rectificada=Decimal("1100.00"),
+                base_anterior=Decimal("1000.00"),
+            ),
+        ),
+    )
+
+    replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
+
+    assert replay_inputs["iva-349-rectificacion-row-codigo-pais"] == {"1": "DE"}
+    assert replay_inputs["iva-349-rectificacion-row-nif"] == {"1": "123456789"}
+    assert replay_inputs["iva-349-rectificacion-row-apellidos"] == {"1": "ALEMAN GMBH"}
+    assert replay_inputs["iva-349-rectificacion-row-clave"] == {"1": "E"}
+    assert replay_inputs["iva-349-rectificacion-row-ejercicio"] == {"1": "2025"}
+    assert replay_inputs["iva-349-rectificacion-row-periodo"] == {"1": "2T"}
+    assert replay_inputs["iva-349-rectificacion-row-base-rectificada"] == {"1": Decimal("1100.00")}
+    assert replay_inputs["iva-349-rectificacion-row-base-anterior"] == {"1": Decimal("1000.00")}

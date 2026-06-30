@@ -293,6 +293,87 @@ def test_invoice_catalogue_source_resolver_folds_slim_consignment_transfer_for_m
     assert {item.source_ref for item in resolution.provenance} == {f"collectible_invoice:{added.record.invoice_id}"}
 
 
+def test_invoice_catalogue_source_resolver_accepts_current_slim_business_invoice_m349_claves(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    collectible_service = CollectibleInvoiceService(settings=secure_profile.settings)
+    payable_service = PayableInvoiceService(settings=secure_profile.settings)
+    collectible_cases = (
+        (IntracomOperationType.E, "DE100000001", Decimal("100.00")),
+        (IntracomOperationType.H, "DE100000002", Decimal("200.00")),
+        (IntracomOperationType.M, "DE100000003", Decimal("300.00")),
+        (IntracomOperationType.S, "DE100000004", Decimal("400.00")),
+        (IntracomOperationType.T, "DE100000005", Decimal("500.00")),
+        (IntracomOperationType.R, "DE100000006", Decimal("600.00")),
+        (IntracomOperationType.D, "DE100000007", Decimal("700.00")),
+        (IntracomOperationType.C, "DE100000008", Decimal("800.00")),
+    )
+    payable_cases = (
+        (IntracomOperationType.A, "DE200000001", Decimal("900.00")),
+        (IntracomOperationType.ADQUISICION_SERVICIOS, "DE200000002", Decimal("1000.00")),
+        (IntracomOperationType.T, "DE200000003", Decimal("1100.00")),
+    )
+
+    for index, (operation_type, nif, amount) in enumerate(collectible_cases, start=1):
+        collectible_service.add(
+            bucket_id=secure_profile.bucket_id,
+            counterparty_nif=nif,
+            counterparty_name=f"Collectible {operation_type.value}",
+            invoice_number=f"DE-CURRENT-COLLECTIBLE-{index}",
+            invoice_date="2026-03-10",
+            taxable_base=amount,
+            iva_rate=Decimal("0"),
+            country_code="DE",
+            operation_type=operation_type,
+        )
+    for index, (operation_type, nif, amount) in enumerate(payable_cases, start=1):
+        payable_service.add(
+            bucket_id=secure_profile.bucket_id,
+            counterparty_nif=nif,
+            counterparty_name=f"Payable {operation_type.value}",
+            invoice_number=f"DE-CURRENT-PAYABLE-{index}",
+            invoice_date="2026-03-10",
+            taxable_base=amount,
+            iva_rate=Decimal("0"),
+            country_code="DE",
+            operation_type=operation_type,
+        )
+    snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
+
+    resolution = InvoiceCatalogueSourceResolver(
+        invoice_repository=InvoiceCatalogueRepository(objects=secure_profile.repository),
+        business_invoice_repository=BusinessOperationInvoiceRepository(objects=secure_profile.repository),
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=secure_profile.bucket_id,
+            modelo="349",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision=snapshot.revision,
+        ),
+    )
+
+    expected_rows = {
+        (nif, operation_type.value): amount for operation_type, nif, amount in (*collectible_cases, *payable_cases)
+    }
+    rows = {(row.nif_comunitario, row.clave_operacion): row for row in resolution.detail_rows}
+    assert set(rows) == set(expected_rows)
+    for key, amount in expected_rows.items():
+        assert rows[key].importe == amount
+    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal(len(expected_rows))
+    assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == sum(
+        expected_rows.values(),
+        Decimal("0"),
+    )
+    assert resolution.binding_values["iva-349-declarante-numero-operadores-adquisicion"] == Decimal(
+        len(payable_cases),
+    )
+    assert resolution.binding_values["iva-349-declarante-importe-operaciones-adquisicion"] == sum(
+        (amount for _, _, amount in payable_cases),
+        Decimal("0"),
+    )
+
+
 def test_invoice_catalogue_source_resolver_refuses_payable_consignment_transfer_for_m349(
     secure_profile: TestRuntimeProfile,
 ) -> None:

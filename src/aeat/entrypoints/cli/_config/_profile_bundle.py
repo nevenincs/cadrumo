@@ -174,7 +174,9 @@ def _build_export_sensitivity_notice(out: Path) -> Notice:
                 "This bundle is UNENCRYPTED and contains sensitive financial data: "
                 "the raw tax id (not redacted), the full ledger, calculation revisions, "
                 "and filing records. It was written to {out}. Delete it after transfer; "
-                "do not email, sync, or leave it on disk."
+                "do not email, sync, or leave it on disk. It is NOT a full backup: "
+                "attachment evidence bytes, AEAT captures, and the audit trail are "
+                "excluded. Use the encrypted recovery archive for a complete backup."
             ),
             out=str(out),
         ),

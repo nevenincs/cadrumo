@@ -927,7 +927,8 @@ def verify_modelo_revision(
     now = clock or _utc_now()
     report_id = derive_verification_report_id(
         calculation_revision_id=calculation_revision_id,
-        run_at=now,
+        completeness_status=completeness,
+        findings=tuple(findings),
         verified_by=actor.strip(),
     )
     report = VerificationReport(
@@ -1271,6 +1272,8 @@ def _detail_row_template_casilla_is_satisfied(
         return any(getattr(row, "row_type", None) == "operador" for row in target.detail_rows)
     if section != "rectificacion":
         return False
+    if any(getattr(row, "row_type", None) == "rectificacion" for row in target.detail_rows):
+        return True
     return target.casilla_values.get(_M349_NUMERO_RECTIFICACIONES_CASILLA, Decimal("0")) == Decimal(
         "0"
     ) and target.casilla_values.get(_M349_IMPORTE_RECTIFICACIONES_CASILLA, Decimal("0")) == Decimal("0")

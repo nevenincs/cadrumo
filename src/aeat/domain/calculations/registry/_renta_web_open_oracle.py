@@ -13,7 +13,7 @@ from ....core import STRICT_FROZEN_CONFIG
 from ....core.config import Settings
 from ....core.decimal import normalize_decimal_separators
 from ._errors import RegistryValidationError
-from ._ids import CasillaId, validated_casilla_id
+from ._ids import CasillaId, OracleId, validated_casilla_id
 from ._live_parity import (
     OracleSurfaceKind,
     ParityFieldComparison,
@@ -24,6 +24,7 @@ from ._live_parity import (
 from ._remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
 
 _RENTA_WEB_OPEN_DEFAULT_YEAR: Final[int] = 2025
+_RENTA_WEB_OPEN_ORACLE_ID: OracleId = "modelo-100-renta-web-open"
 
 
 class RentaWebOpenModel(BaseModel):
@@ -238,7 +239,7 @@ class RentaWebOpenOracle:
         self._driver = driver
 
     @property
-    def oracle_id(self) -> str:
+    def oracle_id(self) -> OracleId:
         """Return the stable identifier for this parity oracle.
 
         Returns:
@@ -246,7 +247,7 @@ class RentaWebOpenOracle:
             ``ParityResult`` so a verdict can be traced back to the oracle that
             produced it.
         """
-        return "modelo-100-renta-web-open"
+        return _RENTA_WEB_OPEN_ORACLE_ID
 
     @property
     def surface_kind(self) -> OracleSurfaceKind:

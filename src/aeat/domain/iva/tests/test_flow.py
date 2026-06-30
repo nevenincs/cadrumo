@@ -6,7 +6,7 @@ import tomllib
 
 import pytest
 
-from ....core.resources import bundled_path
+from ....core.resources import bundled_path, resources
 from ...calculations.registry._binding_selector_utils import selector_as_dict
 from .. import (
     InvoiceKind,
@@ -140,9 +140,7 @@ def test_iva_flow_corpus_excerpts_present_with_boe_quotes() -> None:
 def test_iva_flow_load_registry_recognises_three_articles() -> None:
     """The registry tree loader must surface the three LIVA articles in
     the catalogue."""
-    from ...calculations.registry import load_registry_tree
-
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = resources().modelos.authority.catalogues
     assert "ley-37-1992:art-84" in catalogues.legal
     assert "ley-37-1992:art-88" in catalogues.legal
     assert "ley-37-1992:art-92" in catalogues.legal
@@ -267,14 +265,12 @@ def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
     tiers) + INVERSION_SUJETO_PASIVO — the same flows as DEVENGADA_FLOW_DIRECTIONS.
     This test is a contract gate: if the substrate's devengada set ever
     changes, this test fires unless 303's formula updates in lockstep."""
-    from ...calculations.registry import load_registry_tree
     from .. import (
         DEVENGADA_FLOW_DIRECTIONS,
         IvaFlowDirection,
     )
 
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    m303 = next(m for m in modelos if m.id == "303")
+    m303 = resources().modelos.get("303")
     revision = m303.revisions["2009-y-siguientes"]
 
     # Each ledger_iva_aggregation binding declares its flow direction in

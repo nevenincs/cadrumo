@@ -147,7 +147,7 @@ def test_m100_revision_binds_0171_to_income_source_and_resolves() -> None:
     wiring under test are exactly what ships. Expected value derived from the
     input, never copied from engine output.
     """
-    modelo_def = next(item for item in resources().modelos.all() if item.id == "100")
+    modelo_def = resources().modelos.get("100")
     revision = modelo_def.revisions["2025"]
     casilla_0171 = next(c for c in revision.casillas if c.id == _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA)
     assert str(casilla_0171.input_kind) == "bound"

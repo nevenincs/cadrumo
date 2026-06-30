@@ -1,8 +1,9 @@
-"""Real-CLI roundtrip for the v2 bundled profile export/import (contract).
+"""Real-CLI roundtrip for the v3 bundled profile export/import (contract).
 
 Bundle roundtrip requirement:
   Every domain object in the bundle's four financial-history categories
-  must survive export/import with strict pydantic equality.
+  must survive export/import with strict pydantic equality. The v3 custody
+  fields are present with default-empty values until later phases populate them.
 
 Bundle anti-tautology proof:
   Mutate one ``legal_refs`` entry in the exported JSON before re-import.
@@ -90,6 +91,12 @@ def _create_profile(
         tax_id,
         "--activity",
         activity,
+        "--entity-type",
+        "natural_person",
+        "--name",
+        "Export",
+        "--surnames",
+        "Ready",
     ]
     if output_language is not None:
         args.extend(("--output-language", output_language))
@@ -265,7 +272,7 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
 # ---------------------------------------------------------------------------
 
 
-def test_v2_bundle_export_import_roundtrip(tmp_path: Path) -> None:
+def test_v3_bundle_export_import_roundtrip(tmp_path: Path) -> None:
     """All four financial-history categories survive export/import with strict equality."""
 
     from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
@@ -279,7 +286,15 @@ def test_v2_bundle_export_import_roundtrip(tmp_path: Path) -> None:
     bundle_path = tmp_path / "source-bundle.json"
     source_bucket_id = _seed_and_export(tmp_path, bundle_path)
     exported_bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
+    assert exported_bundle["bundle_schema_version"] == 3
     assert exported_bundle["profile"]["profile_id"] == source_bucket_id
+    assert exported_bundle["carried_objects"] == []
+    assert exported_bundle["coverage_manifest"] == {
+        "custody_profile": "structured",
+        "carried_namespaces": [],
+        "excluded_namespaces": [],
+        "row_counts_by_namespace": {},
+    }
 
     json_bundle_path = tmp_path / "source-bundle-json.json"
     json_export = _export_profile("source", json_bundle_path, json_format=True)
@@ -344,7 +359,7 @@ def test_v2_bundle_export_import_roundtrip(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_v2_bundle_anti_tautology_legal_refs_mutation(tmp_path: Path) -> None:
+def test_v3_bundle_anti_tautology_legal_refs_mutation(tmp_path: Path) -> None:
     """Mutating legal_refs in the exported JSON must surface as inequality.
 
     Export a bundle, mutate one ``legal_refs``
