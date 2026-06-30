@@ -177,8 +177,15 @@ def test_export_result_round_trips_canonical_fields() -> None:
     assert receipt.model_dump(mode="json")["period"] == {"filing_year": 2026, "code": "1T"}
 
 
-def test_export_result_rejects_uppercase_digest() -> None:
-    with pytest.raises(ValueError, match=r"file_sha256|hex|lowercase"):
+@pytest.mark.parametrize(
+    ("digest", "match"),
+    (
+        pytest.param("A" * 64, r"file_sha256|hex|lowercase", id="uppercase"),
+        pytest.param("z" * 64, r"file_sha256|hex", id="non-hex"),
+    ),
+)
+def test_export_result_rejects_invalid_digest(digest: str, match: str) -> None:
+    with pytest.raises(ValueError, match=match):
         DeclaracionExportResult(
             draft_id="d",
             modelo="130",
@@ -186,22 +193,7 @@ def test_export_result_rejects_uppercase_digest() -> None:
             format=DeclaracionExportFormat.FICHERO_BOE,
             output_path=_OTHER_EXPORT_PATH,
             byte_size=1,
-            file_sha256="A" * 64,
-            exported_at=datetime(2026, 5, 3, tzinfo=UTC),
-            narrative=_narrative(),
-        )
-
-
-def test_export_result_rejects_non_hex_digest() -> None:
-    with pytest.raises(ValueError, match=r"file_sha256|hex"):
-        DeclaracionExportResult(
-            draft_id="d",
-            modelo="130",
-            period=_PERIOD,
-            format=DeclaracionExportFormat.FICHERO_BOE,
-            output_path=_OTHER_EXPORT_PATH,
-            byte_size=1,
-            file_sha256="z" * 64,
+            file_sha256=digest,
             exported_at=datetime(2026, 5, 3, tzinfo=UTC),
             narrative=_narrative(),
         )
