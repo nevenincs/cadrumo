@@ -95,3 +95,26 @@ def test_modelo_100_rental_landlord_foreign_nif_flags_have_specific_role() -> No
         for revision in modelo.revisions.values()
         for casilla in revision.casillas
     )
+
+
+def test_modelo_100_cadastral_construction_ratios_are_decimal_roles() -> None:
+    modelos_by_id, _catalogues = _loaded_registry()
+    modelo = modelos_by_id["100"]
+
+    for year in range(2020, 2026):
+        revision = modelo.revisions[str(year)]
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+        for casilla_id in ("0125", "0140"):
+            casilla = casillas_by_id[casilla_id]
+
+            assert tuple(casilla.section) == ("toma_datos_ampliada", "inmuebles", "inmueble")
+            assert casilla.data_type == "decimal"
+            assert casilla.semantic_role == "irpf_inmueble_ratio_construccion_catastral"
+            assert "valor catastral" in casilla.label.lower()
+            assert "100" in casilla.label
+
+    assert all(
+        casilla.semantic_role != "irpf_inmueble_pct_valor_catastral_construccion"
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    )
