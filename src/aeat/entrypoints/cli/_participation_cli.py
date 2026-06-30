@@ -3,9 +3,11 @@
 Surfaces the inverse of the forward ``source_transaction_ids`` link: which
 finalized modelo revisions, filings, and justificantes consumed a given ledger
 transaction. ``participation <transaction-id>`` emits a typed
-:class:`LedgerTransactionParticipationPayload`; ``participation rebuild``
-regenerates the derived index from the authoritative revision catalogue. Lookup
-ids are resolved against a :class:`TransactionCatalogueRepository`.
+:class:`~aeat.entrypoints.cli._ledger_payloads.LedgerTransactionParticipationPayload`;
+``participation rebuild`` calls
+:func:`~aeat.application.modelo.rebuild_participation_index` to regenerate the
+derived :class:`~aeat.domain.modelos.TransactionRevisionParticipationIndex`.
+Lookup ids are resolved against a :class:`TransactionCatalogueRepository`.
 """
 
 from __future__ import annotations
@@ -36,7 +38,8 @@ def register_participation_commands(
     """Register the ``participation`` subgroup under ``aeat app ledger``.
 
     The group callback handles ``participation <transaction-id>`` (the inverse
-    audit lookup); the ``rebuild`` subcommand regenerates the index.
+    audit lookup); the ``rebuild`` subcommand calls
+    :func:`~aeat.application.modelo.rebuild_participation_index`.
     ``resolve_transaction_id`` canonicalises a possibly-abbreviated id for the
     lookup verb.
     """
@@ -54,7 +57,7 @@ def register_participation_commands(
             help=tr("Ledger transaction id whose finalized-revision participations to list."),
         ),
     ) -> None:
-        """List the finalized modelo revisions and filings that consumed a transaction."""
+        """List finalized participations as a typed ledger participation payload."""
         if ctx.invoked_subcommand is not None:
             return
         if transaction_id is None:
@@ -109,6 +112,7 @@ def _emit_participation_lookup(
     transaction_id: str,
     resolve_transaction_id: ResolveTransactionId,
 ) -> None:
+    """Read and emit one :class:`~aeat.domain.modelos.TransactionRevisionParticipationIndex`."""
     from ._ledger_payloads import (
         LedgerTransactionParticipationEntryPayload,
         LedgerTransactionParticipationPayload,
@@ -170,7 +174,7 @@ def _participation_lines(
 def _register_rebuild_command(participation: typer.Typer) -> None:
     @participation.command("rebuild")
     def participation_rebuild(ctx: typer.Context) -> None:
-        """Rebuild the transaction participation index from the revision catalogue."""
+        """Run :func:`~aeat.application.modelo.rebuild_participation_index` for the active bucket."""
         from ._ledger_payloads import LedgerParticipationRebuildResult
 
         bucket_id = _active_bucket_id_or_bad(_state())
