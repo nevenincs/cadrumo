@@ -2,8 +2,8 @@
 
 Exercises :func:`suggest_evidence_split` and :func:`apply_evidence_split`
 against real SQLite persistence in an isolated profile, with a concrete
-in-process split proposer injected by dependency injection (no mocks). Covers
-the Stage-3b split contract:
+subprocess split proposer driven through the production classifier adapter.
+Covers the Stage-3b split contract:
 
 * the model proposes per-child PROPORTIONS and selects each child's expense
   category + IVA category; the system DERIVES each child's euro amount (summing
@@ -33,8 +33,8 @@ from .. import (
 )
 from ._llm_evidence_split_support import (
     _BUCKET,
-    _FixedSplitProposer,
     _seed_parent,
+    _split_subprocess_proposer,
     _two_line_proposal,
 )
 from ._llm_evidence_split_support import (
@@ -62,7 +62,7 @@ def test_suggest_derives_child_amounts_summing_to_parent(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
         provider=LLMProvider.CLAUDE,
-        proposer=_FixedSplitProposer(response=_two_line_proposal()),
+        proposer=_split_subprocess_proposer(response=_two_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,
     )
@@ -88,7 +88,7 @@ def test_suggest_derives_each_child_substrate_from_registry(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
         provider=LLMProvider.CLAUDE,
-        proposer=_FixedSplitProposer(response=_two_line_proposal()),
+        proposer=_split_subprocess_proposer(response=_two_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,
     )
@@ -103,26 +103,24 @@ def test_suggest_derives_each_child_substrate_from_registry(
         assert child.taxable_base + child.iva_amount == child.amount
 
 
-def test_suggest_injects_evidence_text_when_reading(
+def test_suggest_no_linked_evidence_does_not_require_cloud_acknowledgement(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
 ) -> None:
     repository, _events, _objects = repositories
     # No linked evidence -> _resolve_evidence_text returns (None, None) and the
-    # proposer is handed None; this proves read_evidence does not fabricate text
-    # nor require a cloud acknowledgement when there is nothing to read.
+    # suggestion carries no evidence id; read_evidence does not require cloud
+    # acknowledgement when there is nothing to read.
     tx_id = _seed_parent(repository)
-    proposer = _FixedSplitProposer(response=_two_line_proposal())
 
     suggestion = suggest_evidence_split(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
         provider=LLMProvider.CLAUDE,
-        proposer=proposer,
+        proposer=_split_subprocess_proposer(response=_two_line_proposal()),
         transaction_repository=repository,
         read_evidence=True,
     )
 
-    assert proposer.last_evidence_text is None
     assert suggestion.evidence_id is None
 
 

@@ -23,9 +23,9 @@ from .. import (
 from ._llm_evidence_split_support import (
     _BUCKET,
     _NOW,
-    _FixedSplitProposer,
     _seed_parent,
     _seed_received_invoice,
+    _split_subprocess_proposer,
     _two_line_proposal,
 )
 from ._llm_evidence_split_support import repositories as repositories
@@ -45,7 +45,7 @@ def test_apply_splits_parent_and_classifies_children(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
         provider=LLMProvider.CLAUDE,
-        proposer=_FixedSplitProposer(response=_two_line_proposal()),
+        proposer=_split_subprocess_proposer(response=_two_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,
     )
@@ -92,7 +92,7 @@ def test_apply_links_parent_invoice_evidence_to_each_child(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
         provider=LLMProvider.CLAUDE,
-        proposer=_FixedSplitProposer(response=_two_line_proposal()),
+        proposer=_split_subprocess_proposer(response=_two_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,
     )
@@ -121,7 +121,7 @@ def test_apply_child_numbers_are_registry_derived_not_model(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
         provider=LLMProvider.CLAUDE,
-        proposer=_FixedSplitProposer(response=_two_line_proposal()),
+        proposer=_split_subprocess_proposer(response=_two_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,
     )
