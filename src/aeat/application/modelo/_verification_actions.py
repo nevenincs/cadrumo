@@ -649,7 +649,25 @@ evaluate_predicate_expression = _evaluate_predicate_expression
 evaluate_verification_predicates = _evaluate_verification_predicates
 
 
-def _manual_fact_basis_entries(input_values_by_casilla_id: Mapping[CasillaId, str]) -> tuple[ManualFactBasisEntry, ...]:
+def _normalised_observation_refs(observations: Iterable[CasillaObservation | None], field_name: str) -> tuple[str, ...]:
+    refs = tuple(
+        dict.fromkeys(
+            str(ref).strip()
+            for observation in observations
+            if observation is not None
+            for ref in getattr(observation, field_name)
+            if str(ref).strip()
+        ),
+    )
+    if not refs:
+        raise ModeloValidationError(f"ledger filing evidence requires non-empty observation {field_name}")
+    return refs
+
+
+def _manual_fact_basis_entries(
+    input_values_by_casilla_id: Mapping[CasillaId, str],
+    observations: Iterable[CasillaObservation],
+) -> tuple[ManualFactBasisEntry, ...]:
     """Project a revision's operator casilla inputs into manual fact-basis entries.
 
     The ``input_values_by_casilla_id`` holds the caller-supplied (operator-entered) casilla
@@ -657,13 +675,23 @@ def _manual_fact_basis_entries(input_values_by_casilla_id: Mapping[CasillaId, st
     basis a filing artefact must explain. Blank values are skipped (they carry no
     fact).
     """
+    observations_by_casilla_id = {observation.casilla_id: observation for observation in observations}
     return tuple(
-        ManualFactBasisEntry(casilla_id=casilla, value=value)
+        ManualFactBasisEntry(
+            casilla_id=casilla,
+            value=value,
+            legal_refs=_normalised_observation_refs(
+                (observations_by_casilla_id.get(casilla),),
+                "legal_refs",
+            ),
+            source_refs=_normalised_observation_refs(
+                (observations_by_casilla_id.get(casilla),),
+                "source_refs",
+            ),
+        )
         for casilla, value in sorted(input_values_by_casilla_id.items())
         if value.strip()
     )
-
-
 def _assert_evidence_covers_snapshot(snapshot: LedgerFilingSnapshot, evidence: LedgerFilingEvidence) -> None:
     """Guarantee the bundled evidence covers every fingerprinted contributor.
 
@@ -1080,12 +1108,20 @@ def _persist_verified_revision_evidence(
         catalogue=catalogue,
         captured_at=now,
     )
+    evidence_legal_refs = (
+        _normalised_observation_refs(target.observations, "legal_refs") if target.source_transaction_ids else ()
+    )
+    evidence_source_refs = (
+        _normalised_observation_refs(target.observations, "source_refs") if target.source_transaction_ids else ()
+    )
     filing_evidence = compute_ledger_filing_evidence(
         source_transaction_ids=target.source_transaction_ids,
         catalogue=catalogue,
         snapshot_fingerprint=filing_snapshot.snapshot_fingerprint,
         captured_at=now,
-        manual_entries=_manual_fact_basis_entries(target.input_values_by_casilla_id),
+        legal_refs=evidence_legal_refs,
+        source_refs=evidence_source_refs,
+        manual_entries=_manual_fact_basis_entries(target.input_values_by_casilla_id, target.observations),
     )
     _assert_evidence_covers_snapshot(filing_snapshot, filing_evidence)
     verified = target.model_copy(

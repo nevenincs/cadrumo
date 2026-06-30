@@ -519,8 +519,8 @@ class SheetEvidenceContributorRow(BaseModel):
     counterparty: str | None = None
     attachment_ids: tuple[str, ...] = ()
     document_link_ids: tuple[str, ...] = ()
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
+    legal_refs: tuple[str, ...] = Field(min_length=1)
+    source_refs: tuple[str, ...] = Field(min_length=1)
 
 
 class SheetEvidenceManualEntry(BaseModel):
@@ -532,8 +532,8 @@ class SheetEvidenceManualEntry(BaseModel):
     value: str = Field(min_length=1)
     kind: str = Field(min_length=1)
     note: str = ""
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
+    legal_refs: tuple[str, ...] = Field(min_length=1)
+    source_refs: tuple[str, ...] = Field(min_length=1)
 
 
 class SheetEvidenceFacet(BaseModel):

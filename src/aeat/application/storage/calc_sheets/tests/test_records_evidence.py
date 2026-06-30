@@ -32,6 +32,8 @@ def _casilla_id(value: object) -> CasillaId:
 
 _IVA_DEVENGADO_CUOTA_CASILLA: CasillaId = _casilla_id("iva.devengado.cuota")
 _RESULTADO_CONTABLE_CASILLA: CasillaId = _casilla_id("resultado.contable")
+_LEGAL_REFS = ("ley-37-1992:art-99",)
+_SOURCE_REFS = ("boe-modelo-303-2025-form",)
 
 
 def _metadata() -> SheetExportMetadata:
@@ -58,15 +60,16 @@ def test_sheet_export_plan_carries_typed_evidence_facet() -> None:
         counterparty="Proveedor SL",
         attachment_ids=("attachment-1",),
         document_link_ids=("drive-doc-1",),
-        legal_refs=("liva-art-99",),
-        source_refs=("boe-a-2026-1",),
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
     )
     manual = SheetEvidenceManualEntry(
         casilla_id=_RESULTADO_CONTABLE_CASILLA,
         value="140000.00",
         kind="casilla_input",
         note="resultado contable",
-        legal_refs=("lis-art-10",),
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
     )
 
     plan = SheetExportPlan(
@@ -98,3 +101,22 @@ def test_sheet_export_plan_defaults_to_empty_evidence_facet() -> None:
 def test_sheet_evidence_rejects_short_snapshot_fingerprint() -> None:
     with pytest.raises(ValidationError):
         SheetEvidenceFacet(snapshot_fingerprint="short")
+
+
+def test_sheet_evidence_rows_require_grounding() -> None:
+    with pytest.raises(ValidationError, match="legal_refs"):
+        SheetEvidenceContributorRow(
+            casilla_id=_IVA_DEVENGADO_CUOTA_CASILLA,
+            transaction_id="c" * 64,
+            amount=Decimal("121.00"),
+            currency="EUR",
+            source_refs=_SOURCE_REFS,
+        )
+
+    with pytest.raises(ValidationError, match="source_refs"):
+        SheetEvidenceManualEntry(
+            casilla_id=_RESULTADO_CONTABLE_CASILLA,
+            value="140000.00",
+            kind="casilla_input",
+            legal_refs=_LEGAL_REFS,
+        )

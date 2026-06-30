@@ -39,6 +39,8 @@ def _casilla_id(value: object) -> CasillaId:
 
 
 _EVIDENCE_CASILLA: CasillaId = _casilla_id("00501")
+_LEGAL_REFS = ("ley-37-1992:art-99",)
+_SOURCE_REFS = ("boe-modelo-303-2025-form",)
 
 
 @pytest.fixture
@@ -76,8 +78,8 @@ def _evidence() -> LedgerFilingEvidence:
                 purchase_invoice_evidence_id="purchase-evidence-1",
                 attachment_ids=("attachment-1",),
                 document_link_ids=("drive-doc-1",),
-                legal_refs=("liva-art-99",),
-                source_refs=("boe-a-2026-1",),
+                legal_refs=_LEGAL_REFS,
+                source_refs=_SOURCE_REFS,
             ),
         ),
         manual_entries=(
@@ -86,6 +88,8 @@ def _evidence() -> LedgerFilingEvidence:
                 value="140000.00",
                 kind="casilla_input",
                 note="resultado contable",
+                legal_refs=_LEGAL_REFS,
+                source_refs=_SOURCE_REFS,
             ),
         ),
         captured_at=_NOW,
@@ -118,8 +122,8 @@ def _revision(evidence: LedgerFilingEvidence | None) -> CalculationRevision:
             CasillaObservation(
                 casilla_id=_EVIDENCE_CASILLA,
                 value=Decimal("140000.00"),
-                legal_refs=("liva-art-99",),
-                source_refs=("boe-a-2026-1",),
+                legal_refs=_LEGAL_REFS,
+                source_refs=_SOURCE_REFS,
             ),
         ),
         ledger_filing_evidence=evidence,
