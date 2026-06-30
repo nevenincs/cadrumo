@@ -7,13 +7,18 @@ and apply no mutations to stored state. Help strings are localized via
 logic and are not surfaced as operator-facing CLI help.
 
 This module is the transport adapter over the application overview builders:
-:func:`build_overview_status_report`, :func:`build_overview_calendar`,
-:func:`build_overview_calendar_events`,
-:func:`calendar_events_from_modelo_records`, and
-:func:`calendar_filing_evidence_from_sources`.  Each command emits a typed
-payload such as :class:`OverviewStatusResult`, :class:`OverviewCalendarResult`,
-:class:`OverviewAgendaResult`, :class:`OverviewBacklogResult`, or
-:class:`OverviewExplainResult` through :func:`_emit_envelope`.
+:func:`~aeat.application.overview.build_overview_status_report`,
+:func:`~aeat.application.overview.build_overview_calendar`,
+:func:`~aeat.application.overview.build_overview_calendar_events`,
+:func:`~aeat.application.overview.calendar_events_from_modelo_records`, and
+:func:`~aeat.application.overview.calendar_filing_evidence_from_sources`. Each
+command emits a typed payload such as
+:class:`~aeat.entrypoints.cli._overview_payloads.OverviewStatusResult`,
+:class:`~aeat.entrypoints.cli._overview_payloads.OverviewCalendarResult`,
+:class:`~aeat.entrypoints.cli._overview_payloads.OverviewAgendaResult`,
+:class:`~aeat.entrypoints.cli._overview_payloads.OverviewBacklogResult`, or
+:class:`~aeat.entrypoints.cli._overview_payloads.OverviewExplainResult` through
+:func:`~aeat.entrypoints.cli._common._emit_envelope`.
 """
 
 from __future__ import annotations
@@ -79,11 +84,11 @@ def _local_live_calendar_events(
     *,
     expected_tax_id: str | None = None,
 ):
-    """Return :class:`OverviewCalendarEvent` rows from persisted live snapshots.
+    """Return persisted-live :class:`~aeat.application.overview.OverviewCalendarEvent` rows.
 
     The CLI owns the bucket-scoped repository reads; the pure
-    :func:`build_overview_calendar_events` builder performs the projection
-    without contacting AEAT.
+    :func:`~aeat.application.overview.build_overview_calendar_events` builder
+    performs the projection without contacting AEAT.
     """
     from ...application.live import ExpedientesService, JustificanteCaptureSnapshotService, NotificationsService
     from ...domain.justificante import JustificanteRepository
@@ -124,10 +129,11 @@ def _local_modelo_record_calendar_events(
     *,
     expected_tax_id: str | None = None,
 ):
-    """Return :class:`OverviewCalendarEvent` rows from local Modelo records.
+    """Return local-record :class:`~aeat.application.overview.OverviewCalendarEvent` rows.
 
-    Delegates the DTO conversion to :func:`calendar_events_from_modelo_records`
-    after loading bucket-local filing records and justificante metadata.
+    Delegates the DTO conversion to
+    :func:`~aeat.application.overview.calendar_events_from_modelo_records` after
+    loading bucket-local filing records and justificante metadata.
     """
     try:
         from ...domain.justificante import JustificanteRepository
@@ -197,8 +203,8 @@ def _local_calendar_filing_evidence(
 
     The resulting
     :class:`~aeat.application.overview.OverviewCalendarFilingEvidence` rows feed
-    :class:`OverviewCalendar` without treating a local filing record as proof of
-    AEAT submission.
+    :class:`~aeat.application.overview.OverviewCalendar` without treating a
+    local filing record as proof of AEAT submission.
     """
     try:
         from ...adapters.outbound.aeat.sede._observation_store import FiledDeclaracionObservationStore
@@ -401,13 +407,14 @@ def overview_status(
     ),
     verbose: bool = typer.Option(False, "--verbose", help=tr("cli.overview.verbose_help")),
 ) -> None:
-    """Emit :class:`OverviewStatusResult` for readiness or per-period detail.
+    """Emit the overview status payload for readiness or per-period detail.
 
     The deadline-calendar surface that used to live behind `--calendar`
     is now the first-class `aeat app overview calendar` verb per the
     app-overview-shape ADR's Consequences section. No compatibility
     shim is preserved; callers must use the dedicated verb. The full-status
-    branch projects :func:`build_overview_status_report`; the period branch
+    branch projects
+    :func:`~aeat.application.overview.build_overview_status_report`; the period branch
     emits only the matching draft rows.
     """
     from ...application.user_profile import record_to_values
@@ -524,11 +531,13 @@ def overview_calendar(
         ),
     ),
 ) -> None:
-    """Emit :class:`OverviewCalendarResult` over the supplied date window.
+    """Emit the overview calendar payload over the supplied date window.
 
-    The command builds an :class:`OverviewCalendarRange`, enriches it with
-    persisted :class:`OverviewCalendarEvent` and filing-evidence rows, and then
-    delegates the legal calendar projection to :func:`build_overview_calendar`.
+    The command builds an
+    :class:`~aeat.application.overview.OverviewCalendarRange`, enriches it with
+    persisted :class:`~aeat.application.overview.OverviewCalendarEvent` and
+    filing-evidence rows, and then delegates the legal calendar projection to
+    :func:`~aeat.application.overview.build_overview_calendar`.
     """
     from ...application.user_profile import record_to_values
 
@@ -627,11 +636,13 @@ def _overview_calendar_all_profiles(
 ) -> None:
     """Emit the deadline calendar for every registered active profile.
 
-    Iterates :func:`list_profile_buckets`, loads each active bucket's
-    profile record inside its own :func:`profile_storage_session`, and
-    calls :func:`build_overview_calendar` once per profile. Unreadable
+    Iterates :func:`~aeat.application.workflow.list_profile_buckets`, loads each
+    active bucket's profile record inside its own
+    :func:`~aeat.application.user_profile.profile_storage_session`, and calls
+    :func:`~aeat.application.overview.build_overview_calendar` once per profile. Unreadable
     buckets are skipped with a warning line; they do not abort the scan. The
-    combined JSON payload still uses the single :class:`OverviewCalendarResult`
+    combined JSON payload still uses the single
+    :class:`~aeat.entrypoints.cli._overview_payloads.OverviewCalendarResult`
     schema registered for ``overview.calendar``.
     """
     from ...adapters.persistence.storage.bucket import BucketLifecycleStatus
@@ -778,7 +789,7 @@ def overview_agenda(
         ),
     ),
 ) -> None:
-    """Emit :class:`OverviewAgendaResult` with next-due cohort breakdowns.
+    """Emit the overview agenda payload with next-due cohort breakdowns.
 
     The command delegates obligation ranking to
     :func:`~aeat.application.overview.build_overview_agenda` and only adapts the
@@ -878,7 +889,7 @@ def overview_backlog(
         ),
     ),
 ) -> None:
-    """Emit :class:`OverviewBacklogResult` for past-due obligations.
+    """Emit the overview backlog payload for past-due obligations.
 
     The command delegates read-model assembly to
     :func:`~aeat.application.overview.build_overview_backlog`; it does not resume
@@ -952,7 +963,7 @@ def overview_explain(
         ),
     ),
 ) -> None:
-    """Emit :class:`OverviewExplainResult` for one modelo applicability verdict.
+    """Emit the overview explain payload for one modelo applicability verdict.
 
     The explanation comes from
     :func:`~aeat.application.overview.build_overview_explain`; this adapter only
