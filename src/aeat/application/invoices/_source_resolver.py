@@ -30,6 +30,7 @@ from ...adapters.persistence.storage.errors import (
     StorageValidationError,
 )
 from ...core import BindingSourceKind, Period
+from ...core.aggregation import IntracomOperationType
 from ...core.hashing import sha256_hex
 from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import (
@@ -53,7 +54,6 @@ from ..ledger import (
     BusinessOperationInvoice,
     BusinessOperationInvoiceDirection,
     BusinessOperationInvoiceRepository,
-    IntracomOperationType,
 )
 
 _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (
@@ -74,6 +74,21 @@ _M349_OPERADOR_ROW_BINDINGS: dict[BindingId, str] = {
     "iva-349-operador-row-clave": "clave_operacion",
     "iva-349-operador-row-base": "importe",
 }
+_COLLECTIBLE_M349_OPERATION_TYPES: frozenset[IntracomOperationType] = frozenset(
+    {
+        IntracomOperationType.E,
+        IntracomOperationType.S,
+        IntracomOperationType.T,
+        IntracomOperationType.M,
+    },
+)
+_PAYABLE_M349_OPERATION_TYPES: frozenset[IntracomOperationType] = frozenset(
+    {
+        IntracomOperationType.A,
+        IntracomOperationType.ADQUISICION_SERVICIOS,
+        IntracomOperationType.T,
+    },
+)
 
 
 def invoice_direction_to_source_kind(kind: InvoiceKind) -> BusinessOperationInvoiceDirection:
@@ -230,6 +245,14 @@ def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext)
 
 
 def _intracommunity_clave(invoice: Invoice) -> str | None:
+    operation_type = invoice.operation_type
+    if operation_type is not None:
+        return _m349_clave_for_operation_type(
+            invoice_id=invoice.invoice_id,
+            source_kind=BindingSourceKind(_invoice_source_kind(invoice)),
+            operation_type=operation_type,
+            record_label="catalogue invoice",
+        )
     if invoice.iva_category is IvaCategory.INTRA_COMMUNITY_TRIANGULATION:
         return "T"
     if invoice.kind is InvoiceKind.ISSUED and invoice.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY:
@@ -240,6 +263,32 @@ def _intracommunity_clave(invoice: Invoice) -> str | None:
     ):
         return "A"
     return None
+
+
+def _m349_clave_for_operation_type(
+    *,
+    invoice_id: str,
+    source_kind: BindingSourceKind,
+    operation_type: IntracomOperationType,
+    record_label: str,
+) -> str:
+    if operation_type is IntracomOperationType.R:
+        raise RegistryValidationError(
+            f"{record_label} {invoice_id!r} uses rectification operation type R "
+            "but the invoice record has no rectified period/base metadata",
+        )
+    allowed = (
+        _COLLECTIBLE_M349_OPERATION_TYPES
+        if source_kind is BindingSourceKind.COLLECTIBLE_INVOICE
+        else _PAYABLE_M349_OPERATION_TYPES
+    )
+    if operation_type not in allowed:
+        accepted = ", ".join(item.value for item in sorted(allowed, key=lambda item: item.value))
+        raise RegistryValidationError(
+            f"{record_label} {invoice_id!r} uses operation type {operation_type.value!r} "
+            f"with source kind {source_kind.value!r}; accepted: {accepted}",
+        )
+    return operation_type.value
 
 
 def _m349_declarante_summary_union(
@@ -380,21 +429,12 @@ def _business_invoice_clave(invoice: BusinessOperationInvoice) -> str | None:
     operation_type = invoice.operation_type
     if operation_type is None:
         return None
-    if operation_type is IntracomOperationType.R:
-        raise RegistryValidationError(
-            f"business invoice {invoice.invoice_id!r} uses rectification operation type R "
-            "but the slim invoice record has no rectified period/base metadata",
-        )
-    clave = operation_type.value
-    if invoice.source_kind is BusinessOperationInvoiceDirection.COLLECTIBLE_INVOICE and clave in {"A", "I"}:
-        raise RegistryValidationError(
-            f"business invoice {invoice.invoice_id!r} is issued but uses acquisition operation type {clave!r}",
-        )
-    if invoice.source_kind is BusinessOperationInvoiceDirection.PAYABLE_INVOICE and clave in {"E", "S"}:
-        raise RegistryValidationError(
-            f"business invoice {invoice.invoice_id!r} is received but uses supply/service operation type {clave!r}",
-        )
-    return clave
+    return _m349_clave_for_operation_type(
+        invoice_id=invoice.invoice_id,
+        source_kind=BindingSourceKind(invoice.source_kind.value),
+        operation_type=operation_type,
+        record_label="business invoice",
+    )
 
 
 def _business_invoice_party_tax_id(invoice: BusinessOperationInvoice) -> str:
