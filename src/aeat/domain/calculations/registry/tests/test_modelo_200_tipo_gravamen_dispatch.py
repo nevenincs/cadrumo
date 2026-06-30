@@ -37,16 +37,16 @@ from functools import lru_cache
 import pytest
 
 from .....core.resources import bundled_path
-from .. import CasillaId, build_snapshot, load_registry_tree, validated_casilla_id
+from .. import CasillaId, build_snapshot, validated_casilla_id
 from .._binding_selector_utils import selector_as_dict
 from .._errors import RegistryValidationError
 from .._formula_runtime import calculate_registry_snapshot
 from .._legal import verify_legal_catalogue
 from .._schema import ParameterDefinition
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _DISPATCH_BINDING = "modelo-200-2024-profile-legal-entity-form"
 _M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id("00501", surface="_M200_RESULTADO_CONTABLE_CASILLA")
 _M200_CORRECCIONES_AUMENTO_CASILLA: CasillaId = validated_casilla_id(
@@ -101,11 +101,8 @@ def _base_inputs(base: Decimal) -> dict[CasillaId, Decimal]:
     }
 
 
-@lru_cache(maxsize=1)
 def _load_modelo_200():
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == "200")
-    return modelo, catalogues
+    return _committed_modelo("200")
 
 
 @lru_cache(maxsize=1)
