@@ -119,6 +119,36 @@ def _assert_all_extracted_values_decimal(extracted: Mapping[CasillaId, object], 
         )
 
 
+def _assert_engine_closure_matches_extracted_decimal(
+    *,
+    label: str,
+    engine_values: Mapping[CasillaId, object],
+    extracted: Mapping[CasillaId, object],
+    casilla_id: CasillaId,
+    inputs: Mapping[CasillaId, Decimal] | None = None,
+) -> None:
+    extracted_value = extracted.get(casilla_id)
+    assert isinstance(extracted_value, Decimal), (
+        f"PARSER-GAP [{label}]: casilla {casilla_id!r} is not Decimal: "
+        f"{type(extracted_value).__name__!r}"
+    )
+    engine_value = engine_values.get(casilla_id)
+    assert engine_value is not None, (
+        f"FORMULA-MISMATCH [{label}]: casilla {casilla_id!r} absent from engine result."
+    )
+    assert isinstance(engine_value, Decimal), (
+        f"FORMULA-MISMATCH [{label}]: casilla {casilla_id!r} is not Decimal: "
+        f"{type(engine_value).__name__!r}"
+    )
+    input_detail = f"\n  inputs: {inputs}" if inputs is not None else ""
+    assert engine_value == extracted_value, (
+        f"FORMULA-MISMATCH [{label}]: engine casilla {casilla_id!r} = {engine_value!r}, "
+        f"AEAT-printed = {extracted_value!r}.\n"
+        f"  diff: {engine_value - extracted_value!r}"
+        f"{input_detail}"
+    )
+
+
 def _registry_modelo_observations_from_values(
     *,
     modelo: str,

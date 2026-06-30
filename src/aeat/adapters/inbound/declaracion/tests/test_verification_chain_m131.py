@@ -8,6 +8,7 @@ from ._verification_chain_support import (
     CasillaId,
     Decimal,
     RegistryValidationError,
+    _assert_engine_closure_matches_extracted_decimal,
     _casilla_id,
     _decimal_inputs_from_extracted_values,
     _parse_extracted_declaracion_values,
@@ -90,13 +91,10 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
     for closure_id in _M131_CLOSURE_CASILLAS:
         if closure_id not in extracted:
             continue
-        extracted_val = extracted[closure_id]
-        assert isinstance(extracted_val, Decimal)
-        engine_val = engine_values.get(closure_id)
-        assert engine_val is not None, (
-            f"FORMULA-MISMATCH [M131/yr=2026-1T]: casilla {closure_id!r} absent from engine result."
-        )
-        assert engine_val == extracted_val, (
-            f"FORMULA-MISMATCH [M131/yr=2026-1T]: engine casilla {closure_id!r} = {engine_val!r}, "
-            f"AEAT-printed = {extracted_val!r}.\n  inputs: {inputs}"
+        _assert_engine_closure_matches_extracted_decimal(
+            label="M131/yr=2026-1T",
+            engine_values=engine_values,
+            extracted=extracted,
+            casilla_id=closure_id,
+            inputs=inputs,
         )
