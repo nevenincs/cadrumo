@@ -40,9 +40,16 @@ def _fact(
     *,
     category: SpendingCategory,
     amount: Decimal = Decimal("100.00"),
+    taxable_base: Decimal | None = None,
+    iva_amount: Decimal | None = None,
     invoice_id: str | None = "inv-1",
     direction: RentaExpenseDirection = RentaExpenseDirection.OUTGOING_EXPENSE,
 ) -> RentaDeductibleExpenseFact:
+    default_has_iva = amount >= Decimal("21.00")
+    default_taxable_base = amount - Decimal("21.00") if default_has_iva else amount
+    default_iva_amount = Decimal("21.00") if default_has_iva else Decimal("0.00")
+    base = taxable_base if taxable_base is not None else default_taxable_base
+    iva = iva_amount if iva_amount is not None else default_iva_amount
     return RentaDeductibleExpenseFact(
         transaction_id="tx-1",
         invoice_id=invoice_id,
@@ -52,8 +59,8 @@ def _fact(
         posting_date=date(2025, 3, 9),
         payment_date=date(2025, 3, 10),
         gross_amount=amount,
-        taxable_base=amount - Decimal("21.00") if amount >= Decimal("21.00") else amount,
-        iva_amount=Decimal("21.00") if amount >= Decimal("21.00") else Decimal("0.00"),
+        taxable_base=base,
+        iva_amount=iva,
         direction=direction,
         category=category,
         activity_key="main",
@@ -85,7 +92,12 @@ def _profile(category: SpendingCategory, rule: ProportionalityRule) -> CategoryP
 
 
 def test_full_deductible_first_slice_fact_builds_binding_ready_observation() -> None:
-    fact = _fact(category=SpendingCategory.CUOTAS_AUTONOMOS_SS, amount=Decimal("294.00"))
+    fact = _fact(
+        category=SpendingCategory.CUOTAS_AUTONOMOS_SS,
+        amount=Decimal("294.00"),
+        taxable_base=Decimal("273.00"),
+        iva_amount=Decimal("21.00"),
+    )
     result = evaluate_renta_deductibility(
         fact,
         resolve_category_profiles(2025)[SpendingCategory.CUOTAS_AUTONOMOS_SS],
@@ -99,8 +111,10 @@ def test_full_deductible_first_slice_fact_builds_binding_ready_observation() -> 
     assert observation.target_casilla_id == "0186"
     assert observation.filing_date == date(2025, 3, 7)
     assert observation.gross_amount == Decimal("294.00")
-    assert observation.deductible_amount == Decimal("294.00")
-    assert observation.non_deductible_amount == Decimal("0.00")
+    assert observation.taxable_base == Decimal("273.00")
+    assert observation.iva_amount == Decimal("21.00")
+    assert observation.deductible_amount == Decimal("273.00")
+    assert observation.non_deductible_amount == Decimal("21.00")
     assert observation.invoice_evidence_status is RentaInvoiceEvidenceStatus.LINKED
     assert observation.reconciliation_status is RentaReconciliationStatus.LINKED_INVOICE
     assert observation.legal_references
@@ -131,6 +145,8 @@ def test_linked_refund_preserves_category_and_becomes_negative_observation() -> 
     fact = _fact(
         category=SpendingCategory.GASTOS_FINANCIEROS,
         amount=Decimal("35.00"),
+        taxable_base=Decimal("14.00"),
+        iva_amount=Decimal("21.00"),
         direction=RentaExpenseDirection.REFUND,
     )
     result = evaluate_renta_deductibility(
@@ -144,7 +160,10 @@ def test_linked_refund_preserves_category_and_becomes_negative_observation() -> 
     assert observation.sign == -1
     assert observation.target_casilla_id == "0203"
     assert observation.gross_amount == Decimal("-35.00")
-    assert observation.deductible_amount == Decimal("-35.00")
+    assert observation.taxable_base == Decimal("-14.00")
+    assert observation.iva_amount == Decimal("-21.00")
+    assert observation.deductible_amount == Decimal("-14.00")
+    assert observation.non_deductible_amount == Decimal("-21.00")
 
 
 def test_unlinked_refund_is_rejected_before_it_can_enter_calculation() -> None:
@@ -160,6 +179,8 @@ def test_usage_ratio_default_splits_deductible_and_non_deductible_amounts() -> N
     fact = _fact(
         category=SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO,
         amount=Decimal("1000.00"),
+        taxable_base=Decimal("979.00"),
+        iva_amount=Decimal("21.00"),
     )
 
     result = evaluate_renta_deductibility(
@@ -170,12 +191,17 @@ def test_usage_ratio_default_splits_deductible_and_non_deductible_amounts() -> N
 
     assert result.status is RentaDeductibilityStatus.ELIGIBLE
     assert result.applied_ratio == Decimal("0.30")
-    assert result.deductible_amount == Decimal("300.0000")
-    assert result.non_deductible_amount == Decimal("700.0000")
+    assert result.deductible_amount == Decimal("293.7000")
+    assert result.non_deductible_amount == Decimal("706.3000")
 
 
 def test_usage_ratio_without_default_is_ineligible_until_user_ratio_exists() -> None:
-    fact = _fact(category=SpendingCategory.TELEFONIA_MOVIL, amount=Decimal("60.00"))
+    fact = _fact(
+        category=SpendingCategory.TELEFONIA_MOVIL,
+        amount=Decimal("60.00"),
+        taxable_base=Decimal("39.00"),
+        iva_amount=Decimal("21.00"),
+    )
 
     missing = evaluate_renta_deductibility(
         fact,
@@ -192,7 +218,8 @@ def test_usage_ratio_without_default_is_ineligible_until_user_ratio_exists() -> 
     assert missing.reason == "missing usage ratio"
     assert missing.deductible_amount == Decimal("0.00")
     assert with_ratio.status is RentaDeductibilityStatus.ELIGIBLE
-    assert with_ratio.deductible_amount == Decimal("15.0000")
+    assert with_ratio.deductible_amount == Decimal("9.7500")
+    assert with_ratio.non_deductible_amount == Decimal("50.2500")
 
 
 def test_statutory_annual_cap_limits_health_insurance_amount() -> None:
@@ -229,7 +256,12 @@ def test_daily_statutory_cap_variant_requires_days_and_variant() -> None:
 
 
 def test_fixed_percentage_profiles_are_supported_by_the_evaluator() -> None:
-    fact = _fact(category=SpendingCategory.MATERIAL_OFICINA, amount=Decimal("200.00"))
+    fact = _fact(
+        category=SpendingCategory.MATERIAL_OFICINA,
+        amount=Decimal("200.00"),
+        taxable_base=Decimal("179.00"),
+        iva_amount=Decimal("21.00"),
+    )
     profile = _profile(
         SpendingCategory.MATERIAL_OFICINA,
         ProportionalityRule(
@@ -243,8 +275,8 @@ def test_fixed_percentage_profiles_are_supported_by_the_evaluator() -> None:
     result = evaluate_renta_deductibility(fact, profile, _context())
 
     assert result.status is RentaDeductibilityStatus.ELIGIBLE
-    assert result.deductible_amount == Decimal("80.0000")
-    assert result.non_deductible_amount == Decimal("120.0000")
+    assert result.deductible_amount == Decimal("71.6000")
+    assert result.non_deductible_amount == Decimal("128.4000")
 
 
 def test_non_deductible_profiles_cannot_become_observations() -> None:
@@ -284,11 +316,11 @@ def test_exclusive_use_profiles_require_confirmation() -> None:
     assert confirmed.deductible_amount == Decimal("200.00")
 
 
-def test_first_slice_rejects_eligible_categories_without_contract_mapping() -> None:
-    fact = _fact(category=SpendingCategory.MATERIAL_OFICINA, amount=Decimal("55.00"))
+def test_first_slice_rejects_eligible_amortizable_category_without_contract_mapping() -> None:
+    fact = _fact(category=SpendingCategory.HARDWARE_AMORTIZABLE, amount=Decimal("55.00"))
     result = evaluate_renta_deductibility(
         fact,
-        resolve_category_profiles(2025)[SpendingCategory.MATERIAL_OFICINA],
+        resolve_category_profiles(2025)[SpendingCategory.HARDWARE_AMORTIZABLE],
         _context(),
     )
 
