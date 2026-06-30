@@ -25,10 +25,13 @@ See Also:
         and bucket-maintenance transitions.
     :class:`BucketEventHistoryRepository`
         Encrypted per-bucket repository for the append-only history.
-    :mod:`aeat.application.bucket_maintenance`
+    :class:`~aeat.domain.buckets.BucketEventHistoryPersistenceError`
+        Storage-boundary error raised when the encrypted catalogue cannot be
+        loaded or persisted safely.
+    :mod:`~aeat.application.bucket_maintenance`
         Application facade that composes profile lifecycle operations and emits
         bucket-maintenance events through this domain history.
-    :mod:`aeat.application.workflow`
+    :mod:`~aeat.application.workflow`
         Active-profile state and bucket-pointer workflows that provide the
         current storage slice observed by bucket event consumers.
 """
