@@ -1,8 +1,9 @@
 """Ledger lifecycle and transaction-structure CLI commands.
 
 Lifecycle commands resolve transactions through the shared repository helpers
-and emit typed :class:`OutputSchema` mutation envelopes for every structural
-change.
+and emit typed :class:`~aeat.entrypoints.cli._schemas.OutputSchema` mutation
+payloads inside :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:func:`~aeat.entrypoints.cli._common._emit_envelope` for every structural change.
 """
 
 from __future__ import annotations
