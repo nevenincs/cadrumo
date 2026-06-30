@@ -567,6 +567,9 @@ class TestTypoTwinWarning:
             ("100", "2025", "0239", "irpf_eo_agr_reintegro_subvenciones"),
             ("100", "2025", "2202", "irpf_anexo_b_aav_importe_satisfecho"),
             ("100", "2025", "2243", "irpf_ganancia_inmueble_catastral_4_b"),
+            ("100", "2025", "2154", "irpf_deduccion_murcia_vehiculo_matricula"),
+            ("100", "2025", "2155", "irpf_deduccion_murcia_vehiculo_importe"),
+            ("100", "2025", "2246", "irpf_deduccion_canarias_acciones_participaciones"),
             # M303 compensacion-pendiente roles appear in both 2009-y-siguientes and
             # 2023-y-siguientes revisions; the validator requires unique occurrence for
             # intentional_singleton, so they carry semantic_role_cardinality="shared".
@@ -684,6 +687,9 @@ class TestTypoTwinWarning:
             "irpf_eo_agr_reintegro_subvenciones",
             "irpf_anexo_b_aav_importe_satisfecho",
             "irpf_ganancia_inmueble_catastral_4_b",
+            "irpf_deduccion_murcia_vehiculo_matricula",
+            "irpf_deduccion_murcia_vehiculo_importe",
+            "irpf_deduccion_canarias_acciones_participaciones",
             "iva_oss_union_servicios_destino_de_cuota",
             "iva_oss_union_servicios_destino_fr_cuota",
         }
@@ -941,14 +947,14 @@ class TestTypoTwinWarning:
             is False
         )
 
-    def test_ccaa_axis_roles_do_not_warn_as_typos(self) -> None:
-        murcia = _casilla(cid="a", semantic_role="irpf_deduccion_murcia_vehiculo_importe")
-        asturias = _casilla(cid="b", semantic_role="irpf_deduccion_asturias_vehiculo_importe")
-        m = _registry_modelo("100", "2025", [murcia, asturias])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
+    def test_ccaa_tokens_are_not_axis_tokens(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "irpf_deduccion_murcia_vehiculo_importe",
+                "irpf_deduccion_asturias_vehiculo_importe",
+            )
+            is False
+        )
 
     def test_field_detail_tokens_are_not_optional_axis_tokens(self) -> None:
         assert (
