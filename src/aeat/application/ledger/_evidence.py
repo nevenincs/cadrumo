@@ -9,13 +9,15 @@ body, and Drive-URL evidence sources are out of scope. ``add`` refuses
 non-PDF/non-image source paths with a typed
 :class:`PurchaseInvoiceEvidenceInputError`.
 
-Persistence is bucket-scoped encrypted secure-object storage. At ``add``
-time the source file's bytes are copied into the encrypted
+Persistence is bucket-scoped encrypted secure-object storage. The evidence
+catalogue is a :class:`PurchaseInvoiceEvidenceDocument` persisted through
+:class:`SecureBoundRepository` under
+:data:`aeat.adapters.persistence.storage.LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE`.
+At ``add`` time the source file's bytes are copied into the encrypted
 :class:`AttachmentStore` (active bucket) and the resulting content-addressed
-``attachment_id`` is recorded on the evidence record; the bytes thereafter
-live only in secure storage. ``source_path`` is retained as a provenance
-breadcrumb and is never read for bytes
-(``sensitive-financial-data-secure-storage-only``).
+``attachment_id`` is recorded on the evidence record; the bytes thereafter live
+only in secure storage. ``source_path`` is retained as a provenance breadcrumb
+and is never read for bytes (``sensitive-financial-data-secure-storage-only``).
 """
 
 from __future__ import annotations
@@ -172,7 +174,18 @@ class PurchaseInvoiceEvidenceResult(BaseModel):
 
 
 class PurchaseInvoiceEvidenceRepository(SecureBoundRepository[PurchaseInvoiceEvidenceDocument]):
-    """Encrypted repository for one bucket's purchase invoice evidence records."""
+    """Encrypted store for one bucket's :class:`PurchaseInvoiceEvidenceDocument`.
+
+    The namespace, sensitivity, schema version, and object-key contract come
+    from
+    :data:`aeat.adapters.persistence.storage.LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE`.
+
+    See Also:
+        :class:`PurchaseInvoiceEvidenceService`
+            CRUD service that mutates this repository and emits bucket events.
+        :class:`AttachmentStore`
+            Encrypted byte store that holds the referenced source files.
+    """
 
     namespace = LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE.namespace
     sensitivity = LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE.sensitivity

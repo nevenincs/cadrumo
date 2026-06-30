@@ -3,7 +3,10 @@
 Two noun-groups (``payable_invoice``, ``collectible_invoice``) each
 expose the canonical five-verb CRUD spine
 ``add``/``remove``/``update``/``view``/``list``. Records are
-bucket-scoped and persisted as encrypted secure-object documents per noun-kind.
+bucket-scoped and persisted as encrypted :class:`BusinessOperationInvoiceDocument`
+payloads through :class:`SecureBoundRepository` per noun-kind, under the
+:data:`aeat.adapters.persistence.storage.LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE`
+namespace contract.
 
 The records are intentionally slim. Business-detail enrichment (line
 items, IVA breakdown, reconciliation linkages) belongs to the
@@ -231,7 +234,20 @@ class BusinessOperationInvoiceDocument(BaseModel):
 
 
 class BusinessOperationInvoiceRepository(SecureBoundRepository[BusinessOperationInvoiceDocument]):
-    """Encrypted repository for one bucket/source-kind invoice catalogue."""
+    """Encrypted store for one bucket/source-kind invoice catalogue.
+
+    The namespace, sensitivity, schema version, and object-key contract come
+    from
+    :data:`aeat.adapters.persistence.storage.LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE`.
+
+    See Also:
+        :class:`BusinessOperationInvoiceDocument`
+            Bucket-local payload grouped by invoice direction.
+        :class:`PayableInvoiceService`
+            CRUD service for vendor invoices.
+        :class:`CollectibleInvoiceService`
+            CRUD service for customer invoices.
+    """
 
     namespace = LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE.namespace
     sensitivity = LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE.sensitivity
