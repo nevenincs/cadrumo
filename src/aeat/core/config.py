@@ -1,9 +1,17 @@
 """Central settings facade for AEAT automation.
 
-This module uses :class:`StorageRouteClassification` for SQL database route
-classification and ``SettingsConfigDict`` for Pydantic configuration.
-The primary export is the :class:`Settings` class, which is built on
-:class:`pydantic_settings.BaseSettings` with custom validation rules.
+The :class:`Settings` model is the environment authority for AEAT-prefixed
+configuration: operators and tests override fields here, and downstream code
+obtains the effective model through :func:`load_settings` or
+:func:`override_settings`. Runtime-tunable settings stay in this schema, while
+AEAT/Sede route and selector defaults come from
+:mod:`aeat.core.external_constants` through the default factories below.
+
+The storage boundary exposed here is also deliberate. Database URL derivation,
+active-profile bucket routing, and route classification are surfaced through
+:class:`StorageRouteClassification`, :func:`classify_storage_route`, and
+:func:`settings_for_active_profile_bucket` so write guards do not re-parse SQL
+URLs or active-profile pointers independently.
 """
 
 from __future__ import annotations
@@ -75,7 +83,16 @@ class Settings(AeatTimeoutSettings):
     """Application settings populated from environment variables and ``.env``.
 
     Field names map directly to env var names (uppercased). For example,
-    ``aeat_base_url`` reads ``AEAT_BASE_URL``.
+    ``aeat_base_url`` reads ``AEAT_BASE_URL``. The model is declarative: it
+    carries operator choices, timeouts, storage roots, live-read opt-ins, and
+    provider selectors, but does not open secret stores, build outbound
+    providers, or execute AEAT browser flows.
+
+    Validators keep derived paths coherent with ``aeat_local_storage_root`` and
+    derive ``aeat_database_url`` from either an explicit field, the active
+    profile, or the cold root fallback. Tests and CLI scopes should prefer
+    :func:`override_settings` over process-wide environment mutation whenever
+    they are not explicitly testing environment parsing.
     """
 
     model_config = SettingsConfigDict(
@@ -436,12 +453,21 @@ class Settings(AeatTimeoutSettings):
 
     @property
     def live_tests_enabled(self) -> bool:
-        """Whether the pytest live-read opt-in is enabled."""
+        """Whether the pytest live-read opt-in is enabled.
+
+        This is a strict ``"1"`` predicate for test selection only; production
+        live-read access gates consume their own policy and capability checks.
+        """
         return _live_test_config.strict_live_test_opt_in(self.aeat_live_tests_enabled)
 
     @property
     def live_tests_google_enabled(self) -> bool:
-        """Whether the Google (OAuth / Drive) live-test opt-in is enabled (strict ``"1"``)."""
+        """Whether the Google live-test opt-in is enabled.
+
+        Google OAuth / Drive tests use the same strict ``"1"`` predicate as the
+        general live-read opt-in and remain separate from production provider
+        construction.
+        """
         return _live_test_config.strict_live_test_opt_in(self.aeat_live_tests_google)
 
     # ── Replay IPC ──────────────────────────────────────────────────────────
@@ -1062,6 +1088,13 @@ class Settings(AeatTimeoutSettings):
 
     @model_validator(mode="after")
     def _resolve_storage_substrate_dirs_under_storage_root(self) -> Settings:
+        """Root storage substrate directories under ``aeat_local_storage_root``.
+
+        Secret, blob, and audit stores share the same state-root derivation as
+        token and log directories unless the operator explicitly supplies the
+        individual field. The validator only computes paths; provider factories
+        and custody loaders decide how those directories are opened.
+        """
         for field_name, dirname in _STATE_ROOT_DERIVED_DIRS.items():
             if field_name in self.model_fields_set:
                 continue
@@ -1214,17 +1247,35 @@ _settings_override: contextvars.ContextVar[Settings | None] = contextvars.Contex
 
 
 def classify_storage_route(settings: Settings | None = None) -> StorageRouteClassification:
-    """Classify the effective primary SQL route and return a :class:`StorageRouteClassification`."""
+    """Classify the effective primary SQL route.
+
+    The returned :class:`StorageRouteClassification` distinguishes explicit
+    database URLs, active-profile bucket databases, and cold root-fallback
+    SQLite routes. Application write guards consume this facade instead of
+    re-parsing ``aeat_database_url`` or duplicating active-profile pointer
+    rules.
+    """
     return classify_storage_route_for_settings(settings or load_settings())
 
 
 def settings_for_active_profile_bucket(bucket_id: str, source: Settings | None = None) -> Settings:
-    """Return a :class:`Settings` instance routed to ``bucket_id``'s active-profile database."""
+    """Return settings routed to ``bucket_id``'s active-profile database.
+
+    Non-route fields are preserved from ``source`` (or :func:`load_settings`),
+    while ``aeat_database_url`` is re-derived through the same validators used
+    by normal settings construction. Explicit database URLs are refused by the
+    lower-level route helper because they already define the storage authority.
+    """
     return settings_for_bucket_route(bucket_id, source or load_settings())
 
 
 def load_settings() -> Settings:
-    """Return the effective :class:`Settings` instance."""
+    """Return the effective :class:`Settings` instance.
+
+    Context-local overrides installed by :func:`override_settings` win inside
+    their block; otherwise this constructs a fresh model from the configured
+    environment sources.
+    """
     override = _settings_override.get()
     if override is not None:
         return override
@@ -1233,7 +1284,13 @@ def load_settings() -> Settings:
 
 @contextmanager
 def override_settings(**overrides: object) -> Iterator[Settings]:
-    """Override one or more :class:`Settings` fields for the with-block."""
+    """Override one or more :class:`Settings` fields for the with-block.
+
+    Overrides are validated through normal model construction so derived route,
+    token, log, and storage-substrate paths stay coherent. The helper preserves
+    ``model_fields_set`` to keep the distinction between explicit operator
+    settings and computed defaults visible to route classification.
+    """
     current = load_settings()
     # ``model_copy(update=)`` skips validators in Pydantic v2; route the
     # merged dict through ``model_validate`` so a malformed override
