@@ -35,6 +35,7 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ....domain.usage_ratios import UsageRatioProfile, save_usage_ratios
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     AggregationValidationError,
@@ -316,6 +317,44 @@ def test_renta_filing_aggregation_routes_office_software_and_marketing_to_m100_e
     assert resolution.binding_values["renta-2025-ledger-expense-0199-deductible"] == Decimal("780.00")
 
 
+def test_renta_filing_aggregation_loads_usage_ratios_for_mobile_phone_expenses(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """The live source resolver must consume persisted proportionality ratios."""
+    phone = _transaction(
+        "row-phone",
+        amount=Decimal("121.00"),
+        category=SpendingCategory.TELEFONIA_MOVIL,
+    )
+    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+        TransactionCatalogue.from_transactions((phone,)),
+    )
+    InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects).save(InvoiceCatalogue())
+    save_usage_ratios(
+        UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.50")}),
+        bucket_id="test",
+        objects=secure_objects,
+    )
+
+    snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+    resolution = LedgerRentaExpenseAggregationSourceResolver(
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id="test",
+            modelo="100",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
+            revision=snapshot.revision,
+        ),
+    )
+
+    assert resolution.diagnostics == ()
+    assert resolution.binding_values["renta-2025-ledger-expense-0199-deductible"] == Decimal("60.50")
+    assert resolution.source_transaction_ids == (phone.transaction_id,)
+
+
 def test_m100_expense_aggregation_uses_taxable_base_for_iva_bearing_business_expenses(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -567,13 +606,13 @@ def test_manual_transaction_tax_fields_feed_renta_observation_without_invoice_ca
     assert result.casilla_values == {_M100_ASESORIA_CASILLA: Decimal("100.00")}
 
 
-def test_unsupported_first_slice_category_lists_current_supported_mappings() -> None:
+def test_usage_ratio_phone_requires_ratio_before_routing_to_other_expenses() -> None:
     phone = _transaction(
         "phone",
         category=SpendingCategory.TELEFONIA_MOVIL,
     )
 
-    result = aggregate_renta_ledger_expenses(
+    missing_ratio = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((phone,)),
         InvoiceCatalogue(),
         bucket_id="test",
@@ -581,16 +620,22 @@ def test_unsupported_first_slice_category_lists_current_supported_mappings() -> 
         profile_year=2025,
     )
 
-    assert result.observations == ()
-    assert result.issues[0].reason is RentaLedgerAggregationIssueReason.CATEGORY_OUTSIDE_FIRST_SLICE
-    detail = result.issues[0].detail
-    assert "telefonia_movil" in detail
-    assert "0186=cuotas_autonomos_ss" in detail
-    assert "0192=arrendamiento_local" in detail
-    assert "0199=" in detail
-    assert "material_oficina" in detail
-    assert "software_suscripcion" in detail
-    assert "0203=gastos_bancarios, gastos_financieros" in detail
+    assert missing_ratio.observations == ()
+    assert missing_ratio.issues[0].reason is RentaLedgerAggregationIssueReason.INELIGIBLE_DEDUCTIBILITY
+    assert "missing usage ratio" in missing_ratio.issues[0].detail
+
+    with_ratio = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((phone,)),
+        InvoiceCatalogue(),
+        bucket_id="test",
+        period=_ANNUAL_2025,
+        profile_year=2025,
+        usage_ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.25")},
+    )
+
+    assert with_ratio.issues == ()
+    assert with_ratio.observations[0].deductible_amount == Decimal("30.2500")
+    assert with_ratio.casilla_values == {_M100_ASESORIA_CASILLA: Decimal("30.2500")}
 
 
 def test_linked_invoice_issue_date_controls_period_filtering() -> None:

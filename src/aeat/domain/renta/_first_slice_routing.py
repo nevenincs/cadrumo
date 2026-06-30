@@ -53,6 +53,10 @@ FIRST_SLICE_EXPENSE_CASILLAS: Mapping[SpendingCategory, CasillaId] = {
         "0199",
         surface="FIRST_SLICE_EXPENSE_CASILLAS.SOFTWARE_SUSCRIPCION",
     ),
+    SpendingCategory.TELEFONIA_MOVIL: validated_casilla_id(
+        "0199",
+        surface="FIRST_SLICE_EXPENSE_CASILLAS.TELEFONIA_MOVIL",
+    ),
     SpendingCategory.PUBLICIDAD_MARKETING: validated_casilla_id(
         "0199",
         surface="FIRST_SLICE_EXPENSE_CASILLAS.PUBLICIDAD_MARKETING",

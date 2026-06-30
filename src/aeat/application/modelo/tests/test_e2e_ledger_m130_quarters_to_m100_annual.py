@@ -61,8 +61,9 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
     validated_casilla_id,
 )
+from ....domain.categories import SpendingCategory
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.invoices import InvoiceCatalogueRepository
+from ....domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._calculation_revision import CalculationRevision
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
@@ -77,6 +78,7 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ....domain.usage_ratios import UsageRatioProfile, save_usage_ratios
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
@@ -99,6 +101,7 @@ _FILE_AT = datetime(2024, 4, 6, 12, 0, tzinfo=UTC)
 _M130_REVISION = "2019-y-siguientes"
 _M100_ANNUAL_PERIOD = "0A"
 _RELATION_PREFILL_SOURCE = "relation_prefill"
+_M100_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-2024-modelo-100-estimacion-directa-es-normal"
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -116,6 +119,9 @@ _M130_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
 _M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = _casilla_id("18")
 _M130_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("19")
 _M100_PAGOS_CASILLA: CasillaId = _casilla_id("0604")
+_M100_ACTIVITY_INCOME_CASILLA: CasillaId = _casilla_id("0171")
+_M100_EXPENSES_PREVIOUS_SUM_CASILLA: CasillaId = _casilla_id("0218")
+_M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA: CasillaId = _casilla_id("0220")
 _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = _casilla_id("0224")
 _M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = _casilla_id("1479")
 _M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = _casilla_id("1553")
@@ -137,27 +143,36 @@ _PRIOR_YEAR_NET_INCOME = Decimal("50000")
 
 # One coherent year of business income, booked one distinct transaction per
 # quarter. Cumulative-YTD (RD 439/2007 art. 110.2) windows then make each
-# quarter's casilla 01 the running sum: 1T=5000, 2T=8000, 3T=10000, 4T=14000.
+# quarter's casilla 01 the running sum: 1T=4000, 2T=7500, 3T=9500, 4T=12000.
 _QUARTER_INCOME: dict[str, tuple[date, Decimal]] = {
-    "1T": (date(_YEAR, 2, 15), Decimal("5000.00")),
-    "2T": (date(_YEAR, 5, 20), Decimal("3000.00")),
+    "1T": (date(_YEAR, 2, 15), Decimal("4000.00")),
+    "2T": (date(_YEAR, 5, 20), Decimal("3500.00")),
     "3T": (date(_YEAR, 8, 10), Decimal("2000.00")),
-    "4T": (date(_YEAR, 11, 5), Decimal("4000.00")),
+    "4T": (date(_YEAR, 11, 5), Decimal("2500.00")),
 }
 _QUARTER_ORDER = ("1T", "2T", "3T", "4T")
 _EXPECTED_CUMULATIVE_C01: dict[str, Decimal] = {
-    "1T": Decimal("5000.00"),
-    "2T": Decimal("8000.00"),
-    "3T": Decimal("10000.00"),
-    "4T": Decimal("14000.00"),
+    "1T": Decimal("4000.00"),
+    "2T": Decimal("7500.00"),
+    "3T": Decimal("9500.00"),
+    "4T": Decimal("12000.00"),
 }
+
+_EXPECTED_M100_ACTIVITY_INCOME = Decimal("12000.00")
+_EXPECTED_M100_ACTIVITY_EXPENSES = Decimal("2400.00")
+_EXPECTED_M100_ACTIVITY_NET = Decimal("9600.00")
+_EXPENSE_ROWS: tuple[tuple[str, date, SpendingCategory, Decimal], ...] = (
+    ("expense-office", date(_YEAR, 2, 20), SpendingCategory.MATERIAL_OFICINA, Decimal("500.00")),
+    ("expense-software", date(_YEAR, 5, 22), SpendingCategory.SOFTWARE_SUSCRIPCION, Decimal("700.00")),
+    ("expense-phone", date(_YEAR, 8, 12), SpendingCategory.TELEFONIA_MOVIL, Decimal("300.00")),
+    ("expense-advisory", date(_YEAR, 11, 8), SpendingCategory.ASESORIA_FISCAL, Decimal("900.00")),
+)
 
 # M130 manual casillas (retenciones / agrarian / vivienda / prior
 # autoliquidaciones). All zero for this pure-estimación-directa, no-retención
-# persona so casilla 03 == casilla 01 and casilla 19 == casilla 12. Casilla 02
-# (Gastos) is a source-owned bound casilla (ledger renta gasto aggregation) and is
-# NOT supplied here: with no expense transactions seeded its resolver returns 0,
-# so casilla 03 == casilla 01 as before.
+# persona. Casilla 02 (Gastos) is a source-owned bound casilla
+# (ledger renta gasto aggregation) and is NOT supplied here: the persisted
+# expense rows drive it through the live source resolver.
 _M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
     _M130_RETENCIONES_CASILLA: Decimal("0"),
     _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
@@ -220,11 +235,67 @@ def _income_transaction(period: str) -> Transaction:
     )
 
 
-def _persist_year_of_income(secure_objects: SecureObjectRepository) -> None:
-    """Persist the four quarterly business-income transactions into the bucket."""
+def _expense_transaction(
+    transaction_id: str,
+    *,
+    value_date: date,
+    category: SpendingCategory,
+    taxable_base: Decimal,
+) -> Transaction:
+    gross_amount = (taxable_base * Decimal("1.21")).quantize(Decimal("0.01"))
+    iva_amount = gross_amount - taxable_base
+    return Transaction.model_validate(
+        {
+            "raw": RawTransaction(
+                transaction_id=transaction_id,
+                booked_date=value_date,
+                value_date=value_date,
+                amount=gross_amount,
+                currency="EUR",
+                counterparty="Proveedor",
+                description=f"gasto {category.value}",
+                provenance=RawProvenance(
+                    source_path=Path(__file__),
+                    source_sha256="b" * 64,
+                    source_row_index=1,
+                    source_format=SourceFormat.CSV,
+                    ingested_at=_T0,
+                    provider_name="CSV provider",
+                ),
+                raw_fields={"Concepto": f"gasto {category.value}"},
+            ),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "business_classification": BusinessClassification.BUSINESS,
+            "business_pct": None,
+            "purchase_invoice_evidence_id": None,
+            "category_id": category.value,
+            "taxable_base": taxable_base,
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": iva_amount,
+            "lifecycle_state": TransactionLifecycleState.ACTIVE,
+            "classified_at": _T0,
+            "classified_by": "manual",
+        },
+    )
+
+
+def _persist_marta_style_ledger(secure_objects: SecureObjectRepository) -> None:
+    """Persist Marta-shaped annual activity income plus deductible expenses."""
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    transactions = tuple(_income_transaction(period) for period in _QUARTER_ORDER) + tuple(
+        _expense_transaction(transaction_id, value_date=value_date, category=category, taxable_base=taxable_base)
+        for transaction_id, value_date, category, taxable_base in _EXPENSE_ROWS
+    )
     tx_repo.save(
-        TransactionCatalogue.from_transactions(tuple(_income_transaction(period) for period in _QUARTER_ORDER)),
+        TransactionCatalogue.from_transactions(transactions),
+    )
+    InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(InvoiceCatalogue())
+    save_usage_ratios(
+        UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("1")}),
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
     )
 
 
@@ -371,7 +442,7 @@ def _seed_taxpayer_profile() -> None:
 def _m100_non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     """Zero-default every M100/2024 binding that is neither profile- nor relation-sourced."""
     snapshot = resources().modelos.authority.snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
-    return {
+    values = {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
         if binding.source
@@ -386,6 +457,8 @@ def _m100_non_relation_zero_bindings() -> dict[BindingId, Decimal]:
             "payable_invoice",
         )
     }
+    values[_M100_ESTIMACION_DIRECTA_NORMAL_BINDING] = Decimal("1")
+    return values
 
 
 def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> CalculationRevision:
@@ -421,7 +494,7 @@ def test_ledger_drives_m130_quarters_and_folds_into_m100_annual(
 ) -> None:
     """The full yearly cadence: persisted ledger → 4×M130 → M100 0604 fold-in."""
     _seed_taxpayer_profile()
-    _persist_year_of_income(secure_objects)
+    _persist_marta_style_ledger(secure_objects)
     _seed_prior_year_m100(secure_objects)
     _seed_m131_zero_quarters(secure_objects)
 
@@ -445,6 +518,11 @@ def test_ledger_drives_m130_quarters_and_folds_into_m100_annual(
     assert all(value > Decimal("0") for value in computed_c19.values()), computed_c19
 
     annual = _calculate_m100_annual(secure_objects)
+
+    assert Decimal(annual.casilla_values[_M100_ACTIVITY_INCOME_CASILLA]) == _EXPECTED_M100_ACTIVITY_INCOME
+    assert Decimal(annual.casilla_values[_M100_EXPENSES_PREVIOUS_SUM_CASILLA]) == _EXPECTED_M100_ACTIVITY_EXPENSES
+    assert Decimal(annual.casilla_values[_M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA]) == _EXPECTED_M100_ACTIVITY_EXPENSES
+    assert Decimal(annual.casilla_values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == _EXPECTED_M100_ACTIVITY_NET
 
     # Transport invariant #2: the annual M100 0604 folds in the SUM of the four
     # engine-computed M130 casilla-19 values (M131 c15 folds as zero). This wires
@@ -476,7 +554,7 @@ def test_verify_gate_blocks_chain_carrying_non_official_prior_year(
     real ledger-derived multi-period chain.
     """
     _seed_taxpayer_profile()
-    _persist_year_of_income(secure_objects)
+    _persist_marta_style_ledger(secure_objects)
     _seed_prior_year_m100(secure_objects)
     _seed_m131_zero_quarters(secure_objects)
     for period in _QUARTER_ORDER:
