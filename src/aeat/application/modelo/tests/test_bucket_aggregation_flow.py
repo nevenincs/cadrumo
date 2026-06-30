@@ -188,6 +188,38 @@ def _store_profile(objects: SecureObjectRepository) -> None:
     )
 
 
+def _store_first_period_profile(objects: SecureObjectRepository) -> None:
+    """Store a profile whose IVA activity begins inside the 2026 1T filing period.
+
+    A taxpayer whose ``censo.activity_start_date`` falls within the target period
+    has no in-scope prior Modelo 303 period, so the prior-compensation dependency
+    is pre-activity and the IVA wallet gate grounds a ``first_period_zero``
+    decision instead of blocking. This is the genuine new-filer / sin-actividad
+    scenario: the first Modelo 303 with an empty ledger.
+    """
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+        UserProfileRecord(
+            profile_id=_BUCKET_ID,
+            display_name="Test runtime profile",
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Ready"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="design"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="censo.activity_start_date", value=date(2026, 1, 15)),
+            ),
+            created_at=_T0,
+            updated_at=_T0,
+        ),
+    )
+
+
 def _wallet_decision(*, period: str, selected_amount: Decimal) -> IvaCompensationReconciliationDecision:
     return IvaCompensationReconciliationDecision(
         taxpayer_nif="12345678Z",
@@ -604,3 +636,59 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_ledger_bound_
     assert all(
         event.event_type != BucketEventType.MODELO_CALCULATION_CREATED for event in event_repo.load().events.values()
     )
+
+
+def test_first_period_empty_ledger_m303_calculates_zero_sin_actividad(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A first-period filer with an empty ledger files a valid zero (sin actividad) Modelo 303.
+
+    Art. 164.Uno.6.º LIVA (Ley 37/1992) obliges every sujeto pasivo to present the
+    periodic ``declaración-liquidación`` regardless of activity, so a period with no
+    operations is a legitimate zero-result filing, not an error. When the taxpayer's
+    ``censo.activity_start_date`` falls inside the target period there is no in-scope
+    prior compensation dependency, so the IVA wallet gate grounds a ``first_period_zero``
+    decision and the calculate produces a zero result with NO ledger import, NO seed,
+    and NO manual override — the path a new filer needs (issue #555).
+    """
+    _store_first_period_profile(secure_objects)
+    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
+    work_unit = _seed_303_work_unit(wu_repo)
+
+    # Empty ledger: no transactions saved at all, no overrides, no seed.
+    revision = calculate_modelo_revision_from_bucket_aggregation(
+        work_unit.work_unit_id,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=event_repo,
+        transaction_repository=tx_repo,
+        clock=_T1,
+    )
+
+    prior_compensacion_casilla = _casilla_id("iva.compensacion-pendiente-periodos-anteriores")
+    assert revision.source_transaction_ids == ()
+    assert revision.casilla_values[_M303_REPERCUTIDO_GENERAL_CASILLA] == Decimal("0")
+    assert revision.casilla_values[_M303_SOPORTADO_INTERIORES_CASILLA] == Decimal("0")
+    assert revision.casilla_values[_M303_RESULTADO_CASILLA] == Decimal("0.00")
+    assert revision.casilla_values[prior_compensacion_casilla] == Decimal("0")
+
+    # The revision is persisted and the calculation lifecycle event fired.
+    assert len(cr_repo.load().revisions) == 1
+    calculation_events = [
+        event
+        for event in event_repo.load().for_bucket(_BUCKET_ID)
+        if event.event_type == BucketEventType.MODELO_CALCULATION_CREATED
+    ]
+    assert len(calculation_events) == 1
+
+    # The IVA wallet authority recorded a non-blocking first-period zero decision,
+    # so prior compensation was grounded rather than silently assumed.
+    decision = IvaWalletDecisionRepository(objects=secure_objects).load_decision(
+        "12345678Z",
+        Period.from_year_and_code(2026, "1T"),
+    )
+    assert decision is not None
+    assert decision.blocked is False
+    assert decision.selected_amount == Decimal("0")
+    assert str(decision.divergence) == "first_period_zero"
