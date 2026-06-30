@@ -762,6 +762,66 @@ def test_modelo_100_inmueble_0080_activity_use_days_are_integer() -> None:
         )
 
 
+def test_modelo_100_spouse_disability_marriage_months_are_integer_months() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_rows = {
+        _casilla_id("0246"): (
+            "Primer mes",
+            "irpf_conyuge_discapacidad_matrimonio_mes_inicio",
+        ),
+        _casilla_id("0247"): (
+            "Último mes completo",
+            "irpf_conyuge_discapacidad_matrimonio_mes_fin",
+        ),
+    }
+    expected_section = ("resultados", "calculo_impuesto_res", "deduc_conyuge_disc_res")
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_rows}
+
+        assert set(casillas_by_id) == set(expected_rows)
+        for casilla_id, (label_prefix, expected_role) in expected_rows.items():
+            casilla = casillas_by_id[casilla_id]
+            constraints = casilla.constraints
+            expected_sources = {
+                f"aeat-dr-100-{filing_year}-dictionary",
+                f"aeat-dr-100-{filing_year}-input-dictionary",
+                f"aeat-dr-100-{filing_year}-xsd",
+            }
+
+            assert casilla.label.startswith(label_prefix)
+            assert "vigente el matrimonio" in casilla.label
+            assert tuple(casilla.section) == expected_section
+            assert casilla.data_type == "integer"
+            assert casilla.semantic_role == expected_role
+            assert "ley-35-2006:art-81-bis" in casilla.legal_refs
+            assert expected_sources.issubset(casilla.source_refs)
+            assert constraints is not None
+            assert constraints.sign == "non_negative"
+            assert constraints.min_value is None
+            assert constraints.max_value == Decimal("12")
+            assert "ley-35-2006:art-81-bis" in constraints.legal_refs
+            assert expected_sources.issubset(constraints.source_refs)
+
+        formulas_by_target = {
+            formula.target_casilla_id: formula
+            for formula in revision.formulas
+            if formula.target_casilla_id in expected_rows
+        }
+        for formula in formulas_by_target.values():
+            assert "ley-35-2006:art-82" in formula.legal_refs
+            assert f"aeat-dr-100-{filing_year}-dictionary" in formula.source_refs
+            assert f"aeat-dr-100-{filing_year}-xsd" in formula.source_refs
+
+    assert all(
+        casilla.semantic_role != "irpf_matrimonio_mes_fin"
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    )
+
+
 def test_modelo_100_inmueble_0076_habitual_residence_days_are_integer() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
