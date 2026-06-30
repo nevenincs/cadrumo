@@ -13,6 +13,7 @@ from .....domain.calculations.registry import (
     BindingId,
     CasillaId,
     RegistryValidationError,
+    RelationId,
     calculate_registry_snapshot,
     validated_casilla_id,
 )
@@ -147,6 +148,42 @@ def _assert_engine_closure_matches_extracted_decimal(
         f"  diff: {engine_value - extracted_value!r}"
         f"{input_detail}"
     )
+
+
+def _calculate_engine_values_from_inputs(
+    *,
+    modelo: str,
+    year: int,
+    period: str,
+    label: str,
+    inputs: Mapping[CasillaId, Decimal],
+    binding_values: Mapping[BindingId, Decimal] | None = None,
+    enum_binding_values: Mapping[BindingId, str] | None = None,
+    relation_values: Mapping[RelationId, Decimal] | None = None,
+) -> dict[CasillaId, object]:
+    snapshot = _registry_snapshot(modelo, year, period)
+    try:
+        result = calculate_registry_snapshot(
+            snapshot,
+            inputs=inputs,
+            date_context={"filing_period": _period_to_date(year, period)},
+            binding_values=binding_values,
+            enum_binding_values=enum_binding_values,
+            relation_values=relation_values,
+        )
+    except RegistryValidationError as exc:
+        detail = f"\n  binding_values: {sorted(binding_values)}" if binding_values is not None else ""
+        if enum_binding_values is not None:
+            detail += f"\n  enum_binding_values: {sorted(enum_binding_values)}"
+        if relation_values is not None:
+            detail += f"\n  relation_values: {sorted(relation_values)}"
+        pytest.fail(
+            f"BINDING-GAP [{label}]: calculate_registry_snapshot raised RegistryValidationError.\n"
+            f"  error: {exc}\n"
+            f"  inputs: {sorted(inputs)}"
+            f"{detail}",
+        )
+    return dict(result.values)
 
 
 def _registry_modelo_observations_from_values(

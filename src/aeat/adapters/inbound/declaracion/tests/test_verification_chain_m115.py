@@ -5,14 +5,11 @@ import pytest
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M115,
     CasillaId,
-    RegistryValidationError,
     _assert_engine_closure_matches_extracted_decimal,
+    _calculate_engine_values_from_inputs,
     _casilla_id,
     _decimal_inputs_from_extracted_values,
     _parse_extracted_declaracion_values,
-    _period_to_date,
-    _registry_snapshot,
-    calculate_registry_snapshot,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -65,23 +62,13 @@ def test_verification_chain_m115_engine_recomputes_retenciones_and_resultado() -
         )
 
     inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M115)
-
-    snapshot = _registry_snapshot("115", 2024, "1T")
-    filing_period_date = _period_to_date(2024, "1T")
-
-    try:
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=inputs,
-            date_context={"filing_period": filing_period_date},
-        )
-    except RegistryValidationError as exc:
-        pytest.fail(
-            f"BINDING-GAP [M115/2024-1T]: calculate_registry_snapshot raised "
-            f"RegistryValidationError.\n  error: {exc}\n  inputs: {sorted(inputs)}",
-        )
-
-    engine_values = dict(result.values)
+    engine_values = _calculate_engine_values_from_inputs(
+        modelo="115",
+        year=2024,
+        period="1T",
+        label="M115/2024-1T",
+        inputs=inputs,
+    )
 
     for closure_id in _M115_CLOSURE_CASILLAS:
         _assert_engine_closure_matches_extracted_decimal(

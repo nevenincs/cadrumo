@@ -7,14 +7,11 @@ from ._verification_chain_support import (
     BindingId,
     CasillaId,
     Decimal,
-    RegistryValidationError,
     _assert_engine_closure_matches_extracted_decimal,
+    _calculate_engine_values_from_inputs,
     _casilla_id,
     _decimal_inputs_from_extracted_values,
     _parse_extracted_declaracion_values,
-    _period_to_date,
-    _registry_snapshot,
-    calculate_registry_snapshot,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -68,25 +65,14 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
     binding_values: dict[BindingId, Decimal] = {
         "modelo-131-2026-resultados-negativos-anteriores": Decimal("0"),
     }
-
-    snapshot = _registry_snapshot("131", 2026, "1T")
-    filing_period_date = _period_to_date(2026, "1T")
-
-    try:
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=inputs,
-            date_context={"filing_period": filing_period_date},
-            binding_values=binding_values,
-        )
-    except RegistryValidationError as exc:
-        pytest.fail(
-            f"BINDING-GAP [M131/yr=2026-1T]: calculate_registry_snapshot raised "
-            f"RegistryValidationError.\n  error: {exc}\n"
-            f"  inputs: {sorted(inputs)}\n  binding_values: {sorted(binding_values)}",
-        )
-
-    engine_values = dict(result.values)
+    engine_values = _calculate_engine_values_from_inputs(
+        modelo="131",
+        year=2026,
+        period="1T",
+        label="M131/yr=2026-1T",
+        inputs=inputs,
+        binding_values=binding_values,
+    )
 
     for closure_id in _M131_CLOSURE_CASILLAS:
         if closure_id not in extracted:

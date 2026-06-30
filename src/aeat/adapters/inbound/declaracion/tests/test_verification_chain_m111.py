@@ -7,15 +7,12 @@ import pytest
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M111,
     CasillaId,
-    RegistryValidationError,
     _assert_engine_closure_matches_extracted_decimal,
+    _calculate_engine_values_from_inputs,
     _casilla_id,
     _casilla_ids,
     _decimal_inputs_from_extracted_values,
     _parse_extracted_declaracion_values,
-    _period_to_date,
-    _registry_snapshot,
-    calculate_registry_snapshot,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -56,25 +53,13 @@ def test_verification_chain_m111_engine_recomputes_closure_casillas_28_and_30(
     """
     extracted = _parse_extracted_declaracion_values(modelo="111", fixture_stem=pdf_stem, year=year, period=period)
     inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M111)
-
-    snapshot = _registry_snapshot("111", year, period)
-    filing_period_date = _period_to_date(year, period)
-
-    try:
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=inputs,
-            date_context={"filing_period": filing_period_date},
-        )
-    except RegistryValidationError as exc:
-        pytest.fail(
-            f"BINDING-GAP [{pdf_stem}]: calculate_registry_snapshot raised "
-            f"RegistryValidationError - a required binding is missing.\n"
-            f"  error: {exc}\n"
-            f"  inputs supplied: {sorted(inputs)}",
-        )
-
-    engine_values = dict(result.values)
+    engine_values = _calculate_engine_values_from_inputs(
+        modelo="111",
+        year=year,
+        period=period,
+        label=pdf_stem,
+        inputs=inputs,
+    )
     has_leaf_inputs = bool(inputs.keys() & _M111_RETENCIONES_TOTAL_LEAVES)
 
     if _M111_RETENCIONES_TOTAL_CASILLA in extracted and has_leaf_inputs:

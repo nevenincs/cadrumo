@@ -9,13 +9,10 @@ from ._verification_chain_support import (
     BindingId,
     CasillaId,
     Decimal,
-    RegistryValidationError,
+    _calculate_engine_values_from_inputs,
     _casilla_id,
     _decimal_inputs_from_extracted_values,
     _parse_extracted_declaracion_values,
-    _period_to_date,
-    _registry_snapshot,
-    calculate_registry_snapshot,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -83,27 +80,14 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
         "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         "irpf.previous_year_economic_activity_net_income": Decimal("0"),
     }
-
-    snapshot = _registry_snapshot("130", year, period)
-    filing_period_date = _period_to_date(year, period)
-
-    try:
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=inputs,
-            date_context={"filing_period": filing_period_date},
-            binding_values=binding_values,
-        )
-    except RegistryValidationError as exc:
-        pytest.fail(
-            f"BINDING-GAP [{pdf_stem}]: calculate_registry_snapshot raised "
-            f"RegistryValidationError - a required binding is missing.\n"
-            f"  error: {exc}\n"
-            f"  inputs supplied: {sorted(inputs)}\n"
-            f"  binding_values supplied: {sorted(binding_values)}",
-        )
-
-    engine_values = dict(result.values)
+    engine_values = _calculate_engine_values_from_inputs(
+        modelo="130",
+        year=year,
+        period=period,
+        label=pdf_stem,
+        inputs=inputs,
+        binding_values=binding_values,
+    )
 
     input_01 = inputs.get(_M130_INGRESOS_CASILLA, Decimal("0"))
     input_02 = inputs.get(_M130_GASTOS_CASILLA, Decimal("0"))
