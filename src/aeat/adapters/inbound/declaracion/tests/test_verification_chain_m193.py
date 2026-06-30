@@ -3,18 +3,16 @@ from __future__ import annotations
 import pytest
 
 from ._verification_chain_support import (
-    FIXTURES_DIR,
     BindingId,
     CasillaId,
     Decimal,
-    DeclaracionParseError,
     RegistryValidationError,
     _casilla_id,
+    _parse_extracted_declaracion_values,
     _registry_modelo_observations_from_values,
     _registry_snapshot,
     calculate_registry_snapshot,
     date,
-    parse_declaracion,
     resolve_bound_inputs_by_casilla_id,
     resolve_relation_values_from_observations,
 )
@@ -64,19 +62,7 @@ def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_re
     Verdict: VERIFIED - the M123->M193 monetary relation chain resolves without
     resurrecting the retired quarterly perceptor-count relation.
     """
-    pdf_path = FIXTURES_DIR / "justificantes" / "193" / "2024-0A.pdf"
-
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override="193",
-            año_override=2024,
-            period_override="0A",
-        )
-    except DeclaracionParseError as exc:
-        pytest.fail(f"PARSER-GAP [M193/2024-0A engine]: parse_declaracion raised.\n  error: {exc}")
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+    extracted = _parse_extracted_declaracion_values(modelo="193", fixture_stem="2024-0A", year=2024, period="0A")
 
     perceptor_binding_value = Decimal("2")
     extracted_perceptors = extracted.get(_DECL_TOTAL_PERCEPTORES_CASILLA)
