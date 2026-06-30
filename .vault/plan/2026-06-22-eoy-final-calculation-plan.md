@@ -3,13 +3,13 @@ tags:
   - '#plan'
   - '#eoy-final-calculation'
 date: '2026-06-22'
-modified: '2026-06-24'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-22-eoy-final-calculation-adr]]'
   - '[[2026-06-21-eoy-final-calculation-audit]]'
+  - '[[2026-06-30-eoy-final-calculation-research]]'
 ---
-
 
 # `eoy-final-calculation` plan
 
@@ -25,9 +25,9 @@ Convert casilla DP200014B:00592 (cuota liquida) from a bare manual input into a 
 
 Close the adjacent end-of-year aggregation gaps and lock the headline-figure derivation with real end-to-end regression tests.
 
-- [ ] `P02.S04` - Confirm the M100 non-first-slice gastos advisory fires at parity with 2025 (no code unless missing); `src/aeat/_data/registry/aeat/modelos/100`.
-- [ ] `P02.S05` - Extend the 0004-domestic-base M303 ledger base aggregation to every supported 303 revision so base casilla 03/07/28 never populate cuota without base (F3); `src/aeat/_data/registry/aeat/modelos/303`.
-- [ ] `P02.S06` - Add M100 and M390 annual continuity regression coverage asserting the headline figure derives from period/ledger inputs, mirroring the M130 carry-forward tests; `src/aeat/application/modelo/tests`.
+- [x] `P02.S04` - Confirm the M100 non-first-slice gastos advisory fires at parity with 2025 (no code unless missing); `src/aeat/_data/registry/aeat/modelos/100`.
+- [x] `P02.S05` - Extend the 0004-domestic-base M303 ledger base aggregation to every supported 303 revision so base casilla 03/07/28 never populate cuota without base (F3); `src/aeat/_data/registry/aeat/modelos/303`.
+- [x] `P02.S06` - Add M100 and M390 annual continuity regression coverage asserting the headline figure derives from period/ledger inputs, mirroring the M130 carry-forward tests; `src/aeat/application/modelo/tests`.
 
 ## Description
 
@@ -38,12 +38,6 @@ the open work is F2 (M200 cuota liquida derivation), the adjacent F3 (M303 base 
 authorising ADR and audit are listed in `related:`. Phase blocks appear above; this section is prose.
 
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 
