@@ -3,6 +3,7 @@ id = "0542"
 number = "0542"
 label = "Tipos medios de gravamen ( [0542] = [0540] x 100 / [0510] ); ( [0543] = [0541] x 100 / [0510] ): Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+data_type = "ratio"
 semantic_role = "irpf_tipo_medio_gravamen_ahorro_estatal"
 input_kind = "computed"
 formula = "renta-2021-tipo-medio-gravamen-estatal-base-liquidable-ahorro"
