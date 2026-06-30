@@ -823,11 +823,13 @@ def filed_list_cmd(
         typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help")),
     ] = None,
 ) -> None:
-    """List filed-declaration rows without downloading justificantes or submitted files.
+    """List :class:`~aeat.application.live.FiledDataListingRow` register rows.
 
-    All filters are optional refinements. When ``--modelo`` is omitted the
-    listing iterates every modelo configured in the registry. When
-    ``--from-year`` / ``--to-year`` are omitted they default to the current
+    The command reads AEAT's declaration register and emits
+    :class:`~aeat.entrypoints.cli._app_live_payloads.FiledListResult` without
+    downloading justificantes, submitted files, or declaration-copy artefacts.
+    All filters are optional refinements: omitting ``--modelo`` iterates every
+    registry-configured modelo, and omitted year bounds default to the current
     calendar year.
     """
     from datetime import date as _date
@@ -985,7 +987,16 @@ def filed_pull_cmd(
     expediente_id: Annotated[str | None, typer.Option("--expediente", help=tr("cli.app.live.expediente_help"))] = None,
     limit: Annotated[int | None, typer.Option("--limit", min=1, help=tr("cli.app.live.limit_help"))] = None,
 ) -> None:
-    """Capture filed-declaration data from the authenticated AEAT register."""
+    """Capture filed-declaration observations through the read-only AEAT register.
+
+    Single-modelo mode delegates to
+    :func:`~aeat.application.live.capture_filed_data`; range mode delegates to
+    :func:`~aeat.application.live.capture_filed_data_bulk`. Both flows persist
+    encrypted filed observations and artefact references, register parsed
+    justificante metadata when available, and only stamp local
+    :class:`~aeat.domain.modelos.ModeloRecord` evidence when an existing current
+    filing record matches.
+    """
     from ._app_live_payloads import FiledCaptureFailurePayload, FiledCaptureResult
 
     _emit_live_auth_preflight()
@@ -1115,7 +1126,14 @@ def filed_pull_sources_cmd(
         ),
     ] = None,
 ) -> None:
-    """Capture filed observations required by a target filing's dependencies."""
+    """Capture registry-selected source observations for a target :class:`Period`.
+
+    Delegates to :func:`~aeat.application.live.capture_source_filed_data`, which
+    resolves dependencies from a validated registry snapshot before reading
+    prior filed declarations. The emitted
+    :class:`~aeat.entrypoints.cli._app_live_payloads.FiledCaptureSourcesResult`
+    is local evidence only; the command does not submit or mutate AEAT state.
+    """
     from ._app_live_payloads import FiledCaptureSourcesResult
 
     _emit_live_auth_preflight()

@@ -25,7 +25,12 @@ from ._schemas import OutputSchema, register_schema
 
 
 class FiledListingRowPayload(OutputSchema):
-    """One filed declaration row in a filed-list result."""
+    """JSON projection of one :class:`~aeat.application.live.FiledDataListingRow`.
+
+    The row comes from AEAT's declaration register only; the boolean fields say
+    which submitted-file, declaration-copy, or justificante links were visible
+    without downloading those artefacts.
+    """
 
     modelo: str
     year: int
@@ -39,7 +44,7 @@ class FiledListingRowPayload(OutputSchema):
 
 
 class FiledCaptureFailurePayload(OutputSchema):
-    """One failed declaration capture row in a filed pull result."""
+    """JSON projection of one :class:`~aeat.application.live.FiledDataCaptureFailureRow`."""
 
     modelo: str
     year: int
@@ -56,7 +61,14 @@ class FiledCaptureFailurePayload(OutputSchema):
 
 @register_schema("app.live.filed.list")
 class FiledListResult(OutputSchema):
-    """Payload for ``aeat app live filed list``."""
+    """List result for declaration-register rows returned by the live filed surface.
+
+    Single-modelo calls mirror
+    :class:`~aeat.application.live.FiledDataListingReport`; registry-wide calls
+    mirror :class:`~aeat.application.live.BulkFiledDataListingReport` and may
+    include per-modelo failure rows. No filed artefact bodies are captured by
+    this schema.
+    """
 
     modelo_filter: str | None
     year_from: int
@@ -69,7 +81,16 @@ class FiledListResult(OutputSchema):
 
 @register_schema("app.live.filed.pull")
 class FiledCaptureResult(OutputSchema):
-    """Payload for ``aeat app live filed pull``."""
+    """Capture result for encrypted filed-declaration observations and artefacts.
+
+    In ``single`` mode the payload mirrors
+    :class:`~aeat.application.live.FiledDataCaptureReport`; in ``bulk`` mode it
+    mirrors :class:`~aeat.application.live.BulkFiledDataCaptureReport`. The
+    ``observation_paths`` and ``artefact_refs`` fields identify local encrypted
+    stores, while justificante and filing-evidence counts report local metadata
+    enrolment against existing :class:`~aeat.domain.modelos.ModeloRecord`
+    records.
+    """
 
     mode: Literal["single", "bulk"] = "single"
     output_root: str
@@ -96,7 +117,13 @@ class FiledCaptureResult(OutputSchema):
 
 @register_schema("app.live.filed.pull_sources")
 class FiledCaptureSourcesResult(OutputSchema):
-    """Payload for ``aeat app live filed pull-sources``."""
+    """Source-observation capture result for a target filing's registry dependencies.
+
+    Mirrors :class:`~aeat.application.live.SourceFiledDataCaptureReport`: the
+    target :class:`Period` is resolved through registry authority, prior filed
+    observations are persisted as encrypted local evidence, and matching
+    justificantes may enrol local filing evidence without mutating AEAT state.
+    """
 
     output_root: str
     target_modelo: str
