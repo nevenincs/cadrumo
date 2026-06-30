@@ -32,7 +32,8 @@ from collections.abc import Callable
 
 import pytest
 
-from ....core.resources import resources
+from ....core.resources import bundled_path, resources
+from ....domain.calculations.registry._legal import verify_legal_catalogue
 from ....domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     TaxRoute,
@@ -840,7 +841,7 @@ def test_undetermined_reason_distinct_from_undeclared_and_unruled() -> None:
 
 def test_seed_legal_refs_resolve_against_the_registry() -> None:
     """Every ``legal_refs`` key carried by the seed applicability table
-    must point at a real registry legal entity.
+    must point at a real, corpus-backed registry legal entity.
 
     Per ``.claude/rules/aeat-calculation-grounding.md``, every typed-ID
     reference must resolve against an existing registry entity — no
@@ -871,3 +872,9 @@ def test_seed_legal_refs_resolve_against_the_registry() -> None:
     # Every seed key is a scoped article reference, not a bare law slug.
     for ref in sorted(seed_refs):
         assert ":" in ref, f"seed legal_ref is not in scoped article form: {ref!r}"
+
+    legal_refs = {
+        ref: resources().modelos.authority.catalogues.legal[ref]
+        for ref in sorted(seed_refs)
+    }
+    verify_legal_catalogue(legal_refs, source_root=bundled_path())
