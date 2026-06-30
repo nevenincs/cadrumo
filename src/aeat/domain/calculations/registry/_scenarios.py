@@ -37,8 +37,8 @@ class RegistryScenarioExpectedOutput(RegistryScenarioModel):
     value: Decimal
     operand_refs: tuple[str, ...] = ()
     operand_casilla_refs: tuple[CasillaId, ...] = ()
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
+    legal_refs: tuple[str, ...] = Field(min_length=1)
+    source_refs: tuple[str, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
     def _operand_casilla_refs_are_traced(self) -> RegistryScenarioExpectedOutput:
@@ -111,9 +111,9 @@ class RegistryScenarioComparison(RegistryScenarioModel):
     actual_operand_refs: tuple[str, ...] = ()
     expected_operand_casilla_refs: tuple[CasillaId, ...] = ()
     actual_operand_casilla_refs: tuple[CasillaId, ...] = ()
-    expected_legal_refs: tuple[str, ...] = ()
+    expected_legal_refs: tuple[str, ...] = Field(min_length=1)
     actual_legal_refs: tuple[str, ...] = ()
-    expected_source_refs: tuple[str, ...] = ()
+    expected_source_refs: tuple[str, ...] = Field(min_length=1)
     actual_source_refs: tuple[str, ...] = ()
     detail: str | None = None
 

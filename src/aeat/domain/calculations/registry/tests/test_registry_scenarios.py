@@ -6,18 +6,17 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from .....core.resources import bundled_path
 from .._errors import RegistrySnapshotError, RegistryValidationError
 from .._scenarios import (
     RegistryCalculationScenario,
-    RegistryScenarioExpectedOutput,
     assert_registry_scenario_matches,
     run_registry_calculation_scenario,
 )
 from ._registry_scenarios_support import (
     _REGISTRY_ROOT,
-    _casilla_id,
     _estimacion_objetiva_modulos_archetype_scenario,
     _expected,
     _final_settlement_scenario,
@@ -178,10 +177,11 @@ def test_registry_scenario_requires_declared_operand_casilla_refs() -> None:
     scenario = _simplified_direct_estimation_cap_scenario().model_copy(
         update={
             "expected_outputs": (
-                RegistryScenarioExpectedOutput(
-                    target_casilla_id=_casilla_id("0222"),
+                _expected(
+                    "0222",
                     value=Decimal("2000.00"),
                     operand_refs=("0180",),
+                    operand_casilla_refs=(),
                 ),
             ),
         },
@@ -198,6 +198,24 @@ def test_registry_scenario_requires_declared_operand_casilla_refs() -> None:
     assert "expected operand casillas were not declared" in detail
     with pytest.raises(RegistryValidationError, match="expected operand casillas were not declared"):
         assert_registry_scenario_matches(report)
+
+
+def test_registry_scenario_expected_output_requires_grounding() -> None:
+    with pytest.raises(ValidationError, match="legal_refs"):
+        RegistryCalculationScenario(
+            id="ungrounded-expected-output",
+            modelo="100",
+            revision="2025",
+            filing_year=2025,
+            period="0A",
+            expected_outputs=(
+                {
+                    "target_casilla_id": _operand_casilla_refs("0222")[0],
+                    "value": Decimal("2000.00"),
+                    "source_refs": ("aeat-renta-2025-manual-parte1",),
+                },
+            ),
+        )
 
 
 def test_registry_scenario_requires_declared_revision_to_match_snapshot() -> None:
