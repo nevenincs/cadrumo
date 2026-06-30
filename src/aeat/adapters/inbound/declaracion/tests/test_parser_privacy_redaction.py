@@ -1,4 +1,4 @@
-"""Focused adapter contract tests split from the original monolith."""
+"""Declaracion parser privacy redaction tests."""
 
 from __future__ import annotations
 
