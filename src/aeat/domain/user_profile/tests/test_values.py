@@ -39,22 +39,32 @@ def test_profile_record_is_strict_frozen_and_tombstones_live_root() -> None:
         profile.display_name = "Changed"
 
 
-def test_profile_record_rejects_invalid_lifecycle_state() -> None:
-    with pytest.raises(ValidationError, match="tombstoned profiles must carry removed_at"):
-        UserProfileRecord.model_validate(
+@pytest.mark.parametrize(
+    ("payload", "expected_message"),
+    (
+        pytest.param(
             {
                 "profile_id": _REMOVED_PROFILE_ID,
                 "display_name": "Removed",
                 "status": "tombstoned",
             },
-        )
-
-    with pytest.raises(ValidationError, match="active profiles must not carry removed_at"):
-        UserProfileRecord(
-            profile_id=_ACTIVE_PROFILE_ID,
-            display_name="Active",
-            removed_at=datetime(2026, 5, 7, tzinfo=UTC),
-        )
+            "tombstoned profiles must carry removed_at",
+            id="tombstoned-without-removed-at",
+        ),
+        pytest.param(
+            {
+                "profile_id": _ACTIVE_PROFILE_ID,
+                "display_name": "Active",
+                "removed_at": datetime(2026, 5, 7, tzinfo=UTC),
+            },
+            "active profiles must not carry removed_at",
+            id="active-with-removed-at",
+        ),
+    ),
+)
+def test_profile_record_rejects_invalid_lifecycle_state(payload: dict[str, object], expected_message: str) -> None:
+    with pytest.raises(ValidationError, match=expected_message):
+        UserProfileRecord.model_validate(payload)
 
 
 def test_profile_fact_rejects_invalid_effective_window() -> None:
