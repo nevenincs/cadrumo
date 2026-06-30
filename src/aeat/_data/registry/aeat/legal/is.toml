@@ -1157,13 +1157,15 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11071#a14"
 published_at = 2015-10-22
 effective_from = 2015-10-24
 review_status = "reviewed"
-reviewed_at = 2026-05-27
-reviewed_by = "wgergely"
-notes = "Ley 44/2015 Art. 14: reserva especial. Las sociedades laborales deberan destinar a la reserva especial una parte de sus beneficios liquidos del ejercicio no inferior al 10 por ciento, hasta que dicha reserva alcance, al menos, el importe del capital social. Para el calculo de la base imponible del Impuesto sobre Sociedades, la dotacion a la reserva especial es gasto fiscalmente deducible segun el regimen fiscal vigente. A efectos practicos, la dotacion obligatoria del 10 por ciento sobre el beneficio neto reduce la base imponible IS, con el limite de que la reserva acumulada no supere el 50 por ciento del capital social (limite operativo en el contexto del calculo del IS; la norma fija 'hasta el importe del capital social' como limite definitivo pero la jurisprudencia fiscal y la practica de la AEAT aplican el 50 por ciento como umbral de la reduccion en cuota)."
+reviewed_at = 2026-06-30
+reviewed_by = "codex (verified against official BOE-A-2015-11071 consolidated art. 14; corpus excerpt currentized)"
+notes = "Ley 44/2015 Art. 14: reserva especial. Las sociedades laborales deben constituir una reserva especial dotada con el diez por ciento del beneficio liquido de cada ejercicio hasta que alcance al menos una cifra superior al doble del capital social. El articulo tambien limita el destino de la reserva a compensar perdidas cuando no haya otras reservas disponibles suficientes y/o a adquirir acciones o participaciones propias para enajenarlas a trabajadores indefinidos conforme al art 12. La reduccion de base imponible IS por dotaciones a la reserva especial se fundamenta separadamente en Ley 44/2015 art 13."
 required_text = [
     "reserva especial",
-    "beneficios líquidos",
-    "10 por ciento",
+    "diez por ciento del beneficio líquido",
+    "superior al doble del capital social",
+    "compensación de pérdidas",
+    "adquisición de sus propias acciones o participaciones sociales",
 ]
 
 [legal."ley-31-2022:art-39"]
