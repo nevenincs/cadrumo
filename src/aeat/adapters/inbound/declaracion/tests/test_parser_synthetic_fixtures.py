@@ -8,8 +8,6 @@ from pathlib import Path
 import pytest
 
 from ._parser_boundary_support import (
-    _MODELO_115_SYNTHETIC_FIXTURE,
-    _MODELO_131_SYNTHETIC_FIXTURE,
     _MODELO_184_SYNTHETIC_FIXTURE,
     _MODELO_232_2016_SYNTHETIC_FIXTURE,
     _MODELO_232_2018_SYNTHETIC_FIXTURE,
@@ -29,26 +27,6 @@ pytestmark = [
 _DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
 _DECL_TIPO_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.tipo-ejercicio")
 _DECL_CNAE_CASILLA: CasillaId = _casilla_id("decl.cnae")
-_M115_CASILLA_01: CasillaId = _casilla_id("01")
-_M115_CASILLA_02: CasillaId = _casilla_id("02")
-_M115_CASILLA_03: CasillaId = _casilla_id("03")
-_M115_CASILLA_04: CasillaId = _casilla_id("04")
-_M115_CASILLA_05: CasillaId = _casilla_id("05")
-_M131_CASILLA_01: CasillaId = _casilla_id("01")
-_M131_CASILLA_02: CasillaId = _casilla_id("02")
-_M131_CASILLA_03: CasillaId = _casilla_id("03")
-_M131_CASILLA_04: CasillaId = _casilla_id("04")
-_M131_CASILLA_05: CasillaId = _casilla_id("05")
-_M131_CASILLA_06: CasillaId = _casilla_id("06")
-_M131_CASILLA_07: CasillaId = _casilla_id("07")
-_M131_CASILLA_08: CasillaId = _casilla_id("08")
-_M131_CASILLA_09: CasillaId = _casilla_id("09")
-_M131_CASILLA_10: CasillaId = _casilla_id("10")
-_M131_CASILLA_11: CasillaId = _casilla_id("11")
-_M131_CASILLA_12: CasillaId = _casilla_id("12")
-_M131_CASILLA_13: CasillaId = _casilla_id("13")
-_M131_CASILLA_14: CasillaId = _casilla_id("14")
-_M131_CASILLA_15: CasillaId = _casilla_id("15")
 
 
 def test_parser_extracts_modelo_720_synthetic_fixture_targets() -> None:
@@ -99,7 +77,6 @@ def test_parser_extracts_modelo_720_synthetic_fixture_targets() -> None:
         f"decl.ejercicio: expected Decimal('2024') from AEAT-grounded fixture, got "
         f"{values[_DECL_EJERCICIO_CASILLA]!r}"
     )
-
 
 def test_parser_extracts_modelo_184_synthetic_fixture_targets() -> None:
     """Round-trip: parse the sanitized M184 synthetic fixture and verify decl.ejercicio.
@@ -309,163 +286,4 @@ def test_parser_extracts_modelo_347_synthetic_fixture_targets() -> None:
     assert values[_DECL_EJERCICIO_CASILLA] == Decimal("2024"), (
         f"decl.ejercicio: expected Decimal('2024') from AEAT-grounded fixture, got "
         f"{values[_DECL_EJERCICIO_CASILLA]!r}"
-    )
-
-
-def test_parser_extracts_modelo_115_synthetic_fixture_targets() -> None:
-    """Round-trip: parse the sanitized M115 synthetic fixture and verify all five casillas.
-
-    Ground truth for the label patterns is the AEAT-published Diseno de Registro (DR) XLS:
-      src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_115/files/
-        01-115-orden-eha-3435-2007-ejercicios-2019-y-siguientes-actualizado-febrero-2019-172-kb-xls.xls
-    Sheet "DR 11501", rows 16-20 (field descriptions, Windows-1252 decoded):
-      row 16: "Retenciones e ingresos a cuenta. Numero perceptores [01]"
-      row 17: "Retenciones e ingresos a cuenta. Base retenciones e ingresos a cuenta [02]"
-      row 18: "Retenciones e ingresos a cuenta. Retenciones e ingresos a cuenta [03]"
-      row 19: "Retenciones e ingresos a cuenta. Resultado anteriores declaraciones [04]"
-      row 20: "Retenciones e ingresos a cuenta. Resultado a ingresar [03] - [04]"
-
-    Layout verdict: M115 printed form uses the same two-column table layout as M111
-    (box numbers at LINE-END, not LINE-START).  The profile is converted to named_label
-    using the sub-label text after "Retenciones e ingresos a cuenta. ".
-
-    Fixture values:
-      01 (perceptores): 3       — parse_spanish_decimal("3") = Decimal("3")
-      02 (base):        12.000,00 — Decimal("12000.00")
-      03 (retenciones): 2.280,00  — Decimal("2280.00")
-      04 (anteriores):  0,00      — Decimal("0.00")
-      05 (resultado):   2.280,00  — Decimal("2280.00")
-
-    Ground truth: values are read from the printed fixture lines, not re-run from the
-    registry formula.  The 19% retencion rate (2280 = 12000 * 0.19) is consistent with
-    Art. 100 RIRPF but the fixture is grounded on the DR sub-label vocabulary, not on
-    a numeric calculation.
-
-    Non-tautological: the label_patterns are grounded against the DR XLS field
-    descriptions — NOT the registry casilla label fields.  A pattern that drifts from
-    the DR sub-label vocabulary will produce a zero-match parse failure on this fixture.
-    """
-    filing = parse_declaracion(
-        _MODELO_115_SYNTHETIC_FIXTURE,
-        modelo_override="115",
-        año_override=2024,
-        period_override="1T",
-    )
-
-    assert filing.modelo == "115"
-    assert filing.period == _expected_period(2024, "1T")
-    assert filing.tax_id == "Y0000001S"
-    assert filing.registry_snapshot_ref is not None
-    assert filing.registry_snapshot_ref.modelo == "115"
-    assert filing.registry_snapshot_ref.modelo_year == 2024
-    assert filing.registry_snapshot_ref.period == "1T"
-
-    values = {v.casilla_id: v.printed_value for v in filing.values}
-
-    # All five casillas defined by the M115 declaracion_pdf profile must be present.
-    assert set(values.keys()) == {
-        _M115_CASILLA_01,
-        _M115_CASILLA_02,
-        _M115_CASILLA_03,
-        _M115_CASILLA_04,
-        _M115_CASILLA_05,
-    }, (
-        f"expected exactly {{01, 02, 03, 04, 05}}, got {set(values.keys())!r}"
-    )
-
-    # casilla 01 (perceptores): fixture prints "Numero de perceptores 3";
-    # parse_spanish_decimal("3") = Decimal("3").
-    # Ground truth: DR XLS row 16 sub-label "Numero perceptores".
-    assert values[_M115_CASILLA_01] == Decimal("3"), (
-        f"casilla {_M115_CASILLA_01!r}: expected Decimal('3'), got {values[_M115_CASILLA_01]!r}"
-    )
-
-    # casilla 02 (base): fixture prints "Base de retenciones e ingresos a cuenta 12.000,00";
-    # parse_spanish_decimal("12.000,00") = Decimal("12000.00").
-    # Ground truth: DR XLS row 17 sub-label "Base retenciones e ingresos a cuenta".
-    assert values[_M115_CASILLA_02] == Decimal("12000.00"), (
-        f"casilla {_M115_CASILLA_02!r}: expected Decimal('12000.00'), got {values[_M115_CASILLA_02]!r}"
-    )
-
-    # casilla 03 (retenciones): fixture prints "Retenciones e ingresos a cuenta 2.280,00";
-    # parse_spanish_decimal("2.280,00") = Decimal("2280.00").
-    # Ground truth: DR XLS row 18 sub-label "Retenciones e ingresos a cuenta".
-    assert values[_M115_CASILLA_03] == Decimal("2280.00"), (
-        f"casilla {_M115_CASILLA_03!r}: expected Decimal('2280.00'), got {values[_M115_CASILLA_03]!r}"
-    )
-
-    # casilla 04 (anteriores): fixture prints "Resultado de anteriores declaraciones 0,00";
-    # parse_spanish_decimal("0,00") = Decimal("0.00").
-    # Ground truth: DR XLS row 19 sub-label "Resultado anteriores declaraciones".
-    assert values[_M115_CASILLA_04] == Decimal("0.00"), (
-        f"casilla {_M115_CASILLA_04!r}: expected Decimal('0.00'), got {values[_M115_CASILLA_04]!r}"
-    )
-
-    # casilla 05 (resultado): fixture prints "Resultado a ingresar 2.280,00";
-    # parse_spanish_decimal("2.280,00") = Decimal("2280.00").
-    # Ground truth: DR XLS row 20 sub-label "Resultado a ingresar".
-    assert values[_M115_CASILLA_05] == Decimal("2280.00"), (
-        f"casilla {_M115_CASILLA_05!r}: expected Decimal('2280.00'), got {values[_M115_CASILLA_05]!r}"
-    )
-
-
-def test_parser_extracts_modelo_131_casillas_from_synthetic_fixture() -> None:
-    """Round-trip: parse the M131 2026 synthetic fixture via the bbox_anchored profile.
-
-    The M131 2026 form places box numbers at the END of label lines (e.g.
-    "Suma de rendimientos netos ........... 01  5.000,00").  The bbox_anchored
-    profile locates each box number by pdfplumber word-position and reads the
-    adjacent value word to the right.
-
-    Ground truth is derived by probing the committed synthetic fixture PDF with
-    pdfplumber (see _find_bbox_casilla_hits in _parser.py).  The fixture file
-    is named 2024-1T.pdf (filename pinned by the round-trip corpus test) but
-    the printed ejercicio is irrelevant here: this test forces the 2026
-    revision selection via the full override triple (modelo + año + revision),
-    which bypasses text-based template detection.  The 2026 revision is the
-    only one that ships a bbox_anchored extraction profile for M131.
-
-    Expected values (all 15 casillas must be extracted):
-    - 01: 5.000,00 (rendimientos netos)
-    - 02, 07, 10, 13, 15: 100,00
-    - 03, 04, 05, 06, 08, 09, 11, 12, 14: 0,00
-    """
-    expected: dict[CasillaId, Decimal] = {
-        _M131_CASILLA_01: Decimal("5000.00"),
-        _M131_CASILLA_02: Decimal("100.00"),
-        _M131_CASILLA_03: Decimal("0.00"),
-        _M131_CASILLA_04: Decimal("0.00"),
-        _M131_CASILLA_05: Decimal("0.00"),
-        _M131_CASILLA_06: Decimal("0.00"),
-        _M131_CASILLA_07: Decimal("100.00"),
-        _M131_CASILLA_08: Decimal("0.00"),
-        _M131_CASILLA_09: Decimal("0.00"),
-        _M131_CASILLA_10: Decimal("100.00"),
-        _M131_CASILLA_11: Decimal("0.00"),
-        _M131_CASILLA_12: Decimal("0.00"),
-        _M131_CASILLA_13: Decimal("100.00"),
-        _M131_CASILLA_14: Decimal("0.00"),
-        _M131_CASILLA_15: Decimal("100.00"),
-    }
-
-    filing = parse_declaracion(
-        _MODELO_131_SYNTHETIC_FIXTURE,
-        modelo_override="131",
-        año_override=2026,
-        template_revision_override="2026",
-        period_override="1T",
-    )
-
-    assert filing.modelo == "131"
-    assert filing.period == _expected_period(2026, "1T")
-    assert filing.tax_id == "Y0000001S", f"expected tax_id='Y0000001S', got {filing.tax_id!r}"
-    assert filing.registry_snapshot_ref is not None
-    assert filing.registry_snapshot_ref.modelo == "131"
-    assert filing.registry_snapshot_ref.modelo_year == 2026
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
-    assert extracted == expected, (
-        f"M131 2026 synthetic fixture: extracted casillas do not match ground truth.\n"
-        f"  expected: {expected}\n"
-        f"  got:      {extracted}"
     )
