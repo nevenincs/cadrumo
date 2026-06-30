@@ -26,23 +26,21 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from functools import lru_cache
 
 import pytest
 
-from .....core.resources import bundled_path
 from ....deadlines import (
     EntityType,
     IVARegime,
     LegalEntityForm,
     TaxpayerProfile,
 )
-from .. import CasillaId, build_snapshot, calculate_registry_snapshot, validated_casilla_id
+from .. import CasillaId, calculate_registry_snapshot, validated_casilla_id
 from ..applicability import (
     Modelo202Modality,
     derive_modelo_202_modality,
 )
-from ._registry_schema_support import _committed_modelo
+from ._registry_schema_support import _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -84,20 +82,8 @@ _M200_CUOTA_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
 )
 
 
-def _load_modelo_200():
-    return _committed_modelo("200")
-
-
-@lru_cache(maxsize=1)
 def _snapshot():
-    modelo, catalogues = _load_modelo_200()
-    return build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2024,
-        period="0A",
-    )
+    return _committed_snapshot("200", 2024, "0A")
 
 
 def _cuota_for(

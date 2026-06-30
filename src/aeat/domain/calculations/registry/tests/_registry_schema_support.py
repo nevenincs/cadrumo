@@ -66,6 +66,12 @@ def _committed_modelo(modelo_id: str) -> tuple[ModeloDefinition, RegistryCatalog
     return next(modelo for modelo in modelos if modelo.id == modelo_id), catalogues
 
 
+@cache
+def _committed_snapshot(modelo_id: str, filing_year: int, period: str):
+    modelo, catalogues = _committed_modelo(modelo_id)
+    return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period=period)
+
+
 def _committed_registry() -> tuple[ModeloDefinition, RegistryCatalogues]:
     return _committed_modelo("130")
 
