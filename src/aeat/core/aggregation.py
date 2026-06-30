@@ -1,4 +1,23 @@
-"""Core aggregation taxonomy shared across application and adapter layers."""
+"""Core aggregation taxonomy shared across registry, application, and adapters.
+
+This module owns closed value sets and tiny pydantic carriers only; it does not
+aggregate ledger rows, calculate casilla values, or perform source resolution.
+The registry schema imports :class:`BindingAggregation`,
+:class:`RelationAggregation`, and :class:`BindingSourceKind` to validate TOML
+authoring input. Application resolvers and adapters import the same
+:class:`BindingSourceKind` members so source tokens do not drift through bare
+strings.
+
+Keep the three axes separate:
+
+- :class:`BindingAggregationOp` governs how a
+  ``DataBindingDefinition.aggregation`` folds selected binding values.
+- :class:`RelationAggregationOp` governs cross-modelo relation fold-ins.
+- :class:`RowSetGroupingKind` is the downstream row-assembly grouping axis, not
+  a binding ``source`` token; use
+  :data:`ROW_SET_GROUPING_FOR_BINDING_SOURCE` only where a detail-record binding
+  source must be projected into the row assembler.
+"""
 
 from __future__ import annotations
 
@@ -144,6 +163,11 @@ class PeriodKind(StrEnum):
     application aggregation layer can both import without violating the
     hexagonal direction (domain → core is always legal; domain → application
     is forbidden).
+
+    This lightweight cadence enum is an aggregation/deadline taxonomy, not the
+    public :class:`aeat.core.Period` classifier. Concrete filing-period values
+    should use :class:`aeat.core.Period` and its exported ``PeriodKind``, which
+    also distinguishes instalment and extended registry tokens.
     """
 
     MONTHLY = "monthly"
@@ -183,14 +207,16 @@ class RowSetGroupingKind(StrEnum):
 
 
 class BindingSourceKind(StrEnum):
-    """The single canonical closed set of registry binding ``source`` tokens.
+    """The single canonical closed set of binding/source-mesh tokens.
 
     Every :class:`~aeat.domain.calculations.registry.DataBindingDefinition`
-    declares exactly one ``source`` drawn from this enum. The members below are
-    the complete set of source tokens declared across the registry authoring
-    tree; the per-family frozensets (invoice, ledger, counterpart) are
-    **derived** from this enum rather than hand-maintained, so a new source
-    token is added in exactly one place.
+    declares exactly one ``source`` drawn from the registry-declared subset of
+    this enum. The same enum also carries mesh-only source decisions such as
+    :attr:`BORRADOR` and :attr:`IVA_WALLET_DECISION`, which are resolved before a
+    registry binding is constructed and are parity-accounted as non-registry
+    members. Per-family frozensets (invoice, ledger, counterpart) are
+    **derived** from this enum rather than hand-maintained, so a new source token
+    is added in exactly one place.
 
     BEHAVIOUR-PRESERVING LIFT: every member's string VALUE equals the source
     token that was previously a bare string (or a :class:`RowSetGroupingKind`
@@ -323,7 +349,19 @@ COUNTERPART_SOURCE_KINDS: Final[frozenset[CounterpartSourceKind]] = frozenset(
 
 
 def counterpart_source_kind(value: object) -> CounterpartSourceKind:
-    """Return ``value`` narrowed to the counterpart source-kind subset."""
+    """Return ``value`` narrowed to the counterpart source-kind subset.
+
+    Args:
+        value: A :class:`BindingSourceKind` member or its stored string value.
+
+    Returns:
+        The same source kind narrowed to :data:`CounterpartSourceKind` for
+        counterpart aggregation inputs.
+
+    Raises:
+        ValueError: When ``value`` is not a known :class:`BindingSourceKind`, or
+            is known but outside the counterpart subset.
+    """
     try:
         source_kind = value if isinstance(value, BindingSourceKind) else BindingSourceKind(value)
     except ValueError as exc:
