@@ -168,12 +168,7 @@ async def test_verify_csv_closes_self_owned_session_and_playwright() -> None:
     async def _factory() -> verify_module.VerifyBrowserSessionLike:
         return session_like
 
-    original_factory = verify_module.DEFAULT_BROWSER_SESSION_FACTORY
-    verify_module.DEFAULT_BROWSER_SESSION_FACTORY = _factory
-    try:
-        result = await verify_module.verify_csv("ABCD1234EFGH5678")
-    finally:
-        verify_module.DEFAULT_BROWSER_SESSION_FACTORY = original_factory
+    result = await verify_module.verify_csv("ABCD1234EFGH5678", browser_session_factory=_factory)
 
     # Session-lifetime contract: self-owned session AND context are closed.
     assert session.create_context_calls == 1
@@ -189,25 +184,20 @@ async def test_build_default_browser_session_raises_browser_adapter_type_error_o
     object, _build_default_browser_session must raise BrowserAdapterTypeError —
     a typed, registered envelope — not the bare built-in TypeError.
 
-    A hand-rolled sentinel that is not a VerifyBrowserSessionLike is returned
-    by a factory passed via the production DI seam; the raised exception
-    class is asserted directly so any regression to bare TypeError fails
-    this test.
+    A plain object that is not a VerifyBrowserSessionLike is returned by a
+    factory passed via the production DI seam; the raised exception class is
+    asserted directly so any regression to bare TypeError fails this test.
     """
     from ......core.config import Settings
 
-    class _NotASession:
-        """Intentionally wrong type — satisfies no browser-session protocol."""
-
-    sentinel = _NotASession()
-
     async def _bad_factory(settings: Settings) -> object:
-        return sentinel
+        del settings
+        return object()
 
     with pytest.raises(verify_module._BrowserAdapterTypeError) as exc_info:
         await verify_module._build_default_browser_session(factory=_bad_factory)
 
-    assert "_NotASession" in str(exc_info.value)
+    assert "object" in str(exc_info.value)
 
 
 def test_browser_adapter_type_error_is_registered() -> None:
