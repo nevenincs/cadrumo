@@ -2737,7 +2737,7 @@ cli:
       description_help: Descripció no buida de la transacció
       direction_help: Sentit de la transacció (INCOMING, OUTGOING o INTERNAL_TRANSFER)
       help: Afegeix una transacció manual al llibre del perfil actiu
-      idempotency_key_help: Clau d'idempotència aportada pel cridador
+      idempotency_key_help: 'Clau estable per a aquesta anotació lògica: repetir la mateixa clau és una operació sense efecte, de manera que els reintents no dupliquen la fila. Ometeu-la per afegir un duplicat deliberat.'
       idempotent_noop: 'Operació idempotent sense efecte: ja existeix una transacció amb aquesta clau d''idempotència (%{transaction_id}); no s''ha afegit res.'
       irpf_category_help: Categoria d'IRPF per a càlculs de models
       iva_amount_help: Import d'IVA de la transacció

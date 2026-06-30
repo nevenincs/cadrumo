@@ -1,0 +1,21 @@
+# Régimen simplificado cuota devengada fold-in: the annual resumen (M390 box
+# 79 "IVA devengado - Total cuota resultante" of the régimen simplificado
+# apartado) carries the cuota devengada the operator settled in the fourth-quarter
+# Modelo 303 (casilla 54 "RS - Total cuota resultante"). Régimen simplificado is
+# determined annually and declared in the 4T autoliquidación only (1T-3T are
+# ingresos a cuenta), so the source is the single 4T quarter, carried (copy) onto
+# the 0A annual target — not summed across quarters like the régimen general totals.
+[[revisions."2010-y-siguientes".relations]]
+id = "modelo-390-rel-303-cuota-devengada-simplificado"
+kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
+source_modelo = "303"
+source_revision_selector = { year_from = 2009 }
+source_casilla_id = "54"
+target_binding = "modelo-390-prev-303-cuota-devengada-simplificado"
+period_alignment = { source_period_kind = "quarterly", target_period = "0A" }
+source_periods = ["4T"]
+target_periods = ["0A"]
+aggregation = { op = "copy" }
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]

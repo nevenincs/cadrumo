@@ -24,6 +24,7 @@ import json
 import secrets
 from typing import TYPE_CHECKING, NamedTuple
 
+from ...adapters.persistence.storage._namespace_registry import StorageCustodyProfile
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now
 from ...domain.buckets import (
@@ -35,7 +36,6 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ...adapters.persistence.storage._namespace_registry import StorageCustodyProfile
 from ..user_profile._bundle import (
     SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
     deserialize_profile_bundle,

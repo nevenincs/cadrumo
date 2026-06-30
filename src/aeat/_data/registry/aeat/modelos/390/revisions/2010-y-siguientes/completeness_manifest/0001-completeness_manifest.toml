@@ -10,6 +10,8 @@ legal_refs = [
     "ley-37-1992:art-91",
     "ley-37-1992:art-92",
     "ley-37-1992:art-99",
+    "ley-37-1992:art-122",
+    "ley-37-1992:art-123",
     "orden-eha-3111-2009:art-1",
     "rd-1624-1992:art-29",
     "rd-1624-1992:art-30",
@@ -48,6 +50,10 @@ number = "iva.anual.reconciliacion.devengada-303"
 [[revisions."2010-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "iva.anual.reconciliacion.resultado-303"
 number = "iva.anual.reconciliacion.resultado-303"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.reconciliacion.devengada-simplificado-303"
+number = "79"
 
 [[revisions."2010-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "iva.anual.repercutido.general"
