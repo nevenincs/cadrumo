@@ -1007,6 +1007,7 @@ application:
           mediante el comando `aeat config profile edit`. El TRLIRNR Art. 10 exige
           que los declarantes IRNR no residentes en la UE/EEE designen un representante
           para comunicaciones con la AEAT.
+      modelo_210_2025_rendimientos_integros_implica_base_imponible: 'Los rendimientos íntegros son positivos pero la base imponible es cero; revise la determinación de la base imponible.'
     iva_wallet:
       correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
         Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe

@@ -293,7 +293,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers["aeat.application.evidence.bundles"] = _bound_resolver(_evidence_bundle_repo)
 
     def _purchase_invoice_evidence_repo() -> object:
-        from ..ledger import PurchaseInvoiceEvidenceRepository
+        from ..ledger._evidence import PurchaseInvoiceEvidenceRepository
 
         return PurchaseInvoiceEvidenceRepository()
 
@@ -397,7 +397,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers["aeat.outbound.aeat.sede.filed_declaration.artefacts"] = _sha256_payload_resolver
 
     def _filed_observation_key(record: SecureObjectRecord, _bucket_id: str) -> str:
-        from ...adapters.outbound.aeat.sede._observation_models import FiledDeclaracionObservation
+        from ...adapters.outbound.aeat.sede import FiledDeclaracionObservation
         from ...adapters.outbound.aeat.sede._observation_store import filed_declaracion_observation_object_key
 
         obs = _envelope_payload(record, FiledDeclaracionObservation)
@@ -411,7 +411,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers["aeat.outbound.aeat.sede.filed_declaration.observations"] = _filed_observation_key
 
     def _iva_wallet_observation_key(record: SecureObjectRecord, _bucket_id: str) -> str:
-        from ...adapters.outbound.aeat.sede._observation_models import IvaCompensationWalletObservation
+        from ...adapters.outbound.aeat.sede import IvaCompensationWalletObservation
         from ...adapters.outbound.aeat.sede._observation_store import (
             iva_compensation_wallet_observation_object_key,
         )

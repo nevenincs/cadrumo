@@ -192,3 +192,25 @@ def test_full_custody_coverage_gate_refuses_uncovered_namespace() -> None:
             covered_namespaces=frozenset({"aeat.domain.buckets.event_history"}),
         )
     assert "aeat.surprise.new_store" in str(excinfo.value.context["missing_namespaces"])
+
+
+def test_every_carried_namespace_has_a_natural_key_resolver() -> None:
+    """A new carried-disposition namespace must declare how its natural key resolves.
+
+    The serialise path is fail-closed: a populated carried namespace with neither a
+    registered resolver nor a fixed default object key raises. This gate makes that
+    a build-time failure instead of an export-time surprise.
+    """
+    from ....adapters.persistence.storage._namespace_registry import StorageCustodyProfile
+    from ...user_profile._custody_carry import (
+        _natural_key_resolvers,
+        carried_namespace_definitions,
+    )
+
+    resolvers = set(_natural_key_resolvers())
+    unresolved = [
+        definition.namespace
+        for definition in carried_namespace_definitions(StorageCustodyProfile.FULL)
+        if definition.namespace not in resolvers and definition.default_object_key is None
+    ]
+    assert unresolved == [], f"carried namespaces without a natural-key resolver: {unresolved}"

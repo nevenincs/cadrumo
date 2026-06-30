@@ -1,0 +1,66 @@
+---
+tags:
+  - '#exec'
+  - '#modelo-verify-nonzero-guards'
+date: '2026-06-30'
+modified: '2026-06-30'
+step_id: 'S15'
+related:
+  - "[[2026-06-30-modelo-verify-nonzero-guards-plan]]"
+---
+
+<!-- FRONTMATTER RULES:
+     tags: one directory tag (hardcoded #exec) and one feature tag.
+     Replace modelo-verify-nonzero-guards with a kebab-case feature tag, e.g. #foo-bar.
+     Additional tags may be appended below the required pair.
+
+     modified: CLI-maintained last-modified stamp; set at scaffold time,
+     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
+
+     step_id is the originating Step's canonical identifier, e.g. S01.
+     The S15 and 2026-06-30-modelo-verify-nonzero-guards-plan placeholders are machine-filled by
+     `vaultspec-core vault add exec`; do not fill them by hand.
+
+     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
+     parent plan.
+
+     DO NOT add fields beyond those scaffolded; metadata lives
+     only in the frontmatter. -->
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
+     - NEVER use [[wiki-links]] or markdown links in the document body.
+     - NEVER reference file paths in the body. If you must name a source file,
+       class, or function, use inline backtick code: `src/module.py`. -->
+
+<!-- STEP RECORD:
+     This file represents one Step from the originating plan. Identified
+     by its canonical leaf identifier (S##) and ancestor display path.
+     The Append the modelo-210-2025-rendimientos-integros-implica-base-imponible ADVISORY predicate implies_nonzero(["rendimientos_integros", "base_imponible"]) with legal_refs trlirnr-rdleg-5-2004:art-24 to the existing 2025 verification_predicates.toml, leaving the representante-fiscal predicate untouched and ## Scope
+
+- `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/verification_expectations/0001-verification_predicates.toml` placeholders below are machine-filled
+     by `vaultspec-core vault add exec` from the originating Step row;
+     do not fill them by hand. -->
+
+# Append the modelo-210-2025-rendimientos-integros-implica-base-imponible ADVISORY predicate implies_nonzero(["rendimientos_integros", "base_imponible"]) with legal_refs trlirnr-rdleg-5-2004:art-24 to the existing 2025 verification_predicates.toml, leaving the representante-fiscal predicate untouched
+
+## Scope
+
+- `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/verification_expectations/0001-verification_predicates.toml`
+
+## Description
+
+- Confirmed no peer WIP in the M210 registry path via `git status --short` and `git diff` before editing.
+- Confirmed `rendimientos_integros` (manual, required, money) and `base_imponible` (computed via `m210_resolve_base_imponible`) casillas exist in `casillas/0001-casillas.toml`, and that `trlirnr-rdleg-5-2004:art-24` already resolves in `irnr.toml` with a reviewed BOE corpus citation.
+- Appended a second `[[revisions."2025".verification_predicates]]` array entry to `0001-verification_predicates.toml`: `predicate_id = "modelo-210-2025-rendimientos-integros-implica-base-imponible"`, `expression = 'implies_nonzero(["rendimientos_integros", "base_imponible"])'`, `finding_kind = "ADVISORY"`, `legal_refs = ["trlirnr-rdleg-5-2004:art-24"]`.
+- Left the pre-existing `m210-representante-fiscal-required` BLOCKING_RULE predicate (lines 12-16) byte-identical; only appended below it in the same file, per the registry-revision-content-inline-or-fragmented convention this file already follows (inline declaration).
+- Added an explanatory comment block grounding the ADVISORY severity choice (formula-defended consequent, but a legitimately zero base on the general/UE-EEE branch via a full art 24.6 expense offset is not ruled out) and explicitly scoping out the inmobiliaria branch (deferred to Wave W02 Phase P07, no DSL support for categorical-equality predicates yet).
+- Added the locale leaf `application.modelo.findings.modelo_210_2025_rendimientos_integros_implica_base_imponible` to all four locales (en, es, ca, hu) via `python -m aeat.locales set`, matching the M131/M200 advisory-message convention; confirmed via `python -m aeat.locales audit` that the new key carries no missing/extra drift in any locale.
+
+## Outcome
+
+The 2025 revision's `verification_predicates` array now carries two predicates: the untouched representante-fiscal BLOCKING_RULE gate and the new base-imponible ADVISORY guard. The registry loads and validates cleanly (confirmed by the S16/S17 test runs). Locale parity holds for the new finding key across all four shipped locales.
+
+## Notes
+
+No incidents. No peer WIP encountered. The locale-audit run surfaced one pre-existing, unrelated drift item (`cli.app.modelo.work.revision_verbose_help` missing in all four locales) that predates this change and is out of this Step's scope.
