@@ -55,7 +55,6 @@ _SEMANTIC_ROLE_AXIS_TOKEN_GROUPS: tuple[frozenset[str], ...] = (
     frozenset({"count", "amount"}),
     frozenset({"anteriores", "posteriores"}),
     frozenset({"ascendiente", "descendiente"}),
-    frozenset({"nacimiento", "fallecimiento"}),
     frozenset({"transmision", "adquisicion"}),
     frozenset({"ab", "c"}),
 )

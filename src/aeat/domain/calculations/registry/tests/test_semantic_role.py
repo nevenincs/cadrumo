@@ -303,6 +303,11 @@ class TestTypoTwinWarning:
                 "00501",
                 "is_liquidacion_i_importe",
             ),
+            ("100", "2025", "DECFAL", "irpf_declarante_fecha_fallecimiento"),
+            ("100", "2025", "FNACDLG", "irpf_descendiente_fecha_nacimiento"),
+            ("100", "2025", "FALLDLG", "irpf_descendiente_fecha_fallecimiento"),
+            ("100", "2025", "ANOASDLG", "irpf_ascendiente_fecha_nacimiento"),
+            ("100", "2025", "FALLASDLG", "irpf_ascendiente_fecha_fallecimiento"),
             (
                 "100",
                 "2020",
@@ -528,6 +533,11 @@ class TestTypoTwinWarning:
             "is_correccion_otras_correcciones_resultado_permanente_disminucion",
             "is_correccion_otras_correcciones_resultado_temporaria_ejercicio_disminucion",
             "is_liquidacion_i_importe",
+            "irpf_declarante_fecha_fallecimiento",
+            "irpf_descendiente_fecha_nacimiento",
+            "irpf_descendiente_fecha_fallecimiento",
+            "irpf_ascendiente_fecha_nacimiento",
+            "irpf_ascendiente_fecha_fallecimiento",
             "irpf_deduccion_c_valenciana_ayudas_publicas_generalitat_2020",
             "irpf_num_hijos_maternidad_2020",
             "irpf_incremento_maternidad_no_aplicado_2020",
@@ -787,6 +797,15 @@ class TestTypoTwinWarning:
             semantic_roles_are_axis_siblings(
                 "is_liquidacion_i_importe",
                 "is_liquidacion_ii_importe",
+            )
+            is False
+        )
+
+    def test_birth_death_tokens_are_not_axis_tokens(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "irpf_descendiente_fecha_nacimiento",
+                "irpf_descendiente_fecha_fallecimiento",
             )
             is False
         )
