@@ -1,12 +1,17 @@
 """Typed ``--json`` payload schemas for the profile-capabilities CLI commands.
 
-Each class is a strict :class:`OutputSchema` subclass registered with
-:func:`register_schema` so the JSON-contract gate enumerates the surface. Field
-sets match the payload dicts constructed in ``_capabilities_cli.py``.
+Each class is a strict
+:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass registered with
+:func:`~aeat.entrypoints.cli._schemas.register_schema` so the JSON-contract gate
+enumerates the surface. Field sets match the payload dicts constructed in
+:mod:`aeat.entrypoints.cli._config._capabilities_cli` and enter
+:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:func:`~aeat.entrypoints.cli._common._emit_envelope`.
 
 Capability identifiers come from :class:`~aeat.core.ServiceCapability`; the
 resolved posture is computed by
-:func:`~aeat.application.user_profile.resolve_active_capability`.
+:func:`~aeat.application.user_profile.resolve_active_capability` and the pure
+:func:`~aeat.application.user_profile.resolve_capability` resolver.
 """
 
 from __future__ import annotations
@@ -15,11 +20,13 @@ from .._schemas import OutputSchema, register_schema
 
 
 class CapabilityRowPayload(OutputSchema):
-    """One resolved capability row nested in :class:`CapabilitiesShowResult`.
+    """One resolved capability row for the profile-capabilities show result.
 
-    Mirrors :class:`~aeat.application.user_profile.CapabilityDecision` after the
-    resolver has combined the profile fact, global default, and safety floor.
-    ``source`` is the JSON value of
+    Nested in
+    :class:`~aeat.entrypoints.cli._config._capabilities_payloads.CapabilitiesShowResult`
+    and mirrors :class:`~aeat.application.user_profile.CapabilityDecision` after
+    the resolver has combined the profile fact, global default, and safety
+    floor. ``source`` is the JSON value of
     :class:`~aeat.application.user_profile.CapabilitySource`.
     """
 
