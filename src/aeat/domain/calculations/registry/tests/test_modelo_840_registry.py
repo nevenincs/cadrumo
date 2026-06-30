@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from functools import lru_cache
-
 import pytest
 
 from .....core.resources import bundled_path
@@ -12,19 +10,16 @@ from .. import (
     InputKind,
     RegistryValidator,
     build_snapshot,
-    load_registry_tree,
 )
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
 _WWW6_HOST = aeat_host("www6")
 
 
-@lru_cache(maxsize=1)
 def _load_modelo_840():
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(modelo for modelo in modelos if modelo.id == "840")
-    return modelo, catalogues
+    return _committed_modelo("840")
 
 
 _FORBIDDEN_REMOTE_ACTIONS = frozenset(
