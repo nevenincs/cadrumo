@@ -5,6 +5,9 @@ from __future__ import annotations
 import pytest
 
 from ....core import Period
+from ...calculations import CalculationObservationRepository
+from ...workflow import WorkflowRunRepository
+from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 from ._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
@@ -217,14 +220,8 @@ def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_
     assert filed_events == ()
 
 
-def test_file_still_refuses_a_closed_past_period_no_pending_obligation(repos: Repos) -> None:
-    """The ``NO_PENDING_OBLIGATION`` guard stays on the filing path.
-
-    Deadline-independence applies to ``verify`` only. Filing a modelo
-    130 revision for 2024 Q1 at a 2026 clock — when no obligation
-    exists for that period — must still abort: filing without a
-    pending obligation stays refused.
-    """
+def test_file_records_verified_modelo_130_2024_as_late_non_official_local_filing(repos: Repos) -> None:
+    """A real historical M130 obligation can be marked filed locally after verification."""
 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo, filing_year=2024)
@@ -249,42 +246,51 @@ def test_file_still_refuses_a_closed_past_period_no_pending_obligation(repos: Re
         clock=T2,
     )
 
-    with pytest.raises(ModeloWorkflowGateError) as gate_error:
-        file_revision(
-            revision.calculation_revision_id,
-            revision=revision,
-            work_unit=work_unit,
-            actor="operator-A",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
-            clock=T3,
-        )
+    filing = file_revision(
+        revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
+        clock=T3,
+    )
 
-    assert gate_error.value.result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION
+    assert filing.status is ModeloRecordStatus.VIGENTE
+    assert filing.aeat_accepted is False
+    assert filing.external_evidence is None
     refreshed = get_calculation_revision(
         revision.calculation_revision_id,
         calculation_repository=cr_repo,
     )
-    assert refreshed.state is CalculationRevisionState.VERIFICADO_COMPLETO
+    assert refreshed.state is CalculationRevisionState.PRESENTADO
+    assert get_work_unit(work_unit.work_unit_id, repository=wu_repo).filed_calculation_revision_id == (
+        revision.calculation_revision_id
+    )
+    observation = CalculationObservationRepository().load_observation(
+        "130",
+        Period.from_year_and_code(2024, "1T"),
+    )
+    assert observation is not None
+    assert observation.source_kind == APP_FILING_SOURCE_KIND
+    assert APP_FILING_SOURCE_KIND == "app_filing"
 
-    # Discoverability: the refusal is not a dead end. The operator-facing
-    # render signposts the local finish line (`aeat app modelo export`) —
-    # exporting a verified-complete revision to a fichero-BOE artefact needs
-    # neither an open filing-obligation window nor this `file` step — and the
-    # refusal summary states why the gate refused (the obligation window is not
-    # open).
-    from ....core.errors import render_error_text
+    workflow_runs = WorkflowRunRepository(objects=bv_repo.secure_object_repository).list()
+    target_run = next(
+        run
+        for run in workflow_runs
+        if run.obligation is not None and run.obligation.modelo == "130" and run.obligation.period == work_unit.period
+    )
+    assert target_run.final_stage is WorkflowStage.DONE
+    computing = next(step for step in target_run.steps if step.stage is WorkflowStage.COMPUTING_DEADLINES)
+    assert computing.success is True
+    assert computing.details is not None
+    assert computing.details.get("overdue") == "true"
+    assert computing.details.get("extemporanea") == "true"
 
-    rendered = render_error_text(gate_error.value)
-    # The signpost must name the REAL verb: `aeat app modelo export` is a sibling
-    # of `work` (registered as @app.command("export")), NOT a `work` subcommand —
-    # a `work export` form errors on copy-paste ("No such command 'export'").
-    assert "aeat app modelo export" in rendered
-    assert "aeat app modelo work export" not in rendered
-    assert gate_error.value.suggestion == "aeat app modelo export <work-unit-id> --output <path>"
-    assert "filing-obligation window is not open" in gate_error.value.result.summary
+    assert target_filing_records(list_filing_records(filing_repository=fr_repo), work_unit) == (filing,)
 
 
 def test_file_refuses_future_period_before_filing_window_opens(repos: Repos) -> None:
