@@ -877,6 +877,34 @@ def test_modelo_100_disability_minimum_headcounts_are_integer_counts() -> None:
             assert expected_sources.issubset(constraints.source_refs)
 
 
+def test_modelo_100_family_numerosa_ascendant_count_is_integer_count() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0652"))
+        constraints = casilla.constraints
+        expected_sources = {
+            f"aeat-dr-100-{filing_year}-dictionary",
+            f"aeat-dr-100-{filing_year}-input-dictionary",
+            f"aeat-dr-100-{filing_year}-xsd",
+        }
+
+        assert casilla.label == "Indique el número de ascendientes que forman parte de la misma familia numerosa"
+        assert tuple(casilla.section) == ("resultados", "calculo_impuesto_res", "deduc_familia_numerosa_res")
+        assert casilla.data_type == "integer"
+        assert casilla.semantic_role == "irpf_familia_numerosa_num_ascendientes"
+        assert "ley-35-2006:art-81-bis" in casilla.legal_refs
+        assert expected_sources.issubset(casilla.source_refs)
+        assert constraints is not None
+        assert constraints.sign == "non_negative"
+        assert constraints.min_value is None
+        assert constraints.max_value == Decimal("99")
+        assert "ley-35-2006:art-81-bis" in constraints.legal_refs
+        assert expected_sources.issubset(constraints.source_refs)
+
+
 def test_modelo_100_inmueble_0076_habitual_residence_days_are_integer() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
