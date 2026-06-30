@@ -21,19 +21,16 @@ import pytest
 from .....core.resources import bundled_path
 from .. import InputKind, resolve_bound_inputs_by_casilla_id
 from .._formula_runtime import calculate_registry_snapshot
-from .._loader import load_registry_tree
 from .._snapshot import build_snapshot
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def test_modelo_180_copies_monetary_relations_and_binds_perceptor_count() -> None:
     """M180 relation formulas cover money only; perceptor count is a bound distinct-NIF fact."""
 
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(m for m in modelos if m.id == "180")
+    modelo, catalogues = _committed_modelo("180")
     revision = next(rev for rev in modelo.revisions.values() if rev.id == "2023-y-siguientes")
 
     # Graph-wiring assertions — each output casilla must declare an

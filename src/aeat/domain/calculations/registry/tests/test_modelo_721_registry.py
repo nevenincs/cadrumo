@@ -11,17 +11,14 @@ from .....core.paths import PROJECT_ROOT
 from .....core.resources import bundled_path
 from .._corpus_catalogue import verify_source_file
 from .._legal import verify_legal_catalogue
-from .._loader import load_registry_tree
 from .._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
-
 
 def _modelo_721() -> tuple[ModeloDefinition, ModeloRevision, RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(modelo for modelo in modelos if modelo.id == "721")
+    modelo, catalogues = _committed_modelo("721")
     return modelo, modelo.revisions["2023-y-siguientes"], catalogues
 
 
