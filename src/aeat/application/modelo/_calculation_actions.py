@@ -1,12 +1,13 @@
 """Calculation revision actions for modelo work units.
 
 The calculate paths resolve a law-determined :class:`RegistrySnapshot` from
-each :class:`~aeat.domain.modelos._work_unit.WorkUnit`, merge manual inputs with
-profile, borrador, IVA-wallet, and bucket aggregation channels, and execute
-:func:`calculate_registry_snapshot` against the asserted :class:`ModeloRevision`.
+each :class:`aeat.domain.modelos.WorkUnit`, merge manual inputs with profile,
+borrador, IVA-wallet, and bucket aggregation channels, and execute
+:func:`aeat.domain.calculations.registry.calculate_registry_snapshot` against
+the asserted :class:`ModeloRevision`.
 
 Persistence is centralized through :class:`CalculationRevision`,
-:class:`~aeat.domain.modelos._calculation_repository.CalculationRevisionCatalogueRepository`,
+:class:`aeat.domain.modelos.CalculationRevisionCatalogueRepository`,
 and :class:`BucketEventHistoryRepository`, so the work-unit pointer and
 ``modelo.calculation.created`` event advance with the stored draft revision.
 
@@ -21,8 +22,8 @@ persisted revision cannot claim bucket-source grounding while carrying a caller
 substitute for the same value.
 
 See Also:
-    :mod:`aeat.application.aggregation._source_mesh`:
-        Source-mesh contracts and diagnostics consumed by the bucket
+    :mod:`aeat.application.aggregation`:
+        Public source-mesh contracts and diagnostics consumed by the bucket
         aggregation path.
     :func:`aeat.application.modelo._calculation_resolution.resolve_calculation_binding_channels`:
         Merges caller, backend, borrador, and date binding channels for the
@@ -133,13 +134,14 @@ if TYPE_CHECKING:
 class BucketAggregationCalculationResult:
     """Calculation revision plus the non-blocking source diagnostics raised while resolving it.
 
-    ``source_diagnostics`` carries the :class:`CalculationSourceDiagnostic`
-    rows the source mesh emitted during resolution — notably the
-    unconsumed-declarable-IVA advisories (a declarable IVA observation no
-    ``ledger_iva_aggregation`` binding selects). They are NON-blocking: the
-    revision in ``revision`` was computed and persisted regardless. Surfacing
-    them keeps an unrouted declarable observation from being silently
-    under-declared (no-silent-under-declaration).
+    ``revision`` is the persisted :class:`CalculationRevision`.
+    ``source_diagnostics`` carries the
+    :class:`aeat.application.aggregation.CalculationSourceDiagnostic` rows the
+    source mesh emitted during resolution, notably the unconsumed-declarable-IVA
+    advisories (a declarable IVA observation no ``ledger_iva_aggregation``
+    binding selects). They are NON-blocking: the revision was computed and
+    persisted regardless. Surfacing them keeps an unrouted declarable
+    observation from being silently under-declared (no-silent-under-declaration).
     """
 
     revision: CalculationRevision
@@ -316,11 +318,13 @@ def calculate_modelo_revision(
     Pipeline:
 
     1. Load the work unit; refuse on DISCARDED.
-    2. Resolve the registry snapshot for ``(modelo, filing_year,
-       period)``. Failure to resolve raises
+    2. Resolve the :class:`RegistrySnapshot` for the work unit's
+       ``(modelo, filing_year, period)`` and assert its
+       :class:`ModeloRevision`. Failure to resolve raises
        :exc:`CalculationRegistryUnavailableError` — the calculate
        path runs the engine, so a missing snapshot is a hard refusal.
-    3. Run :func:`calculate_registry_snapshot` over the snapshot
+    3. Run :func:`aeat.domain.calculations.registry.calculate_registry_snapshot`
+       over the snapshot
        with the operator-supplied manual casilla inputs, binding
        values, enum-binding values, and relation values. The
        engine evaluates every declared formula in dependency order
@@ -335,7 +339,8 @@ def calculate_modelo_revision(
        ``modelo.calculation.created``.
 
     The revision starts in ``BORRADOR`` state; callers must run
-    ``verify_modelo_revision`` and ``file_modelo_revision``
+    :func:`aeat.application.modelo.verify_modelo_revision` and
+    :func:`aeat.application.modelo.file_modelo_revision`
     explicitly to advance through the lifecycle.
 
     See Also:
@@ -467,10 +472,10 @@ def calculate_modelo_revision_from_bucket_aggregation(
     invoice and OSS/IOSS resolvers. The wrapper resolves enrolled source
     families into backend binding, casilla, relation, detail-row, and provenance
     channels, rejects caller collisions with source-owned bindings, and then
-    delegates to :func:`calculate_modelo_revision`.
+    delegates to :func:`aeat.application.modelo.calculate_modelo_revision`.
 
     Returns a :class:`CalculationRevision`. Use
-    :func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`
+    :func:`aeat.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`
     when the caller also needs the non-blocking source diagnostics (e.g. the
     operator-facing CLI calculate surface, which surfaces unconsumed-declarable
     IVA advisories).
@@ -478,7 +483,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
     See Also:
         :func:`_resolve_bucket_source_mesh`:
             Runs the enrolled resolver set and returns the merged
-            :class:`CalculationSourceResolution`.
+            :class:`aeat.application.aggregation.CalculationSourceResolution`.
         :func:`_reject_caller_overrides_of_source_bindings`:
             Refuses caller values for source-owned binding and bound-casilla
             slots.
@@ -514,10 +519,12 @@ def _resolve_bucket_source_mesh(
 ) -> CalculationSourceResolution:
     """Resolve the live source mesh for a bucket-aggregation calculation.
 
-    Builds the :class:`CalculationSourceContext`, runs every enrolled ledger /
-    invoice / carry resolver through :func:`merge_source_resolutions`, and
-    augments the result with the unhandled-binding-source advisories for any
-    declared source with no enrolled resolver. Returns the merged resolution.
+    Builds the :class:`aeat.application.aggregation.CalculationSourceContext`,
+    runs every enrolled ledger / invoice / carry resolver through
+    :func:`aeat.application.aggregation.merge_source_resolutions`, and augments
+    the result with the unhandled-binding-source advisories for any declared
+    source with no enrolled resolver. Returns the merged
+    :class:`aeat.application.aggregation.CalculationSourceResolution`.
     """
     from ..aggregation import (
         CalculationSourceContext,
@@ -746,13 +753,14 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     """Calculate a modelo revision and return it alongside the source diagnostics.
 
     Identical orchestration to
-    :func:`calculate_modelo_revision_from_bucket_aggregation`, but returns a
+    :func:`aeat.application.modelo.calculate_modelo_revision_from_bucket_aggregation`,
+    but returns a
     :class:`BucketAggregationCalculationResult` carrying both the persisted
     :class:`CalculationRevision` and the NON-blocking
-    :class:`CalculationSourceDiagnostic` rows the source mesh raised while
-    resolving the bucket ledger (the unconsumed-declarable-IVA advisories the
-    operator-facing CLI surfaces so an unrouted observation is never silently
-    under-declared).
+    :class:`aeat.application.aggregation.CalculationSourceDiagnostic` rows the
+    source mesh raised while resolving the bucket ledger (the
+    unconsumed-declarable-IVA advisories the operator-facing CLI surfaces so an
+    unrouted observation is never silently under-declared).
 
     The bucket evidence is read from the injected
     :class:`TransactionCatalogueRepository` and
@@ -966,9 +974,9 @@ def _previous_filing_resolution_excluding_iva_compensation(
     value and any matching provenance row before the resolution enters the
     source mesh.
 
-    Because :class:`CalculationSourceResolution` is immutable, the exclusion
-    returns a copied resolution with only the 303 compensation binding and its
-    provenance removed.
+    Because :class:`aeat.application.aggregation.CalculationSourceResolution`
+    is immutable, the exclusion returns a copied resolution with only the 303
+    compensation binding and its provenance removed.
     """
     from ..calculations._binding_prefill import _MODELO_303_IVA_COMPENSATION_BINDING_ID
 
@@ -1029,7 +1037,8 @@ def assert_no_novel_source_kinds(revision: ModeloRevision) -> None:
       explicitly deferred advisory sources.
 
     Args:
-        revision: The :class:`ModeloRevision` whose bindings are checked.
+        revision: The :class:`ModeloRevision` whose binding source kinds are
+            checked against the live source-mesh enrollment.
 
     Raises:
         ModeloAggregationBindingError: When a binding carries a source kind
