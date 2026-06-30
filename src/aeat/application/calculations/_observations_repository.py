@@ -286,9 +286,11 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
     by the clean-state service from this repository plus filing, verification,
     and justificante repositories.
 
-    The repository binds each :class:`Envelope` payload to
+    The repository binds each
+    :class:`~aeat.adapters.persistence.storage.Envelope` payload to
     :data:`aeat.adapters.persistence.storage.CALCULATION_OBSERVATIONS_NAMESPACE`
-    through :class:`SecureBoundRepository`.
+    through
+    :class:`~aeat.adapters.persistence.storage.envelope.SecureBoundRepository`.
     """
 
     namespace: ClassVar[str] = CALCULATION_OBSERVATIONS_NAMESPACE.namespace
@@ -393,7 +395,8 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
     immutable audit events use
     :data:`aeat.adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE`.
     Both store :class:`IvaCompensationReconciliationDecision` payloads in
-    :class:`Envelope` records through :class:`SecureBoundRepository`.
+    :class:`~aeat.adapters.persistence.storage.Envelope` records through
+    :class:`~aeat.adapters.persistence.storage.envelope.SecureBoundRepository`.
     """
 
     namespace: ClassVar[str] = IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE.namespace
