@@ -303,6 +303,8 @@ class TestTypoTwinWarning:
             ("100", "2025", "2234", "irpf_perdida_fondos_coti_importe_computable"),
             ("100", "2025", "0360", "irpf_ganancia_premios_juegos_valoracion_b"),
             ("100", "2025", "0361", "irpf_ganancia_premios_juegos_pub_valoracion_b"),
+            ("100", "2025", "0238", "irpf_eo_reintegro_subvenciones"),
+            ("100", "2025", "0239", "irpf_eo_agr_reintegro_subvenciones"),
             # M303 compensacion-pendiente roles appear in both 2009-y-siguientes and
             # 2023-y-siguientes revisions; the validator requires unique occurrence for
             # intentional_singleton, so they carry semantic_role_cardinality="shared".
@@ -360,6 +362,8 @@ class TestTypoTwinWarning:
             "irpf_perdida_fondos_coti_importe_computable",
             "irpf_ganancia_premios_juegos_valoracion_b",
             "irpf_ganancia_premios_juegos_pub_valoracion_b",
+            "irpf_eo_reintegro_subvenciones",
+            "irpf_eo_agr_reintegro_subvenciones",
             "iva_oss_union_servicios_destino_de_cuota",
             "iva_oss_union_servicios_destino_fr_cuota",
         }
@@ -578,6 +582,15 @@ class TestTypoTwinWarning:
             semantic_roles_are_axis_siblings(
                 "irpf_ganancia_premios_juegos_pub_valoracion",
                 "irpf_ganancia_premios_juegos_valoracion",
+            )
+            is False
+        )
+
+    def test_agricultural_objective_estimation_marker_is_not_optional_axis_token(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "irpf_eo_agr_reintegro_subvenciones",
+                "irpf_eo_reintegro_subvenciones",
             )
             is False
         )
