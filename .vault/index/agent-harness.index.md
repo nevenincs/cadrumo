@@ -17,6 +17,9 @@ related:
   - '[[2026-06-30-agent-harness-W04-P08-summary]]'
   - '[[2026-06-30-agent-harness-W04-P09-summary]]'
   - '[[2026-06-30-agent-harness-W04-P10-summary]]'
+  - '[[2026-06-30-agent-harness-W05-P11-summary]]'
+  - '[[2026-06-30-agent-harness-W05-P12-summary]]'
+  - '[[2026-06-30-agent-harness-W05-P13-summary]]'
   - '[[2026-06-30-agent-harness-adr]]'
   - '[[2026-06-30-agent-harness-plan]]'
   - '[[2026-06-30-agent-harness-research]]'
@@ -45,6 +48,9 @@ Auto-generated index of all documents tagged with `#agent-harness`.
 - `2026-06-30-agent-harness-W04-P08-summary` - `agent-harness` `W04.P08` summary
 - `2026-06-30-agent-harness-W04-P09-summary` - `agent-harness` `W04.P09` summary
 - `2026-06-30-agent-harness-W04-P10-summary` - `agent-harness` `W04.P10` summary
+- `2026-06-30-agent-harness-W05-P11-summary` - `agent-harness` `W05.P11` summary
+- `2026-06-30-agent-harness-W05-P12-summary` - `agent-harness` `W05.P12` summary
+- `2026-06-30-agent-harness-W05-P13-summary` - `agent-harness` `W05.P13` summary
 
 ### plan
 
