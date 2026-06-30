@@ -22,6 +22,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -543,6 +544,7 @@ def test_s27_withholding_source_kind_is_enrolled_not_deferred() -> None:
 # ---------------------------------------------------------------------------
 
 
+@cache
 def _revision(modelo: str, revision_id: str) -> ModeloRevision:
-    modelo_def = next(item for item in resources().modelos.all() if item.id == modelo)
+    modelo_def = resources().modelos.get(modelo)
     return modelo_def.revisions[revision_id]
