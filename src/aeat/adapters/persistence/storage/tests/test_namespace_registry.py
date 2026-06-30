@@ -19,16 +19,22 @@ from .. import (
     AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
     APPLICATION_EVIDENCE_BUNDLE_NAMESPACE,
     ATTACHMENT_BLOB_NAMESPACE,
+    ATTACHMENT_MANIFEST_NAMESPACE,
     BLOB_MANIFEST_SCHEMA_VERSION,
     BUCKET_DB_DIRNAME,
+    BUCKET_EVENT_HISTORY_NAMESPACE,
     BUCKET_LOCK_FILENAME,
     BUCKET_MANIFEST_FILENAME,
     BUCKETS_DIRNAME,
+    CALCULATION_OBSERVATIONS_NAMESPACE,
     CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
     GOOGLE_DRIVE_CONFIG_NAMESPACE,
     GOOGLE_OAUTH_CLIENT_NAMESPACE,
     GOOGLE_OAUTH_METADATA_NAMESPACE,
     GOOGLE_OAUTH_TOKEN_NAMESPACE,
+    IVA_COMPENSATION_HISTORY_NAMESPACE,
+    IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE,
+    IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE,
     LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE,
     LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE,
     LIVE_CENSO_SNAPSHOT_NAMESPACE,
@@ -49,8 +55,11 @@ from .. import (
     TEST_SECURE_BOUND_CONTRACT_NAMESPACE,
     TEST_SESSION_LIFECYCLE_NAMESPACE,
     TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
+    TRANSACTION_PARTICIPATION_INDEX_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,
     SecureObjectNamespaceDefinition,
+    StorageCustodyDisposition,
+    StorageCustodyProfile,
     StorageHierarchyRegistry,
     StorageNamespaceScope,
     StorageRemoteMirrorPolicy,
@@ -176,6 +185,55 @@ def test_transaction_participation_index_namespace_is_registered() -> None:
     assert registered.scope is StorageNamespaceScope.PROFILE_LOCAL
     assert registered.schema_version == 1
     assert registered.object_key_grammar == "{transaction_id}"
+    assert registered.custody_disposition is StorageCustodyDisposition.DERIVED_REBUILDABLE
+
+
+def test_every_registered_namespace_declares_explicit_custody_disposition() -> None:
+    missing = [
+        definition.key
+        for definition in STORAGE_NAMESPACE_REGISTRY.namespaces
+        if "custody_disposition" not in definition.model_fields_set
+    ]
+
+    assert missing == []
+    assert {definition.custody_disposition for definition in STORAGE_NAMESPACE_REGISTRY.namespaces} <= set(
+        StorageCustodyDisposition,
+    )
+
+
+def test_custody_profile_projection_matches_bucket_custody_adr_examples() -> None:
+    full_namespaces = STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(StorageCustodyProfile.FULL)
+    structured_namespaces = STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(
+        StorageCustodyProfile.STRUCTURED,
+    )
+    full_keys = {definition.key for definition in full_namespaces}
+    structured_keys = {definition.key for definition in structured_namespaces}
+
+    cross_period_keys = {
+        CALCULATION_OBSERVATIONS_NAMESPACE.key,
+        IVA_COMPENSATION_HISTORY_NAMESPACE.key,
+        IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE.key,
+        IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE.key,
+    }
+    evidence_keys = {
+        ATTACHMENT_BLOB_NAMESPACE.key,
+        ATTACHMENT_MANIFEST_NAMESPACE.key,
+        APPLICATION_EVIDENCE_BUNDLE_NAMESPACE.key,
+        LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE.key,
+    }
+
+    assert cross_period_keys <= full_keys
+    assert cross_period_keys <= structured_keys
+    assert evidence_keys <= full_keys
+    assert evidence_keys.isdisjoint(structured_keys)
+    assert LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE.key in full_keys
+    assert LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE.key in structured_keys
+    assert LIVE_CENSO_SNAPSHOT_NAMESPACE.key in full_keys
+    assert LIVE_CENSO_SNAPSHOT_NAMESPACE.key not in structured_keys
+    assert BUCKET_EVENT_HISTORY_NAMESPACE.key in full_keys
+    assert BUCKET_EVENT_HISTORY_NAMESPACE.key not in structured_keys
+    assert TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.key not in full_keys
+    assert TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.key not in structured_keys
 
 
 def test_auth_session_cache_remote_namespaces_are_registered() -> None:
@@ -380,6 +438,7 @@ def test_namespace_definition_rejects_pathlike_namespaces() -> None:
             schema_version=1,
             object_key_grammar="{id}",
             scope=StorageNamespaceScope.PROFILE_LOCAL,
+            custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
         )
 
 
@@ -409,6 +468,7 @@ def _make_namespace_definition(**overrides: object) -> SecureObjectNamespaceDefi
         "schema_version": 1,
         "object_key_grammar": "{id}",
         "scope": StorageNamespaceScope.PROFILE_LOCAL,
+        "custody_disposition": StorageCustodyDisposition.STRUCTURED_CUSTODY,
     }
     defaults.update(overrides)
     return SecureObjectNamespaceDefinition.model_validate(defaults)
