@@ -2,19 +2,20 @@
 
 This module converts CLI override tokens into a
 :class:`WorkCalculateInputBundle`, resolves the active work unit's
-:class:`ModeloRevision`, and validates canonical :class:`CasillaId` values,
+:class:`ModeloRevision`, and validates canonical ``CasillaId`` values,
 binding channels, relation ids, and shortcut-derived semantic-role casillas
 before the calculate service persists a :class:`CalculationRevision`.
 
 The application result pairs that persisted revision with its parent
-:class:`~aeat.domain.modelos._work_unit.WorkUnit` and any non-blocking
-:class:`CalculationSourceDiagnostic` rows surfaced by bucket aggregation.
+:class:`aeat.domain.modelos.WorkUnit` and any non-blocking
+:class:`aeat.application.aggregation.CalculationSourceDiagnostic` rows surfaced
+by bucket aggregation or post-calculation advisory collectors.
 
 See Also:
     :func:`aeat.entrypoints.cli._modelo_work_calculate_cli.register_work_calculate_commands`:
         Parses the operator-facing ``modelo work calculate`` command and calls
         this module to build the input bundle.
-    :func:`aeat.application.modelo._calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+    :func:`aeat.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
         Consumes the validated bundle and persists the draft calculation
         revision.
     :mod:`aeat.application.modelo._calculation_resolution`:
@@ -192,19 +193,20 @@ class ModeloWorkCalculationServiceResult:
     """Application-owned result for one `modelo work calculate` command.
 
     ``revision`` is the persisted :class:`CalculationRevision`; ``work_unit`` is
-    the parent :class:`~aeat.domain.modelos._work_unit.WorkUnit` loaded after
+    the parent :class:`aeat.domain.modelos.WorkUnit` loaded after
     persistence so renderers do not have to repeat the lookup. The optional
     advisory summaries are presentation data derived from registry
     applicability and authorization metadata.
 
     ``source_diagnostics`` carries the NON-blocking
-    :class:`CalculationSourceDiagnostic` rows the source mesh raised while
-    resolving the bucket ledger — notably the unconsumed-declarable-IVA
-    advisories (a declarable IVA observation no ``ledger_iva_aggregation``
-    binding selects). The calculate verb succeeded regardless; surfacing them
-    keeps an unrouted observation from being silently under-declared
+    :class:`aeat.application.aggregation.CalculationSourceDiagnostic` rows the
+    source mesh and post-calculation advisory collectors raised. They include
+    unresolved or deferred binding sources, unrouted ledger observations, and
+    calculate-grade official-box / prior-payment / settlement advisories. The
+    calculate verb succeeded and persisted the revision regardless; surfacing
+    these rows keeps omitted or degraded source evidence operator-visible
     (no-silent-under-declaration). Each diagnostic's ``message`` carries the
-    observation's category / rate / flow provenance.
+    evidence needed by the CLI renderer.
     """
 
     revision: CalculationRevision
@@ -224,12 +226,12 @@ def calculate_modelo_work_revision(
 
     The function forwards the already validated :class:`WorkCalculateInputBundle`
     into the bucket-aggregation calculation path, reloads the parent
-    :class:`~aeat.domain.modelos._work_unit.WorkUnit`, and attaches any Modelo
+    :class:`aeat.domain.modelos.WorkUnit`, and attaches any Modelo
     202 modality, authorization, or non-blocking source diagnostics needed by
     the CLI payload.
 
     See Also:
-        :func:`aeat.application.modelo._calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+        :func:`aeat.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
             Runs source aggregation and persists the calculation revision.
         :func:`aeat.entrypoints.cli._modelo_work_calculate_cli._run_work_calculate`:
             Calls this service and serialises the result for the operator.
@@ -288,7 +290,7 @@ def build_work_calculate_input_bundle(
 
     Detail rows are checked before engine dispatch, and shortcut flags are
     translated into semantic-role casilla values or backend-owned bindings by
-    :func:`apply_calculation_shortcut_inputs`.
+    :func:`aeat.application.modelo.apply_calculation_shortcut_inputs`.
     """
     _validate_detail_rows(detail_rows)
     revision = _revision_for_work_unit(work_unit_id)
