@@ -73,3 +73,25 @@ def test_modelo_100_dependency_relations_resolve_against_registered_modelos() ->
             assert set(relation.source_periods).issubset(source_revision.period_selector.periods), relation.id
         assert relation.target_binding in {binding.id for binding in revision.bindings}
         assert set(relation.target_periods).issubset(revision.period_selector.periods)
+
+
+def test_modelo_100_rental_landlord_foreign_nif_flags_have_specific_role() -> None:
+    modelos_by_id, _catalogues = _loaded_registry()
+    modelo = modelos_by_id["100"]
+
+    for year in range(2020, 2026):
+        revision = modelo.revisions[str(year)]
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+        for casilla_id, referenced_nif_id in (("0716", "0715"), ("0718", "0717")):
+            casilla = casillas_by_id[casilla_id]
+
+            assert tuple(casilla.section)[-1] == "deduccion_alquiler_res"
+            assert casilla.data_type == "boolean"
+            assert casilla.semantic_role == "irpf_deduccion_alquiler_arrendador_nif_extranjero_flag"
+            assert f"[{referenced_nif_id}]" in casilla.label
+
+    assert all(
+        casilla.semantic_role != "irpf_anexo_a_nif_extranjero_flag"
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    )
