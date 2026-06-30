@@ -22,6 +22,9 @@ from .._profile_health import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_BUCKET_ID = "31313131-3131-4313-8313-313131313131"
+_PROFILE_LABEL = "Operator"
+
 
 _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="identity.tax_id", value="00000000T"),
@@ -40,7 +43,7 @@ def _seed_ready_profile_record(bucket_id: str, repository: SecureObjectRepositor
     UserProfileLifecycleRepository(bucket_id=bucket_id, objects=repository).save(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name=bucket_id,
+            display_name=_PROFILE_LABEL,
             facts=_READY_PROFILE_FACTS,
         ),
     )
@@ -49,14 +52,14 @@ def _seed_ready_profile_record(bucket_id: str, repository: SecureObjectRepositor
 def test_active_profile_health_reports_missing_profile_record(tmp_path: Path) -> None:
     with isolated_runtime_profile(
         tmp_path=tmp_path,
-        bucket_id="operator",
-        label="Operator",
+        bucket_id=_BUCKET_ID,
+        label=_PROFILE_LABEL,
     ) as profile:
-        write_pointer(profile.storage_root, BucketPointer(bucket_id="operator", schema_version=1))
+        write_pointer(profile.storage_root, BucketPointer(bucket_id=_BUCKET_ID, schema_version=1))
         with override_settings(aeat_active_profile=None):
             health = assess_active_profile_health()
 
-    assert health.active_profile == "operator"
+    assert health.active_profile == _BUCKET_ID
     assert health.source == "pointer"
     assert health.registered_bucket is True
     assert health.profile_record_present is False
@@ -68,10 +71,10 @@ def test_active_profile_health_reports_missing_profile_record(tmp_path: Path) ->
 def test_profile_repair_clears_only_degraded_pointer(tmp_path: Path) -> None:
     with isolated_runtime_profile(
         tmp_path=tmp_path,
-        bucket_id="operator",
-        label="Operator",
+        bucket_id=_BUCKET_ID,
+        label=_PROFILE_LABEL,
     ) as profile:
-        write_pointer(profile.storage_root, BucketPointer(bucket_id="operator", schema_version=1))
+        write_pointer(profile.storage_root, BucketPointer(bucket_id=_BUCKET_ID, schema_version=1))
         with override_settings(aeat_active_profile=None):
             dry_run = repair_active_profile_pointer(clear_active=True, confirmed=False)
             assert dry_run.dry_run is True
@@ -90,11 +93,11 @@ def test_profile_repair_clears_only_degraded_pointer(tmp_path: Path) -> None:
 def test_profile_repair_does_not_clear_healthy_pointer(tmp_path: Path) -> None:
     with isolated_runtime_profile(
         tmp_path=tmp_path,
-        bucket_id="operator",
-        label="Operator",
+        bucket_id=_BUCKET_ID,
+        label=_PROFILE_LABEL,
     ) as profile:
-        _seed_ready_profile_record("operator", profile.repository)
-        write_pointer(profile.storage_root, BucketPointer(bucket_id="operator", schema_version=1))
+        _seed_ready_profile_record(_BUCKET_ID, profile.repository)
+        write_pointer(profile.storage_root, BucketPointer(bucket_id=_BUCKET_ID, schema_version=1))
 
         with override_settings(aeat_active_profile=None):
             health = assess_active_profile_health()
@@ -110,11 +113,11 @@ def test_profile_repair_does_not_clear_healthy_pointer(tmp_path: Path) -> None:
 def test_manifest_without_status_is_not_backfilled_from_profile_record(tmp_path: Path) -> None:
     with isolated_runtime_profile(
         tmp_path=tmp_path,
-        bucket_id="operator",
-        label="Operator",
+        bucket_id=_BUCKET_ID,
+        label=_PROFILE_LABEL,
     ) as profile:
-        _seed_ready_profile_record("operator", profile.repository)
-        target = manifest_path(bucket_paths(profile.storage_root, "operator"))
+        _seed_ready_profile_record(_BUCKET_ID, profile.repository)
+        target = manifest_path(bucket_paths(profile.storage_root, _BUCKET_ID))
         legacy_text = "\n".join(
             line for line in target.read_text(encoding="utf-8").splitlines() if not line.startswith("status = ")
         )
