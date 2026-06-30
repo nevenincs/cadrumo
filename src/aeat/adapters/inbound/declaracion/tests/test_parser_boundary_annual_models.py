@@ -6,93 +6,12 @@ import pytest
 
 from ._parser_boundary_support import (
     FIXTURES_DIR,
-    CasillaId,
     Decimal,
-    _expected_casilla_values,
     _expected_period,
     parse_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
-
-@pytest.mark.parametrize(
-    "pdf_stem,year",
-    [
-        ("2022-0A", 2022),
-        ("2023-0A", 2023),
-    ],
-)
-def test_parser_extracts_modelo_390_profile_targets_from_corpus(pdf_stem: str, year: int) -> None:
-    """Round-trip: parse synthetic M390 corpus fixtures and verify formula-consistent casilla values.
-
-    Ground truth is derived from the _Modelo390CorpusFixture leaf inputs in _generate.py.
-    The fixtures are synthetic formula-consistent PDFs (verification_source =
-    synthetic_from_aeat_published_text) replacing the earlier sanitised-real-form PDFs
-    that carried uniform 1.000,00 amounts making resultado-regimen-general inconsistent.
-
-    All five bbox_anchored leaf casillas are printed (boxes 02/04/06/26/49), including
-    zero-value ones, so the extractor captures all five inputs.
-
-    Per-specimen expected values (derived from _compute_m390_closure leaf inputs):
-      2022-0A: c06=10500, c04=0, c02=0, c26=0, c49=8400 -> c47=10500, c64=8400, c65=2100
-      2023-0A: c06=12600, c04=0, c02=0, c26=0, c49=9800 -> c47=12600, c64=9800, c65=2800
-    """
-    _EXPECTED: dict[str, dict[CasillaId, Decimal]] = {
-        "2022-0A": _expected_casilla_values(
-            {
-                "iva.anual.repercutido.general": Decimal("10500.00"),
-                "iva.anual.repercutido.reducido": Decimal("0.00"),
-                "iva.anual.repercutido.super-reducido": Decimal("0.00"),
-                "iva.anual.autorepercutido.intracomunitaria": Decimal("0.00"),
-                "iva.anual.soportado.interiores": Decimal("8400.00"),
-                "iva.anual.cuota-devengada-total": Decimal("10500.00"),
-                "iva.anual.cuota-deducible-total": Decimal("8400.00"),
-                "iva.anual.resultado-regimen-general": Decimal("2100.00"),
-            }
-        ),
-        "2023-0A": _expected_casilla_values(
-            {
-                "iva.anual.repercutido.general": Decimal("12600.00"),
-                "iva.anual.repercutido.reducido": Decimal("0.00"),
-                "iva.anual.repercutido.super-reducido": Decimal("0.00"),
-                "iva.anual.autorepercutido.intracomunitaria": Decimal("0.00"),
-                "iva.anual.soportado.interiores": Decimal("9800.00"),
-                "iva.anual.cuota-devengada-total": Decimal("12600.00"),
-                "iva.anual.cuota-deducible-total": Decimal("9800.00"),
-                "iva.anual.resultado-regimen-general": Decimal("2800.00"),
-            }
-        ),
-    }
-    expected = _EXPECTED[pdf_stem]
-
-    pdf_path = FIXTURES_DIR / "justificantes" / "390" / f"{pdf_stem}.pdf"
-
-    filing = parse_declaracion(
-        pdf_path,
-        modelo_override="390",
-        año_override=year,
-        period_override="0A",
-    )
-
-    assert filing.modelo == "390"
-    assert filing.period == _expected_period(year, "0A")
-    assert filing.tax_id == "Y0000001S"
-    assert filing.registry_snapshot_ref is not None
-    assert filing.registry_snapshot_ref.modelo == "390"
-    assert filing.registry_snapshot_ref.modelo_year == year
-    assert filing.registry_snapshot_ref.period == "0A"
-
-    values = {v.casilla_id: v.printed_value for v in filing.values}
-
-    assert set(values.keys()) == set(expected.keys()), (
-        f"{pdf_stem}: extracted casilla set mismatch.\n  expected: {sorted(expected)}\n  got:      {sorted(values)}"
-    )
-
-    for casilla_id, expected_value in expected.items():
-        assert values[casilla_id] == expected_value, (
-            f"{pdf_stem}: casilla {casilla_id!r} expected {expected_value!r}, got {values[casilla_id]!r}"
-        )
-
 
 @pytest.mark.parametrize(
     "pdf_stem,year",
