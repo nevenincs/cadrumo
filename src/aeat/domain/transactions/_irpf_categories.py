@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-from ..categories import SpendingCategory
+from ..categories import SpendingCategory, SpendingCategoryFamily, categories_for_family
 from ._enums import TransactionDirection
 
 LedgerIrpfCategoryPurpose = Literal[
@@ -35,13 +35,17 @@ RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING = frozenset(
     },
 )
 RENT_IRPF_CATEGORIES_PAID_NET_OF_WITHHOLDING = RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING
+PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING = frozenset(
+    category.value for category in categories_for_family(SpendingCategoryFamily.PROFESSIONAL_SERVICES)
+)
 
 _LEDGER_IRPF_CATEGORY_CATALOGUE = (
     LedgerIrpfCategoryDescriptor(
         id=IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
         purpose="activity_income_withholding",
-        directions=(TransactionDirection.INCOMING,),
+        directions=(TransactionDirection.INCOMING, TransactionDirection.OUTGOING),
         net_paid_invoice=True,
+        related_category_ids=tuple(sorted(PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING)),
     ),
     LedgerIrpfCategoryDescriptor(
         id=SpendingCategory.ARRENDAMIENTO_LOCAL.value,

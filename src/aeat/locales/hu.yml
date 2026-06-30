@@ -2729,12 +2729,13 @@ cli:
         preflight` nem jelöli hiányzóként a kategóriát bevételeknél.
       irpf_header: IRPF-KATEGORIAK A --irpf-category KAPCSOLOHOZ
       irpf_id_column: irpf-category (ezt az erteket adja meg)
-      irpf_purpose_activity_income_withholding: netto szakmai bevetel visszatartasa
+      irpf_purpose_activity_income_withholding: szakmai tevekenysegi visszatartas (netto bevetel vagy kiadas)
       irpf_purpose_employment_income: munkaviszonybol szarmazo jovedelem (nem netto
         szamlakhoz)
       irpf_purpose_rent_expense_withholding: netto berleti dij visszatartasa
       irpf_usage_example: 'Netto berleti dij: --category-id {rent_category} --irpf-category
-        {rent_category}. Netto szakmai bevetel: --irpf-category {activity_category}.'
+        {rent_category}. Netto szakmai szolgaltatas: --category-id {professional_category}
+        --irpf-category {activity_category}.'
       irpf_use_column: hasznalat
       usage_example: Adja meg az azonosítót egyszerűen, pl. --category-id {example}
         (nem kategóriacsaládos vagy összetett kulcs).
