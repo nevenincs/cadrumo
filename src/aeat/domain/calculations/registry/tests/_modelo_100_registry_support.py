@@ -342,8 +342,15 @@ _LEGACY_GALICIA_INMUEBLE_VACIO_ADECUACION_PENDING_ROLE = "irpf_deduccion_inmuebl
 _MADRID_GASTOS_ARRENDAMIENTO_ROLE = "irpf_deduccion_madrid_gastos_arrendamiento"
 _MADRID_INTERESES_PRESTAMOS_VIVIENDA_ROLE = "irpf_deduccion_madrid_intereses_prestamos_vivienda"
 _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_ROLE = "irpf_deduccion_madrid_vivienda_nacimiento_adopcion"
+_MADRID_VIVIENDA_NACIMIENTO_ADOPCION_ANIO_ROLE = "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_anio"
 _MADRID_FAMILIA_NUMEROSA_ROLE = "irpf_deduccion_madrid_familia_numerosa"
 _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_IMPORTE_ROLE = "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_importe"
+_MADRID_VIVIENDA_NACIMIENTO_ADOPCION_PRECIO_ROLE = (
+    "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_precio"
+)
+_MADRID_VIVIENDA_MUNICIPIO_RIESGO_ROLE = "irpf_deduccion_madrid_vivienda_municipio_riesgo"
+_MADRID_VIVIENDA_MUNICIPIO_RIESGO_ANIO_ROLE = "irpf_deduccion_madrid_vivienda_municipio_riesgo_anio"
+_MADRID_VIVIENDA_MUNICIPIO_RIESGO_PRECIO_ROLE = "irpf_deduccion_madrid_vivienda_municipio_riesgo_precio"
 _ANEXO_B_INST_AUTO_IMPORTE_PENDIENTE_ANTERIOR_ROLE = "irpf_anexo_b_inst_auto_importe_pendiente_anterior"
 _C_VALENCIANA_APLICADO_EJERCICIO_ROLE = "irpf_deduccion_c_valenciana_aplicado_ejercicio"
 _C_VALENCIANA_GENERADO_2024_PENDIENTE_3_ROLE = "irpf_deduccion_c_valenciana_generado_2024_pendiente_3"
@@ -454,6 +461,36 @@ _MADRID_REUSED_ID_DEDUCTION_ROWS = {
         "1120": (
             "Importe de la deducción",
             _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_IMPORTE_ROLE,
+        ),
+    },
+}
+_MADRID_VIVIENDA_ACQUISITION_DETAIL_ROWS = {
+    2024: {
+        "2027": (
+            "Por adquisición de vivienda habitual por nacimiento o adopción de hijos",
+            _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_ROLE,
+        ),
+        "2028": (
+            "Precio de adquisición/cantidades invertidas",
+            _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_PRECIO_ROLE,
+        ),
+        "2029": (
+            "Año de adquisición",
+            _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_ANIO_ROLE,
+        ),
+    },
+    2025: {
+        "2027": (
+            "Por adquisición de vivienda habitual en municipios en riesgo de despoblación",
+            _MADRID_VIVIENDA_MUNICIPIO_RIESGO_ROLE,
+        ),
+        "2028": (
+            "Precio de adquisición/cantidades invertidas",
+            _MADRID_VIVIENDA_MUNICIPIO_RIESGO_PRECIO_ROLE,
+        ),
+        "2029": (
+            "Año de adquisición",
+            _MADRID_VIVIENDA_MUNICIPIO_RIESGO_ANIO_ROLE,
         ),
     },
 }
