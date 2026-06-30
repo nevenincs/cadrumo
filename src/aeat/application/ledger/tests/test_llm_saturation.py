@@ -52,7 +52,7 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
-_BUCKET = "bucket-a"
+_BUCKET = "17171717-1717-4717-8717-171717171717"
 
 
 class _FixedSaturatingClassifier:
