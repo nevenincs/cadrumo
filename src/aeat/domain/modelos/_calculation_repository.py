@@ -1,9 +1,10 @@
 """Encrypted SQL repository for the calculation-revision catalogue.
 
-Persists and loads :class:`CalculationRevision` records via
-:class:`SecureObjectRepository` at :class:`SensitivityClass` FINANCIAL.
-Each record is wrapped in an :class:`Envelope` before being written to
-the encrypted BLOB per profile bucket.
+:class:`~aeat.domain.modelos.CalculationRevisionCatalogueRepository` persists
+and loads :class:`CalculationRevision` records in a
+:class:`CalculationRevisionCatalogue` via :class:`SecureObjectRepository` at
+:class:`SensitivityClass` FINANCIAL. Each catalogue is wrapped in an
+:class:`Envelope` before being written to the encrypted BLOB per profile bucket.
 """
 
 from __future__ import annotations
@@ -31,11 +32,21 @@ _CALCULATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_calculation_revision
 
 
 class CalculationRevisionPersistenceError(ModeloError):
-    """Raised when the calculation-revision catalogue cannot be persisted or loaded."""
+    """Raised when the calculation-revision catalogue cannot be persisted or loaded.
+
+    This wraps storage-boundary failures from
+    :class:`~aeat.domain.modelos.CalculationRevisionCatalogueRepository` while
+    preserving translated recovery context for callers.
+    """
 
 
 class CalculationRevisionCatalogueRepository:
-    """Read / write the calculation-revision catalogue in encrypted storage."""
+    """Repository over encrypted SQL-backed calculation-revision catalogue storage.
+
+    The repository wraps a :class:`SecureObjectRepository` and exposes the
+    concrete load/save implementation behind
+    :class:`~aeat.domain.modelos.CalculationRevisionCatalogueRepositoryProtocol`.
+    """
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
@@ -55,8 +66,8 @@ class CalculationRevisionCatalogueRepository:
         A modelo (an AEAT tax form or declaration) carries calculation revisions
         per filing profile, and each profile owns its own encrypted bucket. This
         property exposes the resolved bucket identifier, or ``None`` when the
-        repository was constructed against a caller-supplied ``SecureObjectRepository``
-        rather than a resolved bucket.
+        repository was constructed against a caller-supplied
+        :class:`SecureObjectRepository` rather than a resolved bucket.
 
         Returns:
             The trimmed bucket identifier, or ``None`` when no bucket was resolved.
@@ -81,19 +92,21 @@ class CalculationRevisionCatalogueRepository:
         A calculation revision is a dated, computed version of a modelo's casilla
         values (a casilla is a numbered box on an AEAT form); the catalogue is the
         keyed collection of those revisions. The stored record is decrypted, its
-        ``Envelope`` parsed, and its sensitivity classification and schema version
-        checked before the payload is returned. When nothing has been persisted yet,
-        an empty ``CalculationRevisionCatalogue`` is returned rather than raising.
+        :class:`Envelope` parsed, and its sensitivity classification and schema
+        version checked before the payload is returned. When nothing has been
+        persisted yet, an empty :class:`CalculationRevisionCatalogue` is returned
+        rather than raising.
 
         Returns:
             The persisted :class:`CalculationRevisionCatalogue`, or an empty one when no
             record exists.
 
         Raises:
-            CalculationRevisionPersistenceError: If the stored record fails the
-                FINANCIAL classification check, or its envelope schema version
-                exceeds the version this consumer supports, or an integrity error
-                surfaces while decrypting and decoding the record.
+            :class:`CalculationRevisionPersistenceError`: If the stored record
+                fails the FINANCIAL classification check, or its envelope schema
+                version exceeds the version this consumer supports, or an
+                integrity error surfaces while decrypting and decoding the
+                record.
         """
         from ...adapters.persistence.storage import Envelope, SensitivityClass
         from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
@@ -161,14 +174,16 @@ class CalculationRevisionCatalogueRepository:
     def save(self, catalogue: CalculationRevisionCatalogue) -> None:
         """Persist the calculation-revision catalogue to encrypted storage.
 
-        Wraps the catalogue (the keyed collection of a modelo's dated calculation
-        revisions) in an ``Envelope`` stamped with the current schema version, write
-        time, and FINANCIAL sensitivity classification, then writes the serialised
-        envelope to the encrypted store under this repository's namespace and key.
-        An existing catalogue object at that location is overwritten.
+        Wraps the catalogue (the keyed collection of a modelo's dated
+        calculation revisions) in an :class:`Envelope` stamped with the current
+        schema version, write time, and FINANCIAL sensitivity classification,
+        then writes the serialised envelope to the encrypted store under this
+        repository's namespace and key. An existing catalogue object at that
+        location is overwritten.
 
         Args:
-            catalogue: The ``CalculationRevisionCatalogue`` to serialise and store.
+            catalogue: The :class:`CalculationRevisionCatalogue` to serialise and
+                store.
         """
         from ...adapters.persistence.storage import Envelope, SensitivityClass
 
@@ -188,11 +203,13 @@ class CalculationRevisionCatalogueRepository:
         )
 
     def to_secure_object_write(self, catalogue: CalculationRevisionCatalogue) -> SecureObjectWrite:
-        """Return the :class:`SecureObjectWrite` upsert for ``catalogue`` without committing it.
+        """Return the secure-object upsert for ``catalogue`` without committing it.
 
-        Mirrors the bucket-event-history repository so the catalogue save can be
+        The returned :class:`~aeat.adapters.persistence.storage.SecureObjectWrite`
+        carries the same :class:`Envelope` and :class:`SensitivityClass`
+        classification that :meth:`save` would persist directly. It can be
         co-emitted with related secure objects (e.g. the participation index) in
-        one ``save_with_secure_object_writes`` unit of work.
+        one :meth:`save_with_secure_object_writes` unit of work.
         """
         from ...adapters.persistence.storage import Envelope, SecureObjectWrite, SensitivityClass
 
@@ -222,6 +239,12 @@ class CalculationRevisionCatalogueRepository:
         single SQL transaction, so the participation index co-emitted here can
         never drift from the calculation revision it indexes (per the
         composition-service single-writer discipline).
+
+        Args:
+            catalogue: The :class:`CalculationRevisionCatalogue` to persist.
+            extra_writes: Additional
+                :class:`~aeat.adapters.persistence.storage.SecureObjectWrite`
+                objects to commit atomically with the catalogue.
         """
         self._objects.save_many((self.to_secure_object_write(catalogue), *extra_writes))
 

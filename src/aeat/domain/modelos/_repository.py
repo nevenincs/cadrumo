@@ -1,11 +1,11 @@
 """Encrypted SQL repository for the modelo work-unit catalogue.
 
-The work-unit catalogue persists at :class:`SensitivityClass` FINANCIAL
-through the same :class:`aeat.adapters.persistence.storage.sql.SecureObjectRepository`
-backend the transaction and invoice catalogues use. The catalogue is
-serialised as a single :class:`Envelope`-wrapped JSON payload keyed by
-a stable namespace + object key; the underlying column is encrypted so
-no plaintext work-unit metadata lands on disk.
+:class:`~aeat.domain.modelos.WorkUnitCatalogueRepository` persists
+:class:`WorkUnit` records in a :class:`WorkUnitCatalogue` at
+:class:`SensitivityClass` FINANCIAL through :class:`SecureObjectRepository`.
+The catalogue is serialised as a single :class:`Envelope`-wrapped JSON payload
+keyed by a stable namespace and object key; the underlying column is encrypted
+so no plaintext work-unit metadata lands on disk.
 """
 
 from __future__ import annotations
@@ -29,15 +29,23 @@ _WORK_UNIT_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_work_unit_persistence"
 
 
 class WorkUnitPersistenceError(ModeloError):
-    """Raised when the work-unit catalogue cannot be loaded or saved."""
+    """Raised when the work-unit catalogue cannot be loaded or saved.
+
+    This wraps storage-boundary failures from
+    :class:`~aeat.domain.modelos.WorkUnitCatalogueRepository` while preserving
+    translated recovery context for callers.
+    """
 
 
 class WorkUnitCatalogueRepository:
-    """Read / write the work-unit catalogue in the encrypted backend.
+    """Repository over encrypted SQL-backed work-unit catalogue storage.
 
     A single envelope-wrapped catalogue object holds every work
     unit. Loads return an empty catalogue when no object has been
     persisted yet (no separate "fresh install" path is needed).
+    The repository wraps a :class:`SecureObjectRepository` and exposes the
+    concrete load/save implementation behind
+    :class:`~aeat.domain.modelos.WorkUnitCatalogueRepositoryProtocol`.
     """
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
@@ -65,9 +73,9 @@ class WorkUnitCatalogueRepository:
             when no object has been persisted yet.
 
         Raises:
-            WorkUnitPersistenceError: When the persisted envelope's
-                classification or schema version disagrees with the
-                consumer's contract.
+            :class:`WorkUnitPersistenceError`: When the persisted envelope's
+                classification or schema version disagrees with the consumer's
+                contract.
         """
         from ...adapters.persistence.storage import Envelope, SensitivityClass
         from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
@@ -130,7 +138,14 @@ class WorkUnitCatalogueRepository:
         return catalogue
 
     def save(self, catalogue: WorkUnitCatalogue) -> None:
-        """Persist ``catalogue`` as the encrypted singleton object."""
+        """Persist ``catalogue`` as the encrypted singleton object.
+
+        The on-disk database value is an encrypted :class:`Envelope` BLOB at the
+        :class:`SensitivityClass` FINANCIAL classification.
+
+        Args:
+            catalogue: The :class:`WorkUnitCatalogue` to persist.
+        """
         from ...adapters.persistence.storage import Envelope, SensitivityClass
 
         envelope = Envelope[WorkUnitCatalogue](
