@@ -25,9 +25,9 @@ from .. import (
 from ._llm_evidence_split_support import (
     _BUCKET,
     _NOW,
-    _FixedSplitProposer,
     _seed_parent,
     _single_line_proposal,
+    _split_subprocess_proposer,
     _two_line_proposal,
 )
 from ._llm_evidence_split_support import (
@@ -49,7 +49,7 @@ def test_single_child_suggestion_does_not_recommend_split(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
         provider=LLMProvider.CLAUDE,
-        proposer=_FixedSplitProposer(response=_single_line_proposal()),
+        proposer=_split_subprocess_proposer(response=_single_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,
     )
@@ -69,7 +69,7 @@ def test_apply_evidence_split_refuses_a_no_split_verdict(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
         provider=LLMProvider.CLAUDE,
-        proposer=_FixedSplitProposer(response=_single_line_proposal()),
+        proposer=_split_subprocess_proposer(response=_single_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,
     )
@@ -92,7 +92,7 @@ def test_apply_evidence_classification_writes_in_place_from_the_lone_child(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
         provider=LLMProvider.CLAUDE,
-        proposer=_FixedSplitProposer(response=_single_line_proposal()),
+        proposer=_split_subprocess_proposer(response=_single_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,
     )
@@ -127,7 +127,7 @@ def test_apply_evidence_classification_refuses_a_multi_child_split(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
         provider=LLMProvider.CLAUDE,
-        proposer=_FixedSplitProposer(response=_two_line_proposal()),
+        proposer=_split_subprocess_proposer(response=_two_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,
     )
