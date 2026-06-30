@@ -178,7 +178,8 @@ def _root(
         from ._bootstrap_exempt import is_bootstrap_exempt
 
         verb_path = _full_invocation_verb_path() or _verb_path_from_context(ctx)
-        if not is_bootstrap_exempt(verb_path):
+        explicit_profile_show = _is_explicit_profile_show_invocation(ctx, verb_path)
+        if not is_bootstrap_exempt(verb_path) and not explicit_profile_show:
             _normalize_active_profile_label_to_uuid(ctx)
     if ctx.invoked_subcommand is None:
         # The landing surface needs the application operator_surface
@@ -380,6 +381,7 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
 
     verb_path = _full_invocation_verb_path() or _verb_path_from_context(ctx)
     exempt = is_bootstrap_exempt(verb_path)
+    explicit_profile_show = _is_explicit_profile_show_invocation(ctx, verb_path)
     argv_tokens = _full_invocation_tokens() or tuple(
         str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ())
     )
@@ -398,6 +400,8 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
         # database and keeps the bare-invocation landing card path
         # (handled by the caller) intact. Bootstrap-exempt verbs also
         # return — they run cleanly with no profile by design.
+        return
+    if explicit_profile_show:
         return
     if _is_unregistered_profile_status_probe(verb_path, active_bucket_id):
         return
@@ -426,6 +430,53 @@ def _is_unregistered_profile_status_probe(verb_path: str | None, active_bucket_i
     from ...application.workflow import read_profile_bucket_by_id
 
     return read_profile_bucket_by_id(active_bucket_id) is None
+
+
+def _is_explicit_profile_show_invocation(ctx: typer.Context, verb_path: str | None) -> bool:
+    """Return whether the operator targeted ``config profile show <name>``.
+
+    Explicit profile inspection resolves its own label/UUID target and must stay
+    reachable when the unrelated active-profile pointer is stale. The no-arg
+    ``config profile show`` form still depends on the active profile and remains
+    active-profile guarded.
+    """
+    if verb_path is not None:
+        verb_tokens = verb_path.split()
+        if verb_tokens[:3] == ["config", "profile", "show"] and len(verb_tokens) > 3:
+            return True
+
+    from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
+
+    raw_tokens = _full_invocation_tokens() or tuple(
+        str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ())
+    )
+    command_start = _profile_show_command_start(raw_tokens)
+    if command_start is None:
+        return False
+    return _has_explicit_profile_show_target(raw_tokens[command_start + 3 :])
+
+
+def _profile_show_command_start(tokens: tuple[str, ...]) -> int | None:
+    for index in range(0, max(len(tokens) - 2, 0)):
+        if tokens[index : index + 3] == ("config", "profile", "show"):
+            return index
+    return None
+
+
+def _has_explicit_profile_show_target(tokens: tuple[str, ...]) -> bool:
+    value_options = {"--format", "--language", "--lang", "--output-language", "--profile"}
+    skip_next = False
+    for token in tokens:
+        if skip_next:
+            skip_next = False
+            continue
+        if token.startswith("-"):
+            option = token.split("=", 1)[0]
+            if "=" not in token and option in value_options:
+                skip_next = True
+            continue
+        return True
+    return False
 
 
 def _register_wizard_catalogue_for_profile_keys() -> None:

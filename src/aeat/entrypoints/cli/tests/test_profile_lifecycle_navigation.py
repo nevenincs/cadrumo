@@ -620,3 +620,43 @@ def test_active_profile_env_and_pointer_refuse_tombstoned_uuid(
         assert result.exit_code != 0, result.output
         assert "Unknown profile" in result.output
         assert "rows" not in result.output
+
+
+def test_explicit_profile_show_reaches_tombstoned_target_with_stale_active_uuid(
+    _per_bucket_backend: Path,
+) -> None:
+    """Explicit ``show <label|uuid>`` inspects tombstones despite stale active UUIDs."""
+
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....core import BucketPointer, write_pointer
+    from ....core.config import load_settings, override_settings
+
+    seed("alpha")
+    pointer = read_profile_bucket("alpha")
+    assert pointer is not None
+    tombstoned_uuid = pointer.bucket_id
+
+    dispose_engine()
+    deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
+    assert deleted.exit_code == 0, deleted.output
+
+    dispose_engine()
+    with override_settings(aeat_active_profile=tombstoned_uuid):
+        by_env_label = _invoke(("--language", "en", "config", "profile", "show", "alpha"))
+        by_env_uuid = _invoke(("--language", "en", "config", "profile", "show", tombstoned_uuid))
+
+    write_pointer(
+        load_settings().aeat_local_storage_root,
+        BucketPointer(bucket_id=tombstoned_uuid, schema_version=1),
+    )
+    dispose_engine()
+    with override_settings(aeat_active_profile=None):
+        by_pointer_label = _invoke(("--language", "en", "config", "profile", "show", "alpha"))
+        by_pointer_uuid = _invoke(("--language", "en", "config", "profile", "show", tombstoned_uuid))
+
+    for result in (by_env_label, by_env_uuid, by_pointer_label, by_pointer_uuid):
+        assert result.exit_code == 0, result.output
+        assert "status\ttombstoned" in result.output
+        assert "record_validity\ttombstoned" in result.output
+        assert "Unknown profile" not in result.output
