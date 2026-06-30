@@ -1,4 +1,4 @@
-"""Synthetic and error parser boundary tests split from parser boundary part 2."""
+"""Parser boundary error-path tests."""
 
 from __future__ import annotations
 
