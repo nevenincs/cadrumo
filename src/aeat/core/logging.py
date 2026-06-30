@@ -15,6 +15,11 @@ to :func:`~aeat.core.redaction.redact_for_log`; this module keeps only
 logging-specific key-paired placeholders such as cookies, passphrases, and
 certificate serial suffixes. Per-run JSONL handlers are attached with
 :func:`attach_run_sink` so the same filter protects observability output.
+
+Logging is a diagnostic channel, not the CLI result contract. Operator-facing
+success payloads and typed :class:`~aeat.core.json_contract.Notice` values are
+rendered through the JSON/text output stack; this module only prepares redacted
+log records and plaintext diagnostic log files rooted by settings.
 """
 
 from __future__ import annotations
@@ -181,7 +186,15 @@ def _scrub_positional_args(message: str, args: tuple[Any, ...]) -> tuple[Any, ..
 
 
 class SecretScrubbingFilter(logging.Filter):
-    """Redact sensitive fields from log records before formatting."""
+    """Redact sensitive fields from log records before formatting.
+
+    The filter mutates each :class:`logging.LogRecord` in place so handlers,
+    stderr diagnostics, and JSONL run sinks see the same scrubbed record. It is
+    deliberately narrower than CLI output redaction: structured command results
+    still route through :mod:`aeat.core.output_rendering` or
+    :mod:`aeat.core.json_contract`, while this filter protects logging-only
+    message text, %-format args, exception text, and ``extra`` fields.
+    """
 
     @override
     def filter(self, record: logging.LogRecord) -> bool:
@@ -307,7 +320,17 @@ def default_log_file_path() -> Path:
 
 
 def configure_logging() -> None:
-    """Configures the project-wide logging defaults."""
+    """Configure the project-wide diagnostic logging defaults.
+
+    Installs settings-derived stderr/file handlers, the run-context record
+    factory, and :class:`SecretScrubbingFilter` on the root logger plus every
+    configured handler. The file handler writes redacted diagnostic plaintext
+    under :func:`default_log_file_path`; this module does not encrypt logs or
+    persist them through secure-object repositories.
+
+    The function is idempotent so early imports can safely call
+    :func:`get_logger` without duplicating handlers.
+    """
     global _CONFIGURED
     if _CONFIGURED:
         return
@@ -424,6 +447,9 @@ def attach_run_sink(sink: logging.Handler) -> None:
         sink: The :class:`logging.Handler` (typically
             :class:`aeat.core.observability._sink.JsonlRunSink`) to
             attach to the root logger.
+
+    The sink is a diagnostic observability target. It receives redacted log
+    records, not CLI result payloads or secure-storage records.
     """
     if not any(isinstance(f, SecretScrubbingFilter) for f in sink.filters):
         sink.addFilter(SecretScrubbingFilter())
@@ -453,7 +479,13 @@ def detach_run_sink(sink: logging.Handler) -> None:
 
 
 def get_logger(name: str) -> logging.Logger:
-    """Returns a configured logger for the given module name.
+    """Return a configured logger for the given module name.
+
+    Preferred over direct :func:`logging.getLogger` in production modules
+    because it ensures the project defaults are installed and attaches
+    :class:`SecretScrubbingFilter` directly to the returned logger. Startup
+    modules that must use stdlib logging before settings load rely on later
+    propagation through the configured root logger instead.
 
     Args:
         name: The name of the module, typically __name__.
