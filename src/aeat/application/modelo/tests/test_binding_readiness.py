@@ -60,6 +60,7 @@ valid_from = 2025-01-01
 period_selector = {{ years = [2025], periods = ["{period}"] }}
 legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-001"]
+orden_aplicabilidad = ["test-ley-001:art-1"]
 
 [[revisions."{revision_id}".application_links]]
 id = "test-filing-link"
