@@ -5,11 +5,11 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import bundled_path
-from .. import ModeloDefinition, RegistryCatalogues, build_snapshot, load_registry_tree
+from .. import ModeloDefinition, RegistryCatalogues, build_snapshot
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _REQUIRED_SURFACES = {
     "approval",
     "calculation",
@@ -25,15 +25,9 @@ _REQUIRED_SURFACES = {
 }
 
 
-def _load_modelo(modelo_id: str):
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == modelo_id)
-    return modelo, catalogues
-
-
 @pytest.fixture(scope="module")
 def modelo_111_registry():
-    return _load_modelo("111")
+    return _committed_modelo("111")
 
 
 @pytest.mark.parametrize("period", ["1T", "01"])

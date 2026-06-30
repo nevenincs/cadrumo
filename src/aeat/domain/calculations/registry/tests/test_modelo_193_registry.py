@@ -14,25 +14,16 @@ from .. import (
     RegistryValidator,
     build_snapshot,
     calculate_registry_snapshot,
-    load_registry_tree,
     relation_source_requirements,
     resolve_bound_inputs_by_casilla_id,
     resolve_relation_values_from_observations,
 )
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
-
-
-def _load_modelo(modelo_id: str):
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == modelo_id)
-    return modelo, catalogues
-
-
 def test_modelo_193_validates_and_gates_workflow_surfaces_through_snapshot() -> None:
-    modelo, catalogues = _load_modelo("193")
+    modelo, catalogues = _committed_modelo("193")
 
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
     snapshot = build_snapshot(
@@ -62,7 +53,7 @@ def test_modelo_193_validates_and_gates_workflow_surfaces_through_snapshot() -> 
 
 
 def test_modelo_193_relations_resolve_against_modelo_123_registry() -> None:
-    modelo, catalogues = _load_modelo("193")
+    modelo, catalogues = _committed_modelo("193")
     snapshot = build_snapshot(
         modelo,
         catalogues,
@@ -70,7 +61,7 @@ def test_modelo_193_relations_resolve_against_modelo_123_registry() -> None:
         filing_year=2025,
         period="0A",
     )
-    modelo_123, _ = _load_modelo("123")
+    modelo_123, _ = _committed_modelo("123")
     snapshot_123 = build_snapshot(
         modelo_123,
         catalogues,
@@ -86,7 +77,7 @@ def test_modelo_193_relations_resolve_against_modelo_123_registry() -> None:
 
 
 def test_modelo_193_calculation_aggregates_modelo_123_quarterly_observations() -> None:
-    modelo, catalogues = _load_modelo("193")
+    modelo, catalogues = _committed_modelo("193")
     snapshot = build_snapshot(
         modelo,
         catalogues,
@@ -94,7 +85,7 @@ def test_modelo_193_calculation_aggregates_modelo_123_quarterly_observations() -
         filing_year=2025,
         period="0A",
     )
-    modelo_123, _ = _load_modelo("123")
+    modelo_123, _ = _committed_modelo("123")
     snapshot_123 = build_snapshot(
         modelo_123,
         catalogues,

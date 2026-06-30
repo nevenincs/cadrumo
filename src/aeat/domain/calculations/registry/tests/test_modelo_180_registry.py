@@ -15,16 +15,14 @@ from .. import (
     RegistryValidator,
     build_snapshot,
     calculate_registry_snapshot,
-    load_registry_tree,
     relation_source_requirements,
     resolve_bound_inputs_by_casilla_id,
     resolve_relation_values_from_observations,
     validated_casilla_id,
 )
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -54,12 +52,6 @@ _M180_2023_PROFILE_TARGET_LEGAL_REFS = _M180_HISTORICAL_PROFILE_TARGET_LEGAL_REF
 )
 
 
-def _load_modelo(modelo_id: str):
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == modelo_id)
-    return modelo, catalogues
-
-
 def _nested_legal_refs(value: object) -> set[str]:
     refs: set[str] = set()
 
@@ -79,7 +71,7 @@ def _nested_legal_refs(value: object) -> set[str]:
 
 
 def test_modelo_180_2023_amendment_is_scoped_to_2023_revision() -> None:
-    modelo, _ = _load_modelo("180")
+    modelo, _ = _committed_modelo("180")
     historical_refs = _nested_legal_refs(modelo.revisions["2019-2022"].model_dump(mode="python"))
     current_refs = _nested_legal_refs(modelo.revisions["2023-y-siguientes"].model_dump(mode="python"))
 
@@ -98,7 +90,7 @@ def test_modelo_180_extraction_profile_legal_refs_match_target_casillas(
     revision_id: str,
     expected_refs: frozenset[str],
 ) -> None:
-    modelo, _ = _load_modelo("180")
+    modelo, _ = _committed_modelo("180")
     revision = modelo.revisions[revision_id]
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
 
@@ -118,7 +110,7 @@ def test_modelo_180_validated_snapshot_gates_workflow_surfaces_for_annual_summar
     filing_year: int,
     period: str,
 ) -> None:
-    modelo, catalogues = _load_modelo("180")
+    modelo, catalogues = _committed_modelo("180")
 
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
     snapshot = build_snapshot(
@@ -155,7 +147,7 @@ def test_modelo_180_validated_snapshot_gates_workflow_surfaces_for_annual_summar
 
 
 def test_modelo_180_relations_resolve_against_modelo_115_registry() -> None:
-    modelo, catalogues = _load_modelo("180")
+    modelo, catalogues = _committed_modelo("180")
     snapshot = build_snapshot(
         modelo,
         catalogues,
@@ -163,7 +155,7 @@ def test_modelo_180_relations_resolve_against_modelo_115_registry() -> None:
         filing_year=2025,
         period="0A",
     )
-    modelo_115, _ = _load_modelo("115")
+    modelo_115, _ = _committed_modelo("115")
     snapshot_115 = build_snapshot(
         modelo_115,
         catalogues,
@@ -179,7 +171,7 @@ def test_modelo_180_relations_resolve_against_modelo_115_registry() -> None:
 
 
 def test_modelo_180_calculation_aggregates_modelo_115_quarterly_observations() -> None:
-    modelo, catalogues = _load_modelo("180")
+    modelo, catalogues = _committed_modelo("180")
     snapshot = build_snapshot(
         modelo,
         catalogues,
@@ -187,7 +179,7 @@ def test_modelo_180_calculation_aggregates_modelo_115_quarterly_observations() -
         filing_year=2025,
         period="0A",
     )
-    modelo_115, _ = _load_modelo("115")
+    modelo_115, _ = _committed_modelo("115")
     snapshot_115 = build_snapshot(
         modelo_115,
         catalogues,
@@ -236,7 +228,7 @@ def test_modelo_180_calculation_aggregates_modelo_115_quarterly_observations() -
 
 
 def test_modelo_180_rejects_incomplete_modelo_115_observation_chain() -> None:
-    modelo, catalogues = _load_modelo("180")
+    modelo, catalogues = _committed_modelo("180")
     snapshot = build_snapshot(
         modelo,
         catalogues,
