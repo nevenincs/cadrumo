@@ -1,24 +1,33 @@
-"""Encrypted :class:`SecureObjectRepository` persistence for Google records.
+"""Encrypted Google record persistence.
+
+This module writes Google records through
+:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`.
 
 Four per-profile record families back Google configuration and session state,
-each under the namespace and :class:`SensitivityClass` declared by the storage
-registry:
+each under the namespace and
+:class:`~aeat.adapters.persistence.storage.SensitivityClass` declared by the
+storage registry:
 
-- :data:`GOOGLE_OAUTH_CLIENT_NAMESPACE` stores the operator-imported
-  :class:`OAuthClient` at ``SensitivityClass.SECRET`` because
-  ``client_secret`` is a long-lived credential.
-- :data:`GOOGLE_OAUTH_TOKEN_NAMESPACE` stores the refresh :class:`OAuthToken`
-  returned by :func:`aeat.adapters.outbound.google._oauth_flow.run_login_flow`
-  at ``SensitivityClass.SECRET``.
-- :data:`GOOGLE_OAUTH_METADATA_NAMESPACE` stores the non-secret
+- :data:`aeat.adapters.persistence.storage.GOOGLE_OAUTH_CLIENT_NAMESPACE`
+  stores the operator-imported :class:`OAuthClient` at ``SECRET`` sensitivity
+  because ``client_secret`` is a long-lived credential.
+- :data:`aeat.adapters.persistence.storage.GOOGLE_OAUTH_TOKEN_NAMESPACE`
+  stores the refresh :class:`OAuthToken` returned by
+  :func:`aeat.adapters.outbound.google._oauth_flow.run_login_flow` at
+  ``SECRET`` sensitivity.
+- :data:`aeat.adapters.persistence.storage.GOOGLE_OAUTH_METADATA_NAMESPACE`
+  stores the non-secret
   :class:`OAuthMetadata` account, scope, issuance, refresh, and reauth audit
-  fields at ``SensitivityClass.FINANCIAL``.
-- :data:`GOOGLE_DRIVE_CONFIG_NAMESPACE` stores the :class:`DriveConfig` root
-  folder selection used by :func:`aeat.adapters.outbound.storage.get_storage_provider`.
+  fields at ``FINANCIAL`` sensitivity.
+- :data:`aeat.adapters.persistence.storage.GOOGLE_DRIVE_CONFIG_NAMESPACE`
+  stores the :class:`DriveConfig` root folder selection used by
+  :func:`aeat.adapters.outbound.storage.get_storage_provider` at
+  ``FINANCIAL`` sensitivity.
 
 The public helpers use the profile identifier resolved by
 :func:`aeat.adapters.outbound.google._active_profile.resolve_active_profile` as
-the storage object key.
+the storage object key, matching the ``{profile}`` grammar on all four
+namespace definitions.
 """
 
 from __future__ import annotations
@@ -46,9 +55,11 @@ _RECORD_VERSION = 1
 def save_client(profile: str, client: OAuthClient) -> None:
     """Persist an :class:`OAuthClient` for ``profile``.
 
-    The record is written under :data:`GOOGLE_OAUTH_CLIENT_NAMESPACE` with
-    ``SensitivityClass.SECRET`` so ``aeat config google login`` and Drive
-    credential hydration can reload the operator-imported Desktop OAuth client.
+    The record is written under
+    :data:`aeat.adapters.persistence.storage.GOOGLE_OAUTH_CLIENT_NAMESPACE`
+    with :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+    ``SECRET`` so ``aeat config google login`` and Drive credential hydration
+    can reload the operator-imported Desktop OAuth client.
     """
     _repository().save(
         namespace=_NAMESPACE_CLIENT,
@@ -81,8 +92,10 @@ def load_client(profile: str) -> OAuthClient | None:
 def save_token(profile: str, token: OAuthToken) -> None:
     """Persist an :class:`OAuthToken` refresh credential for ``profile``.
 
-    The token is written under :data:`GOOGLE_OAUTH_TOKEN_NAMESPACE` with
-    ``SensitivityClass.SECRET``. The CLI saves this after
+    The token is written under
+    :data:`aeat.adapters.persistence.storage.GOOGLE_OAUTH_TOKEN_NAMESPACE`
+    with :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+    ``SECRET``. The CLI saves this after
     :func:`aeat.adapters.outbound.google._oauth_flow.run_login_flow`, and
     refresh code may overwrite it when Google rotates the refresh token.
     """
@@ -119,8 +132,10 @@ def save_metadata(profile: str, metadata: OAuthMetadata) -> None:
 
     Metadata is non-secret companion state for :class:`OAuthToken`: account
     email, granted scopes, issue/refresh timestamps, and reauth status. It is
-    written under :data:`GOOGLE_OAUTH_METADATA_NAMESPACE` with
-    ``SensitivityClass.FINANCIAL``.
+    written under
+    :data:`aeat.adapters.persistence.storage.GOOGLE_OAUTH_METADATA_NAMESPACE`
+    with :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+    ``FINANCIAL``.
     """
     _repository().save(
         namespace=_NAMESPACE_METADATA,
@@ -153,8 +168,10 @@ def load_metadata(profile: str) -> OAuthMetadata | None:
 def save_drive_config(profile: str, config: DriveConfig) -> None:
     """Persist the per-profile :class:`DriveConfig` backend selection.
 
-    The config is written under :data:`GOOGLE_DRIVE_CONFIG_NAMESPACE` with
-    ``SensitivityClass.FINANCIAL`` so
+    The config is written under
+    :data:`aeat.adapters.persistence.storage.GOOGLE_DRIVE_CONFIG_NAMESPACE`
+    with :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+    ``FINANCIAL`` so
     :func:`aeat.adapters.outbound.storage.get_storage_provider` can resolve the
     Drive root folder without re-reading environment-only configuration.
     """
@@ -189,10 +206,12 @@ def load_drive_config(profile: str) -> DriveConfig | None:
 def delete_session(profile: str) -> tuple[bool, bool]:
     """Delete the login session while preserving registration and Drive config.
 
-    Removes only :class:`OAuthToken` and :class:`OAuthMetadata`, matching
-    ``aeat config google logout``. The registered :class:`OAuthClient` and
-    :class:`DriveConfig` remain available so a later login can reuse the Cloud
-    Console JSON and the same Drive root folder.
+    Removes only the
+    :data:`aeat.adapters.persistence.storage.GOOGLE_OAUTH_TOKEN_NAMESPACE` and
+    :data:`aeat.adapters.persistence.storage.GOOGLE_OAUTH_METADATA_NAMESPACE`
+    records, matching ``aeat config google logout``. The registered
+    :class:`OAuthClient` and :class:`DriveConfig` remain available so a later
+    login can reuse the Cloud Console JSON and the same Drive root folder.
 
     Args:
         profile: The profile identifier whose token and metadata records to
