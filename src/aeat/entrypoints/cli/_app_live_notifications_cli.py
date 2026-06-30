@@ -88,7 +88,13 @@ def notifications_pull(ctx: typer.Context) -> None:
     ),
 )
 def notifications_list(ctx: typer.Context) -> None:
-    """List persisted DEHu notification snapshots without contacting AEAT."""
+    """List persisted DEHu notification snapshots without contacting AEAT.
+
+    The command reads :class:`~aeat.application.live.NotificationsService`
+    storage for the active bucket and emits
+    :class:`~aeat.entrypoints.cli._app_live_payloads.NotificationsListResult`
+    summaries rather than expanding notification rows.
+    """
     bucket_id = _bucket_id()
     rows = NotificationsService().list_snapshots(bucket_id=bucket_id)
     result = NotificationsListResult(
@@ -122,7 +128,15 @@ def notifications_show(
         ),
     ],
 ) -> None:
-    """Show one persisted DEHu notification snapshot by id prefix."""
+    """Show one persisted DEHu notification snapshot by id prefix.
+
+    The id is resolved through
+    :class:`~aeat.application.live.NotificationsService` ``show``, then
+    projected as
+    :class:`~aeat.entrypoints.cli._app_live_payloads.NotificationsViewResult`.
+    This local view does not acknowledge, submit, or mark notifications
+    remotely.
+    """
     bucket_id = _bucket_id()
     record = NotificationsService().show(bucket_id=bucket_id, snapshot_id=snapshot_id)
     result = NotificationsViewResult(
@@ -170,7 +184,13 @@ def notifications_show(
     ),
 )
 def notifications_latest(ctx: typer.Context) -> None:
-    """Show the most recent DEHu notification snapshot, or report none."""
+    """Show the most recent DEHu notification snapshot, or report none.
+
+    A missing snapshot still emits
+    :class:`~aeat.entrypoints.cli._app_live_payloads.NotificationsLatestResult`
+    with ``snapshot_id=None`` so automation can distinguish no local capture
+    from a live-read failure.
+    """
     bucket_id = _bucket_id()
     record = NotificationsService().latest(bucket_id=bucket_id)
     if record is None:
