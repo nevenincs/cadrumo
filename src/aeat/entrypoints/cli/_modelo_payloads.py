@@ -683,7 +683,7 @@ class WorkHistoryResult(OutputSchema):
 
 
 class WorkflowRunPayload(OutputSchema):
-    """One workflow run row in the runs listing."""
+    """One :class:`aeat.application.workflow.WorkflowResult` row in the runs listing."""
 
     run_id: str
     modelo: str | None
@@ -695,7 +695,11 @@ class WorkflowRunPayload(OutputSchema):
 
 @register_schema("modelo.work.runs")
 class WorkRunsResult(OutputSchema):
-    """Workflow runs listing result."""
+    """Workflow run listing returned by ``aeat app modelo work runs``.
+
+    Rows mirror persisted :class:`aeat.application.workflow.WorkflowResult`
+    records discovered through :func:`aeat.application.workflow.list_runs`.
+    """
 
     operation: str = "modelo.work.runs"
     run_count: int
@@ -1171,7 +1175,16 @@ class IvaWalletOverrideResult(OutputSchema):
 
 @register_schema("modelo.work.resume")
 class WorkResumeResult(OutputSchema):
-    """Workflow resume precondition and context result."""
+    """Workflow resume precondition and context result.
+
+    Combines the resumable
+    :class:`aeat.application.workflow.WorkflowResumeContext` with selector
+    metadata from
+    :class:`aeat.application.workflow.WorkflowResumeTargetResolution`. The
+    ``obligation`` payload is the serialized
+    :class:`aeat.domain.deadlines.ModeloDeadline` the workflow engine would use
+    for a fresh attempt.
+    """
 
     operation: str = "modelo.work.resume"
     prior_workflow_run_id: str
