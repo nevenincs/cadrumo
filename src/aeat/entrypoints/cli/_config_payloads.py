@@ -7,7 +7,7 @@ JSON-contract test suite can enumerate every config-command surface this
 module covers.
 
 Field sets match the production payload dicts constructed in
-:mod:`aeat.entrypoints.cli._config` and its config submodules at their emit
+:mod:`~aeat.entrypoints.cli._config` and its config submodules at their emit
 sites. Optional fields cover multi-branch payload shapes (e.g.
 repair.quarantine has a no-active-profile branch, a dry-run preview branch, and
 a live branch; config.status has several readiness states).
@@ -16,9 +16,10 @@ All sequence fields use ``list`` rather than ``tuple`` because
 ``model_dump(mode='json')`` serialises pydantic tuples as JSON arrays.
 
 The application services remain the source of profile, auth, apoderado, and
-repair semantics: :mod:`aeat.application.user_profile`,
-:mod:`aeat.application.auth`, :mod:`aeat.application.diagnostics`,
-:mod:`aeat.application.repair_integrity`, and :mod:`aeat.application.workflow`.
+repair semantics: :mod:`~aeat.application.user_profile`,
+:mod:`~aeat.application.auth`, :mod:`~aeat.application.diagnostics`,
+:mod:`~aeat.application.repair_integrity`, and
+:mod:`~aeat.application.workflow`.
 These payload classes document and validate only the CLI transport shapes that
 enter :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
 :func:`~aeat.entrypoints.cli._common._emit_envelope`.
@@ -78,7 +79,9 @@ class ProfilePointerPayload(OutputSchema):
     Mirrors the :class:`~aeat.application.workflow.ProfileBucketPointer`
     projection that links an operator-facing profile name to the immutable
     profile bucket id. The row deliberately carries no profile facts; detailed
-    facts stay under :class:`ProfileFactPayload` in the profile-show envelope.
+    facts stay under
+    :class:`~aeat.entrypoints.cli._config_payloads.ProfileFactPayload` in the
+    profile-show envelope.
     """
 
     name: str
@@ -138,7 +141,9 @@ class RepairQuarantineResult(OutputSchema):
     :func:`~aeat.application.diagnostics.preview_quarantine_unreadable_secure_objects`
     and mutate nothing; confirmed rows come from
     :func:`~aeat.application.diagnostics.quarantine_unreadable_secure_objects`.
-    Both branches expose aggregate :class:`QuarantineNamespacePayload` counts
+    Both branches expose aggregate
+    :class:`~aeat.entrypoints.cli._config_payloads.QuarantineNamespacePayload`
+    counts
     rather than secure-object payload material.
     """
 
@@ -164,7 +169,9 @@ class RepairResetProgressResult(OutputSchema):
     the confirmed reset path.  Dry-run calls
     :func:`~aeat.application.workflow.fingerprint_workflow_state`; confirmed
     reset calls :func:`~aeat.application.workflow.reset_workflow_state`.  The
-    optional :class:`WorkflowFingerprintPayload` is a metadata summary of the
+    optional
+    :class:`~aeat.entrypoints.cli._config_payloads.WorkflowFingerprintPayload`
+    is a metadata summary of the
     encrypted progress envelope, not the saved workflow contents.
     """
 
@@ -202,7 +209,9 @@ class ConfigListResult(OutputSchema):
 
     Note: ``config_list`` is registered on the ``profile list`` sub-command
     which maps to the CLI path ``config.list`` (the profile sub-app carries
-    the list verb). Each :class:`ProfilePointerPayload` row identifies a
+    the list verb). Each
+    :class:`~aeat.entrypoints.cli._config_payloads.ProfilePointerPayload` row
+    identifies a
     registered bucket, while ``active_profile`` names the current pointer.
     """
 
@@ -294,7 +303,8 @@ class ConfigProfileShowResult(OutputSchema):
     Covers the missing-record branch, the unreadable-record branch, and
     the success path. Optional fields accommodate each branch. Successful rows
     project :class:`~aeat.domain.user_profile.UserProfileRecord` facts through
-    :class:`ProfileFactPayload`; failures report pointer and record readiness
+    :class:`~aeat.entrypoints.cli._config_payloads.ProfileFactPayload`;
+    failures report pointer and record readiness
     without dumping encrypted profile contents.
     """
 
@@ -338,9 +348,11 @@ class ConfigProfileValidateResult(OutputSchema):
 
 
 class ProfilePreflightMissingPayload(OutputSchema):
-    """One missing-required-field row inside :class:`ConfigProfilePreflightResult`.
+    """One missing-required-field row inside the profile preflight result.
 
-    Mirrors :class:`~aeat.application.user_profile.ProfilePreflightRequirement`
+    Nested in
+    :class:`~aeat.entrypoints.cli._config_payloads.ConfigProfilePreflightResult`
+    and mirrors :class:`~aeat.application.user_profile.ProfilePreflightRequirement`
     so the CLI can name the missing selector, schema section, and field key for
     a concrete modelo/revision/period context.
     """
@@ -491,7 +503,9 @@ class AuthConfigurePayload(OutputSchema):
         ``status`` is a CLI-only display field left to its default.
 
         Returns:
-            The projected :class:`AuthConfigurePayload` instance.
+            The projected
+            :class:`~aeat.entrypoints.cli._config_payloads.AuthConfigurePayload`
+            instance.
         """
         return cls(
             provider=result.provider,
@@ -561,8 +575,10 @@ class AuthClearPayload(OutputSchema):
 
     Field set is 1:1 with the application
     :class:`~aeat.application.auth.AuthClearResult`; the envelope derives its
-    values via :meth:`from_result` rather than the command handler re-declaring
-    the field map inline (DB-26 S49).
+    values via
+    :meth:`~aeat.entrypoints.cli._config_payloads.AuthClearPayload.from_result`
+    rather than the command handler re-declaring the field map inline (DB-26
+    S49).
     """
 
     removed_sessions: int
@@ -577,7 +593,9 @@ class AuthClearPayload(OutputSchema):
         :class:`~aeat.application.auth.AuthClearResult`.
 
         Returns:
-            The projected :class:`AuthClearPayload` instance.
+            The projected
+            :class:`~aeat.entrypoints.cli._config_payloads.AuthClearPayload`
+            instance.
         """
         return cls(
             removed_sessions=result.removed_sessions,
