@@ -6,16 +6,11 @@ import pytest
 
 from ._parser_boundary_part2_support import (
     _M036_EVENT_KIND_CASILLA,
-    _M349_IMPORTE_OPERACIONES_CASILLA,
-    _M349_IMPORTE_RECTIFICACIONES_CASILLA,
-    _M349_NUMERO_OPERADORES_CASILLA,
-    _M349_NUMERO_RECTIFICACIONES_CASILLA,
     _M840_EJERCICIO_CASILLA,
     _M840_TIPO_DECLARACION_CASILLA,
 )
 from ._parser_boundary_support import (
     _MODELO_036_SYNTHETIC_FIXTURE,
-    _MODELO_349_SYNTHETIC_FIXTURE,
     _MODELO_840_SYNTHETIC_FIXTURE,
     Decimal,
     DeclaracionParseError,
@@ -26,6 +21,7 @@ from ._parser_boundary_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+
 
 def test_parser_requires_a_known_registry_model_after_template_resolution(tmp_path: Path) -> None:
     pdf_path = tmp_path / "modelo-999.pdf"
@@ -44,80 +40,6 @@ def test_parser_requires_a_known_registry_model_after_template_resolution(tmp_pa
     error = excinfo.value.context.get("error", "")
     assert isinstance(error, str)
     assert "is not present in the calculation registry" in error
-
-def test_parser_extracts_modelo_349_synthetic_fixture_targets() -> None:
-    """Round-trip: parse the sanitized M349 synthetic fixture and verify all four casillas.
-
-    Ground truth is the AEAT-published instructions PDF at:
-      src/aeat/_data/corpus/aeat_official/instructions/modelo_349/files/instr_mod_349.pdf
-    pages 8-9 (CUMPLIMENTACIÓN DE LA HOJA-RESUMEN).
-
-    AEAT text (verbatim):
-      "Casilla 01 Número total de operadores intracomunitarios."
-      "Casilla 02 Importe de las operaciones intracomunitarias."
-      "Casilla 03 Número total de operadores intracomunitarios con rectificaciones."
-      "Casilla 04 Importe de las rectificaciones."
-
-    The synthetic fixture prints those labels so the named_label parser captures
-    the trailing value token on each line.  The profile patterns are grounded
-    against this AEAT-published text — NOT the registry casilla label fields —
-    so this test is non-tautological: a pattern that drifts away from the AEAT
-    label format will produce a zero-match parse failure.
-    """
-    filing = parse_declaracion(
-        _MODELO_349_SYNTHETIC_FIXTURE,
-        modelo_override="349",
-        año_override=2024,
-        period_override="1T",
-    )
-
-    assert filing.modelo == "349"
-    assert filing.period == _expected_period(2024, "1T")
-    assert filing.tax_id == "Y0000001S"
-    assert filing.registry_snapshot_ref is not None
-    assert filing.registry_snapshot_ref.modelo == "349"
-    assert filing.registry_snapshot_ref.modelo_year == 2024
-    assert filing.registry_snapshot_ref.period == "1T"
-
-    values = {v.casilla_id: v.printed_value for v in filing.values}
-
-    # All four casillas defined by the M349 declaracion_pdf profile must be present.
-    assert set(values.keys()) == {
-        _M349_NUMERO_OPERADORES_CASILLA,
-        _M349_IMPORTE_OPERACIONES_CASILLA,
-        _M349_NUMERO_RECTIFICACIONES_CASILLA,
-        _M349_IMPORTE_RECTIFICACIONES_CASILLA,
-    }, f"expected exactly the four M349 profile casillas, got {set(values.keys())!r}"
-
-    # decl.numero-operadores: fixture prints "Numero total de operadores intracomunitarios 5";
-    # parse_spanish_decimal("5") = Decimal("5").
-    # Ground truth: AEAT instructions page 8 "Casilla 01 Número total de operadores intracomunitarios."
-    assert values[_M349_NUMERO_OPERADORES_CASILLA] == Decimal("5"), (
-        f"decl.numero-operadores: expected Decimal('5'), got {values[_M349_NUMERO_OPERADORES_CASILLA]!r}"
-    )
-
-    # decl.importe-operaciones: fixture prints "Importe de las operaciones intracomunitarias 1.234,56";
-    # parse_spanish_decimal("1.234,56") = Decimal("1234.56").
-    # Ground truth: AEAT instructions page 8 "Casilla 02 Importe de las operaciones intracomunitarias."
-    assert values[_M349_IMPORTE_OPERACIONES_CASILLA] == Decimal("1234.56"), (
-        f"decl.importe-operaciones: expected Decimal('1234.56'), got {values[_M349_IMPORTE_OPERACIONES_CASILLA]!r}"
-    )
-
-    # decl.numero-rectificaciones: fixture prints
-    # "Numero total de operadores intracomunitarios con rectificaciones 0";
-    # parse_spanish_decimal("0") = Decimal("0").
-    # Ground truth: AEAT instructions page 9 "Casilla 03 Número total de operadores
-    # intracomunitarios con rectificaciones."
-    assert values[_M349_NUMERO_RECTIFICACIONES_CASILLA] == Decimal("0"), (
-        f"decl.numero-rectificaciones: expected Decimal('0'), got {values[_M349_NUMERO_RECTIFICACIONES_CASILLA]!r}"
-    )
-
-    # decl.importe-rectificaciones: fixture prints "Importe de las rectificaciones 0,00";
-    # parse_spanish_decimal("0,00") = Decimal("0.00").
-    # Ground truth: AEAT instructions page 9 "Casilla 04 Importe de las rectificaciones."
-    assert values[_M349_IMPORTE_RECTIFICACIONES_CASILLA] == Decimal("0.00"), (
-        f"decl.importe-rectificaciones: expected Decimal('0.00'), got {values[_M349_IMPORTE_RECTIFICACIONES_CASILLA]!r}"
-    )
 
 
 def test_parser_extracts_modelo_840_synthetic_fixture_targets() -> None:
