@@ -58,6 +58,11 @@ from ._help import (
     render_help_text,
     render_root_landing_text,
 )
+from ._manifest import (
+    CommandSchemaRef,
+    OperatorSurfaceManifest,
+    build_operator_surface_manifest,
+)
 from ._models import (
     FilingStatus,
     HelpDocument,
@@ -85,6 +90,7 @@ __all__ = [
     "MOUNTED_COMMAND_FAMILIES",
     "SOURCE_KIND_ALIASES",
     "BucketEventSuffix",
+    "CommandSchemaRef",
     "CrudContractCatalogue",
     "CrudVerb",
     "FilingStatus",
@@ -104,6 +110,7 @@ __all__ = [
     "OperatorSurfaceContract",
     "OperatorSurfaceContractError",
     "OperatorSurfaceLogFields",
+    "OperatorSurfaceManifest",
     "OrthogonalAxis",
     "RootLandingReport",
     "RootSurface",
@@ -112,6 +119,7 @@ __all__ = [
     "SourceKindAlias",
     "build_help_document",
     "build_operator_surface_contract",
+    "build_operator_surface_manifest",
     "build_root_landing_report",
     "event_suffix_for",
     "get_builtin_catalogue",
