@@ -9,22 +9,12 @@ from ._verification_chain_support import (
     CasillaId,
     Decimal,
     DeclaracionParseError,
+    _casilla_id,
+    _casilla_ids,
     parse_declaracion,
-    validated_casilla_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
-
-
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-def _casilla_ids(*values: object) -> frozenset[CasillaId]:
-    return frozenset(_casilla_id(value) for value in values)
 
 
 _M349_SUMMARY_CASILLAS: frozenset[CasillaId] = _casilla_ids(

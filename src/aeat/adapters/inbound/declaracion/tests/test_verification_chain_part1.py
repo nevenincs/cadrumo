@@ -13,17 +13,10 @@ from ._verification_chain_support import (
     Decimal,
     _assert_m303_engine_matches_extracted_decimal,
     _build_m303_engine_result,
-    validated_casilla_id,
+    _casilla_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
-
-
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
 
 
 _M303_SUMA_RESULTADOS_CASILLA: CasillaId = _casilla_id("64")
