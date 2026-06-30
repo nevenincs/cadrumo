@@ -140,6 +140,43 @@ def _production_legal_ref_literals() -> dict[str, tuple[str, ...]]:
     return {ref: tuple(locations) for ref, locations in refs.items()}
 
 
+def _direct_string_literals(node: ast.AST) -> tuple[tuple[str, int], ...]:
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return ((node.value, node.lineno),)
+    if isinstance(node, ast.Tuple | ast.List | ast.Set):
+        values: list[tuple[str, int]] = []
+        for item in node.elts:
+            values.extend(_direct_string_literals(item))
+        return tuple(values)
+    return ()
+
+
+def _production_source_ref_literals() -> dict[str, tuple[str, ...]]:
+    refs: dict[str, list[str]] = {}
+    for path in _PRODUCTION_PACKAGE_ROOT.rglob("*.py"):
+        if "tests" in path.relative_to(_PRODUCTION_PACKAGE_ROOT).parts:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            value_node: ast.AST | None = None
+            if isinstance(node, ast.Assign):
+                names = [target.id for target in node.targets if isinstance(target, ast.Name)]
+                if any("SOURCE_REF" in name.upper() or name == "source_refs" for name in names):
+                    value_node = node.value
+            elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+                target_is_source_ref = "SOURCE_REF" in node.target.id.upper() or node.target.id == "source_refs"
+                if node.value is not None and target_is_source_ref:
+                    value_node = node.value
+            elif isinstance(node, ast.keyword) and node.arg == "source_refs":
+                value_node = node.value
+            if value_node is None:
+                continue
+            location = path.relative_to(_PRODUCTION_PACKAGE_ROOT.parent).as_posix()
+            for value, line_number in _direct_string_literals(value_node):
+                refs.setdefault(value, []).append(f"{location}:{line_number}")
+    return {ref: tuple(locations) for ref, locations in refs.items()}
+
+
 def test_production_python_legal_ref_literals_resolve_to_catalogue_and_corpus(
     committed_registry: tuple[Path, tuple[ModeloDefinition, ...], RegistryCatalogues],
 ) -> None:
@@ -154,3 +191,19 @@ def test_production_python_legal_ref_literals_resolve_to_catalogue_and_corpus(
         + "\n".join(f"{ref}: {refs_by_literal[ref]}" for ref in missing)
     )
     verify_legal_catalogue({ref: catalogues.legal[ref] for ref in refs}, source_root=bundled_path())
+
+
+def test_production_python_source_ref_literals_resolve_to_catalogue_and_corpus(
+    committed_registry: tuple[Path, tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    _registry_root, _modelos, catalogues = committed_registry
+    refs_by_literal = _production_source_ref_literals()
+    refs = sorted(refs_by_literal)
+
+    assert refs_by_literal, "production Python contains no direct source_refs literals"
+    missing = sorted(ref for ref in refs if ref not in catalogues.sources)
+    assert not missing, (
+        "production Python source_refs literals absent from source catalogue:\n"
+        + "\n".join(f"{ref}: {refs_by_literal[ref]}" for ref in missing)
+    )
+    verify_source_catalogue(bundled_path(), {ref: catalogues.sources[ref] for ref in refs})
