@@ -263,7 +263,7 @@ class SheetRowSetColumn(BaseModel):
     binding: BindingId
     header_address: SheetCellAddress
     header_label: str = Field(min_length=1)
-    legal_refs: tuple[str, ...] = ()
+    legal_refs: tuple[str, ...] = Field(min_length=1)
 
 
 class SheetRowSet(BaseModel):
@@ -294,8 +294,8 @@ class SheetRowSet(BaseModel):
     header_row: int = Field(ge=1)
     first_data_row: int = Field(ge=2)
     columns: tuple[SheetRowSetColumn, ...] = Field(min_length=1)
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
+    legal_refs: tuple[str, ...] = Field(min_length=1)
+    source_refs: tuple[str, ...] = Field(min_length=1)
 
 
 class SheetProtectedRange(BaseModel):

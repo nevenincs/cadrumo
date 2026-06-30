@@ -36,6 +36,9 @@ from .._calc_sheets_pull import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_TEST_LEGAL_REFS = ("ley-58-2003:art-119",)
+_TEST_SOURCE_REFS = ("aeat-dr-190-2025",)
+
 
 def _plan_metadata() -> SheetExportMetadata:
     return SheetExportMetadata(
@@ -74,8 +77,11 @@ def _populated_plan(*, row_set_groupings: tuple[str, ...] = ("detalle-actividade
                     binding=f"binding.{grouping}.code",
                     header_address=SheetCellAddress(tab=TabName.DETALLE, row=1, column=1, a1="A1"),
                     header_label="Código",
+                    legal_refs=_TEST_LEGAL_REFS,
                 ),
             ),
+            legal_refs=_TEST_LEGAL_REFS,
+            source_refs=_TEST_SOURCE_REFS,
         )
         for grouping in row_set_groupings
     )
