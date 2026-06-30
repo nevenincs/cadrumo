@@ -32,6 +32,11 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+@pytest.fixture(scope="module")
+def _m036_2025_alta_snapshot():
+    return resources().modelos.authority.snapshot("036", filing_year=2025, period="alta")
+
+
 def test_censo_foundation_owner_is_registry_domain() -> None:
     records = censo_modelo_ownership_map()
 
@@ -64,16 +69,16 @@ def test_modelo_036_is_active_event_triggered_foundation() -> None:
     assert is_active_censo_modelo("036") is True
 
 
-def test_modelo_036_foundation_event_kinds_are_registry_backed() -> None:
+def test_modelo_036_foundation_event_kinds_are_registry_backed(_m036_2025_alta_snapshot) -> None:
     record = censo_modelo_ownership("036")
-    snapshot = resources().modelos.authority.snapshot("036", filing_year=2025, period="alta")
+    snapshot = _m036_2025_alta_snapshot
 
     assert record.event_kinds == snapshot.revision.period_selector.periods
     assert snapshot.filing_schedules["modelo-036-event-triggered"].periods == record.event_kinds
 
 
-def test_active_036_work_unit_periods_resolve_from_committed_registry_revision() -> None:
-    snapshot = resources().modelos.authority.snapshot("036", filing_year=2025, period="alta")
+def test_active_036_work_unit_periods_resolve_from_committed_registry_revision(_m036_2025_alta_snapshot) -> None:
+    snapshot = _m036_2025_alta_snapshot
 
     for period in snapshot.revision.period_selector.periods:
         result = resolve_censo_modelo_work_unit_foundation(modelo="036", period=period)
