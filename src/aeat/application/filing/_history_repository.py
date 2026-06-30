@@ -44,7 +44,22 @@ from ._runtime_repository import (
 
 
 class ModeloHistoryRepository(SecureBoundRepository[ModeloHistory]):
-    """Repository over encrypted SQL-backed :class:`ModeloHistory` records."""
+    """Encrypted filing-history store for bucket-local :class:`ModeloHistory`.
+
+    The :class:`SecureBoundRepository` base wraps each payload in an
+    :class:`~aeat.adapters.persistence.storage.Envelope` and binds it to
+    :data:`aeat.adapters.persistence.storage.APPLICATION_FILING_HISTORY_NAMESPACE`.
+    The modelo identifier is the natural object key, so list and iteration APIs
+    expose one lightweight history per modelo rather than the authoritative
+    work-unit filing catalogue.
+
+    See Also:
+        :class:`ModeloHistory`
+            Strict payload stored by this repository.
+        :class:`aeat.domain.modelos.ModeloRecordCatalogueRepository`
+            FINANCIAL-class filing-record catalogue for current and superseded
+            work-unit lifecycle records.
+    """
 
     namespace: ClassVar[str] = APPLICATION_FILING_HISTORY_NAMESPACE.namespace
     sensitivity: ClassVar[SensitivityClass] = APPLICATION_FILING_HISTORY_NAMESPACE.sensitivity
