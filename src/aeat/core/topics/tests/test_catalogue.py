@@ -6,9 +6,10 @@ import ast
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ...resources import resources
-from .. import TopicCatalogue, TopicNotFoundError
+from .. import Topic, TopicCatalogue, TopicNotFoundError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -92,6 +93,19 @@ def test_every_topic_legal_ref_resolves_against_real_legal_catalogue() -> None:
 
     assert ungrounded == []
     assert missing == []
+
+
+def test_topic_requires_legal_refs() -> None:
+    """A topic cannot be registered without legal grounding."""
+
+    with pytest.raises(ValidationError) as raised:
+        Topic(
+            slug="ungrounded-topic",
+            title_key="topic.ungrounded-topic.title",
+            body_key="topic.ungrounded-topic.body",
+        )
+
+    assert "legal_refs" in str(raised.value)
 
 
 _FORBIDDEN_IMPORT_ROOTS: frozenset[str] = frozenset({"click", "rich", "typer", "aeat.entrypoints"})
