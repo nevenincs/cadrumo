@@ -198,7 +198,12 @@ class CrossPeriodCleanStatePayload(OutputSchema):
 
 
 class VerificationReportPayload(OutputSchema):
-    """Verification report fields returned by verify / verification-report commands."""
+    """Shared projection of a :class:`aeat.domain.modelos.VerificationReport`.
+
+    ``findings`` carries the blocking or advisory
+    :class:`FindingPayload` rows that explain whether the selected
+    :class:`CalculationRevision` earned the verified-complete transition.
+    """
 
     verification_report_id: VerificationReportId
     calculation_revision_id: CalculationRevisionId
@@ -220,7 +225,12 @@ class ExternalEvidencePayload(OutputSchema):
 
 
 class ModeloRecordPayload(OutputSchema):
-    """Filing record fields returned by file / filing-record commands."""
+    """Shared projection of a :class:`aeat.domain.modelos.ModeloRecord`.
+
+    The payload represents local filing state for a verified
+    :class:`CalculationRevision`; it is not a live AEAT submission. Live or
+    imported evidence appears only through ``external_evidence``.
+    """
 
     filing_record_id: FilingRecordId
     work_unit_id: WorkUnitId
@@ -439,9 +449,13 @@ class WorkRevisionsResult(OutputSchema):
 class WorkVerifyResult(OutputSchema):
     """Verification report returned by ``aeat app modelo work verify``.
 
-    On a successful verificado-completo verdict the revision transitions to
-    ``verificado_completo``; on a refused verdict the revision is unchanged
-    and ``findings`` names every blocking or advisory issue.
+    The command delegates to
+    :func:`aeat.application.modelo.verify_modelo_revision` and returns the
+    resulting :class:`VerificationReportPayload`. On a successful
+    verificado-completo verdict the revision transitions to
+    ``verificado_completo``; on a refused verdict the revision is unchanged and
+    ``findings`` names every blocking or advisory issue. Advisory findings also
+    ride the envelope's :class:`aeat.core.json_contract.Notice` channel.
     """
 
     operation: str = "modelo.work.verify"
@@ -475,8 +489,11 @@ class WorkDependenciesResult(OutputSchema):
 class WorkFileResult(OutputSchema):
     """Internal-filing confirmation returned by ``aeat app modelo work file``.
 
-    Records that the revision was marked as internally filed. Does NOT
-    represent an AEAT submission; ``live_submission`` is always ``False``.
+    The command delegates to
+    :func:`aeat.application.modelo.file_modelo_revision` and returns the
+    resulting :class:`ModeloRecordPayload`. It records that the verified
+    revision was marked as internally filed. It does not represent an AEAT
+    submission; ``live_submission`` is always ``False``.
     """
 
     operation: str = "modelo.work.file"
