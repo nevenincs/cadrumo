@@ -52,6 +52,7 @@ from .._ledger_filing_snapshot import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
+_BUCKET_ID = "13131313-1313-4313-8313-131313131313"
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -132,14 +133,14 @@ def test_capture_projects_tax_facts_and_binds_fingerprint() -> None:
 
 @pytest.fixture
 def _objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile.repository
 
 
 def _revision_with_evidence(*, evidence: LedgerFilingEvidence, tx_id: str) -> CalculationRevision:
     period = Period.from_year_and_code(2025, "1T")
     work_unit_id = derive_work_unit_id(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=2025,
         period=period,
