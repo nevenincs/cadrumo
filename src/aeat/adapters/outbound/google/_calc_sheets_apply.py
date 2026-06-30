@@ -802,8 +802,6 @@ def _developer_metadata_pairs(plan: SheetExportPlan) -> list[tuple[str, str]]:
     ]
     if plan.relation_provenance is not None:
         for relation in plan.relation_provenance.values:
-            if relation.value is None and relation.provenance == "operator_manual":
-                continue
             payload = {
                 "value": str(relation.value) if relation.value is not None else "",
                 "provenance": relation.provenance,
