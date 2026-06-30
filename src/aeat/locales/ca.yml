@@ -738,6 +738,12 @@ application:
         valids.
       calculate_decimal_input_invalid: 'El valor %{flag} de %{key} no es decimal:
         %{value}'
+      calculate_detail_casilla_unsupported: La casella %{key} identifica un camp de
+        detall de perceptor/immoble del Model 180, no una casella decimal escalar.
+        El canal local --casilla nomes accepta caselles decimals escalars; les files
+        de detall de perceptor/immoble del Model 180 encara no estan suportades a
+        la superficie publica --row. Usa aeat app modelo aggregate --modelo 180 --retencion-observation
+        per a la font suportada de nombre de perceptors/base/retencions anual.
       calculate_m184_share_sum_invalid: Els percentatges de participacio de les files
         de membre del model 184 han de sumar exactament 100%; s'ha obtingut %{total}
         en %{count} files.
@@ -793,8 +799,8 @@ application:
         no esta verificada-completa ni presentada i no es pot exportar.
       export_unsupported: El model %{modelo} no es pot exportar a fichero-BOE perque
         %{reason}. El calcul, la verificacio i els registres locals de presentacio
-        poden existir, pero aquesta ordre no pot produir un fitxer per pujar a
-        l'AEAT per a aquest model ni certifica la correccio BOE/export.
+        poden existir, pero aquesta ordre no pot produir un fitxer per pujar a l'AEAT
+        per a aquest model ni certifica la correccio BOE/export.
       external_filing_evidence_reference_blank: La importació de declaració externa
         requereix un evidence_reference_id no buit.
       external_filing_no_casilla_values: La importació de declaració externa requereix
@@ -885,7 +891,6 @@ application:
         Torneu a crear la unitat de treball per vincular-la a la revisio actual.
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
-      calculate_detail_casilla_unsupported: 'La casella %{key} identifica un camp de detall de perceptor/immoble del Model 180, no una casella decimal escalar. El canal local --casilla nomes accepta caselles decimals escalars; les files de detall de perceptor/immoble del Model 180 encara no estan suportades a la superficie publica --row. Usa aeat app modelo aggregate --modelo 180 --retencion-observation per a la font suportada de nombre de perceptors/base/retencions anual.'
     findings:
       art20_reduccion_next_action: Verifiqueu si les vostres altres rendes diferents
         de les del treball excloses les exemptes de l'exercici no superen 6500 EUR;
@@ -1182,6 +1187,7 @@ application:
         registre.
       registry_snapshot_invalid: No s'ha pogut carregar la instantània del registre
         per verificar la declaració.
+      registry_snapshot_ref_mismatch: 'La instantania del registre per al model %{modelo} %{period} no coincideix amb la referencia estampada a la declaracio: observada %{observed_ref}, resolta %{resolved_ref}.'
   wizard:
     errors:
       create_missing_filing_baseline: 'A la creació del perfil li falten dades d''identitat
@@ -1324,8 +1330,6 @@ cli:
           group_help: Factures del catàleg de conciliació que es vinculen a transaccions.
           invoice_id_help: Identificador de factura del catàleg (o prefix no ambigu).
           list_help: Llista les factures del catàleg de conciliació.
-          operation_type_unsupported: '--operation-type {value} encara no pot alimentar
-            el Model 349 des del catàleg; admesos: {supported}.'
           remove_help: Elimina una factura del catàleg de conciliació.
           view_help: Mostra una factura del catàleg de conciliació per identificador
             o prefix no ambigu.
@@ -2774,7 +2778,8 @@ cli:
         `ledger preflight` no marquen un ingrés com a missing_category.
       irpf_header: CATEGORIES D'IRPF PER A --irpf-category
       irpf_id_column: irpf-category (passa aquest valor exacte)
-      irpf_purpose_activity_income_withholding: retencio d'activitat professional cobrada o pagada neta
+      irpf_purpose_activity_income_withholding: retencio d'activitat professional
+        cobrada o pagada neta
       irpf_purpose_employment_income: rendiments del treball (no per a factures netes)
       irpf_purpose_rent_expense_withholding: retencio de lloguer pagat net
       irpf_usage_example: 'Lloguer net: --category-id {rent_category} --irpf-category
@@ -3898,6 +3903,8 @@ errors:
     lookup_dispatch_arg_count: L''operador {op} de la fórmula espera {expected} arguments.
     lookup_dispatch_arg_kind: L''operador {op} de la fórmula requereix que {position}
       sigui una fulla de tipus {expected_kind}.
+    m210_gastos_deducibles_negative: 'Les gastos_deducibles M210 %{casilla_id} no poden ser negatives; valor rebut %{value}.'
+    m210_gastos_deducibles_not_allowed: 'Les gastos_deducibles M210 %{casilla_id} nomes s''admeten en la via UE/EEE de l''article 24.6; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.'
     m210_imputation_coefficient_invalid: errors.calc.m210_imputation_coefficient_invalid
     m210_imputation_days_invalid: errors.calc.m210_imputation_days_invalid
     m210_imputation_no_catastral_value_missing: errors.calc.m210_imputation_no_catastral_value_missing
@@ -5172,13 +5179,17 @@ wizard:
       legal-name:
         help: Raó social de la persona jurídica per a capçaleres d'exportació
       ley-49-2002-option-date:
-        help: 'Registra la data de la casella 653 del model 036 per a l opcio del titol II de la Llei 49/2002.'
+        help: Registra la data de la casella 653 del model 036 per a l opcio del titol
+          II de la Llei 49/2002.
       ley-49-2002-option-declared:
-        help: 'Registra si la casella 651 del model 036 declara l opcio pel titol II de la Llei 49/2002.'
+        help: Registra si la casella 651 del model 036 declara l opcio pel titol II
+          de la Llei 49/2002.
       ley-49-2002-renunciation-date:
-        help: 'Registra la data de la casella 654 del model 036 per a la renuncia al titol II de la Llei 49/2002.'
+        help: Registra la data de la casella 654 del model 036 per a la renuncia al
+          titol II de la Llei 49/2002.
       ley-49-2002-renunciation-declared:
-        help: 'Registra si la casella 652 del model 036 declara la renuncia al regim del titol II de la Llei 49/2002.'
+        help: Registra si la casella 652 del model 036 declara la renuncia al regim
+          del titol II de la Llei 49/2002.
       llm-vision:
         help: Activar la visió LLM local per llegir factures.
       monedas-virtuales-extranjero-above-threshold:
@@ -5567,17 +5578,20 @@ wizard:
             label: Societat civil amb objecte mercantil
         prompt: Forma jurídica
       ley-49-2002-option-date:
-        help: 'Usa la data ISO corresponent a la casella 653 del model 036.'
-        prompt: 'Data declarada de l opcio pel regim especial de la Llei 49/2002'
+        help: Usa la data ISO corresponent a la casella 653 del model 036.
+        prompt: Data declarada de l opcio pel regim especial de la Llei 49/2002
       ley-49-2002-option-declared:
-        help: 'Usa el fet declarat a la casella 651 del model 036; l aplicacio legal continua condicionada als requisits legals i al fet que no hi hagi renuncia.'
-        prompt: 'L entitat ha presentat al model 036 l opcio pel regim fiscal especial del titol II de la Llei 49/2002?'
+        help: Usa el fet declarat a la casella 651 del model 036; l aplicacio legal
+          continua condicionada als requisits legals i al fet que no hi hagi renuncia.
+        prompt: L entitat ha presentat al model 036 l opcio pel regim fiscal especial
+          del titol II de la Llei 49/2002?
       ley-49-2002-renunciation-date:
-        help: 'Usa la data ISO corresponent a la casella 654 del model 036.'
-        prompt: 'Data declarada de la renuncia al regim especial de la Llei 49/2002'
+        help: Usa la data ISO corresponent a la casella 654 del model 036.
+        prompt: Data declarada de la renuncia al regim especial de la Llei 49/2002
       ley-49-2002-renunciation-declared:
-        help: 'Usa el fet declarat a la casella 652 del model 036.'
-        prompt: 'L entitat ha presentat al model 036 la renuncia al regim fiscal especial del titol II de la Llei 49/2002?'
+        help: Usa el fet declarat a la casella 652 del model 036.
+        prompt: L entitat ha presentat al model 036 la renuncia al regim fiscal especial
+          del titol II de la Llei 49/2002?
       new-entity-first-two-profit-periods:
         help: S'aplica només a persones jurídiques. Si ho marques, l'entitat tributa
           al tipus reduït del 15 per cent durant aquests dos períodes.

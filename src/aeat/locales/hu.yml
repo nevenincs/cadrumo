@@ -684,6 +684,12 @@ application:
         <MODELO>`.'
       calculate_decimal_input_invalid: 'A(z) %{flag} ertek %{key} kulcshoz nem decimalis
         szam: %{value}'
+      calculate_detail_casilla_unsupported: A(z) %{key} casilla a Modelo 180 perceptor/ingatlan
+        reszletsor mezojet nevezi meg, nem skalaris decimalis casilla bemenetet. A
+        helyi --casilla csatorna csak skalaris decimalis casillakat fogad; a Modelo
+        180 perceptor/ingatlan reszletsorai meg nem tamogatottak a nyilvanos --row
+        feluleten. Hasznald az aeat app modelo aggregate --modelo 180 --retencion-observation
+        parancsot a tamogatott eves perceptor-szam/base/retenciones forrashoz.
       calculate_m184_share_sum_invalid: 'A 184-es modell tag sorainak reszesedesi
         szazalekai pontosan 100%-ot kell adjanak; kapott ertek: %{total}, sorok: %{count}.'
       calculate_m347_threshold_not_met: A 347-es modell %{nif} partnere osszesen %{total},
@@ -736,9 +742,9 @@ application:
       export_revision_state_refused: A(z) %{calculation_revision_id} számítási revízió
         nincs ellenőrzött-teljes vagy beadott állapotban, ezért nem exportálható.
       export_unsupported: A(z) %{modelo} modelo nem exportalhato fichero-BOE fajlba,
-        mert %{reason}. A szamitas, az ellenorzes es a helyi bevallasi rekordok
-        letezhetnek, de ez a parancs ehhez a modelohoz nem tud AEAT feltoltesi
-        fajlt kesziteni, es nem igazolja a BOE/export helyesseget.
+        mert %{reason}. A szamitas, az ellenorzes es a helyi bevallasi rekordok letezhetnek,
+        de ez a parancs ehhez a modelohoz nem tud AEAT feltoltesi fajlt kesziteni,
+        es nem igazolja a BOE/export helyesseget.
       external_filing_evidence_reference_blank: A külső bevallás importálásához nem
         üres evidence_reference_id szükséges.
       external_filing_no_casilla_values: A külső bevallás importálásához legalább
@@ -832,7 +838,6 @@ application:
         létre újra a munkaegységet.
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
-      calculate_detail_casilla_unsupported: 'A(z) %{key} casilla a Modelo 180 perceptor/ingatlan reszletsor mezojet nevezi meg, nem skalaris decimalis casilla bemenetet. A helyi --casilla csatorna csak skalaris decimalis casillakat fogad; a Modelo 180 perceptor/ingatlan reszletsorai meg nem tamogatottak a nyilvanos --row feluleten. Hasznald az aeat app modelo aggregate --modelo 180 --retencion-observation parancsot a tamogatott eves perceptor-szam/base/retenciones forrashoz.'
     findings:
       art20_reduccion_next_action: Ellenorizze, hogy a nem munkabol szarmazo egyeb
         jovedelme a mentes jovedelem nelkul az adoevben nem haladja-e meg a 6500 EUR-t;
@@ -1118,6 +1123,7 @@ application:
       registry_policy_invalid: A registry ellenőrzési házirendje nem tölthető be.
       registry_snapshot_invalid: A bevallás ellenőrzéséhez szükséges registry-pillanatkép
         nem tölthető be.
+      registry_snapshot_ref_mismatch: 'A(z) %{modelo} %{period} modell registry-pillanatkepe nem egyezik a nyilatkozaton rogzitett hivatkozassal: megfigyelt %{observed_ref}, feloldott %{resolved_ref}.'
   wizard:
     errors:
       create_missing_filing_baseline: 'A profil létrehozásához hiányoznak a bevallási
@@ -1265,8 +1271,6 @@ cli:
           group_help: Egyeztetési katalógus számlái, amelyek tranzakciókhoz kapcsolhatók.
           invoice_id_help: Katalógusbeli számla azonosítója (vagy egyértelmű előtag).
           list_help: Az egyeztetési katalógus számláinak listázása.
-          operation_type_unsupported: 'A(z) --operation-type {value} még nem tudja
-            feltölteni a 349-es modellt a katalógusból; támogatott: {supported}.'
           remove_help: Egy egyeztetési katalógusbeli számla törlése.
           view_help: Egy egyeztetési katalógusbeli számla megjelenítése azonosító
             vagy egyértelmű előtag alapján.
@@ -2730,7 +2734,8 @@ cli:
         preflight` nem jelöli hiányzóként a kategóriát bevételeknél.
       irpf_header: IRPF-KATEGORIAK A --irpf-category KAPCSOLOHOZ
       irpf_id_column: irpf-category (ezt az erteket adja meg)
-      irpf_purpose_activity_income_withholding: szakmai tevekenysegi visszatartas (netto bevetel vagy kiadas)
+      irpf_purpose_activity_income_withholding: szakmai tevekenysegi visszatartas
+        (netto bevetel vagy kiadas)
       irpf_purpose_employment_income: munkaviszonybol szarmazo jovedelem (nem netto
         szamlakhoz)
       irpf_purpose_rent_expense_withholding: netto berleti dij visszatartasa
@@ -3861,6 +3866,8 @@ errors:
     lookup_dispatch_arg_count: A(z) {op} képletoperátor {expected} argumentumot vár.
     lookup_dispatch_arg_kind: A(z) {op} képletoperátornál a(z) {position}. pozíciónak
       {expected_kind} levélnek kell lennie.
+    m210_gastos_deducibles_negative: 'A(z) M210 gastos_deducibles %{casilla_id} nem lehet negativ; kapott ertek %{value}.'
+    m210_gastos_deducibles_not_allowed: 'A(z) M210 gastos_deducibles %{casilla_id} csak az EU/EGT 24.6 cikk szerinti uton engedelyezett; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.'
     m210_imputation_coefficient_invalid: errors.calc.m210_imputation_coefficient_invalid
     m210_imputation_days_invalid: errors.calc.m210_imputation_days_invalid
     m210_imputation_no_catastral_value_missing: errors.calc.m210_imputation_no_catastral_value_missing
@@ -5077,13 +5084,17 @@ wizard:
       legal-name:
         help: Jogi személy cégneve az exportfejlécekhez
       ley-49-2002-option-date:
-        help: 'Rogziti a 036-os nyomtatvany 653-as mezojenek datumat a Ley 49/2002 II. cime szerinti valasztashoz.'
+        help: Rogziti a 036-os nyomtatvany 653-as mezojenek datumat a Ley 49/2002
+          II. cime szerinti valasztashoz.
       ley-49-2002-option-declared:
-        help: 'Rogziti, hogy a 036-os nyomtatvany 651-es mezoje bejelenti-e a Ley 49/2002 II. cime szerinti valasztast.'
+        help: Rogziti, hogy a 036-os nyomtatvany 651-es mezoje bejelenti-e a Ley 49/2002
+          II. cime szerinti valasztast.
       ley-49-2002-renunciation-date:
-        help: 'Rogziti a 036-os nyomtatvany 654-es mezojenek datumat a Ley 49/2002 II. cime szerinti lemondashoz.'
+        help: Rogziti a 036-os nyomtatvany 654-es mezojenek datumat a Ley 49/2002
+          II. cime szerinti lemondashoz.
       ley-49-2002-renunciation-declared:
-        help: 'Rogziti, hogy a 036-os nyomtatvany 652-es mezoje bejelenti-e a Ley 49/2002 II. cime szerinti rendszerrol valo lemondast.'
+        help: Rogziti, hogy a 036-os nyomtatvany 652-es mezoje bejelenti-e a Ley 49/2002
+          II. cime szerinti rendszerrol valo lemondast.
       llm-vision:
         help: Helyi LLM-látás engedélyezése a számlák beolvasásához.
       monedas-virtuales-extranjero-above-threshold:
@@ -5476,17 +5487,23 @@ wizard:
             label: Kereskedelmi célú polgári társaság
         prompt: Jogi forma
       ley-49-2002-option-date:
-        help: 'A 036-os nyomtatvany 653-as mezojehez tartozo ISO datumot hasznald.'
-        prompt: 'A Ley 49/2002 szerinti kulonleges rendszer valasztasanak bejelentett datuma'
+        help: A 036-os nyomtatvany 653-as mezojehez tartozo ISO datumot hasznald.
+        prompt: A Ley 49/2002 szerinti kulonleges rendszer valasztasanak bejelentett
+          datuma
       ley-49-2002-option-declared:
-        help: 'A 036-os nyomtatvany 651-es mezojeben szereplo bejelentesi tenyt hasznald; a jogi alkalmazas tovabbra is a torvenyi feltetelektol es a lemondas hianyatol fugg.'
-        prompt: 'A szervezet a 036-os nyomtatvanyon bejelentette a Ley 49/2002 II. cime szerinti kulonleges adozasi rendszer valasztasat?'
+        help: A 036-os nyomtatvany 651-es mezojeben szereplo bejelentesi tenyt hasznald;
+          a jogi alkalmazas tovabbra is a torvenyi feltetelektol es a lemondas hianyatol
+          fugg.
+        prompt: A szervezet a 036-os nyomtatvanyon bejelentette a Ley 49/2002 II.
+          cime szerinti kulonleges adozasi rendszer valasztasat?
       ley-49-2002-renunciation-date:
-        help: 'A 036-os nyomtatvany 654-es mezojehez tartozo ISO datumot hasznald.'
-        prompt: 'A Ley 49/2002 szerinti kulonleges rendszerrol valo lemondas bejelentett datuma'
+        help: A 036-os nyomtatvany 654-es mezojehez tartozo ISO datumot hasznald.
+        prompt: A Ley 49/2002 szerinti kulonleges rendszerrol valo lemondas bejelentett
+          datuma
       ley-49-2002-renunciation-declared:
-        help: 'A 036-os nyomtatvany 652-es mezojeben szereplo bejelentesi tenyt hasznald.'
-        prompt: 'A szervezet a 036-os nyomtatvanyon bejelentette a Ley 49/2002 II. cime szerinti kulonleges adozasi rendszerrol valo lemondast?'
+        help: A 036-os nyomtatvany 652-es mezojeben szereplo bejelentesi tenyt hasznald.
+        prompt: A szervezet a 036-os nyomtatvanyon bejelentette a Ley 49/2002 II.
+          cime szerinti kulonleges adozasi rendszerrol valo lemondast?
       new-entity-first-two-profit-periods:
         help: Csak jogi személyekre vonatkozik. Ha be van jelölve, az entitás 15%-os
           kedvezményes adókulcs szerint adózik az adott két időszakban.

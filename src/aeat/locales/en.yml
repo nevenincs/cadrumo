@@ -673,6 +673,12 @@ application:
         values.
       calculate_decimal_input_invalid: '%{flag} value for %{key} is not a decimal:
         %{value}'
+      calculate_detail_casilla_unsupported: Casilla %{key} names a Modelo 180 perceptor/property
+        detail field, not a scalar decimal casilla input. The local work --casilla
+        channel only accepts scalar decimal casillas; Modelo 180 perceptor/property
+        detail rows are not supported on the public --row surface yet. Use aeat app
+        modelo aggregate --modelo 180 --retencion-observation for the supported annual
+        perceptor count/base/retenciones source.
       calculate_m184_share_sum_invalid: Modelo 184 member-row share percentages must
         sum to exactly 100%; got %{total} across %{count} rows.
       calculate_m347_threshold_not_met: Modelo 347 counterparty %{nif} total %{total}
@@ -724,9 +730,9 @@ application:
       export_revision_state_refused: Calculation revision %{calculation_revision_id}
         is not verified-complete or filed and cannot be exported.
       export_unsupported: Modelo %{modelo} cannot be exported to fichero-BOE because
-        %{reason}. Calculation, verification, and local filing records may still
-        exist, but this command cannot produce an AEAT upload file for this modelo
-        and does not certify BOE/export correctness.
+        %{reason}. Calculation, verification, and local filing records may still exist,
+        but this command cannot produce an AEAT upload file for this modelo and does
+        not certify BOE/export correctness.
       external_filing_evidence_reference_blank: External-filing import requires a
         non-empty evidence_reference_id.
       external_filing_no_casilla_values: External-filing import requires at least
@@ -817,7 +823,6 @@ application:
         the work unit to bind it to the current revision.
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
-      calculate_detail_casilla_unsupported: 'Casilla %{key} names a Modelo 180 perceptor/property detail field, not a scalar decimal casilla input. The local work --casilla channel only accepts scalar decimal casillas; Modelo 180 perceptor/property detail rows are not supported on the public --row surface yet. Use aeat app modelo aggregate --modelo 180 --retencion-observation for the supported annual perceptor count/base/retenciones source.'
     findings:
       art20_reduccion_next_action: Verify whether your other non-work income excluding
         exempt income for the year does not exceed 6500 EUR; if it does not, declare
@@ -1108,6 +1113,7 @@ application:
       registry_policy_invalid: Registry verification policy could not be loaded.
       registry_snapshot_invalid: The registry snapshot could not be loaded for declaration
         verification.
+      registry_snapshot_ref_mismatch: 'Registry snapshot for modelo %{modelo} %{period} does not match the stamped declaration reference: observed %{observed_ref}, resolved %{resolved_ref}.'
   wizard:
     errors:
       create_missing_filing_baseline: 'Profile creation is missing filing identity
@@ -1246,8 +1252,6 @@ cli:
           group_help: Reconciliation catalogue invoices that link to transactions.
           invoice_id_help: Catalogue invoice id (or unambiguous prefix).
           list_help: List reconciliation catalogue invoices.
-          operation_type_unsupported: '--operation-type {value} cannot feed Modelo
-            349 from the catalogue yet; supported: {supported}.'
           remove_help: Delete one reconciliation catalogue invoice.
           view_help: Show one reconciliation catalogue invoice by id or unambiguous
             prefix.
@@ -2623,7 +2627,8 @@ cli:
         do not flag income as missing_category.
       irpf_header: IRPF CATEGORIES FOR --irpf-category
       irpf_id_column: irpf-category (pass this exact value)
-      irpf_purpose_activity_income_withholding: professional activity withholding (received or paid net)
+      irpf_purpose_activity_income_withholding: professional activity withholding
+        (received or paid net)
       irpf_purpose_employment_income: employment income (not for net-paid invoices)
       irpf_purpose_rent_expense_withholding: net-paid rent expense withholding
       irpf_usage_example: 'Net-paid rent example: --category-id {rent_category} --irpf-category
@@ -3711,6 +3716,8 @@ errors:
     lookup_dispatch_arg_count: Formula op {op} expects {expected} arguments.
     lookup_dispatch_arg_kind: Formula op {op} requires {position} to be a {expected_kind}
       leaf.
+    m210_gastos_deducibles_negative: 'M210 gastos_deducibles %{casilla_id} must be non-negative; got %{value}.'
+    m210_gastos_deducibles_not_allowed: 'M210 gastos_deducibles %{casilla_id} is only allowed for the EU/EEA Art. 24.6 path; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.'
     m210_imputation_coefficient_invalid: errors.calc.m210_imputation_coefficient_invalid
     m210_imputation_days_invalid: errors.calc.m210_imputation_days_invalid
     m210_imputation_no_catastral_value_missing: errors.calc.m210_imputation_no_catastral_value_missing
@@ -4905,13 +4912,17 @@ wizard:
       legal-name:
         help: Legal or company name for legal-entity export headers
       ley-49-2002-option-date:
-        help: 'Record the Modelo 036 casilla 653 date for the Ley 49/2002 Title II option.'
+        help: Record the Modelo 036 casilla 653 date for the Ley 49/2002 Title II
+          option.
       ley-49-2002-option-declared:
-        help: 'Record whether Modelo 036 casilla 651 declares the Ley 49/2002 Title II option.'
+        help: Record whether Modelo 036 casilla 651 declares the Ley 49/2002 Title
+          II option.
       ley-49-2002-renunciation-date:
-        help: 'Record the Modelo 036 casilla 654 date for the Ley 49/2002 Title II renunciation.'
+        help: Record the Modelo 036 casilla 654 date for the Ley 49/2002 Title II
+          renunciation.
       ley-49-2002-renunciation-declared:
-        help: 'Record whether Modelo 036 casilla 652 declares renunciation of the Ley 49/2002 Title II regime.'
+        help: Record whether Modelo 036 casilla 652 declares renunciation of the Ley
+          49/2002 Title II regime.
       llm-vision:
         help: Enable on-host LLM vision for reading invoices.
       monedas-virtuales-extranjero-above-threshold:
@@ -5296,17 +5307,20 @@ wizard:
             label: Civil partnership with commercial object
         prompt: Legal form
       ley-49-2002-option-date:
-        help: 'Use the ISO date corresponding to Modelo 036 casilla 653.'
-        prompt: 'Date declared for the Ley 49/2002 special-regime option'
+        help: Use the ISO date corresponding to Modelo 036 casilla 653.
+        prompt: Date declared for the Ley 49/2002 special-regime option
       ley-49-2002-option-declared:
-        help: 'Use the declaration fact from Modelo 036 casilla 651; legal application still depends on the statutory requirements and no renunciation.'
-        prompt: 'Has the entity filed the Modelo 036 option for the Title II Ley 49/2002 special fiscal regime?'
+        help: Use the declaration fact from Modelo 036 casilla 651; legal application
+          still depends on the statutory requirements and no renunciation.
+        prompt: Has the entity filed the Modelo 036 option for the Title II Ley 49/2002
+          special fiscal regime?
       ley-49-2002-renunciation-date:
-        help: 'Use the ISO date corresponding to Modelo 036 casilla 654.'
-        prompt: 'Date declared for the Ley 49/2002 special-regime renunciation'
+        help: Use the ISO date corresponding to Modelo 036 casilla 654.
+        prompt: Date declared for the Ley 49/2002 special-regime renunciation
       ley-49-2002-renunciation-declared:
-        help: 'Use the declaration fact from Modelo 036 casilla 652.'
-        prompt: 'Has the entity filed a Modelo 036 renunciation of the Title II Ley 49/2002 special fiscal regime?'
+        help: Use the declaration fact from Modelo 036 casilla 652.
+        prompt: Has the entity filed a Modelo 036 renunciation of the Title II Ley
+          49/2002 special fiscal regime?
       new-entity-first-two-profit-periods:
         help: Applies only to legal entities. When set, the entity is taxed at the
           15 percent reduced rate during those two periods.
