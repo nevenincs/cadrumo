@@ -2110,6 +2110,7 @@ cli:
         revision_selector_help: Selector de revision.
         revision_show_help: Mostrar los valores de casilla guardados de una revisión
           de cálculo concreta (sin recalcular)
+        revision_verbose_help: Mostrar la traza completa de la fórmula por casilla (op, formula_id, referencias y valores de los operandos).
         revisions_help: Listar las revisiones de cálculo, opcionalmente filtradas
           por unidad de trabajo
         row_empty_key: Clave de campo --row vacía en {token}; cada campo debe tener

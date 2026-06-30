@@ -2029,6 +2029,7 @@ cli:
         revision_selector_help: Revizio valaszto.
         revision_show_help: Egy tárolt számítási revízió megőrzött mezőértékeinek
           megjelenítése (újraszámítás nélkül).
+        revision_verbose_help: A teljes mezőnkénti képletnyom megjelenítése (op, formula_id, operandus-hivatkozások és -értékek).
         revisions_help: Számítási revíziók listázása, opcionálisan egy munkaegységre
           szűrve.
         row_empty_key: Üres mezőkulcs a --row {token} mezőben; minden mezőnek KULCS=ÉRTÉK

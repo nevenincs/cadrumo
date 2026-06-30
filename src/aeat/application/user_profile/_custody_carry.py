@@ -28,6 +28,7 @@ cannot be silently dropped.
 from __future__ import annotations
 
 import base64
+import json
 from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING
 
@@ -105,6 +106,28 @@ def _blob_resolver(record: SecureObjectRecord, _bucket_id: str) -> str:
     from ...adapters.persistence.storage.attachment import _unwrap_blob_payload
 
     return sha256_hex(_unwrap_blob_payload(record.payload))
+
+
+def _json_field_resolver(field: str) -> NaturalKeyResolver:
+    """Resolver for an ``Envelope`` row whose natural key is one top-level payload field."""
+
+    def _resolve(record: SecureObjectRecord, _bucket_id: str) -> str:
+        envelope = json.loads(record.payload.decode("utf-8"))
+        return str(envelope["payload"][field])
+
+    return _resolve
+
+
+def _bucket_template_resolver(template: str) -> NaturalKeyResolver:
+    def _resolve(_record: SecureObjectRecord, bucket_id: str) -> str:
+        return template.format(bucket_id=bucket_id)
+
+    return _resolve
+
+
+def _sha256_payload_resolver(record: SecureObjectRecord, _bucket_id: str) -> str:
+    """Resolver for a raw-bytes row content-addressed by the SHA-256 of its payload."""
+    return sha256_hex(record.payload)
 
 
 # ---------------------------------------------------------------------------
@@ -232,6 +255,177 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
 
     resolvers["aeat.domain.justificante.metadata"] = _bound_resolver(_justificante_metadata_repo)
 
+    # --- Withholding / retencion observations (SecureBoundRepository) ---------
+    def _retencion_repo() -> object:
+        from ..aggregation import RetencionObservationRepository
+
+        return RetencionObservationRepository()
+
+    resolvers["aeat.retenciones.observations"] = _bound_resolver(_retencion_repo)
+
+    def _withholding_repo() -> object:
+        from ..aggregation import WithholdingObservationRepository
+
+        return WithholdingObservationRepository()
+
+    resolvers["aeat.withholding.observations"] = _bound_resolver(_withholding_repo)
+
+    # --- Filing/ledger/submission state (SecureBoundRepository) ---------------
+    def _filing_history_repo() -> object:
+        from ..filing import ModeloHistoryRepository
+
+        return ModeloHistoryRepository()
+
+    resolvers["aeat.application.filing.history"] = _bound_resolver(_filing_history_repo)
+
+    def _iva_remote_state_repo() -> object:
+        from ..live import IvaRemoteStateAcquisitionManifestRepository
+
+        return IvaRemoteStateAcquisitionManifestRepository()
+
+    resolvers["aeat.application.live.iva_remote_state_acquisitions"] = _bound_resolver(_iva_remote_state_repo)
+
+    def _evidence_bundle_repo() -> object:
+        from ..evidence import EvidenceBundleRepository
+
+        return EvidenceBundleRepository()
+
+    resolvers["aeat.application.evidence.bundles"] = _bound_resolver(_evidence_bundle_repo)
+
+    def _purchase_invoice_evidence_repo() -> object:
+        from ..ledger import PurchaseInvoiceEvidenceRepository
+
+        return PurchaseInvoiceEvidenceRepository()
+
+    resolvers["aeat.application.ledger.purchase_invoice_evidence"] = _bound_resolver(_purchase_invoice_evidence_repo)
+
+    def _business_operation_invoice_repo() -> object:
+        from ..ledger import BusinessOperationInvoiceRepository
+
+        return BusinessOperationInvoiceRepository()
+
+    resolvers["aeat.application.ledger.business_operation_invoices"] = _bound_resolver(_business_operation_invoice_repo)
+
+    def _classification_rule_repo() -> object:
+        from ..ledger import LedgerClassificationRuleRepository
+
+        return LedgerClassificationRuleRepository()
+
+    resolvers["aeat.ledger.classification.rules"] = _bound_resolver(_classification_rule_repo)
+
+    def _submission_repo() -> object:
+        from ...domain.submission import SubmissionRepository
+
+        return SubmissionRepository()
+
+    resolvers["aeat.domain.submission.records"] = _bound_resolver(_submission_repo)
+
+    def _draft_repo() -> object:
+        from ...domain.filing import ModeloDraftRepository
+
+        return ModeloDraftRepository()
+
+    resolvers["aeat.domain.filing.drafts"] = _bound_resolver(_draft_repo)
+
+    # --- Filing amendments (union payload; key is a top-level field) ----------
+    resolvers["aeat.domain.filing.amendments"] = _json_field_resolver("amendment_id")
+
+    # --- Per-bucket single-document stores -----------------------------------
+    resolvers["aeat.domain.usage_ratios"] = _bucket_template_resolver("profile:{bucket_id}")
+
+    # --- Live snapshot captures (SecureSnapshotRepository) --------------------
+    def _borrador_payload() -> type:
+        from ..live._borrador_100 import Borrador100Snapshot
+
+        return Borrador100Snapshot
+
+    def _borrador_key(bucket_id: str, snapshot_id: str) -> str:
+        from ..live._borrador_100 import borrador_100_snapshot_object_key
+
+        return borrador_100_snapshot_object_key(bucket_id, snapshot_id)
+
+    resolvers["aeat.application.live.borrador_100_snapshot"] = _snapshot_resolver(_borrador_payload, _borrador_key)
+
+    def _m036_payload() -> type:
+        from ..modelo._m036_lifecycle import M036DeclarationResult
+
+        return M036DeclarationResult
+
+    def _m036_key(bucket_id: str, declaration_id: str) -> str:
+        from ..modelo._m036_lifecycle import _m036_declaration_object_key
+
+        return _m036_declaration_object_key(bucket_id, declaration_id)
+
+    resolvers["aeat.application.modelo.m036_declaration"] = _snapshot_resolver(
+        _m036_payload,
+        _m036_key,
+        snapshot_id_attr="declaration_id",
+    )
+
+    def _verify_payload() -> type:
+        from ..live._verify import VerifyObservation
+
+        return VerifyObservation
+
+    def _verify_key(bucket_id: str, observation_id: str) -> str:
+        from ..live._verify import verify_observation_object_key
+
+        return verify_observation_object_key(bucket_id, observation_id)
+
+    resolvers["aeat.application.live.verify_observations"] = _snapshot_resolver(
+        _verify_payload,
+        _verify_key,
+        snapshot_id_attr="observation_id",
+    )
+
+    def _profile_snapshot_payload() -> type:
+        from ...domain.user_profile._values import UserProfileSnapshot
+
+        return UserProfileSnapshot
+
+    def _profile_snapshot_key(bucket_id: str, snapshot_id: str) -> str:
+        from ._repository import user_profile_snapshot_object_key
+
+        return user_profile_snapshot_object_key(bucket_id, snapshot_id)
+
+    resolvers["aeat.application.user_profile.snapshot"] = _snapshot_resolver(
+        _profile_snapshot_payload,
+        _profile_snapshot_key,
+    )
+
+    # --- AEAT-outbound filed-declaration state -------------------------------
+    resolvers["aeat.outbound.aeat.sede.filed_declaration.artefacts"] = _sha256_payload_resolver
+
+    def _filed_observation_key(record: SecureObjectRecord, _bucket_id: str) -> str:
+        from ...adapters.outbound.aeat.sede._observation_models import FiledDeclaracionObservation
+        from ...adapters.outbound.aeat.sede._observation_store import filed_declaracion_observation_object_key
+
+        obs = _envelope_payload(record, FiledDeclaracionObservation)
+        return filed_declaracion_observation_object_key(
+            obs.modelo,  # type: ignore[attr-defined]
+            obs.ejercicio,  # type: ignore[attr-defined]
+            obs.period,  # type: ignore[attr-defined]
+            obs.expediente_id,  # type: ignore[attr-defined]
+        )
+
+    resolvers["aeat.outbound.aeat.sede.filed_declaration.observations"] = _filed_observation_key
+
+    def _iva_wallet_observation_key(record: SecureObjectRecord, _bucket_id: str) -> str:
+        from ...adapters.outbound.aeat.sede._observation_models import IvaCompensationWalletObservation
+        from ...adapters.outbound.aeat.sede._observation_store import (
+            iva_compensation_wallet_observation_object_key,
+        )
+
+        obs = _envelope_payload(record, IvaCompensationWalletObservation)
+        return iva_compensation_wallet_observation_object_key(
+            obs.taxpayer_nif,  # type: ignore[attr-defined]
+            obs.target_year,  # type: ignore[attr-defined]
+            obs.target_period,  # type: ignore[attr-defined]
+            obs.captured_at.isoformat(),  # type: ignore[attr-defined]
+        )
+
+    resolvers["aeat.outbound.aeat.sede.iva_compensation_wallet.observations"] = _iva_wallet_observation_key
+
     return resolvers
 
 
@@ -273,6 +467,9 @@ def serialize_carried_objects(
         if not keys:
             continue
         resolver = resolvers.get(definition.namespace)
+        if resolver is None and definition.default_object_key is not None:
+            # Single-document / catalogue stores have a fixed natural key.
+            resolver = _fixed_resolver(definition.default_object_key)
         if resolver is None:
             from ...domain.user_profile._errors import ProfileExportError
 
