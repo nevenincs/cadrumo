@@ -1,16 +1,22 @@
 """JSON-contract payloads for the rich catalogue-invoice CLI verbs.
 
-Each payload is an :class:`OutputSchema` subclass on the shared CLI envelope.
+Each payload is a strict
+:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass registered with
+:func:`~aeat.entrypoints.cli._schemas.register_schema` on the shared
+:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` surface.
 
 The unified ``aeat app ledger invoice`` group drives the slim
 :class:`~aeat.application.ledger.BusinessOperationInvoice` operator record
-(payloads in :mod:`._ledger_payloads`). The ``catalogue`` subgroup added here
-drives the **rich** :class:`~aeat.domain.invoices.Invoice` in the
+(payloads in :mod:`aeat.entrypoints.cli._ledger_payloads`). The ``catalogue``
+subgroup added here drives the **rich** :class:`~aeat.domain.invoices.Invoice`
+in the
 :class:`~aeat.domain.invoices.InvoiceCatalogue` — the only invoice aggregate
 that carries ``linked_transaction_ids`` and the one ``link --invoice-id``
-resolves. These payloads are declared in their own module so the registration
-side-effects live next to the verb that emits them without touching the slim
-:mod:`._ledger_payloads` surface.
+resolves through
+:func:`~aeat.application.invoices.link_invoice_transaction_repositories`. These
+payloads are declared in their own module so the registration side-effects live
+next to the verb that emits them without touching the slim
+:mod:`aeat.entrypoints.cli._ledger_payloads` surface.
 """
 
 from __future__ import annotations
@@ -24,7 +30,7 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
     Carries the content-addressed ``invoice_id`` (the value
     ``link --invoice-id`` resolves) plus the identity and total fields. The
     ``linked_transaction_ids`` list reflects the bidirectional links the
-    ``link`` verb writes onto the rich :class:`Invoice`.
+    ``link`` verb writes onto the rich :class:`~aeat.domain.invoices.Invoice`.
     """
 
     invoice_id: str
@@ -47,22 +53,41 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
 
 @register_schema("ledger.invoice.catalogue.create")
 class CatalogueInvoiceCreateResult(CatalogueInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger invoice catalogue create``."""
+    """JSON envelope for ``aeat app ledger invoice catalogue create``.
+
+    Mirrors the ``invoice`` inside
+    :class:`~aeat.application.invoices.CatalogueInvoiceCreateResult` returned by
+    :func:`~aeat.application.invoices.create_catalogue_invoice`.
+    """
 
 
 @register_schema("ledger.invoice.catalogue.view")
 class CatalogueInvoiceViewResult(CatalogueInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger invoice catalogue view``."""
+    """JSON envelope for ``aeat app ledger invoice catalogue view``.
+
+    Projects the rich :class:`~aeat.domain.invoices.Invoice` resolved by
+    :func:`~aeat.application.invoices.resolve_catalogue_invoice_from_repository`.
+    """
 
 
 @register_schema("ledger.invoice.catalogue.remove")
 class CatalogueInvoiceRemoveResult(CatalogueInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger invoice catalogue remove``."""
+    """JSON envelope for ``aeat app ledger invoice catalogue remove``.
+
+    Reports the deleted rich :class:`~aeat.domain.invoices.Invoice` returned by
+    :func:`~aeat.application.invoices.remove_catalogue_invoice`; linked invoices
+    are refused before this payload is emitted.
+    """
 
 
 @register_schema("ledger.invoice.catalogue.list")
 class CatalogueInvoiceListResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger invoice catalogue list``."""
+    """JSON envelope for ``aeat app ledger invoice catalogue list``.
+
+    Each row is a :class:`CatalogueInvoiceRecordPayload` projected from the
+    active bucket's :class:`~aeat.domain.invoices.InvoiceCatalogue`; ``kind``
+    filtering stays in the CLI query before this envelope is validated.
+    """
 
     bucket_id: str
     rows: list[CatalogueInvoiceRecordPayload]
