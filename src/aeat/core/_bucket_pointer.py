@@ -11,7 +11,16 @@ operator-visible name is ``active-profile`` to match the verb noun.
 The on-disk representation is single-document TOML keyed by
 ``bucket_id`` and ``schema_version``. An atomic write-then-rename
 helper, :func:`write_pointer`, materialises the pointer; the
-:func:`resolve_active_bucket_id` resolver consumes it at startup. The companion
+:func:`resolve_active_bucket_id` resolver consumes it at startup. Invalid
+TOML and pydantic validation failures are deliberate hard failures for
+``read_pointer``; they are not treated as "no active profile" because that
+would silently fall back to root storage.
+
+This module is also distinct from the application-layer manifest scanners:
+:class:`~aeat.application.workflow.ProfileBucketPointer` records are derived
+from ``buckets/*/manifest.toml`` and prove registered profile metadata. A
+``BucketPointer`` only names the intended active bucket; it does not prove the
+bucket exists, read a manifest, or validate lifecycle status. The companion
 :mod:`aeat.core._bucket_pointer_io` module owns the file boundary, while this
 module owns strict validation and deterministic serialisation only.
 """
@@ -32,6 +41,10 @@ class BucketPointer(BaseModel):
     not read settings, open storage, inspect manifests, or resolve precedence;
     those operations belong to :func:`read_pointer`, :func:`write_pointer`, and
     :func:`resolve_active_bucket_id`.
+
+    Attributes:
+        bucket_id: Encrypted profile bucket id selected by the pointer.
+        schema_version: Pointer document schema version. Values start at ``1``.
     """
 
     model_config = _STRICT_FROZEN
@@ -66,6 +79,11 @@ class BucketPointer(BaseModel):
 
         Returns:
             A validated :class:`BucketPointer` instance.
+
+        Raises:
+            tomllib.TOMLDecodeError: If ``text`` is not valid TOML.
+            pydantic.ValidationError: If the TOML payload violates the strict
+                pointer schema.
         """
         payload = tomllib.loads(text)
         return cls.model_validate(payload)
