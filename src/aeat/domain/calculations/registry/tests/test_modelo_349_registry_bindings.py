@@ -8,8 +8,7 @@ from typing import cast
 
 import pytest
 
-from .....core import BindingSourceKind
-from .....core.aggregation import IntracomOperationType
+from .....core import BindingSourceKind, IntracomOperationType
 from .. import (
     CasillaId,
     InputKind,

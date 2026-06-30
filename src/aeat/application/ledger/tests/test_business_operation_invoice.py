@@ -10,6 +10,7 @@ import pytest
 
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import IntracomOperationType
 from ....core.config import Settings
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -19,7 +20,6 @@ from .._business_operation_invoice import (
     BusinessOperationInvoiceNotFoundError,
     BusinessOperationInvoicePatch,
     CollectibleInvoiceService,
-    IntracomOperationType,
     PayableInvoiceService,
     validate_eu_iva_id,
 )
