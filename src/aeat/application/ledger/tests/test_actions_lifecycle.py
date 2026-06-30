@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ._action_test_support import (
+    _BUCKET_ID,
     UTC,
     BucketEventHistoryRepository,
     BucketEventType,
@@ -55,7 +56,7 @@ def _create_manual_row(
     resolved_occurred_at = occurred_at if occurred_at is not None else datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=resolved_booked_date,
             amount=resolved_amount,
             direction=TransactionDirection.OUTGOING,
@@ -73,7 +74,7 @@ def test_archive_manual_transaction_records_lifecycle_lineage_and_event(secure_o
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("50.00"),
             direction=TransactionDirection.OUTGOING,
@@ -86,7 +87,7 @@ def test_archive_manual_transaction_records_lifecycle_lineage_and_event(secure_o
     )
 
     archived = archive_manual_transaction(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
         reason="wrong account import",
@@ -102,7 +103,7 @@ def test_archive_manual_transaction_records_lifecycle_lineage_and_event(secure_o
     assert persisted.lifecycle_lineage[-1].state is TransactionLifecycleState.ARCHIVED
     assert persisted.lifecycle_lineage[-1].reason == "wrong account import"
     assert persisted.lifecycle_lineage[-1].bucket_event_id == archived.bucket_event_ids[0]
-    events = event_repository.load().for_bucket("bucket-a")
+    events = event_repository.load().for_bucket(_BUCKET_ID)
     assert [event.event_type for event in events] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
         BucketEventType.LEDGER_TRANSACTION_ARCHIVED,
@@ -118,7 +119,7 @@ def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("50.00"),
             direction=TransactionDirection.OUTGOING,
@@ -130,7 +131,7 @@ def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
     archived = archive_manual_transaction(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
         reason="wrong account import",
@@ -143,7 +144,7 @@ def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
         update_manual_transaction(
             transaction_id=created.ref.transaction_id,
             command=ManualLedgerTransactionCommand(
-                bucket_id="bucket-a",
+                bucket_id=_BUCKET_ID,
                 booked_date=date(2026, 5, 1),
                 amount=Decimal("60.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -160,7 +161,7 @@ def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
     assert persisted is not None
     assert persisted.lifecycle_state is TransactionLifecycleState.ARCHIVED
     assert persisted.lifecycle_lineage[-1].bucket_event_id == archived.bucket_event_ids[0]
-    assert [event.event_type for event in event_repository.load().for_bucket("bucket-a")] == [
+    assert [event.event_type for event in event_repository.load().for_bucket(_BUCKET_ID)] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
         BucketEventType.LEDGER_TRANSACTION_ARCHIVED,
     ]
@@ -170,7 +171,7 @@ def test_stash_manual_transaction_records_lifecycle_lineage_and_event(secure_obj
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("50.00"),
             direction=TransactionDirection.OUTGOING,
@@ -183,7 +184,7 @@ def test_stash_manual_transaction_records_lifecycle_lineage_and_event(secure_obj
     )
 
     stashed = stash_manual_transaction(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
         reason="needs supporting statement",
@@ -197,7 +198,7 @@ def test_stash_manual_transaction_records_lifecycle_lineage_and_event(secure_obj
     assert persisted.lifecycle_state is TransactionLifecycleState.STASHED
     assert persisted.lifecycle_lineage[-1].state is TransactionLifecycleState.STASHED
     assert persisted.lifecycle_lineage[-1].bucket_event_id == stashed.bucket_event_ids[0]
-    events = event_repository.load().for_bucket("bucket-a")
+    events = event_repository.load().for_bucket(_BUCKET_ID)
     assert [event.event_type for event in events] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
         BucketEventType.LEDGER_TRANSACTION_STASHED,
@@ -211,7 +212,7 @@ def test_restore_stashed_transaction_returns_it_to_active_with_event_and_lineage
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("50.00"),
             direction=TransactionDirection.OUTGOING,
@@ -223,7 +224,7 @@ def test_restore_stashed_transaction_returns_it_to_active_with_event_and_lineage
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
     stash_manual_transaction(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
         reason="needs supporting statement",
@@ -233,12 +234,12 @@ def test_restore_stashed_transaction_returns_it_to_active_with_event_and_lineage
     )
 
     # The row left the active-aggregation set while stashed.
-    stashed_summary = summarize_manual_transactions(bucket_id="bucket-a", transaction_repository=transaction_repository)
+    stashed_summary = summarize_manual_transactions(bucket_id=_BUCKET_ID, transaction_repository=transaction_repository)
     assert stashed_summary.active_count == 0
     assert stashed_summary.stashed_count == 1
 
     restored = restore_manual_transaction(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-B",
         reason="stashed by mistake",
@@ -258,13 +259,13 @@ def test_restore_stashed_transaction_returns_it_to_active_with_event_and_lineage
     # The restored row is genuinely active again: it re-enters the
     # active-aggregation set that tax calculations consume.
     restored_summary = summarize_manual_transactions(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_repository=transaction_repository,
     )
     assert restored_summary.active_count == 1
     assert restored_summary.stashed_count == 0
 
-    events = event_repository.load().for_bucket("bucket-a")
+    events = event_repository.load().for_bucket(_BUCKET_ID)
     assert [event.event_type for event in events] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
         BucketEventType.LEDGER_TRANSACTION_STASHED,
@@ -279,7 +280,7 @@ def test_restore_archived_transaction_returns_it_to_active(secure_objects: Secur
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("72.50"),
             direction=TransactionDirection.OUTGOING,
@@ -291,7 +292,7 @@ def test_restore_archived_transaction_returns_it_to_active(secure_objects: Secur
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
     archive_manual_transaction(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
         reason="wrong row archived",
@@ -301,7 +302,7 @@ def test_restore_archived_transaction_returns_it_to_active(secure_objects: Secur
     )
 
     restored = restore_manual_transaction(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-B",
         reason="archived by mistake",
@@ -316,7 +317,7 @@ def test_restore_archived_transaction_returns_it_to_active(secure_objects: Secur
     assert persisted.lifecycle_lineage[-1].previous_state is TransactionLifecycleState.ARCHIVED
     assert persisted.lifecycle_lineage[-1].state is TransactionLifecycleState.ACTIVE
     assert persisted.lifecycle_lineage[-1].bucket_event_id == restored.bucket_event_ids[0]
-    events = event_repository.load().for_bucket("bucket-a")
+    events = event_repository.load().for_bucket(_BUCKET_ID)
     assert [event.event_type for event in events] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
         BucketEventType.LEDGER_TRANSACTION_ARCHIVED,
@@ -337,7 +338,7 @@ def test_restore_refuses_an_already_active_transaction(secure_objects: SecureObj
 
     with pytest.raises(TransactionValidationError, match="already active"):
         restore_manual_transaction(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             transaction_id=created.ref.transaction_id,
             actor="operator-A",
             transaction_repository=transaction_repository,
@@ -349,7 +350,7 @@ def test_restore_refuses_an_already_active_transaction(secure_objects: SecureObj
     persisted = transaction_repository.load().get(created.ref.transaction_id)
     assert persisted is not None
     assert persisted.lifecycle_state is TransactionLifecycleState.ACTIVE
-    assert [event.event_type for event in event_repository.load().for_bucket("bucket-a")] == [
+    assert [event.event_type for event in event_repository.load().for_bucket(_BUCKET_ID)] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
     ]
 
@@ -363,7 +364,7 @@ def test_finalized_modelo_reference_blocks_lifecycle_removal_prior_id_and_reset(
         idempotency_key="restore-blocked",
     )
     stash_manual_transaction(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=restore_row.ref.transaction_id,
         actor="operator-A",
         reason="parked pending review",
@@ -389,7 +390,7 @@ def test_finalized_modelo_reference_blocks_lifecycle_removal_prior_id_and_reset(
     updated_prior_row = update_manual_transaction(
         transaction_id=prior_source_row.ref.transaction_id,
         command=ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 2),
             amount=Decimal("35.00"),
             direction=TransactionDirection.OUTGOING,
@@ -415,7 +416,7 @@ def test_finalized_modelo_reference_blocks_lifecycle_removal_prior_id_and_reset(
 
     with pytest.raises(TransactionValidationError, match="finalized modelo"):
         restore_manual_transaction(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             transaction_id=restore_row.ref.transaction_id,
             actor="operator-A",
             transaction_repository=transaction_repository,
@@ -425,7 +426,7 @@ def test_finalized_modelo_reference_blocks_lifecycle_removal_prior_id_and_reset(
             occurred_at=datetime(2026, 5, 6, 10, 0, tzinfo=UTC),
         )
     dry_run_removal = remove_manual_transaction(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=remove_row.ref.transaction_id,
         actor="operator-A",
         dry_run=True,
@@ -437,7 +438,7 @@ def test_finalized_modelo_reference_blocks_lifecycle_removal_prior_id_and_reset(
     assert dry_run_removal.blocking_modelo_references[0].modelo == "303"
     with pytest.raises(TransactionValidationError, match="finalized modelo"):
         remove_manual_transaction(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             transaction_id=remove_row.ref.transaction_id,
             actor="operator-A",
             transaction_repository=transaction_repository,
@@ -447,7 +448,7 @@ def test_finalized_modelo_reference_blocks_lifecycle_removal_prior_id_and_reset(
         )
     with pytest.raises(TransactionValidationError, match="finalized modelo"):
         archive_manual_transaction(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             transaction_id=lifecycle_row.ref.transaction_id,
             actor="operator-A",
             transaction_repository=transaction_repository,
@@ -458,7 +459,7 @@ def test_finalized_modelo_reference_blocks_lifecycle_removal_prior_id_and_reset(
         )
     with pytest.raises(TransactionValidationError, match="finalized modelo"):
         remove_manual_transaction(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             transaction_id=updated_prior_row.ref.transaction_id,
             actor="operator-A",
             transaction_repository=transaction_repository,
@@ -467,7 +468,7 @@ def test_finalized_modelo_reference_blocks_lifecycle_removal_prior_id_and_reset(
             calculation_repository=calculation_repository,
         )
     dry_run_reset = reset_ledger_catalogue(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         actor="operator-A",
         dry_run=True,
         transaction_repository=transaction_repository,
@@ -478,7 +479,7 @@ def test_finalized_modelo_reference_blocks_lifecycle_removal_prior_id_and_reset(
     assert dry_run_reset.blocking_modelo_references[0].modelo == "303"
     with pytest.raises(TransactionValidationError, match="finalized modelo"):
         reset_ledger_catalogue(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             actor="operator-A",
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
@@ -495,7 +496,7 @@ def test_finalized_modelo_reference_blocks_lifecycle_removal_prior_id_and_reset(
     assert persisted_lifecycle_row is not None
     assert persisted_lifecycle_row.lifecycle_state is TransactionLifecycleState.ACTIVE
     assert persisted.get(updated_prior_row.ref.transaction_id) is not None
-    event_types = [event.event_type for event in event_repository.load().for_bucket("bucket-a")]
+    event_types = [event.event_type for event in event_repository.load().for_bucket(_BUCKET_ID)]
     assert BucketEventType.LEDGER_TRANSACTION_RESTORED not in event_types
     assert BucketEventType.LEDGER_TRANSACTION_ARCHIVED not in event_types
     assert BucketEventType.LEDGER_TRANSACTION_REMOVED not in event_types
@@ -513,7 +514,7 @@ def test_restore_roundtrip_survives_storage_reload_and_breaks_on_corruption(
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("50.00"),
             direction=TransactionDirection.OUTGOING,
@@ -525,7 +526,7 @@ def test_restore_roundtrip_survives_storage_reload_and_breaks_on_corruption(
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
     stash_manual_transaction(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
         reason="parked",
@@ -534,7 +535,7 @@ def test_restore_roundtrip_survives_storage_reload_and_breaks_on_corruption(
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
     restore_manual_transaction(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-B",
         reason="restored",
@@ -567,7 +568,7 @@ def test_archive_and_stash_refuse_invalid_lifecycle_transitions(secure_objects: 
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("50.00"),
             direction=TransactionDirection.OUTGOING,
@@ -579,7 +580,7 @@ def test_archive_and_stash_refuse_invalid_lifecycle_transitions(secure_objects: 
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
     archive_manual_transaction(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
         transaction_repository=transaction_repository,
@@ -589,7 +590,7 @@ def test_archive_and_stash_refuse_invalid_lifecycle_transitions(secure_objects: 
 
     with pytest.raises(TransactionValidationError, match="already archived"):
         archive_manual_transaction(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             transaction_id=created.ref.transaction_id,
             actor="operator-A",
             transaction_repository=transaction_repository,
@@ -598,7 +599,7 @@ def test_archive_and_stash_refuse_invalid_lifecycle_transitions(secure_objects: 
         )
     with pytest.raises(TransactionValidationError, match="cannot be stashed"):
         stash_manual_transaction(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             transaction_id=created.ref.transaction_id,
             actor="operator-A",
             transaction_repository=transaction_repository,
@@ -606,7 +607,7 @@ def test_archive_and_stash_refuse_invalid_lifecycle_transitions(secure_objects: 
             occurred_at=datetime(2026, 5, 3, 10, 0, tzinfo=UTC),
         )
 
-    assert [event.event_type for event in event_repository.load().for_bucket("bucket-a")] == [
+    assert [event.event_type for event in event_repository.load().for_bucket(_BUCKET_ID)] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
         BucketEventType.LEDGER_TRANSACTION_ARCHIVED,
     ]
@@ -621,7 +622,7 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
     invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 2),
             amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
@@ -643,7 +644,7 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
     )
 
     removed = remove_manual_transaction(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
         reason="wrong account import",
@@ -659,7 +660,7 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
     detached = invoice_repository.load().get(purchase_evidence.invoice_id)
     assert detached is not None
     assert detached.linked_transaction_ids == ()
-    events = event_repository.load().for_bucket("bucket-a")
+    events = event_repository.load().for_bucket(_BUCKET_ID)
     assert [event.event_type for event in events] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
         BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED,
@@ -677,7 +678,7 @@ def test_remove_manual_transaction_dry_run_reports_without_mutation(secure_objec
     )
 
     report = remove_manual_transaction(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
         dry_run=True,
@@ -689,7 +690,7 @@ def test_remove_manual_transaction_dry_run_reports_without_mutation(secure_objec
     assert report.dry_run is True
     assert report.removed is False
     assert transaction_repository.load().get(created.ref.transaction_id) is not None
-    assert [event.event_type for event in event_repository.load().for_bucket("bucket-a")] == [
+    assert [event.event_type for event in event_repository.load().for_bucket(_BUCKET_ID)] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
     ]
 
@@ -703,7 +704,7 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
     invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
     first = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 2),
             amount=Decimal("25.00"),
             direction=TransactionDirection.OUTGOING,
@@ -718,7 +719,7 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
     )
     second = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 3),
             amount=Decimal("30.00"),
             direction=TransactionDirection.OUTGOING,
@@ -736,7 +737,7 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
     )
 
     report = reset_ledger_catalogue(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         actor="operator-A",
         reason="contaminated import batch",
         transaction_repository=transaction_repository,
@@ -752,7 +753,7 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
     detached = invoice_repository.load().get(purchase_evidence.invoice_id)
     assert detached is not None
     assert detached.linked_transaction_ids == ()
-    events = event_repository.load().for_bucket("bucket-a")
+    events = event_repository.load().for_bucket(_BUCKET_ID)
     assert [event.event_type for event in events] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
         BucketEventType.LEDGER_TRANSACTION_CREATED,
@@ -784,7 +785,7 @@ def test_reset_ledger_catalogue_clears_a_large_ledger_without_payload_overflow(
     for index in range(row_count):
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id="bucket-a",
+                bucket_id=_BUCKET_ID,
                 booked_date=date(2026, 5, 1),
                 amount=Decimal("10.00") + Decimal(index),
                 direction=TransactionDirection.OUTGOING,
@@ -800,7 +801,7 @@ def test_reset_ledger_catalogue_clears_a_large_ledger_without_payload_overflow(
     assert len(transaction_repository.load().transactions) == row_count
 
     report = reset_ledger_catalogue(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         actor="operator-A",
         reason="bulk wipe",
         transaction_repository=transaction_repository,
@@ -813,14 +814,14 @@ def test_reset_ledger_catalogue_clears_a_large_ledger_without_payload_overflow(
     assert transaction_repository.load().transactions == {}
     reset_events = [
         event
-        for event in event_repository.load().for_bucket("bucket-a")
+        for event in event_repository.load().for_bucket(_BUCKET_ID)
         if event.event_type is BucketEventType.LEDGER_CATALOGUE_RESET
     ]
     assert len(reset_events) == 1
     assert reset_events[0].payload["removed_transaction_count"] == str(row_count)
     removed_events = [
         event
-        for event in event_repository.load().for_bucket("bucket-a")
+        for event in event_repository.load().for_bucket(_BUCKET_ID)
         if event.event_type is BucketEventType.LEDGER_TRANSACTION_REMOVED
     ]
     assert {event.object_id for event in removed_events} == set(created_ids)

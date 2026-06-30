@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ._action_test_support import (
+    _BUCKET_ID,
     POST_UPDATE_EVENT_PAYLOADS,
     PRESERVED_CREATE_AUDIT_FIELDS,
     UPDATED_FIELD_EXPECTATIONS,
@@ -64,7 +65,7 @@ def _drive_update_manual_transaction(secure_objects: SecureObjectRepository) -> 
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("50.00"),
             direction=TransactionDirection.OUTGOING,
@@ -78,7 +79,7 @@ def _drive_update_manual_transaction(secure_objects: SecureObjectRepository) -> 
     updated = update_manual_transaction(
         transaction_id=created.ref.transaction_id,
         command=ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("60.00"),
             direction=TransactionDirection.OUTGOING,
@@ -94,7 +95,7 @@ def _drive_update_manual_transaction(secure_objects: SecureObjectRepository) -> 
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
     reloaded = transaction_repository.load()
-    events = tuple(event_repository.load().for_bucket("bucket-a"))
+    events = tuple(event_repository.load().for_bucket(_BUCKET_ID))
     return _UpdateManualOutcome(created=created, updated=updated, reloaded=reloaded, events=events)
 
 
@@ -187,7 +188,7 @@ def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("75.00"),
             direction=TransactionDirection.OUTGOING,
@@ -200,7 +201,7 @@ def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
     )
 
     updated = update_manual_transaction_fields(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         patch=ManualLedgerTransactionPatch(
             description="classified row",
@@ -224,7 +225,7 @@ def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
     assert updated.transaction.category_id == "office-supplies"
     assert updated.transaction.taxable_base == Decimal("61.98")
     assert updated.transaction.edit_lineage[-1].source_command == "aeat app ledger classify"
-    events = event_repository.load().for_bucket("bucket-a")
+    events = event_repository.load().for_bucket(_BUCKET_ID)
     assert [event.event_type for event in events] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
         BucketEventType.LEDGER_TRANSACTION_UPDATED,
@@ -238,7 +239,7 @@ def test_update_manual_transaction_fields_preserves_imported_source_jurisdiction
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 7, 15),
             amount=Decimal("250.00"),
             direction=TransactionDirection.OUTGOING,
@@ -253,7 +254,7 @@ def test_update_manual_transaction_fields_preserves_imported_source_jurisdiction
     )
 
     updated = update_manual_transaction_fields(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         patch=ManualLedgerTransactionPatch(
             business_classification=BusinessClassification.BUSINESS,
@@ -280,7 +281,7 @@ def test_update_manual_transaction_fields_clears_tax_facts_for_personal_reclassi
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
@@ -300,7 +301,7 @@ def test_update_manual_transaction_fields_clears_tax_facts_for_personal_reclassi
     )
 
     updated = update_manual_transaction_fields(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.PERSONAL),
         actor="operator-C",
@@ -319,7 +320,7 @@ def test_update_manual_transaction_fields_clears_tax_facts_for_personal_reclassi
     assert updated.transaction.irpf_category is None
     assert updated.transaction.usage_ratio_id is None
     assert updated.transaction.prorrata_reference is None
-    events = event_repository.load().for_bucket("bucket-a")
+    events = event_repository.load().for_bucket(_BUCKET_ID)
     assert [event.event_type for event in events[1:]] == [
         BucketEventType.LEDGER_TRANSACTION_UPDATED,
         BucketEventType.LEDGER_TRANSACTION_CLASSIFIED,
@@ -336,7 +337,7 @@ def test_update_manual_transaction_emits_purchase_evidence_attachment_event(
     invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
@@ -351,7 +352,7 @@ def test_update_manual_transaction_emits_purchase_evidence_attachment_event(
     updated = update_manual_transaction(
         transaction_id=created.ref.transaction_id,
         command=ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
@@ -370,7 +371,7 @@ def test_update_manual_transaction_emits_purchase_evidence_attachment_event(
     assert updated.transaction.purchase_invoice_evidence_id == purchase_evidence.invoice_id
     assert updated.transaction.evidence_provenance[-1].evidence_id == purchase_evidence.invoice_id
     assert updated.transaction.evidence_provenance[-1].bucket_event_id == updated.bucket_event_ids[0]
-    events = event_repository.load().for_bucket("bucket-a")
+    events = event_repository.load().for_bucket(_BUCKET_ID)
     assert [event.event_type for event in events] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
         BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED,
@@ -390,7 +391,7 @@ def test_attach_manual_transaction_evidence_delegates_to_validated_backend_patch
     invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
@@ -403,7 +404,7 @@ def test_attach_manual_transaction_evidence_delegates_to_validated_backend_patch
     )
 
     attached = attach_manual_transaction_evidence(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         purchase_invoice_evidence_id=purchase_evidence.invoice_id,
         actor="operator-B",
@@ -415,7 +416,7 @@ def test_attach_manual_transaction_evidence_delegates_to_validated_backend_patch
 
     assert attached.transaction.purchase_invoice_evidence_id == purchase_evidence.invoice_id
     assert attached.transaction.evidence_provenance[-1].evidence_kind == "purchase_invoice_evidence"
-    events = event_repository.load().for_bucket("bucket-a")
+    events = event_repository.load().for_bucket(_BUCKET_ID)
     assert [event.event_type for event in events] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
         BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED,
@@ -431,7 +432,7 @@ def test_update_manual_transaction_mixed_edit_and_evidence_lineage_uses_evidence
     invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
@@ -446,7 +447,7 @@ def test_update_manual_transaction_mixed_edit_and_evidence_lineage_uses_evidence
     updated = update_manual_transaction(
         transaction_id=created.ref.transaction_id,
         command=ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
@@ -464,7 +465,7 @@ def test_update_manual_transaction_mixed_edit_and_evidence_lineage_uses_evidence
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 
-    events = event_repository.load().for_bucket("bucket-a")
+    events = event_repository.load().for_bucket(_BUCKET_ID)
     attach_event = next(
         event for event in events if event.event_type is BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED
     )
@@ -476,7 +477,7 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_obj
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 2),
             amount=Decimal("25.00"),
             direction=TransactionDirection.OUTGOING,
@@ -493,7 +494,7 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_obj
         update_manual_transaction(
             transaction_id=created.ref.transaction_id,
             command=ManualLedgerTransactionCommand(
-                bucket_id="bucket-a",
+                bucket_id=_BUCKET_ID,
                 booked_date=date(2026, 5, 2),
                 amount=Decimal("35.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -508,7 +509,7 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_obj
         )
 
     assert tuple(transaction_repository.load().transactions) == (created.ref.transaction_id,)
-    assert [event.event_type for event in event_repository.load().for_bucket("bucket-a")] == [
+    assert [event.event_type for event in event_repository.load().for_bucket(_BUCKET_ID)] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
     ]
 
@@ -520,7 +521,7 @@ def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_sa
     category = SpendingCategory.TELEFONIA_MOVIL
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("50.00"),
             direction=TransactionDirection.OUTGOING,
@@ -537,7 +538,7 @@ def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_sa
         update_manual_transaction(
             transaction_id=created.ref.transaction_id,
             command=ManualLedgerTransactionCommand(
-                bucket_id="bucket-a",
+                bucket_id=_BUCKET_ID,
                 booked_date=date(2026, 5, 1),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -555,7 +556,7 @@ def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_sa
 
     reloaded = transaction_repository.load()
     assert tuple(reloaded.transactions) == (created.ref.transaction_id,)
-    events = event_repository.load().for_bucket("bucket-a")
+    events = event_repository.load().for_bucket(_BUCKET_ID)
     assert [event.event_type for event in events] == [BucketEventType.LEDGER_TRANSACTION_CREATED]
 
 
@@ -563,7 +564,7 @@ def test_update_manual_transaction_rejects_provenance_only_correction(secure_obj
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("50.00"),
             direction=TransactionDirection.OUTGOING,
@@ -579,7 +580,7 @@ def test_update_manual_transaction_rejects_provenance_only_correction(secure_obj
         update_manual_transaction(
             transaction_id=created.ref.transaction_id,
             command=ManualLedgerTransactionCommand(
-                bucket_id="bucket-a",
+                bucket_id=_BUCKET_ID,
                 booked_date=date(2026, 5, 1),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -599,7 +600,7 @@ def _create_classified_transaction(
     """Create a BUSINESS transaction with typical tax fields set."""
     return create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
             amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
@@ -629,10 +630,10 @@ def test_update_manual_transaction_fields_reaffirmation_noop_returns_stored_tran
 
     transaction_repository, event_repository = _repositories(secure_objects)
     created = _create_classified_transaction(transaction_repository, event_repository)
-    event_count_before = len(list(event_repository.load().for_bucket("bucket-a")))
+    event_count_before = len(list(event_repository.load().for_bucket(_BUCKET_ID)))
 
     result = update_manual_transaction_fields(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         patch=ManualLedgerTransactionPatch(
             business_classification=BusinessClassification.BUSINESS,
@@ -653,7 +654,7 @@ def test_update_manual_transaction_fields_reaffirmation_noop_returns_stored_tran
     # unchanged and no new events must have been written.
     assert result.transaction.transaction_id == created.ref.transaction_id
     assert result.bucket_event_ids == ()
-    event_count_after = len(list(event_repository.load().for_bucket("bucket-a")))
+    event_count_after = len(list(event_repository.load().for_bucket(_BUCKET_ID)))
     assert event_count_after == event_count_before
 
 
@@ -678,7 +679,7 @@ def test_update_manual_transaction_fields_reaffirm_true_bypasses_outer_guard_but
     # Identical-command re-affirmation: outer guard skipped but inner guard fires.
     with pytest.raises(TransactionValidationError, match="must change at least one"):
         update_manual_transaction_fields(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             transaction_id=created.ref.transaction_id,
             patch=ManualLedgerTransactionPatch(
                 business_classification=BusinessClassification.BUSINESS,
@@ -709,7 +710,7 @@ def test_update_manual_transaction_fields_reaffirm_true_with_net_change_emits_ev
     created = _create_classified_transaction(transaction_repository, event_repository)
 
     result = update_manual_transaction_fields(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         patch=ManualLedgerTransactionPatch(
             business_classification=BusinessClassification.BUSINESS,
@@ -725,7 +726,7 @@ def test_update_manual_transaction_fields_reaffirm_true_with_net_change_emits_ev
 
     assert result.bucket_event_ids != ()
     assert result.transaction.notes == "reaffirmed with corrected notes"
-    events = list(event_repository.load().for_bucket("bucket-a"))
+    events = list(event_repository.load().for_bucket(_BUCKET_ID))
     new_event_types = [e.event_type for e in events[1:]]
     assert BucketEventType.LEDGER_TRANSACTION_CLASSIFIED in new_event_types
 
@@ -744,7 +745,7 @@ def test_update_manual_transaction_fields_different_classification_bypasses_noop
     created = _create_classified_transaction(transaction_repository, event_repository)
 
     result = update_manual_transaction_fields(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.PERSONAL),
         actor="operator-C",
