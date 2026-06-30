@@ -301,11 +301,11 @@ test-ratchets:
 
 # Run the unit test suite in parallel, ignoring workbook parity tests. Quiet progress; failures shown.
 test-unit:
-    @uv run --no-sync pytest -q -n {{pytest_workers}} --dist=loadfile -m unit --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity
+    @uv run --no-sync pytest -q -rs -n {{pytest_workers}} --dist=loadfile -m unit --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity
 
 # Run the unit test suite serially for reruns after a parallel failure.
 test-unit-serial:
-    @uv run --no-sync pytest -q -m unit --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity
+    @uv run --no-sync pytest -q -rs -m unit --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity
 
 # Run the integration test suite. Quiet progress; failures shown.
 test-integration:
