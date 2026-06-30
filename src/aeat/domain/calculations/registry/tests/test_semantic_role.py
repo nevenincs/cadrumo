@@ -263,6 +263,37 @@ class TestTypoTwinWarning:
             ("100", "2025", "1708", "irpf_deduccion_cantabria_nuevos_contribuyentes_extranjero"),
             ("100", "2025", "1714", "irpf_deduccion_cantabria_nuevos_contribuyentes_extranjero_generado"),
             ("100", "2025", "1717", "irpf_deduccion_cantabria_nuevos_contribuyentes_extranjero_pendiente"),
+            (
+                "100",
+                "2022",
+                "0808",
+                "irpf_deduccion_c_valenciana_acciones_participaciones_aplicado_ejercicio_anterior",
+            ),
+            (
+                "100",
+                "2022",
+                "1117",
+                "irpf_deduccion_c_valenciana_acciones_participaciones_aplicado_ejercicio",
+            ),
+            (
+                "100",
+                "2025",
+                "1185",
+                "irpf_deduccion_c_valenciana_danos_vivienda_dana_generado_pendiente_1",
+            ),
+            (
+                "100",
+                "2025",
+                "2012",
+                "irpf_deduccion_c_valenciana_aportaciones_fondos_propios_generado_pendiente_1",
+            ),
+            ("100", "2025", "2014", "irpf_deduccion_c_valenciana_danos_vivienda_dana_pendiente_1"),
+            (
+                "100",
+                "2025",
+                "2015",
+                "irpf_deduccion_c_valenciana_aportaciones_fondos_propios_pendiente_1",
+            ),
             # M303 compensacion-pendiente roles appear in both 2009-y-siguientes and
             # 2023-y-siguientes revisions; the validator requires unique occurrence for
             # intentional_singleton, so they carry semantic_role_cardinality="shared".
@@ -306,6 +337,12 @@ class TestTypoTwinWarning:
             "is_pf_mod_40_3_b2_base_tipo_4",
             "is_pf_mod_40_3_b2_porcentaje_4",
             "is_pf_mod_40_3_correcciones_impuesto_complementario",
+            "irpf_deduccion_c_valenciana_acciones_participaciones_aplicado_ejercicio_anterior",
+            "irpf_deduccion_c_valenciana_acciones_participaciones_aplicado_ejercicio",
+            "irpf_deduccion_c_valenciana_danos_vivienda_dana_generado_pendiente_1",
+            "irpf_deduccion_c_valenciana_aportaciones_fondos_propios_generado_pendiente_1",
+            "irpf_deduccion_c_valenciana_danos_vivienda_dana_pendiente_1",
+            "irpf_deduccion_c_valenciana_aportaciones_fondos_propios_pendiente_1",
             "iva_oss_union_servicios_destino_de_cuota",
             "iva_oss_union_servicios_destino_fr_cuota",
         }
