@@ -568,6 +568,10 @@ class Settings(AeatTimeoutSettings):
             "missing definition-review metadata; when False the rejection is downgraded to a warning"
         ),
     )
+    aeat_normatives_root: Path = Field(
+        default_factory=lambda: bundled_path("corpus", "normatives"),
+        description="Root directory for the bundled legal normatives corpus",
+    )
 
     # ── IVA catalogue (aeat.domain.iva) ──────────────────────────────────
     aeat_iva_catalogue_root: Path = Field(
@@ -1216,6 +1220,7 @@ class Settings(AeatTimeoutSettings):
         "aeat_audit_dir",
         "aeat_registry_parity_store_dir",
         "aeat_manuals_root",
+        "aeat_normatives_root",
         "aeat_iva_catalogue_root",
         "aeat_certificate_path",
         "aeat_llm_cache_dir",
