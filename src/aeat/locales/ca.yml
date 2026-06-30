@@ -1901,11 +1901,7 @@ cli:
           no esta suportat per crear unitats de treball en aquest CLI. Base legal:
           Llei 19/1991 art. 28 i Ordre HAC/1023/2021. Presenta la declaracio a la
           Seu de l AEAT.'
-        create_stub_modelo_refused: 'El model %{modelo} (declaració informativa sobre
-          monedes virtuals situades a l estranger) no està suportat per crear unitats
-          de treball en aquest CLI. Autoritat legal: Ordre HFP/887/2023 i RD 1065/2007
-          art. 42 quàter; el llindar informatiu és de 50.000 EUR a 31 de desembre.
-          Presenta la declaració a la Seu de l AEAT quan hi hagi obligació legal.'
+        create_stub_modelo_refused: 'El model %{modelo} (declaració informativa sobre monedes virtuals situades a l estranger) no està suportat per crear unitats de treball en aquest CLI. Autoritat legal: Ordre HFP/886/2023 i RD 1065/2007 art. 42 quàter; el llindar informatiu és de 50.000 EUR a 31 de desembre. Presenta la declaració a la Seu de l AEAT quan hi hagi obligació legal.'
         dependencies_help: Mostra dependencies d'historial de presentacions entre
           models i els bloquejos clean-state actuals per a una presentacio objectiu
         discard_help: Marcar una unitat de treball com descartada (transició d'estat

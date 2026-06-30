@@ -1937,11 +1937,7 @@ cli:
           no esta soportado para crear unidades de trabajo en este CLI. Base legal:
           Ley 19/1991 Art. 28 y Orden HAC/1023/2021. Presenta la declaracion en la
           Sede de la AEAT.'
-        create_stub_modelo_refused: 'Modelo %{modelo} (declaración informativa sobre
-          monedas virtuales situadas en el extranjero) no está soportado para crear
-          unidades de trabajo en este CLI. Autoridad legal: Orden HFP/887/2023 y RD
-          1065/2007 Art. 42 quáter; el umbral informativo es 50.000 EUR a 31 de diciembre.
-          Presenta la declaración en la Sede de la AEAT cuando exista obligación legal.'
+        create_stub_modelo_refused: 'Modelo %{modelo} (declaración informativa sobre monedas virtuales situadas en el extranjero) no está soportado para crear unidades de trabajo en este CLI. Autoridad legal: Orden HFP/886/2023 y RD 1065/2007 Art. 42 quáter; el umbral informativo es 50.000 EUR a 31 de diciembre. Presenta la declaración en la Sede de la AEAT cuando exista obligación legal.'
         dependencies_help: Muestra dependencias de historial de presentaciones entre
           modelos y los bloqueos clean-state actuales para una presentación objetivo
         discard_help: Marcar una unidad de trabajo como descartada (transición de
