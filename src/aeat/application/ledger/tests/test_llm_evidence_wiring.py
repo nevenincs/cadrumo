@@ -36,11 +36,12 @@ from .._llm_classification import _resolve_evidence, suggest_llm_classification
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _INVOICE = "Factura Acme SL material de oficina base 100,00 IVA 21,00 total 121,00"
+_BUCKET_ID = "32323232-3232-4232-8232-323232323232"
 
 
 @pytest.fixture
 def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-001") as p:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as p:
         yield p
 
 
@@ -87,14 +88,14 @@ def _add_evidence(profile: TestRuntimeProfile, tmp_path: Path) -> str:
         settings=profile.settings,
         bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
     )
-    return svc.add(bucket_id="bucket-001", source_path=_text_pdf(tmp_path, _INVOICE)).record.evidence_id
+    return svc.add(bucket_id=_BUCKET_ID, source_path=_text_pdf(tmp_path, _INVOICE)).record.evidence_id
 
 
 def test_no_linked_evidence_returns_none(profile: TestRuntimeProfile) -> None:
     txn = _transaction(evidence_id=None)
     resolved = _resolve_evidence(
         txn,
-        bucket_id="bucket-001",
+        bucket_id=_BUCKET_ID,
         settings=profile.settings,
         evidence_acknowledged=True,
     )
@@ -107,7 +108,7 @@ def test_consent_off_refuses_text_layer_evidence_read(profile: TestRuntimeProfil
     # A text-layer PDF routes to the cloud subprocess classifier; default posture
     # is cloud upload not permitted -> refuse even when acknowledged.
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
-        _resolve_evidence(txn, bucket_id="bucket-001", settings=profile.settings, evidence_acknowledged=True)
+        _resolve_evidence(txn, bucket_id=_BUCKET_ID, settings=profile.settings, evidence_acknowledged=True)
 
 
 def test_consented_read_returns_on_host_extracted_text(profile: TestRuntimeProfile, tmp_path: Path) -> None:
@@ -118,7 +119,7 @@ def test_consented_read_returns_on_host_extracted_text(profile: TestRuntimeProfi
     # Permitted deployment + per-invocation acknowledgement -> on-host text + reference.
     resolved = _resolve_evidence(
         txn,
-        bucket_id="bucket-001",
+        bucket_id=_BUCKET_ID,
         settings=consenting,
         evidence_acknowledged=True,
     )
@@ -130,7 +131,7 @@ def test_consented_read_returns_on_host_extracted_text(profile: TestRuntimeProfi
 
     # Permitted but not acknowledged this invocation -> refused.
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
-        _resolve_evidence(txn, bucket_id="bucket-001", settings=consenting, evidence_acknowledged=False)
+        _resolve_evidence(txn, bucket_id=_BUCKET_ID, settings=consenting, evidence_acknowledged=False)
 
 
 class _RecordingClassifier:
@@ -172,7 +173,7 @@ def test_no_evidence_transaction_does_not_trigger_consent_gate_and_uploads_no_ev
     "no evidence = no upload = no consent needed" invariant.
     """
     txn = _transaction(evidence_id=None)
-    repository = TransactionCatalogueRepository(bucket_id="bucket-001", objects=profile.repository)
+    repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
     repository.save(TransactionCatalogue.from_transactions((txn,)))
 
     # Default posture: cloud upload not permitted AND not acknowledged.
@@ -180,7 +181,7 @@ def test_no_evidence_transaction_does_not_trigger_consent_gate_and_uploads_no_ev
     classifier = _RecordingClassifier()
 
     suggestion = suggest_llm_classification(
-        bucket_id="bucket-001",
+        bucket_id=_BUCKET_ID,
         transaction_id=txn.transaction_id,
         provider=None,
         classifier=classifier,
