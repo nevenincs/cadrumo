@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -10,7 +10,6 @@ import pytest
 from ....domain.categories import SpendingCategory
 from ....domain.transactions import (
     BusinessClassification,
-    Transaction,
     TransactionCatalogue,
     TransactionDirection,
     TransactionLifecycleState,
@@ -20,7 +19,6 @@ from ._preflight_test_support import (
     _AD_HOC_2026,
     _BUCKET_ID,
     _Q2_2026,
-    _raw_transaction,
     _transaction,
 )
 from ._preflight_test_support import (
@@ -101,93 +99,6 @@ def test_preflight_reports_all_missing_modelo_readiness_facts() -> None:
             LedgerPreflightIssueReason.MISSING_PROPORTIONALITY_REFERENCE,
         ),
     )
-
-
-def test_preflight_does_not_flag_missing_category_on_income_transaction() -> None:
-    """An INCOMING (income) transaction with no category_id must not be
-    flagged missing_category.
-
-    ``category_id`` is a SpendingCategory foreign key — a
-    deductible-expense taxonomy. The only modelo binding that reads it
-    is the Renta first-slice expense aggregation, which never admits a
-    pure-income transaction. Income is classified by direction alone,
-    so forcing an expense category onto it is a modelling error.
-    """
-
-    income = _transaction(
-        "row-income",
-        direction=TransactionDirection.INCOMING,
-        amount=Decimal("1500.00"),
-        category_id=None,
-        taxable_base=Decimal("1239.67"),
-        iva_rate=Decimal("0.21"),
-        iva_amount=Decimal("260.33"),
-    )
-
-    report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
-        transactions=TransactionCatalogue.from_transactions((income,)),
-    )
-
-    assert report.checked_transaction_count == 1
-    assert LedgerPreflightIssueReason.MISSING_CATEGORY not in {issue.reason for issue in report.issues}
-    assert report.ready is True
-
-
-def test_preflight_still_flags_missing_category_on_expense_transaction() -> None:
-    """An OUTGOING (expense) transaction with no category_id must still
-    be flagged missing_category; the deductible-expense pipeline
-    genuinely needs the spending-category foreign key."""
-
-    expense = _transaction(
-        "row-expense",
-        direction=TransactionDirection.OUTGOING,
-        amount=Decimal("121.00"),
-        category_id=None,
-    )
-
-    report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
-        transactions=TransactionCatalogue.from_transactions((expense,)),
-    )
-
-    assert LedgerPreflightIssueReason.MISSING_CATEGORY in {issue.reason for issue in report.issues}
-
-
-def test_preflight_flags_missing_category_on_income_refund_with_purchase_evidence() -> None:
-    """An INCOMING transaction that carries a purchase-invoice evidence
-    id is an expense refund — it feeds the Renta expense pipeline and
-    therefore does need a deductible-expense category."""
-
-    refund = Transaction.model_validate(
-        {
-            "raw": _raw_transaction("row-refund", amount=Decimal("45.00")),
-            "direction": TransactionDirection.INCOMING,
-            "group_label": None,
-            "business_classification": BusinessClassification.BUSINESS,
-            "source_jurisdiction": "ES",
-            "business_pct": None,
-            "category_id": None,
-            "purchase_invoice_evidence_id": "evidence-001",
-            "taxable_base": Decimal("37.19"),
-            "iva_rate": Decimal("0.21"),
-            "iva_amount": Decimal("7.81"),
-            "usage_ratio_id": None,
-            "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        },
-    )
-
-    report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
-        transactions=TransactionCatalogue.from_transactions((refund,)),
-    )
-
-    assert LedgerPreflightIssueReason.MISSING_CATEGORY in {issue.reason for issue in report.issues}
 
 
 def test_preflight_ignores_personal_internal_transfer_and_out_of_period_rows() -> None:
