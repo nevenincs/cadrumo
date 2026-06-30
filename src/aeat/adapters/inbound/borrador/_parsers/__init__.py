@@ -7,9 +7,8 @@ extractors depend on one local text-extraction primitive instead of on
 ``pdfplumber`` directly.
 
 See Also:
-    :func:`extract_pages_text`
-        Active per-page text extraction primitive consumed by the extractor
-        registry.
+    :func:`~aeat.adapters.inbound.borrador._parsers._pdfplumber_backend.extract_pages_text`
+        Active per-page text extraction primitive re-exported by this facade.
     :mod:`aeat.adapters.inbound.pdf`
         Shared inbound-PDF helper package used by this backend.
 """

@@ -49,9 +49,8 @@ _CSV_RE = re.compile(
 class Modelo100ObservedV2025Extractor:
     """Concrete Modelo 100 observed-value extractor implementation.
 
-    Reads the printed text via
-    :func:`~aeat.adapters.inbound.borrador._parsers.extract_pages_text`, locates
-    printed casilla rows, and returns a strict
+    Reads the printed text via the backend facade's ``extract_pages_text``
+    primitive, locates printed casilla rows, and returns a strict
     :class:`~aeat.adapters.inbound.borrador._schema.BorradorObservation`.
 
     Attributes:

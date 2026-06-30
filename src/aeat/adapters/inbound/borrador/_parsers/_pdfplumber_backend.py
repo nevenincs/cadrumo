@@ -1,8 +1,9 @@
 """Pdfplumber-backed page text extraction for Modelo 100 PDFs.
 
-Implements the single :func:`extract_pages_text` primitive that the
-borrador extractors consume. The function isolates the pdfplumber
-dependency so other backends (e.g. pdfminer, OCR) can be swapped in
+Implements the single
+:func:`~aeat.adapters.inbound.borrador._parsers._pdfplumber_backend.extract_pages_text`
+primitive that the borrador extractors consume. The function isolates the
+pdfplumber dependency so other backends (e.g. pdfminer, OCR) can be swapped in
 without touching extractor code.
 
 The backend delegates to

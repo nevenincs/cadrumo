@@ -1,7 +1,7 @@
 """Per-año Modelo 100 observed-value extractor registry.
 
 Registers the concrete extractor classes (one per tax year) and exposes
-:func:`get_extractor` for the public
+:func:`~aeat.adapters.inbound.borrador._extractors.get_extractor` for the public
 :func:`~aeat.adapters.inbound.borrador.parse_borrador` entry point.
 
 The observed-value extraction logic is year-agnostic: the AEAT Renta Web Open
