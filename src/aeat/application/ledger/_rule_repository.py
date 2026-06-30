@@ -1,7 +1,19 @@
 """Profile-scoped encrypted repository for ledger classification rules.
 
-Records are stored at the :class:`SensitivityClass` declared by the
-``LEDGER_CLASSIFICATION_RULES_NAMESPACE`` and are encrypted at rest.
+:class:`LedgerClassificationRule` records are stored through
+:class:`SecureBoundRepository` at the :class:`SensitivityClass` declared by
+:data:`aeat.adapters.persistence.storage.LEDGER_CLASSIFICATION_RULES_NAMESPACE`.
+The bound repository serialises each rule through an :class:`Envelope`, so the
+stored rule pattern, actor, category, and classification stay encrypted at rest.
+
+See Also:
+    :class:`LedgerClassificationRule`
+        Content-addressed payload model persisted by this repository.
+    :func:`aeat.application.ledger.add_classification_rule`
+        Application entry point that creates and saves a rule.
+    :func:`aeat.application.ledger.apply_classification_rules`
+        Application entry point that evaluates persisted rules over active
+        ledger transactions.
 """
 
 from __future__ import annotations
@@ -16,13 +28,11 @@ from ...domain.transactions._classification_rule import LedgerClassificationRule
 
 
 class LedgerClassificationRuleRepository(SecureBoundRepository[LedgerClassificationRule]):
-    """Encrypted profile-local store of ledger classification rules.
+    """Encrypted profile-local store of :class:`LedgerClassificationRule` payloads.
 
     Rules are sorted by ``(priority, created_at)`` ascending so that
     lower-priority-number rules (higher precedence) are evaluated first.
     Among same-priority rules the earliest-created rule wins.
-
-    Follows the same pattern as ``IvaCompensationHistoryRepository``.
     """
 
     namespace: ClassVar[str] = LEDGER_CLASSIFICATION_RULES_NAMESPACE.namespace
