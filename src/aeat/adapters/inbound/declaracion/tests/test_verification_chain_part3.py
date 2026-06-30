@@ -212,6 +212,12 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
                 # Cataluña CCAA code (corpus PDF casilla 70 = '09').
                 "renta-2021-profile-tax-residence-ccaa": "cataluna",
             },
+            relation_values={
+                # The sanitised corpus has no prior-period M130/M131 evidence; keep
+                # pagos-fraccionados relations explicit on the relation channel.
+                "renta-2021-rel-130-pagos-fraccionados": Decimal("0"),
+                "renta-2021-rel-131-pagos-fraccionados": Decimal("0"),
+            },
         )
     except RegistryValidationError as exc:
         pytest.fail(
