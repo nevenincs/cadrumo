@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from ....core.paths import PROJECT_ROOT
+from ....tests._inventory import leaf_name
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -88,14 +89,6 @@ def _registry_query_service_call_count(path: Path) -> int:
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "RegistryQueryService":
             count += 1
     return count
-
-
-def _call_name(node: ast.Call) -> str | None:
-    if isinstance(node.func, ast.Name):
-        return node.func.id
-    if isinstance(node.func, ast.Attribute):
-        return node.func.attr
-    return None
 
 
 def _raw_id_regex_lines(path: Path) -> tuple[int, ...]:
@@ -203,7 +196,7 @@ def test_extracted_modelo_cli_modules_do_not_reintroduce_legacy_selector_calls()
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
             if isinstance(node, ast.Call):
-                name = _call_name(node)
+                name = leaf_name(node.func)
                 if name in _LEGACY_SELECTOR_CALL_NAMES:
                     offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}:{node.lineno}: {name}")
 
@@ -225,7 +218,7 @@ def test_modelo_cli_uses_centralized_operator_addressing_facades() -> None:
                             f"{path.relative_to(PROJECT_ROOT).as_posix()}:{node.lineno}: import {alias.name}",
                         )
             if isinstance(node, ast.Call):
-                name = _call_name(node)
+                name = leaf_name(node.func)
                 if name in _CENTRALIZED_ADDRESSING_FORBIDDEN_NAMES:
                     offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}:{node.lineno}: {name}")
 

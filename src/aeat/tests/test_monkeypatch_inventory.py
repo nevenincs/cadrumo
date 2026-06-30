@@ -15,9 +15,8 @@ from typing import NamedTuple
 import pytest
 
 from ._inventory import (
+    all_test_control_modules,
     ast_for_path,
-    discover_test_control_modules,
-    project_test_control_modules,
     qualified_name,
     repo_relative,
 )
@@ -228,7 +227,7 @@ def _canonical_patch_name(
 def patch_inventory() -> list[str]:
     """Return monkeypatch machinery violations from deterministic test controls."""
     violations: list[str] = []
-    for module_path in sorted(set(discover_test_control_modules()) | set(project_test_control_modules())):
+    for module_path in all_test_control_modules():
         relative = repo_relative(module_path)
         tree = ast_for_path(module_path)
         if tree is None:
@@ -358,5 +357,5 @@ def test_context_factory():
 
 def test_discovery_found_modules() -> None:
     """Guardrail: the discovery walk must find at least one test module."""
-    modules = sorted(set(discover_test_control_modules()) | set(project_test_control_modules()))
+    modules = all_test_control_modules()
     assert modules, "No test modules discovered — check glob roots."

@@ -4,7 +4,7 @@ Each class is a strict
 :class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass registered with
 :func:`~aeat.entrypoints.cli._schemas.register_schema` so the JSON-contract gate
 enumerates the surface. Field sets match the payload dicts constructed in
-:mod:`aeat.entrypoints.cli._config._capabilities_cli` and enter
+:mod:`~aeat.entrypoints.cli._config._capabilities_cli` and enter
 :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
 :func:`~aeat.entrypoints.cli._common._emit_envelope`.
 

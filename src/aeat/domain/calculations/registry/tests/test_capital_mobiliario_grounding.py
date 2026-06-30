@@ -13,13 +13,11 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import bundled_path
-from .._loader import load_registry_tree
 from .._temporal import select_revision
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _ACTIVIDADES_CHAPTER = frozenset(
     {
         "ley-35-2006:art-27",
@@ -32,10 +30,13 @@ _ACTIVIDADES_CHAPTER = frozenset(
 _CAPITAL_MOBILIARIO_CHAPTER = frozenset({"ley-35-2006:art-25", "ley-35-2006:art-26"})
 
 
+def _m100_revision(filing_year: int):
+    modelo, _ = _committed_modelo("100")
+    return select_revision(modelo, filing_year=filing_year, period="0A")
+
+
 def _m100_capital_mobiliario_casillas(filing_year: int):
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
-    modelos_by_id = {m.id: m for m in modelos}
-    rev = select_revision(modelos_by_id["100"], filing_year=filing_year, period="0A")
+    rev = _m100_revision(filing_year)
     return [c for c in rev.casillas if "rdto_capital_mobiliario" in tuple(c.section)]
 
 
@@ -72,9 +73,7 @@ _RETENCIONES_PAGOS = ("0591", "0604", "0609")
 
 
 def _m100_casilla(filing_year: int, cid: str):
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
-    modelos_by_id = {m.id: m for m in modelos}
-    rev = select_revision(modelos_by_id["100"], filing_year=filing_year, period="0A")
+    rev = _m100_revision(filing_year)
     return {c.id: c for c in rev.casillas}.get(cid)
 
 

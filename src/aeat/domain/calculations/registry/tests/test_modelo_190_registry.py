@@ -16,17 +16,16 @@ from .. import (
     WithholdingObservation,
     build_snapshot,
     calculate_registry_snapshot,
-    load_registry_tree,
     relation_source_requirements,
     resolve_bound_inputs_by_casilla_id,
     resolve_relation_values_from_observations,
     resolve_withholding_binding_values,
     validated_casilla_id,
 )
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _WWW6_HOST = aeat_host("www6")
 _DECL_TOTAL_PERCEPCIONES_CASILLA: CasillaId = validated_casilla_id(
     "decl.total-percepciones",
@@ -55,12 +54,6 @@ _RETIRED_M111_PERCEPCIONES_SOURCE_CASILLAS: frozenset[CasillaId] = frozenset(
 _M190_PERCEPCIONES_BINDING = "modelo-190-percepciones-anual"
 
 
-def _load_modelo(modelo_id: str):
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == modelo_id)
-    return modelo, catalogues
-
-
 def _withholding_observation(source_id: str, nif: str, clave: str) -> WithholdingObservation:
     return WithholdingObservation(
         source_id=source_id,
@@ -73,7 +66,7 @@ def _withholding_observation(source_id: str, nif: str, clave: str) -> Withholdin
 
 
 def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> None:
-    modelo, catalogues = _load_modelo("190")
+    modelo, catalogues = _committed_modelo("190")
 
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
     snapshot = build_snapshot(
@@ -106,7 +99,7 @@ def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> 
 
 
 def test_modelo_190_filed_declarations_read_allows_live_register_host() -> None:
-    modelo, _ = _load_modelo("190")
+    modelo, _ = _committed_modelo("190")
     revision = modelo.revisions["2024-y-siguientes"]
     filed_read = next(ref for ref in revision.live_cross_references if ref.id == "modelo-190-filed-declarations-read")
 
@@ -119,7 +112,7 @@ def test_modelo_190_filed_declarations_read_allows_live_register_host() -> None:
 
 
 def test_modelo_190_relations_resolve_against_modelo_111_registry() -> None:
-    modelo, catalogues = _load_modelo("190")
+    modelo, catalogues = _committed_modelo("190")
     snapshot = build_snapshot(
         modelo,
         catalogues,
@@ -127,7 +120,7 @@ def test_modelo_190_relations_resolve_against_modelo_111_registry() -> None:
         filing_year=2025,
         period="0A",
     )
-    modelo_111, _ = _load_modelo("111")
+    modelo_111, _ = _committed_modelo("111")
     snapshot_111 = build_snapshot(
         modelo_111,
         catalogues,
@@ -146,7 +139,7 @@ def test_modelo_190_relations_resolve_against_modelo_111_registry() -> None:
 
 
 def test_modelo_190_calculation_aggregates_modelo_111_quarterly_observations() -> None:
-    modelo, catalogues = _load_modelo("190")
+    modelo, catalogues = _committed_modelo("190")
     snapshot = build_snapshot(
         modelo,
         catalogues,

@@ -8,9 +8,9 @@ command JSON-contract surface carried by
 :func:`~aeat.entrypoints.cli._common._emit_envelope`. These schemas are the
 CLI projection of the secure, profile-local rule engine: persisted
 :class:`~aeat.domain.transactions.LedgerClassificationRule` records are listed
-and added through :mod:`aeat.entrypoints.cli._ledger_rules_cli`, while
+and added through :mod:`~aeat.entrypoints.cli._ledger_rules_cli`, while
 :func:`~aeat.application.ledger.apply_classification_rules` owns live mutation
-semantics. The parent :mod:`aeat.entrypoints.cli._ledger_payloads` module
+semantics. The parent :mod:`~aeat.entrypoints.cli._ledger_payloads` module
 re-exports these split schemas so existing ledger command emitters keep one
 payload import surface.
 """
@@ -24,7 +24,10 @@ class ClassificationRulePayload(OutputSchema):
     """One persisted ledger classification rule row.
 
     Mirrors :class:`~aeat.domain.transactions.LedgerClassificationRule` as
-    emitted by :class:`RuleAddResult` and nested in :class:`RuleListResult`.
+    emitted by
+    :class:`~aeat.entrypoints.cli._ledger_rule_payloads.RuleAddResult` and
+    nested in
+    :class:`~aeat.entrypoints.cli._ledger_rule_payloads.RuleListResult`.
     ``rule_id`` is the content-addressed id, ``description_pattern`` is the
     regex evaluated against transaction descriptions, and lower ``priority``
     values run before higher ones.
@@ -71,7 +74,7 @@ class RuleApplyMatchPayload(OutputSchema):
     :class:`~aeat.domain.transactions.LedgerClassificationRule` match selection
     as :func:`~aeat.application.ledger.apply_classification_rules`, but remains
     evidence only: no transaction state or bucket event is written for these
-    :class:`RuleApplyResult` rows.
+    :class:`~aeat.entrypoints.cli._ledger_rule_payloads.RuleApplyResult` rows.
     """
 
     transaction_id: str
@@ -83,7 +86,9 @@ class RuleApplyMatchPayload(OutputSchema):
 class RuleApplyAppliedPayload(OutputSchema):
     """One transaction classified by a live ``ledger rule apply`` pass.
 
-    Nested in :class:`RuleApplyResult` and mirrors
+    Nested in
+    :class:`~aeat.entrypoints.cli._ledger_rule_payloads.RuleApplyResult` and
+    mirrors
     :class:`~aeat.application.ledger.ApplyRulesAppliedRow`: the transaction id,
     the matched content-addressed rule id, and the classification persisted
     through the shared manual transaction mutation path with ``rule:<rule_id>``
@@ -125,7 +130,9 @@ class RuleApplyResult(OutputSchema):
 class LLMProviderAvailabilityPayload(OutputSchema):
     """One subprocess LLM provider's PATH availability.
 
-    Nested in :class:`LedgerProvidersResult` and mirrors
+    Nested in
+    :class:`~aeat.entrypoints.cli._ledger_rule_payloads.LedgerProvidersResult`
+    and mirrors
     :class:`~aeat.application.ledger.LLMProviderAvailability` from
     :func:`~aeat.application.ledger.available_llm_providers`.  The probe uses
     PATH lookup only; it does not spawn the provider CLI or send transaction
@@ -141,7 +148,9 @@ class LLMProviderAvailabilityPayload(OutputSchema):
 class VisionProviderPayload(OutputSchema):
     """The on-host Ollama vision model's availability.
 
-    Nested in :class:`LedgerProvidersResult` and carries the
+    Nested in
+    :class:`~aeat.entrypoints.cli._ledger_rule_payloads.LedgerProvidersResult`
+    and carries the
     :class:`~aeat.application.provisioning.DependencyStatus` fields surfaced
     beside subprocess LLM providers, including operator remediation text when
     the local model or service is unavailable.

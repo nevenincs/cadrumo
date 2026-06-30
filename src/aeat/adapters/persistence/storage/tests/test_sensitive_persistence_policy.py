@@ -12,6 +12,7 @@ import pytest
 from .....tests._inventory import (
     SRC_AEAT,
     ast_for_path,
+    leaf_name,
     non_test_package_python_files,
     non_test_python_files_under,
     repo_relative,
@@ -293,15 +294,6 @@ def _iter_production_python_files() -> list[Path]:
     return list(non_test_package_python_files(include_data=True))
 
 
-def _call_name(node: ast.Call) -> str | None:
-    target = node.func
-    if isinstance(target, ast.Attribute):
-        return target.attr
-    if isinstance(target, ast.Name):
-        return target.id
-    return None
-
-
 def _dotted_call_name(node: ast.Call) -> str | None:
     target = node.func
     parts: list[str] = []
@@ -311,7 +303,7 @@ def _dotted_call_name(node: ast.Call) -> str | None:
     if isinstance(target, ast.Name):
         parts.append(target.id)
     if not parts:
-        return _call_name(node)
+        return leaf_name(node.func) or None
     return ".".join(reversed(parts))
 
 
@@ -324,7 +316,7 @@ def _is_write_mode_arg(node: ast.AST | None) -> bool:
 
 
 def _calls_file_open_for_write(node: ast.Call) -> bool:
-    name = _call_name(node)
+    name = leaf_name(node.func)
     if name not in {"open"}:
         return False
     mode_arg: ast.AST | None = None
@@ -360,7 +352,7 @@ class _FileWriteVisitor(ast.NodeVisitor):
     @override
     def visit_Call(self, node: ast.Call) -> None:
         dotted = _dotted_call_name(node)
-        name = _call_name(node)
+        name = leaf_name(node.func)
         if (
             name in {"write_text", "write_bytes", "NamedTemporaryFile", "mkstemp"}
             or _calls_file_open_for_write(node)
@@ -424,7 +416,7 @@ def _sensitive_surface_violations(path: Path) -> list[str]:
 
 def _sensitive_call_violations(node: ast.Call, *, path: Path, relative: str) -> list[str]:
     """Return forbidden-call offences for one AST Call node, honouring the allowlist."""
-    name = _call_name(node)
+    name = leaf_name(node.func)
     key = (relative, _function_for_line(path, node.lineno), _dotted_call_name(node) or name or "<unknown>")
     if key in _SENSITIVE_DIRECT_WRITE_EXCEPTIONS:
         return []

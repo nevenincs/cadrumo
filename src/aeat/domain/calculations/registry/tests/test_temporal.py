@@ -16,22 +16,21 @@ from datetime import date
 
 import pytest
 
-from .....core.resources import bundled_path
 from .._errors import (
     AmbiguousRevisionSelectionError,
     NoRevisionForPeriodError,
     RegistrySnapshotError,
 )
-from .._loader import load_registry_tree
 from .._schema import ModeloDefinition
 from .._temporal import select_revision
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _committed_modelo_100() -> ModeloDefinition:
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    return next(modelo for modelo in modelos if modelo.id == "100")
+    modelo, _catalogues = _committed_modelo("100")
+    return modelo
 
 
 def test_select_revision_returns_the_matching_year_revision() -> None:

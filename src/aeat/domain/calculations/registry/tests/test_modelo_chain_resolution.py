@@ -6,17 +6,15 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.resources import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .. import CasillaId, validated_casilla_id
 from .._bindings import RegistryModeloObservation
-from .._loader import load_registry_tree
 from .._relations import resolve_relation_values_from_observations
 from .._schema import ModeloDefinition, ModeloRevision
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _M111_RETENCIONES_PERIODO_CASILLA: CasillaId = validated_casilla_id(
     "01",
     surface="test_modelo_chain_resolution M111 retenciones periodo casilla",
@@ -24,8 +22,8 @@ _M111_RETENCIONES_PERIODO_CASILLA: CasillaId = validated_casilla_id(
 
 
 def _modelo(modelo_id: str) -> ModeloDefinition:
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
-    return next(m for m in modelos if m.id == modelo_id)
+    modelo, _ = _committed_modelo(modelo_id)
+    return modelo
 
 
 def _revision(modelo_id: str, revision_id: str) -> ModeloRevision:

@@ -18,21 +18,20 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import RegistryCatalogues, RegistryValidationError
-from .._loader import load_registry_tree
 from .._schema import ExtractionProfileDefinition, ModeloDefinition
 from .._validate import RegistryValidator
 from ._gate_support import catalogues_for_m130_gate_tests
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _DATA_ROOT = bundled_path()
 
 
 @cache
 def _committed_130() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    return next(m for m in modelos if m.id == "130"), catalogues_for_m130_gate_tests(catalogues)
+    modelo, catalogues = _committed_modelo("130")
+    return modelo, catalogues_for_m130_gate_tests(catalogues)
 
 
 def _committed_profile(

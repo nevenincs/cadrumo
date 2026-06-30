@@ -11,7 +11,7 @@ from pydantic import ValidationError
 
 from .....core.classification import SensitivityClass
 from .....core.errors import ERROR_REGISTRY, build_error_envelope
-from .....tests._inventory import ast_for_path, package_python_files, repo_relative
+from .....tests._inventory import ast_for_path, leaf_name, package_python_files, repo_relative
 from .. import (
     AEAT_BROWSER_SESSION_NAMESPACE,
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
@@ -735,7 +735,7 @@ def _resolve_namespace_value(node: ast.expr, bindings: dict[str, str]) -> str | 
 
 def _namespace_values_from_call(node: ast.Call, bindings: dict[str, str]) -> set[str]:
     values: set[str] = set()
-    call_name = _call_name(node.func)
+    call_name = leaf_name(node.func)
     if call_name in _SECURE_OBJECT_METHODS:
         for keyword in node.keywords:
             if keyword.arg != "namespace":
@@ -771,11 +771,3 @@ def _is_namespace_target_name(name: str) -> bool:
 
 def _is_namespace_constant_name(name: str) -> bool:
     return name == "namespace" or "NAMESPACE" in name
-
-
-def _call_name(node: ast.AST) -> str:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return node.attr
-    return ""

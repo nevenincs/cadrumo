@@ -14,9 +14,9 @@ from .._errors import RegistryValidationError
 from .._filed_state import RegistryFiledStateComparison, compare_calculation_to_filed_observation
 from .._formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from .._ids import CasillaId, validated_casilla_id
-from .._loader import load_registry_tree
 from .._schema import RegistrySnapshot
 from .._snapshot import build_snapshot
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -54,8 +54,7 @@ _MODELO_130_COMPUTED_CASILLA_IDS: tuple[CasillaId, ...] = (
 
 
 def _modelo_130_snapshot() -> RegistrySnapshot:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(item for item in modelos if item.id == "130")
+    modelo, catalogues = _committed_modelo("130")
     return build_snapshot(
         modelo,
         catalogues,

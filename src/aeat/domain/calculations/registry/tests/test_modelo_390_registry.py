@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from functools import lru_cache
 
 import pytest
 
@@ -16,9 +15,9 @@ from .. import (
     RegistryValidator,
     binding_source_casilla_ids,
     build_snapshot,
-    load_registry_tree,
     validated_casilla_id,
 )
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -62,11 +61,8 @@ _M390_EXTRACTION_PROFILE_TARGET_LEGAL_REFS = frozenset(
 )
 
 
-@lru_cache(maxsize=1)
 def _load_modelo_390() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(m for m in modelos if m.id == "390")
-    return modelo, catalogues
+    return _committed_modelo("390")
 
 
 def test_modelo_390_validator_accepts_committed_definition() -> None:

@@ -9,7 +9,7 @@ from typing import NamedTuple
 
 import pytest
 
-from .....tests._inventory import ast_for_path, package_python_files, repo_relative
+from .....tests._inventory import ast_for_path, leaf_name, package_python_files, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -141,7 +141,7 @@ def _iter_test_modules() -> tuple[Path, ...]:
 
 def _uses_ephemeral_master_key(tree: ast.AST) -> bool:
     return any(
-        isinstance(node, ast.Call) and _call_name(node.func) == "EphemeralMasterKeyProvider" for node in ast.walk(tree)
+        isinstance(node, ast.Call) and leaf_name(node.func) == "EphemeralMasterKeyProvider" for node in ast.walk(tree)
     )
 
 
@@ -149,7 +149,7 @@ def _operates_database_storage(tree: ast.AST) -> bool:
     return bool(_default_sql_backed_constructor_calls(tree)) or any(
         isinstance(node, ast.Call)
         and (
-            _call_name(node.func)
+            leaf_name(node.func)
             in {
                 "create_engine_from_settings",
                 "get_engine",
@@ -167,7 +167,7 @@ def _default_sql_backed_constructor_calls(tree: ast.AST) -> tuple[tuple[int, str
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
             continue
-        constructor = _call_name(node.func)
+        constructor = leaf_name(node.func)
         if constructor not in _DEFAULT_SQL_BACKED_CONSTRUCTORS:
             continue
         if _has_explicit_repository_injection(node):
@@ -176,18 +176,10 @@ def _default_sql_backed_constructor_calls(tree: ast.AST) -> tuple[tuple[int, str
     return tuple(calls)
 
 
-def _call_name(node: ast.expr) -> str:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return node.attr
-    return ""
-
-
 def _has_explicit_repository_injection(node: ast.Call) -> bool:
     if node.args:
         return True
-    if _call_name(node.func) == "SecureObjectRepository":
+    if leaf_name(node.func) == "SecureObjectRepository":
         return bool(node.keywords)
     return any(keyword.arg in _INJECTION_KEYWORDS for keyword in node.keywords if keyword.arg is not None)
 
@@ -210,7 +202,7 @@ def _is_autouse_pytest_fixture(node: ast.FunctionDef | ast.AsyncFunctionDef) -> 
     for decorator in node.decorator_list:
         if not isinstance(decorator, ast.Call):
             continue
-        if _call_name(decorator.func) != "fixture":
+        if leaf_name(decorator.func) != "fixture":
             continue
         if any(
             keyword.arg == "autouse" and isinstance(keyword.value, ast.Constant) and keyword.value.value is True
@@ -253,7 +245,7 @@ def _call_overrides_temp_database_or_storage_settings(
 ) -> bool:
     if not isinstance(node, ast.Call):
         return False
-    if _call_name(node.func) != "override_settings":
+    if leaf_name(node.func) != "override_settings":
         return False
     for keyword in node.keywords:
         rendered = ast.unparse(keyword.value)
@@ -275,7 +267,7 @@ def _sets_temp_storage_root_env(node: ast.FunctionDef | ast.AsyncFunctionDef) ->
 def _call_sets_temp_storage_root_env(node: ast.AST) -> bool:
     if not isinstance(node, ast.Call):
         return False
-    if _call_name(node.func) != "setenv":
+    if leaf_name(node.func) != "setenv":
         return False
     if len(node.args) < 2:
         return False
@@ -291,7 +283,7 @@ def _sets_temp_database_url_env(node: ast.FunctionDef | ast.AsyncFunctionDef) ->
 def _call_sets_temp_database_url_env(node: ast.AST) -> bool:
     if not isinstance(node, ast.Call):
         return False
-    if _call_name(node.func) != "setenv":
+    if leaf_name(node.func) != "setenv":
         return False
     if len(node.args) < 2:
         return False
@@ -303,7 +295,7 @@ def _call_sets_temp_database_url_env(node: ast.AST) -> bool:
 
 def _disposes_engine_around_fixture(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
     dispose_calls = sum(
-        1 for child in ast.walk(node) if isinstance(child, ast.Call) and _call_name(child.func) == "dispose_engine"
+        1 for child in ast.walk(node) if isinstance(child, ast.Call) and leaf_name(child.func) == "dispose_engine"
     )
     has_yield = any(isinstance(child, (ast.Yield, ast.YieldFrom)) for child in ast.walk(node))
     return has_yield and dispose_calls >= 2
@@ -319,7 +311,7 @@ def _has_literal_passphrase_callback(node: ast.Call) -> bool:
 
 
 def _sets_literal_secret_passphrase_env(node: ast.Call) -> bool:
-    if _call_name(node.func) not in {"setenv", "putenv"}:
+    if leaf_name(node.func) not in {"setenv", "putenv"}:
         return False
     if len(node.args) < 2:
         return False
@@ -327,7 +319,7 @@ def _sets_literal_secret_passphrase_env(node: ast.Call) -> bool:
 
 
 def _overrides_literal_secret_passphrase(node: ast.Call) -> bool:
-    if _call_name(node.func) != "override_settings":
+    if leaf_name(node.func) != "override_settings":
         return False
     for keyword in node.keywords:
         if keyword.arg != "aeat_secret_passphrase":
@@ -336,7 +328,7 @@ def _overrides_literal_secret_passphrase(node: ast.Call) -> bool:
             return True
         if (
             isinstance(keyword.value, ast.Call)
-            and _call_name(keyword.value.func) == "SecretStr"
+            and leaf_name(keyword.value.func) == "SecretStr"
             and keyword.value.args
             and _literal_nonblank_string(keyword.value.args[0]) is not None
         ):

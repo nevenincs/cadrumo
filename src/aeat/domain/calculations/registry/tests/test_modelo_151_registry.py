@@ -5,8 +5,9 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import bundled_path
-from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, load_registry_tree
+from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator
 from .._legal import verify_legal_catalogue
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -14,9 +15,7 @@ _M151_FORM_ORDER_REF = "orden-eha-2887-2008:modelo-151"
 
 
 def _load_modelo_151() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(m for m in modelos if m.id == "151")
-    return modelo, catalogues
+    return _committed_modelo("151")
 
 
 def test_modelo_151_validator_accepts_committed_definition() -> None:

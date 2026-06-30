@@ -14,7 +14,6 @@ from ......core.errors import ERROR_REGISTRY
 from ......core.resources import bundled_path
 from ..._errors import RegistryValidationError
 from ..._ids import CasillaId, validated_casilla_id
-from ..._loader import load_registry_tree
 from ..._parity_tapes import ParityScenario
 from ..._schema import RegistrySnapshot
 from ..._snapshot import build_snapshot
@@ -34,6 +33,7 @@ from ..._workbook_parity import (
     scan_workbook,
     verify_workbook_backend,
 )
+from .._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -54,8 +54,7 @@ def _write_formula_workbook(path: Path) -> None:
 
 
 def _committed_modelo_130_snapshot() -> RegistrySnapshot:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(item for item in modelos if item.id == "130")
+    modelo, catalogues = _committed_modelo("130")
     return build_snapshot(
         modelo,
         catalogues,

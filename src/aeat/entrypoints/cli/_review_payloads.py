@@ -66,7 +66,9 @@ class ReviewQueueResult(OutputSchema):
 class ReviewViewResult(OutputSchema):
     """JSON envelope for ``aeat review view <item_id>``.
 
-    Carries the single :class:`ReviewQueueRowPayload` returned by
+    Carries the single
+    :class:`~aeat.entrypoints.cli._review_payloads.ReviewQueueRowPayload`
+    returned by
     :func:`~aeat.application.review.project_review_item`; not-found items are
     refused before this envelope is emitted.
     """

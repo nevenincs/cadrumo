@@ -834,22 +834,35 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         casilla_inputs=casilla_inputs or {},
         bound_inputs=backend_source_inputs,
     )
+    caller_binding_values = binding_values or {}
+    caller_relation_values_from_bindings = {
+        relation.id: _calculated_decimal(caller_binding_values[relation.target_binding])
+        for relation in snapshot.revision.relations
+        if relation.target_binding in caller_binding_values
+    }
     # Feed the relation-resolver's resolved relation_values onto the engine's
     # first-class relation channel so computed casillas that reference
-    # ``{ relation = ... }`` operands fire. A caller --relation override still
-    # wins (precedence ladder step 4, D2 carve-out for relation carries): an
-    # operator override of an auto-carried relation value is legitimate.
-    merged_relation_values = {**source_resolution.relation_values, **dict(relation_values or {})}
+    # ``{ relation = ... }`` operands fire. A caller --binding override of a
+    # relation's target binding also resolves that relation for formula operands;
+    # this keeps the public binding override contract aligned with relation-only
+    # formulas such as M100 0604. A caller --relation override remains the most
+    # explicit value and wins last.
+    merged_relation_values = {
+        **source_resolution.relation_values,
+        **caller_relation_values_from_bindings,
+        **dict(relation_values or {}),
+    }
     caller_relation_ids = frozenset((relation_values or {}).keys())
+    caller_resolved_relation_ids = caller_relation_ids | frozenset(caller_relation_values_from_bindings)
     unresolved_relation_ids = tuple(
         relation_id
         for relation_id in source_resolution.unresolved_relation_ids
-        if relation_id not in caller_relation_ids
+        if relation_id not in caller_resolved_relation_ids
     )
     # A caller --binding override of an expected-but-missing binding RESOLVES it,
     # so drop it from the unresolved set and its advisory (mirrors the relation
     # caller-override carve-out above).
-    caller_binding_ids = frozenset((binding_values or {}).keys())
+    caller_binding_ids = frozenset(caller_binding_values)
     unresolved_binding_ids = tuple(
         binding_id
         for binding_id in source_resolution.unresolved_binding_ids
@@ -858,7 +871,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     source_diagnostics = tuple(
         diagnostic
         for diagnostic in source_resolution.diagnostics
-        if (diagnostic.relation_id is None or diagnostic.relation_id not in caller_relation_ids)
+        if (diagnostic.relation_id is None or diagnostic.relation_id not in caller_resolved_relation_ids)
         and (
             diagnostic.binding_id is None
             or (

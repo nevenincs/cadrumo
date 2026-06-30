@@ -29,7 +29,7 @@ from typing import NamedTuple
 
 import pytest
 
-from ._inventory import ast_for_path, discover_test_control_modules, project_test_control_modules, repo_relative
+from ._inventory import all_test_control_modules, ast_for_path, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -215,7 +215,7 @@ def test_control_inventory() -> _TestControlInventoryViolations:
     test_double_bindings: list[str] = []
     test_double_definitions: list[str] = []
 
-    for module_path in sorted(set(discover_test_control_modules()) | set(project_test_control_modules())):
+    for module_path in all_test_control_modules():
         relative = repo_relative(module_path)
         tree = ast_for_path(module_path)
         if tree is None:
@@ -333,5 +333,5 @@ def test_no_fake_stub_or_dummy_definitions(
 
 def test_discovery_found_modules() -> None:
     """Guardrail: the discovery walk must find at least one test module."""
-    modules = sorted(set(discover_test_control_modules()) | set(project_test_control_modules()))
+    modules = all_test_control_modules()
     assert modules, "No test modules discovered — check glob roots."

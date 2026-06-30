@@ -8,9 +8,10 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
-from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
+from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot
 from .._errors import NoRevisionForPeriodError
 from .._legal import verify_legal_catalogue
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -18,9 +19,7 @@ _M210_FORM_ORDER_REF = "orden-eha-3316-2010:art-1"
 
 
 def _load_modelo_210() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(m for m in modelos if m.id == "210")
-    return modelo, catalogues
+    return _committed_modelo("210")
 
 
 def _trlirnr_corpus_paragraph(anchor: str) -> str:

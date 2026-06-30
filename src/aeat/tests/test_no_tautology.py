@@ -33,7 +33,7 @@ from pathlib import Path
 import pytest
 
 from ..core.logging import get_logger
-from ._inventory import ast_for_path, discover_test_control_modules, project_test_control_modules, repo_relative
+from ._inventory import all_test_control_modules, ast_for_path, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -166,10 +166,10 @@ def _tautological_sites(
 def test_no_tautological_assertions() -> None:
     """No deterministic test-control module may contain tautological assertions.
 
-    Uses :func:`discover_test_control_modules` as the per-test filter so the
-    existing fixtures-dir exclusion stays intact.
+    Uses the shared test-control module inventory so the existing fixtures-dir
+    exclusion stays intact.
     """
-    modules = sorted(set(discover_test_control_modules()) | set(project_test_control_modules()))
+    modules = all_test_control_modules()
     violations: list[str] = []
 
     for module_path in modules:
@@ -254,5 +254,5 @@ def test_detection_is_non_trivial() -> None:
 
 def test_discovery_found_modules() -> None:
     """Guardrail: the discovery walk must find at least one test module."""
-    modules = sorted(set(discover_test_control_modules()) | set(project_test_control_modules()))
+    modules = all_test_control_modules()
     assert modules, "No test modules discovered — check glob roots."

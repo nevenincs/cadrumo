@@ -3,24 +3,21 @@
 from __future__ import annotations
 
 from datetime import date
-from functools import lru_cache
 
 import pytest
 
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
-from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
+from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
 _WWW6_HOST = aeat_host("www6")
 
 
-@lru_cache(maxsize=1)
 def _load_modelo_184() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(m for m in modelos if m.id == "184")
-    return modelo, catalogues
+    return _committed_modelo("184")
 
 
 def test_modelo_184_registry_validator_accepts_committed_definition() -> None:

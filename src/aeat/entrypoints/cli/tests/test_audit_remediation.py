@@ -11,6 +11,7 @@ import click
 import pytest
 from click.testing import Result
 
+from ....tests._inventory import leaf_name
 from ....tests.cli_runner import aeat_click_command, invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 
@@ -208,7 +209,7 @@ def _typer_help_violations(tree: ast.AST, *, module: Path) -> tuple[str, ...]:
     """
     violations: list[str] = []
     for node in ast.walk(tree):
-        if not isinstance(node, ast.Call) or _call_name(node) not in _TYPER_HELP_SURFACE_CALLABLES:
+        if not isinstance(node, ast.Call) or leaf_name(node.func) not in _TYPER_HELP_SURFACE_CALLABLES:
             continue
         violations.extend(_typer_help_keyword_violations(node, module=module))
     return tuple(violations)
@@ -221,14 +222,6 @@ def _typer_help_keyword_violations(node: ast.Call, *, module: Path) -> tuple[str
         for keyword in node.keywords
         if keyword.arg == "help" and not _is_direct_tr_literal(keyword.value)
     )
-
-
-def _call_name(node: ast.Call) -> str | None:
-    if isinstance(node.func, ast.Name):
-        return node.func.id
-    if isinstance(node.func, ast.Attribute):
-        return node.func.attr
-    return None
 
 
 def _is_direct_tr_literal(node: ast.AST) -> bool:

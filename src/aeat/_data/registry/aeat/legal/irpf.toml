@@ -3255,6 +3255,26 @@ required_text = [
     "Individualización de rentas",
 ]
 
+[legal."ley-35-2006:art-14.2.m"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a14"
+document_id = "BOE-A-2006-20764"
+article = "14.2.m"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a14"
+published_at = 2006-11-29
+effective_from = 2023-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-30
+reviewed_by = "codex"
+notes = "LIRPF art 14.2.m: imputacion temporal de rendimientos del trabajo en especie por entrega de acciones o participaciones de empresa emergente que cumplen art 42.3.f pero no estan exentos por superar la cuantia prevista. Se imputan al admitirse a negociacion, salir del patrimonio del contribuyente, o cumplirse el plazo de diez anos."
+required_text = [
+    "rendimientos del trabajo en especie derivados de la entrega de acciones",
+    "artículo 42 de esta ley no estén exentos por superar la cuantía",
+    "plazo de diez años",
+]
+
 [legal."ley-35-2006:art-17"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -3275,6 +3295,28 @@ required_text = [
     "trabajo personal o de la relación laboral o estatutaria",
     "Las pensiones y haberes pasivos percibidos",
     "se calificarán como rendimientos de actividades económicas",
+]
+
+[legal."ley-35-2006:art-42.3.f"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a42"
+document_id = "BOE-A-2006-20764"
+article = "42.3.f"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a42"
+published_at = 2006-11-29
+effective_from = 2023-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-30
+reviewed_by = "codex"
+notes = "LIRPF art 42.3.f: exencion de rendimientos del trabajo en especie por entrega gratuita o bajo precio de acciones o participaciones a trabajadores en activo, con limite general de 12.000 euros anuales y limite de 50.000 euros anuales para empresas emergentes."
+required_text = [
+    "Estarán exentos los siguientes rendimientos del trabajo en especie",
+    "entrega a los trabajadores en activo",
+    "acciones o participaciones",
+    "12.000 euros anuales",
+    "50.000 euros anuales",
 ]
 
 [legal."ley-35-2006:art-18"]

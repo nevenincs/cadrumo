@@ -10,21 +10,20 @@ from pathlib import Path
 import pytest
 
 from .....core.config import Settings
-from .....core.resources import bundled_path
 from .._citation_blocklist import KnownBadCitation, find_known_bad, known_bad_citations
 from .._corpus_catalogue import verify_source_catalogue, verify_source_file
 from .._errors import RegistryValidationError
 from .._legal import verify_legal_catalogue
-from .._loader import load_registry_tree
 from .._schema import LegalReference, RegistryCatalogues, SourceCitation, SourceReference
 from .._validate import RegistryValidator
 from .._validate_evidence import EvidenceValidator
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _catalogues() -> RegistryCatalogues:
-    _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _modelos, catalogues = _committed_registry_tree()
     return catalogues
 
 

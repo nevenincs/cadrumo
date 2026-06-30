@@ -90,6 +90,11 @@ def project_test_control_modules() -> tuple[Path, ...]:
 
 
 @cache
+def all_test_control_modules() -> tuple[Path, ...]:
+    return tuple(sorted(set(discover_test_control_modules()) | set(project_test_control_modules())))
+
+
+@cache
 def package_python_files(*, include_data: bool = False) -> tuple[Path, ...]:
     """Return package ``.py`` files under ``src/aeat``.
 
@@ -245,6 +250,11 @@ def qualified_name(node: ast.AST) -> str:
         parent = qualified_name(node.value)
         return f"{parent}.{node.attr}" if parent else node.attr
     return ""
+
+
+def leaf_name(node: ast.AST) -> str:
+    name = qualified_name(node)
+    return name.rsplit(".", 1)[-1] if name else ""
 
 
 def has_marker_on_line_or_adjacent_comment_block(lines: Sequence[str], lineno: int, marker: str) -> bool:

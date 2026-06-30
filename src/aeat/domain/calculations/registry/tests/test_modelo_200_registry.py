@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from functools import lru_cache
 from html import unescape
 
 import pytest
@@ -15,7 +14,6 @@ from .. import (
     RegistryValidator,
     build_snapshot,
     calculate_registry_snapshot,
-    load_registry_tree,
     resolve_export_layout,
     validated_casilla_id,
 )
@@ -23,10 +21,9 @@ from .._errors import RegistryValidationError
 from .._legal import verify_legal_catalogue
 from .._runtime_graph import expression_casilla_refs
 from .._schema import InputKind
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def _m200_casilla(value: object, *, surface: str = "test_modelo_200_registry.casilla") -> CasillaId:
@@ -94,11 +91,8 @@ def _base_inputs(
     }
 
 
-@lru_cache(maxsize=1)
 def _load_modelo_200():
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == "200")
-    return modelo, catalogues
+    return _committed_modelo("200")
 
 
 def test_modelo_200_validates_with_deadline_and_schedule_catalogue_refs() -> None:

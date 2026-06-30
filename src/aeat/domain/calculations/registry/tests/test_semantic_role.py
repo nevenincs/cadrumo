@@ -288,6 +288,78 @@ class TestTypoTwinWarning:
             (
                 "200",
                 "2024-y-siguientes",
+                "02511",
+                "is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02512",
+                "is_correccion_operaciones_a_plazos_art11_4_temporaria_ejercicio_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02513",
+                "is_correccion_operaciones_a_plazos_art11_4_temporaria_anteriores_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02516",
+                "is_correccion_operaciones_a_plazos_art11_4_permanente_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02517",
+                "is_correccion_operaciones_a_plazos_art11_4_temporaria_ejercicio_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02518",
+                "is_correccion_operaciones_a_plazos_art11_4_temporaria_anteriores_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03321",
+                "is_correccion_operaciones_a_plazos_dt1_permanente_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03322",
+                "is_correccion_operaciones_a_plazos_dt1_temporaria_ejercicio_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03323",
+                "is_correccion_operaciones_a_plazos_dt1_temporaria_anteriores_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03326",
+                "is_correccion_operaciones_a_plazos_dt1_permanente_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03327",
+                "is_correccion_operaciones_a_plazos_dt1_temporaria_ejercicio_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03328",
+                "is_correccion_operaciones_a_plazos_dt1_temporaria_anteriores_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
                 "03396",
                 "is_correccion_otras_correcciones_resultado_permanente_disminucion",
             ),
@@ -487,14 +559,18 @@ class TestTypoTwinWarning:
             ("100", "2025", "2229", "irpf_ganancia_fondos_coti_valor_adquisicion_global"),
             ("100", "2025", "2230", "irpf_ganancia_fondos_coti_ganancia"),
             ("100", "2025", "2231", "irpf_ganancia_fondos_coti_exenta_renta_vitalicia"),
+            ("100", "2025", "2233", "irpf_perdida_fondos_coti_importe"),
             ("100", "2025", "2234", "irpf_perdida_fondos_coti_importe_computable"),
             ("100", "2025", "0360", "irpf_ganancia_premios_juegos_valoracion_b"),
             ("100", "2025", "0361", "irpf_ganancia_premios_juegos_pub_valoracion_b"),
-            ("100", "2025", "0413", "irpf_ganancia_inmueble_catastral_4"),
+            ("100", "2025", "0413", "irpf_ganancia_inmueble_referencia_catastral_4"),
             ("100", "2025", "0238", "irpf_eo_reintegro_subvenciones"),
             ("100", "2025", "0239", "irpf_eo_agr_reintegro_subvenciones"),
             ("100", "2025", "2202", "irpf_anexo_b_aav_importe_satisfecho"),
-            ("100", "2025", "2243", "irpf_ganancia_inmueble_catastral_4_b"),
+            ("100", "2025", "2243", "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_4"),
+            ("100", "2025", "2154", "irpf_deduccion_murcia_vehiculo_matricula"),
+            ("100", "2025", "2155", "irpf_deduccion_murcia_vehiculo_importe"),
+            ("100", "2025", "2246", "irpf_deduccion_canarias_acciones_participaciones"),
             # M303 compensacion-pendiente roles appear in both 2009-y-siguientes and
             # 2023-y-siguientes revisions; the validator requires unique occurrence for
             # intentional_singleton, so they carry semantic_role_cardinality="shared".
@@ -534,6 +610,18 @@ class TestTypoTwinWarning:
             "irpf_anexo_c_exceso_sps_rg_aportaciones_aplicado",
             "is_deduccion_di_internacional_rdleg_pendiente",
             "is_deduccion_di_interna_rdleg_pendiente",
+            "is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
+            "is_correccion_operaciones_a_plazos_art11_4_temporaria_ejercicio_aumento",
+            "is_correccion_operaciones_a_plazos_art11_4_temporaria_anteriores_aumento",
+            "is_correccion_operaciones_a_plazos_art11_4_permanente_disminucion",
+            "is_correccion_operaciones_a_plazos_art11_4_temporaria_ejercicio_disminucion",
+            "is_correccion_operaciones_a_plazos_art11_4_temporaria_anteriores_disminucion",
+            "is_correccion_operaciones_a_plazos_dt1_permanente_aumento",
+            "is_correccion_operaciones_a_plazos_dt1_temporaria_ejercicio_aumento",
+            "is_correccion_operaciones_a_plazos_dt1_temporaria_anteriores_aumento",
+            "is_correccion_operaciones_a_plazos_dt1_permanente_disminucion",
+            "is_correccion_operaciones_a_plazos_dt1_temporaria_ejercicio_disminucion",
+            "is_correccion_operaciones_a_plazos_dt1_temporaria_anteriores_disminucion",
             "is_correccion_otras_correcciones_resultado_permanente_disminucion",
             "is_correccion_otras_correcciones_resultado_temporaria_ejercicio_disminucion",
             "is_liquidacion_i_importe",
@@ -592,14 +680,18 @@ class TestTypoTwinWarning:
             "irpf_ganancia_fondos_coti_valor_adquisicion_global",
             "irpf_ganancia_fondos_coti_ganancia",
             "irpf_ganancia_fondos_coti_exenta_renta_vitalicia",
+            "irpf_perdida_fondos_coti_importe",
             "irpf_perdida_fondos_coti_importe_computable",
             "irpf_ganancia_premios_juegos_valoracion_b",
             "irpf_ganancia_premios_juegos_pub_valoracion_b",
-            "irpf_ganancia_inmueble_catastral_4",
+            "irpf_ganancia_inmueble_referencia_catastral_4",
             "irpf_eo_reintegro_subvenciones",
             "irpf_eo_agr_reintegro_subvenciones",
             "irpf_anexo_b_aav_importe_satisfecho",
-            "irpf_ganancia_inmueble_catastral_4_b",
+            "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_4",
+            "irpf_deduccion_murcia_vehiculo_matricula",
+            "irpf_deduccion_murcia_vehiculo_importe",
+            "irpf_deduccion_canarias_acciones_participaciones",
             "iva_oss_union_servicios_destino_de_cuota",
             "iva_oss_union_servicios_destino_fr_cuota",
         }
@@ -730,35 +822,23 @@ class TestTypoTwinWarning:
             is False
         )
 
-    def test_legal_reference_axis_roles_do_not_warn_as_typos(self) -> None:
-        article = _casilla(
-            cid="a",
-            semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
+    def test_legal_reference_tokens_are_not_axis_tokens(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
+                "is_correccion_operaciones_a_plazos_dt1_permanente_aumento",
+            )
+            is False
         )
-        transitional = _casilla(
-            cid="b",
-            semantic_role="is_correccion_operaciones_a_plazos_dt1_permanente_aumento",
-        )
-        m = _registry_modelo("200", "2024-y-siguientes", [article, transitional])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
 
-    def test_optional_legal_regime_roles_do_not_warn_as_typos(self) -> None:
-        rdleg = _casilla(
-            cid="a",
-            semantic_role="is_deduccion_di_internacional_rdleg_pendiente",
+    def test_legal_regime_tokens_are_not_axis_tokens(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "is_deduccion_di_internacional_rdleg_pendiente",
+                "is_deduccion_di_internacional_pendiente",
+            )
+            is False
         )
-        current = _casilla(
-            cid="b",
-            semantic_role="is_deduccion_di_internacional_pendiente",
-        )
-        m = _registry_modelo("200", "2024-y-siguientes", [rdleg, current])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
 
     def test_numeric_window_tokens_are_not_axis_tokens(self) -> None:
         assert (
@@ -869,14 +949,14 @@ class TestTypoTwinWarning:
             is False
         )
 
-    def test_ccaa_axis_roles_do_not_warn_as_typos(self) -> None:
-        murcia = _casilla(cid="a", semantic_role="irpf_deduccion_murcia_vehiculo_importe")
-        asturias = _casilla(cid="b", semantic_role="irpf_deduccion_asturias_vehiculo_importe")
-        m = _registry_modelo("100", "2025", [murcia, asturias])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
+    def test_ccaa_tokens_are_not_axis_tokens(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "irpf_deduccion_murcia_vehiculo_importe",
+                "irpf_deduccion_asturias_vehiculo_importe",
+            )
+            is False
+        )
 
     def test_field_detail_tokens_are_not_optional_axis_tokens(self) -> None:
         assert (
@@ -894,11 +974,11 @@ class TestTypoTwinWarning:
             is False
         )
 
-    def test_cadastral_b_marker_is_not_optional_axis_token(self) -> None:
+    def test_cadastral_anexo_c1_marker_is_not_optional_axis_token(self) -> None:
         assert (
             semantic_roles_are_axis_siblings(
-                "irpf_ganancia_inmueble_catastral_4_b",
-                "irpf_ganancia_inmueble_catastral_4",
+                "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_4",
+                "irpf_ganancia_inmueble_referencia_catastral_4",
             )
             is False
         )

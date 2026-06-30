@@ -61,7 +61,8 @@ class RegistryVerifyResult(OutputSchema):
     ``verified`` marks the fail-fast registry/corpus validation branch, while
     extra fields preserve the same
     :class:`~aeat.application.registry.RegistryRevisionDetailReport` inventory
-    available from :class:`RegistryInspectResult`.
+    available from
+    :class:`~aeat.entrypoints.cli._registry_payloads.RegistryInspectResult`.
     """
 
     verified: bool

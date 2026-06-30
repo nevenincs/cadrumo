@@ -34,6 +34,7 @@ from .._calc_sheets_pull import (
     RelationEdit,
     compute_from_pull,
 )
+from ._calc_sheets_support import modelo_130_2025_1t_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -42,12 +43,6 @@ _M303_PRINTED_RESULT_REFERENCE_CASILLA: CasillaId = validated_casilla_id(
     "69",
     surface="_M303_PRINTED_RESULT_REFERENCE_CASILLA",
 )
-
-
-def _modelo_130_snapshot():
-    from datetime import date
-
-    return resources().modelos.authority.snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
 
 
 def _modelo_303_snapshot():
@@ -124,7 +119,7 @@ def _relation_edits_for(snapshot) -> tuple[RelationEdit, ...]:
 
 
 def test_compute_from_pull_refuses_stale_workbook() -> None:
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     pull = PullResult(
         spreadsheet_id="test-id",
         operator_edits=_operator_edits_for(snapshot, {}),
@@ -167,7 +162,7 @@ def test_compute_from_pull_refuses_printed_number_operator_edit_reference() -> N
 
 
 def test_compute_from_pull_refuses_missing_metadata() -> None:
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     pull = PullResult(
         spreadsheet_id="test-id",
         operator_edits=_operator_edits_for(snapshot, {}),
@@ -185,7 +180,7 @@ def test_compute_from_pull_refuses_missing_metadata() -> None:
 def test_compute_from_pull_refuses_contradictory_matching_metadata_verdict() -> None:
     """A MATCHES verdict cannot override metadata that no longer binds to the snapshot."""
 
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     pull = PullResult(
         spreadsheet_id="test-id",
         operator_edits=_operator_edits_for(snapshot, {_M130_INGRESOS_CASILLA: Decimal("100")}),
@@ -208,7 +203,7 @@ def test_compute_from_pull_refuses_contradictory_matching_metadata_verdict() -> 
 def test_compute_from_pull_runs_against_matching_snapshot() -> None:
     """Happy path: matching metadata + zero inputs returns a valid result."""
 
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     pull = PullResult(
         spreadsheet_id="test-id",
         operator_edits=_operator_edits_for(snapshot, {}),
@@ -231,7 +226,7 @@ def test_compute_from_pull_runs_against_matching_snapshot() -> None:
 def test_compute_from_pull_coerces_string_operator_values_to_decimal() -> None:
     """Operator values arriving as strings (Sheets text-format cells) parse cleanly."""
 
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     pull = PullResult(
         spreadsheet_id="test-id",
         operator_edits=_operator_edits_for(snapshot, {_M130_INGRESOS_CASILLA: "10000.50"}),
@@ -254,7 +249,7 @@ def test_compute_from_pull_coerces_string_operator_values_to_decimal() -> None:
 def test_compute_from_pull_coerces_malformed_string_to_zero() -> None:
     """Malformed string values default to Decimal('0') rather than crashing."""
 
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     pull = PullResult(
         spreadsheet_id="test-id",
         operator_edits=_operator_edits_for(snapshot, {_M130_INGRESOS_CASILLA: "not-a-number"}),

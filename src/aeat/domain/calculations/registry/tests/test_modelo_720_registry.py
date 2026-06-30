@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import date
-from functools import lru_cache
 from typing import cast
 
 import pytest
@@ -15,20 +14,17 @@ from .. import (
     ModeloRevision,
     RegistryValidator,
     build_snapshot,
-    load_registry_tree,
 )
 from .._binding_selector_utils import selector_as_dict
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
 _WWW6_HOST = aeat_host("www6")
 
 
-@lru_cache(maxsize=1)
 def _load_modelo_720():
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(modelo for modelo in modelos if modelo.id == "720")
-    return modelo, catalogues
+    return _committed_modelo("720")
 
 
 _FORBIDDEN_REMOTE_ACTIONS = frozenset(

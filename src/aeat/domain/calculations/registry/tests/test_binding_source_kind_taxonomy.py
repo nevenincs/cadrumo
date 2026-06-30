@@ -24,15 +24,14 @@ from .....core.aggregation import (
     INVOICE_BINDING_SOURCE_KINDS,
     LEDGER_BINDING_SOURCE_KINDS,
 )
-from .....core.resources import bundled_path
-from .. import load_registry_tree
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _declared_source_kinds() -> set[BindingSourceKind]:
     """Return every distinct ``source`` declared across all compiled revisions."""
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _ = _committed_registry_tree()
     declared: set[BindingSourceKind] = set()
     for modelo in modelos:
         for revision in modelo.revisions.values():

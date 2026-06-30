@@ -2,13 +2,13 @@
 
 Strict :class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclasses for the
 LLM decision terminals, split out of
-:mod:`aeat.entrypoints.cli._ledger_payloads` to keep that registry within its
+:mod:`~aeat.entrypoints.cli._ledger_payloads` to keep that registry within its
 size budget. These unregistered branch payloads share the registered
 :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerClassifySingleResult`
 ``ledger.classify`` command key, and validated instances enter
 :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
 :func:`~aeat.entrypoints.cli._common._emit_envelope`. They are imported directly
-by :mod:`aeat.entrypoints.cli._ledger_llm_cli` rather than re-exported from the
+by :mod:`~aeat.entrypoints.cli._ledger_llm_cli` rather than re-exported from the
 parent payload module.
 
 The application layer owns the suggestion contracts:

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import warnings
 from datetime import date
-from functools import lru_cache
 
 import pytest
 
@@ -19,10 +18,10 @@ from .. import (
     RegistryValidator,
     build_snapshot,
     extract_record_design,
-    load_registry_tree,
     resolve_ledger_oss_aggregation_binding_values,
     validated_casilla_id,
 )
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
@@ -86,11 +85,8 @@ _FORBIDDEN_REMOTE_ACTIONS = frozenset(
 )
 
 
-@lru_cache(maxsize=1)
 def _load_modelo_369() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(m for m in modelos if m.id == "369")
-    return modelo, catalogues
+    return _committed_modelo("369")
 
 
 def test_modelo_369_validator_accepts_committed_definition() -> None:

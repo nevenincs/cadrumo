@@ -17,19 +17,17 @@ from .. import (
     RegistryValidationError,
     build_snapshot,
     calculate_registry_snapshot,
-    load_registry_tree,
     resolve_previous_filing_binding_values,
     validated_casilla_id,
 )
 from .._binding_selector_utils import selector_as_dict
 from .._bindings import RegistryModeloObservation
 from .._text import normalise_corpus_text
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _ModeloFixture = tuple[ModeloDefinition, RegistryCatalogues]
-
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -88,15 +86,9 @@ _M130_EXTRACTION_PROFILE_TARGET_LEGAL_REFS = frozenset(
 )
 
 
-def _load_modelo(modelo_id: str):
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == modelo_id)
-    return modelo, catalogues
-
-
 @pytest.fixture(scope="module")
 def modelo_130_registry():
-    return _load_modelo("130")
+    return _committed_modelo("130")
 
 
 def _snapshot_130(modelo_130_registry: _ModeloFixture, *, period: str = "1T", filing_year: int = 2026):

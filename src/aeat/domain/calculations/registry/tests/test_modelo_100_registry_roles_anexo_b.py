@@ -39,6 +39,7 @@ from ._modelo_100_registry_support import (
     _ANEXO_B_TOTAL_SATISFECHO_ROLE,
     _ANEXO_B_TOTAL_SATISFECHO_SECTIONS,
     _AUTONOMIC_DEDUCTION_ART_77_REF,
+    _LEGACY_ANEXO_B_AAV_AMOUNT_APPLIED_ROLE,
     _LEGACY_ANEXO_B_AAV_AMOUNT_CURRENT_ROLE,
     _LEGACY_ANEXO_B_AAV_AMOUNT_PENDING_ROLE,
     _LEGACY_ANEXO_B_ACCOUNT_HOLDER_KEY_ROLE,
@@ -151,7 +152,12 @@ def test_modelo_100_anexo_b_aav_amount_roles_are_grounded_in_official_labels() -
     legacy_roles = [
         casilla.id
         for casilla in revision.casillas
-        if casilla.semantic_role in {_LEGACY_ANEXO_B_AAV_AMOUNT_CURRENT_ROLE, _LEGACY_ANEXO_B_AAV_AMOUNT_PENDING_ROLE}
+        if casilla.semantic_role
+        in {
+            _LEGACY_ANEXO_B_AAV_AMOUNT_CURRENT_ROLE,
+            _LEGACY_ANEXO_B_AAV_AMOUNT_APPLIED_ROLE,
+            _LEGACY_ANEXO_B_AAV_AMOUNT_PENDING_ROLE,
+        }
     ]
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in _ANEXO_B_AAV_AMOUNT_ROWS}
 

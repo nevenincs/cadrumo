@@ -48,6 +48,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import BindingSourceKind, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
@@ -58,11 +59,13 @@ from ....domain.calculations.registry import (
     calculate_registry_snapshot,
     materialize_relation_binding_values,
     resolve_bound_inputs_by_casilla_id,
+    resolve_retenciones_aggregation_binding_values,
     resolve_withholding_binding_values,
     validated_casilla_id,
 )
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
+from ...aggregation._retenciones import RetencionObservation, RetencionScheme, aggregate_retenciones_111
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import resolve_relations_from_local_store
@@ -237,6 +240,51 @@ _YEAR_N_PLUS_1_WITHHOLDING_OBSERVATIONS: tuple[WithholdingObservation, ...] = (
     _withholding_obs("yN1-b-q2", "33333333P", "B", filing_year=_YEAR_N_PLUS_1),
 )
 _YEAR_N_PLUS_1_WITHHOLDING_PERCEPCIONES = Decimal("2")
+_PERIOD_ACCRUAL_DATES = {
+    "1T": "03-31",
+    "2T": "06-30",
+    "3T": "09-30",
+    "4T": "12-31",
+}
+
+
+def _split_amount(amount: Decimal, parts: int) -> tuple[Decimal, ...]:
+    if parts <= 0:
+        if amount != Decimal("0"):
+            raise AssertionError(f"cannot spread non-zero retenciones fixture amount {amount} over zero perceptors")
+        return ()
+    unit = (amount / Decimal(parts)).quantize(Decimal("0.01"))
+    values = [unit for _ in range(parts - 1)]
+    values.append(amount - sum(values, Decimal("0")))
+    return tuple(values)
+
+
+def _retencion_observations_for_111_inputs(
+    *,
+    filing_year: int,
+    period: str,
+    casilla_inputs: dict[CasillaId, Decimal],
+) -> tuple[RetencionObservation, ...]:
+    perceptor_count = casilla_inputs[_M111_TRABAJO_DINERARIO_PERCEPTORES_CASILLA]
+    if perceptor_count != perceptor_count.to_integral_value():
+        raise AssertionError(f"Modelo 111 perceptores fixture must be integral, got {perceptor_count}")
+    count = int(perceptor_count)
+    bases = _split_amount(casilla_inputs[_M111_TRABAJO_DINERARIO_IMPORTE_CASILLA], count)
+    retenciones = _split_amount(casilla_inputs[_M111_TRABAJO_DINERARIO_RETENCIONES_CASILLA], count)
+    accrued_on = f"{filing_year}-{_PERIOD_ACCRUAL_DATES[period]}"
+    return tuple(
+        RetencionObservation(
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION.value,
+            source_object_id=f"m111-{filing_year}-{period}-work-{index:02d}",
+            perceptor_nif=f"{index:08d}H",
+            perceptor_name=f"Trabajador {index:02d}",
+            scheme=RetencionScheme.WORK_INCOME,
+            taxable_base=base,
+            retencion_amount=retencion,
+            accrued_on=accrued_on,
+        )
+        for index, (base, retencion) in enumerate(zip(bases, retenciones, strict=True), start=1)
+    )
 
 
 def _calculate_111(
@@ -247,17 +295,28 @@ def _calculate_111(
 ) -> RegistryCalculationResult:
     """Run the REAL 111 quarterly calculation and return the engine result."""
     snapshot = resources().modelos.authority.snapshot(_MODELO_111, filing_year=filing_year, period=period)
-    # Supply all manual-input zero casillas plus the scenario inputs.
-    zero_inputs = {cid: Decimal("0") for cid in _ZERO_CASILLAS}
+    retenciones = aggregate_retenciones_111(
+        _retencion_observations_for_111_inputs(
+            filing_year=filing_year,
+            period=period,
+            casilla_inputs=casilla_inputs,
+        ),
+        period=Period.from_year_and_code(filing_year, period),
+    )
+    binding_values = resolve_retenciones_aggregation_binding_values(snapshot.revision, retenciones)
+    bound_inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    # Supply all remaining manual-input zero casillas plus the scenario inputs.
+    zero_inputs = {cid: Decimal("0") for cid in _ZERO_CASILLAS if cid not in bound_inputs}
+    manual_inputs = {cid: value for cid, value in casilla_inputs.items() if cid not in bound_inputs}
     inputs = {
-        **resolve_bound_inputs_by_casilla_id(snapshot.revision, {}),
+        **bound_inputs,
         **zero_inputs,
-        **casilla_inputs,
+        **manual_inputs,
     }
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
-        binding_values={},
+        binding_values=binding_values,
         date_context={"filing_period": date(filing_year, 12, 31)},
     )
 

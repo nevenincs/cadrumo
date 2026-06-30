@@ -42,7 +42,7 @@ class LedgerListProjection:
 
 
 def parse_ledger_list_filter_spec(filters: list[str]) -> LedgerReviewFilterSpec:
-    """Parse ``ledger list --filter`` clauses and return a :class:`LedgerReviewFilterSpec`."""
+    """Parse ``ledger list --filter`` clauses and return a :class:`~aeat.application.review.LedgerReviewFilterSpec`."""
     return LedgerReviewFilterSpec.from_strings(filters)
 
 
@@ -201,10 +201,12 @@ def project_ledger_list(
     sort_order: LedgerSortOrder = LedgerSortOrder.ASC,
     exclude_llm_rejected: bool = False,
 ) -> LedgerListProjection:
-    """Project, page, and render one ``ledger list`` result set and return a :class:`LedgerListProjection`.
+    """Project, page, and render one ``ledger list`` result set.
+
+    Returns a :class:`~aeat.entrypoints.cli._ledger_list.LedgerListProjection`.
 
     When ``sort_by`` is supplied the result set is stably sorted on that closed
-    :class:`aeat.core.LedgerSortField` axis (ascending by default,
+    :class:`~aeat.core.LedgerSortField` axis (ascending by default,
     ``sort_order=DESC`` for descending), applied *after* the C6 filter and the
     ``--group`` selection and *before* paging, with a deterministic final
     tie-break on the content-addressed ``transaction_id`` (D5). ``--by-group``

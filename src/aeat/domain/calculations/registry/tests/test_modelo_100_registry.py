@@ -73,3 +73,150 @@ def test_modelo_100_dependency_relations_resolve_against_registered_modelos() ->
             assert set(relation.source_periods).issubset(source_revision.period_selector.periods), relation.id
         assert relation.target_binding in {binding.id for binding in revision.bindings}
         assert set(relation.target_periods).issubset(revision.period_selector.periods)
+
+
+def test_modelo_100_rental_landlord_foreign_nif_flags_have_specific_role() -> None:
+    modelos_by_id, _catalogues = _loaded_registry()
+    modelo = modelos_by_id["100"]
+
+    for year in range(2020, 2026):
+        revision = modelo.revisions[str(year)]
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+        for casilla_id, referenced_nif_id in (("0716", "0715"), ("0718", "0717")):
+            casilla = casillas_by_id[casilla_id]
+
+            assert tuple(casilla.section)[-1] == "deduccion_alquiler_res"
+            assert casilla.data_type == "boolean"
+            assert casilla.semantic_role == "irpf_deduccion_alquiler_arrendador_nif_extranjero_flag"
+            assert f"[{referenced_nif_id}]" in casilla.label
+
+    assert all(
+        casilla.semantic_role != "irpf_anexo_a_nif_extranjero_flag"
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    )
+
+
+def test_modelo_100_cadastral_construction_ratios_are_decimal_roles() -> None:
+    modelos_by_id, _catalogues = _loaded_registry()
+    modelo = modelos_by_id["100"]
+
+    for year in range(2020, 2026):
+        revision = modelo.revisions[str(year)]
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+        for casilla_id in ("0125", "0140"):
+            casilla = casillas_by_id[casilla_id]
+
+            assert tuple(casilla.section) == ("toma_datos_ampliada", "inmuebles", "inmueble")
+            assert casilla.data_type == "decimal"
+            assert casilla.semantic_role == "irpf_inmueble_ratio_construccion_catastral"
+            assert "valor catastral" in casilla.label.lower()
+            assert "100" in casilla.label
+
+    assert all(
+        casilla.semantic_role != "irpf_inmueble_pct_valor_catastral_construccion"
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    )
+
+
+def test_modelo_100_business_lease_marker_is_boolean_flag() -> None:
+    modelos_by_id, _catalogues = _loaded_registry()
+    modelo = modelos_by_id["100"]
+
+    for year in range(2020, 2026):
+        revision = modelo.revisions[str(year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == "0082")
+
+        assert tuple(casilla.section) == ("toma_datos_ampliada", "inmuebles", "inmueble")
+        assert casilla.data_type == "boolean"
+        assert casilla.semantic_role == "irpf_inmueble_arrendamiento_negocio_flag"
+        assert casilla.label == "Bien inmueble objeto de arrendamiento de negocio"
+
+
+def test_modelo_100_immovable_gain_cadastral_reference_roles_match_source_blocks() -> None:
+    modelos_by_id, _catalogues = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    main_roles = {
+        "1819": "irpf_ganancia_inmueble_referencia_catastral_1",
+        "1820": "irpf_ganancia_inmueble_referencia_catastral_2",
+        "1821": "irpf_ganancia_inmueble_referencia_catastral_3",
+    }
+    c1_roles = {
+        "1883": "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_1",
+        "1884": "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_2",
+        "1885": "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_3",
+    }
+
+    for year in range(2022, 2026):
+        revision = modelo.revisions[str(year)]
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+        year_source_refs = {
+            f"aeat-dr-100-{year}-dictionary",
+            f"aeat-dr-100-{year}-xsd",
+        }
+
+        for slot, (casilla_id, semantic_role) in enumerate(main_roles.items(), start=1):
+            casilla = casillas_by_id[casilla_id]
+
+            assert tuple(casilla.section) == ("toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble")
+            assert casilla.data_type == "text"
+            assert casilla.semantic_role == semantic_role
+            assert casilla.label == f"Referencia catastral {slot}"
+            assert year_source_refs.issubset(casilla.source_refs)
+
+        for slot, (casilla_id, semantic_role) in enumerate(c1_roles.items(), start=1):
+            casilla = casillas_by_id[casilla_id]
+
+            assert tuple(casilla.section) == ("toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble")
+            assert casilla.data_type == "text"
+            assert casilla.semantic_role == semantic_role
+            assert casilla.label == f"Referencia castastral {slot}"
+            assert year_source_refs.issubset(casilla.source_refs)
+
+    revision_2025 = modelo.revisions["2025"]
+    casillas_2025 = {casilla.id: casilla for casilla in revision_2025.casillas}
+
+    assert casillas_2025["0413"].semantic_role == "irpf_ganancia_inmueble_referencia_catastral_4"
+    assert casillas_2025["0413"].label == "Referencia catastral 4"
+    assert casillas_2025["2243"].semantic_role == "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_4"
+    assert casillas_2025["2243"].label == "Referencia castastral 4"
+
+    legacy_roles = {
+        "irpf_ganancia_inmueble_catastral_2",
+        "irpf_ganancia_inmueble_catastral_3",
+        "irpf_ganancia_inmueble_catastral_4",
+        "irpf_ganancia_inmueble_catastral_1_b",
+        "irpf_ganancia_inmueble_catastral_2_b",
+        "irpf_ganancia_inmueble_catastral_3_b",
+        "irpf_ganancia_inmueble_catastral_4_b",
+    }
+    assert not any(
+        casilla.semantic_role in legacy_roles
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    )
+
+
+def test_modelo_100_regularization_refunds_use_noun_role() -> None:
+    modelos_by_id, _catalogues = _loaded_registry()
+    modelo = modelos_by_id["100"]
+
+    for year in range(2020, 2026):
+        revision = modelo.revisions[str(year)]
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+        expected_casilla_ids = ("0677", "0682") if year <= 2023 else ("0677",)
+
+        for casilla_id in expected_casilla_ids:
+            casilla = casillas_by_id[casilla_id]
+
+            assert tuple(casilla.section) == ("resultados", "regularizacion_res")
+            assert casilla.semantic_role == "irpf_regularizacion_devolucion_autoliquidaciones_anteriores"
+            assert "devoluci" in casilla.label.lower()
+            assert str(year) in casilla.label
+
+    assert all(
+        casilla.semantic_role != "irpf_regularizacion_autoliquidaciones_anteriores_devolver"
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    )

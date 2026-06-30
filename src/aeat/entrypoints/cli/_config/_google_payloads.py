@@ -15,16 +15,16 @@ sequence fields use ``list`` rather than ``tuple`` because
 
 The payload classes document only the CLI transport shapes registered with
 :func:`~aeat.entrypoints.cli._schemas.register_schema`. OAuth state remains
-owned by :mod:`aeat.adapters.outbound.google`, Drive mirror state by
-:mod:`aeat.adapters.outbound.storage`, and calc-sheets semantics by
-:mod:`aeat.application.storage.calc_sheets`.
+owned by :mod:`~aeat.adapters.outbound.google`, Drive mirror state by
+:mod:`~aeat.adapters.outbound.storage`, and calc-sheets semantics by
+:mod:`~aeat.application.storage.calc_sheets`.
 
 See Also:
-    :mod:`aeat.entrypoints.cli._config._google`
+    :mod:`~aeat.entrypoints.cli._config._google`
         Google OAuth, status, and Drive mirror emit sites.
-    :mod:`aeat.entrypoints.cli._config._google_folder`
+    :mod:`~aeat.entrypoints.cli._config._google_folder`
         Drive root-folder configuration emit sites.
-    :mod:`aeat.entrypoints.cli._config._google_sync_calc`
+    :mod:`~aeat.entrypoints.cli._config._google_sync_calc`
         Google Sheets export, pull, verify, and compute emit sites.
 """
 

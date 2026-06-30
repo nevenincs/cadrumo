@@ -1123,7 +1123,9 @@ application:
       registry_policy_invalid: A registry ellenőrzési házirendje nem tölthető be.
       registry_snapshot_invalid: A bevallás ellenőrzéséhez szükséges registry-pillanatkép
         nem tölthető be.
-      registry_snapshot_ref_mismatch: 'A(z) %{modelo} %{period} modell registry-pillanatkepe nem egyezik a nyilatkozaton rogzitett hivatkozassal: megfigyelt %{observed_ref}, feloldott %{resolved_ref}.'
+      registry_snapshot_ref_mismatch: 'A(z) %{modelo} %{period} modell registry-pillanatkepe
+        nem egyezik a nyilatkozaton rogzitett hivatkozassal: megfigyelt %{observed_ref},
+        feloldott %{resolved_ref}.'
   wizard:
     errors:
       create_missing_filing_baseline: 'A profil létrehozásához hiányoznak a bevallási
@@ -1566,7 +1568,11 @@ cli:
         actor_help: A MODELO_EXPORTED eseményen rögzített üzemeltetői felirat.
         errors:
           output_required: Adja meg a --output PATH erteket a fichero-BOE artefaktumhoz.
-        help: 'Hitelesített vagy benyújtott modell-revíziót exportál helyi, AEAT-kompatibilis fichero-BOE fájlba. Csak helyi; soha nem lép kapcsolatba az AEAT-tal, és a létrehozott fájl nem hivatalos AEAT-benyújtási bizonyíték. Benyújtás után használja az AEAT justificante-t, a benyújtott bevallások lekérdezését vagy a CSV cotejo bizonyítékot.'
+        help: Hitelesített vagy benyújtott modell-revíziót exportál helyi, AEAT-kompatibilis
+          fichero-BOE fájlba. Csak helyi; soha nem lép kapcsolatba az AEAT-tal, és
+          a létrehozott fájl nem hivatalos AEAT-benyújtási bizonyíték. Benyújtás után
+          használja az AEAT justificante-t, a benyújtott bevallások lekérdezését vagy
+          a CSV cotejo bizonyítékot.
         output_help: A fichero-BOE artefakt írásának elérési útja.
         revision_help: 'Az exportálandó számítási revízió azonosítója; alapértelmezés:
           a munkaegység legújabb hitelesített-teljes vagy benyújtott revíziója.'
@@ -1662,7 +1668,19 @@ cli:
           megerősítéséhez.
         seed_conflict: 'Belső hiba: ütközés a meglévő IVA-kompenzációs vetőösszeg-rekorddal.'
         seed_filing_year_help: A vetőösszeg benyújtási éve.
-        seed_help: "Modelo 303 áthozott kompenzációs nyitóegyenleg deklarálása egy olyan időszakra, amely megelőzi a helyi előzményeket. Megtagadja, ha az időszakhoz már van rekord.\n\nKét eset:\n\n  --amount 0   Nulla nyitóegyenleg: azt deklarálja, hogy erre az időszakra nincs áthozandó függő kompenzáció. Ez olyan adózónál is előfordulhat, aki korábban már adott be M303 bevallást, ha az utolsó M303 nem hagyott függőben lévő kompenzációt.\n\n  --amount X   Áthozott egyenleg: az adózó korábbi M303 bevallásokat nyújtott be más eszközzel vagy közvetlenül az AEAT-nál. X az utolsó benyújtott M303 bevallásból származó, későbbi időszakokra függőben maradó kompenzáció.\n\nAz automatikus first_period_zero eset független a seed parancstól: a számítás és az egyeztetés során a tevékenységkezdési és nyilvántartási feltételek bizonyítják, hogy ez az első IVA-időszak; ekkor az AEAT 110-es casilla nulla a LIVA 99.5. cikke (37/1992. törvény) alapján, és nem blokkol."
+        seed_help: "Modelo 303 áthozott kompenzációs nyitóegyenleg deklarálása egy\
+          \ olyan időszakra, amely megelőzi a helyi előzményeket. Megtagadja, ha az\
+          \ időszakhoz már van rekord.\n\nKét eset:\n\n  --amount 0   Nulla nyitóegyenleg:\
+          \ azt deklarálja, hogy erre az időszakra nincs áthozandó függő kompenzáció.\
+          \ Ez olyan adózónál is előfordulhat, aki korábban már adott be M303 bevallást,\
+          \ ha az utolsó M303 nem hagyott függőben lévő kompenzációt.\n\n  --amount\
+          \ X   Áthozott egyenleg: az adózó korábbi M303 bevallásokat nyújtott be\
+          \ más eszközzel vagy közvetlenül az AEAT-nál. X az utolsó benyújtott M303\
+          \ bevallásból származó, későbbi időszakokra függőben maradó kompenzáció.\n\
+          \nAz automatikus first_period_zero eset független a seed parancstól: a számítás\
+          \ és az egyeztetés során a tevékenységkezdési és nyilvántartási feltételek\
+          \ bizonyítják, hogy ez az első IVA-időszak; ekkor az AEAT 110-es casilla\
+          \ nulla a LIVA 99.5. cikke (37/1992. törvény) alapján, és nem blokkol."
         seed_invalid_amount: A vetőösszegnek érvényes, nem negatív decimálisnak kell
           lennie.
         seed_period_help: 'A 303-as nyomtatvány benyújtásának időszaka: 1T-4T negyedévek
@@ -1839,7 +1857,11 @@ cli:
         create_stub_modelo_714_refused: 'A(z) %{modelo} nyomtatvany (vagyonado) munkafeladat-letrehozasa
           ebben a CLI-ben nem tamogatott. Jogi alap: Ley 19/1991 28. cikk es Orden
           HAC/1023/2021. A bevallast az AEAT Sede feluleten kell benyujtani.'
-        create_stub_modelo_refused: 'A(z) %{modelo} nyomtatvány (külföldön tartott virtuális pénznemek informatív bevallása) munkafeladat-létrehozása ebben a CLI-ben nem támogatott. Jogi alap: Orden HFP/886/2023 és RD 1065/2007 Art. 42 quater; a jelentési küszöb 50 000 EUR december 31-én. Jogszabályi kötelezettség esetén az AEAT Sede felületén kell benyújtani.'
+        create_stub_modelo_refused: 'A(z) %{modelo} nyomtatvány (külföldön tartott
+          virtuális pénznemek informatív bevallása) munkafeladat-létrehozása ebben
+          a CLI-ben nem támogatott. Jogi alap: Orden HFP/886/2023 és RD 1065/2007
+          Art. 42 quater; a jelentési küszöb 50 000 EUR december 31-én. Jogszabályi
+          kötelezettség esetén az AEAT Sede felületén kell benyújtani.'
         dependencies_help: Keresztidoszaki bevallastorteneti fuggosegek es az aktualis
           clean-state blokkolok megjelenitese a celbevallashoz
         discard_help: Munkaegység eldobottként megjelölése (auditálható állapotváltás).
@@ -2030,10 +2052,21 @@ cli:
         runs_help: 'Mentett munkafolyamat-futtatások listázása futtatásazonosítókkal,
           legújabb először. Futtatásazonosítót használjon: `aeat app modelo work resume`.
           Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
-        sal_beneficio_neto_help: 'A munkavállalói tulajdonú társaság (SAL/SLL, 44/2015. törvény 14. cikk) tárgyévi nettó nyeresége. Az asszisztens 10%-ot alkalmaz a kötelező külön tartalék kiszámításához, a jegyzett tőke kétszeresét egy eurócenttel meghaladó küszöbig korlátozva. Használd a --sal-reserva-dotada és --sal-capital-social opciókkal együtt.'
-        sal_capital_social_help: 'A munkavállalói tulajdonú társaság jegyzett tőkéje (44/2015. törvény 14. cikk). A szigorú küszöb alapja: a dotáció nulla, amikor a felhalmozott tartalék eléri a jegyzett tőke kétszeresét egy eurócenttel meghaladó összeget. Szükséges a --sal-beneficio-neto és --sal-reserva-dotada opciókkal együtt.'
+        sal_beneficio_neto_help: A munkavállalói tulajdonú társaság (SAL/SLL, 44/2015.
+          törvény 14. cikk) tárgyévi nettó nyeresége. Az asszisztens 10%-ot alkalmaz
+          a kötelező külön tartalék kiszámításához, a jegyzett tőke kétszeresét egy
+          eurócenttel meghaladó küszöbig korlátozva. Használd a --sal-reserva-dotada
+          és --sal-capital-social opciókkal együtt.
+        sal_capital_social_help: 'A munkavállalói tulajdonú társaság jegyzett tőkéje
+          (44/2015. törvény 14. cikk). A szigorú küszöb alapja: a dotáció nulla, amikor
+          a felhalmozott tartalék eléri a jegyzett tőke kétszeresét egy eurócenttel
+          meghaladó összeget. Szükséges a --sal-beneficio-neto és --sal-reserva-dotada
+          opciókkal együtt.'
         sal_computation_error: 'SAL számítási hiba: %{message}'
-        sal_reserva_dotada_help: 'Korábbi években felhalmozott külön tartalék (44/2015. törvény 14. cikk). Annak ellenőrzésére szolgál, hogy a tartalék már elérte-e a jegyzett tőke kétszeresét egy eurócenttel meghaladó összeget. Szükséges a --sal-beneficio-neto és --sal-capital-social opciókkal együtt.'
+        sal_reserva_dotada_help: Korábbi években felhalmozott külön tartalék (44/2015.
+          törvény 14. cikk). Annak ellenőrzésére szolgál, hogy a tartalék már elérte-e
+          a jegyzett tőke kétszeresét egy eurócenttel meghaladó összeget. Szükséges
+          a --sal-beneficio-neto és --sal-capital-social opciókkal együtt.
         sal_reserva_not_decimal: A --sal-* értékeknek decimális összegeknek kell lenniük.
         selector_ambiguous: Több aktív munkaegység illeszkedik erre a modelo/év/időszak
           párosra. Válasszon nyilvántartási revíziót vagy adjon meg pontos munkaegység-azonosítót.
@@ -2568,6 +2601,13 @@ cli:
       help: Ellenorzi, hogy a helyreallitasi kulcs megnyitja-e a tarolt helyreallitasi
         csomagot.
     workflow_help: Konfiguráció-munkafolyamat súgó megjelenítése.
+  contract:
+    app_help: 'Kibocsatja az operator kepesseg-jegyzeket: gyokerek, parancscsaladok, eletciklus es eredmenysemak.'
+    summary_commands: 'Regisztralt parancsok: {count}'
+    summary_families: 'Parancscsaladok: {count}'
+    summary_heading: 'Operatorfelulet-jegyzek'
+    summary_lifecycle: 'Modelo eletciklus: {steps}'
+    summary_roots: 'Gyokerek: {roots}'
   diagnostics:
     browser:
       http_status_label: HTTP-állapot
@@ -3852,12 +3892,21 @@ errors:
     lookup_dispatch_arg_count: A(z) {op} képletoperátor {expected} argumentumot vár.
     lookup_dispatch_arg_kind: A(z) {op} képletoperátornál a(z) {position}. pozíciónak
       {expected_kind} levélnek kell lennie.
-    m210_gastos_deducibles_negative: 'A(z) M210 gastos_deducibles %{casilla_id} nem lehet negativ; kapott ertek %{value}.'
-    m210_gastos_deducibles_not_allowed: 'A(z) M210 gastos_deducibles %{casilla_id} csak az EU/EGT 24.6 cikk szerinti uton engedelyezett; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.'
-    m210_imputation_coefficient_invalid: 'A(z) M210 ingatlan-imputacios egyutthato %{casilla_id} csak a registryben rogzitett Art. 85 kulcsok egyike lehet (%{allowed_values}); kapott ertek %{value}.'
-    m210_imputation_days_invalid: 'A(z) M210 imputacios napok %{casilla_id} erteke 1 es %{max_days} kozotti egesz szam kell legyen; kapott ertek %{value}.'
-    m210_imputation_no_catastral_value_missing: 'Kataszteri ertek nelkuli M210 ingatlan-imputaciohoz pozitiv szerzesi ertek vagy hatosag altal megallapitott ertek kell (%{acquisition_casilla_id}, %{administrative_casilla_id}).'
-    m210_imputation_no_filing_year: 'Az M210 ingatlan-imputacio szamitasahoz nem nulla bevallasi ev szukseges.'
+    m210_gastos_deducibles_negative: A(z) M210 gastos_deducibles %{casilla_id} nem
+      lehet negativ; kapott ertek %{value}.
+    m210_gastos_deducibles_not_allowed: A(z) M210 gastos_deducibles %{casilla_id}
+      csak az EU/EGT 24.6 cikk szerinti uton engedelyezett; tipo_renta=%{tipo_renta},
+      country_of_fiscal_residence=%{country_of_fiscal_residence}.
+    m210_imputation_coefficient_invalid: A(z) M210 ingatlan-imputacios egyutthato
+      %{casilla_id} csak a registryben rogzitett Art. 85 kulcsok egyike lehet (%{allowed_values});
+      kapott ertek %{value}.
+    m210_imputation_days_invalid: A(z) M210 imputacios napok %{casilla_id} erteke
+      1 es %{max_days} kozotti egesz szam kell legyen; kapott ertek %{value}.
+    m210_imputation_no_catastral_value_missing: Kataszteri ertek nelkuli M210 ingatlan-imputaciohoz
+      pozitiv szerzesi ertek vagy hatosag altal megallapitott ertek kell (%{acquisition_casilla_id},
+      %{administrative_casilla_id}).
+    m210_imputation_no_filing_year: Az M210 ingatlan-imputacio szamitasahoz nem nulla
+      bevallasi ev szukseges.
     parameter_unknown: A(z) {parameter_id} paraméter nincs regisztrálva.
     relation_value_missing: A(z) {relation_id} relációnak nincs megadott értéke.
     text_input_non_text_casillas: errors.calc.text_input_non_text_casillas
@@ -5083,6 +5132,10 @@ wizard:
           II. cime szerinti rendszerrol valo lemondast.
       llm-vision:
         help: Helyi LLM-látás engedélyezése a számlák beolvasásához.
+      modelo-111-no-retenciones-periods:
+        help: Vesszővel elválasztott Modelo 111 nem kötelezett időszakok, ÉÉÉÉ:IDŐSZAK
+          formátumban (például 2025:2T,2025:3T). Csak akkor használja, ha nem történt
+          forrásadó-köteles kifizetés.
       monedas-virtuales-extranjero-above-threshold:
         help: Külföldi virtuális valuták meghaladják a Modelo 721 küszöbértékét
       name:
@@ -5098,10 +5151,6 @@ wizard:
         help: CLI kimeneti nyelv ehhez a profilhoz
       pays-capital-income-with-retencion:
         help: Forrásadóval terhelt tőkejövedelmet fizet
-      modelo-111-no-retenciones-periods:
-        help: 'Vesszővel elválasztott Modelo 111 nem kötelezett időszakok, ÉÉÉÉ:IDŐSZAK
-          formátumban (például 2025:2T,2025:3T). Csak akkor használja, ha nem
-          történt forrásadó-köteles kifizetés.'
       pays-professionals-with-retencion:
         help: Forrásadóval terhelt díjazást fizet szakembereknek
       pays-rent-with-retencion:
@@ -5238,14 +5287,14 @@ wizard:
         help: A munkavállaló kiküldött adózási rendbe lépésének dátuma (RIRPF 116.
           cikkely). Az adózási rend a 6. naptári év végén jár le.
         prompt: A különleges adózási rend kezdőnapja (ÉÉÉÉ-HH-NN)
+      modelo-111-no-retenciones-periods:
+        help: ÉÉÉÉ:IDŐSZAK időszakok, amikor nem történt retención vagy ingreso a
+          cuenta alá eső kifizetés, ezért nem nyújtandó be üres Modelo 111.
+        prompt: Modelo 111 forrásadó nélküli időszakok
       monedas-virtuales-extranjero-above-threshold:
         prompt: Külföldi virtuális valuták meghaladják a Modelo 721 küszöbértékét
       pays-capital-income-with-retencion:
         prompt: Forrásadóval terhelt tőkejövedelmet fizet
-      modelo-111-no-retenciones-periods:
-        help: 'ÉÉÉÉ:IDŐSZAK időszakok, amikor nem történt retención vagy ingreso
-          a cuenta alá eső kifizetés, ezért nem nyújtandó be üres Modelo 111.'
-        prompt: Modelo 111 forrásadó nélküli időszakok
       pays-professionals-with-retencion:
         prompt: Forrásadóval terhelt díjazást fizet szakembereknek
       pays-rent-with-retencion:

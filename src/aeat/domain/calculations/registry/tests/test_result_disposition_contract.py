@@ -12,14 +12,13 @@ from .....core import (
     modelo_has_codified_disposition,
     result_disposition_casilla_ids,
 )
-from .....core.resources import bundled_path
-from .. import load_registry_tree
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_codified_result_disposition_specs_resolve_against_bundled_revisions() -> None:
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = _committed_registry_tree()
 
     checked_revisions: list[str] = []
     offences: list[str] = []

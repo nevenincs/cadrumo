@@ -3,16 +3,16 @@
 Centralises the rules every CLI command uses to decide whether to
 emit ANSI colour, render a rich progress widget, or refuse a request
 that requires interactive stdin. Resolution merges three signals — the
-active CLI flag context (via :func:`aeat.entrypoints.cli._context`),
+active CLI flag context (via :func:`~aeat.entrypoints.cli._context`),
 explicit per-call overrides, and the operator's environment
 (``NO_COLOR``, ``AEAT_FORCE_COLOR``, surfaced through
-:class:`Settings`) — so call sites never need to re-implement the
+:class:`~aeat.core.config.Settings`) — so call sites never need to re-implement the
 precedence rules.
 
-Environment variables flow through :class:`aeat.core.config.Settings`
+Environment variables flow through :class:`~aeat.core.config.Settings`
 rather than direct ``os.environ`` reads: ``NO_COLOR`` populates
-:attr:`Settings.no_color`, and ``AEAT_FORCE_COLOR`` populates
-:attr:`Settings.aeat_force_color`. Pydantic-settings handles the
+:attr:`~aeat.core.config.Settings.no_color`, and ``AEAT_FORCE_COLOR`` populates
+:attr:`~aeat.core.config.Settings.aeat_force_color`. Pydantic-settings handles the
 ``.env`` + ``os.environ`` merge order; this module never reaches
 into the process environment directly.
 """
@@ -29,8 +29,9 @@ from ...core.errors import AeatError
 class NonTtyRefusedError(AeatError):
     """Raised when a command requires interactive stdin but stdin is piped.
 
-    Carries the operator-facing recovery hint on :attr:`suggestion` so
-    the renderer can append it to the standard refusal message.
+    Carries the operator-facing recovery hint on
+    :attr:`~aeat.entrypoints.cli._tty.NonTtyRefusedError.suggestion` so the
+    renderer can append it to the standard refusal message.
 
     Attributes:
         suggestion: Copy-paste-ready recovery hint shown to the user.
@@ -52,7 +53,7 @@ class NonTtyRefusedError(AeatError):
 
 
 def _isatty(stream: object) -> bool:
-    """Return :data:`True` when ``stream`` exposes a truthy ``isatty()``."""
+    """Return ``True`` when ``stream`` exposes a truthy ``isatty()``."""
     isatty = getattr(stream, "isatty", None)
     if not callable(isatty):
         return False
@@ -92,7 +93,7 @@ def should_use_color(*, no_color: bool | None = None) -> bool:
             adopt the helper before any global flag is wired.
 
     Returns:
-        :data:`True` when colour output is appropriate.
+        ``True`` when colour output is appropriate.
     """
     settings = Settings()
     resolved_no_color = current_cli_flag("no_color") or bool(no_color)
@@ -111,7 +112,7 @@ def should_show_rich_progress(
 ) -> bool:
     """Return whether an interactive rich progress widget can render safely.
 
-    When this returns :data:`False` and the caller is neither ``quiet``
+    When this returns ``False`` and the caller is neither ``quiet``
     nor in ``json_mode``, the caller should fall back to line-based
     stderr progress instead of a live spinner or progress bar.
 
@@ -122,7 +123,7 @@ def should_show_rich_progress(
             ``--no-progress``.
 
     Returns:
-        :data:`True` when both stdout and stderr are interactive and no
+        ``True`` when both stdout and stderr are interactive and no
         suppressing flag is active.
     """
     resolved_quiet = current_cli_flag("quiet") or bool(quiet)

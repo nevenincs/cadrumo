@@ -14,8 +14,8 @@ from ._modelo_100_legal_refs_support import (
     _CASILLA_0921,
     _CASILLA_1091,
     _DA45_CLAUSULA_SUELO_REF,
-    _DEDUCTION_LOSS_INTEREST_AUTONOMIC_SECOND_ROLE,
-    _DEDUCTION_LOSS_INTEREST_STATE_SECOND_ROLE,
+    _DEDUCTION_LOSS_INTEREST_AUTONOMIC_ROLE,
+    _DEDUCTION_LOSS_INTEREST_STATE_ROLE,
     _EXTREMADURA_VIVIENDA_ZONAS_RURALES_ROLE,
     _INCENTIVO_ART_33_REGULARIZATION_CASILLAS,
     _LGT_INTEREST_ART_26_REF,
@@ -147,12 +147,12 @@ def test_modelo_100_casilla_1091_role_tracks_year_specific_official_meaning(
 @pytest.mark.parametrize(
     ("filing_year", "expected_role", "expected_label_snippet"),
     (
-        (2020, _DEDUCTION_LOSS_INTEREST_STATE_SECOND_ROLE, "Parte estatal"),
-        (2021, _DEDUCTION_LOSS_INTEREST_STATE_SECOND_ROLE, "Parte estatal"),
-        (2022, _DEDUCTION_LOSS_INTEREST_AUTONOMIC_SECOND_ROLE, "Parte autonómica"),
-        (2023, _DEDUCTION_LOSS_INTEREST_AUTONOMIC_SECOND_ROLE, "Parte autonómica"),
-        (2024, _DEDUCTION_LOSS_INTEREST_AUTONOMIC_SECOND_ROLE, "Parte autonómica"),
-        (2025, _DEDUCTION_LOSS_INTEREST_AUTONOMIC_SECOND_ROLE, "Parte autonómica"),
+        (2020, _DEDUCTION_LOSS_INTEREST_STATE_ROLE, "Parte estatal"),
+        (2021, _DEDUCTION_LOSS_INTEREST_STATE_ROLE, "Parte estatal"),
+        (2022, _DEDUCTION_LOSS_INTEREST_AUTONOMIC_ROLE, "Parte autonómica"),
+        (2023, _DEDUCTION_LOSS_INTEREST_AUTONOMIC_ROLE, "Parte autonómica"),
+        (2024, _DEDUCTION_LOSS_INTEREST_AUTONOMIC_ROLE, "Parte autonómica"),
+        (2025, _DEDUCTION_LOSS_INTEREST_AUTONOMIC_ROLE, "Parte autonómica"),
     ),
 )
 def test_modelo_100_casilla_0581_role_tracks_year_specific_state_autonomic_column(
@@ -166,6 +166,7 @@ def test_modelo_100_casilla_0581_role_tracks_year_specific_state_autonomic_colum
     assert casilla.number == "0581"
     assert casilla.section[-1] == "gravamenes_res"
     assert casilla.semantic_role == expected_role
+    assert not casilla.semantic_role.endswith("_2")
     assert expected_label_snippet in casilla.label
     assert f"aeat-dr-100-{filing_year}-dictionary" in casilla.source_refs
 

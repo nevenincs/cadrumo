@@ -292,12 +292,13 @@ _ANEXO_B_OTROS_GASTOS_LABELS = {
 _ANEXO_B_AAV_SECTION = "an_b_inf_adc_aav"
 _ANEXO_B_AAV_IMPORTE_SATISFECHO_ROLE = "irpf_anexo_b_aav_importe_satisfecho"
 _LEGACY_ANEXO_B_AAV_AMOUNT_CURRENT_ROLE = "irpf_anexo_b_aav_amount_current"
-_ANEXO_B_AAV_AMOUNT_APPLIED_ROLE = "irpf_anexo_b_aav_amount_applied"
+_ANEXO_B_AAV_IMPORTE_APLICADO_ROLE = "irpf_anexo_b_aav_importe_aplicado"
+_LEGACY_ANEXO_B_AAV_AMOUNT_APPLIED_ROLE = "irpf_anexo_b_aav_amount_applied"
 _ANEXO_B_AAV_IMPORTE_PENDIENTE_ROLE = "irpf_anexo_b_aav_importe_pendiente"
 _LEGACY_ANEXO_B_AAV_AMOUNT_PENDING_ROLE = "irpf_anexo_b_aav_amount_pending"
 _ANEXO_B_AAV_AMOUNT_ROWS = {
     "2202": ("Importe total satisfecho en 2025", _ANEXO_B_AAV_IMPORTE_SATISFECHO_ROLE),
-    "2203": ("Importe satisfecho que se aplica en el ejercicio", _ANEXO_B_AAV_AMOUNT_APPLIED_ROLE),
+    "2203": ("Importe satisfecho que se aplica en el ejercicio", _ANEXO_B_AAV_IMPORTE_APLICADO_ROLE),
     "2204": (
         "Importe satisfecho en 2025 pendiente de aplicación en ejercicios futuros",
         _ANEXO_B_AAV_IMPORTE_PENDIENTE_ROLE,
@@ -623,8 +624,8 @@ _INCENTIVO_ART_33_REGULARIZATION_CASILLAS = _casilla_ids("0568", "0569")
 _REGULARIZACION_PREVIOUS_INTEREST_CASILLAS = _casilla_ids("0582", "0583")
 _REGULARIZACION_DEDUCTION_LOSS_CASILLAS = _casilla_ids("0572", "0574", "0577", "0579")
 _REGULARIZACION_DEDUCTION_LOSS_INTEREST_CASILLAS = _casilla_ids("0573", "0576", "0578", "0581")
-_DEDUCTION_LOSS_INTEREST_STATE_SECOND_ROLE = "irpf_intereses_demora_perdida_deduccion_estatal_2"
-_DEDUCTION_LOSS_INTEREST_AUTONOMIC_SECOND_ROLE = "irpf_intereses_demora_perdida_deduccion_autonomica_2"
+_DEDUCTION_LOSS_INTEREST_STATE_ROLE = "irpf_intereses_demora_perdida_deduccion_estatal"
+_DEDUCTION_LOSS_INTEREST_AUTONOMIC_ROLE = "irpf_intereses_demora_perdida_deduccion_autonomica"
 _LIRPF_CAPITAL_GAINS_ART_33_REF = "ley-35-2006:art-33"
 _DA45_CLAUSULA_SUELO_REF = "ley-35-2006:da-45"
 _RIRPF_DEDUCTION_LOSS_ART_59_REF = "rd-439-2007:art-59"

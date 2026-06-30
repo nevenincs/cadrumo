@@ -9,7 +9,7 @@ covers. Validated results enter
 :func:`~aeat.entrypoints.cli._common._emit_envelope`.
 
 Field sets match the production payload dicts constructed in
-:mod:`aeat.entrypoints.cli._config._profile_censo` at their emit sites.
+:mod:`~aeat.entrypoints.cli._config._profile_censo` at their emit sites.
 
 The backing service is :class:`~aeat.application.user_profile.CensoSyncService`;
 this module documents only the CLI transport shapes for

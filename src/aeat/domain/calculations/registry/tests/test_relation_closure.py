@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from functools import cache
 
 import pytest
 from pydantic import ValidationError
@@ -13,7 +12,6 @@ from .....tests.registry_observations import registry_grounded_modelo_observatio
 from .. import CasillaId, RegistryCatalogues, RegistryValidationError, validated_casilla_id
 from .._binding_selector_utils import selector_as_dict
 from .._bindings import RegistryModeloObservation
-from .._loader import load_registry_tree
 from .._relations import (
     RegistryFoldRequirement,
     relation_source_requirements,
@@ -22,18 +20,17 @@ from .._relations import (
 from .._schema import ModeloDefinition, ModeloRevision
 from .._schema_surfaces import RelationDefinition
 from .._validate import RegistryValidator
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _M115_BASE_CASILLA: CasillaId = validated_casilla_id("02", surface="_M115_BASE_CASILLA")
 _M115_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03", surface="_M115_RETENCIONES_CASILLA")
 _UNKNOWN_SOURCE_CASILLA: CasillaId = validated_casilla_id("missing-output", surface="_UNKNOWN_SOURCE_CASILLA")
 
 
-@cache
 def _committed_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
-    return load_registry_tree(_REGISTRY_ROOT)
+    return _committed_registry_tree()
 
 
 def _modelo(modelos: tuple[ModeloDefinition, ...], modelo_id: str) -> ModeloDefinition:

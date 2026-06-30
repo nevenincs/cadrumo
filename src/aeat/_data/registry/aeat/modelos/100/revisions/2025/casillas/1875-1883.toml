@@ -4,6 +4,6 @@ number = "1883"
 label = "Referencia castastral 1"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 data_type = "text"
-semantic_role = "irpf_ganancia_inmueble_catastral_1_b"
+semantic_role = "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_1"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

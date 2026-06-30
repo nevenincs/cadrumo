@@ -25,13 +25,13 @@ from .. import (
     RegistryValidationError,
     build_snapshot,
     calculate_registry_snapshot,
-    load_registry_tree,
     resolve_ledger_renta_expense_aggregation_binding_values,
     unsupported_ledger_renta_expense_observations,
     validate_ledger_renta_expense_aggregation_binding_definition,
     validated_casilla_id,
 )
 from .._binding_selector_utils import selector_as_dict
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -58,8 +58,7 @@ _UNKNOWN_RENTA_EXPENSE_CASILLA: CasillaId = validated_casilla_id(
 
 
 def _modelo_100_snapshot(filing_year: int):
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(item for item in modelos if item.id == "100")
+    modelo, catalogues = _committed_modelo("100")
     return build_snapshot(
         modelo,
         catalogues,

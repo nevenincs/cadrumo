@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import date
-from functools import lru_cache
 from itertools import pairwise
 
 import pytest
@@ -18,20 +17,17 @@ from .. import (
     ModeloRevision,
     RegistryValidator,
     build_snapshot,
-    load_registry_tree,
 )
 from .._binding_selector_utils import selector_as_dict
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
 _WWW6_HOST = aeat_host("www6")
 
 
-@lru_cache(maxsize=1)
 def _load_modelo_232():
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(modelo for modelo in modelos if modelo.id == "232")
-    return modelo, catalogues
+    return _committed_modelo("232")
 
 
 def test_committed_modelo_232_validates_against_catalogues() -> None:

@@ -14,13 +14,11 @@ from .. import (
     RegistryValidator,
     build_snapshot,
     calculate_registry_snapshot,
-    load_registry_tree,
     validated_casilla_id,
 )
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -48,12 +46,6 @@ _M123_2019_2023_REGULARIZACION_CASILLA: CasillaId = _casilla_id("04")
 _M123_2019_2023_PREVIOUS_RESULT_CASILLA: CasillaId = _casilla_id("05")
 _M123_2019_2023_RESULTADO_CASILLA: CasillaId = _casilla_id("06")
 _M123_2019_2023_INGRESO_CASILLA: CasillaId = _casilla_id("07")
-
-
-def _load_modelo(modelo_id: str):
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == modelo_id)
-    return modelo, catalogues
 
 
 @pytest.mark.parametrize(
@@ -96,7 +88,7 @@ def test_modelo_123_validated_snapshot_owns_workflow_surfaces(
     filing_year: int,
     required_surfaces: set[str],
 ) -> None:
-    modelo, catalogues = _load_modelo("123")
+    modelo, catalogues = _committed_modelo("123")
 
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
     snapshot = build_snapshot(
@@ -126,7 +118,7 @@ def test_modelo_123_validated_snapshot_owns_workflow_surfaces(
 
 
 def _snapshot_2024(filing_year: int = 2024):
-    modelo, catalogues = _load_modelo("123")
+    modelo, catalogues = _committed_modelo("123")
     return build_snapshot(
         modelo,
         catalogues,
@@ -255,7 +247,7 @@ def test_m123_2019_2023_casilla_06_invariant_to_nperceptores_and_base() -> None:
     manual pass-through casillas with no formula; they must not affect
     casilla 06 (Suma de retenciones y regularizacion = [03] + [05]).
     """
-    modelo, catalogues = _load_modelo("123")
+    modelo, catalogues = _committed_modelo("123")
     snapshot = build_snapshot(
         modelo,
         catalogues,

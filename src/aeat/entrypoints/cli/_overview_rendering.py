@@ -5,8 +5,8 @@ This module consumes an application-built
 localized text lines plus :class:`~aeat.core.json_contract.Notice` objects for the
 :class:`~aeat.core.json_contract.SchemaEnvelope` notice channel.  It is
 presentation-only: active-profile discovery, storage reads, and status assembly
-stay upstream in :mod:`aeat.application.overview` and
-:mod:`aeat.entrypoints.cli._overview`.
+stay upstream in :mod:`~aeat.application.overview` and
+:mod:`~aeat.entrypoints.cli._overview`.
 """
 
 from __future__ import annotations

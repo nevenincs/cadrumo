@@ -7,7 +7,7 @@ JSON-contract test suite can enumerate every overview-command surface this
 module covers.
 
 Field sets match the production payload dicts constructed in
-:mod:`aeat.entrypoints.cli._overview` at their emit sites. All sequence fields
+:mod:`~aeat.entrypoints.cli._overview` at their emit sites. All sequence fields
 use ``list`` rather than ``tuple`` because ``model_dump(mode='json')``
 serialises pydantic tuples as JSON arrays, and the strict
 :class:`~aeat.entrypoints.cli._schemas.OutputSchema` base does not coerce lists
@@ -26,7 +26,8 @@ result schemas then wrap those fragments, plus read models returned by
 :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` surface through
 :func:`~aeat.entrypoints.cli._common._emit_envelope`. The application overview
 package remains the source of business semantics; this module only documents
-and validates the transport shape emitted by :mod:`aeat.entrypoints.cli._overview`.
+and validates the transport shape emitted by
+:mod:`~aeat.entrypoints.cli._overview`.
 """
 
 from __future__ import annotations
@@ -39,9 +40,11 @@ from ._schemas import OutputSchema, register_schema
 
 
 class OverviewDraftPayload(OutputSchema):
-    """One draft row nested in a period-scoped :class:`OverviewStatusResult`.
+    """One draft row nested in a period-scoped overview status result.
 
-    The full-status branch forwards
+    Nested in
+    :class:`~aeat.entrypoints.cli._overview_payloads.OverviewStatusResult`. The
+    full-status branch forwards
     :class:`~aeat.application.overview.OverviewStatusReport` counters, while the
     period branch expands the selected :class:`~aeat.domain.filing.ModeloDraft`
     records into these small JSON rows.
@@ -55,7 +58,9 @@ class OverviewDraftPayload(OutputSchema):
 class OverviewCalendarEntryPayload(OutputSchema):
     """One :class:`~aeat.application.overview.OverviewCalendarEntry` row.
 
-    The nested :class:`OverviewCalendarFilingEvidencePayload` keeps filing
+    The nested
+    :class:`~aeat.entrypoints.cli._overview_payloads.OverviewCalendarFilingEvidencePayload`
+    keeps filing
     evidence beside the legal deadline row rather than flattening it into the
     command result. Deadline fields remain the legal schedule from
     :class:`~aeat.domain.deadlines.ModeloDeadline`; local and observed filing
@@ -80,8 +85,10 @@ class OverviewCalendarEntryPayload(OutputSchema):
 
 
 class OverviewCalendarFilingEvidencePayload(OutputSchema):
-    """Filing evidence nested in an :class:`OverviewCalendarEntryPayload`.
+    """Filing evidence nested in an overview calendar entry payload.
 
+    Nested in
+    :class:`~aeat.entrypoints.cli._overview_payloads.OverviewCalendarEntryPayload`.
     Mirrors
     :class:`~aeat.application.overview.OverviewCalendarFilingEvidence` and keeps
     local filing state, observed AEAT submission state, and justificante
@@ -116,7 +123,9 @@ class OverviewCalendarEventPayload(OutputSchema):
     Events are additive observations beside the legal calendar, such as filed
     declarations or notifications loaded from persisted live snapshots. Optional
     filing fields mirror the application event model without upgrading the
-    corresponding :class:`OverviewCalendarEntryPayload` evidence row by
+    corresponding
+    :class:`~aeat.entrypoints.cli._overview_payloads.OverviewCalendarEntryPayload`
+    evidence row by
     themselves.
     """
 
@@ -215,8 +224,11 @@ class OverviewCalendarPayload(OutputSchema):
 class OverviewCalendarProfilePayload(OutputSchema):
     """One profile block in ``overview calendar --all-profiles`` mode.
 
-    The embedded :class:`OverviewCalendarPayload` is the full calendar result
-    for that profile. :class:`OverviewCalendarResult` then carries these blocks
+    The embedded
+    :class:`~aeat.entrypoints.cli._overview_payloads.OverviewCalendarPayload`
+    is the full calendar result for that profile.
+    :class:`~aeat.entrypoints.cli._overview_payloads.OverviewCalendarResult`
+    then carries these blocks
     under ``profiles``, keeping all-profile output typed instead of falling back
     to a raw nested ``dict``.
     """
@@ -237,7 +249,8 @@ class OverviewStatusResult(OutputSchema):
 
     The full-status branch accepts the JSON form of
     :class:`~aeat.application.overview.OverviewStatusReport`; the period branch
-    uses :class:`OverviewDraftPayload` rows derived from matching
+    uses :class:`~aeat.entrypoints.cli._overview_payloads.OverviewDraftPayload`
+    rows derived from matching
     :class:`~aeat.domain.filing.ModeloDraft` records for the scoped draft list.
     The application report is derived from
     :class:`~aeat.application.state_projection.OperatorStateProjection`; this

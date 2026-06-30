@@ -12,7 +12,7 @@ rather than ``tuple`` because ``model_dump(mode='json')`` serialises pydantic
 tuples as JSON arrays, and the strict ``OutputSchema`` base does not coerce
 lists to tuples on re-validation.
 
-The application reports in :mod:`aeat.application.registry` remain the
+The application reports in :mod:`~aeat.application.registry` remain the
 authority for legal-citation and manual-corpus semantics. These payload classes
 validate the CLI transport shape that enters
 :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through

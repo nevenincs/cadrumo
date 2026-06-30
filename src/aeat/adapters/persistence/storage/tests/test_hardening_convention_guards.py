@@ -11,7 +11,15 @@ import pytest
 
 from .....core.errors import ERROR_REGISTRY, AeatError, get_registered_error_code
 from .....locales.manager import LocaleManager
-from .....tests._inventory import SRC_AEAT, ast_for_path, package_ast_items, qualified_name, repo_path, repo_relative
+from .....tests._inventory import (
+    SRC_AEAT,
+    ast_for_path,
+    leaf_name,
+    package_ast_items,
+    qualified_name,
+    repo_path,
+    repo_relative,
+)
 from ..errors import SecureStorageError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -125,7 +133,7 @@ def test_profile_repository_kdf_defaults_flow_from_canonical_master_key_model() 
     calls = [node for node in ast.walk(function) if isinstance(node, ast.Call)]
 
     assert any(_is_kdf_default_to_manifest_call(call) for call in calls)
-    assert not any(_call_name(call.func) == "ManifestKdfParams" for call in calls)
+    assert not any(leaf_name(call.func) == "ManifestKdfParams" for call in calls)
     assert not any(
         keyword.arg in {"algorithm", "version", "memory_cost", "time_cost", "parallelism", "salt", "output_length"}
         for call in calls
@@ -355,14 +363,6 @@ def _source_segment(path: Path, node: ast.AST) -> str:
     return segment
 
 
-def _call_name(node: ast.expr) -> str:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return node.attr
-    return ""
-
-
 def _is_logger_call(node: ast.AST, method: str) -> bool:
     return (
         isinstance(node, ast.Call)
@@ -435,7 +435,7 @@ def _is_environment_call(
         return True
     if _is_environ_method_call(node, os_aliases, environ_aliases):
         return True
-    if _call_name(node.func) in {"setenv", "delenv", "putenv", "unsetenv"}:
+    if leaf_name(node.func) in {"setenv", "delenv", "putenv", "unsetenv"}:
         return bool(node.args) and _env_key_name(node.args[0], constants) is not None
     return False
 
@@ -443,7 +443,7 @@ def _is_environment_call(
 def _env_key_for_call(node: ast.Call, constants: dict[str, str]) -> str | None:
     if not node.args:
         return None
-    if _call_name(node.func) == "update":
+    if leaf_name(node.func) == "update":
         return _env_key_from_mapping(node.args[0], constants)
     return _env_key_name(node.args[0], constants)
 

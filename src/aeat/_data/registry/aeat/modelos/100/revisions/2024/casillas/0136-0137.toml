@@ -3,6 +3,7 @@ id = "0137"
 number = "0137"
 label = "Número de días en que el inmueble accesorio ha estado arrendado"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+data_type = "integer"
 semantic_role = "irpf_inmueble_dias_arrendado"
 legal_refs = ["ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

@@ -1198,7 +1198,9 @@ application:
       registry_policy_invalid: No se pudo cargar la política de verificación del registro.
       registry_snapshot_invalid: No se pudo cargar el snapshot del registro para verificar
         la declaración.
-      registry_snapshot_ref_mismatch: 'La instantanea de registro para el modelo %{modelo} %{period} no coincide con la referencia estampada en la declaracion: observada %{observed_ref}, resuelta %{resolved_ref}.'
+      registry_snapshot_ref_mismatch: 'La instantanea de registro para el modelo %{modelo}
+        %{period} no coincide con la referencia estampada en la declaracion: observada
+        %{observed_ref}, resuelta %{resolved_ref}.'
   wizard:
     errors:
       create_missing_filing_baseline: 'A la creación del perfil le faltan datos de
@@ -1644,7 +1646,11 @@ cli:
         actor_help: Etiqueta del operador registrada en el evento MODELO_EXPORTED.
         errors:
           output_required: Proporcione --output PATH para el artefacto fichero-BOE.
-        help: 'Exporta una revisión de modelo verificada o presentada a un fichero local compatible con AEAT (fichero-BOE). Local; nunca contacta con AEAT, y el fichero generado no es evidencia oficial de presentación ante AEAT. Use el justificante AEAT, la consulta de declaraciones presentadas o el cotejo CSV tras presentar.'
+        help: Exporta una revisión de modelo verificada o presentada a un fichero
+          local compatible con AEAT (fichero-BOE). Local; nunca contacta con AEAT,
+          y el fichero generado no es evidencia oficial de presentación ante AEAT.
+          Use el justificante AEAT, la consulta de declaraciones presentadas o el
+          cotejo CSV tras presentar.
         output_help: Ruta donde escribir el artefacto fichero-BOE.
         revision_help: Identificador de la revisión de cálculo a exportar; por defecto,
           la revisión verificada o presentada más reciente de la unidad de trabajo.
@@ -1936,7 +1942,11 @@ cli:
           no esta soportado para crear unidades de trabajo en este CLI. Base legal:
           Ley 19/1991 Art. 28 y Orden HAC/1023/2021. Presenta la declaracion en la
           Sede de la AEAT.'
-        create_stub_modelo_refused: 'Modelo %{modelo} (declaración informativa sobre monedas virtuales situadas en el extranjero) no está soportado para crear unidades de trabajo en este CLI. Autoridad legal: Orden HFP/886/2023 y RD 1065/2007 Art. 42 quáter; el umbral informativo es 50.000 EUR a 31 de diciembre. Presenta la declaración en la Sede de la AEAT cuando exista obligación legal.'
+        create_stub_modelo_refused: 'Modelo %{modelo} (declaración informativa sobre
+          monedas virtuales situadas en el extranjero) no está soportado para crear
+          unidades de trabajo en este CLI. Autoridad legal: Orden HFP/886/2023 y RD
+          1065/2007 Art. 42 quáter; el umbral informativo es 50.000 EUR a 31 de diciembre.
+          Presenta la declaración en la Sede de la AEAT cuando exista obligación legal.'
         dependencies_help: Muestra dependencias de historial de presentaciones entre
           modelos y los bloqueos clean-state actuales para una presentación objetivo
         discard_help: Marcar una unidad de trabajo como descartada (transición de
@@ -2125,10 +2135,19 @@ cli:
         runs_help: Listar las ejecuciones de flujo persistidas con sus ids de ejecución,
           de la más reciente a la más antigua. Usa un id de ejecución con `aeat app
           modelo work resume`. Solo local; nunca contacta con AEAT.
-        sal_beneficio_neto_help: 'Beneficio neto del ejercicio de la Sociedad Laboral (SAL/SLL, Ley 44/2015 Art. 14). Se aplica el 10% para calcular la dotación obligatoria a la reserva especial, limitada al primer céntimo por encima del doble del capital social. Úsalo junto con --sal-reserva-dotada y --sal-capital-social.'
-        sal_capital_social_help: 'Capital social de la Sociedad Laboral (Ley 44/2015 Art. 14). Base del umbral estricto: la dotación se anula cuando la reserva acumulada alcanza el primer céntimo por encima del doble del capital social. Necesario junto con --sal-beneficio-neto y --sal-reserva-dotada.'
+        sal_beneficio_neto_help: Beneficio neto del ejercicio de la Sociedad Laboral
+          (SAL/SLL, Ley 44/2015 Art. 14). Se aplica el 10% para calcular la dotación
+          obligatoria a la reserva especial, limitada al primer céntimo por encima
+          del doble del capital social. Úsalo junto con --sal-reserva-dotada y --sal-capital-social.
+        sal_capital_social_help: 'Capital social de la Sociedad Laboral (Ley 44/2015
+          Art. 14). Base del umbral estricto: la dotación se anula cuando la reserva
+          acumulada alcanza el primer céntimo por encima del doble del capital social.
+          Necesario junto con --sal-beneficio-neto y --sal-reserva-dotada.'
         sal_computation_error: 'Error de cómputo SAL: %{message}'
-        sal_reserva_dotada_help: 'Reserva especial acumulada en ejercicios anteriores (Ley 44/2015 Art. 14). Se usa para comprobar si la reserva ya alcanza el primer céntimo por encima del doble del capital social. Necesario junto con --sal-beneficio-neto y --sal-capital-social.'
+        sal_reserva_dotada_help: Reserva especial acumulada en ejercicios anteriores
+          (Ley 44/2015 Art. 14). Se usa para comprobar si la reserva ya alcanza el
+          primer céntimo por encima del doble del capital social. Necesario junto
+          con --sal-beneficio-neto y --sal-capital-social.
         sal_reserva_not_decimal: Los valores --sal-* deben ser importes decimales.
         selector_ambiguous: Mas de una unidad de trabajo activa coincide con este
           modelo/ano/periodo. Elija una revision del registro o pase un id de unidad
@@ -2655,6 +2674,13 @@ cli:
       help: Verificar que una clave de recuperacion abre el envoltorio de recuperacion
         persistido.
     workflow_help: Mostrar ayuda del flujo de configuración
+  contract:
+    app_help: 'Emite el manifiesto de capacidades del operador: raices, familias de comandos, ciclo de vida y esquemas de resultado.'
+    summary_commands: 'Comandos registrados: {count}'
+    summary_families: 'Familias de comandos: {count}'
+    summary_heading: 'Manifiesto de la superficie del operador'
+    summary_lifecycle: 'Ciclo de vida del modelo: {steps}'
+    summary_roots: 'Raices: {roots}'
   diagnostics:
     browser:
       http_status_label: Estado HTTP
@@ -2794,8 +2820,8 @@ cli:
       attachment_help: Id de adjunto seguro a enlazar con el movimiento; repetir para
         varios adjuntos
       help: Adjuntar objetos de evidencia segura a un movimiento del libro. Crea antes
-        un id de justificante de factura de compra con 'aeat app ledger evidence
-        add PATH'.
+        un id de justificante de factura de compra con 'aeat app ledger evidence add
+        PATH'.
       id_help: Id del movimiento del libro al que adjuntar evidencia
       purchase_invoice_evidence_help: Id de justificante de factura de compra que
         soporta el movimiento; créalo con 'aeat app ledger evidence add PATH'
@@ -3940,12 +3966,20 @@ errors:
     lookup_dispatch_arg_count: El operador {op} de la fórmula espera {expected} argumentos.
     lookup_dispatch_arg_kind: El operador {op} de la fórmula requiere que {position}
       sea una hoja de tipo {expected_kind}.
-    m210_gastos_deducibles_negative: 'Los gastos_deducibles M210 %{casilla_id} no pueden ser negativos; valor recibido %{value}.'
-    m210_gastos_deducibles_not_allowed: 'Los gastos_deducibles M210 %{casilla_id} solo se admiten en la ruta UE/EEE del articulo 24.6; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.'
-    m210_imputation_coefficient_invalid: 'El coeficiente de imputacion inmobiliaria M210 %{casilla_id} debe ser uno de los tipos del art. 85 declarados en el registro (%{allowed_values}); valor recibido %{value}.'
-    m210_imputation_days_invalid: 'Los dias de imputacion M210 %{casilla_id} deben ser un entero entre 1 y %{max_days}; valor recibido %{value}.'
-    m210_imputation_no_catastral_value_missing: 'La imputacion inmobiliaria M210 sin valor catastral requiere un valor de adquisicion o valor comprobado por la Administracion positivo (%{acquisition_casilla_id}, %{administrative_casilla_id}).'
-    m210_imputation_no_filing_year: 'La imputacion inmobiliaria M210 requiere un ejercicio de declaracion no nulo.'
+    m210_gastos_deducibles_negative: Los gastos_deducibles M210 %{casilla_id} no pueden
+      ser negativos; valor recibido %{value}.
+    m210_gastos_deducibles_not_allowed: Los gastos_deducibles M210 %{casilla_id} solo
+      se admiten en la ruta UE/EEE del articulo 24.6; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.
+    m210_imputation_coefficient_invalid: El coeficiente de imputacion inmobiliaria
+      M210 %{casilla_id} debe ser uno de los tipos del art. 85 declarados en el registro
+      (%{allowed_values}); valor recibido %{value}.
+    m210_imputation_days_invalid: Los dias de imputacion M210 %{casilla_id} deben
+      ser un entero entre 1 y %{max_days}; valor recibido %{value}.
+    m210_imputation_no_catastral_value_missing: La imputacion inmobiliaria M210 sin
+      valor catastral requiere un valor de adquisicion o valor comprobado por la Administracion
+      positivo (%{acquisition_casilla_id}, %{administrative_casilla_id}).
+    m210_imputation_no_filing_year: La imputacion inmobiliaria M210 requiere un ejercicio
+      de declaracion no nulo.
     parameter_unknown: El parámetro {parameter_id} no está registrado.
     relation_value_missing: La relación {relation_id} no tiene valor asignado.
     text_input_non_text_casillas: 'Entrada de texto suministrada para casillas no
@@ -5231,6 +5265,9 @@ wizard:
           del titulo II de la Ley 49/2002.
       llm-vision:
         help: Activar la visión LLM local para leer facturas.
+      modelo-111-no-retenciones-periods:
+        help: Periodos Modelo 111 sin obligación, separados por comas, formato AAAA:PERIODO
+          (por ejemplo 2025:2T,2025:3T). Usar solo cuando no se pagaron rentas sujetas.
       monedas-virtuales-extranjero-above-threshold:
         help: Monedas virtuales en el extranjero superan el umbral del Modelo 721
       name:
@@ -5246,10 +5283,6 @@ wizard:
         help: Idioma de salida de la CLI para este perfil
       pays-capital-income-with-retencion:
         help: Paga rentas de capital con retención
-      modelo-111-no-retenciones-periods:
-        help: 'Periodos Modelo 111 sin obligación, separados por comas, formato
-          AAAA:PERIODO (por ejemplo 2025:2T,2025:3T). Usar solo cuando no se
-          pagaron rentas sujetas.'
       pays-professionals-with-retencion:
         help: Paga a profesionales con retención
       pays-rent-with-retencion:
@@ -5391,14 +5424,14 @@ wizard:
         help: Fecha en que el trabajador optó por el régimen de impatriados (RIRPF
           Art. 116). El régimen expira al finalizar el 6.º año natural.
         prompt: Fecha de inicio del régimen especial (AAAA-MM-DD)
+      modelo-111-no-retenciones-periods:
+        help: Periodos AAAA:PERIODO en los que no se pagaron rentas sujetas a retención
+          o ingreso a cuenta, por lo que no se presenta un Modelo 111 en blanco.
+        prompt: Periodos Modelo 111 sin retenciones
       monedas-virtuales-extranjero-above-threshold:
         prompt: Monedas virtuales en el extranjero superan el umbral del Modelo 721
       pays-capital-income-with-retencion:
         prompt: Paga rentas de capital con retención
-      modelo-111-no-retenciones-periods:
-        help: 'Periodos AAAA:PERIODO en los que no se pagaron rentas sujetas a retención
-          o ingreso a cuenta, por lo que no se presenta un Modelo 111 en blanco.'
-        prompt: Periodos Modelo 111 sin retenciones
       pays-professionals-with-retencion:
         prompt: Paga a profesionales con retención
       pays-rent-with-retencion:

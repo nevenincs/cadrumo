@@ -2,9 +2,11 @@
 
 One ``aeat app ledger invoice`` noun-group gated by ``--kind issued|received``
 replaces the prior payable-invoice / collectible-invoice split. The operator's
-``--kind`` is routed through :func:`invoice_direction_to_source_kind` (the single
+``--kind`` is routed through
+:func:`~aeat.application.invoices.invoice_direction_to_source_kind` (the single
 contractual direction->settlement mapping) to select the matching slim CRUD
-service over the encrypted :class:`BusinessOperationInvoice` catalogue.
+service over the encrypted
+:class:`~aeat.application.ledger.BusinessOperationInvoice` catalogue.
 """
 
 from __future__ import annotations
@@ -61,10 +63,11 @@ from ._ledger_payloads import (
 class InvoiceKindOption(StrEnum):
     """Operator-facing ``--kind`` axis for the unified invoice command.
 
-    Mirrors :class:`InvoiceKind`; declared as the Typer option type so click
-    renders ``Choice([issued, received])`` and instructs the operator on parse
-    failure. ``issued`` settles to ``collectible_invoice``; ``received`` settles
-    to ``payable_invoice`` via :func:`invoice_direction_to_source_kind`.
+    Mirrors :class:`~aeat.domain.iva.InvoiceKind`; declared as the Typer option
+    type so click renders ``Choice([issued, received])`` and instructs the
+    operator on parse failure. ``issued`` settles to ``collectible_invoice``;
+    ``received`` settles to ``payable_invoice`` via
+    :func:`~aeat.application.invoices.invoice_direction_to_source_kind`.
     """
 
     ISSUED = "issued"
@@ -487,10 +490,11 @@ def catalogue_create(
     """Create a rich linkable invoice in the reconciliation catalogue.
 
     The slim ``invoice add`` record cannot be linked to a transaction; this
-    verb mints the rich :class:`Invoice` whose content-addressed ``invoice_id``
-    is the value ``aeat app ledger link --invoice-id`` resolves. Supplying an
-    intra-community ``--operation-type`` stamps the invoice so the Modelo 349
-    recapitulative calculation can read it.
+    verb mints the rich :class:`~aeat.domain.invoices.Invoice` whose
+    content-addressed ``invoice_id`` is the value
+    ``aeat app ledger link --invoice-id`` resolves. Supplying an intra-community
+    ``--operation-type`` stamps the invoice so the Modelo 349 recapitulative
+    calculation can read it.
     """
     from pydantic import ValidationError
 

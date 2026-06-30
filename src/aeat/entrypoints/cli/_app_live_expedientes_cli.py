@@ -1,4 +1,14 @@
-"""Typer registration for live expedientes snapshot commands."""
+"""Typer registration for read-only live expedientes snapshot commands.
+
+The pull/list/view/latest verbs route AEAT declaration-register captures through
+:func:`~aeat.application.live.capture_expedientes_bulk` and
+:class:`~aeat.application.live.ExpedientesService`, then emit
+:class:`~aeat.entrypoints.cli._app_live_payloads.ExpedientesCaptureResult`,
+:class:`~aeat.entrypoints.cli._app_live_payloads.ExpedientesListResult`,
+:class:`~aeat.entrypoints.cli._app_live_payloads.ExpedientesViewResult`, or
+:class:`~aeat.entrypoints.cli._app_live_payloads.ExpedientesLatestResult`
+through :func:`~aeat.entrypoints.cli._common._emit_envelope`.
+"""
 
 from __future__ import annotations
 
@@ -69,7 +79,7 @@ class _ExpedientesRowDict(TypedDict):
 
 
 class _SnapshotWithCapturedAt(Protocol):
-    """Minimal surface required by :func:`_expedientes_row`."""
+    """Minimal surface required by :func:`~aeat.entrypoints.cli._app_live_expedientes_cli._expedientes_row`."""
 
     @property
     def captured_at(self) -> _datetime: ...

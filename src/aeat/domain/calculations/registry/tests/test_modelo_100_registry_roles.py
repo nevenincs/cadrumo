@@ -556,3 +556,340 @@ def test_modelo_100_anexo_c_energy_excess_roles_are_spelled_and_grounded(filing_
     assert not offences, "misspelled Anexo C energy-efficiency roles remain:\n  " + "\n  ".join(offences)
     assert _ANEXO_C_ENERGY_EXCESS_ROLES.issubset(set(roles_by_casilla.values()))
     assert not missing_da50
+
+
+def test_modelo_100_prevision_social_0383_splits_income_threshold_polarity() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_by_year = {
+        2023: (
+            "irpf_red_prevision_social_rendimientos_trabajo_igual_inferior_60000_flag",
+            "iguales o inferiores a 60.000",
+        ),
+        2024: (
+            "irpf_red_prevision_social_rendimientos_trabajo_igual_inferior_60000_flag",
+            "iguales o inferiores a 60.000",
+        ),
+        2025: (
+            "irpf_red_prevision_social_rendimientos_trabajo_superior_60000_flag",
+            "superiores a 60.000",
+        ),
+    }
+
+    for filing_year, (expected_role, label_fragment) in expected_by_year.items():
+        revision = modelo.revisions[str(filing_year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0383"))
+
+        assert tuple(casilla.section) == ("toma_datos_ampliada", "red_base_imponible", "red_prevision_social")
+        assert casilla.semantic_role == expected_role
+        assert label_fragment in casilla.label
+        if filing_year == 2025:
+            assert casilla.semantic_role_cardinality == "intentional_singleton"
+            assert casilla.semantic_role_cardinality_reason
+            assert "flips casilla 0383" in casilla.semantic_role_cardinality_reason
+        else:
+            assert casilla.semantic_role_cardinality == "shared"
+        assert {"ley-35-2006:art-51", "ley-35-2006:art-52"}.issubset(casilla.legal_refs)
+        assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+            casilla.source_refs,
+        )
+
+    assert all(
+        casilla.semantic_role != "irpf_red_prevision_social_rendimientos_trabajo_rango_flag"
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    )
+
+
+def test_modelo_100_derechos_transmission_global_role_spans_revisions() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_role = "irpf_ganancia_derechos_valor_transmision_global"
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0343"))
+
+        assert tuple(casilla.section) == ("toma_datos_ampliada", "gp_derechos", "entidad_derecho")
+        assert casilla.semantic_role == expected_role
+        assert casilla.label.startswith("Importe global de las transmisiones efectuadas en ")
+        assert {"ley-35-2006:art-33", "ley-35-2006:art-34"}.issubset(casilla.legal_refs)
+        assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+            casilla.source_refs,
+        )
+
+    assert all(
+        casilla.semantic_role != "irpf_ganancia_transmisiones_importe_global_2024"
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    )
+
+
+def test_modelo_100_premios_0303_splits_historical_emancipation_grant_from_rental_aid() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_by_year = {
+        2020: ("irpf_ganancia_premios_renta_basica_emancipacion", "emancipaci"),
+        2021: ("irpf_ganancia_premios_renta_basica_emancipacion", "emancipaci"),
+        2022: ("irpf_ganancia_premios_ayuda_alquiler", "al alquiler"),
+        2023: ("irpf_ganancia_premios_ayuda_alquiler", "al alquiler"),
+        2024: ("irpf_ganancia_premios_ayuda_alquiler", "al alquiler"),
+        2025: ("irpf_ganancia_premios_ayuda_alquiler", "al alquiler"),
+    }
+
+    for filing_year, (expected_role, label_fragment) in expected_by_year.items():
+        revision = modelo.revisions[str(filing_year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0303"))
+
+        assert tuple(casilla.section) == ("toma_datos_ampliada", "gp_premios", "otras")
+        assert casilla.semantic_role == expected_role
+        assert label_fragment in casilla.label
+        assert {"ley-35-2006:art-33", "ley-35-2006:art-34"}.issubset(casilla.legal_refs)
+        assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+            casilla.source_refs,
+        )
+
+    assert all(
+        casilla.semantic_role != "irpf_ganancia_renta_basica_emancipacion"
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    )
+
+
+def test_modelo_100_2020_0356_is_gp_otros_ordinal_element_number() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    revision_2020 = modelo.revisions["2020"]
+    casilla = next(casilla for casilla in revision_2020.casillas if casilla.id == _casilla_id("0356"))
+
+    assert casilla.label == "Número de orden del elemento"
+    assert tuple(casilla.section) == ("toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial")
+    assert casilla.data_type == "integer"
+    assert casilla.semantic_role == "irpf_gp_elemento_numero_orden"
+    assert tuple(casilla.legal_refs) == ("ley-35-2006:art-33", "ley-35-2006:art-34")
+    assert {"aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-xsd"}.issubset(casilla.source_refs)
+
+    later_revision_roles = {
+        filing_year: next(
+            casilla.semantic_role
+            for casilla in modelo.revisions[str(filing_year)].casillas
+            if casilla.id == _casilla_id("0356")
+        )
+        for filing_year in range(2022, 2026)
+    }
+
+    assert set(later_revision_roles.values()) == {"irpf_ganancia_premios_ayuda_200_euros"}
+
+
+def test_modelo_100_tfi_operation_counts_are_integer_until_restructure() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_roles = {
+        _casilla_id("0414"): "irpf_re_especial_tfi_declarante_num_operaciones",
+        _casilla_id("0416"): "irpf_re_especial_tfi_conyuge_num_operaciones",
+    }
+
+    for filing_year in range(2020, 2023):
+        revision = modelo.revisions[str(filing_year)]
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_roles}
+
+        assert set(casillas_by_id) == set(expected_roles)
+        for casilla_id, expected_role in expected_roles.items():
+            casilla = casillas_by_id[casilla_id]
+
+            assert casilla.label.endswith("Nº de operaciones")
+            assert tuple(casilla.section) == ("toma_datos_ampliada", "regimen_especial")
+            assert casilla.data_type == "integer"
+            assert casilla.semantic_role == expected_role
+            assert "ley-35-2006:art-37" in casilla.legal_refs
+            assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+                casilla.source_refs,
+            )
+
+    revision_2025 = modelo.revisions["2025"]
+    casilla_0414_2025 = next(casilla for casilla in revision_2025.casillas if casilla.id == _casilla_id("0414"))
+
+    assert casilla_0414_2025.semantic_role == "irpf_deduccion_obtencion_rendimientos_trabajo"
+    assert tuple(casilla_0414_2025.section) == ("resultado_declaracion",)
+
+
+def test_modelo_100_2025_coti_fund_loss_role_matches_loss_label() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    revision = modelo.revisions["2025"]
+    coti_loss = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("2233"))
+    general_loss = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0321"))
+
+    assert coti_loss.label == "Pérdidas patrimoniales"
+    assert tuple(coti_loss.section) == ("toma_datos_ampliada", "gp_fondos_coti", "fondo")
+    assert coti_loss.semantic_role == "irpf_perdida_fondos_coti_importe"
+    assert coti_loss.semantic_role_cardinality == "intentional_singleton"
+    assert coti_loss.semantic_role_cardinality_reason
+    assert "quoted-fund coti capital-loss slot" in coti_loss.semantic_role_cardinality_reason
+    assert {"ley-35-2006:art-33", "ley-35-2006:art-34"}.issubset(coti_loss.legal_refs)
+    assert {"aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd"}.issubset(coti_loss.source_refs)
+
+    assert general_loss.label == coti_loss.label
+    assert general_loss.semantic_role == "irpf_perdida_fondos_importe"
+    assert all(
+        casilla.semantic_role != "irpf_perdida_fondos_coti_importe_obtenido"
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    )
+
+
+def test_modelo_100_inmueble_0080_activity_use_days_are_integer() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_role = "irpf_inmueble_dias_afecto_actividades_economicas"
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0080"))
+
+        assert (
+            casilla.label
+            == "Número de días en que ha tenido este uso: Bien inmueble afecto a actividades económicas"
+        )
+        assert tuple(casilla.section) == ("toma_datos_ampliada", "inmuebles", "inmueble")
+        assert casilla.data_type == "integer"
+        assert casilla.semantic_role == expected_role
+        assert {"ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30"}.issubset(
+            casilla.legal_refs,
+        )
+        assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+            casilla.source_refs,
+        )
+
+
+def test_modelo_100_inmueble_0076_habitual_residence_days_are_integer() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_role = "irpf_inmueble_dias_vivienda_habitual"
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0076"))
+
+        assert casilla.label == f"Número de días en que el inmueble ha sido su vivienda habitual en {filing_year}"
+        assert tuple(casilla.section) == ("toma_datos_ampliada", "inmuebles", "inmueble")
+        assert casilla.data_type == "integer"
+        assert casilla.semantic_role == expected_role
+        assert "ley-35-2006:art-22" in casilla.legal_refs
+        assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+            casilla.source_refs,
+        )
+
+
+def test_modelo_100_inmueble_0079_use_days_are_integer() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_role = "irpf_inmueble_dias_uso"
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0079"))
+
+        assert casilla.label == "Número de días en que la vivienda ha tenido este uso"
+        assert tuple(casilla.section) == ("toma_datos_ampliada", "inmuebles", "inmueble")
+        assert casilla.data_type == "integer"
+        assert casilla.semantic_role == expected_role
+        assert "ley-35-2006:art-22" in casilla.legal_refs
+        assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+            casilla.source_refs,
+        )
+
+
+def test_modelo_100_inmueble_0085_disposal_days_are_integer() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_role = "irpf_inmueble_dias_a_disposicion"
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0085"))
+
+        assert casilla.label == "Número de días a disposición del contribuyente"
+        assert tuple(casilla.section) == ("toma_datos_ampliada", "inmuebles", "inmueble")
+        assert casilla.data_type == "integer"
+        assert casilla.semantic_role == expected_role
+        assert "ley-35-2006:art-22" in casilla.legal_refs
+        assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+            casilla.source_refs,
+        )
+
+
+def test_modelo_100_inmueble_0088_mixed_use_days_are_integer() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_role = "irpf_inmueble_dias_otros_usos"
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0088"))
+
+        assert casilla.label == "Número de días"
+        assert tuple(casilla.section) == ("toma_datos_ampliada", "inmuebles", "inmueble")
+        assert casilla.data_type == "integer"
+        assert casilla.semantic_role == expected_role
+        assert "ley-35-2006:art-22" in casilla.legal_refs
+        assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+            casilla.source_refs,
+        )
+
+
+def test_modelo_100_inmueble_rented_days_are_integer() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_labels = {
+        "0101": "Número de días en que el inmueble ha estado arrendado",
+        "0122": "Número de días en que el inmueble ha estado arrendado",
+        "0137": "Número de días en que el inmueble accesorio ha estado arrendado",
+    }
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        for casilla_id, expected_label in expected_labels.items():
+            casilla = next(
+                casilla for casilla in revision.casillas if casilla.id == _casilla_id(casilla_id)
+            )
+
+            assert casilla.label == expected_label
+            assert tuple(casilla.section) == ("toma_datos_ampliada", "inmuebles", "inmueble")
+            assert casilla.data_type == "integer"
+            assert casilla.semantic_role == "irpf_inmueble_dias_arrendado"
+            assert "ley-35-2006:art-23" in casilla.legal_refs
+            assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+                casilla.source_refs,
+            )
+
+
+def test_modelo_100_retrib_especie_no_exenta_total_role_names_aggregate() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_role = "irpf_retrib_especie_no_exenta_importe_integro_pendiente_imputacion"
+    expected_legal_refs = {
+        "ley-35-2006:art-17",
+        "ley-35-2006:art-42.3.f",
+        "ley-35-2006:art-14.2.m",
+    }
+
+    for filing_year in range(2023, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("1971"))
+
+        assert tuple(casilla.section) == ("toma_datos_ampliada", "rdto_trabajo", "retrib_especie_anexo_c")
+        assert casilla.semantic_role == expected_role
+        assert "42.3.f" in casilla.label
+        assert "14.2.m" in casilla.label
+        assert casilla.label.endswith("Impo...")
+        assert expected_legal_refs.issubset(casilla.legal_refs)
+        assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+            casilla.source_refs,
+        )
+
+    assert all(
+        casilla.semantic_role != "irpf_retrib_especie_importe_no_exenta_4"
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    )

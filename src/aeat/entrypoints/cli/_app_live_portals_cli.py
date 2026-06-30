@@ -1,7 +1,9 @@
 """Portal registry command registration for ``aeat app live portals``.
 
-The list verb accepts :class:`PortalCategory` filters and projects local portal
-registry metadata into CLI envelopes.
+The list verb accepts :class:`~aeat.domain.portals.PortalCategory` filters and
+projects local :class:`~aeat.domain.portals.PortalMetadata` records from
+:data:`~aeat.domain.portals.PORTAL_REGISTRY` into
+:class:`~aeat.entrypoints.cli._app_live_payloads.PortalEntryPayload` envelopes.
 """
 
 from __future__ import annotations
@@ -87,8 +89,9 @@ def portals_list(
 ) -> None:
     """List local AEAT portal registry entries, optionally filtered by category or modelo.
 
-    The ``category`` option is parsed as :class:`PortalCategory` and passed to
-    the registry category filter.
+    The ``category`` option is parsed as
+    :class:`~aeat.domain.portals.PortalCategory` and passed to
+    :func:`~aeat.domain.portals.portals_by_category`.
     """
     from ...domain.portals import PORTAL_REGISTRY, portals_by_category, portals_for_modelo
 
@@ -125,7 +128,7 @@ def portals_show(
         typer.Argument(help=tr("cli.app.live.portals.portal_id_help", default="Portal enum value.")),
     ],
 ) -> None:
-    """Show one portal-registry entry by its ``Portal`` enum value id."""
+    """Show one portal-registry entry by its :class:`~aeat.domain.portals.Portal` id."""
     from ...domain.portals import UnknownPortalError, get_portal
 
     try:

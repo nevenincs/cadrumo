@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from ...tests._inventory import leaf_name
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
@@ -21,14 +23,6 @@ def _repo_source(relative_path: str) -> str:
 
 def _repo_tree(relative_path: str) -> ast.AST:
     return ast.parse(_repo_source(relative_path))
-
-
-def _call_name(func: ast.expr) -> str:
-    if isinstance(func, ast.Name):
-        return func.id
-    if isinstance(func, ast.Attribute):
-        return func.attr
-    return ""
 
 
 def _assert_module_constant_identity(
@@ -55,7 +49,7 @@ def _decimal_call_literal_offenders(
     for node in ast.walk(_repo_tree(relative_path)):
         if not isinstance(node, ast.Call):
             continue
-        if _call_name(node.func) != "Decimal":
+        if leaf_name(node.func) != "Decimal":
             continue
         if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == literal:
             offenders.append(f"{display_path}:{node.lineno}: bare Decimal({literal!r}); use {replacement}")
@@ -73,7 +67,7 @@ def _min_arg_literal_offenders(
     for node in ast.walk(_repo_tree(relative_path)):
         if not isinstance(node, ast.Call):
             continue
-        if _call_name(node.func) != "min":
+        if leaf_name(node.func) != "min":
             continue
         for arg in node.args:
             if isinstance(arg, ast.Constant) and arg.value == literal:
