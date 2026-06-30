@@ -1,16 +1,16 @@
-# M210 IRNR Phase 1 baseline tipo-de-gravamen table (W09.P41.S388).
+# M210 IRNR baseline tipo-de-gravamen table.
 #
 # Keyed-bracket-table parameter mapping each declarable tipo_renta to
 # its TRLIRNR baseline rate. The lookup is exact-match on tipo_renta;
 # there is no notion of numeric-interval overlap because the domain is
 # an enum of regulatory categories, not an income amount.
 #
-# Phase 1 rows (per m210-irnr-full-engine ADR §D2.3):
+# Current rows:
 # - general                 → 24% (TRLIRNR Art 25.1.a baseline)
 # - ue_residente            → 19% (TRLIRNR Art 25.1.a UE/EEE)
 # - ganancia_patrimonial    → 19% (TRLIRNR Art 25.1.f, savings-base rate)
-# - inmobiliaria            → 24% (TRLIRNR Art 25.1.a; deduction routing
-#                                  via Art 24.5 deferred to Phase 2)
+# - inmobiliaria            → 24% (TRLIRNR Art 25.1.a; Art 24.5 reaches
+#                                  the imputed-real-estate base mechanics)
 # - interest                → 19% (TRLIRNR Art 25.1.f.2º: "intereses y otros
 #                                  rendimientos obtenidos por la cesión a
 #                                  terceros de capitales propios" tributan al
@@ -31,9 +31,8 @@
 # tipo_renta is `pension`. Other future tipos with no row still surface
 # as deferred/missing coverage through the lookup helper.
 #
-# S389 will compose this baseline with an override table
-# (m210-convenio-rates) that REPLACES the baseline when the profile
-# declares a treaty country.
+# `m210-convenio-rates` replaces this baseline when the profile declares a
+# treaty country with a matching row for the filed tipo_renta.
 
 [[revisions."2025".parameters]]
 id = "m210-tipo-gravamen-2025"

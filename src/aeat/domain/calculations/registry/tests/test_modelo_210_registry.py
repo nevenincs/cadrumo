@@ -287,3 +287,10 @@ def test_modelo_210_pension_tariff_and_convenio_row_are_grounded() -> None:
     assert "Las pensiones pagadas por un Estado Contratante" in treaty_text
     assert "solo pueden someterse a imposicion en este Estado" in treaty_text
     assert ar_treaty.document_id == "BOE-A-1994-20084"
+
+    casillas = {casilla.id: casilla for casilla in revision.casillas}
+    assert "trlirnr-rdleg-5-2004:art-25.1.b" in modelo.legal_refs
+    assert "trlirnr-rdleg-5-2004:art-25.1.b" in revision.legal_refs
+    assert "trlirnr-rdleg-5-2004:art-25.1.b" in casillas["tipo_renta"].legal_refs
+    assert "trlirnr-rdleg-5-2004:art-25.1.b" in casillas["tipo_gravamen"].legal_refs
+    assert "trlirnr-rdleg-5-2004:art-25.1.b" in casillas["cuota_integra"].legal_refs

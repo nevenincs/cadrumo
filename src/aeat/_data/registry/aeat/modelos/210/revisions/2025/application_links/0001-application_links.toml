@@ -1,10 +1,9 @@
-# Modelo 210 Phase 1 application-link declaration (W04.P19.S387.patch).
+# Modelo 210 application-link declaration.
 #
 # The validator requires at least one filing or communication surface
-# to satisfy the casilla-routing contract. Phase 1 declares the
-# minimum filing link (the engine path that S389 will wire); broader
-# surfaces (export, extractor, verification, review, workflow,
-# reconciliation, portal) land alongside the Phase 2 schema work.
+# to satisfy the casilla-routing contract. The 2025 revision declares
+# the current filing, calculation, verification, review, approval,
+# reconciliation, and workflow consumers.
 
 [[revisions."2025".application_links]]
 id = "modelo-210-2025-filing"
@@ -15,6 +14,8 @@ legal_refs = [
     "trlirnr-rdleg-5-2004:art-13.1.h",
     "trlirnr-rdleg-5-2004:art-24",
     "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.b",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
     "ley-35-2006:art-85",
 ]
 source_refs = [
@@ -32,6 +33,7 @@ legal_refs = [
     "trlirnr-rdleg-5-2004:art-13.1.h",
     "trlirnr-rdleg-5-2004:art-24",
     "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.b",
     "trlirnr-rdleg-5-2004:art-25.1.f",
     "ley-35-2006:art-85",
 ]
@@ -46,6 +48,7 @@ legal_refs = [
     "trlirnr-rdleg-5-2004:art-13.1.h",
     "trlirnr-rdleg-5-2004:art-24",
     "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.b",
     "trlirnr-rdleg-5-2004:art-25.1.f",
     "ley-35-2006:art-85",
 ]
@@ -60,6 +63,7 @@ legal_refs = [
     "trlirnr-rdleg-5-2004:art-13.1.h",
     "trlirnr-rdleg-5-2004:art-24",
     "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.b",
     "trlirnr-rdleg-5-2004:art-25.1.f",
     "ley-35-2006:art-85",
 ]
@@ -74,6 +78,7 @@ legal_refs = [
     "trlirnr-rdleg-5-2004:art-13.1.h",
     "trlirnr-rdleg-5-2004:art-24",
     "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.b",
     "trlirnr-rdleg-5-2004:art-25.1.f",
     "ley-35-2006:art-85",
 ]
@@ -88,6 +93,7 @@ legal_refs = [
     "trlirnr-rdleg-5-2004:art-13.1.h",
     "trlirnr-rdleg-5-2004:art-24",
     "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.b",
     "trlirnr-rdleg-5-2004:art-25.1.f",
     "ley-35-2006:art-85",
 ]
@@ -102,6 +108,7 @@ legal_refs = [
     "trlirnr-rdleg-5-2004:art-13.1.h",
     "trlirnr-rdleg-5-2004:art-24",
     "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.b",
     "trlirnr-rdleg-5-2004:art-25.1.f",
     "ley-35-2006:art-85",
 ]
