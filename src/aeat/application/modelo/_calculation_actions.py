@@ -85,9 +85,7 @@ from ._action_errors import (
     ModeloCrossPeriodCleanStateError,
     WorkUnitNotFoundError,
 )
-from ._binding_resolution import (
-    resolve_available_bound_inputs_by_casilla_id,
-)
+from ._binding_resolution import resolve_available_bound_inputs_by_casilla_id
 from ._calculation_aggregation_context import load_bucket_aggregation_context as _load_bucket_aggregation_context
 from ._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from ._calculation_helpers import (
@@ -96,11 +94,15 @@ from ._calculation_helpers import (
 from ._calculation_helpers import (
     resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit,
 )
-from ._calculation_preparation import _IVA_LEDGER_EXEMPT_REGIMES as _IVA_LEDGER_EXEMPT_REGIMES
+from ._calculation_preparation import (
+    _IVA_LEDGER_EXEMPT_REGIMES as _IVA_LEDGER_EXEMPT_REGIMES,
+)
 from ._calculation_preparation import (
     _raise_if_ledger_preflight_blocks_calculation as _raise_if_ledger_preflight_blocks_calculation,
 )
-from ._calculation_preparation import prepare_calculation as _prepare_calculation
+from ._calculation_preparation import (
+    prepare_calculation as _prepare_calculation,
+)
 from ._calculation_resolution import (
     build_calculation_replay_payloads as _build_calculation_replay_payloads,
 )
@@ -195,15 +197,8 @@ def _m390_303_reconciliation_targets(
         target_casilla = target_casillas_by_binding.get(relation.target_binding)
         if target_casilla is None:
             continue
-        targets.append(
-            (
-                relation.id,
-                relation.target_binding,
-                target_casilla,
-                relation.source_casilla_id,
-                annual_casilla,
-            ),
-        )
+        target = relation.id, relation.target_binding, target_casilla, relation.source_casilla_id, annual_casilla
+        targets.append(target)
     return tuple(targets)
 
 
@@ -689,9 +684,7 @@ def _resolve_bucket_source_mesh(
 #     unresolved slot of these as absent-by-design (operator-manual fallback) or
 #     the relation channel already surfaces its own diagnostic;
 #   - manual_input: the operator supplies the value directly.
-_NON_SILENT_BOUND_BINDING_SOURCES: frozenset[str] = frozenset(
-    {"previous_filing", "relation_prefill", "manual_input"},
-)
+_NON_SILENT_BOUND_BINDING_SOURCES: frozenset[str] = frozenset({"previous_filing", "relation_prefill", "manual_input"})
 
 
 def _expected_but_missing_binding_ids(
