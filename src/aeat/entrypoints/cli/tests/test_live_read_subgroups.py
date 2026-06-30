@@ -63,6 +63,8 @@ from .._app_live_auth_preflight import _live_auth_preflight_lines
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_ACTIVE_TEST_BUCKET_ID = "00000000-0000-4000-8000-000000000000"
+
 _FORBIDDEN_LIVE_MUTATION_VERBS = frozenset(
     {
         "submit",
@@ -121,10 +123,10 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(aeat_audit_dir=tmp_path / "audit"),
-        profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
+        profile_create_storage_span(_ACTIVE_TEST_BUCKET_ID),
     ):
         workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id="00000000-0000-4000-8000-000000000000"),
+            lambda state: register_minimal_profile(state, profile_id=_ACTIVE_TEST_BUCKET_ID),
         )
         yield
 
@@ -197,7 +199,7 @@ class TestVerifySubgroup:
     def test_verify_latest_renders_persisted_observation(self) -> None:
         # Seed an observation via the service surface so the CLI has
         # something to render.
-        bucket_id = "default"
+        bucket_id = _ACTIVE_TEST_BUCKET_ID
         VerifyService().record(
             bucket_id=bucket_id,
             surface=VerifySurface.NIF_IVA,
@@ -232,7 +234,7 @@ class TestBorrador100Subgroup:
         assert result.exit_code != 0
 
     def test_borrador_100_full_lifecycle_via_service_seed(self) -> None:
-        bucket_id = "default"
+        bucket_id = _ACTIVE_TEST_BUCKET_ID
         Borrador100SnapshotService(bucket_id=bucket_id).capture(
             filing_year=2024,
             period=Period.from_year_and_code(2024, "0A"),

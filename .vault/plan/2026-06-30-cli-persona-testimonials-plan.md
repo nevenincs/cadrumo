@@ -119,17 +119,37 @@ Run owner-aware gates, vault hygiene, and closure audits so the campaign can dis
 
 Run scoped and broad gates with explicit owner classification so concurrent-agent WIP is not misreported as this campaign fixed or broken.
 
-- [ ] `W05.P10.S27` - Run calculation registry CLI and ledger gates for touched surfaces; `src/aeat`.
-- [ ] `W05.P10.S28` - Run owner-aware full-tree gate and classify unrelated failures; `.vault/audit`.
-- [ ] `W05.P10.S29` - Run vault plan and vault schema checks for changed campaign documents; `.vault/plan`.
+- [x] `W05.P10.S27` - Run calculation registry CLI and ledger gates for touched surfaces; `src/aeat`.
+- [x] `W05.P10.S28` - Run owner-aware full-tree gate and classify unrelated failures; `.vault/audit`.
+- [x] `W05.P10.S29` - Run vault plan and vault schema checks for changed campaign documents; `.vault/plan`.
 
 ### Phase `W05.P11` - honest closure and residual queue
 
 Publish closure records that enumerate fixed work, not-yet-fixed edges, residual risks, and follow-up waves for newly arrived testimonials.
 
-- [ ] `W05.P11.S30` - Publish campaign closure audit with fixed and residual edges; `.vault/audit`.
-- [ ] `W05.P11.S31` - Update open follow-up queue for new testimonials without claiming boundedness; `.vault/plan`.
-- [ ] `W05.P11.S32` - Review completed fixes with code-review agents before closure; `src/aeat`.
+- [x] `W05.P11.S30` - Publish campaign closure audit with fixed and residual edges; `.vault/audit`.
+- [x] `W05.P11.S31` - Update open follow-up queue for new testimonials without claiming boundedness; `.vault/plan`.
+- [x] `W05.P11.S32` - Review completed fixes with code-review agents before closure; `src/aeat`.
+
+## Wave `W06` - ongoing testimonial intake and residual hardening queue
+
+Keep the open-ended persona campaign active after the W05 checkpoint. New roots, transcripts, summaries, and closeout messages enter this queue, and artifact hygiene stays separate from product correctness.
+
+### Phase `W06.P12` - rolling intake and artifact hygiene
+
+Reconcile newly arrived persona artifacts and evidence gaps while keeping artifact completeness separate from calculation and CLI product correctness.
+
+- [ ] `W06.P12.S33` - Inventory newly arrived persona roots and transcript summary evidence since the W05 checkpoint; `tmp/personas`.
+- [ ] `W06.P12.S34` - Repair or document persona artifact evidence gaps for roots lacking local transcript BOE export or approval proof; `tmp/personas`.
+- [ ] `W06.P12.S35` - Keep the ignored closeout ledger and vault audit in sync without promoting scratch roots to product truth; `tmp/personas/_cpdefix-closeout-ledger.md`.
+
+### Phase `W06.P13` - next behavior defect dispatch
+
+Convert only reproduced operator-visible product defects into code work, with RAG-grounded briefs, disjoint ownership, review, and owner-aware gates.
+
+- [ ] `W06.P13.S36` - Replay new transcript final messages for under-declaration data-loss cross-profile legal-evidence and live-read risks; `tmp/personas`.
+- [ ] `W06.P13.S37` - Dispatch RAG-grounded code fixers for reproduced campaign-owned behavior defects; `agent orchestration`.
+- [ ] `W06.P13.S38` - Run owner-aware touched-surface gates for W06 fixes and classify unrelated baseline or concurrent failures; `src/aeat`.
 
 ## Description
 
