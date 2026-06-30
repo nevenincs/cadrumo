@@ -942,6 +942,7 @@ application:
           megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
           ki az AEAT kommunikaciohoz.
       modelo_210_2025_rendimientos_integros_implica_base_imponible: 'A bruttó jövedelem (rendimientos íntegros) pozitív, de az adóalap (base imponible) nulla; ellenőrizze az adóalap meghatározását.'
+      modelo_210_2025_inmobiliaria_implica_base_imponible: 'A jövedelem típusa inmobiliaria, de az adóalap nulla; ellenőrizze az imputált ingatlanjövedelem adóalapjának meghatározását (értékbecslés, együttható, beszámítási napok).'
       modelo_202_base_imponible_previa_determinada_cuando_resultado_positivo: 'A számviteli eredmény pozitív, de az előzetes adóalap (base imponible previa) nulla; ellenőrizze az adóalap meghatározását.'
       modelo_123_2024_base_total_implica_retenciones_total: 'A teljes adóalap pozitív, de a teljes forrásadó (retenciones) nulla; ellenőrizze a forrásadó meghatározását.'
       modelo_151_base_liquidable_implica_cuota_integra: 'Az általános adóalap (base liquidable general) pozitív, de a teljes adó (cuota íntegra general) nulla; ellenőrizze az adó meghatározását.'
@@ -2094,7 +2095,6 @@ cli:
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
-        file_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id} számítási revízió már be van nyújtva; a meglévő benyújtási rekord változatlanul visszaadva.'
   common:
     errors:
       draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található

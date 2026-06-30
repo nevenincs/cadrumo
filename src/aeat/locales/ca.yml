@@ -995,6 +995,7 @@ application:
           que els declarants IRNR no residents a la UE/EEE designin un representant
           per a comunicacions amb l'AEAT.
       modelo_210_2025_rendimientos_integros_implica_base_imponible: 'Els rendiments íntegres són positius però la base imposable és zero; reviseu la determinació de la base imposable.'
+      modelo_210_2025_inmobiliaria_implica_base_imponible: 'El tipus de renda és inmobiliaria però la base imposable és zero; reviseu la determinació de la base imposable de la renda immobiliària imputada (valor cadastral, coeficient, dies d''imputació).'
       modelo_202_base_imponible_previa_determinada_cuando_resultado_positivo: 'El resultat comptable és positiu però la base imposable prèvia és zero; reviseu la determinació de la base imposable.'
       modelo_123_2024_base_total_implica_retenciones_total: 'La base total és positiva però les retencions totals són zero; reviseu la determinació de la retenció.'
       modelo_151_base_liquidable_implica_cuota_integra: 'La base liquidable general és positiva però la quota íntegra general és zero; reviseu la determinació de la quota íntegra.'
@@ -2153,7 +2154,6 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
-        file_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul %{calculation_revision_id} ja està presentada; sha retornat el registre de presentació existent sense canvis.'
   common:
     errors:
       draft_id_not_found: ID d'esborrany %{draft_id} no trobat
