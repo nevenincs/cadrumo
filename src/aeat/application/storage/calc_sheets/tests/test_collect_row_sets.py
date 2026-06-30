@@ -41,6 +41,10 @@ def test_collect_row_sets_groups_modelo_349_bindings_by_grouping() -> None:
     assert "operator_clave_period" in by_grouping
     assert len(by_grouping["operator_clave"].columns) == 5
     assert len(by_grouping["operator_clave_period"].columns) == 8
+    for row_set in row_sets:
+        assert row_set.legal_refs
+        assert row_set.source_refs
+        assert all(column.legal_refs for column in row_set.columns)
 
 
 def test_collect_row_sets_suppresses_payable_acquisition_mirror_rows() -> None:
