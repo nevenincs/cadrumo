@@ -162,6 +162,8 @@ def test_expanding_span_classified_direct_previous_filing_binding() -> None:
     assert [(item.source_modelo, item.periods, item.source_casilla_ids) for item in requirements] == [
         ("130", ("1T",), (_M130_PAGO_FRACCIONADO_CASILLA,))
     ]
+    assert requirements[0].legal_refs == (_REFERENCE_LEGAL_ID,)
+    assert requirements[0].source_refs == (_REFERENCE_SOURCE_ID,)
 
 
 def test_expanding_span_mutually_exclusive_with_offset() -> None:

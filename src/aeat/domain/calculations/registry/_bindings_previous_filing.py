@@ -21,7 +21,7 @@ from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import invariant_diagnostics, selector_against_model
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
-from ._ids import BindingId, CasillaId, ModeloId
+from ._ids import BindingId, CasillaId, LegalRefId, ModeloId, SourceRefId
 from ._observation_fold import fold_sum_or_copy
 from ._period_offset_math import apply_period_offset
 from ._relations import RegistryFoldRequirement
@@ -70,6 +70,8 @@ def previous_filing_observation_requirements(
     """
     binding_ids_by_key: dict[tuple[ModeloId, int, str], set[BindingId]] = {}
     source_casilla_ids_by_key: dict[tuple[ModeloId, int, str], set[CasillaId]] = {}
+    legal_refs_by_key: dict[tuple[ModeloId, int, str], set[LegalRefId]] = {}
+    source_refs_by_key: dict[tuple[ModeloId, int, str], set[SourceRefId]] = {}
     for binding in revision.bindings:
         if binding.source != "previous_filing":
             continue
@@ -81,6 +83,8 @@ def previous_filing_observation_requirements(
             key = (selector.source_modelo, expected_year, required_period)
             binding_ids_by_key.setdefault(key, set()).add(binding.id)
             source_casilla_ids_by_key.setdefault(key, set()).update(_previous_filing_source_ids(selector))
+            legal_refs_by_key.setdefault(key, set()).update(binding.legal_refs)
+            source_refs_by_key.setdefault(key, set()).update(binding.source_refs)
     return tuple(
         RegistryFoldRequirement(
             source_modelo=modelo,
@@ -93,6 +97,8 @@ def previous_filing_observation_requirements(
             periods=(required_period,),
             binding_ids=tuple(sorted(binding_ids_by_key[(modelo, expected_year, required_period)])),
             source_casilla_ids=tuple(sorted(source_casilla_ids_by_key[(modelo, expected_year, required_period)])),
+            legal_refs=tuple(sorted(legal_refs_by_key[(modelo, expected_year, required_period)])),
+            source_refs=tuple(sorted(source_refs_by_key[(modelo, expected_year, required_period)])),
         )
         for modelo, expected_year, required_period in sorted(binding_ids_by_key)
     )
