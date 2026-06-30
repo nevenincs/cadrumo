@@ -30,19 +30,27 @@ The four behaviours under test:
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
 from ....core import Period
+from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import (
     CasillaId,
     RegistryModeloObservation,
     validated_casilla_id,
 )
+from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
+from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
+from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
 from ...calculations._binding_prefill import _MODELO_303_IVA_COMPENSATION_BINDING_ID
 from ...calculations._cross_period_clean_state import _OFFICIAL_SOURCE_KINDS
@@ -78,6 +86,20 @@ _T1 = datetime(2026, 4, 10, 9, 0, 0, tzinfo=UTC)
 _T2 = datetime(2026, 4, 11, 9, 0, 0, tzinfo=UTC)
 _T3 = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
 _T4 = datetime(2026, 7, 10, 9, 0, 0, tzinfo=UTC)
+_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
+
+
+@pytest.fixture
+def repos(tmp_path: Path) -> Iterator[_Repos]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        objects = profile.repository
+        yield (
+            WorkUnitCatalogueRepository(objects=objects),
+            CalculationRevisionCatalogueRepository(objects=objects),
+            ModeloRecordCatalogueRepository(objects=objects),
+            VerificationReportCatalogueRepository(objects=objects),
+            BucketEventHistoryRepository(objects=objects),
+        )
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -140,7 +162,7 @@ _2T_INPUTS_WITHOUT_15: dict[CasillaId, Decimal] = {
 def _seed_130(repos_: _Repos, *, period: str, clock: datetime):
     wu_repo = repos_[0]
     return create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
         period=Period.from_year_and_code(2026, period),
@@ -210,7 +232,7 @@ def _file_1t_with_negative_result(repos_: _Repos) -> Decimal:
 def _seed_first_year_activity_profile(repos_: _Repos) -> None:
     objects = repos_[4].secure_object_repository
     profile = UserProfileRecord(
-        profile_id="00000000-0000-4000-8000-000000000000",
+        profile_id=_BUCKET_ID,
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -229,13 +251,13 @@ def _seed_first_year_activity_profile(repos_: _Repos) -> None:
         created_at=_T1,
         updated_at=_T1,
     )
-    UserProfileLifecycleRepository(bucket_id="default", objects=objects).save(profile)
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(profile)
 
 
 def _seed_existing_303_activity_profile(repos_: _Repos) -> None:
     objects = repos_[4].secure_object_repository
     profile = UserProfileRecord(
-        profile_id="00000000-0000-4000-8000-000000000000",
+        profile_id=_BUCKET_ID,
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),
@@ -254,13 +276,13 @@ def _seed_existing_303_activity_profile(repos_: _Repos) -> None:
         created_at=_T1,
         updated_at=_T1,
     )
-    UserProfileLifecycleRepository(bucket_id="default", objects=objects).save(profile)
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(profile)
 
 
 def _seed_first_303_activity_profile(repos_: _Repos) -> None:
     objects = repos_[4].secure_object_repository
     profile = UserProfileRecord(
-        profile_id="00000000-0000-4000-8000-000000000000",
+        profile_id=_BUCKET_ID,
         display_name="Test first IVA profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),
@@ -279,7 +301,7 @@ def _seed_first_303_activity_profile(repos_: _Repos) -> None:
         created_at=_T1,
         updated_at=_T1,
     )
-    UserProfileLifecycleRepository(bucket_id="default", objects=objects).save(profile)
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(profile)
 
 
 def test_local_file_then_next_period_calculate_carries_previous_filing_value(repos: _Repos) -> None:
@@ -477,7 +499,7 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
     wu_repo = repos[0]
     _seed_existing_303_activity_profile(repos)
     work_unit_303 = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "2T"),
@@ -522,7 +544,7 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(repos: _Repo
     wu_repo = repos[0]
     _seed_existing_303_activity_profile(repos)
     work_unit_303 = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "2T"),
@@ -550,7 +572,7 @@ def test_existing_activity_m303_1t_missing_prior_filing_blocks_wallet_zero(repos
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
     _seed_existing_303_activity_profile(repos)
     work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
@@ -574,7 +596,7 @@ def test_first_iva_period_m303_1t_uses_wallet_first_period_zero(repos: _Repos) -
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
     _seed_first_303_activity_profile(repos)
     work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),

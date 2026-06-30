@@ -45,7 +45,7 @@ from .._registry_helpers import validate_casilla_input_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-renta"
+_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _YEAR = 2025
 _PERIOD = "0A"
 _DECIMAL_BINDING: BindingId = "renta-2025-modelo-111-retenciones-periodicas"

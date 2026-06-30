@@ -53,7 +53,7 @@ from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-sofia-m100-expense-inspection"
+_BUCKET_ID = "76634915-7e84-4db9-9c06-0c67ad5a164d"
 _YEAR = 2025
 _ANNUAL_PERIOD = "0A"
 _REVISION_ID = "2025"
