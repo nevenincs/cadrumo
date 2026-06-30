@@ -117,6 +117,7 @@ from ._calculate_input import (
     authorization_advisory_for_modelo,
     build_work_calculate_input_bundle,
     calculate_modelo_work_revision,
+    is_detail_casilla_override_key,
     modelo_202_modality_for_work_unit,
 )
 from ._calculation_actions import (
@@ -525,6 +526,7 @@ __all__ = [
     "get_work_unit",
     "guard_active_profile_foral_ccaa",
     "import_external_filing_evidence",
+    "is_detail_casilla_override_key",
     "list_calculation_revisions",
     "list_filing_records",
     "list_m036_declarations",

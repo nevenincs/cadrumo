@@ -817,6 +817,7 @@ application:
         the work unit to bind it to the current revision.
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
+      calculate_detail_casilla_unsupported: 'Casilla %{key} names a Modelo 180 perceptor/property detail field, not a scalar decimal casilla input. The local work --casilla channel only accepts scalar decimal casillas; Modelo 180 perceptor/property detail rows are not supported on the public --row surface yet. Use aeat app modelo aggregate --modelo 180 --retencion-observation for the supported annual perceptor count/base/retenciones source.'
     findings:
       art20_reduccion_next_action: Verify whether your other non-work income excluding
         exempt income for the year does not exceed 6500 EUR; if it does not, declare
