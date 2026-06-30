@@ -251,6 +251,28 @@ class TestTypoTwinWarning:
             ),
             (
                 "100",
+                "2020",
+                "0463",
+                "irpf_red_prevision_social_exceso_2015_2019",
+            ),
+            (
+                "100",
+                "2021",
+                "0437",
+                "irpf_red_prevision_social_exceso_2016_2020",
+            ),
+            (
+                "100",
+                "2020",
+                "1171",
+                "irpf_deduccion_c_valenciana_ayudas_publicas_generalitat_2020",
+            ),
+            ("100", "2022", "1911", "irpf_num_hijos_maternidad_2020"),
+            ("100", "2022", "1912", "irpf_incremento_maternidad_no_aplicado_2020"),
+            ("100", "2022", "1914", "irpf_num_hijos_maternidad_2021"),
+            ("100", "2022", "1915", "irpf_incremento_maternidad_no_aplicado_2021"),
+            (
+                "100",
                 "2025",
                 "2027",
                 "irpf_deduccion_madrid_vivienda_municipio_riesgo",
@@ -266,6 +288,30 @@ class TestTypoTwinWarning:
                 "2025",
                 "2029",
                 "irpf_deduccion_madrid_vivienda_municipio_riesgo_anio",
+            ),
+            (
+                "100",
+                "2025",
+                "1958",
+                "irpf_deduccion_c_valenciana_autoconsumo_generado_pendiente_2",
+            ),
+            (
+                "100",
+                "2025",
+                "2013",
+                "irpf_deduccion_c_valenciana_autoconsumo_pendiente_2",
+            ),
+            (
+                "100",
+                "2025",
+                "2022",
+                "irpf_deduccion_madrid_nuevos_contribuyentes_pendiente_1",
+            ),
+            (
+                "100",
+                "2025",
+                "2163",
+                "irpf_deduccion_murcia_recursos_energeticos_renovables_pendiente_1",
             ),
             ("184", "2015-y-siguientes", "tipo2.clave", "tipo_renta_atribuida_clave"),
             ("184", "2015-y-siguientes", "tipo2.subclave", "tipo_renta_atribuida_subclave"),
@@ -430,9 +476,20 @@ class TestTypoTwinWarning:
         reviewed_roles = {
             "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_precio",
             "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_anio",
+            "irpf_red_prevision_social_exceso_2015_2019",
+            "irpf_red_prevision_social_exceso_2016_2020",
+            "irpf_deduccion_c_valenciana_ayudas_publicas_generalitat_2020",
+            "irpf_num_hijos_maternidad_2020",
+            "irpf_incremento_maternidad_no_aplicado_2020",
+            "irpf_num_hijos_maternidad_2021",
+            "irpf_incremento_maternidad_no_aplicado_2021",
             "irpf_deduccion_madrid_vivienda_municipio_riesgo",
             "irpf_deduccion_madrid_vivienda_municipio_riesgo_precio",
             "irpf_deduccion_madrid_vivienda_municipio_riesgo_anio",
+            "irpf_deduccion_c_valenciana_autoconsumo_generado_pendiente_2",
+            "irpf_deduccion_c_valenciana_autoconsumo_pendiente_2",
+            "irpf_deduccion_madrid_nuevos_contribuyentes_pendiente_1",
+            "irpf_deduccion_murcia_recursos_energeticos_renovables_pendiente_1",
             "tipo_renta_atribuida_clave",
             "tipo_renta_atribuida_subclave",
             "total_percepciones_count",
@@ -591,6 +648,15 @@ class TestTypoTwinWarning:
             _emit_semantic_role_typo_twin_warnings([m])
         assert captured == []
 
+    def test_related_party_row_slot_roles_do_not_warn_as_typos(self) -> None:
+        first_slot = _casilla(cid="a", semantic_role="related_party_nif_1", data_type="nif")
+        second_slot = _casilla(cid="b", semantic_role="related_party_nif_2", data_type="nif")
+        m = _registry_modelo("232", "2018-y-siguientes", [first_slot, second_slot])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert captured == []
+
     def test_sin_maintenance_marker_is_not_optional_axis_token(self) -> None:
         assert (
             semantic_roles_are_axis_siblings(
@@ -645,14 +711,14 @@ class TestTypoTwinWarning:
             _emit_semantic_role_typo_twin_warnings([m])
         assert captured == []
 
-    def test_numeric_axis_sibling_roles_do_not_warn_as_typos(self) -> None:
-        first_window = _casilla(cid="a", semantic_role="irpf_red_prevision_social_exceso_2015_2019")
-        second_window = _casilla(cid="b", semantic_role="irpf_red_prevision_social_exceso_2016_2020")
-        m = _registry_modelo("100", "2021", [first_window, second_window])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
+    def test_numeric_window_tokens_are_not_axis_tokens(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "irpf_red_prevision_social_exceso_2015_2019",
+                "irpf_red_prevision_social_exceso_2016_2020",
+            )
+            is False
+        )
 
     def test_relationship_axis_sibling_roles_do_not_warn_as_typos(self) -> None:
         descendant = _casilla(cid="a", semantic_role="irpf_descendiente_fecha_nacimiento")
@@ -700,14 +766,14 @@ class TestTypoTwinWarning:
             is False
         )
 
-    def test_numeric_axis_roles_do_not_warn_as_typos(self) -> None:
-        annual_line = _casilla(cid="a", semantic_role="irpf_deduccion_cantabria_obras_mejora_pendiente_1")
-        general_line = _casilla(cid="b", semantic_role="irpf_deduccion_cantabria_obras_mejora_pendiente_2")
-        m = _registry_modelo("100", "2025", [annual_line, general_line])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
+    def test_numeric_line_tokens_are_not_axis_tokens(self) -> None:
+        assert (
+            semantic_roles_are_axis_siblings(
+                "irpf_deduccion_cantabria_obras_mejora_pendiente_1",
+                "irpf_deduccion_cantabria_obras_mejora_pendiente_2",
+            )
+            is False
+        )
 
     def test_ccaa_axis_roles_do_not_warn_as_typos(self) -> None:
         murcia = _casilla(cid="a", semantic_role="irpf_deduccion_murcia_vehiculo_importe")

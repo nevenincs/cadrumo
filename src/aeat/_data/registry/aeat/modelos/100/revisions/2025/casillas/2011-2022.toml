@@ -4,5 +4,7 @@ number = "2022"
 label = "Importe generado en 2024 pendiente de aplicación"
 section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
 semantic_role = "irpf_deduccion_madrid_nuevos_contribuyentes_pendiente_1"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only Madrid nuevos-contribuyentes generated-2024 pending line; the source label encodes 2024 and it is distinct from the generic pending row."
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
