@@ -4,7 +4,7 @@ Each result is a strict :class:`~aeat.entrypoints.cli._schemas.OutputSchema`
 registered through :func:`~aeat.entrypoints.cli._schemas.register_schema` and
 emitted inside :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` via
 :func:`~aeat.entrypoints.cli._common._emit_envelope`. The parent
-:mod:`aeat.entrypoints.cli._ledger_payloads` module re-exports these split
+:mod:`~aeat.entrypoints.cli._ledger_payloads` module re-exports these split
 schemas so ledger ratio handlers keep the existing payload import surface.
 
 The application layer remains authoritative for
@@ -88,7 +88,7 @@ class RatiosValidateResult(OutputSchema):
     """JSON envelope for ``aeat app ledger ratios validate``.
 
     Mirrors ``RatiosValidationReport.model_dump(mode='json')`` produced by
-    :func:`validate_ratios_for_bucket`.
+    :func:`~aeat.application.ledger.validate_ratios_for_bucket`.
     """
 
     bucket_id: str
