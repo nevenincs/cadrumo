@@ -161,8 +161,8 @@ class WorkbookParityComparison(WorkbookParityModel):
     actual_registry_value: Decimal | int | str | bool | None
     status: ParityStatus
     tolerance: Decimal = Decimal("0")
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
+    legal_refs: tuple[str, ...] = Field(min_length=1)
+    source_refs: tuple[str, ...] = Field(min_length=1)
     detail: str | None = None
 
 
