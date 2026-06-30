@@ -34,7 +34,15 @@ from ...core.errors import CoreValidationError
 from ...core.i18n import tr
 from ...core.identity import BucketId
 from ...core.logging import get_logger
-from ...domain.calculations.registry import BindingId, CasillaId, ModeloRevision, RelationId
+from ...domain.calculations.registry import (
+    BindingId,
+    CasillaId,
+    LegalRefId,
+    ModeloId,
+    ModeloRevision,
+    RelationId,
+    SourceRefId,
+)
 from ...domain.modelos._row_models import ModeloDetailRow
 from ._errors import AggregationValidationError, t
 
@@ -236,11 +244,33 @@ class CalculationSourceProvenance(BaseModel):
     """Canonical binding source when ``source_kind`` names one; ``None`` for non-binding provenance."""
     source_ref: str = Field(min_length=1, max_length=256)
     fingerprint: str | None = Field(default=None, min_length=1, max_length=256)
+    relation_id: RelationId | None = None
+    source_modelo: ModeloId | None = None
+    source_filing_year: int | None = Field(default=None, ge=2000, le=2099)
+    source_periods: tuple[str, ...] = ()
+    source_casilla_ids: tuple[CasillaId, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = ()
+    source_refs: tuple[SourceRefId, ...] = ()
 
     @model_validator(mode="before")
     @classmethod
     def _set_binding_source(cls, value: object) -> object:
         return _infer_binding_source(value)
+
+    @model_validator(mode="after")
+    def _relation_provenance_is_complete(self) -> CalculationSourceProvenance:
+        if self.relation_id is None:
+            return self
+        if (
+            self.source_modelo is None
+            or self.source_filing_year is None
+            or not self.source_periods
+            or not self.source_casilla_ids
+            or not self.legal_refs
+            or not self.source_refs
+        ):
+            raise SourceMeshError("aggregation.source_mesh.errors.relation_provenance_incomplete")
+        return self
 
 
 class BorradorSourceProvenance(BaseModel):

@@ -125,6 +125,17 @@ def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: 
             "modelo-180-rel-115-base-anual:115:2026:1T,2T,3T,4T:02",
             "modelo-180-rel-115-retenciones-anual:115:2026:1T,2T,3T,4T:03",
         }
+        resolved_prefill = {item.relation: item for item in prefill.values if item.value is not None}
+        provenance_by_relation = {item.relation_id: item for item in source_resolution.provenance}
+        assert set(provenance_by_relation) == set(resolved_prefill)
+        for relation_id, provenance in provenance_by_relation.items():
+            prefilled = resolved_prefill[relation_id]
+            assert provenance.source_modelo == prefilled.source_modelo
+            assert provenance.source_filing_year == prefilled.source_filing_year
+            assert provenance.source_periods == prefilled.source_periods
+            assert provenance.source_casilla_ids == prefilled.source_casilla_ids
+            assert provenance.legal_refs == prefilled.legal_refs
+            assert provenance.source_refs == prefilled.source_refs
 
 
 def test_resolve_relations_returns_operator_manual_blanks_when_local_store_is_empty(tmp_path: Path) -> None:

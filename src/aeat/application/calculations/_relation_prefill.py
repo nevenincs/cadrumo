@@ -826,6 +826,13 @@ class RelationPrefillSourceResolver:
                 CalculationSourceProvenance(
                     source_kind="relation_prefill",
                     source_ref=_relation_provenance_ref(item),
+                    relation_id=item.relation,
+                    source_modelo=item.source_modelo,
+                    source_filing_year=item.source_filing_year,
+                    source_periods=item.source_periods,
+                    source_casilla_ids=item.source_casilla_ids,
+                    legal_refs=item.legal_refs,
+                    source_refs=item.source_refs,
                 )
                 for item in resolved
             ),
