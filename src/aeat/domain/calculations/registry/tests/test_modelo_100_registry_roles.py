@@ -936,6 +936,44 @@ def test_modelo_100_2022_maternity_child_counts_are_integer() -> None:
         assert {"aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-xsd"}.issubset(casilla.source_refs)
 
 
+def test_modelo_100_la_rioja_municipality_codes_are_integer() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    common_expected_roles = {
+        "1064": "irpf_deduccion_la_rioja_vivienda_codigo_municipio",
+        "1067": "irpf_deduccion_la_rioja_adecuacion_municipio_codigo",
+        "1162": "irpf_deduccion_la_rioja_arrendamiento_municipio_codigo",
+        "1164": "irpf_deduccion_la_rioja_municipio_pequeno_codigo",
+        "1204": "irpf_deduccion_la_rioja_municipio_pequeno_codigo_2",
+        "1205": "irpf_deduccion_la_rioja_municipio_pequeno_codigo_3",
+    }
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        expected_roles = dict(common_expected_roles)
+        if filing_year >= 2021:
+            expected_roles["1071"] = "irpf_deduccion_la_rioja_guarderia_municipio_codigo"
+
+        casillas_by_id = {
+            casilla.id: casilla
+            for casilla in revision.casillas
+            if casilla.id in {_casilla_id(casilla_id) for casilla_id in expected_roles}
+        }
+
+        assert set(casillas_by_id) == {_casilla_id(casilla_id) for casilla_id in expected_roles}
+        for casilla_id, expected_role in expected_roles.items():
+            casilla = casillas_by_id[_casilla_id(casilla_id)]
+
+            assert casilla.label in {"Código del municipio", "Código del municipio:", "Código del pequeño municipio:"}
+            assert tuple(casilla.section) == ("resultados", "deduccion_autonomica_res", "la_rioja_res")
+            assert casilla.data_type == "integer"
+            assert casilla.semantic_role == expected_role
+            assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+            assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+                casilla.source_refs,
+            )
+
+
 def test_modelo_100_retrib_especie_no_exenta_total_role_names_aggregate() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
