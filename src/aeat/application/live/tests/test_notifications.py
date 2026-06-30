@@ -27,6 +27,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _AEAT = Settings.external_constants().aeat
 _NOTIFICATIONS_SUMMARY_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.notifications_summary}"
 _NOTIFICATIONS_QUERY_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.notifications_query.removesuffix('?VEZ=BUSCAR1')}"
+_BUCKET_A_ID = "58585858-5858-4858-8858-585858585858"
+_BUCKET_B_ID = "59595959-5959-4959-8959-595959595959"
 
 
 @pytest.fixture
@@ -241,7 +243,7 @@ class TestListSnapshots:
 
 class TestBucketIsolation:
     def test_snapshots_are_runtime_profile_scoped(self, tmp_path: Path) -> None:
-        with isolated_runtime_profile(tmp_path=tmp_path / "bucket-a", bucket_id="bucket-A") as bucket_a:
+        with isolated_runtime_profile(tmp_path=tmp_path / "profile-a", bucket_id=_BUCKET_A_ID) as bucket_a:
             svc_a = _service(bucket_a)
             svc_a.capture(
                 bucket_id=bucket_a.bucket_id,
@@ -249,7 +251,7 @@ class TestBucketIsolation:
             )
             assert svc_a.list_snapshots(bucket_id=bucket_a.bucket_id)[0].rows[0].concepto == "A"
 
-        with isolated_runtime_profile(tmp_path=tmp_path / "bucket-b", bucket_id="bucket-B") as bucket_b:
+        with isolated_runtime_profile(tmp_path=tmp_path / "profile-b", bucket_id=_BUCKET_B_ID) as bucket_b:
             svc_b = _service(bucket_b)
             assert svc_b.list_snapshots(bucket_id=bucket_b.bucket_id) == ()
             svc_b.capture(
@@ -287,7 +289,7 @@ class TestSecureStorage:
 
     def test_object_key_refuses_blank_snapshot_with_locale_metadata(self) -> None:
         with pytest.raises(LiveApplicationInputError) as exc_info:
-            notifications_snapshot_object_key("bucket-1", " ")
+            notifications_snapshot_object_key(_BUCKET_A_ID, " ")
         assert exc_info.value.translated_message == "application.live.notifications.errors.snapshot_id_blank"
 
 
