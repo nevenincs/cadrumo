@@ -22,7 +22,7 @@ law-determined re-confirmation, not three parallel copies that can drift.
 See Also:
     :func:`~aeat.application.calculations._binding_prefill.resolve_bindings_from_local_store`
         Previous-filing binding reader that drops divergent carries and surfaces
-        unstamped advisories.
+        revision re-confirmation advisories.
     :func:`~aeat.application.calculations._relation_prefill.resolve_relations_from_local_store`
         Relation-prefill reader that applies the same revision-stamp gate.
     :func:`~aeat.application.calculations._cross_period_clean_state.evaluate_cross_period_clean_state`
@@ -36,7 +36,7 @@ from ...core.resources import resources
 
 
 def revision_carry_outcome(
-    stamped_revision_id: str | None,
+    stamped_revision_id: str,
     *,
     source_modelo: str,
     source_filing_year: int,
@@ -50,7 +50,6 @@ def revision_carry_outcome(
 
     ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2:
 
-    - Missing stamp (unstamped record) → ``(False, True)``: carry proceeds, advisory set.
     - Indeterminate (source context fails to resolve) → ``(False, True)``: carry
       proceeds, but the stamp could not be re-confirmed so the advisory MUST be set
       rather than carrying silently clean.
@@ -59,8 +58,7 @@ def revision_carry_outcome(
     - Matching stamp → ``(False, False)``: clean carry, no advisory.
 
     Args:
-        stamped_revision_id: The revision the source filing was stamped with, or
-            ``None`` for a record that carries no stamp.
+        stamped_revision_id: The revision the source filing was stamped with.
         source_modelo: The carried observation's source modelo id.
         source_filing_year: The source filing year.
         source_period: The source period as the bare registry token
@@ -69,10 +67,8 @@ def revision_carry_outcome(
     Returns:
         A ``(diverges, advisory)`` pair. ``diverges`` is ``True`` only when a
         present stamp disagrees with the law-determined revision; ``advisory`` is
-        ``True`` when the stamp is absent or could not be re-confirmed.
+        ``True`` when the stamp could not be re-confirmed.
     """
-    if stamped_revision_id is None:
-        return False, True
     try:
         snapshot = resources().modelos.authority.snapshot(
             source_modelo,
