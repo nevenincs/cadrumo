@@ -30,6 +30,9 @@ related:
   - '[[2026-06-30-cli-persona-testimonials-W02-P05-S12]]'
   - '[[2026-06-30-cli-persona-testimonials-W02-P05-S13]]'
   - '[[2026-06-30-cli-persona-testimonials-W02-P05-S14]]'
+  - '[[2026-06-30-cli-persona-testimonials-W03-P06-S15]]'
+  - '[[2026-06-30-cli-persona-testimonials-W03-P06-S16]]'
+  - '[[2026-06-30-cli-persona-testimonials-W03-P06-S17]]'
   - '[[2026-06-30-cli-persona-testimonials-audit]]'
   - '[[2026-06-30-cli-persona-testimonials-plan]]'
 ---
@@ -71,6 +74,9 @@ Auto-generated index of all documents tagged with `#cli-persona-testimonials`.
 - `2026-06-30-cli-persona-testimonials-W02-P05-S12` - Audit active-profile label-to-UUID normalization at the CLI root
 - `2026-06-30-cli-persona-testimonials-W02-P05-S13` - Harden workflow bucket-scan ambiguity and tombstone behavior
 - `2026-06-30-cli-persona-testimonials-W02-P05-S14` - Sweep profile identity CLI journeys for by-id and by-label parity
+- `2026-06-30-cli-persona-testimonials-W03-P06-S15` - Replay weak IVA cross-period company and pos-chain persona roots
+- `2026-06-30-cli-persona-testimonials-W03-P06-S16` - Replay mixed-income autonomo and employee persona roots
+- `2026-06-30-cli-persona-testimonials-W03-P06-S17` - Replay raw Ana and Taller transcript roots through the current CLI
 
 ### plan
 
