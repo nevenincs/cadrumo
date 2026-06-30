@@ -66,8 +66,8 @@ class RegistryFoldRequirement(BaseModel):
     dependency_role: str = ""
     dependency_treatment: str = ""
     aggregation_op: str = ""
-    legal_refs: tuple[LegalRefId, ...] = ()
-    source_refs: tuple[SourceRefId, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
     _values_unique = field_validator("binding_ids", "source_casilla_ids", "legal_refs", "source_refs")(
         unique_tuple("fold requirement tuple")
