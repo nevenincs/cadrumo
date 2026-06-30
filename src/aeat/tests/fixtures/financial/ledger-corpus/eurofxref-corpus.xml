@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gesmes:Envelope
+  xmlns:gesmes="http://www.gesmes.org/xml/2002-08-01"
+  xmlns="http://www.ecb.int/vocabulary/2002-08-01/eurofxref">
+  <Cube>
+    <Cube time="2024-01-01">
+      <Cube currency="GBP" rate="0.8474576271186440677966101695" />
+      <Cube currency="USD" rate="1.086956521739130434782608696" />
+    </Cube>
+  </Cube>
+</gesmes:Envelope>
