@@ -2691,8 +2691,7 @@ cli:
       description_help: Nem üres narratíva.
       direction_help: Tranzakció iránya (INCOMING / OUTGOING / INTERNAL_TRANSFER).
       help: Egyetlen kézi főkönyvi tranzakció hozzáadása az aktív profilban.
-      idempotency_key_help: A hívó által megadott idempotencia-kulcs, amelyet a sorral
-        együtt tárolnak.
+      idempotency_key_help: 'Stabil kulcs ehhez a logikai bejegyzéshez: ugyanazon kulcs ismételt megadása üres művelet, így az újrapróbálkozások nem duplikálják a sort. Hagyja el szándékos duplikátum hozzáadásához.'
       idempotent_noop: 'Idempotens üres művelet: már létezik tranzakció ezzel az idempotencia-kulccsal (%{transaction_id}); semmi sem került hozzáadásra.'
       irpf_category_help: IRPF-specifikus kategóriakulcs.
       iva_amount_help: Opcionális IVA-összeg a soron.
