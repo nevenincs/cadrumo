@@ -34,26 +34,15 @@ from .....domain.calculations.registry import (
     CasillaId,
     RegistryValidationError,
     calculate_registry_snapshot,
-    validated_casilla_id,
 )
 from .....tests import FIXTURES_DIR
 from .. import DeclaracionParseError, parse_declaracion
+from ._verification_chain_support import _casilla_id, _casilla_ids
 
 pytestmark = [
     pytest.mark.unit,
     pytest.mark.hex_inbound_adapter,
 ]
-
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test_m303_primitive_anti_tautology.casilla")
-    except ValueError as exc:
-        raise AssertionError(f"M303 primitive test casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-def _casilla_ids(*values: object) -> frozenset[CasillaId]:
-    return frozenset(_casilla_id(value) for value in values)
-
 
 _IVA_REPERCUTIDO_GENERAL_CASILLA: CasillaId = _casilla_id("iva.repercutido.general")
 _IVA_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
