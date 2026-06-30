@@ -596,7 +596,12 @@ class ModeloRecordShowResult(OutputSchema):
 
 @register_schema("modelo.verification_report.list")
 class VerificationReportListResult(OutputSchema):
-    """Verification-report listing returned by ``aeat app modelo verification-report list``."""
+    """Typed listing of persisted verification reports.
+
+    ``reports`` contains shared :class:`VerificationReportPayload` projections;
+    filtering only constrains ``calculation_revision_id_filter`` and leaves each
+    report's finding, missing-casilla, and verificado-completo fields intact.
+    """
 
     operation: str = "modelo.verification_report.list"
     calculation_revision_id_filter: str | None = None
@@ -606,7 +611,14 @@ class VerificationReportListResult(OutputSchema):
 
 @register_schema("modelo.verification_report.view")
 class VerificationReportShowResult(OutputSchema):
-    """Verification-report detail returned by ``aeat app modelo verification-report view``."""
+    """Typed detail view for one persisted verification report.
+
+    This schema mirrors :class:`WorkVerifyResult` verification fields so
+    operators can re-read a saved
+    :class:`aeat.domain.modelos.VerificationReport` with the same
+    :class:`FindingPayload` legal/source-reference detail emitted by
+    ``aeat app modelo work verify``.
+    """
 
     operation: str = "modelo.verification_report.show"
     verification_report_id: VerificationReportId
