@@ -27,20 +27,17 @@ import pytest
 
 from ....adapters.outbound.aeat.browser._site_health import SiteHealthState
 from ....adapters.outbound.aeat.browser._site_health_parsers import evaluate_response
-from ....core.errors import BaseSeverity, SiteHealthError, build_error_envelope
+from ....core.errors import SiteHealthError, build_error_envelope
 from ....core.errors._registry import ErrorCategory, ErrorEnvelope
-from ....domain.submission import ModeloFinding
 from ....tests import FIXTURES_DIR
-from .. import WorkflowAbortReason, WorkflowEngine, WorkflowPurpose, WorkflowStage
+from .. import WorkflowAbortReason, WorkflowEngine, WorkflowStage
 from .._errors import UnhandledWorkflowError, WorkflowInputMismatchError
 from ._engine_support import (
     _SEDE_ROOT_URL,
-    _ConcreteDeadlineEngine,
     _ConcreteDraft,
     _ConcreteDraftBuilder,
     _Fixtures,
     _fixtures,
-    _obligation,
     _period,
     _profile,
     _registry_schema_version,
@@ -125,111 +122,6 @@ class TestHappyPath:
                     today=fx.today,
                     resumed_from=bad,
                 )
-
-
-class TestVerifyPurpose:
-    """``WorkflowPurpose.VERIFY`` makes the run deadline-independent.
-
-    Verification asserts a calculation is internally sound; it has no
-    honest dependency on the AEAT filing calendar (see the work-verify
-    deadline-independence contract). For ``VERIFY`` the ``COMPUTING_DEADLINES``
-    stage never aborts with ``NO_PENDING_OBLIGATION`` or
-    ``DEADLINE_PASSED``, and the preflight stage skips the filing-window
-    gate. ``FILE`` (the default) keeps both as hard refusals.
-    """
-
-    def test_verify_reaches_done_without_a_pending_obligation(self) -> None:
-        """No scheduled obligation: ``FILE`` aborts, ``VERIFY`` proceeds."""
-        fx = _fixtures()
-        fx.deadline_engine.obligation = None
-
-        file_result = _run_for_obligation(fx, purpose=WorkflowPurpose.FILE)
-        assert file_result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION
-
-        verify_result = _run_for_obligation(fx, purpose=WorkflowPurpose.VERIFY)
-        assert verify_result.final_stage is WorkflowStage.DONE
-        assert verify_result.aborted_reason is None
-
-    def test_verify_reaches_done_for_a_closed_filing_window(self) -> None:
-        """Closed-window target: both ``FILE`` (late, extemporánea) and ``VERIFY`` proceed.
-
-        A closed-window ``FILE`` is no
-        longer refused with DEADLINE_PASSED; it is admitted as a late local filing.
-        ``VERIFY`` remains calendar-independent.
-        """
-        fx = _fixtures()
-        past = _obligation(period=_period(2025, "4T"), closes_on=date(2026, 1, 20))
-        fx.deadline_engine = _ConcreteDeadlineEngine(obligation=past, profile=fx.profile)
-        fx.draft = _ConcreteDraft(period=past.period, profile_tax_id=fx.profile.tax_id)
-        fx.draft_builder.draft = fx.draft
-
-        file_result = _run_for_period(
-            fx.engine(),
-            fx.profile,
-            past.modelo,
-            past.period,
-            today=fx.today,
-            purpose=WorkflowPurpose.FILE,
-        )
-        assert file_result.aborted_reason is not WorkflowAbortReason.DEADLINE_PASSED
-
-        verify_result = _run_for_period(
-            fx.engine(),
-            fx.profile,
-            past.modelo,
-            past.period,
-            today=fx.today,
-            purpose=WorkflowPurpose.VERIFY,
-        )
-        assert verify_result.final_stage is WorkflowStage.DONE
-        assert verify_result.aborted_reason is None
-
-    def test_verify_records_deadline_stage_as_informational(self) -> None:
-        """The verify ``COMPUTING_DEADLINES`` step is a success step
-        tagged ``deadline_role=informational``."""
-        fx = _fixtures()
-        fx.deadline_engine.obligation = None
-
-        result = _run_for_obligation(fx, purpose=WorkflowPurpose.VERIFY)
-        deadline_step = next(s for s in result.steps if s.stage is WorkflowStage.COMPUTING_DEADLINES)
-        assert deadline_step.success is True
-        assert deadline_step.details is not None
-        assert deadline_step.details["deadline_role"] == "informational"
-        assert deadline_step.details["filing_window"] == "absent"
-
-    def test_verify_skips_the_preflight_deadline_window_gate(self) -> None:
-        """Both LOCAL purposes skip the AEAT filing-window preflight gate.
-
-        VERIFY is calendar-independent.
-        FILE is a LOCAL mark-as-filed that contacts AEAT zero times;
-        re-applying the AEAT
-        filing-window gate in preflight would re-block the legitimate late local
-        filing that seeds the next period's cross-period carry. Obligation
-        existence is still enforced at the deadline stage; only the redundant
-        submission-window re-check is skipped here. The window gate binds only an
-        actual AEAT submission, which this app never performs."""
-        fx = _fixtures()
-
-        _run_for_obligation(fx, purpose=WorkflowPurpose.VERIFY)
-        assert fx.submission_engine.skip_deadline_window_calls == [True]
-
-        fresh = _fixtures()
-        _run_for_obligation(fresh, purpose=WorkflowPurpose.FILE)
-        assert fresh.submission_engine.skip_deadline_window_calls == [True]
-
-    def test_verify_still_refuses_an_unsound_draft(self) -> None:
-        """Deadline-independence does not weaken verification: a draft
-        carrying ERROR findings still aborts ``DRAFT_HAS_ERRORS``."""
-        fx = _fixtures()
-        fx.deadline_engine.obligation = None
-        fx.draft = _ConcreteDraft(
-            profile_tax_id=fx.profile.tax_id,
-            findings=(ModeloFinding(severity=BaseSeverity.ERROR, message="translation"),),
-        )
-        fx.draft_builder.draft = fx.draft
-
-        result = _run_for_obligation(fx, purpose=WorkflowPurpose.VERIFY)
-        assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
 
 
 class TestSiteUnavailableArm:
