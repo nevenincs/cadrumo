@@ -6,17 +6,16 @@ import pytest
 
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M111,
-    FIXTURES_DIR,
     CasillaId,
     Decimal,
-    DeclaracionParseError,
     RegistryValidationError,
     _casilla_id,
     _casilla_ids,
+    _decimal_inputs_from_extracted_values,
+    _parse_extracted_declaracion_values,
     _period_to_date,
     _registry_snapshot,
     calculate_registry_snapshot,
-    parse_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -55,26 +54,8 @@ def test_verification_chain_m111_engine_recomputes_closure_casillas_28_and_30(
     GROUNDED authority: AEAT corpus PDFs from the sanitised real-form fixture
     set committed at src/aeat/tests/fixtures/justificantes/111/.
     """
-    pdf_path = FIXTURES_DIR / "justificantes" / "111" / f"{pdf_stem}.pdf"
-
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override="111",
-            año_override=year,
-            period_override=period,
-        )
-    except DeclaracionParseError as exc:
-        pytest.fail(f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised DeclaracionParseError.\n  error: {exc}")
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
-
-    inputs: dict[CasillaId, Decimal] = {}
-    for casilla_id, value in extracted.items():
-        if casilla_id in _COMPUTED_CASILLAS_M111:
-            continue
-        if isinstance(value, Decimal):
-            inputs[casilla_id] = value
+    extracted = _parse_extracted_declaracion_values(modelo="111", fixture_stem=pdf_stem, year=year, period=period)
+    inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M111)
 
     snapshot = _registry_snapshot("111", year, period)
     filing_period_date = _period_to_date(year, period)

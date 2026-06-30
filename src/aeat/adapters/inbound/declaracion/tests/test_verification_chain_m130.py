@@ -6,17 +6,16 @@ import pytest
 
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M130,
-    FIXTURES_DIR,
     BindingId,
     CasillaId,
     Decimal,
-    DeclaracionParseError,
     RegistryValidationError,
     _casilla_id,
+    _decimal_inputs_from_extracted_values,
+    _parse_extracted_declaracion_values,
     _period_to_date,
     _registry_snapshot,
     calculate_registry_snapshot,
-    parse_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -62,23 +61,7 @@ _M130_FORMULA_CHAIN_CASILLAS: tuple[CasillaId, ...] = (
 )
 def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: str, year: int, period: str) -> None:
     """Engine recomputes casilla 19 (resultado final) from extracted leaf inputs."""
-    pdf_path = FIXTURES_DIR / "justificantes" / "130" / f"{pdf_stem}.pdf"
-
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override="130",
-            año_override=year,
-            period_override=period,
-        )
-    except DeclaracionParseError as exc:
-        pytest.fail(
-            f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised DeclaracionParseError - "
-            f"extraction coverage failure prevents engine recomputation.\n"
-            f"  error: {exc}",
-        )
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+    extracted = _parse_extracted_declaracion_values(modelo="130", fixture_stem=pdf_stem, year=year, period=period)
 
     closure_extracted: Decimal | None
     if _M130_RESULTADO_CASILLA not in extracted:
@@ -91,13 +74,7 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
         closure_extracted = raw_closure
 
     extracted_c03 = extracted.get(_M130_RENDIMIENTO_NETO_CASILLA)
-    inputs: dict[CasillaId, Decimal] = {}
-    for casilla_id, value in extracted.items():
-        if casilla_id in _COMPUTED_CASILLAS_M130:
-            continue
-        if not isinstance(value, Decimal):
-            continue
-        inputs[casilla_id] = value
+    inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M130)
     if isinstance(extracted_c03, Decimal):
         inputs[_M130_INGRESOS_CASILLA] = extracted_c03
 
