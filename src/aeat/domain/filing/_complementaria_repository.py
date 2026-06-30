@@ -49,7 +49,17 @@ _AMENDMENT_NAMESPACE = "aeat.domain.filing.amendments"
 
 
 class ModeloAmendmentRepository:
-    """Repository over encrypted SQL-backed :class:`BaseAmendment` payloads."""
+    """Encrypted AUDIT repository for :class:`BaseAmendment` records.
+
+    Persists :class:`ModeloComplementaria` and :class:`ModeloSustitutiva`
+    payloads under
+    :data:`aeat.adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`. The
+    repository wraps the amendment union in an
+    :class:`~aeat.adapters.persistence.storage.Envelope` before writing through
+    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`; the
+    amendment id is the natural key used for load, delete, and ordered
+    iteration.
+    """
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
