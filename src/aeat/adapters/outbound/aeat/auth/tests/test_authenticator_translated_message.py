@@ -23,6 +23,7 @@ import functools
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 import pytest
@@ -158,19 +159,15 @@ class _RecordingBrowserContext:
         self.closed = True
 
 
-class _RecordingResponse:
-    status = 200
-
-
 class _RecordingPage:
     def __init__(self) -> None:
         self.url = "https://www6.aeat.es/protected"
         self.status = 200
 
-    async def goto(self, url: str, *, timeout: float | None = None) -> _RecordingResponse:
+    async def goto(self, url: str, *, timeout: float | None = None) -> SimpleNamespace:
         del timeout
         self.url = url
-        return _RecordingResponse()
+        return SimpleNamespace(status=200)
 
     async def close(self) -> None:
         pass
@@ -202,23 +199,19 @@ class _RecordingBrowserSession:
         self.closed = True
 
 
-class _HandshakeVerifier:
-    def __call__(self, _cert: LoadedCertificate, _target: str) -> HandshakeResult:
-        return _successful_handshake()
+def _handshake_verifier(_cert: LoadedCertificate, _target: str) -> HandshakeResult:
+    return _successful_handshake()
 
 
-class _FailingHandshakeVerifier:
-    """Returns a failed handshake so the login probe is_valid=False."""
-
-    def __call__(self, _cert: LoadedCertificate, _target: str) -> HandshakeResult:
-        return HandshakeResult(
-            success=False,
-            status_code=0,
-            server_cert_chain=(),
-            elapsed_ms=0,
-            attempted_at=datetime.now(UTC),
-            error_message="simulated handshake failure",
-        )
+def _failing_handshake_verifier(_cert: LoadedCertificate, _target: str) -> HandshakeResult:
+    return HandshakeResult(
+        success=False,
+        status_code=0,
+        server_cert_chain=(),
+        elapsed_ms=0,
+        attempted_at=datetime.now(UTC),
+        error_message="simulated handshake failure",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -233,7 +226,7 @@ def test_authenticate_already_active_carries_translated_message(
     when authenticate is called while a real session is still active."""
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_for(bundle_path)
-    authenticator = AeatAuthenticator(settings, handshake_verifier=_HandshakeVerifier())
+    authenticator = AeatAuthenticator(settings, handshake_verifier=_handshake_verifier)
     browser_session = _RecordingBrowserSession()
 
     async def run() -> None:
@@ -264,7 +257,7 @@ def test_authenticate_assertion_failed_carries_translated_message(
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_for(bundle_path)
     # Use a failing handshake so the probe is_valid=False, but the context marker check passes.
-    authenticator = AeatAuthenticator(settings, handshake_verifier=_FailingHandshakeVerifier())
+    authenticator = AeatAuthenticator(settings, handshake_verifier=_failing_handshake_verifier)
 
     # cert_ok=True -> context carries CERTIFICATE_CONTEXT_MARKER (marker check passes).
     # The probe fails because handshake.success=False -> assertion_failed raised.
