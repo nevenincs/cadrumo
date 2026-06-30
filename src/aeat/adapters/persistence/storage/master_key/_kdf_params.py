@@ -27,7 +27,7 @@ from .._kdf_salt import KDF_SALT_BYTES, decode_kdf_salt, encode_kdf_salt, requir
 from ..errors import StorageValidationError
 
 if TYPE_CHECKING:
-    from ..bucket._manifest import ManifestKdfParams
+    from ..bucket import ManifestKdfParams
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
@@ -46,7 +46,7 @@ class KdfParams(BaseModel):
     """OWASP-baseline Argon2id parameters with strict validation.
 
     Distinct from the manifest-side
-    :class:`aeat.adapters.persistence.storage.bucket._manifest.ManifestKdfParams`
+    :class:`aeat.adapters.persistence.storage.bucket.ManifestKdfParams`
     record: that record carries whatever parameter set the bucket was
     enrolled under (so a future cost-bump is non-breaking); this record
     pins the parameter window the substrate accepts for new enrolments
@@ -92,7 +92,7 @@ class KdfParams(BaseModel):
 
     def to_manifest_params(self) -> ManifestKdfParams:
         """Return this canonical parameter set as a :class:`ManifestKdfParams` bucket-manifest shape."""
-        from ..bucket._manifest import ManifestKdfParams
+        from ..bucket import ManifestKdfParams
 
         return ManifestKdfParams.model_validate(self.model_dump())
 

@@ -44,11 +44,12 @@ from ._keystore_paths import keystore_path, keystore_root, validate_keystore_sep
 from ._layout import BucketPaths, bucket_paths, provision_bucket_directory
 from ._lockfile import acquire_lock, lock_path, release_lock
 from ._manifest import BucketKeySchedule, BucketLifecycleStatus, BucketManifest, ManifestKdfParams
-from ._manifest_io import manifest_path, read_manifest, write_manifest
+from ._manifest_io import MISSING_BUCKET_MANIFEST_MESSAGE, manifest_path, read_manifest, write_manifest
 from ._sealed_archive_reader import SealedArchiveContents, read_sealed_archive
 from ._sealed_archive_writer import write_sealed_archive
 
 __all__ = [
+    "MISSING_BUCKET_MANIFEST_MESSAGE",
     "BucketAlreadyPresentError",
     "BucketBusyError",
     "BucketError",
