@@ -35,8 +35,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 from ...adapters.persistence.storage import LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE
 from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ...core import STRICT_FROZEN_CONFIG
-from ...core.aggregation import IntracomOperationType
+from ...core import STRICT_FROZEN_CONFIG, IntracomOperationType
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ...core.external_constants import DEFAULT_CURRENCY
@@ -516,7 +515,6 @@ __all__ = [
     "BusinessOperationInvoiceRepository",
     "BusinessOperationInvoiceResult",
     "CollectibleInvoiceService",
-    "IntracomOperationType",
     "PayableInvoiceService",
     "validate_eu_iva_id",
 ]

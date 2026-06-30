@@ -100,7 +100,6 @@ from ._business_operation_invoice import (
     BusinessOperationInvoiceRepository,
     BusinessOperationInvoiceResult,
     CollectibleInvoiceService,
-    IntracomOperationType,
     PayableInvoiceService,
     validate_eu_iva_id,
 )
@@ -218,7 +217,6 @@ __all__ = [
     "CollectibleInvoiceService",
     "EligibleCategoryRow",
     "ExportSerializationFormat",
-    "IntracomOperationType",
     "LLMClassificationSuggestion",
     "LLMProvider",
     "LLMProviderAvailability",
