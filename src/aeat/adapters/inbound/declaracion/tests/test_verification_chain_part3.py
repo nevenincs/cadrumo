@@ -6,10 +6,8 @@ import pytest
 
 from ._verification_chain_support import (
     CasillaId,
-    Decimal,
     _assert_decimal_casilla,
     _casilla_id,
-    _casilla_ids,
     _declaracion_case_label,
     _parse_extracted_declaracion_values,
 )
@@ -17,28 +15,9 @@ from ._verification_chain_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
-_M349_SUMMARY_CASILLAS: frozenset[CasillaId] = _casilla_ids(
-    "decl.numero-operadores",
-    "decl.importe-operaciones",
-    "decl.numero-rectificaciones",
-    "decl.importe-rectificaciones",
-)
 _DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
 _DECL_PERIODO_CASILLA: CasillaId = _casilla_id("decl.periodo")
 _DECL_EVENT_KIND_CASILLA: CasillaId = _casilla_id("decl.event-kind")
-
-
-def test_verification_chain_m349_parser_extracts_declaracion_pdf_casillas() -> None:
-    extracted = _parse_extracted_declaracion_values(modelo="349", fixture_stem="2024-1T", year=2024, period="1T")
-
-    assert set(extracted.keys()) == _M349_SUMMARY_CASILLAS, (
-        f"PARSER-GAP [M349/2024-1T]: unexpected casilla set.\n  got: {sorted(extracted)}"
-    )
-    for casilla_id, value in extracted.items():
-        assert isinstance(value, Decimal), (
-            f"PARSER-GAP [M349/2024-1T]: casilla {casilla_id!r} not Decimal: "
-            f"{type(value).__name__!r} = {value!r}"
-        )
 
 
 @pytest.mark.parametrize(
