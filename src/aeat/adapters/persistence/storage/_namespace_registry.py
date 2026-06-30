@@ -333,7 +333,9 @@ REPAIR_INTEGRITY_DECISION_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{decision_id_sha256_hex}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
-    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+    # Host-local storage-repair decisions are bound to the host that made them and
+    # are not portable bucket data; they are not carried by an export.
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
 APPLICATION_FILING_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
     key="application_filing_history",

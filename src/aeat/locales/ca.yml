@@ -2087,6 +2087,7 @@ cli:
         revision_selector_help: Selector de revisio.
         revision_show_help: Mostrar els valors de casella desats d'una revisió de
           càlcul concreta (sense recalcular)
+        revision_verbose_help: Mostrar la traça completa de la fórmula per casella (op, formula_id, referències i valors dels operands).
         revisions_help: Llistar les revisions de càlcul, opcionalment filtrades per
           unitat de treball
         row_empty_key: Clau de camp buida a --row {token}; cada camp ha de tenir el

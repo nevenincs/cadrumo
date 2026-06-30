@@ -1966,6 +1966,7 @@ cli:
         revision_selector_help: Revision selector.
         revision_show_help: Show one stored calculation revision's persisted casilla
           values (without recomputing)
+        revision_verbose_help: Expose the full per-casilla formula trace (op, formula_id, operand refs and values).
         revisions_help: List calculation revisions, optionally filtered to one work
           unit
         row_empty_key: Empty field key in --row {token}; each field must be in KEY=VALUE
