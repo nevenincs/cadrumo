@@ -136,6 +136,20 @@ _PROFILE_ENTITY_TYPE_PATH = "taxpayer_type.entity_type"
 _LEGAL_ENTITY_TYPE = "legal_entity"
 _LEGAL_ENTITY_NAME_SLOT_MODELOS: frozenset[str] = frozenset({Modelo.M111.value})
 _LOGGER = get_logger(__name__)
+_LOCAL_EXPORT_EVIDENCE_STATUS = "local_export_not_official_aeat_filing_evidence"
+_LOCAL_EXPORT_OFFICIAL_EVIDENCE_MESSAGE = (
+    "Local export wrote an AEAT-compatible fichero-BOE file only; it is not official AEAT filing evidence. "
+    "Official evidence comes from AEAT after filing: justificante, consulta de declaraciones presentadas, "
+    "or CSV cotejo."
+)
+_LOCAL_EXPORT_OFFICIAL_EVIDENCE_NEXT_ACTION = (
+    "After filing through AEAT, capture official evidence with "
+    "`aeat app modelo reconcile pull --modelo {modelo} --year {filing_year} --period {period}`, "
+    "or `aeat app live justificante pull --modelo {modelo} --year {filing_year} --period {period}` "
+    "when live read access is available; otherwise import AEAT justificante/CSV evidence with "
+    "`aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf "
+    "--evidence-id CSV --set CASILLA=VALUE`."
+)
 
 
 def _compose_legal_full_name(*, surnames: str, name: str) -> str:
@@ -274,6 +288,16 @@ class ModeloExportResult(BaseModel):
     bucket_event_id: str = Field(min_length=1, max_length=128)
     casilla_provenance: tuple[filing_domain.ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
     iva_wallet_decision_provenance: ModeloIvaWalletDecisionProvenance | None = None
+    local_evidence_status: str = Field(default=_LOCAL_EXPORT_EVIDENCE_STATUS, min_length=1)
+    official_evidence_message: str = Field(default=_LOCAL_EXPORT_OFFICIAL_EVIDENCE_MESSAGE, min_length=1)
+    official_evidence_next_action: str = Field(
+        default=_LOCAL_EXPORT_OFFICIAL_EVIDENCE_NEXT_ACTION.format(
+            modelo="MODELO",
+            filing_year="YEAR",
+            period="PERIOD",
+        ),
+        min_length=1,
+    )
 
 
 def _sha256_ref(value: str) -> str:
@@ -649,6 +673,14 @@ def _resolve_work_unit_period(work_unit: WorkUnit) -> Period:
     return work_unit.period
 
 
+def _official_evidence_next_action(*, modelo: str, filing_year: int, period: Period) -> str:
+    return _LOCAL_EXPORT_OFFICIAL_EVIDENCE_NEXT_ACTION.format(
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period.registry_token,
+    )
+
+
 def _raise_if_export_layout_unsupported(*, work_unit: WorkUnit, schema_provider: RegistrySchemaAccessor) -> None:
     """Refuse a modelo whose registry snapshot cannot render fichero-BOE bytes."""
     modelo = str(work_unit.modelo)
@@ -779,6 +811,11 @@ def _persist_exported_draft(
         bucket_event_id=event.event_id,
         casilla_provenance=receipt.casilla_provenance,
         iva_wallet_decision_provenance=iva_wallet_provenance,
+        official_evidence_next_action=_official_evidence_next_action(
+            modelo=str(work_unit.modelo),
+            filing_year=work_unit.filing_year,
+            period=period,
+        ),
     )
 
 

@@ -1566,9 +1566,7 @@ cli:
         actor_help: A MODELO_EXPORTED eseményen rögzített üzemeltetői felirat.
         errors:
           output_required: Adja meg a --output PATH erteket a fichero-BOE artefaktumhoz.
-        help: Hitelesített-teljes vagy benyújtott nyomtatvány-revízió exportálása
-          helyi AEAT-kompatibilis fichero-BOE fájlba. Csak helyi; soha nem lép kapcsolatba
-          az AEAT-tal.
+        help: 'Hitelesített vagy benyújtott modell-revíziót exportál helyi, AEAT-kompatibilis fichero-BOE fájlba. Csak helyi; soha nem lép kapcsolatba az AEAT-tal, és a létrehozott fájl nem hivatalos AEAT-benyújtási bizonyíték. Benyújtás után használja az AEAT justificante-t, a benyújtott bevallások lekérdezését vagy a CSV cotejo bizonyítékot.'
         output_help: A fichero-BOE artefakt írásának elérési útja.
         revision_help: 'Az exportálandó számítási revízió azonosítója; alapértelmezés:
           a munkaegység legújabb hitelesített-teljes vagy benyújtott revíziója.'

@@ -1644,8 +1644,7 @@ cli:
         actor_help: Etiqueta del operador registrada en el evento MODELO_EXPORTED.
         errors:
           output_required: Proporcione --output PATH para el artefacto fichero-BOE.
-        help: Exporta una revisión de modelo verificada o presentada a un fichero
-          local compatible con AEAT (fichero-BOE). Local; nunca contacta con AEAT.
+        help: 'Exporta una revisión de modelo verificada o presentada a un fichero local compatible con AEAT (fichero-BOE). Local; nunca contacta con AEAT, y el fichero generado no es evidencia oficial de presentación ante AEAT. Use el justificante AEAT, la consulta de declaraciones presentadas o el cotejo CSV tras presentar.'
         output_help: Ruta donde escribir el artefacto fichero-BOE.
         revision_help: Identificador de la revisión de cálculo a exportar; por defecto,
           la revisión verificada o presentada más reciente de la unidad de trabajo.

@@ -33,6 +33,7 @@ from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
+from .envelope_helpers import unwrap_envelope_notices as _notices
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -459,6 +460,12 @@ def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
     )
 
     assert result.exit_code == 0, result.output
+    assert "evidence_status\tlocal_export_not_official_aeat_filing_evidence" in result.output
+    assert "not official AEAT filing evidence" in result.output
+    assert "justificante" in result.output
+    assert "consulta de declaraciones presentadas" in result.output
+    assert "CSV cotejo" in result.output
+    assert "aeat app modelo reconcile pull --modelo 111 --year 2026 --period 1T" in result.output
     assert out.exists()
     assert out.stat().st_size > 0
 
@@ -571,6 +578,19 @@ def test_export_resolves_visible_target_to_current_verified_revision(
     assert result.exit_code == 0, result.output
     payload = _payload(result.output)
     assert payload["calculation_revision_id"] == calculation_revision_id
+    notices = _notices(result.output)
+    notice = next(
+        notice for notice in notices if notice["code"] == "modelo.export.local_export_not_official_evidence"
+    )
+    assert notice["severity"] == "warning"
+    assert notice["context"]["evidence_status"] == "local_export_not_official_aeat_filing_evidence"
+    assert notice["context"]["modelo"] == "111"
+    assert notice["context"]["filing_year"] == "2026"
+    assert notice["context"]["period"] == "1T"
+    assert "not official AEAT filing evidence" in notice["message"]
+    assert "consulta de declaraciones presentadas" in notice["message"]
+    assert "CSV cotejo" in notice["message"]
+    assert "aeat app modelo reconcile pull --modelo 111 --year 2026 --period 1T" in notice["suggestion"]
     assert out.exists()
 
 
