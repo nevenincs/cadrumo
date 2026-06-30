@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -12,7 +13,7 @@ import pytest
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
-from ....domain.calculations.registry import resolve_ledger_iva_aggregation_binding_values
+from ....domain.calculations.registry import ModeloRevision, resolve_ledger_iva_aggregation_binding_values
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind, ProrrataKind, ProrrataRegime
 from ....domain.transactions import (
     BusinessClassification,
@@ -43,6 +44,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _period(year: int, code: str) -> Period:
     return Period.from_year_and_code(year, code)
+
+
+@cache
+def _modelo_revision(modelo_id: str, revision_id: str) -> ModeloRevision:
+    return resources().modelos.get(modelo_id).revisions[revision_id]
 
 
 _Q2_2023 = _period(2023, "2T")
@@ -624,7 +630,7 @@ def test_preclassified_candidates_cover_non_domestic_exempt_recargo_and_adjustme
 
 
 def test_preclassified_candidates_feed_modelo_309_recargo_and_reverse_charge_bindings() -> None:
-    revision = next(item for item in resources().modelos.all() if item.id == "309").revisions["2004-y-siguientes"]
+    revision = _modelo_revision("309", "2004-y-siguientes")
     candidates = (
         IvaLedgerCandidate(
             ledger_id="eu-acquisition",
@@ -653,7 +659,7 @@ def test_preclassified_candidates_feed_modelo_309_recargo_and_reverse_charge_bin
 
 
 def test_preclassified_candidate_blocks_unsupported_modelo_390_regime() -> None:
-    revision = next(item for item in resources().modelos.all() if item.id == "390").revisions["2010-y-siguientes"]
+    revision = _modelo_revision("390", "2010-y-siguientes")
     candidate = IvaLedgerCandidate(
         ledger_id="retail-recargo",
         transaction_date=date(2026, 4, 12),
@@ -689,7 +695,7 @@ def test_preclassified_candidate_rejects_non_declarable_sentinel_category() -> N
 
 
 def test_preclassified_candidate_outside_period_blocks_binding_resolution() -> None:
-    revision = next(item for item in resources().modelos.all() if item.id == "309").revisions["2004-y-siguientes"]
+    revision = _modelo_revision("309", "2004-y-siguientes")
     candidate = IvaLedgerCandidate(
         ledger_id="late-row",
         transaction_date=date(2026, 7, 1),
@@ -723,8 +729,7 @@ def test_projected_observations_feed_modelo_303_binding_resolver() -> None:
         TransactionCatalogue.from_transactions((incoming, outgoing)),
         period=_Q2_2026,
     )
-    modelos = resources().modelos.all()
-    revision = next(item for item in modelos if item.id == "303").revisions["2009-y-siguientes"]
+    revision = _modelo_revision("303", "2009-y-siguientes")
 
     binding_values = resolve_ledger_iva_aggregation_binding_values(revision, projection.observations)
 

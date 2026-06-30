@@ -27,9 +27,9 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import resources
 from .. import CasillaId, validated_casilla_id
 from .._schema import ModeloDefinition
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -61,7 +61,8 @@ _SUPPORTED_EJERCICIOS: tuple[str, ...] = ("2020", "2021", "2022", "2023", "2024"
 
 
 def _committed_modelo_100() -> ModeloDefinition:
-    return resources().modelos.get("100")
+    modelo, _catalogues = _committed_modelo("100")
+    return modelo
 
 
 @pytest.fixture(scope="module")

@@ -41,7 +41,7 @@ from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
@@ -66,6 +66,7 @@ from ...domain.calculations.registry import (
     ModeloRevision,
     RegistrySnapshot,
     RegistrySnapshotError,
+    SourceReference,
     SourceRefId,
     ValidatedRegistryAuthority,
     expression_casilla_refs,
@@ -213,6 +214,8 @@ class RegistrySchemaAccessor:
 
     collections: dict[str, RegistryCasillaCollection]
     subviews: dict[str, RegistryModeloSubview]
+    source_root: Path | None = None
+    sources: Mapping[SourceRefId, SourceReference] = field(default_factory=dict)
 
     def get_collection(self, modelo: str) -> CasillaCollection:
         """Return the casilla collection for ``modelo``.
@@ -404,6 +407,8 @@ def _build_runtime_schema_provider_cached(
     return RegistrySchemaAccessor(
         collections={modelo_id: collection_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
         subviews={modelo_id: _subview_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
+        source_root=resolved_source_root,
+        sources=dict(authority.catalogues.sources),
     )
 
 

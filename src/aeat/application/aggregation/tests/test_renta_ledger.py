@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -12,7 +13,7 @@ import pytest
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id
 from ....domain.categories import SpendingCategory
 from ....domain.invoices import (
     Invoice,
@@ -52,6 +53,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _period(year: int, code: str) -> Period:
     return Period.from_year_and_code(year, code)
+
+
+@cache
+def _m100_2025_snapshot() -> RegistrySnapshot:
+    return resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
 
 
 _ANNUAL_2025 = _period(2025, "0A")
@@ -252,7 +258,7 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
     tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
     invoice_repo.save(InvoiceCatalogue())
 
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+    snapshot = _m100_2025_snapshot()
     resolution = LedgerRentaExpenseAggregationSourceResolver(
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
@@ -299,7 +305,7 @@ def test_renta_filing_aggregation_routes_office_software_and_marketing_to_m100_e
     tx_repo.save(TransactionCatalogue.from_transactions(transactions))
     invoice_repo.save(InvoiceCatalogue())
 
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+    snapshot = _m100_2025_snapshot()
     resolution = LedgerRentaExpenseAggregationSourceResolver(
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
@@ -336,7 +342,7 @@ def test_renta_filing_aggregation_loads_usage_ratios_for_mobile_phone_expenses(
         objects=secure_objects,
     )
 
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+    snapshot = _m100_2025_snapshot()
     resolution = LedgerRentaExpenseAggregationSourceResolver(
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),

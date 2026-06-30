@@ -864,6 +864,116 @@ def test_modelo_100_inmueble_rented_days_are_integer() -> None:
             )
 
 
+def test_modelo_100_eo_module_units_are_decimal() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_legal_refs = {
+        "ley-35-2006:art-27",
+        "ley-35-2006:art-28",
+        "ley-35-2006:art-30",
+        "ley-35-2006:art-31",
+        "ley-35-2006:art-32",
+    }
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        for casilla_id in ("1445", "1448", "1451", "1454", "1457", "1460", "1463"):
+            casilla = next(
+                casilla for casilla in revision.casillas if casilla.id == _casilla_id(casilla_id)
+            )
+
+            assert casilla.label == "Nº de unidades"
+            assert tuple(casilla.section) == (
+                "toma_datos_ampliada",
+                "reg_estima_obj",
+                "actividad_est_obj",
+            )
+            assert casilla.data_type == "decimal"
+            assert casilla.semantic_role == "irpf_eo_modulo_num_unidades"
+            assert expected_legal_refs.issubset(casilla.legal_refs)
+            assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+                casilla.source_refs,
+            )
+
+
+def test_modelo_100_re_attribution_inmueble_days_are_integer() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("1618"))
+
+        assert casilla.label == "Nº de días"
+        assert tuple(casilla.section) == ("toma_datos_ampliada", "regimenes_especiales", "re_at_rentas")
+        assert casilla.data_type == "integer"
+        assert casilla.semantic_role == "irpf_re_atrib_inmueble_num_dias"
+        assert "ley-35-2006:art-86" in casilla.legal_refs
+        assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+            casilla.source_refs,
+        )
+
+
+def test_modelo_100_2022_maternity_child_counts_are_integer() -> None:
+    revision = _modelo_100_snapshot(2022).revision
+    expected_roles = {
+        _casilla_id("1911"): "irpf_num_hijos_maternidad_2020",
+        _casilla_id("1914"): "irpf_num_hijos_maternidad_2021",
+    }
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_roles}
+
+    assert set(casillas_by_id) == set(expected_roles)
+    for casilla_id, expected_role in expected_roles.items():
+        casilla = casillas_by_id[casilla_id]
+
+        assert casilla.label == "Número de hijos que dan derecho a la deducción por maternidad"
+        assert tuple(casilla.section) == ("resultados", "calculo_impuesto_res", "ampliacion_deduc_mater_res")
+        assert casilla.data_type == "integer"
+        assert casilla.semantic_role == expected_role
+        assert casilla.semantic_role_cardinality == "intentional_singleton"
+        assert casilla.semantic_role_cardinality_reason
+        assert "ley-35-2006:art-81" in casilla.legal_refs
+        assert {"aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-xsd"}.issubset(casilla.source_refs)
+
+
+def test_modelo_100_la_rioja_municipality_codes_are_integer() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    common_expected_roles = {
+        "1064": "irpf_deduccion_la_rioja_vivienda_codigo_municipio",
+        "1067": "irpf_deduccion_la_rioja_adecuacion_municipio_codigo",
+        "1162": "irpf_deduccion_la_rioja_arrendamiento_municipio_codigo",
+        "1164": "irpf_deduccion_la_rioja_municipio_pequeno_codigo",
+        "1204": "irpf_deduccion_la_rioja_municipio_pequeno_codigo_2",
+        "1205": "irpf_deduccion_la_rioja_municipio_pequeno_codigo_3",
+    }
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        expected_roles = dict(common_expected_roles)
+        if filing_year >= 2021:
+            expected_roles["1071"] = "irpf_deduccion_la_rioja_guarderia_municipio_codigo"
+
+        casillas_by_id = {
+            casilla.id: casilla
+            for casilla in revision.casillas
+            if casilla.id in {_casilla_id(casilla_id) for casilla_id in expected_roles}
+        }
+
+        assert set(casillas_by_id) == {_casilla_id(casilla_id) for casilla_id in expected_roles}
+        for casilla_id, expected_role in expected_roles.items():
+            casilla = casillas_by_id[_casilla_id(casilla_id)]
+
+            assert casilla.label in {"Código del municipio", "Código del municipio:", "Código del pequeño municipio:"}
+            assert tuple(casilla.section) == ("resultados", "deduccion_autonomica_res", "la_rioja_res")
+            assert casilla.data_type == "integer"
+            assert casilla.semantic_role == expected_role
+            assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+            assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+                casilla.source_refs,
+            )
+
+
 def test_modelo_100_retrib_especie_no_exenta_total_role_names_aggregate() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]

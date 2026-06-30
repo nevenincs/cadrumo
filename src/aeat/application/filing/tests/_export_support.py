@@ -152,10 +152,10 @@ def _provider_with_export_layouts(
 
 
 def _assert_missing_export_layout_refusal(message: str, modelo: str) -> None:
-    assert f"modelo {modelo!r} fichero-BOE export is unsupported" in message
+    assert f"modelo {modelo!r} local declaration export is unsupported" in message
     assert "registry snapshot has no complete export_layouts definition" in message
     assert "calculation, verification, and local filing surfaces may exist" in message.lower()
-    assert "cannot produce a BOE export file" in message
+    assert "cannot produce an AEAT-compatible export file" in message
     assert "does not certify legal correctness" in message
 
 

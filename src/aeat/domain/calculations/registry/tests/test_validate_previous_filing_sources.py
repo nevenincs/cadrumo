@@ -14,6 +14,8 @@ the expanding span emit a phantom prior-quarter requirement at 1T would fail her
 
 from __future__ import annotations
 
+from functools import cache
+
 import pytest
 
 from .....core.resources import resources
@@ -30,6 +32,7 @@ _POSITIVE_PART_CASILLA: CasillaId = validated_casilla_id("07", surface="_POSITIV
 _MINORACION_CASILLA: CasillaId = validated_casilla_id("16", surface="_MINORACION_CASILLA")
 
 
+@cache
 def _casilla_05_requirements(period: str) -> tuple[RegistryFoldRequirement, ...]:
     snapshot = resources().modelos.authority.snapshot("130", filing_year=_FILING_YEAR, period=period)
     return tuple(

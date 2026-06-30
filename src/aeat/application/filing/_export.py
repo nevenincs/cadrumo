@@ -44,13 +44,15 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
+from xml.etree import ElementTree
 
+from defusedxml import ElementTree as DefusedElementTree
 from pydantic import BaseModel, Field, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -68,7 +70,10 @@ from ...domain.calculations.registry import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
     RegistryValidationError,
+    SourceReference,
+    XmlDictionaryEntry,
     parse_export_payload,
+    xml_dictionary_entries,
 )
 from ...domain.filing import (
     FilingExportError,
@@ -101,6 +106,7 @@ class DeclaracionExportFormat(StrEnum):
     """
 
     FICHERO_BOE = "fichero-boe"
+    XML_DICTIONARY = "xml-dictionary"
 
 
 class DeclaracionVerifyVerdict(StrEnum):
@@ -312,10 +318,10 @@ def export_draft(
         raise FilingExportError(_missing_export_layout_message(draft.modelo))
     layout = subview.export_layouts[0]
     _raise_if_export_layout_not_renderable(draft.modelo, layout)
-    payload = _render_layout(layout, draft=draft, headers=headers)
+    payload = _render_export_layout(layout, draft=draft, headers=headers, schema_provider=provider)
     if not payload:
         raise FilingExportError(f"modelo {draft.modelo!r} export layout {layout.id!r} rendered an empty payload")
-    casilla_provenance = _exported_casilla_provenance(layout, draft=draft)
+    casilla_provenance = _exported_casilla_provenance(layout, draft=draft, schema_provider=provider)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_bytes(payload)
     digest = sha256_hex(payload)
@@ -323,7 +329,7 @@ def export_draft(
         draft_id=draft.draft_id,
         modelo=draft.modelo,
         period=draft.period,
-        format=DeclaracionExportFormat.FICHERO_BOE,
+        format=_declaracion_export_format(layout),
         output_path=output_path,
         byte_size=len(payload),
         file_sha256=digest,
@@ -337,14 +343,15 @@ def export_layout_renderability_reason(
     modelo: str,
     layout: ExportLayoutDefinition | None,
 ) -> str | None:
-    """Return why ``layout`` cannot currently produce local fichero-BOE bytes."""
+    """Return why ``layout`` cannot currently produce local declaration bytes."""
     if layout is None:
         return "the registry snapshot has no complete export_layouts definition"
+    if layout.format == "xml_dictionary":
+        if layout.dictionary_source_ref is None:
+            return f"XML dictionary export layout {layout.id!r} declares no dictionary source"
+        return None
     if layout.format != "fixed_width":
-        return (
-            f"export layout {layout.id!r} uses unsupported format {layout.format!r}; "
-            "the local fichero-BOE exporter currently renders fixed_width layouts only"
-        )
+        return f"export layout {layout.id!r} uses unsupported format {layout.format!r}"
     if not layout.records:
         return f"export layout {layout.id!r} declares no export records"
     return None
@@ -364,9 +371,9 @@ def _missing_export_layout_message(modelo: str) -> str:
 
 def _export_layout_not_renderable_message(modelo: str, reason: str) -> str:
     return (
-        f"modelo {modelo!r} fichero-BOE export is unsupported: {reason}. "
+        f"modelo {modelo!r} local declaration export is unsupported: {reason}. "
         "Calculation, verification, and local filing surfaces may exist for this modelo, "
-        "but this command cannot produce a BOE export file and does not certify legal correctness."
+        "but this command cannot produce an AEAT-compatible export file and does not certify legal correctness."
     )
 
 
@@ -421,7 +428,12 @@ def verify_export(
     payload = file_path.read_bytes()
     digest = sha256_hex(payload)
     try:
-        mismatched, checked = _mismatched_casilla_ids(subview.export_layouts[0], draft=draft, payload=payload)
+        mismatched, checked = _mismatched_casilla_ids(
+            subview.export_layouts[0],
+            draft=draft,
+            payload=payload,
+            schema_provider=provider,
+        )
     except RegistryValidationError:
         _logger.warning("declaration export verification could not parse %s", file_path, exc_info=True)
         return DeclaracionVerifyResult(
@@ -482,6 +494,24 @@ def _did_page_suppressed(record: ExportRecordDefinition, *, headers: dict[str, s
     return not result_disposition_is_refund(disposition)
 
 
+def _declaracion_export_format(layout: ExportLayoutDefinition) -> DeclaracionExportFormat:
+    if layout.format == "xml_dictionary":
+        return DeclaracionExportFormat.XML_DICTIONARY
+    return DeclaracionExportFormat.FICHERO_BOE
+
+
+def _render_export_layout(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: ModeloDraft,
+    headers: dict[str, str],
+    schema_provider: RegistrySchemaAccessor,
+) -> bytes:
+    if layout.format == "xml_dictionary":
+        return _render_xml_dictionary_layout(layout, draft=draft, headers=headers, schema_provider=schema_provider)
+    return _render_layout(layout, draft=draft, headers=headers)
+
+
 def _render_layout(layout: ExportLayoutDefinition, *, draft: ModeloDraft, headers: dict[str, str]) -> bytes:
     chunks: list[bytes] = []
     normalized_headers = {key.lower(): value for key, value in headers.items()}
@@ -511,6 +541,142 @@ def _render_layout(layout: ExportLayoutDefinition, *, draft: ModeloDraft, header
 
 
 render_layout = _render_layout
+
+_XML_SCHEMA_INSTANCE_NS = "http://www.w3.org/2001/XMLSchema-instance"
+ElementTree.register_namespace("xsi", _XML_SCHEMA_INSTANCE_NS)
+
+
+def _render_xml_dictionary_layout(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: ModeloDraft,
+    headers: dict[str, str],
+    schema_provider: RegistrySchemaAccessor,
+) -> bytes:
+    entries = xml_dictionary_entries(layout, source_root=schema_provider.source_root, sources=schema_provider.sources)
+    xsd_source = _xml_dictionary_xsd_source(layout, schema_provider.sources)
+    version = _latest_xml_dictionary_xsd_version(xsd_source, source_root=schema_provider.source_root)
+    root = ElementTree.Element(
+        "Declaracion",
+        {
+            "modelo": draft.modelo,
+            "ejercicio": str(draft.period.filing_year),
+            "periodo": draft.period.registry_token,
+            "versionxsd": version,
+            f"{{{_XML_SCHEMA_INSTANCE_NS}}}noNamespaceSchemaLocation": xsd_source.source_url,
+        },
+    )
+    normalized_headers = {key.lower(): value for key, value in headers.items()}
+    casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
+    for entry in entries:
+        rendered = _xml_dictionary_rendered_value(
+            entry,
+            draft=draft,
+            casilla_values=casilla_values,
+            headers=normalized_headers,
+        )
+        if rendered is None or rendered == "":
+            continue
+        _set_xml_dictionary_path(root, entry.path, rendered)
+    return ElementTree.tostring(root, encoding="utf-8", xml_declaration=True)
+
+
+def _xml_dictionary_xsd_source(
+    layout: ExportLayoutDefinition,
+    sources: Mapping[str, SourceReference],
+) -> SourceReference:
+    refs = set(layout.source_refs)
+    for source in sources.values():
+        if source.id in refs and source.kind == "xsd":
+            return source
+    raise FilingExportError(f"XML dictionary export layout {layout.id!r} has no resolved XSD source")
+
+
+def _latest_xml_dictionary_xsd_version(source: SourceReference, *, source_root: Path | None) -> str:
+    if source_root is None:
+        raise FilingExportError(f"XML dictionary XSD source {source.id!r} requires source_root")
+    try:
+        root = DefusedElementTree.parse(source_root / source.corpus_path).getroot()
+    except (DefusedElementTree.ParseError, OSError) as exc:
+        raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} could not be parsed") from exc
+    versions: list[str] = []
+    for simple_type in root.iter("{http://www.w3.org/2001/XMLSchema}simpleType"):
+        if simple_type.attrib.get("name") != "tipo_VersionXSD":
+            continue
+        for enumeration in simple_type.iter("{http://www.w3.org/2001/XMLSchema}enumeration"):
+            value = enumeration.attrib.get("value")
+            if value:
+                versions.append(value)
+    if not versions:
+        raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} declares no versionxsd values")
+    return sorted(versions, key=lambda item: tuple(int(part) for part in item.split(".")))[-1]
+
+
+def _xml_dictionary_rendered_value(
+    entry: XmlDictionaryEntry,
+    *,
+    draft: ModeloDraft,
+    casilla_values: dict[CasillaId, object],
+    headers: dict[str, str],
+) -> str | None:
+    raw = casilla_values.get(entry.casilla_id) if entry.casilla_id is not None else None
+    if raw is None:
+        raw = _xml_dictionary_header_value(entry, draft=draft, headers=headers)
+    if raw is None:
+        return None
+    return _format_xml_dictionary_value(entry.data_type, raw)
+
+
+def _xml_dictionary_header_value(
+    entry: XmlDictionaryEntry,
+    *,
+    draft: ModeloDraft,
+    headers: dict[str, str],
+) -> object | None:
+    path_tail = entry.path.rsplit("/", 1)[-1].lstrip("@").lower()
+    for key in (entry.field_id.lower(), path_tail):
+        value = headers.get(key)
+        if value is not None:
+            return value
+    if entry.field_id == "DPNIF_D":
+        return draft.profile_tax_id
+    if entry.field_id == "DP_APENOM_D":
+        return headers.get("legal_name") or " ".join(
+            part for part in (headers.get("surnames", ""), headers.get("name", "")) if part
+        )
+    return None
+
+
+def _format_xml_dictionary_value(data_type: str, value: object) -> str:
+    if isinstance(value, bool):
+        return "S" if value else "N"
+    if isinstance(value, date):
+        return f"{value.day}/{value.month}/{value.year}"
+    normalized_type = data_type.upper()
+    if normalized_type.startswith(("N", "P")):
+        amount = coerce_decimal(value, default=Decimal("0")) or Decimal("0")
+        return f"{round_to_cents(amount):.2f}"
+    return str(value).strip()
+
+
+def _set_xml_dictionary_path(root: ElementTree.Element[str], absolute_path: str, value: str) -> None:
+    parts = tuple(part for part in absolute_path.strip("/").split("/") if part)
+    if not parts:
+        raise FilingExportValidationError("XML dictionary entry path must not be empty")
+    current = root
+    for index, part in enumerate(parts):
+        if index == 0 and part == root.tag:
+            continue
+        if part.startswith("@"):
+            if index != len(parts) - 1:
+                raise FilingExportValidationError("XML dictionary attribute must terminate its path")
+            current.set(part[1:], value)
+            return
+        child = next((candidate for candidate in current if candidate.tag == part), None)
+        if child is None:
+            child = ElementTree.SubElement(current, part)
+        current = child
+    current.text = value
 
 
 def _record_render_rows(
@@ -831,11 +997,17 @@ def _mismatched_casilla_ids(
     *,
     draft: ModeloDraft,
     payload: bytes,
+    schema_provider: RegistrySchemaAccessor,
 ) -> tuple[tuple[CasillaId, ...], tuple[CasillaId, ...]]:
     values = {value.casilla_id: value.value for value in draft.values}
     mismatched: list[CasillaId] = []
     checked: list[CasillaId] = []
-    for parsed in parse_export_payload(layout, payload).casillas:
+    for parsed in parse_export_payload(
+        layout,
+        payload,
+        source_root=schema_provider.source_root,
+        sources=schema_provider.sources,
+    ).casillas:
         if parsed.casilla_id is None:
             continue
         checked.append(parsed.casilla_id)
@@ -863,7 +1035,23 @@ def _exported_casilla_provenance(
     layout: ExportLayoutDefinition,
     *,
     draft: ModeloDraft,
+    schema_provider: RegistrySchemaAccessor,
 ) -> tuple[ModeloCasillaProvenance, ...]:
+    if layout.format == "xml_dictionary":
+        entries = xml_dictionary_entries(
+            layout,
+            source_root=schema_provider.source_root,
+            sources=schema_provider.sources,
+        )
+        draft_casillas = {value.casilla_id for value in draft.values}
+        return _provenance_for_casillas(
+            draft,
+            (
+                entry.casilla_id
+                for entry in entries
+                if entry.casilla_id is not None and entry.casilla_id in draft_casillas
+            ),
+        )
     draft_casillas = {value.casilla_id for value in draft.values}
     layout_casillas = (
         field.casilla_id

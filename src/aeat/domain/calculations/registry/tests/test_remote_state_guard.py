@@ -18,7 +18,7 @@ from .....tests.aeat_literal_fixtures import (
     aeat_url,
     configured_path,
 )
-from .. import ModeloDefinition, RegistryCatalogues, build_snapshot, load_registry_tree
+from .. import ModeloDefinition, RegistryCatalogues, build_snapshot
 from .._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from .._errors import RegistrySnapshotError, RegistryValidationError
 from .._groi_oracle import GROI_ORACLE_ID, GroiOracle
@@ -35,6 +35,7 @@ from .._remote_state_guard import (
 )
 from .._renta_web_open_oracle import RentaWebOpenOracle
 from .._schema import LiveCrossReferenceDecision
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -600,7 +601,7 @@ def test_remote_state_guard_allows_public_read_surface_get() -> None:
 
 
 def test_committed_static_cross_references_reject_remote_state_operations() -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
 
     policies = [
         remote_state_policy_from_cross_reference(cross_reference)
@@ -632,7 +633,7 @@ def test_committed_static_cross_references_reject_remote_state_operations() -> N
 
 
 def test_committed_oracle_planned_operations_conform_to_bound_guard_policies() -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
     oracle_catalogue = _production_oracle_catalogue()
     covered_oracle_ids: set[str] = set()
 

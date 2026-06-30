@@ -12,14 +12,15 @@ from typing import Literal
 import pytest
 from pydantic import ValidationError
 
-from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
+from .. import ModeloDefinition, ModeloRevision, applicable_filing_schedules
 from .._live_parity import (
     CrossReferenceApplicability,
     evaluate_cross_reference_applicability,
 )
 from .._remote_state_guard import AEAT_WRITE_FORBIDDEN_ACTIONS
 from .._schema import LiveCrossReferenceDecision, ProfilePredicateDefinition
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW2_HOST = aeat_host("www2")
@@ -140,10 +141,7 @@ def test_groi_349_binding_is_not_applicable_when_profile_is_not_intracomunitario
     arithmetic.
     """
 
-    from .. import load_registry_tree
-
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(modelo for modelo in modelos if modelo.id == "349")
+    modelo, _ = _committed_modelo("349")
     binding = next(
         decision
         for decision in modelo.revisions["2020-y-siguientes"].live_cross_references
@@ -168,11 +166,7 @@ def test_groi_349_binding_is_not_applicable_when_profile_is_not_intracomunitario
 
 
 def _load_binding(modelo_id: str, revision_id: str, cross_reference_id: str) -> LiveCrossReferenceDecision:
-
-    from .. import load_registry_tree
-
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(modelo for modelo in modelos if modelo.id == modelo_id)
+    modelo, _ = _committed_modelo(modelo_id)
     return next(
         decision
         for decision in modelo.revisions[revision_id].live_cross_references
@@ -215,10 +209,7 @@ def test_oss_369_filing_schedules_select_only_when_oss_enrolled() -> None:
     gate is then defense-in-depth at the binding layer.
     """
 
-    from .. import applicable_filing_schedules, load_registry_tree
-
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo_369 = next(modelo for modelo in modelos if modelo.id == "369")
+    modelo_369, _ = _committed_modelo("369")
 
     for revision in modelo_369.revisions.values():
         not_enrolled = applicable_filing_schedules(
@@ -297,10 +288,8 @@ def test_user_profile_contract_rejects_typoed_predicate_field() -> None:
         UserProfileRegistryContractSeverity,
         validate_user_profile_registry_contract,
     )
-    from .. import ModeloDefinition, ModeloRevision, load_registry_tree
 
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo_349 = next(modelo for modelo in modelos if modelo.id == "349")
+    modelo_349, _ = _committed_modelo("349")
     revision = modelo_349.revisions["2020-y-siguientes"]
     binding = next(
         decision
@@ -349,10 +338,7 @@ def test_groi_349_cross_reference_declares_does_intracomunitario_predicate() -> 
     fails alongside any TOML edit.
     """
 
-    from .. import load_registry_tree
-
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(modelo for modelo in modelos if modelo.id == "349")
+    modelo, _ = _committed_modelo("349")
     revision = modelo.revisions["2020-y-siguientes"]
     binding = next(
         decision

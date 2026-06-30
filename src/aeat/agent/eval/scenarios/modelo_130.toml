@@ -1,0 +1,30 @@
+# Golden scenario: prepare Modelo 130 (IRPF pago fraccionado, estimación directa).
+#
+# Declares the expected operator tool trajectory for the modelo-130 preparation
+# workflow and the provenance the result must carry. The runner asserts the
+# trajectory resolves against the live CLI surface, follows the modelo lifecycle
+# order, is consistent with the shipped `preparar-modelo-130` skill, and that the
+# resolved revision's casillas carry their registry legal grounding. No casilla
+# value is hand-asserted here (that would be a tautological calculation test);
+# the value-oracle dimension against an AEAT worked example is a follow-up.
+
+name = "modelo-130-direct-estimation"
+modelo = "130"
+filing_year = 2024
+period = "1T"
+skill_name = "preparar-modelo-130"
+provenance_required = true
+
+# Ordered tool trajectory in registry-key (envelope command) form. Read the form,
+# create the work unit, calculate, read the revision, verify independently, export
+# the local artefact, then pull official evidence after the human files.
+expected_trajectory = [
+  "modelo.describe",
+  "modelo.casillas",
+  "modelo.work.create",
+  "modelo.work.calculate",
+  "modelo.work.revision",
+  "modelo.work.verify",
+  "modelo.export",
+  "modelo.reconcile.pull",
+]

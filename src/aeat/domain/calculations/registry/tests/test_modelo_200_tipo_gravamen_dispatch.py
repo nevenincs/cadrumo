@@ -32,18 +32,17 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from functools import lru_cache
 
 import pytest
 
 from .....core.resources import bundled_path
-from .. import CasillaId, build_snapshot, validated_casilla_id
+from .. import CasillaId, validated_casilla_id
 from .._binding_selector_utils import selector_as_dict
 from .._errors import RegistryValidationError
 from .._formula_runtime import calculate_registry_snapshot
 from .._legal import verify_legal_catalogue
 from .._schema import ParameterDefinition
-from ._registry_schema_support import _committed_modelo
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -101,20 +100,8 @@ def _base_inputs(base: Decimal) -> dict[CasillaId, Decimal]:
     }
 
 
-def _load_modelo_200():
-    return _committed_modelo("200")
-
-
-@lru_cache(maxsize=1)
 def _snapshot():
-    modelo, catalogues = _load_modelo_200()
-    return build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2024,
-        period="0A",
-    )
+    return _committed_snapshot("200", 2024, "0A")
 
 
 def _parameters() -> dict[str, ParameterDefinition]:
@@ -180,7 +167,7 @@ def test_nonprofit_cuota_bracket_carries_the_ley_49_2002_rate_authority() -> Non
 
 def test_ley_49_2002_art_10_nonprofit_rate_links_to_bundled_corpus() -> None:
     """The regime-specific 10% legal reference resolves to the bundled BOE excerpt."""
-    _, catalogues = _load_modelo_200()
+    _, catalogues = _committed_modelo("200")
     reference = catalogues.legal["ley-49-2002:art-10"]
 
     assert reference.corpus_ref == "corpus/normatives/html/ley-49-2002-art-10.html#a10"

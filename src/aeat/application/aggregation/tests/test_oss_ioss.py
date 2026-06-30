@@ -27,7 +27,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -65,10 +65,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _SUPPLY_DATE = date(2025, 6, 15)
 
 
-@lru_cache(maxsize=1)
+@cache
 def _modelo_369_union_revision() -> ModeloRevision:
-    modelos = resources().modelos.all()
-    modelo = next(item for item in modelos if item.id == "369")
+    modelo = resources().modelos.get("369")
     return modelo.revisions["esquema-union"]
 
 

@@ -210,7 +210,13 @@ from ._export import (
     export_fields_for_casilla,
     resolve_export_layout,
 )
-from ._export_parse import ParsedExportFieldValue, ParsedExportPayload, parse_export_payload
+from ._export_parse import (
+    ParsedExportFieldValue,
+    ParsedExportPayload,
+    XmlDictionaryEntry,
+    parse_export_payload,
+    xml_dictionary_entries,
+)
 from ._filed_state import RegistryFiledStateComparison, compare_calculation_to_filed_observation
 from ._formula_runtime import (
     M210_CONVENIO_MISSING_SENTINEL,
@@ -628,6 +634,7 @@ __all__ = [
     "WorkbookParityRunReport",
     "WorkbookRunnerAvailability",
     "WorkbookScanOptions",
+    "XmlDictionaryEntry",
     "applicable_filing_schedules",
     "assert_formula_workbook_runner_ready",
     "assert_remote_operation_allowed",
@@ -782,4 +789,5 @@ __all__ = [
     "verify_source_file",
     "verify_workbook_backend",
     "withholding_binding_requirements",
+    "xml_dictionary_entries",
 ]

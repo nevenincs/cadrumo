@@ -96,12 +96,7 @@ def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight() ->
     envelope = json.loads(readiness.output)
     assert envelope["notices"][0]["code"] == "modelo.readiness.ledger_preflight_scope"
     assert envelope["notices"][0]["context"]["missing_bindings"] == str(len(readiness_missing))
-    export_notice = next(
-        notice for notice in envelope["notices"] if notice["code"] == "modelo.readiness.export_unsupported"
-    )
-    assert export_notice["context"]["layout_id"] == "modelo-100-2025-xml-dictionary"
-    assert export_notice["context"]["layout_format"] == "xml_dictionary"
-    assert "fixed_width" in export_notice["context"]["reason"]
+    assert all(notice["code"] != "modelo.readiness.export_unsupported" for notice in envelope["notices"])
     assert readiness_missing.keys() <= bindings_missing_ids
     preflight_resolved_ids = bindings_missing_ids - set(readiness_missing)
     assert preflight_resolved_ids
@@ -133,9 +128,9 @@ def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight() ->
     assert "ready\tFalse" in text_readiness.output
     assert "source_binding_ready\tFalse" in text_readiness.output
     assert "ledger_ready_scope\ttransaction_preflight_only" in text_readiness.output
-    assert "export_ready\tFalse" in text_readiness.output
-    assert "export_refusal\texport layout 'modelo-100-2025-xml-dictionary'" in text_readiness.output
-    assert "finish_line\tlocal calculation, verification, and internal filing only" in text_readiness.output
+    assert "export_ready\tTrue" in text_readiness.output
+    assert "export_refusal\t\n" in text_readiness.output
+    assert "finish_line\texport verified-complete revision via 'aeat app modelo export'" in text_readiness.output
     assert "readiness_note\tledger_ready only means" in text_readiness.output
     assert (
         "missing_bindings_command\taeat app modelo bindings list "

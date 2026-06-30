@@ -22,9 +22,9 @@ from functools import lru_cache
 import pytest
 
 from .....core.paths import PROJECT_ROOT
-from .....core.resources import bundled_path
-from .. import CasillaId, load_registry_tree, validated_casilla_id
+from .. import CasillaId, validated_casilla_id
 from .._runtime_graph import expression_binding_refs, expression_parameter_refs, expression_relation_refs
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -62,8 +62,7 @@ _SUPPORTED_REVISIONS: tuple[str, ...] = ("2020", "2021", "2022", "2023", "2024",
 
 
 def _modelo_100():
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    return next(m for m in modelos if m.id == "100"), catalogues
+    return _committed_modelo("100")
 
 
 def test_top_level_cuota_chain_targets_present_in_every_supported_revision() -> None:

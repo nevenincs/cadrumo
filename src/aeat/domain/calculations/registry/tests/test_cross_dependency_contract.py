@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
-from functools import lru_cache
+from functools import cache
 from typing import Protocol
 
 import pytest
@@ -38,7 +38,7 @@ def _registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     return _committed_registry_tree()
 
 
-@lru_cache(maxsize=1)
+@cache
 def _validated_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     modelos, catalogues = _registry_tree()
     RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(modelos)
