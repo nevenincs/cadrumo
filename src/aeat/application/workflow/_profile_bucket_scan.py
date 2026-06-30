@@ -172,18 +172,20 @@ def resolve_profile_bucket(
     refusing every profile-scoped command with a "no manifest" error.
 
     This resolver tries the UUID-direct lookup first (the canonical bucket
-    directory key), then falls back to the manifest-scan-by-label. A label is
-    unique among live profiles (the name-uniqueness guard), so the fallback is
-    unambiguous. Returns ``None`` when the identifier matches neither a bucket
-    UUID nor a live profile label.
+    directory key), then falls back to the manifest-scan-by-label. The same
+    lifecycle filter applies to both paths: by default tombstoned profiles are
+    hidden from live surfaces whether the operator supplies a UUID or a label.
+    A label is unique among live profiles (the name-uniqueness guard), so the
+    fallback is unambiguous. Returns ``None`` when the identifier matches
+    neither a live bucket UUID nor a live profile label.
 
     Args:
         identifier: A profile UUID bucket id or an operator display label.
         root: Optional AEAT root override. When ``None``, resolves
             ``Settings.aeat_local_storage_root`` via ``load_settings``.
-        include_tombstoned: Forwarded to the label fallback so inspect
-            surfaces can resolve a deleted profile by name; the UUID-direct
-            lookup already resolves regardless of status.
+        include_tombstoned: When ``True``, inspect surfaces can resolve a
+            deleted profile by UUID or name; default ``False`` matches only
+            live profiles.
 
     Returns:
         A :class:`ProfileBucketPointer` for the resolved profile, or ``None``.
@@ -192,6 +194,8 @@ def resolve_profile_bucket(
         return None
     by_id = read_profile_bucket_by_id(identifier, root=root)
     if by_id is not None:
+        if not include_tombstoned and by_id.status is BucketLifecycleStatus.TOMBSTONED:
+            return None
         return by_id
     return read_profile_bucket(identifier, root=root, include_tombstoned=include_tombstoned)
 

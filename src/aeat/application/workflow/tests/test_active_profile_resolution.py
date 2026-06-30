@@ -121,6 +121,36 @@ def _write_live_bucket(root: Path, *, bucket_id: str, label: str) -> None:
     )
 
 
+def _tombstone_bucket(root: Path, *, bucket_id: str, label: str) -> None:
+    """Write a real tombstoned bucket manifest at ``<root>/buckets/<bucket_id>/``."""
+    from datetime import UTC, datetime
+
+    from ....adapters.persistence.storage.bucket import (
+        BucketLifecycleStatus,
+        BucketManifest,
+        bucket_paths,
+        provision_bucket_directory,
+        write_manifest,
+    )
+    from ....adapters.persistence.storage.master_key import KdfParams
+
+    now = datetime.now(UTC).replace(microsecond=0)
+    provision_bucket_directory(root, bucket_id)
+    write_manifest(
+        bucket_paths(root, bucket_id),
+        BucketManifest(
+            bucket_id=bucket_id,
+            label=label,
+            created_at=now,
+            last_unlocked_at=None,
+            kdf_params=KdfParams.default().to_manifest_params(),
+            recovery_enrolled=False,
+            schema_version=1,
+            status=BucketLifecycleStatus.TOMBSTONED,
+        ),
+    )
+
+
 def test_resolve_profile_bucket_resolves_an_active_profile_by_uuid(tmp_path: Path) -> None:
     """A UUID identifier resolves directly to its bucket pointer."""
 
@@ -128,6 +158,34 @@ def test_resolve_profile_bucket_resolves_an_active_profile_by_uuid(tmp_path: Pat
     _write_live_bucket(tmp_path, bucket_id=uuid, label="operator")
 
     pointer = resolve_profile_bucket(uuid, root=tmp_path)
+
+    assert pointer is not None
+    assert pointer.bucket_id == uuid
+    assert pointer.label == "operator"
+
+
+def test_resolve_profile_bucket_excludes_a_tombstoned_profile_by_uuid_by_default(tmp_path: Path) -> None:
+    """Live-surface resolution hides a tombstoned profile even when addressed by UUID.
+
+    Label resolution already excludes tombstoned profiles by default. The UUID
+    fast path must apply the same lifecycle filter so ``--profile <uuid>`` cannot
+    activate a deleted bucket that ``--profile <label>`` and ``config switch``
+    would refuse.
+    """
+
+    uuid = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
+    _tombstone_bucket(tmp_path, bucket_id=uuid, label="operator")
+
+    assert resolve_profile_bucket(uuid, root=tmp_path) is None
+
+
+def test_resolve_profile_bucket_can_include_a_tombstoned_profile_by_uuid_for_inspection(tmp_path: Path) -> None:
+    """Inspection callers may opt into tombstoned UUID resolution explicitly."""
+
+    uuid = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
+    _tombstone_bucket(tmp_path, bucket_id=uuid, label="operator")
+
+    pointer = resolve_profile_bucket(uuid, root=tmp_path, include_tombstoned=True)
 
     assert pointer is not None
     assert pointer.bucket_id == uuid
