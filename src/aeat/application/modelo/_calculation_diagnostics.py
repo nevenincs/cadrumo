@@ -1,17 +1,21 @@
 """Post-calculation advisory coordination for bucket aggregation calculations.
 
-The bucket aggregation calculate path first resolves source-backed values and
-persists the calculated revision. This module then fans out advisory-only checks
-over the loaded :class:`ModeloRevision` and the computed :class:`CasillaId` value
-map, returning non-blocking
-:class:`~aeat.application.aggregation.CalculationSourceDiagnostic` rows for the
+The bucket aggregation calculate path first resolves source-backed values,
+executes the registry formula engine, and persists the calculated revision. This
+module then fans out advisory-only checks over the loaded
+:class:`ModeloRevision` and the computed :class:`CasillaId` value map, returning
+non-blocking
+:class:`aeat.application.aggregation.CalculationSourceDiagnostic` rows for the
 caller to append to source mesh diagnostics. It does not compute, override, or
 persist casilla values.
 
 The prior-payment collectors need persisted filing observations, so the
-coordinator shares one :class:`CalculationObservationRepository` instance across
-them. The official-box and settlement collectors read only the revision
-structure and calculated casilla values.
+coordinator shares one
+:class:`aeat.application.calculations.CalculationObservationRepository` instance
+across them. The official-box and settlement collectors read only the revision
+structure and calculated casilla values. Together the collectors extend the
+source mesh's no-silent-under-declaration diagnostics with checks whose evidence
+only exists after the revision has been calculated.
 
 See Also:
     :func:`aeat.application.modelo._calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
@@ -57,7 +61,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
     130 prior-payment minoracion capture, and settlement-not-computed structure.
     These diagnostics are informational and non-blocking; the calculation result
     already exists, and the caller merely appends these rows to the source mesh's
-    existing :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
+    existing :class:`aeat.application.aggregation.CalculationSourceDiagnostic`
     sequence.
 
     Args:
@@ -72,14 +76,14 @@ def collect_bucket_aggregation_advisory_diagnostics(
             inspected.
 
     Returns:
-        Tuple of :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
+        Tuple of :class:`aeat.application.aggregation.CalculationSourceDiagnostic`
         advisory rows, or an empty tuple when no post-calculation advisory fires.
 
     See Also:
-        :class:`CalculationObservationRepository`:
+        :class:`aeat.application.calculations.CalculationObservationRepository`:
             Supplies the prior-filing observation catalogue used by the Modelo
             130 prior-payment advisory collectors.
-        :func:`aeat.application.modelo._calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+        :func:`aeat.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
             Appends this tuple to the source mesh diagnostics on the returned
             bucket aggregation result.
     """
