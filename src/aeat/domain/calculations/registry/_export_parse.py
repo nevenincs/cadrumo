@@ -53,7 +53,9 @@ class ParsedExportPayload(RegistryModel):
 
 
 @dataclass(frozen=True)
-class _XmlDictionaryEntry:
+class XmlDictionaryEntry:
+    """One field mapping from an official AEAT XML dictionary source."""
+
     field_id: str
     path: str
     data_type: str
@@ -132,7 +134,7 @@ def _parse_xml_dictionary_payload(
     source_root: Path | None,
     sources: Mapping[str, SourceReference] | None,
 ) -> ParsedExportPayload:
-    entries = _load_xml_dictionary_entries(layout, source_root=source_root, sources=sources)
+    entries = xml_dictionary_entries(layout, source_root=source_root, sources=sources)
     try:
         root = ElementTree.fromstring(payload)
     except ElementTree.ParseError as exc:
@@ -158,12 +160,13 @@ def _parse_xml_dictionary_payload(
     return ParsedExportPayload(layout_id=layout.id, fields=tuple(parsed), casillas=casillas)
 
 
-def _load_xml_dictionary_entries(
+def xml_dictionary_entries(
     layout: ExportLayoutDefinition,
     *,
     source_root: Path | None,
     sources: Mapping[str, SourceReference] | None,
-) -> tuple[_XmlDictionaryEntry, ...]:
+) -> tuple[XmlDictionaryEntry, ...]:
+    """Resolve official AEAT XML dictionary entries for ``layout``."""
     if layout.dictionary_source_ref is None:
         raise RegistryValidationError(f"XML export layout {layout.id!r} has no dictionary source")
     if source_root is None or sources is None:
@@ -174,7 +177,7 @@ def _load_xml_dictionary_entries(
             f"XML export layout {layout.id!r} has unresolved dictionary source {layout.dictionary_source_ref!r}",
         )
     dictionary_path = source_root / Path(source.corpus_path)
-    entries: list[_XmlDictionaryEntry] = []
+    entries: list[XmlDictionaryEntry] = []
     for line in _read_dictionary_text(dictionary_path).splitlines():
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
@@ -184,7 +187,7 @@ def _load_xml_dictionary_entries(
             continue
         casilla_id = _parse_dictionary_casilla_id(match["casilla"])
         entries.append(
-            _XmlDictionaryEntry(
+            XmlDictionaryEntry(
                 field_id=match["field"].strip(),
                 path=match["path"].strip(),
                 data_type=match["type"].strip(),
@@ -455,5 +458,7 @@ def _line_ending_bytes(line_ending: str) -> bytes:
 __all__ = [
     "ParsedExportFieldValue",
     "ParsedExportPayload",
+    "XmlDictionaryEntry",
     "parse_export_payload",
+    "xml_dictionary_entries",
 ]
