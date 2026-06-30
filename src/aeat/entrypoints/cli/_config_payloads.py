@@ -12,6 +12,10 @@ several readiness states).
 
 All sequence fields use ``list`` rather than ``tuple`` because
 ``model_dump(mode='json')`` serialises pydantic tuples as JSON arrays.
+
+The application services remain the source of profile, auth, apoderado, and
+repair semantics. These payload classes document and validate only the CLI
+transport shapes that enter :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope`.
 """
 
 from __future__ import annotations
@@ -63,7 +67,13 @@ class WorkflowFingerprintPayload(OutputSchema):
 
 
 class ProfilePointerPayload(OutputSchema):
-    """One profile entry in the config.list result."""
+    """One active-profile pointer row in the config profile listing.
+
+    Mirrors the manifest projection that links an operator-facing profile name
+    to the immutable profile bucket id. The row deliberately carries no
+    profile facts; detailed facts stay under :class:`ProfileFactPayload` in the
+    profile-show envelope.
+    """
 
     name: str
     bucket_id: str
@@ -71,7 +81,13 @@ class ProfilePointerPayload(OutputSchema):
 
 
 class ProfileIssuePayload(OutputSchema):
-    """One validation issue from ProfileValidationService."""
+    """One validation issue from :class:`~aeat.application.user_profile.ProfileValidationService`.
+
+    The payload mirrors
+    :class:`~aeat.application.user_profile.ProfileValidationIssue` as plain JSON
+    so ``profile show`` and ``profile validate`` expose the same readiness
+    diagnostics without importing domain records into the CLI layer.
+    """
 
     severity: str
     code: str
@@ -80,7 +96,11 @@ class ProfileIssuePayload(OutputSchema):
 
 
 class ProfileFactPayload(OutputSchema):
-    """One fact key/value pair in config.profile.show."""
+    """One schema-backed fact key/value pair in ``config profile show``.
+
+    Values are the operator-display projection of profile facts, not the
+    encrypted :class:`~aeat.domain.user_profile.UserProfileRecord` itself.
+    """
 
     path: str
     value: str
@@ -93,7 +113,11 @@ class ProfileFactPayload(OutputSchema):
 
 @register_schema("config.repair.logs")
 class RepairLogsResult(OutputSchema):
-    """JSON envelope for ``aeat config repair logs``."""
+    """JSON envelope for ``aeat config repair logs``.
+
+    The payload is a bounded log-tail view: ``path`` identifies the log file
+    rendered to the operator and ``lines`` contains the selected text lines.
+    """
 
     path: str
     lines: list[str]
@@ -172,7 +196,8 @@ class ConfigListResult(OutputSchema):
 
     Note: ``config_list`` is registered on the ``profile list`` sub-command
     which maps to the CLI path ``config.list`` (the profile sub-app carries
-    the list verb).
+    the list verb). Each :class:`ProfilePointerPayload` row identifies a
+    registered bucket, while ``active_profile`` names the current pointer.
     """
 
     active_profile: str | None = None
@@ -181,14 +206,23 @@ class ConfigListResult(OutputSchema):
 
 @register_schema("config.switch")
 class ConfigSwitchResult(OutputSchema):
-    """JSON envelope for ``aeat config switch``."""
+    """JSON envelope for ``aeat config switch``.
+
+    Reports the profile name that became the active bucket pointer after the
+    workflow-state update; no profile facts are emitted on this mutation.
+    """
 
     active_profile: str
 
 
 @register_schema("config.lock")
 class ConfigLockResult(OutputSchema):
-    """JSON envelope for ``aeat config lock``."""
+    """JSON envelope for ``aeat config lock``.
+
+    Confirms the profile whose local session material was locked and echoes the
+    remaining active pointer, if any. ``session_warning`` carries the local
+    secure-storage advisory shown by the command.
+    """
 
     locked_profile: str
     active_profile: str | None = None
@@ -197,7 +231,11 @@ class ConfigLockResult(OutputSchema):
 
 @register_schema("config.rekey")
 class ConfigRekeyResult(OutputSchema):
-    """JSON envelope for ``aeat config rekey``."""
+    """JSON envelope for ``aeat config rekey``.
+
+    Reports the secure-store directory and whether local encrypted material was
+    re-keyed. Key material and recovery phrases never enter this payload.
+    """
 
     secret_store_dir: str
     rekeyed: bool
@@ -205,7 +243,11 @@ class ConfigRekeyResult(OutputSchema):
 
 @register_schema("config.recover")
 class ConfigRecoverResult(OutputSchema):
-    """JSON envelope for ``aeat config recover``."""
+    """JSON envelope for ``aeat config recover``.
+
+    Reports the recovery file used and the local secret-store directory that was
+    recovered, without serialising the recovery secret itself.
+    """
 
     recovery_path: str
     secret_store_dir: str
@@ -214,7 +256,12 @@ class ConfigRecoverResult(OutputSchema):
 
 @register_schema("config.show_recovery")
 class ConfigShowRecoveryResult(OutputSchema):
-    """JSON envelope for ``aeat config show-recovery``."""
+    """JSON envelope for ``aeat config show-recovery``.
+
+    The mnemonic is optional and appears only when the command intentionally
+    rotates or reveals recovery material. The path and enrolment flags remain
+    the stable machine-readable status fields.
+    """
 
     recovery_path: str
     recovery_enrolled: bool
@@ -224,7 +271,11 @@ class ConfigShowRecoveryResult(OutputSchema):
 
 @register_schema("config.verify_recovery")
 class ConfigVerifyRecoveryResult(OutputSchema):
-    """JSON envelope for ``aeat config verify-recovery``."""
+    """JSON envelope for ``aeat config verify-recovery``.
+
+    Confirms whether the supplied recovery material matched the encrypted local
+    recovery record; the secret phrase is not echoed back.
+    """
 
     recovery_path: str
     verified: bool
@@ -235,7 +286,10 @@ class ConfigProfileShowResult(OutputSchema):
     """JSON envelope for ``aeat config profile show``.
 
     Covers the missing-record branch, the unreadable-record branch, and
-    the success path. Optional fields accommodate each branch.
+    the success path. Optional fields accommodate each branch. Successful rows
+    project :class:`~aeat.domain.user_profile.UserProfileRecord` facts through
+    :class:`ProfileFactPayload`; failures report pointer and record readiness
+    without dumping encrypted profile contents.
     """
 
     profile_id: str | None = None
@@ -277,7 +331,12 @@ class ConfigProfileValidateResult(OutputSchema):
 
 
 class ProfilePreflightMissingPayload(OutputSchema):
-    """One missing-required-field row inside :class:`ConfigProfilePreflightResult`."""
+    """One missing-required-field row inside :class:`ConfigProfilePreflightResult`.
+
+    Mirrors :class:`~aeat.application.user_profile.ProfilePreflightRequirement`
+    so the CLI can name the missing selector, schema section, and field key for
+    a concrete modelo/revision/period context.
+    """
 
     selector: str
     section_key: str
@@ -292,7 +351,8 @@ class ConfigProfilePreflightResult(OutputSchema):
     period)`` filing context requires that the active profile does not yet
     carry. ``ready=true`` when no required field is missing; exit code is
     ``0`` when ready and ``2`` when missing fields surface so operators
-    discover the gap via the shell exit status.
+    discover the gap via the shell exit status. The application authority is
+    :class:`~aeat.application.user_profile.ProfilePreflightReport`.
     """
 
     profile_id: str
@@ -306,7 +366,11 @@ class ConfigProfilePreflightResult(OutputSchema):
 
 @register_schema("config.profile.delete")
 class ConfigProfileDeleteResult(OutputSchema):
-    """JSON envelope for ``aeat config profile delete``."""
+    """JSON envelope for ``aeat config profile delete``.
+
+    Reports the tombstoned profile id and display label plus whether the active
+    profile pointer had to be cleared.
+    """
 
     profile_id: str
     display_name: str
@@ -316,7 +380,12 @@ class ConfigProfileDeleteResult(OutputSchema):
 
 @register_schema("config.profile.duplicate")
 class ConfigProfileDuplicateResult(OutputSchema):
-    """JSON envelope for ``aeat config profile duplicate``."""
+    """JSON envelope for ``aeat config profile duplicate``.
+
+    Projects the source and new immutable profile ids produced by the profile
+    lifecycle service; the copied fact set is not expanded in this mutation
+    result.
+    """
 
     source_profile_id: str
     target_profile_id: str
@@ -328,7 +397,10 @@ class ConfigStatusResult(OutputSchema):
     """JSON envelope for ``aeat config profile status``.
 
     Covers all readiness branches: none, dangling_pointer,
-    missing/unreadable profile record, incomplete config, and ready.
+    missing/unreadable profile record, incomplete config, and ready. The ready
+    branch summarises the active profile's canonical tax/activity fields; error
+    branches keep pointer and record diagnostics separate so an unreadable
+    encrypted profile is not mistaken for an unregistered profile.
     """
 
     active_profile: str | None = None
@@ -350,7 +422,12 @@ class ConfigStatusResult(OutputSchema):
 
 @register_schema("config.reset")
 class ConfigResetResult(OutputSchema):
-    """JSON envelope for ``aeat config reset``."""
+    """JSON envelope for ``aeat config reset``.
+
+    Reports the reset scope, removed profile ids, and whether local auth session
+    state was removed. It does not include deleted profile records or auth
+    secrets.
+    """
 
     scope: str
     removed_profile_ids: list[str]
@@ -364,7 +441,12 @@ class ConfigResetResult(OutputSchema):
 
 @register_schema("config.auth.providers")
 class AuthProvidersResult(OutputSchema):
-    """JSON envelope for ``aeat config auth providers``."""
+    """JSON envelope for ``aeat config auth providers``.
+
+    Wraps :class:`~aeat.application.auth.AuthProvidersReport`; each row is the
+    JSON form of :class:`~aeat.application.auth.AuthProviderListing`, preserving
+    implemented and reserved provider slots from the auth catalogue.
+    """
 
     providers: list[dict[str, object]]
 
@@ -373,10 +455,11 @@ class AuthProvidersResult(OutputSchema):
 class AuthConfigurePayload(OutputSchema):
     """JSON envelope for ``aeat config auth configure``.
 
-    Field set mirrors :class:`AuthConfigureResult` from the application layer,
-    whose fields are non-nullable with empty/false defaults; this envelope
-    reconciles to the same nullability (DB-26 S50). ``status`` is the one
-    CLI-only display field with no application counterpart.
+    Field set mirrors :class:`~aeat.application.auth.AuthConfigureResult` from
+    the application layer, whose fields are non-nullable with empty/false
+    defaults; this envelope reconciles to the same nullability (DB-26 S50).
+    ``status`` is the one CLI-only display field with no application
+    counterpart.
     """
 
     provider: str
@@ -420,9 +503,10 @@ class AuthConfigurePayload(OutputSchema):
 class AuthStatusPayload(OutputSchema):
     """JSON envelope for ``aeat config auth status``.
 
-    The application ``AuthStatusResult`` model evolves independently;
-    ``extra="allow"`` ensures any additional fields pass through without
-    re-declaring every provider-specific key here.
+    The application :class:`~aeat.application.auth.AuthStatusResult` model
+    evolves independently; ``extra="allow"`` ensures any additional fields pass
+    through without re-declaring every provider-specific key here. The payload is
+    a local readiness projection and never performs live AEAT contact.
     """
 
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
@@ -435,8 +519,10 @@ class AuthStatusPayload(OutputSchema):
 class AuthTestPayload(OutputSchema):
     """JSON envelope for ``aeat config auth test``.
 
-    Thin envelope; the application model carries all provider-specific
-    fields. ``extra="allow"`` forwards them without re-declaration.
+    Thin envelope over :class:`~aeat.application.auth.AuthTestResult`; the
+    application model carries all provider-specific probe fields.
+    ``extra="allow"`` forwards them without re-declaration. The command tests
+    local readiness and persisted-session metadata; it does not submit to AEAT.
     """
 
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
@@ -449,8 +535,10 @@ class AuthTestPayload(OutputSchema):
 class AuthLoginPayload(OutputSchema):
     """JSON envelope for ``aeat config auth login``.
 
-    Thin envelope; the application model carries provider-specific
-    login fields. ``extra="allow"`` forwards them without re-declaration.
+    Thin envelope over :class:`~aeat.application.auth.AuthLoginResult`; the
+    application model carries provider-specific live-login fields.
+    ``extra="allow"`` forwards them without re-declaration. Session cookies,
+    tokens, QR payloads, and certificate material stay outside the JSON result.
     """
 
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
@@ -463,9 +551,10 @@ class AuthLoginPayload(OutputSchema):
 class AuthClearPayload(OutputSchema):
     """JSON envelope for ``aeat config auth clear``.
 
-    Field set is 1:1 with the application :class:`AuthClearResult`; the
-    envelope derives its values via :meth:`from_result` rather than the
-    command handler re-declaring the field map inline (DB-26 S49).
+    Field set is 1:1 with the application
+    :class:`~aeat.application.auth.AuthClearResult`; the envelope derives its
+    values via :meth:`from_result` rather than the command handler re-declaring
+    the field map inline (DB-26 S49).
     """
 
     removed_sessions: int
@@ -488,7 +577,13 @@ class AuthClearPayload(OutputSchema):
 
 @register_schema("config.auth.apoderado.check")
 class ApoderadoCheckResult(OutputSchema):
-    """JSON envelope for ``aeat config auth apoderado check``."""
+    """JSON envelope for ``aeat config auth apoderado check``.
+
+    Mirrors the read-only :class:`~aeat.application.auth.ApoderadoStatus`
+    projection once live verification is wired. Until then the command refuses
+    at the application boundary instead of pretending stored configuration is a
+    live AEAT check.
+    """
 
     bucket_id: str
     configured: bool
@@ -525,7 +620,8 @@ class ConfigProfileCreateResult(OutputSchema):
     """JSON envelope for ``aeat config profile create``.
 
     The post-create next-step hint is surfaced on the envelope ``notices``
-    channel, not as a bespoke ``next`` field.
+    channel, not as a bespoke ``next`` field. The lifecycle mutation itself is
+    owned by :class:`~aeat.application.user_profile.ProfileLifecycleService`.
     """
 
     profile_name: str
@@ -538,7 +634,9 @@ class ConfigProfileEditResult(OutputSchema):
     """JSON envelope for ``aeat config profile edit``.
 
     The post-edit next-step hint is surfaced on the envelope ``notices``
-    channel, not as a bespoke ``next`` field.
+    channel, not as a bespoke ``next`` field. The payload reports only the
+    edited profile name and mutation status; edited facts remain in secure
+    profile storage.
     """
 
     profile_name: str
@@ -547,7 +645,12 @@ class ConfigProfileEditResult(OutputSchema):
 
 @register_schema("config.profile.export")
 class ConfigProfileExportResult(OutputSchema):
-    """JSON envelope for ``aeat config profile export``."""
+    """JSON envelope for ``aeat config profile export``.
+
+    Reports the exported profile id, display label, output path, and portable
+    bundle schema version. Bundle contents are written to ``out`` rather than
+    embedded in the CLI envelope.
+    """
 
     profile_id: str
     display_name: str
@@ -559,7 +662,11 @@ class ConfigProfileExportResult(OutputSchema):
 
 @register_schema("config.profile.import")
 class ConfigProfileImportResult(OutputSchema):
-    """JSON envelope for ``aeat config profile import``."""
+    """JSON envelope for ``aeat config profile import``.
+
+    Projects :class:`~aeat.application.user_profile.ProfileImportResult` down to
+    the imported profile identity, label, and bundle schema version.
+    """
 
     profile_id: str
     display_name: str
@@ -568,7 +675,12 @@ class ConfigProfileImportResult(OutputSchema):
 
 @register_schema("config.profile.logout")
 class ConfigProfileLogoutResult(OutputSchema):
-    """JSON envelope for ``aeat config profile logout``."""
+    """JSON envelope for ``aeat config profile logout``.
+
+    Confirms which profile's local session was logged out and echoes any
+    remaining active pointer. ``session_warning`` carries local secure-storage
+    advice without exposing session contents.
+    """
 
     logged_out_profile: str
     active_profile: str | None = None
@@ -577,7 +689,11 @@ class ConfigProfileLogoutResult(OutputSchema):
 
 @register_schema("config.profile.rename")
 class ConfigProfileRenameResult(OutputSchema):
-    """JSON envelope for ``aeat config profile rename``."""
+    """JSON envelope for ``aeat config profile rename``.
+
+    Reports the immutable profile id plus the previous and new display labels;
+    profile identity and bucket storage remain unchanged.
+    """
 
     profile_id: str
     previous_display_name: str
@@ -596,7 +712,9 @@ class RepairProfileResult(OutputSchema):
     Covers the inspection branch (operator-readable profile-record status),
     and the ``--clear-active`` pointer-repair branch. The application layer
     model evolves independently across these branches; ``extra="allow"`` keeps
-    the envelope shape stable without re-declaring every field.
+    the envelope shape stable without re-declaring every field. The payload is
+    a pointer/record repair projection and does not dump encrypted profile
+    contents.
     """
 
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
@@ -646,9 +764,10 @@ class RepairIntegrityRegistryResult(OutputSchema):
 class ApoderadoStatusResult(OutputSchema):
     """JSON envelope for ``aeat config auth apoderado status``.
 
-    Mirrors :class:`aeat.application.auth._apoderado.ApoderadoStatus`.
-    ``extra="allow"`` lets the application model evolve without
-    breaking the envelope contract here.
+    Mirrors :class:`~aeat.application.auth.ApoderadoStatus`. ``extra="allow"``
+    lets the application model evolve without breaking the envelope contract
+    here. This is the offline encrypted-configuration read, not a live AEAT
+    verification.
     """
 
     bucket_id: str
@@ -661,7 +780,13 @@ class ApoderadoStatusResult(OutputSchema):
 
 @register_schema("config.auth.apoderado.configure")
 class ApoderadoConfigureResult(OutputSchema):
-    """JSON envelope for ``aeat config auth apoderado configure``."""
+    """JSON envelope for ``aeat config auth apoderado configure``.
+
+    Projects :class:`~aeat.application.auth.ApoderadoConfiguration` after scope
+    validation against the apoderamientos catalogue. The represented NIF is
+    stored encrypted by the application service; the CLI only emits the chosen
+    configuration summary.
+    """
 
     bucket_id: str
     represented_nif: str
@@ -673,7 +798,11 @@ class ApoderadoConfigureResult(OutputSchema):
 
 @register_schema("config.auth.apoderado.clear")
 class ApoderadoClearResult(OutputSchema):
-    """JSON envelope for ``aeat config auth apoderado clear``."""
+    """JSON envelope for ``aeat config auth apoderado clear``.
+
+    Reports the bucket whose encrypted apoderado configuration was removed and
+    whether a record existed to clear.
+    """
 
     bucket_id: str
     cleared: bool
@@ -683,7 +812,8 @@ class ApoderadoClearResult(OutputSchema):
 class ApoderadoScopesListResult(OutputSchema):
     """JSON envelope for ``aeat config auth apoderado scopes list``.
 
-    Mirrors the apoderado scope catalogue payload.
+    Mirrors the apoderado scope catalogue payload from
+    :class:`~aeat.domain.auth.ApoderamientosCatalogue`.
     """
 
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
@@ -701,9 +831,10 @@ class ApoderadoScopesListResult(OutputSchema):
 class AuthDiagnosticsListResult(OutputSchema):
     """JSON envelope for ``aeat config auth diagnostics list``.
 
-    Mirrors :class:`AuthDiagnosticListReport.model_dump(mode='json')`.
-    ``extra="allow"`` forwards the per-row diagnostic summary fields
-    without re-declaring the sub-model.
+    Mirrors :class:`~aeat.application.auth.AuthDiagnosticListReport`
+    ``model_dump(mode='json')``. ``extra="allow"`` forwards the per-row
+    :class:`~aeat.application.auth.AuthDiagnosticSummary` fields without
+    re-declaring the sub-model.
     """
 
     row_count: int
@@ -714,9 +845,10 @@ class AuthDiagnosticsListResult(OutputSchema):
 class AuthDiagnosticsShowResult(OutputSchema):
     """JSON envelope for ``aeat config auth diagnostics show``.
 
-    Mirrors :class:`AuthDiagnosticDetail.model_dump(mode='json')` with
-    fingerprint fields. ``extra="allow"`` forwards every diagnostic
-    field without re-declaring the application model locally.
+    Mirrors :class:`~aeat.application.auth.AuthDiagnosticDetail`
+    ``model_dump(mode='json')`` with fingerprint fields. ``extra="allow"``
+    forwards every redacted diagnostic field without re-declaring the
+    application model locally.
     """
 
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
@@ -727,7 +859,11 @@ class AuthDiagnosticsShowResult(OutputSchema):
 
 @register_schema("config.auth.diagnostics.report")
 class AuthDiagnosticsReportResult(OutputSchema):
-    """JSON envelope for ``aeat config auth diagnostics report``."""
+    """JSON envelope for ``aeat config auth diagnostics report``.
+
+    Projects :class:`~aeat.application.auth.AuthDiagnosticReportResult` after an
+    operator records the phone-state outcome for an encrypted auth diagnostic.
+    """
 
     diagnostic_id: str
     phone_state: str
