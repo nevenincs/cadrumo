@@ -94,7 +94,6 @@ def modelo_record(
     filing_record_id = derive_filing_record_id(
         work_unit_id=WORK_UNIT_ID,
         calculation_revision_id=CALCULATION_REVISION_ID,
-        filed_at=filed_at,
         filed_by=filed_by,
     )
     return ModeloRecord(

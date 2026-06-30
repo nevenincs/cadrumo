@@ -265,7 +265,6 @@ def amend_modelo_revision[CasillaKey](
     new_filing_id = derive_filing_record_id(
         work_unit_id=baseline.work_unit_id,
         calculation_revision_id=new_revision_id,
-        filed_at=now,
         filed_by=actor.strip(),
     )
 

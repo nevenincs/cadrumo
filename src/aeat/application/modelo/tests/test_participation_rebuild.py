@@ -147,7 +147,6 @@ def test_rebuild_includes_finalized_excludes_borrador_and_carries_filing_record(
         filing_id = derive_filing_record_id(
             work_unit_id=filed_wu.work_unit_id,
             calculation_revision_id=filed_rev.calculation_revision_id,
-            filed_at=_T0 + timedelta(hours=2),
             filed_by="aeat.cli.modelo.file",
         )
         filing_record = ModeloRecord(
