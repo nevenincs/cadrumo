@@ -896,6 +896,46 @@ def test_modelo_100_eo_module_units_are_decimal() -> None:
             )
 
 
+def test_modelo_100_re_attribution_inmueble_days_are_integer() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("1618"))
+
+        assert casilla.label == "Nº de días"
+        assert tuple(casilla.section) == ("toma_datos_ampliada", "regimenes_especiales", "re_at_rentas")
+        assert casilla.data_type == "integer"
+        assert casilla.semantic_role == "irpf_re_atrib_inmueble_num_dias"
+        assert "ley-35-2006:art-86" in casilla.legal_refs
+        assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+            casilla.source_refs,
+        )
+
+
+def test_modelo_100_2022_maternity_child_counts_are_integer() -> None:
+    revision = _modelo_100_snapshot(2022).revision
+    expected_roles = {
+        _casilla_id("1911"): "irpf_num_hijos_maternidad_2020",
+        _casilla_id("1914"): "irpf_num_hijos_maternidad_2021",
+    }
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_roles}
+
+    assert set(casillas_by_id) == set(expected_roles)
+    for casilla_id, expected_role in expected_roles.items():
+        casilla = casillas_by_id[casilla_id]
+
+        assert casilla.label == "Número de hijos que dan derecho a la deducción por maternidad"
+        assert tuple(casilla.section) == ("resultados", "calculo_impuesto_res", "ampliacion_deduc_mater_res")
+        assert casilla.data_type == "integer"
+        assert casilla.semantic_role == expected_role
+        assert casilla.semantic_role_cardinality == "intentional_singleton"
+        assert casilla.semantic_role_cardinality_reason
+        assert "ley-35-2006:art-81" in casilla.legal_refs
+        assert {"aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-xsd"}.issubset(casilla.source_refs)
+
+
 def test_modelo_100_retrib_especie_no_exenta_total_role_names_aggregate() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
