@@ -28,8 +28,8 @@ owns it.
 ## Procedure
 
 1. Read the form shape so you cite real casillas, not remembered ones:
-   `aeat app modelo describe --modelo 130 --year <YEAR> --period <PERIOD>` and
-   `aeat app modelo casillas --modelo 130 --year <YEAR> --period <PERIOD>`. See the
+   `aeat app modelo describe 130 --year <YEAR> --period <PERIOD>` and
+   `aeat app modelo casillas 130 --year <YEAR> --period <PERIOD>`. See the
    `reference/casillas.md` companion for what each casilla means.
 2. Create the work unit:
    `aeat app modelo work create --modelo 130 --year <YEAR> --period <PERIOD>`.

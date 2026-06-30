@@ -234,7 +234,6 @@ def _seed_local_filing_record(
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit.work_unit_id,
         calculation_revision_id=filed_revision.calculation_revision_id,
-        filed_at=filed_at,
         filed_by=filed_by,
     )
     filing = ModeloRecord(

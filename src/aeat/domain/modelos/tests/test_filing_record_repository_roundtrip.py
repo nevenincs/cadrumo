@@ -68,13 +68,11 @@ def _populated_catalogue() -> ModeloRecordCatalogue:
     superseded_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=superseded_revision,
-        filed_at=superseded_filed_at,
         filed_by="aeat.cli.modelo.file",
     )
     current_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=current_revision,
-        filed_at=current_filed_at,
         filed_by="aeat.cli.modelo.amend",
     )
 
@@ -158,14 +156,12 @@ def test_filing_record_catalogue_allows_distinct_current_group_members() -> None
     member_a_id = derive_filing_record_id(
         work_unit_id=_hex("1"),
         calculation_revision_id=_hex("2"),
-        filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
         member_nif="A00000000",
     )
     member_b_id = derive_filing_record_id(
         work_unit_id=_hex("3"),
         calculation_revision_id=_hex("4"),
-        filed_at=filed_at + timedelta(minutes=5),
         filed_by="aeat.cli.modelo.file",
         member_nif="B00000001",
     )
@@ -235,7 +231,6 @@ def test_filing_record_rejects_aeat_acceptance_without_external_evidence() -> No
     filing_id = derive_filing_record_id(
         work_unit_id=_hex("9"),
         calculation_revision_id=_hex("a"),
-        filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
     )
 
@@ -260,7 +255,6 @@ def test_filing_record_model_copy_revalidates_aeat_acceptance_invariant() -> Non
     filing_id = derive_filing_record_id(
         work_unit_id=_hex("b"),
         calculation_revision_id=_hex("c"),
-        filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
     )
     record = ModeloRecord(
@@ -285,7 +279,6 @@ def test_filing_record_rejects_external_evidence_without_aeat_acceptance() -> No
     filing_id = derive_filing_record_id(
         work_unit_id=_hex("d"),
         calculation_revision_id=_hex("e"),
-        filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
     )
     evidence = ExternalEvidence(
@@ -315,7 +308,6 @@ def test_filing_record_model_copy_revalidates_external_evidence_acceptance_invar
     filing_id = derive_filing_record_id(
         work_unit_id=_hex("f"),
         calculation_revision_id=_hex("0"),
-        filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
     )
     record = ModeloRecord(
@@ -346,14 +338,12 @@ def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> Non
     first_id = derive_filing_record_id(
         work_unit_id=_hex("5"),
         calculation_revision_id=_hex("6"),
-        filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
         member_nif="A00000000",
     )
     second_id = derive_filing_record_id(
         work_unit_id=_hex("7"),
         calculation_revision_id=_hex("8"),
-        filed_at=filed_at + timedelta(minutes=5),
         filed_by="aeat.cli.modelo.file",
         member_nif="A00000000",
     )
@@ -524,7 +514,6 @@ def test_filing_record_source_transaction_ids_survive_roundtrip(tmp_path: Path) 
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
     )
     record = ModeloRecord(
@@ -559,7 +548,6 @@ def test_derive_filing_record_id_is_stable_regardless_of_source_transaction_ids(
     derived = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
     )
 
@@ -591,7 +579,6 @@ def test_filing_record_absent_source_transaction_ids_defaults_to_empty(tmp_path:
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
     )
     record = ModeloRecord(

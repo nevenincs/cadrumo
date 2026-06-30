@@ -232,7 +232,6 @@ def _seed_member_322_filing(
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        filed_at=_CLOCK,
         filed_by="aeat-import-test",
         member_nif=member_nif,
     )
@@ -306,7 +305,6 @@ def _live_capture_filing(*, csv: str, kind: ExternalEvidenceKind) -> ModeloRecor
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        filed_at=_CLOCK,
         filed_by="aeat-live-capture-test",
     )
     return ModeloRecord(
@@ -471,7 +469,6 @@ def _seed_source_filing_record_without_import_flow(
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit.work_unit_id,
         calculation_revision_id=revision_id,
-        filed_at=_CLOCK,
         filed_by="aeat-import-test",
     )
     filing_repository = ModeloRecordCatalogueRepository()

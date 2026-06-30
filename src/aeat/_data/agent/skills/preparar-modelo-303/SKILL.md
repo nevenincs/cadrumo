@@ -21,8 +21,8 @@ value yourself.
 
 ## Procedure
 
-1. Read the form shape: `aeat app modelo describe --modelo 303 --year <YEAR>
-   --period <PERIOD>` and `aeat app modelo casillas --modelo 303 --year <YEAR>
+1. Read the form shape: `aeat app modelo describe 303 --year <YEAR>
+   --period <PERIOD>` and `aeat app modelo casillas 303 --year <YEAR>
    --period <PERIOD>`.
 2. Create the work unit: `aeat app modelo work create --modelo 303 --year <YEAR>
    --period <PERIOD>`.

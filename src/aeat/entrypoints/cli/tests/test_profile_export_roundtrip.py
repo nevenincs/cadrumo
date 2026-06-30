@@ -239,7 +239,6 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
         filing_record_id = derive_filing_record_id(
             work_unit_id=wu_id,
             calculation_revision_id=revision_id,
-            filed_at=filed_at,
             filed_by="operator",
         )
         from ....domain.modelos._codes import ModeloCode

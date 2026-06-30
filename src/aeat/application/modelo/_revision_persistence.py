@@ -333,7 +333,6 @@ def persist_filed_revision(
     new_filing_id = derive_filing_record_id(
         work_unit_id=target.work_unit_id,
         calculation_revision_id=calculation_revision_id,
-        filed_at=now,
         filed_by=actor.strip(),
     )
 

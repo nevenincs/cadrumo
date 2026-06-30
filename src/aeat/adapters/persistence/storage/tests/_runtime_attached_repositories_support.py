@@ -597,7 +597,6 @@ def _filing_record_catalogue(bucket_id: str, label: str) -> ModeloRecordCatalogu
     record_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
     )
     record = ModeloRecord(

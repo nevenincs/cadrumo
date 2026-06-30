@@ -82,7 +82,6 @@ def _modelo_record_with_external_justificante(
         filing_record_id=derive_filing_record_id(
             work_unit_id=_WORK_UNIT_ID,
             calculation_revision_id=_CALCULATION_REVISION_ID,
-            filed_at=filed_at,
             filed_by="aeat-import",
         ),
         work_unit_id=_WORK_UNIT_ID,

@@ -118,7 +118,6 @@ def _seed_unverified_filing(
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        filed_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC),
         filed_by="operator",
         member_nif=member_nif,
     )

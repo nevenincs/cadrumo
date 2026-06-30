@@ -214,7 +214,6 @@ def import_external_filing_evidence[CasillaKey](
     new_filing_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        filed_at=now,
         filed_by=actor.strip(),
     )
 

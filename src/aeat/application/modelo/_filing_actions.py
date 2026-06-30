@@ -48,7 +48,7 @@ from ...domain.modelos._calculation_repository import CalculationRevisionCatalog
 from ...domain.modelos._calculation_revision import CalculationRevisionState
 from ...domain.modelos._codes import ModeloCode
 from ...domain.modelos._errors import ModeloError
-from ...domain.modelos._filing_record import ModeloRecord, ModeloRecordStatus
+from ...domain.modelos._filing_record import ModeloRecord, ModeloRecordCatalogue, ModeloRecordStatus
 from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from ...domain.modelos._protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -91,6 +91,24 @@ if TYPE_CHECKING:
 
 class ModeloFilingEvidenceMissingError(ModeloError):
     """Raised when internal filing would seal deductible IVA without evidence."""
+
+
+def _existing_vigente_filing_record(
+    catalogue: ModeloRecordCatalogue,
+    calculation_revision_id: str,
+) -> ModeloRecord | None:
+    """Return the current (VIGENTE) filing record for a filed revision, if any.
+
+    Used by the idempotent re-file no-op: a revision already in ``PRESENTADO``
+    state is the current filed answer, so its VIGENTE :class:`ModeloRecord` is
+    returned unchanged. A ``PRESENTADO`` revision must have exactly one VIGENTE
+    record; ``None`` signals an inconsistent state the caller refuses rather than
+    masking.
+    """
+    for record in catalogue.values():
+        if record.calculation_revision_id == calculation_revision_id and record.status is ModeloRecordStatus.VIGENTE:
+            return record
+    return None
 
 
 def file_modelo_revision(
@@ -218,6 +236,19 @@ def file_modelo_revision(
             translated_message="application.modelo.errors.calculation_revision_not_found",
             context={"calculation_revision_id": calculation_revision_id},
         )
+    if target.state is CalculationRevisionState.PRESENTADO:
+        # Idempotent re-file: this revision is already the current filed answer.
+        # A retry of a completed single-subject file returns the existing VIGENTE
+        # filing record as a clean no-op - no new filing record, no duplicate
+        # MODELO_FILED lifecycle event, and (filing is a local transition, never
+        # an AEAT submission per aeat-safety-legal-gates) no write/submit path is
+        # touched. Mirrors the verify-report content-pinned idempotency. The CLI
+        # surfaces the no-op as an info Notice. A PRESENTADO revision with no
+        # VIGENTE record is an inconsistent state, so it falls through to the
+        # hard refusal below rather than fabricating a record.
+        existing = _existing_vigente_filing_record(fr_repo.load(), calculation_revision_id)
+        if existing is not None:
+            return existing
     if target.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "

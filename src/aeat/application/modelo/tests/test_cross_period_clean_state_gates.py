@@ -290,7 +290,6 @@ def _seed_source_filing_record_without_import_flow(
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit.work_unit_id,
         calculation_revision_id=revision_id,
-        filed_at=_CLOCK,
         filed_by="aeat-import-test",
     )
     filings = filing_repository.load()
