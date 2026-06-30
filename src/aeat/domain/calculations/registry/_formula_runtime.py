@@ -18,38 +18,19 @@ from pydantic import BaseModel, Field, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ...contribuyente import UE_EEA_COUNTRY_CODES
+from . import _formula_initial_values as _formula_inputs
+from . import _formula_runtime_ops as _ops
 from ._bindings import CasillaObservation
 from ._casilla_membership import casillas_by_id as _casillas_by_id
 from ._errors import CasillaConstraintViolationError, RegistrySnapshotError, RegistryValidationError
-from ._formula_initial_values import (
-    binding_values_with_absent_by_design_defaults as _binding_values_with_absent_by_design_defaults,
-)
-from ._formula_initial_values import (
-    initial_values as _initial_values,
-)
-from ._formula_initial_values import (
-    materialise_observations as _materialise_observations,
-)
-from ._formula_runtime_ops import apply_rounding as _apply_rounding
-from ._formula_runtime_ops import evaluate_args_op as _evaluate_args_op
-from ._formula_runtime_ops import read_parameter as read_parameter
-from ._formula_runtime_ops import reject_non_decimal as _reject_non_decimal
-from ._formula_runtime_ops import reject_non_string as _reject_non_string
-from ._formula_runtime_ops import reject_unknown_external_values as _reject_unknown_external_values
-from ._formula_runtime_ops import resolve_bracket as _resolve_bracket
-from ._formula_runtime_ops import resolve_parameter as _resolve_parameter
-from ._formula_runtime_ops import validated_decimal_input_casilla_ids as _validated_decimal_input_casilla_ids
 from ._formula_text_inputs import validate_text_input_targets as _validate_text_input_targets
 from ._formula_text_inputs import validated_text_input_casilla_ids as _validated_text_input_casilla_ids
 from ._ids import BindingId, CasillaId, FormulaId, ParameterId, RelationId, validated_casilla_id
 from ._runtime_graph import formula_evaluation_order
-from ._schema import (
-    FormulaExpression,
-    ParameterDefinition,
-    RegistrySnapshot,
-)
+from ._schema import FormulaExpression, ParameterDefinition, RegistrySnapshot
 
 _ZERO = Decimal("0")
+read_parameter = _ops.read_parameter
 
 # M210 IRNR sentinel rate values. Emitted by
 # ``m210_resolve_rate`` when a deterministic rate cannot be resolved
@@ -62,12 +43,7 @@ _ZERO = Decimal("0")
 _M210_DEFERRED_TIPO_SENTINEL = Decimal("-1")
 _M210_CONVENIO_MISSING_SENTINEL = Decimal("-2")
 _M210_DOMESTIC_TARIFF_RATE = "DOMESTIC_TARIFF"
-_M210_RATE_SENTINELS = frozenset(
-    {
-        _M210_DEFERRED_TIPO_SENTINEL,
-        _M210_CONVENIO_MISSING_SENTINEL,
-    },
-)
+_M210_RATE_SENTINELS = frozenset({_M210_DEFERRED_TIPO_SENTINEL, _M210_CONVENIO_MISSING_SENTINEL})
 
 # Public-aliased re-exports for the application-layer verification
 # sweep. The private module-internal names stay primary so the engine
@@ -283,7 +259,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
             id; consumed by text-routed ops.
     """
     revision = snapshot.revision
-    resolved_inputs = _validated_decimal_input_casilla_ids(
+    resolved_inputs = _ops.validated_decimal_input_casilla_ids(
         inputs,
         revision=revision,
     )
@@ -295,24 +271,24 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     )
     resolved_date_context.setdefault("filing_period", default_filing_date)
     supplied_bindings = binding_values or {}
-    _reject_non_decimal(supplied_bindings, "binding")
-    resolved_bindings = _binding_values_with_absent_by_design_defaults(
+    _ops.reject_non_decimal(supplied_bindings, "binding")
+    resolved_bindings = _formula_inputs.binding_values_with_absent_by_design_defaults(
         revision,
         supplied_bindings,
         target_period=snapshot.period,
     )
-    _reject_non_decimal(resolved_bindings, "binding")
+    _ops.reject_non_decimal(resolved_bindings, "binding")
     resolved_enum_bindings = enum_binding_values or {}
-    _reject_non_string(resolved_enum_bindings, "enum_binding")
+    _ops.reject_non_string(resolved_enum_bindings, "enum_binding")
     resolved_relations = relation_values or {}
-    _reject_non_decimal(resolved_relations, "relation")
+    _ops.reject_non_decimal(resolved_relations, "relation")
     resolved_unresolved_relations = frozenset(unresolved_relation_ids).difference(resolved_relations)
     resolved_unresolved_bindings = frozenset(unresolved_binding_ids).difference(resolved_bindings)
     resolved_date_bindings: Mapping[BindingId, date] = date_binding_values or {}
     resolved_text_inputs = _validated_text_input_casilla_ids(text_inputs or {})
 
-    _reject_unknown_external_values(resolved_bindings, {binding.id for binding in revision.bindings}, "binding")
-    _reject_unknown_external_values(
+    _ops.reject_unknown_external_values(resolved_bindings, {binding.id for binding in revision.bindings}, "binding")
+    _ops.reject_unknown_external_values(
         resolved_relations,
         {
             relation.id
@@ -321,7 +297,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
         },
         "relation",
     )
-    _reject_unknown_external_values(
+    _ops.reject_unknown_external_values(
         {relation_id: _ZERO for relation_id in resolved_unresolved_relations},
         {
             relation.id
@@ -330,12 +306,12 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
         },
         "unresolved_relation",
     )
-    _reject_unknown_external_values(
+    _ops.reject_unknown_external_values(
         {binding_id: _ZERO for binding_id in resolved_unresolved_bindings},
         {binding.id for binding in revision.bindings},
         "unresolved_binding",
     )
-    values, absent_by_design_casilla_ids = _initial_values(
+    values, absent_by_design_casilla_ids = _formula_inputs.initial_values(
         revision,
         resolved_inputs,
         binding_values=supplied_bindings,
@@ -380,7 +356,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
             except _UnresolvedFormulaDependencyError:
                 unresolved_casilla_ids.add(target)
                 continue
-            value = _apply_rounding(value, formula.rounding)
+            value = _ops.apply_rounding(value, formula.rounding)
             target_casilla_def = casillas_by_id.get(target)
             if target_casilla_def is not None and target_casilla_def.constraints is not None:
                 violation = target_casilla_def.constraints.violates(value)
@@ -412,7 +388,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
                 source_refs=tuple(formula.source_refs),
             )
 
-    observations = _materialise_observations(
+    observations = _formula_inputs.materialise_observations(
         values=values,
         computed_provenance=computed_provenance,
         casillas_by_id=casillas_by_id,
@@ -535,7 +511,7 @@ def _evaluate_expression(
     if op == "age_at_year_end":
         return _evaluate_age_at_year_end(expression, ctx)
     args = [_evaluate_with_ctx(arg, ctx) for arg in expression.args]
-    return _evaluate_args_op(op, args)
+    return _ops.evaluate_args_op(op, args)
 
 
 @dataclass(frozen=True)
@@ -602,7 +578,7 @@ def _evaluate_lookup_bracket(expression: FormulaExpression, ctx: _EvalContext) -
         )
     base = _evaluate_with_ctx(expression.args[0], ctx)
     ctx.operand_refs.append(bracket_arg.parameter)
-    result = _resolve_bracket(bracket_param, base, ctx.date_context)
+    result = _ops.resolve_bracket(bracket_param, base, ctx.date_context)
     ctx.operand_values.append(result)
     return result
 
@@ -641,7 +617,7 @@ def _evaluate_lookup_bracket_by_ccaa(expression: FormulaExpression, ctx: _EvalCo
     base = _evaluate_with_ctx(expression.args[0], ctx)
     ctx.operand_refs.append(binding_arg.binding)
     ctx.operand_refs.append(bracket_param_id)
-    result = _resolve_bracket(bracket_param, base, ctx.date_context)
+    result = _ops.resolve_bracket(bracket_param, base, ctx.date_context)
     ctx.operand_values.append(result)
     return result
 
@@ -831,7 +807,7 @@ def _m210_effective_rate_from_tariff(
             context={"parameter_id": tariff_parameter_id, "op": "m210_resolve_rate"},
         )
     ctx.operand_refs.append(tariff_parameter_id)
-    cuota = _resolve_bracket(tariff_parameter, base, ctx.date_context)
+    cuota = _ops.resolve_bracket(tariff_parameter, base, ctx.date_context)
     ctx.operand_values.append(cuota)
     if base == _ZERO:
         return _ZERO
@@ -1016,7 +992,7 @@ def _m210_scalar_parameter_value(parameter_id: ParameterId, ctx: _EvalContext) -
             translated_message="errors.calc.dispatch_parameter_kind",
             context={"parameter_id": parameter_id, "op": "m210_resolve_base_imponible"},
         )
-    value = _resolve_parameter(parameter, ctx.date_context)
+    value = _ops.resolve_parameter(parameter, ctx.date_context)
     ctx.operand_refs.append(parameter_id)
     ctx.operand_values.append(value)
     return value
@@ -1107,7 +1083,7 @@ def _evaluate_lookup_parameter_by_entity_type(expression: FormulaExpression, ctx
             translated_message="errors.calc.dispatch_parameter_kind",
             context={"parameter_id": scalar_param_id, "op": op},
         )
-    result = _resolve_parameter(scalar_param, ctx.date_context)
+    result = _ops.resolve_parameter(scalar_param, ctx.date_context)
     ctx.operand_refs.append(binding_arg.binding)
     ctx.operand_refs.append(scalar_param_id)
     ctx.operand_values.append(result)
@@ -1186,7 +1162,7 @@ def _evaluate_lookup_bracket_by_entity_type(expression: FormulaExpression, ctx: 
     base = _evaluate_with_ctx(expression.args[0], ctx)
     ctx.operand_refs.append(binding_arg.binding)
     ctx.operand_refs.append(bracket_param_id)
-    result = _resolve_bracket(bracket_param, base, ctx.date_context)
+    result = _ops.resolve_bracket(bracket_param, base, ctx.date_context)
     ctx.operand_values.append(result)
     return result
 
@@ -1300,7 +1276,7 @@ def _evaluate_leaf(
         )
     if expression.parameter is not None:
         parameter = parameters[expression.parameter]
-        value = _resolve_parameter(parameter, date_context)
+        value = _ops.resolve_parameter(parameter, date_context)
         operand_refs.append(expression.parameter)
         operand_values.append(value)
         return value
