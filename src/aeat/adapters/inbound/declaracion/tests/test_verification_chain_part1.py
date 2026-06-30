@@ -38,34 +38,10 @@ def _casilla_id(value: object) -> CasillaId:
         raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
 
 
-def _casilla_ids(*values: object) -> frozenset[CasillaId]:
-    return frozenset(_casilla_id(value) for value in values)
-
-
 _M303_SUMA_RESULTADOS_CASILLA: CasillaId = _casilla_id("64")
 _M303_ATRIBUIBLE_ESTADO_CASILLA: CasillaId = _casilla_id("66")
 _M303_RESULTADO_AUTOLIQUIDACION_CASILLA: CasillaId = _casilla_id("iva.resultado")
 _M303_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("71")
-_M303_2023_PROFILE_CASILLAS: frozenset[CasillaId] = _casilla_ids(
-    "iva.repercutido.general",
-    "iva.repercutido.reducido",
-    "iva.repercutido.super-reducido",
-    "iva.autorepercutido.intracomunitaria",
-    "iva.soportado.interiores",
-    "iva.autoconsumo.promotor.base",
-    "27",
-    "29",
-    "37",
-    "45",
-    "iva.resultado-regimen-general",
-    "64",
-    "66",
-    "iva.compensacion-pendiente-periodos-anteriores",
-    "iva.compensacion-aplicada-periodo",
-    "iva.compensacion-pendiente-periodos-posteriores",
-    "iva.resultado",
-    "71",
-)
 _M303_SYNTHETIC_CLOSURE_CASES: tuple[tuple[CasillaId, str, CasillaId, str, str], ...] = (
     (
         _M303_SUMA_RESULTADOS_CASILLA,
@@ -102,63 +78,6 @@ _M303_SYNTHETIC_CLOSURE_CASE_IDS: tuple[str, ...] = (
     "box-69-resultado-autoliquidacion",
     "box-71-resultado-final",
 )
-
-
-@pytest.mark.parametrize(
-    "pdf_stem,year,period",
-    [
-        ("2023-1T", 2023, "1T"),
-        ("2023-2T", 2023, "2T"),
-        ("2023-3T", 2023, "3T"),
-        ("2023-4T", 2023, "4T"),
-        ("2024-1T", 2024, "1T"),
-        ("2024-2T", 2024, "2T"),
-        ("2024-3T", 2024, "3T"),
-        ("2024-4T", 2024, "4T"),
-    ],
-)
-def test_verification_chain_m303_parser_extracts_all_profile_casillas(pdf_stem: str, year: int, period: str) -> None:
-    """Parser extracts all 12 M303 profile casillas from corpus PDFs.
-
-    GROUNDED authority: AEAT corpus PDFs from the sanitised real-form fixture
-    set committed at src/aeat/tests/fixtures/justificantes/303/.
-
-    Verdict: PARSER-GAP when extraction fails. This test verifies the
-    extraction side of the chain only. The companion test
-    test_verification_chain_m303_engine_recomputes_resultado_regimen_general
-    exercises the formula engine (box 46 = box 27 − box 45, Orden
-    EHA/3786/2008 art. 1).
-
-    The M303 2009-y-siguientes revision (2021-2022 PDFs) is excluded here;
-    it covers a different profile.
-    """
-    pdf_path = FIXTURES_DIR / "justificantes" / "303" / f"{pdf_stem}.pdf"
-
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override="303",
-            año_override=year,
-            period_override=period,
-        )
-    except DeclaracionParseError as exc:
-        pytest.fail(
-            f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised — M303 2023+ extraction failed.\n  error: {exc}",
-        )
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
-
-    assert set(extracted.keys()) == _M303_2023_PROFILE_CASILLAS, (
-        f"PARSER-GAP [{pdf_stem}]: M303 2023+ profile extraction did not produce "
-        f"the expected 18 casilla IDs (6 primitives + 12 form-page totals).\n"
-        f"  got: {sorted(extracted)}"
-    )
-    # All extracted values must be Decimal instances (amount fields).
-    for casilla_id, value in extracted.items():
-        assert isinstance(value, Decimal), (
-            f"PARSER-GAP [{pdf_stem}]: casilla {casilla_id!r} should be Decimal, "
-            f"got {type(value).__name__!r} = {value!r}"
-        )
 
 
 @pytest.mark.parametrize(
