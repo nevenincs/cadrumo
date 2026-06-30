@@ -166,14 +166,16 @@ class TestCif:
 class TestRejection:
     """Non-strings, empty values, and arbitrary garbage are rejected."""
 
-    def test_empty_string_rejected(self) -> None:
+    @pytest.mark.parametrize(
+        "candidate",
+        (
+            pytest.param("", id="empty"),
+            pytest.param("   ", id="whitespace-only"),
+        ),
+    )
+    def test_empty_document_rejected(self, candidate: str) -> None:
         with pytest.raises(IdentityError) as excinfo:
-            validate_identity("")
-        assert excinfo.value.translated_message == "errors.identity.document_empty"
-
-    def test_whitespace_only_rejected(self) -> None:
-        with pytest.raises(IdentityError) as excinfo:
-            validate_identity("   ")
+            validate_identity(candidate)
         assert excinfo.value.translated_message == "errors.identity.document_empty"
 
     def test_non_string_rejected(self) -> None:
