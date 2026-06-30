@@ -111,8 +111,15 @@ _PROFILE_SCHEDULE_SOURCE_MODELOS = frozenset({"036", "840"})
 def _assert_periodic_to_annual_summary_contract(relation: RelationDefinition, *, scope: str) -> None:
     assert relation.kind == "annual_summary", scope
     assert relation.target_periods == ("0A",), scope
-    assert len(relation.source_periods) > 1, scope
-    assert relation_aggregation_op(relation) == RelationAggregationOp.SUM, scope
+    aggregation_op = relation_aggregation_op(relation)
+    if aggregation_op == RelationAggregationOp.SUM:
+        assert len(relation.source_periods) > 1, scope
+        return
+    if aggregation_op == RelationAggregationOp.COPY:
+        assert relation.source_periods == ("4T",), scope
+        assert "simplificado" in relation.id, scope
+        return
+    raise AssertionError(scope)
 
 
 def _assert_instalment_to_final_settlement_contract(relation: RelationDefinition, *, scope: str) -> None:
