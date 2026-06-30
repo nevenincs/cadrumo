@@ -36,6 +36,7 @@ from ...application.modelo import (
     build_work_calculate_input_bundle,
     declared_modelo_period_tokens,
     get_work_unit,
+    is_detail_casilla_override_key,
     modelo_work_create_refusal_locale_key,
     validate_m349_country_prefix_context,
     validate_m349_nif_format,
@@ -257,6 +258,28 @@ def parse_casilla_override(spec: str) -> tuple[CasillaId, str]:
     return validated_casilla_id(key, surface="--casilla key"), value
 
 
+def parse_work_calculate_casilla_override(spec: str) -> tuple[str, str]:
+    """Parse a work-calculate ``--casilla`` spec, preserving reserved detail aliases."""
+    key, value = parse_kv_spec(
+        spec,
+        flag="--casilla",
+        key_label="ID",
+        transform=str.strip,
+        key_validator=validate_work_calculate_casilla_key,
+        strip_key=False,
+    )
+    if is_detail_casilla_override_key(key):
+        return key, value
+    return validated_casilla_id(key, surface="--casilla key"), value
+
+
+def validate_work_calculate_casilla_key(key: str, spec: str) -> None:
+    """Validate a work-calculate ``--casilla`` key or pass reserved detail aliases through."""
+    if is_detail_casilla_override_key(key):
+        return
+    validate_casilla_key(key, spec)
+
+
 def parse_row_spec(spec: str) -> ModeloDetailRow:
     """Parse a ``--row TYPE FIELD=value ...`` spec into a typed row model."""
     try:
@@ -417,7 +440,7 @@ def work_calculate_input_bundle_from_cli(
     autoconsumo_promotor_base: str | None,
 ) -> WorkCalculateInputBundle:
     """Build a :class:`WorkCalculateInputBundle` from raw Typer option values."""
-    casilla_pairs = dict(parse_casilla_override(spec) for spec in (casilla or ()))
+    casilla_pairs = dict(parse_work_calculate_casilla_override(spec) for spec in (casilla or ()))
     binding_pairs = dict(parse_binding_override(spec) for spec in (binding or ()))
     relation_pairs = dict(parse_relation_override(spec) for spec in relation or ())
     detail_rows: tuple[ModeloDetailRow, ...] = tuple(parse_row_spec(spec) for spec in (row or ()))
@@ -475,6 +498,8 @@ def work_calculate_input_bundle_from_cli(
                 default="--autoconsumo-promotor-base must be a decimal amount; received: {value}",
             ),
         )
+    except AeatError:
+        raise
     except (LookupError, ValueError, WorkUnitNotFoundError) as exc:
         raise typer.BadParameter(str(exc)) from exc
 

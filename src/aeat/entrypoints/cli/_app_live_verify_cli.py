@@ -1,4 +1,12 @@
-"""Live verify CLI command surface."""
+"""Typer registration for live NIF verification commands.
+
+The ``list`` / ``view`` / ``latest`` commands read bucket-local
+:class:`~aeat.application.live._verify.VerifyObservation` rows persisted by
+:class:`~aeat.application.live.VerifyService`. The ``nif-iva`` and ``tgvi``
+commands perform read-only AEAT checks, require live-read access, and then append
+an audit observation; none of these commands submits, registers, or mutates AEAT
+state.
+"""
 
 from __future__ import annotations
 
@@ -61,6 +69,7 @@ def _expected(value: str | None) -> VerifyVerdict | None:
 
 
 def _verify_row(observation) -> _VerifyRow:
+    """Project a stored verify observation into the shared CLI row shape."""
     return _VerifyRow(
         observation_id=observation.observation_id,
         surface=observation.surface.value,
@@ -96,7 +105,13 @@ def verify_list(
         typer.Option("--nif", help=tr("cli.app.live.verify.nif_help", default="Filter to one NIF.")),
     ] = None,
 ) -> None:
-    """List persisted NIF verification observations, optionally filtered by surface or NIF."""
+    """List persisted NIF verification observations.
+
+    Optional ``--surface`` filtering maps to
+    :class:`~aeat.application.live.VerifySurface`; rows are stored observations
+    returned by :class:`~aeat.application.live.VerifyService`, not fresh live
+    checks.
+    """
     from ...application.live import VerifyService, VerifySurface
     from ._app_live_payloads import VerifyListResult, VerifyObservationSummaryPayload
 
@@ -141,7 +156,13 @@ def verify_show(
         ),
     ],
 ) -> None:
-    """Show one persisted NIF verification observation by id prefix."""
+    """Show one persisted NIF verification observation by id prefix.
+
+    The lookup resolves a stored
+    :class:`~aeat.application.live._verify.VerifyObservation` through
+    :class:`~aeat.application.live.VerifyService` and emits the same row shape
+    as ``aeat app live verify list``.
+    """
     from ...application.live import VerifyService
     from ._app_live_payloads import VerifyViewResult
 
@@ -176,7 +197,14 @@ def verify_latest(
         typer.Option("--nif", help=tr("cli.app.live.verify.latest_nif_help", default="NIF to look up.")),
     ],
 ) -> None:
-    """Show the most recent verify observation for a given (surface, NIF) pair."""
+    """Show the most recent verify observation for a surface/NIF pair.
+
+    The command validates ``surface`` as a
+    :class:`~aeat.application.live.VerifySurface` and reads the latest persisted
+    observation. A missing match emits the stable
+    :class:`~aeat.entrypoints.cli._app_live_payloads.VerifyLatestResult` shape
+    with ``observation_id=None``.
+    """
     from ...application.live import VerifyService, VerifySurface
     from ._app_live_payloads import VerifyLatestResult
 
@@ -237,7 +265,13 @@ def verify_nif_iva(
         ),
     ] = None,
 ) -> None:
-    """Live-check one intra-community NIF-IVA via the AEAT IXVI service and persist the observation."""
+    """Live-check one intra-community NIF-IVA and persist the observation.
+
+    The command uses the AEAT IXVI read surface after the live-read access gate,
+    records the verdict through :class:`~aeat.application.live.VerifyService`,
+    and returns
+    :class:`~aeat.entrypoints.cli._app_live_payloads.VerifyNifIvaResult`.
+    """
     from ...adapters.outbound.aeat.sede._nif_iva_check import NifIvaCheckSedeDriver
     from ...application.live import VerifyService, VerifySurface
     from ...core.access_gate import AeatAccessGate
@@ -289,7 +323,13 @@ def verify_tgvi(
         ),
     ] = None,
 ) -> None:
-    """Live-check one Spanish NIF's ROI/VIES (GROI) registration and persist the observation."""
+    """Live-check one Spanish NIF's ROI/VIES registration and persist it.
+
+    The command uses the AEAT TGVI/GROI read surface after the live-read access
+    gate, records the verdict through
+    :class:`~aeat.application.live.VerifyService`, and returns
+    :class:`~aeat.entrypoints.cli._app_live_payloads.VerifyTgviResult`.
+    """
     from ...adapters.outbound.aeat.sede._groi_check import GroiSedeDriver
     from ...application.live import VerifyService, VerifySurface
     from ...core.access_gate import AeatAccessGate

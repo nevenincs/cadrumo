@@ -98,7 +98,7 @@ def verify_legal_catalogue(
         raise RegistryValidationError("legal catalogue validation failed:\n" + "\n".join(f" - {f}" for f in failures))
 
 
-_LEGAL_CORPUS_CACHE: dict[tuple[str, int], str] = {}
+_LEGAL_CORPUS_CACHE: dict[tuple[str, int, int], str] = {}
 
 
 def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
@@ -110,7 +110,7 @@ def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
     if not path.is_file():
         raise RegistryValidationError(f"legal reference {reference.id!r} missing corpus file {path_text!r}")
     stat = path.stat()
-    cache_key = (path.name, stat.st_size)
+    cache_key = (str(path), stat.st_size, stat.st_mtime_ns)
     if cache_key in _LEGAL_CORPUS_CACHE:
         return _LEGAL_CORPUS_CACHE[cache_key]
 

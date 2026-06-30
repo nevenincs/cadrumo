@@ -324,6 +324,15 @@ class CrossPeriodDependencyEvidence(BaseModel):
     positive value would be a taxpayer benefit. A nonzero carry still requires the
     prior filing evidence.
     """
+    m111_no_retenciones_no_obligation_advisory: bool = False
+    """Non-blocking advisory: an M111 source period was explicitly attested as no-obligation.
+
+    Modelo 111 instructions distinguish a negative return (subject payments made
+    but no effective withholding) from a period with no subject payments at all.
+    The latter must not be filed as an all-blank M111, so a cross-period
+    dependency on that period can be scoped out only when the profile carries the
+    explicit no-retenciones period token.
+    """
 
     @property
     def clean(self) -> bool:
@@ -429,6 +438,11 @@ class CrossPeriodCleanStateVerdict(BaseModel):
     def has_zero_value_previous_filing_advisory(self) -> bool:
         """True when an explicit zero previous-filing carry was scoped out."""
         return any(item.zero_value_previous_filing_advisory for item in self.dependencies)
+
+    @property
+    def has_m111_no_retenciones_no_obligation_advisory(self) -> bool:
+        """True when any M111 source period was scoped out as no-retenciones/no-obligation."""
+        return any(item.m111_no_retenciones_no_obligation_advisory for item in self.dependencies)
 
     @property
     def suppressed_pre_activity_dependencies(self) -> tuple[CrossPeriodDependencyEvidence, ...]:

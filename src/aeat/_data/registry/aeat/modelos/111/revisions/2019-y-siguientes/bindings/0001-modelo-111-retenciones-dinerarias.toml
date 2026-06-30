@@ -1,0 +1,98 @@
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-111-trabajo-dinerario-perceptores"
+source = "retenciones_aggregation"
+selector = { target_casilla_id = "01", fact = "perceptor_count_distinct", schemes = ["rendimientos_trabajo"] }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-111-instructions"
+required_text = ["Casillas 01 y 07", "N.&ordm; perceptores", "rendimientos del trabajo (casilla 01)"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-111-trabajo-dinerario-base"
+source = "retenciones_aggregation"
+selector = { target_casilla_id = "02", fact = "taxable_base_sum", schemes = ["rendimientos_trabajo"] }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-111-instructions"
+required_text = ["Casillas 02 y 08", "Importe de las percepciones", "rendimientos del trabajo (casilla 02)"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-111-trabajo-dinerario-retenciones"
+source = "retenciones_aggregation"
+selector = { target_casilla_id = "03", fact = "retencion_amount_sum", schemes = ["rendimientos_trabajo"] }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-111-instructions"
+required_text = ["Casillas 03 y 09", "Importe de las retenciones", "rendimientos del trabajo (casilla 03)"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-111-actividades-dinerario-perceptores"
+source = "retenciones_aggregation"
+selector = { target_casilla_id = "07", fact = "perceptor_count_distinct", schemes = ["actividades_economicas", "actividades_profesionales"] }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-111-instructions"
+required_text = ["Casillas 01 y 07", "N.&ordm; perceptores", "actividades econ&oacute;micas (casilla 07)"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-111-actividades-dinerario-base"
+source = "retenciones_aggregation"
+selector = { target_casilla_id = "08", fact = "taxable_base_sum", schemes = ["actividades_economicas", "actividades_profesionales"] }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-111-instructions"
+required_text = ["Casillas 02 y 08", "Importe de las percepciones", "actividades econ&oacute;micas (casilla 08)"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-111-actividades-dinerario-retenciones"
+source = "retenciones_aggregation"
+selector = { target_casilla_id = "09", fact = "retencion_amount_sum", schemes = ["actividades_economicas", "actividades_profesionales"] }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-111-instructions"
+required_text = ["Casillas 03 y 09", "Importe de las retenciones", "actividades econ&oacute;micas (casilla 09)"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-111-premios-dinerario-perceptores"
+source = "retenciones_aggregation"
+selector = { target_casilla_id = "13", fact = "perceptor_count_distinct", schemes = ["premios"] }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-111-instructions"
+required_text = ["premios sujetos a retenci&oacute;n", "casillas 13, 14 y 15", "premios dinerarios"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-111-premios-dinerario-base"
+source = "retenciones_aggregation"
+selector = { target_casilla_id = "14", fact = "taxable_base_sum", schemes = ["premios"] }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-111-instructions"
+required_text = ["premios sujetos a retenci&oacute;n", "casillas 13, 14 y 15", "premios dinerarios"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-111-premios-dinerario-retenciones"
+source = "retenciones_aggregation"
+selector = { target_casilla_id = "15", fact = "retencion_amount_sum", schemes = ["premios"] }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-111-instructions"
+required_text = ["premios sujetos a retenci&oacute;n", "casillas 13, 14 y 15", "premios dinerarios"]

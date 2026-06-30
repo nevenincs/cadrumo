@@ -72,6 +72,7 @@ from ._renta_income_ledger import (
 from ._renta_ledger import aggregate_renta_ledger_expenses_from_repositories
 from ._retencion_observations_repository import RetencionObservationRepository
 from ._retenciones import (
+    aggregate_retenciones_111,
     aggregate_retenciones_115,
     aggregate_retenciones_180,
     aggregate_retenciones_193,
@@ -652,6 +653,7 @@ def _empty_source_resolution(
 #: "percepciones", a distinct perceptor/clave/subclave figure handled by
 #: :class:`~._withholding_source.WithholdingSourceResolver`.
 _RETENCIONES_AGGREGATORS = {
+    Modelo.M111.value: aggregate_retenciones_111,
     Modelo.M115.value: aggregate_retenciones_115,
     Modelo.M180.value: aggregate_retenciones_180,
     Modelo.M193.value: aggregate_retenciones_193,
@@ -695,6 +697,19 @@ class RetencionesAggregationSourceResolver:
                 error=exc,
             )
         if not observations:
+            suggestion = (
+                "Supply the per-perceptor retención observations "
+                "(`aeat app modelo aggregate --retencion-observation`) before calculating."
+            )
+            if str(context.modelo) == Modelo.M111.value:
+                suggestion = (
+                    "Supply the per-perceptor retención observations "
+                    "(`aeat app modelo aggregate --retencion-observation`) if any renta subject to "
+                    "retención or ingreso a cuenta was paid. If none was paid, do not file an all-blank "
+                    "Modelo 111; record the no-obligation period with "
+                    f"`aeat config profile edit PROFILE --quiet --modelo-111-no-retenciones-periods "
+                    f"{context.filing_year}:{context.period.registry_token}` before verifying M190."
+                )
             raise AggregationValidationError(
                 t("aggregation.retenciones.errors.perceptor_observations_missing"),
                 context={
@@ -703,10 +718,7 @@ class RetencionesAggregationSourceResolver:
                     "period": context.period.registry_token,
                     "source_kind": "retenciones_aggregation",
                 },
-                suggestion=(
-                    "Supply the per-perceptor retención observations "
-                    "(`aeat app modelo aggregate --retencion-observation`) before calculating."
-                ),
+                suggestion=suggestion,
             )
         aggregation = aggregator(tuple(observations), period=context.period)
         return CalculationSourceResolution(

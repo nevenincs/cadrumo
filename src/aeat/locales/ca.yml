@@ -738,6 +738,12 @@ application:
         valids.
       calculate_decimal_input_invalid: 'El valor %{flag} de %{key} no es decimal:
         %{value}'
+      calculate_detail_casilla_unsupported: La casella %{key} identifica un camp de
+        detall de perceptor/immoble del Model 180, no una casella decimal escalar.
+        El canal local --casilla nomes accepta caselles decimals escalars; les files
+        de detall de perceptor/immoble del Model 180 encara no estan suportades a
+        la superficie publica --row. Usa aeat app modelo aggregate --modelo 180 --retencion-observation
+        per a la font suportada de nombre de perceptors/base/retencions anual.
       calculate_m184_share_sum_invalid: Els percentatges de participacio de les files
         de membre del model 184 han de sumar exactament 100%; s'ha obtingut %{total}
         en %{count} files.
@@ -793,8 +799,8 @@ application:
         no esta verificada-completa ni presentada i no es pot exportar.
       export_unsupported: El model %{modelo} no es pot exportar a fichero-BOE perque
         %{reason}. El calcul, la verificacio i els registres locals de presentacio
-        poden existir, pero aquesta ordre no pot produir un fitxer per pujar a
-        l'AEAT per a aquest model ni certifica la correccio BOE/export.
+        poden existir, pero aquesta ordre no pot produir un fitxer per pujar a l'AEAT
+        per a aquest model ni certifica la correccio BOE/export.
       external_filing_evidence_reference_blank: La importació de declaració externa
         requereix un evidence_reference_id no buit.
       external_filing_no_casilla_values: La importació de declaració externa requereix
@@ -1181,6 +1187,7 @@ application:
         registre.
       registry_snapshot_invalid: No s'ha pogut carregar la instantània del registre
         per verificar la declaració.
+      registry_snapshot_ref_mismatch: 'La instantania del registre per al model %{modelo} %{period} no coincideix amb la referencia estampada a la declaracio: observada %{observed_ref}, resolta %{resolved_ref}.'
   wizard:
     errors:
       create_missing_filing_baseline: 'A la creació del perfil li falten dades d''identitat
@@ -1323,8 +1330,6 @@ cli:
           group_help: Factures del catàleg de conciliació que es vinculen a transaccions.
           invoice_id_help: Identificador de factura del catàleg (o prefix no ambigu).
           list_help: Llista les factures del catàleg de conciliació.
-          operation_type_unsupported: '--operation-type {value} encara no pot alimentar
-            el Model 349 des del catàleg; admesos: {supported}.'
           remove_help: Elimina una factura del catàleg de conciliació.
           view_help: Mostra una factura del catàleg de conciliació per identificador
             o prefix no ambigu.
@@ -1896,11 +1901,7 @@ cli:
           no esta suportat per crear unitats de treball en aquest CLI. Base legal:
           Llei 19/1991 art. 28 i Ordre HAC/1023/2021. Presenta la declaracio a la
           Seu de l AEAT.'
-        create_stub_modelo_refused: 'El model %{modelo} (declaració informativa sobre
-          monedes virtuals situades a l estranger) no està suportat per crear unitats
-          de treball en aquest CLI. Autoritat legal: Ordre HFP/887/2023 i RD 1065/2007
-          art. 42 quàter; el llindar informatiu és de 50.000 EUR a 31 de desembre.
-          Presenta la declaració a la Seu de l AEAT quan hi hagi obligació legal.'
+        create_stub_modelo_refused: 'El model %{modelo} (declaració informativa sobre monedes virtuals situades a l estranger) no està suportat per crear unitats de treball en aquest CLI. Autoritat legal: Ordre HFP/886/2023 i RD 1065/2007 art. 42 quàter; el llindar informatiu és de 50.000 EUR a 31 de desembre. Presenta la declaració a la Seu de l AEAT quan hi hagi obligació legal.'
         dependencies_help: Mostra dependencies d'historial de presentacions entre
           models i els bloquejos clean-state actuals per a una presentacio objectiu
         discard_help: Marcar una unitat de treball com descartada (transició d'estat
@@ -2090,18 +2091,10 @@ cli:
         runs_help: Llistar les execucions de flux persistides amb els seus ids d'execució,
           de la més recent a la més antiga. Usa un id d'execució amb `aeat app modelo
           work resume`. Només local; mai contacta amb AEAT.
-        sal_beneficio_neto_help: Benefici net de l'exercici de la Societat Laboral
-          (SAL/SLL, Llei 44/2015 art. 14). S'aplica el 10% per calcular la dotació
-          obligatòria a la reserva especial, limitada pel llindar del 50% del capital
-          social. Fes-lo servir amb --sal-reserva-dotada i --sal-capital-social.
-        sal_capital_social_help: 'Capital social de la Societat Laboral (Llei 44/2015
-          art. 14). Denominador del test del 50%: la dotació s''anul·la quan la reserva
-          acumulada arriba al 50% del capital social. Necessari amb --sal-beneficio-neto
-          i --sal-reserva-dotada.'
+        sal_beneficio_neto_help: 'Benefici net de l''exercici de la Societat Laboral (SAL/SLL, Llei 44/2015 art. 14). S''aplica el 10% per calcular la dotació obligatòria a la reserva especial, limitada al primer cèntim per sobre del doble del capital social. Fes-lo servir amb --sal-reserva-dotada i --sal-capital-social.'
+        sal_capital_social_help: 'Capital social de la Societat Laboral (Llei 44/2015 art. 14). Base del llindar estricte: la dotació s''anul·la quan la reserva acumulada arriba al primer cèntim per sobre del doble del capital social. Necessari amb --sal-beneficio-neto i --sal-reserva-dotada.'
         sal_computation_error: 'Error de càlcul SAL: %{message}'
-        sal_reserva_dotada_help: Reserva especial acumulada en exercicis anteriors
-          (Llei 44/2015 art. 14). S'utilitza per comprovar si ja s'ha assolit el límit
-          del 50% del capital social. Necessari amb --sal-beneficio-neto i --sal-capital-social.
+        sal_reserva_dotada_help: 'Reserva especial acumulada en exercicis anteriors (Llei 44/2015 art. 14). S''utilitza per comprovar si la reserva ja arriba al primer cèntim per sobre del doble del capital social. Necessari amb --sal-beneficio-neto i --sal-capital-social.'
         sal_reserva_not_decimal: Els valors --sal-* han de ser imports decimals.
         selector_ambiguous: Mes d una unitat de treball activa coincideix amb aquest
           modelo/any/periode. Trieu una revisio del registre o passeu un id explicit
@@ -2773,7 +2766,8 @@ cli:
         `ledger preflight` no marquen un ingrés com a missing_category.
       irpf_header: CATEGORIES D'IRPF PER A --irpf-category
       irpf_id_column: irpf-category (passa aquest valor exacte)
-      irpf_purpose_activity_income_withholding: retencio d'activitat professional cobrada o pagada neta
+      irpf_purpose_activity_income_withholding: retencio d'activitat professional
+        cobrada o pagada neta
       irpf_purpose_employment_income: rendiments del treball (no per a factures netes)
       irpf_purpose_rent_expense_withholding: retencio de lloguer pagat net
       irpf_usage_example: 'Lloguer net: --category-id {rent_category} --irpf-category
@@ -3897,10 +3891,12 @@ errors:
     lookup_dispatch_arg_count: L''operador {op} de la fórmula espera {expected} arguments.
     lookup_dispatch_arg_kind: L''operador {op} de la fórmula requereix que {position}
       sigui una fulla de tipus {expected_kind}.
-    m210_imputation_coefficient_invalid: errors.calc.m210_imputation_coefficient_invalid
-    m210_imputation_days_invalid: errors.calc.m210_imputation_days_invalid
-    m210_imputation_no_catastral_value_missing: errors.calc.m210_imputation_no_catastral_value_missing
-    m210_imputation_no_filing_year: errors.calc.m210_imputation_no_filing_year
+    m210_gastos_deducibles_negative: 'Les gastos_deducibles M210 %{casilla_id} no poden ser negatives; valor rebut %{value}.'
+    m210_gastos_deducibles_not_allowed: 'Les gastos_deducibles M210 %{casilla_id} nomes s''admeten en la via UE/EEE de l''article 24.6; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.'
+    m210_imputation_coefficient_invalid: 'El coeficient d''imputacio immobiliaria M210 %{casilla_id} ha de ser un dels tipus de l''art. 85 declarats al registre (%{allowed_values}); valor rebut %{value}.'
+    m210_imputation_days_invalid: 'Els dies d''imputacio M210 %{casilla_id} han de ser un enter entre 1 i %{max_days}; valor rebut %{value}.'
+    m210_imputation_no_catastral_value_missing: 'La imputacio immobiliaria M210 sense valor cadastral requereix un valor d''adquisicio o valor comprovat per l''Administracio positiu (%{acquisition_casilla_id}, %{administrative_casilla_id}).'
+    m210_imputation_no_filing_year: 'La imputacio immobiliaria M210 requereix un exercici de declaracio no nul.'
     parameter_unknown: El paràmetre {parameter_id} no està registrat.
     relation_value_missing: La relació {relation_id} no té cap valor assignat.
     text_input_non_text_casillas: 'Entrada de text subministrada per a caselles no
@@ -5171,13 +5167,17 @@ wizard:
       legal-name:
         help: Raó social de la persona jurídica per a capçaleres d'exportació
       ley-49-2002-option-date:
-        help: 'Registra la data de la casella 653 del model 036 per a l opcio del titol II de la Llei 49/2002.'
+        help: Registra la data de la casella 653 del model 036 per a l opcio del titol
+          II de la Llei 49/2002.
       ley-49-2002-option-declared:
-        help: 'Registra si la casella 651 del model 036 declara l opcio pel titol II de la Llei 49/2002.'
+        help: Registra si la casella 651 del model 036 declara l opcio pel titol II
+          de la Llei 49/2002.
       ley-49-2002-renunciation-date:
-        help: 'Registra la data de la casella 654 del model 036 per a la renuncia al titol II de la Llei 49/2002.'
+        help: Registra la data de la casella 654 del model 036 per a la renuncia al
+          titol II de la Llei 49/2002.
       ley-49-2002-renunciation-declared:
-        help: 'Registra si la casella 652 del model 036 declara la renuncia al regim del titol II de la Llei 49/2002.'
+        help: Registra si la casella 652 del model 036 declara la renuncia al regim
+          del titol II de la Llei 49/2002.
       llm-vision:
         help: Activar la visió LLM local per llegir factures.
       monedas-virtuales-extranjero-above-threshold:
@@ -5194,6 +5194,10 @@ wizard:
         help: Idioma de sortida de la CLI per a aquest perfil
       pays-capital-income-with-retencion:
         help: Paga rendes de capital amb retenció
+      modelo-111-no-retenciones-periods:
+        help: 'Periodes Modelo 111 sense obligacio, separats per comes, format
+          AAAA:PERIODE (per exemple 2025:2T,2025:3T). Useu-ho només quan no es
+          van pagar rendes subjectes.'
       pays-professionals-with-retencion:
         help: Paga a professionals amb retenció
       pays-rent-with-retencion:
@@ -5335,6 +5339,10 @@ wizard:
         prompt: Monedes virtuals a l'estranger superen el llindar del Modelo 721
       pays-capital-income-with-retencion:
         prompt: Paga rendes de capital amb retenció
+      modelo-111-no-retenciones-periods:
+        help: 'Periodes AAAA:PERIODE en què no es van pagar rendes subjectes a retenció
+          o ingrés a compte, de manera que no es presenta un Modelo 111 en blanc.'
+        prompt: Periodes Modelo 111 sense retencions
       pays-professionals-with-retencion:
         prompt: Paga a professionals amb retenció
       pays-rent-with-retencion:
@@ -5566,17 +5574,20 @@ wizard:
             label: Societat civil amb objecte mercantil
         prompt: Forma jurídica
       ley-49-2002-option-date:
-        help: 'Usa la data ISO corresponent a la casella 653 del model 036.'
-        prompt: 'Data declarada de l opcio pel regim especial de la Llei 49/2002'
+        help: Usa la data ISO corresponent a la casella 653 del model 036.
+        prompt: Data declarada de l opcio pel regim especial de la Llei 49/2002
       ley-49-2002-option-declared:
-        help: 'Usa el fet declarat a la casella 651 del model 036; l aplicacio legal continua condicionada als requisits legals i al fet que no hi hagi renuncia.'
-        prompt: 'L entitat ha presentat al model 036 l opcio pel regim fiscal especial del titol II de la Llei 49/2002?'
+        help: Usa el fet declarat a la casella 651 del model 036; l aplicacio legal
+          continua condicionada als requisits legals i al fet que no hi hagi renuncia.
+        prompt: L entitat ha presentat al model 036 l opcio pel regim fiscal especial
+          del titol II de la Llei 49/2002?
       ley-49-2002-renunciation-date:
-        help: 'Usa la data ISO corresponent a la casella 654 del model 036.'
-        prompt: 'Data declarada de la renuncia al regim especial de la Llei 49/2002'
+        help: Usa la data ISO corresponent a la casella 654 del model 036.
+        prompt: Data declarada de la renuncia al regim especial de la Llei 49/2002
       ley-49-2002-renunciation-declared:
-        help: 'Usa el fet declarat a la casella 652 del model 036.'
-        prompt: 'L entitat ha presentat al model 036 la renuncia al regim fiscal especial del titol II de la Llei 49/2002?'
+        help: Usa el fet declarat a la casella 652 del model 036.
+        prompt: L entitat ha presentat al model 036 la renuncia al regim fiscal especial
+          del titol II de la Llei 49/2002?
       new-entity-first-two-profit-periods:
         help: S'aplica només a persones jurídiques. Si ho marques, l'entitat tributa
           al tipus reduït del 15 per cent durant aquests dos períodes.

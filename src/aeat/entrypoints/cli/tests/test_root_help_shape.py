@@ -148,6 +148,30 @@ def test_installed_console_base_command_starts_clean_workspace(tmp_path: Path) -
     assert "unreadable_rows" not in combined_output
 
 
+def test_uv_no_sync_console_help_starts_from_repo_root(tmp_path: Path) -> None:
+    uv_exe = shutil.which("uv")
+    assert uv_exe is not None
+
+    result = subprocess.run(
+        [uv_exe, "run", "--no-sync", "aeat", "--help"],
+        cwd=Path.cwd(),
+        env=_console_env(tmp_path),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=60,
+        check=False,
+    )
+
+    combined_output = f"{result.stdout}\n{result.stderr}"
+    assert result.returncode == 0, combined_output
+    assert "aeat config profile create NAME" in result.stdout
+    assert "aeat app overview status" in result.stdout
+    assert "aeat app ledger import" in result.stdout
+    assert "Failed to spawn" not in combined_output
+    assert "program not found" not in combined_output
+
+
 def test_installed_console_profile_create_honors_isolated_storage_env(tmp_path: Path) -> None:
     aeat_exe = shutil.which("aeat")
     assert aeat_exe is not None

@@ -56,6 +56,7 @@ from ._cross_period_models import (
     _ObservationPayload,
     _period_strictly_before_activity_start,
 )
+from ._m111_no_retenciones import is_m111_no_retenciones_period
 from ._observations_repository import CalculationObservationRepository
 from ._revision_carry_gate import revision_carry_outcome
 
@@ -287,6 +288,16 @@ def _suppressed_zero_value_previous_filing_evidence(
     )
 
 
+def _suppressed_m111_no_retenciones_evidence(
+    requirement: CrossPeriodDependencyRequirement,
+) -> CrossPeriodDependencyEvidence:
+    """Clean advisory row for an explicit M111 no-retenciones/no-obligation period."""
+    return CrossPeriodDependencyEvidence(
+        requirement=requirement,
+        m111_no_retenciones_no_obligation_advisory=True,
+    )
+
+
 def _suppressed_first_year_fractional_evidence(
     requirement: CrossPeriodDependencyRequirement,
     *,
@@ -367,6 +378,7 @@ def evaluate_cross_period_clean_state(
     taxpayer_files_economic_activity: bool | None = None,
     not_applicable_source_modelos: frozenset[str] | None = None,
     zero_value_previous_filing_binding_ids: frozenset[str] | None = None,
+    m111_no_retenciones_periods: frozenset[tuple[int, str]] | None = None,
 ) -> CrossPeriodCleanStateVerdict:
     """Evaluate cross-period dependencies and return a clean-state verdict.
 
@@ -413,6 +425,11 @@ def evaluate_cross_period_clean_state(
     are retained as clean advisory rows rather than demanding evidence of a prior
     filing for a carry the taxpayer is not claiming. Nonzero carries and every
     binding not named here stay fully in scope.
+
+    ``m111_no_retenciones_periods`` carries explicit profile attestations that no
+    Modelo 111 filing obligation existed for a source period because no rentas
+    subject to withholding/ingreso a cuenta were paid. It scopes out only those
+    exact M111 periods; nonzero and unknown periods remain fully evaluated.
     """
     filing_catalogue = filing_repository.load()
     calculation_catalogue = calculation_repository.load()
@@ -464,6 +481,17 @@ def evaluate_cross_period_clean_state(
         )
     )
     zero_value_previous_filing_keys = {requirement.key for requirement in zero_value_previous_filing_requirements}
+    m111_no_retenciones_requirements = tuple(
+        requirement
+        for requirement in partition.in_scope
+        if is_m111_no_retenciones_period(
+            source_modelo=requirement.source_modelo,
+            filing_year=requirement.filing_year,
+            period_token=requirement.period.registry_token,
+            attested_periods=m111_no_retenciones_periods or frozenset(),
+        )
+    )
+    m111_no_retenciones_keys = {requirement.key for requirement in m111_no_retenciones_requirements}
     in_scope_dependencies = tuple(
         _evaluate_requirement(
             requirement,
@@ -479,7 +507,9 @@ def evaluate_cross_period_clean_state(
             ),
         )
         for requirement in partition.in_scope
-        if requirement.key not in first_year_fractional_keys and requirement.key not in zero_value_previous_filing_keys
+        if requirement.key not in first_year_fractional_keys
+        and requirement.key not in zero_value_previous_filing_keys
+        and requirement.key not in m111_no_retenciones_keys
     )
     in_scope_dependencies = tuple(
         _relax_same_year_local_chain(evidence, target_filing_year=snapshot.filing_year)
@@ -502,6 +532,10 @@ def evaluate_cross_period_clean_state(
         _suppressed_zero_value_previous_filing_evidence(requirement)
         for requirement in zero_value_previous_filing_requirements
     )
+    m111_no_retenciones_dependencies = tuple(
+        _suppressed_m111_no_retenciones_evidence(requirement)
+        for requirement in m111_no_retenciones_requirements
+    )
     return CrossPeriodCleanStateVerdict(
         bucket_id=bucket_id,
         target_modelo=str(snapshot.modelo.id),
@@ -513,6 +547,7 @@ def evaluate_cross_period_clean_state(
             *not_applicable_dependencies,
             *first_year_fractional_dependencies,
             *zero_value_previous_filing_dependencies,
+            *m111_no_retenciones_dependencies,
         ),
     )
 

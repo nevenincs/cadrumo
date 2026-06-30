@@ -1,4 +1,11 @@
-"""Typer registration for live Modelo 100 borrador snapshot commands."""
+"""Typer registration for live Modelo 100 borrador snapshot commands.
+
+The list/view/latest commands expose bucket-local
+:class:`~aeat.application.live.Borrador100Snapshot` records captured from AEAT
+through :class:`~aeat.application.live.Borrador100SnapshotService`. They manage
+snapshot visibility and inspection only; they do not file, submit, or refresh
+live AEAT data.
+"""
 
 from __future__ import annotations
 
@@ -68,7 +75,13 @@ def register_borrador_commands(app: typer.Typer, *, active_bucket_id: Callable[[
             ),
         ] = "active",
     ) -> None:
-        """List persisted Modelo 100 borrador snapshots for the active bucket."""
+        """List persisted Modelo 100 borrador snapshots for the active bucket.
+
+        ``--state`` maps to :class:`~aeat.application.live.SnapshotLifecycleState`:
+        ``active`` is the default consumption surface, while ``superseded`` and
+        ``discarded`` keep audit-visible snapshots available through
+        :class:`~aeat.entrypoints.cli._app_live_payloads.Borrador100ListResult`.
+        """
         bucket_id = active_bucket_id()
         try:
             state_filter = None if state == "all" else SnapshotLifecycleState(state)
@@ -107,7 +120,14 @@ def register_borrador_commands(app: typer.Typer, *, active_bucket_id: Callable[[
             ),
         ],
     ) -> None:
-        """Show one Modelo 100 borrador snapshot with its casilla binding values."""
+        """Show one Modelo 100 borrador snapshot with its binding values.
+
+        The command resolves a stored
+        :class:`~aeat.application.live.Borrador100Snapshot` through
+        :class:`~aeat.application.live.Borrador100SnapshotService` and projects
+        JSON-safe binding scalars into
+        :class:`~aeat.entrypoints.cli._app_live_payloads.Borrador100ViewResult`.
+        """
         bucket_id = active_bucket_id()
         record = Borrador100SnapshotService(bucket_id=bucket_id).show(snapshot_id)
         binding_values = {
@@ -150,7 +170,13 @@ def register_borrador_commands(app: typer.Typer, *, active_bucket_id: Callable[[
             ),
         ],
     ) -> None:
-        """Show the most recent active Modelo 100 borrador snapshot for the given filing year."""
+        """Show the most recent active Modelo 100 borrador snapshot for a year.
+
+        Only active snapshots are candidates for the latest pointer. When the
+        bucket has no active capture for ``filing_year``, the command emits
+        :class:`~aeat.entrypoints.cli._app_live_payloads.Borrador100LatestResult`
+        with ``snapshot_id=None`` instead of attempting a live fetch.
+        """
         bucket_id = active_bucket_id()
         record = Borrador100SnapshotService(bucket_id=bucket_id).latest_for_year(filing_year=filing_year)
         if record is None:
@@ -184,6 +210,7 @@ def register_borrador_commands(app: typer.Typer, *, active_bucket_id: Callable[[
 
 
 def _borrador_row(snapshot) -> _BorradorRow:
+    """Project snapshot metadata into the shared Borrador 100 summary shape."""
     return _BorradorRow(
         snapshot_id=snapshot.snapshot_id,
         filing_year=snapshot.filing_year,

@@ -38,6 +38,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG, Modelo
 from ...core.logging import get_logger
+from ..calculations.registry import LegalRefId
 from ._enums import ReduccionTier, UseType
 from ._errors import TierResolutionError
 from ._models import Arrendamiento, Finca
@@ -69,6 +70,13 @@ JOVEN_TENANT_AGE_MAX: int = 35
 """Tier 70-b-1 inclusive age range (``BOE``: "una edad comprendida entre
 18 y 35 años")."""
 
+_LIRPF_ART_23_CURRENT_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-35-2006:art-23",)
+_LIRPF_ART_23_2021_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-35-2006:art-23-2021",)
+_LIRPF_DT_38_LEGAL_REFS: tuple[LegalRefId, ...] = (
+    "ley-35-2006:dt-38",
+    "ley-35-2006:art-23-2021",
+)
+
 
 class TierResolution(BaseModel):
     """Outcome of a single :func:`resolve_reduccion` invocation.
@@ -82,10 +90,8 @@ class TierResolution(BaseModel):
         qualifying_share: Fraction of rendimiento neto eligible for
             the tier reducción. Always ``1`` except for tier 70-b-1
             with mixed-qualification co-tenants.
-        boe_citation_id: Stable identifier for the BOE provision
-            grounding the resolution (e.g. ``"art_23_2_a"``,
-            ``"art_23_2_b_1"``, ``"dt_38"``,
-            ``"art_23_2_par_4_lau_17_6"``).
+        legal_refs: Registry legal-reference ids grounding the
+            resolution in the bundled legal catalogue and corpus.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -93,50 +99,50 @@ class TierResolution(BaseModel):
     tier: ReduccionTier
     reduccion_pct: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
     qualifying_share: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
-    boe_citation_id: str = Field(min_length=1)
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
 
 
 _FORFEIT_LAU_17_6 = TierResolution(
     tier=ReduccionTier.FORFEIT_LAU_17_6,
     reduccion_pct=Decimal("0"),
     qualifying_share=Decimal("0"),
-    boe_citation_id="art_23_2_par_4_lau_17_6",
+    legal_refs=_LIRPF_ART_23_CURRENT_LEGAL_REFS,
 )
 _DT_38 = TierResolution(
     tier=ReduccionTier.TIER_60_GRANDFATHERED_DT38,
     reduccion_pct=Decimal("0.60"),
     qualifying_share=Decimal("1"),
-    boe_citation_id="dt_38",
+    legal_refs=_LIRPF_DT_38_LEGAL_REFS,
 )
 _PRE_AMENDMENT = TierResolution(
     tier=ReduccionTier.TIER_60_GRANDFATHERED_DT38,
     reduccion_pct=Decimal("0.60"),
     qualifying_share=Decimal("1"),
-    boe_citation_id="pre_amendment",
+    legal_refs=_LIRPF_ART_23_2021_LEGAL_REFS,
 )
 _TIER_50 = TierResolution(
     tier=ReduccionTier.TIER_50,
     reduccion_pct=Decimal("0.50"),
     qualifying_share=Decimal("1"),
-    boe_citation_id="art_23_2_d",
+    legal_refs=_LIRPF_ART_23_CURRENT_LEGAL_REFS,
 )
 _TIER_60_REHAB = TierResolution(
     tier=ReduccionTier.TIER_60_REHAB,
     reduccion_pct=Decimal("0.60"),
     qualifying_share=Decimal("1"),
-    boe_citation_id="art_23_2_c",
+    legal_refs=_LIRPF_ART_23_CURRENT_LEGAL_REFS,
 )
 _TIER_70_PUBLIC_ADMIN = TierResolution(
     tier=ReduccionTier.TIER_70_PUBLIC_ADMIN,
     reduccion_pct=Decimal("0.70"),
     qualifying_share=Decimal("1"),
-    boe_citation_id="art_23_2_b_2",
+    legal_refs=_LIRPF_ART_23_CURRENT_LEGAL_REFS,
 )
 _TIER_90 = TierResolution(
     tier=ReduccionTier.TIER_90,
     reduccion_pct=Decimal("0.90"),
     qualifying_share=Decimal("1"),
-    boe_citation_id="art_23_2_a",
+    legal_refs=_LIRPF_ART_23_CURRENT_LEGAL_REFS,
 )
 
 
@@ -179,8 +185,8 @@ def resolve_reduccion(
 
     Returns:
         :class:`TierResolution` carrying the tier, the numeric
-        reducción percentage, the qualifying share, and the BOE
-        citation identifier.
+        reducción percentage, the qualifying share, and the registry
+        legal-reference ids.
 
     Raises:
         TierResolutionError: If ``finca.use_type`` is not eligible
@@ -377,7 +383,7 @@ def _resolve_tier_70_b_1(
         tier=ReduccionTier.TIER_70_JOVEN,
         reduccion_pct=Decimal("0.70"),
         qualifying_share=qualifying_share,
-        boe_citation_id="art_23_2_b_1",
+        legal_refs=_LIRPF_ART_23_CURRENT_LEGAL_REFS,
     )
 
 

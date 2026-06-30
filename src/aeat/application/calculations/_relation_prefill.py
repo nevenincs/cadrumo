@@ -81,6 +81,10 @@ from ..aggregation._source_mesh import (
     CalculationSourceResolution,
     storage_degradation_resolution,
 )
+from ._m111_no_retenciones import (
+    is_m111_no_retenciones_period,
+    m111_no_retenciones_periods_for_bucket,
+)
 from ._observations_repository import CalculationObservationRepository
 from ._revision_carry_gate import revision_carry_outcome
 
@@ -97,6 +101,7 @@ def _gather_observations_for_snapshot(
     *,
     repository: CalculationObservationRepository,
     activity_start_date: date | None = None,
+    m111_no_retenciones_periods: frozenset[tuple[int, str]] | None = None,
 ) -> tuple[RegistryModeloObservation, ...]:
     """Collect every observation a relation in ``snapshot.revision`` could need.
 
@@ -111,7 +116,11 @@ def _gather_observations_for_snapshot(
     gather set matches the scoped requirement set the resolver folds.
     """
     needed: dict[tuple[str, int, str], RegistryModeloObservation] = {}
-    requirements = _scoped_relation_source_requirements(snapshot, activity_start_date)
+    requirements = _scoped_relation_source_requirements(
+        snapshot,
+        activity_start_date,
+        m111_no_retenciones_periods=m111_no_retenciones_periods,
+    )
     for requirement in requirements:
         for period in requirement.periods:
             payload = repository.load_observation(
@@ -268,8 +277,10 @@ def _activity_start_date_for_bucket(bucket_id: str) -> date | None:
 def _scoped_relation_source_requirements(
     snapshot: RegistrySnapshot,
     activity_start_date: date | None,
+    *,
+    m111_no_retenciones_periods: frozenset[tuple[int, str]] | None = None,
 ) -> tuple[RegistryFoldRequirement, ...]:
-    """Return ``relation_source_requirements`` with pre-start periods scoped out.
+    """Return ``relation_source_requirements`` with no-obligation periods scoped out.
 
     A quarterly source period STRICTLY before the operator-declared activity
     start is a period in which the taxpayer had no filing obligation, so its
@@ -283,26 +294,31 @@ def _scoped_relation_source_requirements(
     still unresolves the requirement downstream, preserving
     ``no-silent-under-declaration``. Returns the requirements unchanged when
     ``activity_start_date`` is ``None`` (the common full-year / fail-closed
-    case).
+    case). Explicit M111 no-retenciones period attestations also scope out only
+    the named source periods: AEAT instructions say no M111 should be presented
+    when no subject rents were paid, so M190 can fold the remaining filed
+    quarters without requiring a nonexistent blank M111.
     """
     requirements = relation_source_requirements(
         snapshot.revision,
         filing_year=snapshot.filing_year,
         period=snapshot.period,
     )
-    if activity_start_date is None:
+    attested_m111_periods = m111_no_retenciones_periods or frozenset()
+    if activity_start_date is None and not attested_m111_periods:
         return requirements
-
-    from ._cross_period_clean_state import _period_strictly_before_activity_start
 
     scoped: list[RegistryFoldRequirement] = []
     for requirement in requirements:
         kept = tuple(
             token
             for token in requirement.periods
-            if not _period_strictly_before_activity_start(
-                Period.from_year_and_code(requirement.filing_year, token),
-                activity_start_date,
+            if not _relation_period_scoped_out(
+                requirement.source_modelo,
+                requirement.filing_year,
+                token,
+                activity_start_date=activity_start_date,
+                m111_no_retenciones_periods=attested_m111_periods,
             )
         )
         if len(kept) == len(requirement.periods):
@@ -311,13 +327,39 @@ def _scoped_relation_source_requirements(
             kept_filing = tuple(
                 period
                 for period in requirement.filing_periods
-                if not _period_strictly_before_activity_start(period, activity_start_date)
+                if period.registry_token in kept
             )
             scoped.append(requirement.model_copy(update={"periods": kept, "filing_periods": kept_filing}))
         # else: EVERY source period is strictly pre-activity → no obligation at
         # all; drop the requirement (its ``periods`` field is min_length=1 and
         # cannot be emptied). The relation then resolves to None as before.
     return tuple(scoped)
+
+
+def _relation_period_scoped_out(
+    source_modelo: str,
+    filing_year: int,
+    period_token: str,
+    *,
+    activity_start_date: date | None,
+    m111_no_retenciones_periods: frozenset[tuple[int, str]],
+) -> bool:
+    """Return whether a relation source period is absent by explicit no-obligation evidence."""
+    if is_m111_no_retenciones_period(
+        source_modelo=source_modelo,
+        filing_year=filing_year,
+        period_token=period_token,
+        attested_periods=m111_no_retenciones_periods,
+    ):
+        return True
+    if activity_start_date is None:
+        return False
+    from ._cross_period_clean_state import _period_strictly_before_activity_start
+
+    return _period_strictly_before_activity_start(
+        Period.from_year_and_code(filing_year, period_token),
+        activity_start_date,
+    )
 
 
 def resolve_relations_from_local_store(
@@ -327,6 +369,7 @@ def resolve_relations_from_local_store(
     captured_at: datetime | None = None,
     modelo_202_first_year_cuota: bool = False,
     activity_start_date: date | None = None,
+    m111_no_retenciones_periods: frozenset[tuple[int, str]] | None = None,
 ) -> RelationValues:
     """Build a relation-value record from the local observation store.
 
@@ -349,6 +392,10 @@ def resolve_relations_from_local_store(
             so a mid-year-start filer folds only the quarters it actually had an
             obligation for instead of leaving the annual fold unresolved. ``None``
             (the default / fail-closed case) keeps the full all-quarters behaviour.
+        m111_no_retenciones_periods: Explicit ``(year, period)`` M111 no-obligation
+            attestations. Each named source period is removed from M111 relation
+            folds only; unknown/non-M111 periods keep the normal filing-grade
+            requirement.
 
     Returns a
     :class:`~aeat.application.storage.calc_sheets._records.RelationValues`
@@ -372,14 +419,28 @@ def resolve_relations_from_local_store(
         active_bucket_id = resolve_active_bucket_id()
         if active_bucket_id is not None:
             activity_start_date = _activity_start_date_for_bucket(active_bucket_id)
+    if m111_no_retenciones_periods is None:
+        from ...core import resolve_active_bucket_id
+
+        active_bucket_id = resolve_active_bucket_id()
+        m111_no_retenciones_periods = (
+            m111_no_retenciones_periods_for_bucket(active_bucket_id)
+            if active_bucket_id is not None
+            else frozenset()
+        )
     observations = _gather_observations_for_snapshot(
         snapshot,
         repository=repo,
         activity_start_date=activity_start_date,
+        m111_no_retenciones_periods=m111_no_retenciones_periods,
     )
     requirements_by_relation = {
         relation_id: requirement
-        for requirement in _scoped_relation_source_requirements(snapshot, activity_start_date)
+        for requirement in _scoped_relation_source_requirements(
+            snapshot,
+            activity_start_date,
+            m111_no_retenciones_periods=m111_no_retenciones_periods,
+        )
         for relation_id in requirement.relation_ids
     }
 
@@ -566,6 +627,7 @@ class RelationPrefillSourceResolver:
         # the whole fold. Derived once from the bucket profile and shared by the
         # resolution and the diagnostic so both see the same scoped requirement set.
         activity_start_date = _activity_start_date_for_bucket(str(context.bucket_id))
+        m111_no_retenciones_periods = m111_no_retenciones_periods_for_bucket(str(context.bucket_id))
         try:
             relation_values = resolve_relations_from_local_store(
                 snapshot,
@@ -583,6 +645,7 @@ class RelationPrefillSourceResolver:
                     )
                 ),
                 activity_start_date=activity_start_date,
+                m111_no_retenciones_periods=m111_no_retenciones_periods,
             )
         except _STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
@@ -593,7 +656,11 @@ class RelationPrefillSourceResolver:
             )
         requirements_by_relation = {
             relation_id: requirement
-            for requirement in _scoped_relation_source_requirements(snapshot, activity_start_date)
+            for requirement in _scoped_relation_source_requirements(
+                snapshot,
+                activity_start_date,
+                m111_no_retenciones_periods=m111_no_retenciones_periods,
+            )
             for relation_id in requirement.relation_ids
         }
         resolved = tuple(item for item in relation_values.values if item.value is not None)

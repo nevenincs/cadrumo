@@ -147,6 +147,28 @@ def test_modelo_100_2021_deportistas_0489_is_grounded_in_dictionary_and_manual()
     assert "aportaciones y contribuciones realizadas en 2021" in manual_text
 
 
+def test_modelo_100_2021_forestal_0302_prefers_manual_year_over_dictionary_drift() -> None:
+    modelos, catalogues = _registry_tree()
+    modelo = next(modelo for modelo in modelos if modelo.id == "100")
+    revision = modelo.revisions["2021"]
+    casilla = next(casilla for casilla in revision.casillas if casilla.id == "0302")
+    dictionary = catalogues.sources["aeat-dr-100-2021-dictionary"]
+    manual = catalogues.sources["aeat-renta-2021-manual-parte1"]
+
+    expected_label = (
+        "Ganancias patrimoniales obtenidas por los vecinos en 2021 como consecuencia de "
+        "aprovechamientos forestales en montes públicos"
+    )
+
+    assert _record_design_label(dictionary.corpus_path, "0302") == expected_label.replace("2021", "2020")
+    assert casilla.label == expected_label
+    assert "aeat-renta-2021-manual-parte1" in casilla.source_refs
+
+    manual_text = " ".join(_manual_extracted_text(manual.corpus_path).split())
+    assert expected_label in manual_text
+    assert "Esta ganancia patrimonial ha estado sujeta en 2021 a la retención del 19 por 100" in manual_text
+
+
 def test_renta_manual_sources_match_manifest() -> None:
     catalogues = _catalogues()
     sources_by_path = {source.corpus_path: source for source in catalogues.sources.values()}

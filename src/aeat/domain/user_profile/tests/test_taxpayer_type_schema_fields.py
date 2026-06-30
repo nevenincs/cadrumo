@@ -241,7 +241,7 @@ def test_ley_49_2002_special_regime_fields_match_modelo_036_record_design(
 def test_sal_reserva_profile_description_uses_twice_capital_threshold(
     schema: ProfileSchemaDefinition,
 ) -> None:
-    """The registry schema must not preserve the old 50 percent SAL cap prose."""
+    """The registry schema must not preserve obsolete SAL cap prose."""
     descriptions = " ".join(
         schema.field(field_path).description
         for field_path in (
@@ -252,8 +252,11 @@ def test_sal_reserva_profile_description_uses_twice_capital_threshold(
 
     assert "50 percent" not in descriptions
     assert "0.50" not in descriptions
+    assert "does not exceed twice" not in descriptions
+    assert "reaches at least 2 * capital_social." not in descriptions
     assert "twice" in descriptions
-    assert "2 * capital_social" in descriptions
+    assert "2 * capital_social + 0.01" in descriptions
+    assert "first euro cent above twice capital social" in descriptions
     assert "ley 44/2015 art. 14" in descriptions
 
 

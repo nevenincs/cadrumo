@@ -673,6 +673,12 @@ application:
         values.
       calculate_decimal_input_invalid: '%{flag} value for %{key} is not a decimal:
         %{value}'
+      calculate_detail_casilla_unsupported: Casilla %{key} names a Modelo 180 perceptor/property
+        detail field, not a scalar decimal casilla input. The local work --casilla
+        channel only accepts scalar decimal casillas; Modelo 180 perceptor/property
+        detail rows are not supported on the public --row surface yet. Use aeat app
+        modelo aggregate --modelo 180 --retencion-observation for the supported annual
+        perceptor count/base/retenciones source.
       calculate_m184_share_sum_invalid: Modelo 184 member-row share percentages must
         sum to exactly 100%; got %{total} across %{count} rows.
       calculate_m347_threshold_not_met: Modelo 347 counterparty %{nif} total %{total}
@@ -724,9 +730,9 @@ application:
       export_revision_state_refused: Calculation revision %{calculation_revision_id}
         is not verified-complete or filed and cannot be exported.
       export_unsupported: Modelo %{modelo} cannot be exported to fichero-BOE because
-        %{reason}. Calculation, verification, and local filing records may still
-        exist, but this command cannot produce an AEAT upload file for this modelo
-        and does not certify BOE/export correctness.
+        %{reason}. Calculation, verification, and local filing records may still exist,
+        but this command cannot produce an AEAT upload file for this modelo and does
+        not certify BOE/export correctness.
       external_filing_evidence_reference_blank: External-filing import requires a
         non-empty evidence_reference_id.
       external_filing_no_casilla_values: External-filing import requires at least
@@ -1107,6 +1113,7 @@ application:
       registry_policy_invalid: Registry verification policy could not be loaded.
       registry_snapshot_invalid: The registry snapshot could not be loaded for declaration
         verification.
+      registry_snapshot_ref_mismatch: 'Registry snapshot for modelo %{modelo} %{period} does not match the stamped declaration reference: observed %{observed_ref}, resolved %{resolved_ref}.'
   wizard:
     errors:
       create_missing_filing_baseline: 'Profile creation is missing filing identity
@@ -1245,8 +1252,6 @@ cli:
           group_help: Reconciliation catalogue invoices that link to transactions.
           invoice_id_help: Catalogue invoice id (or unambiguous prefix).
           list_help: List reconciliation catalogue invoices.
-          operation_type_unsupported: '--operation-type {value} cannot feed Modelo
-            349 from the catalogue yet; supported: {supported}.'
           remove_help: Delete one reconciliation catalogue invoice.
           view_help: Show one reconciliation catalogue invoice by id or unambiguous
             prefix.
@@ -1798,11 +1803,7 @@ cli:
         create_stub_modelo_714_refused: 'Modelo %{modelo} (Wealth Tax) is not supported
           for work-unit creation in this CLI. Legal basis: Ley 19/1991 Art. 28 and
           Orden HAC/1023/2021. File the return at AEAT Sede.'
-        create_stub_modelo_refused: 'Modelo %{modelo} (informative declaration of
-          virtual currencies held abroad) is not supported for work-unit creation
-          in this CLI. Legal authority: Orden HFP/887/2023 and RD 1065/2007 Art. 42
-          quater; the reporting threshold is 50,000 EUR at 31 December. File through
-          AEAT Sede when legally required.'
+        create_stub_modelo_refused: 'Modelo %{modelo} (informative declaration of virtual currencies held abroad) is not supported for work-unit creation in this CLI. Legal authority: Orden HFP/886/2023 and RD 1065/2007 Art. 42 quater; the reporting threshold is 50,000 EUR at 31 December. File through AEAT Sede when legally required.'
         dependencies_help: Show cross-period filing-history dependencies and current
           clean-state blockers for a target filing
         discard_help: Mark a work unit as discarded (auditable state transition)
@@ -1979,18 +1980,10 @@ cli:
         runs_help: List persisted workflow runs with their run ids, newest first.
           Use a run id with `aeat app modelo work resume`. Local-only; never contacts
           AEAT.
-        sal_beneficio_neto_help: Net profit for the fiscal year of the worker-owned
-          company (SAL/SLL, Law 44/2015 Art. 14). The assistant applies 10% to calculate
-          the mandatory special reserve allocation, capped by the 50% share-capital
-          threshold. Use it with --sal-reserva-dotada and --sal-capital-social.
-        sal_capital_social_help: 'Share capital of the worker-owned company (Law 44/2015
-          Art. 14). Denominator for the 50% test: the allocation is zero once accumulated
-          reserve reaches 50% of share capital. Required with --sal-beneficio-neto
-          and --sal-reserva-dotada.'
+        sal_beneficio_neto_help: 'Net profit for the fiscal year of the worker-owned company (SAL/SLL, Law 44/2015 Art. 14). The assistant applies 10% to calculate the mandatory special reserve allocation, capped at the first euro cent above twice share capital. Use it with --sal-reserva-dotada and --sal-capital-social.'
+        sal_capital_social_help: 'Share capital of the worker-owned company (Law 44/2015 Art. 14). Basis for the strict threshold: the allocation is zero once accumulated reserve reaches the first euro cent above twice share capital. Required with --sal-beneficio-neto and --sal-reserva-dotada.'
         sal_computation_error: 'SAL computation error: %{message}'
-        sal_reserva_dotada_help: Special reserve accumulated in previous fiscal years
-          (Law 44/2015 Art. 14). Used to check whether the reserve has already reached
-          50% of share capital. Required with --sal-beneficio-neto and --sal-capital-social.
+        sal_reserva_dotada_help: 'Special reserve accumulated in previous fiscal years (Law 44/2015 Art. 14). Used to check whether the reserve has reached the first euro cent above twice share capital. Required with --sal-beneficio-neto and --sal-capital-social.'
         sal_reserva_not_decimal: --sal-* values must be decimal amounts.
         selector_ambiguous: More than one active work unit matches this modelo/year/period.
           Choose a registry revision or pass an explicit work-unit id. {candidates}
@@ -2622,7 +2615,8 @@ cli:
         do not flag income as missing_category.
       irpf_header: IRPF CATEGORIES FOR --irpf-category
       irpf_id_column: irpf-category (pass this exact value)
-      irpf_purpose_activity_income_withholding: professional activity withholding (received or paid net)
+      irpf_purpose_activity_income_withholding: professional activity withholding
+        (received or paid net)
       irpf_purpose_employment_income: employment income (not for net-paid invoices)
       irpf_purpose_rent_expense_withholding: net-paid rent expense withholding
       irpf_usage_example: 'Net-paid rent example: --category-id {rent_category} --irpf-category
@@ -3710,10 +3704,12 @@ errors:
     lookup_dispatch_arg_count: Formula op {op} expects {expected} arguments.
     lookup_dispatch_arg_kind: Formula op {op} requires {position} to be a {expected_kind}
       leaf.
-    m210_imputation_coefficient_invalid: errors.calc.m210_imputation_coefficient_invalid
-    m210_imputation_days_invalid: errors.calc.m210_imputation_days_invalid
-    m210_imputation_no_catastral_value_missing: errors.calc.m210_imputation_no_catastral_value_missing
-    m210_imputation_no_filing_year: errors.calc.m210_imputation_no_filing_year
+    m210_gastos_deducibles_negative: 'M210 gastos_deducibles %{casilla_id} must be non-negative; got %{value}.'
+    m210_gastos_deducibles_not_allowed: 'M210 gastos_deducibles %{casilla_id} is only allowed for the EU/EEA Art. 24.6 path; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.'
+    m210_imputation_coefficient_invalid: 'M210 imputed real-estate coefficient %{casilla_id} must be one of the registry-authored Art. 85 rates (%{allowed_values}); got %{value}.'
+    m210_imputation_days_invalid: 'M210 imputation days %{casilla_id} must be an integer from 1 to %{max_days}; got %{value}.'
+    m210_imputation_no_catastral_value_missing: 'M210 imputed real-estate without cadastral value requires a positive acquisition value or administrative checked value (%{acquisition_casilla_id}, %{administrative_casilla_id}).'
+    m210_imputation_no_filing_year: 'M210 imputed real-estate calculation requires a non-zero filing year.'
     parameter_unknown: Parameter {parameter_id} is not registered.
     relation_value_missing: Relation {relation_id} has no supplied value.
     text_input_non_text_casillas: 'Text input supplied for non-text fields: %{casilla_ids}.'
@@ -4904,13 +4900,17 @@ wizard:
       legal-name:
         help: Legal or company name for legal-entity export headers
       ley-49-2002-option-date:
-        help: 'Record the Modelo 036 casilla 653 date for the Ley 49/2002 Title II option.'
+        help: Record the Modelo 036 casilla 653 date for the Ley 49/2002 Title II
+          option.
       ley-49-2002-option-declared:
-        help: 'Record whether Modelo 036 casilla 651 declares the Ley 49/2002 Title II option.'
+        help: Record whether Modelo 036 casilla 651 declares the Ley 49/2002 Title
+          II option.
       ley-49-2002-renunciation-date:
-        help: 'Record the Modelo 036 casilla 654 date for the Ley 49/2002 Title II renunciation.'
+        help: Record the Modelo 036 casilla 654 date for the Ley 49/2002 Title II
+          renunciation.
       ley-49-2002-renunciation-declared:
-        help: 'Record whether Modelo 036 casilla 652 declares renunciation of the Ley 49/2002 Title II regime.'
+        help: Record whether Modelo 036 casilla 652 declares renunciation of the Ley
+          49/2002 Title II regime.
       llm-vision:
         help: Enable on-host LLM vision for reading invoices.
       monedas-virtuales-extranjero-above-threshold:
@@ -4927,6 +4927,10 @@ wizard:
         help: CLI output language for this profile
       pays-capital-income-with-retencion:
         help: Pays capital income with retención
+      modelo-111-no-retenciones-periods:
+        help: 'Comma-separated Modelo 111 no-obligation periods, format YYYY:PERIOD
+          (for example 2025:2T,2025:3T). Use only when no subject payments were
+          made.'
       pays-professionals-with-retencion:
         help: Pays professionals with retención
       pays-rent-with-retencion:
@@ -5064,6 +5068,10 @@ wizard:
         prompt: Virtual currencies held abroad above Modelo 721 threshold
       pays-capital-income-with-retencion:
         prompt: Pays capital income with retención
+      modelo-111-no-retenciones-periods:
+        help: 'Comma-separated YYYY:PERIOD periods where no rentas subject to retención
+          or ingreso a cuenta were paid, so no all-blank Modelo 111 is filed.'
+        prompt: Modelo 111 no-retenciones periods
       pays-professionals-with-retencion:
         prompt: Pays professionals with retención
       pays-rent-with-retencion:
@@ -5295,17 +5303,20 @@ wizard:
             label: Civil partnership with commercial object
         prompt: Legal form
       ley-49-2002-option-date:
-        help: 'Use the ISO date corresponding to Modelo 036 casilla 653.'
-        prompt: 'Date declared for the Ley 49/2002 special-regime option'
+        help: Use the ISO date corresponding to Modelo 036 casilla 653.
+        prompt: Date declared for the Ley 49/2002 special-regime option
       ley-49-2002-option-declared:
-        help: 'Use the declaration fact from Modelo 036 casilla 651; legal application still depends on the statutory requirements and no renunciation.'
-        prompt: 'Has the entity filed the Modelo 036 option for the Title II Ley 49/2002 special fiscal regime?'
+        help: Use the declaration fact from Modelo 036 casilla 651; legal application
+          still depends on the statutory requirements and no renunciation.
+        prompt: Has the entity filed the Modelo 036 option for the Title II Ley 49/2002
+          special fiscal regime?
       ley-49-2002-renunciation-date:
-        help: 'Use the ISO date corresponding to Modelo 036 casilla 654.'
-        prompt: 'Date declared for the Ley 49/2002 special-regime renunciation'
+        help: Use the ISO date corresponding to Modelo 036 casilla 654.
+        prompt: Date declared for the Ley 49/2002 special-regime renunciation
       ley-49-2002-renunciation-declared:
-        help: 'Use the declaration fact from Modelo 036 casilla 652.'
-        prompt: 'Has the entity filed a Modelo 036 renunciation of the Title II Ley 49/2002 special fiscal regime?'
+        help: Use the declaration fact from Modelo 036 casilla 652.
+        prompt: Has the entity filed a Modelo 036 renunciation of the Title II Ley
+          49/2002 special fiscal regime?
       new-entity-first-two-profit-periods:
         help: Applies only to legal entities. When set, the entity is taxed at the
           15 percent reduced rate during those two periods.

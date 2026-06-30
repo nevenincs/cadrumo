@@ -11,117 +11,31 @@ its response is parsed through the same allow-list the subprocess path uses.
 from __future__ import annotations
 
 import base64
-import json
-import threading
-from collections.abc import Callable, Iterator
-from datetime import UTC, date, datetime
-from decimal import Decimal
-from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from io import BytesIO
+from collections.abc import Callable
+from datetime import UTC, datetime
 from pathlib import Path
-from queue import Queue
-from typing import ClassVar, override
 
 import pytest
-from PIL import Image
 
-from ....core.config import Settings, load_settings, override_settings
-from ....domain.buckets import BucketEventHistoryRepository
-from ....domain.categories import SpendingCategory
-from ....domain.iva import IvaCategory
-from ....domain.transactions import (
-    BusinessClassification,
-    LLMClassificationResponse,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionDirection,
-    TransactionValidationError,
-    prompt_spec_with_saturation_fields,
+from ....core.config import Settings
+from ....tests.secure_sql import TestRuntimeProfile
+from .._evidence import PurchaseInvoiceEvidenceInputError
+from .._llm_classification import _resolve_evidence
+from ._llm_vision_evidence_support import (
+    _add_evidence,
+    _png_image,
+    _scan_only_pdf,
+    _transaction,
 )
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .._evidence import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
-from .._llm_classification import _classify_with_evidence, _resolve_evidence, _ResolvedEvidence
-from .._vision_classifier import LocalVisionLLMClassifier
+from ._llm_vision_evidence_support import (
+    profile as profile,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 
-
-def _json_object(value: object) -> dict[str, object]:
-    assert isinstance(value, dict)
-    result: dict[str, object] = {}
-    for key, item in value.items():
-        assert isinstance(key, str)
-        result[key] = item
-    return result
-
-
-def _json_array(value: object) -> list[object]:
-    assert isinstance(value, list)
-    return list(value)
-
-
-@pytest.fixture
-def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
-        yield runtime
-
-
-def _scan_only_pdf() -> bytes:
-    """A one-page raster (text-layer-free) PDF -- the scan-only case."""
-    buffer = BytesIO()
-    Image.new("RGB", (260, 160), "white").save(buffer, format="PDF")
-    return buffer.getvalue()
-
-
-def _png_image() -> bytes:
-    buffer = BytesIO()
-    Image.new("RGB", (120, 80), "white").save(buffer, format="PNG")
-    return buffer.getvalue()
-
-
-def _transaction(evidence_id: str) -> Transaction:
-    raw = RawTransaction(
-        transaction_id="row-vision",
-        booked_date=date(2025, 5, 1),
-        value_date=date(2025, 5, 1),
-        amount=Decimal("121.00"),
-        currency="EUR",
-        counterparty="Acme SL",
-        description="office supplies",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="a" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 5, 1, 12, 0, tzinfo=UTC),
-            provider_name="manual",
-        ),
-        raw_fields={"Concepto": "office supplies"},
-    )
-    return Transaction.model_validate(
-        {
-            "raw": raw,
-            "direction": TransactionDirection.OUTGOING,
-            "group_label": None,
-            "source_jurisdiction": "ES",
-            "purchase_invoice_evidence_id": evidence_id,
-        },
-    )
-
-
-def _add_evidence(profile: TestRuntimeProfile, tmp_path: Path, *, name: str, data: bytes) -> str:
-    path = tmp_path / name
-    path.write_bytes(data)
-    service = PurchaseInvoiceEvidenceService(
-        settings=profile.settings,
-        bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
-    )
-    return service.add(bucket_id=_BUCKET_ID, source_path=path).record.evidence_id
+__all__ = ["profile"]
 
 
 def test_scan_only_pdf_resolves_to_images_gestor_allowed_no_consent(
@@ -209,196 +123,3 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
     assert "llm_vision on" in (raised.value.suggestion or "")
 
 
-class _ObservedOllamaRequest(BaseHTTPRequestHandler):
-    """Loopback Ollama endpoint that captures the chat body and returns a classification."""
-
-    events: ClassVar[Queue[dict[str, object]]]
-    content: ClassVar[str]
-
-    def do_POST(self) -> None:
-        body = self.rfile.read(int(self.headers.get("content-length", "0")))
-        self.events.put({"body": json.loads(body.decode("utf-8"))})
-        payload = {
-            "model": "llava-test",
-            "message": {"content": self.content},
-            "prompt_eval_count": 9,
-            "eval_count": 5,
-        }
-        encoded = json.dumps(payload).encode("utf-8")
-        self.send_response(HTTPStatus.OK)
-        self.send_header("content-type", "application/json")
-        self.send_header("content-length", str(len(encoded)))
-        self.end_headers()
-        self.wfile.write(encoded)
-
-    @override
-    def log_message(self, format: str, *args: object) -> None:
-        """Silence stdlib request logging during tests."""
-
-
-def _run_against_loopback_ollama[T](content: str, call: Callable[[], T]) -> tuple[dict[str, object], T]:
-    """Stand up a loopback Ollama returning ``content`` and run ``call()`` against it.
-
-    Returns ``(observed_request_body, call_result)``.
-    """
-    events: Queue[dict[str, object]] = Queue()
-    _ObservedOllamaRequest.events = events
-    _ObservedOllamaRequest.content = content
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _ObservedOllamaRequest)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    endpoint = f"http://127.0.0.1:{server.server_port}/api/chat"
-    try:
-        with override_settings(aeat_llm_ollama_chat_url=endpoint):
-            result = call()
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=3)
-    return events.get_nowait(), result
-
-
-def test_vision_classifier_classifies_from_images(profile: TestRuntimeProfile) -> None:
-    """The vision classifier sends the images to the local model and parses the result."""
-    _ = profile  # active bucket session backs the LLM cache
-    classification_json = json.dumps(
-        {
-            "classification": "BUSINESS",
-            "confidence": 0.9,
-            "reason": "office hardware invoice read from the attached image",
-            "category": SpendingCategory.HARDWARE_AMORTIZABLE.value,
-            "iva_category": IvaCategory.DOMESTIC_GENERAL_21.value,
-            "business_pct": None,
-        },
-    )
-    images = (base64.b64encode(_png_image()).decode("ascii"),)
-
-    def _call() -> LLMClassificationResponse:
-        classifier = LocalVisionLLMClassifier(spec=prompt_spec_with_saturation_fields(), model="llava-test")
-        return classifier.classify(_transaction("ev-1"), evidence_images=images)
-
-    observed, response = _run_against_loopback_ollama(classification_json, _call)
-    assert response.classification is BusinessClassification.BUSINESS
-    assert response.category is SpendingCategory.HARDWARE_AMORTIZABLE
-    assert response.iva_category is IvaCategory.DOMESTIC_GENERAL_21
-
-    body = _json_object(observed["body"])
-    messages = _json_array(body["messages"])
-    user_message = _json_object(messages[-1])
-    assert user_message["images"] == list(images)
-
-
-def test_image_evidence_classifies_with_no_provider(profile: TestRuntimeProfile) -> None:
-    """The UX fix: image evidence routes to the vision model even with no --llm provider."""
-    _ = profile  # active bucket session backs the LLM cache
-    classification_json = json.dumps(
-        {
-            "classification": "BUSINESS",
-            "confidence": 0.88,
-            "reason": "scanned office-supplies invoice read on-host",
-            "category": SpendingCategory.HARDWARE_AMORTIZABLE.value,
-            "iva_category": IvaCategory.DOMESTIC_GENERAL_21.value,
-            "business_pct": None,
-        },
-    )
-    evidence = _ResolvedEvidence(
-        reference="ev-1",
-        text=None,
-        images=(base64.b64encode(_png_image()).decode("ascii"),),
-    )
-
-    def _call() -> tuple[LLMClassificationResponse, str]:
-        return _classify_with_evidence(
-            _transaction("ev-1"),
-            evidence,
-            text_classifier=None,  # no --llm provider resolved
-            spec=prompt_spec_with_saturation_fields(),
-            vision_classifier=None,
-            vision_model=None,
-            settings=load_settings(),
-        )
-
-    _observed, (response, provenance) = _run_against_loopback_ollama(classification_json, _call)
-    assert response.classification is BusinessClassification.BUSINESS
-    assert provenance.startswith("llm:local-vision:")
-
-
-def test_text_or_no_evidence_without_provider_refuses_instructively() -> None:
-    """Without a provider and without readable image evidence, the text path refuses."""
-    with pytest.raises(TransactionValidationError, match="needs a cloud provider"):
-        _classify_with_evidence(
-            _transaction("ev-1"),
-            None,  # no linked evidence -> text path -> needs a provider
-            text_classifier=None,
-            spec=prompt_spec_with_saturation_fields(),
-            vision_classifier=None,
-            vision_model=None,
-            settings=load_settings(),
-        )
-
-
-def test_vision_connection_error_becomes_a_typed_refusal_with_fix(profile: TestRuntimeProfile) -> None:
-    """A down/unreachable Ollama is converted to LLMClassifierError, not a raw traceback."""
-    from ....domain.transactions import LLMClassifierError
-
-    _ = profile  # active bucket session backs the LLM cache before the connection attempt
-    evidence = _ResolvedEvidence(
-        reference="ev-1",
-        text=None,
-        images=(base64.b64encode(_png_image()).decode("ascii"),),
-    )
-    unreachable_settings = load_settings().model_copy(
-        update={
-            "aeat_llm_ollama_chat_url": "http://127.0.0.1:1/api/chat",
-            "aeat_llm_vision_read_timeout_s": 1,
-        },
-    )
-    classifier = LocalVisionLLMClassifier(
-        spec=prompt_spec_with_saturation_fields(),
-        settings=unreachable_settings,
-    )
-    with pytest.raises(LLMClassifierError, match=r"vision reading failed.*Fix:"):
-        _classify_with_evidence(
-            _transaction("ev-1"),
-            evidence,
-            text_classifier=None,
-            spec=prompt_spec_with_saturation_fields(),
-            vision_classifier=classifier,
-            vision_model=None,
-            settings=unreachable_settings,
-        )
-
-
-def test_vision_model_override_selects_the_named_model(profile: TestRuntimeProfile) -> None:
-    """--vision-model threads through to the request model and the provenance stamp."""
-    _ = profile  # active bucket session backs the LLM cache
-    classification_json = json.dumps(
-        {
-            "classification": "BUSINESS",
-            "confidence": 0.8,
-            "reason": "office invoice",
-            "category": SpendingCategory.HARDWARE_AMORTIZABLE.value,
-            "iva_category": IvaCategory.DOMESTIC_GENERAL_21.value,
-        },
-    )
-    evidence = _ResolvedEvidence(
-        reference="ev-1",
-        text=None,
-        images=(base64.b64encode(_png_image()).decode("ascii"),),
-    )
-
-    def _call() -> tuple[LLMClassificationResponse, str]:
-        return _classify_with_evidence(
-            _transaction("ev-1"),
-            evidence,
-            text_classifier=None,
-            spec=prompt_spec_with_saturation_fields(),
-            vision_classifier=None,
-            vision_model="qwen2.5vl:7b",
-            settings=load_settings(),
-        )
-
-    observed, (_response, provenance) = _run_against_loopback_ollama(classification_json, _call)
-    assert provenance == "llm:local-vision:qwen2.5vl:7b"
-    body = _json_object(observed["body"])
-    assert body["model"] == "qwen2.5vl:7b"

@@ -96,7 +96,7 @@ _UNSUPPORTED_WORK_CASES = (
         year=2024,
         period="0A",
         revision="2023-y-siguientes",
-        required_groups=(("HFP/887/2023",), ("50",), (_SEDE_HOST, "Sede")),
+        required_groups=(("HFP/886/2023",), ("50",), (_SEDE_HOST, "Sede")),
     ),
 )
 
@@ -131,6 +131,8 @@ def test_work_create_unsupported_modelo_refuses_with_legal_authority(case: Unsup
         assert any(token in output for token in required_group), (
             f"modelo {case.modelo} output did not contain any of {required_group!r}: {output!r}"
         )
+    if case.modelo == "721":
+        assert "HFP/887/2023" not in output, "M721 must not cite the custodian-side 172/173 order"
     assert "Modelo desconocido" not in output
     assert "could not evaluate" not in output
 

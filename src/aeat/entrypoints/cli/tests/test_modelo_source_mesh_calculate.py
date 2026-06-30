@@ -107,6 +107,52 @@ def _create_115_work_unit() -> dict[str, object]:
     return _payload(result.output)
 
 
+def _create_111_work_unit() -> dict[str, object]:
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "111",
+            "--year",
+            "2025",
+            "--period",
+            "2T",
+            "--revision",
+            "2019-y-siguientes",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    return _payload(result.output)
+
+
+def _create_180_work_unit() -> dict[str, object]:
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "180",
+            "--year",
+            "2026",
+            "--period",
+            "0A",
+            "--revision",
+            "2023-y-siguientes",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    return _payload(result.output)
+
+
 def _raw_transaction(
     provider_id: str,
     *,
@@ -245,6 +291,59 @@ def test_work_calculate_modelo_115_uses_retenciones_aggregation_observation() ->
     assert Decimal(casilla_values["05"]) == Decimal("513.00")
 
 
+def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestation_path() -> None:
+    """A no-observation M111 quarter is not filed blank; the CLI names the attestation path."""
+
+    _create_profile()
+    _create_111_work_unit()
+
+    calculated = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            "--modelo",
+            "111",
+            "--year",
+            "2025",
+            "--period",
+            "2T",
+            "--by",
+            "Javier",
+        ],
+    )
+
+    assert calculated.exit_code != 0, calculated.output
+    envelope = json.loads(calculated.output)
+    assert envelope["error"]["code"] == "ERROR_FINANCIAL_AGGREGATION_VALIDATION"
+    assert envelope["error"]["context"]["modelo"] == "111"
+    assert envelope["error"]["context"]["period"] == "2T"
+    assert envelope["error"]["context"]["source_kind"] == "retenciones_aggregation"
+    suggestion = envelope["error"]["suggestion"]
+    assert "--retencion-observation" in suggestion
+    assert "do not file an all-blank Modelo 111" in suggestion
+    assert "--modelo-111-no-retenciones-periods 2025:2T" in suggestion
+
+    attested = invoke_cached_cli(
+        [
+            "config",
+            "profile",
+            "edit",
+            "operator",
+            "--quiet",
+            "--modelo-111-no-retenciones-periods",
+            "2025:2T,2025:3T,2025:4T",
+        ],
+    )
+    assert attested.exit_code == 0, attested.output
+    shown = invoke_cached_cli(("config", "profile", "show", "operator"))
+    assert shown.exit_code == 0, shown.output
+    assert "withholding.modelo_111_no_retenciones_periods\t2025:2T,2025:3T,2025:4T" in shown.output
+
+
 def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_evidence() -> None:
     """A classified rent ledger row alone must hard-stop instead of producing zeros."""
     from ....application.user_profile._orchestration import profile_storage_session
@@ -280,6 +379,34 @@ def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_eviden
     assert envelope["error"]["context"]["period"] == "1T"
     assert envelope["error"]["context"]["source_kind"] == "retenciones_aggregation"
     assert "--retencion-observation" in envelope["error"]["suggestion"]
+
+
+def test_work_calculate_modelo_180_refuses_string_perceptor_casilla_with_detail_guidance() -> None:
+    """M180 perceptor string fields are refused before the decimal casilla parser."""
+
+    _create_profile()
+    work_unit = _create_180_work_unit()
+
+    calculated = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            str(work_unit["work_unit_id"]),
+            "--casilla",
+            "perc.nif=B12345678",
+        ],
+    )
+
+    assert calculated.exit_code != 0, calculated.output
+    envelope = json.loads(calculated.output)
+    assert envelope["error"]["code"] == "REFUSED_MODELO_CALCULATE_CASILLA_INPUT"
+    assert envelope["error"]["context"]["key"] == "perc.nif"
+    assert "perceptor/property detail rows are not supported" in envelope["error"]["message"]
+    assert "--retencion-observation" in envelope["error"]["message"]
 
 
 def test_work_calculate_persists_ledger_source_mesh_observations() -> None:

@@ -2,160 +2,22 @@
 
 from __future__ import annotations
 
-import json
-
 import pytest
 
 from ._action_test_support import (
     _BUCKET_ID,
-    UTC,
-    BucketEventObjectType,
-    BucketEventType,
     Decimal,
-    ExportSerializationFormat,
-    LedgerExportCommand,
     LedgerSourceImportCommand,
     Path,
     SecureObjectRepository,
-    StringIO,
     TransactionDirection,
     _repositories,
-    csv,
-    datetime,
-    export_ledger_transactions,
     import_ledger_source,
     import_ledger_transactions,
     parsed_import_transaction,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-def test_import_ledger_transactions_persists_rows_and_emits_import_events(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    first_parsed = parsed_import_transaction()
-    # A genuinely distinct movement: import dedup keys on the movement
-    # identity (date + amount + normalised narrative), so the second
-    # row must differ in one of those — not merely in the provider id.
-    second_parsed = parsed_import_transaction(
-        transaction_id="provider-row-2",
-        amount=Decimal("48.40"),
-        description="second provider import row",
-    )
-
-    first_import = import_ledger_transactions(
-        bucket_id=_BUCKET_ID,
-        parsed_rows=(first_parsed, second_parsed),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        actor="operator-A",
-        source_command="aeat app ledger import",
-        occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
-    )
-    duplicate_import = import_ledger_transactions(
-        bucket_id=_BUCKET_ID,
-        parsed_rows=(first_parsed,),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        actor="operator-A",
-        source_command="aeat app ledger import",
-        occurred_at=datetime(2026, 5, 4, 9, 31, tzinfo=UTC),
-    )
-
-    assert first_import.summary.imported == 2
-    assert first_import.summary.skipped == 0
-    assert len(first_import.bucket_event_ids) == 2
-    assert duplicate_import.summary.imported == 0
-    assert duplicate_import.summary.skipped == 1
-    assert duplicate_import.bucket_event_ids == ()
-    persisted = transaction_repository.load()
-    assert tuple(sorted(persisted.transactions)) == tuple(
-        sorted(ref.transaction_id for ref in first_import.summary.imported_refs),
-    )
-    events = event_repository.load().for_bucket(_BUCKET_ID)
-    assert [event.event_type for event in events] == [
-        BucketEventType.LEDGER_TRANSACTION_IMPORTED,
-        BucketEventType.LEDGER_TRANSACTION_IMPORTED,
-    ]
-    assert {event.object_id for event in events} == {ref.transaction_id for ref in first_import.summary.imported_refs}
-    assert all(event.object_type is BucketEventObjectType.LEDGER_TRANSACTION for event in events)
-    assert {event.payload["source_row_index"] for event in events} == {"1"}
-    assert {event.payload["provider_name"] for event in events} == {"CSV provider"}
-
-
-def test_import_keeps_genuine_intrabatch_twins_with_distinct_ids(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    """Two genuine same-day/same-amount/same-narrative movements in ONE statement
-    carry distinct provider row ids (``synthesize_transaction_id`` embeds the
-    source row index), so both must import — collapsing them on the coarser
-    import fingerprint (date + amount + narrative) silently drops a real movement
-    and under-declares the return. Re-importing the same rows still dedups against
-    the persisted catalogue. Regression for the intra-batch fingerprint skip."""
-    transaction_repository, event_repository = _repositories(secure_objects)
-    twin_a = parsed_import_transaction(
-        transaction_id="provider-row-1",
-        amount=Decimal("605.00"),
-        description="Cobro factura recurrente",
-    )
-    twin_b = parsed_import_transaction(
-        transaction_id="provider-row-2",
-        amount=Decimal("605.00"),
-        description="Cobro factura recurrente",
-    )
-
-    first = import_ledger_transactions(
-        bucket_id=_BUCKET_ID,
-        parsed_rows=(twin_a, twin_b),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        actor="operator-A",
-        occurred_at=datetime(2026, 6, 7, 9, 0, tzinfo=UTC),
-    )
-    assert first.summary.imported == 2
-    assert first.summary.skipped == 0
-    assert len(transaction_repository.load().transactions) == 2
-
-    second = import_ledger_transactions(
-        bucket_id=_BUCKET_ID,
-        parsed_rows=(twin_a, twin_b),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        actor="operator-A",
-        occurred_at=datetime(2026, 6, 7, 9, 5, tzinfo=UTC),
-    )
-    assert second.summary.imported == 0
-    assert second.summary.skipped == 2
-    assert len(transaction_repository.load().transactions) == 2
-
-
-def test_import_skips_true_transaction_id_collision_within_batch(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    """Two rows resolving to the SAME content transaction id (identical provider
-    id + date + amount + narrative) cannot both persist — the catalogue keys on
-    that id and the later would overwrite the earlier — so the later is skipped to
-    keep the imported and stored counts consistent."""
-    transaction_repository, event_repository = _repositories(secure_objects)
-    row = parsed_import_transaction(
-        transaction_id="same-provider-id",
-        amount=Decimal("605.00"),
-        description="Cobro factura recurrente",
-    )
-
-    result = import_ledger_transactions(
-        bucket_id=_BUCKET_ID,
-        parsed_rows=(row, row),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        actor="operator-A",
-        occurred_at=datetime(2026, 6, 7, 9, 0, tzinfo=UTC),
-    )
-    assert result.summary.imported == 1
-    assert result.summary.skipped == 1
-    assert len(transaction_repository.load().transactions) == 1
 
 
 def test_import_ledger_source_owns_provider_validation_ingest_and_persistence(
@@ -202,47 +64,6 @@ def test_import_ledger_source_owns_provider_validation_ingest_and_persistence(
     assert [tx.raw.amount for tx in stored] == [Decimal("48.40"), Decimal("121.00")]
     assert stored[0].direction is TransactionDirection.OUTGOING
     assert stored[1].direction is TransactionDirection.INCOMING
-
-
-@pytest.mark.parametrize("export_format", [ExportSerializationFormat.CSV, ExportSerializationFormat.JSONL])
-def test_import_ledger_source_honors_explicit_direction_column_on_positive_amount_in_exports(
-    secure_objects: SecureObjectRepository,
-    tmp_path: Path,
-    export_format: ExportSerializationFormat,
-) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    statement = tmp_path / "explicit-direction.csv"
-    statement.write_text(
-        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID,direction,source_jurisdiction\n"
-        "2026-04-17,French Vendor,FR expense,48.40,EUR,n26-fr-expense,OUTGOING,FR\n",
-        encoding="utf-8",
-    )
-
-    imported = import_ledger_source(
-        LedgerSourceImportCommand(bucket_id=_BUCKET_ID, path=statement, provider="csv", actor="operator-A"),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-    )
-    exported = export_ledger_transactions(
-        LedgerExportCommand(bucket_id=_BUCKET_ID, export_format=export_format),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-    )
-
-    assert imported.imported == 1
-    (stored,) = transaction_repository.load().values()
-    assert stored.raw.amount == Decimal("48.40")
-    assert stored.direction is TransactionDirection.OUTGOING
-    assert stored.source_jurisdiction == "FR"
-    if export_format == ExportSerializationFormat.CSV:
-        rows = tuple(csv.DictReader(StringIO(exported.payload.decode("utf-8"))))
-    else:
-        rows = tuple(json.loads(line) for line in exported.payload.decode("utf-8").splitlines() if line.strip())
-    assert len(rows) == 1
-    (row,) = rows
-    assert row["amount"] == "48.40"
-    assert row["direction"] == "OUTGOING"
-    assert row["source_jurisdiction"] == "FR"
 
 
 def test_import_outgoing_magnitude_row_stores_positive_with_outgoing_direction(

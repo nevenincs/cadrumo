@@ -334,6 +334,7 @@ class SetupAnswers(BaseModel):
     professional_income_withholding_ge_70pct: bool = False
     pays_rent_with_retencion: bool = False
     pays_capital_income_with_retencion: bool = False
+    modelo_111_no_retenciones_periods: str = ""
     irpf_estimation_regime: Any = ""
     irpf_special_regime: Any = ""
     """IRPF special-regime axis. Blank for the general regime."""

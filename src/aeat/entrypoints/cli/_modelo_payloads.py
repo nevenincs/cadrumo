@@ -47,7 +47,15 @@ if TYPE_CHECKING:
 
 
 class WorkUnitPayload(OutputSchema):
-    """Work unit fields shared across create / status / rename / discard."""
+    """Shared JSON projection of a bucket-scoped :class:`WorkUnit`.
+
+    The payload carries the stable :class:`WorkUnitId`, operator-facing short
+    ids, current / filed :class:`CalculationRevisionId` pointers, optional
+    :class:`FilingRecordId`, and discard metadata used by create, list, status,
+    rename, and discard lifecycle commands.  It is lifecycle metadata only:
+    calculation, verification, filing, and import evidence remain in their own
+    command payloads.
+    """
 
     work_unit_id: WorkUnitId
     short_work_unit_id: str
@@ -273,6 +281,16 @@ class FormulaPayload(OutputSchema):
 
 @register_schema("modelo.work.create")
 class WorkCreateResult(OutputSchema):
+    """Creation result returned by ``aeat app modelo work create``.
+
+    Mirrors :class:`WorkUnitPayload` after the application layer resolves the
+    registry revision and active bucket profile, then adds create-specific
+    status fields such as ``name_applied`` and
+    ``applicability_guard_bypassed``.  Newly created work units have no current
+    calculation revision or filing record until later lifecycle commands
+    populate those pointers.
+    """
+
     operation: str = "modelo.work.create"
     status: str
     status_message: str
@@ -302,7 +320,12 @@ class WorkCreateResult(OutputSchema):
 
 @register_schema("modelo.work.list")
 class WorkListResult(OutputSchema):
-    """Work-unit listing result returned by ``aeat app modelo work list``."""
+    """Work-unit listing result returned by ``aeat app modelo work list``.
+
+    The list contains :class:`WorkUnitPayload` rows for the selected bucket and
+    filters.  Discarded work units stay preserved in storage for audit history
+    but are omitted unless ``include_discarded`` is true.
+    """
 
     operation: str = "modelo.work.list"
     bucket_id_filter: str | None = None
@@ -313,7 +336,13 @@ class WorkListResult(OutputSchema):
 
 @register_schema("modelo.work.status")
 class WorkStatusResult(OutputSchema):
-    """Work-unit status result returned by ``aeat app modelo work status``."""
+    """Status projection returned by ``aeat app modelo work status``.
+
+    Reports one :class:`WorkUnit` lifecycle root together with the current
+    calculation, filed calculation, and filing-record pointers that default
+    downstream work-unit commands.  It does not inline the referenced
+    calculation, verification, or filing payloads.
+    """
 
     operation: str = "modelo.work.status"
     work_unit_id: WorkUnitId
@@ -340,7 +369,13 @@ class WorkStatusResult(OutputSchema):
 
 @register_schema("modelo.work.rename")
 class WorkRenameResult(OutputSchema):
-    """Work-unit rename confirmation returned by ``aeat app modelo work rename``."""
+    """Rename confirmation returned by ``aeat app modelo work rename``.
+
+    A rename preserves the :class:`WorkUnitId`, registry revision, and stored
+    calculation / filing pointers while updating only display metadata and
+    ``updated_at``.  Discarded work units are rejected before this payload is
+    emitted.
+    """
 
     operation: str = "modelo.work.rename"
     work_unit_id: WorkUnitId
@@ -369,9 +404,11 @@ class WorkRenameResult(OutputSchema):
 class WorkDiscardResult(OutputSchema):
     """Work-unit discard confirmation returned by ``aeat app modelo work discard``.
 
-    The discard is an audit-grade state transition: the work unit is
-    preserved with ``discarded_at`` / ``discarded_by`` / ``discard_reason``
-    populated and subsequent mutations are rejected.
+    The discard is an audit-grade transition on the :class:`WorkUnit`
+    lifecycle root: the record is preserved with ``discarded_at`` /
+    ``discarded_by`` / ``discard_reason`` populated, default listings hide it,
+    and subsequent mutations are rejected.  It never deletes the stored
+    calculation revisions or contacts AEAT.
     """
 
     operation: str = "modelo.work.discard"

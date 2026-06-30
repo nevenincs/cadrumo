@@ -277,6 +277,7 @@ src/aeat/_data/corpus/manuals/**/source.html/
 
 # Scratch / ad-hoc workspace / temp
 scratch/*
+.scratch-*/
 .campaign-runs/
 .vault-scratch/
 .dedup-scan/

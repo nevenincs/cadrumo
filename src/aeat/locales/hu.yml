@@ -684,6 +684,12 @@ application:
         <MODELO>`.'
       calculate_decimal_input_invalid: 'A(z) %{flag} ertek %{key} kulcshoz nem decimalis
         szam: %{value}'
+      calculate_detail_casilla_unsupported: A(z) %{key} casilla a Modelo 180 perceptor/ingatlan
+        reszletsor mezojet nevezi meg, nem skalaris decimalis casilla bemenetet. A
+        helyi --casilla csatorna csak skalaris decimalis casillakat fogad; a Modelo
+        180 perceptor/ingatlan reszletsorai meg nem tamogatottak a nyilvanos --row
+        feluleten. Hasznald az aeat app modelo aggregate --modelo 180 --retencion-observation
+        parancsot a tamogatott eves perceptor-szam/base/retenciones forrashoz.
       calculate_m184_share_sum_invalid: 'A 184-es modell tag sorainak reszesedesi
         szazalekai pontosan 100%-ot kell adjanak; kapott ertek: %{total}, sorok: %{count}.'
       calculate_m347_threshold_not_met: A 347-es modell %{nif} partnere osszesen %{total},
@@ -736,9 +742,9 @@ application:
       export_revision_state_refused: A(z) %{calculation_revision_id} számítási revízió
         nincs ellenőrzött-teljes vagy beadott állapotban, ezért nem exportálható.
       export_unsupported: A(z) %{modelo} modelo nem exportalhato fichero-BOE fajlba,
-        mert %{reason}. A szamitas, az ellenorzes es a helyi bevallasi rekordok
-        letezhetnek, de ez a parancs ehhez a modelohoz nem tud AEAT feltoltesi
-        fajlt kesziteni, es nem igazolja a BOE/export helyesseget.
+        mert %{reason}. A szamitas, az ellenorzes es a helyi bevallasi rekordok letezhetnek,
+        de ez a parancs ehhez a modelohoz nem tud AEAT feltoltesi fajlt kesziteni,
+        es nem igazolja a BOE/export helyesseget.
       external_filing_evidence_reference_blank: A külső bevallás importálásához nem
         üres evidence_reference_id szükséges.
       external_filing_no_casilla_values: A külső bevallás importálásához legalább
@@ -1117,6 +1123,7 @@ application:
       registry_policy_invalid: A registry ellenőrzési házirendje nem tölthető be.
       registry_snapshot_invalid: A bevallás ellenőrzéséhez szükséges registry-pillanatkép
         nem tölthető be.
+      registry_snapshot_ref_mismatch: 'A(z) %{modelo} %{period} modell registry-pillanatkepe nem egyezik a nyilatkozaton rogzitett hivatkozassal: megfigyelt %{observed_ref}, feloldott %{resolved_ref}.'
   wizard:
     errors:
       create_missing_filing_baseline: 'A profil létrehozásához hiányoznak a bevallási
@@ -1264,8 +1271,6 @@ cli:
           group_help: Egyeztetési katalógus számlái, amelyek tranzakciókhoz kapcsolhatók.
           invoice_id_help: Katalógusbeli számla azonosítója (vagy egyértelmű előtag).
           list_help: Az egyeztetési katalógus számláinak listázása.
-          operation_type_unsupported: 'A(z) --operation-type {value} még nem tudja
-            feltölteni a 349-es modellt a katalógusból; támogatott: {supported}.'
           remove_help: Egy egyeztetési katalógusbeli számla törlése.
           view_help: Egy egyeztetési katalógusbeli számla megjelenítése azonosító
             vagy egyértelmű előtag alapján.
@@ -1837,11 +1842,7 @@ cli:
         create_stub_modelo_714_refused: 'A(z) %{modelo} nyomtatvany (vagyonado) munkafeladat-letrehozasa
           ebben a CLI-ben nem tamogatott. Jogi alap: Ley 19/1991 28. cikk es Orden
           HAC/1023/2021. A bevallast az AEAT Sede feluleten kell benyujtani.'
-        create_stub_modelo_refused: 'A(z) %{modelo} nyomtatvány (külföldön tartott
-          virtuális pénznemek informatív bevallása) munkafeladat-létrehozása ebben
-          a CLI-ben nem támogatott. Jogi alap: Orden HFP/887/2023 és RD 1065/2007
-          Art. 42 quater; a jelentési küszöb 50 000 EUR december 31-én. Jogszabályi
-          kötelezettség esetén az AEAT Sede felületén kell benyújtani.'
+        create_stub_modelo_refused: 'A(z) %{modelo} nyomtatvány (külföldön tartott virtuális pénznemek informatív bevallása) munkafeladat-létrehozása ebben a CLI-ben nem támogatott. Jogi alap: Orden HFP/886/2023 és RD 1065/2007 Art. 42 quater; a jelentési küszöb 50 000 EUR december 31-én. Jogszabályi kötelezettség esetén az AEAT Sede felületén kell benyújtani.'
         dependencies_help: Keresztidoszaki bevallastorteneti fuggosegek es az aktualis
           clean-state blokkolok megjelenitese a celbevallashoz
         discard_help: Munkaegység eldobottként megjelölése (auditálható állapotváltás).
@@ -2032,20 +2033,10 @@ cli:
         runs_help: 'Mentett munkafolyamat-futtatások listázása futtatásazonosítókkal,
           legújabb először. Futtatásazonosítót használjon: `aeat app modelo work resume`.
           Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
-        sal_beneficio_neto_help: A munkavállalói tulajdonú társaság (SAL/SLL, 44/2015.
-          törvény 14. cikk) tárgyévi nettó nyeresége. Az asszisztens 10%-ot alkalmaz
-          a kötelező külön tartalék kiszámításához, a jegyzett tőke 50%-os küszöbével
-          korlátozva. Használd a --sal-reserva-dotada és --sal-capital-social opciókkal
-          együtt.
-        sal_capital_social_help: 'A munkavállalói tulajdonú társaság jegyzett tőkéje
-          (44/2015. törvény 14. cikk). Az 50%-os teszt nevezője: a dotáció nulla,
-          amikor a felhalmozott tartalék eléri a jegyzett tőke 50%-át. Szükséges a
-          --sal-beneficio-neto és --sal-reserva-dotada opciókkal együtt.'
+        sal_beneficio_neto_help: 'A munkavállalói tulajdonú társaság (SAL/SLL, 44/2015. törvény 14. cikk) tárgyévi nettó nyeresége. Az asszisztens 10%-ot alkalmaz a kötelező külön tartalék kiszámításához, a jegyzett tőke kétszeresét egy eurócenttel meghaladó küszöbig korlátozva. Használd a --sal-reserva-dotada és --sal-capital-social opciókkal együtt.'
+        sal_capital_social_help: 'A munkavállalói tulajdonú társaság jegyzett tőkéje (44/2015. törvény 14. cikk). A szigorú küszöb alapja: a dotáció nulla, amikor a felhalmozott tartalék eléri a jegyzett tőke kétszeresét egy eurócenttel meghaladó összeget. Szükséges a --sal-beneficio-neto és --sal-reserva-dotada opciókkal együtt.'
         sal_computation_error: 'SAL számítási hiba: %{message}'
-        sal_reserva_dotada_help: Korábbi években felhalmozott külön tartalék (44/2015.
-          törvény 14. cikk). Annak ellenőrzésére szolgál, hogy a tartalék már elérte-e
-          a jegyzett tőke 50%-át. Szükséges a --sal-beneficio-neto és --sal-capital-social
-          opciókkal együtt.
+        sal_reserva_dotada_help: 'Korábbi években felhalmozott külön tartalék (44/2015. törvény 14. cikk). Annak ellenőrzésére szolgál, hogy a tartalék már elérte-e a jegyzett tőke kétszeresét egy eurócenttel meghaladó összeget. Szükséges a --sal-beneficio-neto és --sal-capital-social opciókkal együtt.'
         sal_reserva_not_decimal: A --sal-* értékeknek decimális összegeknek kell lenniük.
         selector_ambiguous: Több aktív munkaegység illeszkedik erre a modelo/év/időszak
           párosra. Válasszon nyilvántartási revíziót vagy adjon meg pontos munkaegység-azonosítót.
@@ -2729,7 +2720,8 @@ cli:
         preflight` nem jelöli hiányzóként a kategóriát bevételeknél.
       irpf_header: IRPF-KATEGORIAK A --irpf-category KAPCSOLOHOZ
       irpf_id_column: irpf-category (ezt az erteket adja meg)
-      irpf_purpose_activity_income_withholding: szakmai tevekenysegi visszatartas (netto bevetel vagy kiadas)
+      irpf_purpose_activity_income_withholding: szakmai tevekenysegi visszatartas
+        (netto bevetel vagy kiadas)
       irpf_purpose_employment_income: munkaviszonybol szarmazo jovedelem (nem netto
         szamlakhoz)
       irpf_purpose_rent_expense_withholding: netto berleti dij visszatartasa
@@ -3860,10 +3852,12 @@ errors:
     lookup_dispatch_arg_count: A(z) {op} képletoperátor {expected} argumentumot vár.
     lookup_dispatch_arg_kind: A(z) {op} képletoperátornál a(z) {position}. pozíciónak
       {expected_kind} levélnek kell lennie.
-    m210_imputation_coefficient_invalid: errors.calc.m210_imputation_coefficient_invalid
-    m210_imputation_days_invalid: errors.calc.m210_imputation_days_invalid
-    m210_imputation_no_catastral_value_missing: errors.calc.m210_imputation_no_catastral_value_missing
-    m210_imputation_no_filing_year: errors.calc.m210_imputation_no_filing_year
+    m210_gastos_deducibles_negative: 'A(z) M210 gastos_deducibles %{casilla_id} nem lehet negativ; kapott ertek %{value}.'
+    m210_gastos_deducibles_not_allowed: 'A(z) M210 gastos_deducibles %{casilla_id} csak az EU/EGT 24.6 cikk szerinti uton engedelyezett; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.'
+    m210_imputation_coefficient_invalid: 'A(z) M210 ingatlan-imputacios egyutthato %{casilla_id} csak a registryben rogzitett Art. 85 kulcsok egyike lehet (%{allowed_values}); kapott ertek %{value}.'
+    m210_imputation_days_invalid: 'A(z) M210 imputacios napok %{casilla_id} erteke 1 es %{max_days} kozotti egesz szam kell legyen; kapott ertek %{value}.'
+    m210_imputation_no_catastral_value_missing: 'Kataszteri ertek nelkuli M210 ingatlan-imputaciohoz pozitiv szerzesi ertek vagy hatosag altal megallapitott ertek kell (%{acquisition_casilla_id}, %{administrative_casilla_id}).'
+    m210_imputation_no_filing_year: 'Az M210 ingatlan-imputacio szamitasahoz nem nulla bevallasi ev szukseges.'
     parameter_unknown: A(z) {parameter_id} paraméter nincs regisztrálva.
     relation_value_missing: A(z) {relation_id} relációnak nincs megadott értéke.
     text_input_non_text_casillas: errors.calc.text_input_non_text_casillas
@@ -5076,13 +5070,17 @@ wizard:
       legal-name:
         help: Jogi személy cégneve az exportfejlécekhez
       ley-49-2002-option-date:
-        help: 'Rogziti a 036-os nyomtatvany 653-as mezojenek datumat a Ley 49/2002 II. cime szerinti valasztashoz.'
+        help: Rogziti a 036-os nyomtatvany 653-as mezojenek datumat a Ley 49/2002
+          II. cime szerinti valasztashoz.
       ley-49-2002-option-declared:
-        help: 'Rogziti, hogy a 036-os nyomtatvany 651-es mezoje bejelenti-e a Ley 49/2002 II. cime szerinti valasztast.'
+        help: Rogziti, hogy a 036-os nyomtatvany 651-es mezoje bejelenti-e a Ley 49/2002
+          II. cime szerinti valasztast.
       ley-49-2002-renunciation-date:
-        help: 'Rogziti a 036-os nyomtatvany 654-es mezojenek datumat a Ley 49/2002 II. cime szerinti lemondashoz.'
+        help: Rogziti a 036-os nyomtatvany 654-es mezojenek datumat a Ley 49/2002
+          II. cime szerinti lemondashoz.
       ley-49-2002-renunciation-declared:
-        help: 'Rogziti, hogy a 036-os nyomtatvany 652-es mezoje bejelenti-e a Ley 49/2002 II. cime szerinti rendszerrol valo lemondast.'
+        help: Rogziti, hogy a 036-os nyomtatvany 652-es mezoje bejelenti-e a Ley 49/2002
+          II. cime szerinti rendszerrol valo lemondast.
       llm-vision:
         help: Helyi LLM-látás engedélyezése a számlák beolvasásához.
       monedas-virtuales-extranjero-above-threshold:
@@ -5100,6 +5098,10 @@ wizard:
         help: CLI kimeneti nyelv ehhez a profilhoz
       pays-capital-income-with-retencion:
         help: Forrásadóval terhelt tőkejövedelmet fizet
+      modelo-111-no-retenciones-periods:
+        help: 'Vesszővel elválasztott Modelo 111 nem kötelezett időszakok, ÉÉÉÉ:IDŐSZAK
+          formátumban (például 2025:2T,2025:3T). Csak akkor használja, ha nem
+          történt forrásadó-köteles kifizetés.'
       pays-professionals-with-retencion:
         help: Forrásadóval terhelt díjazást fizet szakembereknek
       pays-rent-with-retencion:
@@ -5240,6 +5242,10 @@ wizard:
         prompt: Külföldi virtuális valuták meghaladják a Modelo 721 küszöbértékét
       pays-capital-income-with-retencion:
         prompt: Forrásadóval terhelt tőkejövedelmet fizet
+      modelo-111-no-retenciones-periods:
+        help: 'ÉÉÉÉ:IDŐSZAK időszakok, amikor nem történt retención vagy ingreso
+          a cuenta alá eső kifizetés, ezért nem nyújtandó be üres Modelo 111.'
+        prompt: Modelo 111 forrásadó nélküli időszakok
       pays-professionals-with-retencion:
         prompt: Forrásadóval terhelt díjazást fizet szakembereknek
       pays-rent-with-retencion:
@@ -5475,17 +5481,23 @@ wizard:
             label: Kereskedelmi célú polgári társaság
         prompt: Jogi forma
       ley-49-2002-option-date:
-        help: 'A 036-os nyomtatvany 653-as mezojehez tartozo ISO datumot hasznald.'
-        prompt: 'A Ley 49/2002 szerinti kulonleges rendszer valasztasanak bejelentett datuma'
+        help: A 036-os nyomtatvany 653-as mezojehez tartozo ISO datumot hasznald.
+        prompt: A Ley 49/2002 szerinti kulonleges rendszer valasztasanak bejelentett
+          datuma
       ley-49-2002-option-declared:
-        help: 'A 036-os nyomtatvany 651-es mezojeben szereplo bejelentesi tenyt hasznald; a jogi alkalmazas tovabbra is a torvenyi feltetelektol es a lemondas hianyatol fugg.'
-        prompt: 'A szervezet a 036-os nyomtatvanyon bejelentette a Ley 49/2002 II. cime szerinti kulonleges adozasi rendszer valasztasat?'
+        help: A 036-os nyomtatvany 651-es mezojeben szereplo bejelentesi tenyt hasznald;
+          a jogi alkalmazas tovabbra is a torvenyi feltetelektol es a lemondas hianyatol
+          fugg.
+        prompt: A szervezet a 036-os nyomtatvanyon bejelentette a Ley 49/2002 II.
+          cime szerinti kulonleges adozasi rendszer valasztasat?
       ley-49-2002-renunciation-date:
-        help: 'A 036-os nyomtatvany 654-es mezojehez tartozo ISO datumot hasznald.'
-        prompt: 'A Ley 49/2002 szerinti kulonleges rendszerrol valo lemondas bejelentett datuma'
+        help: A 036-os nyomtatvany 654-es mezojehez tartozo ISO datumot hasznald.
+        prompt: A Ley 49/2002 szerinti kulonleges rendszerrol valo lemondas bejelentett
+          datuma
       ley-49-2002-renunciation-declared:
-        help: 'A 036-os nyomtatvany 652-es mezojeben szereplo bejelentesi tenyt hasznald.'
-        prompt: 'A szervezet a 036-os nyomtatvanyon bejelentette a Ley 49/2002 II. cime szerinti kulonleges adozasi rendszerrol valo lemondast?'
+        help: A 036-os nyomtatvany 652-es mezojeben szereplo bejelentesi tenyt hasznald.
+        prompt: A szervezet a 036-os nyomtatvanyon bejelentette a Ley 49/2002 II.
+          cime szerinti kulonleges adozasi rendszerrol valo lemondast?
       new-entity-first-two-profit-periods:
         help: Csak jogi személyekre vonatkozik. Ha be van jelölve, az entitás 15%-os
           kedvezményes adókulcs szerint adózik az adott két időszakban.

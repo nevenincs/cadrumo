@@ -746,6 +746,12 @@ application:
         validos.
       calculate_decimal_input_invalid: 'El valor %{flag} de %{key} no es decimal:
         %{value}'
+      calculate_detail_casilla_unsupported: La casilla %{key} nombra un campo de detalle
+        de perceptor/inmueble del Modelo 180, no una casilla decimal escalar. El canal
+        local --casilla solo acepta casillas decimales escalares; las filas de detalle
+        de perceptor/inmueble del Modelo 180 aun no estan soportadas en la superficie
+        publica --row. Usa aeat app modelo aggregate --modelo 180 --retencion-observation
+        para la fuente soportada de numero de perceptores/base/retenciones anual.
       calculate_m184_share_sum_invalid: Los porcentajes de participacion de las filas
         de miembro del modelo 184 deben sumar exactamente 100%; se obtuvo %{total}
         en %{count} filas.
@@ -1192,6 +1198,7 @@ application:
       registry_policy_invalid: No se pudo cargar la política de verificación del registro.
       registry_snapshot_invalid: No se pudo cargar el snapshot del registro para verificar
         la declaración.
+      registry_snapshot_ref_mismatch: 'La instantanea de registro para el modelo %{modelo} %{period} no coincide con la referencia estampada en la declaracion: observada %{observed_ref}, resuelta %{resolved_ref}.'
   wizard:
     errors:
       create_missing_filing_baseline: 'A la creación del perfil le faltan datos de
@@ -1335,8 +1342,6 @@ cli:
           group_help: Facturas del catálogo de conciliación que se vinculan a transacciones.
           invoice_id_help: Identificador de factura del catálogo (o prefijo no ambiguo).
           list_help: Lista las facturas del catálogo de conciliación.
-          operation_type_unsupported: '--operation-type {value} todavía no puede alimentar
-            el Modelo 349 desde el catálogo; admitidos: {supported}.'
           remove_help: Elimina una factura del catálogo de conciliación.
           view_help: Muestra una factura del catálogo de conciliación por identificador
             o prefijo no ambiguo.
@@ -1932,11 +1937,7 @@ cli:
           no esta soportado para crear unidades de trabajo en este CLI. Base legal:
           Ley 19/1991 Art. 28 y Orden HAC/1023/2021. Presenta la declaracion en la
           Sede de la AEAT.'
-        create_stub_modelo_refused: 'Modelo %{modelo} (declaración informativa sobre
-          monedas virtuales situadas en el extranjero) no está soportado para crear
-          unidades de trabajo en este CLI. Autoridad legal: Orden HFP/887/2023 y RD
-          1065/2007 Art. 42 quáter; el umbral informativo es 50.000 EUR a 31 de diciembre.
-          Presenta la declaración en la Sede de la AEAT cuando exista obligación legal.'
+        create_stub_modelo_refused: 'Modelo %{modelo} (declaración informativa sobre monedas virtuales situadas en el extranjero) no está soportado para crear unidades de trabajo en este CLI. Autoridad legal: Orden HFP/886/2023 y RD 1065/2007 Art. 42 quáter; el umbral informativo es 50.000 EUR a 31 de diciembre. Presenta la declaración en la Sede de la AEAT cuando exista obligación legal.'
         dependencies_help: Muestra dependencias de historial de presentaciones entre
           modelos y los bloqueos clean-state actuales para una presentación objetivo
         discard_help: Marcar una unidad de trabajo como descartada (transición de
@@ -2125,18 +2126,10 @@ cli:
         runs_help: Listar las ejecuciones de flujo persistidas con sus ids de ejecución,
           de la más reciente a la más antigua. Usa un id de ejecución con `aeat app
           modelo work resume`. Solo local; nunca contacta con AEAT.
-        sal_beneficio_neto_help: Beneficio neto del ejercicio de la Sociedad Laboral
-          (SAL/SLL, Ley 44/2015 Art. 14). Se aplica el 10% para calcular la dotación
-          obligatoria a la reserva especial, limitada por el umbral del 50% del capital
-          social. Úsalo junto con --sal-reserva-dotada y --sal-capital-social.
-        sal_capital_social_help: 'Capital social de la Sociedad Laboral (Ley 44/2015
-          Art. 14). Denominador del test del 50%: la dotación se anula cuando la reserva
-          acumulada alcanza el 50% del capital social. Necesario junto con --sal-beneficio-neto
-          y --sal-reserva-dotada.'
+        sal_beneficio_neto_help: 'Beneficio neto del ejercicio de la Sociedad Laboral (SAL/SLL, Ley 44/2015 Art. 14). Se aplica el 10% para calcular la dotación obligatoria a la reserva especial, limitada al primer céntimo por encima del doble del capital social. Úsalo junto con --sal-reserva-dotada y --sal-capital-social.'
+        sal_capital_social_help: 'Capital social de la Sociedad Laboral (Ley 44/2015 Art. 14). Base del umbral estricto: la dotación se anula cuando la reserva acumulada alcanza el primer céntimo por encima del doble del capital social. Necesario junto con --sal-beneficio-neto y --sal-reserva-dotada.'
         sal_computation_error: 'Error de cómputo SAL: %{message}'
-        sal_reserva_dotada_help: Reserva especial acumulada en ejercicios anteriores
-          (Ley 44/2015 Art. 14). Se usa para comprobar si ya se ha alcanzado el límite
-          del 50% del capital social. Necesario junto con --sal-beneficio-neto y --sal-capital-social.
+        sal_reserva_dotada_help: 'Reserva especial acumulada en ejercicios anteriores (Ley 44/2015 Art. 14). Se usa para comprobar si la reserva ya alcanza el primer céntimo por encima del doble del capital social. Necesario junto con --sal-beneficio-neto y --sal-capital-social.'
         sal_reserva_not_decimal: Los valores --sal-* deben ser importes decimales.
         selector_ambiguous: Mas de una unidad de trabajo activa coincide con este
           modelo/ano/periodo. Elija una revision del registro o pase un id de unidad
@@ -2815,7 +2808,8 @@ cli:
         preflight` no marcan un ingreso como missing_category.
       irpf_header: CATEGORIAS DE IRPF PARA --irpf-category
       irpf_id_column: irpf-category (pasa este valor exacto)
-      irpf_purpose_activity_income_withholding: retencion por actividad profesional cobrada o pagada neta
+      irpf_purpose_activity_income_withholding: retencion por actividad profesional
+        cobrada o pagada neta
       irpf_purpose_employment_income: rendimientos del trabajo (no para facturas netas)
       irpf_purpose_rent_expense_withholding: retencion de alquiler pagado neto
       irpf_usage_example: 'Alquiler neto: --category-id {rent_category} --irpf-category
@@ -3945,10 +3939,12 @@ errors:
     lookup_dispatch_arg_count: El operador {op} de la fórmula espera {expected} argumentos.
     lookup_dispatch_arg_kind: El operador {op} de la fórmula requiere que {position}
       sea una hoja de tipo {expected_kind}.
-    m210_imputation_coefficient_invalid: errors.calc.m210_imputation_coefficient_invalid
-    m210_imputation_days_invalid: errors.calc.m210_imputation_days_invalid
-    m210_imputation_no_catastral_value_missing: errors.calc.m210_imputation_no_catastral_value_missing
-    m210_imputation_no_filing_year: errors.calc.m210_imputation_no_filing_year
+    m210_gastos_deducibles_negative: 'Los gastos_deducibles M210 %{casilla_id} no pueden ser negativos; valor recibido %{value}.'
+    m210_gastos_deducibles_not_allowed: 'Los gastos_deducibles M210 %{casilla_id} solo se admiten en la ruta UE/EEE del articulo 24.6; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.'
+    m210_imputation_coefficient_invalid: 'El coeficiente de imputacion inmobiliaria M210 %{casilla_id} debe ser uno de los tipos del art. 85 declarados en el registro (%{allowed_values}); valor recibido %{value}.'
+    m210_imputation_days_invalid: 'Los dias de imputacion M210 %{casilla_id} deben ser un entero entre 1 y %{max_days}; valor recibido %{value}.'
+    m210_imputation_no_catastral_value_missing: 'La imputacion inmobiliaria M210 sin valor catastral requiere un valor de adquisicion o valor comprobado por la Administracion positivo (%{acquisition_casilla_id}, %{administrative_casilla_id}).'
+    m210_imputation_no_filing_year: 'La imputacion inmobiliaria M210 requiere un ejercicio de declaracion no nulo.'
     parameter_unknown: El parámetro {parameter_id} no está registrado.
     relation_value_missing: La relación {relation_id} no tiene valor asignado.
     text_input_non_text_casillas: 'Entrada de texto suministrada para casillas no
@@ -5221,13 +5217,17 @@ wizard:
       legal-name:
         help: Razón social de la persona jurídica para cabeceras de exportación
       ley-49-2002-option-date:
-        help: 'Registra la fecha de la casilla 653 del modelo 036 para la opcion del titulo II de la Ley 49/2002.'
+        help: Registra la fecha de la casilla 653 del modelo 036 para la opcion del
+          titulo II de la Ley 49/2002.
       ley-49-2002-option-declared:
-        help: 'Registra si la casilla 651 del modelo 036 declara la opcion por el titulo II de la Ley 49/2002.'
+        help: Registra si la casilla 651 del modelo 036 declara la opcion por el titulo
+          II de la Ley 49/2002.
       ley-49-2002-renunciation-date:
-        help: 'Registra la fecha de la casilla 654 del modelo 036 para la renuncia al titulo II de la Ley 49/2002.'
+        help: Registra la fecha de la casilla 654 del modelo 036 para la renuncia
+          al titulo II de la Ley 49/2002.
       ley-49-2002-renunciation-declared:
-        help: 'Registra si la casilla 652 del modelo 036 declara la renuncia al regimen del titulo II de la Ley 49/2002.'
+        help: Registra si la casilla 652 del modelo 036 declara la renuncia al regimen
+          del titulo II de la Ley 49/2002.
       llm-vision:
         help: Activar la visión LLM local para leer facturas.
       monedas-virtuales-extranjero-above-threshold:
@@ -5245,6 +5245,10 @@ wizard:
         help: Idioma de salida de la CLI para este perfil
       pays-capital-income-with-retencion:
         help: Paga rentas de capital con retención
+      modelo-111-no-retenciones-periods:
+        help: 'Periodos Modelo 111 sin obligación, separados por comas, formato
+          AAAA:PERIODO (por ejemplo 2025:2T,2025:3T). Usar solo cuando no se
+          pagaron rentas sujetas.'
       pays-professionals-with-retencion:
         help: Paga a profesionales con retención
       pays-rent-with-retencion:
@@ -5390,6 +5394,10 @@ wizard:
         prompt: Monedas virtuales en el extranjero superan el umbral del Modelo 721
       pays-capital-income-with-retencion:
         prompt: Paga rentas de capital con retención
+      modelo-111-no-retenciones-periods:
+        help: 'Periodos AAAA:PERIODO en los que no se pagaron rentas sujetas a retención
+          o ingreso a cuenta, por lo que no se presenta un Modelo 111 en blanco.'
+        prompt: Periodos Modelo 111 sin retenciones
       pays-professionals-with-retencion:
         prompt: Paga a profesionales con retención
       pays-rent-with-retencion:
@@ -5623,17 +5631,20 @@ wizard:
             label: Sociedad civil con objeto mercantil
         prompt: Forma jurídica
       ley-49-2002-option-date:
-        help: 'Usa la fecha ISO correspondiente a la casilla 653 del modelo 036.'
-        prompt: 'Fecha declarada de la opcion por el regimen especial de la Ley 49/2002'
+        help: Usa la fecha ISO correspondiente a la casilla 653 del modelo 036.
+        prompt: Fecha declarada de la opcion por el regimen especial de la Ley 49/2002
       ley-49-2002-option-declared:
-        help: 'Usa el hecho declarado en la casilla 651 del modelo 036; la aplicacion legal sigue condicionada a los requisitos legales y a que no exista renuncia.'
-        prompt: 'La entidad ha presentado en el modelo 036 la opcion por el regimen fiscal especial del titulo II de la Ley 49/2002?'
+        help: Usa el hecho declarado en la casilla 651 del modelo 036; la aplicacion
+          legal sigue condicionada a los requisitos legales y a que no exista renuncia.
+        prompt: La entidad ha presentado en el modelo 036 la opcion por el regimen
+          fiscal especial del titulo II de la Ley 49/2002?
       ley-49-2002-renunciation-date:
-        help: 'Usa la fecha ISO correspondiente a la casilla 654 del modelo 036.'
-        prompt: 'Fecha declarada de la renuncia al regimen especial de la Ley 49/2002'
+        help: Usa la fecha ISO correspondiente a la casilla 654 del modelo 036.
+        prompt: Fecha declarada de la renuncia al regimen especial de la Ley 49/2002
       ley-49-2002-renunciation-declared:
-        help: 'Usa el hecho declarado en la casilla 652 del modelo 036.'
-        prompt: 'La entidad ha presentado en el modelo 036 la renuncia al regimen fiscal especial del titulo II de la Ley 49/2002?'
+        help: Usa el hecho declarado en la casilla 652 del modelo 036.
+        prompt: La entidad ha presentado en el modelo 036 la renuncia al regimen fiscal
+          especial del titulo II de la Ley 49/2002?
       new-entity-first-two-profit-periods:
         help: Aplica solo a personas jurídicas. Si lo marca, la entidad tributa al
           tipo reducido del 15 por ciento durante esos dos periodos.

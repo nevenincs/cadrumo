@@ -769,6 +769,15 @@ _OBLIGATIONS_SECTION = WizardSection(
             suffix="obligations",
         ),
         WizardQuestion(
+            id="modelo-111-no-retenciones-periods",
+            profile_key="withholding.modelo_111_no_retenciones_periods",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.obligations.modelo-111-no-retenciones-periods.prompt"),
+            help=tr("wizard.setup.obligations.modelo-111-no-retenciones-periods.help"),
+            required=False,
+            answer_type=str,
+        ),
+        WizardQuestion(
             id="irpf-estimation-regime",
             profile_key="irpf.estimation_regime",
             widget=WizardWidget.SELECT,
