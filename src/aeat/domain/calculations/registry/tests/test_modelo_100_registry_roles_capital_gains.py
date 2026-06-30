@@ -57,6 +57,35 @@ def test_modelo_100_instalment_collection_year_counts_are_integer(
     assert casilla_id_for_unique_revision_semantic_role(revision, expected_role) == casilla_id
 
 
+@pytest.mark.parametrize("filing_year", range(2020, 2026))
+def test_modelo_100_other_element_imputation_years_are_positional_years(filing_year: int) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    expected_roles = {
+        "0363": "irpf_ganancia_otros_anio_imputacion_1",
+        "0367": "irpf_ganancia_otros_anio_imputacion_2",
+        "0371": "irpf_ganancia_otros_anio_imputacion_3",
+        "0375": "irpf_ganancia_otros_anio_imputacion_4",
+    }
+    casillas_by_id = {
+        casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_roles
+    }
+
+    assert set(casillas_by_id) == set(expected_roles)
+    for casilla_id, expected_role in expected_roles.items():
+        casilla = casillas_by_id[casilla_id]
+
+        assert casilla.label == "Año de imputación"
+        assert tuple(casilla.section) == _OTHER_ELEMENTS_SECTION
+        assert casilla.data_type == "year"
+        assert casilla.semantic_role == expected_role
+        assert set(casilla.legal_refs) >= _CAPITAL_GAIN_REFS
+        assert {
+            f"aeat-dr-100-{filing_year}-dictionary",
+            f"aeat-dr-100-{filing_year}-xsd",
+        }.issubset(casilla.source_refs)
+        assert casilla_id_for_unique_revision_semantic_role(revision, expected_role) == casilla_id
+
+
 @pytest.mark.parametrize("filing_year", [2022, 2023, 2024, 2025])
 def test_modelo_100_crypto_instalment_collection_years_role_uses_total_not_pending_name(
     filing_year: int,
