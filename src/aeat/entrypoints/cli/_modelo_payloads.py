@@ -103,7 +103,14 @@ class WorkPlazoDeadlinePayload(OutputSchema):
 
 
 class CalculationRevisionPayload(OutputSchema):
-    """Calculation revision fields surfaced by calculate / revisions commands."""
+    """Shared JSON projection of a persisted :class:`CalculationRevision`.
+
+    ``casilla_values`` is the flat convenience table keyed by casilla id, while
+    ``observations`` carries the joinable :class:`ObservationPayload` rows with
+    formula, operand, legal-reference, and source-reference provenance. The
+    binding and relation override maps preserve the operator inputs that shaped
+    the draft revision.
+    """
 
     calculation_revision_id: CalculationRevisionId
     work_unit_id: WorkUnitId
@@ -377,6 +384,18 @@ class WorkDiscardResult(OutputSchema):
 
 @register_schema("modelo.work.calculate")
 class WorkCalculateResult(OutputSchema):
+    """Successful ``modelo work calculate`` result payload.
+
+    The calculate CLI flattens the persisted :class:`CalculationRevision` fields
+    from :class:`CalculationRevisionPayload`, then adds the presentation-only
+    values carried by
+    :class:`aeat.application.modelo.ModeloWorkCalculationServiceResult`: Modelo
+    202 modality, backend authorization state, and optional
+    :class:`WorkPlazoDeadlinePayload`. Non-blocking authorization and source
+    diagnostics are projected into the envelope's
+    :class:`aeat.core.json_contract.Notice` rows, not bespoke result fields.
+    """
+
     operation: str = "modelo.work.calculate"
     saved: bool = True
     saved_confirmation: str
