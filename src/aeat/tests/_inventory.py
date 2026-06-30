@@ -247,6 +247,11 @@ def qualified_name(node: ast.AST) -> str:
     return ""
 
 
+def leaf_name(node: ast.AST) -> str:
+    name = qualified_name(node)
+    return name.rsplit(".", 1)[-1] if name else ""
+
+
 def has_marker_on_line_or_adjacent_comment_block(lines: Sequence[str], lineno: int, marker: str) -> bool:
     """Return True when *marker* appears on *lineno* or its leading comment block."""
     idx = lineno - 1
