@@ -37,12 +37,13 @@ from .. import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
+_BUCKET_ID = "20202020-2020-4202-8202-202020202020"
 _COUNTERPARTY_CIF = "A58818501"
 
 
 def _build(invoice_number: str, *, linked: tuple[str, ...] = ()) -> Invoice:
     invoice = build_catalogue_invoice(
-        bucket_id="operator",
+        bucket_id=_BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         counterparty_name="Papeleria Sol SL",
         counterparty_tax_id=_COUNTERPARTY_CIF,
@@ -125,9 +126,9 @@ def _two_invoices_sharing_a_prefix() -> tuple[str, list[Invoice]]:
 
 def test_remove_catalogue_invoice_deletes_unlinked_record(tmp_path) -> None:
     """An unlinked invoice is removed and the updated catalogue persists."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         created = create_catalogue_invoice(
-            bucket_id="operator",
+            bucket_id=_BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             counterparty_name="Papeleria Sol SL",
             counterparty_tax_id=_COUNTERPARTY_CIF,
@@ -141,15 +142,15 @@ def test_remove_catalogue_invoice_deletes_unlinked_record(tmp_path) -> None:
         invoice_id = created.invoice.invoice_id
 
         # Resolve through the repository before removal to prove the read path.
-        resolved = resolve_catalogue_invoice_from_repository(bucket_id="operator", invoice_id=invoice_id[:8])
+        resolved = resolve_catalogue_invoice_from_repository(bucket_id=_BUCKET_ID, invoice_id=invoice_id[:8])
         assert resolved.invoice_id == invoice_id
 
-        result = remove_catalogue_invoice(bucket_id="operator", invoice_id=invoice_id[:8])
+        result = remove_catalogue_invoice(bucket_id=_BUCKET_ID, invoice_id=invoice_id[:8])
         assert result.invoice.invoice_id == invoice_id
         assert invoice_id not in result.catalogue
 
         # The deletion is persisted: a fresh load no longer carries the id.
-        reloaded = InvoiceCatalogueRepository(bucket_id="operator").load()
+        reloaded = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load()
         assert invoice_id not in reloaded
 
 
@@ -160,13 +161,13 @@ def test_remove_catalogue_invoice_refuses_linked_record(tmp_path) -> None:
     citing a vanished invoice — a one-sided link the consistency check flags.
     """
     transaction_id = "a" * 64  # transaction ids are 64-char lowercase hex digests
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         linked_invoice = _build("2026-0142", linked=(transaction_id,))
-        repository = InvoiceCatalogueRepository(bucket_id="operator")
+        repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
         repository.save(InvoiceCatalogue.from_invoices([linked_invoice]))
 
         with pytest.raises(InvoiceValidationError) as exc:
-            remove_catalogue_invoice(bucket_id="operator", invoice_id=linked_invoice.invoice_id)
+            remove_catalogue_invoice(bucket_id=_BUCKET_ID, invoice_id=linked_invoice.invoice_id)
         assert exc.value.translated_message == "application.invoices.lifecycle.errors.remove_linked_invoice"
         assert exc.value.context is not None
         assert exc.value.context["invoice_id"] == linked_invoice.invoice_id
