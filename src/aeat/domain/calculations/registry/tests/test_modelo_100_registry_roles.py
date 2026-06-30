@@ -822,6 +822,61 @@ def test_modelo_100_spouse_disability_marriage_months_are_integer_months() -> No
     )
 
 
+def test_modelo_100_disability_minimum_headcounts_are_integer_counts() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_rows = {
+        _casilla_id("0618"): (
+            "descendientes",
+            ("resultados", "calculo_impuesto_res", "deduc_descendiente_disc_res"),
+            "irpf_descendiente_num_contribuyentes_derecho",
+            Decimal("1"),
+            Decimal("9"),
+        ),
+        _casilla_id("0629"): (
+            "ascendientes",
+            ("resultados", "calculo_impuesto_res", "deduc_ascendiente_disc_res"),
+            "irpf_ascendiente_num_contribuyentes_derecho",
+            None,
+            Decimal("99"),
+        ),
+    }
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_rows}
+
+        assert set(casillas_by_id) == set(expected_rows)
+        for casilla_id, (
+            label_fragment,
+            expected_section,
+            expected_role,
+            min_value,
+            max_value,
+        ) in expected_rows.items():
+            casilla = casillas_by_id[casilla_id]
+            constraints = casilla.constraints
+            expected_sources = {
+                f"aeat-dr-100-{filing_year}-dictionary",
+                f"aeat-dr-100-{filing_year}-input-dictionary",
+                f"aeat-dr-100-{filing_year}-xsd",
+            }
+
+            assert "número de personas con derecho al mínimo" in casilla.label
+            assert label_fragment in casilla.label
+            assert tuple(casilla.section) == expected_section
+            assert casilla.data_type == "integer"
+            assert casilla.semantic_role == expected_role
+            assert "ley-35-2006:art-81-bis" in casilla.legal_refs
+            assert expected_sources.issubset(casilla.source_refs)
+            assert constraints is not None
+            assert constraints.sign == "non_negative"
+            assert constraints.min_value == min_value
+            assert constraints.max_value == max_value
+            assert "ley-35-2006:art-81-bis" in constraints.legal_refs
+            assert expected_sources.issubset(constraints.source_refs)
+
+
 def test_modelo_100_inmueble_0076_habitual_residence_days_are_integer() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
