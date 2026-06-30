@@ -1,4 +1,11 @@
-"""Typer registration for modelo filing-record and verification-report commands."""
+"""Typer registration for modelo filing-record and verification-report commands.
+
+The filing-record commands render stored :class:`aeat.domain.modelos.ModeloRecord`
+rows, import AEAT-attested external evidence through
+:func:`aeat.application.modelo.import_external_filing_evidence`, and record
+operator-supplied local observations for calculation prefill. Verification-report
+commands expose persisted :class:`aeat.domain.modelos.VerificationReport` rows.
+"""
 
 from __future__ import annotations
 
@@ -59,7 +66,7 @@ def register_record_commands(
     resolve_default_actor: Callable[[], str],
     bad_parameter_from_error: Callable[[Exception], typer.BadParameter],
 ) -> None:
-    """Mount filing-record and verification-report commands on the modelo app."""
+    """Mount filing-record and verification-report command groups."""
     global _validate_work_unit_id
     global _parse_amendment_casilla
     global _resolve_default_actor
@@ -74,24 +81,28 @@ def register_record_commands(
 
 
 def _work_unit_id(raw: str) -> str:
+    """Validate a filing-record command work-unit id."""
     if _validate_work_unit_id is None:
         raise RuntimeError("modelo record commands were not registered")
     return _validate_work_unit_id(raw)
 
 
 def _casilla_value(spec: str) -> tuple[CasillaId, Decimal]:
+    """Parse one ``--set`` casilla value through the modelo CLI parser."""
     if _parse_amendment_casilla is None:
         raise RuntimeError("modelo record commands were not registered")
     return _parse_amendment_casilla(spec)
 
 
 def _actor() -> str:
+    """Return the active-profile default actor for record commands."""
     if _resolve_default_actor is None:
         raise RuntimeError("modelo record commands were not registered")
     return _resolve_default_actor()
 
 
 def _bad_from_error(exc: Exception) -> typer.BadParameter:
+    """Adapt application exceptions into Typer parameter errors."""
     if _bad_parameter_from_error is None:
         raise RuntimeError("modelo record commands were not registered")
     return _bad_parameter_from_error(exc)
@@ -239,7 +250,15 @@ def filing_record_import(
         ),
     ] = None,
 ) -> None:
-    """Persist an externally-filed return as a baseline filing record."""
+    """Import AEAT external evidence as a current :class:`aeat.domain.modelos.ModeloRecord`.
+
+    The CLI validates :class:`ExternalEvidenceKind`, parses each ``--set`` value
+    into a ``CasillaId`` decimal, resolves the active profile tax id, and
+    delegates to :func:`aeat.application.modelo.import_external_filing_evidence`.
+    The result is emitted as :class:`FilingRecordImportResult`; it is an
+    AEAT-attested baseline for the amendment path, not a live submission from
+    this application.
+    """
     validated_work_unit_id = _work_unit_id(work_unit_id)
     try:
         kind = ExternalEvidenceKind(evidence_kind)

@@ -217,7 +217,12 @@ class VerificationReportPayload(OutputSchema):
 
 
 class ExternalEvidencePayload(OutputSchema):
-    """External-evidence reference embedded in a filing record."""
+    """JSON projection of :class:`aeat.domain.modelos.ExternalEvidence`.
+
+    The evidence reference records the official AEAT source used to import a
+    filing baseline; it is data observed from outside the application, not proof
+    that this CLI submitted the return.
+    """
 
     kind: str
     reference_id: str
@@ -748,7 +753,15 @@ class WorkRunsResult(OutputSchema):
 
 @register_schema("modelo.filing_record.import")
 class FilingRecordImportResult(OutputSchema):
-    """Filing record created by importing external AEAT evidence."""
+    """Result emitted by ``aeat app modelo filing-record import``.
+
+    The command delegates to
+    :func:`aeat.application.modelo.import_external_filing_evidence` and returns
+    the resulting evidence-bearing :class:`ModeloRecordPayload` with the
+    requested ``evidence_kind`` and ``evidence_reference_id``. Imported records
+    are the baseline consumed by ``modelo work amend`` and remain distinct from a
+    live AEAT submission by this application.
+    """
 
     operation: str = "modelo.filing_record.import"
     evidence_kind: str
