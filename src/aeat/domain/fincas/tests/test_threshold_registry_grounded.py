@@ -22,8 +22,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.resources import bundled_path
-from ...calculations.registry import RegistryValidationError, load_registry_tree, read_parameter, verify_legal_catalogue
+from ....core.resources import bundled_path, resources
+from ...calculations.registry import RegistryValidationError, read_parameter, verify_legal_catalogue
 from .._enums import ReduccionTier
 from .._tier_resolver import (
     DEFAULT_EJERCICIO_AMENDMENT_YEAR,
@@ -50,7 +50,7 @@ _RESOLVER_LEGAL_REFS = (
 
 
 def test_resolver_legal_refs_resolve_against_catalogue_and_bundled_corpus() -> None:
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = resources().modelos.authority.catalogues
     missing = sorted(ref for ref in _RESOLVER_LEGAL_REFS if ref not in catalogues.legal)
 
     assert missing == []
