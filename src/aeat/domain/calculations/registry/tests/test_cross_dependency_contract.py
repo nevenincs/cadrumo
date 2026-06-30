@@ -105,7 +105,7 @@ def test_cross_dependency_roles_match_supported_modelo_hierarchy() -> None:
                 _assert_relation_role_contract(relation, scope=f"{modelo.id}/{revision.id}/{relation.id}")
 
 
-_PROFILE_SCHEDULE_SOURCE_MODELOS = frozenset({"036", "037", "840"})
+_PROFILE_SCHEDULE_SOURCE_MODELOS = frozenset({"036", "840"})
 
 
 def _assert_periodic_to_annual_summary_contract(relation: RelationDefinition, *, scope: str) -> None:
@@ -192,6 +192,19 @@ def test_cross_dependency_source_requirements_are_derivable_for_target_periods()
                         requirement.dependency_treatment
                         == classifications_by_source[requirement.source_modelo].treatment
                     )
+
+
+def test_dependency_classifications_exclude_inactive_census_modelo_037() -> None:
+    modelos, _catalogues = _validated_registry_tree()
+    offenders = [
+        f"{modelo.id}/{revision.id}/{classification.id}"
+        for modelo in modelos
+        for revision in modelo.revisions.values()
+        for classification in revision.dependency_classifications
+        if classification.source_modelo == "037"
+    ]
+
+    assert not offenders, "inactive Modelo 037 must not be an active dependency source: " + ", ".join(offenders)
 
 
 def test_unconsumed_factual_evidence_relations_use_evidence_treatment() -> None:
