@@ -4,8 +4,8 @@ Submission audit records keep the local or imported
 :class:`aeat.domain.submission.ModeloPresentado` lifecycle: draft id, modelo,
 period, taxpayer identity, AEAT receipt metadata when observed, and attempt
 summaries. They are stored as encrypted byte objects in the primary SQL backend
-at :class:`SensitivityClass` AUDIT; no plaintext submission JSON or envelope
-file lands on disk.
+at :class:`~aeat.adapters.persistence.storage.SensitivityClass` ``AUDIT``; no
+plaintext submission JSON or envelope file lands on disk.
 
 See Also:
     :class:`aeat.domain.submission.ModeloPresentado`
@@ -43,8 +43,8 @@ _log = get_logger(__name__)
 class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
     """Encrypted AUDIT repository for :class:`ModeloPresentado` records.
 
-    The :class:`SecureBoundRepository` base stores each
-    :class:`ModeloPresentado` in a
+    The :class:`~aeat.adapters.persistence.storage.SecureBoundRepository` base
+    stores each :class:`ModeloPresentado` in a
     :class:`~aeat.adapters.persistence.storage.Envelope` row under
     :data:`aeat.adapters.persistence.storage.SUBMISSION_RECORDS_NAMESPACE`.
     The natural key is the submission id, so the list and iteration APIs expose
