@@ -838,6 +838,32 @@ def test_modelo_100_inmueble_0088_mixed_use_days_are_integer() -> None:
         )
 
 
+def test_modelo_100_inmueble_rented_days_are_integer() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_labels = {
+        "0101": "Número de días en que el inmueble ha estado arrendado",
+        "0122": "Número de días en que el inmueble ha estado arrendado",
+        "0137": "Número de días en que el inmueble accesorio ha estado arrendado",
+    }
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        for casilla_id, expected_label in expected_labels.items():
+            casilla = next(
+                casilla for casilla in revision.casillas if casilla.id == _casilla_id(casilla_id)
+            )
+
+            assert casilla.label == expected_label
+            assert tuple(casilla.section) == ("toma_datos_ampliada", "inmuebles", "inmueble")
+            assert casilla.data_type == "integer"
+            assert casilla.semantic_role == "irpf_inmueble_dias_arrendado"
+            assert "ley-35-2006:art-23" in casilla.legal_refs
+            assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+                casilla.source_refs,
+            )
+
+
 def test_modelo_100_retrib_especie_no_exenta_total_role_names_aggregate() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
