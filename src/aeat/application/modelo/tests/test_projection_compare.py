@@ -32,6 +32,7 @@ from .._projection import compare_modelo_years
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _T0 = datetime(2026, 6, 25, 9, 0, tzinfo=UTC)
+_BUCKET_ID = "13013013-0130-4130-8130-130130130130"
 _M130_REVISION_ID = "2019-y-siguientes"
 
 
@@ -101,7 +102,7 @@ def _seed_revision(
 
 def test_compare_uses_revision_observation_rows_from_registry_snapshot(tmp_path: Path) -> None:
     """Comparison rows must not lose registry-grounded provenance."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="modelo-compare-provenance") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         UserProfileLifecycleRepository(bucket_id=profile.bucket_id, objects=profile.repository).save(
             UserProfileRecord(
                 profile_id=profile.bucket_id,
