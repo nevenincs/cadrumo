@@ -86,6 +86,56 @@ def test_modelo_100_other_element_imputation_years_are_positional_years(filing_y
         assert casilla_id_for_unique_revision_semantic_role(revision, expected_role) == casilla_id
 
 
+@pytest.mark.parametrize("filing_year", range(2022, 2026))
+@pytest.mark.parametrize(
+    ("expected_section", "expected_roles"),
+    [
+        (
+            _CRYPTO_SECTION,
+            {
+                "1861": "irpf_ganancia_cripto_anio_imputacion_1",
+                "1865": "irpf_ganancia_cripto_anio_imputacion_2",
+                "1869": "irpf_ganancia_cripto_anio_imputacion_3",
+                "1873": "irpf_ganancia_cripto_anio_imputacion_4",
+            },
+        ),
+        (
+            _INMUEBLE_SECTION,
+            {
+                "1886": "irpf_ganancia_inmueble_anio_imputacion_1",
+                "1890": "irpf_ganancia_inmueble_anio_imputacion_2",
+                "1894": "irpf_ganancia_inmueble_anio_imputacion_3",
+                "1898": "irpf_ganancia_inmueble_anio_imputacion_4",
+            },
+        ),
+    ],
+)
+def test_modelo_100_special_asset_imputation_years_are_years(
+    filing_year: int,
+    expected_section: tuple[str, ...],
+    expected_roles: dict[str, str],
+) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    casillas_by_id = {
+        casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_roles
+    }
+
+    assert set(casillas_by_id) == set(expected_roles)
+    for casilla_id, expected_role in expected_roles.items():
+        casilla = casillas_by_id[casilla_id]
+
+        assert casilla.label == "Año de imputación"
+        assert tuple(casilla.section) == expected_section
+        assert casilla.data_type == "year"
+        assert casilla.semantic_role == expected_role
+        assert set(casilla.legal_refs) >= _CAPITAL_GAIN_REFS
+        assert {
+            f"aeat-dr-100-{filing_year}-dictionary",
+            f"aeat-dr-100-{filing_year}-xsd",
+        }.issubset(casilla.source_refs)
+        assert casilla_id_for_unique_revision_semantic_role(revision, expected_role) == casilla_id
+
+
 @pytest.mark.parametrize("filing_year", [2022, 2023, 2024, 2025])
 def test_modelo_100_crypto_instalment_collection_years_role_uses_total_not_pending_name(
     filing_year: int,
