@@ -896,6 +896,55 @@ def test_modelo_100_eo_module_units_are_decimal() -> None:
             )
 
 
+def test_modelo_100_eo_agricultural_indices_are_decimal() -> None:
+    modelos_by_id, _ = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    expected_legal_refs = {
+        "ley-35-2006:art-27",
+        "ley-35-2006:art-28",
+        "ley-35-2006:art-30",
+        "ley-35-2006:art-31",
+        "ley-35-2006:art-32",
+    }
+    expected_roles = {
+        "1540": "irpf_eo_agr_indice_medios_ajenos",
+        "1541": "irpf_eo_agr_indice_personal_asalariado",
+        "1542": "irpf_eo_agr_indice_tierras_arrendadas",
+        "1544": "irpf_eo_agr_indice_ecologica",
+        "1545": "irpf_eo_agr_indice_regadio_electrico",
+        "1546": "irpf_eo_agr_indice_pequena_empresa",
+        "1547": "irpf_eo_agr_indice_forestal",
+    }
+
+    for filing_year in range(2020, 2026):
+        revision = modelo.revisions[str(filing_year)]
+        roles_for_year = dict(expected_roles)
+        if filing_year == 2025:
+            roles_for_year["0160"] = "irpf_eo_agr_indice_corrector_mejillon_batea"
+
+        casillas_by_id = {
+            casilla.id: casilla
+            for casilla in revision.casillas
+            if casilla.id in {_casilla_id(casilla_id) for casilla_id in roles_for_year}
+        }
+
+        assert set(casillas_by_id) == {_casilla_id(casilla_id) for casilla_id in roles_for_year}
+        for casilla_id, expected_role in roles_for_year.items():
+            casilla = casillas_by_id[_casilla_id(casilla_id)]
+
+            assert tuple(casilla.section) == (
+                "toma_datos_ampliada",
+                "reg_estima_obj_agricola",
+                "actividad_agr",
+            )
+            assert casilla.data_type == "decimal"
+            assert casilla.semantic_role == expected_role
+            assert expected_legal_refs.issubset(casilla.legal_refs)
+            assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
+                casilla.source_refs,
+            )
+
+
 def test_modelo_100_re_attribution_inmueble_days_are_integer() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
