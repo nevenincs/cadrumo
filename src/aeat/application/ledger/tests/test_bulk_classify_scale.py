@@ -39,6 +39,7 @@ from .. import bulk_classify_from_csv
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ROW_COUNT = 270
+_BUCKET_ID = "18181818-1818-4818-8818-181818181818"
 
 
 class _CountingTxRepo(TransactionCatalogueRepository):
@@ -91,7 +92,7 @@ def _unclassified(idx: int) -> Transaction:
 
 @pytest.fixture
 def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile
 
 
