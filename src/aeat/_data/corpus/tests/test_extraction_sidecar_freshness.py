@@ -13,7 +13,7 @@ from dev.docs.preprocess import (
     PreprocessOutput,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # src/aeat/_data/corpus/tests/test_extraction_sidecar_freshness.py -> parents[5] is repo root.
 _REPO_ROOT = Path(__file__).resolve().parents[5]
