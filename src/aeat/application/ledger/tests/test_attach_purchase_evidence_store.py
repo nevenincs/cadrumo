@@ -40,7 +40,7 @@ from .._evidence import PurchaseInvoiceEvidenceService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET = "bucket-001"
+_BUCKET = "31313131-3131-4131-8131-313131313131"
 
 
 @pytest.fixture
