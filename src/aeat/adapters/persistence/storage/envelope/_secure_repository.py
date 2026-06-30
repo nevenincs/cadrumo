@@ -1,10 +1,12 @@
-"""Generic SQL-backed :class:`Envelope` repository built on :class:`SecureObjectRepository`.
+"""Generic SQL-backed envelope repository for secure objects.
 
-The 8 domain repositories that wrap :class:`SecureObjectRepository`
+The 8 domain repositories that wrap
+:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
 (filing drafts, submissions, filing history, complementaria,
 justificantes, observations, assets, inventory) all share the same
-boilerplate: namespace + sensitivity + schema-version + Pydantic payload
-type + a function that extracts the natural id from the payload.
+boilerplate: :class:`~aeat.adapters.persistence.storage.Envelope` wrapping,
+namespace + sensitivity + schema-version + Pydantic payload type, and a
+function that extracts the natural id from the payload.
 
 This module provides :class:`SecureBoundRepository`, a generic base
 class that captures that shared shape exactly once. Concrete subclasses
@@ -13,7 +15,8 @@ override the four class-level descriptors (`namespace`, `payload_type`,
 they inherit `envelope_path_for`, `lock_target_for`, `load`, `save`,
 `delete`, `iter_ids`, and `iter_records` for free.
 
-The base class does NOT replace :class:`SecureObjectRepository`; it
+The base class does NOT replace
+:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`; it
 composes one.
 """
 
@@ -61,16 +64,19 @@ class SecureBoundRepository[T: BaseModel]:
 
     Subclasses MUST set class attributes:
 
-    - :attr:`namespace`: the :class:`SecureObjectRepository` namespace
-      string for this payload family (e.g. ``"aeat.domain.filing.drafts"``).
+    - :attr:`namespace`: the
+      :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+      namespace string for this payload family
+      (e.g. ``"aeat.domain.filing.drafts"``).
     - :attr:`payload_type`: the typed Pydantic model class wrapped by the
       envelope.
-    - :attr:`sensitivity`: the :class:`SensitivityClass` that every row
-      in this namespace MUST carry; mismatches raise
-      :class:`ClassificationError`.
+    - :attr:`sensitivity`: the
+      :class:`~aeat.adapters.persistence.storage.SensitivityClass` that every
+      row in this namespace MUST carry; mismatches raise
+      :class:`~aeat.adapters.persistence.storage.errors.ClassificationError`.
     - :attr:`schema_version`: the current envelope schema version this
       consumer expects; rows whose version differs from it raise
-      :class:`EnvelopeVersionError`.
+      :class:`~aeat.adapters.persistence.storage.errors.EnvelopeVersionError`.
 
     Subclasses MUST implement :meth:`extract_identifier` so that
     :meth:`save` and :meth:`iter_ids` can recover the natural id from
@@ -155,7 +161,13 @@ class SecureBoundRepository[T: BaseModel]:
 
     @property
     def secure_object_repository(self) -> SecureObjectRepository:
-        """Return the concrete :class:`SecureObjectRepository` backing this logical repository."""
+        """Return the concrete secure-object backend.
+
+        Returns:
+            The
+            :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+            backing this logical repository.
+        """
         return self._objects
 
     # ------------------------------------------------------------------
