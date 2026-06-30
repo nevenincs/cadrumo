@@ -16,9 +16,9 @@ related:
 
 Declare a per-namespace custody disposition in the canonical storage namespace registry so the carry set is registry-derived and self-policing.
 
-- [ ] `P01.S01` - Add StorageCustodyDisposition enum and a required custody_disposition field to SecureObjectNamespaceDefinition; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
-- [ ] `P01.S02` - Declare custody_disposition on every namespace definition in the registry; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
-- [ ] `P01.S03` - Add a registry projection helper returning the carry-set namespaces per custody profile; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
+- [x] `P01.S01` - Add StorageCustodyDisposition enum and a required custody_disposition field to SecureObjectNamespaceDefinition; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
+- [x] `P01.S02` - Declare custody_disposition on every namespace definition in the registry; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
+- [x] `P01.S03` - Add a registry projection helper returning the carry-set namespaces per custody profile; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
 
 ### Phase `P02` - schema bump and extended payload model
 
