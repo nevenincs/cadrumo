@@ -430,9 +430,10 @@ class TestReplacementShape:
                 encoding="literal",
             )
 
-    def test_rejects_unknown_surface(self) -> None:
-        with pytest.raises(ValidationError, match=r"Input should be"):
-            Replacement.model_validate(
+    @pytest.mark.parametrize(
+        "payload",
+        (
+            pytest.param(
                 {
                     "surface": "unknown_surface_kind",
                     "surface_index": (0,),
@@ -440,11 +441,9 @@ class TestReplacementShape:
                     "synthetic": "X",
                     "encoding": "literal",
                 },
-            )
-
-    def test_rejects_unknown_encoding(self) -> None:
-        with pytest.raises(ValidationError, match=r"Input should be"):
-            Replacement.model_validate(
+                id="surface",
+            ),
+            pytest.param(
                 {
                     "surface": "content_stream",
                     "surface_index": (0,),
@@ -452,7 +451,13 @@ class TestReplacementShape:
                     "synthetic": "X",
                     "encoding": "bogus",
                 },
-            )
+                id="encoding",
+            ),
+        ),
+    )
+    def test_rejects_unknown_enum_fields(self, payload: dict[str, object]) -> None:
+        with pytest.raises(ValidationError, match=r"Input should be"):
+            Replacement.model_validate(payload)
 
 
 class TestScrubbedSurfaceShape:
