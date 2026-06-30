@@ -1,9 +1,10 @@
 """Domain-level repository Protocol for the invoice catalogue.
 
 Application-layer code that persists or loads the :class:`InvoiceCatalogue`
-depends on this Protocol, not on the concrete adapter-backed
-``InvoiceCatalogueRepository``. This keeps the domain layer free of
-adapter imports while still providing a typed port surface.
+depends on :class:`~aeat.domain.invoices.InvoiceCatalogueRepositoryProtocol`,
+not on the concrete secure-object-backed :class:`InvoiceCatalogueRepository`.
+This keeps callers typed against the narrow port while the concrete repository
+owns the adapter integration.
 """
 
 from __future__ import annotations
@@ -18,8 +19,8 @@ class InvoiceCatalogueRepositoryProtocol(Protocol):
     """Narrow domain-facing repository contract for the invoice catalogue.
 
     Any object that provides ``exists``, ``load``, and ``save`` over a
-    per-bucket invoice catalogue satisfies this protocol. The concrete
-    secure-object-backed implementation lives in the adapter layer.
+    per-bucket :class:`InvoiceCatalogue` satisfies this protocol. The production
+    implementation is :class:`InvoiceCatalogueRepository`.
     """
 
     @property

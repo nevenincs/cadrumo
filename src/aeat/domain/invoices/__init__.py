@@ -1,9 +1,21 @@
 """Immutable invoice catalogue surface for the financial pipeline.
 
-Public surface for :class:`InvoiceCatalogue` and :class:`InvoiceCatalogueRepository`.
-Callers must import invoice models, errors, and service functions
-exclusively from ``aeat.domain.invoices`` and must not reach into the
-private underscore modules inside this package.
+The package root is the import boundary for :class:`InvoiceCatalogue`,
+:class:`InvoiceCatalogueRepository`,
+:class:`~aeat.domain.invoices.InvoiceCatalogueRepositoryProtocol`, invoice
+models, invoice errors, and reconciliation helpers. Callers must import these
+objects from ``aeat.domain.invoices`` and must not reach into the private
+underscore modules inside this package.
+
+See Also:
+    :class:`InvoiceCatalogue`
+        Frozen aggregate persisted as the encrypted invoice catalogue.
+    :class:`InvoiceCatalogueRepository`
+        Governed repository that stores the catalogue through secure-object
+        persistence.
+    :class:`~aeat.domain.invoices.InvoiceCatalogueRepositoryProtocol`
+        Narrow port used by application services that only need load/save
+        semantics.
 """
 
 from __future__ import annotations
