@@ -38,7 +38,6 @@ from ...domain.modelos._protocols import (
 )
 from ...domain.transactions import (
     BusinessClassification,
-    derive_import_fingerprint,
     RawProvenance,
     RawTransaction,
     SourceFormat,
@@ -50,6 +49,7 @@ from ...domain.transactions import (
     TransactionLifecycleLineageEntry,
     TransactionLifecycleState,
     TransactionValidationError,
+    derive_import_fingerprint,
 )
 from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.usage_ratios import (
@@ -124,7 +124,16 @@ def create_manual_transaction(
     event_repository = _bucket_event_repository(bucket_id=command.bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
     if command.idempotency_key is not None:
-        existing = catalogue.get(_provider_transaction_id(command, occurred_at=now))
+        # The idempotency key is authoritative for row identity: a keyed row
+        # carries the clock-free provider id `manual:{bucket}:{key}` on
+        # raw.transaction_id. Scan by that provider id (NOT the content-folding
+        # catalogue id from derive_transaction_id) so the same key always names
+        # the same logical add regardless of which content fields it carries.
+        provider_id = _provider_transaction_id(command, occurred_at=now)
+        existing = next(
+            (row for row in catalogue.values() if row.raw.transaction_id == provider_id),
+            None,
+        )
         if existing is not None:
             if _command_matches_current(command, existing):
                 # Guarded idempotent retry: same idempotency key, identical content.
