@@ -7,9 +7,10 @@ helpers enforce the live-read gate, acquire an authenticated :class:`AeatSession
 then persist filed-history and wallet evidence before reconciliation consumes it.
 
 Encrypted acquisition manifests are stored through the active bucket's
-:class:`SecureObjectRepository` via the typed manifest repository. The manifest
-is redacted operational evidence of the acquisition attempt; it is not a remote
-submission record.
+:class:`SecureObjectRepository` via the typed manifest repository under
+:data:`aeat.adapters.persistence.storage.LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE`.
+The manifest is redacted operational evidence of the acquisition attempt; it is
+not a remote submission record.
 
 See Also:
     :class:`aeat.application.live.IvaRemoteStateStoredEvidenceReport`
@@ -111,6 +112,14 @@ class IvaRemoteStateAcquisitionManifestRepository(_SecureBoundRepository[IvaRemo
     The repository stores redacted :class:`IvaRemoteStateAcquisitionManifest`
     payloads under the active profile bucket. Raw AEAT rows remain in their
     dedicated evidence stores.
+
+    The namespace, sensitivity, schema version, and object-key grammar come
+    from
+    :data:`aeat.adapters.persistence.storage.LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE`.
+    The :class:`~aeat.adapters.persistence.storage.SecureBoundRepository` base
+    writes each manifest through an
+    :class:`~aeat.adapters.persistence.storage.Envelope` so acquisition ids and
+    redacted surface summaries stay inside the encrypted secure-object store.
     """
 
     namespace: ClassVar[str] = _LIVE_IVA_REMOTE_STATE_ACQUISITIONS_STORAGE_NAMESPACE.namespace
