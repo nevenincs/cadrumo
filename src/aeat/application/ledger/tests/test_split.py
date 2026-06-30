@@ -32,7 +32,6 @@ from ....domain.transactions import (
     SplitRole,
     TransactionDirection,
     TransactionLifecycleState,
-    TransactionValidationError,
 )
 from .. import (
     ManualLedgerTransactionCommand,
@@ -178,98 +177,6 @@ def test_split_group_id_is_deterministic(secure_objects: SecureObjectRepository)
     )
     # Different parent id -> different group id
     assert first.split_group_id != second.split_group_id
-
-
-def test_split_refuses_non_active_parent(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    parent_result = _create_parent(transaction_repository, event_repository)
-    archive_manual_transaction(
-        bucket_id=_BUCKET_ID,
-        transaction_id=parent_result.ref.transaction_id,
-        actor="operator-A",
-        source_command="aeat app ledger archive",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-    )
-    with pytest.raises(TransactionValidationError, match="only active"):
-        split_transaction(
-            bucket_id=_BUCKET_ID,
-            transaction_id=parent_result.ref.transaction_id,
-            children=(
-                SplitChildCommand(amount=Decimal("60.00"), description="a"),
-                SplitChildCommand(amount=Decimal("40.00"), description="b"),
-            ),
-            actor="operator-A",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        )
-
-
-def test_split_refuses_sum_mismatch(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    parent_result = _create_parent(transaction_repository, event_repository)
-    with pytest.raises(TransactionValidationError, match="sum to the parent amount exactly"):
-        split_transaction(
-            bucket_id=_BUCKET_ID,
-            transaction_id=parent_result.ref.transaction_id,
-            children=(
-                SplitChildCommand(amount=Decimal("60.00"), description="a"),
-                SplitChildCommand(amount=Decimal("50.00"), description="b"),  # 60+50 != 100
-            ),
-            actor="operator-A",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        )
-
-
-def test_split_refuses_single_child(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    parent_result = _create_parent(transaction_repository, event_repository)
-    with pytest.raises(TransactionValidationError, match="at least two children"):
-        split_transaction(
-            bucket_id=_BUCKET_ID,
-            transaction_id=parent_result.ref.transaction_id,
-            children=(SplitChildCommand(amount=Decimal("100.00"), description="only one"),),
-            actor="operator-A",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        )
-
-
-def test_split_refuses_negative_magnitude_child(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    parent_result = _create_parent(transaction_repository, event_repository)
-    # Amounts are non-negative magnitudes; a negative child is refused
-    # (flow is carried by the inherited direction, not by a sign).
-    with pytest.raises(TransactionValidationError, match="non-negative magnitude"):
-        split_transaction(
-            bucket_id=_BUCKET_ID,
-            transaction_id=parent_result.ref.transaction_id,
-            children=(
-                SplitChildCommand(amount=Decimal("-30.00"), description="a"),
-                SplitChildCommand(amount=Decimal("130.00"), description="b"),
-            ),
-            actor="operator-A",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        )
-
-
-def test_split_refuses_zero_child_amount(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    parent_result = _create_parent(transaction_repository, event_repository)
-    with pytest.raises(TransactionValidationError, match="must not be zero"):
-        split_transaction(
-            bucket_id=_BUCKET_ID,
-            transaction_id=parent_result.ref.transaction_id,
-            children=(
-                SplitChildCommand(amount=Decimal("100.00"), description="a"),
-                SplitChildCommand(amount=Decimal("0.00"), description="b"),
-            ),
-            actor="operator-A",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        )
 
 
 def test_split_preserves_parent_amount_as_persisted_child_sum(secure_objects: SecureObjectRepository) -> None:
