@@ -44,6 +44,7 @@ from ._errors import TransactionValidationError
 from ._ids import TransactionId
 from ._irpf_categories import (
     IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
+    PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING,
     RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING,
     format_irpf_category_ids,
     has_activity_irpf_category,
@@ -1011,12 +1012,14 @@ class Transaction(BaseModel):
         the paid cash gross matches the taxable base; the IVA amount is
         self-assessed but not paid in the transaction itself.
 
-        For professional income paid net of IRPF withholding, the bank receipt
-        can be lower than the invoice gross while the declared base and IVA
-        still need to preserve the invoice substrate. That relaxation is
-        accepted only for INCOMING rows with an explicit non-work
-        ``irpf_category`` and only when ``taxable_base + iva_amount`` is above
-        the cash receipt; under-declared invoice gross remains refused.
+        For professional activity invoices paid or received net of IRPF
+        withholding, the bank cash can be lower than the invoice gross while
+        the declared base and IVA still need to preserve the invoice substrate.
+        That relaxation is accepted only for INCOMING activity rows, or for
+        OUTGOING professional-service expense rows, with an explicit
+        actividad-economica ``irpf_category`` and only when
+        ``taxable_base + iva_amount`` is above the cash movement;
+        under-declared invoice gross remains refused.
 
         For rent expenses paid net of withholding, the same substrate
         preservation is accepted only for OUTGOING rows in the scoped rent
@@ -1067,6 +1070,22 @@ class Transaction(BaseModel):
             return self
         if (
             self.direction == TransactionDirection.OUTGOING
+            and self.category_id in PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING
+            and has_activity_irpf_category(self.irpf_category)
+            and reconstituted > expected
+        ):
+            inferred_withholding = round_to_cents(reconstituted - expected)
+            maximum_supported_withholding = round_to_cents(
+                self.taxable_base * _MAX_SUPPORTED_ACTIVITY_WITHHOLDING_RATE,
+            )
+            if inferred_withholding > maximum_supported_withholding:
+                raise TransactionValidationError(
+                    "inferred IRPF withholding exceeds supported activity rate; "
+                    "cash amount may be invoice base without IVA",
+                )
+            return self
+        if (
+            self.direction == TransactionDirection.OUTGOING
             and self.category_id in RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING
             and has_rent_irpf_category(self.irpf_category)
             and reconstituted > expected
@@ -1079,6 +1098,17 @@ class Transaction(BaseModel):
                 f"set irpf_category={IRPF_CATEGORY_ACTIVIDAD_ECONOMICA} for professional invoices "
                 "so the invoice base and IVA can be kept. Run `aeat app ledger categories` "
                 "to list public IRPF category ids."
+            )
+        if (
+            reconstituted > expected
+            and self.direction == TransactionDirection.OUTGOING
+            and self.category_id in PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING
+        ):
+            detail = (
+                " If this is a professional service invoice paid net of withholding, "
+                f"set irpf_category={IRPF_CATEGORY_ACTIVIDAD_ECONOMICA} so the invoice "
+                "base and IVA can be kept. Run `aeat app ledger categories` to list "
+                "public IRPF category ids."
             )
         if (
             reconstituted > expected
