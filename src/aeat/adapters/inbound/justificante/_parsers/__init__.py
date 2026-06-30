@@ -1,13 +1,17 @@
-"""Private parser backends for the inbound justificante adapter.
+"""Private text-backend dispatch for the inbound justificante adapter.
 
 Callers outside :mod:`aeat.adapters.inbound.justificante` must never import
-from here. Backends expose a common :func:`extract_text` entry point that
+from here. Backends expose a common ``extract_text`` entry point that
 returns the raw concatenated text of a justificante PDF; all field-level
 extraction happens in :mod:`aeat.adapters.inbound.justificante._extract`.
 
-The dispatch is keyed on :class:`aeat.domain.justificante._schema.JustificanteParserBackend`
-so adding a new backend is a matter of branching on the enum value and
-importing the corresponding ``extract_text_*`` helper.
+The dispatch is keyed on
+:class:`~aeat.domain.justificante.JustificanteParserBackend`, and parse
+failures are normalised as
+:class:`~aeat.domain.justificante.JustificanteParseError`. The path entry point
+caches concatenated text by source digest, backend, size, and mtime; the bytes
+entry point stays uncached so secure-storage callers do not need to materialise
+or persist plaintext files.
 """
 
 from __future__ import annotations
@@ -27,12 +31,19 @@ _TEXT_CACHE: OrderedDict[tuple[str, str, int, int], str] = OrderedDict()
 def extract_text(pdf_path: Path, backend: JustificanteParserBackend) -> str:
     """Extract concatenated text from ``pdf_path`` using ``backend``.
 
+    The path result is cached for stable file revisions so repeated corpus
+    parses do not reopen the same PDF.
+
     Args:
         pdf_path: Absolute path to the PDF to read.
         backend: Which backend to dispatch to.
 
     Returns:
         The concatenated text of every page in the PDF, joined by newlines.
+
+    Raises:
+        JustificanteParseError: If the path cannot be read or the selected
+            backend is not implemented.
     """
     try:
         resolved = pdf_path.expanduser().resolve()
@@ -61,12 +72,18 @@ def extract_text(pdf_path: Path, backend: JustificanteParserBackend) -> str:
 
 
 def extract_text_from_bytes(pdf_bytes: bytes, backend: JustificanteParserBackend) -> str:
-    """Extract concatenated text from in-memory PDF bytes using ``backend``."""
+    """Extract concatenated text from in-memory PDF bytes using ``backend``.
+
+    Bytes are sent directly to the selected backend and are not cached, which
+    keeps secure-storage and live-capture parsing free of plaintext filesystem
+    artefacts.
+    """
     backend_value = backend.value if hasattr(backend, "value") else str(backend)
     return _extract_text_from_bytes_uncached(pdf_bytes, backend_value)
 
 
 def _extract_text_uncached(pdf_path: Path, backend_value: str) -> str:
+    """Dispatch one uncached filesystem parse to the selected backend."""
     normalized_backend = backend_value.lower()
     if normalized_backend == JustificanteParserBackend.PDFPLUMBER.value.lower():
         from ._pdfplumber_backend import extract_text_pdfplumber
@@ -76,6 +93,7 @@ def _extract_text_uncached(pdf_path: Path, backend_value: str) -> str:
 
 
 def _extract_text_from_bytes_uncached(pdf_bytes: bytes, backend_value: str) -> str:
+    """Dispatch one in-memory parse to the selected backend."""
     normalized_backend = backend_value.lower()
     if normalized_backend == JustificanteParserBackend.PDFPLUMBER.value.lower():
         from ._pdfplumber_backend import extract_text_pdfplumber_bytes

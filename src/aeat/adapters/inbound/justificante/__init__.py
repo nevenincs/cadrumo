@@ -1,9 +1,17 @@
-"""Inbound parser adapter for AEAT justificante PDFs.
+"""Inbound parser adapter for AEAT justificante receipt PDFs.
 
-Parses the receipt PDF the AEAT issues after a filing (the justificante)
-into a strict domain record, so the reconcile workflow can compare a filed
-return against its official receipt. The defining domain records live in
-:mod:`aeat.domain.justificante`.
+Parses the receipt PDF AEAT issues after a filing into the strict
+:class:`~aeat.domain.justificante.Justificante` domain record used by
+reconciliation and evidence workflows. A justificante is receipt metadata
+(CSV, modelo, period, taxpayer, timestamp, totals, verification URL), not the
+casilla-complete filing copy handled by
+:mod:`aeat.adapters.inbound.declaracion`.
+
+Both public entry points keep the receipt boundary narrow: the filesystem route
+hashes the PDF and the bytes route supports secure-storage captures without
+materialising plaintext scratch files. The field extraction discipline and
+structured :class:`~aeat.domain.justificante.JustificanteParseError`
+attributes live below this package boundary.
 
 Major declaration:
 

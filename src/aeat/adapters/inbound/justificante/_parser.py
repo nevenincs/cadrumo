@@ -1,12 +1,17 @@
-"""Inbound :func:`parse_justificante` entry point.
+"""Inbound ``parse_justificante`` entry points.
 
-Thin orchestration layer that pairs a parser backend
-(:class:`aeat.domain.justificante._schema.JustificanteParserBackend`) with
-the regex extractor in :mod:`aeat.adapters.inbound.justificante._extract` to
-turn a justificante PDF on disk into a strict :class:`Justificante` record.
-The default backend is read from
-:attr:`aeat.core.config.Settings.aeat_justificante_parser_backend` when the
-caller does not supply one.
+This thin orchestration layer pairs a text backend selected by
+:class:`~aeat.domain.justificante.JustificanteParserBackend` with the regex
+extractor in :mod:`aeat.adapters.inbound.justificante._extract`. The extractor
+turns AEAT receipt text into a strict
+:class:`~aeat.domain.justificante.Justificante`; casilla-complete declaration
+PDFs are intentionally out of scope for this adapter.
+
+The filesystem route hashes the PDF before extraction. The bytes route is for
+secure-storage or live-capture flows that already hold decrypted bytes and must
+avoid plaintext temporary files. Both routes surface structured
+:class:`~aeat.domain.justificante.JustificanteParseError` attributes for
+missing, malformed, ambiguous, and coverage-related failures.
 """
 
 from __future__ import annotations
@@ -31,6 +36,11 @@ def parse_justificante(
 ) -> Justificante:
     """Parse an AEAT justificante PDF into a strict :class:`Justificante`.
 
+    Use this filesystem entry point when the receipt PDF is already on disk.
+    The downstream extractor stores a digest-derived source reference on the
+    returned :class:`Justificante`, while parser-boundary failures redact the
+    caller-controlled path from user-facing error messages.
+
     Args:
         pdf_path: Path to the justificante PDF on disk. Must exist and be
             readable.
@@ -39,7 +49,7 @@ def parse_justificante(
             when omitted.
 
     Returns:
-        A fully populated :class:`aeat.domain.justificante._schema.Justificante`
+        A fully populated :class:`~aeat.domain.justificante.Justificante`
         pydantic v2 record.
 
     Raises:
@@ -79,8 +89,22 @@ def parse_justificante_bytes(
 ) -> Justificante:
     """Parse an AEAT justificante PDF already loaded from secure storage.
 
+    The PDF bytes are hashed in memory and passed directly to the configured
+    backend, so decrypted live-capture content does not need a plaintext
+    temporary file.
+
+    Args:
+        pdf_bytes: Raw justificante PDF bytes.
+        backend: Parser backend to use. Defaults to
+            :attr:`aeat.core.config.Settings.aeat_justificante_parser_backend`
+            when omitted.
+
     Returns:
         The parsed :class:`Justificante` extracted from the PDF bytes.
+
+    Raises:
+        JustificanteParseError: If no extractable receipt text or required
+            receipt fields can be read.
     """
     resolved_backend = _resolve_backend(backend)
     _logger.debug("parse_justificante_bytes: source=in-memory backend=%s", resolved_backend)
@@ -93,6 +117,7 @@ def parse_justificante_bytes(
 
 
 def _resolve_backend(backend: JustificanteParserBackend | None) -> JustificanteParserBackend:
+    """Resolve an explicit backend or the configured default backend."""
     if backend is not None:
         return backend
     # Deferred import: ``aeat.core.config`` imports the public justificante
