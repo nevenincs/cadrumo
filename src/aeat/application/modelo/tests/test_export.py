@@ -15,6 +15,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....core import Period
 from ....core.config import override_settings
@@ -134,6 +135,21 @@ def test_export_result_json_surfaces_redacted_iva_wallet_decision_provenance(tmp
         "authority_source_kinds": ["aeat_wallet"],
         "authority_source_refs": ["sha256:" + "2" * 64],
     }
+
+
+def test_iva_wallet_export_provenance_rejects_malformed_redacted_refs() -> None:
+    with pytest.raises(ValidationError) as raised:
+        ModeloIvaWalletDecisionProvenance(
+            decision_ref="sha256:" + "1" * 64,
+            selected_authority="aeat_wallet",
+            divergence="wallet_only",
+            target_year=2026,
+            target_period=Period.from_year_and_code(2026, "2T"),
+            authority_source_kinds=("aeat_wallet",),
+            authority_source_refs=(" ",),
+        )
+
+    assert "authority_source_refs" in str(raised.value)
 
 
 def test_iva_wallet_export_provenance_redacts_taxpayer_amounts_and_source_locators() -> None:
