@@ -15,6 +15,8 @@ from .._recovery_record import RecoveryRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+_CREATED_AT = datetime(2026, 5, 28, 12, 5, 0, tzinfo=UTC)
+
 
 def _b64(n: int) -> str:
     return base64.b64encode(secrets.token_bytes(n)).decode("ascii")
@@ -27,7 +29,7 @@ def _record(**overrides: object) -> RecoveryRecord:
         "tag_b64": _b64(16),
         "mnemonic_word_count": 24,
         "hkdf_info": "aeat-recovery-v1",
-        "created_at": datetime.now(tz=UTC),
+        "created_at": _CREATED_AT,
     }
     defaults.update(overrides)
     return RecoveryRecord(**defaults)
@@ -121,7 +123,7 @@ def test_rejects_unknown_keys() -> None:
                 "tag_b64": _b64(16),
                 "mnemonic_word_count": 24,
                 "hkdf_info": "aeat-recovery-v1",
-                "created_at": datetime.now(tz=UTC),
+                "created_at": _CREATED_AT,
                 "unexpected": "nope",
             },
         )
