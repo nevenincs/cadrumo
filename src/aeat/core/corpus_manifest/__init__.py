@@ -37,6 +37,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..errors import CoreValidationError as _CoreValidationError
 from ..hashing import sha256_hex as _sha256_hex
 from ..logging import get_logger as _get_logger
+from ..time import now as _clock_now
 from ..time._utc import validate_utc_aware
 from ._errors import CorpusManifestDriftError, CorpusManifestError, CorpusManifestTamperError
 
@@ -247,8 +248,9 @@ def build_corpus_manifest(
         corpus_root_name: Stable identifier for this corpus (logged in
             the manifest body so an operator can grep for it).
         generated_at: Optional override for the timestamp. When ``None``
-            the current UTC time is used. Tests pin this for
-            determinism.
+            the canonical clock :func:`aeat.core.time.now` is consulted, so
+            the deterministic-output seam (:func:`aeat.core.time.frozen_clock`)
+            pins it under replay; an explicit value still overrides.
 
     Returns:
         A :class:`CorpusManifest` covering every regular file under
@@ -258,15 +260,12 @@ def build_corpus_manifest(
         FileNotFoundError: If ``corpus_root`` does not exist.
         NotADirectoryError: If ``corpus_root`` is not a directory.
     """
-    from datetime import UTC
-    from datetime import datetime as _dt
-
     if not corpus_root.exists():
         raise FileNotFoundError(corpus_root)
     if not corpus_root.is_dir():
         raise NotADirectoryError(corpus_root)
     if generated_at is None:
-        generated_at = _dt.now(UTC)
+        generated_at = _clock_now()
     raw_entries: list[CorpusEntry] = []
     for path in _iter_corpus_files(corpus_root):
         sha256_hex, length = _hash_file(path)
