@@ -50,6 +50,7 @@ def _validate_revision_closure_sections(
             filing_schedule_ids=context.filing_schedule_ids,
             legal_refs=legal_refs,
             source_refs=source_refs,
+            evidence=evidence,
         ),
     )
     failures.extend(validate_application_link_closure(prefix, revision, modelo_id=modelo_id))
