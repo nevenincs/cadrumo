@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 
 import pytest
 
+from .....core._casilla_id import CasillaId
 from .....core.resources import bundled_path
+from .._formula_runtime import _evaluate_expression
 from .._legal import verify_legal_catalogue
 from .._schema import ModeloDefinition, RegistryCatalogues
 from .._snapshot import build_snapshot
@@ -267,44 +270,100 @@ def _casilla_refs_in_expression(expression: object) -> set[str]:
 
 
 @pytest.mark.parametrize("revision_id", ["2019-2022", "2023-2024", "2025-y-siguientes"])
-def test_committed_modelo_202_b2_resultado_previo_remains_unwired_from_modalidad_40_3_resultado(
+def test_committed_modelo_202_b2_resultado_previo_feeds_modalidad_40_3_resultado(
     revision_id: str,
 ) -> None:
-    """Clave 26 (B2 resultado previo) is a confirmed, undecided registry defect -- not a guard candidate.
+    """Clave 26 (B2 resultado previo) now feeds clave 32 (modalidad-40-3-resultado).
 
-    Every M202 revision's ``modalidad-40-3-resultado`` formula (target clave
-    32) reads only clave 18 (the B1 caso general resultado previo); clave 26
-    (the B2 casos especificos resultado previo, itself formula-derived from
-    claves 22 + 25 + 63 + 66 + 50 + 42 + 51 + 52) is never referenced by any
-    formula in this revision. A taxpayer whose modalidad 40.3 case is B2-only
-    would have their entire B2 computation silently dropped from the final
-    ``cantidad a ingresar`` (clave 34) -- a suspected formula-correctness
-    defect, not a false-positive-risk case. No ``implies_nonzero`` predicate is
-    authored over this relationship because the correct combination semantics
-    (whether clave 32 should sum 18+26, select whichever is populated, or some
-    other treatment) cannot be safely inferred from the bundled corpus or the
-    registry's own vague formula source citation ("es un importe calculado")
-    without further legal/workbook verification
-    (`aeat-safety-legal-gates`, `no-tautological-calculation-tests`). See the
+    The bundled AEAT corpus (``modelo-202-instrucciones.html`` /
+    ``modelo-202-instrucciones-2023-2024.html``) states the clave 32 formula
+    verbatim: "Clave [32] = ( [clave [18] (o clave [26]) - clave [27] -
+    clave [28] ] x clave [29]/100 ) - clave [30] - clave [31]" -- clave 18
+    (B1 caso general, unico tipo) and clave 26 (B2 casos especificos, varios
+    tipos) are alternative, mutually exclusive computations of the same
+    "resultado previo" figure. Every M202 revision previously read only
+    clave 18, silently dropping a B2-only filer's entire computation from
+    the final ``cantidad a ingresar`` (clave 34). See the
     `modelo-verify-nonzero-guards` m202-deferred-items audit (2026-07-01) for
-    the full investigation and the recommended follow-up. This test locks the
-    deliberate absence: closing the prerequisite (verifying and wiring clave 26
-    into clave 32) must update or remove this assertion.
+    the investigation that confirmed the defect against the bundled corpus
+    and resolved it by combining both lanes additively (the registry models
+    no discrete B1-vs-B2 discriminator binding, and both lanes' manual
+    inputs default to zero when unused, so addition reproduces "18 (o 26)"
+    without inventing new registry data).
     """
     modelo, _catalogues = _load_modelo_202()
     revision = modelo.revisions[revision_id]
 
     modalidad_40_3_resultado_formula = next(f for f in revision.formulas if f.target_casilla_id == "32")
-    referenced_casillas = _casilla_refs_in_expression(modalidad_40_3_resultado_formula.expression)
-    assert "26" not in referenced_casillas, (
-        "clave 26 (B2 resultado previo) now feeds clave 32 (modalidad-40-3-resultado); "
-        "the modelo-verify-nonzero-guards m202-deferred-items audit's wiring-gap finding is "
-        "resolved -- update this test and consider authoring the deferred implies_nonzero(26, 32) "
-        "advisory now that the correct combination semantics are confirmed"
-    )
+    expression = modalidad_40_3_resultado_formula.expression
+    referenced_casillas = _casilla_refs_in_expression(expression)
+    assert "18" in referenced_casillas
+    assert "26" in referenced_casillas
+
+    # Lock the exact combination shape: an "add" node whose two args are
+    # precisely the clave 18 and clave 26 leaves (not, say, a "subtract" or
+    # "max" that would zero or misstate one lane).
+    combination_nodes = [node for node in _iter_expression_nodes(expression) if node.op == "add"]
+    assert any(
+        {getattr(arg, "casilla_id", None) for arg in node.args} == {"18", "26"} for node in combination_nodes
+    ), "expected an add(clave 18, clave 26) node combining the B1 and B2 resultado previo lanes"
 
     predicate_ids = {p.predicate_id for p in revision.verification_predicates}
     assert _M202_B2_RESULTADO_PREVIO_ADVISORY_PREDICATE_ID not in predicate_ids
+
+
+def _iter_expression_nodes(expression: object) -> list[object]:
+    """Recursively collect every node (operator or leaf) in a formula expression tree."""
+    nodes = [expression]
+    for arg in getattr(expression, "args", ()):
+        nodes.extend(_iter_expression_nodes(arg))
+    return nodes
+
+
+@pytest.mark.parametrize("revision_id", ["2019-2022", "2023-2024", "2025-y-siguientes"])
+def test_committed_modelo_202_modalidad_40_3_resultado_reflects_b2_only_filer(
+    revision_id: str,
+) -> None:
+    """A B2-only filer's resultado previo (clave 26) now reaches clave 32, not zero.
+
+    This is a graph-wiring / runtime-execution proof, not a re-derivation of
+    LIS tax law (`no-tautological-calculation-tests`): claves 27-31 are held
+    at their neutral values (0 bonificaciones/retenciones/pagos previos, 100%
+    volumen territorio comun) so the only quantity under test is whether the
+    clave 26 leaf is live in the clave 32 dependency graph. Before the fix,
+    a B2-only filer (clave 18 == 0) always produced clave 32 == 0 regardless
+    of clave 26; after the fix clave 32 == clave 26 under these neutral
+    adjustment values.
+    """
+    modelo, _catalogues = _load_modelo_202()
+    revision = modelo.revisions[revision_id]
+    modalidad_40_3_resultado_formula = next(f for f in revision.formulas if f.target_casilla_id == "32")
+
+    operand_refs: list[str] = []
+    operand_casilla_refs: list[CasillaId] = []
+    operand_values: list[Decimal] = []
+    result = _evaluate_expression(
+        modalidad_40_3_resultado_formula.expression,
+        values={
+            "18": Decimal("0"),
+            "26": Decimal("1000"),
+            "27": Decimal("0"),
+            "28": Decimal("0"),
+            "29": Decimal("100"),
+            "30": Decimal("0"),
+            "31": Decimal("0"),
+        },
+        binding_values={},
+        parameters={},
+        date_context={},
+        relation_values={},
+        unresolved_relation_ids=frozenset(),
+        unresolved_casilla_ids=set(),
+        operand_refs=operand_refs,
+        operand_casilla_refs=operand_casilla_refs,
+        operand_values=operand_values,
+    )
+    assert result == Decimal("1000")
 
 
 _M202_MINIMO_A_INGRESAR_CN_10M_ADVISORY_PREDICATE_ID = "modelo-202-04-implica-minimo-a-ingresar-cn-10m"
