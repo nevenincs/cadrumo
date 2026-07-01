@@ -1,39 +1,44 @@
-"""AEAT Sede authentication public facade.
+"""Public outbound AEAT auth facade.
 
-This package is the public import point for outbound authentication. It
-re-exports the application-layer :class:`AuthProvider` protocol, the
-supported :class:`AuthProviderKind` values, concrete providers, session and
-assertion records, provider detail payloads, certificate helpers, and the
-live-read gate types used around AEAT Sede electrónica access.
+This package mirrors the application auth contract from
+:mod:`aeat.application.auth` by re-exporting
+:class:`~aeat.application.auth.AuthProvider` and
+:class:`~aeat.application.auth.AuthProviderKind` alongside the concrete
+certificate and Cl@ve Móvil providers. Use
+:func:`~aeat.adapters.outbound.aeat.auth.select_provider` to resolve
+``CERTIFICATE`` to :class:`~aeat.adapters.outbound.aeat.auth.AeatAuthenticator`
+and ``CLAVE_MOVIL`` to
+:class:`~aeat.adapters.outbound.aeat.auth.ClaveMovilAuthProvider`;
+unsupported kinds raise
+:exc:`~aeat.adapters.outbound.aeat.auth.AuthConfigurationError`.
 
-Major declarations:
+Authentication results are strict, frozen, secret-free records:
+:class:`~aeat.adapters.outbound.aeat.auth.AeatSession` and
+:class:`~aeat.adapters.outbound.aeat.auth.AeatLoginAssertion` carry
+provider-specific payloads through the discriminated ``AuthSessionDetail`` and
+``AuthLoginAssertionDetail`` unions.
+Selected certificate public API is available through
+:mod:`aeat.adapters.outbound.aeat.auth.certificate`, including
+:func:`~aeat.adapters.outbound.aeat.auth.certificate.load_certificate`,
+:func:`~aeat.adapters.outbound.aeat.auth.certificate.verify_handshake`, and
+:func:`~aeat.adapters.outbound.aeat.auth.certificate.health`.
 
-* :func:`~aeat.adapters.outbound.aeat.auth.select_provider` — map a
-  :class:`AuthProviderKind` to the concrete outbound provider
-  (:class:`AeatAuthenticator` for client certificates,
-  :class:`ClaveMovilAuthProvider` for Cl@ve Móvil).
-* :class:`AeatSession` and :class:`AeatLoginAssertion` — the authenticated
-  session record and the re-probe assertion the providers return.
-* :class:`CertificateBundle` and :class:`LoadedCertificate` from
-  :mod:`aeat.adapters.outbound.aeat.auth.certificate` — the PKCS#12
-  certificate-loading and health-evaluation surface.
-* :class:`AuthError` and its subclasses
-  (:class:`AeatSessionExpiredError`, :class:`AuthConfigurationError`, and
-  the certificate and Cl@ve-Móvil error families) — the failure taxonomy.
+Live-read policy is owned by
+:class:`~aeat.core.access_gate.AeatAccessGate`: pytest live reads require
+literal ``AEAT_LIVE_TESTS_ENABLED="1"``, while operator-context reads continue
+through auth, profile, and read-only guards. The associated
+:class:`~aeat.core.access_gate.AeatGateEnvSnapshot` records only
+``aeat_live_tests_enabled`` and ``pytest_current_test``. Live AEAT writes and
+live AEAT submissions are permanently refused by
+:exc:`~aeat.core.access_gate.LiveSubmitForbiddenError`; auth exposes no
+AEAT-side write verb.
 
-Live reads pass through :class:`AeatAccessGate`; no path performs a remote
-write to the AEAT.
-
-See Also:
-    :mod:`aeat.application.auth`
-        Application-owned provider protocol, operator actions, and lazy
-        selection wrapper that delegates to this facade.
-    :class:`AeatAuthenticator`
-        Certificate-backed provider returned for
-        ``AuthProviderKind.CERTIFICATE``.
-    :class:`ClaveMovilAuthProvider`
-        Human-in-the-loop Cl@ve Móvil provider returned for
-        ``AuthProviderKind.CLAVE_MOVIL``.
+Errors remain typed at the facade boundary, including
+:exc:`~aeat.adapters.outbound.aeat.auth.AuthError`,
+:exc:`~aeat.adapters.outbound.aeat.auth.AuthConfigurationError`,
+:exc:`~aeat.adapters.outbound.aeat.auth.AeatLoginAssertionError`,
+:exc:`~aeat.adapters.outbound.aeat.auth.AeatSessionExpiredError`, certificate
+errors, and Cl@ve Móvil errors.
 """
 
 from __future__ import annotations
