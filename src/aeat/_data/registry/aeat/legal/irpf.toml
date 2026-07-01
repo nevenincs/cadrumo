@@ -3607,7 +3607,7 @@ required_text = [
 ]
 
 [sources."boe-modelo-100-2020-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-248-2021.html"
@@ -3621,7 +3621,7 @@ source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-4238"
 review_status = "reviewed"
 
 [sources."boe-modelo-100-2021-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hfp-207-2022.html"
@@ -3635,7 +3635,7 @@ source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-4296"
 review_status = "reviewed"
 
 [sources."boe-modelo-100-2022-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hfp-310-2023.html"
@@ -3649,7 +3649,7 @@ source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-8118"
 review_status = "reviewed"
 
 [sources."boe-modelo-100-2023-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-265-2024.html"
@@ -3663,7 +3663,7 @@ source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-5721"
 review_status = "reviewed"
 
 [sources."boe-modelo-100-2024-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-242-2025.html"
@@ -3677,7 +3677,7 @@ source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2025-5049"
 review_status = "reviewed"
 
 [sources."boe-modelo-100-2025-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-277-2026.html"

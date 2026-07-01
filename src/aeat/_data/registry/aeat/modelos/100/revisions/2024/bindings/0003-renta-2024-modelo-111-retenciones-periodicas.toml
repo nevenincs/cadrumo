@@ -8,5 +8,5 @@ source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
 aeat_prefilled = true
 
 [[revisions."2024".bindings.source_citations]]
-source_ref = "boe-modelo-100-2024-form"
+source_ref = "aeat-renta-2024-manual-parte1"
 required_text = ["Modelo 100", "ejercicio 2024"]
