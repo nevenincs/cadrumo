@@ -21,9 +21,12 @@ See Also:
     :func:`aeat.entrypoints.cli._modelo_records_cli.filing_record_import`:
         CLI surface that parses ``filing-record import`` options and calls this
         service.
-    :func:`aeat.application.modelo._amendment_actions.amend_modelo_revision`:
+    :func:`aeat.application.modelo.amend_modelo_revision`:
         Consumes the imported current :class:`~aeat.domain.modelos.ModeloRecord`
         as an amendment baseline.
+    :mod:`aeat.domain.justificante`:
+        Receipt metadata store required by justificante-PDF, CSV-register, and
+        live-capture evidence kinds.
     :func:`aeat.application.modelo._registry_helpers.reject_unknown_import_casillas`:
         Resolves the registry snapshot and refuses noncanonical or undeclared
         imported casilla ids.
@@ -148,8 +151,11 @@ def import_external_filing_evidence[CasillaKey](
     See Also:
         :func:`aeat.application.modelo._calculation_helpers.external_filing_observations`:
             Builds provenance-bearing observations for imported casilla values.
-        :func:`aeat.application.modelo._amendment_actions.amend_modelo_revision`:
+        :func:`aeat.application.modelo.amend_modelo_revision`:
             Requires this external-evidence baseline before filing amendments.
+        :mod:`aeat.domain.justificante`:
+            Stores the receipt metadata checked for receipt-bound evidence
+            references.
     """
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
