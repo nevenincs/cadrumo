@@ -103,6 +103,35 @@ def test_work_calculate_help_exposes_by_actor_flag() -> None:
     assert "--by" in result.output
 
 
+@pytest.mark.parametrize(
+    "args",
+    [
+        ["app", "modelo", "work", "revisions", "--help"],
+        ["app", "modelo", "work", "verify", "--help"],
+        ["app", "modelo", "export", "--help"],
+    ],
+)
+def test_modelo_help_surfaces_do_not_leak_registry_validation(args: list[str]) -> None:
+    """Reported modelo help surfaces render as CLI help, not registry failures."""
+
+    result = invoke_cached_cli(args)
+
+    assert result.exit_code == 0, result.output
+    assert "registry validation failed" not in result.output
+    assert "config repair integrity" not in result.output
+
+
+def test_reported_top_level_revisions_typo_is_usage_error() -> None:
+    """The reported stale ``modelo revisions`` path is not masked by registry errors."""
+
+    result = invoke_cached_cli(["app", "modelo", "revisions", "--modelo", "130", "--year", "2024", "--period"])
+
+    assert result.exit_code != 0, result.output
+    assert "No such command 'revisions'" in result.output
+    assert "registry validation failed" not in result.output
+    assert "config repair integrity" not in result.output
+
+
 # --- Fix 2: work create validates period token eagerly ---
 
 
