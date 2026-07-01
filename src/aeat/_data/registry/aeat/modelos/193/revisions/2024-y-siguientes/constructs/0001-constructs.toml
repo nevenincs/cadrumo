@@ -24,6 +24,7 @@ application_links = [
     "modelo-193-portal",
     "modelo-193-calculation",
     "modelo-193-filing",
+    "modelo-193-deadline",
     "modelo-193-verification",
     "modelo-193-extractor",
     "modelo-193-review",
@@ -31,4 +32,6 @@ application_links = [
     "modelo-193-reconciliation",
     "modelo-193-workflow",
 ]
+deadline_windows = ["modelo-193-2024-0a", "modelo-193-2025-0a"]
+filing_schedules = ["modelo-193-anual"]
 dependency_classifications = ["modelo-193-dep-123"]

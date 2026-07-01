@@ -809,6 +809,35 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "ley-35-2006:art-101",
         ),
     ),
+    # Modelo 193 - resumen anual de las retenciones declaradas through
+    # Modelo 123 for determinados rendimientos del capital mobiliario.
+    # Annual companion; gated on the same payer-side capital-income
+    # withholding fact as Modelo 123.
+    Modelo.M193: ModeloApplicabilityRule(
+        modelo=Modelo.M193,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.PAYS_CAPITAL_INCOME_WITH_RETENCION,
+        applicable_reason=(
+            "Modelo 193 (resumen anual de retenciones sobre capital mobiliario): "
+            "el contribuyente satisface determinados rendimientos o rentas del "
+            "capital mobiliario sujetos a retencion y presenta el resumen anual "
+            "de las retenciones declaradas."
+        ),
+        not_applicable_reason=(
+            "Modelo 193 no aplica: el resumen anual solo corresponde a quien "
+            "satisface determinados rendimientos o rentas del capital mobiliario "
+            "sujetos a retencion."
+        ),
+        legal_refs=(
+            "ley-35-2006:art-25",
+            "ley-35-2006:art-99",
+            "orden-eha-3377-2011:art-1",
+            "rd-439-2007:art-108",
+            "rd-439-2007:art-90",
+            "ley-35-2006:art-101",
+            "ley-58-2003:art-93",
+        ),
+    ),
     # Modelo 115 — autoliquidación de retenciones por arrendamiento de
     # inmuebles urbanos. The PAYER's obligation: a natural person, legal
     # entity, or attribution entity who pays rent subject to retención.
