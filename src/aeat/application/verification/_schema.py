@@ -114,6 +114,17 @@ class VerificationVerdict(BaseModel):
             the engine audit.
         coverage: Fraction of the registry casillas the extraction
             supplied, in the inclusive ``0.0..1.0`` range.
+        externally_grounded_casilla_ids: The reconciled casillas (from
+            ``computed_casilla_ids`` or ``reconcile_when_present_casilla_ids``)
+            whose reconciliation is backed by an AEAT-authoritative
+            independent oracle expected value, rather than only the app's
+            own engine. Registry-declared data; see
+            :attr:`~aeat.domain.calculations.registry.RegistryVerificationPolicy.externally_grounded_casilla_ids`.
+        independently_grounded_fraction: Fraction of the reconciled casilla
+            set that is externally grounded, in the inclusive ``0.0..1.0``
+            range. A grounding-depth signal, not a correctness score: a low
+            value means most reconciliation was engine-only, not that the
+            filing is wrong.
         narrative: Multilingual user-facing summary string.
         verified_at: UTC timestamp of when the verdict was produced.
     """
@@ -127,5 +138,7 @@ class VerificationVerdict(BaseModel):
     status: VerificationStatus
     discrepancies: tuple[ClassifiedDiscrepancy, ...]
     coverage: float = Field(ge=0.0, le=1.0)
+    externally_grounded_casilla_ids: tuple[CasillaId, ...] = ()
+    independently_grounded_fraction: float = Field(ge=0.0, le=1.0, default=0.0)
     narrative: str
     verified_at: datetime

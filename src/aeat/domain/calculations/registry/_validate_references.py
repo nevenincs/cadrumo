@@ -244,6 +244,11 @@ def _check_verification_expectation_refs(checker: _IdReferenceChecker, revision:
             expectation.reconcile_when_present_casilla_ids,
             checker.casilla_ids,
         )
+        checker.chk_tuple(
+            f"{vep}.externally_grounded_casilla_ids",
+            expectation.externally_grounded_casilla_ids,
+            checker.casilla_ids,
+        )
         for total_kind, casilla_id in expectation.reconciliation_total_casilla_ids.items():
             checker.chk(f"{vep}.reconciliation_total_casilla_ids.{total_kind}", casilla_id, checker.casilla_ids)
         checker.chk_legal_source_refs(vep, expectation.legal_refs, expectation.source_refs)

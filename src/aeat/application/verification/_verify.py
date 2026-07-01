@@ -188,6 +188,10 @@ def verify_declaracion(
     classified = tuple(discrepancies)
     coverage = _compute_coverage(declaracion, policy.computed_casilla_ids)
     status = _derive_status(classified, coverage, min_coverage=policy.min_coverage)
+    externally_grounded = policy.externally_grounded_casilla_ids & reconciled_casilla_ids
+    independently_grounded_fraction = (
+        len(externally_grounded) / len(reconciled_casilla_ids) if reconciled_casilla_ids else 0.0
+    )
     return VerificationVerdict(
         modelo=declaracion.modelo,
         period=period,
@@ -196,6 +200,8 @@ def verify_declaracion(
         status=status,
         discrepancies=classified,
         coverage=coverage,
+        externally_grounded_casilla_ids=tuple(sorted(externally_grounded)),
+        independently_grounded_fraction=independently_grounded_fraction,
         narrative=_compose_narrative(declaracion, status, classified, coverage),
         verified_at=now(),
     )

@@ -175,6 +175,14 @@ reconcile_when_present_casilla_ids = [
     "2232",
     "base-liq-neg-general-2024-aplicada-maxima",
 ]
+# Casillas whose engine value is independently checked against an
+# AEAT-authoritative oracle (the Renta WEB Open open-simulator replays under
+# corpus/parity_replays/renta_web_open/modelo-100-2025-*.json), not only the
+# app's own engine. Derived from the union of those replays'
+# expected_by_casilla_id keys; the CI honesty gate
+# (test_external_oracle_grounding_enrolled.py) cross-checks this declaration
+# symmetrically against the bundled corpus.
+externally_grounded_casilla_ids = ["0610", "0670"]
 tolerance = "0.01"
 rounding = "money-2"
 min_coverage = "0"

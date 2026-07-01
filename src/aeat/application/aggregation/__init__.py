@@ -1,13 +1,15 @@
 """Public aggregation facade for rollup helpers and typed source-mesh resolvers.
 
 This package exposes two related surfaces. The pure aggregation helpers
-(``aggregate_*`` functions plus value records such as :class:`CasillaAggregation`
-and :class:`RetencionesAggregation`) roll classified observations into
-family-specific totals. The live calculation surface is the source mesh:
-:class:`ModeloSourceResolver` implementations claim one or more
+(``aggregate_*`` functions plus value records such as
+:class:`~aeat.application.aggregation.CasillaAggregation` and
+:class:`~aeat.application.aggregation.RetencionesAggregation`) roll classified
+observations into family-specific totals. The live calculation surface is the
+source mesh: :class:`~aeat.application.aggregation.ModeloSourceResolver`
+implementations claim one or more
 :class:`~aeat.core.BindingSourceKind` members and return the canonical
-:class:`CalculationSourceResolution` envelope consumed by the modelo calculate
-path.
+:class:`~aeat.application.aggregation.CalculationSourceResolution` envelope
+consumed by the modelo calculate path.
 
 :func:`aggregate_per_modelo` remains the provider-grouped service for
 per-modelo rollup workflows. It is not the resolved-source envelope used by
@@ -16,16 +18,19 @@ calculation; mesh helpers such as :func:`merge_source_resolutions`,
 :func:`collect_unhandled_source_diagnostics`, and
 :func:`build_binding_source_dispositions` enforce exclusive ownership, declared
 precedence, no-silent-blank diagnostics, and the enrolled / deferred / reserved
-:class:`BindingSourceDisposition` registry.
+:class:`~aeat.application.aggregation.BindingSourceDisposition` registry.
 
 Concrete resolvers re-exported here include
-:class:`LedgerIvaAggregationSourceResolver`,
-:class:`RetencionesAggregationSourceResolver`,
-:class:`OssIossLedgerSourceResolver`, :class:`ProfileSourceResolver`, and
-:class:`WithholdingSourceResolver`. The calculation path also composes
-prior-filing, relation-prefill, invoice, borrador, and IVA-wallet resolvers from
-neighboring application packages; their shared contract is still
-:class:`CalculationSourceResolution`, not :class:`CasillaAggregation`.
+:class:`~aeat.application.aggregation.LedgerIvaAggregationSourceResolver`,
+:class:`~aeat.application.aggregation.RetencionesAggregationSourceResolver`,
+:class:`~aeat.application.aggregation.OssIossLedgerSourceResolver`,
+:class:`~aeat.application.aggregation.ProfileSourceResolver`, and
+:class:`~aeat.application.aggregation.WithholdingSourceResolver`. The calculation
+path also composes prior-filing, relation-prefill, invoice, borrador, and
+IVA-wallet resolvers from neighboring application packages; their shared
+contract is still
+:class:`~aeat.application.aggregation.CalculationSourceResolution`, not
+:class:`~aeat.application.aggregation.CasillaAggregation`.
 
 Aggregation resolvers prepare provenance-carrying source values; they do not
 execute registry formulas, decide filing readiness, or mutate work-unit filing
@@ -34,13 +39,14 @@ state. Those steps remain in :mod:`aeat.domain.calculations.registry` and
 
 The facade also re-exports encrypted observation repositories for the
 retenciones and withholding stores, informativa rollups, and the shared
-:class:`AggregationError` failure taxonomy.
+:class:`~aeat.application.aggregation.AggregationError` failure taxonomy.
 
 See Also:
     :mod:`aeat.application.modelo`
         Work-unit calculate services that consume
-        :class:`CalculationSourceResolution` values and persist contributing
-        ``source_transaction_ids`` on calculation revisions.
+        :class:`~aeat.application.aggregation.CalculationSourceResolution`
+        values and persist contributing ``source_transaction_ids`` on
+        calculation revisions.
     :mod:`aeat.domain.transactions`
         Ledger transaction catalogue resolved by ledger IVA, Renta, OSS/IOSS,
         evidence-advisory, and filing-snapshot aggregation paths.
