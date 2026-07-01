@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from contextlib import nullcontext
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -603,70 +604,33 @@ def test_default_route_repository_refuses_pointer_scoped_active_profile_without_
         secure_object_repository_for_active_bucket_or_default_route()
 
 
-def test_runtime_repository_factory_rechecks_live_session(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("replacement_session", "match"),
+    (
+        (None, "no active bucket session"),
+        (_session(_BUCKET_B_ID), "active bucket session changed"),
+        (_sealed_session(_BUCKET_A_ID), "active bucket session is sealed"),
+        (
+            _session(_BUCKET_A_ID, opened_at=datetime(2000, 1, 1, tzinfo=UTC), idle_minutes=5),
+            "active bucket session has expired",
+        ),
+        (_session(_BUCKET_A_ID, unsecured_backend=True), "active bucket session uses unsecured backend"),
+    ),
+    ids=("no-session", "bucket-changed", "sealed", "expired", "unsecured"),
+)
+def test_runtime_repository_factory_rechecks_live_session(
+    tmp_path: Path,
+    replacement_session: BucketSession | None,
+    match: str,
+) -> None:
     settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
 
     with activate_session(_session(_BUCKET_A_ID)):
         runtime = inspect_storage_runtime(settings, now=_NOW)
 
-    with pytest.raises(StorageValidationError, match="no active bucket session"):
-        runtime.secure_object_repository()
-
-
-def test_runtime_repository_factory_rechecks_session_bucket(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
-
-    with activate_session(_session(_BUCKET_A_ID)):
-        runtime = inspect_storage_runtime(settings, now=_NOW)
-
+    replacement_context = nullcontext() if replacement_session is None else activate_session(replacement_session)
     with (
-        activate_session(_session(_BUCKET_B_ID)),
-        pytest.raises(StorageValidationError, match="active bucket session changed"),
-    ):
-        runtime.secure_object_repository()
-
-
-def test_runtime_repository_factory_rechecks_sealed_session(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
-    sealed_session = _session(_BUCKET_A_ID)
-    sealed_session.close()
-
-    with activate_session(_session(_BUCKET_A_ID)):
-        runtime = inspect_storage_runtime(settings, now=_NOW)
-
-    with (
-        activate_session(sealed_session),
-        pytest.raises(StorageValidationError, match="active bucket session is sealed"),
-    ):
-        runtime.secure_object_repository()
-
-
-def test_runtime_repository_factory_rechecks_expired_session(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
-    expired_session = _session(
-        _BUCKET_A_ID,
-        opened_at=datetime(2000, 1, 1, tzinfo=UTC),
-        idle_minutes=5,
-    )
-
-    with activate_session(_session(_BUCKET_A_ID)):
-        runtime = inspect_storage_runtime(settings, now=_NOW)
-
-    with (
-        activate_session(expired_session),
-        pytest.raises(StorageValidationError, match="active bucket session has expired"),
-    ):
-        runtime.secure_object_repository()
-
-
-def test_runtime_repository_factory_rechecks_unsecured_session(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
-
-    with activate_session(_session(_BUCKET_A_ID)):
-        runtime = inspect_storage_runtime(settings, now=_NOW)
-
-    with (
-        activate_session(_session(_BUCKET_A_ID, unsecured_backend=True)),
-        pytest.raises(StorageValidationError, match="active bucket session uses unsecured backend"),
+        replacement_context,
+        pytest.raises(StorageValidationError, match=match),
     ):
         runtime.secure_object_repository()
