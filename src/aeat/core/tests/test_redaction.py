@@ -124,31 +124,35 @@ def test_cli_public_output_policy_is_emit_only_while_diagnostic_persists() -> No
     assert diagnostic_output_policy.redaction_rules == diagnostic_storage_policy.redaction_rules
 
 
-def test_cli_output_text_does_not_corrupt_tabular_column_header() -> None:
-    """A tab-delimited column header must survive the identifier redactor.
+@pytest.mark.parametrize(
+    ("line", "expected", "forbidden"),
+    (
+        pytest.param(
+            "filing_record_id\tbucket_id\tmodelo\tyear\tperiod\tstatus\tfiled_at\tfiled_by",
+            "filing_record_id\tbucket_id\tmodelo\tyear\tperiod\tstatus\tfiled_at\tfiled_by",
+            (CLI_BUCKET_ID_PLACEHOLDER,),
+            id="tabular-header",
+        ),
+        pytest.param(
+            f"bucket_id\t{_PROFILE_ID}",
+            f"bucket_id\t{CLI_BUCKET_ID_PLACEHOLDER}",
+            (_PROFILE_ID,),
+            id="two-cell-key-value-row",
+        ),
+    ),
+)
+def test_cli_output_text_bucket_id_tabular_heuristic_cases(
+    line: str,
+    expected: str,
+    forbidden: tuple[str, ...],
+) -> None:
+    """Headers pass through, but genuine ``key<TAB>value`` rows still redact."""
 
-    The ``filing-record list`` header places ``bucket_id`` immediately before
-    the ``modelo`` column name. The ``label<TAB>value`` heuristic previously
-    rewrote ``modelo`` into ``<bucket-id>``, corrupting the header. The header
-    carries no values and must pass through verbatim.
-    """
+    rendered = redact_for_cli_output(line)
 
-    header = "filing_record_id\tbucket_id\tmodelo\tyear\tperiod\tstatus\tfiled_at\tfiled_by"
-
-    rendered = redact_for_cli_output(header)
-
-    assert rendered == header
-    assert "\tmodelo\t" in rendered
-    assert CLI_BUCKET_ID_PLACEHOLDER not in rendered
-
-
-def test_cli_output_text_still_redacts_two_cell_key_value_rows() -> None:
-    """The header guard must not weaken redaction of genuine ``key<TAB>value`` rows."""
-
-    rendered = redact_for_cli_output(f"bucket_id\t{_PROFILE_ID}")
-
-    assert _PROFILE_ID not in rendered
-    assert rendered == f"bucket_id\t{CLI_BUCKET_ID_PLACEHOLDER}"
+    assert rendered == expected
+    for fragment in forbidden:
+        assert fragment not in rendered
 
 
 def test_cli_output_reveal_identifiers_unredacts_only_profile_and_bucket() -> None:
