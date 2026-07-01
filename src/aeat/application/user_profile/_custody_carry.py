@@ -38,6 +38,7 @@ from ...adapters.persistence.storage import (
     SecureObjectNamespaceDefinition,
     StorageCustodyProfile,
 )
+from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.hashing import sha256_hex
 
 if TYPE_CHECKING:
@@ -70,7 +71,7 @@ def _envelope_payload(record: SecureObjectRecord, payload_type: type) -> object:
     from ...adapters.persistence.storage.envelope._envelope import Envelope
 
     envelope_cls = Envelope.for_payload_type(payload_type)
-    return envelope_cls.model_validate_json(record.payload.decode("utf-8")).payload
+    return envelope_cls.model_validate_json(record.payload.decode(_UTF_8)).payload
 
 
 def _bound_resolver(repo_factory: Callable[[], object]) -> NaturalKeyResolver:
@@ -78,6 +79,8 @@ def _bound_resolver(repo_factory: Callable[[], object]) -> NaturalKeyResolver:
 
     def _resolve(record: SecureObjectRecord, _bucket_id: str) -> str:
         repo = repo_factory()
+        # TYPE-IGNORE-RATIONALE-BOUND-REPO-DUCK-TYPE: ``repo_factory`` returns
+        # ``object`` so every ``SecureBoundRepository`` shares one resolver.
         payload = _envelope_payload(record, repo.payload_model())  # type: ignore[attr-defined]
         return repo.extract_identifier(payload)  # type: ignore[attr-defined]
 
@@ -113,7 +116,7 @@ def _json_field_resolver(field: str) -> NaturalKeyResolver:
     """Resolver for an :class:`Envelope` row whose natural key is one top-level payload field."""
 
     def _resolve(record: SecureObjectRecord, _bucket_id: str) -> str:
-        envelope = json.loads(record.payload.decode("utf-8"))
+        envelope = json.loads(record.payload.decode(_UTF_8))
         return str(envelope["payload"][field])
 
     return _resolve
@@ -184,6 +187,9 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
         )
 
         payload = _envelope_payload(record, IvaWalletDecisionEnvelopePayload)
+        # TYPE-IGNORE-RATIONALE-ENVELOPE-PAYLOAD-OBJECT: ``_envelope_payload``
+        # returns ``object`` at this generic-resolver boundary; ``payload_type``
+        # (passed above) is the real runtime type, so ``.decision`` exists.
         return iva_wallet_decision_event_key(payload.decision)  # type: ignore[attr-defined]
 
     resolvers["aeat.calculations.iva_wallet.reconciliation_decision_events"] = _iva_wallet_event_key
@@ -295,7 +301,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers["aeat.application.evidence.bundles"] = _bound_resolver(_evidence_bundle_repo)
 
     def _purchase_invoice_evidence_repo() -> object:
-        from ..ledger._evidence import PurchaseInvoiceEvidenceRepository
+        from ..ledger import PurchaseInvoiceEvidenceRepository
 
         return PurchaseInvoiceEvidenceRepository()
 
@@ -355,9 +361,9 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
         return M036DeclarationResult
 
     def _m036_key(bucket_id: str, declaration_id: str) -> str:
-        from ..modelo._m036_lifecycle import _m036_declaration_object_key
+        from ..modelo import m036_declaration_object_key
 
-        return _m036_declaration_object_key(bucket_id, declaration_id)
+        return m036_declaration_object_key(bucket_id, declaration_id)
 
     resolvers["aeat.application.modelo.m036_declaration"] = _snapshot_resolver(
         _m036_payload,
@@ -405,10 +411,10 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
 
         obs = _envelope_payload(record, FiledDeclaracionObservation)
         return filed_declaracion_observation_object_key(
-            obs.modelo,  # type: ignore[attr-defined]
-            obs.ejercicio,  # type: ignore[attr-defined]
-            obs.period,  # type: ignore[attr-defined]
-            obs.expediente_id,  # type: ignore[attr-defined]
+            obs.modelo,  # type: ignore[attr-defined] # TYPE-IGNORE-RATIONALE-ENVELOPE-PAYLOAD-OBJECT
+            obs.ejercicio,  # type: ignore[attr-defined] # TYPE-IGNORE-RATIONALE-ENVELOPE-PAYLOAD-OBJECT
+            obs.period,  # type: ignore[attr-defined] # TYPE-IGNORE-RATIONALE-ENVELOPE-PAYLOAD-OBJECT
+            obs.expediente_id,  # type: ignore[attr-defined] # TYPE-IGNORE-RATIONALE-ENVELOPE-PAYLOAD-OBJECT: object-typed generic-resolver payload
         )
 
     resolvers["aeat.outbound.aeat.sede.filed_declaration.observations"] = _filed_observation_key
@@ -421,10 +427,10 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
 
         obs = _envelope_payload(record, IvaCompensationWalletObservation)
         return iva_compensation_wallet_observation_object_key(
-            obs.taxpayer_nif,  # type: ignore[attr-defined]
-            obs.target_year,  # type: ignore[attr-defined]
-            obs.target_period,  # type: ignore[attr-defined]
-            obs.captured_at.isoformat(),  # type: ignore[attr-defined]
+            obs.taxpayer_nif,  # type: ignore[attr-defined] # TYPE-IGNORE-RATIONALE-ENVELOPE-PAYLOAD-OBJECT
+            obs.target_year,  # type: ignore[attr-defined] # TYPE-IGNORE-RATIONALE-ENVELOPE-PAYLOAD-OBJECT
+            obs.target_period,  # type: ignore[attr-defined] # TYPE-IGNORE-RATIONALE-ENVELOPE-PAYLOAD-OBJECT
+            obs.captured_at.isoformat(),  # type: ignore[attr-defined] # TYPE-IGNORE-RATIONALE-ENVELOPE-PAYLOAD-OBJECT: object-typed generic-resolver payload
         )
 
     resolvers["aeat.outbound.aeat.sede.iva_compensation_wallet.observations"] = _iva_wallet_observation_key
