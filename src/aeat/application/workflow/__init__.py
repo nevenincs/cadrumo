@@ -17,10 +17,25 @@ The profile-discovery surface is manifest-backed and intentionally cheap.
 :func:`~aeat.application.workflow.resolve_profile_bucket` scan plaintext
 bucket manifests and return
 :class:`~aeat.application.workflow.ProfileBucketPointer` records without
-opening an encrypted database. Active-profile status and repair use the
-redacted :class:`~aeat.application.workflow.ActiveProfileHealth` projection;
+opening an encrypted database. The scanners resolve immutable bucket UUIDs
+and operator labels, filter tombstoned buckets from live surfaces by default,
+and leave tombstoned-by-id inspection to diagnostics and repair callers.
+Active-profile status and repair use the redacted
+:class:`~aeat.application.workflow.ActiveProfileHealth` projection;
 sensitive profile records are loaded only through the active bucket and the
 user-profile orchestration layer.
+
+Workflow persistence is likewise bucket-scoped.
+:func:`~aeat.application.workflow.workflow_state_repository` binds the
+state envelope to the currently resolved active bucket via the storage
+runtime's secure-object repository. A cold root with no active pointer is the
+only bootstrap exception, so recovery and status probes can observe an absent
+state without manufacturing a profile bucket. Reset helpers
+:func:`~aeat.application.workflow.fingerprint_workflow_state` and
+:func:`~aeat.application.workflow.reset_workflow_state` operate on the
+workflow-state row only: they emit a plaintext-free
+:class:`~aeat.application.workflow.WorkflowStateResetFingerprint` and append
+the ``workflow_state.reset`` bucket event before deleting the encrypted row.
 
 This initializer is only the public re-export boundary. Manifest parsing stays
 in :mod:`aeat.application.workflow._profile_bucket_scan`; health projection and
@@ -48,6 +63,10 @@ See Also:
         manifest-backed profile buckets without opening secure storage.
     :func:`aeat.application.workflow.assess_active_profile_health`: Produce
         the redacted active-profile status used by CLI status surfaces.
+    :func:`aeat.application.workflow.workflow_state_repository`: Resolve the
+        active-bucket secure-object repository for encrypted workflow state.
+    :class:`aeat.application.workflow.WorkflowStateResetFingerprint`: Redacted
+        reset audit record produced before workflow-state deletion.
     :class:`aeat.application.workflow.DeadlineEngineProtocol`: Protocol
         boundary for pluggable deadline calculation collaborators.
 """
