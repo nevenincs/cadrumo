@@ -776,6 +776,41 @@ class FilingRecordLocalObservationResult(OutputSchema):
     aeat_accepted: bool
 
 
+@register_schema("modelo.casilla")
+class ModeloCasillaResult(OutputSchema):
+    """Single-casilla semantic detail returned by ``aeat app modelo casilla``.
+
+    Projects
+    :class:`~aeat.domain.calculations.registry.ModeloCasillaDetailReport`
+    into the JSON envelope: an operator can look up one casilla's official
+    label, legal / source grounding, input kind, and â€” when the casilla is
+    computed â€” the resolved formula ``expression`` from the authoritative
+    :class:`~aeat.domain.calculations.registry.CasillaId` definition on the
+    resolved registry snapshot, without running a calculation. ``legal_refs``
+    and ``source_refs`` stay required so the grounding survives the boundary.
+    """
+
+    operation: str = "modelo.casilla"
+    modelo: str
+    revision: str
+    filing_year: int | None = None
+    period: str | None = None
+    casilla_id: CasillaId
+    number: str
+    label: str
+    localized_labels: dict[str, str] = Field(default_factory=dict)
+    localized_help: dict[str, str] = Field(default_factory=dict)
+    section: tuple[str, ...] = ()
+    data_type: str
+    input_kind: str
+    required: bool
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+    binding: BindingId | None = None
+    formula_id: FormulaId | None = None
+    formula_expression: dict[str, object] | None = None
+
+
 class CasillaRowPayload(OutputSchema):
     """One casilla row in the casillas output."""
 
@@ -1293,6 +1328,7 @@ __all__ = [
     "ModeloAuditShowResult",
     "ModeloBindingsListResult",
     "ModeloBindingsPreviewResult",
+    "ModeloCasillaResult",
     "ModeloCasillasResult",
     "ModeloCompareResult",
     "ModeloDescribeResult",
