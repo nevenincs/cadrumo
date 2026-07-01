@@ -13,8 +13,14 @@ _STATE_INTEGRAL_QUOTA_ART_62_REF = "ley-35-2006:art-62"
 _GENERAL_SCALE_ART_63_REF = "ley-35-2006:art-63"
 _SAVINGS_STATE_SCALE_ART_66_REF = "ley-35-2006:art-66"
 _STATE_LIQUID_QUOTA_ART_67_REF = "ley-35-2006:art-67"
+_STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF = "ley-35-2006:art-64"
 _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF = "ley-35-2006:art-75"
 _MODELO_100_2025_FORM_ORDER_REF = "orden-hac-277-2026:art-3"
+
+# LIRPF art. 64 (anualidades por alimentos, estatal separate escala, #532) is a
+# legitimate legal_ref on the state escala/cuota-base formulas ONLY for the
+# revisions where the separate-escala régimen is modelled.
+_SEPARATE_ESCALA_MODELLED_YEARS = frozenset({2020, 2021, 2022, 2023, 2024, 2025})
 
 
 def _modelo_100_revisions():
@@ -27,6 +33,8 @@ def test_modelo_100_state_quota_formula_refs_match_lirpf_articles(filing_year: i
     revision = _modelo_100_revisions()[str(filing_year)]
     formulas_by_id = {formula.id: formula for formula in revision.formulas}
     form_order_refs = {_MODELO_100_2025_FORM_ORDER_REF} if filing_year == 2025 else set()
+    regime_modelled = filing_year in _SEPARATE_ESCALA_MODELLED_YEARS
+    regime_refs = {_STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF} if regime_modelled else set()
     expected_refs_by_formula = {
         f"renta-{filing_year}-tipo-medio-gravamen-estatal-base-liquidable-general": {
             _STATE_INTEGRAL_QUOTA_ART_62_REF,
@@ -43,16 +51,19 @@ def test_modelo_100_state_quota_formula_refs_match_lirpf_articles(filing_year: i
         f"renta-{filing_year}-cuota-escala-estatal-sobre-base-liquidable-general": {
             _STATE_INTEGRAL_QUOTA_ART_62_REF,
             _GENERAL_SCALE_ART_63_REF,
+            *regime_refs,
             *form_order_refs,
         },
         f"renta-{filing_year}-cuota-escala-estatal-sobre-minimo-personal-familiar": {
             _STATE_INTEGRAL_QUOTA_ART_62_REF,
             _GENERAL_SCALE_ART_63_REF,
+            *regime_refs,
             *form_order_refs,
         },
         f"renta-{filing_year}-cuota-base-liquidable-general-estatal": {
             _STATE_INTEGRAL_QUOTA_ART_62_REF,
             _GENERAL_SCALE_ART_63_REF,
+            *regime_refs,
             *form_order_refs,
         },
         f"renta-{filing_year}-cuota-integra-estatal": {

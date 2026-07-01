@@ -85,8 +85,19 @@ pytestmark = [
 
 _BORRADOR_FIXTURES_DIR = FIXTURES_DIR / "borrador"
 
-# Casillas computed by the engine from leaf input 0505.
-# Must NOT appear in inputs; the engine derives them.
+# Casilla 0505 (base liquidable general sometida a gravamen) is computed from
+# the 2020-2023 revisions onward (max(0, 0500), #532 Phase 2), so it can no
+# longer be supplied as a leaf input. The verification chain feeds the trabajo
+# leaf 0003 (ingresos íntegros) instead and lets the engine derive 0500 -> 0505.
+# In the fixture scenario the only work-income adjustment is the art. 19.2.f
+# LIRPF "otros gastos" deduction (min(2.000, rendimiento)), so the leaf is the
+# extracted 0505 inflated by 2.000 EUR to net back to the fixture's base
+# liquidable general; the engine then recomputes 0505 == extracted 0505.
+_TRABAJO_INGRESOS_INTEGROS_CASILLA: CasillaId = validated_casilla_id(
+    "0003",
+    surface="_TRABAJO_INGRESOS_INTEGROS_CASILLA",
+)
+_OTROS_GASTOS_ART_19_2_F: Decimal = Decimal("2000")
 _BASE_LIQUIDABLE_GENERAL_CASILLA: CasillaId = validated_casilla_id("0505", surface="_BASE_LIQUIDABLE_GENERAL_CASILLA")
 _CUOTA_INTEGRA_ESTATAL_CASILLA: CasillaId = validated_casilla_id("0545", surface="_CUOTA_INTEGRA_ESTATAL_CASILLA")
 _CUOTA_INTEGRA_AUTONOMICA_CASILLA: CasillaId = validated_casilla_id(
@@ -212,11 +223,15 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
         f"{type(extracted[_BASE_LIQUIDABLE_GENERAL_CASILLA]).__name__!r}"
     )
 
-    # Build engine inputs: supply only the leaf casilla 0505.
-    # All computed casillas (0545, 0546, 0585, 0586) are excluded — the engine
-    # must derive them from 0505 via the bracket formulas.
+    # Build engine inputs: supply the trabajo leaf 0003 derived from the
+    # extracted 0505 (0505 is computed from 0500 in these revisions and cannot
+    # be fed). 0003 = extracted 0505 + 2.000 EUR nets, through the art. 19.2.f
+    # otros-gastos deduction, back to 0500 == 0505 == extracted 0505; the engine
+    # then recomputes the closure casillas (0545, 0546, 0585, 0586).
+    base_liquidable = extracted[_BASE_LIQUIDABLE_GENERAL_CASILLA]
+    assert isinstance(base_liquidable, Decimal)
     inputs: dict[CasillaId, Decimal] = {
-        cid: val for cid, val in extracted.items() if cid not in _COMPUTED_CASILLAS_M100 and isinstance(val, Decimal)
+        _TRABAJO_INGRESOS_INTEGROS_CASILLA: base_liquidable + _OTROS_GASTOS_ART_19_2_F,
     }
 
     try:
@@ -239,6 +254,15 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
         )
 
     engine_values = dict(result.values)
+
+    # The engine must recompute 0505 (now a computed casilla) back to the
+    # extracted base liquidable general from the 0003 leaf.
+    engine_base_liquidable = engine_values.get(_BASE_LIQUIDABLE_GENERAL_CASILLA)
+    assert engine_base_liquidable == base_liquidable, (
+        f"VERIFIED-FAIL [M100-borrador/{year}]: engine recomputed 0505 as "
+        f"{engine_base_liquidable!r} but fixture base liquidable is {base_liquidable!r}; "
+        f"leaf 0003={inputs[_TRABAJO_INGRESOS_INTEGROS_CASILLA]!r}."
+    )
 
     # VERIFIED gate: all four closure casillas must match.
     for closure_id in _COMPUTED_CASILLAS_M100:
@@ -264,7 +288,7 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
             f"VERIFIED-FAIL [M100-borrador/{year}]: engine recomputed casilla {closure_id!r} as "
             f"{engine_val!r} but corpus fixture shows {extracted_val!r}.\n"
             f"  diff: {engine_val - extracted_val!r}\n"
-            f"  leaf input 0505={inputs.get(_BASE_LIQUIDABLE_GENERAL_CASILLA)!r}\n"
+            f"  leaf input 0003={inputs.get(_TRABAJO_INGRESOS_INTEGROS_CASILLA)!r}\n"
             f"  engine chain: 0505={engine_values.get(_BASE_LIQUIDABLE_GENERAL_CASILLA)!r} "
             f"0545={engine_values.get(_CUOTA_INTEGRA_ESTATAL_CASILLA)!r} "
             f"0546={engine_values.get(_CUOTA_INTEGRA_AUTONOMICA_CASILLA)!r}"
