@@ -252,6 +252,7 @@ def test_validator_rejects_roll_forward_balances_with_wrong_arity() -> None:
     ("operator_name", "expression"),
     (
         ("all_nonzero", 'all_nonzero(["01", "missing-casilla"])'),
+        ("at_most_one_positive", 'at_most_one_positive(["01", "missing-casilla"])'),
         ("any_nonzero", 'any_nonzero(["01", "missing-casilla"])'),
         ("cap_le_when_positive", 'cap_le_when_positive(["15", "missing-casilla"])'),
         ("equals", 'equals(["01", "missing-casilla"])'),
@@ -1205,6 +1206,7 @@ def test_convenio_rate_table_rejects_concrete_rate_without_row_legal_refs() -> N
             tipo_renta="interest",
             rate="0.10",
             legal_ref_anchor="convenio-es-ma-1978:art-11",
+            legal_refs=(),
             valid_from=date(2025, 1, 1),
             valid_to=date(2025, 12, 31),
         )

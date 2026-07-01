@@ -19,3 +19,14 @@ predicate_id = "modelo-202-base-imponible-previa-determinada-cuando-resultado-po
 expression = 'implies_nonzero(["04", "13"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-27-2014:art-40-3", "ley-27-2014:art-40"]
+
+# Modalidad 40.3 resultado-previo lane exclusivity: the clave 32 instructions
+# read "clave [18] (o clave [26])", so B1 (clave 18) and B2 (clave 26) are
+# alternatives. The formula adds both zero-default lanes to preserve B2-only
+# filings, but verification must refuse the overstatement case where both
+# alternative lanes are positive.
+[[revisions.2019-2022.verification_predicates]]
+predicate_id = "modelo-202-b1-b2-resultado-previo-at-most-one-positive"
+expression = 'at_most_one_positive(["18", "26"])'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-27-2014:art-40-3", "ley-27-2014:art-40"]

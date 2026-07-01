@@ -167,6 +167,35 @@ def test_cap_le_when_positive_holds_when_ceiling_is_zero_or_negative() -> None:
     )
 
 
+def test_at_most_one_positive_blocks_only_multiple_positive_casillas() -> None:
+    """at_most_one_positive treats absent, zero, and negative values as non-positive."""
+
+    expression = 'at_most_one_positive(["01", "02", "07"])'
+    allowed = _casilla_values((_CASILLA_01, "1200"), (_CASILLA_02, "0"), (_CASILLA_07, "-50"))
+    violating = _casilla_values((_CASILLA_01, "1200"), (_CASILLA_02, "1"), (_CASILLA_07, "0"))
+
+    assert evaluate_predicate_expression(expression, allowed, _workflow_profile()) is True
+    assert evaluate_predicate_expression(expression, violating, _workflow_profile()) is False
+
+
+def test_at_most_one_positive_emits_blocking_rule_finding() -> None:
+    """A violated at_most_one_positive predicate produces a BLOCKING_RULE finding."""
+
+    predicate = VerificationPredicateDefinition(
+        predicate_id="test-at-most-one-positive",
+        legal_refs=("ley-27-2014:art-40-3",),
+        expression='at_most_one_positive(["01", "02"])',
+        finding_kind="BLOCKING_RULE",
+    )
+    values = _casilla_values((_CASILLA_01, "1200"), (_CASILLA_02, "800"))
+
+    findings = evaluate_verification_predicates((predicate,), values, _workflow_profile())
+
+    assert len(findings) == 1
+    assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
+    assert "test-at-most-one-positive" in findings[0].message
+
+
 # ---------------------------------------------------------------------------
 # contract: roll_forward_balances carry-forward continuity predicate (IS-2)
 #
