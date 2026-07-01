@@ -2094,6 +2094,9 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
+        rescate_type_help: 'Pension-plan capital rescate type (LIRPF DT 12a): total (whole capital at once) or parcial (staged withdrawals). A classification and provenance signal, not an amount change: the 40% reduction applies to the pre-2007 share of whatever is received. For parcial, each withdrawal shares the same apartado-4 window.'
+        rescate_contingencia_year_help: 'Year the pension-plan contingency (retirement, disability, death) occurred. Determines the LIRPF DT 12a apartado-4 time window (Ley 26/2014): if the window is closed for the rescate year, the 40% reduction is withheld.'
+        rescate_year_help: 'Year the rescate benefit is received (defaults to the filing year). Compared against the LIRPF DT 12a apartado-4 window measured from --contingencia-year.'
   common:
     errors:
       draft_id_not_found: Draft ID %{draft_id} not found
