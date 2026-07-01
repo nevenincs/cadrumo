@@ -42,6 +42,9 @@ related:
 - Reviewed W09.P45.S303 changes to `src/aeat/application/wizard/_commands.py`, `src/aeat/entrypoints/cli/tests/test_profile_lifecycle_verbs.py`, and profile-validation locale leaves.
 - Checked that profile-create wizard validation now catches pydantic `ValidationError` before the generic CLI boundary and renders concrete `--flag` details for the joint-taxation missing-spouse case.
 - Checked validation evidence from the focused Rosa regression, the full profile lifecycle CLI module, touched-file ruff, locale scaffold/audit, direct isolated CLI output, reviewer output, and RAG grounding.
+- Reviewed W09.P45.S283 as a no-code closure against the retired `src/aeat/diagnostics/profile.py` target.
+- Checked that `aeat.diagnostics` was removed as an unapproved production package, the last pre-delete profile implementation already used `tr("cli.diagnostics.profile.errors.*")`, and current approved diagnostics/profile-adjacent modules do not contain the targeted `BadParameter` residual.
+- Checked validation evidence from source/history searches, retired-surface tests, feature-scoped vault checks, reviewer output, and RAG grounding.
 
 ## Findings
 
@@ -84,6 +87,10 @@ No findings for the D5 IVA classification locale/readiness closure. The first Hu
 ### w09-p45-s303 | low | no findings
 
 No findings for the profile-create validation specificity fix. The dynamic wizard command now formats leaked `SetupAnswers` pydantic validation entries with operator-facing flag names and raises a localized `BadParameter`, so Rosa's joint-taxation path names `--spouse-tax-id` and `--taxation-type` instead of falling through to the generic command-input validation boundary. The test covers the concrete testimonial path; other wizard validation shapes now share the same generic formatter.
+
+### w09-p45-s283 | low | no findings
+
+No findings for the no-code diagnostics-profile closure. The targeted file and package are absent by design after the unapproved `aeat.diagnostics` package removal, and the last pre-delete implementation already localized the listed refusal helpers. Current approved adjacent modules do not carry the targeted `BadParameter` sites, and no source/project references reintroduce `aeat.diagnostics` or stale `cli.diagnostics.profile.*` locale leaves. Reviewer Erdos noted only RAG index freshness lag, not a closure blocker.
 
 ## Recommendations
 
