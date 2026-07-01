@@ -21,7 +21,14 @@ such as :class:`~aeat.application.auth.AuthStatusResult`,
 configuration is :class:`~aeat.application.auth.AuthState`, while provider
 metadata is reported through
 :class:`~aeat.application.auth.AuthProviderDescription` and
-:class:`~aeat.application.auth.AuthProvidersReport`.
+:class:`~aeat.application.auth.AuthProvidersReport`. Configuration writes are
+gated by :class:`~aeat.application.workflow.ActiveProfileHealth`: a missing,
+dangling, or unreadable active bucket is refused before workflow state changes.
+Successful provider configuration persists the updated
+:class:`~aeat.application.workflow.WorkflowState` and the typed
+``AUTH_PROVIDER_CONFIGURED`` bucket event in one secure-object transaction;
+the event payload may include a certificate path but never private keys,
+passwords, session tokens, or QR payloads.
 
 The session lifecycle is encrypted and profile-scoped.
 :func:`~aeat.application.auth.ensure_authenticated_aeat_session` and
@@ -31,7 +38,14 @@ The session lifecycle is encrypted and profile-scoped.
 provider's :class:`~aeat.adapters.outbound.aeat.auth.AeatSession` /
 :class:`~aeat.adapters.outbound.aeat.auth.AeatLoginAssertion` pair. Live-read
 call sites combine this facade with :class:`~aeat.core.access_gate.AeatAccessGate`;
-this package does not expose AEAT-side write verbs.
+this package does not expose AEAT-side write verbs. Session object keys are
+derived from the active bucket through
+:func:`~aeat.application.auth.storage_state_paths`, and operator verbs open an
+active-profile storage span when the process has a selected pointer but no
+ambient master-key session. Cl@ve Móvil session acquisition additionally fails
+closed with :class:`~aeat.application.auth.AuthProfileIdentityMismatchError`
+when the configured identity, active profile tax id, or verified session
+identity disagree.
 
 Additional package-level surfaces cover local auth diagnostics and
 apoderado configuration. :class:`~aeat.application.auth.AuthDiagnosticSummary`,
@@ -55,6 +69,9 @@ See Also:
         Public workflow facade that owns
         :class:`~aeat.application.workflow.WorkflowState` and
         :class:`~aeat.application.workflow.ActiveProfileHealth`.
+    :class:`aeat.domain.buckets.BucketEventHistoryRepository`
+        Durable bucket event catalogue that receives auth configuration,
+        session, lock, and clear events without secret payload material.
     :mod:`aeat.application.live`
         Read-only AEAT capture workflows that obtain verified sessions through
         this package.
