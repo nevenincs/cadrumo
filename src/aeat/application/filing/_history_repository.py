@@ -32,11 +32,12 @@ from pydantic import BaseModel
 
 from ...adapters.persistence.storage import (
     APPLICATION_FILING_HISTORY_NAMESPACE,
+    ClassificationError,
+    EnvelopeVersionError,
+    SecureBoundRepository,
     SecureObjectRepository,
     SensitivityClass,
 )
-from ...adapters.persistence.storage.envelope import SecureBoundRepository
-from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ._history_models import ModeloHistory
 from ._runtime_repository import (
     resolve_application_filing_bucket_id,
