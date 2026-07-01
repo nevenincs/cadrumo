@@ -26,12 +26,14 @@ def test_modelo_309_validator_accepts_committed_definition() -> None:
 
 
 def test_modelo_309_metadata_matches_orden_hac_3625_2003() -> None:
-    modelo, _ = _load_modelo_309()
+    modelo, catalogues = _load_modelo_309()
     assert modelo.tax_domain == "iva"
     assert modelo.cadence == "ad_hoc"
     assert "orden-hac-3625-2003:apartado-1" in modelo.legal_refs
     assert "orden-hac-3625-2003:apartado-3" in modelo.legal_refs
     assert "aeat-dr-309-2023" in modelo.source_refs
+    assert catalogues.sources["aeat-modelo-309-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-309-2003-form"].evidence_tier == "layout_authority"
 
 
 def test_modelo_309_revision_uses_ad_hoc_period_selector() -> None:
@@ -49,6 +51,8 @@ def test_modelo_309_snapshot_builds_for_ad_hoc_period() -> None:
     assert snapshot.revision.orden_aplicabilidad == ("orden-hac-3625-2003:apartado-1",)
     assert "orden-hac-3625-2003:apartado-1" in snapshot.legal
     assert "orden-hac-3625-2003:apartado-3" in snapshot.legal
+    assert "aeat-modelo-309-procedure" in snapshot.sources
+    assert "boe-modelo-309-2003-form" in snapshot.sources
 
 
 def test_modelo_309_filing_schedule_is_ad_hoc() -> None:

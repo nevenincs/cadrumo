@@ -102,6 +102,8 @@ def test_committed_modelo_720_is_informative_only() -> None:
 
 def test_committed_modelo_720_workbook_parity_resolves_to_corpus_artefact() -> None:
     modelo, catalogues = _load_modelo_720()
+    assert catalogues.sources["aeat-modelo-720-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-720-2013-form"].evidence_tier == "layout_authority"
     for revision in modelo.revisions.values():
         ref = next(
             (r for r in revision.workbook_parity_refs if r.workbook_source == "aeat-dr-720"),
@@ -226,6 +228,7 @@ def test_committed_modelo_720_deadline_window_is_january_to_march_following_ejer
     assert window.period_kind == "annual"
     assert window.opens_on == expected_open
     assert window.closes_on == expected_close
+    assert "aeat-modelo-720-procedure" in window.source_refs
 
 
 def _layout_bindings_for(revision: ModeloRevision, record_name: str):

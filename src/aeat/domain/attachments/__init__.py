@@ -29,6 +29,20 @@ link-only attachment path.
 Callers must import public models, errors, enums, protocols, and service
 helpers from ``aeat.domain.attachments`` and must not reach into private
 underscore modules inside this package.
+
+See Also:
+    :mod:`aeat.application.ledger`
+        Ledger lifecycle that verifies attachment existence, byte custody, and
+        bucket ownership before a transaction claims attachment evidence.
+    :mod:`aeat.domain.invoices`
+        Purchase-invoice evidence records that remain distinct from generic
+        encrypted attachment bytes while sharing ledger evidence workflows.
+    :mod:`aeat.application.aggregation`
+        Calculation-source and evidence-advisory surfaces that consume
+        transaction evidence links without reading plaintext files from disk.
+    :mod:`aeat.adapters.persistence.storage`
+        Secure-object and encrypted blob storage that implements
+        :class:`AttachmentStoreProtocol`.
 """
 
 from __future__ import annotations

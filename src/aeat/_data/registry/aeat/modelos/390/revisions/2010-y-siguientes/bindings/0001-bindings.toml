@@ -7,7 +7,7 @@ legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".bindings.source_citations]]
-source_ref = "boe-modelo-390-2009-form"
+source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
 
 [[revisions."2010-y-siguientes".bindings]]
@@ -19,7 +19,7 @@ legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".bindings.source_citations]]
-source_ref = "boe-modelo-390-2009-form"
+source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
 
 [[revisions."2010-y-siguientes".bindings]]
@@ -31,7 +31,7 @@ legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".bindings.source_citations]]
-source_ref = "boe-modelo-390-2009-form"
+source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
 
 [[revisions."2010-y-siguientes".bindings]]
@@ -43,7 +43,7 @@ legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".bindings.source_citations]]
-source_ref = "boe-modelo-390-2009-form"
+source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
 
 # Annual IVA soportado deducible en importaciones — mirrors the M303
@@ -58,7 +58,7 @@ legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71",
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".bindings.source_citations]]
-source_ref = "boe-modelo-390-2009-form"
+source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
 
 [[revisions."2010-y-siguientes".bindings]]
@@ -70,7 +70,7 @@ legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".bindings.source_citations]]
-source_ref = "boe-modelo-390-2009-form"
+source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
 
 # -----------------------------------------------------------------------------
@@ -89,7 +89,7 @@ legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".bindings.source_citations]]
-source_ref = "boe-modelo-390-2009-form"
+source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
 
 [[revisions."2010-y-siguientes".bindings]]
@@ -101,7 +101,7 @@ legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".bindings.source_citations]]
-source_ref = "boe-modelo-390-2009-form"
+source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
 
 [[revisions."2010-y-siguientes".bindings]]
@@ -113,7 +113,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71",
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".bindings.source_citations]]
-source_ref = "boe-modelo-390-2009-form"
+source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
 
 # Régimen simplificado cuota devengada — relation-materialisation slot fed by
@@ -128,7 +128,7 @@ legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".bindings.source_citations]]
-source_ref = "boe-modelo-390-2009-form"
+source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
 
 [[revisions."2010-y-siguientes".bindings]]
@@ -136,10 +136,10 @@ id = "modelo-390-prev-303-compensacion-ultimo-periodo"
 source = "iva_compensation_annual_partition"
 selector = { source_modelo = "303", source_casilla_ids = ["iva.compensacion-generada-periodo", "iva.compensacion-aplicada-periodo", "iva.compensacion-disponible-fin-periodo", "iva.compensacion-pendiente-periodos-posteriores"], source_periods = ["1T", "2T", "3T", "4T"], partition_output = "last_period_amount" }
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".bindings.source_citations]]
-source_ref = "boe-modelo-390-2009-form"
+source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
 
 [[revisions."2010-y-siguientes".bindings]]
@@ -147,10 +147,10 @@ id = "modelo-390-prev-303-compensacion-generada-ejercicio-no-97"
 source = "iva_compensation_annual_partition"
 selector = { source_modelo = "303", source_casilla_ids = ["iva.compensacion-generada-periodo", "iva.compensacion-aplicada-periodo", "iva.compensacion-disponible-fin-periodo", "iva.compensacion-pendiente-periodos-posteriores"], source_periods = ["1T", "2T", "3T", "4T"], partition_output = "generated_not_in_last_amount" }
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".bindings.source_citations]]
-source_ref = "boe-modelo-390-2009-form"
+source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
 
 # -----------------------------------------------------------------------------

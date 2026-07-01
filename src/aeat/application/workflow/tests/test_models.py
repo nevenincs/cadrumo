@@ -34,6 +34,9 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_RUN_STARTED_AT = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
+_SITE_HEALTH_OBSERVED_AT = datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC)
+
 
 def _period(year: int = 2026, code: str = "1T") -> Period:
     return Period.from_year_and_code(year, code)
@@ -67,7 +70,7 @@ class TestComputeRunId:
                 tax_id="X1234567L",
                 modelo="130",
                 period=combined_period,
-                started_at=datetime.now(UTC),
+                started_at=_RUN_STARTED_AT,
             )
 
 
@@ -124,7 +127,7 @@ class TestSiteHealthAlert:
         return SiteHealthStatus(
             state=SiteHealthState.MANTENIMIENTO,
             evidence=evidence,
-            observed_at=datetime.now(tz=UTC),
+            observed_at=_SITE_HEALTH_OBSERVED_AT,
         )
 
     def test_alert_composes_stage_and_status(self) -> None:

@@ -22,12 +22,13 @@ def test_provision_creates_three_subdirectories(tmp_path: Path) -> None:
     paths = provision_bucket_directory(tmp_path, "alpha")
 
     assert paths.bucket_dir == tmp_path / "buckets" / "alpha"
-    assert paths.db_dir.is_dir()
-    assert paths.blobs_dir.is_dir()
-    assert paths.audit_dir.is_dir()
-    assert paths.db_dir == paths.bucket_dir / "db"
-    assert paths.blobs_dir == paths.bucket_dir / "blobs"
-    assert paths.audit_dir == paths.bucket_dir / "audit"
+    for subdir, dirname in (
+        (paths.db_dir, "db"),
+        (paths.blobs_dir, "blobs"),
+        (paths.audit_dir, "audit"),
+    ):
+        assert subdir == paths.bucket_dir / dirname
+        assert subdir.is_dir()
 
 
 def test_provision_is_fail_closed_on_existing_bucket(tmp_path: Path) -> None:
@@ -74,20 +75,23 @@ def test_provision_rejects_empty_bucket_id(tmp_path: Path) -> None:
         provision_bucket_directory(tmp_path, "")
 
 
-def test_provision_rejects_path_separator_in_bucket_id(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "bucket_id",
+    (
+        pytest.param("a/b", id="forward-slash"),
+        pytest.param("a\\b", id="backslash"),
+    ),
+)
+def test_provision_rejects_path_separator_in_bucket_id(tmp_path: Path, bucket_id: str) -> None:
     with pytest.raises(BucketValidationError, match="path separator"):
-        provision_bucket_directory(tmp_path, "a/b")
-    with pytest.raises(BucketValidationError, match="path separator"):
-        provision_bucket_directory(tmp_path, "a\\b")
+        provision_bucket_directory(tmp_path, bucket_id)
 
 
 def test_bucket_paths_is_pure_no_filesystem_side_effects(tmp_path: Path) -> None:
     paths = bucket_paths(tmp_path, "alpha")
 
-    assert not paths.bucket_dir.exists()
-    assert not paths.db_dir.exists()
-    assert not paths.blobs_dir.exists()
-    assert not paths.audit_dir.exists()
+    for path in (paths.bucket_dir, paths.db_dir, paths.blobs_dir, paths.audit_dir):
+        assert not path.exists()
     assert isinstance(paths, BucketPaths)
 
 

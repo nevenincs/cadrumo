@@ -181,7 +181,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI34.s
 review_status = "reviewed"
 
 [sources."boe-modelo-720-2013-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hap-72-2013.html"

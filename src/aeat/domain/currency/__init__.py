@@ -26,11 +26,18 @@ Major declarations:
   the failure taxonomy.
 
 See Also:
-    - :mod:`aeat.adapters.outbound.fx` for the bundled ECB
-      :class:`~aeat.adapters.outbound.fx.EcbReferenceRateProvider` adapter that
-      implements :class:`ExchangeRateProvider`.
-    - :mod:`aeat.application.aggregation` for ledger import and source-resolution
-      paths that consume euro-normalized amounts.
+    :mod:`aeat.adapters.outbound.fx`
+        Bundled ECB :class:`~aeat.adapters.outbound.fx.EcbReferenceRateProvider`
+        adapter that implements :class:`ExchangeRateProvider`.
+    :mod:`aeat.application.ledger`
+        Import path that applies this service and persists ``fx_rate`` /
+        ``value_in_eur`` on transactions.
+    :mod:`aeat.domain.transactions`
+        Transaction model coupling invariants for foreign-currency rate
+        provenance and EUR projection fields.
+    :mod:`aeat.application.aggregation`
+        Source-resolution predicates and amount projections that reject
+        unconverted foreign rows instead of silently treating them as EUR.
 """
 
 from ._errors import (

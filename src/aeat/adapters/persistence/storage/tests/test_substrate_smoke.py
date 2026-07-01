@@ -36,6 +36,10 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+_SECRET_CREATED_AT = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
+_SECRET_EXPIRES_AT = _SECRET_CREATED_AT + timedelta(hours=12)
+_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 25, 14, 0, 0, tzinfo=UTC)
+
 
 def _file_master_provider(tmp_path: Path) -> FileFallbackMasterKeyProvider:
     return FileFallbackMasterKeyProvider(
@@ -71,8 +75,8 @@ def test_full_chain_secret_round_trip(tmp_path: Path) -> None:
         value=b"refresh-token-abc-xyz",
         classification=SensitivityClass.SECRET,
         metadata={"issued_by": "smoke"},
-        created_at=datetime.now(UTC),
-        expires_at=datetime.now(UTC) + timedelta(hours=12),
+        created_at=_SECRET_CREATED_AT,
+        expires_at=_SECRET_EXPIRES_AT,
     )
     secret_store.put(record)
     loaded = secret_store.get(record.key)
@@ -103,7 +107,7 @@ def test_envelope_round_trip(tmp_path: Path) -> None:
 
     env = Envelope[_Payload](
         schema_version=1,
-        written_at=datetime.now(UTC),
+        written_at=_ENVELOPE_WRITTEN_AT,
         classification=SensitivityClass.OPERATIONAL,
         payload=_Payload(kind="smoke", amount=42),
     )
@@ -166,6 +170,16 @@ with exclusive_file_lock(target):
 """
 
 
+def _stop_process(process: subprocess.Popen[str]) -> None:
+    if process.poll() is None:
+        process.terminate()
+    try:
+        process.wait(timeout=10.0)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(timeout=5.0)
+
+
 def test_cross_process_lock_contention(tmp_path: Path) -> None:
     """A real second process is forced to wait for the lock holder.
 
@@ -188,7 +202,7 @@ def test_cross_process_lock_contention(tmp_path: Path) -> None:
 
     target = tmp_path / "contended.json"
     proc = subprocess.Popen(
-        [sys.executable, "-c", _LOCK_HOLDER_SCRIPT, str(target), "0.5"],
+        [sys.executable, "-c", _LOCK_HOLDER_SCRIPT, str(target), "30.0"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
@@ -212,8 +226,4 @@ def test_cross_process_lock_contention(tmp_path: Path) -> None:
         ):
             pytest.fail("acquired lock while another process held it")
     finally:
-        try:
-            proc.wait(timeout=10.0)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            proc.wait(timeout=5.0)
+        _stop_process(proc)

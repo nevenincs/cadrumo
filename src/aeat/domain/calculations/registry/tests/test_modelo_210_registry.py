@@ -152,6 +152,27 @@ def test_modelo_210_form_order_is_boe_corpus_backed() -> None:
     assert "Se aprueba el modelo 210" in source_text
 
 
+def test_modelo_210_irnr_sources_separate_aeat_guidance_from_boe_layout() -> None:
+    modelo, catalogues = _load_modelo_210()
+
+    procedure = catalogues.sources["aeat-modelo-210-procedure"]
+    assert "aeat-modelo-210-procedure" in modelo.source_refs
+    assert procedure.evidence_tier == "official_source_guidance"
+    assert procedure.authority == "aeat"
+    assert procedure.kind == "instructions"
+    assert procedure.corpus_path == "corpus/aeat_official/instructions/modelo_210/files/modelo-210-instrucciones.html"
+    assert (bundled_path() / procedure.corpus_path).is_file()
+
+    m216_procedure = catalogues.sources["aeat-modelo-216-procedure"]
+    assert m216_procedure.evidence_tier == "official_source_guidance"
+    assert m216_procedure.authority == "aeat"
+    assert m216_procedure.kind == "instructions"
+    assert (bundled_path() / m216_procedure.corpus_path).is_file()
+
+    assert catalogues.sources["boe-modelo-210-2024-form-layout"].evidence_tier == "layout_authority"
+    assert catalogues.sources["boe-modelo-216-form-layout"].evidence_tier == "layout_authority"
+
+
 def test_modelo_210_2026_order_is_bundled_and_referenced_by_current_surfaces() -> None:
     modelo, catalogues = _load_modelo_210()
     revision = modelo.revisions["2025"]
@@ -166,6 +187,7 @@ def test_modelo_210_2026_order_is_bundled_and_referenced_by_current_surfaces() -
     assert deadline_source.source_url == "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-13573"
     assert deadline_source.published_at == date(2026, 6, 23)
     assert deadline_source.applies_from == date(2026, 1, 1)
+    assert deadline_source.kind == "instructions"
 
     assert layout_2024_source.applies_to == date(2026, 12, 31)
     assert layout_2026_source.corpus_path == deadline_source.corpus_path

@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.attachment import AttachmentStore
+from ....domain.attachments import AttachmentNotFoundError
 from ....domain.buckets import (
     BucketEvent,
     BucketEventHistoryCatalogue,
@@ -152,7 +153,7 @@ def test_full_custody_carry_restores_evidence_bytes_and_audit_trail(tmp_path: Pa
 
         with runtime.switch_to_secondary():
             # The recipient bucket starts without the evidence or the audit event.
-            with pytest.raises(Exception):  # noqa: B017 - AttachmentNotFoundError
+            with pytest.raises(AttachmentNotFoundError):
                 AttachmentStore().read_bytes(sha)
 
             restore_carried_objects(carried, target_bucket_id=target_bucket)

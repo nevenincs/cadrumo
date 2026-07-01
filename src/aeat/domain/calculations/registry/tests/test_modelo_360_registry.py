@@ -26,12 +26,14 @@ def test_modelo_360_validator_accepts_committed_definition() -> None:
 
 
 def test_modelo_360_metadata_matches_orden_eha_789_2010() -> None:
-    modelo, _ = _load_modelo_360()
+    modelo, catalogues = _load_modelo_360()
     assert modelo.tax_domain == "iva"
     assert modelo.cadence == "ad_hoc"
     assert "orden-eha-789-2010:art-1" in modelo.legal_refs
     assert "orden-eha-789-2010:art-4" in modelo.legal_refs
     assert "aeat-dr-360-2010" in modelo.source_refs
+    assert catalogues.sources["aeat-modelo-360-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-360-2010-form"].evidence_tier == "layout_authority"
 
 
 def test_modelo_360_revision_starts_at_2010() -> None:

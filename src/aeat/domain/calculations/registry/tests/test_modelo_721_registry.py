@@ -79,11 +79,13 @@ def test_modelo_721_revision_uses_boe_layout_sources_and_applicability_chain() -
         "boe-modelo-721-2023-layout",
         "boe-modelo-721-2024-layout",
         "aeat-modelo-721-procedure",
-        "boe-modelo-721-2023-form",
     } <= set(revision.source_refs)
 
     all_modelo_strings = set(_strings(modelo.model_dump(mode="json")))
     assert "aeat-dr-721" not in all_modelo_strings
+    assert "boe-modelo-721-2023-form" not in all_modelo_strings
+    assert "boe-modelo-721-2023-form" not in catalogues.sources
+    assert catalogues.sources["aeat-modelo-721-procedure"].evidence_tier == "official_source_guidance"
 
     workbook_refs = {reference.id: reference for reference in revision.workbook_parity_refs}
     assert workbook_refs["modelo-721-dr-2023"].workbook_source == "boe-modelo-721-2023-layout"

@@ -26,13 +26,15 @@ def test_modelo_322_validator_accepts_committed_definition() -> None:
 
 
 def test_modelo_322_metadata_matches_orden_eha_3434_2007() -> None:
-    modelo, _ = _load_modelo_322()
+    modelo, catalogues = _load_modelo_322()
     assert modelo.tax_domain == "iva"
     assert modelo.cadence == "monthly"
     assert modelo.jurisdiction == "ES-AEAT"
     assert "orden-eha-3434-2007:art-1" in modelo.legal_refs
     assert "orden-eha-3434-2007:art-8" in modelo.legal_refs
     assert "aeat-dr-322-2026" in modelo.source_refs
+    assert catalogues.sources["aeat-modelo-322-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-322-2007-form"].evidence_tier == "layout_authority"
 
 
 def test_modelo_322_revision_starts_at_2008() -> None:
@@ -71,6 +73,7 @@ def test_modelo_322_january_period_uses_official_calendar_shift() -> None:
     jan_2026 = windows["modelo-322-2026-01"]
     assert jan_2026.opens_on == date(2026, 2, 1)
     assert jan_2026.closes_on == date(2026, 3, 2)
+    assert "aeat-modelo-322-procedure" in jan_2026.source_refs
     assert "aeat-calendario-contribuyente-2026-hasta-2-marzo" in jan_2026.source_refs
 
 

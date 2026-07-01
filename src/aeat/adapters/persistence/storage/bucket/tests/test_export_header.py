@@ -13,21 +13,25 @@ from .._export_header import ExportArchiveHeader
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+_VALID_DIGEST = hashlib.sha256(b"manifest-payload").hexdigest()
+_CREATED_AT = datetime(2026, 1, 1, tzinfo=UTC)
+_PLUS_ONE = timezone(timedelta(hours=1))
 
-def _digest() -> str:
-    return hashlib.sha256(b"manifest-payload").hexdigest()
+
+def _header_payload(**overrides: object) -> dict[str, Any]:
+    defaults: dict[str, Any] = {
+        "bucket_id": "bucket-001",
+        "manifest_digest": _VALID_DIGEST,
+        "recovery_wrap_present": True,
+        "archive_schema_version": 1,
+        "created_at": _CREATED_AT,
+    }
+    defaults.update(overrides)
+    return defaults
 
 
 def _header(**overrides: object) -> ExportArchiveHeader:
-    defaults: dict[str, Any] = {
-        "bucket_id": "bucket-001",
-        "manifest_digest": _digest(),
-        "recovery_wrap_present": True,
-        "archive_schema_version": 1,
-        "created_at": datetime.now(tz=UTC),
-    }
-    defaults.update(overrides)
-    return ExportArchiveHeader(**defaults)
+    return ExportArchiveHeader(**_header_payload(**overrides))
 
 
 def test_round_trip() -> None:
@@ -37,17 +41,10 @@ def test_round_trip() -> None:
 
 
 def test_rejects_unknown_keys() -> None:
-    with pytest.raises(ValidationError):
-        ExportArchiveHeader.model_validate(
-            {
-                "bucket_id": "bucket-001",
-                "manifest_digest": _digest(),
-                "recovery_wrap_present": True,
-                "archive_schema_version": 1,
-                "created_at": datetime.now(tz=UTC),
-                "unexpected": 1,
-            },
-        )
+    with pytest.raises(ValidationError) as excinfo:
+        ExportArchiveHeader.model_validate(_header_payload(unexpected=1))
+
+    assert "unexpected" in str(excinfo.value)
 
 
 def test_header_is_frozen() -> None:
@@ -56,16 +53,21 @@ def test_header_is_frozen() -> None:
         header.archive_schema_version = 2
 
 
-def test_rejects_missing_digest() -> None:
-    with pytest.raises(ValidationError):
-        ExportArchiveHeader.model_validate(
-            {
-                "bucket_id": "bucket-001",
-                "recovery_wrap_present": True,
-                "archive_schema_version": 1,
-                "created_at": datetime.now(tz=UTC),
-            },
-        )
+@pytest.mark.parametrize(
+    "missing_field",
+    (
+        pytest.param("bucket_id", id="bucket-id"),
+        pytest.param("manifest_digest", id="manifest-digest"),
+    ),
+)
+def test_rejects_missing_required_header_fields(missing_field: str) -> None:
+    payload = _header_payload()
+    del payload[missing_field]
+
+    with pytest.raises(ValidationError) as excinfo:
+        ExportArchiveHeader.model_validate(payload)
+
+    assert missing_field in str(excinfo.value)
 
 
 @pytest.mark.parametrize(
@@ -73,7 +75,7 @@ def test_rejects_missing_digest() -> None:
     (
         pytest.param("z" * 64, id="non-hex"),
         pytest.param("a" * 63, id="short"),
-        pytest.param(_digest().upper(), id="uppercase"),
+        pytest.param(_VALID_DIGEST.upper(), id="uppercase"),
         pytest.param("+" + ("a" * 63), id="leading-sign"),
         pytest.param(" " + ("a" * 63), id="leading-space"),
         pytest.param(("a" * 63) + "\n", id="trailing-newline"),
@@ -84,34 +86,27 @@ def test_rejects_invalid_digest_spellings(manifest_digest: str) -> None:
         _header(manifest_digest=manifest_digest)
 
 
-def test_rejects_empty_bucket_id() -> None:
+@pytest.mark.parametrize(
+    ("field_name", "value"),
+    (
+        pytest.param("bucket_id", "", id="bucket-empty"),
+        pytest.param("archive_schema_version", 0, id="schema-non-positive"),
+        pytest.param("archive_schema_version", "1", id="schema-coerced"),
+        pytest.param("recovery_wrap_present", 1, id="recovery-flag-coerced"),
+    ),
+)
+def test_rejects_invalid_header_scalars(field_name: str, value: object) -> None:
     with pytest.raises(ValidationError):
-        _header(bucket_id="")
+        _header(**{field_name: value})
 
 
 @pytest.mark.parametrize(
-    "archive_schema_version",
+    "created_at",
     (
-        pytest.param(0, id="non-positive"),
-        pytest.param("1", id="coerced"),
+        pytest.param(datetime(2026, 1, 1), id="naive"),
+        pytest.param(datetime(2026, 1, 1, tzinfo=_PLUS_ONE), id="non-utc-offset"),
     ),
 )
-def test_rejects_invalid_archive_schema_version(archive_schema_version: object) -> None:
+def test_rejects_non_utc_created_at(created_at: datetime) -> None:
     with pytest.raises(ValidationError):
-        _header(archive_schema_version=archive_schema_version)
-
-
-def test_rejects_coerced_recovery_wrap_flag() -> None:
-    with pytest.raises(ValidationError):
-        _header(recovery_wrap_present=1)
-
-
-def test_rejects_naive_created_at() -> None:
-    with pytest.raises(ValidationError):
-        _header(created_at=datetime(2026, 1, 1))
-
-
-def test_rejects_non_utc_offset_created_at() -> None:
-    plus_one = timezone(timedelta(hours=1))
-    with pytest.raises(ValidationError):
-        _header(created_at=datetime(2026, 1, 1, tzinfo=plus_one))
+        _header(created_at=created_at)

@@ -41,6 +41,8 @@ from .._schema import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_ID = "filing-runtime"
+_DRAFT_TIMESTAMP = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
+_AMENDMENT_CREATED_AT = datetime(2026, 5, 25, 15, 0, 0, tzinfo=UTC)
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -60,7 +62,6 @@ _NONCANONICAL_IVA_DEVENGADO_CASILLA_ID = " iva.devengado "
 def _populated_amended_draft() -> ModeloDraft:
     """Build the ModeloDraft embedded inside the amendment."""
 
-    now = datetime.now(UTC).replace(microsecond=0)
     return ModeloDraft(
         draft_id="d" * 64,
         modelo="303",
@@ -91,8 +92,8 @@ def _populated_amended_draft() -> ModeloDraft:
         ),
         binding_values=(),
         findings=(),
-        created_at=now,
-        updated_at=now,
+        created_at=_DRAFT_TIMESTAMP,
+        updated_at=_DRAFT_TIMESTAMP,
         schema_version="schema-2025-1",
     )
 
@@ -113,7 +114,6 @@ def _populated_amendment() -> ModeloComplementaria:
             reason="recomputed downstream of iva.devengado",
         ),
     )
-    now = datetime.now(UTC).replace(microsecond=0)
     return ModeloComplementaria(
         amendment_id=make_amendment_id(
             submission_id=submission_id,
@@ -126,7 +126,7 @@ def _populated_amendment() -> ModeloComplementaria:
         original_period=Period.from_year_and_code(2025, "1T"),
         delta=delta,
         amended_draft=_populated_amended_draft(),
-        created_at=now,
+        created_at=_AMENDMENT_CREATED_AT,
     )
 
 

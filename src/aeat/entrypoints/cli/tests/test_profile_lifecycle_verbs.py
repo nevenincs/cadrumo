@@ -15,20 +15,21 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from ....adapters.persistence.storage._namespace_registry import BUCKETS_DIRNAME, KEYSTORE_DIRNAME
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from ._profile_lifecycle_support import seed, stage_bucket_manifest
+from ._profile_lifecycle_support import distinct_nif, seed, stage_bucket_manifest
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 @pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+def _isolated_backend(tmp_path: Path) -> Iterator[Path]:
     # profile_create_storage_span (called inside seed) resolves the
     # file-backed master-key provider provisioned by this fixture.
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        yield
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        yield storage_root
 
 
 def _invoke_config(args: Sequence[str]) -> Result:
@@ -45,6 +46,100 @@ def _invoke_profile_app(args: Sequence[str]) -> Result:
 
 def _invoke_repair(args: Sequence[str]) -> Result:
     return _invoke_config(("repair", *args))
+
+
+def _bucket_directories_without_manifest(storage_root: Path) -> tuple[Path, ...]:
+    buckets_root = storage_root / BUCKETS_DIRNAME
+    if not buckets_root.is_dir():
+        return ()
+    return tuple(
+        entry
+        for entry in buckets_root.iterdir()
+        if entry.is_dir() and not (entry / "manifest.toml").is_file()
+    )
+
+
+def test_config_profile_create_second_profile_uses_requested_identity_while_first_is_active() -> None:
+    """Creating beta in alpha's live root must not reuse alpha's active bucket."""
+
+    alpha = _invoke_profile(
+        (
+            "create",
+            "alpha",
+            "--quiet",
+            "--tax-id",
+            distinct_nif("alpha"),
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Alpha",
+            "--surnames",
+            "Operator",
+            "--activity",
+            "alpha-design",
+            "--iva-regime",
+            "GENERAL",
+        ),
+    )
+    assert alpha.exit_code == 0, alpha.output
+    assert "profile\talpha" in alpha.output
+    assert "active_profile\talpha" in alpha.output
+
+    beta = _invoke_profile(
+        (
+            "create",
+            "beta",
+            "--quiet",
+            "--tax-id",
+            distinct_nif("beta"),
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Beta",
+            "--surnames",
+            "Operator",
+            "--activity",
+            "beta-consulting",
+            "--iva-regime",
+            "GENERAL",
+        ),
+    )
+    assert beta.exit_code == 0, beta.output
+    assert "profile\tbeta" in beta.output
+    assert "active_profile\tbeta" in beta.output
+    assert "profile\talpha" not in beta.output
+    assert "active_profile\talpha" not in beta.output
+
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+
+    alpha_pointer = read_profile_bucket("alpha")
+    beta_pointer = read_profile_bucket("beta")
+    assert alpha_pointer is not None
+    assert beta_pointer is not None
+    assert alpha_pointer.bucket_id != beta_pointer.bucket_id
+
+    listing = _invoke_profile(("list",))
+    assert listing.exit_code == 0, listing.output
+    assert "active_profile\tbeta" in listing.output
+    assert " \talpha" in listing.output
+    assert "*\tbeta" in listing.output
+
+    alpha_show = invoke_cached_cli(("--profile", "alpha", "config", "profile", "show"))
+    beta_show = invoke_cached_cli(("--profile", "beta", "config", "profile", "show"))
+    assert alpha_show.exit_code == 0, alpha_show.output
+    assert beta_show.exit_code == 0, beta_show.output
+
+    assert "display_name\talpha" in alpha_show.output
+    assert "identity.name\tAlpha" in alpha_show.output
+    assert "activities.description\talpha-design" in alpha_show.output
+    assert "display_name\tbeta" not in alpha_show.output
+    assert "activities.description\tbeta-consulting" not in alpha_show.output
+
+    assert "display_name\tbeta" in beta_show.output
+    assert "identity.name\tBeta" in beta_show.output
+    assert "activities.description\tbeta-consulting" in beta_show.output
+    assert "display_name\talpha" not in beta_show.output
+    assert "activities.description\talpha-design" not in beta_show.output
 
 
 def test_config_switch_activates_existing_profile() -> None:
@@ -660,3 +755,64 @@ def test_config_profile_create_nif_error_does_not_leak_internal_keys() -> None:
     assert "question_id" not in result.output
     # The plain-language diagnostic must be present.
     assert "NIF" in result.output or "nif" in result.output or "tax" in result.output.lower()
+
+
+def test_config_profile_create_invalid_nif_does_not_leave_orphan_bucket(_isolated_backend: Path) -> None:
+    """A NIF validation failure must not leave a manifest-less bucket behind."""
+
+    result = _invoke_profile(
+        (
+            "create",
+            "badnif",
+            "--quiet",
+            "--tax-id",
+            "NOTANIF",
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Test",
+            "--surnames",
+            "Operator",
+            "--activity",
+            "Design",
+            "--iva-regime",
+            "GENERAL",
+        ),
+    )
+
+    assert result.exit_code != 0
+    assert "NIF" in result.output or "nif" in result.output or "tax" in result.output.lower()
+    assert _bucket_directories_without_manifest(_isolated_backend) == ()
+    keystore_root = _isolated_backend / KEYSTORE_DIRNAME
+    assert not keystore_root.is_dir() or tuple(keystore_root.iterdir()) == ()
+
+    valid = _invoke_profile(
+        (
+            "create",
+            "goodnif",
+            "--quiet",
+            "--tax-id",
+            distinct_nif("goodnif"),
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Valid",
+            "--surnames",
+            "Operator",
+            "--activity",
+            "Design",
+            "--iva-regime",
+            "GENERAL",
+        ),
+    )
+    assert valid.exit_code == 0, valid.output
+
+    listing = _invoke_profile(("list",))
+    assert listing.exit_code == 0, listing.output
+    assert "*\tgoodnif" in listing.output
+    assert "badnif" not in listing.output
+
+    shown = _invoke_profile(("show", "goodnif"))
+    assert shown.exit_code == 0, shown.output
+    assert "display_name\tgoodnif" in shown.output
+    assert _bucket_directories_without_manifest(_isolated_backend) == ()

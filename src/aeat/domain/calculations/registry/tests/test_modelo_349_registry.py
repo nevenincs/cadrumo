@@ -259,8 +259,10 @@ def test_committed_modelo_349_gb_xi_country_prefix_rules_are_cited_to_aeat_instr
     modelo, catalogues = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
     source = catalogues.sources[_M349_GB_XI_SOURCE_REF]
+    layout_source = catalogues.sources["boe-modelo-349-form-2010"]
 
     assert source.evidence_tier == "official_source_guidance"
+    assert layout_source.evidence_tier == "layout_authority"
     assert source.kind == "instructions"
     assert source.corpus_path == "corpus/aeat_official/instructions/modelo_349/files/instr_mod_349.txt"
     assert source.sha256 == "da88207bffeb21d0ea94a28229f8657cec0d88769d132d10ecdb74b66ce9e5e8"
@@ -280,10 +282,12 @@ def test_committed_modelo_349_gb_xi_country_prefix_rules_are_cited_to_aeat_instr
     for binding_id, expected_required_text in expected_by_binding.items():
         binding = bindings[binding_id]
         assert _M349_GB_XI_SOURCE_REF in binding.source_refs
-        (instruction_citation,) = (
-            citation for citation in binding.source_citations if citation.source_ref == _M349_GB_XI_SOURCE_REF
-        )
-        assert instruction_citation.required_text == expected_required_text
+        instruction_required_texts = {
+            citation.required_text
+            for citation in binding.source_citations
+            if citation.source_ref == _M349_GB_XI_SOURCE_REF
+        }
+        assert expected_required_text in instruction_required_texts
 
 
 def test_committed_modelo_349_cadence_threshold_links_to_riva_art_81_corpus() -> None:

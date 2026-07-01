@@ -30,15 +30,19 @@ from .._persistence import load_run, save_run
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_RUN_ENDED_AT = datetime(2026, 5, 25, 14, 0, 0, tzinfo=UTC)
+_RUN_STARTED_AT = _RUN_ENDED_AT - timedelta(minutes=10)
+_SECOND_STEP_STARTED_AT = _RUN_ENDED_AT - timedelta(minutes=9)
+_MUTATED_RUN_WRITTEN_AT = datetime(2026, 5, 25, 14, 5, 0, tzinfo=UTC)
+
 
 def _populated_run() -> WorkflowResult:
     """WorkflowResult with non-default values on every defaultable field."""
 
-    now = datetime.now(UTC).replace(microsecond=0)
     return WorkflowResult(
         run_id="r" * 16,
-        started_at=now - timedelta(minutes=10),
-        ended_at=now,
+        started_at=_RUN_STARTED_AT,
+        ended_at=_RUN_ENDED_AT,
         final_stage=WorkflowStage.ABORTED,
         aborted_reason=WorkflowAbortReason.DEADLINE_PASSED,
         obligation=None,
@@ -47,16 +51,16 @@ def _populated_run() -> WorkflowResult:
         steps=(
             WorkflowStep(
                 stage=WorkflowStage.LOADING_PROFILE,
-                started_at=now - timedelta(minutes=10),
-                ended_at=now - timedelta(minutes=9),
+                started_at=_RUN_STARTED_AT,
+                ended_at=_SECOND_STEP_STARTED_AT,
                 success=True,
                 summary="loaded active profile from secure storage",
                 details={"profile": "active"},
             ),
             WorkflowStep(
                 stage=WorkflowStage.COMPUTING_DEADLINES,
-                started_at=now - timedelta(minutes=9),
-                ended_at=now,
+                started_at=_SECOND_STEP_STARTED_AT,
+                ended_at=_RUN_ENDED_AT,
                 success=False,
                 summary="deadline passed for current obligation",
                 details={"modelo": "303", "period": "2025 1T", "closes_on": "2025-04-20"},
@@ -154,7 +158,7 @@ def test_workflow_run_aborted_reason_drift_surfaces_at_load(
             object_key=original.run_id,
             classification=SensitivityClass.FINANCIAL,
             schema_version=_RUN_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_MUTATED_RUN_WRITTEN_AT,
             payload=_json.dumps(envelope).encode("utf-8"),
         )
 

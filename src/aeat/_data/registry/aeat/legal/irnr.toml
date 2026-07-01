@@ -206,15 +206,14 @@ review_status = "reviewed"
 
 [sources."aeat-modelo-210-procedure"]
 evidence_tier = "official_source_guidance"
-authority = "boe"
-kind = "form_spec"
-corpus_path = "corpus/normatives/html/orden-hac-56-2024.html"
-sha256 = "1adcf839bcda32e2aaf1cd2df49f27ea4925f85095b67b2ae7f035d69c015a3c"
-bytes = 141318
-retrieved_at = 2026-05-27
-published_at = 2024-01-31
-applies_from = 2024-02-01
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-1772"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_210/files/modelo-210-instrucciones.html"
+sha256 = "ff453caf329428d284e749e4843966c1140dd14b6fc27d7d21d97a233c24477e"
+bytes = 116754
+retrieved_at = 2026-07-01
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/impuesto-sobre-renta-no-residentes/modelo-210-irnr______a-no-residentes-permanente_/instrucciones.html"
 review_status = "reviewed"
 
 [sources."aeat-irnr-renta-imputada-inmueble-urbano"]
@@ -245,7 +244,7 @@ review_status = "reviewed"
 [sources."boe-modelo-210-2026-deadline-update"]
 evidence_tier = "official_source_guidance"
 authority = "boe"
-kind = "form_spec"
+kind = "instructions"
 corpus_path = "corpus/normatives/html/orden-hac-623-2026.html"
 sha256 = "6377e90dadde044d6872ad025171391275f18b88be67bd47f7ad64437725c56c"
 bytes = 64700
@@ -266,4 +265,33 @@ retrieved_at = 2026-06-28
 published_at = 2026-06-23
 applies_from = 2027-01-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-13573"
+review_status = "reviewed"
+
+# Modelo 216 sources — the governing Orden HAC/56/2024 (BOE-A-2024-1772) is the
+# same bundled corpus the Modelo 210 sources cite; it approves and governs the
+# Modelo 216/296 IRNR retención forms (arts. 1 y ss.). Reuses the reviewed corpus
+# file and its hash; no new corpus fetch required.
+[sources."aeat-modelo-216-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_216/files/modelo-216-instrucciones-2024-y-siguientes.html"
+sha256 = "a4c15ad08e8670a9b18834824158303a3b8c2a26e067d77dca2ca015da2549de"
+bytes = 20790
+retrieved_at = 2026-07-01
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/impuesto-sobre-renta-no-residentes/modelo-216-irnr______sos-cuenta-declaracion-ingreso_/instrucciones-modelo-216-presentacion-ejercicio-siguientes.html"
+review_status = "reviewed"
+
+[sources."boe-modelo-216-form-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-56-2024.html"
+sha256 = "1adcf839bcda32e2aaf1cd2df49f27ea4925f85095b67b2ae7f035d69c015a3c"
+bytes = 141318
+retrieved_at = 2026-05-27
+published_at = 2024-01-31
+applies_from = 2024-02-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-1772"
 review_status = "reviewed"

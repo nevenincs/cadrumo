@@ -17,6 +17,7 @@ from .._sessions import load_persisted_session, storage_state_paths
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "30303030-3030-4303-8303-303030303030"
+_AUTHENTICATED_AT = datetime(2026, 5, 26, 9, 30, 0, tzinfo=UTC)
 
 
 def test_load_persisted_session_accepts_provider_specific_clave_metadata(tmp_path: Path) -> None:
@@ -33,7 +34,7 @@ def test_load_persisted_session_accepts_provider_specific_clave_metadata(tmp_pat
         external = load_external_constants().aeat
         sede_domain = urlsplit(external.domains.sede).netloc
         landing_url = f"{external.domains.www6}{external.sede_paths.expedientes_resumen}"
-        authenticated_at = datetime.now(UTC).replace(microsecond=0)
+        authenticated_at = _AUTHENTICATED_AT
         storage_state = {
             "cookies": [
                 {

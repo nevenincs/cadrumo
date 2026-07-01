@@ -17,8 +17,24 @@ from the bound censo through :func:`derive_home_office_ratios_from_censo` and
 refused on drift by :func:`load_usage_ratios_with_censo_guard`.
 
 Usage ratios model business/personal proportional deduction for ledger and
-Renta paths. They are explicitly separate from IVA prorrata and do not decide
-modelo applicability or casilla routing.
+Renta paths. Ledger commands validate ``usage_ratio_id`` against this profile
+and require any stored ``business_pct`` to match the referenced category ratio;
+Renta aggregation then consumes the resolved mapping as business-use
+proportions. They are explicitly separate from legal IVA prorrata and do not
+decide modelo applicability or casilla routing.
+
+See Also:
+    :mod:`aeat.application.ledger`
+        Validates ledger ratio references, reports missing proportionality, and
+        surfaces HOME_OFFICE censo drift before modelo calculation.
+    :mod:`aeat.application.aggregation`
+        Consumes resolved ratios when building Renta deductible-expense binding
+        values from active ledger rows.
+    :mod:`aeat.domain.iva`
+        Owns the separate legal IVA prorrata substrate used by IVA aggregation.
+    :mod:`aeat.application.user_profile`
+        Supplies the bound censo facts used to derive and guard HOME_OFFICE
+        usage-ratio values.
 
 Callers must import from this package root rather than reaching into the
 private submodules; the public surface listed in :data:`__all__` is the only

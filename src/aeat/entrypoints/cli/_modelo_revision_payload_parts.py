@@ -22,6 +22,19 @@ from ...domain.calculations.registry import CasillaId, FormulaId, LegalRefId, So
 from ._schemas import OutputSchema
 
 
+class DetailRowPayload(OutputSchema):
+    """One JSON-safe modelo detail row.
+
+    Detail rows are heterogeneous by modelo and row type, so the public payload
+    keeps the row discriminator and the row's own field map instead of forcing
+    each command schema to duplicate every domain row shape.
+    """
+
+    index: int = Field(ge=1)
+    row_type: str = Field(min_length=1)
+    fields: dict[str, str | None]
+
+
 class ObservationPayload(OutputSchema):
     """One JSON-safe casilla observation with registry provenance.
 
@@ -77,4 +90,4 @@ class ResultSummaryRowPayload(OutputSchema):
     label: str
 
 
-__all__ = ["ObservationPayload", "ResultSummaryRowPayload"]
+__all__ = ["DetailRowPayload", "ObservationPayload", "ResultSummaryRowPayload"]

@@ -9,7 +9,8 @@ content-derived transaction id. Import helpers such as
 :func:`normalise_movement_reference` are the public identity helpers.
 
 The row model separates amount magnitude from
-:class:`TransactionDirection` and carries classification, tax substrate,
+:class:`TransactionDirection`; downstream tax calculations route by direction
+rather than by signed amounts. It carries classification, tax substrate,
 evidence, split, edit, lifecycle, FX, jurisdiction, and timestamp provenance
 through typed records such as :class:`ClassificationHistoryEntry`,
 :class:`TransactionEvidenceProvenanceEntry`,
@@ -35,6 +36,30 @@ constrain model choices to typed :class:`BusinessClassification`,
 :class:`CategoryChoice`, and :class:`IvaCategoryChoice` allow-lists; regulated
 tax numbers are derived by application services, not originated by this
 package.
+
+Downstream modelo calculation records keep only forward transaction ids on
+:class:`~aeat.domain.modelos.CalculationRevision`. Aggregation services consume
+this catalogue to produce registry binding values and ledger filing snapshots,
+while :class:`~aeat.domain.modelos.TransactionRevisionParticipationIndex`
+provides the rebuildable inverse audit lookup from one ledger transaction to
+finalized revisions and filing records.
+
+See Also:
+    :mod:`aeat.application.ledger`
+        Operator-facing lifecycle that creates, edits, classifies, splits,
+        attaches evidence, and preflights bucket-scoped transactions.
+    :mod:`aeat.application.aggregation`
+        Source resolvers that turn transaction catalogues into
+        :class:`~aeat.application.aggregation.CalculationSourceResolution`
+        payloads for modelo calculation.
+    :func:`aeat.application.aggregation._ledger_filing_snapshot.compute_ledger_filing_snapshot`
+        Captures tax-relevant transaction fields for finalized calculation
+        revisions.
+    :mod:`aeat.domain.invoices`
+        Invoice catalogue and reconciliation records referenced by
+        ``invoice_id`` and ``purchase_invoice_evidence_id``.
+    :mod:`aeat.domain.usage_ratios`
+        Proportionality profiles referenced by ledger rows before aggregation.
 """
 
 from __future__ import annotations

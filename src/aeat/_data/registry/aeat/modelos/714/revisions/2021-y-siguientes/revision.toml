@@ -14,6 +14,5 @@ orden_aplicabilidad = [
 ]
 source_refs = [
     "aeat-modelo-714-procedure",
-    "boe-modelo-714-form",
     "boe-modelo-714-layout",
 ]

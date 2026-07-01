@@ -33,4 +33,5 @@ def test_every_category_belongs_to_exactly_one_family() -> None:
         for category in CATEGORY_FAMILY_MEMBERS[family]:
             memberships[category] += 1
             assert family_for(category) is family
-    assert all(count == 1 for count in memberships.values())
+    offenders = {category.value: count for category, count in memberships.items() if count != 1}
+    assert offenders == {}

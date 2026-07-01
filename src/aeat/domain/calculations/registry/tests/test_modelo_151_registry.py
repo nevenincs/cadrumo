@@ -76,6 +76,8 @@ def test_modelo_151_workbook_parity_uses_layout_authority_source() -> None:
     revision = modelo.revisions["2015-y-siguientes"]
     workbook = revision.workbook_parity_refs[0]
 
+    assert "boe-modelo-151-form" not in catalogues.sources
+    assert catalogues.sources["aeat-modelo-151-procedure"].evidence_tier == "official_source_guidance"
     assert workbook.id == "modelo-151-cuota-escala"
     assert workbook.formula_coverage == "static_layout"
     assert workbook.workbook_source == "boe-modelo-151-layout"

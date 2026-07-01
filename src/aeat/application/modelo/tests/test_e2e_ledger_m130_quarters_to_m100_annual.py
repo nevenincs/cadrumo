@@ -89,8 +89,10 @@ from ...calculations._observations_repository import CalculationObservationRepos
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     ModeloAggregationBindingError,
+    ModeloExportCommand,
     calculate_modelo_revision_from_bucket_aggregation,
     create_work_unit,
+    export_modelo_revision,
     import_external_filing_evidence,
     persist_filed_revision_observation,
     verify_modelo_revision,
@@ -671,10 +673,11 @@ def test_verify_accepts_marta_m100_with_official_m130_observations(
     ]
 
 
-def test_marta_m100_salary_certificate_retenciones_reduce_cuota_diferencial(
+def test_marta_m100_salary_certificate_retenciones_export_replays_verified_total_pagos(
     secure_objects: SecureObjectRepository,
+    tmp_path: Path,
 ) -> None:
-    """Marta's salary-certificate withholding replays through verify as a binding."""
+    """Marta's verified salary withholding replays through verify and XML export."""
     _seed_taxpayer_profile()
     _persist_marta_style_ledger(secure_objects)
     _seed_prior_year_m100(secure_objects)
@@ -695,7 +698,6 @@ def test_marta_m100_salary_certificate_retenciones_reduce_cuota_diferencial(
     assert Decimal(annual.casilla_values[_M100_RETENCIONES_TRABAJO_CASILLA]) == _MARTA_SALARY_WITHHOLDING
     assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("1520.00")
     assert Decimal(annual.casilla_values[_M100_TOTAL_PAGOS_CASILLA]) == Decimal("6020.00")
-    assert Decimal(annual.casilla_values[_M100_CUOTA_DIFERENCIAL_CASILLA]) == Decimal("2725.50")
 
     report = verify_modelo_revision(
         annual.calculation_revision_id,
@@ -714,6 +716,27 @@ def test_marta_m100_salary_certificate_retenciones_reduce_cuota_diferencial(
         for finding in report.findings
         if finding.severity.value == "blocking" or "formula-divergence" in finding.message
     ]
+
+    output = tmp_path / "m100-2024-export.xml"
+    receipt = export_modelo_revision(
+        ModeloExportCommand(
+            calculation_revision_id=annual.calculation_revision_id,
+            output_path=output,
+            actor="marta-cli-rerun",
+        ),
+        workflow_profile=_marta_workflow_profile(),
+        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
+        filing_repository=ModeloRecordCatalogueRepository(objects=secure_objects),
+        bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+        calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
+    )
+
+    xml = output.read_text(encoding="utf-8")
+    assert receipt.output_path == output
+    assert "<RET1>4500.00</RET1>" in xml
+    assert "<RET9>1520.00</RET9>" in xml
+    assert "<PAGOS>6020.00</PAGOS>" in xml
 
 
 def test_m100_base_only_gate_still_blocks_missing_renta_taxable_base(

@@ -7,12 +7,37 @@ record, :class:`JustificanteParserBackend` parser contract,
 :class:`PdfModeloImportError` / :class:`JustificanteError` hierarchy used by
 PDF filing-import flows.
 
+This package is scoped to the AEAT *justificante de presentación* receipt:
+CSV, modelo, period, presentation timestamp, taxpayer id, totals, source path,
+and source hash. A justificante is official submission evidence, but it is not a
+filing copy and it does not carry per-casilla values. Application import paths
+may compose a :class:`Justificante` into a draft scaffold, a local
+:class:`aeat.domain.submission.ModeloPresentado` audit baseline, or a
+:class:`aeat.domain.modelos.ExternalEvidence` reference, but casilla-complete
+declaración, borrador, and predeclaración parsing belongs to their own inbound
+adapter surfaces.
+
 The PDF parsing pipeline lives in :mod:`aeat.adapters.inbound.justificante`;
 this module intentionally does not re-export parser entry points. Live CSV
 verification lives in :mod:`aeat.adapters.outbound.aeat.verify`, because
 Playwright/browser automation belongs in the outbound adapter layer, not the
 domain.
 
+See Also:
+    :func:`aeat.application.filing.import_filing_from_justificante`
+        Application import path that composes receipt metadata into local draft
+        and submission-audit records without treating it as casilla authority.
+    :mod:`aeat.application.live`
+        Read-only live-capture surface that can persist and verify justificante
+        evidence against existing filing records.
+    :mod:`aeat.domain.submission`
+        Local-only :class:`aeat.domain.submission.ModeloPresentado` audit trail
+        populated by imported or historical receipt evidence.
+    :class:`aeat.domain.modelos.ExternalEvidence`
+        Work-unit filing-record evidence reference that may point at a persisted
+        justificante without embedding receipt bytes in the model record.
+    :mod:`aeat.adapters.inbound.justificante`
+        PDF parser implementation kept outside the domain facade.
 """
 
 from __future__ import annotations

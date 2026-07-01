@@ -19,10 +19,10 @@ id = "modelo-303-dr303-09-projection"
 target_casilla_id = "09"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.formulas.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.formulas.expression]
@@ -33,10 +33,10 @@ id = "modelo-303-dr303-06-projection"
 target_casilla_id = "06"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.formulas.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.formulas.expression]
@@ -47,10 +47,10 @@ id = "modelo-303-dr303-03-projection"
 target_casilla_id = "03"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.formulas.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.formulas.expression]
@@ -64,10 +64,10 @@ id = "modelo-303-dr303-11-projection"
 target_casilla_id = "11"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.formulas.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.formulas.expression]
@@ -78,10 +78,10 @@ id = "modelo-303-dr303-13-projection"
 target_casilla_id = "13"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.formulas.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.formulas.expression]
@@ -93,10 +93,10 @@ id = "modelo-303-dr303-27-projection"
 target_casilla_id = "27"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.formulas.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.formulas.expression]
@@ -108,10 +108,10 @@ id = "modelo-303-dr303-29-projection"
 target_casilla_id = "29"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.formulas.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.formulas.expression]
@@ -122,10 +122,10 @@ id = "modelo-303-dr303-33-projection"
 target_casilla_id = "33"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.formulas.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.formulas.expression]
@@ -140,10 +140,10 @@ id = "modelo-303-dr303-37-projection"
 target_casilla_id = "37"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.formulas.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.formulas.expression]
@@ -155,10 +155,10 @@ id = "modelo-303-dr303-45-projection"
 target_casilla_id = "45"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.formulas.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.formulas.expression]

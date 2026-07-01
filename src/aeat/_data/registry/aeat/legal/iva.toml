@@ -63,7 +63,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GZ09.s
 review_status = "reviewed"
 
 [sources."boe-modelo-360-2010-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-789-2010.html"
@@ -140,7 +140,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G404.s
 review_status = "reviewed"
 
 [sources."boe-modelo-309-2003-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-3625-2003.html"
@@ -217,7 +217,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G408.s
 review_status = "reviewed"
 
 [sources."boe-modelo-353-2007-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-3434-2007.html"
@@ -274,7 +274,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G407.s
 review_status = "reviewed"
 
 [sources."boe-modelo-322-2007-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-3434-2007.html"
@@ -391,7 +391,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G403.s
 review_status = "reviewed"
 
 [sources."boe-modelo-308-2008-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-3786-2008.html"
@@ -468,7 +468,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G412.s
 review_status = "reviewed"
 
 [sources."boe-modelo-390-2009-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-3111-2009.html"
@@ -517,7 +517,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G414.s
 review_status = "reviewed"
 
 [sources."boe-modelo-303-2008-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-3786-2008.html"
@@ -624,7 +624,7 @@ source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_re
 review_status = "reviewed"
 
 [sources."boe-modelo-349-form-2010"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-769-2010.html"
@@ -852,7 +852,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G420.s
 review_status = "reviewed"
 
 [sources."boe-modelo-369-2021-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-610-2021.html"

@@ -215,16 +215,3 @@ retrieved_at = 2026-05-27
 applies_from = 2023-08-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI56.shtml"
 review_status = "reviewed"
-
-[sources."boe-modelo-721-2023-form"]
-evidence_tier = "official_source_guidance"
-authority = "boe"
-kind = "form_spec"
-corpus_path = "corpus/normatives/html/orden-hfp-886-2023.html"
-sha256 = "d831f143a46935e906c960d298d2fcf27049c0976189f67566c5e2fe314376a0"
-bytes = 455
-retrieved_at = 2026-06-02
-published_at = 2023-07-29
-applies_from = 2023-07-30
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-17429"
-review_status = "reviewed"

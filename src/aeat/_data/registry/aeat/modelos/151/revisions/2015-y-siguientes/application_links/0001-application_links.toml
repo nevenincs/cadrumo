@@ -4,7 +4,7 @@ surface = "filing"
 consumer = "aeat.application.filing"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113"]
-source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-form"]
+source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
 
 [[revisions."2015-y-siguientes".application_links]]
 id = "modelo-151-calculation"
@@ -12,7 +12,7 @@ surface = "calculation"
 consumer = "aeat.domain.calculations.registry"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-form"]
+source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
 
 [[revisions."2015-y-siguientes".application_links]]
 id = "modelo-151-verification"

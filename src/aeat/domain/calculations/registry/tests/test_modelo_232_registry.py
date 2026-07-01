@@ -88,6 +88,8 @@ def test_committed_modelo_232_is_informative_only() -> None:
 
 def test_committed_modelo_232_workbook_parity_resolves_to_corpus_artefact() -> None:
     modelo, catalogues = _load_modelo_232()
+    assert catalogues.sources["aeat-modelo-232-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-232-2017-form"].evidence_tier == "layout_authority"
     expected_sources = {
         "2018-y-siguientes": "aeat-dr-232-2018",
         "2016-2017": "aeat-dr-232-2016",

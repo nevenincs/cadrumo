@@ -90,6 +90,16 @@ def test_committed_modelo_840_workbook_parity_resolves_to_corpus_artefact() -> N
         assert artefact_path.is_file(), artefact_path
 
 
+def test_committed_modelo_840_guidance_and_layout_sources_are_separated() -> None:
+    modelo, catalogues = _load_modelo_840()
+
+    assert "aeat-modelo-840-procedure" in modelo.source_refs
+    procedure = catalogues.sources["aeat-modelo-840-procedure"]
+    assert procedure.evidence_tier == "official_source_guidance"
+    assert (bundled_path() / procedure.corpus_path).is_file()
+    assert catalogues.sources["boe-modelo-840-2003-form"].evidence_tier == "layout_authority"
+
+
 def test_committed_modelo_840_static_cross_reference_forbids_remote_writes() -> None:
     modelo, _ = _load_modelo_840()
     for revision in modelo.revisions.values():

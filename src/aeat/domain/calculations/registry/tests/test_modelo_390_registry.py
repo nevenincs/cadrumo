@@ -167,6 +167,9 @@ def test_modelo_390_snapshot_carries_legal_authority_and_record_design() -> None
     assert snapshot.legal["orden-eha-3111-2009:art-8"].article == "8"
     assert "aeat-dr-390-2025" in snapshot.sources
     assert "aeat-modelo-390-procedure" in snapshot.sources
+    assert "boe-modelo-390-2009-form" in snapshot.sources
+    assert catalogues.sources["aeat-modelo-390-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-390-2009-form"].evidence_tier == "layout_authority"
 
 
 def test_modelo_390_extraction_profile_legal_refs_match_target_casillas() -> None:

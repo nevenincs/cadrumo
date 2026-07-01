@@ -33,8 +33,10 @@ from collections.abc import Iterable
 from contextlib import contextmanager
 from datetime import date
 
-from ...adapters.persistence.storage import SecureObjectRepository
-from ...adapters.persistence.storage.bucket import bucket_paths
+from ...adapters.persistence.storage._namespace_registry import BUCKET_DEK_FILENAME
+from ...adapters.persistence.storage.bucket._keystore_paths import keystore_path
+from ...adapters.persistence.storage.bucket._layout import bucket_paths
+from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...core import BucketPointer, write_pointer
 from ...core.config import load_settings
 from ...core.errors import AeatError
@@ -142,22 +144,31 @@ def profile_create_storage_span(profile_id: str):
     The span writes the provisional :class:`~aeat.core.BucketPointer`
     needed to resolve the create-time bucket route, then enters
     :func:`~aeat.adapters.persistence.storage.activate_master_key_provider`
-    with DEK enrollment enabled. If bucket setup fails before
+    with DEK enrollment enabled. If bucket setup fails before or outside
     :meth:`~aeat.application.user_profile.ProfileRepository.create`
-    owns rollback, the prior pointer bytes are restored.
+    owns rollback, the prior pointer bytes are restored and provisional
+    bucket/DEK artifacts minted by this span are removed.
     """
-    from ...adapters.persistence.storage import (
+    from ...adapters.persistence.storage.errors import (
         MasterKeyMaterialMissingError,
         SecretAlreadyExistsError,
+    )
+    from ...adapters.persistence.storage.master_key._master_key import (
         activate_master_key_provider,
         get_master_key_provider,
     )
     from ...core.config import override_settings
 
+    root = load_settings().aeat_local_storage_root
+    paths = bucket_paths(root, profile_id)
+    dek_path = keystore_path(root, profile_id) / BUCKET_DEK_FILENAME
+    bucket_dir_existed = paths.bucket_dir.exists()
+    keystore_dir_existed = dek_path.parent.exists()
+    dek_existed = dek_path.exists()
     prior_pointer = capture_active_profile_pointer()
-    _write_active_profile_pointer(profile_id)
     provider = get_master_key_provider()
     try:
+        _write_active_profile_pointer(profile_id)
         try:
             provider.get_master_key()
         except MasterKeyMaterialMissingError:
@@ -174,11 +185,47 @@ def profile_create_storage_span(profile_id: str):
             ),
         ):
             yield profile_id
-    except (AeatError, OSError):
-        # AeatError: encrypted-storage or workflow domain failures during profile create.
-        # OSError: filesystem write of the active-profile pointer or bucket directory.
+    except Exception:
         restore_active_profile_pointer(prior_pointer)
+        _remove_create_span_artifacts(
+            profile_id,
+            bucket_dir_existed=bucket_dir_existed,
+            keystore_dir_existed=keystore_dir_existed,
+            dek_existed=dek_existed,
+        )
         raise
+
+
+def _remove_create_span_artifacts(
+    profile_id: str,
+    *,
+    bucket_dir_existed: bool,
+    keystore_dir_existed: bool,
+    dek_existed: bool,
+) -> None:
+    """Best-effort cleanup of artifacts minted by a failed create span."""
+    import shutil
+
+    root = load_settings().aeat_local_storage_root
+    if not bucket_dir_existed:
+        try:
+            remove_profile_bucket_directory(profile_id)
+        except (AeatError, OSError):
+            _log.debug("failed create-span bucket cleanup for profile %s", profile_id, exc_info=True)
+
+    dek_path = keystore_path(root, profile_id) / BUCKET_DEK_FILENAME
+    if not dek_existed and dek_path.is_file():
+        try:
+            dek_path.unlink()
+        except OSError:
+            _log.debug("failed create-span wrapped-DEK cleanup for profile %s", profile_id, exc_info=True)
+
+    keystore_dir = dek_path.parent
+    if not keystore_dir_existed and keystore_dir.exists():
+        try:
+            shutil.rmtree(keystore_dir)
+        except OSError:
+            _log.debug("failed create-span keystore cleanup for profile %s", profile_id, exc_info=True)
 
 
 @contextmanager
@@ -189,7 +236,10 @@ def profile_storage_session(profile_id: str):
     :class:`~aeat.core.BucketPointer` route and master-key session before
     repositories open encrypted bucket-local storage.
     """
-    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ...adapters.persistence.storage.master_key._master_key import (
+        activate_master_key_provider,
+        get_master_key_provider,
+    )
     from ...core.config import override_settings
 
     with (
@@ -483,7 +533,7 @@ def remove_profile_bucket_directory(profile_id: str) -> None:
     import gc
     import shutil
 
-    from ...adapters.persistence.storage import dispose_engine
+    from ...adapters.persistence.storage.sql.engine import dispose_engine
 
     root = load_settings().aeat_local_storage_root
     target = bucket_paths(root, profile_id).bucket_dir
