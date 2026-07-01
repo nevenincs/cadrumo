@@ -1,11 +1,40 @@
-"""Immutable transaction catalogue surface for the financial pipeline.
+"""Public facade for immutable ledger transactions.
 
-The central type is :class:`TransactionCatalogue`, which holds an immutable
-mapping of ledger transactions keyed by stable transaction identifiers.
-Persistence is handled by :class:`TransactionCatalogueRepository`.
-Callers must import transaction models, errors, and service functions
-exclusively from ``aeat.domain.transactions`` and must not reach into
-the private underscore modules inside this package.
+This package re-exports the transaction domain boundary used by
+:mod:`aeat.application.ledger`: :class:`Transaction` wraps an upstream
+:class:`RawTransaction` and its :class:`RawProvenance`, while
+:class:`TransactionCatalogue` keeps the immutable mapping keyed by the
+content-derived transaction id. Import helpers such as
+:func:`derive_transaction_id`, :func:`derive_import_fingerprint`, and
+:func:`normalise_movement_reference` are the public identity helpers.
+
+The row model separates amount magnitude from
+:class:`TransactionDirection` and carries classification, tax substrate,
+evidence, split, edit, lifecycle, FX, jurisdiction, and timestamp provenance
+through typed records such as :class:`ClassificationHistoryEntry`,
+:class:`TransactionEvidenceProvenanceEntry`,
+:class:`TransactionEditLineageEntry`, and
+:class:`TransactionLifecycleLineageEntry`. Classification helpers
+:func:`set_classification`, :func:`snapshot_classification_state`, and
+:func:`link_invoice` return fresh catalogues instead of mutating callers'
+instances.
+
+Persistence is exposed lazily as :class:`TransactionCatalogueRepository` so
+importing the facade does not eagerly load the SQL storage stack. The
+repository stores each transaction under the bucket-scoped transaction
+namespace as ``FINANCIAL``
+:class:`~aeat.adapters.persistence.storage.SensitivityClass` rows wrapped in
+:class:`~aeat.adapters.persistence.storage.Envelope` through
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`; callers
+should not write plaintext catalogues or reach into private modules.
+
+LLM-facing :class:`LLMClassifier`, :class:`LLMSplitProposer`,
+:class:`PromptSpec`, :class:`LedgerClassificationRule`, and
+:func:`ledger_irpf_category_catalogue` also live behind this facade. They
+constrain model choices to typed :class:`BusinessClassification`,
+:class:`CategoryChoice`, and :class:`IvaCategoryChoice` allow-lists; regulated
+tax numbers are derived by application services, not originated by this
+package.
 """
 
 from __future__ import annotations
