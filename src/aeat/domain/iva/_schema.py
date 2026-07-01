@@ -246,7 +246,7 @@ def _require_translatable(translatable: tr, field_name: str) -> None:
     Raises:
         IvaValidationError: If the translation key is missing or empty.
     """
-    if not translatable:
+    if not str(translatable).strip():
         raise IvaValidationError(f"{field_name}: missing authoritative translation key")
 
 
@@ -341,6 +341,12 @@ class IvaCitation(_IvaStrictFrozen):
     retrieval_date: date = Field(
         description="Date the citation was retrieved / last reviewed.",
     )
+
+    @model_validator(mode="after")
+    def _validate(self) -> IvaCitation:
+        """Enforce the advertised non-empty citation text invariant."""
+        _require_translatable(self.quoted_text, f"IvaCitation[{self.source.value}:{self.article}].quoted_text")
+        return self
 
 
 class IvaRegulation(_IvaStrictFrozen):
