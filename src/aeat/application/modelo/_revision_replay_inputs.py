@@ -22,16 +22,20 @@ from __future__ import annotations
 from decimal import Decimal
 
 from ...core import Modelo
+from ...core.aggregation import BindingSourceKind
 from ...core.resources import resources
 from ...domain import filing as filing_domain
 from ...domain._identifiers import canonical_decimal_string
 from ...domain.calculations.registry import (
     ApplicabilityVerdict,
     BindingId,
+    CasillaDefinition,
+    DataBindingDefinition,
     InputKind,
     RegistrySnapshot,
     RegistrySnapshotError,
     RelationId,
+    bound_casilla_binding_ids,
     derive_modelo_applicability,
 )
 from ...domain.deadlines import TaxpayerProfile
@@ -77,9 +81,18 @@ def revision_filing_replay_inputs(
     context used by relation-zero synthesis. No engine formulas are rerun here.
     """
     snapshot = _snapshot_for_work_unit(work_unit)
+    bound_binding_replay_inputs = _observation_backed_bound_binding_replay_inputs(
+        revision=revision,
+        snapshot=snapshot,
+    )
     return {
         **_informational_casilla_replay_inputs(revision=revision, snapshot=snapshot),
-        **dict(revision.input_values_by_casilla_id),
+        **_casilla_replay_inputs(
+            revision=revision,
+            snapshot=snapshot,
+            bound_binding_replay_inputs=bound_binding_replay_inputs,
+        ),
+        **bound_binding_replay_inputs,
         **dict(revision.binding_overrides),
         **_m349_detail_row_replay_inputs(revision=revision, work_unit=work_unit),
         **_not_applicable_relation_zero_inputs(
@@ -89,6 +102,121 @@ def revision_filing_replay_inputs(
         ),
         **dict(revision.relation_overrides),
     }
+
+
+def _casilla_replay_inputs(
+    *,
+    revision: CalculationRevision,
+    snapshot: RegistrySnapshot | None,
+    bound_binding_replay_inputs: dict[BindingId, str],
+) -> dict[str, str]:
+    """Return stored casilla inputs, excluding migrated observation-backed bound projections."""
+    if snapshot is None:
+        return dict(revision.input_values_by_casilla_id)
+    migrated_bound_casillas = _observation_backed_bound_casillas_with_replay_binding(
+        snapshot=snapshot,
+        binding_ids=frozenset(bound_binding_replay_inputs) | frozenset(revision.binding_overrides),
+    )
+    if not migrated_bound_casillas:
+        return dict(revision.input_values_by_casilla_id)
+    return {
+        casilla_id: value
+        for casilla_id, value in revision.input_values_by_casilla_id.items()
+        if casilla_id not in migrated_bound_casillas
+    }
+
+
+def _observation_backed_bound_binding_replay_inputs(
+    *,
+    revision: CalculationRevision,
+    snapshot: RegistrySnapshot | None,
+) -> dict[BindingId, str]:
+    """Recover missing binding replay values for observation-backed bound casillas.
+
+    Some persisted revisions carry the bound-casilla projection in
+    ``input_values_by_casilla_id`` but lack the matching binding value in
+    ``binding_overrides``. The registry guard is correct to reject that shape.
+    During filing replay, recover the binding entry from the persisted casilla
+    projection when the registry gives a single safe binding target.
+    """
+    if snapshot is None:
+        return {}
+    bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings}
+    recovered: dict[BindingId, str] = {}
+    existing_binding_ids = frozenset(revision.binding_overrides)
+    for casilla in snapshot.revision.casillas:
+        if casilla.input_kind != InputKind.BOUND:
+            continue
+        raw_value = revision.input_values_by_casilla_id.get(casilla.id)
+        if raw_value is None:
+            continue
+        binding_ids = bound_casilla_binding_ids(casilla)
+        if existing_binding_ids.intersection(binding_ids):
+            continue
+        if not _has_observation_backed_binding(binding_ids, bindings_by_id):
+            continue
+        replay_binding_id = _replay_binding_id_for_bound_casilla(casilla, bindings_by_id)
+        if replay_binding_id is None:
+            continue
+        recovered[replay_binding_id] = raw_value
+    return dict(sorted(recovered.items()))
+
+
+def _observation_backed_bound_casillas_with_replay_binding(
+    *,
+    snapshot: RegistrySnapshot,
+    binding_ids: frozenset[BindingId],
+) -> frozenset[str]:
+    bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings}
+    migrated: set[str] = set()
+    for casilla in snapshot.revision.casillas:
+        if casilla.input_kind != InputKind.BOUND:
+            continue
+        casilla_binding_ids = bound_casilla_binding_ids(casilla)
+        if not binding_ids.intersection(casilla_binding_ids):
+            continue
+        if _has_observation_backed_binding(casilla_binding_ids, bindings_by_id):
+            migrated.add(casilla.id)
+    return frozenset(migrated)
+
+
+def _has_observation_backed_binding(
+    binding_ids: tuple[BindingId, ...],
+    bindings_by_id: dict[BindingId, DataBindingDefinition],
+) -> bool:
+    return any(
+        (binding := bindings_by_id.get(binding_id)) is not None
+        and binding.source in {BindingSourceKind.PREVIOUS_FILING, BindingSourceKind.RELATION_PREFILL}
+        for binding_id in binding_ids
+    )
+
+
+def _replay_binding_id_for_bound_casilla(
+    casilla: CasillaDefinition,
+    bindings_by_id: dict[BindingId, DataBindingDefinition],
+) -> BindingId | None:
+    binding_ids = bound_casilla_binding_ids(casilla)
+    manual_casilla_bindings = tuple(
+        binding.id
+        for binding_id in binding_ids
+        if (binding := bindings_by_id.get(binding_id)) is not None
+        and binding.source == BindingSourceKind.MANUAL_INPUT
+        and _binding_selector_casilla_id(binding) == casilla.id
+    )
+    if manual_casilla_bindings:
+        return manual_casilla_bindings[0]
+    if casilla.binding in bindings_by_id:
+        return casilla.binding
+    return next((binding_id for binding_id in binding_ids if binding_id in bindings_by_id), None)
+
+
+def _binding_selector_casilla_id(binding: DataBindingDefinition) -> str | None:
+    selector = binding.selector
+    if isinstance(selector, dict):
+        raw = selector.get("casilla_id")
+        return str(raw) if raw is not None else None
+    raw = getattr(selector, "casilla_id", None)
+    return str(raw) if raw is not None else None
 
 
 def _m349_detail_row_replay_inputs(
