@@ -152,6 +152,17 @@ def test_modelo_714_form_order_is_boe_corpus_backed() -> None:
     assert "ejercicio 2021 y siguientes" in reference.required_text
 
 
+def test_modelo_714_boe_form_source_is_layout_only() -> None:
+    modelo, catalogues = _load_modelo_714()
+    revision = modelo.revisions["2021-y-siguientes"]
+
+    assert "boe-modelo-714-form" not in catalogues.sources
+    assert catalogues.sources["aeat-modelo-714-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-714-layout"].evidence_tier == "layout_authority"
+    assert "boe-modelo-714-layout" in modelo.source_refs
+    assert "boe-modelo-714-layout" in revision.source_refs
+
+
 def test_modelo_714_revision_2021_declares_constructs() -> None:
     modelo, _ = _load_modelo_714()
     revision = modelo.revisions["2021-y-siguientes"]
