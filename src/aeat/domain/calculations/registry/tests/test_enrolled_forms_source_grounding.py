@@ -6,7 +6,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import RegistryValidator
-from ._registry_schema_support import _committed_modelo
+from ._registry_schema_support import _committed_modelo, _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -51,6 +51,14 @@ def test_capital_mobiliario_summary_guidance_and_layout_sources_are_separated(
         for citation in formula.source_citations:
             assert citation.source_ref == procedure_ref
             assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
+
+
+def test_deenrolled_modelo_198_has_no_registry_sources() -> None:
+    modelos, catalogues = _committed_registry_tree()
+
+    assert all(modelo.id != "198" for modelo in modelos)
+    assert "aeat-modelo-198-procedure" not in catalogues.sources
+    assert "boe-modelo-198-form-layout" not in catalogues.sources
 
 
 @pytest.mark.parametrize(
