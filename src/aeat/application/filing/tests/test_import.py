@@ -76,26 +76,26 @@ def test_normalise_period_returns_supported_typed_period(
     assert period.model_dump() == {"filing_year": expected.year, "code": expected.code}
 
 
-def test_normalise_period_rejects_typed_period_year_mismatch(
+@pytest.mark.parametrize(
+    ("modelo", "ejercicio", "raw_period", "match"),
+    [
+        ("130", "2026", Period.from_year_and_code(2025, "1T"), r"cannot canonicalise period 2025 1T"),
+        ("390", "2021", Period.from_year_and_code(2021, "1T"), r"period token '1T' is not declared"),
+    ],
+    ids=("year-mismatch", "registry-period-missing"),
+)
+def test_normalise_period_rejects_unsupported_typed_period(
     schema_provider: RegistrySchemaAccessor,
+    modelo: str,
+    ejercicio: str,
+    raw_period: Period,
+    match: str,
 ) -> None:
-    with pytest.raises(ModeloImportError, match=r"cannot canonicalise period 2025 1T"):
+    with pytest.raises(ModeloImportError, match=match):
         _normalise_period(
-            modelo="130",
-            ejercicio="2026",
-            raw_period=Period.from_year_and_code(2025, "1T"),
-            schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
-        )
-
-
-def test_normalise_period_rejects_period_not_declared_by_registry(
-    schema_provider: RegistrySchemaAccessor,
-) -> None:
-    with pytest.raises(ModeloImportError, match=r"period token '1T' is not declared"):
-        _normalise_period(
-            modelo="390",
-            ejercicio="2021",
-            raw_period=Period.from_year_and_code(2021, "1T"),
+            modelo=modelo,
+            ejercicio=ejercicio,
+            raw_period=raw_period,
             schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
         )
 
