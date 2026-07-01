@@ -2,12 +2,14 @@
 
 This module converts CLI override tokens into a
 :class:`WorkCalculateInputBundle`, resolves the active work unit's
-:class:`ModeloRevision`, and validates canonical ``CasillaId`` values,
+:class:`~aeat.domain.calculations.registry.ModeloRevision`, and validates
+canonical :class:`~aeat.domain.calculations.registry.CasillaId` values,
 binding channels, relation ids, and shortcut-derived semantic-role casillas
-before the calculate service persists a :class:`CalculationRevision`.
+before the calculate service persists a
+:class:`~aeat.domain.modelos.CalculationRevision`.
 
 The application result pairs that persisted revision with its parent
-:class:`WorkUnit` and any non-blocking
+:class:`~aeat.domain.modelos.WorkUnit` and any non-blocking
 :class:`~aeat.application.aggregation.CalculationSourceDiagnostic` rows
 surfaced by bucket aggregation or post-calculation advisory collectors.
 
@@ -130,8 +132,9 @@ class WorkCalculateInputBundle:
     a channel parallel to ``casilla_inputs``: the registry engine's
     ``calculate_registry_snapshot(text_inputs=...)`` reads it for categorical
     formula dispatch, and it rides into the persisted
-    :class:`CalculationRevision` ``input_values_by_casilla_id`` field
-    so the verification layer's required-casilla and
+    :class:`~aeat.domain.modelos.CalculationRevision`
+    ``input_values_by_casilla_id`` field so the verification layer's
+    required-casilla and
     ``casilla_equals_implies_nonzero`` predicate checks can see it. It is never
     folded into the Decimal ``casilla_values`` projection.
     """
@@ -228,10 +231,12 @@ class ModeloAuthorizationAdvisorySummary:
 class ModeloWorkCalculationServiceResult:
     """Application-owned result for one `modelo work calculate` command.
 
-    ``revision`` is the persisted :class:`CalculationRevision`; ``work_unit`` is
-    the parent :class:`WorkUnit` loaded after persistence so renderers do not
-    have to repeat the lookup. The optional advisory summaries are presentation
-    data derived from registry applicability and authorization metadata.
+    ``revision`` is the persisted
+    :class:`~aeat.domain.modelos.CalculationRevision`; ``work_unit`` is the
+    parent :class:`~aeat.domain.modelos.WorkUnit` loaded after persistence so
+    renderers do not have to repeat the lookup. The optional advisory summaries
+    are presentation data derived from registry applicability and authorization
+    metadata.
 
     ``source_diagnostics`` carries the NON-blocking
     :class:`~aeat.application.aggregation.CalculationSourceDiagnostic` rows the
@@ -261,8 +266,9 @@ def calculate_modelo_work_revision(
 
     The function forwards the already validated :class:`WorkCalculateInputBundle`
     into the bucket-aggregation calculation path, reloads the parent
-    :class:`WorkUnit`, and attaches any Modelo 202 modality, authorization, or
-    non-blocking source diagnostics needed by the CLI payload.
+    :class:`~aeat.domain.modelos.WorkUnit`, and attaches any Modelo 202
+    modality, authorization, or non-blocking source diagnostics needed by the
+    CLI payload.
 
     See Also:
         :func:`aeat.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
@@ -318,7 +324,8 @@ def build_work_calculate_input_bundle(
 ) -> WorkCalculateInputBundle:
     """Build a :class:`WorkCalculateInputBundle` from operator-supplied tokens.
 
-    The active work unit determines the :class:`ModeloRevision` used for every
+    The active work unit determines the
+    :class:`~aeat.domain.calculations.registry.ModeloRevision` used for every
     validation step. ``--casilla`` values must be canonical casilla ids; printed
     numbers and ambiguous noncanonical references are refused. A ``--casilla``
     key whose registry :class:`~aeat.domain.calculations.registry.CasillaDefinition`
