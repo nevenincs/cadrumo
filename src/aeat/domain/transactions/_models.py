@@ -390,13 +390,85 @@ def _coerce_transaction_collection_fields(payload: dict[str, object]) -> None:
             payload[key] = _coerce_history(payload[key])
 
 
+class DecisionProvenance(BaseModel):
+    """Typed provenance for one classification decision.
+
+    Carries the classifier that decided (:attr:`decided_by`, in the same
+    ``auto`` / ``manual`` / ``rule:<id>`` / ``llm:<model>`` /
+    ``derived:<basis>`` shape as
+    :attr:`ClassificationHistoryEntry.classified_by`), when it decided
+    (:attr:`decided_at`), the free-text justification, an optional
+    confidence in ``[0, 1]``, and whether the decision was a manual
+    override of an automated classification. This is the typed
+    replacement for the formerly ``dict``-widened reserved
+    :attr:`ClassificationHistoryEntry.provenance` payload; a persisted
+    record must carry a typed provenance, never a bare
+    ``dict[str, object]``.
+
+    Attributes:
+        decided_by: Classifier source string in the approved
+            ``auto`` / ``manual`` / ``rule:<id>`` / ``llm:<model>`` /
+            ``derived:<basis>`` shape.
+        decided_at: Timezone-aware UTC timestamp of the decision.
+        reason: Free-text justification (may be empty).
+        confidence: Optional decision confidence in ``[0, 1]``.
+        manual_override: ``True`` when the decision manually overrode an
+            earlier automated classification.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    decided_by: str = Field(min_length=1, max_length=128)
+    decided_at: datetime
+    reason: str = ""
+    confidence: Decimal | None = None
+    manual_override: bool = False
+
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_inbound(cls, data: object) -> object:
+        """Parse JSON-mode confidence strings back into ``Decimal`` on load."""
+        if isinstance(data, cls):
+            return data
+        if not isinstance(data, Mapping):
+            return data
+        payload = dict(data)
+        if isinstance(payload.get("confidence"), str):
+            payload["confidence"] = Decimal(payload["confidence"])
+        return payload
+
+    @field_validator("decided_by")
+    @classmethod
+    def _validate_decided_by(cls, value: str) -> str:
+        """Restrict ``decided_by`` to the approved classifier shapes."""
+        return _validate_classified_by_shape(value)
+
+    @field_validator("decided_at", mode="before")
+    @classmethod
+    def _parse_decided_at(cls, value: object) -> datetime:
+        """Reject naive or blank decision timestamps."""
+        return _parse_required_aware_datetime(value, field_name="decided_at")
+
+    @field_validator("reason")
+    @classmethod
+    def _normalize_reason(cls, value: str) -> str:
+        """Trim the free-text reason while allowing the empty string."""
+        return value.strip()
+
+    @field_validator("confidence")
+    @classmethod
+    def _validate_confidence(cls, value: Decimal | None) -> Decimal | None:
+        """Restrict confidence to the inclusive 0..1 range when not None."""
+        return _validate_confidence_range(value)
+
+
 class ClassificationHistoryEntry(BaseModel):
     """One frozen record in a transaction's classification chain.
 
-    The :attr:`confidence` and :attr:`provenance` fields are reserved
-    extension points; today both default to ``None`` and future writers
-    populate them without a schema bump because the field list is
-    stable.
+    The :attr:`confidence` and :attr:`provenance` fields default to
+    ``None`` and are populated by writers without a schema bump because
+    the field list is stable; :attr:`provenance` is the typed
+    :class:`DecisionProvenance` record (never a bare ``dict``).
 
     Attributes:
         business_classification: The :class:`BusinessClassification`
@@ -430,7 +502,7 @@ class ClassificationHistoryEntry(BaseModel):
     category_id: str | None = None
     notes: str = ""
     confidence: Decimal | None = None
-    provenance: dict[str, object] | None = None
+    provenance: DecisionProvenance | None = None
 
     @model_validator(mode="before")
     @classmethod
