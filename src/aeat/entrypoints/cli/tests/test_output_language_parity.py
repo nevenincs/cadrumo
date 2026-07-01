@@ -174,6 +174,45 @@ def test_config_switch_accepts_output_language() -> None:
 
 
 # ---------------------------------------------------------------------------
+# David round-10 coverage-gap closure (#529): work create + review verbs.
+# ---------------------------------------------------------------------------
+
+
+def test_work_create_accepts_output_language() -> None:
+    """``aeat app modelo work create`` must accept ``--output-language`` (#529).
+
+    The David round-10 testimonial audit flagged ``modelo work create`` as
+    not accepting the flag while its sibling read verbs (``list``,
+    ``status``) did. Threading the flag closes the inconsistency so the
+    creation-confirmation prose honours the requested language.
+    """
+    _assert_output_language_registered(["app", "modelo", "work", "create"])
+
+
+@pytest.mark.parametrize(
+    "verb",
+    ["queue", "view"],
+)
+def test_review_verb_accepts_output_language(verb: str) -> None:
+    """Every ``aeat app review`` read verb must accept ``--output-language`` (#529).
+
+    The David round-10 testimonial audit flagged ``review queue`` as
+    rendering Spanish regardless of the requested language because the
+    verb never declared the subcommand-position flag."""
+    _assert_output_language_registered(["app", "review", verb])
+
+
+def test_profile_create_wizard_accepts_output_language() -> None:
+    """``aeat config profile create`` (the setup wizard) accepts ``--output-language`` (#530).
+
+    The David round-10 audit flagged the profile-creation wizard as
+    hardcoded Spanish. The wizard command declares the flag and its
+    lazily-built help/prompt prose resolves through ``tr()`` against the
+    requested language."""
+    _assert_output_language_registered(["config", "profile", "create"])
+
+
+# ---------------------------------------------------------------------------
 # Sub-noun-group parity sweep.
 # ---------------------------------------------------------------------------
 
