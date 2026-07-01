@@ -39,38 +39,28 @@ def test_workflow_models_do_not_expose_active_bucket_resolver_shims() -> None:
     assert not hasattr(workflow_models, "require_active_bucket_id")
 
 
-def test_resolver_returns_none_when_no_rung_resolves(tmp_path: Path) -> None:
-    """A fresh root with no env override + no pointer yields None."""
+@pytest.mark.parametrize(
+    ("settings_profile", "pointer_bucket_id", "expected_bucket_id"),
+    [
+        (None, None, None),
+        (None, "catering", "catering"),
+        ("translation", "catering", "translation"),
+        ("   ", "catering", "catering"),
+    ],
+    ids=("no-rung", "pointer-only", "settings-wins", "blank-settings-falls-through"),
+)
+def test_resolver_uses_active_profile_precedence_chain(
+    tmp_path: Path,
+    settings_profile: str | None,
+    pointer_bucket_id: str | None,
+    expected_bucket_id: str | None,
+) -> None:
+    """Settings override wins over the active-profile pointer; blank settings fall through."""
+    if pointer_bucket_id is not None:
+        write_pointer(tmp_path, BucketPointer(bucket_id=pointer_bucket_id, schema_version=1))
 
-    with override_settings(aeat_active_profile=None, aeat_local_storage_root=tmp_path):
-        assert resolve_active_bucket_id() is None
-
-
-def test_pointer_file_wins_when_only_rung_two_is_set(tmp_path: Path) -> None:
-    """With no env override, the pointer file is the canonical default."""
-
-    write_pointer(tmp_path, BucketPointer(bucket_id="catering", schema_version=1))
-
-    with override_settings(aeat_active_profile=None, aeat_local_storage_root=tmp_path):
-        assert resolve_active_bucket_id() == "catering"
-
-
-def test_settings_override_wins_over_pointer_file(tmp_path: Path) -> None:
-    """Rung one (Settings) takes precedence over rung two (pointer)."""
-
-    write_pointer(tmp_path, BucketPointer(bucket_id="catering", schema_version=1))
-
-    with override_settings(aeat_active_profile="translation", aeat_local_storage_root=tmp_path):
-        assert resolve_active_bucket_id() == "translation"
-
-
-def test_empty_settings_override_falls_through_to_pointer(tmp_path: Path) -> None:
-    """An empty override (whitespace) does not block rung two."""
-
-    write_pointer(tmp_path, BucketPointer(bucket_id="catering", schema_version=1))
-
-    with override_settings(aeat_active_profile="   ", aeat_local_storage_root=tmp_path):
-        assert resolve_active_bucket_id() == "catering"
+    with override_settings(aeat_active_profile=settings_profile, aeat_local_storage_root=tmp_path):
+        assert resolve_active_bucket_id() == expected_bucket_id
 
 
 def test_no_active_profile_error_has_registered_error_code() -> None:
