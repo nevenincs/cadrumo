@@ -35,13 +35,14 @@ from ....persistence.storage import (
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
     AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
+    ClassificationError,
     Envelope,
+    EnvelopeVersionError,
     MasterKeyProvider,
     SecureObjectRepository,
     SensitivityClass,
+    secure_object_repository_for_active_bucket,
 )
-from ....persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ._errors import ExpedienteNotFoundError, SedeValidationError
 from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, IvaCompensationWalletObservation
 
