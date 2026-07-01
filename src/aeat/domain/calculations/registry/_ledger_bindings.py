@@ -1101,6 +1101,10 @@ def unsupported_ledger_impatriado_income_observations(
 ) -> tuple[ImpatriadoIncomeObservationProtocol, ...]:
     """Return ES-scoped impatriado observations no binding on ``revision`` can consume.
 
+    The :class:`ModeloRevision` supplies the
+    ``ledger_impatriado_income_aggregation`` binding selectors that define which
+    impatriado base casillas are supported.
+
     Fail-closed counterpart to
     :func:`resolve_ledger_impatriado_income_aggregation_binding_values`. An
     ES-source observation whose ``target_casilla_id`` matches no
