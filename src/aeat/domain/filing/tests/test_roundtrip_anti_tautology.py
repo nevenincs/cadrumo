@@ -55,6 +55,8 @@ from .._schema import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_ID = "filing-runtime"
+_DRAFT_TIMESTAMP = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
+_APPROVED_AT = datetime(2026, 5, 25, 14, 30, tzinfo=UTC)
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -71,7 +73,6 @@ _IVA_RESULTADO_OPERANDS = (_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA)
 
 
 def _populated_draft() -> ModeloDraft:
-    now = datetime.now(UTC).replace(microsecond=0)
     return ModeloDraft(
         draft_id="d" * 64,
         modelo="303",
@@ -100,15 +101,15 @@ def _populated_draft() -> ModeloDraft:
                 casilla_id=_IVA_DEVENGADO_CASILLA,
                 formula_id="iva-cuota-devengada-formula",
                 legal_refs=("ley-37-1992:art-92",),
-                source_refs=("aeat-iva-2025:casilla-01",),
+                source_refs=("aeat-iva-2025",),
             ),
         ),
         findings=(),
-        created_at=now,
-        updated_at=now,
+        created_at=_DRAFT_TIMESTAMP,
+        updated_at=_DRAFT_TIMESTAMP,
         schema_version="schema-2025-1",
         notes="Draft pending operator review",
-        approved_at=datetime(2026, 5, 25, 14, 30, tzinfo=UTC),
+        approved_at=_APPROVED_AT,
         approved_by="operator-reviewer-1",
         review_checksum="a" * 64,
         approval_basis=ModeloApprovalBasis(
