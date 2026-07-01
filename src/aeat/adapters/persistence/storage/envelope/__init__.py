@@ -2,13 +2,18 @@
 
 Public surface for the schema-versioned envelope contract used by
 file-backed persistence consumers. Re-exports the typed
-:class:`Envelope` and :class:`CipherEnvelope` records, the
-:class:`AeadAlgorithm` catalogue, the :class:`EncryptionMetadata`
-record, the plaintext / ciphertext save/load helpers (:func:`save_envelope`,
-:func:`load_envelope`, :func:`save_encrypted_envelope`,
-:func:`load_encrypted_envelope`, :func:`reencrypt_envelope_file`),
-and the :class:`SecureBoundRepository` generic base that domain
-repositories subclass for encrypted-object persistence.
+:class:`~aeat.adapters.persistence.storage.Envelope` and
+:class:`~aeat.adapters.persistence.storage.CipherEnvelope` records, the
+:class:`~aeat.adapters.persistence.storage.AeadAlgorithm` catalogue, the
+:class:`~aeat.adapters.persistence.storage.EncryptionMetadata` record, the
+plaintext / ciphertext save/load helpers
+(:func:`~aeat.adapters.persistence.storage.save_envelope`,
+:func:`~aeat.adapters.persistence.storage.load_envelope`,
+:func:`~aeat.adapters.persistence.storage.save_encrypted_envelope`,
+:func:`~aeat.adapters.persistence.storage.load_encrypted_envelope`,
+:func:`~aeat.adapters.persistence.storage.reencrypt_envelope_file`), and the
+:class:`~aeat.adapters.persistence.storage.SecureBoundRepository` generic base
+that domain repositories subclass for encrypted-object persistence.
 """
 
 from __future__ import annotations

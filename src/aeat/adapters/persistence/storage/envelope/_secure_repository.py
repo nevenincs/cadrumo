@@ -1,19 +1,20 @@
 """Generic SQL-backed envelope repository for secure objects.
 
-The 8 domain repositories that wrap
+Concrete domain and application repositories that wrap
 :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
-(filing drafts, submissions, filing history, complementaria,
-justificantes, observations, assets, inventory) all share the same
-boilerplate: :class:`~aeat.adapters.persistence.storage.Envelope` wrapping,
-namespace + sensitivity + schema-version + Pydantic payload type, and a
-function that extracts the natural id from the payload.
+all share the same boilerplate:
+:class:`~aeat.adapters.persistence.storage.Envelope` wrapping, namespace,
+sensitivity, schema-version, Pydantic payload type, and a function that
+extracts the natural id from the payload.
 
-This module provides :class:`SecureBoundRepository`, a generic base
-class that captures that shared shape exactly once. Concrete subclasses
-override the four class-level descriptors (`namespace`, `payload_type`,
-`sensitivity`, `schema_version`) and implement `extract_identifier`;
-they inherit `envelope_path_for`, `lock_target_for`, `load`, `save`,
-`delete`, `iter_ids`, and `iter_records` for free.
+This module provides
+:class:`~aeat.adapters.persistence.storage.SecureBoundRepository`, a
+generic base class that captures that shared shape exactly once. Concrete
+subclasses override the four class-level descriptors (``namespace``,
+``payload_type``, ``sensitivity``, ``schema_version``) and implement
+``extract_identifier``; they inherit ``envelope_path_for``,
+``lock_target_for``, ``load``, ``save``, ``delete``, ``iter_ids``, and
+``iter_records`` for free.
 
 The base class does NOT replace
 :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`; it
