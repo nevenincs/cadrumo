@@ -29,9 +29,9 @@ chains are modelled. A revision with no formula chain at all yields no advisory
 (an informativa or an unmodelled revision is not a partial-settlement calc surface).
 
 See Also:
-    :func:`aeat.application.modelo._calculation_diagnostics.collect_bucket_aggregation_advisory_diagnostics`:
+    :func:`~aeat.application.modelo._calculation_diagnostics.collect_bucket_aggregation_advisory_diagnostics`:
         Wires this structural advisory into the bucket-aggregation calculate path.
-    :mod:`aeat.application.modelo._verification_actions`:
+    :mod:`~aeat.application.modelo._verification_actions`:
         Evaluates the value-level settlement-completeness predicates that complement
         this structural guard.
     :class:`~aeat.domain.calculations.registry.InputKind`:
@@ -86,7 +86,7 @@ def collect_settlement_not_computed_diagnostics(
     See Also:
         :data:`SETTLEMENT_SEMANTIC_ROLES`:
             The narrow terminal-liquidación role allowlist this collector inspects.
-        :func:`aeat.application.modelo._calculation_diagnostics.collect_bucket_aggregation_advisory_diagnostics`:
+        :func:`~aeat.application.modelo._calculation_diagnostics.collect_bucket_aggregation_advisory_diagnostics`:
             Calls this collector after calculation revision creation.
     """
     if not revision.formulas:
