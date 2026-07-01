@@ -64,8 +64,8 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage import (
     Envelope,
     SecureObjectRepository,
+    secure_object_repository_for_bucket,
 )
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
 from ...core.external_constants import UTF_8_ENCODING
