@@ -55,15 +55,17 @@ from xml.etree import ElementTree
 from defusedxml import ElementTree as DefusedElementTree
 from pydantic import BaseModel, Field, field_validator
 
+from ...core import Modelo
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core._period import Period
 from ...core._result_disposition import ResultDisposition, result_disposition_is_refund
 from ...core.decimal import coerce_decimal
+from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.hashing import sha256_file, sha256_hex
 from ...core.logging import get_logger
 from ...core.money import round_to_cents
 from ...core.time import now
-from ...domain.calculations._export_field_kind import CasillaFieldKind
+from ...domain.calculations.registry import CasillaFieldKind
 from ...domain.calculations.registry._errors import RegistryValidationError
 from ...domain.calculations.registry._export_parse import (
     XmlDictionaryEntry,
@@ -581,7 +583,7 @@ def _render_xml_dictionary_layout(
         if rendered is None or rendered == "":
             continue
         _set_xml_dictionary_path(root, entry.path, rendered)
-    return ElementTree.tostring(root, encoding="utf-8", xml_declaration=True)
+    return ElementTree.tostring(root, encoding=_UTF_8, xml_declaration=True)
 
 
 def _xml_dictionary_xsd_source(
@@ -628,7 +630,7 @@ def _xml_dictionary_rendered_value(
     if raw is None:
         return None
     rendered = _format_xml_dictionary_value(entry.data_type, raw)
-    if draft.modelo == "100" and entry.field_id == "ECIVIL":
+    if draft.modelo == Modelo.M100 and entry.field_id == "ECIVIL":
         try:
             return modelo100_ecivil_export_code(rendered)
         except ValueError as exc:
