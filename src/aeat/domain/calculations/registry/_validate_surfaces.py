@@ -257,6 +257,71 @@ def _casilla_equals_implies_nonzero_predicate_failures(
     return failures
 
 
+# deduccion_requires_adquisicion_before(["amount_id", "acquisition_date_id",
+# "construction_date_id", "cutoff_iso"]) — eligibility-conditional advisory.
+# Mixes three casilla ids with a trailing ISO-date literal, so it cannot route
+# through the generic _casilla_list_predicate_failures (which validates every
+# bracketed token as a casilla id). This authoring-time gate rejects a malformed
+# arity, an unknown amount/date casilla, a non-text date casilla, or an
+# unparseable cutoff at registry load rather than letting the runtime evaluator's
+# defensive bad-arity / unparseable-cutoff branch (returns False — never fires)
+# silently mask a typo.
+_DEDUCCION_REQUIRES_ADQUISICION_BEFORE_PREDICATE = _re.compile(
+    r"^deduccion_requires_adquisicion_before\(\[(?P<ids>[^\]]*)\]\)$",
+)
+_ISO_DATE_LITERAL = _re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def _deduccion_requires_adquisicion_before_predicate_failures(
+    prefix: str,
+    owner: str,
+    expression: str,
+    casillas: set[CasillaId],
+    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
+) -> list[str]:
+    """Return failures for a malformed ``deduccion_requires_adquisicion_before`` predicate."""
+    match = _DEDUCCION_REQUIRES_ADQUISICION_BEFORE_PREDICATE.match(expression.strip())
+    if match is None:
+        return [
+            f"{prefix}: {owner} deduccion_requires_adquisicion_before expression {expression!r} is malformed; "
+            'expected deduccion_requires_adquisicion_before(["amount_casilla_id", '
+            '"acquisition_date_casilla_id", "construction_date_casilla_id", "cutoff_iso"])',
+        ]
+    tokens = _parse_predicate_casilla_id_tokens(match.group("ids"))
+    failures: list[str] = []
+    if len(tokens) != 4:
+        failures.append(
+            f"{prefix}: {owner} deduccion_requires_adquisicion_before must name exactly four tokens "
+            f"(amount casilla id, acquisition-date casilla id, construction-date casilla id, cutoff ISO date), "
+            f"got {len(tokens)}: {tokens!r}",
+        )
+        return failures
+    amount_id, acquisition_date_id, construction_date_id, cutoff = tokens
+    if amount_id not in casillas:
+        failures.append(
+            f"{prefix}: {owner} deduccion_requires_adquisicion_before references unknown amount casilla {amount_id!r}",
+        )
+    for role, date_id in (("acquisition-date", acquisition_date_id), ("construction-date", construction_date_id)):
+        if date_id not in casillas:
+            failures.append(
+                f"{prefix}: {owner} deduccion_requires_adquisicion_before references unknown "
+                f"{role} casilla {date_id!r}",
+            )
+            continue
+        casilla = casilla_by_id.get(date_id)
+        if casilla is not None and casilla.data_type != "text":
+            failures.append(
+                f"{prefix}: {owner} deduccion_requires_adquisicion_before {role} casilla {date_id!r} "
+                "must have data_type 'text'",
+            )
+    if not _ISO_DATE_LITERAL.match(cutoff):
+        failures.append(
+            f"{prefix}: {owner} deduccion_requires_adquisicion_before cutoff {cutoff!r} "
+            "must be an ISO date literal (YYYY-MM-DD)",
+        )
+    return failures
+
+
 def validate_verification_expectation_section(
     failures: list[str],
     *,
@@ -332,6 +397,21 @@ def validate_verification_expectation_section(
             # casilla, or an empty literal at authoring time.
             failures.extend(
                 _casilla_equals_implies_nonzero_predicate_failures(
+                    prefix,
+                    owner,
+                    predicate.expression,
+                    casillas,
+                    casilla_by_id,
+                ),
+            )
+        elif op_name == "deduccion_requires_adquisicion_before":
+            # deduccion_requires_adquisicion_before(["amount_id",
+            # "acquisition_date_id", "construction_date_id", "cutoff_iso"]) mixes
+            # three casilla ids with a trailing ISO-date literal; reject a
+            # malformed arity, an unknown amount/date casilla, a non-text date
+            # casilla, or an unparseable cutoff at authoring time.
+            failures.extend(
+                _deduccion_requires_adquisicion_before_predicate_failures(
                     prefix,
                     owner,
                     predicate.expression,

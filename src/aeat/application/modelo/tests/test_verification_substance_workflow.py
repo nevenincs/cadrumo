@@ -185,6 +185,9 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
         "casilla_equals_implies_nonzero": (
             'casilla_equals_implies_nonzero(["tipo_renta", "inmobiliaria", "base_imponible"])'
         ),
+        "deduccion_requires_adquisicion_before": (
+            'deduccion_requires_adquisicion_before(["0547", "0708", "0690", "2013-01-01"])'
+        ),
     }
     regex_attr_names: dict[str, str] = {
         "all_nonzero": "_PREDICATE_ALL_NONZERO",
@@ -197,6 +200,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
         "profile_field_required": "_PREDICATE_PROFILE_FIELD_REQUIRED",
         "roll_forward_balances": "_PREDICATE_ROLL_FORWARD_BALANCES",
         "casilla_equals_implies_nonzero": "_PREDICATE_CASILLA_EQUALS_IMPLIES_NONZERO",
+        "deduccion_requires_adquisicion_before": "_PREDICATE_DEDUCCION_REQUIRES_ADQUISICION_BEFORE",
     }
 
     missing_probes = KNOWN_VERIFICATION_PREDICATE_OPERATORS.difference(probe_expressions)

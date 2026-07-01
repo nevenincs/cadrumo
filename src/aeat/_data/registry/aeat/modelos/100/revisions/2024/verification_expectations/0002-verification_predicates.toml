@@ -23,3 +23,25 @@ predicate_id = "modelo-100-2024-cuota-resultante-determinada-cuando-base-liquida
 expression = 'implies_nonzero(["0500", "0595"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-35-2006:art-50", "ley-35-2006:art-63", "ley-35-2006:art-79"]
+
+# Vivienda-habitual deducción eligibility advisory (no-silent-under-declaration:
+# an inadmissible deducción over-declares the deducción and under-declares tax).
+# The deducción por inversión en vivienda habitual was ABOLISHED for
+# acquisitions after 31-12-2012; only the transitional régimen (LIRPF DT 18ª)
+# survives, and only for taxpayers who acquired their vivienda (or satisfied
+# construction/rehabilitation amounts) BEFORE 01-01-2013 and had already been
+# deducting. casilla 0547 is the deducción estatal total carried to the cuota
+# (sum of the anexo A.1 importes 0698/0702/0704); casilla 0708 is the acquisition
+# date the operator records for the dwelling ("salvo que se cumplimente la
+# casilla [0690]"); casilla 0690 is the post-2012 CONSTRUCTION transitional case
+# (a qualifying pre-2013-committed construction delivered later). When 0547 is
+# claimed (> 0) but neither a pre-01-01-2013 acquisition date (0708) nor a
+# construction-transitional date (0690) is recorded, the return claims the
+# abolished deducción without any eligibility signal — surfaced as a NON-BLOCKING
+# ADVISORY (a legitimately-eligible pre-2013 acquirer / construction case remains
+# permissible, so this alerts rather than refuses). Grounded in LIRPF DT 18ª.
+[[revisions."2024".verification_predicates]]
+predicate_id = "modelo-100-2024-deduccion-vivienda-habitual-requiere-adquisicion-anterior-2013"
+expression = 'deduccion_requires_adquisicion_before(["0547", "0708", "0690", "2013-01-01"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:dt-18"]

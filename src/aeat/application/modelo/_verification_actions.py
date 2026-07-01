@@ -36,6 +36,7 @@ from __future__ import annotations
 import decimal as _decimal
 import re as _re
 from collections.abc import Iterable, Mapping
+from datetime import date as _date
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -221,6 +222,27 @@ def _resolve_predicate_next_action(predicate_id: str) -> str | None:
     return None
 
 
+# Per-advisory fallback message for advisory predicates whose finding text is
+# not (yet) carried in the locale catalogue. The advisory finding message is
+# resolved via ``tr(advisory_key, default=...)``: a registered locale key still
+# takes precedence, and this default is used only when the key is absent — so
+# translators can enrich the catalogue later without a code change. Mirrors the
+# ``_resolve_predicate_next_action`` per-predicate dispatch shape.
+def _resolve_advisory_message_default(predicate_id: str) -> str | None:
+    if predicate_id in {
+        "modelo-100-2024-deduccion-vivienda-habitual-requiere-adquisicion-anterior-2013",
+        "modelo-100-2025-deduccion-vivienda-habitual-requiere-adquisicion-anterior-2013",
+    }:
+        return (
+            "The deducción por inversión en vivienda habitual is claimed but no pre-2013 "
+            "acquisition signal is recorded. The transitional régimen (LIRPF DT 18ª) admits "
+            "only dwellings acquired before 1 January 2013 (or pre-2013 construction / "
+            "rehabilitation amounts); the deducción was abolished for later acquisitions. "
+            "Confirm the acquisition date qualifies before filing."
+        )
+    return None
+
+
 # advisory_when_ratio_ge(["numerator_id", "denominator_id", "threshold"]) —
 # fires a WARNING-severity ADVISORY finding when numerator/denominator >= threshold
 # and denominator > 0. Used for Art. 109 RIRPF M130 high-retention exemption.
@@ -244,6 +266,20 @@ _PREDICATE_ROLL_FORWARD_BALANCES = _re.compile(r"^roll_forward_balances\(\[(?P<i
 # numeric antecedent.
 _PREDICATE_CASILLA_EQUALS_IMPLIES_NONZERO = _re.compile(
     r"^casilla_equals_implies_nonzero\(\[(?P<ids>[^\]]*)\]\)$",
+)
+# deduccion_requires_adquisicion_before(["amount_id", "acquisition_date_id",
+# "construction_date_id", "cutoff_iso"]) — eligibility-conditional advisory:
+# fires when the amount (Decimal) casilla is strictly positive but neither the
+# acquisition-date TEXT casilla holds a date strictly before the cutoff nor the
+# construction-date TEXT casilla is non-empty. ADVISORY-only; see the
+# deduccion_requires_adquisicion_before branch in
+# _evaluate_advisory_predicate_fires. Authored for the M100 deducción por
+# inversión en vivienda habitual transitional régimen (LIRPF DT 18ª), whose
+# eligibility requires acquisition before 01-01-2013 — a date-threshold trigger
+# neither implies_nonzero (numeric antecedent) nor casilla_equals_implies_nonzero
+# (categorical text equality) can express.
+_PREDICATE_DEDUCCION_REQUIRES_ADQUISICION_BEFORE = _re.compile(
+    r"^deduccion_requires_adquisicion_before\(\[(?P<ids>[^\]]*)\]\)$",
 )
 
 #: One-cent tolerance for the roll-forward continuity reconciliation — absorbs the
@@ -279,6 +315,27 @@ def _parse_predicate_raw_tokens(ids_fragment: str) -> list[str]:
     :func:`_validated_predicate_casilla_id`.
     """
     return [token.strip().strip('"').strip("'") for token in ids_fragment.split(",") if token.strip()]
+
+
+def _parse_predicate_date(raw: str) -> _date | None:
+    """Parse an operator-entered date string, or ``None`` when absent/unparseable.
+
+    Accepts the ISO ``YYYY-MM-DD`` form (the cutoff literal shape) and the two
+    common Spanish operator-entry forms ``DD/MM/YYYY`` and ``DD-MM-YYYY``. Used
+    by the ``deduccion_requires_adquisicion_before`` advisory to read the
+    acquisition-date TEXT casilla and the cutoff literal. An empty or malformed
+    value returns ``None`` so the advisory treats it as "no eligibility signal"
+    (conservative: a non-blocking prompt to correct or confirm the date).
+    """
+    text = raw.strip()
+    if not text:
+        return None
+    for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"):
+        try:
+            return datetime.strptime(text, fmt).date()
+        except ValueError:
+            continue
+    return None
 
 
 def _roll_forward_balance_reconciles(
@@ -628,6 +685,31 @@ def _evaluate_advisory_predicate_fires(
             return False
         consequent = casilla_values.get(consequent_id, Decimal(0))
         return consequent == Decimal(0)
+    m = _PREDICATE_DEDUCCION_REQUIRES_ADQUISICION_BEFORE.match(expr)
+    if m:
+        # deduccion_requires_adquisicion_before(["amount_id",
+        # "acquisition_date_id", "construction_date_id", "cutoff_iso"]) — fires
+        # (advisory shown) when the amount casilla is strictly positive (a
+        # deducción is claimed) AND no pre-cutoff eligibility signal is present:
+        # neither a pre-cutoff acquisition date (read from text_values) nor a
+        # non-empty construction date. A malformed arity or unparseable cutoff
+        # does not fire (defensive, same convention as the other operators).
+        tokens = _parse_predicate_raw_tokens(m.group("ids"))
+        if len(tokens) != 4:
+            return False
+        amount_id = _validated_predicate_casilla_id(tokens[0])
+        acquisition_date_id = _validated_predicate_casilla_id(tokens[1])
+        construction_date_id = _validated_predicate_casilla_id(tokens[2])
+        cutoff = _parse_predicate_date(tokens[3])
+        if cutoff is None:
+            return False
+        amount = casilla_values.get(amount_id, Decimal(0))
+        if amount <= Decimal(0):
+            return False
+        acquisition_date = _parse_predicate_date(text_values.get(acquisition_date_id, ""))
+        eligible_by_acquisition = acquisition_date is not None and acquisition_date < cutoff
+        eligible_by_construction = bool(text_values.get(construction_date_id, "").strip())
+        return not (eligible_by_acquisition or eligible_by_construction)
     return False
 
 
@@ -678,7 +760,7 @@ def _evaluate_verification_predicates(
                     ModeloVerificationFinding(
                         kind=ModeloVerificationFindingKind.ADVISORY,
                         severity=ModeloVerificationFindingSeverity.WARNING,
-                        message=tr(advisory_key),
+                        message=tr(advisory_key, default=_resolve_advisory_message_default(predicate.predicate_id)),
                         legal_refs=tuple(str(r) for r in predicate.legal_refs),
                     ),
                 )
@@ -1331,8 +1413,10 @@ def _collect_revision_verification_findings(
 
     # Layer 2: cross-casilla predicate gate. target.input_values_by_casilla_id
     # carries the operator-entered raw strings (independent of the Decimal
-    # casilla_values projection) for the casilla_equals_implies_nonzero
-    # categorical-conditional operator; every other operator ignores it.
+    # casilla_values projection) for the text-reading operators
+    # (casilla_equals_implies_nonzero categorical antecedent,
+    # deduccion_requires_adquisicion_before date casillas); the other operators
+    # ignore it.
     findings.extend(
         _evaluate_verification_predicates(
             snapshot.revision.verification_predicates,
