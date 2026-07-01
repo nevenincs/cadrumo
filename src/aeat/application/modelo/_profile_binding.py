@@ -224,6 +224,49 @@ def _inject_derived_family_facts(
     fact_index[menores_key] = Decimal(count_menores)
 
 
+_ANUALIDADES_ELIGIBILITY_FILING_YEARS = frozenset({2020, 2021, 2022, 2023, 2024, 2025})
+
+
+def _inject_derived_anualidades_eligibility_facts(
+    fact_index: dict[str, UserProfileFactValue],
+    filing_year: int,
+) -> None:
+    """Inject the LIRPF art. 64/75 anualidades separate-escala eligibility flag.
+
+    Art. 64 grants judicial anualidades por alimentos a favor de los hijos the
+    separate-escala régimen only to a payer "sin derecho a la aplicación por
+    estos últimos del mínimo por descendientes previsto en el artículo 58". This
+    "no right to the mínimo por descendientes" fact is not derivable from any
+    other casilla; it is projected here onto the synthetic Decimal key
+    ``renta_family.anualidades_sin_minimo_descendientes_{year}`` the registry
+    régimen predicate consumes.
+
+    Form-faithful default: filling casilla 0527 (anualidades por decisión
+    judicial) implies the non-custodial payer without the mínimo, so the flag is
+    1 (eligible) unless custody is shared. When at least one eligible descendant
+    has ``custodia_compartida = true`` the mínimo por descendientes is split
+    50/50, the payer retains it, and the régimen does NOT apply (flag 0).
+
+    Idempotent: an explicit fact already present is not overwritten. Only the
+    revisions carrying the separate-escala régimen are handled.
+    """
+    if filing_year not in _ANUALIDADES_ELIGIBILITY_FILING_YEARS:
+        return
+    key = f"renta_family.anualidades_sin_minimo_descendientes_{filing_year}"
+    if key in fact_index:
+        return
+    descendant_facts = {
+        fact_key: str(value)
+        for fact_key, value in fact_index.items()
+        if fact_key.startswith("renta_family.descendiente.")
+    }
+    shared_custody = any(
+        descendant.custodia_compartida and descendant.is_eligible_ordinary(filing_year)
+        for descendant in descendant_list_from_facts(descendant_facts)
+    )
+    fact_index[key] = Decimal("0") if shared_custody else Decimal("1")
+
+
 _MADRID_CCAA_CODE = "madrid"
 _CONJUNTA_DECLARATION_TYPE = "2"
 _AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY = "renta_family.madrid_nacimiento_adopcion_eligible_count"
@@ -504,6 +547,7 @@ def resolve_profile_sourced_bindings(
     fact_index = _profile_fact_index(record, resolved_schema)
     _inject_derived_marriage_facts(fact_index, snapshot.filing_year)
     _inject_derived_family_facts(fact_index, snapshot.filing_year)
+    _inject_derived_anualidades_eligibility_facts(fact_index, snapshot.filing_year)
     _inject_derived_autonomic_deduccion_facts(fact_index, snapshot.filing_year)
     _inject_derived_state_attribution_facts(fact_index)
     enum_bindings = enum_consumed_binding_ids(snapshot.revision)
@@ -565,12 +609,14 @@ def _resolve_one(
 
 inject_derived_marriage_facts = _inject_derived_marriage_facts
 inject_derived_autonomic_deduccion_facts = _inject_derived_autonomic_deduccion_facts
+inject_derived_anualidades_eligibility_facts = _inject_derived_anualidades_eligibility_facts
 profile_fact_index = _profile_fact_index
 resolve_profile_binding_value = _resolve_one
 
 
 __all__ = [
     "ProfileBindingResolutionError",
+    "inject_derived_anualidades_eligibility_facts",
     "inject_derived_autonomic_deduccion_facts",
     "inject_derived_marriage_facts",
     "profile_fact_index",
