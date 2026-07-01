@@ -18,6 +18,8 @@ from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.manuals import ManualId, ManualPart
 from .. import (
     RegistryApplicationInputError,
+    RegistryCitationArticleProjection,
+    RegistryCitationReferenceProjection,
     RegistryCitationShowCommand,
     RegistryCitationsListCommand,
     RegistryManualId,
@@ -593,4 +595,46 @@ def test_registry_topic_projection_is_strict_and_frozen() -> None:
             slug="iva-regime",
             title="IVA",
             body="IVA regime",
+        )
+
+    with pytest.raises(ValidationError, match=r"title"):
+        RegistryTopicProjection(
+            slug="iva-regime",
+            title="   ",
+            body="IVA regime",
+            legal_refs=("ley-37-1992:art-1",),
+        )
+
+    with pytest.raises(ValidationError, match=r"legal_refs"):
+        RegistryTopicProjection(
+            slug="iva-regime",
+            title="IVA",
+            body="IVA regime",
+            legal_refs=("   ",),
+        )
+
+
+def test_registry_citation_projections_reject_blank_authoritative_text() -> None:
+    with pytest.raises(ValidationError, match=r"title"):
+        RegistryCitationReferenceProjection(
+            id="ley-35-2006",
+            kind="ley",
+            number="35/2006",
+            title="   ",
+            published_at="2006-11-29",
+            boe_id="BOE-A-2006-20764",
+            boe_url="https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
+            tags=("irpf",),
+            articulo_count=1,
+            short_title="Ley 35/2006",
+            topic_slugs=("irpf",),
+        )
+
+    with pytest.raises(ValidationError, match=r"summary"):
+        RegistryCitationArticleProjection(
+            numero="32",
+            titulo="Art. 32",
+            summary="   ",
+            permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32",
+            cite="Ley 35/2006, art. 32 (BOE-A-2006-20764)",
         )
