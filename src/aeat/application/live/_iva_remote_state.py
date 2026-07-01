@@ -55,7 +55,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage import (
     SecureObjectRepository as _SecureObjectRepository,
 )
-from ...adapters.persistence.storage.runtime_repository import (
+from ...adapters.persistence.storage import (
     secure_object_repository_for_active_bucket as _secure_object_repository_for_active_bucket,
 )
 from ...application.auth import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
