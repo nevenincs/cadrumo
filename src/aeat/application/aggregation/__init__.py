@@ -35,6 +35,24 @@ state. Those steps remain in :mod:`aeat.domain.calculations.registry` and
 The facade also re-exports encrypted observation repositories for the
 retenciones and withholding stores, informativa rollups, and the shared
 :class:`AggregationError` failure taxonomy.
+
+See Also:
+    :mod:`aeat.application.modelo`
+        Work-unit calculate services that consume
+        :class:`CalculationSourceResolution` values and persist contributing
+        ``source_transaction_ids`` on calculation revisions.
+    :mod:`aeat.domain.transactions`
+        Ledger transaction catalogue resolved by ledger IVA, Renta, OSS/IOSS,
+        evidence-advisory, and filing-snapshot aggregation paths.
+    :mod:`aeat.domain.invoices`
+        Invoice catalogue and purchase-evidence records adapted into invoice
+        source resolutions.
+    :mod:`aeat.domain.attachments`
+        Encrypted document bytes referenced by ledger evidence diagnostics and
+        advisory surfaces without becoming plaintext calculation inputs.
+    :mod:`aeat.domain.calculations.registry`
+        Pure registry formulas, binding declarations, and observation contracts
+        that consume the resolved source payload.
 """
 
 from __future__ import annotations
