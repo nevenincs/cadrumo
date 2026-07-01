@@ -47,7 +47,7 @@ legal_refs = [
     "ley-37-1992:art-163-octovicies",
     "orden-hac-610-2021:art-1",
 ]
-source_refs = ["aeat-dr-369-2021"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-de-low-value-21pct"

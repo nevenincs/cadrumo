@@ -334,6 +334,7 @@ def validate_verification_expectation_section(
     casillas: set[CasillaId],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
     casilla_by_id = {casilla.id: casilla for casilla in revision.casillas}
 
@@ -341,6 +342,14 @@ def validate_verification_expectation_section(
         owner = f"verification expectation {expectation.id}"
         failures.extend(_missing_refs(prefix, owner, expectation.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, expectation.source_refs, source_refs, "source"))
+        failures.extend(
+            evidence.require_source_tier(
+                prefix,
+                owner,
+                expectation.source_refs,
+                "official_source_guidance",
+            ),
+        )
         for casilla_id in expectation.computed_casilla_ids:
             if casilla_id not in casillas:
                 failures.append(f"{prefix}: {owner} references unknown casilla {casilla_id!r}")
