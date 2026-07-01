@@ -19,7 +19,7 @@ from collections.abc import Iterable, Mapping
 from datetime import date
 from typing import Final, NamedTuple
 
-from ...core import Modelo, Period
+from ...core import BindingSourceKind, Modelo, Period
 from ...domain.calculations.registry import (
     CasillaId,
     Modelo202Modality,
@@ -553,8 +553,7 @@ def evaluate_cross_period_clean_state(
         for requirement in zero_value_previous_filing_requirements
     )
     m111_no_retenciones_dependencies = tuple(
-        _suppressed_m111_no_retenciones_evidence(requirement)
-        for requirement in m111_no_retenciones_requirements
+        _suppressed_m111_no_retenciones_evidence(requirement) for requirement in m111_no_retenciones_requirements
     )
     return CrossPeriodCleanStateVerdict(
         bucket_id=bucket_id,
@@ -624,7 +623,8 @@ def _per_grupo_member_requirement_keys(snapshot: RegistrySnapshot) -> set[tuple[
     grouped_binding_ids = {
         binding.id
         for binding in snapshot.revision.bindings
-        if binding.source == "previous_filing" and _selector_grouping(binding.selector) == "per_grupo_member"
+        if binding.source == BindingSourceKind.PREVIOUS_FILING
+        and _selector_grouping(binding.selector) == "per_grupo_member"
     }
     if not grouped_binding_ids:
         return set()
