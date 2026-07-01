@@ -70,6 +70,29 @@ class TestDt12ReduccionPlanPensiones:
         )
         assert result == Decimal("0.00")
 
+    def test_all_pre_2007_equals_full_forty_percent(self) -> None:
+        """pre_2007 == totales: the whole rescate is pre-2007, so reducción = 40% gross.
+
+        Derivation (LIRPF DT 12ª apartado 2, full pre-2007 share):
+          33000 / 33000 * 60000 * 0.40 = 60000 * 0.40 = 24000.00
+        """
+        result = compute_dt12_reduccion_plan_pensiones(
+            gross_rescate=Decimal("60000"),
+            aportaciones_pre_2007=Decimal("33000"),
+            aportaciones_totales=Decimal("33000"),
+        )
+        assert result == Decimal("24000.00")
+
+    def test_pre_2007_exceeds_totales_raises(self) -> None:
+        # DT 12ª apartado 2: the reduced part is a subset of total contributions,
+        # so pre_2007 cannot exceed totales; a share > 1 would over-reduce silently.
+        with pytest.raises(PensionReduccionError, match="must not exceed aportaciones_totales"):
+            compute_dt12_reduccion_plan_pensiones(
+                gross_rescate=Decimal("60000"),
+                aportaciones_pre_2007=Decimal("40000"),
+                aportaciones_totales=Decimal("33000"),
+            )
+
     def test_zero_totales_raises(self) -> None:
         with pytest.raises(PensionReduccionError, match="aportaciones_totales must be positive"):
             compute_dt12_reduccion_plan_pensiones(

@@ -30,7 +30,10 @@ def compute_dt12_reduccion_plan_pensiones(
 
     Raises:
         PensionReduccionError: When ``aportaciones_totales`` is zero or negative
-            (division-by-zero guard), or when any input is negative.
+            (division-by-zero guard), when any input is negative, or when
+            ``aportaciones_pre_2007`` exceeds ``aportaciones_totales`` (DT 12ª
+            apartado 2 scopes the reduced part to contributions made up to
+            31-12-2006, a subset of the total, so its share cannot exceed 1).
     """
     if aportaciones_totales <= Decimal(0):
         raise PensionReduccionError(
@@ -46,6 +49,17 @@ def compute_dt12_reduccion_plan_pensiones(
         raise PensionReduccionError(
             f"aportaciones_pre_2007 must be non-negative; got {aportaciones_pre_2007}",
             context={"field": "aportaciones_pre_2007", "value": str(aportaciones_pre_2007)},
+        )
+    if aportaciones_pre_2007 > aportaciones_totales:
+        raise PensionReduccionError(
+            "aportaciones_pre_2007 must not exceed aportaciones_totales "
+            f"(DT 12ª apartado 2: the pre-2007 part is a subset of total contributions); "
+            f"got pre_2007={aportaciones_pre_2007}, totales={aportaciones_totales}",
+            context={
+                "field": "aportaciones_pre_2007",
+                "value": str(aportaciones_pre_2007),
+                "aportaciones_totales": str(aportaciones_totales),
+            },
         )
 
     reduccion = (aportaciones_pre_2007 / aportaciones_totales) * gross_rescate * DT12_RESCATE_REDUCCION_RATE
