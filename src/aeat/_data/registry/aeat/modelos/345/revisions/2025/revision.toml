@@ -281,7 +281,7 @@ id = "datos-adicionales-clave-i"
 number = "tipo2.170-189"
 label = "Datos adicionales para la clave I"
 section = ["registro_declarado", "datos_adicionales"]
-data_type = "text"
+data_type = "integer"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-823-2022:art-3"]
@@ -308,7 +308,7 @@ data_type = "money"
 semantic_role = "m345_pias_importe_acumulado"
 required = false
 input_kind = "manual"
-constraints = { sign = "non_negative", legal_refs = ["orden-hfp-823-2022:art-3"], source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"] }
+constraints = { sign = "non_negative", max_value = "240000", legal_refs = ["orden-hfp-823-2022:art-3"], source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"] }
 legal_refs = ["orden-hfp-823-2022:art-3"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 

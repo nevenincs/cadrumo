@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 
 import pytest
 
@@ -100,7 +101,7 @@ def test_modelo_345_additional_data_subfields_follow_official_record_design() ->
         ),
         ("fondo-pensiones-nif", "tipo2.152-160", "nif", "m345_fondo_pensiones_nif"),
         ("entidad-aseguradora-nif", "tipo2.161-169", "nif", "m345_entidad_aseguradora_nif"),
-        ("datos-adicionales-clave-i", "tipo2.170-189", "text", None),
+        ("datos-adicionales-clave-i", "tipo2.170-189", "integer", None),
         ("pias-fecha-primera-prima", "tipo2.170-177", "date", "m345_pias_fecha_primera_prima"),
         ("pias-importe-acumulado", "tipo2.178-189", "money", "m345_pias_importe_acumulado"),
         ("datos-adicionales-clave-m", "tipo2.190-270", "text", None),
@@ -120,6 +121,9 @@ def test_modelo_345_additional_data_subfields_follow_official_record_design() ->
     assert casillas["plan-pensiones-denominacion"].constraints.max_length == 40
     assert casillas["fondo-pensiones-numero-registro"].constraints is not None
     assert casillas["fondo-pensiones-numero-registro"].constraints.max_length == 5
+    assert casillas["pias-importe-acumulado"].constraints is not None
+    assert casillas["pias-importe-acumulado"].constraints.sign == "non_negative"
+    assert casillas["pias-importe-acumulado"].constraints.max_value == Decimal("240000")
     assert casillas["pepp-denominacion"].constraints is not None
     assert casillas["pepp-denominacion"].constraints.max_length == 40
     assert casillas["pepp-numero-inscripcion"].constraints is not None
