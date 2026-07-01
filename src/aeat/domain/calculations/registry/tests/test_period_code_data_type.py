@@ -41,30 +41,41 @@ def _casilla_with(data_type: str) -> CasillaDefinition:
 class TestPeriodCodeAccepts:
     """`PeriodCode` accepts every documented period-token form."""
 
-    @pytest.mark.parametrize("code", ["1T", "2T", "3T", "4T"])
-    def test_quarterly_accepted(self, code: str) -> None:
-        assert _PERIOD_ADAPTER.validate_python(code) == code
-
-    @pytest.mark.parametrize("code", ["1P", "2P", "3P", "4P"])
-    def test_is_instalment_accepted(self, code: str) -> None:
-        assert _PERIOD_ADAPTER.validate_python(code) == code
-
-    def test_annual_accepted(self) -> None:
-        assert _PERIOD_ADAPTER.validate_python("0A") == "0A"
-
-    @pytest.mark.parametrize("code", [f"{m:02d}" for m in range(1, 13)])
-    def test_monthly_accepted(self, code: str) -> None:
-        assert _PERIOD_ADAPTER.validate_python(code) == code
-
-    @pytest.mark.parametrize("code", ["EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"])
-    def test_oss_quarter_accepted(self, code: str) -> None:
-        assert _PERIOD_ADAPTER.validate_python(code) == code
-
-    def test_ad_hoc_accepted(self) -> None:
-        assert _PERIOD_ADAPTER.validate_python("AD-HOC") == "AD-HOC"
-
-    @pytest.mark.parametrize("code", ["EVENT-1", "EVENT-42", "EVENT-9999"])
-    def test_event_codes_accepted(self, code: str) -> None:
+    @pytest.mark.parametrize(
+        "code",
+        (
+            pytest.param("1T", id="quarter-1"),
+            pytest.param("2T", id="quarter-2"),
+            pytest.param("3T", id="quarter-3"),
+            pytest.param("4T", id="quarter-4"),
+            pytest.param("1P", id="instalment-1"),
+            pytest.param("2P", id="instalment-2"),
+            pytest.param("3P", id="instalment-3"),
+            pytest.param("4P", id="instalment-4"),
+            pytest.param("0A", id="annual"),
+            pytest.param("01", id="month-01"),
+            pytest.param("02", id="month-02"),
+            pytest.param("03", id="month-03"),
+            pytest.param("04", id="month-04"),
+            pytest.param("05", id="month-05"),
+            pytest.param("06", id="month-06"),
+            pytest.param("07", id="month-07"),
+            pytest.param("08", id="month-08"),
+            pytest.param("09", id="month-09"),
+            pytest.param("10", id="month-10"),
+            pytest.param("11", id="month-11"),
+            pytest.param("12", id="month-12"),
+            pytest.param("EXT-1T", id="oss-quarter-1"),
+            pytest.param("EXT-2T", id="oss-quarter-2"),
+            pytest.param("EXT-3T", id="oss-quarter-3"),
+            pytest.param("EXT-4T", id="oss-quarter-4"),
+            pytest.param("AD-HOC", id="ad-hoc"),
+            pytest.param("EVENT-1", id="event-1"),
+            pytest.param("EVENT-42", id="event-42"),
+            pytest.param("EVENT-9999", id="event-9999"),
+        ),
+    )
+    def test_valid_tokens_accepted(self, code: str) -> None:
         assert _PERIOD_ADAPTER.validate_python(code) == code
 
 
