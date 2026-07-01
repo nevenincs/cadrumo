@@ -37,7 +37,7 @@ legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.bindings.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.bindings.selector]
@@ -56,7 +56,7 @@ legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.bindings.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.bindings.selector]
@@ -75,7 +75,7 @@ legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.bindings.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.bindings.selector]
@@ -94,7 +94,7 @@ legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.bindings.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.bindings.selector]
@@ -123,7 +123,7 @@ legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.bindings.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.bindings.selector]
@@ -142,7 +142,7 @@ legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.bindings.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.bindings.selector]
@@ -161,7 +161,7 @@ legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.bindings.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.bindings.selector]
@@ -180,7 +180,7 @@ legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.bindings.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.bindings.selector]
@@ -208,7 +208,7 @@ legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.bindings.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.bindings.selector]
@@ -227,7 +227,7 @@ legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.bindings.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.bindings.selector]
@@ -246,7 +246,7 @@ legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.bindings.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.bindings.selector]
@@ -265,7 +265,7 @@ legal_refs = ["ley-37-1992:art-25", "rd-1624-1992:art-71", "orden-eha-3786-2008:
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.bindings.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.bindings.selector]
@@ -284,7 +284,7 @@ legal_refs = ["ley-37-1992:art-21", "ley-37-1992:art-22", "rd-1624-1992:art-71",
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.bindings.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.bindings.selector]
@@ -303,7 +303,7 @@ legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.bindings.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.bindings.selector]
@@ -331,7 +331,7 @@ legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-84", 
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.bindings.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.bindings.selector]
@@ -350,7 +350,7 @@ legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-84", 
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.bindings.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.bindings.selector]
@@ -376,7 +376,7 @@ legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71",
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.bindings.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.bindings.selector]
@@ -392,10 +392,10 @@ op = "sum"
 id = "modelo-303-compensacion-pendiente-anteriores"
 source = "previous_filing"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.bindings.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.bindings.selector]
@@ -411,10 +411,10 @@ id = "modelo-303-iva-cuota-devengada-total"
 target_casilla_id = "iva.cuota-devengada-total"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.formulas.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.formulas.expression]
@@ -440,10 +440,10 @@ id = "modelo-303-iva-cuota-deducible-total"
 target_casilla_id = "iva.cuota-deducible-total"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.formulas.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.formulas.expression]
@@ -477,7 +477,7 @@ source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [[revisions.2009-y-siguientes.formulas.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.formulas.expression]
@@ -494,10 +494,10 @@ id = "modelo-303-iva-prorrata-porcentaje"
 target_casilla_id = "iva.prorrata-porcentaje"
 rounding = "integer"
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-102", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.formulas.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.formulas.expression]
@@ -535,10 +535,10 @@ id = "modelo-303-compensacion-aplicada-periodo"
 target_casilla_id = "iva.compensacion-aplicada-periodo"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.formulas.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.formulas.expression]
@@ -561,10 +561,10 @@ id = "modelo-303-compensacion-pendiente-periodos-posteriores"
 target_casilla_id = "iva.compensacion-pendiente-periodos-posteriores"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.formulas.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.formulas.expression]
@@ -581,10 +581,10 @@ id = "modelo-303-iva-resultado"
 target_casilla_id = "iva.resultado"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.formulas.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.formulas.expression]
@@ -601,10 +601,10 @@ id = "modelo-303-compensacion-disponible-fin-periodo"
 target_casilla_id = "iva.compensacion-disponible-fin-periodo"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.formulas.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.formulas.expression]
@@ -621,10 +621,10 @@ id = "modelo-303-compensacion-generada-periodo"
 target_casilla_id = "iva.compensacion-generada-periodo"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.formulas.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
+source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.formulas.expression]
@@ -649,7 +649,7 @@ target_binding = "modelo-303-compensacion-pendiente-anteriores"
 target_periods = ["1T", "2T", "3T", "4T"]
 source_period_offset_from_target = -1
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [revisions.2009-y-siguientes.relations.source_revision_selector]
 filing_year_delta = 0
@@ -667,7 +667,7 @@ treatment = "factual_evidence"
 target_constructs = ["modelo-303-iva-autoliquidacion"]
 relation_refs = ["modelo-303-rel-self-compensacion-anteriores"]
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.live_cross_references]]
 id = "modelo-303-static-documentation"
@@ -765,7 +765,7 @@ surface = "deadline"
 consumer = "aeat.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
-source_refs = ["boe-modelo-303-2008-form"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
 [[revisions.2009-y-siguientes.application_links]]
 id = "modelo-303-calculation"
@@ -773,7 +773,7 @@ surface = "calculation"
 consumer = "aeat.domain.calculations.registry"
 requires_snapshot = true
 legal_refs = ["orden-eha-3786-2008:art-1", "ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.application_links]]
 id = "modelo-303-export"
@@ -781,7 +781,7 @@ surface = "export"
 consumer = "aeat.application.filing.export_draft"
 requires_snapshot = true
 legal_refs = ["orden-eha-3786-2008:art-1", "ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.filing_schedules]]
 id = "modelo-303-trimestral"
