@@ -235,16 +235,17 @@ class TransactionCatalogueRepository:
             instance when this bucket has no transactions.
 
         Raises:
-            ClassificationError: If a row's inner envelope class is not
+            :class:`~aeat.adapters.persistence.storage.ClassificationError`:
+                If a row's inner envelope class is not
                 ``SensitivityClass.FINANCIAL``.
-            EnvelopeVersionError: If a row's inner envelope schema version is
-                higher than the consumer supports.
+            :class:`~aeat.adapters.persistence.storage.EnvelopeVersionError`:
+                If a row's inner envelope schema version is higher than the
+                consumer supports.
             StoredTransactionDriftError: If a row payload fails pydantic schema
                 validation on deserialization.
         """
-        from ...adapters.persistence.storage import Envelope
+        from ...adapters.persistence.storage import ClassificationError, Envelope, EnvelopeVersionError
         from ...adapters.persistence.storage.crypto import secure_object_key_digest
-        from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 
         index_ids = self._load_index_ids()
         if not index_ids:

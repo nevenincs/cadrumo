@@ -96,10 +96,10 @@ class InvoiceCatalogueRepository:
             instance when no database object is present.
 
         Raises:
-            :class:`~aeat.adapters.persistence.storage.errors.ClassificationError`:
+            :class:`~aeat.adapters.persistence.storage.ClassificationError`:
                 If the persisted object's classification is not
                 ``SensitivityClass.FINANCIAL``.
-            :class:`~aeat.adapters.persistence.storage.errors.EnvelopeVersionError`:
+            :class:`~aeat.adapters.persistence.storage.EnvelopeVersionError`:
                 If the envelope schema version is higher than the consumer
                 supports.
         """
@@ -119,14 +119,14 @@ class InvoiceCatalogueRepository:
             return InvoiceCatalogue()
         envelope = Envelope[InvoiceCatalogue].model_validate_json(record.payload.decode("utf-8"))
         if envelope.classification is not SensitivityClass.FINANCIAL:
-            from ...adapters.persistence.storage.errors import ClassificationError
+            from ...adapters.persistence.storage import ClassificationError
 
             raise ClassificationError(
                 f"invoice catalogue has classification {envelope.classification}; "
                 f"consumer expected {SensitivityClass.FINANCIAL}",
             )
         if envelope.schema_version > _INVOICE_CATALOGUE_VERSION:
-            from ...adapters.persistence.storage.errors import EnvelopeVersionError
+            from ...adapters.persistence.storage import EnvelopeVersionError
 
             raise EnvelopeVersionError(
                 f"invoice catalogue is at version {envelope.schema_version}; "
