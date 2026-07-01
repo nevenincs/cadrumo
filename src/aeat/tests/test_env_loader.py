@@ -31,11 +31,15 @@ class TestParseEnvText:
         # ``COLOR=#ffaabb`` is a hex value, not a comment.
         assert parse_env_text("COLOR=#ffaabb") == {"COLOR": "#ffaabb"}
 
-    def test_double_quoted_value_unquoted(self) -> None:
-        assert parse_env_text('NAME="Persona Prueba"') == {"NAME": "Persona Prueba"}
-
-    def test_single_quoted_value_unquoted(self) -> None:
-        assert parse_env_text("NAME='Persona Prueba'") == {"NAME": "Persona Prueba"}
+    @pytest.mark.parametrize(
+        "assignment",
+        (
+            pytest.param('NAME="Persona Prueba"', id="double-quoted"),
+            pytest.param("NAME='Persona Prueba'", id="single-quoted"),
+        ),
+    )
+    def test_quoted_value_unquoted(self, assignment: str) -> None:
+        assert parse_env_text(assignment) == {"NAME": "Persona Prueba"}
 
     def test_quoted_value_preserves_inline_hash(self) -> None:
         # Inside quotes, ``#`` is not a comment marker.
