@@ -11,22 +11,22 @@ BOE exports and calculation workbook exports.
 
 Major declarations:
 
-* :func:`serialize_tabular_rows` — render rows into a
-  :class:`TabularExportResult`.
-* :class:`ExportSerializationFormat` — the closed set of supported output
-  formats.
+* :func:`~aeat.application.export.serialize_tabular_rows` — render rows into a
+  :class:`~aeat.application.export.TabularExportResult`.
+* :class:`~aeat.application.export.ExportSerializationFormat` — the closed set
+  of supported output formats.
 * :class:`~aeat.application.export._errors.ExportFieldError` and
   :class:`~aeat.application.export._errors.ExportFormatError` — typed
   validation failures for export callers.
 
 See Also:
-    :func:`aeat.application.ledger.export_ledger_transactions`
+    :func:`~aeat.application.ledger.export_ledger_transactions`
         Ledger command service that calls this serializer, then owns bucket
         events and operator output paths.
-    :func:`aeat.application.modelo.export_modelo_revision`
+    :func:`~aeat.application.modelo.export_modelo_revision`
         Registry-driven fichero-BOE export for verified or filed modelo
         revisions.
-    :mod:`aeat.application.storage.calc_sheets`
+    :mod:`~aeat.application.storage.calc_sheets`
         Registry workbook export-plan surface for offline and Sheets transports.
 """
 
