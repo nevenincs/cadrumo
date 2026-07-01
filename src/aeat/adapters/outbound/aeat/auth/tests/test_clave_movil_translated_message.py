@@ -44,6 +44,8 @@ _CLAVE_MOVIL_LOCALE_KEYS = [
     "adapters.auth.clave_movil.errors.storage_state_hash_mismatch",
     "adapters.auth.clave_movil.errors.page_missing_click",
 ]
+_EXPIRED_AT = datetime(2026, 5, 28, 14, 25, 0, tzinfo=UTC)
+_LIVE_SESSION_AT = datetime(2099, 5, 28, 14, 30, 0, tzinfo=UTC)
 
 
 @pytest.fixture(autouse=True)
@@ -180,7 +182,7 @@ def test_probe_persisted_session_expired_carries_translated_message(
     storage_state_path = provider._storage_state_path()
 
     # Build an expired metadata record.
-    expired_at = datetime.now(UTC) - timedelta(hours=1)
+    expired_at = _EXPIRED_AT
     metadata = ClaveMovilSessionMetadata(
         authenticated_at=expired_at - timedelta(hours=8),
         idle_deadline=expired_at,
@@ -223,7 +225,7 @@ def test_resume_locked_hash_mismatch_carries_translated_message(
     # Use the canonical storage path so _storage_state_path() locates the record.
     storage_state_path = provider._storage_state_path()
 
-    now = datetime.now(UTC)
+    now = _LIVE_SESSION_AT
     metadata = ClaveMovilSessionMetadata(
         authenticated_at=now - timedelta(hours=1),
         idle_deadline=now + timedelta(hours=7),
