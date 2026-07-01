@@ -148,11 +148,11 @@ def test_negative_cuota_is_refused() -> None:
         )
 
 
-@pytest.mark.parametrize("pct", [Decimal("-1"), Decimal("101")])
-def test_out_of_range_percentage_is_refused(pct: Decimal) -> None:
-    with pytest.raises(ProrrataInputError):
-        compute_regularizacion_prorrata_anual(
-            cuotas_soportadas_deducibles=Decimal("1000.00"),
-            prorrata_provisional_pct=pct,
-            prorrata_definitiva_pct=Decimal("60"),
-        )
+def test_out_of_range_percentage_is_refused() -> None:
+    for pct in (Decimal("-1"), Decimal("101")):
+        with pytest.raises(ProrrataInputError):
+            compute_regularizacion_prorrata_anual(
+                cuotas_soportadas_deducibles=Decimal("1000.00"),
+                prorrata_provisional_pct=pct,
+                prorrata_definitiva_pct=Decimal("60"),
+            )
