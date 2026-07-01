@@ -242,6 +242,61 @@ class ModeloCasillasReport(BaseModel):
     rows: tuple[ModeloCasillaRow, ...]
 
 
+class ModeloCasillaDetailReport(BaseModel):
+    """Full semantic detail for one casilla on a resolved modelo revision.
+
+    Returned by :meth:`RegistryQueryService.casilla`. Unlike the ``casillas``
+    listing, this report addresses a single casilla by its id (or printed
+    number) and, when the casilla is computed, resolves and carries the
+    formula's structured expression. Every field is sourced from the
+    authoritative :class:`~aeat.domain.calculations.registry.CasillaDefinition`
+    on the selected revision, never recomputed.
+
+    Attributes:
+        code: Modelo identifier (e.g. ``"303"``).
+        revision: Registry revision identifier that was resolved.
+        filing_year: Filing year used for revision selection, or ``None``.
+        period: Filing-period code, or ``None``.
+        casilla_id: Canonical registry identifier for the casilla.
+        number: Short numeric or alphanumeric label printed on the form.
+        label: Official Spanish invariant label.
+        localized_labels: Optional locale-keyed label overrides.
+        localized_help: Optional locale-keyed help/hint texts.
+        section: Ordered breadcrumb path locating the casilla in the form.
+        data_type: Raw value type declared by the registry.
+        input_kind: Whether the casilla is manual, bound, or computed.
+        required: ``True`` when required for a valid filing.
+        legal_refs: Regulatory citations grounding this casilla.
+        source_refs: Internal source references for this casilla.
+        binding: Binding id that populates a bound casilla, or ``None``.
+        formula_id: Formula id that computes a computed casilla, or ``None``.
+        formula_expression: JSON-serialisable formula expression when the
+            casilla is computed, or ``None`` for manual and bound casillas.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    code: str
+    revision: str
+    filing_year: int | None
+    filing_period: Period | None = None
+    period: str | None
+    casilla_id: CasillaId
+    number: str
+    label: str
+    localized_labels: dict[str, str] = Field(default_factory=dict)
+    localized_help: dict[str, str] = Field(default_factory=dict)
+    section: tuple[str, ...]
+    data_type: str
+    input_kind: InputKind
+    required: bool
+    legal_refs: tuple[LegalRefId, ...]
+    source_refs: tuple[SourceRefId, ...]
+    binding: BindingId | None
+    formula_id: FormulaId | None
+    formula_expression: Mapping[str, object] | None
+
+
 BindingSelectorQueryValue = str | int | bool | tuple[str, ...]
 
 
@@ -723,6 +778,57 @@ class RegistryQueryService:
             rows=tuple(rows),
         )
 
+    def casilla(
+        self,
+        modelo: str,
+        casilla: str,
+        *,
+        period: str | None = None,
+        as_of: date | None = None,
+    ) -> ModeloCasillaDetailReport:
+        """Return the full semantic detail for one casilla on a resolved revision.
+
+        Addresses a single casilla by its canonical id or its printed
+        ``number`` and surfaces the authoritative label, legal/source
+        grounding, input kind, and â€” when the casilla is computed â€” the
+        resolved formula expression. Revision selection follows the same
+        precedence as :meth:`describe_modelo`.
+
+        Args:
+            modelo: Short numeric identifier for the modelo (e.g. ``"303"``).
+            casilla: Casilla id or printed number to look up.
+            period: Optional period narrowing; see :meth:`describe_modelo`.
+            as_of: Optional calendar date for validity gating.
+
+        Returns:
+            A :class:`ModeloCasillaDetailReport` for the addressed casilla.
+
+        Raises:
+            ``RegistryValidationError``: When the modelo or period is not
+                registered, no revision covers the requested scope, or the
+                casilla id/number is not defined by the resolved revision.
+        """
+        definition, revision, filing_year, registry_period = self._resolve_revision(modelo, period=period, as_of=as_of)
+        return _casilla_detail_report(definition, revision, casilla, filing_year, registry_period)
+
+    def casilla_for_scope(
+        self,
+        modelo: str,
+        casilla: str,
+        *,
+        filing_year: int,
+        period: str,
+        as_of: date | None = None,
+    ) -> ModeloCasillaDetailReport:
+        """Return a :class:`ModeloCasillaDetailReport` for an exact ``(filing_year, period)`` scope."""
+        definition, revision, registry_period = self._resolve_revision_for_scope(
+            modelo,
+            filing_year=filing_year,
+            period=period,
+            as_of=as_of,
+        )
+        return _casilla_detail_report(definition, revision, casilla, filing_year, registry_period)
+
     def bindings_for_scope(
         self,
         modelo: str,
@@ -1032,6 +1138,64 @@ def _binding_rows(revision: ModeloRevision) -> tuple[ModeloBindingQueryRow, ...]
     )
 
 
+def _casilla_detail_report(
+    definition: ModeloDefinition,
+    revision: ModeloRevision,
+    casilla: str,
+    filing_year: int | None,
+    registry_period: str | None,
+) -> ModeloCasillaDetailReport:
+    """Build the single-casilla detail report, resolving the formula expression.
+
+    The casilla is matched by canonical id first, then by printed ``number``
+    (the same dual key the ``casillas --number`` filter accepts). An unknown
+    casilla raises an instructive :class:`RegistryValidationError` naming a
+    bounded sample of valid ids and the ``casillas`` verb that lists them all.
+    A computed casilla's ``formula`` id is resolved against the revision's
+    formulas so the structured expression rides the report.
+    """
+    needle = casilla.strip()
+    matched = next(
+        (item for item in revision.casillas if str(item.id) == needle or item.number == needle),
+        None,
+    )
+    if matched is None:
+        valid_ids = [str(item.id) for item in revision.casillas]
+        sample = ", ".join(valid_ids[:20])
+        overflow = "" if len(valid_ids) <= 20 else f" (+{len(valid_ids) - 20} more)"
+        raise RegistryValidationError(
+            f"casilla {casilla!r} is not defined by revision {revision.id} of modelo {definition.id}; "
+            f"valid casilla ids include: {sample}{overflow}. "
+            f"Run 'aeat app modelo casillas {definition.id}' to list every casilla id and number.",
+        )
+    formula_expression: Mapping[str, object] | None = None
+    if matched.formula is not None:
+        formula = next((item for item in revision.formulas if item.id == matched.formula), None)
+        if formula is not None:
+            formula_expression = _public_mapping(formula.expression.model_dump(mode="json"))
+    return ModeloCasillaDetailReport(
+        code=str(definition.id),
+        revision=str(revision.id),
+        filing_year=filing_year,
+        filing_period=_query_filing_period(filing_year, registry_period),
+        period=registry_period,
+        casilla_id=matched.id,
+        number=matched.number,
+        label=matched.label,
+        localized_labels=dict(matched.localized_labels),
+        localized_help=dict(matched.localized_help),
+        section=tuple(matched.section),
+        data_type=matched.data_type,
+        input_kind=matched.input_kind,
+        required=matched.required,
+        legal_refs=tuple(str(ref) for ref in matched.legal_refs),
+        source_refs=tuple(str(ref) for ref in matched.source_refs),
+        binding=matched.binding,
+        formula_id=matched.formula,
+        formula_expression=formula_expression,
+    )
+
+
 def _relation_inputs_by_target_binding(revision: ModeloRevision) -> dict[BindingId, tuple[RelationId, ...]]:
     """Map each binding id to the relation ids whose ``target_binding`` is that binding.
 
@@ -1113,6 +1277,7 @@ __all__ = [
     "BindingSelectorQueryProjection",
     "ModeloBindingQueryRow",
     "ModeloBindingsReport",
+    "ModeloCasillaDetailReport",
     "ModeloCasillaRow",
     "ModeloCasillasReport",
     "ModeloDescribeReport",
