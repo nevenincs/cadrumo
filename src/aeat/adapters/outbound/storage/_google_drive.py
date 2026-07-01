@@ -1,6 +1,6 @@
-"""Google Drive v3 :class:`aeat.adapters.outbound.storage.StorageProvider` implementation.
+"""Google Drive v3 :class:`~aeat.adapters.outbound.storage.StorageProvider` implementation.
 
-Maps the :class:`aeat.adapters.outbound.storage.StorageProvider` Protocol onto
+Maps the :class:`~aeat.adapters.outbound.storage.StorageProvider` Protocol onto
 the Drive API:
 
 - Each namespace is a folder directly under the operator-configured
@@ -11,16 +11,20 @@ the Drive API:
   ``mimeType=application/octet-stream``, named
   ``<hmac_prefix_8>--<label>.bin``. The Drive ``appProperties`` field carries
   the ownership marker, namespace, full object-key HMAC, and stored
-  ``content_hash`` used to construct :class:`ProviderObjectMetadata`.
+  ``content_hash`` used to construct
+  :class:`~aeat.adapters.outbound.storage.ProviderObjectMetadata`.
 - Downloads use ``files().get_media(fileId=...)`` and validate full SHA-256
-  payload hashes through :func:`verify_content_hash`.
-- HttpError status codes are mapped onto the typed :class:`OutboundStorageError`
-  hierarchy: 401/403 -> :class:`OutboundStoragePermissionError`, 404 ->
-  :class:`OutboundStorageNotFoundError`, 409 ->
-  :class:`OutboundStorageConflictError`, 429 ->
-  :class:`OutboundStorageQuotaError`, 5xx ->
-  :class:`OutboundStorageUnavailableError`, every other failure ->
-  :class:`OutboundStorageNetworkError`.
+  payload hashes through
+  :func:`~aeat.adapters.outbound.storage._integrity.verify_content_hash`.
+- HttpError status codes are mapped onto the typed
+  :class:`~aeat.adapters.outbound.storage.OutboundStorageError` hierarchy:
+  401/403 -> :class:`~aeat.adapters.outbound.storage.OutboundStoragePermissionError`,
+  404 -> :class:`~aeat.adapters.outbound.storage.OutboundStorageNotFoundError`,
+  409 -> :class:`~aeat.adapters.outbound.storage.OutboundStorageConflictError`,
+  429 -> :class:`~aeat.adapters.outbound.storage.OutboundStorageQuotaError`,
+  5xx -> :class:`~aeat.adapters.outbound.storage.OutboundStorageUnavailableError`,
+  every other failure ->
+  :class:`~aeat.adapters.outbound.storage.OutboundStorageNetworkError`.
 
 The :func:`_service_factory` helper constructs the real Drive v3 resource
 lazily so importing this module does not require google-api-python-client or
@@ -544,7 +548,7 @@ class GoogleDriveProvider:
         ``content_hash`` is a ``sha256-<hex>`` string, the payload digest is
         recomputed after download and compared through
         :func:`verify_content_hash`; a mismatch raises
-        :class:`aeat.adapters.outbound.storage.OutboundStorageIntegrityError`
+        :class:`~aeat.adapters.outbound.storage.OutboundStorageIntegrityError`
         before the payload is returned.
 
         Args:
@@ -558,7 +562,7 @@ class GoogleDriveProvider:
         Raises:
             :class:`OutboundStorageNotFoundError`: When the namespace folder or
                 object file is absent from Drive.
-            :class:`aeat.adapters.outbound.storage.OutboundStorageIntegrityError`:
+            :class:`~aeat.adapters.outbound.storage.OutboundStorageIntegrityError`:
                 When the downloaded payload does not match the stored SHA-256
                 digest.
             :class:`OutboundStorageValidationError`: When ``namespace`` or

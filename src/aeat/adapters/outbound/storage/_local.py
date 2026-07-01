@@ -1,4 +1,4 @@
-"""Local-filesystem :class:`aeat.adapters.outbound.storage.StorageProvider` implementation.
+"""Local-filesystem :class:`~aeat.adapters.outbound.storage.StorageProvider` implementation.
 
 Stores objects under a configurable root directory. Each namespace is
 a subdirectory; each object is a single file named
@@ -9,7 +9,7 @@ re-hashing the payload.
 
 Bytes-in / bytes-out: encryption + classification stay above this
 layer. The provider treats every payload as opaque bytes and uses
-:func:`aeat.adapters.outbound.storage._integrity.verify_content_hash` to
+:func:`~aeat.adapters.outbound.storage._integrity.verify_content_hash` to
 enforce the stored digest on read.
 """
 
