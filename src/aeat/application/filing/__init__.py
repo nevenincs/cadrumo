@@ -14,7 +14,8 @@ Major entry points:
 * :func:`export_draft` writes a local fichero-BOE artefact, and
   :func:`verify_export` re-reads that file through the registry export parser.
 * :func:`import_filing_from_justificante` reconstructs a draft-level local
-  receipt baseline from a justificante PDF without treating the receipt as a
+  receipt baseline and companion :class:`aeat.domain.submission.ModeloPresentado`
+  audit record from a justificante PDF without treating the receipt as a
   casilla-value authority.
 * :func:`build_complementaria`, :func:`list_amendments`, and
   :func:`load_amendment` build and read governed
@@ -30,9 +31,10 @@ Remote AEAT submission is not exposed here; attempted live writes are refused
 by :class:`aeat.core.access_gate.LiveSubmitForbiddenError`.
 
 Imports from external PDFs stay evidence-scoped. A justificante import creates a
-local receipt baseline, while casilla-complete declaration and borrador parsing
-enter through the inbound adapter surfaces before application services decide
-how that evidence participates in a work-unit workflow.
+local draft plus submission-audit baseline, while casilla-complete declaration
+and borrador parsing enter through the inbound adapter surfaces before
+application services decide how that evidence participates in a work-unit
+workflow.
 
 Work-unit filing records for calculation revisions live in
 :mod:`aeat.application.modelo` and :mod:`aeat.domain.modelos`. This package owns
@@ -54,6 +56,9 @@ See Also:
     :mod:`aeat.domain.filing`
         Canonical draft records, values, provenance, validation findings, and
         review helpers.
+    :mod:`aeat.domain.submission`
+        Local-only submission audit records populated by justificante import;
+        this is not an AEAT live-submit path.
     :mod:`aeat.domain.calculations.registry`
         Registry authority, snapshots, export layouts, and formula execution
         used by this application facade.
