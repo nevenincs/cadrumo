@@ -27,11 +27,18 @@ def test_tipo_renta_irnr_tokens_match_registry_vocabulary() -> None:
     }
 
 
-def test_tipo_renta_irnr_is_str_and_hydrates_from_token() -> None:
+@pytest.mark.parametrize(
+    ("token", "member"),
+    (
+        pytest.param("pension", TipoRentaIrnr.PENSION, id="pension"),
+        pytest.param("interest", TipoRentaIrnr.INTEREST, id="interest"),
+    ),
+)
+def test_tipo_renta_irnr_is_str_and_hydrates_from_token(token: str, member: TipoRentaIrnr) -> None:
     """A StrEnum member equals its token and hydrates from the stored string."""
-    assert TipoRentaIrnr("pension") is TipoRentaIrnr.PENSION
-    assert TipoRentaIrnr.PENSION == "pension"
-    assert str(TipoRentaIrnr.INTEREST) == "interest"
+    assert TipoRentaIrnr(token) is member
+    assert member == token
+    assert str(member) == token
 
 
 def test_convenio_override_kind_tokens() -> None:
@@ -44,12 +51,18 @@ def test_convenio_override_kind_tokens() -> None:
     }
 
 
-def test_convenio_override_kind_rate_bearing_partition() -> None:
+@pytest.mark.parametrize(
+    ("kind", "carries_rate"),
+    (
+        pytest.param(ConvenioOverrideKind.FLAT, True, id="flat"),
+        pytest.param(ConvenioOverrideKind.CEILING, True, id="ceiling"),
+        pytest.param(ConvenioOverrideKind.ALLOCATION_DOMESTIC_TARIFF, False, id="allocation-domestic-tariff"),
+        pytest.param(ConvenioOverrideKind.EXEMPT, False, id="exempt"),
+    ),
+)
+def test_convenio_override_kind_rate_bearing_partition(kind: ConvenioOverrideKind, carries_rate: bool) -> None:
     """flat/ceiling carry a rate; allocation/exempt do not."""
-    assert ConvenioOverrideKind.FLAT.carries_rate
-    assert ConvenioOverrideKind.CEILING.carries_rate
-    assert not ConvenioOverrideKind.ALLOCATION_DOMESTIC_TARIFF.carries_rate
-    assert not ConvenioOverrideKind.EXEMPT.carries_rate
+    assert kind.carries_rate is carries_rate
 
 
 def test_convenio_override_kind_rejects_unknown_token() -> None:
