@@ -225,9 +225,10 @@ type = "boolean"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Public-administration budget threshold used by filing cadence."
+description = "Public-administration budget threshold used by Modelo 111 filing cadence. Applies when the last approved annual public-administration budget before the start of the tax year exceeds 6 million EUR; the Modelo 111 official instructions then route the withholding self-assessment to monthly."
 model_selectors = ["enrollment.public_administration_budget_gt_6000000"]
 schedule_predicates = ["enrollment.public_administration_budget_gt_6000000"]
+legal_refs = ["orden-eha-586-2011:art-1", "rd-439-2007:art-108"]
 
 [[sections.fields]]
 key = "activity_start_date"
