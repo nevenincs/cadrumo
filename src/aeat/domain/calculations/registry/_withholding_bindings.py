@@ -379,7 +379,7 @@ class WithholdingClaveBreakdown(BaseModel):
 def aggregate_withholding_by_clave(
     observations: Iterable[WithholdingObservation],
 ) -> tuple[WithholdingClaveBreakdown, ...]:
-    """Project withholding observations into a per-clave retención breakdown.
+    """Project withholding observations into :class:`WithholdingClaveBreakdown` rows.
 
     Pure function: identical observations in any order yield the same tuple,
     sorted by ``clave``. No new aggregation is introduced — the magnitudes apply
