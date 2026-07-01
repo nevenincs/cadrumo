@@ -1190,6 +1190,8 @@ class IvaWalletBalanceResult(OutputSchema):
     operation: str = "modelo.iva_wallet.balance"
     as_of_year: int
     total_balance: str
+    active_balance: str
+    expired_balance: str
     lot_count: int
     next_expiry_year: int | None
     unallocated_applied_amount: str

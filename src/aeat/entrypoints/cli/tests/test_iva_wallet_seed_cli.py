@@ -58,6 +58,8 @@ def test_seeded_state_surfaces_as_a_wallet_lot(tmp_path: Path) -> None:
 
     assert report.lot_count == 1, "seeded carry-forward must surface as exactly one wallet lot"
     assert report.total_balance == Decimal("1500.00"), "balance must reflect the seeded amount, not zero"
+    assert report.active_balance == Decimal("1500.00")
+    assert report.expired_balance == Decimal("0")
     assert report.next_expiry_year == 2025 + 4
 
 
@@ -73,6 +75,8 @@ def test_zero_seed_surfaces_no_lot_anti_tautology(tmp_path: Path) -> None:
 
     assert report.lot_count == 0, "a zero seed must not fabricate a wallet lot"
     assert report.total_balance == Decimal("0")
+    assert report.active_balance == Decimal("0")
+    assert report.expired_balance == Decimal("0")
 
 
 def test_seed_iva_compensation_anti_tautology_different_amounts(tmp_path: Path) -> None:

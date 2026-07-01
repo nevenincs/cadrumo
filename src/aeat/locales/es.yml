@@ -1765,7 +1765,8 @@ cli:
         as_of_year_help: Año de referencia para los cálculos de antigüedad y caducidad
           del saldo arrastrado.
         balance_help: Muestra el saldo acumulado del crédito IVA por compensación
-          calculado a partir del historial local del Modelo 303.
+          calculado a partir del historial local del Modelo 303. Informa total_balance,
+          active_balance, expired_balance, lot_count y next_expiry_year.
         correct_amount_help: Importe corregido del saldo a compensar en EUR (decimal,
           p. ej. 1200.50).
         correct_confirm_help: Indicador de confirmación obligatorio. Reconoce que

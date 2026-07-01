@@ -1686,7 +1686,8 @@ cli:
       iva_wallet:
         as_of_year_help: Reference year for carry-forward age and expiry calculations.
         balance_help: Show aggregated IVA compensation carry-forward balance computed
-          from local Modelo 303 history.
+          from local Modelo 303 history. Reports total_balance, active_balance,
+          expired_balance, lot_count, and next_expiry_year.
         correct_amount_help: A javított átvihető egyenleg összege EUR-ban (tizedes,
           pl. 1200.50).
         correct_confirm_help: Kötelező megerősítő jelző. Tudomásul veszi, hogy ez
