@@ -1,18 +1,20 @@
 """Scope-compatible resolution of recorded document links.
 
-Ledger evidence may start from a recorded :class:`AttachmentSource` link, but
-the link is not stored as evidence by itself. :func:`resolve_document_link`
-fetches reachable Drive content as bytes so the caller can persist those bytes
-through :func:`aeat.domain.attachments.add_attachment_bytes`; the original link
-remains provenance metadata on that byte-bearing attachment.
+Ledger evidence may start from a recorded
+:class:`~aeat.domain.attachments.AttachmentSource` link, but the link is not
+stored as evidence by itself.
+:func:`~aeat.adapters.outbound.google.resolve_document_link` fetches reachable
+Drive content as bytes so the caller can persist those bytes through
+:func:`~aeat.domain.attachments.add_attachment_bytes`; the original link remains
+provenance metadata on that byte-bearing attachment.
 
 The resolver stays inside the integration's deliberate minimal-scope posture:
 ``drive.file`` can download Drive files the app created or the operator picked,
 so a ``GOOGLE_DRIVE`` reference to such a file resolves. Operator-external
 documents, arbitrary Drive files that require ``drive.readonly``, and Gmail
 messages that require ``gmail.readonly`` are refused with
-:class:`OutboundStoragePermissionError` instead of being silently stored as
-links.
+:exc:`~aeat.adapters.outbound.storage.OutboundStoragePermissionError` instead
+of being silently stored as links.
 """
 
 from __future__ import annotations
@@ -56,7 +58,7 @@ class _DriveService(Protocol):
 
 
 def parse_drive_file_id(reference: str) -> str | None:
-    """Extract the Drive file id consumed by :func:`resolve_document_link`.
+    """Extract the Drive file id consumed by :func:`~aeat.adapters.outbound.google.resolve_document_link`.
 
     Args:
         reference: A Drive URL, ``?id=...`` link, bare Drive file id, or
@@ -96,7 +98,7 @@ def resolve_document_link(
     credentials: object,
     service: _DriveService | None = None,
 ) -> bytes:
-    """Resolve a recorded :class:`AttachmentSource` link to bytes.
+    """Resolve a recorded :class:`~aeat.domain.attachments.AttachmentSource` link to bytes.
 
     Args:
         source: The recorded link source.
@@ -112,11 +114,13 @@ def resolve_document_link(
         scope can reach.
 
     Raises:
-        :class:`OutboundStoragePermissionError`: For Gmail links, arbitrary
-            URLs, and Drive files outside the ``drive.file`` scope. The
-            required sensitive scope is named in ``context["required_scope"]``.
-        :class:`OutboundStorageValidationError`: For sources that are not
-            remote documents, or a Drive reference with no recognisable file id.
+        :exc:`~aeat.adapters.outbound.storage.OutboundStoragePermissionError`:
+            For Gmail links, arbitrary URLs, and Drive files outside the
+            ``drive.file`` scope. The required sensitive scope is named in
+            ``context["required_scope"]``.
+        :exc:`~aeat.adapters.outbound.storage.OutboundStorageValidationError`:
+            For sources that are not remote documents, or a Drive reference
+            with no recognisable file id.
     """
     if source is AttachmentSource.GMAIL:
         raise OutboundStoragePermissionError(
