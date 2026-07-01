@@ -108,6 +108,33 @@ corpus-verbatim, confidence that no category M123 declares resolves to a
 legitimate zero. Track bundling RD 439/2007 arts. 74-76 as a follow-up to
 close this gap with verbatim text.**
 
+**RESOLVED 2026-07-01 (deferral `DFR-M123-RIRPF-EXONERATION-CORPUS`).**
+`rd-439-2007:art-75` (the "Rentas sujetas a retencion o ingreso a cuenta"
+article - the correct RIRPF numbering for the type-based exoneration list,
+confirmed against the live BOE consolidated text vigente since 2023-04-25,
+Real Decreto 249/2023) is now bundled at
+`corpus/normatives/html/rd-439-2007-art-75.html#a75` and catalogued in
+`legal/irpf.toml`. Article 74 (obligación de practicar retención, no
+exoneration content) and article 76 (obligados a retener - the payer
+categories, not the exempted-income list) were read in full via the BOE
+Legislación Consolidada open-data API and found not to carry exoneration
+content; only article 75 apartado 3 does, so only article 75 was bundled.
+Apartado 3's closed list (letras a-j) was read verbatim, including the
+capital-mobiliario-adjacent exceptions and carve-backs in letras b), c), d),
+e), and h), plus apartado 4. The grounded conclusion is narrower than "no
+capital-mobiliario exception exists": where art. 75.3 removes the withholding
+obligation, the income is not entered as a positive M123 withholding base in
+casillas 04/05; where art. 75.3 or apartado 4 restores a withholding/payment
+on account obligation, the ordinary positive-base guard remains applicable.
+That is the structural cross-check this audit already relied on - now
+corroborated with verbatim text instead of inference. The M123
+`06->09` ADVISORY guard's `legal_refs` now cite `rd-439-2007:art-75`
+alongside the existing `rd-439-2007:art-90` / `ley-35-2006:art-101`
+(`0002-verification_predicates.toml`). **No guard change; the residual gap
+this audit flagged is closed.** Registry load and the legal
+cross-reference/referential-integrity/M123 test selections pass at HEAD.
+See `.vault/exec/2026-07-01-modelo-verify-nonzero-guards-exec-DFR-M123-RIRPF-EXONERATION-CORPUS.md`.
+
 ## Recommendations
 
 - **No guard change.** The M123 `06->09` ADVISORY
@@ -115,20 +142,22 @@ close this gap with verbatim text.**
   test pair (`test_modelo_123_registry.py`,
   `test_verification_m123_advisory.py`) remain sound under the corroboration
   performed here; do not narrow, widen, or convert it to `BLOCKING_RULE`.
-- **Follow-up: bundle RD 439/2007 arts. 74-76.** Fetch and bundle the
-  type-based retention-exoneration article range against the official BOE
-  consolidated text (`BOE-A-2007-6820`), author the corresponding
-  `legal.*` catalogue entries with `corpus_ref` and `required_text`, and
-  cross-check each listed exoneration category against M123's own income
-  scope (dividendos y participaciones, resto de rentas del capital
-  mobiliario) to confirm none intersects. This closes the residual gap this
-  audit records with verbatim BOE text instead of the structural argument.
+- ~~**Follow-up: bundle RD 439/2007 arts. 74-76.**~~ **RESOLVED 2026-07-01**
+  (deferral `DFR-M123-RIRPF-EXONERATION-CORPUS`). `rd-439-2007:art-75` is
+  bundled with verbatim BOE consolidated text (vigente since 2023-04-25) and
+  catalogued in `legal/irpf.toml`; arts. 74/76 were confirmed to carry no
+  exoneration content and were not bundled. The art. 75.3 exceptions and
+  carve-backs were cross-checked against M123's declared "base de retención"
+  casillas: classes with no withholding obligation do not populate a positive
+  M123 withholding base, while carve-back/payment-on-account cases remain
+  covered by the existing positive-base advisory. See the resolution note
+  under the `m123-art-75-exoneration-list-not-bundled` finding above.
 - **No engine change recommended now.** Per `aeat-schema-central-config` and
   `registry-calculation-legal-grounding`, the follow-up is legal-catalogue
   authoring work, not a registry-authoring addition to this campaign's guard;
   scope it as its own small research/authoring pass rather than folding it
   into this plan's closeout.
 - This audit and its exec record
-  (`.vault/exec/2026-07-01-modelo-verify-nonzero-guards-exec.md`) are the
+  (`.vault/exec/2026-07-01-modelo-verify-nonzero-guards-exec-DFR-M123-RIRPF-EXONERATION-CORPUS.md`) are the
   input `W03.P09.S29` should cite when converting this code-review finding
   into either a closed item or a tracked follow-up Step.
