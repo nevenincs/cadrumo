@@ -1,7 +1,7 @@
 """Generic SQL-backed envelope repository for secure objects.
 
 Concrete domain and application repositories that wrap
-:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
 all share the same boilerplate:
 :class:`~aeat.adapters.persistence.storage.Envelope` wrapping, namespace,
 sensitivity, schema-version, Pydantic payload type, and a function that
@@ -17,7 +17,7 @@ subclasses override the four class-level descriptors (``namespace``,
 ``iter_records`` for free.
 
 The base class does NOT replace
-:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`; it
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`; it
 composes one.
 """
 
@@ -66,7 +66,7 @@ class SecureBoundRepository[T: BaseModel]:
     Subclasses MUST set class attributes:
 
     - :attr:`namespace`: the
-      :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+      :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
       namespace string for this payload family
       (e.g. ``"aeat.domain.filing.drafts"``).
     - :attr:`payload_type`: the typed Pydantic model class wrapped by the
@@ -166,7 +166,7 @@ class SecureBoundRepository[T: BaseModel]:
 
         Returns:
             The
-            :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+            :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
             backing this logical repository.
         """
         return self._objects
@@ -256,7 +256,9 @@ class SecureBoundRepository[T: BaseModel]:
         order sorts the result itself. Streams one identifier at a time
         rather than buffering and sorting the whole namespace in memory.
 
-        Fail-closed: :meth:`SecureObjectRepository.list_records` scans the
+        Fail-closed:
+        :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.list_records`
+        scans the
         whole namespace and raises ``SecureObjectUnreadableError`` if any row
         is unreadable, so a full consumption (``tuple(...)``) never yields a
         readable subset past a corrupt row.
@@ -288,7 +290,7 @@ class SecureBoundRepository[T: BaseModel]:
         """Yield every persisted payload in storage order.
 
         Streams each payload straight from
-        :meth:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository.list_records`
+        :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.list_records`
         without buffering the whole namespace or sorting it in memory. Order
         is storage-defined (the ``object_key`` digest order), not the
         natural-id order; a caller that needs a specific order sorts the
