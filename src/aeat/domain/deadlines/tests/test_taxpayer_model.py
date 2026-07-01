@@ -682,94 +682,46 @@ class TestMultiplePagadoresObligationWithTotalIncome:
     threshold is hand-invented.
     """
 
-    def test_multi_payer_over_reduced_limit_2024_obliged(self) -> None:
-        # 2 pagadores, secondary €1,600 > €1,500, total €18,000 > €15,876 (2024).
+    @pytest.mark.parametrize(
+        ("pagadores_count", "secondary_income", "total_income", "year", "expected"),
+        (
+            (2, Decimal("1600"), Decimal("18000"), 2024, True),
+            (2, Decimal("1600"), Decimal("10000"), 2024, False),
+            (2, Decimal("1600"), Decimal("16000"), 2024, True),
+            (2, Decimal("1600"), Decimal("15500"), 2023, True),
+            (2, Decimal("1600"), Decimal("15500"), 2024, False),
+            (1, Decimal("0"), Decimal("18000"), 2024, False),
+            (2, Decimal("1500"), Decimal("18000"), 2024, False),
+            (2, Decimal("1600"), None, 2024, True),
+        ),
+        ids=(
+            "multi-payer-over-reduced-limit",
+            "multi-payer-under-reduced-limit",
+            "between-reduced-and-general",
+            "2023-boundary-over",
+            "2024-boundary-under",
+            "single-payer-under-general",
+            "secondary-at-trigger",
+            "missing-total-income",
+        ),
+    )
+    def test_total_income_obligation_cases(
+        self,
+        pagadores_count: int,
+        secondary_income: Decimal,
+        total_income: Decimal | None,
+        year: int,
+        expected: bool,
+    ) -> None:
         assert (
             evaluate_multiple_pagadores_obligation(
-                2,
-                Decimal("1600"),
-                Decimal("18000"),
-                2024,
+                pagadores_count,
+                secondary_income,
+                total_income,
+                year,
             )
-            is True
+            is expected
         )
-
-    def test_multi_payer_under_reduced_limit_2024_not_obliged(self) -> None:
-        # 2 pagadores, secondary €1,600, but total €10,000 < €15,876 — NOT obliged.
-        assert (
-            evaluate_multiple_pagadores_obligation(
-                2,
-                Decimal("1600"),
-                Decimal("10000"),
-                2024,
-            )
-            is False
-        )
-
-    def test_multi_payer_total_between_reduced_and_general_2024_obliged(self) -> None:
-        # Total €16,000 is below the general €22,000 but above the reduced
-        # €15,876 — exactly the case Art. 96.3 catches.
-        assert (
-            evaluate_multiple_pagadores_obligation(
-                2,
-                Decimal("1600"),
-                Decimal("16000"),
-                2024,
-            )
-            is True
-        )
-
-    def test_2023_reduced_limit_boundary(self) -> None:
-        # In 2023 the reduced limit was €15,000: €15,500 is over it → obliged.
-        assert (
-            evaluate_multiple_pagadores_obligation(
-                2,
-                Decimal("1600"),
-                Decimal("15500"),
-                2023,
-            )
-            is True
-        )
-        # The same €15,500 in 2024 (limit €15,876) is below it → not obliged.
-        assert (
-            evaluate_multiple_pagadores_obligation(
-                2,
-                Decimal("1600"),
-                Decimal("15500"),
-                2024,
-            )
-            is False
-        )
-
-    def test_single_payer_under_general_limit_not_obliged(self) -> None:
-        # 1 pagador, total €18,000 < general €22,000 — not a multiple-pagadores
-        # obligation regardless of total income.
-        assert (
-            evaluate_multiple_pagadores_obligation(
-                1,
-                Decimal("0"),
-                Decimal("18000"),
-                2024,
-            )
-            is False
-        )
-
-    def test_secondary_at_trigger_keeps_general_limit_not_obliged(self) -> None:
-        # Secondary exactly €1,500 keeps the €22,000 limit; €18,000 < €22,000.
-        assert (
-            evaluate_multiple_pagadores_obligation(
-                2,
-                Decimal("1500"),
-                Decimal("18000"),
-                2024,
-            )
-            is False
-        )
-
-    def test_total_income_undeclared_surfaces_conservatively(self) -> None:
-        # When total work income is undeclared, a triggered multiple-pagadores
-        # condition surfaces the advisory rather than granting a false clear.
-        assert evaluate_multiple_pagadores_obligation(2, Decimal("1600"), None, 2024) is True
 
 
 class TestResidencyBoundaryNear:
