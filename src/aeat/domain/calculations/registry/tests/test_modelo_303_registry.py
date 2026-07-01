@@ -620,40 +620,51 @@ def test_modelo_303_sii_monthly_snapshot_resolves_for_each_period() -> None:
         )
         assert snapshot.revision.id == "2023-y-siguientes"
         schedule_ids = {s.id for s in snapshot.revision.filing_schedules}
-        assert "modelo-303-mensual-sii" in schedule_ids, f"monthly SII schedule absent for period {period}"
+        assert "modelo-303-mensual" in schedule_ids, f"monthly schedule absent for period {period}"
 
 
-def test_modelo_303_sii_monthly_filing_schedule_matches_sii_enrolled_profiles() -> None:
-    """The monthly schedule must fire for SII-enrolled profiles and be excluded
-    for standard quarterly profiles."""
-    from ....deadlines._models import IVARegime, ModeloIVAProfile, TaxpayerProfile
+def test_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles() -> None:
+    """The monthly schedule must fire for every legally monthly IVA-liquidation trigger."""
+    from ....deadlines._models import IVARegime, ModeloEnrollment, ModeloIVAProfile, TaxpayerProfile
     from .. import applicable_filing_schedules
 
     modelo, _catalogues = _load_modelo_303()
     revision = modelo.revisions["2023-y-siguientes"]
 
-    sii_profile = TaxpayerProfile(
-        tax_id="A12345678",
-        iva_regime=IVARegime.GENERAL,
-        iva=ModeloIVAProfile(sii_enrolled=True),
+    monthly_profiles = (
+        TaxpayerProfile(
+            tax_id="A12345678",
+            iva_regime=IVARegime.GENERAL,
+            iva=ModeloIVAProfile(sii_enrolled=True),
+        ),
+        TaxpayerProfile(
+            tax_id="B12345678",
+            iva_regime=IVARegime.GENERAL,
+            iva=ModeloIVAProfile(redeme_enrolled=True),
+        ),
+        TaxpayerProfile(
+            tax_id="C12345678",
+            iva_regime=IVARegime.GENERAL,
+            enrollment=ModeloEnrollment(large_company=True),
+        ),
     )
     quarterly_profile = TaxpayerProfile(
-        tax_id="B98765432",
+        tax_id="D98765432",
         iva_regime=IVARegime.GENERAL,
-        iva=ModeloIVAProfile(sii_enrolled=False),
+        iva=ModeloIVAProfile(sii_enrolled=False, redeme_enrolled=False),
+        enrollment=ModeloEnrollment(large_company=False),
     )
 
-    sii_schedules = applicable_filing_schedules(revision, sii_profile)
-    sii_ids = {s.id for s in sii_schedules}
-    assert "modelo-303-mensual-sii" in sii_ids, "monthly SII schedule must match SII-enrolled profile"
-    assert "modelo-303-trimestral" not in sii_ids, "quarterly schedule must NOT match SII-enrolled profile"
+    for profile in monthly_profiles:
+        monthly_schedules = applicable_filing_schedules(revision, profile)
+        monthly_ids = {s.id for s in monthly_schedules}
+        assert "modelo-303-mensual" in monthly_ids
+        assert "modelo-303-trimestral" not in monthly_ids
 
     quarterly_schedules = applicable_filing_schedules(revision, quarterly_profile)
     quarterly_ids = {s.id for s in quarterly_schedules}
     assert "modelo-303-trimestral" in quarterly_ids, "quarterly schedule must match standard quarterly profile"
-    assert "modelo-303-mensual-sii" not in quarterly_ids, (
-        "monthly SII schedule must NOT match standard quarterly profile"
-    )
+    assert "modelo-303-mensual" not in quarterly_ids, "monthly schedule must NOT match standard quarterly profile"
 
 
 def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuota() -> None:

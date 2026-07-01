@@ -748,12 +748,28 @@ explanation = "SII-enrolled taxpayers file Modelo 303 monthly, not quarterly; th
 legal_refs = ["rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
+[[revisions.2023-y-siguientes.filing_schedules.profile_conditions]]
+field = "iva.redeme_enrolled"
+op = "not_equals"
+value = true
+explanation = "REDEME taxpayers file IVA self-assessments monthly; this schedule excludes them from the quarterly path."
+legal_refs = ["rd-1624-1992:art-30", "rd-596-2016"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.filing_schedules.profile_conditions]]
+field = "enrollment.large_company"
+op = "not_equals"
+value = true
+explanation = "Large-company taxpayers have a monthly IVA liquidation period under Art. 71 RIVA; this schedule excludes them from the quarterly path."
+legal_refs = ["rd-1624-1992:art-71", "ley-37-1992:art-121"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
 [[revisions.2023-y-siguientes.filing_schedules]]
-id = "modelo-303-mensual-sii"
+id = "modelo-303-mensual"
 period_kind = "monthly"
 periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
-profile_condition_mode = "all"
-legal_refs = ["rd-1624-1992:art-71"]
+profile_condition_mode = "any"
+legal_refs = ["rd-1624-1992:art-71", "rd-1624-1992:art-30", "rd-596-2016", "ley-37-1992:art-121"]
 source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
 [[revisions.2023-y-siguientes.filing_schedules.profile_conditions]]
@@ -762,6 +778,22 @@ op = "equals"
 value = true
 explanation = "Taxpayers enrolled in SII (Suministro Inmediato de Informacion) file Modelo 303 monthly per Art. 62.6 RD 1624/1992."
 legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.filing_schedules.profile_conditions]]
+field = "iva.redeme_enrolled"
+op = "equals"
+value = true
+explanation = "Taxpayers registered in REDEME file IVA self-assessments monthly under RD 596/2016 and Art. 30 RIVA."
+legal_refs = ["rd-1624-1992:art-30", "rd-596-2016"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.filing_schedules.profile_conditions]]
+field = "enrollment.large_company"
+op = "equals"
+value = true
+explanation = "Large-company taxpayers file Modelo 303 monthly because Art. 71 RIVA makes their IVA liquidation period monthly."
+legal_refs = ["rd-1624-1992:art-71", "ley-37-1992:art-121"]
 source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
 [[revisions.2023-y-siguientes.deadline_windows]]
@@ -1034,7 +1066,7 @@ source_refs = [
 
 [[revisions.2023-y-siguientes.constructs]]
 id = "modelo-303-iva-autoliquidacion"
-title = "Modelo 303 IVA quarterly autoliquidacion"
+title = "Modelo 303 IVA autoliquidacion"
 legal_refs = [
     "orden-eha-3786-2008:art-1",
     "orden-eha-3786-2008:art-7",
@@ -1052,12 +1084,14 @@ legal_refs = [
     "ley-37-1992:art-94",
     "ley-37-1992:art-95",
     "ley-37-1992:art-161",
+    "ley-37-1992:art-121",
     "rd-1624-1992:art-71",
     "ley-37-1992:art-99",
     "ley-37-1992:art-115",
     "ley-37-1992:art-116",
     "rd-1624-1992:art-29",
     "rd-1624-1992:art-30",
+    "rd-596-2016",
     "ley-37-1992:art-102",
     "ley-37-1992:art-104",
     "ley-37-1992:art-107",
@@ -1173,7 +1207,7 @@ workbook_parity_refs = ["modelo-303-dr-2025"]
 extraction_profiles = ["modelo-303-declaracion-pdf"]
 live_cross_references = ["modelo-303-static-documentation", "modelo-303-filed-declarations-read"]
 application_links = ["modelo-303-portal", "modelo-303-filing", "modelo-303-extractor", "modelo-303-verification", "modelo-303-review", "modelo-303-approval", "modelo-303-reconciliation", "modelo-303-workflow", "modelo-303-deadline", "modelo-303-calculation"]
-filing_schedules = ["modelo-303-trimestral", "modelo-303-mensual-sii"]
+filing_schedules = ["modelo-303-trimestral", "modelo-303-mensual"]
 deadline_windows = [
     "modelo-303-2025-1t",
     "modelo-303-2025-2t",
