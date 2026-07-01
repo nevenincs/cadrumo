@@ -607,12 +607,18 @@ def test_no_parallel_work_unit_storage_namespace() -> None:
     # it legitimately holds every storage namespace string as a registry entry
     # and is not a competing storage location.
     canonical_namespace_registry = source_root / "adapters" / "persistence" / "storage" / "_namespace_registry.py"
+    # The custody bundle/carry coverage manifests enumerate every storage
+    # namespace in a frozenset to assert full-custody coverage and to skip
+    # double-carrying the typed categories; they name the namespace as a
+    # coverage declaration, not as a competing storage location (the actual
+    # carry writes through ``repository.save(namespace=carried.namespace, ...)``).
+    custody_bundle_manifest = source_root / "application" / "user_profile" / "_bundle.py"
+    custody_carry_manifest = source_root / "application" / "user_profile" / "_custody_carry.py"
+    allowlisted = {canonical, canonical_namespace_registry, custody_bundle_manifest, custody_carry_manifest}
     forbidden_namespace = '"aeat.domain.modelos.work_units"'
     offenders = []
     for py_file in source_root.rglob("*.py"):
-        if py_file == canonical:
-            continue
-        if py_file == canonical_namespace_registry:
+        if py_file in allowlisted:
             continue
         if py_file.name.startswith("test_"):
             continue
