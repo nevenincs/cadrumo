@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Iterator
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -22,9 +22,8 @@ from .._materialisation import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-
-def _expiry() -> datetime:
-    return datetime.now(UTC) + timedelta(hours=1)
+_SECRET_CREATED_AT = datetime(2026, 5, 28, 11, 50, 0, tzinfo=UTC)
+_SECRET_EXPIRES_AT = datetime(2099, 5, 28, 11, 50, 0, tzinfo=UTC)
 
 
 @pytest.fixture
@@ -52,8 +51,8 @@ def _put_secret(store: SecretStore, key: str, value: bytes) -> None:
             key=key,
             value=value,
             classification=SensitivityClass.SECRET,
-            created_at=datetime.now(UTC),
-            expires_at=_expiry(),
+            created_at=_SECRET_CREATED_AT,
+            expires_at=_SECRET_EXPIRES_AT,
         ),
     )
 
