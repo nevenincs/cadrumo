@@ -38,8 +38,8 @@ from ....adapters.persistence.storage import (
     GOOGLE_OAUTH_METADATA_NAMESPACE,
     GOOGLE_OAUTH_TOKEN_NAMESPACE,
     SecureObjectRepository,
+    secure_object_repository_for_active_bucket,
 )
-from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....core.classification import SensitivityClass
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.time import now
