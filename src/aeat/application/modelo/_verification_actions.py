@@ -965,9 +965,10 @@ def _missing_evidence_findings(
     :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
     (reason ``missing_transaction_evidence``) into a
     :class:`~aeat.domain.modelos.ModeloVerificationFinding`. Deductible input-IVA
-    gaps are blocking; output-IVA gaps remain advisory. A revision with no contributing
-    transactions, or whose significant rows all carry evidence, yields no
-    findings.
+    and output-IVA gaps remain advisory on the verify path. A revision with no
+    contributing transactions, or whose significant rows all carry evidence,
+    yields no findings. Later filing/export finish lines may still refuse
+    unsupported deductible IVA.
     """
     if not target.source_transaction_ids:
         return []
@@ -985,16 +986,8 @@ def _missing_evidence_findings(
         is_deductible_gap = diagnostic.source_kind == MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND
         findings.append(
             ModeloVerificationFinding(
-                kind=(
-                    ModeloVerificationFindingKind.BLOCKING_RULE
-                    if is_deductible_gap
-                    else ModeloVerificationFindingKind.ADVISORY
-                ),
-                severity=(
-                    ModeloVerificationFindingSeverity.BLOCKING
-                    if is_deductible_gap
-                    else ModeloVerificationFindingSeverity.WARNING
-                ),
+                kind=ModeloVerificationFindingKind.ADVISORY,
+                severity=ModeloVerificationFindingSeverity.WARNING,
                 message=diagnostic.message,
                 next_action=(
                     f"Register the supplier invoice with `aeat app ledger evidence add PATH`, attach it with "
