@@ -53,6 +53,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _NONEXISTENT_CASILLA: CasillaId = validated_casilla_id("nonexistent-casilla", surface="_NONEXISTENT_CASILLA")
 _NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
 _MISSING_LEGAL_ID = "ley-35-2006:art-9999"
+_LAYOUT_SOURCE_ID = "aeat-layout-source-test"
 
 
 def _modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:
@@ -61,6 +62,21 @@ def _modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:
     except RegistryValidationError as exc:
         return str(exc).splitlines()
     return []
+
+
+def _catalogues_with_layout_source() -> RegistryCatalogues:
+    layout_source = minimal_source_ref().model_copy(
+        update={
+            "id": _LAYOUT_SOURCE_ID,
+            "evidence_tier": "layout_authority",
+            "kind": "record_design",
+            "corpus_path": "registry/aeat/sources/aeat-layout-source-test.pdf",
+        },
+    )
+    return RegistryCatalogues(
+        legal={REFERENCE_LEGAL_ID: minimal_legal_ref()},
+        sources={REFERENCE_SOURCE_ID: minimal_source_ref(), _LAYOUT_SOURCE_ID: layout_source},
+    )
 
 
 def _assert_missing_legal_ref_rejected(revision: ModeloRevision, expected_match: str) -> None:
@@ -278,6 +294,61 @@ def test_modelo_validation_checks_algorithm_binding_provider_outputs() -> None:
 
     assert any("omits provider output(s) 'result'" in failure for failure in failures)
     assert any("maps output(s) 'other' not declared by provider 'provider.test'" in failure for failure in failures)
+
+
+def test_modelo_validation_rejects_algorithm_provider_without_official_source_guidance() -> None:
+    provider = AlgorithmProviderDefinition(
+        id="provider.test",
+        import_path="aeat.tests.provider",
+        callable_name="run",
+        deterministic=True,
+        side_effect_free=True,
+        allowed_input_schema={"value": "decimal"},
+        output_schema={"result": "decimal"},
+        trace_contract="test trace",
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(_LAYOUT_SOURCE_ID,),
+    )
+    revision = minimal_revision().model_copy(update={"algorithm_providers": (provider,)})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"algorithm provider provider\.test requires official_source_guidance source evidence",
+    ):
+        RegistryValidator(_catalogues_with_layout_source()).validate_modelo(minimal_modelo(revision))
+
+
+def test_modelo_validation_rejects_algorithm_binding_without_official_source_guidance() -> None:
+    provider = AlgorithmProviderDefinition(
+        id="provider.test",
+        import_path="aeat.tests.provider",
+        callable_name="run",
+        deterministic=True,
+        side_effect_free=True,
+        allowed_input_schema={"value": "decimal"},
+        output_schema={"result": "decimal"},
+        trace_contract="test trace",
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(REFERENCE_SOURCE_ID,),
+    )
+    binding = AlgorithmBindingDefinition(
+        id="algorithm-binding.test",
+        provider="provider.test",
+        target_casilla_id=_NUMERIC_CASILLA_01,
+        inputs={"value": _NUMERIC_CASILLA_01},
+        output_casilla_ids={"result": _NUMERIC_CASILLA_01},
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(_LAYOUT_SOURCE_ID,),
+    )
+    revision = minimal_revision().model_copy(
+        update={"algorithm_providers": (provider,), "algorithm_bindings": (binding,)},
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"algorithm binding algorithm-binding\.test requires official_source_guidance source evidence",
+    ):
+        RegistryValidator(_catalogues_with_layout_source()).validate_modelo(minimal_modelo(revision))
 
 
 def test_snapshot_integrity_checks_construct_filing_schedule_ref() -> None:
