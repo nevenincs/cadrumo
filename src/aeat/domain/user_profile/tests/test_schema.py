@@ -94,6 +94,12 @@ def test_committed_user_profile_schema_exposes_profile_lookup_metadata() -> None
     assert set(large_company.legal_refs) == {"ley-37-1992:art-121", "rd-1624-1992:art-71"}
     assert "6.010.121,04" in large_company.description
 
+    public_admin_budget = schema.field("censo.public_administration_budget_gt_6000000")
+    assert public_admin_budget.type is ProfileFieldType.BOOLEAN
+    assert "enrollment.public_administration_budget_gt_6000000" in public_admin_budget.schedule_predicates
+    assert set(public_admin_budget.legal_refs) == {"orden-eha-586-2011:art-1", "rd-439-2007:art-108"}
+    assert "6 million" in public_admin_budget.description
+
     autoconsumo_promotor_base = schema.field("iva.autoconsumo_promotor_base")
     assert autoconsumo_promotor_base.type is ProfileFieldType.MONEY
     assert autoconsumo_promotor_base.sensitivity is SensitivityClass.FINANCIAL

@@ -24,6 +24,7 @@ from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._loader import _collect_registry_tree_fingerprints, load_registry_tree
 from ._schema import DeadlineWindowDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
 from ._snapshot import _build_validated_snapshot
+from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
 from ._validate import RegistryValidator
 
 _SnapshotKey = tuple[str, int, str, date | None, str | None]
@@ -49,10 +50,12 @@ class ValidatedRegistryAuthority:
     def load(cls, root: Path, *, source_root: Path) -> ValidatedRegistryAuthority:
         """Load registry TOML and construct a reusable :class:`ValidatedRegistryAuthority` instance."""
         resolved_root = root.expanduser().resolve()
+        resolved_source_root = source_root.expanduser().resolve()
         return _load_authority(
             resolved_root,
-            source_root.expanduser().resolve(),
+            resolved_source_root,
             _collect_registry_tree_fingerprints(resolved_root),
+            collect_source_evidence_fingerprints(resolved_source_root),
         )
 
     def modelo(self, modelo_id: str) -> ModeloDefinition:
@@ -229,7 +232,8 @@ def bundled_authority() -> ValidatedRegistryAuthority:
 def _load_authority(
     root: Path,
     source_root: Path,
-    _fingerprint: tuple[tuple[str, int, int], ...],
+    _registry_fingerprint: tuple[tuple[str, int, int], ...],
+    _source_evidence_fingerprint: tuple[tuple[str, int, int], ...],
 ) -> ValidatedRegistryAuthority:
     modelos, catalogues = load_registry_tree(root)
 
@@ -239,7 +243,11 @@ def _load_authority(
         modelos=modelos,
         catalogues=catalogues,
         _modelos_by_id={modelo.id: modelo for modelo in modelos},
-        _validator=RegistryValidator(catalogues, source_root=source_root),
+        _validator=RegistryValidator(
+            catalogues,
+            source_root=source_root,
+            source_evidence_fingerprint=_source_evidence_fingerprint,
+        ),
         _registry_validated=False,
         _validated_modelos=set(),
         _snapshots={},

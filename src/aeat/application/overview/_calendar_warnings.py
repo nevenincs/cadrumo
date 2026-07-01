@@ -15,6 +15,7 @@ filed-history pull surfaces; this module never starts those operations.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import lru_cache
 from types import MappingProxyType
 
 from ...core import Modelo as _Modelo
@@ -35,22 +36,50 @@ from ._calendar_models import (
     OverviewCensoEnrolmentState,
 )
 
-_PAYER_FACT_PROFILE_KEY: dict[_PayerFact, tuple[str, str]] = {
+_PROFILE_EDIT_FIX_COMMAND = "aeat config profile edit"
+
+_PROFILE_FIELD_WARNING_META: MappingProxyType[str, tuple[str, str]] = MappingProxyType(
+    {
+        "has_employees": ("cli.overview.warning.has_employees_unset", _PROFILE_EDIT_FIX_COMMAND),
+        "pays_professionals_with_retencion": (
+            "cli.overview.warning.retencion_profesionales_unset",
+            _PROFILE_EDIT_FIX_COMMAND,
+        ),
+        "professional_income_withholding_ge_70pct": (
+            "cli.overview.warning.professional_income_withholding_ge_70pct_unset",
+            _PROFILE_EDIT_FIX_COMMAND,
+        ),
+        "pays_rent_with_retencion": (
+            "cli.overview.warning.retencion_arrendamientos_unset",
+            _PROFILE_EDIT_FIX_COMMAND,
+        ),
+        "pays_capital_income_with_retencion": (
+            "cli.overview.warning.retencion_capital_unset",
+            _PROFILE_EDIT_FIX_COMMAND,
+        ),
+        "does_intracomunitario": ("cli.overview.warning.intracomunitario_unset", _PROFILE_EDIT_FIX_COMMAND),
+        "third_party_transactions_above_347_threshold": (
+            "cli.overview.warning.terceros_threshold_unset",
+            _PROFILE_EDIT_FIX_COMMAND,
+        ),
+        "irpf.estimation_regime": ("cli.overview.warning.estimacion_objetiva_unset", _PROFILE_EDIT_FIX_COMMAND),
+        "iva.regime": ("cli.overview.warning.iva_regime_unset", _PROFILE_EDIT_FIX_COMMAND),
+    },
+)
+
+_PAYER_FACT_PROFILE_KEYS: dict[_PayerFact, tuple[str, ...]] = {
     _PayerFact.PAYS_WITHHELD_INCOME: (
+        "has_employees",
         "pays_professionals_with_retencion",
-        "cli.overview.warning.retencion_profesionales_unset",
     ),
     _PayerFact.PAYS_RENT_WITH_RETENCION: (
         "pays_rent_with_retencion",
-        "cli.overview.warning.retencion_arrendamientos_unset",
     ),
     _PayerFact.TRADES_INTRACOMMUNITY: (
         "does_intracomunitario",
-        "cli.overview.warning.intracomunitario_unset",
     ),
     _PayerFact.EXCEEDS_THIRD_PARTY_THRESHOLD: (
         "third_party_transactions_above_347_threshold",
-        "cli.overview.warning.terceros_threshold_unset",
     ),
 }
 
@@ -80,28 +109,77 @@ _CORPORATE_CENSO_ENROLMENT_PROFILE_KEYS: MappingProxyType[str, frozenset[str]] =
 )
 
 
+def _record_gating_field(
+    *,
+    profile_key: str,
+    modelo: str,
+    key_to_modelos: dict[str, set[str]],
+    key_to_meta: dict[str, tuple[str, str]],
+) -> None:
+    meta = _PROFILE_FIELD_WARNING_META.get(profile_key)
+    if meta is None:
+        return
+    key_to_modelos.setdefault(profile_key, set()).add(modelo)
+    key_to_meta[profile_key] = meta
+
+
+@lru_cache(maxsize=1)
+def _deadline_window_profile_keys_by_modelo() -> MappingProxyType[str, tuple[str, ...]]:
+    from ...core.resources import resources
+
+    keys_by_modelo: dict[str, set[str]] = {}
+    for modelo_definition in resources().modelos.all():
+        modelo = str(modelo_definition.id)
+        for revision in modelo_definition.revisions.values():
+            for window in revision.deadline_windows:
+                for condition in window.applicability_conditions:
+                    if condition.field in _PROFILE_FIELD_WARNING_META:
+                        keys_by_modelo.setdefault(modelo, set()).add(condition.field)
+    return MappingProxyType({modelo: tuple(sorted(keys)) for modelo, keys in sorted(keys_by_modelo.items())})
+
+
+@lru_cache(maxsize=1)
 def _gating_fields() -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
-    _fix = "aeat config profile edit"
     key_to_modelos: dict[str, set[str]] = {}
     key_to_meta: dict[str, tuple[str, str]] = {}
 
     for rule in _iter_modelo_applicability_rules():
         if rule.required_payer_fact is not None:
-            payer_fact_meta = _PAYER_FACT_PROFILE_KEY.get(rule.required_payer_fact)
-            if payer_fact_meta is not None:
-                profile_key, locale_key = payer_fact_meta
-                key_to_modelos.setdefault(profile_key, set()).add(rule.modelo)
-                key_to_meta[profile_key] = (locale_key, _fix)
+            for profile_key in _PAYER_FACT_PROFILE_KEYS.get(rule.required_payer_fact, ()):
+                _record_gating_field(
+                    profile_key=profile_key,
+                    modelo=rule.modelo,
+                    key_to_modelos=key_to_modelos,
+                    key_to_meta=key_to_meta,
+                )
 
         if len(rule.required_estimation_regimes) == 1:
             (regime,) = rule.required_estimation_regimes
             if regime in _ESTIMATION_REGIME_PROFILE_KEY:
-                profile_key, locale_key = _ESTIMATION_REGIME_PROFILE_KEY[regime]
-                key_to_modelos.setdefault(profile_key, set()).add(rule.modelo)
-                key_to_meta[profile_key] = (locale_key, _fix)
+                profile_key, _locale_key = _ESTIMATION_REGIME_PROFILE_KEY[regime]
+                _record_gating_field(
+                    profile_key=profile_key,
+                    modelo=rule.modelo,
+                    key_to_modelos=key_to_modelos,
+                    key_to_meta=key_to_meta,
+                )
 
-    key_to_modelos["iva.regime"] = set(_IVA_REGIME_MODELOS)
-    key_to_meta["iva.regime"] = ("cli.overview.warning.iva_regime_unset", _fix)
+    for modelo, profile_keys in _deadline_window_profile_keys_by_modelo().items():
+        for profile_key in profile_keys:
+            _record_gating_field(
+                profile_key=profile_key,
+                modelo=modelo,
+                key_to_modelos=key_to_modelos,
+                key_to_meta=key_to_meta,
+            )
+
+    for modelo in _IVA_REGIME_MODELOS:
+        _record_gating_field(
+            profile_key="iva.regime",
+            modelo=modelo,
+            key_to_modelos=key_to_modelos,
+            key_to_meta=key_to_meta,
+        )
 
     return MappingProxyType(
         {
@@ -113,9 +191,6 @@ def _gating_fields() -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
             for profile_key in sorted(key_to_modelos)
         },
     )
-
-
-_GATING_FIELDS: MappingProxyType[str, tuple[tuple[str, ...], str, str]] = _gating_fields()
 _CENSO_ENROLMENT_PROFILE_KEYS = frozenset(
     {
         "activities.iae_epigraph",
@@ -168,10 +243,9 @@ def calendar_applicability_profile_keys_for_modelo(modelo: str) -> tuple[str, ..
             if regime in _ESTIMATION_REGIME_PROFILE_KEY:
                 keys.add(_ESTIMATION_REGIME_PROFILE_KEY[regime][0])
         if rule.required_payer_fact is not None:
-            payer_fact_meta = _PAYER_FACT_PROFILE_KEY.get(rule.required_payer_fact)
-            if payer_fact_meta is not None:
-                keys.add(payer_fact_meta[0])
+            keys.update(_PAYER_FACT_PROFILE_KEYS.get(rule.required_payer_fact, ()))
         break
+    keys.update(_deadline_window_profile_keys_by_modelo().get(modelo, ()))
     if modelo in _IVA_REGIME_MODELOS:
         keys.add("iva.regime")
     keys.update(_CORPORATE_CENSO_ENROLMENT_PROFILE_KEYS.get(modelo, frozenset()))
@@ -344,7 +418,7 @@ def _build_completeness_and_warnings(
     defaulted: list[str] = []
     warnings: list[CalendarWarning] = []
     defaulted_modelos: set[str] = set()
-    for key, (affected_modelos, message_key, fix_command) in _GATING_FIELDS.items():
+    for key, (affected_modelos, message_key, fix_command) in _gating_fields().items():
         raw = raw_values.get(key)
         if raw is not None and str(raw).strip():
             explicitly_set.append(key)

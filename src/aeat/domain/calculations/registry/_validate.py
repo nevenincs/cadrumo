@@ -14,6 +14,7 @@ from ._corpus_catalogue import verify_source_catalogue
 from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
 from ._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from ._source_evidence_fingerprint import SourceEvidenceFingerprint, collect_source_evidence_fingerprints
 from ._validate_cache import (
     CATALOGUE_FAILURE_CACHE,
     MODELO_VALIDATION_CACHE,
@@ -42,6 +43,7 @@ class RegistryValidator:
         source_root: Path | None = None,
         justificante_corpus_root: Path | None = None,
         user_profile_schema: ProfileSchemaDefinition | None = None,
+        source_evidence_fingerprint: SourceEvidenceFingerprint | None = None,
     ) -> None:
         self._legal = catalogues.legal
         self._sources = catalogues.sources
@@ -66,6 +68,14 @@ class RegistryValidator:
             self._justificante_corpus_root = candidate if candidate.is_dir() else None
         else:
             self._justificante_corpus_root = None
+        self._source_evidence_fingerprint = (
+            source_evidence_fingerprint
+            if source_evidence_fingerprint is not None
+            else collect_source_evidence_fingerprints(
+                self._source_root,
+                justificante_corpus_root=self._justificante_corpus_root,
+            )
+        )
 
     def validate_modelo(self, modelo: ModeloDefinition) -> None:
         failures = self._cached_modelo_failures(modelo)
@@ -86,6 +96,9 @@ class RegistryValidator:
             else None
         )
 
+    def _source_evidence_key(self) -> SourceEvidenceFingerprint:
+        return self._source_evidence_fingerprint
+
     def _cached_modelo_failures(self, modelo: ModeloDefinition) -> tuple[str, ...]:
         cache_key = (
             id(modelo),
@@ -93,6 +106,7 @@ class RegistryValidator:
             id(self._sources),
             self._source_root_key(),
             self._corpus_root_key(),
+            self._source_evidence_key(),
         )
         cached = MODELO_VALIDATION_CACHE.get(cache_key)
         if cached is not None and cached[0] is modelo and cached[1] is self._legal and cached[2] is self._sources:
@@ -105,7 +119,7 @@ class RegistryValidator:
         if self._catalogue_failures is not None:
             return self._catalogue_failures
         source_root_key = self._source_root_key()
-        cache_key = (id(self._legal), id(self._sources), source_root_key)
+        cache_key = (id(self._legal), id(self._sources), source_root_key, self._source_evidence_key())
         cached = CATALOGUE_FAILURE_CACHE.get(cache_key)
         if cached is not None and cached[0] is self._legal and cached[1] is self._sources:
             self._catalogue_failures = cached[2]
@@ -154,6 +168,7 @@ class RegistryValidator:
             id(self._sources),
             self._source_root_key(),
             self._corpus_root_key(),
+            self._source_evidence_key(),
         )
         cached = REGISTRY_VALIDATION_CACHE.get(cache_key)
         if cached is not None and cached[0] == modelo_tuple and cached[1] is self._legal and cached[2] is self._sources:

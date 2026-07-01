@@ -2,9 +2,10 @@
 
 Use this guide when the active profile must prepare Modelo 303. Modelo 303 is
 the Spanish IVA/VAT self-assessment (`autoliquidacion`) used here to calculate
-standard quarterly IVA filings; SII-enrolled profiles use monthly Modelo 303
-periods. The registry's official title is "Modelo 303. Impuesto sobre el Valor
-Anadido. Autoliquidacion."
+standard quarterly IVA filings; monthly IVA-liquidation profiles such as REDEME
+or large-company taxpayers use monthly Modelo 303 periods. Voluntary SII
+enrolment alone remains quarterly. The registry's official title is "Modelo 303.
+Impuesto sobre el Valor Anadido. Autoliquidacion."
 
 `aeat` does not submit Modelo 303 to AEAT. Export creates a local file that you
 upload through the official AEAT channel yourself.
@@ -70,8 +71,8 @@ be calculated:
   classifications.
 - [Plan your filing calendar](filing-calendar.md) and confirm the period token
   with [Understand filing periods](filing-periods.md). Standard non-exempt
-  profiles use quarterly periods such as `1T`; SII-enrolled profiles use
-  monthly periods such as `01`.
+  profiles use quarterly periods such as `1T`; monthly IVA-liquidation profiles
+  such as REDEME or large-company taxpayers use monthly periods such as `01`.
 - [Import or add your transactions](import-bank-statements.md), then
   [classify them](classify-transactions.md). Modelo 303 needs enough IVA detail
   on business rows to route ledger amounts to the right IVA boxes.
@@ -289,7 +290,9 @@ aeat app modelo work file --modelo 303 --year 2026 --period 1T
 
 Modelo 303 supports quarterly and monthly period tokens in the registry. The
 profile determines which cadence appears in the filing calendar: ordinary
-non-exempt profiles are quarterly, while SII-enrolled profiles are monthly.
+non-exempt profiles are quarterly, while monthly IVA-liquidation profiles such
+as REDEME or large-company taxpayers are monthly. Voluntary SII enrolment by
+itself does not switch Modelo 303 from quarterly to monthly.
 
 The source-backed behavior is:
 

@@ -9,14 +9,15 @@ Two registry-owned storage contracts govern this module:
   immutable filing-time snapshots keyed by ``(profile_id, snapshot_id)``:
   a profile owns many filing snapshots.
 
-Both namespace definitions provide the IDENTITY sensitivity, schema version,
+Both namespace definitions provide the ``IDENTITY``
+:class:`~aeat.adapters.persistence.storage.SensitivityClass`, schema version,
 bucket-local scope, and object-key grammar. They ride the active-bucket
 plumbing: every read and write resolves through a profile bucket so two
 operators never share profile storage. ``snapshot_id`` is deterministic in
 shape but globally unique within a bucket per ``new_profile_snapshot_id``.
 Records are stored as :class:`~aeat.adapters.persistence.storage.Envelope`
 objects encrypted at rest by
-:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`.
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
 """
 
 from __future__ import annotations
@@ -33,10 +34,10 @@ from ...adapters.persistence.storage import (
 )
 from ...adapters.persistence.storage import (
     Envelope,
+    SecureObjectRepository,
 )
 from ...adapters.persistence.storage.bucket import BucketValidationError
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.user_profile import (
@@ -63,7 +64,7 @@ _log = get_logger(__name__)
 
 
 def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
-    """Return a :class:`SecureObjectRepository` bound to ``bucket_id``'s database.
+    """Return a public secure-object repository bound to ``bucket_id``'s database.
 
     The storage runtime owns readiness and physical route attachment.
     User-profile repositories only name the logical bucket they need;
@@ -130,7 +131,9 @@ class _BucketBoundRepository:
     Both :class:`UserProfileLifecycleRepository` and
     :class:`UserProfileSnapshotRepository` bind to one bucket's own
     database (no cross-bucket reads/writes by default) and either accept
-    an injected :class:`SecureObjectRepository` or build one for the
+    an injected
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    or build one for the
     named bucket. The constructor is identical across both classes so it
     lives here as a single source of truth.
     """
@@ -153,7 +156,7 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
     :data:`aeat.adapters.persistence.storage.USER_PROFILE_VALUE_NAMESPACE`,
     wrap each :class:`UserProfileRecord` in an
     :class:`~aeat.adapters.persistence.storage.Envelope`, and persist through
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`.
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
     """
 
     @property
@@ -341,7 +344,7 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
     :data:`aeat.adapters.persistence.storage.USER_PROFILE_SNAPSHOT_NAMESPACE`,
     wrap each :class:`UserProfileSnapshot` in an
     :class:`~aeat.adapters.persistence.storage.Envelope`, and persist through
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`.
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
     """
 
     @property

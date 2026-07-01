@@ -110,7 +110,7 @@ class LegalReference(RegistryModel):
     reviewed_at: date | None = None
     reviewed_by: str | None = None
     notes: str | None = None
-    required_text: tuple[str, ...] = Field(default_factory=tuple)
+    required_text: tuple[str, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
     def _validate_legal_reference(self) -> LegalReference:

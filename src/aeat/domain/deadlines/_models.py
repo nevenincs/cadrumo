@@ -307,7 +307,10 @@ class ModeloIVAProfile(BaseModel):
         sii_enrolled: Enrolled in the SII (Suministro Inmediato de
             Información) — the near-real-time IVA ledger-submission
             system created by RD 596/2016. Mandatory for the monthly
-            IVA collective; voluntary for everyone else.
+            IVA collective; voluntary for everyone else. This records
+            SII membership only; Modelo 303 monthly cadence is driven by
+            monthly-liquidation facts such as REDEME or large-company
+            status, not by voluntary SII alone.
         redeme_enrolled: Registered in REDEME (Registro de Devolución
             Mensual del IVA) — one of the mandatory-SII triggers.
         refund_account: The encrypted cuenta-devolución refund account

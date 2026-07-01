@@ -123,6 +123,7 @@ def _minimal_legal_ref() -> LegalReference:
         permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
         effective_from=date(2006, 11, 30),
         review_status="reviewed",
+        required_text=("art-1",),
     )
 
 

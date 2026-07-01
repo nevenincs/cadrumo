@@ -1,7 +1,7 @@
 """Encrypted Google record persistence.
 
 This module writes Google records through
-:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`.
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
 
 Four per-profile record families back Google configuration and session state,
 each under the namespace and
@@ -37,9 +37,9 @@ from ....adapters.persistence.storage import (
     GOOGLE_OAUTH_CLIENT_NAMESPACE,
     GOOGLE_OAUTH_METADATA_NAMESPACE,
     GOOGLE_OAUTH_TOKEN_NAMESPACE,
+    SecureObjectRepository,
 )
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.classification import SensitivityClass
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.time import now

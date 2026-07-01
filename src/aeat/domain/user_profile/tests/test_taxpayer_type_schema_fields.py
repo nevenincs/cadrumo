@@ -270,11 +270,15 @@ def test_iva_regime_enum_includes_reagp(schema: ProfileSchemaDefinition) -> None
 def test_sii_and_redeme_enrolment_fields_are_present_and_grounded(
     schema: ProfileSchemaDefinition,
 ) -> None:
-    for field_key in ("sii_enrolled", "redeme_enrolled"):
-        field = schema.field(f"iva.{field_key}")
-        assert field.type.value == "boolean"
-        assert field.legal_refs, f"iva.{field_key} must declare legal_refs"
-        assert field.schedule_predicates
+    sii = schema.field("iva.sii_enrolled")
+    assert sii.type.value == "boolean"
+    assert sii.legal_refs, "iva.sii_enrolled must declare legal_refs"
+    assert sii.schedule_predicates == ()
+
+    redeme = schema.field("iva.redeme_enrolled")
+    assert redeme.type.value == "boolean"
+    assert redeme.legal_refs, "iva.redeme_enrolled must declare legal_refs"
+    assert redeme.schedule_predicates
 
 
 def test_iva_profile_selector_legal_refs_resolve_against_catalogue(
@@ -289,6 +293,7 @@ def test_iva_profile_selector_legal_refs_resolve_against_catalogue(
             "ley-37-1992:art-164",
         },
         "censo.large_company": {"ley-37-1992:art-121", "rd-1624-1992:art-71"},
+        "censo.public_administration_budget_gt_6000000": {"orden-eha-586-2011:art-1", "rd-439-2007:art-108"},
         "iva.sii_enrolled": {"rd-596-2016", "rd-1624-1992:art-71"},
         "iva.redeme_enrolled": {"rd-1624-1992:art-30"},
         "iva.autoconsumo_promotor_base": {"ley-37-1992:art-9", "ley-37-1992:art-79"},

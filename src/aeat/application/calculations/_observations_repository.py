@@ -3,7 +3,7 @@
 Stores :class:`~aeat.domain.calculations.registry.RegistryModeloObservation`
 records — ``(modelo, filing_year, period, casilla_values)`` — as encrypted audit
 envelopes in the
-:class:`~aeat.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
 Past-filing value rows are bound to
 :data:`aeat.adapters.persistence.storage.CALCULATION_OBSERVATIONS_NAMESPACE`;
 IVA wallet decisions are split between the latest-state
@@ -154,7 +154,7 @@ def observation_key(modelo: str, period: Period) -> str:
 
     Validated through :func:`~aeat.adapters.persistence.storage.safe_repository_id`
     so each component is constrained to the
-    :class:`~aeat.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
     id contract before composition.
     """
     filing_period = _require_observation_period(period)

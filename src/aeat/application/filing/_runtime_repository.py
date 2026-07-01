@@ -1,7 +1,7 @@
 """Runtime-backed repository helpers for filing application persistence.
 
 Constructs a
-:class:`aeat.adapters.persistence.storage.sql.SecureObjectRepository` scoped to
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` scoped to
 the active filing bucket on demand. The concrete adapter import is deferred so
 the application filing module graph does not acquire an adapters-layer edge at
 import time; only callers that actually need runtime storage cross that
@@ -26,7 +26,7 @@ from ...core import resolve_repository_bucket_id
 from .errors import ModeloApplicationError
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage.sql import SecureObjectRepository
+    from ...adapters.persistence.storage import SecureObjectRepository
 
 
 def resolve_application_filing_bucket_id(bucket_id: str | None) -> str:
@@ -55,7 +55,7 @@ def secure_objects_for_application_filing_bucket(bucket_id: str) -> SecureObject
     the runtime dependency remains transparent.
 
     Returns:
-        A :class:`aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+        A :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
         scoped to ``bucket_id``.
     """
     from ...adapters.persistence.storage.runtime_repository import (

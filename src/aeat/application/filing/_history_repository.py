@@ -7,8 +7,8 @@ superseded filing lifecycle records live in
 :class:`aeat.domain.modelos.ModeloRecordCatalogue`.
 
 Records are stored as encrypted byte objects in the primary SQL backend at
-:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``AUDIT`` via a
-:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`; no
+``AUDIT`` :class:`~aeat.adapters.persistence.storage.SensitivityClass` via a
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`; no
 plaintext filing-history JSON or envelope file lands on disk.
 
 See Also:
@@ -32,11 +32,11 @@ from pydantic import BaseModel
 
 from ...adapters.persistence.storage import (
     APPLICATION_FILING_HISTORY_NAMESPACE,
+    SecureObjectRepository,
     SensitivityClass,
 )
 from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ._history_models import ModeloHistory
 from ._runtime_repository import (
     resolve_application_filing_bucket_id,
@@ -53,7 +53,7 @@ class ModeloHistoryRepository(SecureBoundRepository[ModeloHistory]):
     :data:`aeat.adapters.persistence.storage.APPLICATION_FILING_HISTORY_NAMESPACE`.
     The modelo identifier is the natural object key, so list and iteration APIs
     expose one lightweight history per modelo rather than the authoritative
-    work-unit filing catalogue. The namespace definition supplies the AUDIT
+    work-unit filing catalogue. The namespace definition supplies the ``AUDIT``
     :class:`~aeat.adapters.persistence.storage.SensitivityClass`, schema
     version, bucket-local scope, ``{modelo}`` key grammar, and custody
     contract.

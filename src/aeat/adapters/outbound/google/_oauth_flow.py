@@ -176,7 +176,7 @@ def credentials_to_records(
 
     Returns:
         A 2-tuple of (:class:`OAuthToken`, :class:`OAuthMetadata`) ready for
-        :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+        :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
         persistence through :mod:`aeat.adapters.outbound.google._session_store`.
         Both records validate strict pydantic invariants; metadata refuses
         granted-scope tuples missing any :data:`REQUIRED_SCOPES` member.

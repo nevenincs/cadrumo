@@ -212,17 +212,35 @@ def test_modelo_303_quarterly_deadlines_match_orden_eha_3786_2008_art_7() -> Non
         assert windows[window_id].closes_on == closes
 
 
-def test_modelo_303_sii_january_2026_deadline_uses_aeat_2026_calendar_shift() -> None:
-    """January 2026 monthly IVA closes on 2026-03-02 in the AEAT 2026 calendar."""
+def test_modelo_303_sii_2026_monthly_deadlines_use_aeat_2026_calendar() -> None:
+    """Monthly IVA windows for 2026 periods 01-11 match the AEAT 2026 calendar."""
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2023-y-siguientes"]
-    window = next(w for w in revision.deadline_windows if w.id == "modelo-303-2026-01-mensual")
+    windows = {w.id: w for w in revision.deadline_windows}
+    expected = {
+        "modelo-303-2026-01-mensual": (date(2026, 2, 1), date(2026, 3, 2), date(2026, 2, 25)),
+        "modelo-303-2026-02-mensual": (date(2026, 3, 1), date(2026, 3, 30), date(2026, 3, 25)),
+        "modelo-303-2026-03-mensual": (date(2026, 4, 1), date(2026, 4, 30), date(2026, 4, 27)),
+        "modelo-303-2026-04-mensual": (date(2026, 5, 1), date(2026, 6, 1), date(2026, 5, 27)),
+        "modelo-303-2026-05-mensual": (date(2026, 6, 1), date(2026, 6, 30), date(2026, 6, 25)),
+        "modelo-303-2026-06-mensual": (date(2026, 7, 1), date(2026, 7, 30), date(2026, 7, 27)),
+        "modelo-303-2026-07-mensual": (date(2026, 8, 1), date(2026, 8, 31), date(2026, 8, 26)),
+        "modelo-303-2026-08-mensual": (date(2026, 9, 1), date(2026, 9, 30), date(2026, 9, 25)),
+        "modelo-303-2026-09-mensual": (date(2026, 10, 1), date(2026, 10, 30), date(2026, 10, 27)),
+        "modelo-303-2026-10-mensual": (date(2026, 11, 1), date(2026, 11, 30), date(2026, 11, 25)),
+        "modelo-303-2026-11-mensual": (date(2026, 12, 1), date(2026, 12, 30), date(2026, 12, 24)),
+    }
 
-    assert window.opens_on == date(2026, 2, 1)
-    assert window.closes_on == date(2026, 3, 2)
-    assert window.payment_cutoff_on == date(2026, 2, 25)
-    assert "aeat-calendario-contribuyente-2026-hasta-2-marzo" in window.source_refs
-    assert "aeat-calendario-contribuyente-2026-domiciliacion" in window.source_refs
+    for window_id, (opens_on, closes_on, payment_cutoff_on) in expected.items():
+        window = windows[window_id]
+        assert window.opens_on == opens_on
+        assert window.closes_on == closes_on
+        assert window.payment_cutoff_on == payment_cutoff_on
+        assert "aeat-calendario-contribuyente-2026-domiciliacion" in window.source_refs
+
+    assert "aeat-calendario-contribuyente-2026-hasta-2-marzo" in windows[
+        "modelo-303-2026-01-mensual"
+    ].source_refs
 
 
 def test_modelo_303_live_cross_references_forbid_writes() -> None:
@@ -585,9 +603,11 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
     assert result.values[_M303_DISPONIBLE_CASILLA] == pendiente_posteriores
 
 
-def test_modelo_303_sii_monthly_snapshot_resolves_for_each_period() -> None:
-    """contract regression: SII-enrolled taxpayers file M303 monthly (Art. 62.6
-    RD 1624/1992). The 2023-y-siguientes revision must accept periods 01-12
+def test_modelo_303_monthly_snapshot_resolves_for_each_period() -> None:
+    """The 2023+ revision must accept monthly IVA-liquidation periods 01-12.
+
+    REDEME and large-company taxpayers use monthly Modelo 303 schedules. The
+    revision selector still has to resolve those monthly periods directly
     via select_revision so ``bindings list --period 01`` resolves without a
     RegistrySnapshotError."""
     modelo, catalogues = _load_modelo_303()
@@ -602,40 +622,53 @@ def test_modelo_303_sii_monthly_snapshot_resolves_for_each_period() -> None:
         )
         assert snapshot.revision.id == "2023-y-siguientes"
         schedule_ids = {s.id for s in snapshot.revision.filing_schedules}
-        assert "modelo-303-mensual-sii" in schedule_ids, f"monthly SII schedule absent for period {period}"
+        assert "modelo-303-mensual" in schedule_ids, f"monthly schedule absent for period {period}"
 
 
-def test_modelo_303_sii_monthly_filing_schedule_matches_sii_enrolled_profiles() -> None:
-    """The monthly schedule must fire for SII-enrolled profiles and be excluded
-    for standard quarterly profiles."""
-    from ....deadlines._models import IVARegime, ModeloIVAProfile, TaxpayerProfile
+def test_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles() -> None:
+    """The monthly schedule fires for monthly IVA-liquidation triggers only."""
+    from ....deadlines._models import IVARegime, ModeloEnrollment, ModeloIVAProfile, TaxpayerProfile
     from .. import applicable_filing_schedules
 
     modelo, _catalogues = _load_modelo_303()
     revision = modelo.revisions["2023-y-siguientes"]
 
-    sii_profile = TaxpayerProfile(
+    monthly_profiles = (
+        TaxpayerProfile(
+            tax_id="B12345678",
+            iva_regime=IVARegime.GENERAL,
+            iva=ModeloIVAProfile(redeme_enrolled=True),
+        ),
+        TaxpayerProfile(
+            tax_id="C12345678",
+            iva_regime=IVARegime.GENERAL,
+            enrollment=ModeloEnrollment(large_company=True),
+        ),
+    )
+    voluntary_sii_profile = TaxpayerProfile(
         tax_id="A12345678",
         iva_regime=IVARegime.GENERAL,
-        iva=ModeloIVAProfile(sii_enrolled=True),
+        iva=ModeloIVAProfile(sii_enrolled=True, redeme_enrolled=False),
+        enrollment=ModeloEnrollment(large_company=False),
     )
-    quarterly_profile = TaxpayerProfile(
-        tax_id="B98765432",
+    ordinary_quarterly_profile = TaxpayerProfile(
+        tax_id="D98765432",
         iva_regime=IVARegime.GENERAL,
-        iva=ModeloIVAProfile(sii_enrolled=False),
+        iva=ModeloIVAProfile(sii_enrolled=False, redeme_enrolled=False),
+        enrollment=ModeloEnrollment(large_company=False),
     )
 
-    sii_schedules = applicable_filing_schedules(revision, sii_profile)
-    sii_ids = {s.id for s in sii_schedules}
-    assert "modelo-303-mensual-sii" in sii_ids, "monthly SII schedule must match SII-enrolled profile"
-    assert "modelo-303-trimestral" not in sii_ids, "quarterly schedule must NOT match SII-enrolled profile"
+    for profile in monthly_profiles:
+        monthly_schedules = applicable_filing_schedules(revision, profile)
+        monthly_ids = {s.id for s in monthly_schedules}
+        assert "modelo-303-mensual" in monthly_ids
+        assert "modelo-303-trimestral" not in monthly_ids
 
-    quarterly_schedules = applicable_filing_schedules(revision, quarterly_profile)
-    quarterly_ids = {s.id for s in quarterly_schedules}
-    assert "modelo-303-trimestral" in quarterly_ids, "quarterly schedule must match standard quarterly profile"
-    assert "modelo-303-mensual-sii" not in quarterly_ids, (
-        "monthly SII schedule must NOT match standard quarterly profile"
-    )
+    for profile in (voluntary_sii_profile, ordinary_quarterly_profile):
+        quarterly_schedules = applicable_filing_schedules(revision, profile)
+        quarterly_ids = {s.id for s in quarterly_schedules}
+        assert "modelo-303-trimestral" in quarterly_ids, "quarterly schedule must match non-monthly profile"
+        assert "modelo-303-mensual" not in quarterly_ids, "monthly schedule must NOT match non-monthly profile"
 
 
 def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuota() -> None:

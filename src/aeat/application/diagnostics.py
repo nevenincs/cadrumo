@@ -72,7 +72,7 @@ from ._errors import DiagnosticModelError
 # version surface off the heavy graph (disaster ADR Ruling 4 fast-path).
 if TYPE_CHECKING:
     from ..adapters.outbound.aeat.browser import SiteHealthStatus
-    from ..adapters.persistence.storage.sql.secure_objects import SecureObjectNamespaceIntegrity
+    from ..adapters.persistence.storage import SecureObjectNamespaceIntegrity
     from .wizard._status import WizardStatusReport
     from .workflow._models import WorkflowState
     from .workflow._profile_health import ActiveProfileHealth
@@ -212,9 +212,9 @@ class SecureObjectIntegrityReport(BaseModel):
     cryptographically unrecoverable from this process.
 
     ``namespaces`` carries
-    :class:`~aeat.adapters.persistence.storage.sql.secure_objects.SecureObjectNamespaceIntegrity`
+    :class:`~aeat.adapters.persistence.storage.SecureObjectNamespaceIntegrity`
     rows produced by the encrypted
-    :class:`~aeat.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
     The same aggregate shape is shared by :class:`ConfigRepairReport`,
     :class:`~aeat.application.repair_integrity.RepairIntegrityReport`,
     :func:`preview_quarantine_unreadable_secure_objects`, and
@@ -273,7 +273,7 @@ def _ensure_models_rebuilt() -> None:
     global _models_rebuilt
     if _models_rebuilt:
         return
-    from ..adapters.persistence.storage.sql.secure_objects import (
+    from ..adapters.persistence.storage import (
         SecureObjectNamespaceIntegrity,  # noqa: F401  # model_rebuild local namespace
     )
     from .wizard._status import WizardStatusReport  # noqa: F401  # model_rebuild local namespace
@@ -646,14 +646,14 @@ def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
     operator can locate which application surface holds rows from a
     rotated master-key generation.
     The per-namespace rows come from
-    :meth:`~aeat.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.probe_namespace_integrity`.
+    :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.probe_namespace_integrity`.
     """
     _ensure_models_rebuilt()
+    from ..adapters.persistence.storage import (
+        SecureObjectNamespaceIntegrity,
+    )
     from ..adapters.persistence.storage.runtime_repository import (
         secure_object_repository_for_active_bucket_or_default_route,
-    )
-    from ..adapters.persistence.storage.sql.secure_objects import (
-        SecureObjectNamespaceIntegrity,
     )
 
     try:
@@ -1133,7 +1133,7 @@ def quarantine_unreadable_secure_objects() -> SecureObjectIntegrityReport:
     """Move every undecryptable secure-object row into the quarantine table.
 
     Delegates to
-    :meth:`~aeat.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.quarantine_unreadable_rows`,
+    :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.quarantine_unreadable_rows`,
     which creates the ``secure_objects_quarantine`` archive table on first use,
     copies each undecryptable row's metadata and (still encrypted) payload into
     the archive, then deletes the row from the active ``secure_objects`` table.

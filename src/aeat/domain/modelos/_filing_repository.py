@@ -2,8 +2,8 @@
 
 :class:`~aeat.domain.modelos.ModeloRecordCatalogueRepository` persists and
 loads :class:`ModeloRecord` entries in a :class:`ModeloRecordCatalogue` via
-:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository` at
-:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``FINANCIAL``
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
+``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
 using an :class:`~aeat.adapters.persistence.storage.Envelope` wrapper. The
 catalogue is stored as a single encrypted BLOB per profile bucket.
 The storage contract is declared by
@@ -50,7 +50,7 @@ class ModeloRecordCatalogueRepository:
     catalogue payload keeps member-scoped current/history lookups in the domain
     type, while this repository wraps it in
     :class:`~aeat.adapters.persistence.storage.Envelope` and writes it through
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`.
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
     It exposes the concrete load/save implementation behind
     :class:`~aeat.domain.modelos.ModeloRecordCatalogueRepositoryProtocol`.
     """
@@ -71,7 +71,7 @@ class ModeloRecordCatalogueRepository:
         encrypted records from another's. Returns the resolved bucket
         identifier, or ``None`` when the repository was constructed against
         an injected
-        :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+        :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
         and no bucket id was supplied.
         """
         return self._bucket_id
