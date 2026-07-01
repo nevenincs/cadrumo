@@ -443,14 +443,20 @@ def test_invoice_validates_iva_prefix_for_non_es_country() -> None:
     """Non-ES counterparties must carry a NIF-IVA matching their country format."""
     invoice = _valid_invoice(counterparty_country="DE", counterparty_tax_id="DE123456789")
     assert invoice.counterparty_tax_id == "DE123456789"
-    # An EU Member State enforces its published structure: a prefixless number
-    # is refused with the country-named format diagnostic.
-    with pytest.raises(ValidationError, match=r"is not a valid Germany NIF-IVA"):
-        _valid_invoice(counterparty_country="DE", counterparty_tax_id="123456789")
-    # A non-EU counterparty has no published NIF-IVA pattern and falls back to
-    # the generic leading-prefix check.
-    with pytest.raises(ValidationError, match=r"IVA number must start with the counterparty country ISO-2 prefix"):
-        _valid_invoice(counterparty_country="US", counterparty_tax_id="123456789")
+
+
+@pytest.mark.parametrize(
+    ("country", "tax_id", "match"),
+    [
+        ("DE", "123456789", r"is not a valid Germany NIF-IVA"),
+        ("US", "123456789", r"IVA number must start with the counterparty country ISO-2 prefix"),
+    ],
+    ids=("eu-published-format", "non-eu-generic-prefix"),
+)
+def test_invoice_rejects_invalid_non_es_iva_prefix(country: str, tax_id: str, match: str) -> None:
+    """Non-ES counterparties reject NIF-IVA values that do not match their country."""
+    with pytest.raises(ValidationError, match=match):
+        _valid_invoice(counterparty_country=country, counterparty_tax_id=tax_id)
 
 
 def test_invoice_linked_transaction_ids_are_deduplicated_and_hex_validated() -> None:
