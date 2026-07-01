@@ -264,23 +264,32 @@ class TestPeriodConstruction:
 class TestPeriodAccessors:
     """Verify the read-only accessors and the date-span semantics."""
 
-    def test_quarterly_span(self) -> None:
-        period = Period.from_year_and_code(2026, "1T")
+    @pytest.mark.parametrize(
+        ("year", "code", "expected_start", "expected_end", "inside", "outside"),
+        (
+            (2026, "1T", date(2026, 1, 1), date(2026, 3, 31), date(2026, 2, 15), date(2026, 4, 1)),
+            (2026, "0A", date(2026, 1, 1), date(2026, 12, 31), None, None),
+            (2024, "02", date(2024, 2, 1), date(2024, 2, 29), None, None),
+        ),
+        ids=("quarterly", "annual", "monthly-leap-year"),
+    )
+    def test_period_date_span(
+        self,
+        year: int,
+        code: str,
+        expected_start: date,
+        expected_end: date,
+        inside: date | None,
+        outside: date | None,
+    ) -> None:
+        period = Period.from_year_and_code(year, code)
         assert period.has_date_span() is True
-        assert period.start_date == date(2026, 1, 1)
-        assert period.end_date == date(2026, 3, 31)
-        assert period.contains(date(2026, 2, 15)) is True
-        assert period.contains(date(2026, 4, 1)) is False
-
-    def test_annual_span(self) -> None:
-        period = Period.from_year_and_code(2026, "0A")
-        assert period.start_date == date(2026, 1, 1)
-        assert period.end_date == date(2026, 12, 31)
-
-    def test_monthly_span_february_leap_year(self) -> None:
-        period = Period.from_year_and_code(2024, "02")
-        assert period.start_date == date(2024, 2, 1)
-        assert period.end_date == date(2024, 2, 29)
+        assert period.start_date == expected_start
+        assert period.end_date == expected_end
+        if inside is not None:
+            assert period.contains(inside) is True
+        if outside is not None:
+            assert period.contains(outside) is False
 
     def test_year_alias(self) -> None:
         assert Period.from_year_and_code(2026, "1T").year == 2026
