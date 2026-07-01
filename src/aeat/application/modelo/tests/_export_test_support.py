@@ -45,6 +45,7 @@ _M200_REFUND_RESULT_CASILLA: CasillaId = validated_casilla_id(
     "DP200014B:00599",
     surface="_M200_REFUND_RESULT_CASILLA",
 )
+_SEEDED_REVISION_AT = datetime(2026, 6, 3, 16, 0, tzinfo=UTC)
 
 
 def _casilla_id_from_payload(value: object) -> CasillaId:
@@ -146,7 +147,6 @@ def _seed_revision(
         period=typed_period,
         revision_id=revision_id,
     )
-    now = datetime.now(UTC)
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
@@ -155,8 +155,8 @@ def _seed_revision(
         period=typed_period,
         revision_id=revision_id,
         name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
-        created_at=now,
-        updated_at=now,
+        created_at=_SEEDED_REVISION_AT,
+        updated_at=_SEEDED_REVISION_AT,
     )
     WorkUnitCatalogueRepository().save(
         upsert_work_unit(WorkUnitCatalogueRepository().load(), work_unit),
@@ -171,8 +171,8 @@ def _seed_revision(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
         state=state,
-        created_at=now,
-        updated_at=now,
+        created_at=_SEEDED_REVISION_AT,
+        updated_at=_SEEDED_REVISION_AT,
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
         casilla_values=casilla_values,
@@ -184,7 +184,7 @@ def _seed_revision(
         )
         if casilla_values
         else (),
-        verified_at=now if state is not CalculationRevisionState.BORRADOR else None,
+        verified_at=_SEEDED_REVISION_AT if state is not CalculationRevisionState.BORRADOR else None,
         verified_by="operator" if state is not CalculationRevisionState.BORRADOR else None,
     )
     cr_repo = CalculationRevisionCatalogueRepository()
