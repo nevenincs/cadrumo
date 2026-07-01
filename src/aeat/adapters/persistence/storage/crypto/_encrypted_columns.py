@@ -127,7 +127,7 @@ def decrypt_encrypted_bytes_column(wire: bytes) -> bytes:
     """Decrypt one ``EncryptedBytes`` on-wire payload under the active master key.
 
     Exposed so iterator consumers (notably
-    :class:`aeat.adapters.persistence.storage.sql.SecureObjectRepository`)
+    :class:`aeat.adapters.persistence.storage.SecureObjectRepository`)
     can decrypt rows one-by-one inside their own try/except, rather than
     delegating to SQLAlchemy's column processor whose failure mode aborts
     the entire result-set materialisation.

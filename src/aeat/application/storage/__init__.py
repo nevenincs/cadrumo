@@ -23,7 +23,7 @@ See Also:
         Operator-directed XLSX and evidence-sidecar serializer.
     :func:`aeat.adapters.outbound.google._calc_sheets_apply.apply_export_plan`
         Remote Google Sheets materializer for the same export plan.
-    :class:`aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    :class:`aeat.adapters.persistence.storage.SecureObjectRepository`
         Encrypted canonical persistence boundary that this namespace does not
         replace.
 """
