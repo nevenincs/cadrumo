@@ -91,7 +91,7 @@ class FiledDeclaracionObservationStore:
         artefact: FiledDeclaracionArtefact,
         body: bytes,
     ) -> FiledDeclaracionArtefact:
-        """Persist one captured artefact and return its storage reference.
+        """Persist one captured artefact and return its :class:`FiledDeclaracionArtefact` storage reference.
 
         Artefact bytes are stored under
         :data:`aeat.adapters.persistence.storage.AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE`

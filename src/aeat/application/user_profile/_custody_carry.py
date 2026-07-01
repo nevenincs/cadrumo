@@ -19,7 +19,7 @@ path and honours the same ``D2`` decrypted-payload custody contract.
 
 The set of carried namespaces is registry-driven: it is exactly the namespaces
 whose
-:class:`~aeat.adapters.persistence.storage._namespace_registry.StorageCustodyDisposition`
+:class:`~aeat.adapters.persistence.storage.StorageCustodyDisposition`
 is in the requested custody profile, minus the five typed-category namespaces
 this module deliberately leaves to the typed bundle fields. A populated,
 carried-disposition namespace with no natural key resolver fails the export
@@ -33,7 +33,7 @@ import json
 from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING
 
-from ...adapters.persistence.storage._namespace_registry import (
+from ...adapters.persistence.storage import (
     STORAGE_NAMESPACE_REGISTRY,
     SecureObjectNamespaceDefinition,
     StorageCustodyProfile,
@@ -142,7 +142,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     Lazily imports each owning repository so the user-profile package import
     stays light. Keyed by the persisted namespace string.
     """
-    from ...adapters.persistence.storage._namespace_registry import SECURE_OBJECT_CATALOGUE_KEY
+    from ...adapters.persistence.storage import SECURE_OBJECT_CATALOGUE_KEY
 
     resolvers: dict[str, NaturalKeyResolver] = {}
 
@@ -440,7 +440,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
 def carried_namespace_definitions(
     profile: StorageCustodyProfile,
 ) -> tuple[SecureObjectNamespaceDefinition, ...]:
-    """Return the carried namespace definitions for ``profile`` (typed categories excluded)."""
+    """Return carried :class:`SecureObjectNamespaceDefinition` rows for ``profile``."""
     return tuple(
         definition
         for definition in STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(profile)
@@ -453,13 +453,13 @@ def serialize_carried_objects(
     bucket_id: str,
     profile: StorageCustodyProfile,
 ) -> tuple[CarriedSecureObject, ...]:
-    """Serialise every generically-carried secure-object row for ``profile``.
+    """Serialise every generically-carried :class:`CarriedSecureObject` row for ``profile``.
 
     Reads each carried namespace from the active bucket's encrypted substrate,
     resolving each row's natural key. A populated carried namespace with no
     resolver raises, fail-closed, so the carry can never silently drop a store.
     """
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ...adapters.persistence.storage import secure_object_repository_for_bucket
     from ...domain.user_profile._portable_export import CarriedSecureObject
 
     repository = secure_object_repository_for_bucket(bucket_id)
@@ -521,7 +521,7 @@ def restore_carried_objects(
     natural key, so the recipient bucket re-digests the key under its own DEK
     and re-encrypts the payload. The caller holds the target bucket session.
     """
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ...adapters.persistence.storage import secure_object_repository_for_bucket
 
     repository = secure_object_repository_for_bucket(target_bucket_id)
     for carried in carried_objects:

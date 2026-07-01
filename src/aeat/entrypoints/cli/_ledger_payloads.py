@@ -709,6 +709,9 @@ class LedgerExportPayload(OutputSchema):
         is written to ``output_path``). ``model_dump(mode="json")`` performs the
         typed-id/enum/nested-row coercion so the envelope's loosened field types
         stay exactly consistent with the backend contract.
+
+        Returns:
+            :class:`LedgerExportPayload` ready for the CLI JSON envelope.
         """
         data = result.model_dump(mode="json", exclude={"payload"})
         data["output_path"] = output_path
@@ -763,6 +766,9 @@ class LedgerImportPayload(OutputSchema):
         declares. The three notices are operator-facing display strings computed
         at the emit site and threaded through so this stays the single
         construction point; each is attached only when present.
+
+        Returns:
+            :class:`LedgerImportPayload` ready for the CLI JSON envelope.
         """
         data = result.model_dump(mode="json")
         if dry_run_notice is not None:
