@@ -2,7 +2,7 @@
 
 The lifecycle service handles secure-DB persistence via a
 :class:`~aeat.application.user_profile.ProfileLifecycleService`, which wraps a
-:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
 and emits bucket events to
 :class:`~aeat.domain.buckets.BucketEventHistoryRepository` per profile.
 This module threads active-profile selection through
@@ -33,8 +33,8 @@ from collections.abc import Iterable
 from contextlib import contextmanager
 from datetime import date
 
+from ...adapters.persistence.storage import SecureObjectRepository
 from ...adapters.persistence.storage.bucket import bucket_paths
-from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core import BucketPointer, write_pointer
 from ...core.config import load_settings
 from ...core.errors import AeatError
@@ -84,7 +84,7 @@ def build_lifecycle_service(
     :class:`~aeat.application.user_profile.ProfileLifecycleService`.
 
     ``secure_objects`` is an optional
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
     override; a per-bucket store is resolved when ``None``.
 
     The profile aggregate AND the bucket-event-history catalogue both
@@ -244,7 +244,7 @@ def register_active_profile(
             the encrypted record; plays no role in any key or path.
         facts: Initial profile facts to persist alongside the registration.
         secure_objects: Optional
-            :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+            :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
             override for the encrypted profile store.
         schema: Optional profile schema definition override.
         enforce_unique_tax_id: When ``True``, refuses if another live profile
@@ -520,7 +520,7 @@ def select_profile(
     """Select an existing profile as active.
 
     ``secure_objects`` is an optional
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
     override.
 
     Raises :class:`ProfileNotFoundError` if the profile does not
@@ -552,7 +552,7 @@ def set_active_field(
         state: The current workflow state.
         fact: The profile fact to upsert.
         secure_objects: Optional
-            :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+            :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
             override for the encrypted profile store.
         schema: Optional profile schema definition override.
 
@@ -585,7 +585,7 @@ def set_active_fields(
     """Upsert several facts on the active profile in sequence.
 
     ``secure_objects`` is an optional
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
     override.
 
     Returns a :class:`~aeat.application.workflow.WorkflowState`.
@@ -605,7 +605,7 @@ def remove_active_profile(
     """Tombstone the active profile and clear the active pointer.
 
     ``secure_objects`` is an optional
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
     override.
 
     The bucket directory and
@@ -641,7 +641,7 @@ def read_active_profile(
     through :func:`~aeat.application.user_profile.build_lifecycle_service`.
 
     ``secure_objects`` is an optional
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
     override.
 
     Returns:
@@ -714,7 +714,7 @@ def rename_profile(
         profile_id: The immutable UUIDv4 identity of the profile to rename.
         new_label: The new display label.
         secure_objects: Optional
-            :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+            :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
             override for the encrypted profile store.
         schema: Optional profile schema definition override.
 
