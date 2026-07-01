@@ -6,20 +6,26 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
-from .....core.aggregation import BindingAggregationOp
+from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....iva import (
     IvaCategory,
     IvaFlowDirection,
     IvaRateKind,
 )
+from ....iva._schema import IvaExemptionArticle
 from .. import (
+    DataBindingDefinition,
     IvaLedgerObservation,
+    ModeloRevision,
     RegistryValidationError,
     resolve_ledger_iva_aggregation_binding_values,
     unsupported_ledger_iva_observations,
     validate_ledger_iva_aggregation_binding_definition,
 )
+from .._ledger_bindings import _IvaLedgerSelector
+from .._schema import PeriodSelector
 from ._ledger_iva_aggregation_support import (
     _M303_AUTOREPERCUTIDO_INTERIOR_DEDUCIBLE_CASILLA,
     _M303_AUTOREPERCUTIDO_INTERIOR_DEVENGADO_CASILLA,
@@ -70,6 +76,56 @@ def test_validate_rejects_wrong_source_kind() -> None:
     binding = _binding().model_copy(update={"source": "manual_input"})
     with pytest.raises(RegistryValidationError, match="not a ledger_iva_aggregation"):
         validate_ledger_iva_aggregation_binding_definition(binding)
+
+
+def _article_filter_binding(**selector_updates: object) -> DataBindingDefinition:
+    selector: dict[str, object] = {
+        "categories": (IvaCategory.DOMESTIC_EXEMPT,),
+        "exemption_articles": (IvaExemptionArticle.ART_20_UNO_26,),
+        "rate_kinds": (IvaRateKind.EXEMPT,),
+        "flow_direction": IvaFlowDirection.REPERCUTIDO,
+        "fact": "base_amount_sum",
+    }
+    selector.update(selector_updates)
+    return DataBindingDefinition(
+        id="test-art-20-base",
+        source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        selector=_IvaLedgerSelector.model_validate(selector),
+        legal_refs=("ley-37-1992:art-20",),
+        source_refs=("test-source",),
+    )
+
+
+def _minimal_revision_with_bindings(*bindings: DataBindingDefinition) -> ModeloRevision:
+    return ModeloRevision(
+        id="test-revision",
+        valid_from=date(2026, 1, 1),
+        period_selector=PeriodSelector(year_from=2026, periods=("2T",)),
+        legal_refs=("ley-37-1992:art-20",),
+        source_refs=("test-source",),
+        bindings=bindings,
+    )
+
+
+_MALFORMED_EXEMPTION_ARTICLE_SELECTOR_CASES = (
+    pytest.param({"exemption_articles": ()}, id="empty-exemption-articles"),
+    pytest.param({"exemption_articles": ("bogus",)}, id="unknown-exemption-article"),
+    pytest.param(
+        {
+            "categories": (IvaCategory.DOMESTIC_GENERAL_21,),
+            "exemption_articles": (IvaExemptionArticle.ART_20_UNO_26,),
+        },
+        id="exemption-article-without-domestic-exempt-category",
+    ),
+)
+
+
+@pytest.mark.parametrize("selector_updates", _MALFORMED_EXEMPTION_ARTICLE_SELECTOR_CASES)
+def test_validate_rejects_malformed_exemption_article_selector_without_registry_resources(
+    selector_updates: dict[str, object],
+) -> None:
+    with pytest.raises(ValidationError, match="exemption_articles"):
+        _article_filter_binding(**selector_updates)
 
 
 _SINGLE_BINDING_SELECTOR_CASES = (
@@ -304,6 +360,72 @@ def test_resolve_supports_base_amount_sum_fact() -> None:
     ]
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
     assert result == {"modelo-303-iva-repercutido-general-cuota": Decimal("1500")}
+
+
+def test_resolve_filters_by_exemption_article_when_selector_declares_article() -> None:
+    binding = _article_filter_binding()
+    observations = (
+        _observation(
+            ledger_id="art-20-26",
+            category=IvaCategory.DOMESTIC_EXEMPT,
+            exemption_article=IvaExemptionArticle.ART_20_UNO_26,
+            rate_kind=IvaRateKind.EXEMPT,
+            base=Decimal("400.00"),
+            iva=Decimal("0"),
+        ),
+        _observation(
+            ledger_id="art-20-8",
+            category=IvaCategory.DOMESTIC_EXEMPT,
+            exemption_article=IvaExemptionArticle.ART_20_UNO_8,
+            rate_kind=IvaRateKind.EXEMPT,
+            base=Decimal("700.00"),
+            iva=Decimal("0"),
+        ),
+        _observation(
+            ledger_id="unknown-article",
+            category=IvaCategory.DOMESTIC_EXEMPT,
+            rate_kind=IvaRateKind.EXEMPT,
+            base=Decimal("900.00"),
+            iva=Decimal("0"),
+        ),
+    )
+
+    result = resolve_ledger_iva_aggregation_binding_values(_minimal_revision_with_bindings(binding), observations)
+
+    assert result == {"test-art-20-base": Decimal("400.00")}
+
+
+def test_resolve_without_exemption_article_filter_keeps_broad_domestic_exempt_match() -> None:
+    binding = _article_filter_binding(exemption_articles=None)
+    observations = (
+        _observation(
+            ledger_id="art-20-26",
+            category=IvaCategory.DOMESTIC_EXEMPT,
+            exemption_article=IvaExemptionArticle.ART_20_UNO_26,
+            rate_kind=IvaRateKind.EXEMPT,
+            base=Decimal("400.00"),
+            iva=Decimal("0"),
+        ),
+        _observation(
+            ledger_id="art-20-8",
+            category=IvaCategory.DOMESTIC_EXEMPT,
+            exemption_article=IvaExemptionArticle.ART_20_UNO_8,
+            rate_kind=IvaRateKind.EXEMPT,
+            base=Decimal("700.00"),
+            iva=Decimal("0"),
+        ),
+        _observation(
+            ledger_id="unknown-article",
+            category=IvaCategory.DOMESTIC_EXEMPT,
+            rate_kind=IvaRateKind.EXEMPT,
+            base=Decimal("900.00"),
+            iva=Decimal("0"),
+        ),
+    )
+
+    result = resolve_ledger_iva_aggregation_binding_values(_minimal_revision_with_bindings(binding), observations)
+
+    assert result == {"test-art-20-base": Decimal("2000.00")}
 
 
 def test_resolve_returns_zero_when_no_observation_matches() -> None:

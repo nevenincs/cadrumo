@@ -10,6 +10,7 @@ from .....application.calculations import resolve_iva_compensation_annual_partit
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
+from ....iva._schema import IvaExemptionArticle
 from .. import (
     CasillaId,
     DataBindingDefinition,
@@ -100,6 +101,7 @@ def _observation(
     ledger_id: str = "ledger-1",
     txn_date: date = date(2025, 6, 15),
     category: IvaCategory = IvaCategory.DOMESTIC_GENERAL_21,
+    exemption_article: IvaExemptionArticle | None = None,
     rate_kind: IvaRateKind = IvaRateKind.GENERAL,
     flow: IvaFlowDirection = IvaFlowDirection.REPERCUTIDO,
     base: Decimal = Decimal("1000"),
@@ -110,6 +112,7 @@ def _observation(
         ledger_id=ledger_id,
         transaction_date=txn_date,
         category=category,
+        exemption_article=exemption_article,
         rate_kind=rate_kind,
         flow_direction=flow,
         base_amount=base,

@@ -35,46 +35,16 @@ _EXPECTED_REASON_KEYS = {
 }
 
 
-def test_describe_stale_reason_renders_approval_basis_version_changed() -> None:
-    assert describe_stale_reason(ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED) == tr(
-        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED],
-    )
-
-
-def test_describe_stale_reason_renders_draft_payload_changed() -> None:
-    assert describe_stale_reason(ModeloApprovalStaleReason.DRAFT_PAYLOAD_CHANGED) == tr(
-        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.DRAFT_PAYLOAD_CHANGED],
-    )
-
-
-def test_describe_stale_reason_renders_draft_review_changed() -> None:
-    """DRAFT_REVIEW_CHANGED is re-described as 'draft validation surface
-    changed' so the operator phrase matches the human-readable concept
-    (validation surface), not the raw enum identifier."""
-    assert describe_stale_reason(ModeloApprovalStaleReason.DRAFT_REVIEW_CHANGED) == tr(
-        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.DRAFT_REVIEW_CHANGED],
-    )
-
-
-def test_describe_stale_reason_renders_transaction_catalogue_changed() -> None:
-    assert describe_stale_reason(ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED) == tr(
-        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED],
-    )
-
-
-def test_describe_stale_reason_renders_category_profiles_changed() -> None:
-    assert describe_stale_reason(ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED) == tr(
-        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED],
-    )
-
-
-def test_describe_stale_reason_renders_schema_formula_changed() -> None:
-    """SCHEMA_FORMULA_CHANGED is re-described as 'schema or formula
-    provenance changed' to communicate the broader concept (provenance
-    invalidation, not just the schema or formula bytes themselves)."""
-    assert describe_stale_reason(ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED) == tr(
-        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED],
-    )
+@pytest.mark.parametrize(
+    ("reason", "expected_key"),
+    list(_EXPECTED_REASON_KEYS.items()),
+    ids=lambda value: value.name.lower() if isinstance(value, ModeloApprovalStaleReason) else value.rsplit(".", 1)[-1],
+)
+def test_describe_stale_reason_renders_expected_phrase(
+    reason: ModeloApprovalStaleReason,
+    expected_key: str,
+) -> None:
+    assert describe_stale_reason(reason) == tr(expected_key)
 
 
 @pytest.mark.parametrize("reason", list(ModeloApprovalStaleReason))
@@ -98,5 +68,3 @@ def test_describe_stale_reason_covers_every_enum_member() -> None:
     The catch-all fallback exists for future-proofing only — if it
     fires for a current member, the explicit arms have drifted."""
     assert set(_EXPECTED_REASON_KEYS) == set(ModeloApprovalStaleReason)
-    for reason, expected_key in _EXPECTED_REASON_KEYS.items():
-        assert describe_stale_reason(reason) == tr(expected_key)

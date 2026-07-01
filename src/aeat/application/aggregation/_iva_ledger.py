@@ -28,7 +28,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator
+from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
@@ -53,6 +53,7 @@ from ...domain.iva import (
     lookup_rate,
     validate_prorrata_reference,
 )
+from ...domain.iva._schema import IvaExemptionArticle
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -160,12 +161,26 @@ class IvaLedgerCandidate(BaseModel):
     ledger_id: _LedgerId
     transaction_date: date
     category: IvaCategory
+    exemption_article: IvaExemptionArticle | None = None
     rate_kind: IvaRateKind
     flow_direction: IvaFlowDirection
     base_amount: Decimal
     iva_amount: Decimal
     input_kind: IvaLedgerInputKind = IvaLedgerInputKind.ORDINARY_OPERATION
     prorrata_reference_id: _LedgerId | None = None
+
+    @model_validator(mode="after")
+    def _enforce_exemption_article_category(self) -> IvaLedgerCandidate:
+        if self.exemption_article is not None and self.category is not IvaCategory.DOMESTIC_EXEMPT:
+            raise AggregationValidationError(
+                t("aggregation.iva_ledger.errors.unsupported_iva_category"),
+                context={
+                    "ledger_id": self.ledger_id,
+                    "category": self.category.value,
+                    "exemption_article": self.exemption_article.value,
+                },
+            )
+        return self
 
 
 class IvaLedgerAggregation(BaseModel):
@@ -257,6 +272,7 @@ def validate_iva_ledger_observation(candidate: IvaLedgerCandidate) -> IvaLedgerO
         ledger_id=candidate.ledger_id,
         transaction_date=candidate.transaction_date,
         category=candidate.category,
+        exemption_article=candidate.exemption_article,
         rate_kind=candidate.rate_kind,
         flow_direction=candidate.flow_direction,
         base_amount=candidate.base_amount,
@@ -572,6 +588,7 @@ def _classify_iva_transaction(
         ledger_id=transaction.transaction_id,
         transaction_date=operation_date,
         category=effective_category,
+        exemption_article=transaction.exemption_article,
         rate_kind=rate_kind,
         flow_direction=flow_direction,
         base_amount=base_amount,

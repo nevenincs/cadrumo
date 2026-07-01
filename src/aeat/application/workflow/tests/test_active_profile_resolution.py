@@ -16,6 +16,7 @@ that surface it to the operator can refuse with a typed
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -39,38 +40,28 @@ def test_workflow_models_do_not_expose_active_bucket_resolver_shims() -> None:
     assert not hasattr(workflow_models, "require_active_bucket_id")
 
 
-def test_resolver_returns_none_when_no_rung_resolves(tmp_path: Path) -> None:
-    """A fresh root with no env override + no pointer yields None."""
+@pytest.mark.parametrize(
+    ("settings_profile", "pointer_bucket_id", "expected_bucket_id"),
+    [
+        (None, None, None),
+        (None, "catering", "catering"),
+        ("translation", "catering", "translation"),
+        ("   ", "catering", "catering"),
+    ],
+    ids=("no-rung", "pointer-only", "settings-wins", "blank-settings-falls-through"),
+)
+def test_resolver_uses_active_profile_precedence_chain(
+    tmp_path: Path,
+    settings_profile: str | None,
+    pointer_bucket_id: str | None,
+    expected_bucket_id: str | None,
+) -> None:
+    """Settings override wins over the active-profile pointer; blank settings fall through."""
+    if pointer_bucket_id is not None:
+        write_pointer(tmp_path, BucketPointer(bucket_id=pointer_bucket_id, schema_version=1))
 
-    with override_settings(aeat_active_profile=None, aeat_local_storage_root=tmp_path):
-        assert resolve_active_bucket_id() is None
-
-
-def test_pointer_file_wins_when_only_rung_two_is_set(tmp_path: Path) -> None:
-    """With no env override, the pointer file is the canonical default."""
-
-    write_pointer(tmp_path, BucketPointer(bucket_id="catering", schema_version=1))
-
-    with override_settings(aeat_active_profile=None, aeat_local_storage_root=tmp_path):
-        assert resolve_active_bucket_id() == "catering"
-
-
-def test_settings_override_wins_over_pointer_file(tmp_path: Path) -> None:
-    """Rung one (Settings) takes precedence over rung two (pointer)."""
-
-    write_pointer(tmp_path, BucketPointer(bucket_id="catering", schema_version=1))
-
-    with override_settings(aeat_active_profile="translation", aeat_local_storage_root=tmp_path):
-        assert resolve_active_bucket_id() == "translation"
-
-
-def test_empty_settings_override_falls_through_to_pointer(tmp_path: Path) -> None:
-    """An empty override (whitespace) does not block rung two."""
-
-    write_pointer(tmp_path, BucketPointer(bucket_id="catering", schema_version=1))
-
-    with override_settings(aeat_active_profile="   ", aeat_local_storage_root=tmp_path):
-        assert resolve_active_bucket_id() == "catering"
+    with override_settings(aeat_active_profile=settings_profile, aeat_local_storage_root=tmp_path):
+        assert resolve_active_bucket_id() == expected_bucket_id
 
 
 def test_no_active_profile_error_has_registered_error_code() -> None:
@@ -159,45 +150,33 @@ def _tombstone_bucket(root: Path, *, bucket_id: str, label: str) -> None:
     )
 
 
-def test_resolve_profile_bucket_resolves_an_active_profile_by_uuid(tmp_path: Path) -> None:
-    """A UUID identifier resolves directly to its bucket pointer."""
-
+@pytest.mark.parametrize(
+    ("bucket_writer", "include_tombstoned", "expected_found"),
+    [
+        (_write_live_bucket, False, True),
+        (_tombstone_bucket, False, False),
+        (_tombstone_bucket, True, True),
+    ],
+    ids=("active-default", "tombstoned-default-hidden", "tombstoned-inspection-visible"),
+)
+def test_resolve_profile_bucket_uuid_respects_lifecycle_filter(
+    tmp_path: Path,
+    bucket_writer: Callable[..., None],
+    include_tombstoned: bool,
+    expected_found: bool,
+) -> None:
+    """UUID resolution respects the live-surface lifecycle filter."""
     uuid = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
-    _write_live_bucket(tmp_path, bucket_id=uuid, label="operator")
+    bucket_writer(tmp_path, bucket_id=uuid, label="operator")
 
-    pointer = resolve_profile_bucket(uuid, root=tmp_path)
+    pointer = resolve_profile_bucket(uuid, root=tmp_path, include_tombstoned=include_tombstoned)
 
-    assert pointer is not None
-    assert pointer.bucket_id == uuid
-    assert pointer.label == "operator"
-
-
-def test_resolve_profile_bucket_excludes_a_tombstoned_profile_by_uuid_by_default(tmp_path: Path) -> None:
-    """Live-surface resolution hides a tombstoned profile even when addressed by UUID.
-
-    Label resolution already excludes tombstoned profiles by default. The UUID
-    fast path must apply the same lifecycle filter so ``--profile <uuid>`` cannot
-    activate a deleted bucket that ``--profile <label>`` and ``config switch``
-    would refuse.
-    """
-
-    uuid = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
-    _tombstone_bucket(tmp_path, bucket_id=uuid, label="operator")
-
-    assert resolve_profile_bucket(uuid, root=tmp_path) is None
-
-
-def test_resolve_profile_bucket_can_include_a_tombstoned_profile_by_uuid_for_inspection(tmp_path: Path) -> None:
-    """Inspection callers may opt into tombstoned UUID resolution explicitly."""
-
-    uuid = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
-    _tombstone_bucket(tmp_path, bucket_id=uuid, label="operator")
-
-    pointer = resolve_profile_bucket(uuid, root=tmp_path, include_tombstoned=True)
-
-    assert pointer is not None
-    assert pointer.bucket_id == uuid
-    assert pointer.label == "operator"
+    if expected_found:
+        assert pointer is not None
+        assert pointer.bucket_id == uuid
+        assert pointer.label == "operator"
+    else:
+        assert pointer is None
 
 
 def test_resolve_profile_bucket_resolves_an_active_profile_by_display_name(tmp_path: Path) -> None:

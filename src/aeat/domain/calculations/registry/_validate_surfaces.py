@@ -48,6 +48,14 @@ def validate_cross_reference_section(
             predicate_owner = f"{owner} applicability predicate {predicate.field!r}"
             failures.extend(_missing_refs(prefix, predicate_owner, predicate.legal_refs, legal_refs, "legal"))
             failures.extend(_missing_refs(prefix, predicate_owner, predicate.source_refs, source_refs, "source"))
+            failures.extend(
+                evidence.require_source_tier(
+                    prefix,
+                    predicate_owner,
+                    predicate.source_refs,
+                    "official_source_guidance",
+                ),
+            )
         if cross_reference.oracle_id is not None:
             prior = oracle_bindings.get(cross_reference.oracle_id)
             if prior is not None:
@@ -487,7 +495,6 @@ def validate_application_link_section(
         owner = f"application link {link.id}"
         failures.extend(_missing_refs(prefix, owner, link.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, link.source_refs, source_refs, "source"))
-        failures.extend(evidence.require_legal_authority_refs(prefix, owner, link.legal_refs))
         failures.extend(
             _application_link_source_tier_failures(
                 prefix,

@@ -49,6 +49,7 @@ casilla_ids = [
 formulas = [
     "renta-2025-capital-inmobiliario-rendimiento-neto",
     "renta-2025-capital-inmobiliario-rendimiento-neto-reducido",
+    "renta-2025-inmobiliario-renta-imputada-art-85",
     "renta-2025-inmobiliario-suma-rentas-imputadas",
     "renta-2025-capital-inmobiliario-suma-rendimientos-reducidos",
     "renta-2025-retenciones-arrendamientos-urbanos",

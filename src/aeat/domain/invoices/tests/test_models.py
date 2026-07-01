@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ...iva import InvoiceKind, IvaRateKind, OssIossRegime, TransactionKind
+from ...iva import EUMemberState, InvoiceKind, IvaRateKind, OssIossRegime, TransactionKind
 from .._enums import IvaRate, PaymentStatus, iva_rate_percentage, numeric_iva_rate_percentages
 from .._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 
@@ -119,48 +119,31 @@ def test_invoice_line_rejects_larger_rounding_drift() -> None:
         )
 
 
-def test_invoice_counterparty_eu_member_state_returns_typed_enum_for_eu_country() -> None:
-    """Promote the str counterparty_country into the substrate-typed
-    EUMemberState through the typed accessor — downstream consumers
-    (OSS / IOSS / intra-community routing) work against the closed enum
-    rather than a raw 2-letter string."""
-    from ...iva import EUMemberState
-
+@pytest.mark.parametrize(
+    ("raw_country", "tax_id", "stored_country", "expected_state", "expected_is_member"),
+    [
+        ("DE", "DE123456789", "DE", EUMemberState.DE, True),
+        ("US", "US123456789", "US", None, False),
+        ("fr", "FR12345678901", "FR", EUMemberState.FR, True),
+    ],
+    ids=("eu-member", "non-eu", "lowercase-eu"),
+)
+def test_invoice_counterparty_eu_member_state_accessor(
+    raw_country: str,
+    tax_id: str,
+    stored_country: str,
+    expected_state: EUMemberState | None,
+    expected_is_member: bool,
+) -> None:
+    """Counterparty country is normalized and exposed as a typed EU member when applicable."""
     invoice = _valid_invoice(
-        counterparty_country="DE",
-        counterparty_tax_id="DE123456789",
+        counterparty_country=raw_country,
+        counterparty_tax_id=tax_id,
     )
-    assert invoice.counterparty_country == "DE"
-    assert invoice.counterparty_eu_member_state is EUMemberState.DE
-    assert invoice.counterparty_is_eu_member is True
 
-
-def test_invoice_counterparty_eu_member_state_returns_none_for_non_eu_country() -> None:
-    """Non-EU counterparties resolve to None — Modelo 369 OSS bindings
-    and intra-community classifiers gate on
-    counterparty_is_eu_member to skip non-EU lines."""
-    invoice = _valid_invoice(
-        counterparty_country="US",
-        counterparty_tax_id="US123456789",
-    )
-    assert invoice.counterparty_country == "US"
-    assert invoice.counterparty_eu_member_state is None
-    assert invoice.counterparty_is_eu_member is False
-
-
-def test_invoice_counterparty_eu_member_state_handles_lowercase_input_via_uppercase_storage() -> None:
-    """counterparty_country normalises to uppercase at validation time
-    (validate_country_code). The eu_member_state accessor lowercases
-    again for substrate enum lookup. Round-trip works regardless of
-    input case."""
-    from ...iva import EUMemberState
-
-    invoice = _valid_invoice(
-        counterparty_country="fr",  # input lowercase
-        counterparty_tax_id="FR12345678901",
-    )
-    assert invoice.counterparty_country == "FR"  # stored uppercase
-    assert invoice.counterparty_eu_member_state is EUMemberState.FR
+    assert invoice.counterparty_country == stored_country
+    assert invoice.counterparty_eu_member_state is expected_state
+    assert invoice.counterparty_is_eu_member is expected_is_member
 
 
 def test_invoice_iva_category_is_typed_as_iva_category_substrate_enum() -> None:
@@ -293,46 +276,34 @@ def test_invoice_rejects_oss_line_rate_without_invoice_oss_axes() -> None:
         )
 
 
-def test_invoice_rejects_invalid_issued_at_without_typeerror_escape() -> None:
-    """Invalid date input must stay inside the pydantic validation boundary."""
-    with pytest.raises(ValidationError, match=r"not-a-date.*not a valid ISO-8601 date"):
-        Invoice.model_validate(
-            {
-                "kind": InvoiceKind.ISSUED,
-                "invoice_number": "INV-001",
-                "issued_at": "not-a-date",
-                "counterparty_name": "Cliente SL",
-                "counterparty_tax_id": "B12345674",
-                "counterparty_country": "ES",
-                "base_total": Decimal("100"),
-                "iva_total": Decimal("21"),
-                "grand_total": Decimal("121"),
-                "currency": "EUR",
-                "lines": (_valid_line(),),
-                "payment_status": PaymentStatus.PAID,
-            },
-        )
+@pytest.mark.parametrize(
+    ("field", "value", "match"),
+    [
+        ("issued_at", "not-a-date", r"not-a-date.*not a valid ISO-8601 date"),
+        ("kind", "bogus-kind", r"kind must be an InvoiceKind"),
+    ],
+    ids=("invalid-issued-at", "unknown-kind"),
+)
+def test_invoice_rejects_invalid_core_fields(field: str, value: object, match: str) -> None:
+    """Invalid core field input must stay inside the pydantic validation boundary."""
+    payload = {
+        "kind": InvoiceKind.ISSUED,
+        "invoice_number": "INV-001",
+        "issued_at": date(2026, 4, 1),
+        "counterparty_name": "Cliente SL",
+        "counterparty_tax_id": "B12345674",
+        "counterparty_country": "ES",
+        "base_total": Decimal("100"),
+        "iva_total": Decimal("21"),
+        "grand_total": Decimal("121"),
+        "currency": "EUR",
+        "lines": (_valid_line(),),
+        "payment_status": PaymentStatus.PAID,
+    }
+    payload[field] = value
 
-
-def test_invoice_rejects_unknown_kind_with_domain_validation_message() -> None:
-    """Unknown invoice kind strings must fail as invoice-domain validation."""
-    with pytest.raises(ValidationError, match=r"kind must be an InvoiceKind"):
-        Invoice.model_validate(
-            {
-                "kind": "bogus-kind",
-                "invoice_number": "INV-001",
-                "issued_at": date(2026, 4, 1),
-                "counterparty_name": "Cliente SL",
-                "counterparty_tax_id": "B12345674",
-                "counterparty_country": "ES",
-                "base_total": Decimal("100"),
-                "iva_total": Decimal("21"),
-                "grand_total": Decimal("121"),
-                "currency": "EUR",
-                "lines": (_valid_line(),),
-                "payment_status": PaymentStatus.PAID,
-            },
-        )
+    with pytest.raises(ValidationError, match=match):
+        Invoice.model_validate(payload)
 
 
 def test_iva_rate_percentage_is_resolved_against_centralized_iva_substrate() -> None:
@@ -472,14 +443,20 @@ def test_invoice_validates_iva_prefix_for_non_es_country() -> None:
     """Non-ES counterparties must carry a NIF-IVA matching their country format."""
     invoice = _valid_invoice(counterparty_country="DE", counterparty_tax_id="DE123456789")
     assert invoice.counterparty_tax_id == "DE123456789"
-    # An EU Member State enforces its published structure: a prefixless number
-    # is refused with the country-named format diagnostic.
-    with pytest.raises(ValidationError, match=r"is not a valid Germany NIF-IVA"):
-        _valid_invoice(counterparty_country="DE", counterparty_tax_id="123456789")
-    # A non-EU counterparty has no published NIF-IVA pattern and falls back to
-    # the generic leading-prefix check.
-    with pytest.raises(ValidationError, match=r"IVA number must start with the counterparty country ISO-2 prefix"):
-        _valid_invoice(counterparty_country="US", counterparty_tax_id="123456789")
+
+
+@pytest.mark.parametrize(
+    ("country", "tax_id", "match"),
+    [
+        ("DE", "123456789", r"is not a valid Germany NIF-IVA"),
+        ("US", "123456789", r"IVA number must start with the counterparty country ISO-2 prefix"),
+    ],
+    ids=("eu-published-format", "non-eu-generic-prefix"),
+)
+def test_invoice_rejects_invalid_non_es_iva_prefix(country: str, tax_id: str, match: str) -> None:
+    """Non-ES counterparties reject NIF-IVA values that do not match their country."""
+    with pytest.raises(ValidationError, match=match):
+        _valid_invoice(counterparty_country=country, counterparty_tax_id=tax_id)
 
 
 def test_invoice_linked_transaction_ids_are_deduplicated_and_hex_validated() -> None:

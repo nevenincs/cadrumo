@@ -378,7 +378,8 @@ def _real_estate_capital_scenario() -> RegistryCalculationScenario:
         period="0A",
         inputs=_inputs(
             {
-                "0089": Decimal("123.45"),
+                "0083": Decimal("6172.50"),
+                "0085": Decimal("365"),
                 "0102": Decimal("10000.00"),
                 "0104": Decimal("100.00"),
                 "0107": Decimal("200.00"),
@@ -486,7 +487,7 @@ def _real_estate_capital_scenario() -> RegistryCalculationScenario:
                     "0089",
                 ),
                 operand_casilla_refs=_operand_casilla_refs("0089"),
-                legal_refs=("ley-35-2006:art-22", "orden-hac-277-2026:art-3"),
+                legal_refs=("ley-35-2006:art-22", "ley-35-2006:art-85", "orden-hac-277-2026:art-3"),
             ),
             _expected(
                 "0156",

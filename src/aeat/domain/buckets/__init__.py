@@ -1,23 +1,41 @@
-"""Bucket-scoped append-only event history.
+"""Public facade for bucket-scoped append-only event history.
 
 A bucket is the storage slice associated with the active profile.
 Material workflow transitions (modelo calculation / verification /
 filing, ledger imports, profile lifecycle, etc.) emit immutable
 :class:`BucketEvent` records into a bucket-scoped history so the
 operator can reconstruct *how* current state was reached, not only
-*what* it is now.
+*what* it is now. The history is audit context, not the source of
+relational truth for ledger, profile, modelo, or filing state.
+
+Each :class:`BucketEvent` is content-addressed by bucket id,
+:class:`BucketEventType`, occurrence time, actor,
+:class:`BucketEventObjectType`, object id, and payload. ``payload_version``
+tracks the per-event payload contract, while the closed event and object
+taxonomies prevent emitters from persisting ad-hoc strings.
 
 Public surface:
 
 * :class:`BucketEvent` — one append-only event record.
 * :class:`BucketEventType` — closed catalogue of event kinds.
+* :class:`BucketEventObjectType` — closed catalogue of affected object kinds.
 * :class:`BucketEventHistoryCatalogue` — frozen mapping of every
   event in storage, with bucket / object / type queries.
 * :class:`BucketEventHistoryRepository` — encrypted SQL repository
-  over :class:`SecureObjectRepository`.
+  over
+  :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`,
+  storing a ``FINANCIAL``
+  :class:`~aeat.adapters.persistence.storage.Envelope` singleton.
 * :func:`derive_bucket_event_id` — deterministic SHA-256 event id.
 * :func:`append_bucket_event` — pure helper to insert one event
   into a catalogue (idempotent on identical content).
+
+The repository also exposes
+:meth:`BucketEventHistoryRepository.to_secure_object_write` so sibling
+catalogue updates can co-emit the same encrypted event-history write. Ordinary
+operators consume this history through profile and application services such as
+:mod:`~aeat.application.bucket_maintenance`; this domain facade does not create
+an operator-facing bucket command root.
 
 See Also:
     :class:`BucketEvent`
