@@ -1353,7 +1353,7 @@ source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_re
 review_status = "reviewed"
 
 [sources."aeat-dr-123-2024-v20-form-text"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "form_spec"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.txt"
@@ -1365,7 +1365,7 @@ source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_re
 review_status = "reviewed"
 
 [sources."aeat-dr-123-2019-2023-v13-form-text"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "form_spec"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.txt"
@@ -1413,6 +1413,33 @@ retrieved_at = 2026-05-05
 published_at = 2024-01-31
 applies_from = 2024-02-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-1772"
+review_status = "reviewed"
+
+[sources."boe-modelo-123-2007-form-text"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2007-20485-modelo-123-annex-text.txt"
+sha256 = "3a8245e770efdb23835f7958e76745c25cbf9ce3e8f2da9152679ea7a7ed23dc"
+bytes = 1569
+retrieved_at = 2026-07-01
+published_at = 2007-11-29
+applies_from = 2008-04-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/eli/es/o/2007/11/23/eha3435/dof/spa/pdf"
+review_status = "reviewed"
+
+[sources."boe-modelo-123-2024-form-text"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2024-1772-modelo-123-annex-text.txt"
+sha256 = "e5e284b93878b4b30c0a835c235f73e1b1efc906d35f652dacd519bae763103e"
+bytes = 1437
+retrieved_at = 2026-07-01
+published_at = 2024-01-31
+applies_from = 2024-02-01
+source_url = "https://www.boe.es/boe/dias/2024/01/31/pdfs/BOE-A-2024-1772.pdf"
 review_status = "reviewed"
 
 [sources."aeat-dr-193-2025"]
