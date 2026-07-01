@@ -20,16 +20,14 @@ def test_accepts_canonical_sha256_hex_digest() -> None:
     assert _Holder(verification_report_id=digest).verification_report_id == digest
 
 
-def test_rejects_uppercase_hex() -> None:
+@pytest.mark.parametrize(
+    "digest",
+    (
+        pytest.param("A" * 64, id="uppercase-hex"),
+        pytest.param("a" * 63, id="wrong-length"),
+        pytest.param("g" * 64, id="non-hex-characters"),
+    ),
+)
+def test_rejects_invalid_sha256_digest(digest: str) -> None:
     with pytest.raises(ValidationError):
-        _Holder(verification_report_id="A" * 64)
-
-
-def test_rejects_wrong_length() -> None:
-    with pytest.raises(ValidationError):
-        _Holder(verification_report_id="a" * 63)
-
-
-def test_rejects_non_hex_characters() -> None:
-    with pytest.raises(ValidationError):
-        _Holder(verification_report_id="g" * 64)
+        _Holder(verification_report_id=digest)
