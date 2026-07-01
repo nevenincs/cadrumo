@@ -16,10 +16,16 @@ so a regression in the language threading fails the assertion.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from pathlib import Path
+
 import pytest
 
 from ....application.review import ReviewQueueReport
 from ....core.config import override_settings
+from ....core.external_constants import OUTPUT_LANGUAGE_ENV_VAR
+from ....core.i18n._render import clear_output_language_cache
+from ....tests.secure_sql import isolated_sessionless_storage_root
 from .._review import _queue_lines
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -37,6 +43,24 @@ def _rendered(language: str | None) -> str:
         return "\n".join(_queue_lines(_EMPTY_REPORT))
     with override_settings(aeat_output_language=language):
         return "\n".join(_queue_lines(_EMPTY_REPORT))
+
+
+@pytest.fixture
+def _clean_install(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    """Model a clean install: no active profile, no forced-language env var.
+
+    The clean-install output-language default is Spanish, resolved from the
+    settings default when no profile preference, no override, and no
+    ``AEAT_OUTPUT_LANGUAGE`` env var apply. The test/CI shell exports
+    ``AEAT_OUTPUT_LANGUAGE=en``, and a session-leaked active profile could
+    carry an English preference, so both influences are stripped: the env
+    var is removed and storage is a sessionless isolated root.
+    """
+    monkeypatch.delenv(OUTPUT_LANGUAGE_ENV_VAR, raising=False)
+    with isolated_sessionless_storage_root(tmp_path=tmp_path):
+        clear_output_language_cache()
+        yield
+    clear_output_language_cache()
 
 
 def test_review_queue_renders_english_under_english_override() -> None:
@@ -57,8 +81,9 @@ def test_review_queue_renders_spanish_under_spanish_override() -> None:
     assert "Severity" not in rendered, rendered
 
 
+@pytest.mark.usefixtures("_clean_install")
 def test_review_queue_defaults_to_spanish() -> None:
-    """With no language override the queue defaults to Spanish (clean-install default)."""
+    """With no language override a clean install defaults the queue to Spanish."""
     rendered = _rendered(None)
     assert "Tipo" in rendered, rendered
     assert "pendientes de revisi" in rendered, rendered
