@@ -152,9 +152,7 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
         )
 
     from .diagnostics import quarantine_unreadable_secure_objects
-    from .workflow._models import AuthState
-    from .workflow._persistence import workflow_state_repository
-    from .workflow._utils import utc_now
+    from .workflow import AuthState, utc_now, workflow_state_repository
 
     repository = workflow_state_repository()
     current = repository.load()

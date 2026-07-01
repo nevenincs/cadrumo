@@ -51,6 +51,7 @@ from __future__ import annotations
 # inversion -- the registry never imports renta). Imported for the
 # registration side effect; no symbols are re-exported.
 from . import _first_slice_routing_integrity as _first_slice_routing_integrity
+from ._errors import RentaValidationError
 from ._ledger_expenses import (
     LEDGER_RENTA_EXPENSE_SOURCE,
     RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS,
@@ -100,6 +101,7 @@ __all__ = [
     "RentaIncomeType",
     "RentaInvoiceEvidenceStatus",
     "RentaReconciliationStatus",
+    "RentaValidationError",
     "art_7p_eligible",
     "build_renta_deductible_expense_observation",
     "calculate_art_7p_exemption",
