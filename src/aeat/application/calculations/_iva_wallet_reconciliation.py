@@ -8,7 +8,7 @@ the effective binding decision consumed by Modelo 303 calculation.
 The pure decision logic
 (:func:`~aeat.domain.iva_compensation._reconciliation.reconcile_iva_compensation_wallet`
 and its wallet/recurrence predicates) lives in
-:mod:`aeat.domain.iva_compensation._reconciliation`; it consumes structural
+:mod:`~aeat.domain.iva_compensation._reconciliation`; it consumes structural
 ports such as
 :class:`~aeat.domain.iva_compensation._reconciliation.IvaCompensationWalletObservationProtocol`
 and
