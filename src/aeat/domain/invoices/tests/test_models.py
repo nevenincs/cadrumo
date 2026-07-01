@@ -155,29 +155,16 @@ def test_invoice_iva_category_is_typed_as_iva_category_substrate_enum() -> None:
     from ...iva import IvaCategory
 
     invoice = _valid_invoice()
-    # Default value is None
     assert invoice.iva_category is None
 
-    # String input coerces to IvaCategory
     invoice = Invoice.model_validate(
         {
-            "kind": InvoiceKind.ISSUED,
-            "invoice_number": "INV-001",
-            "issued_at": date(2026, 4, 1),
-            "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
-            "counterparty_country": "ES",
-            "base_total": Decimal("100"),
-            "iva_total": Decimal("21"),
-            "grand_total": Decimal("121"),
-            "currency": "EUR",
-            "lines": (_valid_line(),),
-            "payment_status": PaymentStatus.PAID,
-            "iva_category": "domestic_general_21",  # string input
+            **invoice.model_dump(mode="python"),
+            "iva_category": "domestic_general_21",
         },
     )
     assert invoice.iva_category is IvaCategory.DOMESTIC_GENERAL_21
-    # JSON round-trip preserves the enum value as its string form
+
     json_dump = invoice.model_dump(mode="json")
     assert json_dump["iva_category"] == "domestic_general_21"
 
@@ -185,21 +172,12 @@ def test_invoice_iva_category_is_typed_as_iva_category_substrate_enum() -> None:
 def test_invoice_iva_category_rejects_unknown_string() -> None:
     """An unknown iva_category string must fail validation now that the
     field is typed against the closed IvaCategory enum."""
+    invoice = _valid_invoice()
+
     with pytest.raises(ValidationError, match=r"iva_category must be an IvaCategory"):
         Invoice.model_validate(
             {
-                "kind": InvoiceKind.ISSUED,
-                "invoice_number": "INV-001",
-                "issued_at": date(2026, 4, 1),
-                "counterparty_name": "Cliente SL",
-                "counterparty_tax_id": "B12345674",
-                "counterparty_country": "ES",
-                "base_total": Decimal("100"),
-                "iva_total": Decimal("21"),
-                "grand_total": Decimal("121"),
-                "currency": "EUR",
-                "lines": (_valid_line(),),
-                "payment_status": PaymentStatus.PAID,
+                **invoice.model_dump(mode="python"),
                 "iva_category": "bogus-category",
             },
         )
