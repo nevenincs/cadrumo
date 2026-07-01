@@ -124,13 +124,19 @@ def test_coverage_manifest_rejects_negative_row_counts() -> None:
         )
 
 
-def test_coverage_manifest_row_counts_are_immutable_after_default_and_validation() -> None:
-    default_manifest = CoverageManifest()
-    assert isinstance(default_manifest.row_counts_by_namespace, MappingProxyType)
-    with pytest.raises(TypeError):
-        default_manifest.row_counts_by_namespace["aeat.domain.buckets.event_history"] = 1
-
-    manifest = CoverageManifest(row_counts_by_namespace={"aeat.domain.buckets.event_history": 1})
+@pytest.mark.parametrize(
+    "manifest",
+    (
+        pytest.param(CoverageManifest(), id="default"),
+        pytest.param(
+            CoverageManifest(row_counts_by_namespace={"aeat.domain.buckets.event_history": 1}),
+            id="validated",
+        ),
+    ),
+)
+def test_coverage_manifest_row_counts_are_immutable_after_default_and_validation(
+    manifest: CoverageManifest,
+) -> None:
     assert isinstance(manifest.row_counts_by_namespace, MappingProxyType)
     with pytest.raises(TypeError):
         manifest.row_counts_by_namespace["aeat.domain.buckets.event_history"] = 2
