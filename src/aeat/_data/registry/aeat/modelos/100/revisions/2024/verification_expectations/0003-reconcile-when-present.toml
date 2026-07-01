@@ -9,6 +9,17 @@
 [[revisions."2024".verification_expectations]]
 id = "modelo-100-2024-reconcile-when-present"
 computed_casilla_ids = []
+# Casillas whose engine value is independently checked against an
+# AEAT-authoritative oracle, not only the app's own engine: 0226
+# ("Rendimiento neto reducido") reproduces 58.100,00, the figure the AEAT
+# Manual practico de Renta 2024 (Parte 1, Cap. 7) states three times over in
+# its own caso practico table for a medico radiologo actividad profesional in
+# estimacion directa simplificada (see
+# corpus/manual_oracles/modelo-100-2024-estimacion-directa-simplificada.json
+# and test_m100_2024_estimacion_directa_manual_worked_example.py). The CI
+# honesty gate (test_external_oracle_grounding_enrolled.py) cross-checks this
+# declaration symmetrically against the bundled corpus.
+externally_grounded_casilla_ids = ["0226"]
 reconcile_when_present_casilla_ids = [
     "0007",
     "0012",

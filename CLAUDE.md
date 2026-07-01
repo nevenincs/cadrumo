@@ -85,4 +85,5 @@ You MUST respect these rules at all times:
 @.claude/rules/vaultspec-rag.builtin.md
 @.claude/rules/vaultspec-system.builtin.md
 @.claude/rules/vaultspec.builtin.md
+@.claude/rules/verification-grounding-needs-oracle-evidence.md
 </vaultspec>
