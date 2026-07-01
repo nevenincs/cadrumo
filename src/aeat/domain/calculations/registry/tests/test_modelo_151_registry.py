@@ -5,8 +5,9 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import bundled_path
-from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator
 from .._legal import verify_legal_catalogue
+from .._schema import ModeloDefinition, RegistryCatalogues
+from .._validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -68,3 +69,31 @@ def test_modelo_151_form_order_is_boe_corpus_backed() -> None:
     assert reference.document_id == "BOE-A-2008-16237"
     assert reference.kind == "orden"
     assert reference.article == "modelo 151"
+
+
+def test_modelo_151_carries_base_liquidable_under_declaration_advisory() -> None:
+    """M151 guards the base-liquidable -> cuota-integra handoff (no-silent-under-declaration).
+
+    ``impatriado.cuota-integra-general`` is formula-derived from
+    ``impatriado.base-liquidable-general`` via ``lookup_bracket`` against the
+    art. 93.2.e.1º escala, so a positive base resolving to a zero cuota would
+    only be reachable through a registry regression -- but the verify gate
+    must still surface it as an operator-facing ADVISORY rather than silently
+    granting VERIFICADO_COMPLETO, mirroring the M131 01->02 and M200
+    00501->DP200014:00552 worked-pattern guards.
+    """
+    modelo, _ = _load_modelo_151()
+    revision = modelo.revisions["2015-y-siguientes"]
+
+    predicates = {p.predicate_id: p for p in revision.verification_predicates}
+    predicate_id = "modelo-151-base-liquidable-implica-cuota-integra"
+    assert predicate_id in predicates, "M151 2015-y-siguientes must declare the base-liquidable advisory"
+
+    guard = predicates[predicate_id]
+    assert guard.expression == (
+        'implies_nonzero(["impatriado.base-liquidable-general", "impatriado.cuota-integra-general"])'
+    )
+    assert guard.finding_kind == "ADVISORY", (
+        "the guard must stay non-blocking: a legitimately zero cuota must not refuse the draft"
+    )
+    assert "ley-35-2006:art-93" in tuple(str(r) for r in guard.legal_refs)
