@@ -1,20 +1,27 @@
 """Typed exception hierarchy for the storage provider abstraction.
 
 Provider and remote-mirror failures raised by
-:class:`aeat.adapters.outbound.storage.StorageProvider` implementations use
+:class:`~aeat.adapters.outbound.storage.StorageProvider` implementations use
 subclasses of :class:`OutboundStorageError` so the application layer's sync
 coordinator can dispatch on the concrete failure mode without parsing upstream
 error strings. Each public leaf binds to a stable
-:class:`aeat.core.errors.ErrorCode` through :mod:`aeat.core.errors.registry`
-so the CLI taxonomy stays explicit.
+:class:`~aeat.core.errors.ErrorCode` through
+:mod:`aeat.core.errors.registry` so the CLI taxonomy stays explicit.
 
 :class:`StorageCorruptionError` is the deliberate exception: it derives from
-:class:`CoreError` because it represents structurally invalid sidecar metadata,
-not a remote-provider transport, quota, permission, or mirror failure.
+:class:`~aeat.core.errors.CoreError` because it represents structurally invalid
+sidecar metadata, not a remote-provider transport, quota, permission, or mirror
+failure.
 
 The `Outbound` prefix disambiguates this hierarchy from the persistence
 side :class:`~aeat.adapters.persistence.storage.StorageError`, which
 covers at-rest persistence and has a different parent chain.
+
+See Also:
+    :class:`~aeat.adapters.outbound.storage.StorageProvider`
+        Provider Protocol whose implementations raise this hierarchy.
+    :class:`~aeat.adapters.outbound.storage.ProviderObjectMetadata`
+        Boundary record paired with integrity and corruption checks.
 """
 
 from __future__ import annotations
@@ -69,8 +76,8 @@ class OutboundStorageUnavailableError(OutboundStorageError):
 class StorageCorruptionError(CoreError):
     """Raised when a sidecar file contains structurally invalid field types.
 
-    As a :class:`CoreError`, this indicates on-disk data corruption: the
-    sidecar JSON parses successfully but a required field (e.g.
+    As a :class:`~aeat.core.errors.CoreError`, this indicates on-disk data
+    corruption: the sidecar JSON parses successfully but a required field (e.g.
     ``byte_length``) carries a type that the runtime cannot coerce to the
     expected primitive. Unlike :class:`OutboundStorageIntegrityError`, which
     covers payload-byte hash mismatches from
