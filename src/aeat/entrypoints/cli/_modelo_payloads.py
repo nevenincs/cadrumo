@@ -473,12 +473,13 @@ class WorkCalculateResult(OutputSchema):
 
     The calculate CLI flattens the persisted
     :class:`~aeat.domain.modelos.CalculationRevision` fields from
-    :class:`CalculationRevisionPayload`, then adds the presentation-only values
+    :class:`~aeat.entrypoints.cli._modelo_payloads.CalculationRevisionPayload`,
+    then adds the presentation-only values
     carried by
     :class:`~aeat.application.modelo.ModeloWorkCalculationServiceResult`: Modelo
     202 modality, backend authorization state, and optional
-    :class:`WorkPlazoDeadlinePayload`. Non-blocking authorization and source
-    diagnostics are projected into the envelope's
+    :class:`~aeat.entrypoints.cli._modelo_payloads.WorkPlazoDeadlinePayload`.
+    Non-blocking authorization and source diagnostics are projected into the envelope's
     :class:`~aeat.core.json_contract.Notice` rows, not bespoke result fields.
     """
 
@@ -512,7 +513,8 @@ class WorkCalculateResult(OutputSchema):
 class WorkRevisionsResult(OutputSchema):
     """Calculation-revision listing returned by ``aeat app modelo work revisions``.
 
-    Each entry in ``revisions`` is a :class:`CalculationRevisionPayload`
+    Each entry in ``revisions`` is a
+    :class:`~aeat.entrypoints.cli._modelo_payloads.CalculationRevisionPayload`
     carrying the full casilla table, typed observations, and provenance for one
     persisted :class:`~aeat.domain.modelos.CalculationRevision`.
     """
