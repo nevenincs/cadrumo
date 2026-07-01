@@ -4,10 +4,11 @@ Concrete adapter-layer implementation of the
 :class:`~aeat.domain.attachments._protocols.AttachmentStoreProtocol`. The
 domain declares the protocol; this module provides the implementation that
 reads/writes encrypted attachment blobs and manifests through the
-:class:`SecureObjectRepository` persistence substrate. Blob rows are framed
-byte payloads governed by
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` persistence
+substrate. Blob rows are framed byte payloads governed by
 :data:`aeat.adapters.persistence.storage.ATTACHMENT_BLOB_NAMESPACE`; manifest
-rows wrap :class:`Attachment` payloads in :class:`Envelope` records governed by
+rows wrap :class:`Attachment` payloads in
+:class:`~aeat.adapters.persistence.storage.Envelope` records governed by
 :data:`aeat.adapters.persistence.storage.ATTACHMENT_MANIFEST_NAMESPACE`.
 
 Sensitivity rationale: attachment blobs and manifests are content-addressed
@@ -184,7 +185,7 @@ class AttachmentStore(BaseModel):
     encrypted :class:`Attachment` manifests in
     :data:`aeat.adapters.persistence.storage.ATTACHMENT_MANIFEST_NAMESPACE`.
     Both namespaces are profile-local FINANCIAL custody surfaces; the
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
     encrypts the stored rows and HMAC-digests the object keys.
     """
 
