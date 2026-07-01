@@ -60,6 +60,16 @@ def _wait_for_ready(ready_path: Path, *, timeout: float = 5.0) -> None:
     raise AssertionError(f"subprocess did not signal readiness within {timeout}s")
 
 
+def _stop_process(process: subprocess.Popen[bytes]) -> None:
+    if process.poll() is None:
+        process.terminate()
+    try:
+        process.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(timeout=10)
+
+
 def test_acquire_then_release_round_trip(tmp_path: Path) -> None:
     paths = provision_bucket_directory(tmp_path, "alpha")
 
@@ -97,7 +107,7 @@ def test_second_in_process_acquire_fails_fast(tmp_path: Path) -> None:
 def test_cross_process_busy_detection(tmp_path: Path) -> None:
     paths = provision_bucket_directory(tmp_path, "alpha")
     ready = tmp_path / "ready"
-    script = _holder_script(paths.bucket_dir, hold_seconds=2.0, ready_path=ready)
+    script = _holder_script(paths.bucket_dir, hold_seconds=30.0, ready_path=ready)
 
     holder = subprocess.Popen([sys.executable, "-c", script])
     try:
@@ -111,19 +121,19 @@ def test_cross_process_busy_detection(tmp_path: Path) -> None:
         assert excinfo.value.holding_pid == recorded_pid
         assert recorded_pid != os.getpid()
     finally:
-        holder.wait(timeout=10)
+        _stop_process(holder)
 
 
 def test_wait_seconds_eventually_acquires(tmp_path: Path) -> None:
     paths = provision_bucket_directory(tmp_path, "alpha")
     ready = tmp_path / "ready"
-    script = _holder_script(paths.bucket_dir, hold_seconds=0.6, ready_path=ready)
+    script = _holder_script(paths.bucket_dir, hold_seconds=0.25, ready_path=ready)
 
     holder = subprocess.Popen([sys.executable, "-c", script])
     try:
         _wait_for_ready(ready)
-        # Holder releases after 0.6s; wait 3s window must succeed.
-        acquire_lock(paths, wait_seconds=3.0)
+        # Holder releases after 0.25s; wait window must succeed.
+        acquire_lock(paths, wait_seconds=2.0)
         try:
             assert lock_path(paths).is_file()
         finally:
