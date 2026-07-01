@@ -516,25 +516,18 @@ def test_non_sensitive_fields_pass_through_unchanged() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    ("value", "expected_type", "expected"),
-    (
-        pytest.param("hello world", str, "hello world", id="str"),
-        pytest.param(("safe-value", "also-safe"), tuple, ("safe-value", "also-safe"), id="tuple"),
-        pytest.param(["one", "two"], list, ["one", "two"], id="list"),
-        pytest.param({"alpha", "beta"}, set, {"alpha", "beta"}, id="set"),
-    ),
-)
-def test_scrub_value_non_sensitive_overloads_preserve_shape(
-    value: object,
-    expected_type: type[object],
-    expected: object,
-) -> None:
+def test_scrub_value_non_sensitive_overloads_preserve_shape() -> None:
     """Non-sensitive scalar/container inputs preserve their public shape."""
 
-    result = _scrub_value(value)
-    assert isinstance(result, expected_type)
-    assert result == expected
+    for value, expected_type, expected in (
+        ("hello world", str, "hello world"),
+        (("safe-value", "also-safe"), tuple, ("safe-value", "also-safe")),
+        (["one", "two"], list, ["one", "two"]),
+        ({"alpha", "beta"}, set, {"alpha", "beta"}),
+    ):
+        result = _scrub_value(value)
+        assert isinstance(result, expected_type)
+        assert result == expected
 
 
 def test_scrub_value_mapping_overload_returns_dict() -> None:
@@ -554,19 +547,13 @@ def test_scrub_value_object_overload_passes_through_non_sensitive() -> None:
     assert result is obj
 
 
-@pytest.mark.parametrize(
-    "value",
-    (
-        pytest.param("super-secret", id="str"),
-        pytest.param(12345, id="object"),
-    ),
-)
-def test_scrub_value_sensitive_key_redacts_to_marker(value: object) -> None:
+def test_scrub_value_sensitive_key_redacts_to_marker() -> None:
     """Any input paired with a sensitive key is redacted to the public marker."""
 
-    result = _scrub_value(value, key="token")
-    assert isinstance(result, str)
-    assert result == "<redacted>"
+    for value in ("super-secret", 12345):
+        result = _scrub_value(value, key="token")
+        assert isinstance(result, str)
+        assert result == "<redacted>"
 
 
 def test_scrub_value_nested_mapping_scrubs_recursively() -> None:
