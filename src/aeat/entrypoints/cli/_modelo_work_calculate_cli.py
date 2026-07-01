@@ -32,6 +32,7 @@ from ...application.modelo import (
     WorkUnitNotFoundError,
     calculate_modelo_work_revision,
 )
+from ...core import RescateType
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice
@@ -124,9 +125,9 @@ _RowOpt = Annotated[
                 "[FIELD=value ...]. TYPE is 'miembro' (M184 attribution member), 'vinculada' "
                 "(M232 related-party operation), 'operador' (M349 intracom operator), or 'contraparte' "
                 "(M347 declared counterparty). Repeat to add multiple rows. Quote the whole row argument; "
-                'quote spaced legal names inside it. M184 example: --row '
+                "quote spaced legal names inside it. M184 example: --row "
                 "'miembro nif=12345678A porcentaje=40 importe=10000'. M349 example: --row "
-                "'operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=\"DE Auto GmbH\" "
+                '\'operador codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" '
                 "clave_operacion=E importe=50000'."
             ),
         ),
@@ -196,6 +197,48 @@ _RescateTotalesOpt = Annotated[
         help=tr(
             "cli.app.modelo.work.rescate_plan_pensiones_aportaciones_totales_help",
             default="Total de aportaciones al plan de pensiones (denominador del prorrateo DT 12a LIRPF).",
+        ),
+    ),
+]
+_RescateTipoOpt = Annotated[
+    RescateType | None,
+    typer.Option(
+        "--rescate-type",
+        help=tr(
+            "cli.app.modelo.work.rescate_type_help",
+            default=(
+                "Tipo de rescate del plan de pensiones (DT 12a LIRPF): total (todo el capital de una "
+                "vez) o parcial (cobros escalonados). Es una senal de clasificacion y provenance, no "
+                "cambia el importe: la reduccion del 40% se aplica a la parte pre-2007 de lo percibido. "
+                "En parcial, cada cobro comparte la misma ventana del apartado 4."
+            ),
+        ),
+    ),
+]
+_ContingenciaYearOpt = Annotated[
+    int | None,
+    typer.Option(
+        "--contingencia-year",
+        help=tr(
+            "cli.app.modelo.work.rescate_contingencia_year_help",
+            default=(
+                "Ano en que acaecio la contingencia (jubilacion, incapacidad, fallecimiento) del plan "
+                "de pensiones. Determina la ventana temporal del apartado 4 DT 12a LIRPF (Ley 26/2014): "
+                "si la ventana esta cerrada para el ano de rescate, la reduccion del 40% se retiene."
+            ),
+        ),
+    ),
+]
+_RescateYearOpt = Annotated[
+    int | None,
+    typer.Option(
+        "--rescate-year",
+        help=tr(
+            "cli.app.modelo.work.rescate_year_help",
+            default=(
+                "Ano en que se percibe la prestacion del rescate (por defecto el ano de la declaracion). "
+                "Se compara con la ventana del apartado 4 DT 12a LIRPF medida desde --contingencia-year."
+            ),
         ),
     ),
 ]
@@ -294,6 +337,9 @@ def register_work_calculate_commands(
         rescate_plan_pensiones_capital: _RescateCapitalOpt = None,
         rescate_plan_pensiones_aportaciones_pre_2007: _RescatePre2007Opt = None,
         rescate_plan_pensiones_aportaciones_totales: _RescateTotalesOpt = None,
+        rescate_type: _RescateTipoOpt = None,
+        contingencia_year: _ContingenciaYearOpt = None,
+        rescate_year: _RescateYearOpt = None,
         sal_beneficio_neto: _SalBeneficioOpt = None,
         sal_reserva_dotada: _SalReservaOpt = None,
         sal_capital_social: _SalCapitalOpt = None,
@@ -321,6 +367,9 @@ def register_work_calculate_commands(
             rescate_plan_pensiones_capital=rescate_plan_pensiones_capital,
             rescate_plan_pensiones_aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
             rescate_plan_pensiones_aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,
+            rescate_type=rescate_type,
+            contingencia_year=contingencia_year,
+            rescate_year=rescate_year,
             sal_beneficio_neto=sal_beneficio_neto,
             sal_reserva_dotada=sal_reserva_dotada,
             sal_capital_social=sal_capital_social,
@@ -350,6 +399,9 @@ def _run_work_calculate(
     rescate_plan_pensiones_capital: str | None,
     rescate_plan_pensiones_aportaciones_pre_2007: str | None,
     rescate_plan_pensiones_aportaciones_totales: str | None,
+    rescate_type: RescateType | None,
+    contingencia_year: int | None,
+    rescate_year: int | None,
     sal_beneficio_neto: str | None,
     sal_reserva_dotada: str | None,
     sal_capital_social: str | None,
@@ -379,6 +431,9 @@ def _run_work_calculate(
         rescate_plan_pensiones_capital=rescate_plan_pensiones_capital,
         rescate_plan_pensiones_aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
         rescate_plan_pensiones_aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,
+        rescate_type=rescate_type,
+        contingencia_year=contingencia_year,
+        rescate_year=rescate_year,
         sal_beneficio_neto=sal_beneficio_neto,
         sal_reserva_dotada=sal_reserva_dotada,
         sal_capital_social=sal_capital_social,
