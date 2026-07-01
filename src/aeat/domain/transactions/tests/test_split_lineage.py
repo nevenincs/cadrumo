@@ -58,44 +58,28 @@ def test_derive_split_group_id_is_amount_order_independent() -> None:
     assert first == second
 
 
-def test_derive_split_group_id_differs_on_parent_change() -> None:
+@pytest.mark.parametrize(
+    ("parent_transaction_id", "child_amounts", "child_narratives"),
+    (
+        pytest.param(_CHILD_A, (Decimal("10.00"),), ("rent",), id="parent"),
+        pytest.param(_PARENT, (Decimal("10.01"),), ("rent",), id="amount"),
+        pytest.param(_PARENT, (Decimal("10.00"),), ("utilities",), id="narrative"),
+    ),
+)
+def test_derive_split_group_id_differs_on_input_change(
+    parent_transaction_id: str,
+    child_amounts: tuple[Decimal, ...],
+    child_narratives: tuple[str, ...],
+) -> None:
     first = derive_split_group_id(
         parent_transaction_id=_PARENT,
         child_amounts=(Decimal("10.00"),),
         child_narratives=("rent",),
     )
     second = derive_split_group_id(
-        parent_transaction_id=_CHILD_A,
-        child_amounts=(Decimal("10.00"),),
-        child_narratives=("rent",),
-    )
-    assert first != second
-
-
-def test_derive_split_group_id_differs_on_amount_change() -> None:
-    first = derive_split_group_id(
-        parent_transaction_id=_PARENT,
-        child_amounts=(Decimal("10.00"),),
-        child_narratives=("rent",),
-    )
-    second = derive_split_group_id(
-        parent_transaction_id=_PARENT,
-        child_amounts=(Decimal("10.01"),),
-        child_narratives=("rent",),
-    )
-    assert first != second
-
-
-def test_derive_split_group_id_differs_on_narrative_change() -> None:
-    first = derive_split_group_id(
-        parent_transaction_id=_PARENT,
-        child_amounts=(Decimal("10.00"),),
-        child_narratives=("rent",),
-    )
-    second = derive_split_group_id(
-        parent_transaction_id=_PARENT,
-        child_amounts=(Decimal("10.00"),),
-        child_narratives=("utilities",),
+        parent_transaction_id=parent_transaction_id,
+        child_amounts=child_amounts,
+        child_narratives=child_narratives,
     )
     assert first != second
 
