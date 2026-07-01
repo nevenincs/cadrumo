@@ -360,6 +360,33 @@ def test_bindings_list_payload_is_typed_and_carries_provenance() -> None:
         assert row["source_refs"], f"binding {row['binding_id']!r} must carry registry source_refs"
 
 
+def test_bindings_list_exposes_m100_salary_certificate_withholding_input() -> None:
+    """Marta's suffered salary withholding is discoverable as a public binding."""
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "bindings",
+            "list",
+            "--modelo",
+            "100",
+            "--year",
+            "2024",
+            "--period",
+            "0A",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    rows = {row["binding_id"]: row for row in _payload(result.output)["bindings"]}
+    row = rows["renta-2024-certificado-trabajo-retenciones"]
+    assert row["source"] == "manual_input"
+    assert row["input_channel"] == "decimal"
+    assert "ley-35-2006:art-101" in row["legal_refs"]
+    assert "aeat-dr-100-2024-dictionary" in row["source_refs"]
+
+
 def test_bindings_list_typed_payload_carries_relation_inputs_before_calculate() -> None:
     """The typed M200 list payload names each relation-fed binding's feeding relation.
 

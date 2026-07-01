@@ -136,6 +136,9 @@ _M130_C19_BY_PERIOD: dict[str, Decimal] = {
 }
 _M130_PAGOS_OUTPUT: CasillaId = validated_casilla_id("19", surface="_M130_PAGOS_OUTPUT")
 _M131_PAGOS_OUTPUT: CasillaId = validated_casilla_id("15", surface="_M131_PAGOS_OUTPUT")
+_OPTIONAL_PAYEE_RETENCIONES_BINDINGS: frozenset[BindingId] = frozenset(
+    {"renta-2024-certificado-trabajo-retenciones"},
+)
 
 
 @pytest.fixture
@@ -284,6 +287,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     return {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
+        if binding.id not in _OPTIONAL_PAYEE_RETENCIONES_BINDINGS
         if binding.source
         not in (
             "profile",
