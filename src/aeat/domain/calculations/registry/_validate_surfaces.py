@@ -12,6 +12,7 @@ from collections.abc import Mapping
 
 from ._ids import CasillaId
 from ._schema import (
+    KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     LegalReference,
     ModeloRevision,
@@ -312,6 +313,7 @@ _DEDUCCION_REQUIRES_ADQUISICION_BEFORE_PREDICATE = _re.compile(
     r"^deduccion_requires_adquisicion_before\(\[(?P<ids>[^\]]*)\]\)$",
 )
 _ISO_DATE_LITERAL = _re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_PROFILE_FLAG_ENABLED_PREDICATE = _re.compile(r'^profile_flag_enabled\("(?P<field>[^"]+)"\)$')
 
 
 def _deduccion_requires_adquisicion_before_predicate_failures(
@@ -362,6 +364,23 @@ def _deduccion_requires_adquisicion_before_predicate_failures(
             "must be an ISO date literal (YYYY-MM-DD)",
         )
     return failures
+
+
+def _profile_flag_enabled_predicate_failures(prefix: str, owner: str, expression: str) -> list[str]:
+    """Return failures for a malformed ``profile_flag_enabled`` advisory."""
+    match = _PROFILE_FLAG_ENABLED_PREDICATE.match(expression.strip())
+    if match is None:
+        return [
+            f"{prefix}: {owner} profile_flag_enabled expression {expression!r} is malformed; expected "
+            'profile_flag_enabled("profile_field_name")',
+        ]
+    field = match.group("field")
+    if field not in KNOWN_PROFILE_FLAG_ADVISORY_FIELDS:
+        return [
+            f"{prefix}: {owner} profile_flag_enabled references unsupported profile field {field!r}; "
+            f"supported fields: {sorted(KNOWN_PROFILE_FLAG_ADVISORY_FIELDS)!r}",
+        ]
+    return []
 
 
 def validate_verification_expectation_section(
@@ -470,6 +489,8 @@ def validate_verification_expectation_section(
                     casilla_by_id,
                 ),
             )
+        elif op_name == "profile_flag_enabled":
+            failures.extend(_profile_flag_enabled_predicate_failures(prefix, owner, predicate.expression))
         elif op_name in _CASILLA_LIST_OPERATORS:
             failures.extend(
                 _casilla_list_predicate_failures(

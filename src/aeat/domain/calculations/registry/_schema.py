@@ -1028,6 +1028,13 @@ class FormulaDefinition(RegistryModel):
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
 
 
+KNOWN_PROFILE_FLAG_ADVISORY_FIELDS: frozenset[str] = frozenset(
+    {
+        "professional_income_withholding_ge_70pct",
+    },
+)
+
+
 KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
     {
         # advisory_when_positive(["casilla_id"]) — single-casilla positive
@@ -1102,6 +1109,12 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         "implies_any_nonzero",
         "implies_nonzero",
         "profile_field_required",
+        # profile_flag_enabled("profile_field_name") — profile-state advisory:
+        # FIRES (ADVISORY shown) iff the named boolean TaxpayerProfile field is
+        # true. ADVISORY-only. Authored for the M130 Art. 109 profile flag,
+        # where the legal 70% test is an income-coverage fact declared in the
+        # profile/deadline layer, not a casilla-amount ratio in the form.
+        "profile_flag_enabled",
         # roll_forward_balances(["closing_id", "opening_id", "applied_id",
         # "base_id"]) — carry-forward stock continuity: the closing balance must
         # reconcile to opening − applied + max(0, −base) within a one-cent
@@ -1201,6 +1214,12 @@ class VerificationPredicateDefinition(RegistryModel):
       ue_eee_status) rather than another casilla value. First use site:
       M210 representante-fiscal gate per m210-irnr-full-engine ADR
       §D2.5 (TRLIRNR Art 10).
+    - ``profile_flag_enabled("profile_field_name")`` — profile-state
+      advisory: predicate FIRES (ADVISORY shown) iff the named boolean
+      TaxpayerProfile field is true. ADVISORY-only. Authored for the Modelo
+      130 Art. 109 high-withholding profile flag: the legal 70% threshold is
+      an income-coverage/profile fact, not a ratio between retenciones amount
+      and gross income casillas.
     - ``casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal",
       "consequent_casilla_id"])`` — categorical-conditional material
       implication: predicate FIRES (ADVISORY shown) iff the operator-entered

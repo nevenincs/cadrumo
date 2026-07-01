@@ -13,6 +13,7 @@ from ....domain.calculations.registry import (
 from ....domain.modelos._errors import ModeloError
 from ....domain.modelos._verification_report import (
     ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
 )
 from .._verification_actions import (
     evaluate_advisory_predicate_fires,
@@ -30,19 +31,20 @@ from ._verification_substance_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # ---------------------------------------------------------------------------
-# Art. 109 RIRPF advisory predicate unit tests
+# Advisory predicate unit tests
 # ---------------------------------------------------------------------------
 
-_ADVISORY_RATIO_GE = 'advisory_when_ratio_ge(["06", "01", "0.70"])'
+_ADVISORY_RATIO_GE = 'advisory_when_ratio_ge(["00501", "DP200014:00552", "0.70"])'
+_M130_ART109_PROFILE_ADVISORY = 'profile_flag_enabled("professional_income_withholding_ge_70pct")'
 
 
 @pytest.mark.parametrize(
     ("values", "expected"),
     (
-        (_casilla_values((_CASILLA_06, "10500"), (_CASILLA_01, "15000")), True),
-        (_casilla_values((_CASILLA_06, "12000"), (_CASILLA_01, "15000")), True),
-        (_casilla_values((_CASILLA_06, "9000"), (_CASILLA_01, "15000")), False),
-        (_casilla_values((_CASILLA_06, "5000"), (_CASILLA_01, "0")), False),
+        (_casilla_values((_CASILLA_00501, "10500"), (_M200_BIN_GENERATED_CASILLA, "15000")), True),
+        (_casilla_values((_CASILLA_00501, "12000"), (_M200_BIN_GENERATED_CASILLA, "15000")), True),
+        (_casilla_values((_CASILLA_00501, "9000"), (_M200_BIN_GENERATED_CASILLA, "15000")), False),
+        (_casilla_values((_CASILLA_00501, "5000"), (_M200_BIN_GENERATED_CASILLA, "0")), False),
     ),
     ids=("exact-threshold", "above-threshold", "below-threshold", "zero-denominator"),
 )
@@ -52,10 +54,13 @@ def test_advisory_when_ratio_ge_cases(values: dict[CasillaId, Decimal], expected
 
 
 def test_advisory_when_ratio_ge_rejects_noncanonical_casilla_id_token() -> None:
-    values: dict[CasillaId, Decimal] = {_CASILLA_06: Decimal("100"), _CASILLA_01: Decimal("100")}
+    values: dict[CasillaId, Decimal] = {
+        _CASILLA_00501: Decimal("100"),
+        _M200_BIN_GENERATED_CASILLA: Decimal("100"),
+    }
 
     with pytest.raises(ModeloError, match=r"non-canonical casilla\.id"):
-        evaluate_advisory_predicate_fires('advisory_when_ratio_ge(["06", "bad key", "0.70"])', values)
+        evaluate_advisory_predicate_fires('advisory_when_ratio_ge(["00501", "bad key", "0.70"])', values)
 
 
 _ADVISORY_IMPLIES_M200_BASE = 'implies_nonzero(["00501", "DP200014:00552"])'
@@ -76,30 +81,21 @@ def test_advisory_implies_nonzero_cases(values: dict[CasillaId, Decimal], expect
     assert evaluate_advisory_predicate_fires(_ADVISORY_IMPLIES_M200_BASE, values) is expected
 
 
-def test_advisory_predicate_emits_warning_advisory_finding_when_condition_met() -> None:
-    """Art. 109 ADVISORY predicate produces a WARNING-severity ADVISORY finding when ratio >= 70%.
-
-    The predicate is constructed with finding_kind='ADVISORY' (the new value added
-    in this task). When the ratio condition holds, evaluate_verification_predicates
-    must produce exactly one finding of kind ADVISORY and severity WARNING.
-    No BLOCKING_RULE finding is produced; the operator can still receive
-    VERIFICADO_COMPLETO if all other gates pass.
-    """
+def test_art109_profile_advisory_emits_warning_when_profile_flag_is_enabled() -> None:
+    """Art. 109 ADVISORY reads the profile coverage flag, not a casilla ratio."""
     predicate = VerificationPredicateDefinition(
         predicate_id="modelo-130-art109-exencion-alta-retencion",
         legal_refs=("rd-439-2007:art-109",),
-        expression='advisory_when_ratio_ge(["06", "01", "0.70"])',
+        expression=_M130_ART109_PROFILE_ADVISORY,
         finding_kind="ADVISORY",
     )
-    # Exactly 70% ratio: retenciones 10500 / rendimientos 15000
+    profile = _workflow_profile().model_copy(update={"professional_income_withholding_ge_70pct": True})
     casilla_values: dict[CasillaId, Decimal] = {
-        _CASILLA_06: Decimal("10500"),
+        _CASILLA_06: Decimal("0"),
         _CASILLA_01: Decimal("15000"),
     }
 
-    from ....domain.modelos._verification_report import ModeloVerificationFindingSeverity
-
-    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+    findings = evaluate_verification_predicates((predicate,), casilla_values, profile)
 
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
@@ -107,17 +103,16 @@ def test_advisory_predicate_emits_warning_advisory_finding_when_condition_met() 
     assert "rd-439-2007:art-109" in findings[0].legal_refs
 
 
-def test_advisory_predicate_emits_no_finding_when_condition_not_met() -> None:
-    """ADVISORY predicate produces no finding when ratio < 70%."""
+def test_art109_profile_advisory_ignores_high_retention_amount_ratio_when_profile_flag_is_disabled() -> None:
+    """A high casilla 06 amount alone is not the Art. 109 income-coverage fact."""
     predicate = VerificationPredicateDefinition(
         predicate_id="modelo-130-art109-exencion-alta-retencion",
         legal_refs=("rd-439-2007:art-109",),
-        expression='advisory_when_ratio_ge(["06", "01", "0.70"])',
+        expression=_M130_ART109_PROFILE_ADVISORY,
         finding_kind="ADVISORY",
     )
-    # 60% ratio: retenciones 9000 / rendimientos 15000
     casilla_values: dict[CasillaId, Decimal] = {
-        _CASILLA_06: Decimal("9000"),
+        _CASILLA_06: Decimal("10500"),
         _CASILLA_01: Decimal("15000"),
     }
 
