@@ -16,6 +16,7 @@ row tuple end-to-end.
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from ....core import Period
 from .._review_payloads import (
@@ -46,7 +47,7 @@ def _populated_row(item_id: str = "review-001") -> ReviewQueueRowPayload:
         canonical_next_command="aeat app modelo work calculate draft-abc",
         since="2025-04-20T12:00:00+00:00",
         summary="modelo 303 draft is missing iva.devengado",
-        legal_refs=("liva.art-21", "liva.art-94"),
+        legal_refs=("ley-37-1992:art-21", "ley-37-1992:art-94"),
     )
 
 
@@ -60,7 +61,7 @@ def test_review_queue_row_payload_roundtrips_strictly() -> None:
     # Per-field witnesses for the legal-grounding tuple (the audit's
     # core ask: every operator-facing JSON surface must carry the
     # regulatory grounding tuple).
-    assert roundtripped.legal_refs == ("liva.art-21", "liva.art-94")
+    assert roundtripped.legal_refs == ("ley-37-1992:art-21", "ley-37-1992:art-94")
     assert roundtripped.blocking is True
     assert roundtripped.severity == "HIGH"
 
@@ -89,7 +90,17 @@ def test_review_view_envelope_roundtrips() -> None:
     assert roundtripped == original
     assert roundtripped.operation == "review.view"
     assert roundtripped.row.item_id == "only"
-    assert roundtripped.row.legal_refs == ("liva.art-21", "liva.art-94")
+    assert roundtripped.row.legal_refs == ("ley-37-1992:art-21", "ley-37-1992:art-94")
+
+
+def test_review_queue_row_payload_rejects_blank_legal_refs() -> None:
+    """CLI JSON rows keep review finding grounding on the typed registry-id contract."""
+
+    serialized = _populated_row().model_dump(mode="json")
+    serialized["legal_refs"] = [" "]
+
+    with pytest.raises(ValidationError, match="legal_refs"):
+        ReviewQueueRowPayload.model_validate(serialized)
 
 
 def test_review_payloads_reject_unknown_outer_keys() -> None:
@@ -100,9 +111,7 @@ def test_review_payloads_reject_unknown_outer_keys() -> None:
     rejects them at parse time.
     """
 
-    from pydantic import ValidationError as _PydValidationError
-
     serialized = ReviewViewResult(row=_populated_row()).model_dump(mode="json")
     serialized["extra_marker"] = "leak"  # not in the typed envelope
-    with pytest.raises(_PydValidationError):
+    with pytest.raises(ValidationError):
         ReviewViewResult.model_validate(serialized)
