@@ -131,19 +131,7 @@ def test_attachment_store_refuses_link_only_uri_list_manifest(tmp_path: Path) ->
         assert loaded.mime_type == "application/pdf"
 
 
-@pytest.mark.parametrize(
-    "disguised_mime",
-    [
-        "text/uri-list; charset=utf-8",
-        "text/uri-list;charset=us-ascii",
-        "TEXT/URI-LIST; q=0.9",
-        "text/uri-list ; boundary=x",
-    ],
-)
-def test_parameterized_uri_list_mime_is_refused_at_both_boundaries(
-    tmp_path: Path,
-    disguised_mime: str,
-) -> None:
+def test_parameterized_uri_list_mime_is_refused_at_both_boundaries(tmp_path: Path) -> None:
     """A parameter section must not smuggle a link-only media type past the guards.
 
     MIME syntax allows ``type/subtype; param=value``; a full-string equality
@@ -158,14 +146,20 @@ def test_parameterized_uri_list_mime_is_refused_at_both_boundaries(
             source_reference="https://drive.google.com/file/d/parammime/view",
         )
 
-        manifest_payload = attachment.model_dump(mode="python")
-        manifest_payload["mime_type"] = disguised_mime
-        with pytest.raises(ValidationError, match="link-only URI list"):
-            Attachment.model_validate(manifest_payload)
+        for disguised_mime in (
+            "text/uri-list; charset=utf-8",
+            "text/uri-list;charset=us-ascii",
+            "TEXT/URI-LIST; q=0.9",
+            "text/uri-list ; boundary=x",
+        ):
+            manifest_payload = attachment.model_dump(mode="python")
+            manifest_payload["mime_type"] = disguised_mime
+            with pytest.raises(ValidationError, match="link-only URI list"):
+                Attachment.model_validate(manifest_payload)
 
-        tampered = attachment.model_copy(update={"mime_type": disguised_mime})
-        with pytest.raises(AttachmentValidationError, match="link-only URI list"):
-            store.write_manifest(tampered)
+            tampered = attachment.model_copy(update={"mime_type": disguised_mime})
+            with pytest.raises(AttachmentValidationError, match="link-only URI list"):
+                store.write_manifest(tampered)
 
         # A parameterized NON-link media type stays accepted: the guard parses
         # the media type, it does not blanket-refuse parameter sections.
