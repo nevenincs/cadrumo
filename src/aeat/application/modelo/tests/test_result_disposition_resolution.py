@@ -119,8 +119,8 @@ def _revision_with_casilla_values(work_unit: WorkUnit, values: dict[CasillaId, D
             CasillaObservation(
                 casilla_id=casilla_id,
                 value=value,
-                legal_refs=("result-disposition-test",),
-                source_refs=("result-disposition-test",),
+                legal_refs=("ley-58-2003:art-120",),
+                source_refs=("aeat-modelo-disposition-fixture",),
             )
             for casilla_id, value in values.items()
         ),

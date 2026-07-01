@@ -23,7 +23,7 @@ official_name = "MODELO 130"
 tax_domain = "irpf"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"
-legal_refs = ["ley-35-2006"]
+legal_refs = ["ley-35-2006:art-1"]
 source_refs = ["aeat-source"]
 """
 
@@ -31,7 +31,7 @@ REVISION_TEXT = """
 [revisions.2019-y-siguientes]
 valid_from = 2019-01-01
 period_selector = { year_from = 2019, periods = ["1T", "2T", "3T", "4T"] }
-legal_refs = ["ley-35-2006"]
+legal_refs = ["ley-35-2006:art-1"]
 source_refs = ["aeat-source"]
 
 [[revisions.2019-y-siguientes.casillas]]
@@ -41,7 +41,7 @@ label = "Spanish Label 01"
 section = ["section"]
 input_kind = "manual"
 continuidad_id = "cont_01"
-legal_refs = ["ley-35-2006"]
+legal_refs = ["ley-35-2006:art-1"]
 source_refs = ["aeat-source"]
 
 [[revisions.2019-y-siguientes.casillas]]
@@ -50,7 +50,7 @@ number = "02"
 label = "Spanish Label 02"
 section = ["section"]
 input_kind = "manual"
-legal_refs = ["ley-35-2006"]
+legal_refs = ["ley-35-2006:art-1"]
 source_refs = ["aeat-source"]
 """
 

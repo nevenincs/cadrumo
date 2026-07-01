@@ -58,7 +58,7 @@ def _base_revision_fields() -> dict[str, Any]:
                 casilla_id=_PAYLOAD_CASILLA,
                 value="1234.56",
                 formula_id="f1",
-                legal_refs=("art-1",),
+                legal_refs=("ley-58-2003:art-120",),
                 operand_refs=(_PAYLOAD_CASILLA, "iva.rate"),
                 operand_casilla_refs=(_PAYLOAD_CASILLA,),
                 source_refs=("libro-1",),
@@ -119,7 +119,7 @@ def test_observation_payload_rejects_non_canonical_casilla_id() -> None:
         ObservationPayload(
             casilla_id=_NON_CANONICAL_KEY,
             value="1234.56",
-            legal_refs=("art-1",),
+            legal_refs=("ley-58-2003:art-120",),
             source_refs=("libro-1",),
         )
 
@@ -131,7 +131,7 @@ def test_observation_payload_rejects_non_canonical_operand_casilla_ref() -> None
             value="1234.56",
             operand_refs=("iva.rate",),
             operand_casilla_refs=(_NON_CANONICAL_KEY,),
-            legal_refs=("art-1",),
+            legal_refs=("ley-58-2003:art-120",),
             source_refs=("libro-1",),
         )
 
@@ -152,7 +152,7 @@ def test_observation_payload_carries_formula_op_through_json_channel() -> None:
         operand_refs=(_PAYLOAD_CASILLA, "iva.rate"),
         operand_casilla_refs=(_PAYLOAD_CASILLA,),
         operand_values=("2000.00", "765.44"),
-        legal_refs=("art-1",),
+        legal_refs=("ley-58-2003:art-120",),
         source_refs=("libro-1",),
     )
     restored = ObservationPayload.model_validate_json(original.model_dump_json())
@@ -168,7 +168,7 @@ def test_observation_payload_rejects_untraced_operand_casilla_ref() -> None:
             value="1234.56",
             operand_refs=("iva.rate",),
             operand_casilla_refs=(_PAYLOAD_CASILLA,),
-            legal_refs=("art-1",),
+            legal_refs=("ley-58-2003:art-120",),
             source_refs=("libro-1",),
         )
 
@@ -280,4 +280,4 @@ def test_work_observations_result_roundtrips_observation_contract() -> None:
 
     assert restored == payload
     assert restored.observation_count == 1
-    assert restored.observations[0].legal_refs == ("art-1",)
+    assert restored.observations[0].legal_refs == ("ley-58-2003:art-120",)
