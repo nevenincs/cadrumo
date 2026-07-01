@@ -7,7 +7,7 @@ legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:a
 source_refs = ["aeat-dr-322-2026", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
 
 [[revisions."2008-y-siguientes".bindings.source_citations]]
-source_ref = "boe-modelo-322-2007-form"
+source_ref = "aeat-modelo-322-procedure"
 required_text = ["modelo 322"]
 
 [[revisions."2008-y-siguientes".bindings]]
@@ -19,7 +19,7 @@ legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:a
 source_refs = ["aeat-dr-322-2026", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
 
 [[revisions."2008-y-siguientes".bindings.source_citations]]
-source_ref = "boe-modelo-322-2007-form"
+source_ref = "aeat-modelo-322-procedure"
 required_text = ["modelo 322"]
 
 [[revisions."2008-y-siguientes".bindings]]
@@ -31,7 +31,7 @@ legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:a
 source_refs = ["aeat-dr-322-2026", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
 
 [[revisions."2008-y-siguientes".bindings.source_citations]]
-source_ref = "boe-modelo-322-2007-form"
+source_ref = "aeat-modelo-322-procedure"
 required_text = ["modelo 322"]
 
 [[revisions."2008-y-siguientes".bindings]]
@@ -43,7 +43,7 @@ legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:a
 source_refs = ["aeat-dr-322-2026", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
 
 [[revisions."2008-y-siguientes".bindings.source_citations]]
-source_ref = "boe-modelo-322-2007-form"
+source_ref = "aeat-modelo-322-procedure"
 required_text = ["modelo 322"]
 
 [[revisions."2008-y-siguientes".bindings]]
@@ -55,6 +55,5 @@ legal_refs = ["ley-37-1992:art-84", "orden-eha-3434-2007:art-1", "rd-1624-1992:a
 source_refs = ["aeat-dr-322-2026", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
 
 [[revisions."2008-y-siguientes".bindings.source_citations]]
-source_ref = "boe-modelo-322-2007-form"
+source_ref = "aeat-modelo-322-procedure"
 required_text = ["modelo 322"]
-
