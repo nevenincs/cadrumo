@@ -33,6 +33,7 @@ from .._repository import SubmissionRepository
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _PERIOD = Period.from_year_and_code(2025, "1T")
+_ACKNOWLEDGED_AT = datetime(2026, 5, 27, 10, 30, 0, tzinfo=UTC)
 
 
 def _populated_filing() -> ModeloPresentado:
@@ -46,7 +47,7 @@ def _populated_filing() -> ModeloPresentado:
     is proven to carry the structured value end-to-end.
     """
 
-    now = datetime.now(UTC).replace(microsecond=0)
+    now = _ACKNOWLEDGED_AT
     draft_id = "d" * 64
     submission_id = make_submission_id(draft_id, attempt_ordinal=2)
     return ModeloPresentado(
