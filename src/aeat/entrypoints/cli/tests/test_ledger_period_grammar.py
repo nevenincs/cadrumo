@@ -264,6 +264,42 @@ def test_preflight_calendar_shape_refuses(_isolated_backend: None) -> None:
     assert "1T" in result.output
 
 
+def test_import_period_year_prefixed_token_refuses_with_current_canonical_grammar(
+    tmp_path: Path,
+    _isolated_backend: None,
+) -> None:
+    """``ledger import --period 2026T1 --year 2026`` refuses and teaches ``1T`` plus ``--year``."""
+
+    statement = tmp_path / "statement.csv"
+    statement.write_text(
+        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
+        "2026-02-10,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        encoding="utf-8",
+    )
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "ledger",
+            "import",
+            str(statement),
+            "--provider",
+            "csv",
+            "--dry-run",
+            "--period",
+            "2026T1",
+            "--year",
+            "2026",
+        ],
+    )
+
+    assert result.exit_code != 0, result.output
+    assert "2026T1" in result.output
+    assert "1T" in result.output
+    assert "--year" in result.output
+    assert "2026-Q1" not in result.output
+
+
 def test_status_period_without_year_refuses(_isolated_backend: None) -> None:
     """``ledger status --period 1T`` (no --year) refuses, instructing to add --year."""
 

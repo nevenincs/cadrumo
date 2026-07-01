@@ -27,6 +27,9 @@ related:
 - Reviewed W09.P41.S292 current CLI provenance surfaces and `src/aeat/entrypoints/cli/tests/test_modelo_verification_report_view.py`.
 - Checked that persisted `CalculationRevision.observations` are already exposed with `formula_id`, `legal_refs`, and `source_refs` through JSON revision payloads and the dedicated `work observations` sibling command.
 - Checked validation evidence from focused CLI provenance integration tests, touched-file ruff, reviewer output, and RAG grounding.
+- Reviewed W09.P45.S294 changes to `src/aeat/entrypoints/cli/tests/test_ledger_period_grammar.py`.
+- Checked that the regression uses the real `ledger import` CLI path, a real CSV dry run, and the current canonical period grammar `--period 1T --year 2026`.
+- Checked validation evidence from the focused ledger period grammar integration run, touched-file ruff, reviewer output, and RAG grounding.
 
 ## Findings
 
@@ -49,6 +52,10 @@ No findings for the M131 datos-base binding projection bridge. The change is sco
 ### w09-p41-s292 | low | no findings
 
 No production-code findings for the CLI provenance surface. The row's sibling-command remedy is already present: `work observations` emits typed observation rows with `formula_id`, `legal_refs`, `source_refs`, and operand trace fields, while `work revision` and related JSON payloads carry the same typed observation envelope. One test fixture used a legal-ref-shaped value as a `source_ref`; it was corrected to a valid source id so the existing verification-report provenance test exercises the current schema contract.
+
+### w09-p45-s294 | low | no findings
+
+No findings for the ledger import period-regression guard. Production already refused the `2026T1` testimonial shape through the shared strict period parser; the new test pins the import verb specifically and asserts the refusal teaches `1T` plus `--year` rather than the retired `2026-Q1` shape. A reviewer rerun encountered unrelated dirty-tree collection failure from `PayerFact.REPORTING_PLATFORM_OPERATOR` drift in registry applicability labels; the S294-focused file had already passed `43` integration tests before that peer WIP surfaced.
 
 ## Recommendations
 
