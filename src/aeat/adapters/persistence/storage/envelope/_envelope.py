@@ -11,10 +11,12 @@ consumer adheres to. It pins:
 - the payload itself (typed strict pydantic v2 model);
 - optional encryption metadata (when the payload is at-rest ciphertext).
 
-The :func:`save_envelope` and :func:`load_envelope` helpers atomically
+The :func:`~aeat.adapters.persistence.storage.save_envelope` and
+:func:`~aeat.adapters.persistence.storage.load_envelope` helpers atomically
 write and read the envelope JSON via the project's standard
 ``tempfile.NamedTemporaryFile + os.replace`` pattern. Encrypted envelopes
-derive their key from the active :class:`MasterKeyProvider` via HKDF-SHA256.
+derive their key from the active
+:class:`~aeat.adapters.persistence.storage.MasterKeyProvider` via HKDF-SHA256.
 
 The substrate refuses any payload whose ``schema_version`` differs from
 the consumer's expected version, or which fails classification validation.
@@ -118,7 +120,13 @@ class EncryptionMetadata(BaseModel):
 
     @classmethod
     def from_blob(cls, blob: EncryptedBlob, *, associated_data: bytes = b"") -> EncryptionMetadata:
-        """Build :class:`EncryptionMetadata` from an :class:`EncryptedBlob`."""
+        """Build metadata from an encrypted blob.
+
+        Returns:
+            :class:`~aeat.adapters.persistence.storage.EncryptionMetadata`
+            derived from an
+            :class:`~aeat.adapters.persistence.storage.EncryptedBlob`.
+        """
         return cls(
             nonce_b64=base64.b64encode(blob.nonce).decode("ascii"),
             ciphertext_b64=base64.b64encode(blob.ciphertext).decode("ascii"),
@@ -126,7 +134,7 @@ class EncryptionMetadata(BaseModel):
         )
 
     def to_blob(self) -> EncryptedBlob:
-        """Reconstruct the :class:`EncryptedBlob` from encoded fields."""
+        """Reconstruct the :class:`~aeat.adapters.persistence.storage.EncryptedBlob` from encoded fields."""
         try:
             return EncryptedBlob(
                 nonce=base64.b64decode(self.nonce_b64.encode("ascii"), validate=True),
@@ -150,9 +158,10 @@ class Envelope[PayloadT: BaseModel](BaseModel):
         schema_version: Integer version that consumers compare to their
             expected version. Older and newer versions are refused.
         written_at: Timezone-aware datetime captured at write time.
-        classification: The :class:`SensitivityClass` declared by the
+        classification: The
+            :class:`~aeat.adapters.persistence.storage.SensitivityClass` declared by the
             writer. Mismatches at load time raise
-            :class:`ClassificationError`.
+            :class:`~aeat.adapters.persistence.storage.ClassificationError`.
         payload: The typed payload. Plaintext is stored when
             ``encryption`` is ``None``; ciphertext lives in
             ``encryption.ciphertext_b64`` when present, and ``payload``
@@ -179,7 +188,7 @@ class Envelope[PayloadT: BaseModel](BaseModel):
 
     @classmethod
     def for_payload_type(cls, payload_cls: type[PayloadT]) -> type[Envelope[PayloadT]]:
-        """Return the :class:`Envelope` parameterised for ``payload_cls``.
+        """Return the :class:`~aeat.adapters.persistence.storage.Envelope` parameterised for ``payload_cls``.
 
         This typed factory avoids a bare ``cast(Any, Envelope).__class_getitem__(...)``
         at call sites. The returned class is the concrete generic alias Pydantic
@@ -198,7 +207,7 @@ def save_envelope[T: BaseModel](envelope: Envelope[T], path: Path) -> None:
     """Atomically persist ``envelope`` as JSON to ``path``.
 
     Args:
-        envelope: The :class:`Envelope` to write.
+        envelope: The :class:`~aeat.adapters.persistence.storage.Envelope` to write.
         path: Destination file. Parent directory is created if absent.
 
     Raises:
@@ -245,14 +254,16 @@ def load_envelope[PayloadT: BaseModel](
         envelope_type: The parameterised envelope class
             (e.g. ``Envelope[MyPayloadV1]``). Pydantic uses this to
             validate the JSON against the typed payload.
-        expected_class: The :class:`SensitivityClass` the consumer
-            expects. Mismatch raises :class:`ClassificationError`.
+        expected_class: The
+            :class:`~aeat.adapters.persistence.storage.SensitivityClass` the consumer
+            expects. Mismatch raises
+            :class:`~aeat.adapters.persistence.storage.ClassificationError`.
         max_supported_version: The current ``schema_version`` the
             consumer expects. Any different version raises
-            :class:`EnvelopeVersionError`.
+            :class:`~aeat.adapters.persistence.storage.EnvelopeVersionError`.
 
     Returns:
-        The validated :class:`Envelope` at the consumer's expected version.
+        The validated :class:`~aeat.adapters.persistence.storage.Envelope` at the consumer's expected version.
 
     Raises:
         ClassificationError: If the on-disk classification does not
@@ -280,19 +291,21 @@ _CIPHER_ENVELOPE_AAD_PREFIX = b"aeat.envelope.cipher.v1::"
 class CipherEnvelope(BaseModel):
     """On-disk wire form for ciphertext-at-rest envelopes.
 
-    A :class:`CipherEnvelope` is structurally distinct from
-    :class:`Envelope` — it carries no typed payload field, only the
-    encryption metadata and the same classification gate. The
-    plaintext :class:`Envelope` (with payload) is JSON-serialised,
-    encrypted with AES-256-GCM, and the ciphertext lives inside
-    ``encryption.ciphertext_b64``.
+    A :class:`~aeat.adapters.persistence.storage.CipherEnvelope` is
+    structurally distinct from
+    :class:`~aeat.adapters.persistence.storage.Envelope` — it carries no typed
+    payload field, only the encryption metadata and the same classification
+    gate. The plaintext :class:`~aeat.adapters.persistence.storage.Envelope`
+    (with payload) is JSON-serialised, encrypted with AES-256-GCM, and the
+    ciphertext lives inside ``encryption.ciphertext_b64``.
 
     Attributes:
         cipher_schema_version: Wire-format version of the cipher
             envelope itself (independent of the inner plaintext
             envelope's :attr:`Envelope.schema_version`).
         written_at: Timezone-aware datetime captured at write time.
-        classification: The :class:`SensitivityClass` of the inner
+        classification: The
+            :class:`~aeat.adapters.persistence.storage.SensitivityClass` of the inner
             payload. Replicated at the cipher layer so a load can
             reject foreign-class ciphertext before the master key is
             consulted (defense in depth).
@@ -348,12 +361,12 @@ def save_encrypted_envelope[T: BaseModel](
 ) -> None:
     """Atomically persist ``envelope`` as an AES-256-GCM ciphertext on disk.
 
-    The plaintext :class:`Envelope` is JSON-serialised, encrypted with
-    AES-256-GCM under a per-consumer key derived from the master key
-    via HKDF-SHA256, and written to ``path`` as a :class:`CipherEnvelope`
-    wire form. The classification and HKDF context are bound to the
-    ciphertext via AAD so an attacker cannot relabel or cross-consumer-
-    graft.
+    The plaintext :class:`~aeat.adapters.persistence.storage.Envelope` is
+    JSON-serialised, encrypted with AES-256-GCM under a per-consumer key
+    derived from the master key via HKDF-SHA256, and written to ``path`` as a
+    :class:`~aeat.adapters.persistence.storage.CipherEnvelope` wire form. The
+    classification and HKDF context are bound to the ciphertext via AAD so an
+    attacker cannot relabel or cross-consumer-graft.
 
     The same master-key provider that the test substrate already
     overrides via ``override_master_key_provider`` is honoured here;
@@ -363,8 +376,10 @@ def save_encrypted_envelope[T: BaseModel](
     Args:
         envelope: The plaintext envelope to encrypt and persist.
         path: Destination file. Parent directory is created if absent.
-        master_key_provider: :class:`MasterKeyProvider` supplying the master key
-            used to derive the per-consumer encryption key via HKDF-SHA256.
+        master_key_provider:
+            :class:`~aeat.adapters.persistence.storage.MasterKeyProvider`
+            supplying the master key used to derive the per-consumer encryption
+            key via HKDF-SHA256.
         hkdf_context: Per-consumer context bytes (e.g.
             ``b"aeat.domain.transactions.v1"``). Different
             consumers MUST use distinct contexts so cross-consumer
@@ -423,28 +438,35 @@ def load_encrypted_envelope[PayloadT: BaseModel](
 ) -> Envelope[PayloadT]:
     """Load and decrypt an at-rest-ciphertext envelope.
 
-    The on-disk shape MUST be a :class:`CipherEnvelope`. The
+    The on-disk shape MUST be a
+    :class:`~aeat.adapters.persistence.storage.CipherEnvelope`. The
     classification gate is enforced *before* the master key is
     consulted — a foreign-class ciphertext is rejected without any
     crypto attempt (defense in depth). After decryption, the inner
-    plaintext is parsed back into the typed :class:`Envelope`,
-    classification-checked again, and version-checked.
+    plaintext is parsed back into the typed
+    :class:`~aeat.adapters.persistence.storage.Envelope`, classification-checked
+    again, and version-checked.
 
     Args:
         path: Source file (must exist).
         envelope_type: The parameterised envelope class.
-        expected_class: The :class:`SensitivityClass` the consumer expects.
-            Mismatch raises :class:`ClassificationError` before any crypto
-            attempt.
-        master_key_provider: :class:`MasterKeyProvider` supplying the master key
-            used to derive the per-consumer decryption key via HKDF-SHA256.
+        expected_class: The
+            :class:`~aeat.adapters.persistence.storage.SensitivityClass` the consumer
+            expects. Mismatch raises
+            :class:`~aeat.adapters.persistence.storage.ClassificationError`
+            before any crypto attempt.
+        master_key_provider:
+            :class:`~aeat.adapters.persistence.storage.MasterKeyProvider`
+            supplying the master key used to derive the per-consumer decryption
+            key via HKDF-SHA256.
         hkdf_context: Per-consumer context bytes; MUST match the
             value supplied at save time.
         max_supported_version: Current inner-envelope schema version
             the consumer expects.
 
     Returns:
-        The decrypted and version-checked inner :class:`Envelope`.
+        The decrypted and version-checked inner
+        :class:`~aeat.adapters.persistence.storage.Envelope`.
 
     Raises:
         ClassificationError: If the cipher envelope's class differs
@@ -498,15 +520,18 @@ def reencrypt_envelope_file[PayloadT: BaseModel](
 ) -> bool:
     """Re-encrypt a single plaintext envelope file in place.
 
-    Read once: if ``path`` is already a :class:`CipherEnvelope`, return
+    Read once: if ``path`` is already a
+    :class:`~aeat.adapters.persistence.storage.CipherEnvelope`, return
     ``False`` (already ciphertext, nothing to do). Otherwise parse as
-    a plaintext :class:`Envelope` and re-write through
-    :func:`save_encrypted_envelope`.
+    a plaintext :class:`~aeat.adapters.persistence.storage.Envelope` and
+    re-write through
+    :func:`~aeat.adapters.persistence.storage.save_encrypted_envelope`.
 
     Returns ``True`` iff the file was re-encrypted, ``False`` if the
     file was already ciphertext or did not exist. The atomic-replace
-    pattern from :func:`save_encrypted_envelope` governs the on-disk
-    rewrite: a crash mid-rewrite leaves either the plaintext OR the
+    pattern from
+    :func:`~aeat.adapters.persistence.storage.save_encrypted_envelope` governs
+    the on-disk rewrite: a crash mid-rewrite leaves either the plaintext OR the
     ciphertext on disk, never a torn write.
 
     Repository load paths are strict ciphertext-only; this function
@@ -515,9 +540,13 @@ def reencrypt_envelope_file[PayloadT: BaseModel](
     Args:
         path: Target file to re-encrypt in place.
         envelope_type: The parameterised envelope class.
-        expected_class: The :class:`SensitivityClass` the consumer expects.
-        master_key_provider: :class:`MasterKeyProvider` supplying the master key
-            used to derive the per-consumer encryption key via HKDF-SHA256.
+        expected_class: The
+            :class:`~aeat.adapters.persistence.storage.SensitivityClass` the consumer
+            expects.
+        master_key_provider:
+            :class:`~aeat.adapters.persistence.storage.MasterKeyProvider`
+            supplying the master key used to derive the per-consumer encryption
+            key via HKDF-SHA256.
         hkdf_context: Per-consumer context bytes; MUST match those used
             for subsequent load calls.
         max_supported_version: Current inner-envelope schema version
