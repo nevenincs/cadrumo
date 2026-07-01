@@ -55,6 +55,7 @@ from ...domain.calculations.registry._bindings import CasillaObservation
 from ...domain.calculations.registry._formula_runtime import M210_RATE_SENTINELS
 from ...domain.calculations.registry._ids import CasillaId, validated_casilla_id
 from ...domain.calculations.registry._schema import (
+    KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
     CasillaDefinition,
     InputKind,
     RegistrySnapshot,
@@ -230,6 +231,13 @@ def _resolve_predicate_next_action(predicate_id: str) -> str | None:
 # translators can enrich the catalogue later without a code change. Mirrors the
 # ``_resolve_predicate_next_action`` per-predicate dispatch shape.
 def _resolve_advisory_message_default(predicate_id: str) -> str | None:
+    if predicate_id == "modelo-130-art109-exencion-alta-retencion":
+        return (
+            "The taxpayer profile says at least 70% of professional activity income was subject "
+            "to withholding or payment on account for the Art. 109 RIRPF test. Modelo 130 "
+            "casilla 17 remains the official form subtraction; confirm that preparing an M130 "
+            "draft is intentional for this profile before filing."
+        )
     if predicate_id in {
         "modelo-100-2024-deduccion-vivienda-habitual-requiere-adquisicion-anterior-2013",
         "modelo-100-2025-deduccion-vivienda-habitual-requiere-adquisicion-anterior-2013",
@@ -257,10 +265,12 @@ def _resolve_advisory_message_default(predicate_id: str) -> str | None:
 
 # advisory_when_ratio_ge(["numerator_id", "denominator_id", "threshold"]) —
 # fires a WARNING-severity ADVISORY finding when numerator/denominator >= threshold
-# and denominator > 0. Used for Art. 109 RIRPF M130 high-retention exemption.
+# and denominator > 0. This is a generic casilla-ratio predicate; it is not an
+# Art. 109 RIRPF exemption test for Modelo 130.
 _PREDICATE_ADVISORY_WHEN_RATIO_GE = _re.compile(
     r'^advisory_when_ratio_ge\(\["(?P<num>[^"]+)",\s*"(?P<den>[^"]+)",\s*"(?P<thr>[^"]+)"\]\)$',
 )
+_PREDICATE_PROFILE_FLAG_ENABLED = _re.compile(r'^profile_flag_enabled\("(?P<field>[^"]+)"\)$')
 # advisory_when_positive(["casilla_id"]) — single-casilla positive advisory:
 # fires (advisory shown) iff the one named casilla value is strictly > 0.
 # ADVISORY-only; see the advisory_when_positive branch in
@@ -621,14 +631,17 @@ def _evaluate_advisory_predicate_fires(
     expression: str,
     casilla_values: Mapping[CasillaId, Decimal],
     text_values: Mapping[CasillaId, str] = MappingProxyType({}),
+    profile: TaxpayerProfile | None = None,
 ) -> bool:
     """Return True when an advisory predicate's condition is met (i.e. advisory should fire).
 
     Supports:
 
     - ``advisory_when_ratio_ge(["num_id", "den_id", "threshold"])`` — fires when
-      num/den >= threshold and den > 0. Art. 109 RIRPF: exempt from M130
-      when retenciones_acumuladas / rendimientos_brutos >= 0.70.
+      num/den >= threshold and den > 0. This is a generic casilla-ratio
+      predicate, not an Art. 109 RIRPF Modelo 130 exemption test.
+    - ``profile_flag_enabled("profile_field_name")`` — fires when the named
+      supported boolean TaxpayerProfile field is true.
     - ``implies_nonzero(["antecedent_id", "consequent_id"])`` — fires when the
       material implication is violated, i.e. the antecedent is strictly positive
       but the consequent is zero. As an ADVISORY this surfaces a non-blocking
@@ -669,6 +682,14 @@ def _evaluate_advisory_predicate_fires(
         except _decimal.InvalidOperation:
             return False
         return (num / den) >= threshold
+    m = _PREDICATE_PROFILE_FLAG_ENABLED.match(expr)
+    if m:
+        if profile is None:
+            return False
+        field = m.group("field")
+        if field not in KNOWN_PROFILE_FLAG_ADVISORY_FIELDS:
+            return False
+        return bool(getattr(profile, field, False))
     m = _PREDICATE_ADVISORY_WHEN_POSITIVE.match(expr)
     if m:
         # advisory_when_positive(["casilla_id"]) — fires (advisory shown) iff the
@@ -776,8 +797,8 @@ def _evaluate_verification_predicates(
     ``text_values`` carries operator-entered raw strings (e.g.
     :attr:`~aeat.domain.modelos.CalculationRevision.input_values_by_casilla_id`),
     independent of the Decimal ``casilla_values`` projection. It defaults to an
-    empty mapping and is consumed only by the ``casilla_equals_implies_nonzero``
-    ADVISORY operator; every other operator ignores it.
+    empty mapping and is consumed by text-aware ADVISORY operators such as
+    ``casilla_equals_implies_nonzero``; every other operator ignores it.
 
     ``BLOCKING_RULE`` predicates use negative logic: the predicate expression must
     hold, and a violation emits a BLOCKING finding. ``ADVISORY`` predicates use
@@ -786,9 +807,8 @@ def _evaluate_verification_predicates(
     possible if no blocking findings exist.
 
     ``profile`` is threaded through to support profile-state-aware
-    predicate operators such as ``profile_field_required`` (m210
-    representante-fiscal gate per ADR §D2.5). Casilla-only operators
-    ignore the parameter.
+    predicate operators such as ``profile_field_required`` and
+    ``profile_flag_enabled``. Casilla-only operators ignore the parameter.
 
     See Also:
         :func:`_evaluate_predicate_expression`:
@@ -806,7 +826,7 @@ def _evaluate_verification_predicates(
         if predicate.finding_kind == "ADVISORY":
             # ADVISORY predicates fire a WARNING finding when their condition IS met
             # (affirmative logic — opposite of BLOCKING_RULE predicates).
-            if _evaluate_advisory_predicate_fires(predicate.expression, casilla_values, text_values):
+            if _evaluate_advisory_predicate_fires(predicate.expression, casilla_values, text_values, profile):
                 advisory_key = f"application.modelo.findings.{predicate.predicate_id.replace('-', '_')}"
                 findings.append(
                     ModeloVerificationFinding(

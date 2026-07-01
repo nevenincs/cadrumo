@@ -175,6 +175,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
     probe_expressions: dict[str, str] = {
         "all_nonzero": 'all_nonzero(["01", "02"])',
         "any_nonzero": 'any_nonzero(["01", "02"])',
+        "at_most_one_positive": 'at_most_one_positive(["01", "02"])',
         "cap_le_when_positive": 'cap_le_when_positive(["11", "10"])',
         "advisory_when_positive": 'advisory_when_positive(["0527"])',
         "advisory_when_ratio_ge": 'advisory_when_ratio_ge(["01", "02", "0.5"])',
@@ -182,6 +183,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
         "implies_nonzero": 'implies_nonzero(["01", "07"])',
         "implies_any_nonzero": 'implies_any_nonzero(["iva.cuota-devengada-total", "03", "06", "09"])',
         "profile_field_required": ('profile_field_required("representante_fiscal_nif", "non_resident_irnr_non_eea")'),
+        "profile_flag_enabled": 'profile_flag_enabled("professional_income_withholding_ge_70pct")',
         "roll_forward_balances": 'roll_forward_balances(["00671", "00670", "DP200014:00547", "DP200014:00552"])',
         "casilla_equals_implies_nonzero": (
             'casilla_equals_implies_nonzero(["tipo_renta", "inmobiliaria", "base_imponible"])'
@@ -193,6 +195,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
     regex_attr_names: dict[str, str] = {
         "all_nonzero": "_PREDICATE_ALL_NONZERO",
         "any_nonzero": "_PREDICATE_ANY_NONZERO",
+        "at_most_one_positive": "_PREDICATE_AT_MOST_ONE_POSITIVE",
         "cap_le_when_positive": "_PREDICATE_CAP_LE_WHEN_POSITIVE",
         "advisory_when_positive": "_PREDICATE_ADVISORY_WHEN_POSITIVE",
         "advisory_when_ratio_ge": "_PREDICATE_ADVISORY_WHEN_RATIO_GE",
@@ -200,6 +203,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
         "implies_nonzero": "_PREDICATE_IMPLIES_NONZERO",
         "implies_any_nonzero": "_PREDICATE_IMPLIES_ANY_NONZERO",
         "profile_field_required": "_PREDICATE_PROFILE_FIELD_REQUIRED",
+        "profile_flag_enabled": "_PREDICATE_PROFILE_FLAG_ENABLED",
         "roll_forward_balances": "_PREDICATE_ROLL_FORWARD_BALANCES",
         "casilla_equals_implies_nonzero": "_PREDICATE_CASILLA_EQUALS_IMPLIES_NONZERO",
         "deduccion_requires_adquisicion_before": "_PREDICATE_DEDUCCION_REQUIRES_ADQUISICION_BEFORE",
