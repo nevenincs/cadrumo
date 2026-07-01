@@ -15,11 +15,11 @@ data_type = "bracket_table"
 unit = "EUR"
 bracket_axis = "filing_period"
 legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-form"]
+source_refs = ["aeat-modelo-151-procedure"]
 
 [[revisions."2015-y-siguientes".parameters.source_citations]]
-source_ref = "boe-modelo-151-form"
-required_text = ["modelo 151"]
+source_ref = "aeat-modelo-151-procedure"
+required_text = ["Modelo 151"]
 
 [[revisions."2015-y-siguientes".parameters.brackets]]
 lower_bound = "0"

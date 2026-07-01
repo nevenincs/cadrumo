@@ -12,6 +12,5 @@ orden_aplicabilidad = [
 ]
 source_refs = [
     "aeat-modelo-151-procedure",
-    "boe-modelo-151-form",
     "boe-modelo-151-layout",
 ]
