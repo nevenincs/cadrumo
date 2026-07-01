@@ -23,6 +23,18 @@ persistence layers supply those facts.
 The art-110 disposal (transmisión) compute is deliberately deferred; the
 disposal fields are carried on :class:`BienInversionIvaRecord` so no schema
 migration is needed when it lands.
+
+See Also:
+    :mod:`aeat.application.bienes_inversion`
+        Profile-scoped service that declares and lists the persisted register.
+    :mod:`aeat.adapters.persistence.profile.bienes_inversion`
+        FINANCIAL secure-object repository that stores the register singleton.
+    :mod:`aeat.application.calculations`
+        Advisory projection surface for the deferred
+        ``bienes_inversion_regularizacion`` calculation source.
+    :mod:`aeat.domain.iva`
+        Legal prorrata substrate that supplies the separate definitive
+        percentage input; usage ratios are not a substitute.
 """
 
 from __future__ import annotations
