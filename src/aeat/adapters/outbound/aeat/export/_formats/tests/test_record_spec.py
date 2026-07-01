@@ -35,14 +35,14 @@ _SEGMENT_QUALIFIED_BASE_CASILLA: CasillaId = validated_casilla_id(
 _DUPLICATE_FIELD_CASILLA: CasillaId = validated_casilla_id("01", surface="_DUPLICATE_FIELD_CASILLA")
 
 _FIELD_KIND_DEFAULT_CASES = (
-    pytest.param(FieldKind.NUMERIC, Justification.RIGHT, "0", id="numeric-right-zero"),
-    pytest.param(FieldKind.CURRENCY, Justification.RIGHT, "0", id="currency-right-zero"),
+    (FieldKind.NUMERIC, Justification.RIGHT, "0"),
+    (FieldKind.CURRENCY, Justification.RIGHT, "0"),
 )
 
 _CURRENCY_ENCODING_CASES = (
-    pytest.param(Decimal("1234.56"), 13, False, False, b"0000000123456", id="typical"),
-    pytest.param(Decimal("0.00"), 13, False, False, b"0000000000000", id="zero"),
-    pytest.param(Decimal("-100.00"), 10, True, False, b"0000010000", id="signed-negative"),
+    (Decimal("1234.56"), 13, False, False, b"0000000123456"),
+    (Decimal("0.00"), 13, False, False, b"0000000000000"),
+    (Decimal("-100.00"), 10, True, False, b"0000010000"),
 )
 
 _CURRENCY_ROUNDING_CASES = (
@@ -57,22 +57,21 @@ _CURRENCY_LENGTH_CASES = (
 )
 
 _INLINE_SIGN_CASES = (
-    pytest.param(Decimal("1234.56"), False, b" 0000000000123456", id="positive-space-prefix"),
-    pytest.param(Decimal("-1234.56"), False, b"N0000000000123456", id="negative-n-prefix"),
-    pytest.param(Decimal("0.00"), False, b" 0000000000000000", id="zero-space-prefix"),
-    pytest.param(Decimal("-5.00"), True, b"N000000500", id="signed-true-negative"),
+    (Decimal("1234.56"), False, b" 0000000000123456"),
+    (Decimal("-1234.56"), False, b"N0000000000123456"),
+    (Decimal("0.00"), False, b" 0000000000000000"),
+    (Decimal("-5.00"), True, b"N000000500"),
 )
 
 _TEXT_ENCODING_CASES = (
-    pytest.param("ACME", {"length": 10, "encoding": "cp1252"}, b"ACME      ", id="left-space"),
-    pytest.param(
+    ("ACME", {"length": 10, "encoding": "cp1252"}, b"ACME      "),
+    (
         "42",
         {"length": 6, "justification": Justification.RIGHT, "pad_char": "0", "encoding": "cp1252"},
         b"000042",
-        id="right-zero",
     ),
-    pytest.param("LONGVALUE", {"length": 4, "truncate": True, "encoding": "cp1252"}, b"LONG", id="truncate"),
-    pytest.param("ÑOÑO", {"length": 4, "encoding": "cp1252"}, b"\xd1O\xd1O", id="cp1252-accents"),
+    ("LONGVALUE", {"length": 4, "truncate": True, "encoding": "cp1252"}, b"LONG"),
+    ("ÑOÑO", {"length": 4, "encoding": "cp1252"}, b"\xd1O\xd1O"),
 )
 
 _TEXT_LENGTH_CASES = (
@@ -103,11 +102,11 @@ class TestRecordFieldSpec:
         assert spec.justification is Justification.LEFT  # ALPHANUMERIC default
         assert spec.pad_char == " "
 
-    @pytest.mark.parametrize(("kind", "justification", "pad_char"), _FIELD_KIND_DEFAULT_CASES)
-    def test_kind_defaults(self, kind: FieldKind, justification: Justification, pad_char: str) -> None:
-        spec = record_field(offset=1, length=13, field_id=f"FIELD_{kind.name}", kind=kind)
-        assert spec.justification is justification
-        assert spec.pad_char == pad_char
+    def test_kind_defaults(self) -> None:
+        for kind, justification, pad_char in _FIELD_KIND_DEFAULT_CASES:
+            spec = record_field(offset=1, length=13, field_id=f"FIELD_{kind.name}", kind=kind)
+            assert spec.justification is justification, kind.name
+            assert spec.pad_char == pad_char, kind.name
 
     def test_frozen_rejects_mutation(self) -> None:
         spec = record_field(offset=1, length=9, field_id="FIELD_TEXT", kind=FieldKind.ALPHANUMERIC)
@@ -152,18 +151,12 @@ class TestRecordFieldSpec:
 class TestEncodeCurrency:
     """Currency → right-justified zero-padded cents."""
 
-    @pytest.mark.parametrize(("value", "length", "signed", "inline_sign", "expected"), _CURRENCY_ENCODING_CASES)
-    def test_encoding_cases(
-        self,
-        value: Decimal,
-        length: int,
-        signed: bool,
-        inline_sign: bool,
-        expected: bytes,
-    ) -> None:
-        assert (
-            encode_currency(value, length=length, signed=signed, inline_sign=inline_sign, encoding="cp1252") == expected
-        )
+    def test_encoding_cases(self) -> None:
+        for value, length, signed, inline_sign, expected in _CURRENCY_ENCODING_CASES:
+            assert (
+                encode_currency(value, length=length, signed=signed, inline_sign=inline_sign, encoding="cp1252")
+                == expected
+            ), repr(value)
 
     def test_negative_without_signed_raises(self) -> None:
         """negative must be explicit via signed=True."""
@@ -192,18 +185,18 @@ class TestEncodeCurrency:
 class TestEncodeCurrencyInlineSign:
     """Inline-sign convention: 'N' prefix for negatives."""
 
-    @pytest.mark.parametrize(("value", "signed", "expected"), _INLINE_SIGN_CASES)
-    def test_encoding_cases(self, value: Decimal, signed: bool, expected: bytes) -> None:
+    def test_encoding_cases(self) -> None:
         """Inline-sign output emits one sign byte plus zero-padded magnitude."""
-        result = encode_currency(
-            value,
-            length=len(expected),
-            inline_sign=True,
-            signed=signed,
-            encoding="cp1252",
-        )
-        assert len(result) == len(expected)
-        assert result == expected
+        for value, signed, expected in _INLINE_SIGN_CASES:
+            result = encode_currency(
+                value,
+                length=len(expected),
+                inline_sign=True,
+                signed=signed,
+                encoding="cp1252",
+            )
+            assert len(result) == len(expected), repr(value)
+            assert result == expected, repr(value)
 
     def test_negative_without_inline_sign_or_signed_raises(self) -> None:
         with pytest.raises(ValueError, match="inline_sign=True"):
@@ -224,9 +217,9 @@ class TestEncodeCurrencyInlineSign:
 class TestEncodeText:
     """Text → ISO-8859-15 ljust/rjust with custom pad."""
 
-    @pytest.mark.parametrize(("value", "options", "expected"), _TEXT_ENCODING_CASES)
-    def test_encoding_cases(self, value: str, options: dict[str, object], expected: bytes) -> None:
-        assert encode_text(value, **options) == expected
+    def test_encoding_cases(self) -> None:
+        for value, options, expected in _TEXT_ENCODING_CASES:
+            assert encode_text(value, **options) == expected, value
 
     def test_overflow_without_truncate_raises(self) -> None:
         """silent truncation would corrupt official field content."""
@@ -256,9 +249,9 @@ class TestEncodeText:
 class TestEncodeDate:
     """BOE date shapes."""
 
-    @pytest.mark.parametrize(("date_fmt", "expected"), _DATE_ENCODING_CASES, ids=_DATE_ENCODING_IDS)
-    def test_encoding_cases(self, date_fmt: DateFmt, expected: bytes) -> None:
-        assert encode_date(date(2025, 4, 22), date_fmt, encoding="cp1252") == expected
+    def test_encoding_cases(self) -> None:
+        for case_id, (date_fmt, expected) in zip(_DATE_ENCODING_IDS, _DATE_ENCODING_CASES, strict=True):
+            assert encode_date(date(2025, 4, 22), date_fmt, encoding="cp1252") == expected, case_id
 
     def test_length_invariants(self) -> None:
         for case_id, (date_fmt, expected) in zip(_DATE_ENCODING_IDS, _DATE_ENCODING_CASES, strict=True):

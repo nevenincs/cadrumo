@@ -20,7 +20,7 @@ _MODELO_100_2025_FORM_ORDER_REF = "orden-hac-277-2026:art-3"
 # LIRPF art. 64 (anualidades por alimentos, estatal separate escala, #532) is a
 # legitimate legal_ref on the state escala/cuota-base formulas ONLY for the
 # revisions where the separate-escala régimen is modelled.
-_SEPARATE_ESCALA_MODELLED_YEARS = frozenset({2024, 2025})
+_SEPARATE_ESCALA_MODELLED_YEARS = frozenset({2020, 2021, 2022, 2023, 2024, 2025})
 
 
 def _modelo_100_revisions():

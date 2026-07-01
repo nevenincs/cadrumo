@@ -264,6 +264,108 @@ def test_preflight_calendar_shape_refuses(_isolated_backend: None) -> None:
     assert "1T" in result.output
 
 
+def _write_import_statement(path: Path) -> None:
+    path.write_text(
+        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
+        "2024-02-10,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        encoding="utf-8",
+    )
+
+
+def test_import_accepts_aeat_token_with_year(
+    tmp_path: Path,
+    _isolated_backend: None,
+) -> None:
+    """``ledger import --period 1T --year 2024`` accepts the canonical period form."""
+
+    statement = tmp_path / "statement.csv"
+    _write_import_statement(statement)
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "ledger",
+            "import",
+            str(statement),
+            "--provider",
+            "csv",
+            "--dry-run",
+            "--period",
+            "1T",
+            "--year",
+            "2024",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "Rows\t1" in result.output
+    assert "DRY RUN MODE\tYes" in result.output
+    assert "2024Q1" not in result.output
+    assert "2024-1T" not in result.output
+
+
+@pytest.mark.parametrize("historic_period", ["2024-1T", "2024/1T", "2024Q1"])
+def test_import_historic_period_forms_refuse_with_current_canonical_grammar(
+    historic_period: str,
+    tmp_path: Path,
+    _isolated_backend: None,
+) -> None:
+    """Historic combined forms refuse and teach the AEAT token plus ``--year`` grammar."""
+
+    statement = tmp_path / "statement.csv"
+    _write_import_statement(statement)
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "ledger",
+            "import",
+            str(statement),
+            "--provider",
+            "csv",
+            "--dry-run",
+            "--period",
+            historic_period,
+            "--year",
+            "2024",
+        ],
+    )
+
+    assert result.exit_code != 0, result.output
+    assert historic_period in result.output
+    assert "1T" in result.output
+    assert "0A" in result.output
+    assert "--year" in result.output
+
+
+def test_import_period_without_year_refuses_with_year_guidance(
+    tmp_path: Path,
+    _isolated_backend: None,
+) -> None:
+    """``ledger import --period 1T`` refuses because import also requires ``--year``."""
+
+    statement = tmp_path / "statement.csv"
+    _write_import_statement(statement)
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "ledger",
+            "import",
+            str(statement),
+            "--provider",
+            "csv",
+            "--dry-run",
+            "--period",
+            "1T",
+        ],
+    )
+
+    assert result.exit_code != 0, result.output
+    assert "1T" in result.output
+    assert "--year" in result.output
+
+
 def test_import_period_year_prefixed_token_refuses_with_current_canonical_grammar(
     tmp_path: Path,
     _isolated_backend: None,
@@ -271,11 +373,7 @@ def test_import_period_year_prefixed_token_refuses_with_current_canonical_gramma
     """``ledger import --period 2026T1 --year 2026`` refuses and teaches ``1T`` plus ``--year``."""
 
     statement = tmp_path / "statement.csv"
-    statement.write_text(
-        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
-        "2026-02-10,Client SL,Invoice 1,121.00,EUR,n26-001\n",
-        encoding="utf-8",
-    )
+    _write_import_statement(statement)
 
     result = invoke_cached_cli(
         [

@@ -1,9 +1,10 @@
 """Deterministic in-memory provider adapter used by unit tests.
 
-Implements the :class:`aeat.adapters.outbound.llm._providers.base._ProviderAdapter`
-contract without performing any network I/O so :mod:`aeat.adapters.outbound.llm`
-unit tests can exercise the public client end-to-end without patches or
-network test doubles.
+Implements the
+:class:`~aeat.adapters.outbound.llm._providers.base._ProviderAdapter` contract
+without performing any network I/O so :mod:`aeat.adapters.outbound.llm` unit
+tests can exercise the public client end-to-end without patches or network test
+doubles.
 """
 
 from __future__ import annotations

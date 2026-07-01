@@ -20,9 +20,8 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-@pytest.mark.parametrize(
-    ("concepto", "tipo", "expected"),
-    [
+def test_classifier_maps_concepto_to_expected_category() -> None:
+    for concepto, tipo, expected in (
         # Recaudación enforcement — highest severity, wins over co-mentions.
         ("Diligencia de embargo de cuentas y depósitos", "notificacion", PostFilingEventKind.DILIGENCIA_EMBARGO),
         ("Providencia de apremio con recargo del 20%", "notificacion", PostFilingEventKind.PROVIDENCIA_APREMIO),
@@ -51,14 +50,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
         ("Acuerdo de devolución de ingresos indebidos", "comunicacion", PostFilingEventKind.DEVOLUCION),
         ("Resolución del recurso de reposición", "notificacion", PostFilingEventKind.RESOLUCION),
         ("Acuse de recibo de la notificación", "comunicacion", PostFilingEventKind.ACUSE_RECIBO),
-    ],
-)
-def test_classifier_maps_concepto_to_expected_category(
-    concepto: str,
-    tipo: str,
-    expected: PostFilingEventKind,
-) -> None:
-    assert classify_post_filing_event_kind(concepto=concepto, tipo=tipo) is expected
+    ):
+        assert classify_post_filing_event_kind(concepto=concepto, tipo=tipo) is expected, concepto
 
 
 def test_classifier_is_accent_and_case_insensitive() -> None:
@@ -84,19 +77,13 @@ def test_severity_priority_prefers_enforcement_over_liquidacion() -> None:
     assert kind is PostFilingEventKind.DILIGENCIA_EMBARGO
 
 
-@pytest.mark.parametrize(
-    ("tipo", "expected"),
-    [
+def test_tipo_fallback_when_concepto_is_uninformative() -> None:
+    for tipo, expected in (
         ("notificacion", PostFilingEventKind.NOTIFICACION),
         ("comunicacion", PostFilingEventKind.COMUNICACION),
         ("pendiente", PostFilingEventKind.PENDIENTE),
-    ],
-)
-def test_tipo_fallback_when_concepto_is_uninformative(
-    tipo: str,
-    expected: PostFilingEventKind,
-) -> None:
-    assert classify_post_filing_event_kind(concepto="", tipo=tipo) is expected
+    ):
+        assert classify_post_filing_event_kind(concepto="", tipo=tipo) is expected, tipo
 
 
 def test_unknown_concepto_and_tipo_resolve_to_other() -> None:
@@ -124,32 +111,26 @@ def test_actionable_set_covers_demand_and_enforcement_categories() -> None:
     )
 
 
-@pytest.mark.parametrize(
-    "kind",
-    [
+def test_actionable_kinds_are_flagged() -> None:
+    for kind in (
         PostFilingEventKind.REQUERIMIENTO,
         PostFilingEventKind.PROPUESTA_LIQUIDACION,
         PostFilingEventKind.DILIGENCIA_EMBARGO,
         PostFilingEventKind.PROVIDENCIA_APREMIO,
-    ],
-)
-def test_actionable_kinds_are_flagged(kind: PostFilingEventKind) -> None:
-    assert post_filing_event_is_actionable(kind) is True
+    ):
+        assert post_filing_event_is_actionable(kind) is True, kind
 
 
-@pytest.mark.parametrize(
-    "kind",
-    [
+def test_non_actionable_kinds_are_not_flagged() -> None:
+    for kind in (
         PostFilingEventKind.DECLARACION_PRESENTADA,
         PostFilingEventKind.NOTIFICACION,
         PostFilingEventKind.COMUNICACION,
         PostFilingEventKind.ACUSE_RECIBO,
         PostFilingEventKind.PENDIENTE,
         PostFilingEventKind.OTHER,
-    ],
-)
-def test_non_actionable_kinds_are_not_flagged(kind: PostFilingEventKind) -> None:
-    assert post_filing_event_is_actionable(kind) is False
+    ):
+        assert post_filing_event_is_actionable(kind) is False, kind
 
 
 def test_enum_values_are_stable_stored_tokens() -> None:

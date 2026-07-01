@@ -2599,12 +2599,11 @@ cli:
         válido: %{error}. Corrige el identificador y vuelve a exportar, o importa
         un paquete válido.'
       import_label_help: Nombre visible para el perfil importado; por defecto el nombre
-        guardado en el paquete. Úsalo para importar una segunda copia con otro nombre.
+        guardado en el paquete. Úsalo cuando la etiqueta guardada ya esté en uso.
       import_label_taken: Ya existe un perfil con el nombre %{name}. Vuelve a ejecutar
         con `--label NUEVO_NOMBRE` para importarlo con un nombre distinto.
-      import_label_taken_different_id: La etiqueta especificada pertenece a un perfil
-        con un identificador diferente. Use --label NUEVO_NOMBRE para importar con
-        un nombre distinto.
+      import_label_taken_different_id: La etiqueta de perfil %{name} ya está en uso.
+        Use --label NUEVO_NOMBRE para importar con una etiqueta distinta.
       import_missing_bundle: No se encontró el paquete de perfil en %{path}
       import_missing_filing_baseline: 'Al paquete de perfil le faltan datos de identidad
         para presentar modelos. Corrige el paquete o vuelve a exportar un perfil completo

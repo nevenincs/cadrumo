@@ -1075,12 +1075,74 @@ def _exported_casilla_provenance(
     return _provenance_for_casillas(draft, layout_casillas)
 
 
+def boe_representable_casilla_ids(
+    layout: ExportLayoutDefinition,
+    *,
+    headers: dict[str, str],
+    schema_provider: RegistrySchemaAccessor,
+) -> frozenset[CasillaId]:
+    """Return the casillas the ``.boe`` layout files a slot for, for this disposition.
+
+    A casilla is *representable* when the official record design carries a field
+    for it that this draft's disposition does not suppress. ``xml_dictionary``
+    layouts derive their casillas from the dictionary entries; ``fixed_width``
+    layouts from every ``CASILLA`` field plus the binding-row casilla mappings
+    (``row_field_casilla_ids``), across records not suppressed for the disposition
+    (e.g. the DID refund page on a non-refund filing).
+
+    The completeness gate intersects the calculation-completeness manifest with
+    this set: a manifest casilla absent here is a calculation-closure casilla the
+    official filed record does not carry, so it is out of scope for the ``.boe``
+    parity gate rather than a drift.
+    """
+    if layout.format == "xml_dictionary":
+        entries = xml_dictionary_entries(
+            layout,
+            source_root=schema_provider.source_root,
+            sources=schema_provider.sources,
+        )
+        return frozenset(entry.casilla_id for entry in entries if entry.casilla_id is not None)
+    normalized_headers = {key.lower(): value for key, value in headers.items()}
+    representable: set[CasillaId] = set()
+    for record in layout.records:
+        if _did_page_suppressed(record, headers=normalized_headers):
+            continue
+        for field in record.fields:
+            if field.kind == CasillaFieldKind.CASILLA and field.casilla_id is not None:
+                representable.add(field.casilla_id)
+        representable.update(record.row_field_casilla_ids.values())
+    return frozenset(representable)
+
+
+def rendered_casilla_ids(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: ModeloDraft,
+    headers: dict[str, str],
+    schema_provider: RegistrySchemaAccessor,
+) -> frozenset[CasillaId]:
+    """Return the representable casillas whose value actually reaches disk.
+
+    A representable casilla reaches disk only when the draft carries a value for
+    it; a representable casilla absent from ``draft.values`` renders as a blank
+    fixed-width slot (or an omitted xml element), which is the structurally-thin
+    file the completeness gate exists to refuse. This is the rendered set the
+    gate compares against the manifest-required-and-representable set.
+    """
+    draft_casillas = {value.casilla_id for value in draft.values}
+    return frozenset(
+        boe_representable_casilla_ids(layout, headers=headers, schema_provider=schema_provider) & draft_casillas
+    )
+
+
 __all__ = [
     "DeclaracionExportFormat",
     "DeclaracionExportResult",
     "DeclaracionVerifyResult",
     "DeclaracionVerifyVerdict",
+    "boe_representable_casilla_ids",
     "export_draft",
     "render_layout",
+    "rendered_casilla_ids",
     "verify_export",
 ]

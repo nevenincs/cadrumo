@@ -2,12 +2,17 @@
 
 The package root defines the ``__all__`` contract for public imports. Use these
 top-level re-exports for :class:`LLMClient`, :class:`LLMRequest`,
-:class:`LLMResponse`, ``LLMProvider``, cache, prompt, usage, model,
-multimodal, rasterisation, and exported error types.
+:class:`LLMResponse`, :class:`LLMProvider`, cache records
+(:class:`LLMCache`, :class:`CacheKey`, :class:`CacheStats`,
+:class:`CachedEntry`), prompt types (:class:`PromptRegistry` and
+:class:`PromptDefinition`), usage records (:class:`UsageRecorder`,
+:class:`UsageRecord`, and :class:`UsageSummary`), model records
+(:class:`Translation` and :class:`MultimodalImageInput`), rasterisation, and
+exported error types.
 
-The async-first :class:`LLMClient` ``complete()`` flow reads :class:`LLMCache`
-before a provider call, writes content-addressed encrypted cache entries on
-misses, records usage on hits and misses, and returns :class:`LLMResponse`.
+The async-first :meth:`LLMClient.complete` flow reads :class:`LLMCache` before a
+provider call, writes content-addressed encrypted cache entries on misses,
+records usage on hits and misses, and returns :class:`LLMResponse`.
 Cache types include :class:`CacheKey`, :class:`CacheStats`, and
 :class:`CachedEntry`; persisted cache data is encrypted secure-object storage,
 not plaintext files.

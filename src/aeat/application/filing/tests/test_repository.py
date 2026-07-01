@@ -186,9 +186,9 @@ class TestClassificationGate:
 class TestUnsafeDraftIds:
     """Per-draft envelope paths must not compose into traversal."""
 
-    @pytest.mark.parametrize(
-        "bad",
-        [
+    def test_unsafe_draft_id_rejected(self) -> None:
+        repo = ModeloDraftRepository()
+        for bad in (
             "",
             "..",
             ".",
@@ -196,12 +196,9 @@ class TestUnsafeDraftIds:
             "../escape",
             "a/b",
             "a\\b",
-        ],
-    )
-    def test_unsafe_draft_id_rejected(self, bad: str) -> None:
-        repo = ModeloDraftRepository()
-        with pytest.raises(ValueError):
-            repo.envelope_path_for(bad)
+        ):
+            with pytest.raises(ValueError):
+                repo.envelope_path_for(bad)
 
 
 class TestPerDraftLockIsolation:

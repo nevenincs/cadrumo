@@ -12,6 +12,7 @@ legal_refs = [
     "ley-37-1992:art-99",
     "ley-37-1992:art-122",
     "ley-37-1992:art-123",
+    "ley-37-1992:art-161",
     "orden-eha-3111-2009:art-1",
     "rd-1624-1992:art-29",
     "rd-1624-1992:art-30",
@@ -66,6 +67,14 @@ number = "iva.anual.repercutido.reducido"
 [[revisions."2010-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "iva.anual.repercutido.super-reducido"
 number = "iva.anual.repercutido.super-reducido"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.recargo.general"
+number = "iva.anual.repercutido.recargo.general"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.recargo.reducido"
+number = "iva.anual.repercutido.recargo.reducido"
 
 [[revisions."2010-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "iva.anual.resultado-regimen-general"

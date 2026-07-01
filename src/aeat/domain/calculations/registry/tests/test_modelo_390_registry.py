@@ -12,6 +12,7 @@ from .. import (
     CasillaId,
     ModeloDefinition,
     RegistryCatalogues,
+    RegistryValidationError,
     RegistryValidator,
     binding_source_casilla_ids,
     build_snapshot,
@@ -56,6 +57,7 @@ _M390_COMPENSACION_ULTIMO_PERIODO_CASILLA: CasillaId = _casilla_id(
 _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = _casilla_id(
     "iva.anual.compensacion-generada-ejercicio-no-97",
 )
+_M390_CONSTRUCT_ID = "modelo-390-iva-resumen-anual"
 _M390_RECONCILIATION_PREDICATES = (
     (
         "modelo-390-cuota-devengada-total-equals-reconciliacion-303",
@@ -114,6 +116,17 @@ _M390_EXTRACTION_PROFILE_TARGET_LEGAL_REFS = frozenset(
 
 def _load_modelo_390() -> tuple[ModeloDefinition, RegistryCatalogues]:
     return _committed_modelo("390")
+
+
+def _replace_revision(modelo: ModeloDefinition, revision) -> ModeloDefinition:
+    return modelo.model_copy(
+        update={
+            "revisions": {
+                revision_id: revision if revision_id == revision.id else item
+                for revision_id, item in modelo.revisions.items()
+            },
+        },
+    )
 
 
 def test_modelo_390_validator_accepts_committed_definition() -> None:
@@ -227,11 +240,36 @@ def test_modelo_390_live_cross_references_are_read_only() -> None:
 def test_modelo_390_construct_links_filing_workbook_parity() -> None:
     modelo, _ = _load_modelo_390()
     revision = modelo.revisions["2010-y-siguientes"]
-    construct = next(c for c in revision.constructs if c.id == "modelo-390-iva-resumen-anual")
+    construct = next(c for c in revision.constructs if c.id == _M390_CONSTRUCT_ID)
     assert "modelo-390-filing" in construct.application_links
     assert "modelo-390-deadline" in construct.application_links
     assert construct.filing_schedules == ("modelo-390-anual",)
     assert "modelo-390-dr-2025" in construct.workbook_parity_refs
+    assert "ley-37-1992:art-161" in construct.legal_refs
+
+
+def test_modelo_390_construct_requires_recargo_grounding() -> None:
+    modelo, catalogues = _load_modelo_390()
+    revision = modelo.revisions["2010-y-siguientes"]
+    constructs = tuple(
+        construct.model_copy(
+            update={"legal_refs": tuple(ref for ref in construct.legal_refs if ref != "ley-37-1992:art-161")},
+        )
+        if construct.id == _M390_CONSTRUCT_ID
+        else construct
+        for construct in revision.constructs
+    )
+    mutated_revision = revision.model_copy(update={"constructs": constructs})
+    mutated_modelo = _replace_revision(modelo, mutated_revision)
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=(
+            r"construct 'modelo-390-iva-resumen-anual' does not include legal refs "
+            r"\['ley-37-1992:art-161'\] required by formula 'modelo-390-iva-anual-cuota-devengada-total'"
+        ),
+    ):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
 
 
 def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen() -> None:
@@ -248,6 +286,8 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen() -> No
         "modelo-390-iva-soportado-interiores-cuota",
         "modelo-390-iva-soportado-importaciones-cuota",
         "modelo-390-iva-autorepercutido-intracomunitaria-cuota",
+        "modelo-390-iva-recargo-equivalencia-general-cuota",
+        "modelo-390-iva-recargo-equivalencia-reducido-cuota",
     }
 
 

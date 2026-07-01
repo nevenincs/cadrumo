@@ -2423,11 +2423,11 @@ cli:
       import_invalid_tax_id: 'The profile bundle''s tax identifier is invalid: %{error}.
         Fix the identifier and re-export, or import a valid bundle.'
       import_label_help: Display name for the imported profile; defaults to the name
-        stored in the bundle. Use it to import a second copy under a fresh label.
+        stored in the bundle. Use it when the stored label is already in use.
       import_label_taken: A profile named %{name} already exists. Re-run with `--label
         NEW_NAME` to import it under a different name.
-      import_label_taken_different_id: The specified label belongs to a profile with
-        a different identifier. Pass --label NEW_NAME to import under a distinct name.
+      import_label_taken_different_id: The profile label %{name} is already in use.
+        Pass --label NEW_NAME to import under a distinct label.
       import_missing_bundle: Profile bundle not found at %{path}
       import_missing_filing_baseline: 'The profile bundle is missing filing identity
         details. Fix the bundle or re-export a complete profile with these fields:

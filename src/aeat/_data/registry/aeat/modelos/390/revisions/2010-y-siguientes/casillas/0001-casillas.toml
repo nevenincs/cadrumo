@@ -81,6 +81,36 @@ binding = "modelo-390-iva-autorepercutido-intracomunitaria-cuota"
 legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
+# Recargo de equivalencia cuota devengada - anual (LIVA art. 161). Mirrors the
+# M303 casillas 21/24 so the annual devengada total includes the recargo a
+# supplier charges a recargo-de-equivalencia retailer; see the comment on
+# modelo-390-iva-anual-cuota-devengada-total for the grounding.
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.repercutido.recargo.general"
+number = "iva.anual.repercutido.recargo.general"
+label = "Recargo de equivalencia tipo 5.2pct - Cuota devengada anual"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_cuota_recargo_equivalencia_general"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-recargo-equivalencia-general-cuota"
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.repercutido.recargo.reducido"
+number = "iva.anual.repercutido.recargo.reducido"
+label = "Recargo de equivalencia tipo 1.4pct - Cuota devengada anual"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_cuota_recargo_equivalencia_reducido"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-recargo-equivalencia-reducido-cuota"
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
 # Reconciliation casillas — pulled from the four 303 quarters via previous_filing.
 
 [[revisions."2010-y-siguientes".casillas]]

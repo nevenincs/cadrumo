@@ -1,7 +1,8 @@
 """OpenAI provider adapter for the LLM outbound subpackage.
 
 Speaks the OpenAI ``/v1/chat/completions`` HTTP API and adapts its response
-into the :class:`aeat.adapters.outbound.llm._providers.base.ProviderCompletion`
+into the
+:class:`~aeat.adapters.outbound.llm._providers.base.ProviderCompletion`
 contract.
 """
 
@@ -58,7 +59,7 @@ class _OpenAIResponse(BaseModel):
 
     Attributes:
         id: Vendor-native response identifier (forwarded as
-            :attr:`aeat.adapters.outbound.llm._providers.base.ProviderCompletion.provider_request_id`).
+            :attr:`~aeat.adapters.outbound.llm._providers.base.ProviderCompletion.provider_request_id`).
         model: Model that served the request.
         choices: Returned chat completion choices.
         usage: Token accounting metadata.
