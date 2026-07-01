@@ -101,6 +101,76 @@ def test_ledger_view_shows_the_linked_purchase_invoice_evidence_id(tmp_path: Pat
     assert f"Purchase invoice evidence\t{evidence_id}" in viewed.output
 
 
+def test_ledger_history_shows_post_hoc_purchase_invoice_evidence_attach(tmp_path: Path) -> None:
+    """A post-hoc supplier invoice attach must be visible in ledger history."""
+    added_txn = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-02-15",
+            "--amount",
+            "121.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "Q1 supplier invoice",
+            "--counterparty",
+            "Proveedor SL",
+            "--classification",
+            "BUSINESS",
+            "--taxable-base",
+            "100.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "21.00",
+            "--iva-category",
+            "domestic_general_21",
+        ],
+    )
+    assert added_txn.exit_code == 0, added_txn.output
+    txn = json.loads(added_txn.output)["result"]["transaction_id"]
+
+    pdf = tmp_path / "factura-q1.pdf"
+    pdf.write_bytes(_MINIMAL_PDF)
+    added_evidence = _invoke(
+        ["--format", "json", "app", "ledger", "evidence", "add", str(pdf), "--supplier", "Proveedor SL"],
+    )
+    assert added_evidence.exit_code == 0, added_evidence.output
+    evidence_id = json.loads(added_evidence.output)["result"]["evidence_id"]
+
+    attached = _invoke(
+        ["app", "ledger", "attach", txn, "--purchase-invoice-evidence-id", evidence_id],
+    )
+    assert attached.exit_code == 0, attached.output
+
+    viewed = _invoke(["--format", "json", "app", "ledger", "view", txn])
+    assert viewed.exit_code == 0, viewed.output
+    transaction = json.loads(viewed.output)["result"]["transaction"]
+    assert transaction["purchase_invoice_evidence_id"] == evidence_id
+
+    history = _invoke(["--format", "json", "app", "ledger", "history", txn])
+    assert history.exit_code == 0, history.output
+    events = json.loads(history.output)["result"]["events"]
+    attach_events = [
+        event
+        for event in events
+        if event["event_type"] == "purchase_invoice_evidence.attached"
+        and event["object_type"] == "purchase_invoice_evidence"
+        and event["object_id"] == evidence_id
+    ]
+    assert attach_events, history.output
+    assert attach_events[0]["payload"]["transaction_id"] == txn
+
+    text_history = _invoke(["app", "ledger", "history", txn])
+    assert text_history.exit_code == 0, text_history.output
+    assert "purchase_invoice_evidence.attached" in text_history.output
+
+
 def test_ledger_view_json_carries_the_full_transaction(tmp_path: Path) -> None:
     """The JSON payload exposes the typed transaction with every field,
     so the text view and the JSON contract agree."""
