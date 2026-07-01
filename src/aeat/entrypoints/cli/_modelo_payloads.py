@@ -239,11 +239,13 @@ class CrossPeriodCleanStatePayload(OutputSchema):
 
 
 class VerificationReportPayload(OutputSchema):
-    """Shared projection of a :class:`aeat.domain.modelos.VerificationReport`.
+    """Shared projection of a :class:`~aeat.domain.modelos.VerificationReport`.
 
     ``findings`` carries the blocking or advisory
-    :class:`FindingPayload` rows that explain whether the selected
-    :class:`~aeat.domain.modelos.CalculationRevision` earned the verified-complete transition.
+    :class:`~aeat.entrypoints.cli._modelo_payloads.FindingPayload` rows that
+    explain whether the selected
+    :class:`~aeat.domain.modelos.CalculationRevision` earned the
+    verified-complete transition.
     """
 
     verification_report_id: VerificationReportId
@@ -531,11 +533,13 @@ class WorkVerifyResult(OutputSchema):
 
     The command delegates to
     :func:`aeat.application.modelo.verify_modelo_revision` and returns the
-    resulting :class:`VerificationReportPayload`. On a successful
+    resulting
+    :class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportPayload`.
+    On a successful
     verificado-completo verdict the revision transitions to
     ``verificado_completo``; on a refused verdict the revision is unchanged and
     ``findings`` names every blocking or advisory issue. Advisory findings also
-    ride the envelope's :class:`aeat.core.json_contract.Notice` channel.
+    ride the envelope's :class:`~aeat.core.json_contract.Notice` channel.
     """
 
     operation: str = "modelo.work.verify"
@@ -673,9 +677,11 @@ class ModeloRecordShowResult(OutputSchema):
 class VerificationReportListResult(OutputSchema):
     """Typed listing of persisted verification reports.
 
-    ``reports`` contains shared :class:`VerificationReportPayload` projections;
-    filtering only constrains ``calculation_revision_id_filter`` and leaves each
-    report's finding, missing-casilla, and verificado-completo fields intact.
+    ``reports`` contains shared
+    :class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportPayload`
+    projections; filtering only constrains ``calculation_revision_id_filter`` and
+    leaves each report's finding, missing-casilla, and verificado-completo fields
+    intact.
     """
 
     operation: str = "modelo.verification_report.list"
@@ -690,8 +696,9 @@ class VerificationReportShowResult(OutputSchema):
 
     This schema mirrors :class:`WorkVerifyResult` verification fields so
     operators can re-read a saved
-    :class:`aeat.domain.modelos.VerificationReport` with the same
-    :class:`FindingPayload` legal/source-reference detail emitted by
+    :class:`~aeat.domain.modelos.VerificationReport` with the same
+    :class:`~aeat.entrypoints.cli._modelo_payloads.FindingPayload`
+    legal/source-reference detail emitted by
     ``aeat app modelo work verify``.
     """
 
