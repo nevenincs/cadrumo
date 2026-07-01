@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import tempfile
 from datetime import date
 from decimal import Decimal
@@ -259,6 +260,35 @@ def test_authority_uses_fingerprint_backed_process_cache_and_invalidates(tmp_pat
     assert auth3._registry_validated is True
     assert auth3 is not auth1
     assert auth3.modelo("999").revisions["2025"].label == "after"
+
+
+def test_authority_cache_invalidates_when_source_evidence_changes(tmp_path: Path) -> None:
+    """Authority validation must rerun when corpus evidence changes under the same source root."""
+    registry_root = tmp_path / "registry" / "aeat"
+    legal_dir = registry_root / "legal"
+    revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
+    revision_dir.mkdir(parents=True)
+    legal_dir.mkdir(parents=True)
+    corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
+    corpus_file.parent.mkdir(parents=True)
+    corpus_file.write_bytes(b"x" * 1000)
+
+    (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
+    (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
+    (revision_dir / "revision.toml").write_text(
+        _MINIMAL_REVISION_TOML_TEMPLATE.format(label="before"),
+        encoding="utf-8",
+    )
+
+    clear_fingerprint_cache()
+    first = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+    assert ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path) is first
+
+    corpus_file.write_bytes(b"y" * 1000)
+    os.utime(corpus_file, (1812542400, 1812542400))
+
+    with pytest.raises(RegistryValidationError, match="sha256 mismatch"):
+        ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
 
 
 def test_authority_ignores_legacy_validated_marker_and_revalidates_ambiguity(tmp_path: Path) -> None:
