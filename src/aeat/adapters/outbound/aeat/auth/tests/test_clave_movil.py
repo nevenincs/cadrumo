@@ -69,6 +69,8 @@ from ._clave_movil_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_VERIFY_SESSION_AUTHENTICATED_AT = datetime(2099, 5, 28, 15, 10, tzinfo=UTC)
+
 
 def test_auth_browser_action_policy_allows_configured_own_name_representation_action(tmp_path: Path) -> None:
     settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
@@ -413,11 +415,10 @@ class TestPostAuthLanding:
         target_path = provider._target_path_from_url(target_url)
         context = _SelectorDispatchContext(target_path=target_path)
         provider._context = context
-        now = datetime.now(UTC)
         session = AeatSession(
             provider_kind=AuthProviderKind.CLAVE_MOVIL,
-            authenticated_at=now,
-            idle_deadline=now + timedelta(minutes=18),
+            authenticated_at=_VERIFY_SESSION_AUTHENTICATED_AT,
+            idle_deadline=_VERIFY_SESSION_AUTHENTICATED_AT + timedelta(minutes=18),
             storage_state_path=None,
             identity_nif="12345678Z",
             provider_detail=ClaveMovilSessionDetail(
