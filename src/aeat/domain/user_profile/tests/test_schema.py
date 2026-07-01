@@ -108,6 +108,10 @@ def test_committed_user_profile_schema_exposes_profile_lookup_metadata() -> None
     assert ccaa.type is ProfileFieldType.ENUM
     assert "cataluna" in ccaa.enum_values
 
+    marital_status = schema.field("renta_taxpayer.marital_status")
+    assert marital_status.type is ProfileFieldType.ENUM
+    assert marital_status.enum_values == ("1", "2", "3", "4", "5")
+
     situacion = schema.field("renta_family.situacion_familiar")
     assert situacion.type is ProfileFieldType.ENUM
     assert "soltero" in situacion.enum_values

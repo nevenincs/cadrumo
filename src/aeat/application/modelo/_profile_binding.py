@@ -50,7 +50,7 @@ from ...domain.calculations.registry import (
     expression_binding_refs,
     expression_date_binding_refs,
 )
-from ...domain.contribuyente import marriage_full_year, marriage_month_start
+from ...domain.contribuyente import descendant_list_from_facts, marriage_full_year, marriage_month_start
 from ...domain.modelos._errors import ModeloError
 from ...domain.user_profile import (
     ProfileNotFoundError,
@@ -67,7 +67,20 @@ from ..aggregation._source_mesh import (
 _PROFILE_RESOLVER_ID = "profile"
 _PROFILE_OWNED_SOURCES: tuple[BindingSourceKind, ...] = (BindingSourceKind.PROFILE,)
 _MARRIED_STATUS_TOKENS = frozenset({"2", "casado"})
-_UNMARRIED_STATUS_TOKENS = frozenset({"1", "3", "4", "soltero", "viudo", "separado_divorciado"})
+_PARTNERED_STATUS_TOKENS = _MARRIED_STATUS_TOKENS | frozenset({"5", "pareja_hecho", "pareja_hecho_registrada"})
+_UNMARRIED_STATUS_TOKENS = frozenset(
+    {
+        "1",
+        "3",
+        "4",
+        "5",
+        "soltero",
+        "viudo",
+        "separado_divorciado",
+        "pareja_hecho",
+        "pareja_hecho_registrada",
+    }
+)
 _MARRIAGE_DERIVED_FACT_PATHS = (
     "renta_taxpayer.marriage_full_year",
     "renta_taxpayer.marriage_month_start",
@@ -209,6 +222,75 @@ def _inject_derived_family_facts(
         idx += 1
 
     fact_index[menores_key] = Decimal(count_menores)
+
+
+_MADRID_CCAA_CODE = "madrid"
+_CONJUNTA_DECLARATION_TYPE = "2"
+_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY = "renta_family.madrid_nacimiento_adopcion_eligible_count"
+_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY = "renta_family.unidad_familiar_otros_miembros_base"
+_MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR = 2025
+
+
+def _inject_derived_autonomic_deduccion_facts(
+    fact_index: dict[str, UserProfileFactValue],
+    filing_year: int,
+) -> None:
+    """Inject the Madrid nacimiento/adopción deducción derived facts (casilla 1039).
+
+    Companion to :func:`_inject_derived_marriage_facts` and
+    :func:`_inject_derived_family_facts`. Reads the existing
+    ``renta_family.descendiente.{n}.*`` facts and ``tax_residence.ccaa`` and
+    computes the prorrateo-weighted count of descendants inside the Comunidad de
+    Madrid nacimiento/adopción applicability window (DL 1/2010 arts. 4 y 18.1)
+    who cohabit, projecting it onto the synthetic Decimal keys the registry
+    formula on casilla 1039 consumes.
+
+    The trigger is fail-closed: it auto-populates only the unambiguous single /
+    monoparental individual filer. A tributación conjunta declaration or a
+    married filer needs the spouse's base imponible for the unidad-familiar
+    61.860 € límite, which the app does not persist (research F9); for those
+    cases no count is injected, the registry formula's binding default resolves
+    casilla 1039 to 0, and the operator-facing eligibility advisory surfaces the
+    entitlement instead. A deducción's failure mode is over-claim, so silence on
+    an indeterminate unidad-familiar aggregate is the safe default.
+
+    Only the 2025 filing year is handled (the first-slice registry formula);
+    other years return early. Idempotent: keys already present are not
+    overwritten.
+    """
+    if filing_year != _MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR:
+        return
+
+    # Always supply a neutral 0 default so the casilla-1039 formula's two profile
+    # bindings resolve for EVERY M100 2025 filer — non-Madrid, tributación
+    # conjunta, or no eligible descendants. The registry formula hard-fails on an
+    # unsupplied binding, so the default is what keeps a Cataluña/single filer's
+    # calculation from breaking; the Madrid determinable-eligible branch below
+    # overrides the count with the real prorrateo-weighted value.
+    fact_index.setdefault(_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY, Decimal("0"))
+    fact_index.setdefault(_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY, Decimal("0"))
+
+    ccaa = fact_index.get("tax_residence.ccaa")
+    if not isinstance(ccaa, str) or ccaa.strip().lower() != _MADRID_CCAA_CODE:
+        return
+    declaration_type = str(fact_index.get("filing_export.declaration_type", "")).strip()
+    if declaration_type == _CONJUNTA_DECLARATION_TYPE:
+        return
+    marital_status = str(fact_index.get("renta_taxpayer.marital_status", "")).strip().lower()
+    if marital_status in _PARTNERED_STATUS_TOKENS:
+        return
+
+    descendant_facts = {
+        key: str(value) for key, value in fact_index.items() if key.startswith("renta_family.descendiente.")
+    }
+    weighted_count = Decimal("0")
+    for descendant in descendant_list_from_facts(descendant_facts):
+        if descendant.is_nacimiento_adopcion_eligible(filing_year):
+            weighted_count += descendant.nacimiento_adopcion_prorrateo_share()
+    if weighted_count <= 0:
+        return
+
+    fact_index[_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY] = weighted_count
 
 
 def _inject_derived_state_attribution_facts(
@@ -422,6 +504,7 @@ def resolve_profile_sourced_bindings(
     fact_index = _profile_fact_index(record, resolved_schema)
     _inject_derived_marriage_facts(fact_index, snapshot.filing_year)
     _inject_derived_family_facts(fact_index, snapshot.filing_year)
+    _inject_derived_autonomic_deduccion_facts(fact_index, snapshot.filing_year)
     _inject_derived_state_attribution_facts(fact_index)
     enum_bindings = enum_consumed_binding_ids(snapshot.revision)
 
@@ -481,12 +564,14 @@ def _resolve_one(
 
 
 inject_derived_marriage_facts = _inject_derived_marriage_facts
+inject_derived_autonomic_deduccion_facts = _inject_derived_autonomic_deduccion_facts
 profile_fact_index = _profile_fact_index
 resolve_profile_binding_value = _resolve_one
 
 
 __all__ = [
     "ProfileBindingResolutionError",
+    "inject_derived_autonomic_deduccion_facts",
     "inject_derived_marriage_facts",
     "profile_fact_index",
     "resolve_profile_binding_value",
