@@ -171,46 +171,48 @@ class TestWorkflowResultTerminal:
             summary="translation",
         )
 
-    def test_done_rejects_reason(self) -> None:
-        """A DONE result must not carry an aborted_reason."""
+    @pytest.mark.parametrize(
+        ("overrides", "match"),
+        [
+            (
+                {
+                    "final_stage": WorkflowStage.DONE,
+                    "aborted_reason": WorkflowAbortReason.USER_CANCELLED,
+                },
+                r"DONE results must not carry an aborted_reason",
+            ),
+            (
+                {
+                    "final_stage": WorkflowStage.ABORTED,
+                    "aborted_reason": None,
+                },
+                r"ABORTED results must carry an aborted_reason",
+            ),
+            (
+                {
+                    "final_stage": WorkflowStage.BUILDING_DRAFT,
+                },
+                r"final_stage must be DONE or ABORTED",
+            ),
+        ],
+        ids=("done-with-reason", "aborted-without-reason", "non-terminal-stage"),
+    )
+    def test_terminal_result_rejects_invalid_combinations(self, overrides: dict[str, Any], match: str) -> None:
+        """Terminal workflow results reject impossible stage/reason combinations."""
         now = datetime(2026, 4, 12, tzinfo=UTC)
-        with pytest.raises(ValidationError, match=r"DONE results must not carry an aborted_reason"):
-            WorkflowResult(
-                run_id="a" * 16,
-                started_at=now,
-                ended_at=now,
-                final_stage=WorkflowStage.DONE,
-                aborted_reason=WorkflowAbortReason.USER_CANCELLED,
-                steps=(self._step(),),
-                summary="translation",
-            )
+        values: dict[str, Any] = {
+            "run_id": "a" * 16,
+            "started_at": now,
+            "ended_at": now,
+            "final_stage": WorkflowStage.DONE,
+            "aborted_reason": None,
+            "steps": (self._step(),),
+            "summary": "translation",
+        }
+        values.update(overrides)
 
-    def test_aborted_requires_reason(self) -> None:
-        """An ABORTED result must carry an aborted_reason."""
-        now = datetime(2026, 4, 12, tzinfo=UTC)
-        with pytest.raises(ValidationError, match=r"ABORTED results must carry an aborted_reason"):
-            WorkflowResult(
-                run_id="a" * 16,
-                started_at=now,
-                ended_at=now,
-                final_stage=WorkflowStage.ABORTED,
-                aborted_reason=None,
-                steps=(self._step(),),
-                summary="translation",
-            )
-
-    def test_non_terminal_stage_rejected(self) -> None:
-        """final_stage must be DONE or ABORTED."""
-        now = datetime(2026, 4, 12, tzinfo=UTC)
-        with pytest.raises(ValidationError, match=r"final_stage must be DONE or ABORTED"):
-            WorkflowResult(
-                run_id="a" * 16,
-                started_at=now,
-                ended_at=now,
-                final_stage=WorkflowStage.BUILDING_DRAFT,
-                steps=(self._step(),),
-                summary="translation",
-            )
+        with pytest.raises(ValidationError, match=match):
+            WorkflowResult(**values)
 
     def test_json_round_trip(self) -> None:
         """Result records survive a full JSON round-trip."""

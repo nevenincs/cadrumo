@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
+from .. import ConvenioRateRow
 from .._errors import NoRevisionForPeriodError
 from .._legal import verify_legal_catalogue
 from .._schema import ModeloDefinition, RegistryCatalogues
@@ -52,6 +53,25 @@ def test_modelo_210_validator_accepts_committed_definition() -> None:
     assert modelo.revisions, "210 must declare at least one revision"
     assert any(rev.formulas for rev in modelo.revisions.values()), "210 must declare formulas"
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+
+def test_modelo_210_convenio_rate_parameter_loads_through_real_validator() -> None:
+    modelo, catalogues = _load_modelo_210()
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+    revision = modelo.revisions["2025"]
+    parameter = next(param for param in revision.parameters if param.id == "m210-convenio-rates")
+
+    assert parameter.data_type == "convenio_rate_table"
+    assert parameter.values == ()
+    assert parameter.brackets == ()
+    assert parameter.keyed_brackets == ()
+    assert {(row.country_code, row.tipo_renta, row.rate) for row in parameter.convenio_rates} == {
+        ("AR", "pension", "DOMESTIC_TARIFF"),
+        ("GB", "general", "0.24"),
+        ("MA", "interest", "0.10"),
+    }
+    assert all(isinstance(row, ConvenioRateRow) for row in parameter.convenio_rates)
 
 
 def test_modelo_210_revision_2025_declares_constructs() -> None:

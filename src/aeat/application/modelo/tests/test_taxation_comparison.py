@@ -35,6 +35,7 @@ import pytest
 
 from ....domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id, validated_casilla_id_map
 from .._taxation_comparison import (
+    INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT,
     TaxationComparisonError,
     TaxationRecommendation,
     compare_taxation_modes,
@@ -239,6 +240,63 @@ def test_comparison_result_structure_is_typed(snapshot_2025: RegistrySnapshot) -
     assert result.modelo == "100"
     assert result.revision == "2025"
     assert len(result.recommendation_reason) > 10
+
+
+def test_individual_branch_honesty_caveat_surfaces(snapshot_2025: RegistrySnapshot) -> None:
+    """Every comparison result discloses the single-earner-only scope limit.
+
+    ADR ``2026-07-01-tributacion-conjunta-individual-adr``: the individual run
+    reuses the unidad familiar's single input set, so it faithfully models only
+    a single-earner household. The result MUST carry an explicit, operator-facing
+    caveat so a two-earner individual figure is never presented as authoritative
+    (``no-silent-under-declaration`` / ``aeat-safety-legal-gates``). The caveat
+    must be non-silent: present on the typed result regardless of which mode wins.
+    """
+    inputs = {**_BASE_INPUTS, _M100_TRABAJO_INGRESO_CASILLA: Decimal("52000")}
+    result = compare_taxation_modes(
+        snapshot_2025,
+        inputs=inputs,
+        binding_values=_BASE_BINDINGS,
+        enum_binding_values=_BASE_ENUM_BINDINGS,
+        relation_values=_ZERO_RELATIONS,
+        date_binding_values=_BASE_DATE_BINDINGS,
+    )
+
+    # The first slice is single-earner-faithful only; the flag must say so.
+    assert result.individual_branch_single_earner_only is True
+
+    # The disclosure text is the single-sourced constant and must honestly name
+    # the limitation (single-earner faithful; two-earner not yet modelled).
+    assert result.individual_branch_caveat == INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT
+    caveat = result.individual_branch_caveat.lower()
+    assert "single-earner" in caveat
+    assert "two-earner" in caveat
+    assert "not yet available" in caveat
+
+
+def test_individual_branch_caveat_present_when_individual_recommended(
+    snapshot_2025: RegistrySnapshot,
+) -> None:
+    """The caveat rides even the INDIVIDUAL and INDIFFERENT recommendations.
+
+    The honesty risk is sharpest when the tool recommends individual filing: an
+    operator with a two-earner household could act on a figure the comparator
+    cannot faithfully compute. The caveat must not be gated on the conjunta win,
+    so a zero-income run (which cannot favour conjunta via Art. 84 on nil base)
+    still carries the disclosure.
+    """
+    inputs = {**_BASE_INPUTS, _M100_TRABAJO_INGRESO_CASILLA: Decimal("0")}
+    result = compare_taxation_modes(
+        snapshot_2025,
+        inputs=inputs,
+        binding_values=_BASE_BINDINGS,
+        enum_binding_values=_BASE_ENUM_BINDINGS,
+        relation_values=_ZERO_RELATIONS,
+        date_binding_values=_BASE_DATE_BINDINGS,
+    )
+
+    assert result.individual_branch_single_earner_only is True
+    assert result.individual_branch_caveat == INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT
 
 
 # DEFERRED: non-zero BL-negativa-anterior coverage test. Diagnostic 2026-06-03

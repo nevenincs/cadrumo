@@ -748,6 +748,22 @@ def work_compare_taxation(
         recommendation=comparison.recommendation.value,
         recommendation_reason=comparison.recommendation_reason,
     )
+    from ._modelo_rendering import advisory_notice
+
+    # Honesty caveat (ADR 2026-07-01): the individual branch is faithful only for
+    # a single-earner unidad familiar. Surface it on the typed notices channel so
+    # an operator is never misled into trusting a two-earner individual figure the
+    # comparator cannot compute (cli-notices-are-the-only-diagnostic-channel).
+    caveat_notice = (
+        advisory_notice(
+            "modelo.work.compare_taxation.individual_single_earner_only",
+            comparison.individual_branch_caveat,
+            context={"individual_branch_single_earner_only": "true"},
+        )
+        if comparison.individual_branch_single_earner_only
+        else None
+    )
+
     lines = [
         "operation\tmodelo.work.compare_taxation",
         f"filing_year\t{comparison.filing_year}",
@@ -766,7 +782,15 @@ def work_compare_taxation(
             default="RECOMENDACIÓN: {recommendation} — {reason}",
         ),
     ]
-    _emit_envelope(ctx, command="modelo.work.compare_taxation", result=result, lines=lines)
+    if caveat_notice is not None:
+        lines.append(f"WARNING\t{comparison.individual_branch_caveat}")
+    _emit_envelope(
+        ctx,
+        command="modelo.work.compare_taxation",
+        result=result,
+        lines=lines,
+        notices=[caveat_notice] if caveat_notice is not None else None,
+    )
 
 
 register_work_revision_commands(

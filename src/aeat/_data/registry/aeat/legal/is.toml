@@ -770,6 +770,19 @@ applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/impuesto-sobre-sociedades/modelo-202-is-i_____resencia-territorio-fraccionado_/instrucciones/instrucciones-periodos-impositivos-iniciados-2023-2024.html"
 review_status = "reviewed"
 
+[sources."aeat-modelo-202-instructions-2018-2022"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/aeat_official/instructions/modelo_202/files/modelo-202-instrucciones-2018-2022.pdf"
+sha256 = "6b172c0e88e32c19598813f1dc99644ce544cbe1f2f05053617b84e298250771"
+bytes = 229573
+retrieved_at = 2026-07-01
+applies_from = 2018-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/GE00/202_2018_Instrucciones.pdf"
+review_status = "reviewed"
+
 [sources."aeat-dr-202-2019"]
 evidence_tier = "layout_authority"
 authority = "aeat"

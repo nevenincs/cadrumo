@@ -11,7 +11,7 @@ discrepancy_causes = [
     "correctness_divergence",
 ]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
+source_refs = ["aeat-dr-322-2026", "aeat-modelo-322-procedure"]
 
 # -----------------------------------------------------------------------------
 # Ledger IVA aggregation bindings for the individual monthly group-entity

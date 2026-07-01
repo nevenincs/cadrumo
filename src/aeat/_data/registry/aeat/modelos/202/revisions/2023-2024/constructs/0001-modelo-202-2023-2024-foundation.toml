@@ -11,7 +11,6 @@ legal_refs = [
 ]
 source_refs = [
     "aeat-dr-202-2023",
-    "aeat-modelo-202-instructions",
     "aeat-modelo-202-instructions-2023-2024",
     "boe-modelo-202-base-order",
     "boe-modelo-202-2023-amendment",

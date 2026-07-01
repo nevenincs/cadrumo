@@ -1,13 +1,41 @@
-"""Immutable invoice catalogue surface for the financial pipeline.
+"""Public facade for immutable invoice catalogue records.
 
-The package root is the import boundary for :class:`InvoiceCatalogue`,
-:class:`InvoiceCatalogueRepository`,
-:class:`~aeat.domain.invoices.InvoiceCatalogueRepositoryProtocol`, invoice
-models, invoice errors, and reconciliation helpers. Callers must import these
-objects from ``aeat.domain.invoices`` and must not reach into the private
-underscore modules inside this package.
+The package root is the import boundary for :class:`InvoiceLine`,
+:class:`Invoice`, :class:`InvoiceCatalogue`, invoice errors, repository
+ports, and reconciliation helpers. :class:`Invoice` is a strict frozen
+commercial-document record; :func:`derive_invoice_id` derives its stable id
+from kind, number, issue date, counterparty, currency, and grand total, while
+line and invoice validators preserve totals, tax-rate slots, payment state,
+bucket ownership, and ``linked_transaction_ids`` provenance.
+
+The IVA bridge re-exports :class:`IvaRate`, :class:`PaymentStatus`,
+:class:`IvaInvoiceClassification`, :func:`classify_invoice_line_for_iva`,
+:func:`invoice_line_to_iva_observation`, and rate helpers. The standard helper
+covers domestic IVA rate slots; reverse-charge, intra-community, OSS/IOSS, and
+other non-domestic cases use explicit substrate fields such as
+:class:`~aeat.domain.iva.IvaCategory` already carried on :class:`Invoice`.
+
+Service helpers such as :func:`link_transaction`,
+:func:`suggest_reconciliations`, and :func:`verify_link_consistency` are pure
+operations over :class:`InvoiceCatalogue` and
+:class:`~aeat.domain.transactions.TransactionCatalogue`; persisted
+cross-catalogue workflows belong in :mod:`aeat.application.invoices`.
+
+Persistence is exposed through the concrete
+:class:`InvoiceCatalogueRepository` and the narrow
+:class:`InvoiceCatalogueRepositoryProtocol`. The repository stores the
+active-bucket catalogue singleton through
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` as
+``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+payloads wrapped in :class:`~aeat.adapters.persistence.storage.Envelope`; no
+plaintext invoice row, JSON catalogue, or envelope file is the durable store.
+Callers must import public objects from ``aeat.domain.invoices`` and must not
+reach into the private underscore modules inside this package.
 
 See Also:
+    :class:`Invoice`
+        Strict frozen invoice record that carries identity, totals, payment,
+        bucket, tax-substrate, and linked-transaction facts.
     :class:`InvoiceCatalogue`
         Frozen aggregate persisted as the encrypted invoice catalogue.
     :class:`InvoiceCatalogueRepository`

@@ -53,6 +53,28 @@ from ._modelo_100_registry_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+def test_modelo_100_trabajo_otros_gastos_role_is_decimal_across_revisions() -> None:
+    """Art. 19 work-income amount fields use M100 decimal precision consistently."""
+    modelos_by_id, _catalogues = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    role = "irpf_rendimiento_trabajo_gasto_otros"
+    expected_years = {str(year) for year in range(2020, 2026)}
+    found_years: set[str] = set()
+
+    for revision_id, revision in modelo.revisions.items():
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+        otros_gastos = next(casilla for casilla in revision.casillas if casilla.semantic_role == role)
+        found_years.add(revision_id)
+
+        assert otros_gastos.id == _casilla_id("0019")
+        assert otros_gastos.data_type == "decimal"
+        assert "ley-35-2006:art-19" in otros_gastos.legal_refs
+        assert casillas_by_id[_casilla_id("0018")].data_type == "decimal"
+        assert casillas_by_id[_casilla_id("0022")].data_type == "decimal"
+
+    assert found_years == expected_years
+
+
 @pytest.mark.parametrize("filing_year", range(2020, 2026))
 def test_modelo_100_general_base_gains_cap_uses_general_base_article(filing_year: int) -> None:
     revision = _modelo_100_snapshot(filing_year).revision

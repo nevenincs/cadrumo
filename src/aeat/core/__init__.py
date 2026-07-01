@@ -57,6 +57,7 @@ from typing import TYPE_CHECKING
 from ._capabilities import ServiceCapability
 from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ._iban import IBAN_SHAPE_RE, iban_mod_97
+from ._irnr import ConvenioOverrideKind, TipoRentaIrnr
 from ._ledger_sort import LedgerSortField, LedgerSortOrder
 from ._modelo import NON_REGISTRY_MODELOS, Modelo
 from ._models import STRICT_FROZEN_CONFIG
@@ -116,6 +117,7 @@ __all__: list[str] = [
     "BindingSourceKind",
     "BucketPointer",
     "CasillaId",
+    "ConvenioOverrideKind",
     "IntracomOperationType",
     "LedgerSortField",
     "LedgerSortOrder",
@@ -131,6 +133,7 @@ __all__: list[str] = [
     "ServiceCapability",
     "StandardPeriodCode",
     "TaxDomain",
+    "TipoRentaIrnr",
     "accepted_period_codes",
     "accepted_period_patterns",
     "derive_result_disposition",

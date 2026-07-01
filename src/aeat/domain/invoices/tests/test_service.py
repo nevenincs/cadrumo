@@ -37,84 +37,75 @@ _SAMPLE_HEX_64 = "a" * 64
 
 
 # ---------------------------------------------------------------------------
-# ReconciliationSuggestion
+# Service records
 # ---------------------------------------------------------------------------
 
 
-def test_reconciliation_suggestion_accepts_64_char_transaction_id() -> None:
+@pytest.mark.parametrize(
+    ("record_type", "kwargs"),
+    [
+        (
+            ReconciliationSuggestion,
+            {
+                "invoice_id": "INV-1",
+                "amount_match": True,
+                "counterparty_match": True,
+                "score": Decimal("1"),
+            },
+        ),
+        (LinkInconsistency, {"invoice_id": "INV-1", "direction": "invoice-only"}),
+    ],
+    ids=("suggestion", "inconsistency"),
+)
+def test_service_records_accept_64_char_transaction_id(
+    record_type: type[ReconciliationSuggestion] | type[LinkInconsistency],
+    kwargs: dict[str, object],
+) -> None:
     """A SHA-256-shaped 64-character transaction id satisfies the
     catalogue-key contract."""
 
-    suggestion = ReconciliationSuggestion(
-        invoice_id="INV-1",
-        transaction_id=_SAMPLE_HEX_64,
-        amount_match=True,
-        counterparty_match=True,
-        score=Decimal("1"),
-    )
-    assert suggestion.transaction_id == _SAMPLE_HEX_64
+    record = record_type(transaction_id=_SAMPLE_HEX_64, **kwargs)
+    assert record.transaction_id == _SAMPLE_HEX_64
 
 
-def test_reconciliation_suggestion_rejects_short_transaction_id() -> None:
-    """A provider-raw id (typically 6 to 16 chars) must not satisfy the
-    constraint — it cannot round-trip into the
-    :class:`aeat.domain.transactions.Transaction` catalogue keyed by
-    the 64-character SHA-256 stable hash."""
-
-    with pytest.raises(ValidationError, match=r"transaction_id|hex|length|pattern"):
-        ReconciliationSuggestion(
-            invoice_id="INV-1",
-            transaction_id="raw-12345",
-            amount_match=True,
-            counterparty_match=True,
-            score=Decimal("1"),
-        )
-
-
-def test_reconciliation_suggestion_rejects_oversized_transaction_id() -> None:
-    """A 65-character value (e.g. accidental trailing newline) must
-    also fail. ``max_length`` pins the upper edge."""
-
-    with pytest.raises(ValidationError, match=r"transaction_id|length|String should have at most"):
-        ReconciliationSuggestion(
-            invoice_id="INV-1",
-            transaction_id=_SAMPLE_HEX_64 + "x",
-            amount_match=True,
-            counterparty_match=True,
-            score=Decimal("1"),
-        )
-
-
-# ---------------------------------------------------------------------------
-# LinkInconsistency
-# ---------------------------------------------------------------------------
-
-
-def test_link_inconsistency_accepts_64_char_transaction_id() -> None:
-    inconsistency = LinkInconsistency(
-        invoice_id="INV-1",
-        transaction_id=_SAMPLE_HEX_64,
-        direction="invoice-only",
-    )
-    assert inconsistency.transaction_id == _SAMPLE_HEX_64
-
-
-def test_link_inconsistency_rejects_short_transaction_id() -> None:
-    with pytest.raises(ValidationError, match=r"transaction_id|hex|length|pattern"):
-        LinkInconsistency(
-            invoice_id="INV-1",
-            transaction_id="raw-12345",
-            direction="invoice-only",
-        )
-
-
-def test_link_inconsistency_rejects_oversized_transaction_id() -> None:
-    with pytest.raises(ValidationError, match=r"transaction_id|length|String should have at most"):
-        LinkInconsistency(
-            invoice_id="INV-1",
-            transaction_id=_SAMPLE_HEX_64 + "x",
-            direction="transaction-only",
-        )
+@pytest.mark.parametrize(
+    ("record_type", "kwargs", "transaction_id", "match"),
+    [
+        (
+            ReconciliationSuggestion,
+            {"invoice_id": "INV-1", "amount_match": True, "counterparty_match": True, "score": Decimal("1")},
+            "raw-12345",
+            r"transaction_id|hex|length|pattern",
+        ),
+        (
+            ReconciliationSuggestion,
+            {"invoice_id": "INV-1", "amount_match": True, "counterparty_match": True, "score": Decimal("1")},
+            _SAMPLE_HEX_64 + "x",
+            r"transaction_id|length|String should have at most",
+        ),
+        (
+            LinkInconsistency,
+            {"invoice_id": "INV-1", "direction": "invoice-only"},
+            "raw-12345",
+            r"transaction_id|hex|length|pattern",
+        ),
+        (
+            LinkInconsistency,
+            {"invoice_id": "INV-1", "direction": "transaction-only"},
+            _SAMPLE_HEX_64 + "x",
+            r"transaction_id|length|String should have at most",
+        ),
+    ],
+    ids=("suggestion-short", "suggestion-oversized", "inconsistency-short", "inconsistency-oversized"),
+)
+def test_service_records_reject_noncanonical_transaction_ids(
+    record_type: type[ReconciliationSuggestion] | type[LinkInconsistency],
+    kwargs: dict[str, object],
+    transaction_id: str,
+    match: str,
+) -> None:
+    with pytest.raises(ValidationError, match=match):
+        record_type(transaction_id=transaction_id, **kwargs)
 
 
 def test_link_inconsistency_invoice_id_remains_non_empty_required() -> None:

@@ -1,11 +1,19 @@
-"""Filing domain package: records, protocols, validator, repositories.
+"""Public filing facade for modelo drafts, validation, and amendment records.
 
-The :mod:`aeat.domain.filing` subpackage owns the immutable records
-that describe a filing draft (and its amendment), the cross-package
-Protocols upstream subpackages plug into, the cross-cutting
-:class:`ModeloValidator`, the :class:`ModeloDraft` -- Justificante
-reconciliation engine, and the governed-persistence repositories
-(FINANCIAL drafts and AUDIT amendments).
+The :mod:`aeat.domain.filing` subpackage owns the immutable records and
+repository contracts that describe registry-backed local drafts:
+:class:`ModeloDraft`, :class:`ModeloValue`, :class:`ModeloBindingValue`,
+:class:`ModeloCasillaProvenance`, and :class:`ModeloValidationFinding`.
+Those records preserve the registry ``snapshot_ref``, casilla values, binding
+provenance, and casilla provenance that identify and ground a local draft.
+
+The facade also exports :class:`ModeloValidator`, the protocol contracts
+consumed by :mod:`aeat.application.filing`, the LGT Art. 122 amendment records
+:class:`ModeloComplementaria` and :class:`ModeloSustitutiva`, their
+:class:`CasillaChange` deltas, and the governed repositories. Drafts persist
+through :class:`ModeloDraftRepository` in FINANCIAL encrypted storage;
+amendments persist through :class:`ModeloAmendmentRepository` in AUDIT
+encrypted storage.
 
 The orchestration entry points (:func:`aeat.application.filing.build_draft`,
 :func:`aeat.application.filing.validate_draft`,
@@ -14,15 +22,16 @@ The orchestration entry points (:func:`aeat.application.filing.build_draft`,
 :func:`aeat.application.filing.import_filing_from_justificante`)
 live at :mod:`aeat.application.filing`: domain records are stable
 boundary-crossing types; the use cases that compose them belong on
-the connector layer.
+the application layer. Justificante data is receipt metadata and import
+evidence, not a casilla-value authority.
 
 See Also:
     :mod:`aeat.application.filing`
         Application facade that builds, reviews, approves, exports, verifies,
         imports, and amends these draft records.
     :class:`ModeloDraft`
-        Registry-backed draft aggregate persisted by
-        :class:`ModeloDraftRepository`.
+        Registry-backed draft aggregate carrying values, binding provenance,
+        casilla provenance, and registry snapshot identity.
     :class:`ModeloValidator`
         Domain validator used by application review and approval flows.
     :class:`ModeloAmendmentRepository`

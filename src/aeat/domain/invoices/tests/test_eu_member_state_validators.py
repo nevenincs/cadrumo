@@ -36,34 +36,42 @@ def test_is_eu_member_state_code_accepts_each_substrate_member() -> None:
         assert is_eu_member_state_code(f"  {member.value}  ") is True
 
 
-def test_is_eu_member_state_code_rejects_non_eu_codes() -> None:
-    for non_eu in ("GB", "XI", "CH", "NO", "IS", "US", "CA", "TR", "MX", "JP", "BR"):
-        assert is_eu_member_state_code(non_eu) is False
+@pytest.mark.parametrize("non_eu", ("GB", "XI", "CH", "NO", "IS", "US", "CA", "TR", "MX", "JP", "BR"))
+def test_is_eu_member_state_code_rejects_non_eu_codes(non_eu: str) -> None:
+    assert is_eu_member_state_code(non_eu) is False
 
 
-def test_is_eu_member_state_code_rejects_malformed_inputs() -> None:
-    for bad in ("", "X", "ESP", "1F", "&&", "  "):
-        assert is_eu_member_state_code(bad) is False
+@pytest.mark.parametrize("bad", ("", "X", "ESP", "1F", "&&", "  "))
+def test_is_eu_member_state_code_rejects_malformed_inputs(bad: str) -> None:
+    assert is_eu_member_state_code(bad) is False
 
 
-def test_assert_eu_member_state_code_returns_uppercase_for_eu_member() -> None:
-    assert assert_eu_member_state_code("es") == "ES"
-    assert assert_eu_member_state_code("DE") == "DE"
-    assert assert_eu_member_state_code("  fr  ") == "FR"
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("es", "ES"),
+        ("DE", "DE"),
+        ("  fr  ", "FR"),
+    ],
+    ids=("lowercase", "uppercase", "padded"),
+)
+def test_assert_eu_member_state_code_returns_uppercase_for_eu_member(raw: str, expected: str) -> None:
+    assert assert_eu_member_state_code(raw) == expected
 
 
-def test_assert_eu_member_state_code_raises_for_non_eu_country() -> None:
-    with pytest.raises(ValueError, match="not one of the 27 EU Member States"):
-        assert_eu_member_state_code("GB")
-    with pytest.raises(ValueError, match="not one of the 27 EU Member States"):
-        assert_eu_member_state_code("US")
-
-
-def test_assert_eu_member_state_code_raises_for_malformed_code() -> None:
-    with pytest.raises(ValueError, match="ISO-3166 alpha-2"):
-        assert_eu_member_state_code("ESP")
-    with pytest.raises(ValueError, match="ISO-3166 alpha-2"):
-        assert_eu_member_state_code("E1")
+@pytest.mark.parametrize(
+    ("raw", "message"),
+    [
+        ("GB", "not one of the 27 EU Member States"),
+        ("US", "not one of the 27 EU Member States"),
+        ("ESP", "ISO-3166 alpha-2"),
+        ("E1", "ISO-3166 alpha-2"),
+    ],
+    ids=("gb", "us", "too-long", "non-alpha"),
+)
+def test_assert_eu_member_state_code_raises_for_invalid_codes(raw: str, message: str) -> None:
+    with pytest.raises(ValueError, match=message):
+        assert_eu_member_state_code(raw)
 
 
 def test_validate_country_code_remains_permissive_for_general_invoice_use() -> None:

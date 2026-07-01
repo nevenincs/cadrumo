@@ -35,28 +35,32 @@ def test_resolve_application_filing_bucket_id_accepts_explicit_bucket() -> None:
     assert resolve_application_filing_bucket_id(f"  {_EXPLICIT_BUCKET_ID}  ") == _EXPLICIT_BUCKET_ID
 
 
-def test_resolve_application_filing_bucket_id_rejects_blank_explicit_bucket() -> None:
-    with pytest.raises(ModeloApplicationError) as raised:
-        resolve_application_filing_bucket_id("  ")
-
-    assert raised.value.translated_message == "application.workflow.errors.no_active_profile_bucket"
-    assert raised.value.context == {"reason": "blank_explicit_bucket_id"}
-
-
 def test_resolve_application_filing_bucket_id_uses_active_profile_setting(tmp_path: Path) -> None:
     with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_ACTIVE_BUCKET_ID):
         assert resolve_application_filing_bucket_id(None) == _ACTIVE_BUCKET_ID
 
 
-def test_resolve_application_filing_bucket_id_rejects_missing_active_profile(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("explicit_bucket_id", "expected_reason"),
+    [
+        ("  ", "blank_explicit_bucket_id"),
+        (None, "missing_active_profile_bucket"),
+    ],
+    ids=("blank-explicit", "missing-active-profile"),
+)
+def test_resolve_application_filing_bucket_id_rejects_missing_bucket(
+    explicit_bucket_id: str | None,
+    expected_reason: str,
+    tmp_path: Path,
+) -> None:
     with (
         override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=None),
         pytest.raises(ModeloApplicationError) as raised,
     ):
-        resolve_application_filing_bucket_id(None)
+        resolve_application_filing_bucket_id(explicit_bucket_id)
 
     assert raised.value.translated_message == "application.workflow.errors.no_active_profile_bucket"
-    assert raised.value.context == {"reason": "missing_active_profile_bucket"}
+    assert raised.value.context == {"reason": expected_reason}
 
 
 def test_secure_objects_for_application_filing_bucket_refuses_unready_runtime(tmp_path: Path) -> None:

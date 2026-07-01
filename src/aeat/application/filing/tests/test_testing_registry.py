@@ -95,9 +95,8 @@ def test_approved_status_uses_application_approval_path() -> None:
     assert draft.review_checksum is not None
 
 
-def test_typed_period_input_is_passed_to_draft_without_string_roundtrip() -> None:
-    period = Period.from_year_and_code(2026, "1T")
-
+@pytest.mark.parametrize("period", [_Q1_2026, _Q1_2024], ids=("2026-q1", "2024-q1"))
+def test_typed_period_input_is_passed_to_draft_without_string_roundtrip(period: Period) -> None:
     draft = build_registry_filing_draft(
         modelo="130",
         period=period,
@@ -110,21 +109,6 @@ def test_typed_period_input_is_passed_to_draft_without_string_roundtrip() -> Non
     assert draft.snapshot_ref is not None
     assert draft.snapshot_ref.modelo_year == period.year
     assert draft.snapshot_ref.period == period.registry_token
-
-
-def test_typed_period_input_uses_period_year() -> None:
-    draft = build_registry_filing_draft(
-        modelo="130",
-        period=_Q1_2024,
-        casilla_values=_valid_inputs(),
-        binding_values=_valid_bindings(),
-        status=ModeloDraftStatus.BORRADOR,
-    )
-
-    assert draft.period == _Q1_2024
-    assert draft.snapshot_ref is not None
-    assert draft.snapshot_ref.modelo_year == 2024
-    assert draft.snapshot_ref.period == "1T"
 
 
 def test_string_period_input_is_rejected_at_helper_boundary() -> None:

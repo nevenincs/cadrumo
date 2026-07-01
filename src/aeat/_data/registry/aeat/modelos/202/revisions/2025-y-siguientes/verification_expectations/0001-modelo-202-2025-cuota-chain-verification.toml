@@ -6,4 +6,4 @@ rounding = "money-2"
 min_coverage = "1"
 discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
-source_refs = ["aeat-dr-202-2025"]
+source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]

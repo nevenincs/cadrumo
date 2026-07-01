@@ -11,7 +11,7 @@ discrepancy_causes = [
     "correctness_divergence",
 ]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure"]
 
 # Ledger IVA aggregation bindings for the annual resumen over the full
 # ejercicio. The IVA classification tuple lets Modelo 390 recompute directly

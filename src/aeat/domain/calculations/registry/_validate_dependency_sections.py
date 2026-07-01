@@ -167,15 +167,14 @@ def validate_filing_schedule_section(
     revision: ModeloRevision,
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
     selector_periods = set(revision.period_selector.periods)
     for schedule in revision.filing_schedules:
-        failures.extend(
-            _missing_refs(prefix, f"filing schedule {schedule.id}", schedule.legal_refs, legal_refs, "legal"),
-        )
-        failures.extend(
-            _missing_refs(prefix, f"filing schedule {schedule.id}", schedule.source_refs, source_refs, "source"),
-        )
+        owner = f"filing schedule {schedule.id}"
+        failures.extend(_missing_refs(prefix, owner, schedule.legal_refs, legal_refs, "legal"))
+        failures.extend(_missing_refs(prefix, owner, schedule.source_refs, source_refs, "source"))
+        failures.extend(evidence.require_source_tier(prefix, owner, schedule.source_refs, "official_source_guidance"))
         unknown_periods = sorted(set(schedule.periods).difference(selector_periods))
         if unknown_periods:
             failures.append(
@@ -186,3 +185,11 @@ def validate_filing_schedule_section(
             condition_owner = f"filing schedule {schedule.id} condition {condition.field}"
             failures.extend(_missing_refs(prefix, condition_owner, condition.legal_refs, legal_refs, "legal"))
             failures.extend(_missing_refs(prefix, condition_owner, condition.source_refs, source_refs, "source"))
+            failures.extend(
+                evidence.require_source_tier(
+                    prefix,
+                    condition_owner,
+                    condition.source_refs,
+                    "official_source_guidance",
+                ),
+            )
