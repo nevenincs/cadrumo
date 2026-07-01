@@ -32,49 +32,37 @@ def _record(*facts: UserProfileFact) -> UserProfileRecord:
     )
 
 
-@pytest.mark.parametrize(
-    ("capability", "expected_enabled", "expected_source"),
-    (
-        pytest.param(
-            ServiceCapability.CLOUD_EVIDENCE_UPLOAD,
-            False,
-            CapabilitySource.GLOBAL_SETTING,
-            id="cloud-global-setting",
-        ),
-        pytest.param(ServiceCapability.LLM_VISION, True, CapabilitySource.DEFAULT, id="vision-default"),
-    ),
-)
-def test_no_profile_fact_falls_back_to_global_default(
-    capability: ServiceCapability,
-    expected_enabled: bool,
-    expected_source: CapabilitySource,
-) -> None:
+def test_no_profile_fact_falls_back_to_global_default() -> None:
     settings = load_settings()
-    resolved = resolve_capability(capability, profile_record=None, settings=settings)
+    cases: tuple[tuple[ServiceCapability, bool, CapabilitySource], ...] = (
+        (ServiceCapability.CLOUD_EVIDENCE_UPLOAD, False, CapabilitySource.GLOBAL_SETTING),
+        (ServiceCapability.LLM_VISION, True, CapabilitySource.DEFAULT),
+    )
 
-    assert resolved.enabled is expected_enabled
-    assert resolved.source is expected_source
+    for capability, expected_enabled, expected_source in cases:
+        resolved = resolve_capability(capability, profile_record=None, settings=settings)
+
+        assert resolved.enabled is expected_enabled
+        assert resolved.source is expected_source
 
 
-@pytest.mark.parametrize(
-    ("capability", "expected_enabled"),
-    (
-        pytest.param(ServiceCapability.LLM_VISION, False, id="vision-disabled"),
-        pytest.param(ServiceCapability.CLOUD_EVIDENCE_UPLOAD, True, id="cloud-enabled"),
-    ),
-)
-def test_profile_fact_overrides_the_default(capability: ServiceCapability, expected_enabled: bool) -> None:
+def test_profile_fact_overrides_the_default() -> None:
     settings = load_settings()
     record = _record(
         UserProfileFact(path="capabilities.llm_vision", value=False),
         UserProfileFact(path="capabilities.cloud_evidence_upload", value=True),
     )
-    resolved = resolve_capability(capability, profile_record=record, settings=settings)
 
-    # The profile opted in, and gestor mode is off + global default off, so the
-    # profile fact is the deciding layer.
-    assert resolved.enabled is expected_enabled
-    assert resolved.source is CapabilitySource.PROFILE
+    for capability, expected_enabled in (
+        (ServiceCapability.LLM_VISION, False),
+        (ServiceCapability.CLOUD_EVIDENCE_UPLOAD, True),
+    ):
+        resolved = resolve_capability(capability, profile_record=record, settings=settings)
+
+        # The profile opted in, and gestor mode is off + global default off, so the
+        # profile fact is the deciding layer.
+        assert resolved.enabled is expected_enabled
+        assert resolved.source is CapabilitySource.PROFILE
 
 
 def test_gestor_mode_bars_cloud_upload_even_with_profile_opt_in() -> None:
