@@ -40,6 +40,8 @@ from .._schema import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_ID = "filing-runtime"
+_DRAFT_TIMESTAMP = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
+_APPROVED_AT = datetime(2026, 5, 25, 14, 30, tzinfo=UTC)
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -64,7 +66,6 @@ def _populated_draft() -> ModeloDraft:
     field.
     """
 
-    now = datetime.now(UTC).replace(microsecond=0)
     return ModeloDraft(
         draft_id="d" * 64,
         modelo="303",
@@ -99,15 +100,15 @@ def _populated_draft() -> ModeloDraft:
                 casilla_id=_IVA_DEVENGADO_CASILLA,
                 formula_id="iva-cuota-devengada-formula",
                 legal_refs=("ley-37-1992:art-92",),
-                source_refs=("aeat-iva-2025:casilla-01",),
+                source_refs=("aeat-iva-2025",),
             ),
         ),
         findings=(),
-        created_at=now,
-        updated_at=now,
+        created_at=_DRAFT_TIMESTAMP,
+        updated_at=_DRAFT_TIMESTAMP,
         schema_version="schema-2025-1",
         notes="Draft pending operator review",
-        approved_at=datetime(2026, 5, 25, 14, 30, tzinfo=UTC),
+        approved_at=_APPROVED_AT,
         approved_by="operator-reviewer-1",
         review_checksum="a" * 64,
         approval_basis=ModeloApprovalBasis(
@@ -161,7 +162,7 @@ def test_filing_draft_survives_encrypted_storage_roundtrip(
     assert loaded.casilla_provenance[0].casilla_id == _IVA_DEVENGADO_CASILLA
     assert loaded.casilla_provenance[0].formula_id == "iva-cuota-devengada-formula"
     assert loaded.notes == "Draft pending operator review"
-    assert loaded.approved_at == datetime(2026, 5, 25, 14, 30, tzinfo=UTC)
+    assert loaded.approved_at == _APPROVED_AT
     assert loaded.approved_by == "operator-reviewer-1"
     assert loaded.review_checksum == "a" * 64
     assert loaded.approval_basis is not None
@@ -210,7 +211,6 @@ def test_calculation_revision_observations_survive_encrypted_storage(
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        now = datetime.now(UTC).replace(microsecond=0)
         observation = CasillaObservation(
             casilla_id=_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA,
             value=Decimal("12345.67"),
@@ -234,8 +234,8 @@ def test_calculation_revision_observations_survive_encrypted_storage(
             state=CalculationRevisionState.BORRADOR,
             casilla_values=casilla_values,
             observations=(observation,),
-            created_at=now,
-            updated_at=now,
+            created_at=_DRAFT_TIMESTAMP,
+            updated_at=_DRAFT_TIMESTAMP,
         )
         catalogue = CalculationRevisionCatalogue(
             revisions={revision.calculation_revision_id: revision},
