@@ -10,7 +10,10 @@ include :data:`STRICT_FROZEN_CONFIG`, :class:`CasillaId`, :class:`Modelo`,
 :class:`Period`, :class:`StandardPeriodCode`, ``PeriodKind``,
 :class:`TaxDomain`, :class:`RefundElection`, :class:`ResultDisposition`, and
 the lazily resolved :class:`BindingSourceKind` registry-source taxonomy.
-Active-bucket context uses the plaintext :class:`BucketPointer` value object
+Obligation-coverage mappings expose :data:`OUT_OF_SCOPE_OBLIGATIONS` and
+:data:`UNMODELED_OBLIGATIONS`, the codified AEAT modelo sets the overview
+coverage report reads to distinguish product-scope exclusions from
+registry gaps. Active-bucket context uses the plaintext :class:`BucketPointer` value object
 plus :func:`pointer_path`, :func:`read_pointer`, :func:`write_pointer`,
 :func:`resolve_active_bucket_id`, :func:`require_active_bucket_id`, and
 :func:`resolve_repository_bucket_id`. TOML and option utilities expose
@@ -59,7 +62,7 @@ from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_m
 from ._iban import IBAN_SHAPE_RE, iban_mod_97
 from ._irnr import ConvenioOverrideKind, TipoRentaIrnr
 from ._ledger_sort import LedgerSortField, LedgerSortOrder
-from ._modelo import NON_REGISTRY_MODELOS, Modelo
+from ._modelo import NON_REGISTRY_MODELOS, OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS, Modelo
 from ._models import STRICT_FROZEN_CONFIG
 from ._optional_extras import (
     ANTHROPIC_EXTRA,
@@ -121,7 +124,9 @@ __all__: list[str] = [
     "IBAN_SHAPE_RE",
     "NON_REGISTRY_MODELOS",
     "OPTIONAL_EXTRAS",
+    "OUT_OF_SCOPE_OBLIGATIONS",
     "STRICT_FROZEN_CONFIG",
+    "UNMODELED_OBLIGATIONS",
     "BindingSourceKind",
     "BucketPointer",
     "CasillaId",
