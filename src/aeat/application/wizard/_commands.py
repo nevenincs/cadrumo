@@ -320,6 +320,10 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         "--professional-income-withholding-ge-70pct/--no-professional-income-withholding-ge-70pct",
         help=tr("wizard.setup.flags.professional-income-withholding-ge-70pct.help"),
     ),
+    "art109-activity-income-withholding-ge-70pct": typer.Option(
+        "--art109-activity-income-withholding-ge-70pct/--no-art109-activity-income-withholding-ge-70pct",
+        help=tr("wizard.setup.flags.art109-activity-income-withholding-ge-70pct.help"),
+    ),
     "pays-rent-with-retencion": typer.Option(
         "--pays-rent-with-retencion/--no-pays-rent-with-retencion",
         help=tr("wizard.setup.flags.pays-rent-with-retencion.help"),

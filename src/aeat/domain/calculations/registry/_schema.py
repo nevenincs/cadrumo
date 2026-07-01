@@ -1030,7 +1030,7 @@ class FormulaDefinition(RegistryModel):
 
 KNOWN_PROFILE_FLAG_ADVISORY_FIELDS: frozenset[str] = frozenset(
     {
-        "professional_income_withholding_ge_70pct",
+        "art109_activity_income_withholding_ge_70pct",
     },
 )
 
@@ -1111,9 +1111,9 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         "profile_field_required",
         # profile_flag_enabled("profile_field_name") — profile-state advisory:
         # FIRES (ADVISORY shown) iff the named boolean TaxpayerProfile field is
-        # true. ADVISORY-only. Authored for the M130 Art. 109 profile flag,
-        # where the legal 70% test is an income-coverage fact declared in the
-        # profile/deadline layer, not a casilla-amount ratio in the form.
+        # true. ADVISORY-only. Authored for the M130 Art. 109 activity-income
+        # coverage fact, where the legal 70% test is declared in the
+        # profile/deadline layer, not inferred from a casilla-amount ratio.
         "profile_flag_enabled",
         # roll_forward_balances(["closing_id", "opening_id", "applied_id",
         # "base_id"]) — carry-forward stock continuity: the closing balance must
@@ -1217,9 +1217,9 @@ class VerificationPredicateDefinition(RegistryModel):
     - ``profile_flag_enabled("profile_field_name")`` — profile-state
       advisory: predicate FIRES (ADVISORY shown) iff the named boolean
       TaxpayerProfile field is true. ADVISORY-only. Authored for the Modelo
-      130 Art. 109 high-withholding profile flag: the legal 70% threshold is
-      an income-coverage/profile fact, not a ratio between retenciones amount
-      and gross income casillas.
+      130 Art. 109 activity-income coverage profile fact: the legal 70%
+      threshold is an income-coverage/profile fact, not a ratio between
+      retenciones amount and gross income casillas.
     - ``casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal",
       "consequent_casilla_id"])`` — categorical-conditional material
       implication: predicate FIRES (ADVISORY shown) iff the operator-entered

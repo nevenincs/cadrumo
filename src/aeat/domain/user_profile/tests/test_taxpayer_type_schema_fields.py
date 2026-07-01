@@ -106,6 +106,25 @@ def test_irpf_estimation_regime_enum_covers_directa_and_objetiva(
     assert expected_refs <= legal_ids
 
 
+def test_art109_activity_income_coverage_is_the_schedule_predicate(
+    schema: ProfileSchemaDefinition,
+    legal_ids: frozenset[str],
+) -> None:
+    old_field = schema.field("irpf.professional_income_withholding_ge_70pct")
+    assert old_field.type.value == "boolean"
+    assert old_field.model_selectors == ("professional_income_withholding_ge_70pct",)
+    assert old_field.schedule_predicates == ()
+
+    field = schema.field("irpf.art109_activity_income_withholding_ge_70pct")
+    assert field.type.value == "boolean"
+    assert field.model_selectors == ("art109_activity_income_withholding_ge_70pct",)
+    assert field.schedule_predicates == ("art109_activity_income_withholding_ge_70pct",)
+    assert field.legal_refs == ("rd-439-2007:art-109",)
+    assert "activity-start" in field.description
+    assert "professional, agricultural, livestock, or forestry" in field.description
+    assert set(field.legal_refs) <= legal_ids
+
+
 def test_objective_estimation_threshold_refs_resolve_against_catalogue(
     schema: ProfileSchemaDefinition,
     legal_ids: frozenset[str],

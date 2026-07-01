@@ -41,6 +41,7 @@ def _fully_populated_answers() -> SetupAnswers:
         iva_regime=IVARegime.REAGP,
         iva_sii_enrolled=True,
         iva_redeme_enrolled=True,
+        art109_activity_income_withholding_ge_70pct=True,
     )
 
 
@@ -87,12 +88,14 @@ class TestWizardPersistenceRoundTrip:
         assert rebuilt.iva_regime == original.iva_regime
         assert rebuilt.iva_sii_enrolled == original.iva_sii_enrolled
         assert rebuilt.iva_redeme_enrolled == original.iva_redeme_enrolled
+        assert rebuilt.art109_activity_income_withholding_ge_70pct is True
 
     def test_canonical_dict_carries_taxpayer_axis_profile_keys(self) -> None:
         canonical = serialise_answers(SETUP_FLOW, _fully_populated_answers())
         assert canonical["taxpayer_type.entity_type"] == "natural_person"
         assert canonical["taxpayer_type.irpf_income_categories"] == ("trabajo,capital_inmobiliario,pension")
         assert canonical["irpf.estimation_regime"] == "directa_simplificada"
+        assert canonical["irpf.art109_activity_income_withholding_ge_70pct"] == "true"
         assert canonical["iva.sii_enrolled"] == "true"
         assert canonical["iva.redeme_enrolled"] == "true"
 
@@ -124,6 +127,7 @@ class TestTaxpayerProfileProjection:
                 "taxpayer_type.entity_type": "natural_person",
                 "taxpayer_type.irpf_income_categories": "capital_inmobiliario,pension",
                 "irpf.estimation_regime": "objetiva",
+                "irpf.art109_activity_income_withholding_ge_70pct": "true",
                 "iva.regime": "REAGP",
                 "iva.sii_enrolled": "true",
                 "iva.redeme_enrolled": "true",
@@ -135,6 +139,7 @@ class TestTaxpayerProfileProjection:
             {IrpfIncomeCategory.CAPITAL_INMOBILIARIO, IrpfIncomeCategory.PENSION},
         )
         assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
+        assert profile.art109_activity_income_withholding_ge_70pct is True
         assert profile.iva_regime is IVARegime.REAGP
         assert profile.iva.sii_enrolled is True
         assert profile.iva.redeme_enrolled is True

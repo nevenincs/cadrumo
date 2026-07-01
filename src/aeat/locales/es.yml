@@ -5402,6 +5402,9 @@ wizard:
         help: Paga alquiler de local con retención
       professional-income-withholding-ge-70pct:
         help: Al menos 70% de los ingresos profesionales con retención previa
+      art109-activity-income-withholding-ge-70pct:
+        help: Cobertura Art. 109 - al menos 70% de ingresos de actividades profesionales,
+          agricolas, ganaderas o forestales sujetos a retención o ingreso a cuenta
       representante-fiscal-nif:
         help: NIF/NIE del representante fiscal en España. Obligatorio para no residentes
           fuera de la UE/EEE (art. 47 LGT + art. 10 TRLIRNR RDLeg 5/2004).
@@ -5551,6 +5554,8 @@ wizard:
         prompt: Paga alquiler de local con retención
       professional-income-withholding-ge-70pct:
         prompt: Al menos 70% de los ingresos profesionales con retención previa
+      art109-activity-income-withholding-ge-70pct:
+        prompt: Aplica la excepción Art. 109 por cobertura del 70% de ingresos de actividad
       third-party-transactions-above-347-threshold:
         prompt: Operaciones con terceros superan el umbral del Modelo 347
       title: Obligaciones

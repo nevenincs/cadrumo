@@ -36,6 +36,7 @@ def _profile(**overrides: object) -> TaxpayerProfile:
         "tax_id": "X1234567L",
         "iva_regime": IVARegime.GENERAL,
         "professional_income_withholding_ge_70pct": False,
+        "art109_activity_income_withholding_ge_70pct": False,
     }
     base.update(overrides)
     return TaxpayerProfile.model_validate(base)
@@ -73,14 +74,23 @@ class TestCompute:
 
     def test_profile_condition_can_remove_registry_deadline(self) -> None:
         schedule = _engine().compute(
-            _profile(professional_income_withholding_ge_70pct=True),
+            _profile(art109_activity_income_withholding_ge_70pct=True),
             2026,
             today=date(2026, 1, 1),
         )
 
         modelos = [obligation.modelo for obligation in schedule.obligations]
-        assert "130" not in modelos, "M130 must be absent when professional withholding >= 70%"
+        assert "130" not in modelos, "M130 must be absent when the Art. 109 activity-income fact is true"
         assert modelos.count("303") == 4, "M303 must appear for all four quarters"
+
+    def test_professional_only_high_retention_field_does_not_remove_m130_deadline(self) -> None:
+        schedule = _engine().compute(
+            _profile(professional_income_withholding_ge_70pct=True),
+            2026,
+            today=date(2026, 1, 1),
+        )
+
+        assert [obligation.modelo for obligation in schedule.obligations].count("130") == 4
 
     def test_registry_any_condition_can_add_withholding_deadline_for_employee_payer(self) -> None:
         schedule = _engine().compute(_profile(has_employees=True), 2026, today=date(2026, 1, 1))
@@ -340,7 +350,8 @@ class TestNextDeadline:
 class TestRegistryApplicability:
     def test_applies_to_uses_registry_conditions(self) -> None:
         assert applies_to(_profile(), "130") is True
-        assert applies_to(_profile(professional_income_withholding_ge_70pct=True), "130") is False
+        assert applies_to(_profile(professional_income_withholding_ge_70pct=True), "130") is True
+        assert applies_to(_profile(art109_activity_income_withholding_ge_70pct=True), "130") is False
         assert applies_to(_profile(), "111") is False
         assert applies_to(_profile(has_employees=True), "111") is True
         assert applies_to(_profile(pays_professionals_with_retencion=True), "111") is True

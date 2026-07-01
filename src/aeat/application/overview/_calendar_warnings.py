@@ -45,8 +45,8 @@ _PROFILE_FIELD_WARNING_META: MappingProxyType[str, tuple[str, str]] = MappingPro
             "cli.overview.warning.retencion_profesionales_unset",
             _PROFILE_EDIT_FIX_COMMAND,
         ),
-        "professional_income_withholding_ge_70pct": (
-            "cli.overview.warning.professional_income_withholding_ge_70pct_unset",
+        "art109_activity_income_withholding_ge_70pct": (
+            "cli.overview.warning.art109_activity_income_withholding_ge_70pct_unset",
             _PROFILE_EDIT_FIX_COMMAND,
         ),
         "pays_rent_with_retencion": (
