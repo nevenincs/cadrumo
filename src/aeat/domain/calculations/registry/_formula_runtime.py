@@ -39,6 +39,8 @@ from ._runtime_graph import formula_evaluation_order
 from ._schema import FormulaExpression, ParameterDefinition, RegistrySnapshot
 
 _ZERO = Decimal("0")
+_ONE = Decimal("1")
+_M100_IMPUTATION_YEAR_DAYS = Decimal("365")
 read_parameter, _resolve_bracket = _ops.read_parameter, _ops.resolve_bracket
 
 # M210 IRNR sentinel rate values. Emitted by
@@ -95,6 +97,18 @@ class _M210ResolveBaseArgs:
     recent_rate_parameter: ParameterId
     old_rate_parameter: ParameterId
     no_catastral_fraction_parameter: ParameterId
+
+
+@dataclass(frozen=True, slots=True)
+class _M100ResolveImputedRentArgs:
+    catastral_value_casilla_id: CasillaId
+    revised_flag_casilla_id: CasillaId
+    disposal_days_casilla_id: CasillaId
+    mixed_use_flag_casilla_id: CasillaId
+    disposal_percentage_casilla_id: CasillaId
+    mixed_use_days_casilla_id: CasillaId
+    recent_rate_parameter: ParameterId
+    old_rate_parameter: ParameterId
 
 
 class RegistryCalculationEntry(BaseModel):
@@ -507,6 +521,8 @@ def _evaluate_expression(
         return _evaluate_lookup_bracket(expression, ctx)
     if op == "lookup_bracket_by_ccaa":
         return _evaluate_lookup_bracket_by_ccaa(expression, ctx)
+    if op == "m100_resolve_renta_inmobiliaria_imputada":
+        return _evaluate_m100_resolve_renta_inmobiliaria_imputada(expression, ctx)
     if op == "m210_resolve_rate":
         return _evaluate_m210_resolve_rate(expression, ctx)
     if op == "m210_resolve_base_imponible":
@@ -631,6 +647,208 @@ def _evaluate_lookup_bracket_by_ccaa(expression: FormulaExpression, ctx: _EvalCo
     return result
 
 
+def _evaluate_m100_resolve_renta_inmobiliaria_imputada(
+    expression: FormulaExpression,
+    ctx: _EvalContext,
+) -> Decimal:
+    """Resolve M100 Art. 85 imputed real-estate income for cadastral-value rows.
+
+    M100's 0083-0089 property row has the cadastral-value branch inputs:
+    value, revised-value checkbox, days at disposal, and the mixed-use
+    percentage/days override. The same row does not carry the no-cadastral
+    substitute base (max of acquisition and administration-checked values), so
+    that branch fails closed instead of inventing a base or silently returning
+    zero for a positive imputation period.
+    """
+    op = "m100_resolve_renta_inmobiliaria_imputada"
+    args = _m100_resolve_imputed_rent_args(expression)
+
+    catastral_value = _m100_numeric_casilla_value(args.catastral_value_casilla_id, ctx)
+    disposal_days = _m100_numeric_casilla_value(args.disposal_days_casilla_id, ctx)
+    mixed_use = _m100_boolean_casilla_value(args.mixed_use_flag_casilla_id, ctx, op=op)
+    disposal_percentage = _m100_numeric_casilla_value(args.disposal_percentage_casilla_id, ctx)
+    mixed_use_days = _m100_numeric_casilla_value(args.mixed_use_days_casilla_id, ctx)
+    is_revised = _m100_revised_cadastral_value_flag(args.revised_flag_casilla_id, ctx)
+
+    if catastral_value < _ZERO:
+        raise RegistryValidationError(
+            "M100 Art.85 valor catastral must be non-negative",
+            translated_message="errors.calc.m100_art85_catastral_value_negative",
+            context={"casilla_id": args.catastral_value_casilla_id, "value": str(catastral_value)},
+        )
+    for casilla_id, value in (
+        (args.disposal_days_casilla_id, disposal_days),
+        (args.disposal_percentage_casilla_id, disposal_percentage),
+        (args.mixed_use_days_casilla_id, mixed_use_days),
+    ):
+        if value < _ZERO:
+            raise RegistryValidationError(
+                "M100 Art.85 numeric inputs must be non-negative",
+                translated_message="errors.calc.m100_art85_input_negative",
+                context={"casilla_id": casilla_id, "value": str(value)},
+            )
+    if catastral_value == _ZERO:
+        if disposal_days > _ZERO or mixed_use_days > _ZERO or mixed_use or disposal_percentage > _ZERO:
+            raise RegistryValidationError(
+                "M100 Art.85 no-catastral imputation requires substitute-base casillas that are not "
+                "present in the 0083-0089 registry row",
+                translated_message="errors.calc.m100_art85_no_catastral_base_missing",
+                context={
+                    "catastral_value_casilla_id": args.catastral_value_casilla_id,
+                    "disposal_days_casilla_id": args.disposal_days_casilla_id,
+                    "mixed_use_days_casilla_id": args.mixed_use_days_casilla_id,
+                },
+            )
+        return _ZERO
+
+    effective_days = mixed_use_days if mixed_use else disposal_days
+    _m100_validate_imputation_days(
+        effective_days,
+        casilla_id=args.mixed_use_days_casilla_id if mixed_use else args.disposal_days_casilla_id,
+    )
+    if not mixed_use and (mixed_use_days != _ZERO or disposal_percentage != _ZERO):
+        raise RegistryValidationError(
+            "M100 Art.85 mixed-use days or percentage require casilla 0086 to be checked",
+            translated_message="errors.calc.m100_art85_mixed_use_inputs_without_flag",
+            context={
+                "mixed_use_flag_casilla_id": args.mixed_use_flag_casilla_id,
+                "mixed_use_days_casilla_id": args.mixed_use_days_casilla_id,
+                "disposal_percentage_casilla_id": args.disposal_percentage_casilla_id,
+            },
+        )
+    share = _ONE
+    if mixed_use:
+        if disposal_percentage <= _ZERO or disposal_percentage > Decimal("100"):
+            raise RegistryValidationError(
+                "M100 Art.85 mixed-use percentage must be in (0, 100]",
+                translated_message="errors.calc.m100_art85_disposal_percentage_invalid",
+                context={
+                    "casilla_id": args.disposal_percentage_casilla_id,
+                    "value": str(disposal_percentage),
+                },
+            )
+        share = disposal_percentage / Decimal("100")
+
+    recent_rate = _m100_scalar_parameter_value(args.recent_rate_parameter, ctx, op=op)
+    old_rate = _m100_scalar_parameter_value(args.old_rate_parameter, ctx, op=op)
+    rate = recent_rate if is_revised else old_rate
+    return catastral_value * rate * (effective_days / _M100_IMPUTATION_YEAR_DAYS) * share
+
+
+def _m100_resolve_imputed_rent_args(expression: FormulaExpression) -> _M100ResolveImputedRentArgs:
+    op = "m100_resolve_renta_inmobiliaria_imputada"
+    if len(expression.args) != 8:
+        raise RegistryValidationError(f"formula op {op!r} expects 8 args, got {len(expression.args)}")
+    (
+        catastral_value_arg,
+        revised_flag_arg,
+        disposal_days_arg,
+        mixed_use_flag_arg,
+        disposal_percentage_arg,
+        mixed_use_days_arg,
+        recent_rate_arg,
+        old_rate_arg,
+    ) = expression.args
+    if catastral_value_arg.casilla_id is None:
+        raise RegistryValidationError(f"formula op {op!r} requires args[0] to be a casilla leaf")
+    if revised_flag_arg.casilla_id is None:
+        raise RegistryValidationError(f"formula op {op!r} requires args[1] to be a casilla leaf")
+    if disposal_days_arg.casilla_id is None:
+        raise RegistryValidationError(f"formula op {op!r} requires args[2] to be a casilla leaf")
+    if mixed_use_flag_arg.casilla_id is None:
+        raise RegistryValidationError(f"formula op {op!r} requires args[3] to be a casilla leaf")
+    if disposal_percentage_arg.casilla_id is None:
+        raise RegistryValidationError(f"formula op {op!r} requires args[4] to be a casilla leaf")
+    if mixed_use_days_arg.casilla_id is None:
+        raise RegistryValidationError(f"formula op {op!r} requires args[5] to be a casilla leaf")
+    if recent_rate_arg.parameter is None:
+        raise RegistryValidationError(f"formula op {op!r} requires args[6] to be a parameter leaf")
+    if old_rate_arg.parameter is None:
+        raise RegistryValidationError(f"formula op {op!r} requires args[7] to be a parameter leaf")
+    return _M100ResolveImputedRentArgs(
+        catastral_value_casilla_id=catastral_value_arg.casilla_id,
+        revised_flag_casilla_id=revised_flag_arg.casilla_id,
+        disposal_days_casilla_id=disposal_days_arg.casilla_id,
+        mixed_use_flag_casilla_id=mixed_use_flag_arg.casilla_id,
+        disposal_percentage_casilla_id=disposal_percentage_arg.casilla_id,
+        mixed_use_days_casilla_id=mixed_use_days_arg.casilla_id,
+        recent_rate_parameter=recent_rate_arg.parameter,
+        old_rate_parameter=old_rate_arg.parameter,
+    )
+
+
+def _m100_revised_cadastral_value_flag(casilla_id: CasillaId, ctx: _EvalContext) -> bool:
+    raw_value = ctx.text_values.get(casilla_id, "")
+    ctx.operand_refs.append(casilla_id)
+    ctx.operand_casilla_refs.append(casilla_id)
+    if raw_value == "":
+        return False
+    normalised = raw_value.strip().upper()
+    if normalised == "X":
+        return True
+    raise RegistryValidationError(
+        "M100 Art.85 revised cadastral value flag must be the official X checkbox value",
+        translated_message="errors.calc.m100_art85_revision_flag_invalid",
+        context={"casilla_id": casilla_id, "value": raw_value},
+    )
+
+
+def _m100_numeric_casilla_value(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
+    if casilla_id not in ctx.values:
+        if casilla_id in ctx.unresolved_casilla_ids:
+            raise _UnresolvedFormulaDependencyError((casilla_id,))
+        raise RegistryValidationError(
+            f"casilla {casilla_id!r} referenced before evaluation",
+            translated_message="errors.calc.casilla_referenced_before_evaluation",
+            context={"casilla_id": casilla_id},
+        )
+    value = ctx.values[casilla_id]
+    ctx.operand_refs.append(casilla_id)
+    ctx.operand_casilla_refs.append(casilla_id)
+    ctx.operand_values.append(value)
+    return value
+
+
+def _m100_boolean_casilla_value(casilla_id: CasillaId, ctx: _EvalContext, *, op: str) -> bool:
+    value = _m100_numeric_casilla_value(casilla_id, ctx)
+    if value not in {_ZERO, _ONE}:
+        raise RegistryValidationError(
+            "M100 Art.85 boolean casilla must be 0 or 1",
+            translated_message="errors.calc.m100_art85_boolean_invalid",
+            context={"casilla_id": casilla_id, "value": str(value), "op": op},
+        )
+    return value == _ONE
+
+
+def _m100_validate_imputation_days(days: Decimal, *, casilla_id: CasillaId) -> None:
+    if days != days.to_integral_value() or days <= _ZERO or days > _M100_IMPUTATION_YEAR_DAYS:
+        raise RegistryValidationError(
+            "M100 Art.85 imputation days must be an integer in [1, 365]",
+            translated_message="errors.calc.m100_art85_imputation_days_invalid",
+            context={"casilla_id": casilla_id, "value": str(days), "max_days": str(_M100_IMPUTATION_YEAR_DAYS)},
+        )
+
+
+def _m100_scalar_parameter_value(parameter_id: ParameterId, ctx: _EvalContext, *, op: str) -> Decimal:
+    parameter = ctx.parameters.get(parameter_id)
+    if parameter is None:
+        raise RegistryValidationError(
+            f"parameter {parameter_id!r} not registered",
+            translated_message="errors.calc.parameter_unknown",
+            context={"parameter_id": parameter_id},
+        )
+    if parameter.data_type not in {"decimal", "money", "integer", "ratio"}:
+        raise RegistryValidationError(
+            f"parameter {parameter_id!r} must be scalar to be used by {op}",
+            translated_message="errors.calc.dispatch_parameter_kind",
+            context={"parameter_id": parameter_id, "op": op},
+        )
+    value = _ops.resolve_parameter(parameter, ctx.date_context)
+    ctx.operand_refs.append(parameter_id)
+    ctx.operand_values.append(value)
+    return value
+
+
 def _evaluate_m210_resolve_rate(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
     """Resolve the M210 IRNR tipo de gravamen rate from registry parameters.
 
@@ -682,6 +900,8 @@ def _evaluate_m210_resolve_rate(expression: FormulaExpression, ctx: _EvalContext
         ctx.operand_values.append(_M210_CONVENIO_MISSING_SENTINEL)
         return _M210_CONVENIO_MISSING_SENTINEL
     rate = _m210_rate_from_convenio_row(matched_row.rate)
+    if not isinstance(rate, Decimal):
+        rate = _M210_CONVENIO_MISSING_SENTINEL
     ctx.operand_values.append(rate)
     return rate
 
