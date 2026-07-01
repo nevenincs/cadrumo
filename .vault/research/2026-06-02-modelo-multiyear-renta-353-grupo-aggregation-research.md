@@ -3,12 +3,10 @@ tags:
   - '#research'
   - '#modelo-multiyear-renta-353-grupo-aggregation'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 related:
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
 ---
-
-
 
 # `modelo-multiyear-renta-353-grupo-aggregation` research: `353 grupo-entidades monthly aggregation mechanism`
 
@@ -170,4 +168,3 @@ grouping axis is present; or (b) model the whole group as a single observation
 bucket whose `observations` already carry every member, keyed internally by NIF,
 so the resolver sums within one bucket and the `!= 1` guard still holds. The ADR
 weighs both and recommends (a).
-

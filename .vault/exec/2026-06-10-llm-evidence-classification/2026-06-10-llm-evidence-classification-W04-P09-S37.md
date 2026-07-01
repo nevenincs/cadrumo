@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#llm-evidence-classification'
 date: '2026-06-12'
-modified: '2026-06-12'
+modified: '2026-06-30'
 step_id: 'S37'
 related:
   - "[[2026-06-10-llm-evidence-classification-plan]]"
 ---
-
-
-
 
 # Roll split --llm --read-evidence --apply against a real multi-line invoice with a real cloud CLI
 
@@ -32,4 +29,3 @@ related:
 - The model read the two-line invoice and produced a 2-child split: child 1 = 302.50 ("1. Linea 1: Portatil"), child 2 = 121.00 ("2. Linea 2: Material"); children sum exactly to the 423.50 parent. Descriptions carry the model's evidence citations; both children stamp `llm:codex`. The destructive-op `--yes` gate and the cloud-evidence consent gate both fired and were instructive. Captured in audit `2026-06-13-llm-evidence-classification-audit`.
 
 ## Notes
-

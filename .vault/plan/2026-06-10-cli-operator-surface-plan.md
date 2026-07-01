@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cli-operator-surface'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-10-cli-operator-surface-adr]]'
@@ -11,7 +11,6 @@ related:
   - '[[2026-06-10-cli-operator-surface-audit]]'
   - '[[2026-06-10-cli-operator-crud-matrix-audit]]'
 ---
-
 
 # `cli-operator-surface` `operator surface hardening rollout` plan
 
@@ -141,12 +140,6 @@ Add the reconciliation-history list surface and the IVA wallet correction/read p
 Rollout plan for the accepted operator-surface ADR (2026-06-10-cli-operator-surface-adr, accepted with three operator caveats: strict no-alias hard renames, user-choice input overrides welcome, guessability as the verb acceptance test). The ADR's eight decisions D1 through D8 reconcile the operator-surface weaknesses catalogued by the surface audit (findings F1 to F8, with file and line evidence) and the CRUD matrix audit (capability matrix, journey verdicts (a) through (e), findings F-01 to F-08), both synthesised by the research document. The plan delivers four sequenced waves: W01 lands the independent honesty quick wins (D5 conformance gate first so it protects everything after it, D8 preflight natural-key default, D6 --language honesty contract in the accepted ordering work-then-remove-then-warn); W02 closes the highest-leverage recovery and identity gaps (D2 ledger restore to ACTIVE, D3 lineage-resolving read verbs); W03 executes the strict hard renames (D1 switch-replaces-unlock as one atomic relocation commit, the queued reset-state and bucket renames, D4 one-period-grammar conversion); W04 establishes the D7 read-back baseline (M036 list and view first, then reconciliation history and the IVA wallet correction path). The filing-record unfile decision and the gestor cross-profile bulk gap (CRUD F-04) are explicitly deferred per the ADR. Every operator-surface Step bundles real-behavior tests with no mocks or skips, locale updates through the `python -m aeat.locales` CLI only, same-commit docs updates, the documented-command conformance gate, and CLI-reference regeneration when the command tree changes; Steps that change `src/aeat` module structure also run `python -m dev.docs.apidocs scaffold`. The never-live-submission gate is untouched throughout.
 
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 

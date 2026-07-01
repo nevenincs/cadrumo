@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#binding-resolver-contract-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 step_id: 'S08'
 related:
   - "[[2026-06-26-binding-resolver-contract-unification-plan]]"
 ---
-
-
-
 
 # Remove the BindingSourceResolution Protocol and the resolve_calculation_binding_inputs B-to-A-to-B wrap, re-homing the channel-mismatch and previous-filing-override helpers onto the mesh-merged resolution, applying the apply-cached-on-collision drive against the live peer WIP
 

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#codebase-performance-optimization'
 date: '2026-06-09'
-modified: '2026-06-09'
+modified: '2026-06-30'
 step_id: 'S01'
 related:
   - "[[2026-06-09-codebase-performance-optimization-plan]]"
 ---
-
-
-
 
 # Include user_profile/schema.toml in registry tree fingerprints
 
@@ -27,4 +24,3 @@ related:
 - Done. Schema modifications now invalidate the registry fingerprint and validation cache.
 
 ## Notes
-

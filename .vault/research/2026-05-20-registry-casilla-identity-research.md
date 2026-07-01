@@ -3,12 +3,10 @@ tags:
   - '#research'
   - '#registry-casilla-identity'
 date: '2026-05-20'
-modified: '2026-05-20'
+modified: '2026-06-30'
 related:
   - "[[2026-05-20-branch-reconciliation-audit]]"
 ---
-
-
 
 # `registry-casilla-identity` research: segment-scoped casilla identity for multi-segment AEAT modelos
 

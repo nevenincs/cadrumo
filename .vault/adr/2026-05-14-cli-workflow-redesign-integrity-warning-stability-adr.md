@@ -3,14 +3,13 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
-modified: '2026-05-14'
+modified: '2026-06-30'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-config-doctor-shape-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-research]]"
 ---
-
 
 # `cli-workflow-redesign` adr: `integrity-warning stability` | (**status:** `accepted`)
 

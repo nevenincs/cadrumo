@@ -3,24 +3,18 @@ tags:
   - '#audit'
   - '#cli-persona-testimonials'
 date: '2026-05-21'
-modified: '2026-05-21'
+modified: '2026-06-30'
 related:
   - "[[2026-05-21-cli-persona-testimonials-plan]]"
 ---
-
-
 
 # `cli-persona-testimonials` audit: `errorcode-message-key-translation-gap`
 
 ## Scope
 
-
 ## Findings
 
-
 ## Recommendations
-
-
 
 ## Context
 
@@ -94,4 +88,3 @@ semantics, is a dedicated remediation wave — it is not mechanical
   green per increment.
 - Author the ~8 `wizard.setup.verifier.*` keys (smaller, independent).
 - All locale edits via the `aeat.locales` CLI per project rule.
-

@@ -134,6 +134,8 @@ def taxpayer_profile_from_mapping(
         iva=ModeloIVAProfile(
             roi_enrolled=typed.iva_roi_enrolled,
             oss_enrolled=typed.iva_oss_enrolled,
+            group_member_enrolled=typed.iva_group_member_enrolled,
+            group_dominant_entity_enrolled=typed.iva_group_dominant_entity_enrolled,
             sii_enrolled=typed.iva_sii_enrolled,
             redeme_enrolled=typed.iva_redeme_enrolled,
             intracommunity_operations_exceed_50000_eur=typed.iva_intracommunity_operations_exceed_50000_eur,

@@ -3,12 +3,12 @@ tags:
   - "#adr"
   - "#trabajador-del-mar"
 date: "2026-05-31"
-modified: '2026-06-29'
+modified: '2026-06-30'
 related:
   - "[[2026-05-31-trabajador-del-mar-research]]"
 ---
 
-# trabajador-del-mar adr: maritime-worker-irpf-axis | (**status:** accepted)
+# trabajador-del-mar adr: maritime-worker-irpf-axis | (**status:** `accepted`)
 
 ## Problem Statement
 

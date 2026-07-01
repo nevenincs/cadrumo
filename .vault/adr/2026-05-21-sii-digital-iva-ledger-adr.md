@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-21'
-modified: '2026-06-29'
+modified: '2026-06-30'
 related:
   - "[[2026-05-21-taxpayer-type-applicability-adr]]"
   - "[[2026-05-21-taxpayer-type-applicability-plan]]"
   - "[[2026-05-21-taxpayer-type-applicability-research]]"
 ---
-
 
 # `cli-workflow-redesign` adr: `SII is modelled as a rolling ledger-submission enrolment, not a periodic-window modelo; it suppresses Modelo 347 and 390 and switches Modelo 303 to monthly` | (**status:** `proposed`)
 

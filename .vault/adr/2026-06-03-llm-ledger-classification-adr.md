@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#llm-ledger-classification'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-03-llm-ledger-classification-research]]"
 ---
-
-
 
 # `llm-ledger-classification` adr: `Wire LLM-assisted ledger classification into an operator suggest/confirm/reject loop (MVP)` | (**status:** `accepted`)
 
@@ -128,5 +126,3 @@ land first and become the foundation the grounded extension builds on.
   provenance distinct from manual and rule decisions, and must never originate
   a regulated AEAT tax value (rate, base, cuota) without separate legal
   grounding.
-
-

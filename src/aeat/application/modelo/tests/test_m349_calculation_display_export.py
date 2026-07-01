@@ -190,17 +190,21 @@ def _calculated_revision(
         casilla_values=casilla_values,
         detail_rows=detail_rows,
     )
-    return snapshot, work_unit, CalculationRevision(
-        calculation_revision_id=revision_id,
-        work_unit_id=work_unit.work_unit_id,
-        state=CalculationRevisionState.BORRADOR,
-        input_values_by_casilla_id=input_values,
-        binding_overrides=binding_overrides,
-        casilla_values=casilla_values,
-        observations=observations,
-        detail_rows=detail_rows,
-        created_at=_CLOCK,
-        updated_at=_CLOCK,
+    return (
+        snapshot,
+        work_unit,
+        CalculationRevision(
+            calculation_revision_id=revision_id,
+            work_unit_id=work_unit.work_unit_id,
+            state=CalculationRevisionState.BORRADOR,
+            input_values_by_casilla_id=input_values,
+            binding_overrides=binding_overrides,
+            casilla_values=casilla_values,
+            observations=observations,
+            detail_rows=detail_rows,
+            created_at=_CLOCK,
+            updated_at=_CLOCK,
+        ),
     )
 
 

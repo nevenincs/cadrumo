@@ -298,6 +298,10 @@ extend-exclude = [
   "test_attachment_fix.py",
   "test_m714.py",
   "scripts/classify_m200.py",
+  # Operator-safeguarded root scratch debris (commit cbb293ca4): one-off
+  # docs-migration probe scripts, not package code.
+  "add_frontmatter.py",
+  "test_docs.py",
 ]
 
 [tool.ruff.lint]

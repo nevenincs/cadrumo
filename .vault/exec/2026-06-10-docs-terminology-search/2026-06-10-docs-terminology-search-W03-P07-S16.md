@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S16'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Implement the CLI-surface record emitter (every command and option with locale-resolved help across the four languages) and the concept-card emitter (definition, short_description, four-language alias sets, legal grounding links) (ADR D4)
 
@@ -128,4 +125,3 @@ only, so `ty` is the authoritative gate for `dev/docs`).
   options resolved help in all four languages (`commands_untranslated = 0`).
   The emitter's design tolerates a gap gracefully: a missing/identical
   non-Spanish help is omitted (es stays the invariant) rather than failing.
-

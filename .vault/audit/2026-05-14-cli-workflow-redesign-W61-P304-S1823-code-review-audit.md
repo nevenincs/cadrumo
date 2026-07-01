@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
-modified: '2026-05-14'
+modified: '2026-06-30'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-13-cli-workflow-redesign-manual-ledger-storage-adr]]'
@@ -12,11 +12,7 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]'
 ---
 
-
-
 # `cli-workflow-redesign` Code Review
-
-
 
 W61-P304-S1823-001 | HIGH | Ledger export events fail for ordinary multi-row catalogues
 

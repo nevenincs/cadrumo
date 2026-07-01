@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S28'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Land the end-to-end smoke gate: the offline prorrata worked example returns the concept card, at least one M303 prorrata casilla record, and the relevant how-to page, plus four-language query checks (ADR D8)
 
@@ -137,4 +134,3 @@ could deep-link to a registry/Diseno surface.
   single chained `git add ... ; git commit ...` over ONLY my explicit paths
   (the projection fix + alias field, the injection content, the relevance
   re-path, the updated resolution tests, the new smoke gate, the exec record).
-

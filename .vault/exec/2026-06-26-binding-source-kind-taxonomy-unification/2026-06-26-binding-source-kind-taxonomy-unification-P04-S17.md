@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#binding-source-kind-taxonomy-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 step_id: 'S17'
 related:
   - "[[2026-06-26-binding-source-kind-taxonomy-unification-plan]]"
 ---
-
-
-
 
 # Run the full bindings test surface and both parity halves and owner-triage the full tree
 
@@ -19,7 +16,6 @@ related:
 - `src/aeat/domain/calculations/registry/tests/test_binding_source_kind_taxonomy.py`
 
 ## Description
-
 
 P04 is a verification-only Step (no production edit). Ran the full bindings test
 surface and both parity halves against HEAD and owner-triaged the full tree.
@@ -45,7 +41,6 @@ not hard-code any source's disposition), so r2's in-flight withholding enrollmen
 it lands, without a gate edit.
 
 ## Notes
-
 
 Owner-triaged full-tree failure recorded, NOT fixed (per full-tree-gate-must-
 distinguish-owner): the docstring-core-struct gate fails on

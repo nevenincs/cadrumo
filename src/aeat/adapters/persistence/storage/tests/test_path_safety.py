@@ -60,6 +60,7 @@ class TestSafeSubpath:
         with pytest.raises(PathContainmentError):
             safe_subpath(tmp_path, unsafe_path, context="test")
 
+
 class TestSafeRecordPath:
     """``safe_record_path`` enforces the simple-token allow-list."""
 
@@ -129,6 +130,7 @@ class TestSafeRepositoryId:
             "path_context": "taxpayer_nif",
             "violation": "repository_id_separator",
         }
+
 
 class TestErrorCodeBinding:
     """``PathContainmentError`` binds to the registered INTEGRITY code."""

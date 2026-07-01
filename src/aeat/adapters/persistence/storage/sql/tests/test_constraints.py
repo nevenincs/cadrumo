@@ -146,7 +146,7 @@ def test_secure_object_schema_version_check_constraint(tmp_path: Path) -> None:
             text(
                 "insert into secure_objects "
                 "(namespace, object_key, classification, schema_version, written_at, payload) "
-                "values ('aeat.test.raw', :object_key, 'financial', 0, :written_at, :payload)",
+                "values ('aeat-test.raw', :object_key, 'financial', 0, :written_at, :payload)",
             ),
             {
                 "object_key": b"raw-key",
@@ -167,7 +167,7 @@ def test_secure_object_revision_hash_check_constraints(tmp_path: Path) -> None:
             text(
                 "insert into secure_objects "
                 "(namespace, object_key, classification, schema_version, written_at, revision_id, payload) "
-                "values ('aeat.test.raw', :object_key, 'financial', 1, :written_at, 'short', :payload)",
+                "values ('aeat-test.raw', :object_key, 'financial', 1, :written_at, 'short', :payload)",
             ),
             {
                 "object_key": b"raw-key",

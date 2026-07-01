@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#binding-source-kind-taxonomy-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 step_id: 'S01'
 related:
   - "[[2026-06-26-binding-source-kind-taxonomy-unification-plan]]"
 ---
-
-
-
 
 # Add BORRADOR and IVA_WALLET_DECISION members to BindingSourceKind
 
@@ -19,7 +16,6 @@ related:
 - `src/aeat/core/aggregation.py`
 
 ## Description
-
 
 P01.S01 and P01.S02 landed together as one atomic commit `b869dcda4`
 (`relocation:BindingSourceKind`), because adding the members without the gate

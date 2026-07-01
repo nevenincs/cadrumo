@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cli-persona-testimonials'
 date: '2026-05-22'
-modified: '2026-05-22'
+modified: '2026-06-30'
 step_id: 'P04.S01'
 related:
   - '[[2026-05-21-cli-persona-testimonials-plan]]'
@@ -21,4 +21,3 @@ Implementation evidence:
 Verification:
 - `uv run --no-sync pytest -x src\aeat\application\modelo\test_declaration_period_binding.py` -> 9 passed.
 - `uv run --no-sync ruff check src\aeat\application\modelo\_actions.py src\aeat\application\modelo\test_declaration_period_binding.py src\aeat\application\modelo\test_profile_binding.py src\aeat\entrypoints\cli\test_modelo_discovery_defects.py` -> passed.
-

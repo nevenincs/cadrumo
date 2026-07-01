@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#secure-storage-production-hardening'
 date: '2026-05-22'
-modified: '2026-05-22'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-05-22-secure-storage-production-hardening-architecture-adr]]'
@@ -29,7 +29,6 @@ related:
   - '[[2026-05-26-secure-storage-convention-regrounding-audit]]'
   - '[[2026-05-26-securestorage-repair-policy-adr-coverage-audit]]'
 ---
-
 
 Retired steps: `S422`, `S423`.
 

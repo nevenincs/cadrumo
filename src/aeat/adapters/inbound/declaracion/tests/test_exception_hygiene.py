@@ -30,8 +30,7 @@ def _production_modules() -> tuple[Path, ...]:
 @cache
 def _production_trees() -> tuple[tuple[Path, ast.AST], ...]:
     return tuple(
-        (path, ast.parse(path.read_text(encoding="utf-8"), filename=str(path)))
-        for path in _production_modules()
+        (path, ast.parse(path.read_text(encoding="utf-8"), filename=str(path))) for path in _production_modules()
     )
 
 

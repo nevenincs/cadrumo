@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#registry-m100-row-width-deferrals'
 date: '2026-06-04'
-modified: '2026-06-04'
+modified: '2026-06-30'
 tier: L1
 related:
   - '[[2026-06-04-registry-m100-row-width-deferrals-adr]]'
@@ -11,7 +11,6 @@ related:
   - '[[2026-06-04-registry-row-width-pressure-plan]]'
   - '[[2026-06-04-registry-row-width-pressure-audit]]'
 ---
-
 
 # `registry-m100-row-width-deferrals` `implementation` plan
 

@@ -307,9 +307,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="0A",
-        observations=tuple(
-            o for o in obs_n.observations if o.casilla_id != _TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA
-        ),
+        observations=tuple(o for o in obs_n.observations if o.casilla_id != _TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA),
     )
 
     assert obs_n != obs_n_no_importe, (

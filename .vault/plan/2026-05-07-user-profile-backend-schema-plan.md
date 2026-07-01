@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#user-profile-backend-schema'
 date: '2026-05-07'
-modified: '2026-05-07'
+modified: '2026-06-30'
 related:
   - "[[2026-05-07-user-profile-schema-research]]"
   - "[[2026-05-07-user-profile-backend-schema-adr]]"
@@ -15,8 +15,6 @@ related:
   - "[[2026-05-07-user-profile-census-business-dependencies-reference]]"
   - "[[2026-05-16-profile-lifecycle-cli-plan]]"
 ---
-
-
 
 # `user-profile-schema-rollout` `User Profile Schema And Config CLI Rollout` plan
 
@@ -109,7 +107,6 @@ for tests.
 | `W10` | Autonomous audit, review, repair, repeat. | W8 closure complete or any wave requests audit. | Code review, profile-surface search, persistence audit, registry selector audit, CLI old-surface audit. | No actionable findings remain for the current loop. | Never revert unrelated edits; repair only owned findings. | Commit each repair loop as its own slice. | Open-ended by design; new findings restart the loop. |
 
 ## Tasks
-
 
 - `Wave 0: Workspace And Guardrails`
   1. `W0.P1`: Record current dirty-worktree state and isolate unrelated edits.

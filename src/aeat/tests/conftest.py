@@ -6,7 +6,7 @@ posture this module enforces.
 This module enforces the following invariants at collection time:
 
 1. The hexagonal marker taxonomy contract via the
-   shared helper in :mod:`aeat.tests._marker_hook`. Also hosted from the
+   shared helper in :mod:`aeat-tests._marker_hook`. Also hosted from the
    repo-root ``conftest.py`` so items collected anywhere under
    ``src/aeat/`` pass through the same enforcement surface; double
    invocation is safe because the helper enforces invariants on items

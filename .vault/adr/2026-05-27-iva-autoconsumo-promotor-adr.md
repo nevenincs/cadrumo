@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#iva-autoconsumo-promotor'
 date: '2026-05-27'
-modified: '2026-05-27'
+modified: '2026-06-30'
 related:
   - "[[2026-04-12-modelo-303-390-adr]]"
   - "[[2026-04-17-modelo-formulas-adr]]"
@@ -12,7 +12,6 @@ related:
   - "[[2026-05-21-corporate-entity-calculation-adr]]"
   - '[[2026-06-04-iva-autoconsumo-promotor-research]]'
 ---
-
 
 # `iva-autoconsumo-promotor` adr: IVA autoconsumo promotor Art. 9.1.c LISIVA | (**status:** `accepted`)
 

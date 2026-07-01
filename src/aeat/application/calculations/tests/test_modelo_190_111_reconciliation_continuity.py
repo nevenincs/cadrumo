@@ -543,10 +543,7 @@ def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
 
     # Wiring invariant Year N+1 (year-isolated):
     assert result_n1.values[_M190_TOTAL_PERCEPCIONES_CASILLA] == _YEAR_N_PLUS_1_WITHHOLDING_PERCEPCIONES
-    assert (
-        result_n1.values[_M190_PERCEPCIONES_TOTAL_CASILLA]
-        == expected_n1[_M111_TRABAJO_DINERARIO_IMPORTE_CASILLA]
-    )
+    assert result_n1.values[_M190_PERCEPCIONES_TOTAL_CASILLA] == expected_n1[_M111_TRABAJO_DINERARIO_IMPORTE_CASILLA]
     assert result_n1.values[_M190_RETENCIONES_TOTAL_CASILLA] == expected_n1[_M111_RETENCIONES_TOTAL_CASILLA]
 
     # Authorization-gate enrollment for the 190 resumen.

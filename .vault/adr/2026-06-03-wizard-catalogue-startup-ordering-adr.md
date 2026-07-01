@@ -3,12 +3,11 @@ tags:
   - '#adr'
   - '#wizard-catalogue-startup-ordering'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
   - '[[2026-06-04-wizard-catalogue-startup-ordering-research]]'
 ---
-
 
 # `wizard-catalogue-startup-ordering` adr: CLI composition root owns wizard registration; tests reuse the production root via shared bootstrap | (**status:** `accepted`)
 

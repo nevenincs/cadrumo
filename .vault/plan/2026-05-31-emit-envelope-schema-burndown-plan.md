@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#emit-envelope-schema-burndown'
 date: '2026-05-31'
-modified: '2026-05-31'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-04-25-json-output-contract-adr]]'
@@ -11,7 +11,6 @@ related:
   - '[[2026-05-15-linkage-design-audit-reference]]'
   - '[[2026-06-04-emit-envelope-schema-burndown-research]]'
 ---
-
 
 <!-- RETIRED: W07 -->
 

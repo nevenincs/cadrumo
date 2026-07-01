@@ -129,8 +129,7 @@ def test_current_retention_autoliquidaciones_use_current_grounded_sources(
     assert procedure.authority == "aeat"
     assert procedure.kind == "instructions"
     assert procedure.corpus_path == (
-        f"corpus/aeat_official/instructions/modelo_{modelo_id}/files/"
-        f"modelo-{modelo_id}-procedure.html"
+        f"corpus/aeat_official/instructions/modelo_{modelo_id}/files/modelo-{modelo_id}-procedure.html"
     )
     assert (bundled_path() / procedure.corpus_path).is_file()
     assert procedure.source_url.endswith(f"/Sede/procedimientoini/{procedure_code}.shtml")
@@ -184,7 +183,5 @@ def _revision_source_refs(revision: object) -> tuple[str, ...]:
         for item in getattr(revision, collection_name, ()):
             source_refs.extend(getattr(item, "source_refs", ()))
             if collection_name == "formulas":
-                source_refs.extend(
-                    citation.source_ref for citation in getattr(item, "source_citations", ())
-                )
+                source_refs.extend(citation.source_ref for citation in getattr(item, "source_citations", ()))
     return tuple(source_refs)

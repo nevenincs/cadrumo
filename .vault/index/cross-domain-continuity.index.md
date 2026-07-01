@@ -58,7 +58,13 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S254]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S256]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S267]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S268]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S269]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S270]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S271]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S272]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S285]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S286]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S289]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S290]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S291]]'
@@ -341,6 +347,12 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-05-26-cross-domain-continuity-W09-P42-S165` - merge active_bucket_id_or_raise and require_active_bucket_id into one canonical function update all call sites
 - `2026-05-26-cross-domain-continuity-W09-P45-S168` - extract _covered_by_namespace to one location and import from the other
 - `2026-05-26-cross-domain-continuity-W09-P47-S170` - for every CLI command registering --verbose assert it consumes the flag fix or remove unused declarations
+- `2026-05-26-cross-domain-continuity-W09-P41-S268` - FU-W10-A extract HAC/242/2025 art-8 text into corpus HTML and add required_text to orden-hac-242-2025:art-8 entry in irpf.toml
+- `2026-05-26-cross-domain-continuity-W09-P41-S269` - FU-W10-B oracle-verify M202 2025-2P and 2025-3P closing dates against AEAT calendar and correct if needed
+- `2026-05-26-cross-domain-continuity-W09-P41-S271` - FU-W09-B S268 corpus gap: HAC/242/2025 art-8 is referenced by the M100 2024 deadline-window registration but the corpus file currently exists only as .json without required_text
+- `2026-05-26-cross-domain-continuity-W09-P41-S272` - FU-W09-C S269 verify M202 2025-2P and 2025-3P deadline window closing dates against AEAT oracle
+- `2026-05-26-cross-domain-continuity-W09-P41-S285` - TAUTOLOGICAL_TEST_SUSPICION sweep S98 follow-up: refactor test_cross_dependency_calculations.py M180 and M190 tests to derive expected values from AEAT workbook or grounded fixture instead of synthetic Decimal hand-computed oracles
+- `2026-05-26-cross-domain-continuity-W09-P41-S286` - TAUTOLOGICAL_TEST_SUSPICION sweep S98 follow-up: replace monkeypatch.setenv abuse in application/auth/test_operator.py lines 230-260 and 477-521 with Settings override fixture
 - `2026-05-26-cross-domain-continuity-W09-P41-S323` - R9-MANUEL-A SC profile schema lacks socio enumeration
 
 ### plan

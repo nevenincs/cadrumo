@@ -141,5 +141,3 @@ def test_summarize_manual_transactions_reports_bucket_status_and_readiness(
     assert report.checked_transaction_count == 1
     assert report.readiness_issue_count == 0
     assert report.ready is True
-
-

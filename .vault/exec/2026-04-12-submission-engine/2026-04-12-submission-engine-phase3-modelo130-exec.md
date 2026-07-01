@@ -3,7 +3,7 @@ tags:
   - "#exec"
   - "#submission-engine"
 date: 2026-04-12
-modified: '2026-04-12'
+modified: '2026-06-13'
 title: submission engine — phase-3 modelo130 submitter
 related:
   - "[[2026-04-12-submission-engine-plan]]"

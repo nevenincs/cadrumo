@@ -3,14 +3,13 @@ tags:
   - '#plan'
   - '#calculation-engine-foundations'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 tier: L4
 related:
   - '[[2026-06-10-calculation-engine-foundations-research]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
   - '[[2026-06-10-period-revision-resolution-adr]]'
 ---
-
 
 # `calculation-engine-foundations` `Calculation-engine foundations: aggregation taxonomy + period-revision resolution` plan
 

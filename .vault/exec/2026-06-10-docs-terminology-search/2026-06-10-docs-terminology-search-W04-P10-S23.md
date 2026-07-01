@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S23'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Inject the compiled record kinds via the Pagefind indexing API (addCustomRecord: concepts, casilla projections, CLI records) with typed metadata, filters, and ranking weights derived from the committed relevance data
 
@@ -141,4 +138,3 @@ rather than repeating the slow write per test.
   first via the concept base weight, navigation second, full text third).
 - Commit discipline: all verification ran first; staging and the commit are a
   single chained `git add ... ; git commit ...` over ONLY my explicit paths.
-

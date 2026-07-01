@@ -466,12 +466,9 @@ def test_m123_retenciones_change_reflects_proportionally_in_0610(m100_2024_snaps
         date_binding_values=_DATE_BINDINGS_2024,
     )
 
-    delta_0597 = (
-        result_high.values[_M100_RETENCIONES_M123_CASILLA] - result_low.values[_M100_RETENCIONES_M123_CASILLA]
-    )
+    delta_0597 = result_high.values[_M100_RETENCIONES_M123_CASILLA] - result_low.values[_M100_RETENCIONES_M123_CASILLA]
     delta_0609 = (
-        result_high.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA]
-        - result_low.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA]
+        result_high.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] - result_low.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA]
     )
     delta_0610 = (
         result_low.values[_M100_CUOTA_DIFERENCIAL_CASILLA] - result_high.values[_M100_CUOTA_DIFERENCIAL_CASILLA]

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#cli-operator-surface'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S05'
 related:
   - "[[2026-06-10-cli-operator-surface-plan]]"
 ---
-
-
-
 
 # correct the evidence-id help string that promises unambiguous prefix to state exact-equality matching, via the aeat.locales CLI
 
@@ -44,4 +41,3 @@ prefix matching for evidence ids.
 The other "(or unambiguous prefix)" strings (invoice/snapshot/work-unit ids) were
 left untouched: those ids ARE resolved by prefix through their respective
 resolvers, so their help is honest.
-

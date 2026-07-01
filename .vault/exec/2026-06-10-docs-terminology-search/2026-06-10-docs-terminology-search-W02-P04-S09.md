@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S09'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Implement the typed concept-oriented records (concept level: immutable Spanish-stem concept_id, closed domain enum, domain_refs, legal_refs, broader/related with narrower derived, lifecycle draft/approved/deprecated/retired, replaced_by, seed_provenance, dates
 

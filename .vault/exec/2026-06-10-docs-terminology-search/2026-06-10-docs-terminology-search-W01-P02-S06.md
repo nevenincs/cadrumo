@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S06'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Close the unsupported-text-extension tail (txt, xml, xsd, properties - 36 files incl. M349 instructions and the M100 diccionario dictionaries) via the upstream extension map or interim sidecar emission (ADR D6)
 

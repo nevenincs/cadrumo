@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#renta-cuota-chain-rollout'
 date: '2026-05-06'
-modified: '2026-05-06'
+modified: '2026-06-30'
 related:
   - "[[2026-05-03-calculation-truth-registry-rebuild-plan]]"
   - "[[2026-05-03-calculation-truth-registry-pending-adr]]"
@@ -14,8 +14,6 @@ related:
   - "[[2026-05-08-renta-cuota-integra-state-scale-research]]"
   - "[[2026-05-08-renta-cuota-integra-autonomic-scale-research]]"
 ---
-
-
 
 # `renta-cuota-chain-rollout` plan
 

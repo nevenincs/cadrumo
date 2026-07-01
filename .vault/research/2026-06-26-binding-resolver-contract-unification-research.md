@@ -3,13 +3,11 @@ tags:
   - '#research'
   - '#binding-resolver-contract-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 related:
   - "[[2026-06-26-binding-resolver-contract-unification-adr]]"
   - "[[2026-06-26-bindings-architecture-unification-audit]]"
 ---
-
-
 
 # `binding-resolver-contract-unification` research: `binding shape-c aggregation unification`
 

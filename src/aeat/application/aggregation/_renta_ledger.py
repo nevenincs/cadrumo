@@ -77,10 +77,7 @@ def _first_slice_supported_mappings() -> str:
         key=lambda item: (str(item[1]), item[0].value),
     ):
         grouped.setdefault(casilla_id, []).append(category.value)
-    return "; ".join(
-        f"{casilla_id}={', '.join(categories)}"
-        for casilla_id, categories in grouped.items()
-    )
+    return "; ".join(f"{casilla_id}={', '.join(categories)}" for casilla_id, categories in grouped.items())
 
 
 class RentaLedgerAggregationIssueReason(StrEnum):

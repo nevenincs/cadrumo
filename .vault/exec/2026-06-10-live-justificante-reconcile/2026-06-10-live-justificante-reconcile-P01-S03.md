@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#live-justificante-reconcile'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S03'
 related:
   - "[[2026-06-10-live-justificante-reconcile-plan]]"
 ---
-
-
-
 
 # Prove the persistence boundary with a strict secure-storage roundtrip (every defaultable field non-default), a supersession lifecycle test, and an anti-tautology mutate-on-disk proof.
 

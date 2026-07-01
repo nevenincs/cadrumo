@@ -3,15 +3,13 @@ tags:
   - '#research'
   - '#pdf-sanitizer'
 date: '2026-04-25'
-modified: '2026-04-25'
+modified: '2026-06-30'
 related:
   - "[[2026-04-25-aeat-verify-research]]"
   - "[[2026-04-25-aeat-verify-adr]]"
   - "[[2026-04-25-aeat-verify-plan]]"
   - "[[2026-04-24-aeat-verify-reference]]"
 ---
-
-
 
 # `pdf-sanitizer` research: `pdf-sanitizer-prior-art-and-api`
 

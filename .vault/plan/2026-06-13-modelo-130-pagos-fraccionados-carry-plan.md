@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-adr]]'
@@ -19,8 +19,6 @@ related:
 ### Phase `P01` - Selector-grammar: target-relative expanding-span mode
 
 Extend _PreviousModeloSelector with a target-relative prior-quarter expanding-span mode (2T to {1T}, 3T to {1T,2T}, 4T to {1T,2T,3T}) that emits the full preceding-quarter anchor set into the existing multi-anchor aggregation sum resolve path, validated against existing selector validation and the relation-source collision gate.
-
-
 
 - [x] `P01.S01` - check git status for peer WIP, then add a target-relative prior-quarter expanding-span selector mode to _PreviousModeloSelector that resolves to all same-ejercicio quarters strictly preceding the target (2T to {1T}, 3T to {1T,2T}, 4T to {1T,2T,3T}), bounded by max_year_delta 0, emitting a tuple of (year_delta, period) anchors into the existing required_period_anchors_for_target path; `src/aeat/domain/calculations/registry/_bindings_previous_filing.py`.
 - [x] `P01.S02` - extend _PreviousModeloSelector model validation so the new span mode is mutually exclusive with period, source_periods, and source_period_offset_from_target and stays a direct previous_filing binding under _is_direct_previous_filing_binding, then verify the relation-source collision gate validate_slot_source_hygiene accepts the new mode without a carve-out; `src/aeat/domain/calculations/registry/_bindings_previous_filing.py`.

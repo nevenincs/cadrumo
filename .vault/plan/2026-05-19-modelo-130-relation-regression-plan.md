@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#modelo-130-relation-regression'
 date: '2026-05-19'
-modified: '2026-05-19'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-05-19-modelo-130-relation-regression-research]]'
@@ -12,7 +12,6 @@ related:
   - '[[2026-05-19-iva-compensation-chain-plan]]'
   - '[[2026-05-19-live-iva-compensation-wallet-research]]'
 ---
-
 
 # `modelo-130-relation-regression` `remediation` plan
 

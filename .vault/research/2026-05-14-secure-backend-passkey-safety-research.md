@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#secure-backend-passkey-safety'
 date: '2026-05-14'
-modified: '2026-05-14'
+modified: '2026-06-30'
 related:
   - '[[2026-04-12-data-storage-research]]'
   - '[[2026-04-12-cert-auth-research]]'
@@ -730,7 +730,6 @@ the single-bucket threat model in section 1:
   whose default-name setting was not also updated will write
   auth artefacts to the prior profile's lockfile namespace.
 
-
 ## 6. design implications -- what the ADRs must decide
 
 The defect is real, the fix touches the user first contact with the product, and the substrate already ships half the cryptography needed. Two ADRs are required, sharing this research base. ADR-1 covers custody, enrolment, and passphrase UX (sub-sections 6.1-6.8). ADR-2 covers profile and bucket lifecycle (sub-section 6.9). The decision matrix in section 7 (options) and the open questions in section 8 are likewise split by target ADR.
@@ -999,7 +998,6 @@ eliminate it (the auth lockfile namespace becomes the active
 bucket id) or formalise its precedence relative to the
 WorkflowState pointer.
 
-
 ## 7. options surfaced
 
 ADR-1 (custody + enrolment + passphrase UX) selects from Options A.I, A.II, A.III. ADR-2 (profile/bucket lifecycle) selects from Options B.1, B.2, B.3. None is recommended here -- selection is the ADR phase job.
@@ -1095,7 +1093,6 @@ ADR-1 (custody + enrolment + passphrase UX) selects from Options A.I, A.II, A.II
   index is lost (the bucket directories themselves are
   self-describing via their manifests).
 - Code-impact estimate: B.2 plus a thin keystore-index adapter.
-
 
 ## 8. open questions for the ADRs
 

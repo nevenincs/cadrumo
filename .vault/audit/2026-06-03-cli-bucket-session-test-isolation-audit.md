@@ -3,12 +3,10 @@ tags:
   - '#audit'
   - '#cli-bucket-session-test-isolation'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-30'
 related:
   - '[[2026-06-03-bare-invocation-bucket-session-gate-adr]]'
 ---
-
-
 
 # `cli-bucket-session-test-isolation` audit: `CliRunner ContextVar session non-persistence`
 
@@ -63,5 +61,3 @@ The bare-invocation ADR widened the gate; it did not update the test-runner cont
 - **Source:** finding F3 (per-process session boundary).
   **Rule slug:** `cli-test-bucket-session-must-be-explicit`.
   **Rule:** Test code invoking CLI commands that touch encrypted storage MUST open the bucket session explicitly via the shared test helper; relying on `invoke_cached_cli` to inherit a session opened in a sibling `invoke_cached_cli` is forbidden (the ContextVar resets at invocation boundary, but the disk pointer persists — readers should not conflate the two).
-
-

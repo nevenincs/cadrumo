@@ -170,8 +170,7 @@ def test_modelo_322_enrolls_two_renta_years(tmp_path: Path) -> None:
             result, produced = _calculate_322(filing_year=filing_year)
             # Wiring invariant per year: result == devengada - deducible.
             assert result.values[_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA] == (
-                result.values[_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA]
-                - result.values[_IVA_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
+                result.values[_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA] - result.values[_IVA_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
             )
             recorder.record_calculation_year(filing_year=filing_year, produced_value_count=produced)
 

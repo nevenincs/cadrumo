@@ -562,11 +562,7 @@ def catalogue_list(
     bucket_id = _business_invoice_bucket_id()
     catalogue = InvoiceCatalogueRepository(bucket_id=bucket_id).load()
     wanted = None if kind is None else InvoiceKind(kind.value)
-    rows = tuple(
-        invoice
-        for invoice in catalogue.values()
-        if wanted is None or invoice.kind is wanted
-    )
+    rows = tuple(invoice for invoice in catalogue.values() if wanted is None or invoice.kind is wanted)
     payload = {
         "bucket_id": bucket_id,
         "rows": [_catalogue_invoice_payload(invoice) for invoice in rows],

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#dt-12-rescate-plan-pensiones'
 date: '2026-05-27'
-modified: '2026-05-27'
+modified: '2026-06-30'
 related:
   - "[[2026-04-21-modelo-100-renta-adr]]"
   - "[[2026-04-27-modelo-100-renta-full-calc-adr]]"
@@ -11,7 +11,6 @@ related:
   - "[[2026-05-08-ledger-renta-pipeline-adr]]"
   - '[[2026-06-04-dt-12-rescate-plan-pensiones-research]]'
 ---
-
 
 # `dt-12-rescate-plan-pensiones` adr: DT 12a rescate plan pensiones capital reduccion | (**status:** `accepted`)
 

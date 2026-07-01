@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#persistence-boundary-identity-swarm'
 date: '2026-05-16'
-modified: '2026-05-16'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `persistence-boundary-identity-swarm` audit: `Persistence boundary identity`
 
@@ -157,4 +155,3 @@ However, **the lack of roundtrip tests means regressions would not surface** unt
    - Verify sensitivity class consistency and schema version bounds
 
 6. **Ongoing CI gate**: Add a linting rule to flag any new `SecureObjectRepository` namespace without a corresponding roundtrip test within the same file cluster (or a linked test file with the `test_*roundtrip*.py` pattern).
-

@@ -3,14 +3,12 @@ tags:
   - '#adr'
   - '#secure-persistence-foundation'
 date: '2026-04-27'
-modified: '2026-04-27'
+modified: '2026-06-30'
 related:
   - "[[2026-04-27-secure-persistence-foundation-research]]"
   - "[[2026-04-27-security-storage-audit-audit]]"
   - "[[2026-04-12-data-storage-adr]]"
 ---
-
-
 
 # `secure-persistence-foundation` adr: `secure-persistence-foundation-wave-1-adr` | (**status:** `accepted`)
 

@@ -26,8 +26,7 @@ def test_parser_extracts_modelo_130_tax_id_from_corpus(pdf_stem: str, year: int,
     tax_id = _extract_tax_id(text)
 
     assert tax_id == "Y0000001S", (
-        f"{pdf_stem}: expected tax_id='Y0000001S', got {tax_id!r}; "
-        "check _TAX_ID_RE and _DECLARANT_ROW_RE in _parser.py"
+        f"{pdf_stem}: expected tax_id='Y0000001S', got {tax_id!r}; check _TAX_ID_RE and _DECLARANT_ROW_RE in _parser.py"
     )
 
 

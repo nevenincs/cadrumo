@@ -43,6 +43,9 @@ related:
   - '[[2026-06-30-modelo-verify-nonzero-guards-plan]]'
   - '[[2026-06-30-modelo-verify-nonzero-guards-research]]'
   - '[[2026-07-01-modelo-verify-nonzero-guards-audit]]'
+  - '[[2026-07-01-modelo-verify-nonzero-guards-exec-dfr-m123-rirpf-exoneration-corpus]]'
+  - '[[2026-07-01-modelo-verify-nonzero-guards-exec-dfr-m202-b2-resultado-formula-wiring]]'
+  - '[[2026-07-01-modelo-verify-nonzero-guards-exec-dfr-m210-inmobiliaria-e2e]]'
   - '[[2026-07-01-modelo-verify-nonzero-guards-exec]]'
   - '[[2026-07-01-modelo-verify-nonzero-guards-m202-deferred-items-audit]]'
   - '[[2026-07-01-modelo-verify-nonzero-guards-m202-deferred-items-exec]]'
@@ -101,6 +104,9 @@ Auto-generated index of all documents tagged with `#modelo-verify-nonzero-guards
 - `2026-06-30-modelo-verify-nonzero-guards-W03-P09-S28` - Run a fresh-context honesty review per aeat-campaign-close-honesty-review against the closure summary, persist the output as a second vault audit document, and confirm no Step's underlying decision was assumed-but-unverified
 - `2026-06-30-modelo-verify-nonzero-guards-W03-P09-S29` - Convert every finding from the two review passes into either a newly inserted plan Step with a verification gate or an explicitly documented deferral cross-referenced from the audit document
 - `2026-07-01-modelo-verify-nonzero-guards-exec` - M123 exoneration grounding re-verification
+- `2026-07-01-modelo-verify-nonzero-guards-exec-dfr-m123-rirpf-exoneration-corpus` - M123 RIRPF exoneration corpus deferral resolution
+- `2026-07-01-modelo-verify-nonzero-guards-exec-dfr-m202-b2-resultado-formula-wiring` - M202 B2 resultado previo formula-wiring deferral resolution
+- `2026-07-01-modelo-verify-nonzero-guards-exec-dfr-m210-inmobiliaria-e2e` - M210 inmobiliaria silent-zero advisory end-to-end resolution
 - `2026-07-01-modelo-verify-nonzero-guards-m202-deferred-items-exec` - M202 deferred items grounded decisions
 
 ### plan

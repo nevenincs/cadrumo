@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#ledger-amount-direction'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `ledger-amount-direction` research: `Ledger amount/direction convention`
 

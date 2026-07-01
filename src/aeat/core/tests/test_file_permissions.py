@@ -23,10 +23,7 @@ def _attribute_calls(tree: ast.Module, *, attr: str, owner: str | None = None) -
         if isinstance(node, ast.Call)
         and isinstance(node.func, ast.Attribute)
         and node.func.attr == attr
-        and (
-            owner is None
-            or (isinstance(node.func.value, ast.Name) and node.func.value.id == owner)
-        )
+        and (owner is None or (isinstance(node.func.value, ast.Name) and node.func.value.id == owner))
     ]
 
 

@@ -114,7 +114,7 @@ def test_database_operating_passphrases_use_core_test_setting() -> None:
     assert not violations, "\n".join(
         (
             "Database-backed tests must read the shared dev/test password from "
-            "Settings.aeat_dev_test_database_password or aeat.tests.secure_sql.",
+            "Settings.aeat_dev_test_database_password or aeat-tests.secure_sql.",
             *violations,
         ),
     )

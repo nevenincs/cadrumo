@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#docs-sphinx-ux'
 date: '2026-06-04'
-modified: '2026-06-04'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-04-docs-sphinx-ux-adr]]'
@@ -13,7 +13,6 @@ related:
   - '[[2026-06-01-docs-cli-buildtime-research]]'
   - '[[2026-06-01-docs-educational-surface-adr]]'
 ---
-
 
 # `docs-sphinx-ux` implementation plan
 

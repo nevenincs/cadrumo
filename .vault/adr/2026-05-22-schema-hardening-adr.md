@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#schema-hardening'
 date: '2026-05-22'
-modified: '2026-05-22'
+modified: '2026-06-30'
 related:
   - "[[2026-05-22-schema-hardening-research]]"
 ---
-
-
 
 # `schema-hardening` adr: Warning-sidecar broad suppressor burn-down | (**status:** `accepted`)
 

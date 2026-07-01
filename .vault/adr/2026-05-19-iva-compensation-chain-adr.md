@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#iva-compensation-chain'
 date: '2026-05-19'
-modified: '2026-05-19'
+modified: '2026-06-30'
 related:
   - '[[2026-05-19-iva-compensation-chain-audit-research]]'
   - '[[2026-04-12-modelo-303-390-adr]]'
@@ -18,7 +18,6 @@ related:
 > **Updated 2026-05-19**: Tax-domain identifier mentions in this ADR follow the Spanish-stem terminology authority. The compensation-chain decisions (Modelo 303 casilla identities 110, 78, 87, 69; the Modelo 390 annual reconciliation fields 97 and 662; the source_period_offset_from_target previous-filing selector; and the registry-as-arithmetic-truth rule) are unaffected and require no edit.
 > See `2026-05-19-spanish-stem-terminology-authority-adr` for the canonical
 > rename ledger and Spanish-stem terminology authority.
-
 
 ## Problem Statement
 

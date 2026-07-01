@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
-modified: '2026-05-12'
+modified: '2026-06-30'
 related:
   - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-modelo-work-units-adr]]"
@@ -14,7 +14,6 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-research]]"
 ---
-
 
 # `cli-workflow-redesign` adr: `Modelo verified complete state` | (**status:** `accepted`)
 

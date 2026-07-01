@@ -10,16 +10,6 @@ related:
   - '[[2026-06-30-ledger-add-idempotency-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `ledger-add-idempotency` plan
 
 Make manual `ledger add` and non-granting `modelo verify` retry-safe for the autonomous-agent operator: a same-key add is a guarded no-op, genuine duplicates are preserved, and verify reports content-pin instead of accumulating.

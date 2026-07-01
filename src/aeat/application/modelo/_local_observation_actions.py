@@ -198,9 +198,7 @@ def _canonical_casilla_values[CasillaKey](
 
     declared = casillas_by_id(snapshot.revision)
     non_numeric = sorted(
-        casilla_id
-        for casilla_id in canonical
-        if declared[casilla_id].data_type not in _NUMERIC_CASILLA_DATA_TYPES
+        casilla_id for casilla_id in canonical if declared[casilla_id].data_type not in _NUMERIC_CASILLA_DATA_TYPES
     )
     if non_numeric:
         raise ModeloLocalObservationError(

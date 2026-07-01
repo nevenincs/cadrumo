@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cli-testimonial'
 date: '2026-05-20'
-modified: '2026-05-20'
+modified: '2026-06-30'
 related:
   - "[[2026-05-20-schema-hardening-verification-ledger-audit]]"
 ---
@@ -80,7 +80,7 @@ I guessed: taxation-type 1 = estimación directa (normal for freelancers), outpu
 
 ### Step 4 — First attempt at --quiet creation (wrong option name)
 
-I tried `--tax-residence-region` because the help table showed a truncated option name and I guessed the full name. 
+I tried `--tax-residence-region` because the help table showed a truncated option name and I guessed the full name.
 
 **Command:**
 ```
@@ -210,7 +210,7 @@ ModuleNotFoundError: No module named 'aeat.application.workflow._bucket_pointer'
 
 ### Step 11 — The CLI is completely broken
 
-After the crash, I tried `aeat --help` again. 
+After the crash, I tried `aeat --help` again.
 
 **Output:**
 ```

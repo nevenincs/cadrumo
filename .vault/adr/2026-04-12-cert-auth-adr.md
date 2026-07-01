@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#cert-auth"
 date: 2026-04-12
-modified: '2026-04-12'
+modified: '2026-06-13'
 title: "AEAT PKCS#12 Certificate Authentication"
 related:
   - "[[2026-04-12-cert-auth-research]]"

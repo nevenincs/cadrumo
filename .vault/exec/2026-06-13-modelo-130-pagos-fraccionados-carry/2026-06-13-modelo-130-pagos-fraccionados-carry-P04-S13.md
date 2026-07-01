@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S13'
 related:
   - "[[2026-06-13-modelo-130-pagos-fraccionados-carry-plan]]"
 ---
-
-
-
 
 # add the first-quarter-fires-nothing case: assert a 1T (and a first-filer/alta first quarter) produces casilla 05 = Decimal zero with absent-by-design provenance and emits no blocker and no prior-payment advisory
 

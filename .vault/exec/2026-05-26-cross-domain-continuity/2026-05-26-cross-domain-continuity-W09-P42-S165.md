@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#cross-domain-continuity'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 step_id: 'S165'
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
 ---
-
-
-
 
 # merge active_bucket_id_or_raise and require_active_bucket_id into one canonical function update all call sites
 

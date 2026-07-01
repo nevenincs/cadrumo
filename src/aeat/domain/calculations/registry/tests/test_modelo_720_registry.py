@@ -232,11 +232,7 @@ def test_committed_modelo_720_deadline_window_is_january_to_march_following_ejer
 
 
 def _layout_bindings_for(revision: ModeloRevision, record_name: str):
-    return tuple(
-        binding
-        for binding in revision.bindings
-        if selector_as_dict(binding).get("record") == record_name
-    )
+    return tuple(binding for binding in revision.bindings if selector_as_dict(binding).get("record") == record_name)
 
 
 def test_committed_modelo_720_type_1_bindings_target_declarante_record() -> None:

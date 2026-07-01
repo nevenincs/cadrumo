@@ -1,12 +1,11 @@
 ---
 tags: ['#exec', '#live-iva-compensation-wallet']
 date: '2026-06-05'
-modified: '2026-06-05'
+modified: '2026-06-30'
 step_id: 'S93'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
 ---
-
 
 # W10.P24.S93 live IVA evidence retry
 

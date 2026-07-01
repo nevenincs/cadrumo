@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#live-iva-compensation-wallet'
 date: '2026-05-26'
-modified: '2026-05-26'
+modified: '2026-06-30'
 related:
   - '[[2026-05-22-live-iva-compensation-wallet-profile-bucket-repository-binding-reconciliation-research]]'
   - '[[2026-05-22-live-iva-compensation-wallet-profile-bucket-repository-binding-reconciliation-adr]]'
@@ -13,8 +13,6 @@ related:
   - '[[2026-05-19-iva-compensation-chain-adr]]'
   - '[[2026-04-12-modelo-303-390-adr]]'
 ---
-
-
 
 # `live-iva-compensation-wallet` adr: `remote IVA evidence persistence and reconciliation authority` | (**status:** `accepted`)
 

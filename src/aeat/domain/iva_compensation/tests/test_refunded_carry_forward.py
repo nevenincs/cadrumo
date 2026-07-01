@@ -107,9 +107,7 @@ def test_positive_result_generates_no_carry_regardless_of_disposition() -> None:
     resultado = Decimal("250.00")
 
     assert derive_303_compensation_available(posterior=posterior, resultado=resultado) == posterior
-    assert (
-        derive_303_compensation_available(posterior=posterior, resultado=resultado, refunded=True) == posterior
-    )
+    assert derive_303_compensation_available(posterior=posterior, resultado=resultado, refunded=True) == posterior
 
 
 def test_refund_dispositions_are_classified_as_refund() -> None:

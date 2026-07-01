@@ -3,13 +3,12 @@ tags:
   - '#plan'
   - '#llm-classification-workflow'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-14-llm-classification-workflow-adr]]'
   - '[[2026-06-14-llm-classification-workflow-research]]'
 ---
-
 
 # `llm-classification-workflow` plan
 
@@ -52,16 +51,8 @@ Surface the most-recent LLM rejection on ledger view as a typed info notice, the
 
 ## Description
 
-
 ## Steps
 
-
-
-
-
-
-
 ## Parallelization
-
 
 ## Verification

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#binding-fold-in-carry-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 related:
   - "[[2026-06-26-bindings-architecture-unification-audit]]"
   - "[[2026-06-26-bindings-architecture-unification-research]]"
@@ -11,8 +11,6 @@ related:
   - "[[2026-05-19-live-iva-compensation-wallet-adr]]"
   - "[[2026-06-10-period-revision-resolution-adr]]"
 ---
-
-
 
 # `binding-fold-in-carry-unification` adr: `fold-in and carry unification: one cross-filing fold-in implementation and one compensacion-carry authority` | (**status:** `proposed`)
 
@@ -201,5 +199,3 @@ Out of scope: the naming homonyms and CLI verb fork (phase 2.4).
   relation aggregation at parity with bindings, and one compensación-carry authority
   anchored on the wallet decision; a new fold-in enrolls under the existing mechanism,
   never a second codepath.
-
-

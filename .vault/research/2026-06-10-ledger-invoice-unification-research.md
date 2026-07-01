@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#ledger-invoice-unification'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `ledger-invoice-unification` research: `Unified invoice command and domain decoupling`
 

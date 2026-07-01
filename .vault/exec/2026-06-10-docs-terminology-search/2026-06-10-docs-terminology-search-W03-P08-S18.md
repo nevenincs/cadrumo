@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S18'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Implement the wrangling corrections layer as tested code: casilla-revision dedupe, locale-quadruplet collapse, score-floor and TOC-noise filtering, directory-cluster reading (ADR D6)
 
@@ -121,4 +118,3 @@ concept card) plus the deliberate edge cases (cross-revision casilla collision,
   rankings + identifiers only, no SPLADE vectors) applies at the sweep's
   serialisation boundary, not here -- the wrangled targets already carry only
   ids, targets, and normalised weights. aed5b6d7 (RAG expert) runs the sweep.
-

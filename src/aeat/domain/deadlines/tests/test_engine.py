@@ -417,7 +417,7 @@ class TestAnnualFilingWindows:
         assert engine.explain(_profile(), "100", year=2023)
 
     def test_modelo_303_quarterly_windows_resolve(self) -> None:
-        for year in (2025, 2026):
+        for year in (2024, 2025, 2026):
             quarterly_periods = sorted(
                 (
                     window.period

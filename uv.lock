@@ -55,11 +55,15 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+agent = [
+    { name = "mcp" },
+]
 all = [
     { name = "anthropic" },
     { name = "google-api-python-client" },
     { name = "google-auth" },
     { name = "google-auth-oauthlib" },
+    { name = "mcp" },
     { name = "playwright" },
     { name = "playwright-stealth" },
 ]
@@ -139,6 +143,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aeat", extras = ["agent"], marker = "extra == 'all'" },
     { name = "aeat", extras = ["anthropic"], marker = "extra == 'all'" },
     { name = "aeat", extras = ["browser"], marker = "extra == 'all'" },
     { name = "aeat", extras = ["google"], marker = "extra == 'all'" },
@@ -153,6 +158,7 @@ requires-dist = [
     { name = "google-auth-oauthlib", marker = "extra == 'google'", specifier = ">=1.3.1,<2" },
     { name = "httpx", specifier = ">=0.28.1,<1" },
     { name = "keyring", specifier = ">=25.6.0,<26" },
+    { name = "mcp", marker = "extra == 'agent'", specifier = ">=1.12,<2" },
     { name = "ofxtools", specifier = ">=1.1,<2" },
     { name = "openpyxl", specifier = ">=3.1.5,<4" },
     { name = "pdfplumber", specifier = ">=0.11.9,<1" },
@@ -174,7 +180,7 @@ requires-dist = [
     { name = "tzdata", marker = "sys_platform == 'win32'", specifier = ">=2026.2" },
     { name = "xlrd", specifier = ">=2.0.1,<3" },
 ]
-provides-extras = ["workbook-windows", "google", "browser", "anthropic", "all"]
+provides-extras = ["workbook-windows", "google", "browser", "anthropic", "agent", "all"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -1939,6 +1945,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/0d/15/12ce2de32fbdeb26e
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0a/12/2033cdcf76d05cd4cdab318074428e74c2be4536377bb62832148b034609/ofxtools-1.1.1-py3-none-any.whl", hash = "sha256:4c6a80cfd08d8a6ce7e791ce3bc317e203f36359a0961b20df667cf91a9560e9", size = 236779, upload-time = "2026-06-12T18:51:38.343Z" },
 ]
+
 [[package]]
 name = "openpyxl"
 version = "3.1.5"

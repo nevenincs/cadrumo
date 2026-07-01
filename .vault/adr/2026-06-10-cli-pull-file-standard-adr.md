@@ -3,13 +3,11 @@ tags:
   - '#adr'
   - '#cli-pull-file-standard'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related:
   - '[[2026-06-10-cli-pull-file-standard-research]]'
   - '[[2026-06-10-live-justificante-reconcile-adr]]'
 ---
-
-
 
 # `cli-pull-file-standard` adr: `CLI pull verb and file flag standardization` | (**status:** `accepted`)
 
@@ -117,5 +115,3 @@ real; a half-renamed CLI is worse than either consistent state.
   single file input MUST be named `--file`; do not introduce `capture` / `fetch`
   / `refresh` fetch verbs or `--from-*` / `--source` / `--path` single-file
   options.
-
-

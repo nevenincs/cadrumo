@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#secure-object-integrity'
 date: '2026-05-22'
-modified: '2026-05-22'
+modified: '2026-06-30'
 related:
   - '[[2026-05-22-secure-object-integrity-attribution-plan]]'
   - '[[2026-05-21-secure-object-database-drift-research]]'
@@ -11,8 +11,6 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-integrity-warning-stability-adr]]'
 ---
-
-
 
 # `secure-object-integrity-P05-S16` Code Review
 

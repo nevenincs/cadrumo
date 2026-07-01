@@ -3,10 +3,9 @@ tags:
   - '#reference'
   - '#schema-driven-wizard'
 date: '2026-05-12'
-modified: '2026-05-12'
+modified: '2026-06-30'
 related: []
 ---
-
 
 # aeat config + setup wizard reference
 
@@ -592,7 +591,6 @@ confirmation contract.
 `config.py:673` returns the set of `aeat_*` env vars. If a future
 descriptor encodes which fields are env-sourced vs.
 profile-sourced, this is the right enumeration point.
-
 
 ---
 

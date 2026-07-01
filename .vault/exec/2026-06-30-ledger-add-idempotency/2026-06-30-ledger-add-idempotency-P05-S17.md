@@ -9,9 +9,6 @@ related:
   - "[[2026-06-30-ledger-add-idempotency-plan]]"
 ---
 
-
-
-
 # Add a test proving two non-granting verify retries with identical findings collapse to one report while a changed-finding re-verify produces a distinct report
 
 ## Scope

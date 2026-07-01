@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-05-20'
-modified: '2026-05-20'
+modified: '2026-06-30'
 related:
   - "[[2026-05-20-schema-hardening-verification-ledger-audit]]"
 ---
@@ -12,9 +12,9 @@ related:
 
 ## Scope
 
-Semantic-correctness review of 96 `semantic_role` assignments from `.vault-scratch/r7-m200/batch-4.json`.  
-Coverage: M200 (Impuesto sobre Sociedades) 2024-y-siguientes revision.  
-Casillas reviewed: 736 members across 96 roles.  
+Semantic-correctness review of 96 `semantic_role` assignments from `.vault-scratch/r7-m200/batch-4.json`.
+Coverage: M200 (Impuesto sobre Sociedades) 2024-y-siguientes revision.
+Casillas reviewed: 736 members across 96 roles.
 Criteria: (1) name accuracy, (2) member coherence, (3) granularity.
 
 ## Findings

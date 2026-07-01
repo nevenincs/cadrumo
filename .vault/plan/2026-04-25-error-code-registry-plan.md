@@ -3,14 +3,12 @@ tags:
   - '#plan'
   - '#error-code-registry'
 date: '2026-04-25'
-modified: '2026-04-25'
+modified: '2026-06-30'
 related:
   - "[[2026-04-25-error-code-registry-adr]]"
   - "[[2026-04-25-error-code-registry-research]]"
   - "[[2026-04-24-aeat-cli-wireframe-reference]]"
 ---
-
-
 
 # `error-code-registry` `phase-a-foundation` plan
 

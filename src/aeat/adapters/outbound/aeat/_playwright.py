@@ -31,7 +31,6 @@ try:
     from playwright.async_api import Error as PlaywrightError
     from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 except ImportError:  # the optional `browser` extra is not installed
-
     # TYPE-IGNORE-RATIONALE-OPTIONAL-BROWSER-EXTRA: fallback redefinition of the playwright
     # async_api name when the optional `browser` extra is absent (the real symbol is the import above).
     class PlaywrightError(Exception):  # type: ignore[no-redef]

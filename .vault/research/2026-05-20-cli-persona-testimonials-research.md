@@ -3,12 +3,10 @@ tags:
   - '#research'
   - '#cli-persona-testimonials'
 date: '2026-05-20'
-modified: '2026-05-20'
+modified: '2026-06-30'
 related:
   - "[[2026-05-20-cli-persona-testimonials-audit]]"
 ---
-
-
 
 # `cli-persona-testimonials` research: `cli-i18n-naked-string-remediation-inventory`
 
@@ -18,7 +16,6 @@ Brief description of what was researched, why, and how it relates to
 ## Findings
 
 Adapt format based on content.
-
 
 ## Context
 
@@ -129,4 +126,3 @@ es/ca/hu/en, `audit`. Re-verify git-clean on `_modelo.py` and
 `core/config.py` before editing those. Sequence: D (cleanest, highest
 impact) → C, E, A (error clusters) → B, F (BadParameter clusters) →
 singletons → UNSURE resolution.
-

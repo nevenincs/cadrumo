@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#period-grammar-standardisation'
 date: '2026-06-11'
-modified: '2026-06-11'
+modified: '2026-06-30'
 step_id: 'S23'
 related:
   - "[[2026-06-11-period-grammar-standardisation-plan]]"
 ---
-
-
-
 
 # Replace the period: str / ledger_period fields in the state projection with core.Period and add a save->load->equality roundtrip plus anti-tautology proof at that persistence boundary
 

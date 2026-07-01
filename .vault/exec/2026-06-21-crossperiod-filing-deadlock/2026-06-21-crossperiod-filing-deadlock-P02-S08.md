@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#crossperiod-filing-deadlock'
 date: '2026-06-21'
-modified: '2026-06-21'
+modified: '2026-06-30'
 step_id: 'S08'
 related:
   - "[[2026-06-21-crossperiod-filing-deadlock-plan]]"
 ---
-
-
-
 
 # Emit the non-blocking WARNING non-official-local-chain advisory finding from the cross-period clean-state findings builder
 
@@ -28,4 +25,3 @@ related:
 Landed in commit `84add274d`. A WARNING is non-blocking, so `_classify_verification_outcome` keeps the verify grant open and export proceeds; the non-official basis is disclosed rather than granted silently (`no-silent-under-declaration`).
 
 ## Notes
-

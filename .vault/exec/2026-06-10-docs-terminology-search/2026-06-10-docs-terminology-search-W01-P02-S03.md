@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S03'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Implement the BOE normatives HTML-to-text preprocessor splitting on the BOE article delimiter and stripping TOC link farms, emitting schema-conformant output (or interim sidecars) for the 13 MB normatives corpus (ADR D6)
 

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#cli-operator-surface'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S04'
 related:
   - "[[2026-06-10-cli-operator-surface-plan]]"
 ---
-
-
-
 
 # narrow the work verify --select choices to the states verify accepts so latest-verified and filed stop being advertised-but-impossible, satisfying the new gate
 
@@ -50,4 +47,3 @@ cited `verify --select latest-verified` (the only documented verify selector is
 `ModeloVerifySelector` member values equal the matching
 `ModeloCalculationRevisionSelector` values, so the mapping is total. Other
 commands sharing the full selector enum were intentionally left unchanged.
-

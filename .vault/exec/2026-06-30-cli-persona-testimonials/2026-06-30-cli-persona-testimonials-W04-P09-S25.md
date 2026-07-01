@@ -61,4 +61,3 @@ Passed:
 Latest isolated full-file retest note: full `test_iva_ledger.py` remains blocked
 by unrelated registry source-catalogue byte-count failures in registry-loading
 tests. The S25-specific behavior is covered and passing.
-

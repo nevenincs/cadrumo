@@ -9,9 +9,6 @@ related:
   - "[[2026-06-30-ledger-add-idempotency-plan]]"
 ---
 
-
-
-
 # Upgrade the re-file of an already-PRESENTADO revision from the hard CalculationRevisionStateError to a clean idempotent no-op that returns the existing VIGENTE filing record without emitting a duplicate filing record or lifecycle event, keeping the not-VERIFICADO_COMPLETO case a hard refusal
 
 ## Scope

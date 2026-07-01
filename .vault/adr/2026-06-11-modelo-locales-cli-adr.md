@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-locales-cli'
 date: '2026-06-11'
-modified: '2026-06-11'
+modified: '2026-06-30'
 related:
   - '[[2026-06-11-modelo-locales-cli-research]]'
 ---
@@ -61,4 +61,3 @@ The implementation opens a clean path for future quality gates: a focused modelo
 
 - **Rule slug:** `modelo-locales-cli-authority`.
   **Rule:** Modelo schema-local translation TOML files must be created, updated, removed, scaffolded, and audited through `python -m aeat.locales modelo ...`; direct hand edits are reserved only for migration commits that introduce the CLI itself.
-

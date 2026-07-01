@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
-modified: '2026-05-12'
+modified: '2026-06-30'
 related:
   - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]"
@@ -76,9 +76,6 @@ related:
 > **Updated 2026-05-19**: Module-path mentions of domain/vat/_classification.py and domain/vat/_oss.py in the backend exit-cap inventory, plus the domain/vat legal prorrata substrate reference in the functional gap inventory, follow the Spanish-stem terminology authority: domain/vat migrates into domain/iva. The CLI verb tree, root-command contract, phantom-family adjudication, and backend exit-cap inventory shape are unaffected.
 > See `2026-05-19-spanish-stem-terminology-authority-adr` for the canonical
 > rename ledger and Spanish-stem terminology authority.
-
-
-
 
 # `cli-workflow-redesign` adr: `Apex CLI design: root contract, mini-app requirements, per-modelo requirements, backend exit-cap inventory` | (**status:** `accepted`)
 

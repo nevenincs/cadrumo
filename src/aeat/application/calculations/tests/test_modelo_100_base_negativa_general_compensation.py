@@ -87,6 +87,7 @@ def _casilla_id(value: object) -> CasillaId:
     except ValueError as exc:
         raise AssertionError(f"M100 base negativa fixture casilla key {value!r} is not a CasillaId") from exc
 
+
 #: Anexo-C base-liquidable-general-negativa casillas (ejercicio-2024 origin).
 _PENDIENTE_INICIO: CasillaId = _casilla_id("1388")  # opening pending (bound from prior 1391)
 _APLICADO: CasillaId = _casilla_id("1389")  # operator-elective applied amount

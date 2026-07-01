@@ -3,14 +3,12 @@ tags:
   - '#plan'
   - '#cli-backend-boundary'
 date: '2026-05-08'
-modified: '2026-05-08'
+modified: '2026-06-30'
 related:
   - "[[2026-05-08-cli-backend-boundary-adr]]"
   - "[[2026-05-08-cli-backend-boundary-reference]]"
   - "[[2026-05-08-cli-backend-boundary-research]]"
 ---
-
-
 
 # `cli-backend-boundary` `rollout` plan
 
@@ -31,7 +29,6 @@ The plan is grounded in `2026-05-08-cli-backend-boundary-reference` and
 `2026-05-08-cli-backend-boundary-research`.
 
 ## Tasks
-
 
 ## Backend Owner Matrix
 

@@ -3,14 +3,13 @@ tags:
   - '#audit'
   - '#period-grammar-standardisation'
 date: '2026-06-11'
-modified: '2026-06-11'
+modified: '2026-06-30'
 related:
   - '[[2026-06-11-period-grammar-standardisation-plan]]'
   - '[[2026-06-11-period-grammar-standardisation-adr]]'
 ---
 
 # `period-grammar-standardisation` Code Review
-
 
 ## PERIOD-001 | INFO | No findings in IVA authority-source Period slice
 

@@ -3,13 +3,11 @@ tags:
   - '#exec'
   - '#live-iva-compensation-wallet'
 date: '2026-05-26'
-modified: '2026-05-26'
+modified: '2026-06-30'
 step_id: 'S02'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
 ---
-
-
 
 # `live-iva-compensation-wallet` `W10.P01.S02`
 

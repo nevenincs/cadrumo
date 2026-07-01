@@ -3,14 +3,12 @@ tags:
   - '#adr'
   - '#json-output-contract'
 date: '2026-04-25'
-modified: '2026-04-25'
+modified: '2026-06-30'
 related:
   - "[[2026-04-25-json-output-contract-research]]"
   - "[[2026-04-24-aeat-cli-wireframe-adr]]"
   - "[[2026-04-24-aeat-cli-wireframe-reference]]"
 ---
-
-
 
 # `json-output-contract` adr: `phase-1 foundations for the json output contract` | (**status:** `accepted`)
 

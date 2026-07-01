@@ -65,6 +65,5 @@ def test_parser_extracts_modelo_720_synthetic_fixture_targets() -> None:
 
     # Ground truth: aeat-dr-720 positions 5-8 "EJERCICIO" and Orden HAP/72/2013 Art. 7.
     assert values[_DECL_EJERCICIO_CASILLA] == Decimal("2024"), (
-        f"decl.ejercicio: expected Decimal('2024') from AEAT-grounded fixture, got "
-        f"{values[_DECL_EJERCICIO_CASILLA]!r}"
+        f"decl.ejercicio: expected Decimal('2024') from AEAT-grounded fixture, got {values[_DECL_EJERCICIO_CASILLA]!r}"
     )

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-architecture'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 step_id: 'S61'
 related:
   - "[[2026-05-30-docs-architecture-plan]]"
 ---
-
-
-
 
 # confirm a full green run across lint, docs-check, and the suite
 

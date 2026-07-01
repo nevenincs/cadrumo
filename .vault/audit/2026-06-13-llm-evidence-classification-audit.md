@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#llm-evidence-classification'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 related:
   - "[[2026-06-10-llm-evidence-classification-plan]]"
   - "[[2026-06-12-llm-evidence-classification-audit]]"
 ---
-
-
 
 # `llm-evidence-classification` audit: `Persona roll round 2: full evidence-aware pipeline against real codex CLI`
 
@@ -99,7 +97,6 @@ a documented operator prerequisite (`setup-llm-classification.md`), not a defect
   still awaits a second occurrence.
 
 ## Codification candidates
-
 
 None. This roll validated existing behaviour against the real cloud CLI and
 surfaced one minor UX gap (F5); it produced no new cross-session,

@@ -185,9 +185,8 @@ def test_production_python_legal_ref_literals_resolve_to_catalogue_and_corpus(
 
     assert refs_by_literal, "production Python contains no legal reference literals"
     missing = sorted(ref for ref in refs if ref not in catalogues.legal)
-    assert not missing, (
-        "production Python legal reference literals absent from legal catalogue:\n"
-        + "\n".join(f"{ref}: {refs_by_literal[ref]}" for ref in missing)
+    assert not missing, "production Python legal reference literals absent from legal catalogue:\n" + "\n".join(
+        f"{ref}: {refs_by_literal[ref]}" for ref in missing
     )
     verify_legal_catalogue({ref: catalogues.legal[ref] for ref in refs}, source_root=bundled_path())
 
@@ -201,8 +200,7 @@ def test_production_python_source_ref_literals_resolve_to_catalogue_and_corpus(
 
     assert refs_by_literal, "production Python contains no direct source_refs literals"
     missing = sorted(ref for ref in refs if ref not in catalogues.sources)
-    assert not missing, (
-        "production Python source_refs literals absent from source catalogue:\n"
-        + "\n".join(f"{ref}: {refs_by_literal[ref]}" for ref in missing)
+    assert not missing, "production Python source_refs literals absent from source catalogue:\n" + "\n".join(
+        f"{ref}: {refs_by_literal[ref]}" for ref in missing
     )
     verify_source_catalogue(bundled_path(), {ref: catalogues.sources[ref] for ref in refs})

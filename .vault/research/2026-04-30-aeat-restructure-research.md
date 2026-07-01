@@ -3,12 +3,10 @@ tags:
   - '#research'
   - '#aeat-restructure'
 date: '2026-04-30'
-modified: '2026-04-30'
+modified: '2026-06-30'
 related:
   - '[[2026-04-30-aeat-restructure-adr]]'
 ---
-
-
 
 # `aeat-restructure` research: domain-boundary audit of `src/aeat/`
 
@@ -3698,8 +3696,6 @@ but not that the system still does the right thing for Kent."
 | 22.9 | R1 #3 | Mixed-destination test override count | Add to test-marker mechanic: audit produces explicit override list pre-execution; manual-override count is a hard pre-merge gate |
 | 22.10 | R2 #4 | Python packaging verification | Add to acceptance criteria: `pip install -e .` succeeds; `pip install dist/*.whl` succeeds; installed wheel exposes new paths |
 | 22.11 | R1 #7 | `WorkspaceLockedError` disposition conflict | Resolve to single disposition: keep as test-only fixture; rename to `_TestableAeatError` if kept, OR delete + replace with synthetic test exception. Decision: delete + replace (cleaner) |
-
-
 
 These are project-wide conventions identified during per-module
 audits that were not visible in the initial shape inventory. They

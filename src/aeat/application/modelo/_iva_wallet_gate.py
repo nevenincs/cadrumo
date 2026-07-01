@@ -642,9 +642,7 @@ def _calculated_revision_local_iva_compensation_recurrence(
     )
     wu_repo = work_unit_repository if work_unit_repository is not None else WorkUnitCatalogueRepository()
     calc_repo = (
-        calculation_repository
-        if calculation_repository is not None
-        else CalculationRevisionCatalogueRepository()
+        calculation_repository if calculation_repository is not None else CalculationRevisionCatalogueRepository()
     )
     calculation_catalogue = calc_repo.load()
     matching_work_units = sorted(

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#mandatory-citations'
 date: '2026-04-25'
-modified: '2026-04-25'
+modified: '2026-06-13'
 related:
   - "[[2026-04-25-mandatory-citations-research]]"
   - "[[2026-04-22-citation-blocklist-adr]]"

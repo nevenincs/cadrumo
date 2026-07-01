@@ -3,14 +3,12 @@ tags:
   - '#plan'
   - '#schema-driven-wizard'
 date: '2026-05-12'
-modified: '2026-05-12'
+modified: '2026-06-30'
 related:
   - "[[2026-05-12-schema-driven-wizard-adr]]"
   - "[[2026-05-12-schema-driven-wizard-reference]]"
   - "[[2026-05-12-schema-driven-wizard-research]]"
 ---
-
-
 
 # `schema-driven-wizard` plan
 

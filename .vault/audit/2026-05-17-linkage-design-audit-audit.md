@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#linkage-design-audit'
 date: '2026-05-17'
-modified: '2026-05-17'
+modified: '2026-06-30'
 related:
   - "[[2026-05-17-linkage-design-audit-plan]]"
   - "[[2026-05-15-linkage-design-audit-reference]]"
 ---
-
-
 
 # `linkage-design-audit` audit: `Wave 3 close-out: referential integrity + envelope + hexagonal contracts`
 

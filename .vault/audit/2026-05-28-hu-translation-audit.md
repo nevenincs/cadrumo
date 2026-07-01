@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#hu-translation'
 date: '2026-05-28'
-modified: '2026-05-28'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `hu-translation` audit: Hungarian locale full-parity campaign
 

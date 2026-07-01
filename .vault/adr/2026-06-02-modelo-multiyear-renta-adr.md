@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-multiyear-renta'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 related:
   - "[[2026-05-21-work-verify-deadline-independence-adr]]"
   - "[[2026-06-02-modelo-200-base-determination-adr]]"
@@ -12,8 +12,6 @@ related:
   - '[[2026-06-02-modelo-multiyear-renta-income-research]]'
   - '[[2026-06-04-modelo-multiyear-renta-research]]'
 ---
-
-
 
 # `modelo-multiyear-renta` adr: `multi-year-renta modelo authorization gate` | (**status:** `accepted`)
 

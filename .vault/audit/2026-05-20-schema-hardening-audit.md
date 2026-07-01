@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-05-20'
-modified: '2026-05-20'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `schema-hardening` audit: `m200-m202 pago-fraccionado relation drop`
 

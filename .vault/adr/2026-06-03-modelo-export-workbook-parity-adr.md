@@ -3,14 +3,12 @@ tags:
   - '#adr'
   - '#modelo-export-workbook-parity'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-03-modelo-export-evidence-parity-research]]"
   - "[[2026-06-03-modelo-export-evidence-parity-adr]]"
   - '[[2026-06-04-modelo-export-workbook-parity-research]]'
 ---
-
-
 
 # `modelo-export-workbook-parity` adr: `uniform modelo export workbook parity and UX` | (**status:** `accepted`)
 

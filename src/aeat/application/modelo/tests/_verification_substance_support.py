@@ -80,9 +80,7 @@ def _seed_ready_profile(
     irpf_estimation_regime: str = "directa_normal",
 ) -> None:
     facts = tuple(
-        UserProfileFact(path=fact.path, value=irpf_estimation_regime)
-        if fact.path == "irpf.estimation_regime"
-        else fact
+        UserProfileFact(path=fact.path, value=irpf_estimation_regime) if fact.path == "irpf.estimation_regime" else fact
         for fact in _READY_PROFILE_FACTS
     )
     repository.save(

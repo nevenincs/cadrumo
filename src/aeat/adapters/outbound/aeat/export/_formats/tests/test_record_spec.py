@@ -162,8 +162,7 @@ class TestEncodeCurrency:
         expected: bytes,
     ) -> None:
         assert (
-            encode_currency(value, length=length, signed=signed, inline_sign=inline_sign, encoding="cp1252")
-            == expected
+            encode_currency(value, length=length, signed=signed, inline_sign=inline_sign, encoding="cp1252") == expected
         )
 
     def test_negative_without_signed_raises(self) -> None:

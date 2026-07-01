@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#llm-evidence-classification'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related:
   - "[[2026-06-03-llm-ledger-classification-research]]"
   - "[[2026-06-04-llm-ledger-classification-adr]]"
@@ -12,8 +12,6 @@ related:
   - "[[2026-04-17-attachment-service-adr]]"
   - "[[2026-05-27-iva-classification-enrichment-adr]]"
 ---
-
-
 
 # `llm-evidence-classification` research: `Evidence-aware LLM ledger classification (Stage-3): feeding attached evidence into the classifier`
 

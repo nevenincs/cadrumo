@@ -120,6 +120,8 @@ class TestTaxpayerProfile:
                 "does_intracomunitario": "true",
                 "iva.roi_enrolled": "true",
                 "iva.oss_enrolled": "false",
+                "iva.group_member_enrolled": "true",
+                "iva.group_dominant_entity_enrolled": "true",
                 "iva.intracommunity_operations_exceed_50000_eur": "true",
                 "enrollment.large_company": "true",
                 "enrollment.public_administration_budget_gt_6000000": "false",
@@ -136,6 +138,8 @@ class TestTaxpayerProfile:
         assert profile.iva == ModeloIVAProfile(
             roi_enrolled=True,
             oss_enrolled=False,
+            group_member_enrolled=True,
+            group_dominant_entity_enrolled=True,
             intracommunity_operations_exceed_50000_eur=True,
         )
         assert profile.enrollment == ModeloEnrollment(large_company=True)

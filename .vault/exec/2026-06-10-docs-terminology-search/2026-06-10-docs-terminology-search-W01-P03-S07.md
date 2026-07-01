@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S07'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Add the explicit incremental reindex-before-sweep step to the compile pipeline and a coverage gate asserting every supported-type file under src/aeat/_data is present in the code index metadata, closing the documented watcher staleness hole (ADR D6)
 

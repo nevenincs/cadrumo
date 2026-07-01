@@ -16,6 +16,7 @@ Submodules
    aeat.domain.calculations.registry._aeat_hosts
    aeat.domain.calculations.registry._aeat_nif_iva_oracle
    aeat.domain.calculations.registry._applicability
+   aeat.domain.calculations.registry._applicability_labels
    aeat.domain.calculations.registry._applicability_modelo202
    aeat.domain.calculations.registry._applicability_payer_facts
    aeat.domain.calculations.registry._applicability_routes
@@ -29,6 +30,7 @@ Submodules
    aeat.domain.calculations.registry._checker_oracle_flow
    aeat.domain.calculations.registry._citation_blocklist
    aeat.domain.calculations.registry._constructs
+   aeat.domain.calculations.registry._convenio
    aeat.domain.calculations.registry._corpus_catalogue
    aeat.domain.calculations.registry._counterpart_bindings
    aeat.domain.calculations.registry._coverage
@@ -40,6 +42,7 @@ Submodules
    aeat.domain.calculations.registry._filed_state
    aeat.domain.calculations.registry._formula_initial_values
    aeat.domain.calculations.registry._formula_runtime
+   aeat.domain.calculations.registry._formula_runtime_ops
    aeat.domain.calculations.registry._formula_text_inputs
    aeat.domain.calculations.registry._groi_oracle
    aeat.domain.calculations.registry._ids
@@ -48,9 +51,11 @@ Submodules
    aeat.domain.calculations.registry._legal
    aeat.domain.calculations.registry._live_parity
    aeat.domain.calculations.registry._loader
+   aeat.domain.calculations.registry._loader_cache
    aeat.domain.calculations.registry._observation_fold
    aeat.domain.calculations.registry._parity_tapes
    aeat.domain.calculations.registry._period_offset_math
+   aeat.domain.calculations.registry._period_selector_match
    aeat.domain.calculations.registry._queries
    aeat.domain.calculations.registry._record_design
    aeat.domain.calculations.registry._record_design_coverage
@@ -73,6 +78,7 @@ Submodules
    aeat.domain.calculations.registry._schema_scalars
    aeat.domain.calculations.registry._schema_surfaces
    aeat.domain.calculations.registry._snapshot
+   aeat.domain.calculations.registry._source_evidence_fingerprint
    aeat.domain.calculations.registry._temporal
    aeat.domain.calculations.registry._text
    aeat.domain.calculations.registry._validate
@@ -100,6 +106,7 @@ Submodules
    aeat.domain.calculations.registry._validate_registry_scope
    aeat.domain.calculations.registry._validate_relation_periods
    aeat.domain.calculations.registry._validate_relation_sources
+   aeat.domain.calculations.registry._validate_revision_closure
    aeat.domain.calculations.registry._validate_revision_context
    aeat.domain.calculations.registry._validate_revision_identity
    aeat.domain.calculations.registry._validate_revision_rules

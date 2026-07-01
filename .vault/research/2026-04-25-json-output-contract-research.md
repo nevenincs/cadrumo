@@ -3,15 +3,13 @@ tags:
   - '#research'
   - '#json-output-contract'
 date: '2026-04-25'
-modified: '2026-04-25'
+modified: '2026-06-30'
 related:
   - "[[2026-04-24-aeat-cli-wireframe-reference]]"
   - "[[2026-04-24-aeat-cli-wireframe-adr]]"
   - "[[2026-04-25-json-output-contract-adr]]"
   - "[[2026-04-25-json-output-contract-plan]]"
 ---
-
-
 
 # `json-output-contract` research: `phase-1 --json output contract foundations for issue 399`
 

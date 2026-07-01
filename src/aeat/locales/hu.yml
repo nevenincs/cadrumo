@@ -1271,21 +1271,26 @@ cli:
   app:
     ledger:
       bienes_inversion:
-        acquisition_year_help: 'A jószág beszerzésének éve.'
-        art108_help: 'A jószág a LIVA 108. cikk szerint beruházási jószágnak minősül-e.'
-        asset_ref_help: 'Opcionális kereszthivatkozás egy AssetRecord azonosítóra.'
-        cuota_soportada_help: 'A beszerzéskor viselt teljes előzetes áfa (pozitív).'
-        declare_help: 'Egy áfa-korrekcióhoz nyilvántartott beruházási jószág bejelentése.'
-        description_help: 'A jószág leírása.'
-        disposal_regime_help: 'Átruházási rezsim (sujeta_no_exenta vagy exenta_o_no_sujeta); a --disposal-year mellett kötelező.'
-        disposal_requires_both: 'A --disposal-year és a --disposal-regime csak együtt adható meg.'
-        disposal_year_help: 'Opcionális átruházási év (110. cikk).'
-        group_help: 'Beruházási javak áfa-levonás korrekciós nyilvántartása (LIVA 107-110. cikk).'
-        identifier_help: 'Stabil nyilvántartási azonosító.'
+        acquisition_year_help: A jószág beszerzésének éve.
+        art108_help: A jószág a LIVA 108. cikk szerint beruházási jószágnak minősül-e.
+        asset_ref_help: Opcionális kereszthivatkozás egy AssetRecord azonosítóra.
+        cuota_soportada_help: A beszerzéskor viselt teljes előzetes áfa (pozitív).
+        declare_help: Egy áfa-korrekcióhoz nyilvántartott beruházási jószág bejelentése.
+        description_help: A jószág leírása.
+        disposal_regime_help: Átruházási rezsim (sujeta_no_exenta vagy exenta_o_no_sujeta);
+          a --disposal-year mellett kötelező.
+        disposal_requires_both: A --disposal-year és a --disposal-regime csak együtt
+          adható meg.
+        disposal_year_help: Opcionális átruházási év (110. cikk).
+        group_help: Beruházási javak áfa-levonás korrekciós nyilvántartása (LIVA 107-110.
+          cikk).
+        identifier_help: Stabil nyilvántartási azonosító.
         kind_help: 'Korrekciós időszak: ingó (4 év) vagy ingatlan (9 év).'
-        list_help: 'Az aktív profil nyilvántartásában szereplő összes beruházási jószág listázása.'
-        prorrata_inicial_help: 'A beszerzés évének végleges levonási százaléka (0-100).'
-        unknown_disposal_regime: 'Ismeretlen átruházási rezsim {regime!r}; elfogadott: {accepted}'
+        list_help: Az aktív profil nyilvántartásában szereplő összes beruházási jószág
+          listázása.
+        prorrata_inicial_help: A beszerzés évének végleges levonási százaléka (0-100).
+        unknown_disposal_regime: 'Ismeretlen átruházási rezsim {regime!r}; elfogadott:
+          {accepted}'
       evidence:
         add_help: Vásárlásiszámla-bizonyíték regisztrálása PDF-ből vagy képből.
         evidence_id_help: Bizonyíték azonosítója (pontos egyezés).
@@ -1686,8 +1691,8 @@ cli:
       iva_wallet:
         as_of_year_help: Reference year for carry-forward age and expiry calculations.
         balance_help: Show aggregated IVA compensation carry-forward balance computed
-          from local Modelo 303 history. Reports total_balance, active_balance,
-          expired_balance, lot_count, and next_expiry_year.
+          from local Modelo 303 history. Reports total_balance, active_balance, expired_balance,
+          lot_count, and next_expiry_year.
         correct_amount_help: A javított átvihető egyenleg összege EUR-ban (tizedes,
           pl. 1200.50).
         correct_confirm_help: Kötelező megerősítő jelző. Tudomásul veszi, hogy ez
@@ -2076,6 +2081,10 @@ cli:
           casilla 03 relation csatornakat hasznald, es kezi ertek megadasakor a nem
           hasznalt modalitast allitsd 0-ra.'
         rename_help: Egy munkaegység megjelenítési nevének frissítése.
+        rescate_contingencia_year_help: 'Az az ev, amikor a nyugdijpenztari esemeny
+          (nyugdijazas, rokkantsag, halal) bekovetkezett. Meghatarozza a LIRPF DT
+          12a 4. bekezdes szerinti idoablakot (26/2014 torveny): ha az ablak zarva
+          van a visszavaltas evere, a 40%-os csokkentest visszatartjak.'
         rescate_plan_pensiones_aportaciones_pre_2007_help: A nyugdíjtervbe 2006. dec.
           31-ig befizetett hozzájárulások (a LIRPF 12. átmeneti rendelkezés szerinti
           arányosítás alapja). Szükséges a --rescate-plan-pensiones-capital és --rescate-plan-pensiones-aportaciones-totales
@@ -2090,6 +2099,14 @@ cli:
           kiszámítsa a 40%-os csökkentést és a 0011-es mezőbe írja.
         rescate_plan_pensiones_not_decimal: A --rescate-plan-pensiones-* értékeknek
           decimális összegeknek kell lenniük.
+        rescate_type_help: 'A nyugdijpenztari toke visszavaltasanak tipusa (LIRPF
+          DT 12a): total (a teljes toke egyszerre) vagy parcial (reszletekben). Osztalyozasi
+          es eredetjelzo jel, nem valtoztatja meg az osszeget: a 40%-os csokkentes
+          a kifizetett osszeg 2007 elotti reszere vonatkozik. Parcialis eseten minden
+          reszkifizetes ugyanazt a 4. bekezdes szerinti ablakot osztja.'
+        rescate_year_help: Az az ev, amikor a visszavaltasi juttatast megkapjak (alapertelmezetten
+          a bevallas eve). Osszehasonlitva a LIRPF DT 12a 4. bekezdes szerinti ablakkal,
+          a --contingencia-year evtol merve.
         result_summary_header: eredmény-összefoglaló  Modelo %{modelo} %{year} %{period}
         resume_help: Ellenőrzi, hogy megszakított munkafolyamat újrapróbálható-e az
           AEAT megkeresése nélkül. A normál út a --modelo --year --period; a pontos
@@ -2167,9 +2184,6 @@ cli:
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
-        rescate_type_help: 'A nyugdijpenztari toke visszavaltasanak tipusa (LIRPF DT 12a): total (a teljes toke egyszerre) vagy parcial (reszletekben). Osztalyozasi es eredetjelzo jel, nem valtoztatja meg az osszeget: a 40%-os csokkentes a kifizetett osszeg 2007 elotti reszere vonatkozik. Parcialis eseten minden reszkifizetes ugyanazt a 4. bekezdes szerinti ablakot osztja.'
-        rescate_contingencia_year_help: 'Az az ev, amikor a nyugdijpenztari esemeny (nyugdijazas, rokkantsag, halal) bekovetkezett. Meghatarozza a LIRPF DT 12a 4. bekezdes szerinti idoablakot (26/2014 torveny): ha az ablak zarva van a visszavaltas evere, a 40%-os csokkentest visszatartjak.'
-        rescate_year_help: 'Az az ev, amikor a visszavaltasi juttatast megkapjak (alapertelmezetten a bevallas eve). Osszehasonlitva a LIRPF DT 12a 4. bekezdes szerinti ablakkal, a --contingencia-year evtol merve.'
   common:
     errors:
       draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található
@@ -2560,6 +2574,13 @@ cli:
         követi.
       rename_source_help: A meglévő profilnév.
       rename_target_help: Az új profilnév.
+      sar_catalogue_info: 'Ez az archívum a profilhoz tárolt összes személyesadat-kategóriát
+        tartalmazza: azonosító és profiladatok, modelo munkaegységek, főkönyvi tételek,
+        számítási revíziók és benyújtási nyilvántartások. A csatolt bizonyítékok bájtjai
+        és az AEAT-lekérések titkosított tárolóban maradnak; ezek beemeléséhez használja
+        a titkosított helyreállítási archívumot.'
+      sar_help: A profilhoz tárolt összes személyes adat exportálása GDPR hozzáférési
+        archívumként (a hordozható profilcsomag).
       show_help: 'Egy profil élő értékeinek megjelenítése (alapértelmezés: az aktív
         profil).'
       show_name_help: 'A megjelenítendő profil azonosítója (alapértelmezés: az aktív
@@ -3164,6 +3185,19 @@ cli:
         created_at, modified_at, ...).
       sort_order_help: 'Rendezési sorrend: asc (növekvő) vagy desc (csökkenő).'
       ungrouped_label: (nincs csoport)
+    llm_diagnostics:
+      bad_date: A(z) %{option} értéknek ISO dátumnak (ÉÉÉÉ-HH-NN) kell lennie; a kapott
+        érték %{value}.
+      help: A meglévő LLM használati, költség- és osztályozási megbízhatósági mutatók
+        megjelenítése.
+      no_data_message: Még nincsenek LLM használati vagy osztályozási megbízhatósági
+        mutatók. Futtass egy LLM-alapú osztályozást a feltöltésükhöz.
+      since_help: A használati rekordok alsó, ISO dátumú (ÉÉÉÉ-HH-NN) inkluzív korlátja.
+      threshold_help: Megbízhatósági küszöb, amely alatt az osztályozás alacsony megbízhatóságúnak
+        számít.
+      threshold_range: A --low-confidence-below értéknek a 0..1 inkluzív tartományban
+        kell lennie.
+      until_help: A használati rekordok felső, ISO dátumú (ÉÉÉÉ-HH-NN) inkluzív korlátja.
     merge:
       actor_help: Az üzemeltető neve, amelyet a LEDGER_TRANSACTION_MERGED eseményen
         rögzítenek.
@@ -3502,9 +3536,13 @@ cli:
       modelo_help: AEAT-nyomtatványazonosító (pl. 303, 130, 100).
       year_help: 'Az alkalmazhatóság-értékelés adóéve; alapértelmezés: az aktuális
         év.'
+    local_work_units_unavailable: Az áttekintés helyi Modelo munkaegység-állapota
+      nem érhető el; nem jeleníthető meg megőrzött munkaállapot nélkül.
     period: Időszak
     period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves),
       01-12 (hónapok). A --year kapcsolóval adja meg az évet.'
+    post_filing:
+      pending: '%{count} AEAT bevallás utáni esemény igényel figyelmet: %{kinds}. Tekintsd át őket az ''aeat app live notifications list'' paranccsal.'
     status:
       drafts_empty: Nincs mentett bevallástervezet.
       drafts_empty_with_work_units: Nincs mentett bevallástervezet – ez normális,
@@ -4002,6 +4040,23 @@ errors:
     lookup_dispatch_arg_count: A(z) {op} képletoperátor {expected} argumentumot vár.
     lookup_dispatch_arg_kind: A(z) {op} képletoperátornál a(z) {position}. pozíciónak
       {expected_kind} levélnek kell lennie.
+    m100_art85_boolean_invalid: A 100-as modell 85. cikke szerinti logikai rovat értéke
+      0 vagy 1 lehet.
+    m100_art85_catastral_value_negative: A 100-as modell 85. cikke szerinti kataszteri
+      értéknek nem negatívnak kell lennie.
+    m100_art85_disposal_percentage_invalid: A 100-as modell 85. cikke szerinti vegyes
+      használatú százaléknak 0-nál nagyobbnak és legfeljebb 100-nak kell lennie.
+    m100_art85_imputation_days_invalid: A 100-as modell 85. cikke szerinti hozzászámítási
+      napok számának 1 és 365 közötti egész számnak kell lennie.
+    m100_art85_input_negative: A 100-as modell 85. cikke szerinti számértékek nem
+      lehetnek negatívak.
+    m100_art85_mixed_use_inputs_without_flag: A 100-as modell 85. cikke szerinti vegyes
+      használatú napok vagy százalék megköveteli a vegyes használat rovat bejelölését.
+    m100_art85_no_catastral_base_missing: A 100-as modell 85. cikke szerinti, kataszteri
+      érték nélküli jövedelemhozzászámítás helyettesítő alaprovatokat igényel, amelyek
+      hiányoznak.
+    m100_art85_revision_flag_invalid: A 100-as modell 85. cikke szerinti felülvizsgált
+      kataszteri érték jelölőjének a hivatalos X jelölőnégyzet-értéknek kell lennie.
     m210_gastos_deducibles_negative: A(z) M210 gastos_deducibles %{casilla_id} nem
       lehet negativ; kapott ertek %{value}.
     m210_gastos_deducibles_not_allowed: A(z) M210 gastos_deducibles %{casilla_id}
@@ -4195,6 +4250,7 @@ errors:
     error_resources_not_found: A kért csomagolt erőforrás nem található.
     error_resources_validation: Egy csomagolt alkalmazásfájl nem ment át a szigorú
       érvényesítésen.
+    error_retention: Nem sikerült kiértékelni az adónyilvántartás megőrzési szabályzatát.
     error_review: Felülvizsgálati hiba történt.
     error_sanitization: Hiba történt a dokumentum sanitizálása során.
     error_sede: Hiba történt az AEAT elektronikus Sede-n.
@@ -4720,6 +4776,11 @@ errors:
     refused_profile_schema_validation: A profiladatok sértik a séma-szerződést. Javítsa
       a megjelenített értékeket.
     refused_renta_maritime_exemption_inactive: errors.refused.refused_renta_maritime_exemption_inactive
+    refused_retention_floor: 'Törlés elutasítva: %{retained_record_count} benyújtott
+      adónyilvántartás még a törvényes megőrzési időn belül van (Ley 58/2003, LGT
+      66. és 70. cikk). A legkorábbi biztonságos törlési dátum: %{earliest_safe_erase_date}.
+      Várjon eddig, vagy futtassa újra a --i-acknowledge-legal-retention-obligations
+      és --reason kapcsolóval a felülbíráláshoz.'
     refused_review_edit_parse: A  paramétert nem sikerült elemezni. Ellenőrizze a
       megadott érték szintaxisát.
     refused_review_filter_parse: A  paramétert nem sikerült elemezni. Ellenőrizze
@@ -5167,6 +5228,10 @@ wizard:
           jelennek meg.
       address-postcode:
         help: Adóügyi lakcím irányítószáma
+      art109-activity-income-withholding-ge-70pct:
+        help: Art. 109 fedezet - a lefedett szakmai, mezőgazdasági, állattenyésztési
+          vagy erdészeti tevékenységi jövedelem legalább 70%-a forrásadóval vagy számlára
+          történő befizetéssel terhelt
       bienes-extranjero-above-threshold:
         help: Külföldi vagyon meghaladja a jogszabályi küszöbértéket
       cloud-evidence-upload:
@@ -5221,6 +5286,10 @@ wizard:
         help: Intraközösségi ügyletek meghaladják az 50 000 EUR-t
       iva-oss-enrolled:
         help: OSS-be bejelentkezett
+      iva-group-member-enrolled:
+        help: IVA-csoport tag szervezetekent bejelentkezett
+      iva-group-dominant-entity-enrolled:
+        help: IVA-csoport dominans szervezetekent bejelentkezett
       iva-redeme-enrolled:
         help: Az adózó be van-e jegyezve a REDEME-be
       iva-regime:
@@ -5272,10 +5341,6 @@ wizard:
         help: Forrásadóval terhelt helyi bérleti díjat fizet
       professional-income-withholding-ge-70pct:
         help: A szakmai jövedelmek legalább 70%-a előzetes forrásadóval terhelt
-      art109-activity-income-withholding-ge-70pct:
-        help: Art. 109 fedezet - a lefedett szakmai, mezőgazdasági, állattenyésztési
-          vagy erdészeti tevékenységi jövedelem legalább 70%-a forrásadóval vagy
-          számlára történő befizetéssel terhelt
       representante-fiscal-nif:
         help: A spanyolországi adóügyi képviselő NIF/NIE száma. Kötelező az EU-n/EGT-n
           kívüli nem rezidensek számára (LGT 47. cikkely + TRLIRNR 10. cikkely, RDLeg
@@ -5362,6 +5427,10 @@ wizard:
         prompt: Intraközösségi ügyletek meghaladják az 50 000 EUR-t
       iva-oss-enrolled:
         prompt: OSS-be bejelentkezett
+      iva-group-member-enrolled:
+        prompt: IVA-csoport tag szervezetekent bejelentkezett
+      iva-group-dominant-entity-enrolled:
+        prompt: IVA-csoport dominans szervezetekent bejelentkezett
       iva-redeme-enrolled:
         prompt: REDEME-ben bejegyzett (havi IVA visszaigénylési nyilvántartás)
       iva-regime:
@@ -5376,6 +5445,9 @@ wizard:
         prompt: Megjegyzések saját nyilvántartáshoz (opcionális)
       title: Megjegyzések saját nyilvántartáshoz
     obligations:
+      art109-activity-income-withholding-ge-70pct:
+        prompt: Alkalmazandó az Art. 109 szerinti 70%-os tevékenységi jövedelemfedezeti
+          kivétel
       bienes-extranjero-above-threshold:
         prompt: Külföldi vagyon meghaladja a jogszabályi küszöbértéket
       does-intracomunitario:
@@ -5420,8 +5492,6 @@ wizard:
         prompt: Forrásadóval terhelt helyi bérleti díjat fizet
       professional-income-withholding-ge-70pct:
         prompt: A szakmai jövedelmek legalább 70%-a előzetes forrásadóval terhelt
-      art109-activity-income-withholding-ge-70pct:
-        prompt: Alkalmazandó az Art. 109 szerinti 70%-os tevékenységi jövedelemfedezeti kivétel
       third-party-transactions-above-347-threshold:
         prompt: Harmadik féllel folytatott ügyletek meghaladják a Modelo 347 küszöbértékét
       title: Modelo kötelezettségek

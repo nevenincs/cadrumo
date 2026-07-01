@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
-modified: '2026-05-14'
+modified: '2026-06-30'
 related:
   - '[[2026-05-12-cli-workflow-redesign-domain-harvest-normatives-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-app-registry-boundary-adr]]'
@@ -11,11 +11,7 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
 ---
 
-
-
 # `cli-workflow-redesign` Code Review
-
-
 
 S1834-001 | MEDIUM | Citation article misses bypass registry structured error logging
 `show_registry_citation` only wraps `find_reference` in the structured warning block, then calls `find_articulo` outside that block. A missing or invalid `--articulo` therefore raises `NormativeNotFoundError` without the S1834 registry service log fields such as `registry_service`, `registry_normative_id`, and `registry_articulo`, even though a missing normative id does emit them. This leaves one operator-facing citation lookup failure path outside the central registry logging contract.

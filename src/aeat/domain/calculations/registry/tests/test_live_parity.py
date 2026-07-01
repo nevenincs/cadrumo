@@ -41,7 +41,8 @@ from .._live_parity import (
 )
 from .._remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
 
-# INTENTIONAL: unit because it drives the live-parity oracle backend with a canned-response oracle and never contacts a real AEAT surface.
+# INTENTIONAL: unit because it drives the live-parity oracle backend with a canned-response
+# oracle and never contacts a real AEAT surface.
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _WWW6_HOST = aeat_host("www6")

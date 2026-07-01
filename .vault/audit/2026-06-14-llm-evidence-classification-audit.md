@@ -3,12 +3,10 @@ tags:
   - '#audit'
   - '#llm-evidence-classification'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 related:
   - "[[2026-06-13-llm-evidence-classification-adr]]"
 ---
-
-
 
 # `llm-evidence-classification` audit: `Live local-vision classification verified end to end (qwen2.5vl)`
 
@@ -80,7 +78,6 @@ real public-domain invoice image through `LocalVisionLLMClassifier` — returned
   both `3b` and `7b`.
 
 ## Codification candidates
-
 
 None. This is a live-verification + feature pass; it surfaced a concrete config
 fix (num_ctx) and a model-selection flag, neither of which is a durable

@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#eoy-final-calculation'
 date: '2026-06-21'
-modified: '2026-06-21'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `eoy-final-calculation` audit: `End-of-year annual final-calculation aggregation gaps (M100 income, M200 cuota)`
 

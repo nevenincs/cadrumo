@@ -74,9 +74,7 @@ def test_parser_extracts_modelo_232_synthetic_fixture_targets(
         f"got {values[_DECL_EJERCICIO_CASILLA]!r}"
     )
 
-    assert values[_DECL_TIPO_EJERCICIO_CASILLA] is not None, (
-        "decl.tipo-ejercicio: expected a non-None extracted value"
-    )
+    assert values[_DECL_TIPO_EJERCICIO_CASILLA] is not None, "decl.tipo-ejercicio: expected a non-None extracted value"
     assert values[_DECL_CNAE_CASILLA] == "6201", (
         f"decl.cnae: expected '6201' from AEAT-grounded DR23201 fixture "
         f"(DR field: 'C.N.A.E. actividad principal'), got {values[_DECL_CNAE_CASILLA]!r}"

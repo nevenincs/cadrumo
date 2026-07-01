@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S11'
 related:
   - "[[2026-06-13-modelo-130-pagos-fraccionados-carry-plan]]"
 ---
-
-
-
 
 # encode the casilla-16 filed-zero-vs-not-captured distinction: a prior observation carrying casilla 16 = 0 is a no-op, a prior observation lacking any casilla-16 entry lets the carry proceed but raises a non-blocking advisory naming the gap, never silently dropping the minoracion
 

@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#modelo-enum-hardening'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `modelo-enum-hardening` research: `Modelo-enum sweep: residual inconsistencies and latent problems`
 

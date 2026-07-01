@@ -320,6 +320,8 @@ class SetupAnswers(BaseModel):
     iva_regime: Any = None
     iva_roi_enrolled: bool = False
     iva_oss_enrolled: bool = False
+    iva_group_member_enrolled: bool = False
+    iva_group_dominant_entity_enrolled: bool = False
     iva_sii_enrolled: bool = False
     iva_redeme_enrolled: bool = False
     iva_intracommunity_operations_exceed_50000_eur: bool = False

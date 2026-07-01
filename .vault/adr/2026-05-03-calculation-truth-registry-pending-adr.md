@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#calculation-truth-registry'
 date: '2026-05-03'
-modified: '2026-05-03'
+modified: '2026-06-30'
 related:
   - '[[2026-05-03-calculation-truth-inventory-research]]'
   - '[[2026-05-03-external-tax-definition-engines-reference]]'
@@ -13,8 +13,6 @@ related:
   - '[[2026-05-05-modelo-100-renta-source-dependency-reference]]'
   - '[[2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr]]'
 ---
-
-
 
 # `calculation-truth-registry` adr: `Central AEAT legal calculation registry` | (**status:** `accepted`)
 

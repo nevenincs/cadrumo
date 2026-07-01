@@ -3,13 +3,11 @@ tags:
   - '#exec'
   - '#aeat-cli-hardening'
 date: '2026-05-08'
-modified: '2026-05-08'
+modified: '2026-06-30'
 related:
   - '[[2026-05-08-aeat-cli-hardening-plan]]'
   - '[[2026-05-08-aeat-cli-hardening-review-audit]]'
 ---
-
-
 
 # `aeat-cli-hardening` `W2 Boundary Classification` `Setup Status Boundary`
 

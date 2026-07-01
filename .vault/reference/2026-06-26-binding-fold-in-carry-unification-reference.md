@@ -3,7 +3,7 @@ tags:
   - '#reference'
   - '#binding-fold-in-carry-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 related:
   - "[[2026-06-26-binding-fold-in-carry-unification-adr]]"
   - "[[2026-06-26-binding-fold-in-carry-unification-plan]]"
@@ -11,8 +11,6 @@ related:
   - "[[2026-05-19-live-iva-compensation-wallet-adr]]"
   - "[[2026-06-10-period-revision-resolution-adr]]"
 ---
-
-
 
 # `binding-fold-in-carry-unification` reference: `phase-2.3 fold-in and carry anchor pins`
 

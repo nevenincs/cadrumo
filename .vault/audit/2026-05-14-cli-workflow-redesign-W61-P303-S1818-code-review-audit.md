@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
-modified: '2026-05-14'
+modified: '2026-06-30'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-adr]]'
@@ -11,11 +11,7 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr]]'
 ---
 
-
-
 # `cli-workflow-redesign W61.P303.S1818` Code Review
-
-
 
 W61.P303.S1818-001 | HIGH | Caller-supplied ledger values can bypass bucket-local aggregation when the bucket emits no value
 

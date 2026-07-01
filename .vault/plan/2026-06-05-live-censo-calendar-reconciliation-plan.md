@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#live-censo-calendar-reconciliation'
 date: '2026-06-05'
-modified: '2026-06-05'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-05-live-censo-calendar-reconciliation-research]]'
@@ -12,7 +12,6 @@ related:
   - '[[2026-06-05-calendar-filing-semantics-adr]]'
   - '[[2026-06-03-modelo-036-census-sync-adr]]'
 ---
-
 
 # `live-censo-calendar-reconciliation` `implementation` plan
 

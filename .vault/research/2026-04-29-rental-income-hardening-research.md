@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#rental-income-hardening'
 date: '2026-04-29'
-modified: '2026-04-29'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `rental-income-hardening` research: per-finca register, Ley 12/2023 tier auto-detection, art. 23.1 amortización 3% ledger
 

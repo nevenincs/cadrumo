@@ -183,9 +183,7 @@ def test_modelo_303_extraction_profile_legal_refs_match_target_casillas(
     assert revision.extraction_profiles, revision_id
     profile = next(item for item in revision.extraction_profiles if item.id == "modelo-303-declaracion-pdf")
     target_refs = frozenset(
-        legal_ref
-        for target in profile.target_casillas
-        for legal_ref in casillas_by_id[target.casilla_id].legal_refs
+        legal_ref for target in profile.target_casillas for legal_ref in casillas_by_id[target.casilla_id].legal_refs
     )
 
     assert target_refs == expected_refs
@@ -240,9 +238,7 @@ def test_modelo_303_sii_2026_monthly_deadlines_use_aeat_2026_calendar() -> None:
         assert window.payment_cutoff_on == payment_cutoff_on
         assert "aeat-calendario-contribuyente-2026-domiciliacion" in window.source_refs
 
-    assert "aeat-calendario-contribuyente-2026-hasta-2-marzo" in windows[
-        "modelo-303-2026-01-mensual"
-    ].source_refs
+    assert "aeat-calendario-contribuyente-2026-hasta-2-marzo" in windows["modelo-303-2026-01-mensual"].source_refs
 
 
 def test_modelo_303_live_cross_references_forbid_writes() -> None:

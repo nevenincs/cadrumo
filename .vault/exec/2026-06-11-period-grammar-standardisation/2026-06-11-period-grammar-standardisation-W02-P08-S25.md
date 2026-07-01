@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#period-grammar-standardisation'
 date: '2026-06-11'
-modified: '2026-06-11'
+modified: '2026-06-30'
 step_id: 'S25'
 related:
   - "[[2026-06-11-period-grammar-standardisation-plan]]"
 ---
-
-
-
 
 # Replace the period: str fields in the iva prorrata, submission, verification schema, filing schema and modelo export models with core.Period
 

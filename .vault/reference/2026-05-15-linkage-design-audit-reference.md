@@ -3,11 +3,9 @@ tags:
   - '#reference'
   - '#linkage-design-audit'
 date: '2026-05-15'
-modified: '2026-06-29'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `linkage-design-audit` reference: Linkage Defect Taxonomy v1
 

@@ -119,6 +119,7 @@ class TestNifReplacement:
                 surface_label="taxpayer NIE",
             )
 
+
 class TestNameReplacement:
     """Synthetic names must be uppercase and digit-free."""
 
@@ -285,6 +286,7 @@ class TestArbitraryReplacement:
         )
         assert replacement.synthetic == "SANITIZED-OPAQUE"
         assert replacement.synthetic, "non-empty synthetic must survive validation"
+
 
 class TestAddressReplacement:
     """Address replacement has no shape constraint beyond non-empty."""

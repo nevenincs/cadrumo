@@ -461,7 +461,7 @@ class TestRevisionViewSurfacesDetailRows:
         result = self._run_cli(tmp_path, ["app", "modelo", "work", "calculate", "--help"])
 
         assert result.returncode == 0, result.stderr
-        assert "razon_social=\"DE Auto GmbH\"" in result.stdout
+        assert 'razon_social="DE Auto GmbH"' in result.stdout
         assert "operador codigo_pais=DE" in result.stdout
 
     def test_m349_json_calculate_materialises_operador_detail_rows(self, tmp_path: Path) -> None:

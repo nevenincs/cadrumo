@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#crossperiod-filing-deadlock'
 date: '2026-06-21'
-modified: '2026-06-21'
+modified: '2026-06-30'
 step_id: 'S03'
 related:
   - "[[2026-06-21-crossperiod-filing-deadlock-plan]]"
 ---
-
-
-
 
 # Admit an explicitly-targeted overdue obligation as a late local filing, stamping the extemporanea marker on the COMPUTING_DEADLINES step details instead of aborting DEADLINE_PASSED
 
@@ -28,4 +25,3 @@ related:
 Landed in commit `6e635f566`. The late LOCAL `work file` is admitted and persists the `app_filing` carry observation; `work file` contacts AEAT zero times. Reuses the existing registry-grounded `Recovery` (Ley 58/2003 art-27) admissibility. `test_deadline_passed_via_run_for_period` updated and green.
 
 ## Notes
-

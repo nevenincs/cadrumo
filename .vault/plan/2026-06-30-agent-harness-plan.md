@@ -10,7 +10,6 @@ related:
   - '[[2026-06-30-agent-harness-research]]'
 ---
 
-
 # `agent-harness` plan
 
 ## Wave `W01` - Layer 0: capability manifest exposure

@@ -3,14 +3,12 @@ tags:
   - '#exec'
   - '#modelo-130-relation-regression'
 date: '2026-05-27'
-modified: '2026-05-27'
+modified: '2026-06-30'
 related:
   - '[[2026-05-26-modelo-130-relation-regression-plan]]'
   - '[[2026-05-26-modelo-130-relation-regression-adr]]'
   - '[[2026-05-26-modelo-130-relation-regression-audit]]'
 ---
-
-
 
 # `modelo-130-relation-regression` P07 campaign summary
 

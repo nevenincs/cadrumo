@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#schema-hardening'
 date: '2026-05-22'
-modified: '2026-05-22'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-05-22-schema-hardening-adr]]'
@@ -11,7 +11,6 @@ related:
   - '[[2026-05-21-schema-hardening-reference]]'
   - '[[2026-05-21-schema-hardening-plan]]'
 ---
-
 
 # `schema-hardening` `optional-numeric-suppressor-burn-down` plan
 

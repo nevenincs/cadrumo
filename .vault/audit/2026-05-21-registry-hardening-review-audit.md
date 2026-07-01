@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#registry-hardening'
 date: '2026-05-21'
-modified: '2026-05-21'
+modified: '2026-06-13'
 related:
   []
 ---

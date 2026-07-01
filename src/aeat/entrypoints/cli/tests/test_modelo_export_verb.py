@@ -579,9 +579,7 @@ def test_export_resolves_visible_target_to_current_verified_revision(
     payload = _payload(result.output)
     assert payload["calculation_revision_id"] == calculation_revision_id
     notices = _notices(result.output)
-    notice = next(
-        notice for notice in notices if notice["code"] == "modelo.export.local_export_not_official_evidence"
-    )
+    notice = next(notice for notice in notices if notice["code"] == "modelo.export.local_export_not_official_evidence")
     assert notice["severity"] == "warning"
     assert notice["context"]["evidence_status"] == "local_export_not_official_aeat_filing_evidence"
     assert notice["context"]["modelo"] == "111"

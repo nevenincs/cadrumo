@@ -3,12 +3,10 @@ tags:
   - '#audit'
   - '#semantic-cluster-hardening'
 date: '2026-06-01'
-modified: '2026-06-01'
+modified: '2026-06-30'
 related:
   - "[[2026-06-01-semantic-cluster-hardening-plan]]"
 ---
-
-
 
 # `semantic-cluster-hardening` audit: `Axis-7 semantic functionality-cluster swarm audit (delta)`
 
@@ -255,8 +253,6 @@ None. The constraints these findings enforce (canonical placement, no
 duplication, substitutability pre-filter, private-name import ban) are already
 codified in the core-authority and swarm-audit-cadence rules; this audit
 applies them rather than discovering a new durable rule.
-
-
 
 ## W5 closure - global overlap-freedom proof + honesty-review dispositions
 

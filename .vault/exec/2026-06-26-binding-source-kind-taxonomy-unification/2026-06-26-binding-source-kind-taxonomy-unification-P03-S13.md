@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#binding-source-kind-taxonomy-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 step_id: 'S13'
 related:
   - "[[2026-06-26-binding-source-kind-taxonomy-unification-plan]]"
 ---
-
-
-
 
 # Re-express CounterpartSourceKind, COUNTERPART_SOURCE_KINDS, and counterpart_source_kind as a derived subset of BindingSourceKind
 
@@ -19,7 +16,6 @@ related:
 - `src/aeat/core/aggregation.py`
 
 ## Description
-
 
 This record covers all of P03 (S13 + S14 + S15) — one atomic commit `b5b28a86a`,
 reconciliation preceding deletion per the retired-enum-reconciliation rule.
@@ -51,7 +47,6 @@ value, no casilla value shifts. `RowSetGroupingKind` untouched (scoped out, no
 bridge).
 
 ## Notes
-
 
 `core/__init__.py` carried unrelated peer `result_disposition_casilla_ids` WIP; the
 `AggregationSourceKind` re-export removal landed via the apply-cached gated drive

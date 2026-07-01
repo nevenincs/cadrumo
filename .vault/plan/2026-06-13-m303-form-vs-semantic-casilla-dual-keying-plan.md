@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]'
@@ -12,7 +12,6 @@ related:
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
   - '[[2026-06-09-modelo-iva-routing-carry-adr]]'
 ---
-
 
 # `m303-form-vs-semantic-casilla-dual-keying` `M303 official Diseno box population via semantic projection (Stage 2)` plan
 
@@ -68,12 +67,6 @@ The plan honours the ratified defaults: only cuota-bearing boxes with an exact s
 Authorising documents are carried in the `related:` frontmatter and inherited by every Step: the 2026-06-13 dual-keying ADR (the Stage-2 decision and ratification), the 2026-06-04 research, the 2026-04-17 M303 formulas ADR, the 2026-06-10 aggregation-taxonomy ADR, and the 2026-06-09 IVA routing/carry ADR.
 
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 

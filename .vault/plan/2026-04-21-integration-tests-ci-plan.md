@@ -3,7 +3,7 @@ tags:
   - "#plan"
   - "#integration-tests-ci"
 date: "2026-04-21"
-modified: '2026-04-21'
+modified: '2026-06-13'
 related:
   - "[[2026-04-21-integration-tests-ci-adr]]"
   - "[[2026-04-21-integration-tests-ci-research]]"

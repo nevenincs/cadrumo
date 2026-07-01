@@ -3,7 +3,7 @@
 Test-support helper shared across the package. Live-gated tests under
 both ``src/aeat/adapters/...`` and ``src/aeat/entrypoints/...`` import
 ``requires_live_enabled`` from here; the helper lives in the bundled
-``aeat.tests`` test-support subpackage so no production package needs to
+``aeat-tests`` test-support subpackage so no production package needs to
 import ``pytest``.
 """
 

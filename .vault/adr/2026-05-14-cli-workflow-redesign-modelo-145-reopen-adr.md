@@ -3,15 +3,13 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
-modified: '2026-05-14'
+modified: '2026-06-30'
 related:
   - '[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-research]]'
   - '[[2026-05-12-cli-workflow-redesign-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-modelo-145-foundation-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-w51-modelo-145-deferral-baseline-exec]]'
 ---
-
-
 
 # `cli-workflow-redesign` adr: `Modelo 145 local payer communication reopening` | (**status:** `accepted`)
 

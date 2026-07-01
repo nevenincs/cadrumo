@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cli-operator-surface'
 date: '2026-06-12'
-modified: '2026-06-12'
+modified: '2026-06-30'
 step_id: 'S16'
 related:
   - '[[2026-06-10-cli-operator-surface-plan]]'
@@ -26,4 +26,3 @@ S16 is closed. Restore mirrors the forward lifecycle actions through the applica
 ## Checks
 
 - `pytest src/aeat/application/ledger/tests/test_actions_lifecycle.py -m "unit or integration" -q --basetemp Y:/tmp/pytest-w02-restore-lineage`
-

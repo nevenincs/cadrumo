@@ -360,7 +360,9 @@ def test_authority_load_rejects_reused_number_with_bare_casilla_owner(tmp_path: 
     (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
     (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
 
-    ambiguous_revision = _MINIMAL_REVISION_TOML_TEMPLATE.format(label="ambiguous") + """\
+    ambiguous_revision = (
+        _MINIMAL_REVISION_TOML_TEMPLATE.format(label="ambiguous")
+        + """\
 
 [[revisions."2025".casillas]]
 id = "DPX:01"
@@ -372,6 +374,7 @@ data_type = "integer"
 legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-001"]
 """
+    )
     (revision_dir / "revision.toml").write_text(ambiguous_revision, encoding="utf-8")
 
     clear_fingerprint_cache()

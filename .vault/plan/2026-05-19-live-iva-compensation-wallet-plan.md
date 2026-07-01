@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#live-iva-compensation-wallet'
 date: '2026-05-19'
-modified: '2026-05-19'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-research]]'
@@ -22,7 +22,6 @@ related:
   - '[[2026-05-26-live-iva-remote-evidence-reconciliation-adr]]'
   - '[[2026-05-26-aeat-sede-constants-centralization-adr]]'
 ---
-
 
 # `live-iva-compensation-wallet` `implementation` plan
 

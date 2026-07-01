@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#llm-evidence-classification'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related:
   - "[[2026-06-10-llm-evidence-classification-plan]]"
   - "[[2026-06-10-llm-evidence-classification-adr]]"
 ---
-
-
 
 # `llm-evidence-classification` audit: `Wave W01 code review`
 
@@ -99,5 +97,3 @@ Fix L1 (docstring) opportunistically. M2/M3/L2/L3 are noted/deferred and do not
 block W02.
 
 ## Codification candidates
-
-

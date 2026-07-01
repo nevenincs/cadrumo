@@ -22,19 +22,41 @@ from ._schemas import OutputSchema, register_schema
 
 
 class ModeloReconciliationDiffPayload(OutputSchema):
-    """One metadata disagreement surfaced in a reconciliation report.
+    """One disagreement surfaced in a reconciliation report.
 
     Nested in :class:`ModeloReconcileResult` and mirrors
-    :class:`~aeat.application.modelo.ModeloReconciliationDiff`. Current
-    justificante reconciliation compares header evidence (modelo, period,
-    ejercicio, tax id, and totals), not individual casilla values; casilla-level
-    declaration diffs require a modelo-specific declaration parser.
+    :class:`~aeat.application.modelo.ModeloReconciliationDiff`. Justificante
+    reconciliation compares header evidence (modelo, period, ejercicio, tax id)
+    and, where the revision declares ``reconciliation_total_casilla_ids``, the
+    filed total against the canonical computed result casilla. ``diff_kind`` is
+    the closed category (``header_field`` / ``total``); a ``total`` diff carries
+    the reconciling expectation's ``legal_refs`` / ``source_refs``. Individual
+    casilla declaration diffs require the modelo-specific declaration parser
+    (``diff_kind = casilla`` is reserved).
     """
 
     field_name: str
     work_unit_value: str = ""
     evidence_value: str = ""
     kind: str
+    diff_kind: str = "header_field"
+    legal_refs: tuple[str, ...] = ()
+    source_refs: tuple[str, ...] = ()
+
+
+class ModeloReconciliationAdvisoryPayload(OutputSchema):
+    """One non-blocking reconciliation advisory carried alongside the diffs.
+
+    Mirrors :class:`~aeat.application.modelo.ModeloReconciliationAdvisory`. The
+    CLI also folds each advisory into a typed
+    :class:`~aeat.core.json_contract.Notice` on the envelope ``notices`` channel;
+    this payload preserves the structured ``code`` / ``context`` in the result
+    for machine consumers per ``cli-notices-are-the-only-diagnostic-channel``.
+    """
+
+    code: str
+    message: str
+    context: dict[str, str] = {}
 
 
 @register_schema("modelo.reconcile.pull")
@@ -58,6 +80,7 @@ class ModeloReconcileResult(OutputSchema):
     source_path: str
     verdict: str
     diffs: tuple[ModeloReconciliationDiffPayload, ...] = ()
+    advisories: tuple[ModeloReconciliationAdvisoryPayload, ...] = ()
     reconciled_at: str
     narrative: str = ""
 

@@ -3,14 +3,13 @@ tags:
   - '#plan'
   - '#declaracion-extraction-architecture'
 date: '2026-05-21'
-modified: '2026-05-21'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-adr]]'
   - '[[2026-05-21-declaracion-extraction-architecture-research]]'
   - '[[2026-05-20-branch-reconciliation-audit]]'
 ---
-
 
 # `declaracion-extraction-architecture` umbrella plan
 
@@ -445,7 +444,6 @@ Implement bbox_anchored extraction strategy for M111/M130/M131 declaracion PDFs 
 
 User directive 2026-05-28 second half: complete the verification chain that turns GROUNDED extraction profiles into actual calculation-engine verification. For each GROUNDED modelo with corpus PDFs (M100×3, M111, M115, M123×2, M130, M131, M180, M184, M190, M193, M232×2, M303×2, M347, M349, M369, M390, M720, M840) where the corpus has closure-casilla values present: parse corpus PDF → ExtractedCasilla observations → registry calculation engine recomputes closure casillas from the formula DAG using extracted leaf casillas → assert engine-recomputed values match extracted closure values. This is the project mission: verify the calculation engine against AEAT-grounded printed forms. MUST use centralized infrastructure: aeat.core.errors.AeatError hierarchy, aeat.core.config.Settings, aeat.core.i18n.tr() for user messages, existing calculation engine surface (likely calculate_registry_snapshot per registry public API), existing DeclaracionFiling/ExtractedCasilla observation shape, existing RegistrySnapshot resolution. Real behaviour only - actual engine calls, actual PDFs, no mocks/skips/xfail/tautology.
 
-
 ### Phase `W09.P40` - Phase 2 verification chain: parse → ExtractedCasilla → calculation engine recompute → diff
 
 Implement the verification chain that turns GROUNDED extraction profiles into actual calculation-engine verification: parse_declaracion → filter extracted casillas to non-computed → calculate_registry_snapshot → assert engine closure casilla == extracted printed value. First real end-to-end fidelity gate for the project mission.
@@ -562,7 +560,6 @@ Forward-looking work tracked beyond the 2026-05-30 campaign close per user direc
 
 Forward-horizon follow-up tracked beyond campaign close. Detail in matching tasklist entry.
 
-
 ### Phase `W11.P58` - M100 borrador-surface verification chain - VERIFIED via the per-año class dispatch (tasklist #87)
 
 Forward-horizon follow-up tracked beyond campaign close. Detail in matching tasklist entry.
@@ -579,31 +576,25 @@ Forward-horizon follow-up tracked beyond campaign close. Detail in matching task
 
 Forward-horizon follow-up tracked beyond campaign close. Detail in matching tasklist entry.
 
-
 ### Phase `W11.P61` - Verification chain regression-monitoring discipline - recurring full-suite cadence (tasklist #91)
 
 Forward-horizon follow-up tracked beyond campaign close. Detail in matching tasklist entry.
-
 
 ### Phase `W11.P62` - Justificante test_parser + sidecar parity recurring as new modelos enroll (tasklist #92)
 
 Forward-horizon follow-up tracked beyond campaign close. Detail in matching tasklist entry.
 
-
 ### Phase `W11.P63` - Full-suite baseline+delta discipline per post-rush audit Finding F (tasklist #93)
 
 Forward-horizon follow-up tracked beyond campaign close. Detail in matching tasklist entry.
-
 
 ### Phase `W11.P64` - Purchase-invoice OCR implementation - next campaign starting point per 2026-05-30 ADR (tasklist #86)
 
 Forward-horizon follow-up tracked beyond campaign close. Detail in matching tasklist entry.
 
-
 ### Phase `W11.P66` - M100 borrador-surface verification chain
 
 Extend borrador extractor registry for años 2021/2022/2023, synthesize formula-consistent corpus, and add verification chain test proving M100 ×3 revisions VERIFIED via borrador parse surface
-
 
 ## Wave `W12` - m303-closure-dag-extension-boxes-64-66-69-71
 

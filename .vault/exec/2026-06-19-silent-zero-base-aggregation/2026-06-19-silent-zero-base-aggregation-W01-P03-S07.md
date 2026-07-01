@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#silent-zero-base-aggregation'
 date: '2026-06-20'
-modified: '2026-06-20'
+modified: '2026-06-30'
 step_id: 'S07'
 related:
   - "[[2026-06-19-silent-zero-base-aggregation-plan]]"
 ---
-
-
-
 
 # model recargo de equivalencia on the transaction (recargo rate + recargo cuota alongside the IVA fields, or a dedicated recargo classification) grounded in ley-37-1992:art-161 against the bundled corpus - the prerequisite domain change before any recargo binding
 

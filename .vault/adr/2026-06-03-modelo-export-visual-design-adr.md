@@ -3,13 +3,11 @@ tags:
   - '#adr'
   - '#modelo-export-visual-design'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-03-modelo-export-workbook-parity-adr]]"
   - '[[2026-06-04-modelo-export-visual-design-research]]'
 ---
-
-
 
 # `modelo-export-visual-design` adr: `Modelo export visual design system` | (**status:** `accepted`)
 

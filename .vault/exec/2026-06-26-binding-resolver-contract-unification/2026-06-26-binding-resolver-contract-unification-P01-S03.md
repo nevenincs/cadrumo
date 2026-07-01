@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#binding-resolver-contract-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 step_id: 'S03'
 related:
   - "[[2026-06-26-binding-resolver-contract-unification-plan]]"
 ---
-
-
-
 
 # Delete the consumer-less ModeloLedgerBindingAggregation model and its test after confirming zero live consumers at HEAD
 
@@ -19,7 +16,6 @@ related:
 - `src/aeat/application/aggregation/_modelo_bindings.py`
 
 ## Description
-
 
 The consumer-less `ModeloLedgerBindingAggregation` model deletion in
 `_modelo_bindings.py` (plus its now-unused import cascade) was prepared via an
@@ -39,7 +35,6 @@ retired and the broken HEAD import is fixed. The empty-store ADVISORY-return is
 preserved at HEAD. No casilla value shifts.
 
 ## Notes
-
 
 The shared index was volatile this session: an apply-cached staging of
 `_modelo_bindings.py` was cleared by a peer commit mid-flight, and the peer landed an

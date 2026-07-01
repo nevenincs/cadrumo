@@ -3,12 +3,10 @@ tags:
   - '#audit'
   - '#llm-classification-workflow'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 related:
   - "[[2026-06-14-llm-classification-workflow-adr]]"
 ---
-
-
 
 # `llm-classification-workflow` audit: `Campaign-close honesty review: split recommendation and auto-split`
 
@@ -85,7 +83,6 @@ faithfully implements the ADR. The invariant claims all held under inspection.
   (explicit reject verb + batch review queue); do not let it block this close.
 
 ## Codification candidates
-
 
 **None — the candidate is already covered by two existing rules; a new rule would
 fragment the discipline.** The ADR's `llm-split-recommendation-rides-the-notice-channel`

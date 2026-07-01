@@ -3,14 +3,12 @@ tags:
   - '#reference'
   - '#ledger-renta-pipeline'
 date: '2026-05-08'
-modified: '2026-05-08'
+modified: '2026-06-30'
 related:
   - "[[2026-05-08-ledger-renta-pipeline-plan]]"
   - "[[2026-05-08-ledger-renta-pipeline-adr]]"
   - "[[2026-05-08-ledger-renta-pipeline-research]]"
 ---
-
-
 
 # `ledger-renta-pipeline` reference: `modeller-input-inventory`
 

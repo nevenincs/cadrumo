@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
-modified: '2026-05-13'
+modified: '2026-06-30'
 related:
   - '[[2026-05-12-cli-workflow-redesign-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
@@ -11,7 +11,6 @@ related:
 ---
 
 # `cli-workflow-redesign` `W01.P003 shim cleanup` Code Review
-
 
 W01-P003-SHIM-001 | MEDIUM | S0013 still overclaims deletion while retired CLI shim modules remain in the source tree.
 

@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#repo-health-diagnostics'
 date: '2026-06-08'
-modified: '2026-06-08'
+modified: '2026-06-13'
 related:
   - '[[2026-06-04-full-repo-health-diagnostics-audit]]'
 ---

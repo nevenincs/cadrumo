@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#cli-ledger-testimonials'
 date: '2026-06-09'
-modified: '2026-06-09'
+modified: '2026-06-30'
 related:
   - '[[2026-06-03-cli-ledger-testimonials-audit]]'
   - '[[2026-06-03-cli-ledger-testimonials-plan]]'
 ---
-
-
 
 # `cli-ledger-testimonials` audit: `P05.S13 persona re-run: skeptic/foreign/crossyear post-fix verification`
 

@@ -66,9 +66,7 @@ def test_modelo_100_other_element_imputation_years_are_positional_years(filing_y
         "0371": "irpf_ganancia_otros_anio_imputacion_3",
         "0375": "irpf_ganancia_otros_anio_imputacion_4",
     }
-    casillas_by_id = {
-        casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_roles
-    }
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_roles}
 
     assert set(casillas_by_id) == set(expected_roles)
     for casilla_id, expected_role in expected_roles.items():
@@ -116,9 +114,7 @@ def test_modelo_100_special_asset_imputation_years_are_years(
     expected_roles: dict[str, str],
 ) -> None:
     revision = _modelo_100_snapshot(filing_year).revision
-    casillas_by_id = {
-        casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_roles
-    }
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_roles}
 
     assert set(casillas_by_id) == set(expected_roles)
     for casilla_id, expected_role in expected_roles.items():

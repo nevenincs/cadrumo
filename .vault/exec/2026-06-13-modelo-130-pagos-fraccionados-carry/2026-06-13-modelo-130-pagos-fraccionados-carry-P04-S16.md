@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S16'
 related:
   - "[[2026-06-13-modelo-130-pagos-fraccionados-carry-plan]]"
 ---
-
-
-
 
 # assert the Stage-1 prior_payment_not_deducted advisory degrades to fire only when a prior filing exists in the catalogue but its observation is unreadable/absent so the carry could not populate, and stays silent when the span binding resolves casilla 05 cleanly to non-zero
 

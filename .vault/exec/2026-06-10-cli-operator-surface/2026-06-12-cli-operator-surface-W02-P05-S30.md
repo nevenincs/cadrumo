@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cli-operator-surface'
 date: '2026-06-12'
-modified: '2026-06-12'
+modified: '2026-06-30'
 step_id: 'S30'
 related:
   - '[[2026-06-10-cli-operator-surface-plan]]'
@@ -28,4 +28,3 @@ S30 is closed. Operator docs describe the id-churn behavior without changing sto
 - `aeat --language en app ledger view --help`
 - `aeat --language en app ledger track --help`
 - `pytest src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py src/aeat/entrypoints/cli/tests/test_self_referential_string_conformance.py dev/docs/tests/test_cli_reference_drift.py -m "unit or integration or hex_core" -q --basetemp Y:/tmp/pytest-w02-conformance`
-

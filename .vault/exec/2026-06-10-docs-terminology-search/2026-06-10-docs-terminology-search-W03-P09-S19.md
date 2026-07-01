@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S19'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Implement the query-vocabulary sweep runner: every enrolled concept's terms, translations, and hidden forms swept through the resident RAG service (port 8766, timeout 30, reindex-before-sweep per W01.P03) into ranked term-to-target relevance mappings, with a cadence re-run verb whose diffs are reviewed like any generated-but-committed surface (ADR D6)
 
@@ -138,4 +135,3 @@ skips when busy), `test_relevance_mapping_is_frozen`.
   full sweep (all 53 queries, with the live reindex once the service settles) is
   S20's run-and-commit job; this step proved the runner on the bounded prorrata
   subset. S21 then mines synonym candidates from the sweep hits.
-

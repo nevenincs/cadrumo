@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#cli-operator-surface'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S06'
 related:
   - "[[2026-06-10-cli-operator-surface-plan]]"
 ---
-
-
-
 
 # run the documented-command conformance gate and the new D5 gate to confirm zero drift across hint strings and enum-choice sets
 
@@ -42,5 +39,3 @@ current shared state. The 46-green result was obtained by temporarily restoring
 that cluster to HEAD (safe compare-aside per the worktree-safety rule), running
 the gates, and restoring peer WIP byte-for-byte. The gates will collect normally
 once the peer commits its `OutputLanguageOpt` migration.
-
-

@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#service-capabilities'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-15-service-capabilities-research]]'
@@ -11,19 +11,11 @@ related:
   - '[[2026-06-15-dependency-provisioning-adr]]'
 ---
 
-
-
-
-
-
-
-
 # `service-capabilities` plan
 
 ## Wave `W01` - Capability backend
 
 Core ServiceCapability enum, the profile capabilities schema section, the resolution layer, and gate rewiring.
-
 
 ### Phase `W01.P01` - Core enum + schema section
 
@@ -87,17 +79,8 @@ Capability extras, torch relocation, just doctor/provision recipes, fix env-play
 
 ## Description
 
-
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 
-
 ## Verification
-

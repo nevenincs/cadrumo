@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#codebase-performance-optimization'
 date: '2026-06-09'
-modified: '2026-06-09'
+modified: '2026-06-30'
 step_id: 'S06'
 related:
   - "[[2026-06-09-codebase-performance-optimization-plan]]"
 ---
-
-
-
 
 # Reuse TypeAdapter(AnyHttpUrl) instance in _extract.py instead of creating it inline
 
@@ -27,4 +24,3 @@ related:
 - Done. The TypeAdapter instance is instantiated once when the module loads, speeding up receipt parsing.
 
 ## Notes
-

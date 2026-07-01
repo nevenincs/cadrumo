@@ -3,15 +3,13 @@ tags:
   - '#audit'
   - '#bindings-architecture-unification'
 date: '2026-06-26'
-modified: '2026-06-29'
+modified: '2026-06-30'
 related:
   - '[[2026-06-14-bindings-interface-hardening-adr]]'
   - '[[2026-06-15-bindings-interface-hardening-audit]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
   - '[[2026-06-02-registry-bindings-boundary-audit]]'
 ---
-
-
 
 # `bindings-architecture-unification` audit: `bindings architecture breadth audit: cross-source data-sourcing taxonomy and contract fragmentation`
 

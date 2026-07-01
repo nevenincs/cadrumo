@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#modelo-registry-fragments'
 date: '2026-05-19'
-modified: '2026-05-19'
+modified: '2026-06-30'
 related:
   - '[[2026-05-19-modelo-registry-fragment-architecture-research]]'
 ---
-
-
 
 # `modelo-registry-fragments` adr: fragment authoring compiler for modelo registry definitions | (**status:** `accepted`)
 

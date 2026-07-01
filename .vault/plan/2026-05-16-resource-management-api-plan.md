@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#resource-management-api'
 date: '2026-05-16'
-modified: '2026-05-16'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-05-16-resource-management-api-adr]]'
@@ -11,7 +11,6 @@ related:
   - '[[2026-05-16-resource-management-api-audit]]'
   - '[[2026-05-15-corpus-registry-packaging-adr]]'
 ---
-
 
 # `resource-management-api` plan
 

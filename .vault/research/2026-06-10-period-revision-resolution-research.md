@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#period-revision-resolution'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `period-revision-resolution` research: `Period to revision resolution: existing resolver, the identity-vs-calc divergence defect, and the orden-grounding gap`
 

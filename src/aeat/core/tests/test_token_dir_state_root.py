@@ -35,7 +35,7 @@ def _without_token_dir_env():
     ``aeat_token_dir``. Constructor kwargs win against env, but the
     tests that want the *derived* path pass no kwarg, so env precedence
     would surface here. Delegates to the centralized
-    :func:`aeat.tests.env_scope.scoped_env_var` helper.
+    :func:`aeat-tests.env_scope.scoped_env_var` helper.
     """
     return scoped_env_var("AEAT_TOKEN_DIR", None)
 

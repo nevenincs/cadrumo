@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#cross-domain-continuity'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 step_id: 'S289'
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
 ---
-
-
-
 
 # evaluate access_gate __init__.py env-var read pre-Settings bootstrap
 
@@ -46,4 +43,3 @@ coverage for live-read gate`) proves the migrated reader observes
 The plan's path (`src/aeat/access_gate/__init__.py`) is stale; the
 canonical home is `src/aeat/core/access_gate/__init__.py`. No
 additional code authored by this record.
-

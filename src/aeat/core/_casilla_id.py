@@ -72,7 +72,4 @@ def validated_casilla_id_map[T](
     key shape only; the caller remains responsible for validating membership
     against the selected :class:`~aeat.domain.calculations.registry.ModeloRevision`.
     """
-    return {
-        validated_casilla_id(key, surface=f"{surface} key"): value
-        for key, value in values.items()
-    }
+    return {validated_casilla_id(key, surface=f"{surface} key"): value for key, value in values.items()}

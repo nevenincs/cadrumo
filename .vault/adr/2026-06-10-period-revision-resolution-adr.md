@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#period-revision-resolution'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related:
   - "[[2026-06-10-period-revision-resolution-research]]"
 ---
-
-
 
 # `period-revision-resolution` adr: `Period to revision resolution engine` | (**status:** `accepted`)
 
@@ -327,8 +325,6 @@ check instead of an archaeology exercise.
   a directory name.
 
 ## Codification candidates
-
-
 
 - **Rule slug:** `revision-resolution-is-law-determined`.
   **Rule:** Every production calculation, verification, filing, or export path resolves

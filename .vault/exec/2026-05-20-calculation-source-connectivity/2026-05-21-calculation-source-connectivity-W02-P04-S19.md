@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#calculation-source-connectivity'
 date: '2026-05-21'
-modified: '2026-05-21'
+modified: '2026-06-13'
 step_id: 'S19'
 related:
   - '[[2026-05-20-calculation-source-connectivity-plan]]'

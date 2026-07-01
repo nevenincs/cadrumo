@@ -3,13 +3,11 @@ tags:
   - '#adr'
   - '#dependency-provisioning'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 related:
   - "[[2026-06-15-service-capabilities-research]]"
   - "[[2026-06-15-service-capabilities-adr]]"
 ---
-
-
 
 # `dependency-provisioning` adr: `Dependency management and graceful degradation: cohesive missing-dependency behaviour, provisioning, and a single doctor` | (**status:** `accepted`)
 
@@ -165,5 +163,3 @@ one doctor row. A single `aeat config check` replaces the dissolved
   surface ships and a review confirms the ungraceful paths are closed.
 
 ## Codification candidates
-
-

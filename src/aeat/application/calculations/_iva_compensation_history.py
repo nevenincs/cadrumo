@@ -81,8 +81,8 @@ _M303_RESULTADO_CASILLA: Final[CasillaId] = _casilla_id("iva.resultado")
 _M303_GENERADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-generada-periodo")
 _M303_POSTERIOR_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
 _M303_DISPONIBLE_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-disponible-fin-periodo")
-_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: Final[CasillaId] = (
-    _casilla_id("iva.compensacion-pendiente-periodos-anteriores")
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: Final[CasillaId] = _casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores"
 )
 _M303_COMPENSACION_APLICADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-aplicada-periodo")
 _M303_RESULTADO_FINAL_CASILLA: Final[CasillaId] = _casilla_id("71")
@@ -411,10 +411,13 @@ def iva_compensation_annual_summary_from_filed_observation(
         )
     values = _decimal_casilla_values(observation)
     last_period = _resolve_casilla_value(values, _M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA) or _ZERO
-    generated_not_in_last = _resolve_casilla_value(
-        values,
-        _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA,
-    ) or _ZERO
+    generated_not_in_last = (
+        _resolve_casilla_value(
+            values,
+            _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA,
+        )
+        or _ZERO
+    )
     source_artefact_sha256 = next(
         (artefact.sha256 for artefact in observation.artefacts if artefact.kind == "submitted_file"),
         None,

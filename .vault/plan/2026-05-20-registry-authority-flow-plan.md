@@ -3,13 +3,12 @@ tags:
   - '#plan'
   - '#registry-authority-flow'
 date: '2026-05-20'
-modified: '2026-05-20'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-05-20-registry-authority-flow-adr]]'
   - '[[2026-05-20-registry-authority-flow-research]]'
 ---
-
 
 # `registry-authority-flow` registry authority flow rollout plan
 

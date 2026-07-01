@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#service-capabilities'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `service-capabilities` research: `Profile-linked service capabilities, dependency management, and graceful degradation: current-state map`
 

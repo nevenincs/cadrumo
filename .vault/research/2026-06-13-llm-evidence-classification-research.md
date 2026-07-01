@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#llm-evidence-classification'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `llm-evidence-classification` research: `Local vision model for consumer-grade on-host evidence reading`
 

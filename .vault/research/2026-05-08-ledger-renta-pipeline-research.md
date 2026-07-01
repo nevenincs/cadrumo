@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#ledger-renta-pipeline'
 date: '2026-05-08'
-modified: '2026-05-08'
+modified: '2026-06-30'
 related:
   - "[[2026-04-14-transaction-catalogue-review-audit]]"
   - "[[2026-04-17-invoice-catalogue-research]]"
@@ -12,8 +12,6 @@ related:
   - "[[2026-04-28-modelo-100-renta-full-calc-reference]]"
   - "[[2026-05-08-aeat-cli-hardening-inventory-audit]]"
 ---
-
-
 
 # `ledger-renta-pipeline` research: `live-ledger-to-renta-calculation-state`
 

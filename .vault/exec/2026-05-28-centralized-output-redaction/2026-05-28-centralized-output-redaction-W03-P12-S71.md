@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#centralized-output-redaction'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 step_id: 'S71'
 related:
   - "[[2026-05-28-centralized-output-redaction-plan]]"
 ---
-
-
-
 
 # update LLM redaction tests for shared redaction vocabulary
 

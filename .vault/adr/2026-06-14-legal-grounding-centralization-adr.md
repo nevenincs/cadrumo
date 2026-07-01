@@ -3,13 +3,11 @@ tags:
   - '#adr'
   - '#legal-grounding-centralization'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 related:
   - '[[2026-06-14-legal-grounding-centralization-research]]'
   - "[[2026-06-14-legal-grounding-centralization-audit]]"
 ---
-
-
 
 # `legal-grounding-centralization` adr: `Cross-Domain Regulatory-Value Centralization — Remediation Decisions` | (**status:** `accepted`)
 
@@ -89,5 +87,3 @@ ALL Spanish-tax concepts) is larger than this inventory and continues in subsequ
 passes (IS brackets, IRPF escalas, módulos, informativa thresholds).
 
 ## Codification candidates
-
-

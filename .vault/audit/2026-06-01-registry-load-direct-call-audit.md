@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#registry-load-direct-call'
 date: '2026-06-01'
-modified: '2026-06-01'
+modified: '2026-06-30'
 related:
   - "[[2026-06-01-test-suite-performance-audit]]"
   - "[[2026-05-28-codebase-solidification-plan]]"
 ---
-
-
 
 # `registry-load-direct-call` audit: inventory of direct `ValidatedRegistryAuthority.load()` call sites for fixture consolidation
 
@@ -74,5 +72,3 @@ The two test sites in `test_authority.py` (lines 185 and 187) verify cache inval
 After migration, re-measure test-suite duration (cluster-5 empirical tables in test-suite-performance audit) to quantify snapshot-rebuild cost reduction.
 
 ## Findings
-
-

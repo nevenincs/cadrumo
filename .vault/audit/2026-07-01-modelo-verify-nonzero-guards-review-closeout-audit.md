@@ -148,23 +148,31 @@ Resolved deferrals and remaining follow-ups from this closeout:
   `cb002833a`.
 
 Two adjacent pre-existing defects were surfaced while proving DFR-M210 (NOT
-caused by this campaign; they live in other subsystems and are tracked for a
-separately-grounded follow-up):
+caused by this campaign; they live in other subsystems). Both are now RESOLVED:
 
-- `FUP-M210-ENUM-DISPATCH-ARG-INDEX`:
-  `_ENUM_DISPATCH_BINDING_ARG_INDEX["m210_resolve_rate"] = 3` is stale for the
-  current 6-arg form (country binding is now at index 5), so the bucket-profile
-  auto-resolution of `country_of_fiscal_residence` can misroute the string onto
-  the Decimal channel and raise. Needs an index correction + a regression.
-- `FUP-FILING-DRAFT-TEXT-CASILLA`: the post-verify filing-draft builder
-  (`_decimal_input` in `application/filing`) does not accept `data_type = "text"`
-  casilla inputs, so an inmobiliaria M210 draft would raise on `tipo_renta`.
-  The verify-stage guard (this campaign's scope) is unaffected; extending the
-  text channel into the filing-draft stage is the follow-up.
+- `FUP-M210-ENUM-DISPATCH-ARG-INDEX`: RESOLVED — `_enum_dispatch_binding_arg_index`
+  in `_runtime_graph.py` is now arity-aware for `m210_resolve_rate` (returns 3
+  for the 4-arg form, 5 for the current 6-arg form), so the bucket-profile
+  auto-resolution of `country_of_fiscal_residence` reads the correct binding
+  leaf. Committed at HEAD with `test_runtime_graph.py` coverage.
+- `FUP-FILING-DRAFT-TEXT-CASILLA`: RESOLVED — the filing-draft builder now
+  computes `text_casilla_ids`, excludes them from the Decimal parse
+  (`casilla_ids - text_casilla_ids`), and routes them via `_text_inputs_for_ids`
+  into `text_casilla_inputs`, so an inmobiliaria M210 draft no longer raises on
+  `tipo_renta`. Committed at HEAD with `test_text_casilla_routing.py` coverage.
 
 The fresh honesty review did run and is persisted here. Its commit-state blocker
 is resolved (the campaign's substantive work is committed across
-`a7992b56f`, `3cb07b8bd`, `5592a0a3a`, `b860c576e`, `cb002833a`, `d10662573`).
-No re-export hunk is part of this closeout. Current follow-up work must import
-and test from owning modules directly, not from package facades, per the active
-no-reexports direction.
+`a7992b56f`, `3cb07b8bd`, `5592a0a3a`, `b860c576e`, `cb002833a`, `d10662573`,
+and the package-facade re-export as `1fea185fb`).
+
+DIRECTION TENSION (for owner reconciliation): the registry package-facade
+re-export of the two text-input validators was committed as `1fea185fb`,
+following the committed `service-imports-via-top-level-reexports` rule. A
+concurrent note in this feature's records asserts an "active no-reexports
+direction" (consume from owning submodules directly). These two positions
+conflict; both were observed in-flight in the shared worktree. The re-export
+is harmless either way (two `__all__` symbols); if the no-reexports direction
+is authoritative, the owner should drop `1fea185fb` and update the
+`service-imports-via-top-level-reexports` rule accordingly. Flagged rather than
+silently overridden.

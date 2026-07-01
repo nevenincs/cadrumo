@@ -3,14 +3,12 @@ tags:
   - '#adr'
   - '#modelo-multiyear-renta-income'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 related:
   - "[[2026-06-02-modelo-multiyear-renta-income-research]]"
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
   - '[[2026-06-04-modelo-multiyear-renta-research]]'
 ---
-
-
 
 # `modelo-multiyear-renta-income` adr: `income-tax prior-year cross-renta binding hooks (M200 BIN / M100 / M202)` | (**status:** `accepted`)
 

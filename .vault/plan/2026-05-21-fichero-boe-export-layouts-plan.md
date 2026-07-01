@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#fichero-boe-export-layouts'
 date: '2026-05-21'
-modified: '2026-05-21'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-04-22-aeat-fichero-boe-export-adr]]'
@@ -12,7 +12,6 @@ related:
   - '[[2026-06-04-fichero-boe-export-layouts-adr]]'
   - '[[2026-06-04-fichero-boe-export-layouts-research]]'
 ---
-
 
 # `fichero-boe-export-layouts` plan
 

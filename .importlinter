@@ -104,6 +104,15 @@ ignore_imports =
     aeat.domain.calculations.registry.tests.test_detail_record_modelo_coverage -> aeat.application.storage.calc_sheets
     aeat.domain.invoices.tests.test_reconciliation -> aeat.application.invoices
     aeat.domain.modelos.tests.test_work_unit -> aeat.application.modelo
+    # ── registry/modelo test files pulling application fixtures (test-topology refactor) ──
+    aeat.domain.calculations.registry.tests.test_modelo_100_registry_roles_capital_gains -> aeat.application.modelo._semantic_role_resolution
+    aeat.domain.calculations.registry.tests.test_modelo_100_registry_roles_prevision_social -> aeat.application.modelo._semantic_role_resolution
+    aeat.domain.calculations.registry.tests._ledger_iva_aggregation_support -> aeat.application.calculations
+    aeat.domain.calculations.registry.tests.test_binding_coverage_breadth -> aeat.application.aggregation
+    aeat.domain.calculations.registry.tests.test_binding_coverage_breadth -> aeat.application.modelo._calculation_actions
+    aeat.domain.calculations.registry.tests.test_ledger_renta_income_binding -> aeat.application.aggregation._renta_income_ledger
+    aeat.domain.calculations.registry.tests.test_referential_integrity_part4 -> aeat.application.diagnostics
+    aeat.domain.modelos.tests.test_work_unit -> aeat.application.user_profile
 
 # ── S22: Core must not import outer layers ────────────────────────────────────
 # Core is the innermost layer and must not import from domain, application,
@@ -167,6 +176,11 @@ ignore_imports =
     aeat.core.tests.test_setup_answers -> aeat.domain.deadlines._profiles
     aeat.core.tests.test_wizard_catalogue -> aeat.application.wizard._catalogue
     # ── core test files importing application/domain/adapters for fixtures ──
+    # test_clock verifies the calc-sheets ``_utc_now`` alias follows the core
+    # clock seam (it IS ``core.time.now``); a deliberate cross-layer seam check.
+    aeat.core.time.tests.test_clock -> aeat.application.storage.calc_sheets._records
+    # test_golden (observability replay) pulls a domain user_profile fixture.
+    aeat.core.observability.tests.test_golden -> aeat.domain.user_profile
     aeat.core.tests.test_external_constants -> aeat.domain.portals._categories
     aeat.core.resources._repos.tests.test_singletons -> aeat.domain.auth.apoderamientos._catalogue
     aeat.core.resources._repos.tests.test_singletons -> aeat.domain.user_profile._schema
@@ -530,6 +544,10 @@ ignore_imports =
     # application/ may import adapters/ for outbound wiring; full inversion
     # would require a major refactor and is deferred.
     aeat.application.** -> aeat.adapters.**
+    # The shared secure-SQL test helper wraps the real persistence adapter for
+    # roundtrip-discipline tests; ignoring its adapter edge breaks the layer
+    # path for every application/domain test that routes fixtures through it.
+    aeat.tests.secure_sql -> aeat.adapters.**
     # ── application → entrypoints (test CLI-runner sentinels) ──
     aeat.application.setup.tests.test_cli -> aeat.tests.cli_runner
     aeat.application.tests.test_config_parity -> aeat.tests.cli_runner
@@ -562,6 +580,27 @@ ignore_imports =
     aeat.domain.usage_ratios._service -> aeat.adapters.persistence.storage
     aeat.domain.usage_ratios._service -> aeat.adapters.persistence.storage.errors
     aeat.domain.usage_ratios.tests.test_service -> aeat.adapters.persistence.storage
+    # ── runtime repositories / submission engine importing the storage package
+    #    (co-located repository substrate; parent-package granularity of the
+    #    already-sanctioned `...storage.runtime_repository` / `.errors` edges) ──
+    aeat.domain.filing._runtime_repository -> aeat.adapters.persistence.storage
+    aeat.domain.modelos._runtime_repository -> aeat.adapters.persistence.storage
+    aeat.domain.submission._engine -> aeat.adapters.persistence.storage
+    # ── test files pulling application/adapters/entrypoints fixtures (test-topology refactor) ──
+    aeat.domain.calculations.registry.tests.test_modelo_100_registry_roles_capital_gains -> aeat.application.modelo._semantic_role_resolution
+    aeat.domain.calculations.registry.tests.test_modelo_100_registry_roles_prevision_social -> aeat.application.modelo._semantic_role_resolution
+    aeat.application.modelo.tests.test_m349_calculation_display_export -> aeat.entrypoints.cli._modelo_rendering
+    aeat.core.observability.tests.test_golden -> aeat.domain.user_profile
+    aeat.core.time.tests.test_clock -> aeat.application.storage.calc_sheets._records
+    aeat.domain.calculations.registry.tests._ledger_iva_aggregation_support -> aeat.application.calculations
+    aeat.domain.calculations.registry.tests.test_binding_coverage_breadth -> aeat.application.aggregation
+    aeat.domain.calculations.registry.tests.test_binding_coverage_breadth -> aeat.application.modelo._calculation_actions
+    aeat.domain.calculations.registry.tests.test_ledger_renta_income_binding -> aeat.application.aggregation._renta_income_ledger
+    aeat.domain.calculations.registry.tests.test_referential_integrity_part4 -> aeat.application.diagnostics
+    aeat.domain.calculations.registry.tests.test_referential_integrity_part4 -> aeat.tests.secure_sql
+    aeat.domain.currency.tests.test_service -> aeat.adapters.outbound.fx
+    aeat.domain.modelos.tests.test_work_unit -> aeat.application.user_profile
+    aeat.domain.submission.tests.test_repository -> aeat.adapters.persistence.storage.sql.engine
     # ── domain repositories migrated to SecureBoundRepository (envelope substrate) ──
     aeat.domain.fincas._repository -> aeat.adapters.persistence.storage.errors
     aeat.domain.fincas._repository -> aeat.adapters.persistence.storage.sql._orm

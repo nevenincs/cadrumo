@@ -9,9 +9,6 @@ related:
   - "[[2026-06-30-ledger-add-idempotency-plan]]"
 ---
 
-
-
-
 # Stamp the content-only import fingerprint from derive_import_fingerprint onto manual rows at creation time, replacing the current import_fingerprint=None, without folding any timestamp
 
 ## Scope
@@ -28,4 +25,3 @@ related:
 Landed in commit `0c5b5da62`. Manual rows (previously `import_fingerprint=None`) now carry a 64-hex fingerprint; proven to survive an encrypted reload in `test_manual_add_idempotency.py`.
 
 ## Notes
-

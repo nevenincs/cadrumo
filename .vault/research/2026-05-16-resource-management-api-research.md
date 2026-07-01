@@ -3,14 +3,12 @@ tags:
   - '#research'
   - '#resource-management-api'
 date: '2026-05-16'
-modified: '2026-05-16'
+modified: '2026-06-30'
 related:
   - "[[2026-05-15-corpus-registry-packaging-adr]]"
   - "[[2026-05-15-corpus-registry-packaging-research]]"
   - "[[2026-05-15-corpus-registry-packaging-plan]]"
 ---
-
-
 
 # `resource-management-api` research: centralised typed resource registry over the corpus-registry boundary
 

@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#agent-rule-consolidation'
 date: '2026-06-01'
-modified: '2026-06-01'
+modified: '2026-06-30'
 related:
   - "[[2026-06-01-agent-rule-consolidation-research]]"
 ---
-
-
 
 # `agent-rule-consolidation` adr: `Drain agent memory into condensed rules; sweep worktree scratch` | (**status:** `accepted`)
 

@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#ledger-operator-hardening'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 related:
   - "[[2026-06-02-ledger-operator-hardening-plan]]"
   - "[[2026-06-02-ledger-operator-hardening-adr]]"
 ---
-
-
 
 # `ledger-operator-hardening` audit: `ledger operator persona testimonials and honesty review`
 
@@ -236,5 +234,3 @@ the import normalizer is wired.
 Deferred to codify until the corresponding fix lands: F2 (bulk-write batching
 discipline) is better promoted as a rule once the load-once/save-once pattern is
 implemented and proven, so the rule can cite the canonical batch helper.
-
-

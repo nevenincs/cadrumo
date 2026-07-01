@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#ledger-transaction-lifecycle'
 date: '2026-05-14'
-modified: '2026-05-14'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-05-14-ledger-transaction-lifecycle-adr]]'
@@ -11,7 +11,6 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
 ---
-
 
 # `ledger-transaction-lifecycle` plan
 

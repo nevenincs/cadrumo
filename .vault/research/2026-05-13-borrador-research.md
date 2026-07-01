@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#borrador'
 date: '2026-05-13'
-modified: '2026-05-13'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `borrador` research: `Modelo 100 PDF parsing: borrador / predeclaración / declaración layout-discovery`
 

@@ -111,6 +111,7 @@ def parse_edit_clause(raw: str) -> EditClause:
     except ValueError as exc:
         raise EditParseError(raw, reason="invalid-value") from exc
 
+
 def parse_edit_clauses(raw: Iterable[str]) -> tuple[EditClause, ...]:
     """Parse a sequence of ``--set`` strings into :class:`EditClause` records, preserving input order."""
     return tuple(parse_edit_clause(item) for item in raw)
@@ -478,6 +479,7 @@ class InvoiceEditSpec(BaseModel):
             if (key in present) != (value is not None):
                 raise ValueError(f"clauses[{label}] / {label} field disagree")
         return self
+
 
 __all__ = [
     "EditClause",

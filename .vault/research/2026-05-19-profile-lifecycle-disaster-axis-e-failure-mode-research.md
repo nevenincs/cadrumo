@@ -3,7 +3,7 @@ tags:
   - "#research"
   - "#profile-lifecycle-disaster"
 date: '2026-05-19'
-modified: '2026-05-19'
+modified: '2026-06-30'
 related:
   - "[[2026-05-19-operator-blind-fumbler-testimony-audit]]"
   - "[[2026-05-19-operator-blind-newcomer-testimony-audit]]"
@@ -441,4 +441,3 @@ provider is active via get_master_key_provider().__enter__(). No new protocol ne
 No shims constraint: the cold-start session bootstrap must not be a shim wrapping
 the old call graph. The CLI root callback must directly enter the provider context.
 The existing _root callback in entrypoints/cli/__init__.py is the correct insertion point.
-

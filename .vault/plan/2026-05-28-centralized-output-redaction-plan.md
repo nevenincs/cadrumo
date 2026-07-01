@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#centralized-output-redaction'
 date: '2026-05-28'
-modified: '2026-05-28'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-05-28-centralized-output-redaction-research]]'
@@ -11,7 +11,6 @@ related:
   - '[[2026-04-25-json-output-contract-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-output-rendering-normalization-adr]]'
 ---
-
 
 # `centralized-output-redaction` `centralized CLI output redaction` plan
 

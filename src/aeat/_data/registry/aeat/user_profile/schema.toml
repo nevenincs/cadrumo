@@ -840,6 +840,28 @@ model_selectors = ["iva.oss_enrolled"]
 schedule_predicates = ["iva.oss_enrolled"]
 
 [[sections.fields]]
+key = "group_member_enrolled"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer is a member entity in the IVA group-of-entities special regime and files Modelo 322 as the individual monthly self-assessment."
+model_selectors = ["iva.group_member_enrolled"]
+schedule_predicates = ["iva.group_member_enrolled"]
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[sections.fields]]
+key = "group_dominant_entity_enrolled"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer is the dominant entity of an IVA group-of-entities regime and files Modelo 353 as the aggregate monthly self-assessment."
+model_selectors = ["iva.group_dominant_entity_enrolled"]
+schedule_predicates = ["iva.group_dominant_entity_enrolled"]
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+
+[[sections.fields]]
 key = "sii_enrolled"
 type = "boolean"
 required = false

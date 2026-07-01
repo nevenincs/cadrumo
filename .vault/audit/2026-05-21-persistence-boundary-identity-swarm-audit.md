@@ -3,23 +3,17 @@ tags:
   - '#audit'
   - '#codebase-health'
 date: '2026-05-21'
-modified: '2026-05-21'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `codebase-health` audit: `persistence-boundary-identity-swarm-audit`
 
 ## Scope
 
-
 ## Findings
 
-
 ## Recommendations
-
-
 
 ## Context
 
@@ -204,4 +198,3 @@ Drives open-session → write/read → touch → expire → refusal cycle with r
 - **F15 (ambient env var coupling in `InventoryLedgerRepository`)** is a cosmetic coupling, not a correctness defect. If the inventory ledger ever needs to support per-bucket resolution (matching the user-profile pattern), the natural fix is to add an optional `objects: SecureObjectRepository | None = None` injection parameter, mirroring `UserProfileLifecycleRepository.__init__`.
 
 - **No shims, no compatibility layers, no deprecated aliases were found** in any persistence boundary — consistent with the eliminate-shims branch objective.
-

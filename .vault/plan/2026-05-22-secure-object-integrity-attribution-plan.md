@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#secure-object-integrity'
 date: '2026-05-22'
-modified: '2026-05-22'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]'
@@ -13,8 +13,6 @@ related:
   - '[[2026-06-04-secure-object-integrity-adr]]'
   - '[[2026-06-04-secure-object-integrity-research]]'
 ---
-
-
 
 # `secure-object-integrity` plan: unreadable-row attribution and fail-closed repair diagnostics
 

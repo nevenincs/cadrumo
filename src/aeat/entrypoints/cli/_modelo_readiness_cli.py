@@ -261,8 +261,7 @@ def _readiness_notices(report) -> tuple[Notice, ...]:
                 severity=NoticeSeverity.WARNING,
                 code="modelo.readiness.export_unsupported",
                 message=(
-                    f"Modelo {report.modelo} cannot produce a local fichero-BOE export: "
-                    f"{export_context['reason']}."
+                    f"Modelo {report.modelo} cannot produce a local fichero-BOE export: {export_context['reason']}."
                 ),
                 suggestion=f"aeat app modelo describe {report.modelo}",
                 context=export_context,

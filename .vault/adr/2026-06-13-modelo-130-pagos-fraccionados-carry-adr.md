@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 related:
   - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-research]]'
   - "[[2026-06-04-m130-casilla-15-override-adr]]"
@@ -12,9 +12,6 @@ related:
   - "[[2026-06-13-first-filer-attestation-adr]]"
   - "[[2026-04-27-modelo-130-calc-verify-adr]]"
 ---
-
-
-
 
 # `modelo-130-pagos-fraccionados-carry` adr: `casilla 05 cumulative pagos-fraccionados carry (target-relative same-ejercicio sum)` | (**status:** `accepted`)
 
@@ -70,7 +67,6 @@ defaults. The open questions are resolved as follows:
 
 ## Problem Statement
 
-
 Modelo 130 (IRPF pago fraccionado, estimacion directa) accumulates from the
 start of the ejercicio: casilla 01 (Ingresos) is a year-to-date cumulative sum,
 so casilla 04 (Importe del pago fraccionado) is the cumulative 20% pago
@@ -110,7 +106,6 @@ also an open AEAT question on entry to this work; it is now resolved (see
 Rationale) and is not the naive "sum of prior casilla 07".
 
 ## Considerations
-
 
 The AEAT-grounded accumulation rule (resolved). The official Modelo 130
 instrucciones (AEAT sede, `aeat-modelo-130-instructions`) define casilla 05
@@ -167,7 +162,6 @@ from the verbatim quote.
 
 ## Constraints
 
-
 - Primitive gap is the blocker. The single-offset / static-period selector
   cannot express the target-relative prior-quarter span. Stage 2 cannot ship as
   a pure-data binding under the current selector grammar; it requires either a
@@ -196,7 +190,6 @@ from the verbatim quote.
   for the row; casilla 05 is the summing sibling.
 
 ## Implementation
-
 
 ### S1 - Canonical mechanism and the chosen extension
 
@@ -305,7 +298,6 @@ not run, not alongside a correct carry.
 
 ## Rationale
 
-
 The accumulation rule is taken verbatim from the authoritative AEAT sede Modelo
 130 instrucciones (the same aeat-modelo-130-instructions source the registry
 already cites for casillas 03/04/07/12/17/19), fetched and confirmed twice during
@@ -326,7 +318,6 @@ expresses an expanding prior-quarter set without per-period registry fragments o
 wasteful fixed slots. It keeps one resolver, one source kind, one mesh enrollment.
 
 ## Consequences
-
 
 Gains. Cumulative 2T/3T/4T filings stop over-stating the resultado; the operator
 no longer hand-enters casilla 05; the silent over-payment closes at the value
@@ -369,7 +360,6 @@ live surface is functional.
 
 ## Codification candidates
 
-
 - Rule slug: m130-casilla-05-is-positive-07-minus-16-cumulative.
   Rule: Modelo 130 casilla 05 MUST be computed as the same-ejercicio sum of each
   prior quarter positive part of casilla 07 minus the sum of those quarters
@@ -379,7 +369,6 @@ live surface is functional.
   and the externally-grounded oracle is green.)
 
 ## Open questions (operator)
-
 
 - Casilla 16 availability across prior filings. The minoracion term assumes each
   prior M130 filing casilla 16 is present in its persisted observation set.

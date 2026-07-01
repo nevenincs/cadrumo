@@ -3,13 +3,12 @@ tags:
   - '#exec'
   - '#cli-workflow-redesign'
 date: '2026-05-23'
-modified: '2026-05-23'
+modified: '2026-06-30'
 step_id: 'S13'
 related:
   - "[[2026-05-22-cli-workflow-redesign-exec]]"
   - "[[2026-05-21-taxpayer-type-applicability-plan]]"
 ---
-
 
 # `cli-workflow-redesign` `W03.P11.S13` code review
 

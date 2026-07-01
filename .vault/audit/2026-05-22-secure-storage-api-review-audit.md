@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#secure-storage-api'
 date: '2026-05-22'
-modified: '2026-05-22'
+modified: '2026-06-30'
 related:
   - '[[2026-04-27-secure-persistence-foundation-adr]]'
   - '[[2026-05-06-secure-persistence-enforcement-adr]]'
@@ -11,11 +11,7 @@ related:
   - '[[2026-05-22-secure-object-integrity-attribution-plan]]'
 ---
 
-
-
 # `secure-storage-api` Code Review
-
-
 
 SECURE-STORAGE-001 | CRITICAL | Silent master-key minting still bypasses explicit enrollment
 The accepted custody design requires explicit operator enrollment before protected storage is minted. The implementation still has generic master-key resolution paths that fetch or mint a master key on demand in `src/aeat/adapters/persistence/storage/master_key/_master_key.py` at `KeyringMasterKeyProvider.get_master_key`, `FileFallbackMasterKeyProvider.get_master_key`, and `_mint_new`. Profile creation and wizard creation reach those paths from `src/aeat/entrypoints/cli/_config/__init__.py` and `src/aeat/application/wizard/_commands.py`. This preserves the previous silent-enrollment failure mode: the operator can create encrypted state before passphrase confirmation, recovery-code verification, and data-loss acknowledgement have happened. Remediation should make unprovisioned custody fail closed everywhere except the explicit enrollment command, and should move key minting behind the accepted `aeat config init` flow.

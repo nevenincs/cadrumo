@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#identity-primitives'
 date: '2026-05-30'
-modified: '2026-05-30'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-05-30-identity-primitives-adr]]'
@@ -16,7 +16,6 @@ related:
   - '[[2026-05-20-registry-authority-flow-adr]]'
   - '[[2026-06-04-identity-primitives-research]]'
 ---
-
 
 # `identity-primitives` placement rollout plan
 

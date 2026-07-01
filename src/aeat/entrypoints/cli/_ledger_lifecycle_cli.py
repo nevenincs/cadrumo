@@ -619,9 +619,7 @@ def ledger_split(
         f"{tr('cli.ledger.labels.split_group_id')}\t{result.split_group_id}",
         f"{tr('cli.ledger.labels.children')}\t{len(result.child_transaction_ids)}",
     ]
-    lines.extend(
-        f"{tr('cli.ledger.labels.child_id')}\t{row.display_id}\t{row.full_id}" for row in child_id_rows
-    )
+    lines.extend(f"{tr('cli.ledger.labels.child_id')}\t{row.display_id}\t{row.full_id}" for row in child_id_rows)
     lines.append(f"{tr('cli.ledger.labels.event_id')}\t{result.bucket_event_id}")
     lines.extend(f"ADVISORY\t{notice.message}" for notice in notices)
     _emit_envelope(
@@ -655,8 +653,7 @@ def _split_child_id_rows(child_transaction_ids: tuple[str, ...]) -> list[LedgerS
 
     width = compute_display_id_width(child_transaction_ids)
     return [
-        LedgerSplitChildIdPayload(full_id=child_id, display_id=child_id[:width])
-        for child_id in child_transaction_ids
+        LedgerSplitChildIdPayload(full_id=child_id, display_id=child_id[:width]) for child_id in child_transaction_ids
     ]
 
 
@@ -835,9 +832,7 @@ def _ledger_split_llm(
         f"{tr('cli.ledger.labels.split_group_id')}\t{applied.split_group_id}",
         f"{tr('cli.ledger.labels.children')}\t{len(applied.child_transaction_ids)}",
     ]
-    lines.extend(
-        f"{tr('cli.ledger.labels.child_id')}\t{row.display_id}\t{row.full_id}" for row in child_id_rows
-    )
+    lines.extend(f"{tr('cli.ledger.labels.child_id')}\t{row.display_id}\t{row.full_id}" for row in child_id_rows)
     lines.append(f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{applied.provenance}")
     _emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
 

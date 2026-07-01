@@ -3,14 +3,12 @@ tags:
   - '#research'
   - '#aeat-cli-wireframe'
 date: '2026-04-24'
-modified: '2026-04-24'
+modified: '2026-06-30'
 related:
   - "[[2026-04-21-auth-cli-adr]]"
   - "[[2026-04-18-category-assignment-cli-adr]]"
   - "[[2026-04-18-unified-review-queue-adr]]"
 ---
-
-
 
 # `aeat-cli-wireframe` research: `kent cli ux wireframe research`
 

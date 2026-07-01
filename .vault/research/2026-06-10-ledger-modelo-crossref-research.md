@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#ledger-modelo-crossref'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `ledger-modelo-crossref` research: `Transaction to modelo revision/filing back-reference`
 

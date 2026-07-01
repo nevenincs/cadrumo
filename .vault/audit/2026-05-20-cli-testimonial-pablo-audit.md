@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cli-testimonial'
 date: '2026-05-20'
-modified: '2026-05-20'
+modified: '2026-06-30'
 related:
   - "[[2026-05-20-cli-testimonial-findings-inventory-audit]]"
 ---
@@ -315,52 +315,52 @@ I would not trust this tool with real tax data until `rename` is atomic or the g
 
 ## Bugs and gaps
 
-1. **Command:** `aeat config profile rename` on Windows  
-   **Expected:** Atomic rename — either succeeds fully or rolls back the registry to original state on failure  
-   **Actual:** On WinError 32 (SQLite file lock), the target bucket is already registered before the rename fails; the source registration is already removed. Both appear in `profile list` as `missing_profile_record` ghosts. No rollback occurs.  
+1. **Command:** `aeat config profile rename` on Windows
+   **Expected:** Atomic rename — either succeeds fully or rolls back the registry to original state on failure
+   **Actual:** On WinError 32 (SQLite file lock), the target bucket is already registered before the rename fails; the source registration is already removed. Both appear in `profile list` as `missing_profile_record` ghosts. No rollback occurs.
    **Severity:** BLOCKER — rename is non-atomic on Windows and leaves the registry in an unrecoverable state without manual filesystem intervention.
 
-2. **Command:** `aeat config profile delete <ghost-name>` after broken rename  
-   **Expected:** Deletes the ghost entry or explains why it cannot  
-   **Actual:** `Refused. Perfil desconocido: <name>` even though `profile list` shows the profile  
+2. **Command:** `aeat config profile delete <ghost-name>` after broken rename
+   **Expected:** Deletes the ghost entry or explains why it cannot
+   **Actual:** `Refused. Perfil desconocido: <name>` even though `profile list` shows the profile
    **Severity:** BLOCKER — ghost profiles created by failed renames cannot be cleaned up through any CLI command.
 
-3. **Command:** `aeat config repair profile --profile <broken> --yes`  
-   **Expected:** Repairs or removes the broken profile record  
-   **Actual:** Loops identically regardless of flags; no repair performed; the `next_action` suggestion points back to itself  
+3. **Command:** `aeat config repair profile --profile <broken> --yes`
+   **Expected:** Repairs or removes the broken profile record
+   **Actual:** Loops identically regardless of flags; no repair performed; the `next_action` suggestion points back to itself
    **Severity:** BLOCKER — the repair command cannot repair the `missing_profile_record` state.
 
-4. **Command:** `aeat config repair reset-state --dry-run`  
-   **Expected:** Shows what would be deleted, exits cleanly  
-   **Actual:** Crashes with full SQLAlchemy traceback, `NoActiveBucketSessionError`, exit code 6  
+4. **Command:** `aeat config repair reset-state --dry-run`
+   **Expected:** Shows what would be deleted, exits cleanly
+   **Actual:** Crashes with full SQLAlchemy traceback, `NoActiveBucketSessionError`, exit code 6
    **Severity:** MAJOR — a `--dry-run` option must not throw an uncaught exception; this destroys trust in the entire repair surface.
 
-5. **Command:** `aeat config profile create NAME` (success case)  
-   **Expected:** Confirmation line showing profile ID and active status  
-   **Actual:** No output, exit 0  
+5. **Command:** `aeat config profile create NAME` (success case)
+   **Expected:** Confirmation line showing profile ID and active status
+   **Actual:** No output, exit 0
    **Severity:** MAJOR — silent success is ambiguous; users cannot distinguish success from a hung process.
 
-6. **Command:** `aeat config profile create NAME` (second profile creation)  
-   **Expected:** Active profile stays on the current profile; or at minimum a warning is shown  
-   **Actual:** Active profile silently switches to the newly created profile without any message  
+6. **Command:** `aeat config profile create NAME` (second profile creation)
+   **Expected:** Active profile stays on the current profile; or at minimum a warning is shown
+   **Actual:** Active profile silently switches to the newly created profile without any message
    **Severity:** MAJOR — creating a second profile changes the operating context silently; any subsequent `app` commands run against the wrong profile.
 
-7. **Command:** `aeat config profile show` (spouse field visibility)  
-   **Expected:** Spouse tax ID, name, surnames, birth date visible in output  
-   **Actual:** No spouse fields appear in `profile show` output  
+7. **Command:** `aeat config profile show` (spouse field visibility)
+   **Expected:** Spouse tax ID, name, surnames, birth date visible in output
+   **Actual:** No spouse fields appear in `profile show` output
    **Severity:** MAJOR — user cannot verify spouse data was saved; it is unclear whether the data round-trips correctly.
 
-8. **Command:** `aeat config profile delete NAME --yes`  
-   **Expected:** Profile removed from list and inaccessible  
-   **Actual:** Profile tombstoned; remains in list, remains switchable, and `app` runs against it  
+8. **Command:** `aeat config profile delete NAME --yes`
+   **Expected:** Profile removed from list and inaccessible
+   **Actual:** Profile tombstoned; remains in list, remains switchable, and `app` runs against it
    **Severity:** MINOR — tombstone semantics are unexplained in `--help`; the word "delete" is misleading.
 
-9. **Command:** `aeat config profile create ... --tax-residence-community`  
-   **Expected:** Either works or shows the correct flag name  
-   **Actual:** `No such option: --tax-residence-community Did you mean --tax-residence-ccaa?`; the `--help` table truncates the real flag name to `--tax-residence-…`  
+9. **Command:** `aeat config profile create ... --tax-residence-community`
+   **Expected:** Either works or shows the correct flag name
+   **Actual:** `No such option: --tax-residence-community Did you mean --tax-residence-ccaa?`; the `--help` table truncates the real flag name to `--tax-residence-…`
    **Severity:** MINOR — truncated help text forces users to guess flag names.
 
-10. **Command:** `aeat config repair quarantine --yes` (after `profile switch` in a broken state)  
-    **Expected:** Scans the active bucket or explains clearly it requires a live session  
-    **Actual:** `Refused. no active bucket session` even after `switch` reports `active_profile pablo` — the switch succeeded at the pointer level but did not establish a session, and the error message is identical to the pre-switch error giving no guidance  
+10. **Command:** `aeat config repair quarantine --yes` (after `profile switch` in a broken state)
+    **Expected:** Scans the active bucket or explains clearly it requires a live session
+    **Actual:** `Refused. no active bucket session` even after `switch` reports `active_profile pablo` — the switch succeeded at the pointer level but did not establish a session, and the error message is identical to the pre-switch error giving no guidance
     **Severity:** MINOR — switch and session establishment appear decoupled; error message provides no actionable next step beyond the switch already performed.

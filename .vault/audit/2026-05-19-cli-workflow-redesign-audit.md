@@ -3,12 +3,10 @@ tags:
   - '#audit'
   - '#cli-workflow-redesign'
 date: '2026-05-19'
-modified: '2026-05-19'
+modified: '2026-06-30'
 related:
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
 ---
-
-
 
 # `cli-workflow-redesign` audit: `master plan rollout snapshot`
 
@@ -19,7 +17,7 @@ The scope of this audit covers a comprehensive review of the active plans and ro
 ## Findings
 
 ### 1. Overall Campaign Execution Status
-An audit of the May 2026 execution plan corpus shows substantial progress toward completing the core refactoring of the entrypoint and command handling layers. 
+An audit of the May 2026 execution plan corpus shows substantial progress toward completing the core refactoring of the entrypoint and command handling layers.
 
 The campaign is characterized by:
 - A total of 258 Architecture Decision Records (ADRs) rolled out to govern calculations, boundaries, persistence, and workflows.
@@ -131,4 +129,3 @@ Several specific active tracks support the closure of the Master Plan:
 2. **Execute the Profile Lifecycle Disaster Recovery Plan**: Resolve the 37 outstanding steps in `2026-05-19-profile-lifecycle-disaster-plan.md`. This is a critical structural blocker ensuring profile and bucket safety.
 3. **Execute the remaining Wave 28 and Wave 57 Steps**: Decouple the currency normalization and evidence bundle lifecycles to clear technical duplication paths and ensure a clean entrypoint structure.
 4. **Adhere to the Dual-Subagent Documentation Workflow**: Use the designated Researcher/Author/Editor workflow for any subsequent updates to project document repositories.
-

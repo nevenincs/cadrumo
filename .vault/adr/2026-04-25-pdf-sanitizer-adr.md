@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#pdf-sanitizer'
 date: '2026-04-25'
-modified: '2026-04-25'
+modified: '2026-06-30'
 related:
   - "[[2026-04-25-pdf-sanitizer-research]]"
   - "[[2026-04-25-aeat-verify-research]]"
@@ -11,8 +11,6 @@ related:
   - "[[2026-04-25-aeat-verify-plan]]"
   - "[[2026-04-24-aeat-verify-reference]]"
 ---
-
-
 
 # `pdf-sanitizer` adr: `pdf-sanitizer-architecture-and-api` | (**status:** `accepted`)
 

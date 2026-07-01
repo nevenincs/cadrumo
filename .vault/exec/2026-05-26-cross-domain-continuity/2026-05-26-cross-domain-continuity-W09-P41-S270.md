@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#cross-domain-continuity'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 step_id: 'S270'
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
 ---
-
-
-
 
 # FU-W09-A S267 verify CI sets AEAT_DEV_TEST_DATABASE_PASSWORD environment variable
 

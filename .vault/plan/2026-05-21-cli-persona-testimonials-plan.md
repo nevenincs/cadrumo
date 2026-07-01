@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cli-persona-testimonials'
 date: '2026-05-21'
-modified: '2026-05-21'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-05-20-cli-persona-testimonials-audit]]'
@@ -13,12 +13,6 @@ related:
   - '[[2026-05-21-cli-persona-testimonials-audit]]'
   - '[[2026-06-04-cli-persona-testimonials-adr]]'
 ---
-
-
-
-
-
-
 
 # `cli-persona-testimonials` `cli-persona-testimonial-remediation-plan` plan
 
@@ -44,10 +38,6 @@ Replace this scaffold with the tier-appropriate structure for your plan.
 Format examples for each block type are embedded below as commented
 templates.
 
-
-
-
-
 ## Parallelization
 
 State which Steps, Phases, or Waves can be executed in parallel and
@@ -70,7 +60,6 @@ complete.
 
 For tier-specific verification cadence, see the convention ADR
 authorising this plan via the `related:` frontmatter.
-
 
 ## Context
 

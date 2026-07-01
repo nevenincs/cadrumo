@@ -3,7 +3,7 @@ tags:
   - "#plan"
   - "#pytest-markers"
 date: 2026-04-17
-modified: '2026-04-17'
+modified: '2026-06-30'
 related:
   - "[[2026-04-17-pytest-markers-adr]]"
   - "[[2026-04-17-pytest-markers-research]]"
@@ -12,8 +12,6 @@ related:
   - "[[2026-04-13-filing-complementaria-adr]]"
   - "[[2026-04-12-base-module-structure-adr]]"
 ---
-
-
 
 # `pytest-markers` `phase-1` plan
 
@@ -48,7 +46,6 @@ Deterministic conclusion: the canonical hook host is a new repo-root `conftest.p
 - **GitHub Actions is disabled on this repo.** No `.github/workflows/*` file is created or altered; `tests/test_release_config.py` enforces this invariant.
 
 ## Tasks
-
 
 - `Phase 1: marker registration`
   1. `Step 1.1: rewrite pyproject.toml marker table and addopts`

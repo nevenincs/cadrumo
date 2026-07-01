@@ -3,13 +3,11 @@ tags:
   - '#research'
   - '#declaracion-extraction-architecture'
 date: '2026-05-28'
-modified: '2026-05-28'
+modified: '2026-06-30'
 related: []
 ---
 
-
-
-# `declaracion-extraction-architecture` research: `{topic}`
+# `declaracion-extraction-architecture` research: `declaración extraction architecture`
 
 Brief description of what was researched, why, and how it relates to
 `declaracion-extraction-architecture`.

@@ -3,13 +3,11 @@ tags:
   - '#exec'
   - '#calculation-truth-registry'
 date: '2026-05-07'
-modified: '2026-05-07'
+modified: '2026-06-30'
 related:
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
   - '[[2026-05-07-calculation-truth-registry-coverage-audit]]'
 ---
-
-
 
 # `calculation-truth-registry` `Phase 0B` `Coverage Audit Gate`
 

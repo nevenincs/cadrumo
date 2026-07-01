@@ -606,9 +606,7 @@ def test_modelo_100_anexo_c_protected_patrimony_current_year_excess_role_is_grou
         assert expected_sources.issubset(casilla.source_refs)
 
     assert all(
-        casilla.semantic_role != old_role
-        for revision in modelo.revisions.values()
-        for casilla in revision.casillas
+        casilla.semantic_role != old_role for revision in modelo.revisions.values() for casilla in revision.casillas
     )
 
 
@@ -802,8 +800,7 @@ def test_modelo_100_inmueble_0080_activity_use_days_are_integer() -> None:
         casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0080"))
 
         assert (
-            casilla.label
-            == "Número de días en que ha tenido este uso: Bien inmueble afecto a actividades económicas"
+            casilla.label == "Número de días en que ha tenido este uso: Bien inmueble afecto a actividades económicas"
         )
         assert tuple(casilla.section) == ("toma_datos_ampliada", "inmuebles", "inmueble")
         assert casilla.data_type == "integer"
@@ -1047,9 +1044,7 @@ def test_modelo_100_inmueble_rented_days_are_integer() -> None:
     for filing_year in range(2020, 2026):
         revision = modelo.revisions[str(filing_year)]
         for casilla_id, expected_label in expected_labels.items():
-            casilla = next(
-                casilla for casilla in revision.casillas if casilla.id == _casilla_id(casilla_id)
-            )
+            casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id(casilla_id))
 
             assert casilla.label == expected_label
             assert tuple(casilla.section) == ("toma_datos_ampliada", "inmuebles", "inmueble")
@@ -1075,9 +1070,7 @@ def test_modelo_100_eo_module_units_are_decimal() -> None:
     for filing_year in range(2020, 2026):
         revision = modelo.revisions[str(filing_year)]
         for casilla_id in ("1445", "1448", "1451", "1454", "1457", "1460", "1463"):
-            casilla = next(
-                casilla for casilla in revision.casillas if casilla.id == _casilla_id(casilla_id)
-            )
+            casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id(casilla_id))
 
             assert casilla.label == "Nº de unidades"
             assert tuple(casilla.section) == (
@@ -1204,9 +1197,7 @@ def test_modelo_100_eo_agricultural_product_indices_are_decimal() -> None:
         if filing_year == 2025:
             ids_for_year.add(_casilla_id("0158"))
         casillas_by_id = {
-            casilla.id: casilla
-            for casilla in revision.casillas
-            if casilla.semantic_role == "irpf_eo_agr_indice"
+            casilla.id: casilla for casilla in revision.casillas if casilla.semantic_role == "irpf_eo_agr_indice"
         }
 
         assert set(casillas_by_id) == ids_for_year

@@ -3,14 +3,12 @@ tags:
   - '#research'
   - '#schema-hardening'
 date: '2026-05-27'
-modified: '2026-05-27'
+modified: '2026-06-30'
 related:
   - '[[2026-05-27-schema-hardening-m100-revision-drift-research]]'
   - '[[2026-05-20-registry-casilla-identity-research]]'
   - '[[2026-05-19-modelo-registry-fragment-architecture-adr]]'
 ---
-
-
 
 # `schema-hardening` research: `casilla-continuity-contract`
 

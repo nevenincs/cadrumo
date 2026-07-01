@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#modelo-130-100-continuity'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-09-modelo-iva-routing-carry-adr]]'
@@ -65,13 +65,6 @@ params) stay tracked in the harness task list and earn their own plans when pick
 
 ## Steps
 
-
-
-
-
-
-
 ## Parallelization
-
 
 ## Verification

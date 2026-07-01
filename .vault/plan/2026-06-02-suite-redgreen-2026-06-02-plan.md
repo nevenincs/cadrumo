@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#suite-redgreen-2026-06-02'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-04-21-calc-verification-adr]]'
@@ -13,7 +13,6 @@ related:
   - '[[2026-06-04-suite-redgreen-2026-06-02-adr]]'
   - '[[2026-06-04-suite-redgreen-2026-06-02-research]]'
 ---
-
 
 # `suite-redgreen-2026-06-02` `Suite red-green burndown 2026-06-02` plan
 
@@ -144,16 +143,8 @@ Diagnose + fix CLI surface tests
 
 ## Description
 
-
 ## Steps
 
-
-
-
-
-
-
 ## Parallelization
-
 
 ## Verification

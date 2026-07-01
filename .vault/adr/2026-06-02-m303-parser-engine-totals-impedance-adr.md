@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#m303-parser-engine-totals-impedance'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 related:
   - "[[2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - "[[2026-06-02-m390-annual-autoconsumo-promotor-source-adr]]"
   - '[[2026-06-04-m303-parser-engine-totals-impedance-research]]'
 ---
-
 
 # `m303-parser-engine-totals-impedance` adr: parser extracts primitives; engine computes totals | (**status:** `accepted`)
 

@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#agent-rule-consolidation'
 date: '2026-06-01'
-modified: '2026-06-01'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `agent-rule-consolidation` research: `Worktree hygiene, memory triage, and rule-system audit`
 

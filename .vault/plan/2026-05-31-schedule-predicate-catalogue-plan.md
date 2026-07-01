@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#schedule-predicate-catalogue'
 date: '2026-05-31'
-modified: '2026-05-31'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-05-31-schedule-predicate-catalogue-adr]]'
@@ -29,24 +29,24 @@ gaps remain. This plan closes all three gaps in two phases.
 
 ### S01 -- add validate_registry() call in _load_authority
 
-Add a  call inside 
+Add a  call inside
 in , immediately after
  returns and before the  dataclass
 is constructed. This makes the predicate-field check fire at registry load, not at
 the first  call.
 
-Verification gate: run 
-and confirm it passes. Run 
+Verification gate: run
+and confirm it passes. Run
 to confirm the CI gate still passes.
 
 #### Detail: S02 -- document alias shims in _resolve_profile_fact
 
-Add inline comments to the two hardcoded attribute aliases in 
+Add inline comments to the two hardcoded attribute aliases in
 in  (lines 81-85) explaining
 which schema predicate path each alias serves and why the alias exists.
 No behavioural change.
 
-Verification gate: 
+Verification gate:
 passes unchanged.
 
 ### Phase `P02` - proof tests for the two uncovered predicate surfaces

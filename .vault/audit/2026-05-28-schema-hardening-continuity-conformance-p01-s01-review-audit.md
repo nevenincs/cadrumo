@@ -3,14 +3,12 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-05-28'
-modified: '2026-05-28'
+modified: '2026-06-30'
 related:
   - '[[2026-05-28-schema-hardening-continuity-conformance-plan]]'
   - '[[2026-05-28-schema-hardening-continuity-conformance-research]]'
   - '[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]'
 ---
-
-
 
 # `schema-hardening` Code Review
 

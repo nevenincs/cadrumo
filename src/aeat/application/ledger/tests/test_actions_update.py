@@ -165,7 +165,3 @@ def test_update_manual_transaction_post_update_events_target_new_transaction_id(
 ) -> None:
     outcome = _drive_update_manual_transaction(secure_objects)
     assert {event.object_id for event in outcome.events[1:]} == {outcome.updated.ref.transaction_id}
-
-
-
-

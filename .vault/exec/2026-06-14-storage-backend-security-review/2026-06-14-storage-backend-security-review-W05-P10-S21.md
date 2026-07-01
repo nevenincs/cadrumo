@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#storage-backend-security-review'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S21'
 related:
   - "[[2026-06-14-storage-backend-security-review-plan]]"
 ---
-
-
-
 
 # Route every domain and outbound secure-object namespace literal through its STORAGE_NAMESPACE_REGISTRY definition constant
 
@@ -55,7 +52,6 @@ gate to (a) recognise a string literal that equals a registry-declared namespace
 value as compliant, and (b) restrict the "must come from registry" check to
 non-lazy modules, so it stops over-flagging the lazy domain literals and the
 legitimate non-registry `_NAMESPACE` constants (mirror keys, `"_probe"`).
-
 
 ## Notes
 

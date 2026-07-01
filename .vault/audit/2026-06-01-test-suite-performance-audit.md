@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#test-suite-performance'
 date: '2026-06-01'
-modified: '2026-06-01'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `test-suite-performance` audit: unit lane wallclock triage
 

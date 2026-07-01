@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#reconciliation-correctness-audit'
 date: '2026-06-25'
-modified: '2026-06-25'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `reconciliation-correctness-audit` audit: `IVA and calculations RAG correctness and completeness audit`
 
@@ -178,7 +176,6 @@ correctness risk = GAP-B; biggest test-integrity risk = GAP-D; M190 is NOT confi
 - Complete the non-IVA slice and merge before declaring the campaign structurally complete.
 
 ## Codification candidates
-
 
 No NEW codification candidates from this verification pass — it confirms existing fixes
 rather than surfacing a new durable constraint. Pre-existing candidates remain pending
