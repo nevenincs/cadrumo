@@ -95,15 +95,24 @@ def _serialise_pkcs12(
     *,
     subject_attrs: list[x509.NameAttribute[str | bytes]] | None,
     not_valid_after: datetime | None,
+    subject_name: x509.Name | None = None,
 ) -> bytes:
-    """Generate a real self-signed PKCS#12 bundle and return its bytes."""
+    """Generate a real self-signed PKCS#12 bundle and return its bytes.
+
+    ``subject_name`` takes precedence over ``subject_attrs`` and lets a
+    caller supply a pre-built :class:`x509.Name` carrying a multi-valued
+    RDN (``CN=X+SERIALNUMBER=Y``) that a flat attribute list cannot express.
+    """
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    attrs = subject_attrs or [
-        x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
-        x509.NameAttribute(NameOID.COMMON_NAME, "NOMBRE APELLIDO1 APELLIDO2 - 12345678Z"),
-        x509.NameAttribute(NameOID.SERIAL_NUMBER, "IDCES-12345678Z"),
-    ]
-    subject = issuer = x509.Name(attrs)
+    if subject_name is not None:
+        subject = issuer = subject_name
+    else:
+        attrs = subject_attrs or [
+            x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
+            x509.NameAttribute(NameOID.COMMON_NAME, "NOMBRE APELLIDO1 APELLIDO2 - 12345678Z"),
+            x509.NameAttribute(NameOID.SERIAL_NUMBER, "IDCES-12345678Z"),
+        ]
+        subject = issuer = x509.Name(attrs)
     now = datetime.now(UTC)
     cert = (
         x509.CertificateBuilder()
@@ -143,6 +152,7 @@ def _build_bundle(
     *,
     subject_attrs: list[x509.NameAttribute[str | bytes]] | None = None,
     not_valid_after: datetime | None = None,
+    subject_name: x509.Name | None = None,
 ) -> Path:
     """Generate a real self-signed PKCS#12 bundle on disk.
 
@@ -151,10 +161,16 @@ def _build_bundle(
     regenerate.
     """
     out = tmp_path / "bundle.p12"
-    if subject_attrs is None and not_valid_after is None:
+    if subject_attrs is None and not_valid_after is None and subject_name is None:
         out.write_bytes(_default_pkcs12_bytes())
         return out
-    out.write_bytes(_serialise_pkcs12(subject_attrs=subject_attrs, not_valid_after=not_valid_after))
+    out.write_bytes(
+        _serialise_pkcs12(
+            subject_attrs=subject_attrs,
+            not_valid_after=not_valid_after,
+            subject_name=subject_name,
+        )
+    )
     return out
 
 
@@ -163,6 +179,7 @@ def _load_cert(
     *,
     subject_attrs: list[x509.NameAttribute[str | bytes]] | None = None,
     not_valid_after: datetime | None = None,
+    subject_name: x509.Name | None = None,
 ) -> LoadedCertificate:
     """Build a bundle + load it under a deterministic env var name."""
     from pydantic import SecretStr
@@ -171,6 +188,7 @@ def _load_cert(
         tmp_path,
         subject_attrs=subject_attrs,
         not_valid_after=not_valid_after,
+        subject_name=subject_name,
     )
     bundle = CertificateBundle(
         path=bundle_path,
@@ -764,7 +782,7 @@ async def test_authenticator_synchronous_surface(tmp_path: Path, _settings_facto
     settings = _settings_factory(bundle_path)
     async with AeatAuthenticator(settings) as auth:
         cert = auth.load_certificate()
-        nif = auth.extract_nif_from_subject(cert)
+        nif = extract_nif_from_subject(cert)
         assert nif == "12345678Z"
 
 

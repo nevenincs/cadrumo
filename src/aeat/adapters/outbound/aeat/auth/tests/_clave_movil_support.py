@@ -253,6 +253,9 @@ class _RecordingBrowserSession:
         self._verification_code = verification_code
         self.contexts: list[_RecordingContext] = []
         self.closed = False
+        # No profile: exercises the settings-fallback resume path in
+        # AeatAuthenticator._resolve_storage_state_path.
+        self.profile = None
 
     async def create_context(
         self,
