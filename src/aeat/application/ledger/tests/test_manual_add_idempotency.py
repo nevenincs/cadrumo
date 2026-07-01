@@ -246,12 +246,40 @@ def test_keyed_retry_is_clock_free_across_boundary_timestamps(secure_objects: Se
 
 
 def test_manual_row_carries_content_fingerprint_surviving_reload(secure_objects: SecureObjectRepository) -> None:
-    """A created manual row carries a 64-hex content fingerprint that survives an encrypted reload (P02.S05)."""
+    """A created manual row's content fingerprint roundtrips the encrypted boundary with strict equality (P02.S05, P05.S16).
+
+    Strengthened beyond a presence check: the full row is compared for strict
+    equality across a FRESH repository over the same store (so the non-default
+    ``import_fingerprint`` genuinely roundtrips, not merely re-defaults), and an
+    anti-tautology leg proves the fingerprint is content-bound rather than a
+    constant — a different movement yields a different fingerprint, so a dropped
+    or content-independent fingerprint would surface as an inequality here.
+    """
     repo, _events, created = _create_manual_row(secure_objects, description="cash sale", idempotency_key="fp-1")
-    reloaded = repo.load().get(created.ref.transaction_id)
-    assert reloaded.import_fingerprint is not None
-    assert len(reloaded.import_fingerprint) == 64
-    assert all(char in "0123456789abcdef" for char in reloaded.import_fingerprint)
+    original = repo.load().get(created.ref.transaction_id)
+    assert original.import_fingerprint is not None
+    assert len(original.import_fingerprint) == 64
+    assert all(char in "0123456789abcdef" for char in original.import_fingerprint)
+
+    # Strict save->load equality across a fresh repository reading the same store:
+    # every field, the non-default import_fingerprint included, roundtrips exactly.
+    fresh_repo, _fresh_events = _repositories(secure_objects)
+    reloaded = fresh_repo.load().get(created.ref.transaction_id)
+    assert reloaded == original
+
+    # Anti-tautology: the fingerprint is content-derived, not a constant. A row
+    # with different content produces a different fingerprint.
+    other_repo, other_events = _repositories(secure_objects, bucket_id=_OTHER_BUCKET_ID)
+    other = _add(
+        other_repo,
+        other_events,
+        description="a different movement",
+        amount=Decimal("77.00"),
+        bucket_id=_OTHER_BUCKET_ID,
+    )
+    other_row = other_repo.load().get(other.ref.transaction_id)
+    assert other_row.import_fingerprint is not None
+    assert other_row.import_fingerprint != original.import_fingerprint
 
 
 def test_import_recognises_a_prior_manual_movement(secure_objects: SecureObjectRepository) -> None:
