@@ -6,7 +6,7 @@ period_kind = "annual"
 opens_on = 2019-02-01
 closes_on = 2019-02-28
 legal_refs = ["orden-eha-3012-2008:art-10", "ley-58-2003:art-93"]
-source_refs = ["boe-modelo-347-2008-form"]
+source_refs = ["boe-modelo-347-2008-form", "aeat-modelo-347-procedure"]
 
 [[revisions."2008-y-siguientes".deadline_windows]]
 id = "modelo-347-2019-0a"
@@ -16,7 +16,7 @@ period_kind = "annual"
 opens_on = 2020-02-01
 closes_on = 2020-02-29
 legal_refs = ["orden-eha-3012-2008:art-10", "ley-58-2003:art-93"]
-source_refs = ["boe-modelo-347-2008-form"]
+source_refs = ["boe-modelo-347-2008-form", "aeat-modelo-347-procedure"]
 
 [[revisions."2008-y-siguientes".deadline_windows]]
 id = "modelo-347-2020-0a"
@@ -26,7 +26,7 @@ period_kind = "annual"
 opens_on = 2021-02-01
 closes_on = 2021-02-28
 legal_refs = ["orden-eha-3012-2008:art-10", "ley-58-2003:art-93"]
-source_refs = ["boe-modelo-347-2008-form"]
+source_refs = ["boe-modelo-347-2008-form", "aeat-modelo-347-procedure"]
 
 [[revisions."2008-y-siguientes".deadline_windows]]
 id = "modelo-347-2021-0a"
@@ -36,7 +36,7 @@ period_kind = "annual"
 opens_on = 2022-02-01
 closes_on = 2022-02-28
 legal_refs = ["orden-eha-3012-2008:art-10", "ley-58-2003:art-93"]
-source_refs = ["boe-modelo-347-2008-form"]
+source_refs = ["boe-modelo-347-2008-form", "aeat-modelo-347-procedure"]
 
 [[revisions."2008-y-siguientes".deadline_windows]]
 id = "modelo-347-2022-0a"
@@ -46,7 +46,7 @@ period_kind = "annual"
 opens_on = 2023-02-01
 closes_on = 2023-02-28
 legal_refs = ["orden-eha-3012-2008:art-10", "ley-58-2003:art-93"]
-source_refs = ["boe-modelo-347-2008-form"]
+source_refs = ["boe-modelo-347-2008-form", "aeat-modelo-347-procedure"]
 
 [[revisions."2008-y-siguientes".deadline_windows]]
 id = "modelo-347-2023-0a"
@@ -56,7 +56,7 @@ period_kind = "annual"
 opens_on = 2024-02-01
 closes_on = 2024-02-29
 legal_refs = ["orden-eha-3012-2008:art-10", "ley-58-2003:art-93"]
-source_refs = ["boe-modelo-347-2008-form"]
+source_refs = ["boe-modelo-347-2008-form", "aeat-modelo-347-procedure"]
 
 [[revisions."2008-y-siguientes".deadline_windows]]
 id = "modelo-347-2024-0a"
@@ -66,7 +66,7 @@ period_kind = "annual"
 opens_on = 2025-02-01
 closes_on = 2025-02-28
 legal_refs = ["orden-eha-3012-2008:art-10", "ley-58-2003:art-93"]
-source_refs = ["boe-modelo-347-2008-form"]
+source_refs = ["boe-modelo-347-2008-form", "aeat-modelo-347-procedure"]
 
 [[revisions."2008-y-siguientes".deadline_windows]]
 id = "modelo-347-2025-0a"
@@ -76,7 +76,11 @@ period_kind = "annual"
 opens_on = 2026-02-01
 closes_on = 2026-03-02
 legal_refs = ["orden-eha-3012-2008:art-10", "ley-58-2003:art-93"]
-source_refs = ["boe-modelo-347-2008-form", "aeat-calendario-contribuyente-2026-hasta-2-marzo"]
+source_refs = [
+    "boe-modelo-347-2008-form",
+    "aeat-modelo-347-procedure",
+    "aeat-calendario-contribuyente-2026-hasta-2-marzo",
+]
 
 [[revisions."2008-y-siguientes".deadline_windows]]
 id = "modelo-347-2026-0a"
@@ -86,5 +90,5 @@ period_kind = "annual"
 opens_on = 2027-02-01
 closes_on = 2027-02-28
 legal_refs = ["orden-eha-3012-2008:art-10", "ley-58-2003:art-93"]
-source_refs = ["boe-modelo-347-2008-form"]
+source_refs = ["boe-modelo-347-2008-form", "aeat-modelo-347-procedure"]
 

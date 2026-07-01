@@ -73,6 +73,9 @@ def test_committed_modelo_347_is_informative_only() -> None:
 def test_committed_modelo_347_workbook_parity_refs_resolve_to_corpus() -> None:
     modelo, catalogues = _load_modelo_347()
     expected_sources = {"aeat-dr-347-2025", "aeat-dr-347-2011"}
+    assert catalogues.sources["aeat-modelo-347-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-347-2008-form"].evidence_tier == "layout_authority"
+    assert catalogues.sources["boe-modelo-347-2011-amendment"].evidence_tier == "layout_authority"
     for revision in modelo.revisions.values():
         sources_seen = {ref.workbook_source for ref in revision.workbook_parity_refs}
         assert expected_sources <= sources_seen, sources_seen
@@ -145,6 +148,7 @@ def test_committed_modelo_347_deadline_window_matches_official_calendar(
     assert window.period_kind == "annual"
     assert window.opens_on == expected_open
     assert window.closes_on == expected_close
+    assert "aeat-modelo-347-procedure" in window.source_refs
     if filing_year == 2025:
         assert "aeat-calendario-contribuyente-2026-hasta-2-marzo" in window.source_refs
 
