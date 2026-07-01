@@ -58,10 +58,12 @@ from ...domain.calculations.registry import CasillaId as _CasillaId
 from ...domain.calculations.registry import (
     CrossReferenceApplicabilityDeclaracion as _CrossReferenceApplicabilityDeclaracion,
 )
+from ...domain.calculations.registry import ExportLayoutId as _ExportLayoutId
 from ...domain.calculations.registry import GroiOracle as _GroiOracle
 from ...domain.calculations.registry import (
     InputKind as _InputKind,
 )
+from ...domain.calculations.registry import LegalRefId as _LegalRefId
 from ...domain.calculations.registry import (
     LiveParityCatalogue as _LiveParityCatalogue,
 )
@@ -74,12 +76,14 @@ from ...domain.calculations.registry import (
 )
 from ...domain.calculations.registry import RegistrySnapshot as _RegistrySnapshot
 from ...domain.calculations.registry import RelationId as _RelationId
+from ...domain.calculations.registry import SourceRefId as _SourceRefId
 from ...domain.calculations.registry import (
     ValidatedRegistryAuthority as _ValidatedRegistryAuthority,
 )
 from ...domain.calculations.registry import (
     WorkbookBackendVerificationReport as _WorkbookBackendVerificationReport,
 )
+from ...domain.calculations.registry import WorkbookParityRefId as _WorkbookParityRefId
 from ...domain.calculations.registry import (
     audit_registry_oracle_bindings as _audit_registry_oracle_bindings,
 )
@@ -230,8 +234,8 @@ class RegistryWorkbookParityDetailReport(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    id: str
-    workbook_source: str
+    id: _WorkbookParityRefId
+    workbook_source: _SourceRefId
     formula_coverage: str
     runner_required: bool
     output_cell_count: int
@@ -244,9 +248,9 @@ class RegistryRevisionDetailReport(BaseModel):
 
     modelo: str
     revision: str
-    legal_refs: tuple[str, ...]
-    source_refs: tuple[str, ...]
-    export_layout_ids: tuple[str, ...]
+    legal_refs: tuple[_LegalRefId, ...]
+    source_refs: tuple[_SourceRefId, ...]
+    export_layout_ids: tuple[_ExportLayoutId, ...]
     export_layout_count: int
     export_record_count: int
     export_field_count: int
@@ -599,8 +603,8 @@ def _revision_details(modelos: tuple[_ModeloDefinition, ...]) -> tuple[RegistryR
             export_fields = tuple(field for record in export_records for field in record.fields)
             workbook_parity = tuple(
                 RegistryWorkbookParityDetailReport(
-                    id=str(reference.id),
-                    workbook_source=str(reference.workbook_source),
+                    id=reference.id,
+                    workbook_source=reference.workbook_source,
                     formula_coverage=reference.formula_coverage,
                     runner_required=reference.runner_required,
                     output_cell_count=len(reference.output_cells),
@@ -611,9 +615,9 @@ def _revision_details(modelos: tuple[_ModeloDefinition, ...]) -> tuple[RegistryR
                 RegistryRevisionDetailReport(
                     modelo=str(modelo.id),
                     revision=str(revision_id),
-                    legal_refs=tuple(str(ref) for ref in revision.legal_refs),
-                    source_refs=tuple(str(ref) for ref in revision.source_refs),
-                    export_layout_ids=tuple(str(layout.id) for layout in revision.export_layouts),
+                    legal_refs=tuple(revision.legal_refs),
+                    source_refs=tuple(revision.source_refs),
+                    export_layout_ids=tuple(layout.id for layout in revision.export_layouts),
                     export_layout_count=len(revision.export_layouts),
                     export_record_count=len(export_records),
                     export_field_count=len(export_fields),
