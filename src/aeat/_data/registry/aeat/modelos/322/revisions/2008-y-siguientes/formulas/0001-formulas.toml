@@ -9,10 +9,10 @@ expression = { op = "add", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026", "boe-modelo-322-2007-form"]
+source_refs = ["aeat-dr-322-2026", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
 
 [[revisions."2008-y-siguientes".formulas.source_citations]]
-source_ref = "boe-modelo-322-2007-form"
+source_ref = "aeat-modelo-322-procedure"
 required_text = ["modelo 322"]
 
 [[revisions."2008-y-siguientes".formulas]]
@@ -24,10 +24,10 @@ expression = { op = "add", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026", "boe-modelo-322-2007-form"]
+source_refs = ["aeat-dr-322-2026", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
 
 [[revisions."2008-y-siguientes".formulas.source_citations]]
-source_ref = "boe-modelo-322-2007-form"
+source_ref = "aeat-modelo-322-procedure"
 required_text = ["modelo 322"]
 
 [[revisions."2008-y-siguientes".formulas]]
@@ -39,9 +39,8 @@ expression = { op = "subtract", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026", "boe-modelo-322-2007-form"]
+source_refs = ["aeat-dr-322-2026", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
 
 [[revisions."2008-y-siguientes".formulas.source_citations]]
-source_ref = "boe-modelo-322-2007-form"
+source_ref = "aeat-modelo-322-procedure"
 required_text = ["modelo 322"]
-
