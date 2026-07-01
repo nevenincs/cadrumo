@@ -38,6 +38,7 @@ from .._renta_web_open_oracle import RentaWebOpenOracle
 from .._schema import ModeloDefinition
 from ._registry_schema_support import _committed_registry_tree
 
+# INTENTIONAL: unit because the audit helpers are pure and exercise the real oracle catalogue with no I/O and no AEAT contact.
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 

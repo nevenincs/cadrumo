@@ -61,6 +61,7 @@ from .._app_live import (
 )
 from .._app_live_auth_preflight import _live_auth_preflight_lines
 
+# INTENTIONAL: integration because it exercises the live-read CLI subgroup wiring and error surfaces locally without contacting AEAT.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _ACTIVE_TEST_BUCKET_ID = "00000000-0000-4000-8000-000000000000"
