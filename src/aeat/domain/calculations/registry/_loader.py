@@ -503,6 +503,26 @@ def _load_modelo_directory_cached(
     return _build_modelo_definition_from_data(resolved, merged)
 
 
+def load_modelo_directory_without_locales(resolved: Path) -> ModeloDefinition:
+    """Load a directory-mode :class:`ModeloDefinition` without applying locale TOML.
+
+    Composes the same manifest/revisions/build steps as
+    :func:`load_modelo_directory` but skips :func:`_apply_locales`, for
+    callers (the schema-local locale-authoring CLI) that must read the raw
+    Spanish schema before any translation overlay is injected.
+
+    Raises:
+        RegistryLoadError: If the manifest is missing, malformed, or no
+            revisions are found under ``resolved/revisions``.
+    """
+    manifest_data = _load_modelo_manifest(resolved)
+    merged_revisions = _load_modelo_revisions(resolved)
+    if not merged_revisions:
+        raise RegistryLoadError(f"{resolved}: no revisions found in revisions/")
+    merged: dict[str, object] = {**manifest_data, "revisions": merged_revisions}
+    return _build_modelo_definition_from_data(resolved, merged)
+
+
 def _load_modelo_manifest(resolved: Path) -> dict[str, object]:
     """Load the directory-mode manifest.toml and reject inlined [revisions]."""
     manifest_path = resolved / "manifest.toml"

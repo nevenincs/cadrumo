@@ -51,19 +51,7 @@ def test_natural_person_route_has_irpf_tarifa_bracket_schedules() -> None:
         for formula in revision.formulas
         if formula.id == "renta-2025-cuota-escala-autonomica-sobre-base-liquidable-general"
     )
-    # From 2024/2025 the autonomic escala formula wraps its lookup_bracket_by_ccaa
-    # operators in the LIRPF art. 64/75 anualidades separate-escala if_then_else
-    # predicate (#532), so the dispatch table is no longer at the top level.
-    def _first_ccaa_dispatch_table(expression: object) -> dict | None:
-        if getattr(expression, "op", None) == "lookup_bracket_by_ccaa":
-            return expression.args[2].dispatch_table
-        for arg in getattr(expression, "args", ()) or ():
-            found = _first_ccaa_dispatch_table(arg)
-            if found is not None:
-                return found
-        return None
-
-    dispatch_table = _first_ccaa_dispatch_table(autonomic_formula.expression)
+    dispatch_table = autonomic_formula.expression.args[2].dispatch_table
     assert dispatch_table, "autonomic IRPF general scale must dispatch by CCAA"
     for ccaa, parameter_id in dispatch_table.items():
         parameter = parameters[parameter_id]
