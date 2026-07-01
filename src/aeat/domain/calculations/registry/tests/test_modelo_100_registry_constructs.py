@@ -18,6 +18,7 @@ from .. import (
     InputKind,
     RegistrySnapshotError,
     RegistryValidationError,
+    RegistryValidator,
     RemoteOperation,
     assert_remote_operation_allowed,
     parse_export_payload,
@@ -716,6 +717,38 @@ def test_construct_reader_rejects_blank_grounding_refs_at_projection_boundary() 
 
         with pytest.raises(ValidationError, match=next(iter(update))):
             resolve_construct(mutated_revision, construct.id)
+
+
+def test_validator_rejects_construct_sources_without_official_guidance() -> None:
+    modelo, revision = _modelo_100_revision_2025()
+    _modelos_by_id, catalogues = _loaded_registry()
+    construct = next(item for item in revision.constructs if item.source_refs)
+    sources = dict(catalogues.sources)
+    for source_ref in construct.source_refs:
+        sources[source_ref] = sources[source_ref].model_copy(update={"evidence_tier": "layout_authority"})
+    mutated_catalogues = catalogues.model_copy(update={"sources": sources})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"construct .* requires official_source_guidance source evidence",
+    ):
+        RegistryValidator(mutated_catalogues, source_root=_source_root()).validate_modelo(modelo)
+
+
+def test_validator_rejects_construct_legal_refs_without_legal_authority() -> None:
+    modelo, revision = _modelo_100_revision_2025()
+    _modelos_by_id, catalogues = _loaded_registry()
+    construct = next(item for item in revision.constructs if item.legal_refs)
+    legal = dict(catalogues.legal)
+    legal_ref = construct.legal_refs[0]
+    legal[legal_ref] = legal[legal_ref].model_copy(update={"evidence_tier": "official_source_guidance"})
+    mutated_catalogues = catalogues.model_copy(update={"legal": legal})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"construct .* legal ref .* is not legal authority",
+    ):
+        RegistryValidator(mutated_catalogues, source_root=_source_root()).validate_modelo(modelo)
 
 
 def test_validator_rejects_construct_member_outside_revision() -> None:

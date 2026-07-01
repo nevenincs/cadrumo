@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 
 from ._schema import LegalReference, ModeloRevision, SourceReference
+from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import _missing_refs
 
 _CONSTRUCT_MEMBER_ATTRS = {
@@ -39,12 +40,15 @@ def validate_construct_closure(
     member_objects: Mapping[str, Mapping[str, object]],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> list[str]:
     failures: list[str] = []
     for construct in revision.constructs:
         owner = f"construct {construct.id}"
         failures.extend(_missing_refs(scope, owner, construct.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(scope, owner, construct.source_refs, source_refs, "source"))
+        failures.extend(evidence.require_legal_authority_refs(scope, owner, construct.legal_refs))
+        failures.extend(evidence.require_source_tier(scope, owner, construct.source_refs, "official_source_guidance"))
         construct_legal_refs = set(construct.legal_refs)
         construct_source_refs = set(construct.source_refs)
         for kind, attr in _CONSTRUCT_MEMBER_ATTRS.items():
