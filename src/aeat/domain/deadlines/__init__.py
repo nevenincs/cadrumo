@@ -1,13 +1,26 @@
-"""Registry-backed filing-deadline computation engine for taxpayer profiles.
+"""Public facade for registry-backed filing deadline computation.
 
 :class:`DeadlineEngine` is the project's first user-visible
 "answer-the-user" surface: given an :class:`TaxpayerProfile` and a
 year, it produces a deterministic typed :class:`Schedule` of every
 filing the taxpayer profile is obliged to submit, with concrete
-opens / closes dates and a current :class:`ObligationStatus`.
+opens / closes dates and a current :class:`ObligationStatus`. Each
+:class:`ModeloDeadline` may also carry a :class:`Recovery` payload backed by
+the Ley 58/2003 art. 27 :class:`RecargoBand` table when the obligation is
+overdue.
 
 The engine is read-only — it never touches the storage layer, never
 files anything, and never mutates its inputs.
+
+The facade also exposes the taxpayer-shape enums consumed by registry
+applicability predicates (:class:`EntityType`, :class:`LegalEntityForm`,
+:class:`IrpfIncomeCategory`, :class:`IrpfEstimationRegime`,
+:class:`FiscalResidency`) and the BOE-cited holiday shift substrate
+(:class:`CalendarCCAA`, :class:`HolidayCalendar`, :class:`DeadlineShift`,
+:func:`shift_deadline`, :data:`MODELOS_WITHOUT_SHIFT`). Profile mappings enter
+through :func:`taxpayer_profile_from_mapping`; local overview and workflow
+services consume the resulting :class:`Schedule` rather than rebuilding deadline
+or recovery logic.
 
 See Also:
     :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority`
