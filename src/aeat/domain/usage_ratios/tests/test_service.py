@@ -125,35 +125,35 @@ def test_save_writes_encrypted_database_object(_runtime_profile: TestRuntimeProf
     assert b"profile" not in on_disk
 
 
-def test_load_corrupt_secure_object_raises_persistence_error(_runtime_profile: TestRuntimeProfile) -> None:
-    """A malformed encrypted payload surfaces as :class:`UsageRatioPersistenceError`."""
+@pytest.mark.parametrize(
+    ("payload", "message", "cause_type", "detail"),
+    [
+        (b"{not-json", None, ValidationError, "Invalid JSON"),
+        (b"\xff", "invalid UTF-8", UnicodeDecodeError, None),
+    ],
+    ids=("invalid-json", "non-utf8"),
+)
+def test_load_malformed_secure_object_raises_persistence_error(
+    _runtime_profile: TestRuntimeProfile,
+    payload: bytes,
+    message: str | None,
+    cause_type: type[BaseException],
+    detail: str | None,
+) -> None:
+    """Malformed encrypted payload bytes stay on the domain persistence surface."""
     _runtime_profile.repository.save(
         namespace="aeat.domain.usage_ratios",
         object_key=usage_ratios_object_key(_BUCKET_A_ID),
         classification=SensitivityClass.FINANCIAL,
         schema_version=1,
         written_at=datetime.now(UTC),
-        payload=b"{not-json",
+        payload=payload,
     )
-    with pytest.raises(UsageRatioPersistenceError) as exc_info:
+    with pytest.raises(UsageRatioPersistenceError, match=message) as exc_info:
         load_usage_ratios(bucket_id=_BUCKET_A_ID)
-    assert isinstance(exc_info.value.__cause__, ValidationError)
-    assert "Invalid JSON" in str(exc_info.value)
-
-
-def test_load_non_utf8_secure_object_raises_persistence_error(_runtime_profile: TestRuntimeProfile) -> None:
-    """Non-UTF-8 encrypted payload bytes stay on the domain persistence surface."""
-    _runtime_profile.repository.save(
-        namespace="aeat.domain.usage_ratios",
-        object_key=usage_ratios_object_key(_BUCKET_A_ID),
-        classification=SensitivityClass.FINANCIAL,
-        schema_version=1,
-        written_at=datetime.now(UTC),
-        payload=b"\xff",
-    )
-    with pytest.raises(UsageRatioPersistenceError, match="invalid UTF-8") as exc_info:
-        load_usage_ratios(bucket_id=_BUCKET_A_ID)
-    assert isinstance(exc_info.value.__cause__, UnicodeDecodeError)
+    assert isinstance(exc_info.value.__cause__, cause_type)
+    if detail is not None:
+        assert detail in str(exc_info.value)
 
 
 def test_load_inner_classification_mismatch_raises_persistence_error(
