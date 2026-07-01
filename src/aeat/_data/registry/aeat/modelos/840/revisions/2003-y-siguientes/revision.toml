@@ -14,6 +14,7 @@ orden_aplicabilidad = [
 ]
 source_refs = [
     "aeat-dr-840",
+    "aeat-modelo-840-procedure",
     "boe-modelo-840-2003-form",
 ]
 
