@@ -276,46 +276,34 @@ def test_invoice_rejects_oss_line_rate_without_invoice_oss_axes() -> None:
         )
 
 
-def test_invoice_rejects_invalid_issued_at_without_typeerror_escape() -> None:
-    """Invalid date input must stay inside the pydantic validation boundary."""
-    with pytest.raises(ValidationError, match=r"not-a-date.*not a valid ISO-8601 date"):
-        Invoice.model_validate(
-            {
-                "kind": InvoiceKind.ISSUED,
-                "invoice_number": "INV-001",
-                "issued_at": "not-a-date",
-                "counterparty_name": "Cliente SL",
-                "counterparty_tax_id": "B12345674",
-                "counterparty_country": "ES",
-                "base_total": Decimal("100"),
-                "iva_total": Decimal("21"),
-                "grand_total": Decimal("121"),
-                "currency": "EUR",
-                "lines": (_valid_line(),),
-                "payment_status": PaymentStatus.PAID,
-            },
-        )
+@pytest.mark.parametrize(
+    ("field", "value", "match"),
+    [
+        ("issued_at", "not-a-date", r"not-a-date.*not a valid ISO-8601 date"),
+        ("kind", "bogus-kind", r"kind must be an InvoiceKind"),
+    ],
+    ids=("invalid-issued-at", "unknown-kind"),
+)
+def test_invoice_rejects_invalid_core_fields(field: str, value: object, match: str) -> None:
+    """Invalid core field input must stay inside the pydantic validation boundary."""
+    payload = {
+        "kind": InvoiceKind.ISSUED,
+        "invoice_number": "INV-001",
+        "issued_at": date(2026, 4, 1),
+        "counterparty_name": "Cliente SL",
+        "counterparty_tax_id": "B12345674",
+        "counterparty_country": "ES",
+        "base_total": Decimal("100"),
+        "iva_total": Decimal("21"),
+        "grand_total": Decimal("121"),
+        "currency": "EUR",
+        "lines": (_valid_line(),),
+        "payment_status": PaymentStatus.PAID,
+    }
+    payload[field] = value
 
-
-def test_invoice_rejects_unknown_kind_with_domain_validation_message() -> None:
-    """Unknown invoice kind strings must fail as invoice-domain validation."""
-    with pytest.raises(ValidationError, match=r"kind must be an InvoiceKind"):
-        Invoice.model_validate(
-            {
-                "kind": "bogus-kind",
-                "invoice_number": "INV-001",
-                "issued_at": date(2026, 4, 1),
-                "counterparty_name": "Cliente SL",
-                "counterparty_tax_id": "B12345674",
-                "counterparty_country": "ES",
-                "base_total": Decimal("100"),
-                "iva_total": Decimal("21"),
-                "grand_total": Decimal("121"),
-                "currency": "EUR",
-                "lines": (_valid_line(),),
-                "payment_status": PaymentStatus.PAID,
-            },
-        )
+    with pytest.raises(ValidationError, match=match):
+        Invoice.model_validate(payload)
 
 
 def test_iva_rate_percentage_is_resolved_against_centralized_iva_substrate() -> None:
