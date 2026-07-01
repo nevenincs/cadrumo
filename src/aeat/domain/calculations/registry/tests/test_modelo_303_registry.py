@@ -212,17 +212,35 @@ def test_modelo_303_quarterly_deadlines_match_orden_eha_3786_2008_art_7() -> Non
         assert windows[window_id].closes_on == closes
 
 
-def test_modelo_303_sii_january_2026_deadline_uses_aeat_2026_calendar_shift() -> None:
-    """January 2026 monthly IVA closes on 2026-03-02 in the AEAT 2026 calendar."""
+def test_modelo_303_sii_2026_monthly_deadlines_use_aeat_2026_calendar() -> None:
+    """Monthly IVA windows for 2026 periods 01-11 match the AEAT 2026 calendar."""
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2023-y-siguientes"]
-    window = next(w for w in revision.deadline_windows if w.id == "modelo-303-2026-01-mensual")
+    windows = {w.id: w for w in revision.deadline_windows}
+    expected = {
+        "modelo-303-2026-01-mensual": (date(2026, 2, 1), date(2026, 3, 2), date(2026, 2, 25)),
+        "modelo-303-2026-02-mensual": (date(2026, 3, 1), date(2026, 3, 30), date(2026, 3, 25)),
+        "modelo-303-2026-03-mensual": (date(2026, 4, 1), date(2026, 4, 30), date(2026, 4, 27)),
+        "modelo-303-2026-04-mensual": (date(2026, 5, 1), date(2026, 6, 1), date(2026, 5, 27)),
+        "modelo-303-2026-05-mensual": (date(2026, 6, 1), date(2026, 6, 30), date(2026, 6, 25)),
+        "modelo-303-2026-06-mensual": (date(2026, 7, 1), date(2026, 7, 30), date(2026, 7, 27)),
+        "modelo-303-2026-07-mensual": (date(2026, 8, 1), date(2026, 8, 31), date(2026, 8, 26)),
+        "modelo-303-2026-08-mensual": (date(2026, 9, 1), date(2026, 9, 30), date(2026, 9, 25)),
+        "modelo-303-2026-09-mensual": (date(2026, 10, 1), date(2026, 10, 30), date(2026, 10, 27)),
+        "modelo-303-2026-10-mensual": (date(2026, 11, 1), date(2026, 11, 30), date(2026, 11, 25)),
+        "modelo-303-2026-11-mensual": (date(2026, 12, 1), date(2026, 12, 30), date(2026, 12, 24)),
+    }
 
-    assert window.opens_on == date(2026, 2, 1)
-    assert window.closes_on == date(2026, 3, 2)
-    assert window.payment_cutoff_on == date(2026, 2, 25)
-    assert "aeat-calendario-contribuyente-2026-hasta-2-marzo" in window.source_refs
-    assert "aeat-calendario-contribuyente-2026-domiciliacion" in window.source_refs
+    for window_id, (opens_on, closes_on, payment_cutoff_on) in expected.items():
+        window = windows[window_id]
+        assert window.opens_on == opens_on
+        assert window.closes_on == closes_on
+        assert window.payment_cutoff_on == payment_cutoff_on
+        assert "aeat-calendario-contribuyente-2026-domiciliacion" in window.source_refs
+
+    assert "aeat-calendario-contribuyente-2026-hasta-2-marzo" in windows[
+        "modelo-303-2026-01-mensual"
+    ].source_refs
 
 
 def test_modelo_303_live_cross_references_forbid_writes() -> None:
