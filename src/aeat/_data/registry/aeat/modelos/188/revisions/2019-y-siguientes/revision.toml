@@ -89,6 +89,14 @@ requires_snapshot = true
 legal_refs = ["orden-eha-3377-2011:art-1"]
 source_refs = ["aeat-modelo-188-procedure"]
 
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-188-2019-y-siguientes-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3377-2011:art-1"]
+source_refs = ["aeat-modelo-188-procedure", "boe-modelo-188-form-layout"]
+
 [[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-188-2025-0a"
 filing_year = 2025

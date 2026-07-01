@@ -1453,24 +1453,6 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "orden-eha-1308-2005:art-4",
         ),
     ),
-    # Modelo 220
-    Modelo.M220: ModeloApplicabilityRule(
-        modelo=Modelo.M220,
-        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
-        required_payer_fact=PayerFact.MEMBER_OF_FISCAL_CONSOLIDATION_GROUP,
-        applicable_reason=(
-            "Modelo 220 (declaracion IS grupos): la entidad representante del grupo fiscal en regimen de "
-            "consolidacion presenta la declaracion anual del Impuesto sobre Sociedades del grupo."
-        ),
-        not_applicable_reason=(
-            "Modelo 220 no aplica: solo corresponde a la entidad representante de un grupo fiscal en regimen "
-            "de consolidacion del Impuesto sobre Sociedades."
-        ),
-        legal_refs=(
-            "orden-hac-657-2025:art-1",
-            "orden-hac-657-2025:art-6",
-        ),
-    ),
     # Modelo 115 — autoliquidación de retenciones por arrendamiento de
     # inmuebles urbanos. The PAYER's obligation: a natural person, legal
     # entity, or attribution entity who pays rent subject to retención.

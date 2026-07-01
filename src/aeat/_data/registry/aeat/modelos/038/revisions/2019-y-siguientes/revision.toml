@@ -76,3 +76,11 @@ consumer = "aeat.application.filing"
 requires_snapshot = true
 legal_refs = ["orden-hac-66-2002:art-1"]
 source_refs = ["enrolled-modelo-038-procedure"]
+
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-038-2019-y-siguientes-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = ["orden-hac-66-2002:art-6", "orden-hac-66-2002:art-1"]
+source_refs = ["enrolled-modelo-038-procedure", "enrolled-modelo-038-layout"]

@@ -76,3 +76,11 @@ consumer = "aeat.application.filing"
 requires_snapshot = true
 legal_refs = ["orden-eha-1308-2005:art-1"]
 source_refs = ["enrolled-modelo-380-procedure"]
+
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-380-2019-y-siguientes-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = ["orden-eha-1308-2005:art-4", "orden-eha-1308-2005:art-1"]
+source_refs = ["enrolled-modelo-380-procedure", "enrolled-modelo-380-layout"]
