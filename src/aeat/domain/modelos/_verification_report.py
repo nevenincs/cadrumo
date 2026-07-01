@@ -27,7 +27,7 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.hashing import content_hash_hex
-from ..calculations.registry import CasillaId, VerificationExpectationId
+from ..calculations.registry import CasillaId, LegalRefId, SourceRefId, VerificationExpectationId
 from ._errors import ModeloValidationError
 from ._ids import VerificationReportId
 
@@ -113,8 +113,8 @@ class ModeloVerificationFinding(BaseModel):
     expectation_id: VerificationExpectationId | None = None
     message: _FindingMessage
     next_action: _FindingMessage | None = None
-    legal_refs: tuple[str, ...] = Field(min_length=1)
-    source_refs: tuple[str, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = ()
 
 
 def derive_verification_report_id(
