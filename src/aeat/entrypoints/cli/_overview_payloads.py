@@ -82,6 +82,10 @@ class OverviewCalendarEntryPayload(OutputSchema):
     filing_year: int | None = None
     censo_enrolment_state: str
     filing_evidence: OverviewCalendarFilingEvidencePayload
+    source: str = "registry_deadline"
+    local_work_unit_id: str | None = None
+    local_work_unit_name: str | None = None
+    local_work_unit_revision_id: str | None = None
 
 
 class OverviewCalendarFilingEvidencePayload(OutputSchema):

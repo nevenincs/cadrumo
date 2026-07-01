@@ -21,17 +21,19 @@ from datetime import date, datetime, timedelta
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time import now
-from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
-from . import (
+from ...domain.deadlines._engine import DeadlineEngine
+from ...domain.deadlines._models import TaxpayerProfile
+from ._calendar import build_overview_calendar
+from ._calendar_models import (
     CalendarCompleteness,
     CalendarWarning,
     OverviewCalendarEntry,
     OverviewCalendarRange,
     OverviewPeriodState,
-    build_overview_calendar,
 )
+from ._coverage import ObligationCoverageReport
 from ._errors import OverviewAgendaError
 
 _DEFAULT_HORIZON_DAYS = 14
@@ -87,6 +89,7 @@ class OverviewAgenda(BaseModel):
     generated_at: datetime
     warnings: tuple[CalendarWarning, ...] = ()
     completeness: CalendarCompleteness = Field(default_factory=CalendarCompleteness)
+    coverage: ObligationCoverageReport = Field(default_factory=ObligationCoverageReport)
     taxpayer_model_declared: bool = True
     incomplete_reason: str | None = None
 
@@ -170,6 +173,7 @@ def build_overview_agenda(
         generated_at=now(),
         warnings=calendar.warnings,
         completeness=calendar.completeness,
+        coverage=calendar.coverage,
         taxpayer_model_declared=calendar.taxpayer_model_declared,
         incomplete_reason=calendar.incomplete_reason,
     )

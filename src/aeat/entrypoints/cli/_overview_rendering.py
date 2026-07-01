@@ -13,12 +13,10 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from ...application.overview import (
-    OverviewCalendarEvent,
-    OverviewStatusReport,
-    actionable_post_filing_events,
-)
-from ...core import Modelo
+from ...application.overview._calendar import actionable_post_filing_events
+from ...application.overview._calendar_models import OverviewCalendarEvent, OverviewStatusReport
+from ...application.overview._coverage import CoverageAdviceReason, ObligationCoverageReport
+from ...core._modelo import Modelo
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 
@@ -39,6 +37,50 @@ def overview_next_step_notices(report: OverviewStatusReport) -> list[Notice]:
     ]
 
 
+_COVERAGE_NOTICE_CODE = "overview.coverage.incomplete"
+
+
+def overview_coverage_notices(coverage: ObligationCoverageReport) -> list[Notice]:
+    """Project the obligation-coverage advisory onto the envelope notice channel.
+
+    Returns a single default-visible :class:`~aeat.core.json_contract.Notice`
+    naming every registry modelo the surface could not positively scope — the
+    ``advised`` bucket of the reconciliation — so an operator (or the autonomous
+    agent the CLI targets) is never allowed to trust ``overview`` and silently
+    under-file. Severity is ``warning`` when at least one advised obligation is
+    positively known to apply but has no deadline window (the Modelo-190 shape —
+    an unambiguous under-filing risk); otherwise ``info`` for the merely
+    applicability-undetermined set. The advised modelo→reason map rides on
+    :attr:`~aeat.core.json_contract.Notice.context` so machine consumers keep the
+    structured list. Empty ``advised`` yields no notice.
+    """
+    if not coverage.has_advisories:
+        return []
+    advised = coverage.advised
+    modelos = ", ".join(item.modelo for item in advised)
+    window_missing = any(item.reason is CoverageAdviceReason.APPLICABLE_WINDOW_MISSING for item in advised)
+    severity = NoticeSeverity.WARNING if window_missing else NoticeSeverity.INFO
+    message = tr(
+        "cli.overview.coverage.investigate",
+        default=(
+            "%{count} filing obligation(s) could not be positively scoped for "
+            "this profile and may be under-reported: %{modelos}. Investigate "
+            "each with 'aeat app overview explain <modelo>'."
+        ),
+        count=len(advised),
+        modelos=modelos,
+    )
+    return [
+        Notice(
+            severity=severity,
+            code=_COVERAGE_NOTICE_CODE,
+            message=message,
+            suggestion=f"aeat app overview explain {advised[0].modelo}",
+            context={item.modelo: item.reason.value for item in advised},
+        ),
+    ]
+
+
 _POST_FILING_NOTICE_CODE = "overview.post_filing.pending"
 
 
@@ -52,7 +94,7 @@ def overview_post_filing_event_notices(events: Sequence[OverviewCalendarEvent]) 
     sancionador, or a recaudación enforcement act — and projects them onto a
     single ``warning``-severity :class:`~aeat.core.json_contract.Notice` so the
     overview never silently buries a pending requerimiento in an
-    undifferentiated event list. The per-event reference->kind map rides on
+    undifferentiated event list. The per-event reference→kind map rides on
     :attr:`~aeat.core.json_contract.Notice.context` so machine consumers keep the
     structured list. Empty when no actionable event is present.
     """
@@ -236,8 +278,7 @@ def _drafts_line(report: OverviewStatusReport) -> str:
             return tr(
                 "cli.overview.status.drafts_empty_with_work_units",
                 default=(
-                    "No declaration drafts are saved - this is normal and "
-                    "does not affect your modelo work units below."
+                    "No declaration drafts are saved - this is normal and does not affect your modelo work units below."
                 ),
             )
         return tr("cli.overview.status.drafts_empty")
@@ -264,6 +305,7 @@ def _filing_obligation_lines(report: OverviewStatusReport) -> tuple[str, ...]:
 
 
 __all__ = [
+    "overview_coverage_notices",
     "overview_post_filing_event_notices",
     "render_cli_overview_status_lines",
 ]

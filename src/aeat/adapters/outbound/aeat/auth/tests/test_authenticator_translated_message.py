@@ -21,7 +21,7 @@ from __future__ import annotations
 import asyncio
 import functools
 from collections.abc import Mapping
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import TYPE_CHECKING
@@ -60,6 +60,9 @@ _AUTHENTICATOR_LOCALE_KEYS = [
 
 _SECRET = "correct-horse-battery-staple"
 _BUCKET_ID = "auth-translated-message"
+_CERT_NOT_BEFORE = datetime(2026, 5, 28, 14, 15, 0, tzinfo=UTC)
+_CERT_NOT_AFTER = datetime(2099, 5, 28, 14, 15, 0, tzinfo=UTC)
+_HANDSHAKE_ATTEMPTED_AT = datetime(2026, 5, 28, 14, 20, 0, tzinfo=UTC)
 
 
 @pytest.fixture(autouse=True)
@@ -77,15 +80,14 @@ def _default_pkcs12_bytes() -> bytes:
         x509.NameAttribute(NameOID.SERIAL_NUMBER, "IDCES-12345678Z"),
     ]
     subject = issuer = x509.Name(attrs)
-    now = datetime.now(UTC)
     cert = (
         x509.CertificateBuilder()
         .subject_name(subject)
         .issuer_name(issuer)
         .public_key(key.public_key())
         .serial_number(x509.random_serial_number())
-        .not_valid_before(now - timedelta(days=1))
-        .not_valid_after(now + timedelta(days=365))
+        .not_valid_before(_CERT_NOT_BEFORE)
+        .not_valid_after(_CERT_NOT_AFTER)
         .sign(key, hashes.SHA256())
     )
     return pkcs12.serialize_key_and_certificates(
@@ -137,7 +139,7 @@ def _successful_handshake() -> HandshakeResult:
         status_code=200,
         server_cert_chain=(),
         elapsed_ms=10,
-        attempted_at=datetime.now(UTC),
+        attempted_at=_HANDSHAKE_ATTEMPTED_AT,
         error_message=None,
     )
 
@@ -209,7 +211,7 @@ def _failing_handshake_verifier(_cert: LoadedCertificate, _target: str) -> Hands
         status_code=0,
         server_cert_chain=(),
         elapsed_ms=0,
-        attempted_at=datetime.now(UTC),
+        attempted_at=_HANDSHAKE_ATTEMPTED_AT,
         error_message="simulated handshake failure",
     )
 

@@ -9,7 +9,7 @@ carries a dedicated CLI surface test exercising the real backend
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -31,6 +31,8 @@ from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_EVENT_OCCURRED_AT = datetime(2026, 5, 28, 13, 20, 0, tzinfo=UTC)
 
 
 @pytest.fixture(autouse=True)
@@ -59,9 +61,7 @@ def _seed_event(
 
     repo = BucketEventHistoryRepository()
     catalogue = repo.load()
-    occurred_at = datetime.now(UTC).replace(microsecond=0)
-    if offset_seconds:
-        occurred_at = occurred_at.replace(second=(occurred_at.second + offset_seconds) % 60)
+    occurred_at = _EVENT_OCCURRED_AT + timedelta(seconds=offset_seconds)
     object_id = "wu" + "0" * (64 - 2)
     actor = "cli/aeat"
     payload = {"modelo": modelo, year_payload_key: year, "period": period}

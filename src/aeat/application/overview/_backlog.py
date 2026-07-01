@@ -21,17 +21,20 @@ from datetime import date, datetime, timedelta
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time import now
-from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
-from . import (
+from ...domain.deadlines._engine import DeadlineEngine
+from ...domain.deadlines._models import TaxpayerProfile
+from ...domain.modelos._work_unit import WorkUnit, WorkUnitState
+from ._calendar import build_overview_calendar
+from ._calendar_models import (
     CalendarCompleteness,
     CalendarWarning,
     OverviewCalendarEntry,
     OverviewCalendarRange,
     OverviewPeriodState,
-    build_overview_calendar,
 )
+from ._coverage import ObligationCoverageReport
 
 _DEFAULT_LOOKBACK_DAYS = 365
 """Default lookback window when neither --from nor --to is supplied."""
@@ -77,6 +80,7 @@ class OverviewBacklog(BaseModel):
     generated_at: datetime
     warnings: tuple[CalendarWarning, ...] = ()
     completeness: CalendarCompleteness = Field(default_factory=CalendarCompleteness)
+    coverage: ObligationCoverageReport = Field(default_factory=ObligationCoverageReport)
     taxpayer_model_declared: bool = True
     incomplete_reason: str | None = None
 
@@ -89,6 +93,7 @@ def build_overview_backlog(
     as_of: date | None = None,
     engine: DeadlineEngine | None = None,
     raw_values: Mapping[str, object] | None = None,
+    work_units: tuple[WorkUnit, ...] = (),
 ) -> OverviewBacklog:
     """Enumerate the operator's past-due obligations.
 
@@ -101,6 +106,10 @@ def build_overview_backlog(
         engine: Optional :class:`~aeat.domain.deadlines.DeadlineEngine`
             override.
         raw_values: Optional raw profile values passed through to the engine.
+        work_units: Optional Modelo work units loaded by the caller. When no
+            explicit ``from_date`` is supplied, the default range expands back
+            to the earliest active local work unit so historical in-progress
+            work is not silently excluded by the 365-day lookback.
 
     The default window is the 365 days preceding ``as_of`` (today
     when omitted), which is wide enough to surface every backlog
@@ -118,7 +127,10 @@ def build_overview_backlog(
     calendar range used for the computation.
     """
     resolved_as_of = as_of or date.today()
-    resolved_from = from_date or (resolved_as_of - timedelta(days=_DEFAULT_LOOKBACK_DAYS))
+    resolved_from = from_date or min(
+        resolved_as_of - timedelta(days=_DEFAULT_LOOKBACK_DAYS),
+        _earliest_active_work_unit_date(work_units, fallback=resolved_as_of),
+    )
     resolved_to = to_date or resolved_as_of
     window = OverviewCalendarRange(from_date=resolved_from, to_date=resolved_to)
     calendar = build_overview_calendar(
@@ -127,6 +139,7 @@ def build_overview_backlog(
         today=resolved_as_of,
         engine=engine,
         raw_values=raw_values,
+        work_units=work_units,
     )
 
     items: list[OverviewCalendarEntry] = []
@@ -145,9 +158,22 @@ def build_overview_backlog(
         generated_at=now(),
         warnings=calendar.warnings,
         completeness=calendar.completeness,
+        coverage=calendar.coverage,
         taxpayer_model_declared=calendar.taxpayer_model_declared,
         incomplete_reason=calendar.incomplete_reason,
     )
+
+
+def _earliest_active_work_unit_date(work_units: tuple[WorkUnit, ...], *, fallback: date) -> date:
+    anchors: list[date] = []
+    for unit in work_units:
+        if unit.state is WorkUnitState.DESCARTADO:
+            continue
+        if unit.period.has_date_span():
+            anchors.append(unit.period.start_date)
+            continue
+        anchors.append(unit.created_at.date())
+    return min(anchors) if anchors else fallback
 
 
 __all__ = [

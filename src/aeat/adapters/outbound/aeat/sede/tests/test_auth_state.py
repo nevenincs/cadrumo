@@ -37,7 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 # Helpers
 # ---------------------------------------------------------------------------
 
-_NOW = datetime.now(UTC)
+_NOW = datetime(2026, 5, 28, 14, 40, 0, tzinfo=UTC)
 _DEADLINE = _NOW + timedelta(hours=8)
 
 

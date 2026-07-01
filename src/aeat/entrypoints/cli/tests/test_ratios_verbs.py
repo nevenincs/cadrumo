@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -20,6 +21,7 @@ from ....tests.secure_sql import isolated_profile_storage_root
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _AEAT = Settings.external_constants().aeat
 _G313_URL = f"{_AEAT.domains.sede}{_AEAT.sede_paths.censo_g313_launcher}"
+_CENSO_CAPTURED_AT = datetime(2026, 5, 28, 13, 45, 0, tzinfo=UTC)
 
 
 def _invoke_ratios(args: Sequence[str]) -> Result:
@@ -158,15 +160,13 @@ def _capture_censo_with_vivienda_office(office_m2: str, total_m2: str) -> None:
     against.
     """
 
-    from datetime import UTC, datetime
-
     from ....application.live._censo import CensoSnapshotService
 
     bucket_id = resolve_active_bucket_id() or ""
     service = CensoSnapshotService(bucket_id=bucket_id)
     service.capture(
         profile_id=bucket_id,
-        captured_at=datetime.now(UTC),
+        captured_at=_CENSO_CAPTURED_AT,
         source_url=_G313_URL,
         censo_facts={
             "vivienda_office.total_m2": total_m2,

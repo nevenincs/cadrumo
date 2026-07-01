@@ -36,6 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _SECRET = "correct-horse-battery-staple"
 _WARN_DAYS = 60
 _CRITICAL_DAYS = 14
+_NOW = datetime(2099, 5, 28, 14, 10, 0, tzinfo=UTC)
 
 
 def _build_pkcs12(
@@ -82,7 +83,7 @@ def _loaded_cert_for_window(
     not_valid_before: datetime | None = None,
 ) -> LoadedCertificate:
     """Return a LoadedCertificate with ``not_after`` at the given point."""
-    not_valid_before = not_valid_before or (datetime.now(UTC) - timedelta(days=1))
+    not_valid_before = not_valid_before or (_NOW - timedelta(days=1))
     p12 = _build_pkcs12(
         tmp_path,
         not_valid_before=not_valid_before,
@@ -103,7 +104,7 @@ def _loaded_cert_for_window(
 
 
 def test_health_ok_bucket(tmp_path: Path) -> None:
-    now = datetime.now(UTC)
+    now = _NOW
     cert = _loaded_cert_for_window(
         tmp_path,
         not_valid_after=now + timedelta(days=200),
@@ -122,7 +123,7 @@ def test_health_ok_bucket(tmp_path: Path) -> None:
 
 def test_health_warn_exact_boundary(tmp_path: Path) -> None:
     """A cert with exactly ``warn_days`` remaining is WARN (inclusive)."""
-    now = datetime.now(UTC)
+    now = _NOW
     cert = _loaded_cert_for_window(
         tmp_path,
         not_valid_after=now + timedelta(days=_WARN_DAYS, seconds=30),
@@ -133,7 +134,7 @@ def test_health_warn_exact_boundary(tmp_path: Path) -> None:
 
 
 def test_health_warn_below_boundary(tmp_path: Path) -> None:
-    now = datetime.now(UTC)
+    now = _NOW
     cert = _loaded_cert_for_window(tmp_path, not_valid_after=now + timedelta(days=30))
     result = evaluate_loaded_certificate_health(cert, warn_days=_WARN_DAYS, critical_days=_CRITICAL_DAYS, now=now)
     assert result.severity is CertificateHealthSeverity.WARN
@@ -141,7 +142,7 @@ def test_health_warn_below_boundary(tmp_path: Path) -> None:
 
 def test_health_critical_exact_boundary(tmp_path: Path) -> None:
     """Exactly ``critical_days`` remaining → CRITICAL (inclusive)."""
-    now = datetime.now(UTC)
+    now = _NOW
     cert = _loaded_cert_for_window(
         tmp_path,
         not_valid_after=now + timedelta(days=_CRITICAL_DAYS, seconds=30),
@@ -152,7 +153,7 @@ def test_health_critical_exact_boundary(tmp_path: Path) -> None:
 
 
 def test_health_critical_below_boundary(tmp_path: Path) -> None:
-    now = datetime.now(UTC)
+    now = _NOW
     cert = _loaded_cert_for_window(tmp_path, not_valid_after=now + timedelta(days=3))
     result = evaluate_loaded_certificate_health(cert, warn_days=_WARN_DAYS, critical_days=_CRITICAL_DAYS, now=now)
     assert result.severity is CertificateHealthSeverity.CRITICAL
@@ -161,7 +162,7 @@ def test_health_critical_below_boundary(tmp_path: Path) -> None:
 
 def test_health_expired(tmp_path: Path) -> None:
     """An expired cert never raises from ``health()`` — returns EXPIRED."""
-    now = datetime.now(UTC)
+    now = _NOW
     p12 = _build_pkcs12(
         tmp_path,
         not_valid_before=now - timedelta(days=10),
@@ -184,7 +185,7 @@ def test_health_expired(tmp_path: Path) -> None:
 
 
 def test_health_disk_path_ok(tmp_path: Path) -> None:
-    now = datetime.now(UTC)
+    now = _NOW
     p12 = _build_pkcs12(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
@@ -207,7 +208,7 @@ def test_health_disk_path_ok(tmp_path: Path) -> None:
 
 
 def test_health_model_is_frozen(tmp_path: Path) -> None:
-    now = datetime.now(UTC)
+    now = _NOW
     cert = _loaded_cert_for_window(tmp_path, not_valid_after=now + timedelta(days=200))
     result = evaluate_loaded_certificate_health(cert, warn_days=_WARN_DAYS, critical_days=_CRITICAL_DAYS, now=now)
     assert isinstance(result, CertificateHealth)
@@ -220,14 +221,14 @@ def test_pre_expiry_error_is_aeat_error() -> None:
 
 
 def test_evaluate_rejects_inverted_thresholds(tmp_path: Path) -> None:
-    now = datetime.now(UTC)
+    now = _NOW
     cert = _loaded_cert_for_window(tmp_path, not_valid_after=now + timedelta(days=100))
     with pytest.raises(ValueError, match=r"warn_days|critical_days|threshold"):
         evaluate_loaded_certificate_health(cert, warn_days=10, critical_days=30, now=now)
 
 
 def test_evaluate_rejects_nonpositive_critical(tmp_path: Path) -> None:
-    now = datetime.now(UTC)
+    now = _NOW
     cert = _loaded_cert_for_window(tmp_path, not_valid_after=now + timedelta(days=100))
     with pytest.raises(ValueError, match=r"critical_days|must be positive|greater than"):
         evaluate_loaded_certificate_health(cert, warn_days=60, critical_days=0, now=now)

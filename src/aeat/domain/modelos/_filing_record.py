@@ -1,12 +1,12 @@
 """Filing-record store paired with filed calculation revisions.
 
-A :class:`ModeloRecord` is the durable receipt of an internal filing
-event: at time T, actor A marked calculation revision R of work unit
-W as the current filed answer for (bucket, modelo, year, period).
-The filing record holds filing-event state (filed timestamp, actor,
-notes, AEAT-acceptance bit, supersession link); the filed calculation
-revision holds the immutable calculation result. The two are paired
-so the calculation revision never accretes filing-side concerns.
+A :class:`~aeat.domain.modelos.ModeloRecord` is the durable receipt of an
+internal filing event: at time T, actor A marked calculation revision R of work
+unit W as the current filed answer for (bucket, modelo, year, period). The
+filing record holds filing-event state (filed timestamp, actor, notes,
+AEAT-acceptance bit, supersession link); the filed calculation revision holds
+the immutable calculation result. The two are paired so the calculation revision
+never accretes filing-side concerns.
 
 There is at most one *current* filing record per (bucket_id, modelo,
 filing_year, period) tuple. When a later verified revision is filed,
@@ -18,8 +18,10 @@ catalogue for audit.
 
 The ``aeat_accepted`` flag defaults to ``False`` and is independent
 of internal filing. It exists only to record an externally-observed
-AEAT acceptance imported into the bucket through read-only live
-signals. The filing record itself never initiates a live submission.
+AEAT acceptance imported into the bucket through evidence channels such as
+justificante/CSV imports or read-only live capture. When true,
+``external_evidence`` must carry :class:`~aeat.domain.modelos.ExternalEvidence`;
+the filing record itself never initiates a live submission.
 """
 
 from __future__ import annotations
@@ -45,7 +47,7 @@ ModeloActorLabel = Annotated[
 """Validated string identifying the operator who filed or triggered a filing event.
 
 Strips surrounding whitespace; must be 1–64 characters after stripping.
-Used as ``filed_by`` on :class:`ModeloRecord` and feeds into the
+Used as ``filed_by`` on :class:`~aeat.domain.modelos.ModeloRecord` and feeds into the
 content-addressed :func:`derive_filing_record_id`.
 """
 _Notes = Annotated[
@@ -75,11 +77,11 @@ class ModeloRecordStatus(StrEnum):
 class ExternalEvidenceKind(StrEnum):
     """Closed catalogue of external-evidence kinds.
 
-    A filing record marked with one of these kinds carries imported
-    official evidence (an AEAT justificante PDF, a CSV-attested
-    receipt) rather than a tool-computed calculation revision. This
-    is the gate the modelo-amend path requires before it accepts an
-    amendment baseline.
+    A :class:`~aeat.domain.modelos.ModeloRecord` marked with one of these kinds
+    carries imported official evidence (justificante, CSV register, or live
+    capture) rather than a tool-computed calculation revision. This is the gate
+    :func:`aeat.application.modelo.amend_modelo_revision` requires before it
+    accepts an amendment baseline.
     """
 
     AEAT_JUSTIFICANTE_PDF = "aeat_justificante_pdf"
@@ -96,10 +98,11 @@ _EvidenceReference = Annotated[
 class ExternalEvidence(BaseModel):
     """Imported-evidence metadata for an externally-filed return.
 
-    Populated by the filing-record import path (justificante reader,
-    CSV register importer, AEAT live capture); consumed by the
-    modelo-amend path as the gate that proves the baseline is
-    AEAT-attested and not a fabricated local draft.
+    Populated by
+    :func:`aeat.application.modelo.import_external_filing_evidence` for a
+    current :class:`~aeat.domain.modelos.ModeloRecord`; consumed by
+    :func:`aeat.application.modelo.amend_modelo_revision` as the gate that
+    proves the baseline is AEAT-attested and not a fabricated local draft.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -123,7 +126,7 @@ def derive_filing_record_id(
     filings) the member NIF. ``filed_at`` is deliberately excluded from the
     identity so a re-file of the same revision by the same actor resolves to
     the same record (an idempotent re-file is a no-op, not a new time-stamped
-    duplicate); ``filed_at`` is retained on :class:`ModeloRecord` as a
+    duplicate); ``filed_at`` is retained on :class:`~aeat.domain.modelos.ModeloRecord` as a
     non-identity last-seen field. Member-scoped group filings include the
     member NIF in the identity; single-filer records omit it.
     """
@@ -140,9 +143,9 @@ def derive_filing_record_id(
 class ModeloRecord(BaseModel):
     """Durable receipt of one internal filing event for an AEAT modelo (tax form).
 
-    Pairs a filed :class:`CalculationRevisionId` with the filing event
-    metadata (actor, timestamp, notes, AEAT-acceptance bit, supersession
-    link). The id is content-addressed by the filing outcome -
+    Pairs a filed :class:`~aeat.domain.modelos.CalculationRevisionId` with the
+    filing event metadata (actor, timestamp, notes, AEAT-acceptance bit,
+    supersession link). The id is content-addressed by the filing outcome -
     ``work_unit_id``, ``calculation_revision_id``, ``filed_by``, and (for
     member-scoped group filings) ``member_nif`` - via
     :func:`derive_filing_record_id`; ``filed_at`` is a non-identity last-seen
@@ -150,9 +153,11 @@ class ModeloRecord(BaseModel):
     idempotent no-op rather than a new record. A ``model_validator`` enforces
     the derivation on construction.
 
-    ``aeat_accepted`` records an externally-observed AEAT acceptance
-    signal imported through read-only live signals — it does not imply
-    that the application submitted anything.
+    ``aeat_accepted`` records externally-observed AEAT acceptance imported
+    through evidence channels; it does not imply that the application submitted
+    anything. It must travel with
+    :class:`~aeat.domain.modelos.ExternalEvidence`, while locally filed records
+    created by :func:`aeat.application.modelo.file_modelo_revision` carry neither.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -237,10 +242,10 @@ class ModeloRecordCatalogue(BaseModel):
     """Immutable catalogue of every filing record in a bucket's storage.
 
     Keyed by ``filing_record_id``; the model validator enforces that every
-    key equals the id of the :class:`ModeloRecord` it maps to, and that at
+    key equals the id of the :class:`~aeat.domain.modelos.ModeloRecord` it maps to, and that at
     most one record per (bucket_id, modelo, filing_year, period,
     member_nif) tuple carries ``status=VIGENTE``. Iteration yields
-    :class:`ModeloRecord` values (not key–value pairs) — the override is
+    :class:`~aeat.domain.modelos.ModeloRecord` values (not key–value pairs) — the override is
     annotated with a suppression comment on ``__iter__``.
     """
 
@@ -276,7 +281,7 @@ class ModeloRecordCatalogue(BaseModel):
         return self
 
     def get(self, filing_record_id: str) -> ModeloRecord | None:
-        """Return the :class:`ModeloRecord` for ``filing_record_id``, or ``None``."""
+        """Return the :class:`~aeat.domain.modelos.ModeloRecord` for ``filing_record_id``, or ``None``."""
         return self.records.get(filing_record_id)
 
     def current_for(
@@ -288,7 +293,7 @@ class ModeloRecordCatalogue(BaseModel):
         period: Period,
         member_nif: str | None = None,
     ) -> ModeloRecord | None:
-        """Return the current (non-superseded) :class:`ModeloRecord` for a filing tuple.
+        """Return the current (non-superseded) :class:`~aeat.domain.modelos.ModeloRecord` for a filing tuple.
 
         Returns ``None`` when no filing has ever happened for the
         tuple. ``member_nif=None`` means the single-filer or aggregate
@@ -322,7 +327,7 @@ class ModeloRecordCatalogue(BaseModel):
         """Return every filing record for a tuple, ordered by filed_at.
 
         Returns:
-            Tuple of :class:`ModeloRecord` objects ordered by filing timestamp.
+            Tuple of :class:`~aeat.domain.modelos.ModeloRecord` objects ordered by filing timestamp.
         """
         expected_member_nif = member_nif.strip() if member_nif is not None else None
         matching = tuple(
@@ -337,12 +342,12 @@ class ModeloRecordCatalogue(BaseModel):
         return tuple(sorted(matching, key=lambda r: r.filed_at))
 
     def values(self):
-        """Return a view of all :class:`ModeloRecord` values in the catalogue."""
+        """Return a view of all :class:`~aeat.domain.modelos.ModeloRecord` values in the catalogue."""
         return self.records.values()
 
     @override
     def __iter__(self) -> Iterator[ModeloRecord]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
-        """Iterate over :class:`ModeloRecord` values (not ``(key, value)`` pairs)."""
+        """Iterate over :class:`~aeat.domain.modelos.ModeloRecord` values (not ``(key, value)`` pairs)."""
         return iter(self.records.values())
 
     def __len__(self) -> int:
@@ -350,7 +355,7 @@ class ModeloRecordCatalogue(BaseModel):
         return len(self.records)
 
     def __contains__(self, key: object) -> bool:
-        """Test membership by :class:`ModeloRecord` instance or ``filing_record_id`` string."""
+        """Test membership by :class:`~aeat.domain.modelos.ModeloRecord` instance or ``filing_record_id`` string."""
         if isinstance(key, ModeloRecord):
             return key.filing_record_id in self.records
         if isinstance(key, str):
