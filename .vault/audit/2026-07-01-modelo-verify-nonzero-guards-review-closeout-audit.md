@@ -121,13 +121,19 @@ Resolved deferrals and remaining follow-ups from this closeout:
   base and holds when the base computes (the `dias_imputacion = 0` scenario is
   refused by the engine, so a one-day sub-cent fact rounding to EUR 0.00 was
   used instead). Committed `d10662573`. 2 tests pass.
-- `DFR-M210-TEXT-INPUT-LOCALE-PARITY`: STILL OPEN — the text-input empty
-  refusal is present in `_calculate_input.py` as
-  `application.modelo.errors.calculate_text_input_empty`, but a scoped
-  catalogue search found no locale/catalogue entry for that key. The existing
-  core error registry key `errors.refused.modelo_calculate_text_input` is a
-  different envelope-level message. This needs a sanctioned locale/error-message
-  pass rather than a closeout claim.
+- `DFR-M210-TEXT-INPUT-LOCALE-PARITY`: RESOLVED — the text-input empty
+  refusal in `_calculate_input.py` now resolves through the runtime YAML
+  catalogues (`src/aeat/locales/en.yml`, `es.yml`, `ca.yml`, and `hu.yml`) for
+  `application.modelo.errors.calculate_text_input_empty`. The entries were
+  provisioned through the sanctioned locale CLI
+  (`python -m aeat.locales set`). `test_calculate_input_error_localization.py`
+  now exercises `_text_value("   ", key="tipo_renta")`, verifies the typed
+  `ModeloCalculateTextInputError`, and resolves the real localized message via
+  `resolve_error_message(error)`. The locale gate also exposed and repaired
+  pre-existing catalogue drift (11 live missing keys and one stale invoice-import
+  extra key across the four runtime catalogues), so both `python -m aeat.locales
+  scaffold --check` and `python -m aeat.locales audit` now report all catalogues
+  as clean.
 - `DFR-M123-RIRPF-EXONERATION-CORPUS`: RESOLVED — RD 439/2007 art. 75.3
   (BOE-A-2007-6820, vigente) was bundled as `rd-439-2007-art-75.html` and
   catalogued as `rd-439-2007:art-75`. The corrected conclusion is not that only
