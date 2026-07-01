@@ -1003,6 +1003,26 @@ required_text = [
     "En todo caso se reputará actividad empresarial o profesional habitual del sujeto pasivo la de arrendamiento.",
 ]
 
+[legal."ley-37-1992:art-105"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a105"
+document_id = "BOE-A-1992-28740"
+article = "105"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a105"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "claude-opus (agent-authored from bundled ley-37-1992.html#a105 arts. 105.Uno/.Cuatro procedimiento de la prorrata general; operator to re-stamp)"
+notes = "Articulo 105 LIVA: procedimiento de la prorrata general. Apartado Uno: el porcentaje de deduccion provisionalmente aplicable cada ano natural sera el fijado como definitivo para el ano precedente. Apartado Cuatro: en la ultima declaracion-liquidacion de cada ano natural el sujeto pasivo calcula la prorrata definitiva en funcion de las operaciones del ano y practica la consiguiente regularizacion de las deducciones provisionales - la cuota de esa regularizacion se consigna en la casilla 44 del Modelo 303 y en el campo de regularizacion anual del Modelo 390. Base legal de la regularizacion prorrata por porcentaje definitivo."
+required_text = [
+    "el porcentaje de deducción provisionalmente aplicable cada año natural será el fijado como definitivo para el año precedente",
+    "En la última declaración-liquidación del impuesto correspondiente a cada año natural el sujeto pasivo calculará la prorrata de deducción definitiva",
+    "practicará la consiguiente regularización de las deducciones provisionales",
+]
+
 [legal."ley-37-1992:art-107"]
 evidence_tier = "legal_authority"
 authority = "boe"
