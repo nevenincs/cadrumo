@@ -78,18 +78,17 @@ def test_recargo_record_is_frozen() -> None:
         load_recargo_rates().general_rate = Decimal("0.999")
 
 
-@pytest.mark.parametrize(
-    ("iva_rate_kind", "expected"),
-    (
-        pytest.param(IvaRateKind.GENERAL, Decimal("0.052"), id="general"),
-        pytest.param(IvaRateKind.REDUCED, Decimal("0.014"), id="reduced"),
-        pytest.param(IvaRateKind.SUPER_REDUCED, Decimal("0.005"), id="super-reduced"),
-        pytest.param(IvaRateKind.ZERO, None, id="zero"),
-        pytest.param(IvaRateKind.EXEMPT, None, id="exempt"),
-    ),
-)
-def test_recargo_rate_for(iva_rate_kind: IvaRateKind, expected: Decimal | None) -> None:
-    assert recargo_rate_for(iva_rate_kind) == expected
+def test_recargo_rate_for() -> None:
+    cases: tuple[tuple[IvaRateKind, Decimal | None], ...] = (
+        (IvaRateKind.GENERAL, Decimal("0.052")),
+        (IvaRateKind.REDUCED, Decimal("0.014")),
+        (IvaRateKind.SUPER_REDUCED, Decimal("0.005")),
+        (IvaRateKind.ZERO, None),
+        (IvaRateKind.EXEMPT, None),
+    )
+
+    for iva_rate_kind, expected in cases:
+        assert recargo_rate_for(iva_rate_kind) == expected, iva_rate_kind
 
 
 def test_recargo_record_validates_inputs_in_strict_mode() -> None:
