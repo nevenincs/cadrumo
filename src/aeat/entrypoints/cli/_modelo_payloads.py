@@ -57,7 +57,7 @@ from ._modelo_aux_payloads import (
     WorkRunsResult,
     WorkUnitHistoryEventPayload,
 )
-from ._modelo_revision_payload_parts import ObservationPayload, ResultSummaryRowPayload
+from ._modelo_revision_payload_parts import DetailRowPayload, ObservationPayload, ResultSummaryRowPayload
 from ._modelo_work_revision_payloads import WorkObservationsResult, WorkRevisionResult
 from ._payloads_modelo_reconcile import (
     ModeloReconcileResult,
@@ -158,6 +158,7 @@ class CalculationRevisionPayload(OutputSchema):
     casilla_values: dict[CasillaId, str]  # casilla_id -> str(Decimal)
     observations: tuple[ObservationPayload, ...]
     result_summary: tuple[ResultSummaryRowPayload, ...] = ()
+    detail_rows: tuple[DetailRowPayload, ...] = ()
     binding_overrides: dict[BindingId, str]
     relation_overrides: dict[RelationId, str] = Field(default_factory=dict)
     input_values_by_casilla_id: dict[CasillaId, str]
@@ -490,6 +491,7 @@ class WorkCalculateResult(OutputSchema):
     casilla_values: dict[CasillaId, str]
     observations: tuple[ObservationPayload, ...]
     result_summary: tuple[ResultSummaryRowPayload, ...] = ()
+    detail_rows: tuple[DetailRowPayload, ...] = ()
     binding_overrides: dict[BindingId, str]
     relation_overrides: dict[RelationId, str] = Field(default_factory=dict)
     input_values_by_casilla_id: dict[CasillaId, str]
@@ -783,8 +785,8 @@ class ModeloCasillaResult(OutputSchema):
     Projects
     :class:`~aeat.domain.calculations.registry.ModeloCasillaDetailReport`
     into the JSON envelope: an operator can look up one casilla's official
-    label, legal / source grounding, input kind, and â€” when the casilla is
-    computed â€” the resolved formula ``expression`` from the authoritative
+    label, legal / source grounding, input kind, and, when the casilla is
+    computed, the resolved formula ``expression`` from the authoritative
     :class:`~aeat.domain.calculations.registry.CasillaId` definition on the
     resolved registry snapshot, without running a calculation. ``legal_refs``
     and ``source_refs`` stay required so the grounding survives the boundary.

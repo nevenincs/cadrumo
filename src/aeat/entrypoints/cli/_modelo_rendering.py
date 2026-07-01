@@ -35,6 +35,7 @@ from ._modelo_payloads import (
     WorkRecargoPayload,
     WorkUnitPayload,
 )
+from ._modelo_revision_payload_parts import DetailRowPayload
 
 _EXTEMPORANEOUS_RECARGO_LEGAL_REF = "ley-58-2003:art-27.2"
 _M349_ROW_FIELD_TEMPLATE_PREFIXES = ("op.", "rect.")
@@ -356,6 +357,21 @@ def work_unit_deadline_output(unit) -> tuple[WorkPlazoDeadlinePayload | None, li
     return _work_unit_deadline_output_from_summary(modelo_work_plazo_summary(unit))
 
 
+def detail_row_payloads(rev) -> tuple[DetailRowPayload, ...]:
+    """Return materialised detail rows for the JSON calculation payload."""
+    rows: list[DetailRowPayload] = []
+    for index, detail_row in enumerate(rev.detail_rows, start=1):
+        dumped = detail_row.model_dump(mode="json", exclude={"row_type"})
+        rows.append(
+            DetailRowPayload(
+                index=index,
+                row_type=str(detail_row.row_type),
+                fields={key: None if value is None else str(value) for key, value in dumped.items()},
+            ),
+        )
+    return tuple(rows)
+
+
 def calculation_revision_payload(rev) -> CalculationRevisionPayload:
     """Project a calculation revision into the shared JSON payload.
 
@@ -388,6 +404,7 @@ def calculation_revision_payload(rev) -> CalculationRevisionPayload:
         casilla_values={k: str(v) for k, v in _visible_calculation_casilla_values(rev).items()},
         observations=observations,
         result_summary=result_summary_payload(rev),
+        detail_rows=detail_row_payloads(rev),
         binding_overrides={key: str(value) for key, value in rev.binding_overrides.items()},
         relation_overrides={key: str(value) for key, value in rev.relation_overrides.items()},
         input_values_by_casilla_id=dict(rev.input_values_by_casilla_id),

@@ -26,7 +26,7 @@ from pydantic import Field
 
 from ...domain.calculations.registry import BindingId, CasillaId, RelationId
 from ...domain.modelos._ids import CalculationRevisionId, WorkUnitId
-from ._modelo_revision_payload_parts import ObservationPayload, ResultSummaryRowPayload
+from ._modelo_revision_payload_parts import DetailRowPayload, ObservationPayload, ResultSummaryRowPayload
 from ._schemas import OutputSchema, register_schema
 
 
@@ -51,6 +51,7 @@ class WorkRevisionResult(OutputSchema):
     casilla_values: dict[CasillaId, str]
     observations: tuple[ObservationPayload, ...]
     result_summary: tuple[ResultSummaryRowPayload, ...] = ()
+    detail_rows: tuple[DetailRowPayload, ...] = ()
     binding_overrides: dict[BindingId, str]
     relation_overrides: dict[RelationId, str] = Field(default_factory=dict)
     input_values_by_casilla_id: dict[CasillaId, str]
