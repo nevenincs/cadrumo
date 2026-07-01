@@ -62,7 +62,7 @@ related:
 ## Outcome
 
 - All 5 axis tests pass; the coverage warning surfaces "2 of 54 registered --format json commands enrolled; 52 uncovered (opt-in)". Ruff clean; collect-only clean.
-- The state-transition tier fingerprints committed state via the substrate's at-rest reader `read_db_at_rest_bytes` (main `.db` + committed `-wal`, omitting the volatile `-shm` WAL read-index) rather than the whole-tree `compute_db_sha256`: the `-shm` read-marks flap on every read (not a state change) and its mmap handle cannot be removed in-session on Windows after `engine.dispose()`, so `compute_db_sha256`-over-the-live-tree is non-deterministic in-session (it stays valid at a between-process replay boundary). The main `aeat.db` is provably byte-identical across the idempotent retry. (Operator-accepted deviation.)
+- The state-transition tier uses the substrate's `compute_db_sha256` (the ADR's named db_sha256 tier) over a committed-files snapshot: before and after the retry the committed bucket files (main `.db` + committed `-wal`) are copied into a temp tree excluding the volatile `-shm` WAL read-index, and `compute_db_sha256` fingerprints that snapshot. This is the ADR-faithful realization of the named tier (operator-accepted, no doc-note divergence to reconcile). The live var tree cannot be hashed directly in-session because the `-shm` read-marks flap on every read (not a state change) and its mmap handle cannot be removed on Windows after `engine.dispose()`; the snapshot lets `compute_db_sha256` run over the committed bytes exactly as it would at a between-process replay boundary where no connection is open. The main `aeat.db` is provably byte-identical across the idempotent retry.
 
 ## Notes
 
