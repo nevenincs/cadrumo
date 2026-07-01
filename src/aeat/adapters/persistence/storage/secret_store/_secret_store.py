@@ -19,7 +19,7 @@ so parallel writers serialise rather than race.
 
 The retention contract is enforced at write time: SECRET- and SESSION-class
 records MUST carry an ``expires_at`` field; the store raises
-:exc:`aeat.adapters.persistence.storage.errors.RetentionPolicyError`
+:exc:`~aeat.adapters.persistence.storage.RetentionPolicyError`
 when it is absent.
 """
 
@@ -291,7 +291,7 @@ class SecretStore:
             record: The :class:`SecretRecord` to persist.
             overwrite: If ``True``, replace any existing record at the
                 same key. If ``False`` (default), raise
-                :exc:`aeat.adapters.persistence.storage.errors.SecretAlreadyExistsError`
+                :exc:`~aeat.adapters.persistence.storage.SecretAlreadyExistsError`
                 on collision.
 
         Returns:
