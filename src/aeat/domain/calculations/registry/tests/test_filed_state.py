@@ -11,7 +11,11 @@ from pydantic import ValidationError
 from .....core.resources import bundled_path
 from .._bindings import RegistryModeloObservation
 from .._errors import RegistryValidationError
-from .._filed_state import RegistryFiledStateComparison, compare_calculation_to_filed_observation
+from .._filed_state import (
+    RegistryFiledStateComparison,
+    RegistryFiledStateDrift,
+    compare_calculation_to_filed_observation,
+)
 from .._formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from .._ids import CasillaId, validated_casilla_id
 from .._schema import RegistrySnapshot
@@ -131,6 +135,24 @@ def test_filed_state_comparison_rejects_legacy_casilla_list_keys() -> None:
     assert "compared_casillas" in message
     assert "missing_local_casillas" in message
     assert "missing_filed_casillas" in message
+
+
+def test_filed_state_drift_rejects_blank_registry_provenance_refs() -> None:
+    """Drift rows are operator-facing provenance carriers, not free-text bags."""
+    for field_name in ("formula_id", "legal_refs", "source_refs"):
+        payload = {
+            "casilla_id": _M130_RESULTADO_FINAL_CASILLA,
+            "local_value": Decimal("1.00"),
+            "filed_value": Decimal("2.00"),
+            "delta": Decimal("-1.00"),
+            "formula_id": "resultado-final",
+            "legal_refs": ("ley-35-2006:art-110",),
+            "source_refs": ("aeat-dr-130-2026",),
+        }
+        payload[field_name] = (" ",) if field_name.endswith("_refs") else " "
+
+        with pytest.raises(ValidationError, match=field_name):
+            RegistryFiledStateDrift.model_validate(payload)
 
 
 def test_filed_state_comparison_reports_value_drift() -> None:
