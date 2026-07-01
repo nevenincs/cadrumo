@@ -12,7 +12,7 @@ from typing import Literal, TypedDict
 import pytest
 from pydantic import ValidationError
 
-from .._ids import CasillaId, validated_casilla_id
+from .._ids import CasillaId, LegalRefId, SourceRefId, validated_casilla_id
 from .._schema import (
     AlgorithmBindingDefinition,
     CasillaDefinition,
@@ -32,8 +32,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # Shared fixture constants — pattern mirrors test_referential_integrity
 # ---------------------------------------------------------------------------
 
-_SCHEMA_LEGAL_ID = "lirpf:art-test"
-_SCHEMA_SOURCE_ID = "aeat-test-source-001"
+_SCHEMA_LEGAL_ID: LegalRefId = "lirpf:art-test"
+_SCHEMA_SOURCE_ID: SourceRefId = "aeat-test-source-001"
 _SCHEMA_CASILLA_ID: CasillaId = validated_casilla_id("01", surface="_SCHEMA_CASILLA_ID")
 
 
@@ -401,8 +401,8 @@ class _FieldBase(TypedDict):
     padding: Literal["left_zero", "left_space", "right_space", "none"]
     justification: Literal["left", "right", "none"]
     signed: bool
-    legal_refs: tuple[str, ...]
-    source_refs: tuple[str, ...]
+    legal_refs: tuple[LegalRefId, ...]
+    source_refs: tuple[SourceRefId, ...]
 
 
 _FIELD_BASE: _FieldBase = _FieldBase(

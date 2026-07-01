@@ -20,6 +20,7 @@ from .. import (
     ExtractionTargetDefinition,
     FormulaExpression,
     KeyedBracketEntry,
+    LegalRefId,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
@@ -207,8 +208,8 @@ def _convenio_row(
     tipo_renta: str,
     rate: str,
     *,
-    legal_ref_anchor: str = "convenio-art-7",
-    legal_refs: tuple[str, ...] | None = None,
+    legal_ref_anchor: LegalRefId = "convenio-art-7",
+    legal_refs: tuple[LegalRefId, ...] | None = None,
     notes: str | None = None,
 ) -> ConvenioRateRow:
     resolved_legal_refs = (legal_ref_anchor,) if legal_refs is None else legal_refs

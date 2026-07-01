@@ -12,6 +12,7 @@ from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .. import (
     CasillaId,
+    LegalRefId,
     ModeloDefinition,
     OssIossLedgerObservation,
     RegistryCatalogues,
@@ -47,18 +48,18 @@ _M369_IMPORTACION_DE_LOW_VALUE_CUOTA_CASILLA: CasillaId = _casilla_id(
     "iva.importacion.de.low-value-cuota",
 )
 _M369_IMPORTACION_CUOTA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.importacion.cuota-total")
-_M369_EXTERIOR_SCHEME_LEGAL_REFS = (
+_M369_EXTERIOR_SCHEME_LEGAL_REFS: tuple[LegalRefId, ...] = (
     "ley-37-1992:art-163-octiesdecies",
     "ley-37-1992:art-163-noniesdecies",
     "ley-37-1992:art-163-vicies",
 )
-_M369_UNION_SCHEME_LEGAL_REFS = (
+_M369_UNION_SCHEME_LEGAL_REFS: tuple[LegalRefId, ...] = (
     "ley-37-1992:art-163-unvicies",
     "ley-37-1992:art-163-duovicies",
     "ley-37-1992:art-163-tervicies",
     "ley-37-1992:art-163-quatervicies",
 )
-_M369_IMPORTACION_SCHEME_LEGAL_REFS = (
+_M369_IMPORTACION_SCHEME_LEGAL_REFS: tuple[LegalRefId, ...] = (
     "ley-37-1992:art-163-quinvicies",
     "ley-37-1992:art-163-sexvicies",
     "ley-37-1992:art-163-septvicies",
@@ -178,7 +179,7 @@ def test_modelo_369_snapshot_selects_scheme_by_period(period: str, expected_revi
 def test_modelo_369_snapshots_carry_scheme_authority(
     period: str,
     revision_id: str,
-    expected_legal_refs: tuple[str, ...],
+    expected_legal_refs: tuple[LegalRefId, ...],
 ) -> None:
     modelo, catalogues = _load_modelo_369()
 
@@ -665,12 +666,8 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
     # Identity threading: each bound casilla equals its binding fact value.
     # The cuota-total formula is verified structurally (operands present);
     # the arithmetic itself stays bound to workbook-parity / oracle replays.
-    assert result.values[_M369_UNION_DE_SERVICES_CUOTA_CASILLA] == binding_values[
-        "modelo-369-union-de-services-21pct"
-    ]
-    assert result.values[_M369_UNION_FR_SERVICES_CUOTA_CASILLA] == binding_values[
-        "modelo-369-union-fr-services-21pct"
-    ]
+    assert result.values[_M369_UNION_DE_SERVICES_CUOTA_CASILLA] == binding_values["modelo-369-union-de-services-21pct"]
+    assert result.values[_M369_UNION_FR_SERVICES_CUOTA_CASILLA] == binding_values["modelo-369-union-fr-services-21pct"]
     assert (
         result.values[_M369_UNION_DE_GOODS_DISTANCE_CUOTA_CASILLA]
         == binding_values["modelo-369-union-de-goods-distance-21pct"]
