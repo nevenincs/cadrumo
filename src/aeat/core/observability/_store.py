@@ -36,6 +36,7 @@ _logger = get_logger(__name__)
 
 _TRACE_FILENAME = "trace.json"
 _EVENTS_FILENAME = "events.jsonl"
+_ENVELOPE_FILENAME = "envelope.json"
 
 # Run ids are minted by :func:`aeat.core.observability._context._mint_run_id`
 # as ``uuid4().hex[:16]``. Validate every run_id reaching the filesystem
@@ -189,6 +190,91 @@ def load_trace(run_id: str, *, settings: Settings | None = None) -> RunTrace:
         raise RunTraceValidationError(
             f"trace.json for run {run_id!r} failed strict validation: {exc}",
         ) from exc
+
+
+def save_envelope(
+    run_id: str,
+    document: dict[str, object],
+    *,
+    settings: Settings | None = None,
+) -> Path:
+    """Persist an emitted envelope document to ``<runs_dir>/<run_id>/envelope.json``.
+
+    The document is the verbatim, already-CLI-redacted
+    :class:`~aeat.core.json_contract.SchemaEnvelope` mapping captured by
+    :func:`aeat.core.observability.capture_envelopes` during the run. It
+    is stored key-sorted so the on-disk artifact is byte-stable, and it
+    is the golden expectation a later :func:`replay_run` asserts against.
+    Re-validation into a typed envelope happens on load via
+    :func:`aeat.core.observability.validate_captured_envelope`; this
+    writer stays free of any JSON-contract dependency.
+
+    Args:
+        run_id: 16-char lowercase hex run identifier.
+        document: The emitted envelope mapping to persist.
+        settings: Optional :class:`aeat.core.config.Settings` override.
+
+    Returns:
+        Absolute path of the written ``envelope.json`` file.
+    """
+    target = _run_dir(run_id, settings=settings) / _ENVELOPE_FILENAME
+    try:
+        target.write_text(
+            json.dumps(document, ensure_ascii=False, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+    except OSError as exc:
+        _raise_persistence_error("save_envelope", target, exc)
+    return target
+
+
+def load_envelope_document(
+    run_id: str,
+    *,
+    settings: Settings | None = None,
+) -> dict[str, object]:
+    """Load the persisted emitted-envelope document for a run.
+
+    Read-only: does not create the per-run directory. Returns the raw
+    mapping; type it with
+    :func:`aeat.core.observability.validate_captured_envelope`.
+
+    Args:
+        run_id: 16-char lowercase hex run identifier.
+        settings: Optional :class:`aeat.core.config.Settings` override.
+
+    Returns:
+        The persisted envelope mapping.
+
+    Raises:
+        RunTraceValidationError: When ``run_id`` has an invalid shape,
+            the file is missing, or its contents are not a JSON object.
+    """
+    _validate_run_id(run_id)
+    target = runs_dir(settings) / run_id / _ENVELOPE_FILENAME
+    try:
+        exists = target.exists()
+    except OSError as exc:
+        _raise_persistence_error("load_envelope_document.exists", target, exc)
+    if not exists:
+        raise RunTraceValidationError(
+            f"envelope.json not found for run {run_id!r} at {target}",
+        )
+    try:
+        raw = target.read_text(encoding="utf-8")
+    except OSError as exc:
+        _raise_persistence_error("load_envelope_document", target, exc)
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise RunTraceValidationError(
+            f"envelope.json for run {run_id!r} is not valid JSON: {exc}",
+        ) from exc
+    if not isinstance(parsed, dict):
+        raise RunTraceValidationError(
+            f"envelope.json for run {run_id!r} must be a JSON object, got {type(parsed).__name__}",
+        )
+    return parsed
 
 
 def save_events_append(
@@ -365,9 +451,11 @@ def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTra
 __all__ = [
     "iter_events",
     "iter_runs",
+    "load_envelope_document",
     "load_events",
     "load_trace",
     "runs_dir",
+    "save_envelope",
     "save_events_append",
     "save_trace",
 ]
