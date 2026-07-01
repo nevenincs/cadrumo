@@ -115,13 +115,16 @@ class TestDescendantInfoAgeCalculation:
         d = DescendantInfo(birth_date=date(2024, 6, 15))
         assert d.age_at_year_end(2024) == 0
 
-    def test_is_eligible_ordinary_age_24_is_true(self) -> None:
-        d = DescendantInfo(birth_date=date(2000, 1, 1))
-        assert d.is_eligible_ordinary(2024) is True
-
-    def test_is_eligible_ordinary_age_25_is_false(self) -> None:
-        d = DescendantInfo(birth_date=date(1999, 1, 1))
-        assert d.is_eligible_ordinary(2024) is False
+    @pytest.mark.parametrize(
+        ("birth_date", "expected"),
+        (
+            pytest.param(date(2000, 1, 1), True, id="age-24"),
+            pytest.param(date(1999, 1, 1), False, id="age-25"),
+        ),
+    )
+    def test_is_eligible_ordinary_age_boundary(self, birth_date: date, expected: bool) -> None:
+        d = DescendantInfo(birth_date=birth_date)
+        assert d.is_eligible_ordinary(2024) is expected
 
     def test_is_eligible_ordinary_over_25_with_discapacidad_is_true(self) -> None:
         d = DescendantInfo(birth_date=date(1990, 1, 1), discapacidad_grado=33)
@@ -139,17 +142,17 @@ class TestDescendantInfoAgeCalculation:
         d = DescendantInfo(birth_date=date(2021, 12, 31))
         assert d.is_eligible_menor_tres(2024) is False
 
-    def test_joined_before_1_july_true_for_prior_year_birth(self) -> None:
-        d = DescendantInfo(birth_date=date(2020, 3, 15))
-        assert d.joined_before_or_on_1_july(2024) is True
-
-    def test_joined_before_1_july_true_for_june_30_birth_in_filing_year(self) -> None:
-        d = DescendantInfo(birth_date=date(2024, 6, 30))
-        assert d.joined_before_or_on_1_july(2024) is True
-
-    def test_joined_before_1_july_false_for_july_1_birth_in_filing_year(self) -> None:
-        d = DescendantInfo(birth_date=date(2024, 7, 1))
-        assert d.joined_before_or_on_1_july(2024) is False
+    @pytest.mark.parametrize(
+        ("birth_date", "expected"),
+        (
+            pytest.param(date(2020, 3, 15), True, id="prior-year"),
+            pytest.param(date(2024, 6, 30), True, id="june-30"),
+            pytest.param(date(2024, 7, 1), False, id="july-1"),
+        ),
+    )
+    def test_joined_before_or_on_1_july_birth_date_boundary(self, birth_date: date, expected: bool) -> None:
+        d = DescendantInfo(birth_date=birth_date)
+        assert d.joined_before_or_on_1_july(2024) is expected
 
     def test_adopted_before_1_july_uses_adoption_date(self) -> None:
         d = DescendantInfo(birth_date=date(2020, 1, 1), adoption_date=date(2024, 5, 12))
