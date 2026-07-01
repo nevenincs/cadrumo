@@ -28,7 +28,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ValidationError
 
-from ...adapters.persistence.storage.errors import StorageValidationError
+from ...adapters.persistence.storage import StorageValidationError
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import pointer_path, read_pointer
 from ...core.config import load_settings
