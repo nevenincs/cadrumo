@@ -1200,6 +1200,32 @@ def test_convenio_rate_table_rejects_duplicate_triple() -> None:
         )
 
 
+def test_convenio_rate_table_rejects_unsupported_parameter_fields() -> None:
+    """Convenio table schema stays strict; unsupported TOML keys are rejected."""
+
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        ParameterDefinition.model_validate(
+            {
+                "id": "test-convenio-rates-extra-field",
+                "data_type": "convenio_rate_table",
+                "unit": "ratio",
+                "convenio_rates": (
+                    {
+                        "country_code": "MA",
+                        "tipo_renta": "interest",
+                        "rate": "0.10",
+                        "legal_ref_anchor": "convenio-es-ma-art-14",
+                        "legal_refs": ("convenio-es-ma-art-14",),
+                        "valid_from": date(2025, 1, 1),
+                    },
+                ),
+                "legal_refs": ("trlirnr-rdleg-5-2004:art-25.1.a",),
+                "source_refs": ("aeat-modelo-210-procedure",),
+                "unsupported_convenio_metadata": "not allowed",
+            },
+        )
+
+
 def test_convenio_rate_table_rejects_malformed_rate_string() -> None:
     """A ConvenioRateRow with a rate field that is neither Decimal nor DOMESTIC_TARIFF is rejected.
 
