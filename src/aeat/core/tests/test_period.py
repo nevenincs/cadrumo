@@ -49,49 +49,49 @@ class TestStandardPeriodCode:
 class TestRegistryPeriodCodeValidator:
     """Verify RegistryPeriodCode validator accepts all valid forms."""
 
-    def test_accepts_standard_period_codes(self) -> None:
+    def test_accepts_every_standard_period_code(self) -> None:
         for code in StandardPeriodCode:
             result = _validate_test_model(code.value)
             assert result == code.value
 
-    def test_accepts_extended_oss_codes(self) -> None:
-        for code in ("EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"):
-            result = _validate_test_model(code)
-            assert result == code
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        (
+            ("EXT-1T", "EXT-1T"),
+            ("EXT-2T", "EXT-2T"),
+            ("EXT-3T", "EXT-3T"),
+            ("EXT-4T", "EXT-4T"),
+            ("AD-HOC", "AD-HOC"),
+            ("EVENT-1", "EVENT-1"),
+            ("EVENT-2", "EVENT-2"),
+            ("EVENT-27", "EVENT-27"),
+            ("EVENT-142", "EVENT-142"),
+            ("1t", "1T"),
+            ("ad-hoc", "AD-HOC"),
+            ("  1T  ", "1T"),
+        ),
+        ids=(
+            "ext-q1",
+            "ext-q2",
+            "ext-q3",
+            "ext-q4",
+            "ad-hoc",
+            "event-1",
+            "event-2",
+            "event-27",
+            "event-142",
+            "lowercase-standard",
+            "lowercase-ad-hoc",
+            "strips-whitespace",
+        ),
+    )
+    def test_accepts_extended_normalized_period_codes(self, raw: str, expected: str) -> None:
+        assert _validate_test_model(raw) == expected
 
-    def test_accepts_ad_hoc_literal(self) -> None:
-        result = _validate_test_model("AD-HOC")
-        assert result == "AD-HOC"
-
-    def test_accepts_event_period_patterns(self) -> None:
-        for event_num in (1, 2, 27, 142):
-            event_code = f"EVENT-{event_num}"
-            result = _validate_test_model(event_code)
-            assert result == event_code
-
-    def test_normalizes_case(self) -> None:
-        result = _validate_test_model("1t")
-        assert result == "1T"
-
-        result = _validate_test_model("ad-hoc")
-        assert result == "AD-HOC"
-
-    def test_strips_whitespace(self) -> None:
-        result = _validate_test_model("  1T  ")
-        assert result == "1T"
-
-    def test_rejects_invalid_code(self) -> None:
-        with pytest.raises(ValidationError) as exc_info:
-            _validate_test_model("BOGUS")
-        assert "invalid period code" in str(exc_info.value).lower()
-
-    def test_rejects_invalid_event_pattern(self) -> None:
+    @pytest.mark.parametrize("bad", ("BOGUS", "EVENT-abc", "EXT-5T"), ids=("unknown", "bad-event", "bad-ext"))
+    def test_rejects_invalid_period_codes(self, bad: str) -> None:
         with pytest.raises(ValidationError):
-            _validate_test_model("EVENT-abc")
-
-    def test_rejects_invalid_extended_pattern(self) -> None:
-        with pytest.raises(ValidationError):
-            _validate_test_model("EXT-5T")
+            _validate_test_model(bad)
 
     def test_error_message_lists_accepted_set(self) -> None:
         with pytest.raises(ValidationError) as exc_info:
