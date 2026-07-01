@@ -21,7 +21,7 @@ requires its fact (``no-silent-under-declaration``: the zero is loud, not silent
 
 from __future__ import annotations
 
-from ...adapters.persistence.storage.errors import (
+from ...adapters.persistence.storage import (
     ClassificationError,
     DecryptionError,
     EnvelopeVersionError,
