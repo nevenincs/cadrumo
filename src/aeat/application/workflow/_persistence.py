@@ -1,9 +1,10 @@
 """Encrypted persistence for workflow state and workflow runs.
 
-Workflow state is stored as an :class:`Envelope`-wrapped record in the
-secure-object backend. The load path deserialises the envelope and
-validates it; callers receive a typed :class:`WorkflowState` or a
-diagnostic error class rather than a raw payload.
+Workflow state is stored as an
+:class:`~aeat.adapters.persistence.storage.Envelope`-wrapped record in the
+secure-object backend. The load path deserialises the envelope and validates
+it; callers receive a typed :class:`WorkflowState` or a diagnostic error class
+rather than a raw payload.
 
 See Also:
     :class:`~aeat.application.workflow.WorkflowState`
@@ -36,7 +37,11 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage import (
     WORKFLOW_STATE_NAMESPACE as WORKFLOW_STATE_STORAGE_NAMESPACE,
 )
-from ...adapters.persistence.storage.envelope import Envelope
+from ...adapters.persistence.storage import (
+    Envelope,
+    SecureObjectRepository,
+    SecureObjectWrite,
+)
 from ...adapters.persistence.storage.errors import (
     ClassificationError,
     EnvelopeVersionError,
@@ -47,7 +52,6 @@ from ...adapters.persistence.storage.runtime_repository import (
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_cold_bootstrap_state,
 )
-from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
 from ...core.logging import get_logger
 from ._errors import WorkflowError
@@ -92,7 +96,7 @@ def _clear_output_language_cache() -> None:
 
 
 class WorkflowStateRepository:
-    """Encrypted SQL object repository for :class:`WorkflowState`."""
+    """Encrypted secure-object repository for :class:`WorkflowState`."""
 
     def __init__(
         self,
@@ -152,10 +156,9 @@ class WorkflowStateRepository:
         Lets callers co-transactionally persist the workflow state and a
         sibling secure-object payload (typically an updated
         bucket-event-history catalogue) via a single
-        :meth:`SecureObjectRepository.save_many` call.
+        :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.save_many`
+        call.
         """
-        from ...adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
-
         try:
             payload = WorkflowState.model_validate({**state.__dict__, "updated_at": utc_now()})
         except ValueError as exc:
@@ -297,7 +300,7 @@ class WorkflowStateRepository:
 
 
 class WorkflowRunRepository:
-    """Encrypted SQL object repository for :class:`WorkflowResult` runs."""
+    """Encrypted secure-object repository for :class:`WorkflowResult` runs."""
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
         self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
@@ -380,8 +383,9 @@ def workflow_state_repository() -> WorkflowStateRepository:
     so the URL is derived from the live bucket path rather than the
     settings-override snapshot captured at test-fixture construction
     time. A cold root with no active bucket pointer is the bootstrap
-    exception: it receives an explicit bare :class:`SecureObjectRepository`
-    so bootstrap-exempt recovery reads can still observe an absent state.
+    exception: it receives an explicit bare
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository` so
+    bootstrap-exempt recovery reads can still observe an absent state.
     """
     from ...core import resolve_active_bucket_id
 
