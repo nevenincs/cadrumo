@@ -12,7 +12,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import BindingSourceKind, Period
 from ....core.errors import ErrorCategory, get_registered_error_code
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
@@ -160,9 +160,7 @@ def test_validate_casilla_input_ids_rejects_decimal_value_for_non_numeric_casill
 
 def test_validate_casilla_input_ids_rejects_non_decimal_numeric_value() -> None:
     snapshot = _modelo_100_registry_snapshot()
-    numeric_casilla = next(
-        casilla for casilla in snapshot.revision.casillas if casilla.id == _M100_NUMERIC_CASILLA
-    )
+    numeric_casilla = next(casilla for casilla in snapshot.revision.casillas if casilla.id == _M100_NUMERIC_CASILLA)
     assert numeric_casilla.data_type in {"decimal", "money", "integer", "ratio"}
 
     with pytest.raises(RegistryValidationError) as raised:
@@ -432,7 +430,7 @@ def test_borrador_source_resolver_matches_application_binding_resolution(
 
     assert resolution.binding_values == expected.binding_values
     assert resolution.enum_binding_values == expected.enum_binding_values
-    assert resolution.owned_sources == ("borrador",)
+    assert resolution.owned_sources == (BindingSourceKind.BORRADOR,)
     assert {item.source_kind for item in resolution.provenance} == {"borrador"}
     assert {item.source_ref for item in resolution.provenance} == {
         f"borrador:{snapshot_id}:binding:{_DECIMAL_BINDING}",

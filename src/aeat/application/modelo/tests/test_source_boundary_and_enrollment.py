@@ -328,8 +328,8 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
         ],
     )
 
-    # The merged owned_sources must include 'ledger_renta_income_aggregation'.
-    assert "ledger_renta_income_aggregation" in source_resolution.owned_sources, (
+    # The merged owned_sources must include the ledger Renta income aggregation source.
+    assert BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION in source_resolution.owned_sources, (
         f"LedgerRentaIncomeAggregationSourceResolver is not enrolled: owned_sources={source_resolution.owned_sources}"
     )
     # Confirm the test is non-vacuous: M130 revision must declare this source kind.
