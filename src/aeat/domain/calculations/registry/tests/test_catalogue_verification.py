@@ -66,6 +66,25 @@ def test_coverage_gate_rejects_gap_with_evidence_refs() -> None:
         )
 
 
+@pytest.mark.parametrize(
+    "field_update",
+    (
+        {"legal_refs": ("",)},
+        {"source_refs": ("",)},
+        {"workbook_refs": ("",)},
+        {"cross_reference_refs": ("",)},
+    ),
+)
+def test_coverage_gate_rejects_blank_evidence_ref_ids(field_update: dict[str, tuple[str, ...]]) -> None:
+    with pytest.raises(ValidationError, match=next(iter(field_update))):
+        EvidenceTierCoverageGate(
+            tier="legal_authority",
+            status="satisfied",
+            detail="blank evidence id",
+            **field_update,
+        )
+
+
 def test_committed_aeat_record_design_sources_match_corpus_manifests() -> None:
     catalogues = _catalogues()
     checked: list[str] = []
