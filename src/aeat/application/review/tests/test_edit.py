@@ -111,31 +111,23 @@ def test_ledger_spec_parses_comments() -> None:
     assert spec.comments == "invoice-reviewed"
 
 
-def test_ledger_spec_business_share_accepts_decimal_zero() -> None:
-    spec = LedgerEditSpec.from_strings(["business.share=0"])
-    assert spec.business_share == Decimal("0")
+@pytest.mark.parametrize(
+    ("raw_value", "expected"),
+    [
+        ("0", Decimal("0")),
+        ("1", Decimal("1")),
+    ],
+    ids=("zero", "one"),
+)
+def test_ledger_spec_business_share_accepts_decimal_boundaries(raw_value: str, expected: Decimal) -> None:
+    spec = LedgerEditSpec.from_strings([f"business.share={raw_value}"])
+    assert spec.business_share == expected
 
 
-def test_ledger_spec_business_share_accepts_decimal_one() -> None:
-    spec = LedgerEditSpec.from_strings(["business.share=1"])
-    assert spec.business_share == Decimal("1")
-
-
-def test_ledger_spec_business_share_rejects_above_one() -> None:
+@pytest.mark.parametrize("raw_value", ("1.5", "-0.1", "full"), ids=("above-one", "negative", "non-decimal"))
+def test_ledger_spec_business_share_rejects_invalid_values(raw_value: str) -> None:
     with pytest.raises(EditParseError, match=r"invalid-value-ledger-business-share") as exc:
-        LedgerEditSpec.from_strings(["business.share=1.5"])
-    assert exc.value.reason == "invalid-value-ledger-business-share"
-
-
-def test_ledger_spec_business_share_rejects_negative() -> None:
-    with pytest.raises(EditParseError, match=r"invalid-value-ledger-business-share") as exc:
-        LedgerEditSpec.from_strings(["business.share=-0.1"])
-    assert exc.value.reason == "invalid-value-ledger-business-share"
-
-
-def test_ledger_spec_business_share_rejects_non_decimal() -> None:
-    with pytest.raises(EditParseError, match=r"invalid-value-ledger-business-share") as exc:
-        LedgerEditSpec.from_strings(["business.share=full"])
+        LedgerEditSpec.from_strings([f"business.share={raw_value}"])
     assert exc.value.reason == "invalid-value-ledger-business-share"
 
 
