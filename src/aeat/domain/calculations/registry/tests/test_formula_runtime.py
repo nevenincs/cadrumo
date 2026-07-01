@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from .._bindings import CasillaObservation
 from .._errors import RegistryValidationError
 from .._formula_initial_values import materialise_observations
-from .._formula_runtime import calculate_registry_snapshot
+from .._formula_runtime import RegistryCalculationEntry, calculate_registry_snapshot
 from .._schema import RegistrySnapshot
 from ._formula_runtime_support import (
     _IVA_PRORRATA_PORCENTAJE_CASILLA,
@@ -50,6 +50,34 @@ def committed_modelo_130_snapshot(
 def test_registry_calculation_result_refuses_ungrounded_observations() -> None:
     with pytest.raises(ValidationError, match="legal_refs"):
         CasillaObservation.model_validate({"casilla_id": _M130_INGRESOS_CASILLA, "value": Decimal("100")})
+
+
+def test_registry_calculation_entry_rejects_blank_grounding_refs() -> None:
+    with pytest.raises(ValidationError, match="legal_refs"):
+        RegistryCalculationEntry(
+            formula_id="modelo-130-test-formula",
+            target_casilla_id=_M130_RESULTADO_FINAL_CASILLA,
+            op="add",
+            operand_refs=(),
+            operand_casilla_refs=(),
+            operand_values=(),
+            value=Decimal("1"),
+            legal_refs=("",),
+            source_refs=("aeat-modelo-130-instructions",),
+        )
+
+    with pytest.raises(ValidationError, match="source_refs"):
+        RegistryCalculationEntry(
+            formula_id="modelo-130-test-formula",
+            target_casilla_id=_M130_RESULTADO_FINAL_CASILLA,
+            op="add",
+            operand_refs=(),
+            operand_casilla_refs=(),
+            operand_values=(),
+            value=Decimal("1"),
+            legal_refs=("rd-439-2007:art-110",),
+            source_refs=(" ",),
+        )
 
 
 def test_materialise_observations_refuses_value_without_registry_casilla() -> None:

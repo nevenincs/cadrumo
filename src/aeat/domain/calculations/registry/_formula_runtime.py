@@ -25,7 +25,16 @@ from ._casilla_membership import casillas_by_id as _casillas_by_id
 from ._errors import CasillaConstraintViolationError, RegistrySnapshotError, RegistryValidationError
 from ._formula_text_inputs import validate_text_input_targets as _validate_text_input_targets
 from ._formula_text_inputs import validated_text_input_casilla_ids as _validated_text_input_casilla_ids
-from ._ids import BindingId, CasillaId, FormulaId, ParameterId, RelationId, validated_casilla_id
+from ._ids import (
+    BindingId,
+    CasillaId,
+    FormulaId,
+    LegalRefId,
+    ParameterId,
+    RelationId,
+    SourceRefId,
+    validated_casilla_id,
+)
 from ._runtime_graph import formula_evaluation_order
 from ._schema import FormulaExpression, ParameterDefinition, RegistrySnapshot
 
@@ -110,8 +119,8 @@ class RegistryCalculationEntry(BaseModel):
     operand_casilla_refs: tuple[CasillaId, ...]
     operand_values: tuple[Decimal, ...]
     value: Decimal
-    legal_refs: tuple[str, ...]
-    source_refs: tuple[str, ...]
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
 
 class RegistryCalculationResult(BaseModel):
