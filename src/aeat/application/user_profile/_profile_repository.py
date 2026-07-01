@@ -47,7 +47,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, ValidationError
 
-from ...adapters.persistence.storage import BUCKET_DEK_FILENAME, BUCKETS_DIRNAME
+from ...adapters.persistence.storage import BUCKET_DEK_FILENAME, BUCKETS_DIRNAME, SecureObjectRepository
 from ...adapters.persistence.storage.bucket import (
     BucketKeySchedule,
     BucketLifecycleStatus,
@@ -62,7 +62,6 @@ from ...adapters.persistence.storage.bucket import (
 )
 from ...adapters.persistence.storage.errors import StorageValidationError
 from ...adapters.persistence.storage.master_key import KdfParams
-from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BucketPointer, pointer_path, write_pointer
 from ...core.config import load_settings
@@ -740,9 +739,10 @@ class ProfileRepository:
     def _lifecycle_repository(self, profile_id: str) -> UserProfileLifecycleRepository:
         """Return a secure-record repository bound to ``profile_id``'s db.
 
-        When an injected :class:`SecureObjectRepository` was supplied at
-        construction it is reused; otherwise the repository resolves the
-        per-bucket engine from settings.
+        When an injected
+        :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+        was supplied at construction it is reused; otherwise the repository
+        resolves the per-bucket engine from settings.
         """
         return UserProfileLifecycleRepository(bucket_id=profile_id, objects=self._secure_objects)
 
