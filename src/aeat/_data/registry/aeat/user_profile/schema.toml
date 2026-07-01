@@ -770,7 +770,6 @@ sensitivity = "financial"
 effective_dated = true
 description = "Whether the taxpayer is enrolled in the SII (Suministro Inmediato de Informacion), the near-real-time IVA Libros registro submission system. Mandatory for the monthly IVA collective (grandes empresas, REDEME, grupos de IVA); voluntary opt-in via Modelo 036 for everyone else."
 model_selectors = ["iva.sii_enrolled"]
-schedule_predicates = ["iva.sii_enrolled"]
 legal_refs = ["rd-596-2016", "rd-1624-1992:art-71"]
 
 [[sections.fields]]

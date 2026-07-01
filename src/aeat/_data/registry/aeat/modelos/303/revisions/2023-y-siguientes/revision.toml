@@ -8,7 +8,7 @@ source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-
 [revisions.2023-y-siguientes.period_selector]
 year_from = 2023
 # Quarterly periods for standard autoliquidacion; monthly periods for
-# SII-enrolled taxpayers (Art. 62.6 RD 1624/1992, Orden HFP/187/2017).
+# monthly IVA-liquidation taxpayers (REDEME or large-company status).
 periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
 
 [[revisions.2023-y-siguientes.workbook_parity_refs]]
@@ -741,14 +741,6 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
 source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
 [[revisions.2023-y-siguientes.filing_schedules.profile_conditions]]
-field = "iva.sii_enrolled"
-op = "not_equals"
-value = true
-explanation = "SII-enrolled taxpayers file Modelo 303 monthly, not quarterly; this schedule excludes them."
-legal_refs = ["rd-1624-1992:art-71"]
-source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
-
-[[revisions.2023-y-siguientes.filing_schedules.profile_conditions]]
 field = "iva.redeme_enrolled"
 op = "not_equals"
 value = true
@@ -770,14 +762,6 @@ period_kind = "monthly"
 periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
 profile_condition_mode = "any"
 legal_refs = ["rd-1624-1992:art-71", "rd-1624-1992:art-30", "rd-596-2016", "ley-37-1992:art-121"]
-source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
-
-[[revisions.2023-y-siguientes.filing_schedules.profile_conditions]]
-field = "iva.sii_enrolled"
-op = "equals"
-value = true
-explanation = "Taxpayers enrolled in SII (Suministro Inmediato de Informacion) file Modelo 303 monthly per Art. 62.6 RD 1624/1992."
-legal_refs = ["rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
 [[revisions.2023-y-siguientes.filing_schedules.profile_conditions]]
