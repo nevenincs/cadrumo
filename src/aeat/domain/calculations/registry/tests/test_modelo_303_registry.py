@@ -603,9 +603,11 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
     assert result.values[_M303_DISPONIBLE_CASILLA] == pendiente_posteriores
 
 
-def test_modelo_303_sii_monthly_snapshot_resolves_for_each_period() -> None:
-    """contract regression: SII-enrolled taxpayers file M303 monthly (Art. 62.6
-    RD 1624/1992). The 2023-y-siguientes revision must accept periods 01-12
+def test_modelo_303_monthly_snapshot_resolves_for_each_period() -> None:
+    """The 2023+ revision must accept monthly IVA-liquidation periods 01-12.
+
+    REDEME and large-company taxpayers use monthly Modelo 303 schedules. The
+    revision selector still has to resolve those monthly periods directly
     via select_revision so ``bindings list --period 01`` resolves without a
     RegistrySnapshotError."""
     modelo, catalogues = _load_modelo_303()
@@ -624,7 +626,7 @@ def test_modelo_303_sii_monthly_snapshot_resolves_for_each_period() -> None:
 
 
 def test_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles() -> None:
-    """The monthly schedule must fire for every legally monthly IVA-liquidation trigger."""
+    """The monthly schedule fires for monthly IVA-liquidation triggers only."""
     from ....deadlines._models import IVARegime, ModeloEnrollment, ModeloIVAProfile, TaxpayerProfile
     from .. import applicable_filing_schedules
 
@@ -632,11 +634,6 @@ def test_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles
     revision = modelo.revisions["2023-y-siguientes"]
 
     monthly_profiles = (
-        TaxpayerProfile(
-            tax_id="A12345678",
-            iva_regime=IVARegime.GENERAL,
-            iva=ModeloIVAProfile(sii_enrolled=True),
-        ),
         TaxpayerProfile(
             tax_id="B12345678",
             iva_regime=IVARegime.GENERAL,
@@ -648,7 +645,13 @@ def test_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles
             enrollment=ModeloEnrollment(large_company=True),
         ),
     )
-    quarterly_profile = TaxpayerProfile(
+    voluntary_sii_profile = TaxpayerProfile(
+        tax_id="A12345678",
+        iva_regime=IVARegime.GENERAL,
+        iva=ModeloIVAProfile(sii_enrolled=True, redeme_enrolled=False),
+        enrollment=ModeloEnrollment(large_company=False),
+    )
+    ordinary_quarterly_profile = TaxpayerProfile(
         tax_id="D98765432",
         iva_regime=IVARegime.GENERAL,
         iva=ModeloIVAProfile(sii_enrolled=False, redeme_enrolled=False),
@@ -661,10 +664,11 @@ def test_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles
         assert "modelo-303-mensual" in monthly_ids
         assert "modelo-303-trimestral" not in monthly_ids
 
-    quarterly_schedules = applicable_filing_schedules(revision, quarterly_profile)
-    quarterly_ids = {s.id for s in quarterly_schedules}
-    assert "modelo-303-trimestral" in quarterly_ids, "quarterly schedule must match standard quarterly profile"
-    assert "modelo-303-mensual" not in quarterly_ids, "monthly schedule must NOT match standard quarterly profile"
+    for profile in (voluntary_sii_profile, ordinary_quarterly_profile):
+        quarterly_schedules = applicable_filing_schedules(revision, profile)
+        quarterly_ids = {s.id for s in quarterly_schedules}
+        assert "modelo-303-trimestral" in quarterly_ids, "quarterly schedule must match non-monthly profile"
+        assert "modelo-303-mensual" not in quarterly_ids, "monthly schedule must NOT match non-monthly profile"
 
 
 def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuota() -> None:
