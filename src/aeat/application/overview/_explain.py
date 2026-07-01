@@ -27,6 +27,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time import now
+from ...domain.calculations.registry import LegalRefId
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
@@ -101,7 +102,7 @@ class OverviewExplain(BaseModel):
     applicable: bool
     verdict: ApplicabilityVerdict
     rationale: str = Field(min_length=1)
-    legal_refs: tuple[str, ...] = Field(min_length=1)
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     scheduling_rationale: str | None = None
     profile_facts: dict[str, _ProfileFactValue] = Field(default_factory=dict)
     generated_at: datetime
